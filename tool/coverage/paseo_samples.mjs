@@ -13,6 +13,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { buildFamily } from './paseo_cases_lib.mjs';
 import { toolSchema, toolCases } from './families/tools.mjs';
 import { itemSchema, itemCases } from './families/items.mjs';
+import { providerSchema, providerCases } from './families/providers.mjs';
 import { listSchema, listCases, listExcluded } from './families/lists.mjs';
 import { permissionSchema, permissionCases, permissionExcluded } from './families/permissions.mjs';
 
@@ -44,6 +45,7 @@ const run = (name, schema, cases, excluded = {}) => {
 
 run('tool', toolSchema(root), toolCases);
 run('items', itemSchema(root), itemCases);
+run('providers', providerSchema(messages), providerCases);
 run('lists', listSchema(messages), listCases, listExcluded);
 run('permissions', permissionSchema(messages.AgentPermissionRequestPayloadSchema, root), permissionCases, permissionExcluded);
 if (problems.length) {

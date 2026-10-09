@@ -600,6 +600,9 @@ class PaseoGateway
   /// Archives rather than deletes: the daemon keeps the provider's own
   /// session, so the conversation can be restored from the computer.
   @override
+  Future<void> archiveSession(String id) => deleteSession(id);
+
+  @override
   Future<void> deleteSession(String id) async {
     if (_isSubagent(id)) throw _PaseoSubagents._readOnly;
     await _revokeBrowserSession(id);
@@ -1238,6 +1241,10 @@ class PaseoGateway
         modelData[modelID] = {
           'id': modelID,
           'name': label is String && label.isNotEmpty ? label : modelID,
+          // The runtime's own context window, so the picker can say it.
+          if (raw['contextWindowMaxTokens'] case final num window
+              when window > 0 && window.isFinite)
+            'limit': {'context': window.toInt()},
           ..._thinkingModelData(raw),
         };
         if (raw['isDefault'] == true) {

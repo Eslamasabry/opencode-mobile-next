@@ -127,6 +127,9 @@ class ServerCapabilities {
   final bool webSearch;
   final bool sessionShare;
   final bool sessionArchive;
+
+  /// The server can delete a conversation for good (Paseo only archives).
+  final bool sessionDelete;
   final bool sessionTodos;
   final bool messageDelete;
   final bool workspaceSymbols;
@@ -233,6 +236,7 @@ class ServerCapabilities {
     this.webSearch = false,
     this.sessionShare = true,
     this.sessionArchive = true,
+    this.sessionDelete = true,
     this.sessionTodos = true,
     this.messageDelete = true,
     this.workspaceSymbols = true,
@@ -314,6 +318,7 @@ class ServerCapabilities {
     webSearch: webSearch,
     sessionShare: sessionShare,
     sessionArchive: sessionArchive,
+    sessionDelete: sessionDelete,
     sessionTodos: sessionTodos,
     messageDelete: messageDelete,
     workspaceSymbols: workspaceSymbols,

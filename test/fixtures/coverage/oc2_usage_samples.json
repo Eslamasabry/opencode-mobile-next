@@ -1,0 +1,1134 @@
+{
+  "source": "contracts/opencode2-openapi-beta-18600.json",
+  "schema": {
+    "SessionStats.Info": [
+      {
+        "path": "range.from",
+        "kind": "number"
+      },
+      {
+        "path": "range.to",
+        "kind": "number"
+      },
+      {
+        "path": "sessions",
+        "kind": "number"
+      },
+      {
+        "path": "subagents",
+        "kind": "number"
+      },
+      {
+        "path": "prompts",
+        "kind": "number"
+      },
+      {
+        "path": "steps",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.input",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.output",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.reasoning",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.cache.read",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.cache.write",
+        "kind": "number"
+      },
+      {
+        "path": "cost",
+        "kind": "number"
+      },
+      {
+        "path": "tools.totals.calls",
+        "kind": "number"
+      },
+      {
+        "path": "tools.totals.succeeded",
+        "kind": "number"
+      },
+      {
+        "path": "tools.totals.failed",
+        "kind": "number"
+      },
+      {
+        "path": "tools.totals.unfinished",
+        "kind": "number"
+      },
+      {
+        "path": "tools.usage[].name",
+        "kind": "string"
+      },
+      {
+        "path": "tools.usage[].calls",
+        "kind": "number"
+      },
+      {
+        "path": "tools.usage[].succeeded",
+        "kind": "number"
+      },
+      {
+        "path": "tools.usage[].failed",
+        "kind": "number"
+      },
+      {
+        "path": "tools.usage[].unfinished",
+        "kind": "number"
+      },
+      {
+        "path": "tools.usage[].durationP50",
+        "kind": "number"
+      },
+      {
+        "path": "tools.mode",
+        "kind": "enum"
+      },
+      {
+        "path": "activeDays",
+        "kind": "number"
+      },
+      {
+        "path": "streak",
+        "kind": "number"
+      },
+      {
+        "path": "activity[].date",
+        "kind": "string"
+      },
+      {
+        "path": "activity[].steps",
+        "kind": "number"
+      },
+      {
+        "path": "models[].model.id",
+        "kind": "string"
+      },
+      {
+        "path": "models[].model.providerID",
+        "kind": "string"
+      },
+      {
+        "path": "models[].model.variant",
+        "kind": "string"
+      },
+      {
+        "path": "models[].steps",
+        "kind": "number"
+      },
+      {
+        "path": "models[].tokens.input",
+        "kind": "number"
+      },
+      {
+        "path": "models[].tokens.output",
+        "kind": "number"
+      },
+      {
+        "path": "models[].tokens.reasoning",
+        "kind": "number"
+      },
+      {
+        "path": "models[].tokens.cache.read",
+        "kind": "number"
+      },
+      {
+        "path": "models[].tokens.cache.write",
+        "kind": "number"
+      },
+      {
+        "path": "models[].cost",
+        "kind": "number"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "stats_summary",
+      "payload": {
+        "range": {
+          "from": 1786454400000,
+          "to": 1788960000000
+        },
+        "sessions": 42,
+        "subagents": 17,
+        "prompts": 318,
+        "steps": 2764,
+        "tokens": {
+          "input": 5120000,
+          "output": 812000,
+          "reasoning": 233000,
+          "cache": {
+            "read": 21400000,
+            "write": 1900000
+          }
+        },
+        "cost": 183.47,
+        "tools": {
+          "mode": "summary",
+          "totals": {
+            "calls": 4410,
+            "succeeded": 4100,
+            "failed": 212,
+            "unfinished": 98
+          }
+        },
+        "activeDays": 19,
+        "streak": 6,
+        "activity": [
+          {
+            "date": "2026-09-28",
+            "steps": 310
+          },
+          {
+            "date": "2026-09-29",
+            "steps": 154
+          }
+        ],
+        "models": [
+          {
+            "model": {
+              "id": "claude-sonnet-5-5",
+              "providerID": "openrouter",
+              "variant": "high"
+            },
+            "steps": 2100,
+            "tokens": {
+              "input": 4000000,
+              "output": 600000,
+              "reasoning": 200000,
+              "cache": {
+                "read": 18000000,
+                "write": 1500000
+              }
+            },
+            "cost": 151.2
+          },
+          {
+            "model": {
+              "id": "gpt-6-sol",
+              "providerID": "openai"
+            },
+            "steps": 664,
+            "tokens": {
+              "input": 1120000,
+              "output": 212000,
+              "reasoning": 33000,
+              "cache": {
+                "read": 3400000,
+                "write": 400000
+              }
+            },
+            "cost": 32.27
+          }
+        ]
+      },
+      "kind": "stats",
+      "fields": [
+        {
+          "key": "SessionStats.Info.range.from",
+          "path": "range.from",
+          "kind": "number",
+          "probes": [
+            "Aug 11"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.range.to",
+          "path": "range.to",
+          "kind": "number",
+          "probes": [
+            "Sep 9"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.sessions",
+          "path": "sessions",
+          "kind": "number",
+          "probes": [
+            "42"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.subagents",
+          "path": "subagents",
+          "kind": "number",
+          "probes": [
+            "17"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.prompts",
+          "path": "prompts",
+          "kind": "number",
+          "probes": [
+            "318"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.steps",
+          "path": "steps",
+          "kind": "number",
+          "probes": [
+            "2,764"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.input",
+          "path": "tokens.input",
+          "kind": "number",
+          "probes": [
+            "5,120,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.output",
+          "path": "tokens.output",
+          "kind": "number",
+          "probes": [
+            "812,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.reasoning",
+          "path": "tokens.reasoning",
+          "kind": "number",
+          "probes": [
+            "233,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.cache.read",
+          "path": "tokens.cache.read",
+          "kind": "number",
+          "probes": [
+            "21,400,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.cache.write",
+          "path": "tokens.cache.write",
+          "kind": "number",
+          "probes": [
+            "1,900,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.cost",
+          "path": "cost",
+          "kind": "number",
+          "probes": [
+            "$183.47"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.mode",
+          "path": "tools.mode",
+          "kind": "enum",
+          "probes": [
+            "Tool reliability"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.totals.calls",
+          "path": "tools.totals.calls",
+          "kind": "number",
+          "probes": [
+            "4,410"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.totals.succeeded",
+          "path": "tools.totals.succeeded",
+          "kind": "number",
+          "probes": [
+            "4,100"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.totals.failed",
+          "path": "tools.totals.failed",
+          "kind": "number",
+          "probes": [
+            "212"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.totals.unfinished",
+          "path": "tools.totals.unfinished",
+          "kind": "number",
+          "probes": [
+            "98"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.activeDays",
+          "path": "activeDays",
+          "kind": "number",
+          "probes": [
+            "19"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.streak",
+          "path": "streak",
+          "kind": "number",
+          "probes": [
+            "6"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.activity[].date",
+          "path": "activity[].date",
+          "kind": "string",
+          "probes": [
+            "Sep 28",
+            "Sep 29"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.activity[].steps",
+          "path": "activity[].steps",
+          "kind": "number",
+          "probes": [
+            "310 steps",
+            "154 steps"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].model.id",
+          "path": "models[].model.id",
+          "kind": "string",
+          "probes": [
+            "claude-sonnet-5-5",
+            "gpt-6-sol"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].model.providerID",
+          "path": "models[].model.providerID",
+          "kind": "string",
+          "probes": [
+            "openrouter",
+            "openai"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].model.variant",
+          "path": "models[].model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].steps",
+          "path": "models[].steps",
+          "kind": "number",
+          "probes": [
+            "2,100",
+            "664"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].tokens.input",
+          "path": "models[].tokens.input",
+          "kind": "number",
+          "probes": [
+            "24,300,000",
+            "5,165,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].tokens.output",
+          "path": "models[].tokens.output",
+          "kind": "number",
+          "probes": [
+            "24,300,000",
+            "5,165,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].tokens.reasoning",
+          "path": "models[].tokens.reasoning",
+          "kind": "number",
+          "probes": [
+            "24,300,000",
+            "5,165,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].tokens.cache.read",
+          "path": "models[].tokens.cache.read",
+          "kind": "number",
+          "probes": [
+            "24,300,000",
+            "5,165,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].tokens.cache.write",
+          "path": "models[].tokens.cache.write",
+          "kind": "number",
+          "probes": [
+            "24,300,000",
+            "5,165,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].cost",
+          "path": "models[].cost",
+          "kind": "number",
+          "probes": [
+            "$151.20",
+            "$32.27"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "stats_detail",
+      "payload": {
+        "range": {
+          "from": 1786454400000,
+          "to": 1788960000000
+        },
+        "sessions": 42,
+        "subagents": 17,
+        "prompts": 318,
+        "steps": 2764,
+        "tokens": {
+          "input": 5120000,
+          "output": 812000,
+          "reasoning": 233000,
+          "cache": {
+            "read": 21400000,
+            "write": 1900000
+          }
+        },
+        "cost": 183.47,
+        "tools": {
+          "mode": "detail",
+          "totals": {
+            "calls": 4410,
+            "succeeded": 4100,
+            "failed": 212,
+            "unfinished": 98
+          },
+          "usage": [
+            {
+              "name": "bash",
+              "calls": 1800,
+              "succeeded": 1700,
+              "failed": 77,
+              "unfinished": 10,
+              "durationP50": 820
+            }
+          ]
+        },
+        "activeDays": 19,
+        "streak": 6,
+        "activity": [
+          {
+            "date": "2026-09-28",
+            "steps": 310
+          },
+          {
+            "date": "2026-09-29",
+            "steps": 154
+          }
+        ],
+        "models": [
+          {
+            "model": {
+              "id": "claude-sonnet-5-5",
+              "providerID": "openrouter",
+              "variant": "high"
+            },
+            "steps": 2100,
+            "tokens": {
+              "input": 4000000,
+              "output": 600000,
+              "reasoning": 200000,
+              "cache": {
+                "read": 18000000,
+                "write": 1500000
+              }
+            },
+            "cost": 151.2
+          },
+          {
+            "model": {
+              "id": "gpt-6-sol",
+              "providerID": "openai"
+            },
+            "steps": 664,
+            "tokens": {
+              "input": 1120000,
+              "output": 212000,
+              "reasoning": 33000,
+              "cache": {
+                "read": 3400000,
+                "write": 400000
+              }
+            },
+            "cost": 32.27
+          }
+        ]
+      },
+      "kind": "stats",
+      "fields": [
+        {
+          "key": "SessionStats.Info.range.from",
+          "path": "range.from",
+          "kind": "number",
+          "probes": [
+            "Aug 11"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.range.to",
+          "path": "range.to",
+          "kind": "number",
+          "probes": [
+            "Sep 9"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.sessions",
+          "path": "sessions",
+          "kind": "number",
+          "probes": [
+            "42"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.subagents",
+          "path": "subagents",
+          "kind": "number",
+          "probes": [
+            "17"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.prompts",
+          "path": "prompts",
+          "kind": "number",
+          "probes": [
+            "318"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.steps",
+          "path": "steps",
+          "kind": "number",
+          "probes": [
+            "2,764"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.input",
+          "path": "tokens.input",
+          "kind": "number",
+          "probes": [
+            "5,120,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.output",
+          "path": "tokens.output",
+          "kind": "number",
+          "probes": [
+            "812,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.reasoning",
+          "path": "tokens.reasoning",
+          "kind": "number",
+          "probes": [
+            "233,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.cache.read",
+          "path": "tokens.cache.read",
+          "kind": "number",
+          "probes": [
+            "21,400,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.cache.write",
+          "path": "tokens.cache.write",
+          "kind": "number",
+          "probes": [
+            "1,900,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.cost",
+          "path": "cost",
+          "kind": "number",
+          "probes": [
+            "$183.47"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.mode",
+          "path": "tools.mode",
+          "kind": "enum",
+          "probes": [
+            "Tool reliability"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.totals.calls",
+          "path": "tools.totals.calls",
+          "kind": "number",
+          "probes": [
+            "4,410"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.totals.succeeded",
+          "path": "tools.totals.succeeded",
+          "kind": "number",
+          "probes": [
+            "4,100"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.totals.failed",
+          "path": "tools.totals.failed",
+          "kind": "number",
+          "probes": [
+            "212"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.totals.unfinished",
+          "path": "tools.totals.unfinished",
+          "kind": "number",
+          "probes": [
+            "98"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.usage[].name",
+          "path": "tools.usage[].name",
+          "kind": "string",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.usage[].calls",
+          "path": "tools.usage[].calls",
+          "kind": "number",
+          "probes": [
+            "1,800"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.usage[].succeeded",
+          "path": "tools.usage[].succeeded",
+          "kind": "number",
+          "probes": [
+            "1,700"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.usage[].failed",
+          "path": "tools.usage[].failed",
+          "kind": "number",
+          "probes": [
+            "77"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.usage[].unfinished",
+          "path": "tools.usage[].unfinished",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.usage[].durationP50",
+          "path": "tools.usage[].durationP50",
+          "kind": "number",
+          "probes": [
+            "820"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.activeDays",
+          "path": "activeDays",
+          "kind": "number",
+          "probes": [
+            "19"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.streak",
+          "path": "streak",
+          "kind": "number",
+          "probes": [
+            "6"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.activity[].date",
+          "path": "activity[].date",
+          "kind": "string",
+          "probes": [
+            "Sep 28",
+            "Sep 29"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.activity[].steps",
+          "path": "activity[].steps",
+          "kind": "number",
+          "probes": [
+            "310 steps",
+            "154 steps"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].model.id",
+          "path": "models[].model.id",
+          "kind": "string",
+          "probes": [
+            "claude-sonnet-5-5",
+            "gpt-6-sol"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].model.providerID",
+          "path": "models[].model.providerID",
+          "kind": "string",
+          "probes": [
+            "openrouter",
+            "openai"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].model.variant",
+          "path": "models[].model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].steps",
+          "path": "models[].steps",
+          "kind": "number",
+          "probes": [
+            "2,100",
+            "664"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].tokens.input",
+          "path": "models[].tokens.input",
+          "kind": "number",
+          "probes": [
+            "24,300,000",
+            "5,165,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].tokens.output",
+          "path": "models[].tokens.output",
+          "kind": "number",
+          "probes": [
+            "24,300,000",
+            "5,165,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].tokens.reasoning",
+          "path": "models[].tokens.reasoning",
+          "kind": "number",
+          "probes": [
+            "24,300,000",
+            "5,165,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].tokens.cache.read",
+          "path": "models[].tokens.cache.read",
+          "kind": "number",
+          "probes": [
+            "24,300,000",
+            "5,165,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].tokens.cache.write",
+          "path": "models[].tokens.cache.write",
+          "kind": "number",
+          "probes": [
+            "24,300,000",
+            "5,165,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.models[].cost",
+          "path": "models[].cost",
+          "kind": "number",
+          "probes": [
+            "$151.20",
+            "$32.27"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "stats_no_tools",
+      "payload": {
+        "range": {
+          "from": 1786454400000,
+          "to": 1788960000000
+        },
+        "sessions": 42,
+        "subagents": 17,
+        "prompts": 318,
+        "steps": 2764,
+        "tokens": {
+          "input": 5120000,
+          "output": 812000,
+          "reasoning": 233000,
+          "cache": {
+            "read": 21400000,
+            "write": 1900000
+          }
+        },
+        "cost": 183.47,
+        "tools": {
+          "mode": "none"
+        },
+        "activeDays": 19,
+        "streak": 6,
+        "activity": [],
+        "models": []
+      },
+      "kind": "stats",
+      "fields": [
+        {
+          "key": "SessionStats.Info.range.from",
+          "path": "range.from",
+          "kind": "number",
+          "probes": [
+            "Aug 11"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.range.to",
+          "path": "range.to",
+          "kind": "number",
+          "probes": [
+            "Sep 9"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.sessions",
+          "path": "sessions",
+          "kind": "number",
+          "probes": [
+            "42"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.subagents",
+          "path": "subagents",
+          "kind": "number",
+          "probes": [
+            "17"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.prompts",
+          "path": "prompts",
+          "kind": "number",
+          "probes": [
+            "318"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.steps",
+          "path": "steps",
+          "kind": "number",
+          "probes": [
+            "2,764"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.input",
+          "path": "tokens.input",
+          "kind": "number",
+          "probes": [
+            "5,120,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.output",
+          "path": "tokens.output",
+          "kind": "number",
+          "probes": [
+            "812,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.reasoning",
+          "path": "tokens.reasoning",
+          "kind": "number",
+          "probes": [
+            "233,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.cache.read",
+          "path": "tokens.cache.read",
+          "kind": "number",
+          "probes": [
+            "21,400,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tokens.cache.write",
+          "path": "tokens.cache.write",
+          "kind": "number",
+          "probes": [
+            "1,900,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.cost",
+          "path": "cost",
+          "kind": "number",
+          "probes": [
+            "$183.47"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.tools.mode",
+          "path": "tools.mode",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.activeDays",
+          "path": "activeDays",
+          "kind": "number",
+          "probes": [
+            "19"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionStats.Info.streak",
+          "path": "streak",
+          "kind": "number",
+          "probes": [
+            "6"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

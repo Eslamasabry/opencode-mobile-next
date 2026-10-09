@@ -20,7 +20,9 @@ enum SessionMenuAction {
   fork,
   rename,
   continueOnComputer,
-  continueOnPhone;
+  continueOnPhone,
+  archive,
+  delete;
 
   /// The entry's key, `session-menu-<value>`, and the stable name tests and
   /// the route use.
@@ -56,6 +58,8 @@ class SessionMenuOffer {
     required this.fork,
     required this.continueOnComputer,
     required this.continueOnPhone,
+    this.archive = false,
+    this.delete = false,
     this.hasPrompt = true,
   });
 
@@ -78,6 +82,8 @@ class SessionMenuOffer {
     fork: capabilities.sessionFork,
     continueOnComputer: capabilities.cliSessionResume,
     continueOnPhone: savedServer,
+    archive: capabilities.sessionArchive,
+    delete: capabilities.sessionDelete,
     hasPrompt: hasPrompt,
   );
 
@@ -90,6 +96,8 @@ class SessionMenuOffer {
   final bool fork;
   final bool continueOnComputer;
   final bool continueOnPhone;
+  final bool archive;
+  final bool delete;
 
   /// Compact and Fork act on prompts: before the first one they wait,
   /// dimmed, with the reason.
@@ -119,10 +127,11 @@ List<KitMenuItem> sessionMenuItems(
     SessionMenuAction action,
     String label,
     IconData icon,
-    KitMenuGroup group, {
+    KitMenuGroup? group, {
     String? supporting,
     String? shortcut,
     bool enabled = true,
+    bool destructive = false,
   }) => KitMenuItem(
     key: ValueKey('session-menu-${action.value}'),
     label: label,
@@ -131,6 +140,7 @@ List<KitMenuItem> sessionMenuItems(
     supporting: explain ? supporting : null,
     shortcut: shortcut,
     enabled: enabled,
+    destructive: destructive,
     disabledReason: enabled ? null : l10n.sessionMenuNeedsPrompt,
     onSelected: () => onSelected(action),
   );
@@ -224,6 +234,24 @@ List<KitMenuItem> sessionMenuItems(
         AppIconography.qrCode,
         act,
         supporting: l10n.sessionMenuContinuePhoneHint,
+      ),
+    if (offer.archive)
+      item(
+        SessionMenuAction.archive,
+        l10n.sessionMenuArchive,
+        AppIconography.archive,
+        act,
+        supporting: l10n.sessionMenuArchiveHint,
+      ),
+    if (offer.delete)
+      item(
+        SessionMenuAction.delete,
+        l10n.sessionMenuDelete,
+        AppIconography.delete,
+        // The kit sets destructive acts apart under a divider of their own.
+        null,
+        supporting: l10n.sessionMenuDeleteHint,
+        destructive: true,
       ),
   ];
 }

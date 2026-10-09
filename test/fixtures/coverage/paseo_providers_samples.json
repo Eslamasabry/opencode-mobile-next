@@ -1,0 +1,480 @@
+{
+  "source": "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js",
+  "schema": {
+    "entry": [
+      {
+        "path": "provider",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      },
+      {
+        "path": "enabled",
+        "kind": "boolean"
+      },
+      {
+        "path": "source",
+        "kind": "enum"
+      },
+      {
+        "path": "error",
+        "kind": "string"
+      },
+      {
+        "path": "models[].provider",
+        "kind": "string"
+      },
+      {
+        "path": "models[].id",
+        "kind": "string"
+      },
+      {
+        "path": "models[].aliases[]",
+        "kind": "string"
+      },
+      {
+        "path": "models[].isSelectable",
+        "kind": "boolean"
+      },
+      {
+        "path": "models[].label",
+        "kind": "string"
+      },
+      {
+        "path": "models[].description",
+        "kind": "string"
+      },
+      {
+        "path": "models[].isDefault",
+        "kind": "boolean"
+      },
+      {
+        "path": "models[].metadata",
+        "kind": "any"
+      },
+      {
+        "path": "models[].contextWindowMaxTokens",
+        "kind": "number"
+      },
+      {
+        "path": "models[].thinkingOptions[].id",
+        "kind": "string"
+      },
+      {
+        "path": "models[].thinkingOptions[].label",
+        "kind": "string"
+      },
+      {
+        "path": "models[].thinkingOptions[].description",
+        "kind": "string"
+      },
+      {
+        "path": "models[].thinkingOptions[].isDefault",
+        "kind": "boolean"
+      },
+      {
+        "path": "models[].thinkingOptions[].metadata",
+        "kind": "any"
+      },
+      {
+        "path": "models[].defaultThinkingOptionId",
+        "kind": "string"
+      },
+      {
+        "path": "modes[].id",
+        "kind": "string"
+      },
+      {
+        "path": "modes[].label",
+        "kind": "string"
+      },
+      {
+        "path": "modes[].description",
+        "kind": "string"
+      },
+      {
+        "path": "modes[].icon",
+        "kind": "string"
+      },
+      {
+        "path": "modes[].colorTier",
+        "kind": "string"
+      },
+      {
+        "path": "fetchedAt",
+        "kind": "string"
+      },
+      {
+        "path": "label",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "iconSvg",
+        "kind": "string"
+      },
+      {
+        "path": "defaultModeId",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "snapshot_ready_and_broken",
+      "family": "providers",
+      "payload": {
+        "entries": [
+          {
+            "provider": "claude",
+            "status": "ready",
+            "enabled": true,
+            "source": "builtin",
+            "fetchedAt": "2026-10-08T09:00:00.000Z",
+            "label": "Claude Code (work laptop)",
+            "description": "Anthropic's coding agent",
+            "iconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>",
+            "defaultModeId": "default",
+            "models": [
+              {
+                "provider": "claude",
+                "id": "claude-sonnet-5-5",
+                "aliases": [
+                  "sonnet"
+                ],
+                "isSelectable": true,
+                "label": "Claude Sonnet 5.5",
+                "description": "Fast and capable",
+                "isDefault": true,
+                "metadata": {
+                  "family": "sonnet"
+                },
+                "contextWindowMaxTokens": 200000,
+                "thinkingOptions": [
+                  {
+                    "id": "high",
+                    "label": "High",
+                    "description": "Think longer",
+                    "isDefault": true,
+                    "metadata": {
+                      "budget": 8000
+                    }
+                  },
+                  {
+                    "id": "low",
+                    "label": "Low"
+                  }
+                ],
+                "defaultThinkingOptionId": "high"
+              }
+            ],
+            "modes": [
+              {
+                "id": "default",
+                "label": "Ask first",
+                "description": "Asks before it changes files",
+                "icon": "shield",
+                "colorTier": "safe"
+              }
+            ]
+          },
+          {
+            "provider": "codex",
+            "status": "error",
+            "enabled": true,
+            "source": "builtin",
+            "error": "Codex CLI exited with status 3 (token refresh failed)",
+            "fetchedAt": "2026-10-08T09:00:00.000Z",
+            "label": "Codex",
+            "defaultModeId": null
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "entry.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "Claude Code"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.enabled",
+          "path": "enabled",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.source",
+          "path": "source",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.fetchedAt",
+          "path": "fetchedAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.label",
+          "path": "label",
+          "kind": "string",
+          "probes": [
+            "Claude Code (work laptop)"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.iconSvg",
+          "path": "iconSvg",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.defaultModeId",
+          "path": "defaultModeId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].provider",
+          "path": "models[].provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].id",
+          "path": "models[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].aliases[]",
+          "path": "models[].aliases[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].isSelectable",
+          "path": "models[].isSelectable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].label",
+          "path": "models[].label",
+          "kind": "string",
+          "probes": [
+            "Claude Sonnet 5.5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].description",
+          "path": "models[].description",
+          "kind": "string",
+          "probes": [
+            "Fast and capable"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].isDefault",
+          "path": "models[].isDefault",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].metadata",
+          "path": "models[].metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].contextWindowMaxTokens",
+          "path": "models[].contextWindowMaxTokens",
+          "kind": "number",
+          "probes": [
+            "200K context"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].thinkingOptions[].id",
+          "path": "models[].thinkingOptions[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].thinkingOptions[].label",
+          "path": "models[].thinkingOptions[].label",
+          "kind": "string",
+          "probes": [
+            "High"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].thinkingOptions[].description",
+          "path": "models[].thinkingOptions[].description",
+          "kind": "string",
+          "probes": [
+            "Think longer"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].thinkingOptions[].isDefault",
+          "path": "models[].thinkingOptions[].isDefault",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].thinkingOptions[].metadata",
+          "path": "models[].thinkingOptions[].metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.models[].defaultThinkingOptionId",
+          "path": "models[].defaultThinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.modes[].id",
+          "path": "modes[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.modes[].label",
+          "path": "modes[].label",
+          "kind": "string",
+          "probes": [
+            "Ask first"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.modes[].description",
+          "path": "modes[].description",
+          "kind": "string",
+          "probes": [
+            "Asks before it changes files"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.modes[].icon",
+          "path": "modes[].icon",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.modes[].colorTier",
+          "path": "modes[].colorTier",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.enabled",
+          "path": "enabled",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.source",
+          "path": "source",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.error",
+          "path": "error",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.fetchedAt",
+          "path": "fetchedAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.label",
+          "path": "label",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.defaultModeId",
+          "path": "defaultModeId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

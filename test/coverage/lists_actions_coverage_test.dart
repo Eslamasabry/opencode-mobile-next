@@ -251,6 +251,14 @@ void main() {
           sends(key, call, protocol: 'OC1');
       await one('OC1 POST /session', api.createSession);
       await one(
+        'OC1 DELETE /session/{sessionID}',
+        () => api.deleteSession('ses_1'),
+      );
+      await one(
+        'OC1 PATCH /session/{sessionID}',
+        () => repository.archiveSession('ses_1'),
+      );
+      await one(
         'OC1 PATCH /project/{projectID}',
         () => repository.renameProject(
           projectID: 'prj_shopfront',
@@ -303,6 +311,10 @@ void main() {
       Future<void> one(String key, Future<Object?> Function() call) =>
           sends(key, call, protocol: 'OC2');
       await one('OC2 POST /api/session', gateway.createSession);
+      await one(
+        'OC2 DELETE /api/session/{sessionID}',
+        () => gateway.deleteSession('ses_1'),
+      );
       await one(
         'OC2 PATCH /api/project/{projectID}',
         () => repository.renameProject(
@@ -375,11 +387,15 @@ void main() {
           reason: '${entry.key}: $file does not mention ${token ?? method}',
         );
       }
-      expect(
-        sentProven,
-        contains(entry.key),
-        reason: '${entry.key}: no real gateway call was matched to it',
-      );
+      // Paseo's calls are proven by its own scripted-daemon test (named in
+      // the entry); the HTTP ones by a real gateway call matched here.
+      if (!entry.key.startsWith('Paseo ')) {
+        expect(
+          sentProven,
+          contains(entry.key),
+          reason: '${entry.key}: no real gateway call was matched to it',
+        );
+      }
     }
   });
 }

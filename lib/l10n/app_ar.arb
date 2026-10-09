@@ -8518,5 +8518,16 @@
   "serverSettingsRecheckAgentsDetail": "استخدمه بعد تسجيل الدخول إلى وكيل على ذلك الحاسوب.",
   "serverSettingsRecheckChecking": "جارٍ التحقق من الوكلاء…",
   "serverSettingsRecheckFailed": "تعذر التحقق من الوكلاء. حاول بعد قليل.",
-  "integrationsMcpDetails": "تفاصيل {name}"
+  "integrationsMcpDetails": "تفاصيل {name}",
+  "usageBusiestDays": "أكثر الأيام نشاطًا",
+  "usageDaySteps": "{count, plural, one {خطوة واحدة} two {خطوتان} few {{count} خطوات} many {{count} خطوة} other {{count} خطوة}}",
+  "sessionMenuArchive": "أرشفة المحادثة",
+  "sessionMenuArchiveHint": "تنتقل إلى المؤرشفة ويحتفظ بها الخادم",
+  "sessionMenuDelete": "حذف المحادثة",
+  "sessionMenuDeleteHint": "تُزال هي وسجلها نهائيًا",
+  "sessionArchiveTitle": "أرشفة «{title}»؟",
+  "sessionArchiveBody": "تنتقل إلى المؤرشفة ويمكنك قراءتها هناك.",
+  "sessionDeleteTitle": "حذف «{title}»؟",
+  "sessionDeleteBody": "تُزال المحادثة وسجلها نهائيًا. لا يمكن التراجع عن ذلك.",
+  "modelPickerAgentUses": "يستخدم {model}"
 }
