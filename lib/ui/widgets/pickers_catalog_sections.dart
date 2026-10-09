@@ -360,10 +360,11 @@ extension _ModelCatalogSections on _ModelCatalogViewState {
     return switch (agent.id) {
       'build' => _strings.modelPickerAgentBuild,
       'plan' => _strings.modelPickerAgentPlan,
-      _ => [
-        if (agent.mode != 'unknown') agent.mode,
-        if (agent.model?.isNotEmpty == true) agent.model!,
-      ].join(' · '),
+      // Never the server's mode word or a provider/model id as copy.
+      _ =>
+        agent.model?.isNotEmpty == true
+            ? _strings.modelPickerAgentUses(modelNameFromId(agent.model!))
+            : '',
     };
   }
 

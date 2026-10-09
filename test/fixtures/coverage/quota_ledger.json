@@ -1,0 +1,18 @@
+{
+  "quota:snapshot.account.plan": "shown",
+  "quota:snapshot.account.ref": "ignored: an opaque reference used only to tell accounts apart; never shown",
+  "quota:snapshot.account.status": "shown",
+  "quota:snapshot.expiresAtMs": "ignored: decides when the reading counts as old; the page says the reading is the last one rather than printing the time",
+  "quota:snapshot.fetchedAtMs": "shown",
+  "quota:snapshot.freshness": "shown",
+  "quota:snapshot.ordinaryUsageAllowed": "shown",
+  "quota:snapshot.provider": "shown",
+  "quota:snapshot.schemaVersion": "ignored: checked before anything is shown; a snapshot from an unknown collector version is refused",
+  "quota:snapshot.source": "ignored: checked before anything is shown; a snapshot from an unknown collector version is refused",
+  "quota:snapshot.status": "shown",
+  "quota:snapshot.windows[].durationSeconds": "shown",
+  "quota:snapshot.windows[].id": "ignored: a window is named by its length (5-hour, this week), not by the collector's id",
+  "quota:snapshot.windows[].resetsAtMs": "shown",
+  "quota:snapshot.windows[].status": "ignored: a window the provider did not report is left out",
+  "quota:snapshot.windows[].usedPercent": "shown"
+}

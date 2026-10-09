@@ -315,6 +315,12 @@
   "usagePrompts": "Prompts",
   "usageSteps": "Agent steps",
   "usageActiveDays": "Active days",
+  "usageBusiestDays": "Busiest days",
+  "usageDaySteps": "{count, plural, one {1 step} other {{count} steps}}",
+  "@usageDaySteps": {
+    "description": "Usage: how many agent steps ran on one day",
+    "placeholders": {"count": {"type": "int"}}
+  },
   "usageStreak": "Longest streak · days",
   "usageEmpty": "No activity in this range. Try a wider range or All projects.",
   "usageTokens": "Tokens",
@@ -19634,6 +19640,11 @@
   "modelPickerAgentPlan": "Reads and plans; does not change files",
   "@modelPickerAgentPlan": {
     "description": "Model picker: what the built-in plan agent does"
+  },
+  "modelPickerAgentUses": "Uses {model}",
+  "@modelPickerAgentUses": {
+    "description": "Model picker: under an agent that has no description of its own, the model it works with",
+    "placeholders": {"model": {"type": "String"}}
   },
   "modelPickerDetailsOutput": "Up to {count} tokens per answer",
   "@modelPickerDetailsOutput": {

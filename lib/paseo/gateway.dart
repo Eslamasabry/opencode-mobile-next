@@ -1245,6 +1245,10 @@ class PaseoGateway
         modelData[modelID] = {
           'id': modelID,
           'name': label is String && label.isNotEmpty ? label : modelID,
+          // The runtime's own context window, so the picker can say it.
+          if (raw['contextWindowMaxTokens'] case final num window
+              when window > 0 && window.isFinite)
+            'limit': {'context': window.toInt()},
           ..._thinkingModelData(raw),
         };
         if (raw['isDefault'] == true) {

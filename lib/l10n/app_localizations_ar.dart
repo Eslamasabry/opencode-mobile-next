@@ -709,6 +709,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get usageActiveDays => 'أيام النشاط';
 
   @override
+  String get usageBusiestDays => 'أكثر الأيام نشاطًا';
+
+  @override
+  String usageDaySteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count خطوة',
+      many: '$count خطوة',
+      few: '$count خطوات',
+      two: 'خطوتان',
+      one: 'خطوة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get usageStreak => 'أطول فترة متواصلة · أيام';
 
   @override
@@ -17213,6 +17230,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get modelPickerAgentPlan => 'يقرأ ويخطط؛ لا يغيّر الملفات';
+
+  @override
+  String modelPickerAgentUses(String model) {
+    return 'يستخدم $model';
+  }
 
   @override
   String modelPickerDetailsOutput(String count) {

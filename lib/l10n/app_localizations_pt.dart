@@ -711,6 +711,20 @@ class AppLocalizationsPt extends AppLocalizations {
   String get usageActiveDays => 'Active days';
 
   @override
+  String get usageBusiestDays => 'Busiest days';
+
+  @override
+  String usageDaySteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count steps',
+      one: '1 step',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get usageStreak => 'Longest streak · days';
 
   @override
@@ -17123,6 +17137,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get modelPickerAgentPlan => 'Lê e planeja; não altera arquivos';
+
+  @override
+  String modelPickerAgentUses(String model) {
+    return 'Uses $model';
+  }
 
   @override
   String modelPickerDetailsOutput(String count) {

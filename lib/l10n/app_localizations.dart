@@ -1344,6 +1344,18 @@ abstract class AppLocalizations {
   /// **'Active days'**
   String get usageActiveDays;
 
+  /// No description provided for @usageBusiestDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Busiest days'**
+  String get usageBusiestDays;
+
+  /// Usage: how many agent steps ran on one day
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {1 step} other {{count} steps}}'**
+  String usageDaySteps(int count);
+
   /// No description provided for @usageStreak.
   ///
   /// In en, this message translates to:
@@ -27379,6 +27391,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reads and plans; does not change files'**
   String get modelPickerAgentPlan;
+
+  /// Model picker: under an agent that has no description of its own, the model it works with
+  ///
+  /// In en, this message translates to:
+  /// **'Uses {model}'**
+  String modelPickerAgentUses(String model);
 
   /// Model picker details: output limit in words
   ///

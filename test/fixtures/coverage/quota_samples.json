@@ -1,0 +1,907 @@
+{
+  "source": "lib/domain/provider_quota.dart (a deployment extension; no contract)",
+  "schema": {
+    "quota:snapshot": [
+      {
+        "path": "schemaVersion",
+        "kind": "number"
+      },
+      {
+        "path": "source",
+        "kind": "string"
+      },
+      {
+        "path": "provider",
+        "kind": "enum"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      },
+      {
+        "path": "freshness",
+        "kind": "enum"
+      },
+      {
+        "path": "fetchedAtMs",
+        "kind": "number"
+      },
+      {
+        "path": "expiresAtMs",
+        "kind": "number"
+      },
+      {
+        "path": "account.ref",
+        "kind": "string"
+      },
+      {
+        "path": "account.status",
+        "kind": "enum"
+      },
+      {
+        "path": "account.plan",
+        "kind": "string"
+      },
+      {
+        "path": "ordinaryUsageAllowed",
+        "kind": "boolean"
+      },
+      {
+        "path": "windows[].id",
+        "kind": "string"
+      },
+      {
+        "path": "windows[].status",
+        "kind": "enum"
+      },
+      {
+        "path": "windows[].usedPercent",
+        "kind": "number"
+      },
+      {
+        "path": "windows[].durationSeconds",
+        "kind": "number"
+      },
+      {
+        "path": "windows[].resetsAtMs",
+        "kind": "number"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "codex_ok",
+      "payload": {
+        "schemaVersion": 1,
+        "provider": "codex",
+        "source": "codex.wham",
+        "status": "ok",
+        "freshness": "fresh",
+        "fetchedAtMs": 1788960000000,
+        "expiresAtMs": 1788960060000,
+        "account": {
+          "ref": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "status": "matched",
+          "plan": "plus"
+        },
+        "windows": [
+          {
+            "id": "primary",
+            "status": "reported",
+            "usedPercent": 25.5,
+            "durationSeconds": 18000,
+            "resetsAtMs": 1788960300000
+          },
+          {
+            "id": "secondary",
+            "status": "missing"
+          }
+        ],
+        "ordinaryUsageAllowed": true
+      },
+      "kind": "quota",
+      "fields": [
+        {
+          "key": "quota:snapshot.schemaVersion",
+          "path": "schemaVersion",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.provider",
+          "path": "provider",
+          "kind": "enum",
+          "probes": [
+            "Codex"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.freshness",
+          "path": "freshness",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.fetchedAtMs",
+          "path": "fetchedAtMs",
+          "kind": "number",
+          "probes": [
+            "Sep 9, 2026"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.expiresAtMs",
+          "path": "expiresAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.ref",
+          "path": "account.ref",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.status",
+          "path": "account.status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.plan",
+          "path": "account.plan",
+          "kind": "string",
+          "probes": [
+            "plus"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].id",
+          "path": "windows[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].status",
+          "path": "windows[].status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].usedPercent",
+          "path": "windows[].usedPercent",
+          "kind": "number",
+          "probes": [
+            "25.5% used"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].durationSeconds",
+          "path": "windows[].durationSeconds",
+          "kind": "number",
+          "probes": [
+            "5-hour window"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].resetsAtMs",
+          "path": "windows[].resetsAtMs",
+          "kind": "number",
+          "probes": [
+            "resets at"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.ordinaryUsageAllowed",
+          "path": "ordinaryUsageAllowed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "minimax_ok",
+      "payload": {
+        "schemaVersion": 1,
+        "provider": "minimax",
+        "source": "minimax.tokenPlan",
+        "status": "ok",
+        "freshness": "fresh",
+        "fetchedAtMs": 1788960000000,
+        "expiresAtMs": 1788960060000,
+        "account": {
+          "ref": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "status": "sourceBound"
+        },
+        "windows": [
+          {
+            "id": "primary",
+            "status": "reported",
+            "usedPercent": 60,
+            "durationSeconds": 604800,
+            "resetsAtMs": 1788965000000
+          }
+        ]
+      },
+      "kind": "quota",
+      "fields": [
+        {
+          "key": "quota:snapshot.schemaVersion",
+          "path": "schemaVersion",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.provider",
+          "path": "provider",
+          "kind": "enum",
+          "probes": [
+            "MiniMax"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.freshness",
+          "path": "freshness",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.fetchedAtMs",
+          "path": "fetchedAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.expiresAtMs",
+          "path": "expiresAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.ref",
+          "path": "account.ref",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.status",
+          "path": "account.status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].id",
+          "path": "windows[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].status",
+          "path": "windows[].status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].usedPercent",
+          "path": "windows[].usedPercent",
+          "kind": "number",
+          "probes": [
+            "60% used"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].durationSeconds",
+          "path": "windows[].durationSeconds",
+          "kind": "number",
+          "probes": [
+            "this week"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].resetsAtMs",
+          "path": "windows[].resetsAtMs",
+          "kind": "number",
+          "probes": [
+            "resets at"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "codex_stale",
+      "payload": {
+        "schemaVersion": 1,
+        "provider": "codex",
+        "source": "codex.wham",
+        "status": "ok",
+        "freshness": "stale",
+        "fetchedAtMs": 1788960000000,
+        "expiresAtMs": 1788960060000,
+        "account": {
+          "ref": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "status": "matched",
+          "plan": "plus"
+        },
+        "windows": [
+          {
+            "id": "primary",
+            "status": "reported",
+            "usedPercent": 25.5,
+            "durationSeconds": 18000,
+            "resetsAtMs": 1788960300000
+          },
+          {
+            "id": "secondary",
+            "status": "missing"
+          }
+        ],
+        "ordinaryUsageAllowed": true
+      },
+      "kind": "quota",
+      "fields": [
+        {
+          "key": "quota:snapshot.schemaVersion",
+          "path": "schemaVersion",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.provider",
+          "path": "provider",
+          "kind": "enum",
+          "probes": [
+            "Codex"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.freshness",
+          "path": "freshness",
+          "kind": "enum",
+          "probes": [
+            "This is the last reading"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.fetchedAtMs",
+          "path": "fetchedAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.expiresAtMs",
+          "path": "expiresAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.ref",
+          "path": "account.ref",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.status",
+          "path": "account.status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.plan",
+          "path": "account.plan",
+          "kind": "string",
+          "probes": [
+            "plus"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].id",
+          "path": "windows[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].status",
+          "path": "windows[].status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].usedPercent",
+          "path": "windows[].usedPercent",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].durationSeconds",
+          "path": "windows[].durationSeconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].resetsAtMs",
+          "path": "windows[].resetsAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.ordinaryUsageAllowed",
+          "path": "ordinaryUsageAllowed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "codex_blocked",
+      "payload": {
+        "schemaVersion": 1,
+        "provider": "codex",
+        "source": "codex.wham",
+        "status": "ok",
+        "freshness": "fresh",
+        "fetchedAtMs": 1788960000000,
+        "expiresAtMs": 1788960060000,
+        "account": {
+          "ref": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "status": "matched",
+          "plan": "plus"
+        },
+        "windows": [
+          {
+            "id": "primary",
+            "status": "reported",
+            "usedPercent": 25.5,
+            "durationSeconds": 18000,
+            "resetsAtMs": 1788960300000
+          },
+          {
+            "id": "secondary",
+            "status": "missing"
+          }
+        ],
+        "ordinaryUsageAllowed": false
+      },
+      "kind": "quota",
+      "fields": [
+        {
+          "key": "quota:snapshot.schemaVersion",
+          "path": "schemaVersion",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.provider",
+          "path": "provider",
+          "kind": "enum",
+          "probes": [
+            "Codex"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.freshness",
+          "path": "freshness",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.fetchedAtMs",
+          "path": "fetchedAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.expiresAtMs",
+          "path": "expiresAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.ref",
+          "path": "account.ref",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.status",
+          "path": "account.status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.plan",
+          "path": "account.plan",
+          "kind": "string",
+          "probes": [
+            "plus"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].id",
+          "path": "windows[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].status",
+          "path": "windows[].status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].usedPercent",
+          "path": "windows[].usedPercent",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].durationSeconds",
+          "path": "windows[].durationSeconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.windows[].resetsAtMs",
+          "path": "windows[].resetsAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.ordinaryUsageAllowed",
+          "path": "ordinaryUsageAllowed",
+          "kind": "boolean",
+          "probes": [
+            "ordinary Codex use is currently blocked"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "codex_unverified",
+      "payload": {
+        "schemaVersion": 1,
+        "provider": "codex",
+        "source": "codex.wham",
+        "status": "ok",
+        "freshness": "fresh",
+        "fetchedAtMs": 1788960000000,
+        "expiresAtMs": 1788960060000,
+        "account": {
+          "status": "unverified"
+        },
+        "windows": []
+      },
+      "kind": "quota",
+      "fields": [
+        {
+          "key": "quota:snapshot.schemaVersion",
+          "path": "schemaVersion",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.provider",
+          "path": "provider",
+          "kind": "enum",
+          "probes": [
+            "Codex"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.freshness",
+          "path": "freshness",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.fetchedAtMs",
+          "path": "fetchedAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.expiresAtMs",
+          "path": "expiresAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.status",
+          "path": "account.status",
+          "kind": "enum",
+          "probes": [
+            "could not verify the selected account"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "codex_rate_limited",
+      "payload": {
+        "schemaVersion": 1,
+        "provider": "codex",
+        "source": "codex.wham",
+        "status": "rateLimited",
+        "freshness": "stale",
+        "fetchedAtMs": 1788960000000,
+        "expiresAtMs": 1788960060000,
+        "account": {
+          "status": "unverified"
+        },
+        "windows": []
+      },
+      "kind": "quota",
+      "fields": [
+        {
+          "key": "quota:snapshot.schemaVersion",
+          "path": "schemaVersion",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.provider",
+          "path": "provider",
+          "kind": "enum",
+          "probes": [
+            "Codex"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "The provider limited quota checks"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.freshness",
+          "path": "freshness",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.fetchedAtMs",
+          "path": "fetchedAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.expiresAtMs",
+          "path": "expiresAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.status",
+          "path": "account.status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "codex_auth_required",
+      "payload": {
+        "schemaVersion": 1,
+        "provider": "codex",
+        "source": "codex.wham",
+        "status": "authRequired",
+        "freshness": "none",
+        "fetchedAtMs": 1788960000000,
+        "expiresAtMs": 1788960060000,
+        "account": {
+          "status": "mismatch"
+        },
+        "windows": []
+      },
+      "kind": "quota",
+      "fields": [
+        {
+          "key": "quota:snapshot.schemaVersion",
+          "path": "schemaVersion",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.provider",
+          "path": "provider",
+          "kind": "enum",
+          "probes": [
+            "Codex"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Sign in again using the provider"
+          ],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.freshness",
+          "path": "freshness",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.fetchedAtMs",
+          "path": "fetchedAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.expiresAtMs",
+          "path": "expiresAtMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "quota:snapshot.account.status",
+          "path": "account.status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

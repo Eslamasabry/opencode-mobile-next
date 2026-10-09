@@ -1,0 +1,296 @@
+{
+  "source": "lib/codex/account.dart (the Codex app-server account API; no contract here)",
+  "schema": {
+    "account:read": [
+      {
+        "path": "requiresOpenaiAuth",
+        "kind": "boolean"
+      },
+      {
+        "path": "account.type",
+        "kind": "string"
+      },
+      {
+        "path": "account.email",
+        "kind": "string"
+      },
+      {
+        "path": "account.planType",
+        "kind": "string"
+      }
+    ],
+    "account:limits": [
+      {
+        "path": "limitId",
+        "kind": "string"
+      },
+      {
+        "path": "limitName",
+        "kind": "string"
+      },
+      {
+        "path": "primary.usedPercent",
+        "kind": "number"
+      },
+      {
+        "path": "primary.windowDurationMins",
+        "kind": "number"
+      },
+      {
+        "path": "primary.resetsAt",
+        "kind": "number"
+      },
+      {
+        "path": "secondary.usedPercent",
+        "kind": "number"
+      },
+      {
+        "path": "secondary.windowDurationMins",
+        "kind": "number"
+      },
+      {
+        "path": "secondary.resetsAt",
+        "kind": "number"
+      }
+    ],
+    "account:usage": [
+      {
+        "path": "summary.lifetimeTokens",
+        "kind": "number"
+      },
+      {
+        "path": "summary.peakDailyTokens",
+        "kind": "number"
+      }
+    ],
+    "account:login": [
+      {
+        "path": "type",
+        "kind": "string"
+      },
+      {
+        "path": "loginId",
+        "kind": "string"
+      },
+      {
+        "path": "verificationUrl",
+        "kind": "string"
+      },
+      {
+        "path": "userCode",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "signed_in",
+      "payload": {
+        "read": {
+          "requiresOpenaiAuth": true,
+          "account": {
+            "type": "chatgpt",
+            "email": "dana@example.com",
+            "planType": "plus"
+          }
+        },
+        "limits": {
+          "limitId": "codex",
+          "limitName": "Codex",
+          "primary": {
+            "usedPercent": 37,
+            "windowDurationMins": 300,
+            "resetsAt": 1791575686
+          },
+          "secondary": {
+            "usedPercent": 12,
+            "windowDurationMins": 10080,
+            "resetsAt": 1791662086
+          }
+        },
+        "usage": {
+          "summary": {
+            "lifetimeTokens": 48210000,
+            "peakDailyTokens": 3150000
+          }
+        }
+      },
+      "kind": "codex_account",
+      "fields": [
+        {
+          "key": "account:read.requiresOpenaiAuth",
+          "path": "requiresOpenaiAuth",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account:read.account.type",
+          "path": "account.type",
+          "kind": "string",
+          "probes": [
+            "ChatGPT"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:read.account.email",
+          "path": "account.email",
+          "kind": "string",
+          "probes": [
+            "dana@example.com"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:read.account.planType",
+          "path": "account.planType",
+          "kind": "string",
+          "probes": [
+            "plus"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:limits.limitId",
+          "path": "limitId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account:limits.limitName",
+          "path": "limitName",
+          "kind": "string",
+          "probes": [
+            "Codex"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:limits.primary.usedPercent",
+          "path": "primary.usedPercent",
+          "kind": "number",
+          "probes": [
+            "37%"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:limits.primary.windowDurationMins",
+          "path": "primary.windowDurationMins",
+          "kind": "number",
+          "probes": [
+            "5-hour window"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:limits.primary.resetsAt",
+          "path": "primary.resetsAt",
+          "kind": "number",
+          "probes": [
+            "Resets in"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:limits.secondary.usedPercent",
+          "path": "secondary.usedPercent",
+          "kind": "number",
+          "probes": [
+            "12%"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:limits.secondary.windowDurationMins",
+          "path": "secondary.windowDurationMins",
+          "kind": "number",
+          "probes": [
+            "7-day window"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:limits.secondary.resetsAt",
+          "path": "secondary.resetsAt",
+          "kind": "number",
+          "probes": [
+            "Resets in"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:usage.summary.lifetimeTokens",
+          "path": "summary.lifetimeTokens",
+          "kind": "number",
+          "probes": [
+            "48,210,000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:usage.summary.peakDailyTokens",
+          "path": "summary.peakDailyTokens",
+          "kind": "number",
+          "probes": [
+            "3,150,000"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "signed_out_login",
+      "payload": {
+        "read": {
+          "requiresOpenaiAuth": true,
+          "account": null
+        },
+        "login": {
+          "type": "chatgptDeviceCode",
+          "loginId": "owned-fixture-login",
+          "verificationUrl": "https://auth.openai.com/codex/device",
+          "userCode": "TEST-1234"
+        }
+      },
+      "kind": "codex_account",
+      "fields": [
+        {
+          "key": "account:login.type",
+          "path": "type",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account:login.loginId",
+          "path": "loginId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account:login.verificationUrl",
+          "path": "verificationUrl",
+          "kind": "string",
+          "probes": [
+            "auth.openai.com"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account:login.userCode",
+          "path": "userCode",
+          "kind": "string",
+          "probes": [
+            "TEST-1234"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}
