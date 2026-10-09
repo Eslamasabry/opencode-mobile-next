@@ -345,6 +345,43 @@ final class GenUiStateController extends ChangeNotifier {
     )];
   }
 
+  /// Registration qualification without transport liveness. Retained OAuth
+  /// may survive browser suspension, but never removal of this registration.
+  bool registeredReady(GenUiScope scope) =>
+      !_disposed &&
+      !_closedProfiles.contains(scope.profileID) &&
+      _sources[genUiScopeKey(scope)]?.ready == true;
+
+  /// Previously observed payload, for continuing an already accepted connector
+  /// while the event transport is temporarily suspended. This alone must never
+  /// authorize a new request; callers must recover and use [state] first.
+  GenUiCard? observedCard(GenUiCard card) {
+    if (_disposed || _closedProfiles.contains(card.scope.profileID)) {
+      return null;
+    }
+    final view = _views[_sessionKey(card.scope, card.sessionID)];
+    for (final parsed in view?.parsed.values ?? const <GenUiParse>[]) {
+      if (parsed is GenUiParsed &&
+          parsed.card.identity == card.identity &&
+          parsed.card.revision == card.revision) {
+        return parsed.card;
+      }
+    }
+    return null;
+  }
+
+  /// Null means recovery is pending, not evidence that a card was removed.
+  GenUiCardState? observedState(GenUiCard card) {
+    if (_disposed ||
+        _closedProfiles.contains(card.scope.profileID) ||
+        _deletedSessions.contains(_sessionKey(card.scope, card.sessionID))) {
+      return GenUiCardState.unknown;
+    }
+    final view = _views[_sessionKey(card.scope, card.sessionID)];
+    if (view == null || !view.complete) return null;
+    return genUiStateFor(card, view.messages, tailComplete: true);
+  }
+
   GenUiCardState state(GenUiCard card) {
     if (!available(card.scope)) return GenUiCardState.unknown;
     final view = _views[_sessionKey(card.scope, card.sessionID)];

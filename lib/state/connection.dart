@@ -1,5 +1,7 @@
 import 'dart:async';
 import '../domain/genui/gen_ui.dart';
+import '../domain/mcp_catalog.dart';
+import 'mcp_chat_controller.dart';
 import '../builtin/agents/gen_ui_install.dart';
 import 'gen_ui_state.dart';
 import 'dart:convert';
@@ -117,6 +119,7 @@ import '../builtin/agents/agent_sign_in.dart' show ChannelAgentSignInHost;
 import 'phone_agent_host_port.dart';
 
 part 'connection/gen_ui.dart';
+part 'connection/mcp_chat.dart';
 part 'connection/feed_questions.dart';
 part 'connection/feed_permissions.dart';
 part 'connection/feed_question_reads.dart';
@@ -233,6 +236,7 @@ typedef EventStreamFactory =
 class ConnectionController extends ChangeNotifier
     with
         _ConnectionControllerGenUi,
+        _ConnectionControllerMcpChat,
         _ConnectionControllerMonitors,
         _ConnectionControllerAttention,
         _ConnectionControllerSurfaces,
@@ -578,6 +582,7 @@ class ConnectionController extends ChangeNotifier
     this.backgroundLive.addListener(_backgroundLiveChanged);
     _profilesShown = _profilesSignature();
     store.changes.addListener(_profilesSaved);
+    addListener(_mcpChatChanged);
     if (_ownsProfileServices) {
       this.backgroundLive.bindActionHandler(_handleCodingAlertAction);
       _syncProfileServices();
@@ -822,6 +827,7 @@ class ConnectionController extends ChangeNotifier
     if (_disposed) return;
     _disposed = true;
     _resetTurnStalls();
+    _mcpChatDispose();
     _genUiDispose();
     _resetConnectionStatusClock();
     _feedDispose();
