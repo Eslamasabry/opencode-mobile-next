@@ -303,6 +303,23 @@ KitRequestCard permissionRequestCard(
   );
 }
 
+String? _metaText(PermissionRequest permission, String key) {
+  final value = permission.metadata[key];
+  return value is String && value.trim().isNotEmpty ? value : null;
+}
+
+/// "from line 20, 80 lines" for a read of part of a file.
+String? _readRange(PermissionRequest permission, AppLocalizations l10n) {
+  if (permission.permission != 'read') return null;
+  final from = permission.metadata['offset'];
+  final count = permission.metadata['limit'];
+  final parts = [
+    if (from is num) l10n.chatRequestReadFrom(from.round().toString()),
+    if (count is num) l10n.chatRequestReadLines(count.round()),
+  ];
+  return parts.isEmpty ? null : parts.join(', ');
+}
+
 const _diffPermissions = {'edit', 'write', 'multiedit', 'patch'};
 const _diffMetadataKeys = ['diff', 'patch', 'preview'];
 
@@ -345,7 +362,9 @@ Future<KitRequestSheetOutcome> showPermissionDetails(
   final fullText =
       command ??
       path ??
-      (others.isEmpty ? l10n.chatUiAllMatchingRequests : others.join('\n'));
+      (others.isNotEmpty
+          ? others.join('\n')
+          : permission.message ?? l10n.chatUiAllMatchingRequests);
   final broader = permission.always.isNotEmpty
       ? permission.always
       : permission.patterns;
@@ -378,6 +397,14 @@ Future<KitRequestSheetOutcome> showPermissionDetails(
           ),
     message: message,
     details: [
+      if (_metaText(permission, 'cwd') case final cwd?)
+        KitTechnicalValue(l10n.chatRequestDetailRunsIn, cwd),
+      if (_metaText(permission, 'prompt') case final prompt?)
+        KitTechnicalValue(l10n.chatRequestDetailAsks, prompt),
+      if (_readRange(permission, l10n) case final range?)
+        KitTechnicalValue(l10n.chatRequestDetailRange, range),
+      if (_metaText(permission, 'subagent_type') case final helper?)
+        KitTechnicalValue(l10n.chatRequestDetailHelper, helper),
       if (permission.permission.isNotEmpty)
         KitTechnicalValue(l10n.chatRequestDetailTool, permission.permission),
       if (command != null && others.isNotEmpty)
@@ -458,7 +485,9 @@ Future<void> showPermissionSheet(
       card: card,
       routes: routes,
       contextLabel: contextLabel,
-      onAllowAlways: controller.capabilities.persistentPermissionGrants
+      onAllowAlways:
+          controller.capabilities.persistentPermissionGrants &&
+              permission.canAlwaysAllow
           ? (_) => answer('always')
           : null,
       message: note == null

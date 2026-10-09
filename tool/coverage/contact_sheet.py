@@ -1,15 +1,27 @@
-"""One sheet of every opened Paseo tool step (build/coverage/paseo_*.png).
+"""One sheet of the opened coverage cases (build/coverage/<prefix>*.png).
 
-    python3 tool/coverage/contact_sheet.py [out.png]
+    python3 tool/coverage/contact_sheet.py out.png [--cols N] prefix [prefix ...]
+
+Prefixes: paseo_ (tool steps), items_ (timeline items), perm_ (permission and
+question requests). Each cell is cropped to what was drawn and captioned with
+the case id.
 """
 import glob
 import sys
 
 from PIL import Image, ImageDraw
 
-out = sys.argv[1] if len(sys.argv) > 1 else "build/coverage/sheet.png"
-files = sorted(glob.glob("build/coverage/paseo_*.png"))
-cols, cell_w = 4, 412
+args = sys.argv[1:]
+out = args.pop(0)
+cols = 4
+if "--cols" in args:
+    i = args.index("--cols")
+    cols = int(args[i + 1])
+    del args[i : i + 2]
+files = []
+for prefix in args:
+    files += sorted(glob.glob(f"build/coverage/{prefix}*.png"))
+cell_w = 412
 images = []
 for path in files:
     img = Image.open(path).convert("RGB")
@@ -20,7 +32,8 @@ for path in files:
         if any(img.getpixel((x, y)) != bg for x in range(0, img.width, 8)):
             bottom = min(img.height, y + 24)
             break
-    images.append((path.split("paseo_")[1][:-4], img.crop((0, 0, img.width, bottom))))
+    name = path.split("/")[-1][:-4]
+    images.append((name, img.crop((0, 0, img.width, bottom))))
 rows = [images[i : i + cols] for i in range(0, len(images), cols)]
 height = sum(max(i.height for _, i in row) + 22 for row in rows)
 sheet = Image.new("RGB", (cols * cell_w, height), (40, 40, 40))
@@ -32,4 +45,4 @@ for row in rows:
         sheet.paste(img, (c * cell_w, y + 22))
     y += max(i.height for _, i in row) + 22
 sheet.save(out)
-print(out, sheet.size)
+print(out, sheet.size, len(images), "cells")

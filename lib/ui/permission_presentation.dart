@@ -10,6 +10,12 @@ String permissionRequestTitle(String permission, {AppLocalizations? l10n}) {
     'read' => strings.e7PermissionAction3,
     'external_directory' => strings.e7PermissionAction4,
     'doom_loop' => strings.e7PermissionAction5,
+    'webfetch' => strings.chatRequestTitleFetch,
+    'websearch' => strings.chatRequestTitleWebSearch,
+    'grep' || 'glob' => strings.chatRequestTitleSearch,
+    'task' => strings.chatRequestTitleTask,
+    'skill' => strings.chatRequestTitleSkill,
+    'mode' => strings.chatRequestTitleMode,
     _ when permission.trim().isEmpty => strings.e7PermissionAction6,
     // Any other id names a tool: in words, as its step row names it, never
     // the id itself (that stays under the request's Details).

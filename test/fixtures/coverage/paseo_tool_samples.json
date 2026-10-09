@@ -256,1043 +256,1311 @@
       }
     ]
   },
+  "excluded": {},
   "cases": [
     {
       "id": "worktree_setup",
-      "type": "worktree_setup",
-      "tool": "paseo_worktree_setup",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "worktree_setup",
-        "worktreePath": "/home/dev/.paseo/worktrees/app/feat-login",
-        "branchName": "feat/login-form",
-        "log": "Preparing worktree for feat/login-form",
-        "commands": [
-          {
-            "index": 14,
-            "command": "npm install",
-            "cwd": "packages/web",
-            "log": "added 212 packages",
-            "status": "completed",
-            "exitCode": 0,
-            "durationMs": 48213
-          },
-          {
-            "index": 15,
-            "command": "npm run build",
-            "cwd": "packages/web",
-            "log": "Build failed: missing env file",
-            "status": "failed",
-            "exitCode": 2,
-            "durationMs": 9120
-          }
-        ],
-        "truncated": true
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-worktree_setup",
+        "name": "paseo_worktree_setup",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "worktree_setup",
+          "worktreePath": "/home/dev/.paseo/worktrees/app/feat-login",
+          "branchName": "feat/login-form",
+          "log": "Preparing worktree for feat/login-form",
+          "commands": [
+            {
+              "index": 14,
+              "command": "npm install",
+              "cwd": "packages/web",
+              "log": "added 212 packages",
+              "status": "completed",
+              "exitCode": 0,
+              "durationMs": 48213
+            },
+            {
+              "index": 15,
+              "command": "npm run build",
+              "cwd": "packages/web",
+              "log": "Build failed: missing env file",
+              "status": "failed",
+              "exitCode": 2,
+              "durationMs": 9120
+            }
+          ],
+          "truncated": true
+        }
       },
       "fields": [
         {
+          "key": "worktree_setup.worktreePath",
           "path": "worktreePath",
           "kind": "string",
           "probes": [
             "/home/dev/.paseo/worktrees/app/feat-login"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "worktree_setup.branchName",
           "path": "branchName",
           "kind": "string",
           "probes": [
             "feat/login-form"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "worktree_setup.log",
           "path": "log",
           "kind": "string",
           "probes": [
             "Preparing worktree for feat/login-form"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "worktree_setup.commands[].index",
           "path": "commands[].index",
           "kind": "number",
           "probes": [
             "14",
             "15"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "worktree_setup.commands[].command",
           "path": "commands[].command",
           "kind": "string",
           "probes": [
             "npm install",
             "npm run build"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "worktree_setup.commands[].cwd",
           "path": "commands[].cwd",
           "kind": "string",
           "probes": [
             "packages/web",
             "packages/web"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "worktree_setup.commands[].log",
           "path": "commands[].log",
           "kind": "string",
           "probes": [
             "added 212 packages",
             "Build failed: missing env file"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "worktree_setup.commands[].status",
           "path": "commands[].status",
           "kind": "enum",
           "probes": [
             "Passed",
             "Failed"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "worktree_setup.commands[].exitCode",
           "path": "commands[].exitCode",
           "kind": "number",
           "probes": [
             "exit code 0",
             "exit code 2"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "worktree_setup.commands[].durationMs",
           "path": "commands[].durationMs",
           "kind": "number",
           "probes": [
             "48213",
             "9120"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "worktree_setup.truncated",
           "path": "truncated",
           "kind": "boolean",
           "probes": [
             "Truncated"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "shell_ok",
-      "type": "shell",
-      "tool": "Bash",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "shell",
-        "command": "flutter test test/login_test.dart",
-        "cwd": "/home/dev/app",
-        "output": "00:04 +12: All tests passed!",
-        "exitCode": 0
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-shell_ok",
+        "name": "Bash",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "shell",
+          "command": "flutter test test/login_test.dart",
+          "cwd": "/home/dev/app",
+          "output": "00:04 +12: All tests passed!",
+          "exitCode": 0
+        }
       },
       "fields": [
         {
+          "key": "shell.command",
           "path": "command",
           "kind": "string",
           "probes": [
             "flutter test test/login_test.dart"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "shell.cwd",
           "path": "cwd",
           "kind": "string",
           "probes": [
             "/home/dev/app"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "shell.output",
           "path": "output",
           "kind": "string",
           "probes": [
             "00:04 +12: All tests passed!"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "shell.exitCode",
           "path": "exitCode",
           "kind": "number",
           "probes": [
             "Passed · exit code 0"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "shell_exit_failed",
-      "type": "shell",
-      "tool": "Bash",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "shell",
-        "command": "flutter analyze",
-        "cwd": "/home/dev/app",
-        "output": "2 issues found.",
-        "exitCode": 3
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-shell_exit_failed",
+        "name": "Bash",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "shell",
+          "command": "flutter analyze",
+          "cwd": "/home/dev/app",
+          "output": "2 issues found.",
+          "exitCode": 3
+        }
       },
       "fields": [
         {
+          "key": "shell.command",
           "path": "command",
           "kind": "string",
           "probes": [
             "flutter analyze"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "shell.cwd",
           "path": "cwd",
           "kind": "string",
           "probes": [
             "/home/dev/app"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "shell.output",
           "path": "output",
           "kind": "string",
           "probes": [
             "2 issues found."
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "shell.exitCode",
           "path": "exitCode",
           "kind": "number",
           "probes": [
             "Failed · exit code 3"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "shell_failed",
-      "type": "shell",
-      "tool": "Bash",
-      "status": "failed",
-      "error": {
-        "message": "Command failed"
-      },
-      "detail": {
-        "type": "shell",
-        "command": "git push origin main"
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-shell_failed",
+        "name": "Bash",
+        "status": "failed",
+        "error": {
+          "message": "Command failed"
+        },
+        "detail": {
+          "type": "shell",
+          "command": "git push origin main"
+        }
       },
       "fields": [
         {
+          "key": "shell.command",
           "path": "command",
           "kind": "string",
           "probes": [
             "git push origin main"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "shell_running",
-      "type": "shell",
-      "tool": "Bash",
-      "status": "running",
-      "error": null,
-      "detail": {
-        "type": "shell",
-        "command": "npm run dev"
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-shell_running",
+        "name": "Bash",
+        "status": "running",
+        "error": null,
+        "detail": {
+          "type": "shell",
+          "command": "npm run dev"
+        }
       },
       "fields": [
         {
+          "key": "shell.command",
           "path": "command",
           "kind": "string",
           "probes": [
             "npm run dev"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "read_ok",
-      "type": "read",
-      "tool": "Read",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "read",
-        "filePath": "lib/main.dart",
-        "content": "void main() {\n  runApp(const App());\n}",
-        "offset": 12,
-        "limit": 40
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-read_ok",
+        "name": "Read",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "read",
+          "filePath": "lib/main.dart",
+          "content": "void main() {\n  runApp(const App());\n}",
+          "offset": 12,
+          "limit": 40
+        }
       },
       "fields": [
         {
+          "key": "read.filePath",
           "path": "filePath",
           "kind": "string",
           "probes": [
             "main.dart"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "read.content",
           "path": "content",
           "kind": "string",
           "probes": [
             "void main() {"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "read.offset",
           "path": "offset",
           "kind": "number",
           "probes": [
             "from 12"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "read.limit",
           "path": "limit",
           "kind": "number",
           "probes": [
             "40 lines"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "edit_old_new",
-      "type": "edit",
-      "tool": "Edit",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "edit",
-        "filePath": "lib/ui/login_form.dart",
-        "oldString": "final label = \"Sign in\";",
-        "newString": "final label = \"Log in\";"
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-edit_old_new",
+        "name": "Edit",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "edit",
+          "filePath": "lib/ui/login_form.dart",
+          "oldString": "final label = \"Sign in\";",
+          "newString": "final label = \"Log in\";"
+        }
       },
       "fields": [
         {
+          "key": "edit.filePath",
           "path": "filePath",
           "kind": "string",
           "probes": [
             "login_form.dart"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "edit.oldString",
           "path": "oldString",
           "kind": "string",
           "probes": [
             "final label = \"Sign in\";"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "edit.newString",
           "path": "newString",
           "kind": "string",
           "probes": [
             "final label = \"Log in\";"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "edit_diff",
-      "type": "edit",
-      "tool": "Edit",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "edit",
-        "filePath": "lib/ui/login_form.dart",
-        "unifiedDiff": "--- a/lib/ui/login_form.dart\n+++ b/lib/ui/login_form.dart\n@@ -1,2 +1,2 @@\n-final retries = 1;\n+final retries = 3;"
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-edit_diff",
+        "name": "Edit",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "edit",
+          "filePath": "lib/ui/login_form.dart",
+          "unifiedDiff": "--- a/lib/ui/login_form.dart\n+++ b/lib/ui/login_form.dart\n@@ -1,2 +1,2 @@\n-final retries = 1;\n+final retries = 3;"
+        }
       },
       "fields": [
         {
+          "key": "edit.filePath",
           "path": "filePath",
           "kind": "string",
           "probes": [
             "login_form.dart"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "edit.unifiedDiff",
           "path": "unifiedDiff",
           "kind": "string",
           "probes": [
             "final retries = 3;"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "write_ok",
-      "type": "write",
-      "tool": "Write",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "write",
-        "filePath": "lib/ui/new_page.dart",
-        "content": "class NewPage {}"
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-write_ok",
+        "name": "Write",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "write",
+          "filePath": "lib/ui/new_page.dart",
+          "content": "class NewPage {}"
+        }
       },
       "fields": [
         {
+          "key": "write.filePath",
           "path": "filePath",
           "kind": "string",
           "probes": [
             "new_page.dart"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "write.content",
           "path": "content",
           "kind": "string",
           "probes": [
             "class NewPage {}"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "grep_content",
-      "type": "search",
-      "tool": "Grep",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "search",
-        "query": "TODO",
-        "toolName": "grep",
-        "mode": "content",
-        "content": "lib/a.dart:12: // TODO tidy\nlib/b.dart:40: // TODO remove",
-        "numFiles": 2,
-        "numMatches": 5
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-grep_content",
+        "name": "Grep",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "search",
+          "query": "TODO",
+          "toolName": "grep",
+          "mode": "content",
+          "content": "lib/a.dart:12: // TODO tidy\nlib/b.dart:40: // TODO remove",
+          "numFiles": 2,
+          "numMatches": 5
+        }
       },
       "fields": [
         {
+          "key": "search.query",
           "path": "query",
           "kind": "string",
           "probes": [
             "TODO"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.toolName",
           "path": "toolName",
           "kind": "enum",
           "probes": [
             "Search text"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.mode",
           "path": "mode",
           "kind": "enum",
-          "probes": []
+          "probes": [],
+          "primary": false
         },
         {
+          "key": "search.content",
           "path": "content",
           "kind": "string",
           "probes": [
             "lib/a.dart:12: // TODO tidy"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.numFiles",
           "path": "numFiles",
           "kind": "number",
           "probes": [
             "2 files"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.numMatches",
           "path": "numMatches",
           "kind": "number",
           "probes": [
             "5 matches"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "grep_files",
-      "type": "search",
-      "tool": "Grep",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "search",
-        "query": "LoginForm",
-        "toolName": "grep",
-        "mode": "files_with_matches",
-        "filePaths": [
-          "lib/ui/login_form.dart",
-          "test/login_form_test.dart"
-        ],
-        "numFiles": 2
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-grep_files",
+        "name": "Grep",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "search",
+          "query": "LoginForm",
+          "toolName": "grep",
+          "mode": "files_with_matches",
+          "filePaths": [
+            "lib/ui/login_form.dart",
+            "test/login_form_test.dart"
+          ],
+          "numFiles": 2
+        }
       },
       "fields": [
         {
+          "key": "search.query",
           "path": "query",
           "kind": "string",
           "probes": [
             "LoginForm"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.toolName",
           "path": "toolName",
           "kind": "enum",
           "probes": [
             "Search text"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.mode",
           "path": "mode",
           "kind": "enum",
-          "probes": []
+          "probes": [],
+          "primary": false
         },
         {
+          "key": "search.filePaths[]",
           "path": "filePaths[]",
           "kind": "string",
           "probes": [
             "lib/ui/login_form.dart",
             "test/login_form_test.dart"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.numFiles",
           "path": "numFiles",
           "kind": "number",
           "probes": [
             "2 files"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "glob_files",
-      "type": "search",
-      "tool": "Glob",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "search",
-        "query": "**/*_test.dart",
-        "toolName": "glob",
-        "filePaths": [
-          "test/a_test.dart",
-          "test/b_test.dart",
-          "test/c_test.dart"
-        ],
-        "numFiles": 3,
-        "durationMs": 174,
-        "truncated": true
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-glob_files",
+        "name": "Glob",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "search",
+          "query": "**/*_test.dart",
+          "toolName": "glob",
+          "filePaths": [
+            "test/a_test.dart",
+            "test/b_test.dart",
+            "test/c_test.dart"
+          ],
+          "numFiles": 3,
+          "durationMs": 174,
+          "truncated": true
+        }
       },
       "fields": [
         {
+          "key": "search.query",
           "path": "query",
           "kind": "string",
           "probes": [
             "**/*_test.dart"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.toolName",
           "path": "toolName",
           "kind": "enum",
           "probes": [
             "Find files"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.filePaths[]",
           "path": "filePaths[]",
           "kind": "string",
           "probes": [
             "test/a_test.dart",
             "test/b_test.dart",
             "test/c_test.dart"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.numFiles",
           "path": "numFiles",
           "kind": "number",
           "probes": [
             "3 found"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.durationMs",
           "path": "durationMs",
           "kind": "number",
           "probes": [
             "174"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.truncated",
           "path": "truncated",
           "kind": "boolean",
           "probes": [
             "Truncated"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "web_search",
-      "type": "search",
-      "tool": "WebSearch",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "search",
-        "query": "shorebird patch size limits",
-        "toolName": "web_search",
-        "webResults": [
-          {
-            "title": "Shorebird patching guide",
-            "url": "https://docs.shorebird.dev/patch"
-          },
-          {
-            "title": "Release sizes explained",
-            "url": "https://docs.shorebird.dev/sizes"
-          }
-        ],
-        "annotations": [
-          "Sources: official documentation"
-        ],
-        "durationSeconds": 7.31
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-web_search",
+        "name": "WebSearch",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "search",
+          "query": "shorebird patch size limits",
+          "toolName": "web_search",
+          "webResults": [
+            {
+              "title": "Shorebird patching guide",
+              "url": "https://docs.shorebird.dev/patch"
+            },
+            {
+              "title": "Release sizes explained",
+              "url": "https://docs.shorebird.dev/sizes"
+            }
+          ],
+          "annotations": [
+            "Sources: official documentation"
+          ],
+          "durationSeconds": 7.31
+        }
       },
       "fields": [
         {
+          "key": "search.query",
           "path": "query",
           "kind": "string",
           "probes": [
             "shorebird patch size limits"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.toolName",
           "path": "toolName",
           "kind": "enum",
           "probes": [
             "Web search"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.webResults[].title",
           "path": "webResults[].title",
           "kind": "string",
           "probes": [
             "Shorebird patching guide",
             "Release sizes explained"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.webResults[].url",
           "path": "webResults[].url",
           "kind": "string",
           "probes": [
             "https://docs.shorebird.dev/patch",
             "https://docs.shorebird.dev/sizes"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.annotations[]",
           "path": "annotations[]",
           "kind": "string",
           "probes": [
             "Sources: official documentation"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "search.durationSeconds",
           "path": "durationSeconds",
           "kind": "number",
           "probes": [
             "7.31"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "fetch_ok",
-      "type": "fetch",
-      "tool": "WebFetch",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "fetch",
-        "url": "https://docs.shorebird.dev/patch",
-        "prompt": "List the patch size limits",
-        "result": "Patches may be up to 2 MB.",
-        "code": 200,
-        "codeText": "OK",
-        "bytes": 15432,
-        "durationMs": 830
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-fetch_ok",
+        "name": "WebFetch",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "fetch",
+          "url": "https://docs.shorebird.dev/patch",
+          "prompt": "List the patch size limits",
+          "result": "Patches may be up to 2 MB.",
+          "code": 200,
+          "codeText": "OK",
+          "bytes": 15432,
+          "durationMs": 830
+        }
       },
       "fields": [
         {
+          "key": "fetch.url",
           "path": "url",
           "kind": "string",
           "probes": [
             "https://docs.shorebird.dev/patch"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "fetch.prompt",
           "path": "prompt",
           "kind": "string",
           "probes": [
             "List the patch size limits"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "fetch.result",
           "path": "result",
           "kind": "string",
           "probes": [
             "Patches may be up to 2 MB."
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "fetch.code",
           "path": "code",
           "kind": "number",
           "probes": [
             "200"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "fetch.codeText",
           "path": "codeText",
           "kind": "string",
           "probes": [
             "OK"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "fetch.bytes",
           "path": "bytes",
           "kind": "number",
           "probes": [
             "15432"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "fetch.durationMs",
           "path": "durationMs",
           "kind": "number",
           "probes": [
             "830"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "fetch_missing",
-      "type": "fetch",
-      "tool": "WebFetch",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "fetch",
-        "url": "https://example.com/missing",
-        "code": 404,
-        "codeText": "Not Found"
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-fetch_missing",
+        "name": "WebFetch",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "fetch",
+          "url": "https://example.com/missing",
+          "code": 404,
+          "codeText": "Not Found"
+        }
       },
       "fields": [
         {
+          "key": "fetch.url",
           "path": "url",
           "kind": "string",
           "probes": [
             "https://example.com/missing"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "fetch.code",
           "path": "code",
           "kind": "number",
           "probes": [
             "404"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "fetch.codeText",
           "path": "codeText",
           "kind": "string",
           "probes": [
             "Not Found"
-          ]
+          ],
+          "primary": false
         }
       ]
     },
     {
       "id": "sub_agent_done",
-      "type": "sub_agent",
-      "tool": "Task",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "sub_agent",
-        "subAgentType": "Explore",
-        "description": "Find the login handler",
-        "childSessionId": "9f2c6e1a-5b7d-4c0e-8a31-2d4f6b8c0e11",
-        "log": "The sign-in check lives in the auth module.",
-        "actions": [
-          {
-            "index": 1,
-            "toolName": "Grep",
-            "summary": "handleLogin"
-          },
-          {
-            "index": 2,
-            "toolName": "Read",
-            "summary": "lib/auth/login.dart"
-          }
-        ]
-      },
-      "fields": [
-        {
-          "path": "subAgentType",
-          "kind": "string",
-          "probes": [
-            "Explore"
-          ]
-        },
-        {
-          "path": "description",
-          "kind": "string",
-          "probes": [
-            "Find the login handler"
-          ]
-        },
-        {
-          "path": "childSessionId",
-          "kind": "string",
-          "probes": [
-            "9f2c6e1a-5b7d-4c0e-8a31-2d4f6b8c0e11"
-          ]
-        },
-        {
-          "path": "log",
-          "kind": "string",
-          "probes": [
-            "The sign-in check lives in the auth module."
-          ]
-        },
-        {
-          "path": "actions[].index",
-          "kind": "number",
-          "probes": [
-            "1",
-            "2"
-          ]
-        },
-        {
-          "path": "actions[].toolName",
-          "kind": "string",
-          "probes": [
-            "Search text",
-            "Read"
-          ]
-        },
-        {
-          "path": "actions[].summary",
-          "kind": "string",
-          "probes": [
-            "handleLogin",
-            "lib/auth/login.dart"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "sub_agent_running",
-      "type": "sub_agent",
-      "tool": "Task",
-      "status": "running",
-      "error": null,
-      "detail": {
-        "type": "sub_agent",
-        "subAgentType": "Explore",
-        "description": "Map the routing",
-        "log": "",
-        "actions": []
-      },
-      "fields": [
-        {
-          "path": "subAgentType",
-          "kind": "string",
-          "probes": [
-            "Explore"
-          ]
-        },
-        {
-          "path": "description",
-          "kind": "string",
-          "probes": [
-            "Map the routing"
-          ]
-        },
-        {
-          "path": "log",
-          "kind": "string",
-          "probes": []
-        }
-      ]
-    },
-    {
-      "id": "skill",
-      "type": "plain_text",
-      "tool": "Skill",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "plain_text",
-        "label": "frontend-design",
-        "text": "Use a clear visual hierarchy.",
-        "icon": "sparkles"
-      },
-      "fields": [
-        {
-          "path": "label",
-          "kind": "string",
-          "probes": [
-            "frontend-design"
-          ]
-        },
-        {
-          "path": "text",
-          "kind": "string",
-          "probes": [
-            "Use a clear visual hierarchy."
-          ]
-        },
-        {
-          "path": "icon",
-          "kind": "enum",
-          "probes": []
-        }
-      ]
-    },
-    {
-      "id": "plan",
-      "type": "plan",
-      "tool": "ExitPlanMode",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "plan",
-        "text": "# Add the login form\n\n- Build the form\n- Wire it to the API"
-      },
-      "fields": [
-        {
-          "path": "text",
-          "kind": "string",
-          "probes": [
-            "Add the login form",
-            "Build the form"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "mcp_flat",
-      "type": "unknown",
-      "tool": "mcp__drive__search",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "unknown",
-        "input": {
-          "query": "quarterly report",
-          "maxResults": 5
-        },
-        "output": {
-          "output": "Found two files: Q3 report and Q4 report"
-        }
-      },
-      "fields": [
-        {
-          "path": "input",
-          "kind": "any",
-          "probes": [
-            "Query",
-            "quarterly report",
-            "Max results"
-          ]
-        },
-        {
-          "path": "output",
-          "kind": "any",
-          "probes": [
-            "Found two files: Q3 report and Q4 report"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "mcp_nested",
-      "type": "unknown",
-      "tool": "mcp__drive__search",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "unknown",
-        "input": {
-          "query": "budget",
-          "filters": {
-            "owner": "me"
-          }
-        },
-        "output": {
-          "output": [
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-sub_agent_done",
+        "name": "Task",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "sub_agent",
+          "subAgentType": "Explore",
+          "description": "Find the login handler",
+          "childSessionId": "9f2c6e1a-5b7d-4c0e-8a31-2d4f6b8c0e11",
+          "log": "The sign-in check lives in the auth module.",
+          "actions": [
             {
-              "name": "Budget 2027"
+              "index": 1,
+              "toolName": "Grep",
+              "summary": "handleLogin"
+            },
+            {
+              "index": 2,
+              "toolName": "Read",
+              "summary": "lib/auth/login.dart"
             }
           ]
         }
       },
       "fields": [
         {
+          "key": "sub_agent.subAgentType",
+          "path": "subAgentType",
+          "kind": "string",
+          "probes": [
+            "Explore"
+          ],
+          "primary": false
+        },
+        {
+          "key": "sub_agent.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Find the login handler"
+          ],
+          "primary": false
+        },
+        {
+          "key": "sub_agent.childSessionId",
+          "path": "childSessionId",
+          "kind": "string",
+          "probes": [
+            "9f2c6e1a-5b7d-4c0e-8a31-2d4f6b8c0e11"
+          ],
+          "primary": false
+        },
+        {
+          "key": "sub_agent.log",
+          "path": "log",
+          "kind": "string",
+          "probes": [
+            "The sign-in check lives in the auth module."
+          ],
+          "primary": false
+        },
+        {
+          "key": "sub_agent.actions[].index",
+          "path": "actions[].index",
+          "kind": "number",
+          "probes": [
+            "1",
+            "2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "sub_agent.actions[].toolName",
+          "path": "actions[].toolName",
+          "kind": "string",
+          "probes": [
+            "Search text",
+            "Read"
+          ],
+          "primary": false
+        },
+        {
+          "key": "sub_agent.actions[].summary",
+          "path": "actions[].summary",
+          "kind": "string",
+          "probes": [
+            "handleLogin",
+            "lib/auth/login.dart"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "sub_agent_running",
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-sub_agent_running",
+        "name": "Task",
+        "status": "running",
+        "error": null,
+        "detail": {
+          "type": "sub_agent",
+          "subAgentType": "Explore",
+          "description": "Map the routing",
+          "log": "",
+          "actions": []
+        }
+      },
+      "fields": [
+        {
+          "key": "sub_agent.subAgentType",
+          "path": "subAgentType",
+          "kind": "string",
+          "probes": [
+            "Explore"
+          ],
+          "primary": false
+        },
+        {
+          "key": "sub_agent.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Map the routing"
+          ],
+          "primary": false
+        },
+        {
+          "key": "sub_agent.log",
+          "path": "log",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "skill",
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-skill",
+        "name": "Skill",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "plain_text",
+          "label": "frontend-design",
+          "text": "Use a clear visual hierarchy.",
+          "icon": "sparkles"
+        }
+      },
+      "fields": [
+        {
+          "key": "plain_text.label",
+          "path": "label",
+          "kind": "string",
+          "probes": [
+            "frontend-design"
+          ],
+          "primary": false
+        },
+        {
+          "key": "plain_text.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Use a clear visual hierarchy."
+          ],
+          "primary": false
+        },
+        {
+          "key": "plain_text.icon",
+          "path": "icon",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-plan",
+        "name": "ExitPlanMode",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "plan",
+          "text": "# Add the login form\n\n- Build the form\n- Wire it to the API"
+        }
+      },
+      "fields": [
+        {
+          "key": "plan.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add the login form",
+            "Build the form"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "mcp_flat",
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-mcp_flat",
+        "name": "mcp__drive__search",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "unknown",
+          "input": {
+            "query": "quarterly report",
+            "maxResults": 5
+          },
+          "output": {
+            "output": "Found two files: Q3 report and Q4 report"
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "unknown.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "Query",
+            "quarterly report",
+            "Max results"
+          ],
+          "primary": false
+        },
+        {
+          "key": "unknown.output",
+          "path": "output",
+          "kind": "any",
+          "probes": [
+            "Found two files: Q3 report and Q4 report"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "mcp_nested",
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-mcp_nested",
+        "name": "mcp__drive__search",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "unknown",
+          "input": {
+            "query": "budget",
+            "filters": {
+              "owner": "me"
+            }
+          },
+          "output": {
+            "output": [
+              {
+                "name": "Budget 2027"
+              }
+            ]
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "unknown.input",
           "path": "input",
           "kind": "any",
           "probes": [
             "budget",
-            "Technical details"
-          ]
+            "What was sent",
+            "What came back"
+          ],
+          "primary": false
         },
         {
+          "key": "unknown.output",
           "path": "output",
           "kind": "any",
-          "probes": []
+          "probes": [],
+          "primary": false
         }
       ]
     },
     {
       "id": "speak_text",
-      "type": "unknown",
-      "tool": "speak",
-      "status": "completed",
-      "error": null,
-      "detail": {
-        "type": "unknown",
-        "input": "The build finished without errors.",
-        "output": null
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-speak_text",
+        "name": "speak",
+        "status": "completed",
+        "error": null,
+        "detail": {
+          "type": "unknown",
+          "input": "The build finished without errors.",
+          "output": null
+        }
       },
       "fields": [
         {
+          "key": "unknown.input",
           "path": "input",
           "kind": "any",
           "probes": [
             "The build finished without errors."
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "unknown.output",
           "path": "output",
           "kind": "any",
-          "probes": []
+          "probes": [],
+          "primary": false
         }
       ]
     },
     {
       "id": "mcp_failed",
-      "type": "unknown",
-      "tool": "mcp__drive__search",
-      "status": "failed",
-      "error": {
-        "message": "timeout"
-      },
-      "detail": {
-        "type": "unknown",
-        "input": {
-          "query": "lost file"
+      "family": "tools",
+      "payload": {
+        "type": "tool_call",
+        "callId": "call-mcp_failed",
+        "name": "mcp__drive__search",
+        "status": "failed",
+        "error": {
+          "message": "timeout"
         },
-        "output": null
+        "detail": {
+          "type": "unknown",
+          "input": {
+            "query": "lost file"
+          },
+          "output": null
+        }
       },
       "fields": [
         {
+          "key": "unknown.input",
           "path": "input",
           "kind": "any",
           "probes": [
             "lost file"
-          ]
+          ],
+          "primary": false
         },
         {
+          "key": "unknown.output",
           "path": "output",
           "kind": "any",
-          "probes": []
+          "probes": [],
+          "primary": false
         }
       ]
     }

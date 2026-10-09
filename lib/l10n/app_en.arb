@@ -33991,5 +33991,100 @@
         "type": "String"
       }
     }
+  },
+  "chatUiAgentNote": "Note",
+  "@chatUiAgentNote": {
+    "description": "Chat journey: Note"
+  },
+  "chatUiAgentWarning": "Warning",
+  "@chatUiAgentWarning": {
+    "description": "Chat journey: Warning"
+  },
+  "chatUiAgentProblem": "Problem",
+  "@chatUiAgentProblem": {
+    "description": "Chat journey: Problem"
+  },
+  "chatUiCompactedAutomatically": "Compacted automatically to make room.",
+  "@chatUiCompactedAutomatically": {
+    "description": "Chat journey: Compacted automatically to make room."
+  },
+  "chatUiCompactedWhenAsked": "Compacted when you asked.",
+  "@chatUiCompactedWhenAsked": {
+    "description": "Chat journey: Compacted when you asked."
+  },
+  "chatUiCompactedFrom": "It was about {tokens} tokens long.",
+  "@chatUiCompactedFrom": {
+    "description": "Chat journey: It was about {tokens} tokens long.",
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "chatRequestTitleFetch": "Open a web page",
+  "@chatRequestTitleFetch": {
+    "description": "Chat journey: Open a web page"
+  },
+  "chatRequestTitleWebSearch": "Search the web",
+  "@chatRequestTitleWebSearch": {
+    "description": "Chat journey: Search the web"
+  },
+  "chatRequestTitleSearch": "Search the project",
+  "@chatRequestTitleSearch": {
+    "description": "Chat journey: Search the project"
+  },
+  "chatRequestTitleTask": "Start a helper agent",
+  "@chatRequestTitleTask": {
+    "description": "Chat journey: Start a helper agent"
+  },
+  "chatRequestTitleSkill": "Use a skill",
+  "@chatRequestTitleSkill": {
+    "description": "Chat journey: Use a skill"
+  },
+  "chatRequestTitleMode": "Switch the agent's mode",
+  "@chatRequestTitleMode": {
+    "description": "Chat journey: Switch the agent's mode"
+  },
+  "chatRequestDetailRunsIn": "Runs in",
+  "@chatRequestDetailRunsIn": {
+    "description": "Chat journey: Runs in"
+  },
+  "chatRequestDetailAsks": "What it asks for",
+  "@chatRequestDetailAsks": {
+    "description": "Chat journey: What it asks for"
+  },
+  "chatRequestDetailRange": "Part of the file",
+  "@chatRequestDetailRange": {
+    "description": "Chat journey: Part of the file"
+  },
+  "chatRequestDetailHelper": "Helper type",
+  "@chatRequestDetailHelper": {
+    "description": "Chat journey: Helper type"
+  },
+  "chatRequestReadFrom": "from line {line}",
+  "@chatRequestReadFrom": {
+    "description": "Chat journey: from line {line}",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "chatRequestReadLines": "{count, plural, one{1 line} other{{count} lines}}",
+  "@chatRequestReadLines": {
+    "description": "Chat journey: {count, plural, one{1 line} other{{count} lines}}",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "toolCardWhatWasSent": "What was sent",
+  "@toolCardWhatWasSent": {
+    "description": "Chat journey: What was sent"
+  },
+  "toolCardWhatCameBack": "What came back",
+  "@toolCardWhatCameBack": {
+    "description": "Chat journey: What came back"
   }
 }

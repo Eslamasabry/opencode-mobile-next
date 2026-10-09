@@ -1,59 +1,15 @@
-// Gate 1 inventory: reads Paseo's own protocol schema, lists every field of
-// every tool-step type, and writes realistic samples (one per real-world case)
-// that a test runs through the app's mapper and tool card.
-//
-// The field list comes from the schema, never from this file. The cases below
-// only say which fields travel together in a real call (how Paseo's producer
-// code fills them: providers/tool-call-detail-primitives.js and
-// providers/claude/*). The build FAILS when
-//   - a schema field appears in no case (a new Paseo field must get a case), or
-//   - a case uses a field the schema does not have.
-//
-//   node tool/coverage/paseo_tool_samples.mjs <paseo protocol dist/messages.js> <out.json>
-import { pathToFileURL } from 'node:url';
-import { writeFileSync } from 'node:fs';
+// Family "tools": every field of every tool-step type (the `detail` of a
+// `tool_call` timeline item), with realistic cases that fill those fields
+// the way Paseo's producers do (providers/tool-call-detail-primitives.js and
+// providers/claude/*).
+import { def, unwrap, members, literalOf, objectFields } from '../paseo_cases_lib.mjs';
 
-const [, , protocolPath, outPath] = process.argv;
-const { AgentTimelineItemPayloadSchema } = await import(pathToFileURL(protocolPath).href);
-
-const def = (s) => s._zod.def;
-function unwrap(s) {
-  for (;;) {
-    const d = def(s);
-    if (['optional', 'nullable', 'default', 'prefault', 'readonly', 'catch'].includes(d.type)) s = d.innerType;
-    else if (d.type === 'lazy') s = d.getter();
-    else if (d.type === 'pipe') s = d.in;
-    else return s;
-  }
-}
-const toolCall = def(AgentTimelineItemPayloadSchema).options
-  .map(unwrap)
-  .flatMap((o) => (def(o).type === 'union' ? def(o).options.map(unwrap) : [o]))
-  .find((o) => def(o).type === 'object' && def(def(o).shape.type).values?.includes('tool_call'));
-const detailUnion = unwrap(def(toolCall).shape.detail);
-
-// ---- 1. every field of every step type, from the schema -------------------
-const schema = {}; // type -> { path: {kind, values?} }
-function walk(s, path, out) {
-  const u = unwrap(s);
-  const d = def(u);
-  switch (d.type) {
-    case 'object':
-      for (const [k, v] of Object.entries(d.shape)) walk(v, path ? `${path}.${k}` : k, out);
-      return;
-    case 'array': walk(d.element, `${path}[]`, out); return;
-    case 'literal': return;
-    case 'enum': out[path] = { kind: 'enum', values: Object.values(d.entries) }; return;
-    case 'union': out[path] = { kind: 'any' }; return;
-    case 'int': out[path] = { kind: 'number' }; return;
-    default: out[path] = { kind: d.type };
-  }
-}
-for (const o of def(detailUnion).options) {
-  const type = def(def(o).shape.type).values[0];
-  const fields = {};
-  for (const [k, v] of Object.entries(def(o).shape)) if (k !== 'type') walk(v, k, fields);
-  schema[type] = fields;
+export function toolSchema(root) {
+  const toolCall = members(root).find((o) => literalOf(o, 'type') === 'tool_call');
+  const detailUnion = unwrap(def(toolCall).shape.detail);
+  const schema = {};
+  for (const o of members(detailUnion)) schema[literalOf(o, 'type')] = objectFields(o);
+  return schema;
 }
 
 // ---- 2. the real-world cases ----------------------------------------------
@@ -181,76 +137,24 @@ const cases = [
   {
     id: 'mcp_nested', type: 'unknown', tool: 'mcp__drive__search', status: 'completed',
     detail: { input: { query: 'budget', filters: { owner: 'me' } }, output: { output: [{ name: 'Budget 2027' }] } },
-    probes: { input: ['budget', 'Technical details'] },
+    probes: { input: ['budget', 'What was sent', 'What came back'] },
   },
   { id: 'speak_text', type: 'unknown', tool: 'speak', status: 'completed', detail: { input: 'The build finished without errors.', output: null } },
   { id: 'mcp_failed', type: 'unknown', tool: 'mcp__drive__search', status: 'failed', error: { message: 'timeout' }, detail: { input: { query: 'lost file' }, output: null }, probes: { input: ['lost file'] } },
 ];
 
-// ---- 3. validate and flatten -----------------------------------------------
-const problems = [];
-function leaves(value, path, out) {
-  if (Array.isArray(value)) { for (const v of value) leaves(v, `${path}[]`, out); return; }
-  if (value !== null && typeof value === 'object') {
-    for (const [k, v] of Object.entries(value)) leaves(v, path ? `${path}.${k}` : k, out);
-    return;
-  }
-  out.push({ path, value });
-}
-function probeOf(v) {
-  if (typeof v === 'number') return [String(v)];
-  if (typeof v !== 'string') return [];
-  const line = v.split('\n').map((l) => l.trim()).find((l) => l) ?? '';
-  return line ? [line] : [];
-}
-const covered = {};
-const outCases = cases.map((c) => {
-  const fields = schema[c.type];
-  if (!fields) { problems.push(`case ${c.id}: Paseo has no step type "${c.type}"`); return c; }
-  // A union field is a leaf whatever shape its value has.
-  const flat = [];
-  const visit = (value, path) => {
-    if (fields[path]?.kind === 'any') { flat.push({ path, value }); return; }
-    if (Array.isArray(value)) { for (const v of value) visit(v, `${path}[]`); return; }
-    if (value !== null && typeof value === 'object') {
-      for (const [k, v] of Object.entries(value)) visit(v, path ? `${path}.${k}` : k);
-      return;
-    }
-    flat.push({ path, value });
-  };
-  visit(c.detail, '');
-  const byPath = new Map();
-  for (const { path, value } of flat) {
-    if (!(path in fields)) { problems.push(`case ${c.id}: "${c.type}.${path}" is not in Paseo's schema`); continue; }
-    const kind = fields[path].kind;
-    if (kind === 'enum' && !fields[path].values.includes(value)) problems.push(`case ${c.id}: ${path}=${value} is not one of ${fields[path].values}`);
-    covered[`${c.type}.${path}`] = true;
-    const entry = byPath.get(path) ?? { path, kind, probes: [] };
-    if (kind === 'any' && value !== null && typeof value === 'object') {
-      // The scalar values a person should be able to read.
-      for (const [, v] of Object.entries(value)) if (typeof v === 'string') entry.probes.push(...probeOf(v));
-    } else if (kind === 'any' && typeof value === 'string') entry.probes.push(...probeOf(value));
-    else if (kind !== 'enum' && kind !== 'boolean') entry.probes.push(...probeOf(value));
-    byPath.set(path, entry);
-  }
-  for (const [path, probes] of Object.entries(c.probes ?? {})) {
-    const entry = byPath.get(path);
-    if (!entry) { problems.push(`case ${c.id}: probes for "${path}", which the case does not set`); continue; }
-    entry.probes = probes;
-  }
-  return { id: c.id, type: c.type, tool: c.tool, status: c.status, error: c.error ?? null, detail: { type: c.type, ...c.detail }, fields: [...byPath.values()] };
-});
-for (const [type, fields] of Object.entries(schema)) {
-  for (const path of Object.keys(fields)) {
-    if (!covered[`${type}.${path}`]) problems.push(`schema field "${type}.${path}" is in no case: add it to a case in tool/coverage/paseo_tool_samples.mjs`);
-  }
-}
-if (problems.length) {
-  console.error(problems.join('\n'));
-  process.exit(1);
-}
-writeFileSync(
-  outPath,
-  JSON.stringify({ source: protocolPath, schema: Object.fromEntries(Object.entries(schema).map(([t, f]) => [t, Object.entries(f).map(([path, v]) => ({ path, kind: v.kind }))])), cases: outCases }, null, 2),
-);
-console.log(outCases.map((c) => `${c.id}: ${c.fields.length} fields`).join('\n'));
+// tool: the name the provider gives the call. probes: what a person should
+// read on screen for a field whose value is reworded (counts, enums).
+export const toolCases = cases.map((c) => ({
+  id: c.id,
+  family: 'tools',
+  payload: {
+    type: 'tool_call',
+    callId: `call-${c.id}`,
+    name: c.tool,
+    status: c.status,
+    error: c.error ?? null,
+    detail: { type: c.type, ...c.detail },
+  },
+  parts: [{ group: c.type, value: c.detail, probes: c.probes }],
+}));

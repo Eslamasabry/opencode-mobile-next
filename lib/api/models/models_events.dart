@@ -60,6 +60,11 @@ class PermissionRequest {
   final List<String> always;
   final PermissionTool? tool;
 
+  /// False when the server can take no standing rule for this request (Paseo
+  /// keeps one only when the agent suggested it): the card then offers no
+  /// "Always allow".
+  final bool canAlwaysAllow;
+
   /// Optional human context supplied with an OpenCode 2 request; v1
   /// requests never carry one.
   final String? message;
@@ -73,6 +78,7 @@ class PermissionRequest {
     this.always = const [],
     this.tool,
     this.message,
+    this.canAlwaysAllow = true,
   });
 
   factory PermissionRequest.fromJson(Map<String, dynamic> json) =>

@@ -209,10 +209,20 @@ class _FileRowState extends State<_FileRow> {
 /// labelled row ("Max results  5"), a list of simple values as lines, and
 /// anything nested only behind "Technical details".
 class _Readable extends StatelessWidget {
-  const _Readable({required this.value, required this.name});
+  const _Readable({required this.value, required this.name, this.foldLabel});
 
   final Object value;
   final String name;
+
+  /// The fold's words when the card has two (what was sent, what came back);
+  /// "Technical details" when it has one.
+  final String? foldLabel;
+
+  /// Whether [value] has anything this card can only show as technical text.
+  static bool hasNested(Object? value) =>
+      (value is Map &&
+          value.values.any((v) => !_simple(v) && v != null && v != '')) ||
+      (value is List && !value.every(_simple));
 
   static bool _simple(Object? v) => v is String || v is num;
 
@@ -255,7 +265,7 @@ class _Readable extends StatelessWidget {
         if (rows.isNotEmpty) KitKeyValue(rows: rows),
         if (nested != null)
           KitDetailsFold(
-            label: l10n.toolCardTechnicalDetails,
+            label: foldLabel ?? l10n.toolCardTechnicalDetails,
             text: const JsonEncoder.withIndent('  ').convert(nested),
           ),
       ],

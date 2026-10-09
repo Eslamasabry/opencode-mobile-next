@@ -142,7 +142,9 @@ class _PermissionAttentionCardState extends State<_PermissionAttentionCard> {
           alwaysAllow: permissionAlwaysStep(
             context,
             permission: permission,
-            supported: conn.capabilities.persistentPermissionGrants,
+            supported:
+                conn.capabilities.persistentPermissionGrants &&
+                permission.canAlwaysAllow,
             onConfirmed: () => answer('always'),
           ),
           onAllow: () => answer('once'),

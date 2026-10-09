@@ -100,9 +100,14 @@ class TranscriptNotice extends StatefulWidget {
     this.headerMono,
     this.markdown = false,
     this.error = false,
+    this.initiallyOpen = false,
     this.actionLabel,
     this.onAction,
   });
+
+  /// Opened at first: the text is what the notice is for (an agent's own
+  /// note), not a detail of it.
+  final bool initiallyOpen;
 
   /// The one thing to do about this notice, on its line ("Compact again" on
   /// a failed compaction). Absent when there is nothing to do.
@@ -128,7 +133,7 @@ class TranscriptNotice extends StatefulWidget {
 }
 
 class _TranscriptNoticeState extends State<TranscriptNotice> {
-  late bool _open = widget.error;
+  late bool _open = widget.error || widget.initiallyOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +157,23 @@ class _TranscriptNoticeState extends State<TranscriptNotice> {
             ),
     );
   }
+}
+
+/// What a finished compaction says: what started it and how long the
+/// conversation was, when the agent's host told. Else the mapper's words.
+String _compactionWords(Part part, AppLocalizations strings) {
+  final meta = part.toolState.metadata;
+  final trigger = meta?['trigger'];
+  final tokens = meta?['preTokens'];
+  final lines = [
+    if (trigger == 'auto') strings.chatUiCompactedAutomatically,
+    if (trigger == 'manual') strings.chatUiCompactedWhenAsked,
+    if (tokens is num && tokens > 0)
+      strings.chatUiCompactedFrom(
+        tokens >= 1000 ? '${(tokens / 1000).round()}k' : '${tokens.round()}',
+      ),
+  ];
+  return lines.isEmpty ? part.text : lines.join(' ');
 }
 
 /// Dispatches a mapper-tagged v2-only message (`v2:switch` / `v2:notice` /
@@ -242,7 +264,7 @@ class V2TranscriptRow extends StatelessWidget {
             key: ValueKey('compaction-completed-$messageId'),
             icon: AppIconography.collapse,
             header: strings.chatUiContextCompacted,
-            text: part.text,
+            text: _compactionWords(part, strings),
           ),
         };
       default:
@@ -254,6 +276,17 @@ class V2TranscriptRow extends StatelessWidget {
           return const SizedBox.shrink();
         }
         final (icon, header, mono) = switch (kind) {
+          'agent-info' => (AppIconography.info, strings.chatUiAgentNote, null),
+          'agent-warning' => (
+            AppIconography.warning,
+            strings.chatUiAgentWarning,
+            null,
+          ),
+          'agent-error' => (
+            AppIconography.warning,
+            strings.chatUiAgentProblem,
+            null,
+          ),
           'instructions' => (
             AppIconography.note,
             strings.sessionInstructionsUpdated,
@@ -285,6 +318,9 @@ class V2TranscriptRow extends StatelessWidget {
         final titledByText =
             part.filename == null &&
             !const {
+              'agent-info',
+              'agent-warning',
+              'agent-error',
               'instructions',
               'synthetic',
               'system',
@@ -296,6 +332,8 @@ class V2TranscriptRow extends StatelessWidget {
           icon: icon,
           header: header,
           headerMono: mono,
+          initiallyOpen: kind.startsWith('agent-'),
+          error: kind == 'agent-error',
           text: kind == 'instructions'
               ? strings.sessionInstructionsApplied
               : kind == 'skill' && part.filename == null
