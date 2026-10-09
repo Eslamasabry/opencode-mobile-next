@@ -1,5 +1,39 @@
 # BD7 — real device crash and ANR qualification
 
+## Current result: 2202 saved-report flow PASS — 2026-10-09
+
+The requested crash-only saved-report journey is **device verified on APK 2202**.
+[Complete receipt](2202-saved-report/report.json),
+[single-crash checkpoint](2202-saved-report/crash-trigger.json),
+[cleanup](2202-saved-report/cleanup.json).
+
+- Exact approved artifact SHA-256:
+  `e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0`;
+  build 2202, local release signer `1DE5BF08...`.
+- Empty/Off baseline, then real UI consent On. Exactly one `am crash --user 0`
+  targeted verified main PID 3222, start ticks 15531. Android recorded exact-main
+  reason 4/status 0; the fresh native report timestamp followed the trigger by
+  166 ms. [Capture status](2202-saved-report/native-capture-status.json).
+- After reopening, the [saved row](2202-saved-report/native-report.jpg),
+  [details preview](2202-saved-report/native-preview.jpg), and
+  [share preview](2202-saved-report/saved-report-share-preview.jpg) were visible.
+  The Share report button was not activated; no external share opened.
+- Switching [capture Off](2202-saved-report/consent-off-after.jpg) used the
+  product's automatic deletion path. Persisted consent was zero, saved count
+  zero, and the saved row absent. No separate Delete row remains when Off.
+- Same-lock `adb install -r` of the approved normal 2202 APK passed subsequent
+  artifact/signer/same-UID verification and app launch. The driver returned PASS,
+  exited successfully and released its reservation; no further ADB access ran.
+
+All six retained JPGs were visually reviewed and are under 100 KB each. They
+contain only fixed diagnostics copy, error category and timestamps. All 83
+focused host checks passed; current source hashes, JSON, images and links were
+checked. No product edit, build, ANR, account action, external share, push or
+release occurred. This qualifies the requested 2202 saved-report slice; the
+historical ANR/2196/2198/2199 results below remain separate.
+
+## Historical attempts and earlier scope
+
 ## 2198 saved-report follow-up — BC takeover, 2026-10-09
 
 Finish line: capture one real verified-process crash on normal2198, show the
@@ -206,3 +240,111 @@ requires a rerun against the coordinator's2197 candidate, including real
 native-crash and ANR capture, saved rows and previews, private diagnostics
 rollback, and normal-app restoration inside the same emulator lock. Until those
 receipts exist, saved-report qualification remains **BLOCKED**.
+
+## 2199 saved-report follow-up — 2026-10-09
+
+Finish line: on approved normal 2199, enable capture through Settings, crash only
+the verified app PID, reopen and verify the saved row and local share preview,
+then delete the owned report, restore capture Off and reinstall normal 2199
+inside the same emulator reservation. Non-goals: ANR, external sharing, provider
+interaction, installer-ticket repair, app-data reset, UI/native changes or builds.
+Emulator order is BB, BA, then BC; the driver waits with `flock -w 3600`.
+
+Candidate and lock-wait regression control: updated 2199 fixture against the
+old 2198-only driver failed (3 assertions, 3 admission errors); the lock assertion
+observed 1800 instead of 3600 seconds. Device proof is pending, not qualified by
+these offline controls.
+
+[2199 host receipt](2199-saved-report-host.json): all 71 focused Python checks
+pass serially through machine_lock; formatting, F/E9 lint and diff checks clean.
+The approved APK SHA-256 is `be1bf7b80a5901a4041fbe8b7a2e754631f05ed04486b70c9e33c0ac1e12061a`;
+build 2199, version 1.2.0 and local signer `1DE5BF08...` are host-verified.
+Run after the BB/BA handoff: `python3 tool/qa/bd7_device_saved_report.py --output
+docs/qa/BD7-2026-10-08/2199-saved-report`. No APK build is required.
+
+The [initial 2199 attempt](2199-saved-report/report.json) passed the empty/Off
+baseline and installer-idle guard, then stopped at `app_navigation_not_ready`
+before consent or crash. Normal 2199 reinstall/identity verification passed.
+A new reservation found the exact app visible on its retained Agents route,
+with Back and no root Settings tab. This is a harness navigation assumption,
+not saved-capture failure. A deterministic route fixture failed before the fix;
+the saved-report driver now returns only from the visible app-owned Agents/Back
+page before normal Settings navigation. Unknown/foreign pages are untouched.
+All 73 focused Python checks pass serially through machine_lock; lint/format and
+diff checks are clean. No app-source edit or build. The first receipt remains
+unchanged, and the device retry uses a separate output directory.
+
+The [crash-trigger retry](2199-saved-report-retry/report.json) enabled capture
+and called `am crash` after exact PID/UID/birth and installer-idle checks.
+Reopening failed because the managed server was stopped, leaving a connection
+page without Settings. The [resumed receipt](2199-saved-report-resumed/report.json)
+correlates the single owned native record (1791507336215 ms) with the exact-main
+Android reason-4 exit (1791507336232 ms, 17 ms later). Product Start and connect
+restored navigation and the saved row was visible. The preview screenshot guard
+then refused its sheet; no unsafe image was retained. Owned report deletion,
+capture Off/zero ring, and exact normal 2199 reinstall plus product startup all
+passed before this reservation was released for BA. These receipts remain FAIL
+and do not qualify share preview. No second crash occurred in that resumption.
+
+Offline harness corrections now cover recovery after cold activity launch,
+reusing the exact visible report page, and the authored kit actions Dismiss and
+Hide details. Public source: `kit_sheet_parts.dart` handle and
+`kitDetailsHide` copy. Private suffixes, unknown content and editable input remain
+refused. Report-page and sheet fixtures failed before their corrections; the
+cold stopped-server fixture also failed before recovery moved inside bounded
+launch navigation. The saved driver permits 60 seconds for real product startup
+and dispatches one guarded recovery per launch; the historical crash/ANR driver
+retains its 15-second default. All 78 focused host checks pass serially through
+machine_lock. App source, account data and ticket files are unchanged. A complete
+new crash/report/share/cleanup proof is still pending the next reservation.
+
+The [pre-consent attempt](2199-saved-report-final/report.json) stopped at
+`navigation_target_unavailable`; normal restoration passed and no second crash
+was triggered. A [navigation-only trace](2199-navigation-debug.json) then passed
+with capture Off and the saved ring empty. Three deterministic controls exposed
+report-page priority, retained Settings scroll and inline exit-history expansion
+assumptions (two assertions and one navigation error before correction). The
+driver now reuses the visible report page, scrolls Settings upward, and opens
+share preview directly from inline exit history. All 81 focused checks pass
+serially through machine_lock; no app source changed. Complete device proof
+still requires a new reservation.
+
+## Crash recovery review — 2026-10-09
+
+The recovered [2199 attempt](2199-saved-report-verified/report.json), despite its
+directory name, is **FAIL**, not a completed qualification. Its safe screenshots
+show consent, the saved native row and its details preview; the share-preview
+image is absent. It stopped at `native_crash/navigation_target_unavailable`.
+[Restoration](2199-saved-report-verified/restoration.json) confirms consent Off
+and zero saved reports. The old host manifests remain historical and unchanged.
+
+The reviewed QA-only correction lets this saved-report driver omit the separate
+Recent app exits UI journey while retaining exact-main Android reason 4, the
+post-trigger saved native record, its row and details preview. The historical
+crash/ANR driver's default still requires exit UI. All 82 focused Python tests
+passed serially through `OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test`;
+[recovery host receipt](recovery-host.json) binds that result to source hashes.
+This is host verification only. Fresh 2202 device qualification follows in a
+separate evidence directory; no failed 2199 result is promoted.
+
+## 2202 saved-report qualification — 2026-10-09
+
+Finish line: on approved normal APK 2202, enable consent, issue one real
+`am crash` to the verified app PID, reopen, view the saved row and local share
+preview, then switch capture Off and verify deletion before same-lock normal
+2202 restoration. Non-goals: ANR, external share, provider/account interaction,
+installer-ticket repair, product changes or builds.
+
+The driver pins build 2202 and local signer, verifies the sidecar checksum, and
+preserves PID/start-ticks/trigger-time intent before signaling. A durable trigger
+receipt refuses another crash in the same output directory. Post-crash failures
+require navigation-only recovery, never blind rerunning of the crash command.
+Turning capture Off erases native and Flutter evidence in the product, so no
+separate Delete button exists afterwards; cleanup checks persisted consent and
+the empty ring and records the automatic deletion.
+
+The 2202 host checkpoint passes all 83 focused Python cases serially through
+`OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test`. Changed-fixture controls failed
+against the preceding code: build admission, durable trigger, and Off-before-
+deletion behavior. [Host receipt](2202-saved-report-host.json). The [fresh device receipt](2202-saved-report/report.json) passes; see the current
+result at the top for the exact scope and cleanup.

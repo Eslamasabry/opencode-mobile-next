@@ -23,6 +23,7 @@ _DEGRADED_COPY = {
 }
 _FIXED = {
     'Report a problem', 'Crash reports', 'Recent app exits', 'Details', 'Close',
+    'Dismiss', 'Hide details',
     'Preview crash report', 'Share report', 'OpenCode Mobile crash report',
     'Captured error categories and times only.',
     'No messages, stacks or conversations are included.',
@@ -201,6 +202,8 @@ class Bd7Ui:
 
     def navigate_report(self):
         self.tap('Settings')
+        # Settings may restore a bottom position with the report row above it.
+        self.scroll('up')
         self.scroll_find('Report a problem')
         self.tap('Report a problem')
         # The page must contain the real consent section; a Settings search

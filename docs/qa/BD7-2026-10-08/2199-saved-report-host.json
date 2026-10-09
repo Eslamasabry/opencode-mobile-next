@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "scope": "offline_driver_preparation",
+  "sourceRevision": "32f761dba39854c7aea2d62c341f1fa0e213c07e",
+  "candidateBuild": 2199,
+  "candidateSha256": "be1bf7b80a5901a4041fbe8b7a2e754631f05ed04486b70c9e33c0ac1e12061a",
+  "candidateSigner": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+  "focusedTests": 71,
+  "testCommand": "OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- python3 -m unittest tool.qa.test_bd7_device_saved_report tool.qa.test_bd7_device_crash_smoke tool.qa.test_bd7_device_ui tool.qa.test_bd7_exit_proof",
+  "result": "PASS",
+  "redControl": {
+    "new2199FixtureAgainstOld2198Driver": {
+      "failures": 3,
+      "admissionErrors": 3
+    },
+    "oldLockWaitSeconds": 1800,
+    "requiredLockWaitSeconds": 3600
+  },
+  "sourceSha256": {
+    "tool/qa/bd7_device_saved_report.py": "cd3adc124d3f4975a188162b9d8683fc99a9597a2675720af3646ebbd9962b34",
+    "tool/qa/test_bd7_device_saved_report.py": "a371123280ee1e67a23a682cddaea8f495c3110365bd6343cee1bfb77ae611c0",
+    "tool/qa/bd7_device_crash_smoke.py": "868240f0a9f25561e64962ae9975f73d55061e19b47222986b929517ba6bb81c",
+    "tool/qa/bd7_device_ui.py": "fcf6914772c38294e07864a81604ede0db524fe3c4db36e966acba56b7aa9225",
+    "tool/qa/bd7_exit_proof.py": "ec032e72560e6bba9a8f7ca4879255f67adbbda876bb344d87e8edbee2a7cb63"
+  },
+  "deviceRun": false,
+  "buildRun": false
+}

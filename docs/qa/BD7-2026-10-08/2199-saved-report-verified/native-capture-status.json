@@ -1,0 +1,10 @@
+{
+  "os_exit": {
+    "pid": 23020,
+    "reason": 4,
+    "status": 0,
+    "exact_main": true
+  },
+  "native_category_file_exists": true,
+  "capture_unavailable_visible": false
+}

@@ -1,0 +1,12 @@
+{
+  "scope": "navigation_only",
+  "consentOff": true,
+  "savedCount": 0,
+  "result": "PASS",
+  "steps": [
+    "tap_settings",
+    "find_report",
+    "tap_report",
+    "find_consent"
+  ]
+}

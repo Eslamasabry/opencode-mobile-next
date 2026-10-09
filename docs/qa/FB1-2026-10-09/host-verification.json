@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "checkedAtUtc": "2026-10-09T02:29:06.138576+00:00",
+  "result": "PASS",
+  "scope": "offline_driver_and_deferred_runbook",
+  "focusedTests": 29,
+  "newAvdCreated": false,
+  "newAvdStarted": false,
+  "deviceQualification": "pending_coordinator_final_pass",
+  "scriptSyntax": "bash -n passed; script not executed",
+  "regressionControl": "Removing default project-field allowance fails the focused screenshot test; restored 29 tests pass",
+  "resourceSnapshot": {
+    "storageFreeGiB": 17.56,
+    "rootFreeGiB": 4.34,
+    "memAvailableMiB": 5262
+  },
+  "requiredAtStart": {
+    "storageFreeGiB": 16,
+    "memAvailableMiB": 6144,
+    "guestRamMiB": 3072,
+    "guestCores": 2,
+    "guestDataGiB": 8
+  },
+  "sourceSha256": {
+    "tool/qa/fb1_first_run.py": "74424bd95aa27269f71f706094723f1cafc314caf886b2e4d9900bb60b70c3cb",
+    "tool/qa/test_fb1_first_run.py": "31d6efbf77514a4ade95ec70d17eef1832d8e6464805fd7caec6f98347645cf6"
+  }
+}
