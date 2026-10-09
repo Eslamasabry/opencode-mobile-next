@@ -51,12 +51,18 @@ class MarkdownFileLinks extends InheritedWidget {
     super.key,
     required this.validate,
     required this.open,
+    this.readImage,
     required super.child,
   });
 
   /// Must be memoized by the provider: spans re-request on every rebuild.
   final Future<bool> Function(String path) validate;
   final void Function(String path) open;
+
+  /// The bytes of a picture file the reply names, for its thumbnail. Null:
+  /// pictures show as named chips. Keep it a stable method, not a closure
+  /// built per rebuild (thumbnails of one path share one cached image).
+  final Future<Uint8List?> Function(String path)? readImage;
 
   static MarkdownFileLinks? maybeOf(BuildContext context) =>
       MarkdownInteractionScope.enabledOf(context)
@@ -65,7 +71,9 @@ class MarkdownFileLinks extends InheritedWidget {
 
   @override
   bool updateShouldNotify(MarkdownFileLinks oldWidget) =>
-      validate != oldWidget.validate || open != oldWidget.open;
+      validate != oldWidget.validate ||
+      open != oldWidget.open ||
+      readImage != oldWidget.readImage;
 }
 
 /// Retired by kit-KitMarkdown: use KitMarkdown.stripPathLineSuffix.
@@ -125,11 +133,13 @@ class _MarkdownTextState extends State<MarkdownText> {
     if (source == null) return _links = _linksSource = null;
     if (_linksSource == null ||
         _linksSource!.validate != source.validate ||
-        _linksSource!.open != source.open) {
+        _linksSource!.open != source.open ||
+        _linksSource!.readImage != source.readImage) {
       _linksSource = source;
       _links = KitMarkdownFileLinks(
         validate: source.validate,
         open: source.open,
+        readImage: source.readImage,
       );
     }
     return _links;

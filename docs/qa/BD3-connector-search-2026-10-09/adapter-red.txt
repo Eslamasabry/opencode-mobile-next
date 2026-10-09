@@ -1,0 +1,140 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart
+test/agent_tool_adapter_test.dart:15:14: Error: Method not found: 'isConnectorSearchTool'.
+      expect(isConnectorSearchTool(id), isTrue);
+             ^^^^^^^^^^^^^^^^^^^^^
+test/agent_tool_adapter_test.dart:18:12: Error: Method not found: 'isConnectorSearchTool'.
+    expect(isConnectorSearchTool('mcp__other__find_connectors'), isFalse);
+           ^^^^^^^^^^^^^^^^^^^^^
+test/agent_tool_adapter_test.dart:19:12: Error: Method not found: 'isConnectorSearchTool'.
+    expect(isConnectorSearchTool('oc-ui_find_connectors_extra'), isFalse);
+           ^^^^^^^^^^^^^^^^^^^^^
+test/agent_tool_adapter_test.dart:11:36: Error: The getter 'connectorSearchName' isn't defined for the type 'AgentToolAdapter'.
+ - 'AgentToolAdapter' is from 'package:opencode_mobile/domain/agent_tools/agent_tool_adapter.dart' ('lib/domain/agent_tools/agent_tool_adapter.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'connectorSearchName'.
+    expect(AgentToolAdapter.claude.connectorSearchName, 'mcp__oc-ui__find_connectors');
+                                   ^^^^^^^^^^^^^^^^^^^
+test/agent_tool_adapter_test.dart:12:39: Error: The getter 'connectorSearchName' isn't defined for the type 'AgentToolAdapter'.
+ - 'AgentToolAdapter' is from 'package:opencode_mobile/domain/agent_tools/agent_tool_adapter.dart' ('lib/domain/agent_tools/agent_tool_adapter.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'connectorSearchName'.
+    expect(AgentToolAdapter.openCode1.connectorSearchName, 'oc-ui_find_connectors');
+                                      ^^^^^^^^^^^^^^^^^^^
+test/agent_tool_adapter_test.dart:13:32: Error: The getter 'connectorSearchName' isn't defined for the type 'AgentToolAdapter'.
+ - 'AgentToolAdapter' is from 'package:opencode_mobile/domain/agent_tools/agent_tool_adapter.dart' ('lib/domain/agent_tools/agent_tool_adapter.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'connectorSearchName'.
+    expect(AgentToolAdapter.pi.connectorSearchName, isNull);
+                               ^^^^^^^^^^^^^^^^^^^
+00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart [E]
+  Failed to load "/home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart":
+  Compilation failed for testPath=/home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: test/agent_tool_adapter_test.dart:15:14: Error: Method not found: 'isConnectorSearchTool'.
+        expect(isConnectorSearchTool(id), isTrue);
+               ^^^^^^^^^^^^^^^^^^^^^
+  test/agent_tool_adapter_test.dart:18:12: Error: Method not found: 'isConnectorSearchTool'.
+      expect(isConnectorSearchTool('mcp__other__find_connectors'), isFalse);
+             ^^^^^^^^^^^^^^^^^^^^^
+  test/agent_tool_adapter_test.dart:19:12: Error: Method not found: 'isConnectorSearchTool'.
+      expect(isConnectorSearchTool('oc-ui_find_connectors_extra'), isFalse);
+             ^^^^^^^^^^^^^^^^^^^^^
+  test/agent_tool_adapter_test.dart:11:36: Error: The getter 'connectorSearchName' isn't defined for the type 'AgentToolAdapter'.
+   - 'AgentToolAdapter' is from 'package:opencode_mobile/domain/agent_tools/agent_tool_adapter.dart' ('lib/domain/agent_tools/agent_tool_adapter.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'connectorSearchName'.
+      expect(AgentToolAdapter.claude.connectorSearchName, 'mcp__oc-ui__find_connectors');
+                                     ^^^^^^^^^^^^^^^^^^^
+  test/agent_tool_adapter_test.dart:12:39: Error: The getter 'connectorSearchName' isn't defined for the type 'AgentToolAdapter'.
+   - 'AgentToolAdapter' is from 'package:opencode_mobile/domain/agent_tools/agent_tool_adapter.dart' ('lib/domain/agent_tools/agent_tool_adapter.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'connectorSearchName'.
+      expect(AgentToolAdapter.openCode1.connectorSearchName, 'oc-ui_find_connectors');
+                                        ^^^^^^^^^^^^^^^^^^^
+  test/agent_tool_adapter_test.dart:13:32: Error: The getter 'connectorSearchName' isn't defined for the type 'AgentToolAdapter'.
+   - 'AgentToolAdapter' is from 'package:opencode_mobile/domain/agent_tools/agent_tool_adapter.dart' ('lib/domain/agent_tools/agent_tool_adapter.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'connectorSearchName'.
+      expect(AgentToolAdapter.pi.connectorSearchName, isNull);
+                                 ^^^^^^^^^^^^^^^^^^^
+  .
+00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart
+00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart [E]
+  Error: The Dart compiler exited unexpectedly.
+  package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+  package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+  dart:async/zone_root.dart 48:47                  _rootRunUnary
+  dart:async/zone.dart 816:35                      _CustomZone.runUnary
+  dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+  dart:async/future_impl.dart 977:13               Future._propagateToListeners
+  dart:async/future_impl.dart 862:9                Future._propagateToListeners
+  dart:async/future_impl.dart 720:5                Future._completeWithValue
+  dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+  dart:async/zone_root.dart 35:13                  _rootRun
+  dart:async/zone.dart 810:35                      _CustomZone.run
+  dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+  dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+  dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+  dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+  dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+  dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+  
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: stages all tools and only verifies evidence-backed transports
+00:00 +1 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: review 1 failed verifier reports verification failure not restart
+00:00 +2 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: review 1 missing verifier reports unqualified not restart
+00:00 +3 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: registration never claims a ready runtime
+00:00 +4 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: OpenCode collision reports partial while Claude remains ready
+00:00 +5 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: OpenCode 2 registration cannot become ready through a permissive verifier
+00:00 +6 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: BA6 qualified OC1 registration still needs live verification
+00:00 +7 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: BA6 builtin verifier runs OC1 as root and Claude in the agent view
+00:00 +8 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: verified Claude registration becomes ready
+00:00 +9 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: verified Claude remains ready when OpenCode runtime is missing
+00:00 +10 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: missing installation disables successfully without verification
+00:00 +11 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: reject invalid profile before invoking setup
+00:00 +12 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: serialize across installer instances
+00:00 +13 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 schema-only JSONC receives the effective registration
+00:00 +14 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC preserves string-array separator with trailing comma false
+00:00 +15 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC preserves string-array separator with trailing comma true
+00:00 +16 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC merges owned entry without changing user content
+00:00 +17 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 disable preserves JSONC and later user edits
+00:00 +18 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a genuine collision in opencode.jsonc
+00:00 +19 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a genuine collision in opencode.json
+00:00 +20 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 current JSON refuses flat null collision
+00:00 +21 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 current JSON refuses nested compatibility collision
+00:00 +22 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a nonobject MCP override null
+00:00 +23 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a nonobject MCP override []
+00:01 +24 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a nonobject MCP override false
+00:01 +25 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config.json {"mcp":{"oc-ui":null}}
+00:01 +26 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"oc-ui":null}}
+00:01 +27 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config.json {"mcp":{"servers":{"oc-ui":null}}}
+00:01 +28 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"servers":{"oc-ui":null}}}
+00:01 +29 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config.json {"mcp":{"oc-ui":null},"mcp":{}}
+00:01 +30 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"oc-ui":null},"mcp":{}}
+00:01 +31 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"other":{},"other":{}}}
+00:01 +32 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp": {/* unfinished
+00:01 +33 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config model = "user-model"
+
+00:01 +34 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses symlinked JSONC without touching its target
+00:01 +35 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC self-check rollback preserves user settings
+00:01 +36 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode uses existing root-owned pinned Node without a system alias
+00:02 +37 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode retains and removes a legacy system Node registration after runtime removal
+00:02 +38 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode unsafe preferred runtime never falls back to another candidate
+00:02 +39 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode refuses writable or foreign-owned helper ancestors
+00:02 +40 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 2 persists direct tools in isolated mcp servers config
+00:02 +41 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction BA6 OC1 readiness requires pinned live connected server and owned helper
+00:03 +42 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction two owners install idempotently and last disable removes only own entry
+00:04 +43 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude CLI uses profile environment and user scope for add/remove
+00:04 +44 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow is exact, idempotent and removed on disable
+00:04 +45 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow preserves user-owned exact permission
+00:04 +46 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow verifies and repairs missing permission
+00:04 +47 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow rejects malformed or symlinked settings
+00:04 +48 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow rolls back its rule on self-check failure
+00:05 +49 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow migrates an existing owned registration
+00:05 +50 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow resets ownership after disable
+00:05 +51 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude readiness checks pinned CLI and discovery in owned profile
+00:05 +52 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction disable absent runtime does not create directories or invoke runtime
+00:05 +53 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 5 unchanged enable keeps marker throughout verification
+00:06 +54 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 repairs owned helper and marker corruption
+00:06 +55 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 modified owned helper cannot block disable
+00:06 +56 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 recovers exact helper orphan from interrupted first install
+00:06 +57 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 unknown orphan remains an unowned collision
+00:06 +58 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction unowned entry collision preserves existing config
+00:06 +59 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction symlinked managed directory refuses writes
+00:06 +60 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction edited owned entry is never removed
+00:06 +61 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction failed self-check rolls back only newly managed writes
+00:07 +62 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart

@@ -1,0 +1,14 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart
+00:00 +0: source changes during add cannot publish success
+00:00 +0 -1: source changes during add cannot publish success [E]
+  Expected: McpChatFailure:<McpChatFailure.sourceChanged>
+    Actual: <null>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/mcp_chat_controller_test.dart 189:5            main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: source changes during add cannot publish success

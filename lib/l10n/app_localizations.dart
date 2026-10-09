@@ -24730,6 +24730,12 @@ abstract class AppLocalizations {
   /// **'Open file'**
   String get kitMarkdownOpenFile;
 
+  /// KitMarkdown: the name of a picture in an agent's reply whose Markdown gave no description (empty, or just the word Image)
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get kitMarkdownImage;
+
   /// KitMarkdown: what a screen reader says for a table in an agent's reply; rows counts the body rows (the header row is not counted)
   ///
   /// In en, this message translates to:

@@ -15390,6 +15390,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get kitMarkdownOpenFile => 'Open file';
 
   @override
+  String get kitMarkdownImage => 'Image';
+
+  @override
   String kitMarkdownTable(int rows) {
     String _temp0 = intl.Intl.pluralLogic(
       rows,

@@ -111,8 +111,17 @@ function normalizeGenUiCard(input) {
       default: fail();
     }
   };
-  obj(input,['v','id','title','body','ask'],['v','id','title','body']);
+  const connector = o => {
+    obj(o,['catalogId','reason'],['catalogId','reason']);
+    const catalogId=id(o.catalogId,/^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/);
+    if(catalogId.length>256) fail();
+    const reason=text(o.reason,32768,true,1);
+    if(scalar(reason)>500) fail();
+    return {catalogId,reason};
+  };
+  obj(input,['v','id','title','body','ask','connector'],['v','id','title','body']);
   if(input.v!==1) fail('version');
-  return {v:1,id:id(input.id,/^[a-z0-9-]{1,48}$/),title:text(input.title,120,true,1),body:arr(input.body,0,40).map(node),...(Object.hasOwn(input,'ask')?{ask:ask(input.ask)}:{})};
+  if(Object.hasOwn(input,'connector')&&Object.hasOwn(input,'ask')) fail();
+  return {v:1,id:id(input.id,/^[a-z0-9-]{1,48}$/),title:text(input.title,120,true,1),body:arr(input.body,0,40).map(node),...(Object.hasOwn(input,'ask')?{ask:ask(input.ask)}:{}),...(Object.hasOwn(input,'connector')?{connector:connector(input.connector)}:{})};
 }
 ''';

@@ -23,7 +23,10 @@ final class PhoneTool {
   final List<String> tools;
 
   /// Agent cards: native choice, form, confirm, report and photo cards.
-  static const cards = PhoneTool(server: 'oc-ui', tools: ['show']);
+  static const cards = PhoneTool(
+    server: 'oc-ui',
+    tools: ['show', 'find_connectors'],
+  );
 }
 
 /// How an agent shows the tool `tool` of MCP server `server` in its
@@ -142,6 +145,10 @@ final class AgentToolAdapter {
 
   /// The card `show` tool's name in this agent's transcript.
   String? get cardShowName => toolName(PhoneTool.cards, 'show');
+
+  /// The read-only catalogue search tool on the same qualified MCP server.
+  String? get connectorSearchName =>
+      toolName(PhoneTool.cards, 'find_connectors');
 
   static const claude = AgentToolAdapter._(
     id: 'claude',

@@ -1,0 +1,39 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart
+00:00 +0: connector suggestion preserves identity and normalizes plain reason
+00:00 +0 -1: connector suggestion preserves identity and normalizes plain reason [E]
+  Expected: <Instance of 'GenUiParsed'>
+    Actual: <Instance of 'GenUiUnreadable'>
+     Which: is not an instance of 'GenUiParsed'
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/gen_ui_connector_test.dart 67:7                main.<fn>
+  
+00:00 +0 -1: connector keeps executed tool provenance requirements
+00:00 +1 -1: Dart and helper reject malformed or actionable connector payloads
+00:00 +1 -2: Dart and helper reject malformed or actionable connector payloads [E]
+  Expected: <Instance of 'GenUiParsed'>
+    Actual: <Instance of 'GenUiUnreadable'>
+     Which: is not an instance of 'GenUiParsed'
+  accepted 0
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/gen_ui_connector_test.dart 164:11              main.<fn>
+  
+00:00 +1 -2: MCP helper advertises connector suggestions and accepts their calls
+00:00 +1 -3: MCP helper advertises connector suggestions and accepts their calls [E]
+  Expected: <Instance of 'Map'>
+    Actual: <null>
+     Which: is not an instance of 'Map'
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/gen_ui_connector_test.dart 224:7               main.<fn>
+  
+00:00 +1 -3: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: Dart and helper reject malformed or actionable connector payloads
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: MCP helper advertises connector suggestions and accepts their calls
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: connector suggestion preserves identity and normalizes plain reason

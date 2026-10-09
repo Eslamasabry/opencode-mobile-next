@@ -1,0 +1,53 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: runtime add followed by authoritative status makes next-turn tools ready
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: double tap coalesces and successful connect never adds again
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: unrelated existing same name is never reused or overwritten
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: unsupported runtime makes no calls
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: wrong requested server cannot mutate
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: required configuration stays in Tools
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: no refresh contract never claims ready
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: source changes during add cannot publish success
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: gateway errors never escape or expose raw credential text
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: authentication is explicit and uses validated code
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: valid manual callback completes and rechecks inventory
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: OAuth off and unsafe launch fail closed
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: dispose never revokes server credentials
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: cancel only acts on owned pending authentication
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: client registration failure requires setup instead of OAuth
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: cancel during delayed OAuth start does not expose late launch
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: owned callback validates state and discovers without exposing code
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: busy callback port explicitly requires manual return URL
+00:00 +18: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: explicit invalidation cannot be undone by returning to source
+00:00 +19: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart
+00:01 +19: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: authoritative connector admission coalesces the same card
+00:02 +20: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: unobserved and mismatched catalog suggestions cannot be admitted
+00:02 +21: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: changed authoritative transcript rejects the earlier card controller
+00:02 +22: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: changed project invalidates an admitted connector before dispatch
+00:02 +23: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: changed active profile invalidates an admitted connector
+00:02 +24: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: same-profile replacement retains the card and uses its fresh repository
+00:02 +25: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: disabling Agent cards invalidates retained connector actions
+00:02 +26: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: disposed card controllers do not exhaust the pending card budget
+00:02 +27: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: source change during history recovery never calls the stale repository
+00:02 +28: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_card_authority_test.dart
+00:02 +28: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_card_authority_test.dart: retained payload is available during suspension but cannot authorize new requests
+00:02 +29: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_card_authority_test.dart: replaced or deleted payload cannot reuse prior consent
+00:02 +30: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_card_authority_test.dart: incomplete recovery is different from a complete removed card
+00:02 +31: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart
+00:03 +31: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: unqualified gateways do not promise chat connector actions
+00:03 +32: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: OpenCode 1 can connect and refresh chat connectors with OAuth
+00:03 +33: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: OpenCode 2 supports runtime chat connectors without chat OAuth
+00:03 +34: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: managed Agent cards preserve connector capability decisions
+00:03 +35: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart
+00:03 +35: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart: chat connector uses runtime add at the current location
+00:04 +36: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart: chat connector cannot replace an existing runtime name
+00:04 +37: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart: invalid chat connector is rejected before contacting the server
+00:04 +38: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart: changing location during inventory read prevents runtime mutation
+00:04 +39: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart
+00:04 +39: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: connector suggestion preserves identity and normalizes plain reason
+00:04 +40: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: connector keeps executed tool provenance requirements
+00:04 +41: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: Dart and helper reject malformed or actionable connector payloads
+00:04 +42: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: MCP helper advertises connector suggestions and accepts their calls
+00:04 +43: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/file_size_ratchet_test.dart
+00:05 +43: /home/eslam/Storage/Code/oc_app-sol-bd/test/file_size_ratchet_test.dart: no lib file grows past its line budget
+00:05 +44: /home/eslam/Storage/Code/oc_app-sol-bd/test/file_size_ratchet_test.dart: the baseline only lists files over the limit
+00:05 +45: All tests passed!

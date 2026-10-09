@@ -1,10 +1,29 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:opencode_mobile/domain/tool_label.dart';
 
 import 'package:opencode_mobile/domain/genui/gen_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('connector search identities are exact and separate from cards', () {
+    expect(PhoneTool.cards.tools, ['show', 'find_connectors']);
+    expect(
+      AgentToolAdapter.claude.connectorSearchName,
+      'mcp__oc-ui__find_connectors',
+    );
+    expect(
+      AgentToolAdapter.openCode1.connectorSearchName,
+      'oc-ui_find_connectors',
+    );
+    expect(AgentToolAdapter.pi.connectorSearchName, isNull);
+    for (final id in ['mcp__oc-ui__find_connectors', 'oc-ui_find_connectors']) {
+      expect(isConnectorSearchTool(id), isTrue);
+      expect(isAgentCardTool(id), isFalse);
+    }
+    expect(isConnectorSearchTool('mcp__other__find_connectors'), isFalse);
+    expect(isConnectorSearchTool('oc-ui_find_connectors_extra'), isFalse);
+  });
   group('every adapter keeps the registry contract', () {
     test('ids and Paseo providers are unique', () {
       final ids = AgentToolAdapters.all.map((agent) => agent.id).toList();

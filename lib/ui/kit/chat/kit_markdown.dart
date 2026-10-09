@@ -7,19 +7,28 @@
 // as a [KitMarkdownBlockBuilder] and a [KitMarkdownHighlighter].
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app_iconography.dart';
 import '../../theme_roles.dart';
 import '../../widgets/external_link.dart';
+import '../kit_bidi.dart';
+import '../kit_chip.dart';
 import '../kit_code_block.dart';
 import '../kit_divider.dart';
+import '../kit_image.dart';
 import '../kit_layout.dart';
+import '../kit_tappable.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
+
+part 'kit_markdown_image.dart';
 
 /// Builds a fenced block whose info string the host claims (```choices```,
 /// ```checklist```, ```command```: AgentBlockKinds). Returns null to let
@@ -35,13 +44,25 @@ typedef KitMarkdownBlockBuilder =
 typedef KitMarkdownHighlighter =
     TextSpan Function(BuildContext context, TextSpan span, {String? source});
 
-/// How inline code that looks like a server path becomes a link. The host
+/// How inline code that looks like a server path becomes a link, and a
+/// Markdown picture that names a server file becomes a tile. The host
 /// memoises [validate]; a path renders as plain mono until it resolves true.
 @immutable
 class KitMarkdownFileLinks {
-  const KitMarkdownFileLinks({required this.validate, required this.open});
+  const KitMarkdownFileLinks({
+    required this.validate,
+    required this.open,
+    this.readImage,
+  });
   final Future<bool> Function(String path) validate;
   final void Function(String path) open;
+
+  /// The bytes of a validated picture file, for its thumbnail in a reply
+  /// (the host's own file transport). Null, or a null result: the picture
+  /// shows as a named chip instead. The host should keep the function
+  /// stable (a method, not a new closure per build): thumbnails of the same
+  /// path through the same function share one cached image.
+  final Future<Uint8List?> Function(String path)? readImage;
 }
 
 /// Agent Markdown in kit text. Chat parts follow the transcript turn model
@@ -152,9 +173,11 @@ class KitMarkdown extends StatefulWidget {
           _isTableDelimiter(line)) {
         continue;
       }
-      final prose = line.replaceFirst(
-        RegExp(r'^\s*(?:#{1,6}\s+|>\s?|[-*+]\s+|\d+\.\s+)'),
-        '',
+      final prose = KitMarkdownImage.withAltText(
+        line.replaceFirst(
+          RegExp(r'^\s*(?:#{1,6}\s+|>\s?|[-*+]\s+|\d+\.\s+)'),
+          '',
+        ),
       );
       output.writeln(
         prose.replaceAllMapped(_speechPattern, (match) {
@@ -477,7 +500,17 @@ class _KitMarkdownState extends State<KitMarkdown> {
         continue;
       }
 
-      paragraph.add(line);
+      // Lines that are only pictures: one group, drawn as tiles.
+      final group = _pictureGroup(lines, i);
+      if (group != null) {
+        flushParagraph();
+        i = group.end;
+        add('i\u0000${group.source}', () => _KitMdImages(images: group.images));
+        continue;
+      }
+
+      final text = _lineOf(lines, i);
+      if (text.trim().isNotEmpty) paragraph.add(text);
       i++;
     }
     flushParagraph();
@@ -581,19 +614,20 @@ bool _isTableDelimiter(String line) {
 bool _isMonoCell(String cell) => RegExp(r'^`[^`\n]+`$').hasMatch(cell.trim());
 
 /// A cell's words as they are drawn (markup dropped), for measuring.
-String _plainOf(String source) => source.replaceAllMapped(
-  _renderPattern,
-  (m) =>
-      m.group(7) ??
-      m.group(6) ??
-      m.group(1) ??
-      m.group(2) ??
-      m.group(3) ??
-      m.group(4) ??
-      m.group(5) ??
-      m.group(9) ??
-      '',
-);
+String _plainOf(String source) =>
+    KitMarkdownImage.withAltText(source).replaceAllMapped(
+      _renderPattern,
+      (m) =>
+          m.group(7) ??
+          m.group(6) ??
+          m.group(1) ??
+          m.group(2) ??
+          m.group(3) ??
+          m.group(4) ??
+          m.group(5) ??
+          m.group(9) ??
+          '',
+    );
 
 class _KitMdTable extends StatefulWidget {
   const _KitMdTable({
@@ -1159,6 +1193,14 @@ class _KitMdTextState extends State<_KitMdText> {
     String src,
   ) {
     final spans = <InlineSpan>[];
+    // A picture inside a sentence is a small run of its own, never `!` and
+    // a link; the words around it parse as usual.
+    final pictures = _pictureSpans(
+      src,
+      widget.role,
+      (text) => _spansOf(context, scope, roles, text),
+    );
+    if (pictures != null) return pictures;
     var pos = 0;
     for (final m in _renderPattern.allMatches(src)) {
       if (m.start > pos) spans.add(TextSpan(text: src.substring(pos, m.start)));

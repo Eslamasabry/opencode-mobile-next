@@ -1,0 +1,14 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart
+00:00 +0: failed descriptor publishing can retry after cooldown
+00:00 +0 -1: failed descriptor publishing can retry after cooldown [E]
+  Expected: <2>
+    Actual: <1>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/mcp_chat_connection_test.dart 367:7            main.<fn>.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: failed descriptor publishing can retry after cooldown

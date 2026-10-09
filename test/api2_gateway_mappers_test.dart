@@ -27,7 +27,8 @@ void main() {
       expect(caps.mcpConfigWrites, isFalse);
       expect(caps.mcpRuntimeAdds, isTrue);
       expect(ServerCapabilities.allV1.mcpConfigWrites, isTrue);
-      expect(ServerCapabilities.allV1.mcpRuntimeAdds, isFalse);
+      // OC1 POST /mcp adds runtime connectors without rewriting config.
+      expect(ServerCapabilities.allV1.mcpRuntimeAdds, isTrue);
       expect(caps.sessionShare, isFalse);
       expect(caps.sessionArchive, isFalse);
       expect(caps.sessionTodos, isFalse);
