@@ -412,9 +412,13 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
       identical(repository, currentRepository) &&
       refreshGeneration == _questionsRefreshGeneration;
 
-  void _markSessionChanged(String id, {bool affectsStatus = true}) {
+  void _markSessionChanged(
+    String id, {
+    bool affectsStatus = true,
+    bool affectsMetadata = true,
+  }) {
     _sessionRevision += 1;
-    _sessionRevisions[id] = _sessionRevision;
+    if (affectsMetadata) _sessionRevisions[id] = _sessionRevision;
     // Metadata hydration must not invalidate a concurrent status snapshot.
     if (affectsStatus) _sessionStatusRevisions[id] = _sessionRevision;
   }

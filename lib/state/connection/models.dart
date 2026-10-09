@@ -82,13 +82,95 @@ mixin _ConnectionControllerModels on ChangeNotifier {
 
   bool get serverOwnsSessionSelection =>
       _self.api is SessionSelectionGateway ||
-      (_self.api == null && _self.serverFlavor == ServerFlavor.v2);
+      (_self.api == null &&
+          (_self.isAgentBackend || _self.serverFlavor == ServerFlavor.v2));
 
   SessionSelection selectionForSession(String sessionID) =>
       _self._selectionForSession(sessionID);
 
   ModelRef? modelForSession(String sessionID) =>
       selectionForSession(sessionID).model;
+
+  /// Display only: a cold connection may use this conversation's last
+  /// confirmed model. Sending always reads [selectionForSession] instead.
+  ModelRef? displayModelForSession(String sessionID) {
+    final selection = selectionForSession(sessionID);
+    if (selection.modelKnown) {
+      _self._rememberDisplayModel(sessionID, selection.model);
+      return selection.model;
+    }
+    return _displayModels[sessionID];
+  }
+
+  String? _displayModelsOwner;
+  Map<String, ModelRef>? _displayModelsCache;
+  String get _displayModelsKey =>
+      'oc.sessionDisplayModels.${_displayModelsOwner!}';
+
+  Map<String, ModelRef> get _displayModels {
+    final owner = (_self._connectedProfile ?? _self.profile)?.id;
+    if (_displayModelsCache != null && _displayModelsOwner == owner) {
+      return _displayModelsCache!;
+    }
+    _displayModelsOwner = owner;
+    final models = <String, ModelRef>{};
+    if (owner != null) {
+      try {
+        final raw = _self.store.prefs.getString(_displayModelsKey);
+        final decoded = raw == null ? null : jsonDecode(raw);
+        if (decoded is Map) {
+          for (final entry in decoded.entries.take(200)) {
+            final value = entry.value;
+            if (entry.key is String &&
+                value is Map &&
+                value['providerID'] is String &&
+                value['modelID'] is String) {
+              models[entry.key as String] = ModelRef(
+                providerID: value['providerID'],
+                modelID: value['modelID'],
+              );
+            }
+          }
+        }
+      } catch (_) {}
+    }
+    return _displayModelsCache = models;
+  }
+
+  void _rememberDisplayModel(String id, ModelRef? model) {
+    if (_self._disposed ||
+        _self._closedQueueProfiles.contains(
+          (_self._connectedProfile ?? _self.profile)?.id,
+        )) {
+      return;
+    }
+    final models = _displayModels;
+    final previous = models[id];
+    if (previous?.providerID == model?.providerID &&
+        previous?.modelID == model?.modelID) {
+      return;
+    }
+    models.remove(id);
+    if (model != null) models[id] = model;
+    while (models.length > 200) {
+      models.remove(models.keys.first);
+    }
+    if (_displayModelsOwner == null) return;
+    final key = _displayModelsKey;
+    final encoded = jsonEncode({
+      for (final entry in models.entries)
+        entry.key: {
+          'providerID': entry.value.providerID,
+          'modelID': entry.value.modelID,
+        },
+    });
+    _modelLibraryWrite = _modelLibraryWrite
+        .catchError((Object _) {})
+        .then((_) async {
+          await _self.store.prefs.setString(key, encoded);
+        })
+        .catchError((Object _) {});
+  }
 
   /// The variant [sessionID] sends with; see [modelForSession].
   String variantForSession(String sessionID) =>
@@ -340,6 +422,7 @@ extension _ConnectionControllerModelsImpl on ConnectionController {
   }
 
   void _forgetSessionModel(String sessionID) {
+    _rememberDisplayModel(sessionID, null);
     if (sessionModels.remove(sessionID) == null) return;
     final p = profile;
     if (p != null) unawaited(store.setSessionModels(p.id, sessionModels));

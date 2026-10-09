@@ -111,6 +111,17 @@ class SelectionController extends ConnectionController {
   );
 }
 
+class OfflinePhoneSelectionController extends ConnectionController {
+  OfflinePhoneSelectionController(super.store) : super(isAgentBackend: true);
+  @override
+  ServerProfile get profile => ServerProfile(
+    id: 'p',
+    name: 'Phone agents',
+    baseUrl: 'ws://localhost',
+    backend: ServerBackend.paseo,
+  );
+}
+
 Future<ConnectionController> controllerFor(SelectionApi api) async {
   SharedPreferences.setMockInitialValues({});
   final controller =
@@ -143,6 +154,45 @@ void event(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test(
+    'cold start model fallback is per conversation and survives restart',
+    () async {
+      final api = SelectionApi();
+      api.values['b'] = _session('b', model: 'two');
+      final c = await controllerFor(api);
+      c.rememberModelName('p', 'one', 'First model');
+      c.rememberModelName('p', 'two', 'Second model');
+      expect(c.displayModelForSession('a')?.modelID, 'one');
+      expect(c.displayModelForSession('b')?.modelID, 'two');
+      // Let the bounded profile cache finish before simulating process restart.
+      await Future<void>.delayed(Duration.zero);
+      final restored = SelectionController(c.store)
+        ..api = SelectionApi()
+        ..status = StreamStatus.disconnected;
+      addTearDown(restored.dispose);
+      expect(restored.selectionForSession('a').modelKnown, isFalse);
+      expect(restored.modelForSession('a'), isNull);
+      expect(restored.displayModelForSession('a')?.modelID, 'one');
+      expect(restored.displayModelForSession('b')?.modelID, 'two');
+      expect(restored.displayModelForSession('unknown'), isNull);
+      expect(restored.knownModelName('p', 'two'), 'Second model');
+      // A confirmed server default invalidates, rather than borrows, a model.
+      restored.sessionsById['a'] = Session(
+        id: 'a',
+        selection: SessionSelection(),
+      );
+      expect(restored.displayModelForSession('a'), isNull);
+      expect(restored.displayModelForSession('b')?.modelID, 'two');
+      await Future<void>.delayed(Duration.zero);
+      final afterDefault = SelectionController(c.store)
+        ..api = SelectionApi()
+        ..status = StreamStatus.disconnected;
+      addTearDown(afterDefault.dispose);
+      expect(afterDefault.displayModelForSession('a'), isNull);
+      expect(afterDefault.displayModelForSession('b')?.modelID, 'two');
+    },
+  );
 
   testWidgets('session agent failure stays visible without changing defaults', (
     tester,
@@ -355,6 +405,50 @@ void main() {
       expect(controller.agentForSession('unloaded'), 'plan');
     },
   );
+
+  test(
+    'cold start phone selection stays unknown before its gateway exists',
+    () async {
+      final c = await controllerFor(SelectionApi());
+      expect(c.displayModelForSession('a')?.modelID, 'one');
+      await Future<void>.delayed(Duration.zero);
+      final offline = OfflinePhoneSelectionController(c.store);
+      addTearDown(offline.dispose);
+      expect(offline.api, isNull);
+      expect(offline.selectionForSession('a').modelKnown, isFalse);
+      expect(offline.modelForSession('a'), isNull);
+      expect(offline.displayModelForSession('a')?.modelID, 'one');
+      expect(offline.displayModelForSession('b')?.modelID, 'one');
+    },
+  );
+
+  for (final v2 in [false, true]) {
+    test(
+      'cold start ${v2 ? "v2" : "v1"} status does not discard selection hydration',
+      () async {
+        final api = SelectionApi();
+        final c = await controllerFor(api);
+        final pending = Completer<Session>();
+        api.read = (_) => pending.future;
+        final read = c.ensureSession('a');
+        final status = <String, dynamic>{
+          'sessionID': 'a',
+          'status': {'type': 'busy'},
+        };
+        if (v2) {
+          event(c, 'session.status', status);
+        } else {
+          c.handleEventForTesting(
+            EventEnvelope(type: 'session.status', properties: status),
+          );
+        }
+        pending.complete(_session('a', model: 'fresh'));
+        await read;
+        expect(c.busySessions, contains('a'));
+        expect(c.modelForSession('a')?.modelID, 'fresh');
+      },
+    );
+  }
 
   test('pending metadata cannot overwrite a newer remote selection', () async {
     final api = SelectionApi();

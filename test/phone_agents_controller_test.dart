@@ -57,6 +57,7 @@ part 'support/phone_agents_check_publication_tests.dart';
 part 'support/phone_agents_capability_refresh_tests.dart';
 part 'support/phone_agents_removal_tests.dart';
 part 'support/phone_agents_idle_tests.dart';
+part 'support/phone_agents_cold_start_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -266,6 +267,8 @@ class _BrowserPort implements BrowserClaudeLaunchPort {
 }
 
 class _HostState {
+  bool helperRunning = false;
+  Future<void> Function()? startHandler;
   Future<AgentHelperStatus> Function()? readHelperStatus;
   Future<AgentPhoneCheckResult> Function(String)? selfTestHandler;
   Future<AgentAuthProbeResult> Function(String)? probeHandler;
@@ -350,7 +353,11 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
   @override
   Future<void> cancelInstall() async => events.log.add('host.cancelInstall');
   @override
-  Future<void> start() async => events.log.add('host.start');
+  Future<void> start() async {
+    events.log.add('host.start');
+    await state.startHandler?.call();
+  }
+
   @override
   Future<void> stop() async => events.log.add('host.stop');
   @override
@@ -645,6 +652,7 @@ Future<_World> _world(
   bool removalSupported = false,
   bool idleSupported = false,
   bool diagnosticsSupported = false,
+  bool livenessSupported = false,
 }) async {
   final profileJson = {
     'id': 'local',
@@ -692,7 +700,9 @@ Future<_World> _world(
     localWakeLockEnsurer: () async {},
     phoneEngineBridge: _NoEngineBridge(),
     phoneAgentHostFactory: (profile) {
-      final host = idleSupported
+      final host = livenessSupported
+          ? _ColdStartHost(events, profile.id, state)
+          : idleSupported
           ? _IdleHost(events, profile.id, state)
           : removalSupported
           ? _RemovableHost(events, profile.id, state)
@@ -817,6 +827,7 @@ void main() {
   _phoneCapabilityRefreshTests();
   _phoneRemovalTests();
   _phoneIdleTests();
+  _phoneColdStartTests();
 
   const dir = _project;
 
@@ -1811,8 +1822,8 @@ void main() {
     expect(c.agentStatusLines, isEmpty);
     await tester.pump();
     expect(w.events.log.where((e) => e == 'host.start'), hasLength(1));
-    // Still stopped afterwards: now it is said, with its Resume.
-    await tester.pump(const Duration(milliseconds: 50));
+    // Still stopped after the startup window: now it is said, with Resume.
+    await tester.pump(const Duration(seconds: 31));
     expect(c.agentStatusLines.single.kind, PhoneAgentStatusLineKind.stopped);
     await c.refreshAgentRows();
     await tester.pump();

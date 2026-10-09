@@ -66,6 +66,7 @@ extension _PhoneAgentRoutes on _ConnectionControllerPhoneAgents {
       revokeBrowser: () =>
           _self._browserLaunches.revokeProfile(profileId: owner),
       beforeHost: [
+        if (backend != null) () => backend._modelLibraryWrite,
         for (final cancellation in signInCancellations) () => cancellation,
         for (final session in signIns)
           () async {

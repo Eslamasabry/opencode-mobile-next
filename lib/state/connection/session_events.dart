@@ -18,7 +18,7 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
           }
           _deletedSessionIDs.remove(s.id);
           _markSessionChanged(s.id);
-          sessionsById[s.id] = s;
+          sessionsById[s.id] = _preserveReadState(s);
           _rememberSessionMembership(s);
           _notifyListeners();
         }
@@ -235,7 +235,7 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
             ? rawStatus['type']?.toString()
             : rawStatus?.toString();
         if (sid != null && sid.isNotEmpty) {
-          _markSessionChanged(sid);
+          _markSessionChanged(sid, affectsMetadata: false);
           switch (sessionStatus) {
             case 'idle':
               if (_phoneChatDispatch.contains(sid)) {
@@ -313,7 +313,7 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
           if (_phoneChatDispatch.contains(sid)) {
             unawaited(_refreshBusySessionStatuses());
           }
-          _markSessionChanged(sid);
+          _markSessionChanged(sid, affectsMetadata: false);
           busySessions.remove(sid);
           _openTurns.remove(sid);
           retryStates.remove(sid);

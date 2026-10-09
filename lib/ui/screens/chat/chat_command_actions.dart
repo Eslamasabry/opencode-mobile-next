@@ -437,7 +437,7 @@ extension _ChatCommandActions on _ChatScreenState {
   }
 
   String? get _presentedModelLabel {
-    final model = _conn.modelForSession(widget.sessionID);
+    final model = _conn.displayModelForSession(widget.sessionID);
     if (model == null) return null;
     for (final candidate in _conn.catalog?.models ?? const <CatalogModel>[]) {
       if (candidate.id == model.modelID &&

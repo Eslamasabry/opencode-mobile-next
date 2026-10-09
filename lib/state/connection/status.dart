@@ -73,6 +73,11 @@ mixin _ConnectionControllerStatus on ChangeNotifier {
   /// events missed during a network handoff are reconciled from REST.
   int dataRefreshRevision = 0;
 
+  /// Initial connection or a bounded phone-helper launch, not an outage.
+  bool get connectionStarting =>
+      _self.status == StreamStatus.connecting ||
+      (_self.isAgentBackend && _self._genUiParent?.phoneAgentStarting == true);
+
   bool get connectionLoading =>
       _self.status == StreamStatus.connecting ||
       _self.status == StreamStatus.reconnecting;

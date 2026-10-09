@@ -51,6 +51,10 @@ class _Api extends OpenCodeApi with CompleteMessageHistory {
 
 class _Controller extends ConnectionController {
   _Controller(super.store, {super.isIsolated});
+  bool ownsSelection = false;
+  @override
+  bool get serverOwnsSessionSelection =>
+      ownsSelection || super.serverOwnsSessionSelection;
   @override
   ServerProfile get profile =>
       ServerProfile(id: 'server-a', name: 'A', baseUrl: 'http://localhost');
@@ -289,6 +293,70 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Auto-approve paused'), findsOneWidget);
     await tester.pump(const Duration(seconds: 9));
+    // The reconnect grace timer belongs to the controller, not the widget.
+    controller.dispose();
+  });
+
+  testWidgets('cold start shows the conversation model then fresh selection', (
+    tester,
+  ) async {
+    final (controller, _) = await _boot();
+    controller.ownsSelection = true;
+    final previous = ModelRef(providerID: 'claude', modelID: 'old-model');
+    controller.rememberModelName('claude', 'old-model', 'Saved Claude model');
+    controller.sessionsById['parent'] = Session(
+      id: 'parent',
+      selection: SessionSelection(model: previous),
+    );
+    expect(controller.displayModelForSession('parent'), previous);
+    controller.sessionsById['parent'] = Session(id: 'parent');
+    controller.status = StreamStatus.connecting;
+    await _pump(tester, controller);
+    expect(find.textContaining('Loading conversation selection'), findsNothing);
+    expect(find.text('Saved Claude model'), findsOneWidget);
+    expect(controller.modelForSession('parent'), isNull);
+    controller.sessionsById['parent'] = Session(
+      id: 'parent',
+      selection: SessionSelection(
+        model: ModelRef(providerID: 'claude', modelID: 'new-model'),
+      ),
+    );
+    controller.rememberModelName('claude', 'new-model', 'Fresh Claude model');
+    controller.status = StreamStatus.connected;
+    controller.notifyListeners();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Saved Claude model'), findsNothing);
+    expect(find.text('Fresh Claude model'), findsOneWidget);
+    expect(find.textContaining('Refreshing'), findsNothing);
+  });
+
+  testWidgets('cold start without a saved model offers a choice immediately', (
+    tester,
+  ) async {
+    final (controller, _) = await _boot();
+    controller.ownsSelection = true;
+    controller.status = StreamStatus.connecting;
+    await _pump(tester, controller);
+    expect(find.textContaining('Loading conversation selection'), findsNothing);
+    expect(find.text('Choose a model'), findsOneWidget);
+  });
+
+  testWidgets('cold start does not label automatic approval paused', (
+    tester,
+  ) async {
+    final (controller, _) = await _boot();
+    await controller.setSessionAutoApproval(
+      'parent',
+      const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
+    );
+    controller.status = StreamStatus.connecting;
+    await _pump(tester, controller);
+    expect(find.text('Auto-approve paused'), findsNothing);
+    expect(find.text('Auto-approve'), findsOneWidget);
+    controller.status = StreamStatus.disconnected;
+    controller.notifyListeners();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Auto-approve paused'), findsOneWidget);
   });
 
   testWidgets('an isolated walkthrough shows no chip', (tester) async {
