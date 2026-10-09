@@ -15,6 +15,7 @@ import sys
 
 from . import background, fixture, fresh, ports, upgrade
 from .capture import BackgroundCapture
+from .runtime import safe_protocol_failure
 from .common import (
     CANDIDATE_BUILD,
     LOCK,
@@ -247,6 +248,11 @@ def run_locked(args, artifacts, receipt, output, *, port_factory=ports.AndroidPo
             result["state"] = result["driver"]["state"]
         except Exception as error:
             result.update(state="fail", code=failure_code(error))
+            facts = safe_protocol_failure(
+                getattr(device, "_protocol_failure_facts", None)
+            )
+            if facts is not None:
+                result["protocolFailure"] = facts
         finally:
             try:
                 device.close_protocol()
@@ -359,7 +365,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if not CANDIDATE_BUILD <= args.candidate_build <= 999999 or (
-            args.candidate_build != CANDIDATE_BUILD and args.case not in ("upgrade", "background", "fresh")
+            args.candidate_build != CANDIDATE_BUILD
+            and args.case not in ("upgrade", "background", "fresh")
         ):
             raise DriverFailure("invalid_candidate_build")
         if not re.fullmatch(r"fq9-[A-Za-z0-9_-]{1,80}", args.run_id):
