@@ -347,7 +347,15 @@ extension _ChatComposerRegion on _ChatScreenState {
               ? null
               : _ComposerNote(key: _composerNoteKey, text: _composerNote!),
         ),
-        _composerStatusStrip(bodyConstraints),
+        // The chips wrap at a narrow width or a large text size; in the room
+        // left over the composer they scroll instead of overflowing.
+        Flexible(
+          child: SingleChildScrollView(
+            reverse: true,
+            primary: false,
+            child: _composerStatusStrip(bodyConstraints),
+          ),
+        ),
       ],
     );
   }

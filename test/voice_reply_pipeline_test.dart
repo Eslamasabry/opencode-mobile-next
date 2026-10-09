@@ -461,6 +461,8 @@ void main() {
       expect(api.prompts, [_transcript]);
       expect(voice.listens, 1);
       expect(find.text(_newReply), findsOneWidget);
+      // The quiet-reconnect window (15s) outlives a status flap.
+      await tester.pump(const Duration(seconds: 16));
     });
   }
 
@@ -620,6 +622,8 @@ void main() {
       expect(calls.where((call) => call.method == 'speak'), hasLength(1));
       expect(api.prompts, [_transcript]);
       expect(voice.listens, 1);
+      // The quiet-reconnect window (15s) outlives a status flap.
+      await tester.pump(const Duration(seconds: 16));
     },
   );
 

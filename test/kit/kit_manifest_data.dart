@@ -551,7 +551,6 @@ const _deferredAtKitMerge = <String, Map<String, String>>{
     'KitStatusLineSlot': _toAssignGallery,
   },
   'test': {
-    'KitComposerStatusStrip': _byChat,
     'KitStatusContribution': _toAssignTest,
     'KitStatusLineSlot': _toAssignTest,
     'KitStatusScope': _toAssignTest,

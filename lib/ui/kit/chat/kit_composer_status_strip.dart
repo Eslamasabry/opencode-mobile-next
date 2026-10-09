@@ -70,7 +70,10 @@ class KitComposerStatusStrip extends StatelessWidget {
       padding: pad,
       child: Wrap(
         key: stripKey,
-        alignment: WrapAlignment.spaceBetween,
+        // Alone, the model chip stays at the end of the line (14A).
+        alignment: chips.isEmpty
+            ? WrapAlignment.end
+            : WrapAlignment.spaceBetween,
         spacing: tokens.space2,
         runSpacing: tokens.space2,
         crossAxisAlignment: WrapCrossAlignment.center,

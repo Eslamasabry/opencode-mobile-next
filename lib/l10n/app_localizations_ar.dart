@@ -28333,7 +28333,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get connectorCardFinishSignIn => 'إكمال تسجيل الدخول';
 
   @override
-  String get connectorCardCheckStatus => 'فحص الحالة';
+  String get connectorCardCheckStatus => 'تحديث';
 
   @override
   String get connectorCardCancelSignIn => 'إلغاء تسجيل الدخول';
@@ -28365,7 +28365,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get connectorCardFailureUnavailable =>
-      'ربط الأدوات من المحادثة غير متاح لهذا الوكيل.';
+      'لا يستطيع هذا الوكيل ربط الأدوات من المحادثة.';
 
   @override
   String get connectorCardFailureInvalidSuggestion =>

@@ -28320,7 +28320,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get connectorCardFinishSignIn => 'Finish sign-in';
 
   @override
-  String get connectorCardCheckStatus => 'Check status';
+  String get connectorCardCheckStatus => 'Refresh';
 
   @override
   String get connectorCardCancelSignIn => 'Cancel sign-in';
@@ -28352,7 +28352,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get connectorCardFailureUnavailable =>
-      'Connecting tools from chat is not available for this agent.';
+      'This agent cannot connect tools from a conversation.';
 
   @override
   String get connectorCardFailureInvalidSuggestion =>
@@ -28380,7 +28380,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get connectorCardFailureOauthUnavailable =>
-      'Sign-in for this connector is not available in this chat.';
+      'This connector cannot sign in from a conversation.';
 
   @override
   String get connectorCardFailureNotConnected =>
