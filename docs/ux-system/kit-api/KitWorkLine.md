@@ -193,3 +193,13 @@ The line follows the turn's width (the conversation pane, at most `KitLayout.pan
 ## Open questions
 
 None.
+
+
+## Update 2026-10-09: the line and its steps are a timeline (KitStepTimeline)
+
+The chip and the hairline stroke are replaced (owner request: the Claude app's grouping sheet, inline, no sheet). `KitWorkLine` keeps its API and states and draws itself with [`KitStepTimeline`](KitStepTimeline.md):
+
+- Closed: the group's glyph (by what the work mostly did), the words, the kit's chevron. No pill. The working mark replaces the glyph while running; the failed mark when the work ended on a failure, with "Didn't finish" appended to the words like "Stopped".
+- Opened, running: the line keeps the summary and no mark (the running step on the rail carries the one mark); "Hide steps" is no longer drawn. The screen-reader label is "Working, {summary}".
+- Opened: the steps hang off the rail (dot, tile, state mark, preview card).
+- Cap: the newest `stepCap` steps are built; "Show {n} earlier steps" reveals them `stepCap` at a time (n is at most `stepCap`), focus landing on the first revealed step. A 200-step turn never lays out more than 25 steps at once.

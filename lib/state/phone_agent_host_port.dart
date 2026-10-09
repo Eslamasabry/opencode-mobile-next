@@ -1,3 +1,5 @@
+export '../domain/agent_helper_status.dart';
+import '../domain/agent_helper_status.dart';
 export '../builtin/agents/phone_agents_host.dart' show PhoneAgentIdleState;
 import '../builtin/agents/phone_agents_host.dart';
 import '../domain/agent_catalog.dart';
@@ -42,6 +44,10 @@ abstract interface class PhoneAgentLivenessPort {
   Future<bool?> helperRunning();
 }
 
+abstract interface class PhoneAgentDiagnosticsPort {
+  Future<AgentHelperStatus> helperStatus();
+}
+
 abstract interface class PhoneAgentGuardedStartPort {
   Future<void> startWhileCurrent({required bool Function() stillCurrent});
 }
@@ -63,6 +69,7 @@ final class BuiltinPhoneAgentHostPort
         PhoneAgentHostPort,
         PhoneAgentAuthPort,
         PhoneAgentLivenessPort,
+        PhoneAgentDiagnosticsPort,
         PhoneAgentRemovalPort,
         PhoneAgentIdleHostPort,
         PhoneAgentGuardedStartPort {
@@ -84,6 +91,9 @@ final class BuiltinPhoneAgentHostPort
   @override
   Future<AgentRemovalResult> removeAgent(String agentId) =>
       _host.removeAgent(agentId);
+  @override
+  Future<AgentHelperStatus> helperStatus() => _host.helperStatus();
+
   @override
   Future<bool?> helperRunning() => _host.helperRunning();
 

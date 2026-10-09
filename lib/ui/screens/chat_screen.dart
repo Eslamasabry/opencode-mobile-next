@@ -98,6 +98,7 @@ import '../widgets/tool_card.dart';
 import '../../domain/genui/gen_ui.dart';
 import '../widgets/agent_card_photos.dart';
 import '../widgets/agent_card_view.dart';
+import '../../state/connector_card_host.dart';
 import '../../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
 import '../../feedback/bug_report.dart' show openBugReport;
 import '../kit/kit.dart';
@@ -145,6 +146,7 @@ import 'files_screen.dart';
 import 'global_sessions_screen.dart';
 import 'home_screen.dart';
 import 'library_screen.dart';
+import 'mcp_catalog_screen.dart' show McpCatalogScreen;
 import 'project_health_screen.dart';
 import 'review_workspace.dart';
 import 'session_context_screen.dart';
@@ -639,6 +641,9 @@ class _ChatScreenState extends State<ChatScreen>
     }
     return _pathLinkChecks.putIfAbsent(path, () => _checkPathLink(path));
   }
+
+  /// A reply's picture file, read for its thumbnail ([_loadPathImage]).
+  Future<Uint8List?> _readPathImage(String path) => _loadPathImage(path);
 
   Future<void> _openPathLink(String raw) async {
     final strings = _chatL10n(context);

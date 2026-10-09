@@ -21,6 +21,7 @@ class ConnectionStatusSnapshot {
     this.since,
     this.usesToken = false,
     this.retrying = false,
+    this.quiet = false,
     this.attemptRevision = 0,
   });
 
@@ -30,13 +31,18 @@ class ConnectionStatusSnapshot {
   final DateTime? since;
   final bool usesToken;
   final bool retrying;
+
+  /// An established link is recovering within its bounded presentation grace.
+  final bool quiet;
   final int attemptRevision;
 
   bool get visible =>
+      !quiet &&
       phase != ConnectionStatusPhase.hidden &&
       phase != ConnectionStatusPhase.connected;
   bool get waiting =>
-      phase == ConnectionStatusPhase.connecting ||
-      phase == ConnectionStatusPhase.reconnecting;
+      !quiet &&
+      (phase == ConnectionStatusPhase.connecting ||
+          phase == ConnectionStatusPhase.reconnecting);
   bool get reachable => phase == ConnectionStatusPhase.connected;
 }

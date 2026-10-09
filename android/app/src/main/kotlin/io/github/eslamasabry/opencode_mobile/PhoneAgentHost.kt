@@ -20,7 +20,8 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
 
     fun status(profile: String): Map<String, Any?> = synchronized(this) {
         identity(profile)
-        mapOf("running" to (children[profile]?.isAlive == true), "abi" to (Build.SUPPORTED_ABIS.firstOrNull() ?: ""))
+        linux.privateAgentDiagnostics("agent-host.$profile") +
+            mapOf("running" to (children[profile]?.isAlive == true), "abi" to (Build.SUPPORTED_ABIS.firstOrNull() ?: ""))
     }
 
     fun start(profile: String, password: String, port: Int, config: String): Map<String, Any?> {

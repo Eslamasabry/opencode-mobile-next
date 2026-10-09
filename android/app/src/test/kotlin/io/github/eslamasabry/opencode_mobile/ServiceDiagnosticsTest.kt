@@ -8,6 +8,18 @@ import org.junit.Test
 
 class ServiceDiagnosticsTest {
     @Test
+    fun observedExitRetainsTimeAndIntentAcrossRestart() {
+        val stopped = ServiceDiagnostics().launched().exited(137, 100L, 2000L, false)
+        val restarted = stopped.launched().snapshot(true, 50L)
+        assertEquals(2000L, restarted["lastExitAtMs"])
+        assertEquals(false, restarted["lastStopRequested"])
+        assertEquals("memory_or_phantom_kill", restarted["exitReason"])
+        val deliberate = stopped.exited(137, 200L, 3000L, true).snapshot(false, null)
+        assertEquals(true, deliberate["lastStopRequested"])
+        assertEquals(3000L, deliberate["lastExitAtMs"])
+    }
+
+    @Test
     fun firstLaunchIsNotARestartAndLaterLaunchesAre() {
         val initial = ServiceDiagnostics()
         val first = initial.launched()
@@ -104,6 +116,8 @@ class ServiceDiagnosticsTest {
                 "running" to false,
                 "lastExitCode" to null,
                 "lastUptimeMs" to null,
+                "lastExitAtMs" to null,
+                "lastStopRequested" to null,
                 "uptimeMs" to null,
                 "restartCount" to 0,
                 "exitReason" to "unknown",

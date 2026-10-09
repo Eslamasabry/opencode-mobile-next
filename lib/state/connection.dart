@@ -1,5 +1,11 @@
 import 'dart:async';
+import '../builtin/agents/gen_ui_search_publish.dart';
+import '../domain/mcp_connector_search.dart';
+import 'mcp_connector_search_bridge.dart';
+import 'setup_registry_store.dart';
 import '../domain/genui/gen_ui.dart';
+import '../domain/mcp_catalog.dart';
+import 'mcp_chat_controller.dart';
 import '../builtin/agents/gen_ui_install.dart';
 import 'gen_ui_state.dart';
 import 'dart:convert';
@@ -117,6 +123,8 @@ import '../builtin/agents/agent_sign_in.dart' show ChannelAgentSignInHost;
 import 'phone_agent_host_port.dart';
 
 part 'connection/gen_ui.dart';
+part 'connection/connector_search.dart';
+part 'connection/mcp_chat.dart';
 part 'connection/feed_questions.dart';
 part 'connection/feed_permissions.dart';
 part 'connection/feed_question_reads.dart';
@@ -130,6 +138,7 @@ part 'connection/lifecycle.dart';
 part 'connection/revert.dart';
 part 'connection/models.dart';
 part 'connection/status.dart';
+part 'connection/quiet_reconnect.dart';
 part 'connection/queue.dart';
 part 'connection/drafts.dart';
 part 'connection/locations.dart';
@@ -233,6 +242,8 @@ typedef EventStreamFactory =
 class ConnectionController extends ChangeNotifier
     with
         _ConnectionControllerGenUi,
+        _ConnectionControllerMcpChat,
+        _ConnectionControllerConnectorSearch,
         _ConnectionControllerMonitors,
         _ConnectionControllerAttention,
         _ConnectionControllerSurfaces,
@@ -534,6 +545,7 @@ class ConnectionController extends ChangeNotifier
     PhoneAgentHostPort Function(ServerProfile profile)? phoneAgentHostFactory,
     AgentSignInHost Function()? agentSignInHostFactory,
     GenUiInstaller? genUiInstaller,
+    GenUiSearchPublisher? genUiSearchPublisher,
     BrowserClaudeLaunchRegistry? browserClaudeLaunchRegistry,
   }) : _browserLaunches =
            browserClaudeLaunchRegistry ?? BrowserClaudeLaunchRegistry(),
@@ -568,6 +580,7 @@ class ConnectionController extends ChangeNotifier
        diagnostics = diagnostics ?? AppDiagnosticsController(),
        _ownsDiagnostics = diagnostics == null {
     _genUiInstaller = genUiInstaller;
+    _genUiSearchPublisher = genUiSearchPublisher;
     _localeStore = AppLocaleStore(store.prefs);
     appLocale = ValueNotifier(_localeStore.value);
     appearance = ValueNotifier(store.appearance);
@@ -578,6 +591,8 @@ class ConnectionController extends ChangeNotifier
     this.backgroundLive.addListener(_backgroundLiveChanged);
     _profilesShown = _profilesSignature();
     store.changes.addListener(_profilesSaved);
+    addListener(_mcpChatChanged);
+    addListener(_connectorSearchSync);
     if (_ownsProfileServices) {
       this.backgroundLive.bindActionHandler(_handleCodingAlertAction);
       _syncProfileServices();
@@ -601,6 +616,7 @@ class ConnectionController extends ChangeNotifier
 
   StreamStatus get status => _status;
   set status(StreamStatus value) {
+    _observeQuietReconnect(value);
     if (_status != value && value != StreamStatus.connected) {
       _attentionTransportRevision++;
     }
@@ -822,8 +838,11 @@ class ConnectionController extends ChangeNotifier
     if (_disposed) return;
     _disposed = true;
     _resetTurnStalls();
+    _mcpChatDispose();
+    _connectorSearchDispose();
     _genUiDispose();
     _resetConnectionStatusClock();
+    _resetQuietReconnect();
     _feedDispose();
     _paShutdown();
     _sideShutdown();

@@ -108,6 +108,7 @@
 /// | [KitWorkGraph] | a team task's items and what each needs, as a graph |
 /// | [TerminalKeyBar] | two rows of terminal keys above the phone's keyboard, with sticky Ctrl and Alt |
 /// | [KitMessage], [KitTurn], [KitWorkLine], [KitToolRow] | STATE-16 a transcript's words, one turn, a turn's work folded under one chip, and one step of it |
+/// | [KitStepTimeline] | a turn's work as one quiet line that opens in place to a timeline: a thin rail, a dot for a sentence, a tile for a tool step, the live mark for the step in progress, a preview card for a file write or edit |
 /// | [KitMarkdown] | agent Markdown in kit text: the prose of a reply or a thought |
 /// | [KitComposer], [KitComposerChips], [KitComposerStatusStrip] | the composer, its chips, and the standing facts above it |
 /// | [KitQueuedMessage] | STATE-17 everything waiting to reach the agent, in one bubble |
@@ -195,6 +196,7 @@ export 'chat/kit_turn.dart';
 export 'kit_request_sheet.dart';
 export 'kit_context_region.dart';
 export 'kit_scrollbar.dart';
+export 'chat/kit_step_timeline.dart';
 export 'chat/kit_tool_row.dart';
 export 'kit_viewer.dart';
 export 'kit_capability_explainer.dart';

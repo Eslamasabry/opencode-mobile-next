@@ -1,0 +1,153 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart
+test/gen_ui_connector_test.dart:35:16: Error: Method not found: 'ToolState'.
+    toolState: ToolState(status: status, executed: executed, input: input),
+               ^^^^^^^^^
+00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart [E]
+  Failed to load "/home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart":
+  Compilation failed for testPath=/home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: test/gen_ui_connector_test.dart:35:16: Error: Method not found: 'ToolState'.
+      toolState: ToolState(status: status, executed: executed, input: input),
+                 ^^^^^^^^^
+  .
+00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart
+00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart [E]
+  Error: The Dart compiler exited unexpectedly.
+  package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+  package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+  dart:async/zone_root.dart 48:47                  _rootRunUnary
+  dart:async/zone.dart 816:35                      _CustomZone.runUnary
+  dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+  dart:async/future_impl.dart 977:13               Future._propagateToListeners
+  dart:async/future_impl.dart 862:9                Future._propagateToListeners
+  dart:async/future_impl.dart 720:5                Future._completeWithValue
+  dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+  dart:async/zone_root.dart 35:13                  _rootRun
+  dart:async/zone.dart 810:35                      _CustomZone.run
+  dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+  dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+  dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+  dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+  dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+  dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+  
+test/mcp_chat_capabilities_test.dart:34:7: Error: No named parameter with the name 'mcpChatConnect'.
+      mcpChatConnect: true,
+      ^^^^^^^^^^^^^^
+lib/domain/server_gateway/capabilities.dart:162:9: Context: Found this candidate, but the arguments don't match.
+  const ServerCapabilities({
+        ^^^^^^^^^^^^^^^^^^
+test/mcp_chat_capabilities_test.dart:48:7: Error: No named parameter with the name 'mcpChatOAuth'.
+      mcpChatOAuth: true,
+      ^^^^^^^^^^^^
+lib/domain/server_gateway/capabilities.dart:162:9: Context: Found this candidate, but the arguments don't match.
+  const ServerCapabilities({
+        ^^^^^^^^^^^^^^^^^^
+test/mcp_chat_capabilities_test.dart:9:25: Error: The getter 'mcpChatConnect' isn't defined for the type 'ServerCapabilities'.
+ - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatConnect'.
+    expect(capabilities.mcpChatConnect, isFalse);
+                        ^^^^^^^^^^^^^^
+test/mcp_chat_capabilities_test.dart:10:25: Error: The getter 'mcpChatOAuth' isn't defined for the type 'ServerCapabilities'.
+ - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatOAuth'.
+    expect(capabilities.mcpChatOAuth, isFalse);
+                        ^^^^^^^^^^^^
+test/mcp_chat_capabilities_test.dart:11:25: Error: The getter 'mcpChatToolRefresh' isn't defined for the type 'ServerCapabilities'.
+ - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatToolRefresh'.
+    expect(capabilities.mcpChatToolRefresh, isFalse);
+                        ^^^^^^^^^^^^^^^^^^
+test/mcp_chat_capabilities_test.dart:18:25: Error: The getter 'mcpChatConnect' isn't defined for the type 'ServerCapabilities'.
+ - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatConnect'.
+    expect(capabilities.mcpChatConnect, isTrue);
+                        ^^^^^^^^^^^^^^
+test/mcp_chat_capabilities_test.dart:19:25: Error: The getter 'mcpChatOAuth' isn't defined for the type 'ServerCapabilities'.
+ - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatOAuth'.
+    expect(capabilities.mcpChatOAuth, isTrue);
+                        ^^^^^^^^^^^^
+test/mcp_chat_capabilities_test.dart:20:25: Error: The getter 'mcpChatToolRefresh' isn't defined for the type 'ServerCapabilities'.
+ - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatToolRefresh'.
+    expect(capabilities.mcpChatToolRefresh, isTrue);
+                        ^^^^^^^^^^^^^^^^^^
+test/mcp_chat_capabilities_test.dart:27:25: Error: The getter 'mcpChatConnect' isn't defined for the type 'ServerCapabilities'.
+ - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatConnect'.
+    expect(capabilities.mcpChatConnect, isTrue);
+                        ^^^^^^^^^^^^^^
+test/mcp_chat_capabilities_test.dart:28:25: Error: The getter 'mcpChatOAuth' isn't defined for the type 'ServerCapabilities'.
+ - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatOAuth'.
+    expect(capabilities.mcpChatOAuth, isFalse);
+                        ^^^^^^^^^^^^
+test/mcp_chat_capabilities_test.dart:29:25: Error: The getter 'mcpChatToolRefresh' isn't defined for the type 'ServerCapabilities'.
+ - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatToolRefresh'.
+    expect(capabilities.mcpChatToolRefresh, isTrue);
+                        ^^^^^^^^^^^^^^^^^^
+00:00 +0 -2: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart [E]
+  Failed to load "/home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart":
+  Compilation failed for testPath=/home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: test/mcp_chat_capabilities_test.dart:34:7: Error: No named parameter with the name 'mcpChatConnect'.
+        mcpChatConnect: true,
+        ^^^^^^^^^^^^^^
+  lib/domain/server_gateway/capabilities.dart:162:9: Context: Found this candidate, but the arguments don't match.
+    const ServerCapabilities({
+          ^^^^^^^^^^^^^^^^^^
+  test/mcp_chat_capabilities_test.dart:48:7: Error: No named parameter with the name 'mcpChatOAuth'.
+        mcpChatOAuth: true,
+        ^^^^^^^^^^^^
+  lib/domain/server_gateway/capabilities.dart:162:9: Context: Found this candidate, but the arguments don't match.
+    const ServerCapabilities({
+          ^^^^^^^^^^^^^^^^^^
+  test/mcp_chat_capabilities_test.dart:9:25: Error: The getter 'mcpChatConnect' isn't defined for the type 'ServerCapabilities'.
+   - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatConnect'.
+      expect(capabilities.mcpChatConnect, isFalse);
+                          ^^^^^^^^^^^^^^
+  test/mcp_chat_capabilities_test.dart:10:25: Error: The getter 'mcpChatOAuth' isn't defined for the type 'ServerCapabilities'.
+   - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatOAuth'.
+      expect(capabilities.mcpChatOAuth, isFalse);
+                          ^^^^^^^^^^^^
+  test/mcp_chat_capabilities_test.dart:11:25: Error: The getter 'mcpChatToolRefresh' isn't defined for the type 'ServerCapabilities'.
+   - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatToolRefresh'.
+      expect(capabilities.mcpChatToolRefresh, isFalse);
+                          ^^^^^^^^^^^^^^^^^^
+  test/mcp_chat_capabilities_test.dart:18:25: Error: The getter 'mcpChatConnect' isn't defined for the type 'ServerCapabilities'.
+   - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatConnect'.
+      expect(capabilities.mcpChatConnect, isTrue);
+                          ^^^^^^^^^^^^^^
+  test/mcp_chat_capabilities_test.dart:19:25: Error: The getter 'mcpChatOAuth' isn't defined for the type 'ServerCapabilities'.
+   - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatOAuth'.
+      expect(capabilities.mcpChatOAuth, isTrue);
+                          ^^^^^^^^^^^^
+  test/mcp_chat_capabilities_test.dart:20:25: Error: The getter 'mcpChatToolRefresh' isn't defined for the type 'ServerCapabilities'.
+   - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatToolRefresh'.
+      expect(capabilities.mcpChatToolRefresh, isTrue);
+                          ^^^^^^^^^^^^^^^^^^
+  test/mcp_chat_capabilities_test.dart:27:25: Error: The getter 'mcpChatConnect' isn't defined for the type 'ServerCapabilities'.
+   - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatConnect'.
+      expect(capabilities.mcpChatConnect, isTrue);
+                          ^^^^^^^^^^^^^^
+  test/mcp_chat_capabilities_test.dart:28:25: Error: The getter 'mcpChatOAuth' isn't defined for the type 'ServerCapabilities'.
+   - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatOAuth'.
+      expect(capabilities.mcpChatOAuth, isFalse);
+                          ^^^^^^^^^^^^
+  test/mcp_chat_capabilities_test.dart:29:25: Error: The getter 'mcpChatToolRefresh' isn't defined for the type 'ServerCapabilities'.
+   - 'ServerCapabilities' is from 'package:opencode_mobile/domain/server_gateway/capabilities.dart' ('lib/domain/server_gateway/capabilities.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatToolRefresh'.
+      expect(capabilities.mcpChatToolRefresh, isTrue);
+                          ^^^^^^^^^^^^^^^^^^
+  .
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart

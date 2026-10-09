@@ -15,6 +15,11 @@ import 'agent_tools/agent_tool_adapter.dart';
 bool isAgentCardTool(String id) =>
     AgentToolAdapters.cardShowNames.contains(id.trim());
 
+/// Exact tool identity only; callers still verify runtime/provider provenance.
+bool isConnectorSearchTool(String id) => AgentToolAdapters.all.any(
+  (agent) => agent.connectorSearchName == id.trim(),
+);
+
 /// Claude Code's notice that a background task it started has ended.
 bool isBackgroundTaskNotice(String id) =>
     id.trim().toLowerCase() == 'task_notification';

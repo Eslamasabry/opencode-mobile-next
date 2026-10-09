@@ -13,6 +13,83 @@ extension _PaseoProviders on PaseoGateway {
     }
   }
 
+  /// Paseo 0.9.2 sends model-specific options in the ordinary (uncompacted)
+  /// provider snapshot. Keep its IDs verbatim for set_agent_thinking_request.
+  Map<String, dynamic> _thinkingModelData(Map<String, dynamic> model) {
+    final options = model['thinkingOptions'];
+    if (options is! List) return const {};
+    final variants = <String, Map<String, dynamic>>{};
+    for (final option in options.take(64)) {
+      if (option is! Map) continue;
+      final id = option['id'];
+      if (id is! String ||
+          id.isEmpty ||
+          id.length > 256 ||
+          variants.containsKey(id)) {
+        continue;
+      }
+      final label = option['label'];
+      variants[id] = {
+        if (label is String && label.isNotEmpty) 'label': label,
+        if (option['isDefault'] == true ||
+            model['defaultThinkingOptionId'] == id)
+          'isDefault': true,
+      };
+    }
+    if (variants.isEmpty) return const {};
+    return {
+      'variants': variants,
+      'capabilities': {'reasoning': true},
+    };
+  }
+
+  Future<void> _setSessionModel(
+    String id,
+    ModelRef model,
+    String variant,
+  ) async {
+    final scope = _scope, epoch = _locationEpoch;
+    if (_drafts.contains(id)) {
+      final provider = providerIdForSession(id);
+      if (provider != null && provider != model.providerID) {
+        throw PaseoFailure(PaseoFailureKind.unavailable);
+      }
+      _draftProviders[id] = model.providerID;
+      _draftModels[id] = model;
+      final draft = _sessions[id];
+      if (draft != null) {
+        _sessions[id] = draft.copyWith(
+          selection: SessionSelection(
+            model: model,
+            variant: variant,
+            agent: draft.selection?.agent,
+          ),
+        );
+      }
+      return;
+    }
+    if (!_agents.containsKey(id)) await _fetchAgent(id);
+    final agent = _agents[id];
+    if (agent == null || model.providerID != agent['provider']) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
+    final reservation = await _beforeBrowserLaunch(id);
+    await transport.request(
+      'set_agent_model_request',
+      {'agentId': _real(id), 'modelId': model.modelID},
+      mutation: true,
+      beforeSend: () => _checkBrowserLaunch(id, reservation),
+    );
+    _checkLocation(scope, epoch);
+    agent['model'] = model.modelID;
+    // Remember a successful model change even if the subsequent thinking
+    // request fails; the daemon applies these changes in the same order.
+    _remember(agent);
+    await _setThinking(id, agent, variant, reservation);
+    _checkLocation(scope, epoch);
+    _remember(agent);
+  }
+
   // ---- runtimes, models and modes ---------------------------------------
 
   Future<List<Map<String, dynamic>>> _providers() async {

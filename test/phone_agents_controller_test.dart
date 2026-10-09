@@ -266,6 +266,7 @@ class _BrowserPort implements BrowserClaudeLaunchPort {
 }
 
 class _HostState {
+  Future<AgentHelperStatus> Function()? readHelperStatus;
   Future<AgentPhoneCheckResult> Function(String)? selfTestHandler;
   Future<AgentAuthProbeResult> Function(String)? probeHandler;
   final auth = <String, AgentAuthProbeResult>{};
@@ -294,6 +295,13 @@ class _HostState {
 
   /// How many next connects fail like a helper Android stopped.
   int failOpens = 0;
+}
+
+class _DiagnosticHost extends _FakeHost implements PhoneAgentDiagnosticsPort {
+  _DiagnosticHost(super.events, super.profileId, super.state);
+  @override
+  Future<AgentHelperStatus> helperStatus() async =>
+      await state.readHelperStatus?.call() ?? const AgentHelperStatus();
 }
 
 class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
@@ -636,6 +644,7 @@ Future<_World> _world(
   BrowserClaudeLaunchRegistry? browserClaudeLaunchRegistry,
   bool removalSupported = false,
   bool idleSupported = false,
+  bool diagnosticsSupported = false,
 }) async {
   final profileJson = {
     'id': 'local',
@@ -687,6 +696,8 @@ Future<_World> _world(
           ? _IdleHost(events, profile.id, state)
           : removalSupported
           ? _RemovableHost(events, profile.id, state)
+          : diagnosticsSupported
+          ? _DiagnosticHost(events, profile.id, state)
           : _FakeHost(events, profile.id, state);
       hosts.add(host);
       return host;
@@ -715,6 +726,85 @@ void main() {
       (_) async => null,
     );
   });
+
+  test(
+    'BD13 helper evidence is read-only and rejects late disposed results',
+    () async {
+      final w = await _world(null, diagnosticsSupported: true);
+      w.state.runtimes = {'claude': _ready('claude')};
+      await w.controller.refreshAgentRows();
+      final expected = AgentHelperStatus(
+        running: false,
+        lastExitAt: DateTime.utc(2026, 10, 9),
+        lastExitCode: 137,
+        lastStopRequested: false,
+        possibleResourceKill: true,
+      );
+      w.state.readHelperStatus = () async => expected;
+      final before = w.events.log
+          .where((entry) => entry == 'host.start')
+          .length;
+      expect(await w.controller.phoneAgentHelperStatus(), same(expected));
+      expect(
+        w.events.log.where((entry) => entry == 'host.start').length,
+        before,
+      );
+      final delayed = Completer<AgentHelperStatus>();
+      w.state.readHelperStatus = () => delayed.future;
+      final pending = w.controller.phoneAgentHelperStatus();
+      w.controller.dispose();
+      delayed.complete(expected);
+      expect(await pending, isNull);
+    },
+  );
+
+  testWidgets(
+    'BA14 child backend keeps scoped BD13 exit evidence after recovery',
+    (tester) async {
+      final w = await _world(tester, diagnosticsSupported: true);
+      try {
+        w.state.runtimes = {'claude': _ready('claude')};
+        w.state.agents = [_agent('c1', _project)];
+        await w.controller.rememberLastUsedProject(_project);
+        await w.controller.refreshAgentRows();
+        await w.controller.refreshChatFeed();
+        final row = w.controller.chatFeed().items.firstWhere(
+          (r) => r.sourceId == 'paseo:$_project',
+        );
+        await w.controller.openChatFeedItem(row);
+        final backend = w.controller.backendForConversation('c1')!;
+        final exit = AgentHelperStatus(
+          running: false,
+          lastExitAt: DateTime.utc(2026, 10, 9),
+          lastExitCode: 137,
+          lastStopRequested: false,
+          possibleResourceKill: true,
+        );
+        w.state.readHelperStatus = () async => exit;
+        expect(await backend.readConnectionHelperExit(), same(exit));
+        // Missing/old-APK data after recovery must not erase known evidence.
+        w.state.readHelperStatus = () async =>
+            const AgentHelperStatus(running: true);
+        expect(await backend.readConnectionHelperExit(), same(exit));
+        // An intentional or older exit is not a new unexpected stop.
+        w.state.readHelperStatus = () async => AgentHelperStatus(
+          running: true,
+          lastExitAt: DateTime.utc(2026, 10, 10),
+          lastExitCode: 0,
+          lastStopRequested: true,
+        );
+        expect(await backend.readConnectionHelperExit(), same(exit));
+        final delayed = Completer<AgentHelperStatus>();
+        w.state.readHelperStatus = () => delayed.future;
+        final pending = backend.readConnectionHelperExit();
+        w.controller.dispose();
+        delayed.complete(exit);
+        expect(await pending, isNull);
+      } finally {
+        w.controller.dispose();
+      }
+    },
+  );
 
   _genUiFeedRefreshTests();
   _nativeQuestionControllerTests();

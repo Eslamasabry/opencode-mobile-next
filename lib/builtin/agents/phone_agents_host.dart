@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../domain/agent_helper_status.dart';
 import '../../domain/agent_catalog.dart';
 import '../../domain/phone_agent_host.dart';
 import '../../domain/phone_agents.dart';
@@ -137,10 +138,10 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   Future<AgentAuthProbeResult> signOut(String agentId) =>
       _authCommand(agentId, logout: true);
 
-  Future<bool?> helperRunning() async {
-    final value = (await _invoke('agentHostStatus'))['running'];
-    return value is bool ? value : null;
-  }
+  Future<AgentHelperStatus> helperStatus() async =>
+      AgentHelperStatus.fromMap(await _invoke('agentHostStatus'));
+
+  Future<bool?> helperRunning() async => (await helperStatus()).running;
 
   Future<PhoneAgentIdleState> idleState() async {
     final raw = await _invoke('status');

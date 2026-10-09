@@ -490,6 +490,42 @@ final kitOverflowChatScenes = <KitOverflowScene>[
           ],
         ),
       ),
+  for (final expanded in [false, true])
+    KitOverflowScene(
+      const ['KitStepTimeline'],
+      expanded ? 'expanded' : 'folded',
+      build: (_, c) => KitStepTimeline(
+        label: c.t(
+          'Read 3 files · edited 1 file · ran 8 commands · 6 other steps',
+          'قرأ 3 ملفات · عدّل ملفًا واحدًا · شغّل 8 أوامر · 6 خطوات أخرى',
+        ),
+        icon: AppIconography.terminal,
+        expanded: expanded,
+        onPressed: _noop,
+        steps: [
+          KitMessage.thought(
+            heading: _reply(c),
+            body: KitMarkdown(_reply(c), role: KitTextRole.secondary),
+          ),
+          KitToolRow(
+            kind: KitToolKind.edit,
+            title: c.t('Write the queue test', 'كتابة اختبار القائمة'),
+            path: 'test/queue/offline_queue_reconnect_test.dart',
+            added: 12,
+            status: KitToolStatus.done,
+            duration: const Duration(seconds: 3),
+            preview: KitStepPreview.fromText(
+              List.generate(
+                8,
+                (i) => 'expect(queue.items, hasLength($i)); // ${_reply(c)}',
+              ).join('\n'),
+            ),
+            body: [KitCodeBlock(text: _reply(c), kind: KitCodeKind.code)],
+          ),
+          _tool(c, KitToolStatus.running),
+        ],
+      ),
+    ),
 ];
 
 KitTurn _turn(

@@ -28121,4 +28121,175 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get e7LocaleUiRussian => 'Русский';
+
+  @override
+  String connectorCardSuggests(String agent) {
+    return '$agent suggests a connector';
+  }
+
+  @override
+  String connectorCardAnnouncement(String agent, String name) {
+    return '$agent suggests a connector: $name';
+  }
+
+  @override
+  String get connectorCardRuns => 'Runs';
+
+  @override
+  String get connectorCardLasts => 'Lasts';
+
+  @override
+  String get connectorCardLastsValue => 'While this server runs';
+
+  @override
+  String get connectorCardRunsNode => 'On this server, with Node';
+
+  @override
+  String get connectorCardRunsPython => 'On this server, with Python';
+
+  @override
+  String get connectorCardRunsDocker => 'In Docker, which the app cannot start';
+
+  @override
+  String get connectorCardRunsNone => 'Nothing the app can start';
+
+  @override
+  String get connectorCardRunsHosted => 'Hosted';
+
+  @override
+  String get connectorCardConnect => 'Connect';
+
+  @override
+  String get connectorCardConnecting => 'Connecting…';
+
+  @override
+  String get connectorCardChecking => 'Checking the connection…';
+
+  @override
+  String get connectorCardSignInNeeded =>
+      'This connector needs you to sign in.';
+
+  @override
+  String get connectorCardSignIn => 'Sign in';
+
+  @override
+  String get connectorCardOpenSignIn => 'Open sign-in page';
+
+  @override
+  String get connectorCardSignInWaiting =>
+      'Waiting for sign-in to finish in your browser.';
+
+  @override
+  String get connectorCardManualCode =>
+      'Paste the browser return URL or authorization code to finish sign-in.';
+
+  @override
+  String get connectorCardCodeLabel => 'Return URL or code';
+
+  @override
+  String get connectorCardCodeRequired => 'Paste the return URL or code first.';
+
+  @override
+  String get connectorCardFinishSignIn => 'Finish sign-in';
+
+  @override
+  String get connectorCardCheckStatus => 'Check status';
+
+  @override
+  String get connectorCardCancelSignIn => 'Cancel sign-in';
+
+  @override
+  String get connectorCardCancelTitle => 'Cancel sign-in?';
+
+  @override
+  String connectorCardCancelBody(String name) {
+    return '$name stops waiting, and its saved sign-in is cleared. You would sign in again to use it.';
+  }
+
+  @override
+  String get connectorCardKeepWaiting => 'Keep waiting';
+
+  @override
+  String get connectorCardConnected => 'Connected';
+
+  @override
+  String get connectorCardToolsReady => 'Tools ready';
+
+  @override
+  String get connectorCardLoadedTools =>
+      'Loaded tools. Continue this conversation to use them.';
+
+  @override
+  String get connectorCardConnectedUnconfirmed =>
+      'Connected. Tool availability has not been confirmed.';
+
+  @override
+  String get connectorCardFailureUnavailable =>
+      'Connecting tools from chat is not available for this agent.';
+
+  @override
+  String get connectorCardFailureInvalidSuggestion =>
+      'This connector suggestion is not available. Browse connectors in Tools.';
+
+  @override
+  String get connectorCardFailureSetupRequired =>
+      'This connector needs setup in Tools before it can connect.';
+
+  @override
+  String get connectorCardFailureNameConflict =>
+      'A connector with this name already exists. Check it in Tools.';
+
+  @override
+  String get connectorCardFailureSourceChanged =>
+      'This conversation\'s connection changed. Reopen the connector card.';
+
+  @override
+  String get connectorCardFailureConnectFailed =>
+      'Could not confirm the connection. Check its status before trying again.';
+
+  @override
+  String get connectorCardFailureAuthenticationFailed =>
+      'Sign-in could not be confirmed. Check its status before trying again.';
+
+  @override
+  String get connectorCardFailureOauthUnavailable =>
+      'Sign-in for this connector is not available in this chat.';
+
+  @override
+  String get connectorCardFailureNotConnected =>
+      'The connector is not connected yet. Check its setup in Tools.';
+
+  @override
+  String get connectorCardOpenTools => 'Open connectors in Tools';
+
+  @override
+  String get connectorCardTryAgain => 'Try again';
+
+  @override
+  String get connectorCardReopen => 'Reopen card';
+
+  @override
+  String get chatUiToolSearchedConnectors => 'Searched connectors';
+
+  @override
+  String get chatUiConnectorSearchEmpty =>
+      'No connectors found in the loaded catalogue.';
+
+  @override
+  String get chatUiConnectorSearchNotLoaded =>
+      'Catalogue not loaded. Open Tools > MCP to load it.';
+
+  @override
+  String get chatUiConnectorSearchUnavailable =>
+      'Connector search is unavailable. Try again from Tools.';
+
+  @override
+  String get chatUiConnectorSearchInvalid =>
+      'Invalid connector search request.';
+
+  @override
+  String get chatUiConnectorSearchNotConnected => 'Not connected';
+
+  @override
+  String get kitMarkdownImage => 'Image';
 }

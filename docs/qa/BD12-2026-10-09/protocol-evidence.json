@@ -1,0 +1,14 @@
+{
+  "packages": {
+    "server": "0.9.2",
+    "protocol": "0.9.2"
+  },
+  "source_root": "/home/eslam/Storage/tmp/claude-tmp/oc-paseo-lock-4pyx6dwm/node_modules/@getpaseo",
+  "files": {
+    "server/dist/server/server/agent/providers/claude/model-manifest.js": "6cd026eb4aea7187bd74d66d61e432d14236e37f6c422cd5bd1f51685549d34e",
+    "server/dist/server/server/session/provider/provider-catalog-session.js": "90bb81007628fad0ec735fea866e68d54d504c90aa8322134e709e3485631154",
+    "server/dist/server/server/session/agent-config/agent-config-session.js": "ce60167a73d51a9765762351afc8a2b13e2deaac462b97487615d39162a3fcef",
+    "protocol/dist/messages.js": "3f854defd7fc5472bd0fbead7fde0d97c127d91758545e7ac862f7edab138d20",
+    "protocol/dist/provider-snapshot-codec.js": "fcc05322c3dc972a155cab80ead4d82faaf6e7acf7ecea6f2112b23172f62a52"
+  }
+}

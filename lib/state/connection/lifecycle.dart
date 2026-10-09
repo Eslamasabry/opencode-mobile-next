@@ -354,6 +354,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   int _beginGeneration({bool preserveConnectionAttempt = false}) {
+    _resetQuietReconnect();
     _genUiRetireQualification();
     _resetTurnStalls();
     _invalidatePhoneChatStatus();
@@ -432,6 +433,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   void _retireTransport() {
+    _resetQuietReconnect();
     _feedRetireTransport();
     _resetTurnStalls();
     _invalidatePhoneChatStatus();

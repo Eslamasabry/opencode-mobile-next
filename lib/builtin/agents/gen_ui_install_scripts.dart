@@ -321,7 +321,8 @@ def verify_claude(d, helper, config_parent):
         responses = [json.loads(x) for x in output([d['node'], helper], payload).splitlines()]
         if len(responses) != 2 or responses[0].get('id') != 1 or responses[1].get('id') != 2: fail(24)
         tools = responses[1]['result']['tools']
-        if len(tools) != 1 or tools[0]['name'] != 'show' or not isinstance(tools[0]['inputSchema'], dict): fail(24)
+        if len(tools) != 2 or {t.get('name') for t in tools} != {'show', 'find_connectors'}: fail(24)
+        if any(not isinstance(t.get('inputSchema'), dict) for t in tools): fail(24)
     except SetupError: raise
     except Exception: fail(24)
 

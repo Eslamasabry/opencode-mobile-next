@@ -1,0 +1,30 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: runtime add followed by authoritative status makes next-turn tools ready
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: double tap coalesces and successful connect never adds again
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: unrelated existing same name is never reused or overwritten
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: unsupported runtime makes no calls
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: wrong requested server cannot mutate
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: required configuration stays in Tools
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: no refresh contract never claims ready
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: source changes during add cannot publish success
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: gateway errors never escape or expose raw credential text
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: authentication is explicit and uses validated code
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: valid manual callback completes and rechecks inventory
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: OAuth off and unsafe launch fail closed
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: dispose never revokes server credentials
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: cancel only acts on owned pending authentication
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: client registration failure requires setup instead of OAuth
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: cancel during delayed OAuth start does not expose late launch
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: owned callback validates state and discovers without exposing code
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: busy callback port explicitly requires manual return URL
+00:00 +18: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: explicit invalidation cannot be undone by returning to source
+00:00 +19: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_card_authority_test.dart
+00:00 +19: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_card_authority_test.dart: retained payload is available during suspension but cannot authorize new requests
+00:00 +20: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_card_authority_test.dart: replaced or deleted payload cannot reuse prior consent
+00:00 +21: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_card_authority_test.dart: incomplete recovery is different from a complete removed card
+00:00 +22: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart
+00:01 +22: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: unqualified gateways do not promise chat connector actions
+00:01 +23: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: OpenCode 1 can connect and refresh chat connectors with OAuth
+00:01 +24: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: OpenCode 2 supports runtime chat connectors without chat OAuth
+00:01 +25: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: managed Agent cards preserve connector capability decisions
+00:01 +26: All tests passed!

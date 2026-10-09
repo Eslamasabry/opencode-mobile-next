@@ -1,0 +1,102 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: fresh agent snapshot restores busy after cached idle
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: hydrating a running agent publishes status without a turn event
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect running restores chat and composer
+00:01 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect idle restores chat and composer
+00:01 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: 3 second link drop preserves work until grace expires
+00:01 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: 30 second link drop preserves work until grace expires
+00:02 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: idle snapshot completes a streamed reply without a terminal event
+00:02 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: subagent running and completed events reach controller busy state
+00:02 +8: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart
+00:02 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: established link gets a bounded quiet window without reachability
+00:03 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: a fresh connect stays visible after an established connection
+00:03 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: credentials bypass the quiet reconnect window
+00:03 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: one grace period survives reads and transport reconnect churn
+00:03 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: a new attempt resets grace; success cancels the old deadline
+00:03 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: real retry publishes pending state and resets an expired attempt
+00:03 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: failure and credentials cannot look reachable
+00:03 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: switching profiles gives the new owner a fresh grace period
+00:03 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: isolated work has no shared server status or deadline
+00:03 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_test.dart: disposal cancels the deadline without a late notification
+00:03 +18: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart
+00:04 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: Details retains BD13 unexpected helper exit after recovery
+00:05 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: all routes share one connection phase and reveal lower notices in order
+00:05 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: same words still replace retry action state
+00:05 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_status_presentation_test.dart: local chat-style status preserves its controls in the slot
+00:05 +22: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart
+00:06 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: v2 quietly reconciles a 3s drop to busy
+00:06 +23: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: v2 quietly reconciles a 3s drop to idle
+00:06 +24: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: reconnect replaces cached selection with current v2 session truth
+00:06 +25: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: a v2 profile builds the v2 pair and gateway event channels
+00:06 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: a mid-session 401 sets passwordRejected until recovery
+00:06 +27: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: a wrong cached flavor re-probes once and retries as v2
+00:06 +28: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_gateway_test.dart: an unhealthy v1 server fails closed without a re-probe
+00:06 +29: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart
+00:08 +29: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: request replies cannot cross scope while waking
+00:08 +30: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: request replies cannot cross contents while waking
+00:08 +31: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: request replies cannot cross resolved then reused while waking
+00:08 +32: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: question answer and reject share a write slot before transport wake
+00:08 +33: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: late question failure after remote resolution does not surface an error
+00:08 +34: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: V2 HTTP hydration envelopes and session-scoped mutations
+00:08 +35: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: loose successful V2 request envelopes remain compatible
+00:08 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: generated V2 request errors retain OpenCode identity
+00:08 +37: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: V2 hydration rejects mismatched and malformed envelopes
+00:08 +38: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: V2-only hydration routes mutations and blocks stale resurrection
+00:08 +39: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: permission and question replies wait for wake transport
+00:08 +40: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: partial V2 hydration failure preserves V2 reply provenance
+00:08 +41: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: QuestionNotFoundError resolves V2 and legacy requests locally
+00:08 +42: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: SSE reconnect refreshes pending questions
+00:08 +43: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: question hydration merges an independent concurrent SSE request
+00:08 +44: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: session snapshots merge around newer per-session events
+00:08 +45: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: connected stream reconciles a missed idle event
+00:08 +46: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: a run missing from one status read, between two steps, stays running
+00:08 +47: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart
+00:09 +47: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: mid-stream drop the partial answer stays on screen while the stream is down and the refetch completes it once
+00:11 +48: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: mid-stream drop a delta arriving after the refetch extends the refetched text exactly once
+00:11 +49: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: long sleep and resume resuming after a sleep reconciles to the server transcript and shows the finished answer once
+00:11 +50: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: network switch a Wi-Fi to LTE flap with a prompt on the wire sends nothing twice
+00:11 +51: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: network switch the queue flushes once after the network returns, in order
+00:11 +52: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: network switch a prompt whose send was cut by the switch is held for review, not resent on the new network
+00:11 +53: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart
+00:12 +53: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: no lib file grows past its line budget
+00:12 +54: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: the baseline only lists files over the limit
+00:12 +55: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart
+00:15 +55: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit (absolute)
+00:15 +56: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G15: no width literals outside the kit (absolute)
+00:15 +57: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G16: every UI component comes from the kit (absolute)
+00:15 +58: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G1/G15/G16 have no baseline: the committed file holds none of them
+00:15 +59: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2: copy, haptics, links and motion go through the kit
+00:15 +60: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G7: layout is directional and bidi marks come from KitBidi
+00:15 +61: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G15 inside the kit: only kit_layout.dart owns widths
+00:15 +62: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G17 colour: every colour comes from a ThemeRoles role
+00:15 +63: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G21 look and motion: numbers and effects come from the kit
+00:15 +64: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G48 drafts: multiline input in a kit sheet keeps a draft
+00:15 +65: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G17/G21 inside the kit: only deferred files keep a baseline, and each deferral still needs it
+00:15 +66: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: allowlists never grow (KIT-5)
+00:15 +67: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: allowlist keys are exact paths or folders under lib/
+00:15 +68: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
+00:15 +69: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: every allowlist entry gives a real reason
+00:15 +70: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: the Flutter widget catalogue exists and is non-trivial
+00:15 +71: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
+00:15 +72: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
+00:15 +73: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
+00:15 +74: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) KIT-7: MaterialPageRoute( and PageRouteBuilder( fail G16, in lib/ui and in UI code elsewhere under lib/, with no baseline to lean on
+00:15 +75: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1/G15/G16 failures name the kit part and the way forward
+00:15 +76: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G17 is absolute: every colour row fails on any hit, with a fix that names what to use
+00:15 +77: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) Scrollbar has no home outside the kit any more (KIT-6)
+00:15 +78: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
+00:15 +79: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts uses of an old API, not its declaration
+00:15 +80: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts motion literals and seams, not KitMotion names
+00:15 +81: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
+00:15 +82: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 counts left/right layout, not the directional forms
+00:15 +83: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 is absolute in the kit, forced-LTR parts may align left
+00:15 +84: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G15x counts breakpoints and layout widths, not guards or gaps
+00:15 +85: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 counts literal colours and theme reads, not transparent
+00:15 +86: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 counts look literals the way the rulebook writes them
+00:15 +87: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 LOOK-21 in the kit: every stroke width comes from KitTokens
+00:15 +88: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 metal/chrome reads identifiers and file names
+00:15 +89: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G48 flags a sheet with a multiline field and no draft
+00:15 +90: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 and G21 also scan Flutter UI code outside lib/ui/
+00:15 +91: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings theme files, allowlist keys and scopes resolve as documented
+00:15 +92: /home/eslam/Storage/Code/oc_app-sol-ba/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
+00:15 +93: All tests passed!

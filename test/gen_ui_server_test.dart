@@ -28,30 +28,44 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  test('initializes, handles notifications and advertises only show', () async {
-    final initialized = await helper.initialize(version: '2024-11-05');
-    expect(initialized['protocolVersion'], '2024-11-05');
-    expect(initialized['capabilities'], {
-      'tools': {'listChanged': false},
-    });
-    helper.notification('notifications/cancelled', {'requestId': 'old'});
-    final listed = await helper.request('tools/list');
-    final tools = (listed['result'] as Map)['tools'] as List;
-    expect(tools, hasLength(1));
-    final tool = tools.single as Map;
-    expect(tool['name'], 'show');
-    final schema = tool['inputSchema'] as Map;
-    expect(schema['additionalProperties'], isFalse);
-    expect(schema['required'], ['v', 'id', 'title', 'body']);
-    final props = schema['properties'] as Map;
-    expect(((props['body'] as Map)['items'] as Map)['oneOf'], hasLength(10));
-    expect((props['ask'] as Map)['oneOf'], hasLength(4));
-    expect((await helper.request('ping'))['result'], isEmpty);
-    expect((await helper.request('unknown'))['error'], {
-      'code': -32601,
-      'message': 'Method not found',
-    });
-  });
+  test(
+    'initializes, handles notifications and advertises scoped card tools',
+    () async {
+      final initialized = await helper.initialize(version: '2024-11-05');
+      expect(initialized['protocolVersion'], '2024-11-05');
+      expect(initialized['capabilities'], {
+        'tools': {'listChanged': false},
+      });
+      helper.notification('notifications/cancelled', {'requestId': 'old'});
+      final listed = await helper.request('tools/list');
+      final tools = (listed['result'] as Map)['tools'] as List;
+      expect(tools.map((tool) => (tool as Map)['name']), [
+        'show',
+        'find_connectors',
+      ]);
+      final tool = tools.first as Map;
+      expect(tool['name'], 'show');
+      final schema = tool['inputSchema'] as Map;
+      expect(schema['additionalProperties'], isFalse);
+      expect(schema['required'], ['v', 'id', 'title', 'body']);
+      final props = schema['properties'] as Map;
+      expect(((props['body'] as Map)['items'] as Map)['oneOf'], hasLength(10));
+      expect((props['ask'] as Map)['oneOf'], hasLength(4));
+      final search = tools.last as Map;
+      expect(search['annotations'], {
+        'readOnlyHint': true,
+        'destructiveHint': false,
+        'idempotentHint': true,
+        'openWorldHint': false,
+      });
+      expect(search['inputSchema']['additionalProperties'], isFalse);
+      expect((await helper.request('ping'))['result'], isEmpty);
+      expect((await helper.request('unknown'))['error'], {
+        'code': -32601,
+        'message': 'Method not found',
+      });
+    },
+  );
 
   test('negotiates unknown version and requires initialization', () async {
     final early = await helper.request('tools/list');
@@ -168,6 +182,253 @@ void main() {
       );
     }
   });
+
+  test(
+    'connector search without a bridge returns a safe actionable result',
+    () async {
+      await helper.initialize();
+      final result = _searchResult(await helper.search({'query': 'design'}));
+      expect(result, {
+        'status': 'catalogue_not_loaded',
+        'message': 'Catalogue not loaded. Open Tools > MCP to load it.',
+        'matches': <Object>[],
+      });
+      await marker.delete();
+      final disabled = await helper.search({'query': 'design'});
+      expect((disabled['result'] as Map)['isError'], isTrue);
+    },
+  );
+
+  test(
+    'connector search reads current bridge and sends bounded authorized query',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() => server.close(force: true));
+      final received = <Map<String, dynamic>>[];
+      server.listen((request) async {
+        expect(request.method, 'POST');
+        expect(request.uri.path, '/find-connectors');
+        expect(
+          request.headers.value(HttpHeaders.authorizationHeader),
+          'Bearer ${'a' * 64}',
+        );
+        received.add(
+          jsonDecode(await utf8.decoder.bind(request).join())
+              as Map<String, dynamic>,
+        );
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(jsonEncode(_searchSuccess));
+        await request.response.close();
+      });
+      final bridge = File('${marker.path}.search.json');
+      await bridge.writeAsString(
+        jsonEncode({
+          'endpoint': 'http://127.0.0.1:${server.port}/find-connectors',
+          'bearer': 'a' * 64,
+        }),
+      );
+      await helper.initialize();
+      expect(
+        _searchResult(await helper.search({'query': 'design'})),
+        _searchSuccess,
+      );
+      expect(received.single, {
+        'arguments': {'query': 'design', 'limit': 5},
+        'directory': Directory.current.path,
+      });
+      await bridge.delete();
+      expect(
+        _searchResult(await helper.search({'query': 'design'}))['status'],
+        'catalogue_not_loaded',
+      );
+      expect(received, hasLength(1));
+    },
+  );
+
+  test(
+    'invalid connector queries and bridge paths never reach the bridge',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() => server.close(force: true));
+      var requests = 0;
+      server.listen((request) async {
+        requests++;
+        request.response.write(jsonEncode(_searchSuccess));
+        await request.response.close();
+      });
+      final bridge = File('${marker.path}.search.json');
+      Future<void> write(String endpoint, {String? bearer}) =>
+          bridge.writeAsString(
+            jsonEncode({'endpoint': endpoint, 'bearer': bearer ?? 'a' * 64}),
+          );
+      final endpoint = 'http://127.0.0.1:${server.port}/find-connectors';
+      await write(endpoint);
+      await helper.initialize();
+      for (final args in <Map<String, Object>>[
+        {'query': ''},
+        {'query': 'x' * 101},
+        {'query': 'design', 'limit': 0},
+        {'query': 'design', 'limit': 11},
+        {'query': 'design', 'limit': 1.5},
+        {'query': 'design', 'url': 'private-sentinel'},
+        {'query': 'https://example.com/private-sentinel'},
+        {'query': 'www.example.com/private-sentinel'},
+        {'query': 'token=private-sentinel'},
+        {'query': 'sk-proj-${'x' * 24}'},
+      ]) {
+        final reply = await helper.search(args);
+        expect(jsonEncode(reply), isNot(contains('private-sentinel')));
+        expect((reply['result'] as Map)['isError'], isTrue);
+      }
+      for (final invalid in [
+        'http://localhost:${server.port}/find-connectors',
+        'http://127.0.0.1:${server.port}/other',
+        '$endpoint?secret=private-sentinel',
+        '$endpoint#private-sentinel',
+        'http://user@127.0.0.1:${server.port}/find-connectors',
+        'https://example.com/find-connectors',
+      ]) {
+        await write(invalid);
+        expect(
+          _searchResult(await helper.search({'query': 'design'}))['status'],
+          'unavailable',
+        );
+      }
+      await write(endpoint, bearer: 'bad-token-private-sentinel');
+      expect(
+        _searchResult(await helper.search({'query': 'design'}))['status'],
+        'unavailable',
+      );
+      await bridge.delete();
+      final target = File('${directory.path}/bridge-target');
+      await target.writeAsString(
+        jsonEncode({'endpoint': endpoint, 'bearer': 'a' * 64}),
+      );
+      await Link(bridge.path).create(target.path);
+      expect(
+        _searchResult(await helper.search({'query': 'design'}))['status'],
+        'unavailable',
+      );
+      expect(requests, 0);
+    },
+  );
+
+  test(
+    'search trims before Unicode bounds and maps rejected bridge input safely',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() => server.close(force: true));
+      final seen = <String>[];
+      var reject = false;
+      server.listen((request) async {
+        final body = jsonDecode(await utf8.decoder.bind(request).join()) as Map;
+        seen.add(body['arguments']['query'] as String);
+        request.response.statusCode = reject ? 400 : 200;
+        request.response.write(
+          jsonEncode(
+            reject
+                ? {'error': 'Invalid connector search request.'}
+                : {'status': 'ok', 'matches': <Object>[]},
+          ),
+        );
+        await request.response.close();
+      });
+      await File('${marker.path}.search.json').writeAsString(
+        jsonEncode({
+          'endpoint': 'http://127.0.0.1:${server.port}/find-connectors',
+          'bearer': 'a' * 64,
+        }),
+      );
+      await helper.initialize();
+      expect(
+        _searchResult(
+          await helper.search({'query': '  ${'🎨' * 100}  '}),
+        )['status'],
+        'ok',
+      );
+      expect(seen.single, '🎨' * 100);
+      reject = true;
+      final rejected = await helper.search({'query': 'design'});
+      expect((rejected['result'] as Map)['isError'], isTrue);
+      expect(jsonEncode(rejected), isNot(contains('unavailable. Try again')));
+    },
+  );
+
+  test(
+    'connector bridge responses are bounded and strictly validated',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() => server.close(force: true));
+      var response = '';
+      server.listen((request) async {
+        await request.drain<void>();
+        request.response.write(response);
+        await request.response.close();
+      });
+      await File('${marker.path}.search.json').writeAsString(
+        jsonEncode({
+          'endpoint': 'http://127.0.0.1:${server.port}/find-connectors',
+          'bearer': 'a' * 64,
+        }),
+      );
+      await helper.initialize();
+      for (final invalid in [
+        'private-sentinel',
+        'x' * 16385,
+        jsonEncode({..._searchSuccess, 'token': 'private-sentinel'}),
+        jsonEncode({
+          'status': 'ok',
+          'matches': [
+            {..._searchMatch, 'url': 'https://private-sentinel'},
+          ],
+        }),
+        jsonEncode({
+          'status': 'ok',
+          'matches': [
+            {..._searchMatch, 'name': 'https://private-sentinel'},
+          ],
+        }),
+        jsonEncode({
+          'status': 'ok',
+          'matches': [
+            {..._searchMatch, 'connected': 'yes'},
+          ],
+        }),
+      ]) {
+        response = invalid;
+        final reply = await helper.search({'query': 'design'});
+        expect(_searchResult(reply), {
+          'status': 'unavailable',
+          'message': 'Connector search is unavailable. Try again from Tools.',
+          'matches': <Object>[],
+        });
+        expect(jsonEncode(reply), isNot(contains('private-sentinel')));
+      }
+    },
+  );
+}
+
+const _searchMatch = {
+  'catalogId': 'com.example/design',
+  'name': 'Design references',
+  'description': 'Find useful design references.',
+  'runtime': 'hosted',
+  'needsSignIn': 'unknown',
+  'connected': false,
+};
+const _searchSuccess = {
+  'status': 'ok',
+  'matches': [_searchMatch],
+};
+
+Map<String, dynamic> _searchResult(Map<String, dynamic> reply) {
+  final result = reply['result'] as Map;
+  final structured = result['structuredContent'] as Map<String, dynamic>;
+  expect(
+    jsonDecode((result['content'] as List).single['text'] as String),
+    structured,
+  );
+  return structured;
 }
 
 class _Helper {
@@ -203,6 +464,9 @@ class _Helper {
 
   Future<Map<String, dynamic>> call(Map<String, Object> card) =>
       request('tools/call', {'name': 'show', 'arguments': card});
+
+  Future<Map<String, dynamic>> search(Map<String, Object> args) =>
+      request('tools/call', {'name': 'find_connectors', 'arguments': args});
 
   Future<Map<String, dynamic>> request(
     String method, [

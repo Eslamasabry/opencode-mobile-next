@@ -1,0 +1,127 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart: shared corpus: Dart and standalone JS agree on acceptance and normalization
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart: rejects cyclic, non-JSON, nonfinite and unpaired surrogate data safely
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart: input preview, missing identity, synthetic and nonexecuted parts are not admitted
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart: revision is normalized and independent of wire key order; scope and call remain separate
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart: state requires matching current call and revision in a complete authoritative tail
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart: only newest eligible ask wins; reports do not supersede asks
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart: only first later authoritative user can settle; synthetic and assistant receipts do not
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart: answer encoder and decoder preserve typed values and validate exact envelope
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart: choice answers require known distinct IDs, cardinality and bounded clean summaries
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart: form answers enforce required false, real dates, ranges, and absence rather than null
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_codec_test.dart: photo receipt records submitted count without asserting retained attachments
+00:00 +11: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_types_test.dart
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_types_test.dart: frontend can construct every public card variant
+00:00 +12: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart
+00:01 +12: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: initializes, handles notifications and advertises only show
+00:01 +13: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: negotiates unknown version and requires initialization
+00:01 +14: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: valid call returns immediately without claiming delivery
+00:01 +15: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: invalid, disabled and unknown calls share safe generic error
+00:01 +16: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: every call rereads marker and refuses symlinks or bad contents
+00:01 +17: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: bounds raw frame bytes before parsing and recovers next frame
+00:01 +18: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: split frames, invalid UTF-8 and malformed JSON stay protocol-only
+00:01 +19: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: marker path rejects relative or embedded control paths
+00:01 +20: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart
+00:01 +20: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: qualified authoritative parts only; source and revision isolation
+00:01 +21: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: unknown session deltas do not notify card listeners
+00:01 +22: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: repeated stale deltas notify only on coverage transition
+00:01 +23: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: profile close before wire clears only the unsent dispatch marker
+00:01 +24: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: unsent cleanup preserves other uncertain dispatches after close
+00:01 +25: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: unsent cleanup cannot resurrect a deleted profile journal
+00:01 +26: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: unsent cleanup preserves a replacement dispatch token
+00:01 +27: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: Undo drops held answer from both surfaces
+00:01 +28: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: duplicate taps send once and only authoritative echo produces receipt
+00:01 +29: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: fresh busy admission refuses a send without a dispatch marker
+00:01 +30: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: uncertain send persists without values and blocks resend after restart
+00:02 +31: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: deletion cancels hold and prevents late read resurrection
+00:02 +32: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: typed reply passes over card; stale coverage never offers controls
+00:02 +33: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: recovery is capped at twenty sessions and two pages
+00:02 +34: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: corrupt persisted state fails closed and cannot authorize resend
+00:02 +35: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: attachments cannot be smuggled into a non-photo answer
+00:02 +36: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: session deletion fences a late history read and candidate write
+00:02 +37: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: a stale recovery cannot replace a newer authoritative transcript
+00:02 +38: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: earlier envelope cannot supply the later answer receipt summary
+00:02 +39: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: unknown coverage is not cleared by an unrelated small pass
+00:02 +40: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: disconnect fences a first read with no cached view
+00:02 +41: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: photo receipt matching in an incomplete busy tail
+00:02 +42: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: photo receipt wrong card in an incomplete busy tail
+00:02 +43: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: photo receipt wrong call in an incomplete busy tail
+00:02 +44: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: incomplete photo receipt rejects synthetic receipt
+00:02 +45: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: incomplete photo receipt rejects wrong role
+00:02 +46: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: incomplete photo receipt rejects missing card
+00:02 +47: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: incomplete photo receipt rejects revised card
+00:02 +48: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: incomplete photo receipt rejects prior unrelated user
+00:02 +49: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: incomplete photo receipt rejects superseding ask
+00:02 +50: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: photo answers validate matching attachments before dispatch
+00:02 +51: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt ack alone remains unconfirmed until the exact live echo
+00:02 +52: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt survives stale lagging history and duplicate echo without clearing journal
+00:02 +53: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt revised card restored later cannot revive old live proof
+00:02 +54: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt missing card restored later cannot revive old live proof
+00:02 +55: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt authoritative passed-over result wins over live receipt
+00:02 +56: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt restart retains dispatch protection but not volatile receipt content
+00:02 +57: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt unreserved optimistic-looking row cannot settle a card
+00:02 +58: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt rejects correlation mismatch
+00:02 +59: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt rejects scope mismatch
+00:02 +60: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt rejects session mismatch
+00:02 +61: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt rejects role mismatch
+00:02 +62: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt rejects synthetic mismatch
+00:02 +63: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt rejects card mismatch
+00:02 +64: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt rejects call mismatch
+00:02 +65: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt rejects value mismatch
+00:02 +66: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt rejects revision mismatch
+00:02 +67: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt rejects endpoint mismatch
+00:02 +68: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt invalidate scope clears the live receipt and rejects its late echo
+00:02 +69: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt close profile clears the live receipt and rejects its late echo
+00:02 +70: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_state_test.dart: live card receipt delete session clears the live receipt and rejects its late echo
+00:02 +71: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart
+00:02 +71: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: capabilities capability truth per the port matrix
+00:02 +72: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: sessions maps the captured session page onto the v1 Session shape
+00:02 +73: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: sessions the server's "default" variant reads as the app's no-variant
+00:02 +74: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip user message carries text and file attachment parts
+00:02 +75: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip assistant "pong" capture maps reasoning/text/tool content
+00:02 +76: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip single assistant fixture parses tokens and cost
+00:02 +77: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip paginated fixture pages map without loss of order
+00:02 +78: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip shell message maps to a v1 tool part
+00:02 +79: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip failed shell maps to a tool error state
+00:02 +80: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip shell metadata preserves the raw v2 status and shellID
+00:02 +81: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip switch markers become tagged v2:switch parts
+00:02 +82: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip synthetic/system/skill become tagged v2:notice parts
+00:02 +83: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip unknown message variants degrade to a generic notice
+00:02 +84: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip compaction statuses become tagged v2:compaction parts
+00:02 +85: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip live-captured variant fixture maps every v2-only shape
+00:02 +86: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip tool error state carries the structured message
+00:02 +87: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip tool file results surface as v1 output files
+00:02 +88: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip tool content interleaving survives as ordered segments
+00:02 +89: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: messages → parts round-trip streaming tool input maps to the v1 pending preview
+00:02 +90: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: permissions maps the v2 request onto the v1 shape
+00:02 +91: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: permissions reply strings map onto the v2 wire enum
+00:02 +92: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: providers & catalog a model and its modes are separate models, told apart by name
+00:02 +93: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: providers & catalog builds the v1 ProvidersResponse from the captured catalogs
+00:02 +94: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: providers & catalog maps catalog models with variant options
+00:02 +95: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: providers & catalog maps agents from the captured agent list
+00:02 +96: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: files & vcs maps fs entries with trailing-slash directories
+00:02 +97: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: files & vcs maps vcs diff and status rows
+00:02 +98: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: errors & health maps the v2 error hierarchy to ApiException
+00:02 +99: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_gateway_mappers_test.dart: errors & health maps health
+00:02 +100: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_mcp_scope_test.dart
+00:05 +100: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_mcp_scope_test.dart: v2 rejects persistent scope and existing names without PUT
+00:05 +101: /home/eslam/Storage/Code/oc_app-sol-bd/test/api2_mcp_scope_test.dart: MCP uniqueness read and add keep the same location across awaits
+00:05 +102: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/product_repository_mcp_test.dart
+00:05 +102: /home/eslam/Storage/Code/oc_app-sol-bd/test/product_repository_mcp_test.dart: saved permissions use the current project and exact generated routes
+00:05 +103: /home/eslam/Storage/Code/oc_app-sol-bd/test/product_repository_mcp_test.dart: generated API failures become product-facing errors
+00:05 +104: /home/eslam/Storage/Code/oc_app-sol-bd/test/product_repository_mcp_test.dart: project MCP setup persists one exact config patch
+00:06 +105: /home/eslam/Storage/Code/oc_app-sol-bd/test/product_repository_mcp_test.dart: global MCP setup persists local command configuration
+00:06 +106: /home/eslam/Storage/Code/oc_app-sol-bd/test/product_repository_mcp_test.dart: MCP OAuth preserves state and completes through generated routes
+00:06 +107: /home/eslam/Storage/Code/oc_app-sol-bd/test/product_repository_mcp_test.dart: persistent MCP setup rejects duplicate names before patching
+00:06 +108: /home/eslam/Storage/Code/oc_app-sol-bd/test/product_repository_mcp_test.dart: MCP drafts fail closed on unsafe transport data
+00:06 +109: /home/eslam/Storage/Code/oc_app-sol-bd/test/product_repository_mcp_test.dart: VCS diff scopes use generated API modes and preserve patches
+00:06 +110: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_oauth_test.dart
+00:06 +110: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_oauth_test.dart: discovers only explicit HTTP loopback OAuth redirects
+00:06 +111: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_oauth_test.dart: manual callback parsing validates state before exposing the code
+00:06 +112: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_oauth_test.dart: loopback listener rejects a mismatched state then captures one code
+00:06 +113: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/sv3_mcp_test.dart
+00:07 +113: /home/eslam/Storage/Code/oc_app-sol-bd/test/sv3_mcp_test.dart: runtime disconnect sends the exact name only when supported
+00:07 +114: /home/eslam/Storage/Code/oc_app-sol-bd/test/sv3_mcp_test.dart: runtime disconnect rejects unsafe names and returns safe errors
+00:07 +115: /home/eslam/Storage/Code/oc_app-sol-bd/test/sv3_mcp_test.dart: MCP setup capabilities do not enable unsupported recovery actions
+00:07 +116: /home/eslam/Storage/Code/oc_app-sol-bd/test/sv3_mcp_test.dart: unavailable MCP setup keeps all stronger actions unavailable
+00:07 +117: All tests passed!

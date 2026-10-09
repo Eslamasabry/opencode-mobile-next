@@ -27,6 +27,7 @@ import '../kit_tokens.dart';
 import '../motion/kit_motion_parts.dart';
 import 'kit_composer_chips.dart';
 import 'kit_markdown.dart';
+import 'kit_step_timeline.dart';
 
 /// Which piece of the transcript a [KitMessage] is.
 enum KitMessageKind { prompt, reply, thought, notice, marker }
@@ -626,10 +627,20 @@ class _Fold extends StatefulWidget {
     required this.onExpansionChanged,
     required this.foldKey,
     this.trailing,
+    this.railIcon,
+    this.railMark,
   });
 
-  /// The header's words and glyph, without the chevron.
+  /// The header's words and glyph, without the chevron. On a
+  /// [KitStepTimeline] the glyph is the rail's node instead: the caller
+  /// leaves it out and names it in [railIcon] or [railMark] (neither: a dot).
   final Widget line;
+
+  /// On a timeline: the step's glyph as a tile on the rail.
+  final IconData? railIcon;
+
+  /// On a timeline: a state mark in the node's place (the live mark).
+  final Widget? railMark;
 
   /// The header's semantic name.
   final String label;
@@ -700,12 +711,17 @@ class _FoldState extends State<_Fold> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
     final open = _open;
+    final onRail = KitStepTimeline.inside(context);
 
+    // On a timeline the first line stays at the top of the 48 dp target, so
+    // the node and the rail can be placed from the tokens alone.
     Widget lineBox(Widget child) => ConstrainedBox(
       constraints: BoxConstraints(minHeight: tokens.minTarget),
       child: Align(
-        alignment: AlignmentDirectional.centerStart,
-        heightFactor: 1,
+        alignment: onRail
+            ? AlignmentDirectional.topStart
+            : AlignmentDirectional.centerStart,
+        heightFactor: onRail ? null : 1,
         child: Padding(
           padding: EdgeInsetsDirectional.symmetric(vertical: tokens.space1),
           child: child,
@@ -778,7 +794,7 @@ class _FoldState extends State<_Fold> with SingleTickerProviderStateMixin {
 
     // One shape open or shut, so the header (and its focus) never remounts.
     final body = widget.body;
-    return Column(
+    final column = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -789,6 +805,16 @@ class _FoldState extends State<_Fold> with SingleTickerProviderStateMixin {
             child: _Body(child: body),
           ),
       ],
+    );
+    // The node goes around the whole step, outside the tap region (which
+    // clips what it draws).
+    return KitStepTimeline.node(
+      context,
+      lineHeight: 20,
+      top: tokens.space1,
+      icon: widget.railIcon,
+      mark: widget.railMark,
+      child: column,
     );
   }
 }
@@ -878,26 +904,33 @@ class _Thought extends StatelessWidget {
     final tokens = KitTokens.of(context);
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final title = titleFor(l10n, message);
+    final onRail = KitStepTimeline.inside(context);
+    final words = KitText(
+      title,
+      role: KitTextRole.secondary,
+      tone: KitTextTone.secondary,
+    );
     return _Fold(
       foldKey: message.thoughtKey,
       label: title,
       expanded: message.expanded,
       onExpansionChanged: message.onExpansionChanged,
       body: message.body,
-      line: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _Glyph(AppIconography.idea),
-          SizedBox(width: tokens.space2),
-          Expanded(
-            child: KitText(
-              title,
-              role: KitTextRole.secondary,
-              tone: KitTextTone.secondary,
+      // On a timeline the thought is a sentence: a dot on the rail (the live
+      // mark while it is still thinking) and its words.
+      railMark: onRail && message.working
+          ? const KitStatusMark(state: KitMarkState.working)
+          : null,
+      line: onRail
+          ? words
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _Glyph(AppIconography.idea),
+                SizedBox(width: tokens.space2),
+                Expanded(child: words),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -957,23 +990,27 @@ class _Notice extends StatelessWidget {
         : (message.icon ?? AppIconography.info);
 
     final action = message.action;
+    final onRail = KitStepTimeline.inside(context);
     return _Fold(
       foldKey: message.noticeKey,
       label: label,
       expanded: message.expanded,
       onExpansionChanged: message.onExpansionChanged,
       body: message.detail,
+      railIcon: onRail ? glyph : null,
       trailing: action == null
           ? null
           : KitButton.fromAction(action, role: KitButtonRole.tertiary),
-      line: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _Glyph(glyph),
-          SizedBox(width: tokens.space2),
-          Expanded(child: wordsLine),
-        ],
-      ),
+      line: onRail
+          ? wordsLine
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _Glyph(glyph),
+                SizedBox(width: tokens.space2),
+                Expanded(child: wordsLine),
+              ],
+            ),
     );
   }
 }

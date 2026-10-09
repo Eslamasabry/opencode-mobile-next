@@ -1,0 +1,15 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart
+00:00 +0: a location change after model update prevents thinking on the new scope
+00:00 +0 -1: a location change after model update prevents thinking on the new scope [E]
+  Expected: throws <Instance of 'PaseoFailure'>
+    Actual: <Instance of 'Future<void>'>
+     Which: emitted <null>
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/paseo_model_catalog_test.dart 269:13          main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: a location change after model update prevents thinking on the new scope

@@ -1,0 +1,100 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: Paseo thinking options survive provider catalog mapping
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: Paseo thinking options survive provider catalog mapping [E]
+  Expected: {
+              'low': {'label': 'Low'},
+              'high': {'label': 'High', 'isDefault': true},
+              'disabled': {'label': 'Off'}
+            }
+    Actual: <null>
+     Which: expected a map
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/paseo_model_catalog_test.dart 71:5             main.<fn>
+
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: Paseo snapshot restores the current thinking choice
+00:00 +0 -2: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: Paseo snapshot restores the current thinking choice [E]
+  Expected: 'high'
+    Actual: ''
+     Which: is different. Both strings start the same, but the actual value is missing the following trailing characters: high
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/paseo_model_catalog_test.dart 84:5             main.<fn>
+
+00:00 +0 -2: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: existing session applies thinking after model and restores it
+00:00 +0 -3: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: existing session applies thinking after model and restores it [E]
+  Bad state: No element
+  dart:core                                 List.single
+  test/paseo_model_catalog_test.dart 98:49  main.<fn>
+
+00:00 +0 -3: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: default thinking resets an existing choice with null
+00:00 +0 -4: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: default thinking resets an existing choice with null [E]
+  Bad state: No element
+  dart:core                                  List.single
+  test/paseo_model_catalog_test.dart 123:47  main.<fn>
+
+00:00 +0 -4: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: a provider-bound draft rejects another provider model
+00:00 +0 -5: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: a provider-bound draft rejects another provider model [E]
+  Expected: throws <Instance of 'PaseoFailure'>
+    Actual: <Instance of 'Future<void>'>
+     Which: emitted <null>
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/paseo_model_catalog_test.dart 131:11          main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                         _CustomZone.registerUnaryCallback
+  test/paseo_model_catalog_test.dart 129:19          main.<fn>
+
+00:00 +0 -5: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: draft thinking survives model selection
+00:00 +0 -6: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: draft thinking survives model selection [E]
+  Expected: 'high'
+    Actual: ''
+     Which: is different. Both strings start the same, but the actual value is missing the following trailing characters: high
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/paseo_model_catalog_test.dart 149:5            main.<fn>
+
+00:00 +0 -6: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart
+00:01 +0 -6: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: (setUpAll)
+00:01 +0 -6: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: single-provider session hides foreign models and agents
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: no matching candidates
+  Actual: _KeyWidgetFinder:<Found 1 widget with key [<'model-picker-agent'>]: [
+            KitChip-[<'model-picker-agent'>](dependencies: [InheritedCupertinoTheme, MediaQuery,
+_InheritedTheme, _LocalizationsScope-[GlobalKey#d6f73]]),
+          ]>
+   Which: means one was found but none were expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart:372:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart line 372
+The test description was:
+  single-provider session hides foreign models and agents
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -7: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: single-provider session hides foreign models and agents [E]
+  Test failed. See exception logs above.
+  The test description was: single-provider session hides foreign models and agents
+
+00:02 +0 -7: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: (tearDownAll)
+00:02 +0 -7: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: single-provider session hides foreign models and agents
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: Paseo snapshot restores the current thinking choice
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: Paseo thinking options survive provider catalog mapping
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: a provider-bound draft rejects another provider model
+  ... and 3 more
