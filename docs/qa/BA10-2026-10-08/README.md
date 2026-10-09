@@ -1,5 +1,10 @@
 # BA10 app-side phone-agent removal
 
+**2026-10-09 update:** [fx install/removal on APK 2202](../BA10-2202-2026-10-09/app-install-remove/README.md)
+is device-proven: 13 MB freed, fx absent, account/chat projections retained.
+The other five agents remain outside this proof. Original preparation below
+is retained as history.
+
 Status: **backend implemented and locally verified; no device proof**. The coordinator's reviewed
 APK 2197 receipt (path, full APK SHA-256, source revision, default-off Dart
 defines, signer verification) has not been delivered. That is the device-run

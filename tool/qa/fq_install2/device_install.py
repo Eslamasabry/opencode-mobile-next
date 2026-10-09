@@ -132,6 +132,10 @@ def make_ports(agent_id, output):
     return d, p, ports, metadata
 
 
+# Shared with removal/storage rows so every BA driver confirms the same handoff.
+confirm_continuation = run.confirm_continuation
+
+
 def run_case(agent_id, *, artifact, output, ports_factory=None):
     if agent_id not in run.TARGETS:
         raise RuntimeError('unsupported_agent')
@@ -197,6 +201,9 @@ print(json.dumps({'exactVersion':match}))
                 result['normalRestored'] = True
         except Exception:
             result['restorationBlocked'] = True
+        result['continuation'] = confirm_continuation(ports, artifact)
+        if result.get('restorationBlocked'):
+            result['continuation']['confirmed'] = False
         (output / (agent_id + '-device.json')).write_text(json.dumps(result, indent=2) + '\n')
         d.adb('shell', 'rm', '-f', '/data/local/tmp/fq-install.xml', '/data/local/tmp/fq-install2.xml')
         d.end_session()

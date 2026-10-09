@@ -1,0 +1,8 @@
+Command: env OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test -- env PYTHONPATH=tool/qa/fq_install2:tool/qa:. python3 -m unittest discover -s tool/qa -p test_final_pass*.py
+..............................................
+----------------------------------------------------------------------
+Ran 46 tests in 0.121s
+
+OK
+
+Exit: 0

@@ -1,0 +1,32 @@
+{
+  "inventory": {
+    "allocatedBytes": 0,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  },
+  "availableBytes": 1779462144,
+  "retained": {
+    "claudeSignedInVisible": false,
+    "phoneGateDigest": "6d88a3324dcdf6b3192b395af275e88d9fd0f968671b6925fc632c1a7391962e",
+    "claudeChatIdDigest": "0726bbaa34819a5a5af9f7107d37bfe52f755e76efbb2733a57fd1b0fd651897",
+    "claudeChatCount": 27,
+    "nodePresent": true,
+    "paseoPresent": true,
+    "claudeHomes": 2,
+    "targetHomes": {
+      "codex": 0,
+      "gemini": 0,
+      "qwen": 0,
+      "goose": 0,
+      "omp-acp": 0,
+      "fx": 0
+    }
+  },
+  "retainedStateMatches": true,
+  "targetAbsent": true
+}
