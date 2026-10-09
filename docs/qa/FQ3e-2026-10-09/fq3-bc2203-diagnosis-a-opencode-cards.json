@@ -1,0 +1,71 @@
+{
+  "runID": "fq3-bc2203-diagnosis-a",
+  "sourceRevision": "47c387047f368daa6f0a6516cc81a1f1b6642748",
+  "attemptID": "attempt-1791526344243188-3942405",
+  "cleanupCode": null,
+  "engine": "opencode",
+  "case": "cards",
+  "cliVersion": "1.18.32",
+  "observedVersion": "1.18.32",
+  "appUID": 10217,
+  "appBuild": 2203,
+  "serverKind": "owned",
+  "testedModel": "opencode/big-pickle",
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "retained": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "connectedModels": 18,
+        "asserted": true
+      }
+    },
+    "cards": {
+      "state": "fail",
+      "code": "oc1_prompt_error",
+      "facts": {}
+    }
+  },
+  "ownedSessions": [
+    "ses_ee0b55fe5ffe0JXiRNfOhkiLQ1",
+    "ses_ee0b55896ffeu3EabvAtC5T6D4"
+  ],
+  "observations": {
+    "version": {
+      "phase": "version",
+      "stage": "complete"
+    },
+    "create": {
+      "phase": "create",
+      "stage": "complete"
+    },
+    "models": {
+      "phase": "models",
+      "stage": "complete"
+    },
+    "cards": {
+      "phase": "cards",
+      "stage": "cards_tool_reply",
+      "model": "opencode/big-pickle",
+      "errorName": "APIError",
+      "httpStatus": 403,
+      "retryable": false
+    }
+  }
+}
