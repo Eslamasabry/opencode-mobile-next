@@ -1,0 +1,6 @@
+machine_lock: got test slot 1 after 24s
+PASS: shipped SDK reads inline base64 image blocks from a synthetic session JSONL unchanged.
+PASS: Paseo sends user images as base64, but its user-history mapper emits text only, not hash links.
+PASS: tool-result image filename is SHA-256(decoded bytes).png; markdown contains a full file URI.
+PASS: pre-existing bare-hash markdown passes through as text; its source-to-ID mapping is not established.
+LIMIT: synthetic JSONL acceptance proves reader compatibility, not what the pinned native Claude writer persists.
