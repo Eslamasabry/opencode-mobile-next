@@ -121,6 +121,34 @@ void main() {
     expect(gateway.commands.single.targetId, 'task');
   });
 
+  testWidgets('Stop task asks first and names the task', (tester) async {
+    final gateway = await _open(
+      tester,
+      source: _Gateway(
+        requests: const [
+          TeamRequest(
+            id: 'recover',
+            kind: 'failed',
+            taskId: 'task',
+            title: 'Build stopped',
+          ),
+        ],
+      ),
+    );
+    final stop = find.text('Stop task');
+    await tester.ensureVisible(stop);
+    await tester.tap(stop);
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('“Keep drafts after restart” stops'),
+      findsOneWidget,
+    );
+    expect(gateway.commands, isEmpty);
+    await tester.tap(find.text('Stop task').last);
+    await tester.pumpAndSettle();
+    expect(gateway.commands.single.action, TeamProjectAction.stopTask);
+  });
+
   testWidgets('failed message keeps the complete composer draft', (
     tester,
   ) async {

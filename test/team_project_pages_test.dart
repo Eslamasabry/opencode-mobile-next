@@ -118,6 +118,19 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('Stop project asks first and names the project', (tester) async {
+    await _open(
+      tester,
+      (c) => TeamProjectOverview(controller: c, projectId: 'site'),
+    );
+    await tester.tap(find.byTooltip(_en.teamProjectMenu));
+    await _settle(tester);
+    await tester.tap(find.text(_en.teamProjectStop));
+    await _settle(tester);
+    expect(find.textContaining('“Launch site” stops'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('B-15: servers show the project lane limit; a queued merge '
       'says it is ready, not waiting for dependencies', (tester) async {
     final c = await _open(

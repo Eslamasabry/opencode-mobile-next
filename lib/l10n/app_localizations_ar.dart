@@ -9861,6 +9861,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get teamUiGateAnswerConfirmCancelRunTitle => 'إيقاف هذا العمل؟';
 
   @override
+  String teamUiGateAnswerConfirmCancelNamedBody(String task) {
+    return 'تتوقف «$task». ويبقى عملها المفتوح كما هو.';
+  }
+
+  @override
   String get teamUiGateAnswerConfirmCancelRunBody =>
       'يتوقف التشغيل ويبقى عمله المفتوح كما هو.';
 
@@ -24890,6 +24895,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'ستتوقف المهام الجارية. سيُحتفظ بعملها وسجل المشروع.';
 
   @override
+  String teamProjectStopNamedBody(String project) {
+    return 'يتوقف «$project». تتوقف مهامه الجارية ويبقى عملها وسجله.';
+  }
+
+  @override
   String get teamProjectAdvance => 'تقديم العرض التجريبي';
 
   @override
@@ -25394,6 +25404,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get teamProjectTaskStopBody =>
       'أوقف هذه المهمة واحتفظ بمحادثتها وتغييراتها للمراجعة.';
+
+  @override
+  String teamProjectTaskStopNamedBody(String task) {
+    return 'تتوقف «$task». وتبقى محادثتها وتغييراتها للمراجعة.';
+  }
 
   @override
   String get teamProjectTaskRestart => 'بدء المهمة مجددًا';

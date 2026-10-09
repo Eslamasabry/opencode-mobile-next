@@ -16204,6 +16204,12 @@ abstract class AppLocalizations {
   /// **'Stop this work?'**
   String get teamUiGateAnswerConfirmCancelRunTitle;
 
+  /// Two-step sheet body before a failed run is cancelled; names the task it stops
+  ///
+  /// In en, this message translates to:
+  /// **'“{task}” stops. Its open work stays as it is.'**
+  String teamUiGateAnswerConfirmCancelNamedBody(String task);
+
   /// Two-step sheet body before a failed run is cancelled
   ///
   /// In en, this message translates to:
@@ -39096,6 +39102,12 @@ abstract class AppLocalizations {
   /// **'Running tasks will stop. Their work and project history will be kept.'**
   String get teamProjectStopBody;
 
+  /// Body of the Stop project confirm; names the project
+  ///
+  /// In en, this message translates to:
+  /// **'“{project}” stops. Its running tasks stop and their work and history stay.'**
+  String teamProjectStopNamedBody(String project);
+
   /// No description provided for @teamProjectAdvance.
   ///
   /// In en, this message translates to:
@@ -40036,6 +40048,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop this task and keep its conversation and changes for review.'**
   String get teamProjectTaskStopBody;
+
+  /// Body of the Stop task confirm; names the task
+  ///
+  /// In en, this message translates to:
+  /// **'“{task}” stops. Its conversation and changes stay for review.'**
+  String teamProjectTaskStopNamedBody(String task);
 
   /// No description provided for @teamProjectTaskRestart.
   ///

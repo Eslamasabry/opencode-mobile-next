@@ -9736,6 +9736,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get teamUiGateAnswerConfirmCancelRunTitle => 'Stop this work?';
 
   @override
+  String teamUiGateAnswerConfirmCancelNamedBody(String task) {
+    return '“$task” stops. Its open work stays as it is.';
+  }
+
+  @override
   String get teamUiGateAnswerConfirmCancelRunBody =>
       'The run stops and its open work stays as it is.';
 
@@ -24741,6 +24746,11 @@ class AppLocalizationsZh extends AppLocalizations {
       'Running tasks will stop. Their work and project history will be kept.';
 
   @override
+  String teamProjectStopNamedBody(String project) {
+    return '“$project” stops. Its running tasks stop and their work and history stay.';
+  }
+
+  @override
   String get teamProjectAdvance => 'Advance demo';
 
   @override
@@ -25243,6 +25253,11 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get teamProjectTaskStopBody =>
       'Stop this task and keep its conversation and changes for review.';
+
+  @override
+  String teamProjectTaskStopNamedBody(String task) {
+    return '“$task” stops. Its conversation and changes stay for review.';
+  }
 
   @override
   String get teamProjectTaskRestart => 'Start task again';

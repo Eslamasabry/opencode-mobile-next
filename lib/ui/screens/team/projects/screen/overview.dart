@@ -109,7 +109,9 @@ class TeamProjectOverview extends StatelessWidget {
             if (await showKitConfirm(
               context,
               title: l.teamProjectStopConfirmTitle,
-              body: l.teamProjectStopBody,
+              body: p.name.trim().isEmpty
+                  ? l.teamProjectStopBody
+                  : l.teamProjectStopNamedBody(p.name.trim()),
               confirmLabel: l.teamProjectStop,
               kind: KitConfirmKind.stop,
             )) {

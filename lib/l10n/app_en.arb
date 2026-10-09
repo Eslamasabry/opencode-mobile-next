@@ -10196,6 +10196,15 @@
   "@teamUiGateAnswerConfirmCancelRunTitle": {
     "description": "Two-step sheet title before a failed run is cancelled"
   },
+  "teamUiGateAnswerConfirmCancelNamedBody": "“{task}” stops. Its open work stays as it is.",
+  "@teamUiGateAnswerConfirmCancelNamedBody": {
+    "description": "Two-step sheet body before a failed run is cancelled; names the task it stops",
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
   "teamUiGateAnswerConfirmCancelRunBody": "The run stops and its open work stays as it is.",
   "@teamUiGateAnswerConfirmCancelRunBody": {
     "description": "Two-step sheet body before a failed run is cancelled"
@@ -30017,6 +30026,15 @@
   "teamProjectStopConfirmTitle": "Stop this project?",
   "teamProjectStop": "Stop project",
   "teamProjectStopBody": "Running tasks will stop. Their work and project history will be kept.",
+  "teamProjectStopNamedBody": "“{project}” stops. Its running tasks stop and their work and history stay.",
+  "@teamProjectStopNamedBody": {
+    "description": "Body of the Stop project confirm; names the project",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
   "teamProjectAdvance": "Advance demo",
   "teamProjectDigest": "Since you were away",
   "teamProjectDigestRead": "Mark as read",
@@ -30231,6 +30249,15 @@
   "teamProjectTaskStopConfirmTitle": "Stop this task?",
   "teamProjectTaskStop": "Stop task",
   "teamProjectTaskStopBody": "Stop this task and keep its conversation and changes for review.",
+  "teamProjectTaskStopNamedBody": "“{task}” stops. Its conversation and changes stay for review.",
+  "@teamProjectTaskStopNamedBody": {
+    "description": "Body of the Stop task confirm; names the task",
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
   "teamProjectTaskRestart": "Start task again",
   "teamProjectTaskAnswer": "Send answer",
   "teamProjectTaskAnswerLabel": "Your answer",

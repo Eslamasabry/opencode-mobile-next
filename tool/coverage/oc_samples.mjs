@@ -16,6 +16,7 @@ import { oc2EventsFamily } from './families/oc2_events.mjs';
 import { oc1RequestsFamily } from './families/oc1_requests.mjs';
 import { oc1ListsFamily } from './families/oc1_lists.mjs';
 import { oc2ListsFamily } from './families/oc2_lists.mjs';
+import { gascityTeamFamily } from './families/team.mjs';
 import { oc1SettingsFamily, oc2SettingsFamily } from './families/settings.mjs';
 import { oc1FilesFamily, oc2FilesFamily } from './families/files.mjs';
 import { oc2ModelsFamily, oc1ModelsFamily, oc2UsageFamily, quotaFamily, codexAccountFamily } from './families/models.mjs';
@@ -23,6 +24,7 @@ import { oc2ModelsFamily, oc1ModelsFamily, oc2UsageFamily, quotaFamily, codexAcc
 const outDir = process.argv[2] ?? 'test/fixtures/coverage';
 const OC1 = 'contracts/opencode-openapi-f12e14cf.json';
 const OC2 = 'contracts/opencode2-openapi-beta-18600.json';
+const GC = 'contracts/gascity-supervisor-openapi-v0-3648ca2d499a.json';
 const problems = [];
 const run = (name, built, source) =>
   finishFamily({ name, outDir, ...built, problems, source, writeFileSync, mkdirSync });
@@ -32,6 +34,7 @@ run('oc1_requests', oc1RequestsFamily(OC1), OC1);
 run('oc1_events', oc1EventsFamily(OC1), OC1);
 run('oc1_lists', oc1ListsFamily(OC1), OC1);
 run('oc2_lists', oc2ListsFamily(OC2), OC2);
+run('gascity_team', gascityTeamFamily(GC), GC);
 run('oc1_settings', oc1SettingsFamily(OC1), OC1);
 run('oc2_settings', oc2SettingsFamily(OC2), OC2);
 run('oc1_files', oc1FilesFamily(OC1), OC1);

@@ -24,6 +24,7 @@ enum GateKind {
       case 'confirm':
       case 'yes_no':
       case 'approval':
+      case 'tool_approval':
         return confirmation;
       case 'free_text':
       case 'freetext':

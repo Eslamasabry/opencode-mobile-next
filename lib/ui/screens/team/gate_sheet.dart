@@ -790,9 +790,12 @@ class _BodyState extends State<_Body> {
         onPressed: busy
             ? null
             : () async {
+                final task = _stoppedTask(controller.snapshot, gate)?.trim();
                 final ok = await _confirm(
                   title: l10n.teamUiGateAnswerConfirmCancelRunTitle,
-                  body: l10n.teamUiGateAnswerConfirmCancelRunBody,
+                  body: task == null || task.isEmpty
+                      ? l10n.teamUiGateAnswerConfirmCancelRunBody
+                      : l10n.teamUiGateAnswerConfirmCancelNamedBody(task),
                   label: l10n.teamUiGateAnswerRunCancel,
                   kind: KitConfirmKind.stop,
                 );

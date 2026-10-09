@@ -326,6 +326,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(confirmSheet, findsOneWidget);
       expect(find.text('Stop this work?'), findsOneWidget);
+      // The confirm names the task it stops.
+      expect(
+        find.textContaining('“Add subtract() to calc.py” stops'),
+        findsOneWidget,
+      );
       expect(gateway.calls, isEmpty);
       await tester.tap(confirmYes);
       await tester.pumpAndSettle();

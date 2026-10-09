@@ -1,0 +1,495 @@
+{
+  "sources": [
+    "contracts/gascity-supervisor-openapi-v0-3648ca2d499a.json"
+  ],
+  "operations": [
+    {
+      "key": "GC POST /v0/city",
+      "operationId": "post-v0-city"
+    },
+    {
+      "key": "GC PATCH /v0/city/{cityName}",
+      "operationId": "patch-v0-city-by-city-name"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/agent/{base}",
+      "operationId": "delete-v0-city-by-city-name-agent-by-base"
+    },
+    {
+      "key": "GC PATCH /v0/city/{cityName}/agent/{base}",
+      "operationId": "patch-v0-city-by-city-name-agent-by-base"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/agent/{base}/{action}",
+      "operationId": "post-v0-city-by-city-name-agent-by-base-by-action"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/agent/{dir}/{base}",
+      "operationId": "delete-v0-city-by-city-name-agent-by-dir-by-base"
+    },
+    {
+      "key": "GC PATCH /v0/city/{cityName}/agent/{dir}/{base}",
+      "operationId": "patch-v0-city-by-city-name-agent-by-dir-by-base"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/agent/{dir}/{base}/{action}",
+      "operationId": "post-v0-city-by-city-name-agent-by-dir-by-base-by-action"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/agents",
+      "operationId": "create-agent"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/bead/{id}",
+      "operationId": "delete-v0-city-by-city-name-bead-by-id"
+    },
+    {
+      "key": "GC PATCH /v0/city/{cityName}/bead/{id}",
+      "operationId": "patch-v0-city-by-city-name-bead-by-id"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/bead/{id}/assign",
+      "operationId": "post-v0-city-by-city-name-bead-by-id-assign"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/bead/{id}/close",
+      "operationId": "post-v0-city-by-city-name-bead-by-id-close"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/bead/{id}/reopen",
+      "operationId": "post-v0-city-by-city-name-bead-by-id-reopen"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/bead/{id}/update",
+      "operationId": "post-v0-city-by-city-name-bead-by-id-update"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/beads",
+      "operationId": "create-bead"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/convoy/{id}",
+      "operationId": "delete-v0-city-by-city-name-convoy-by-id"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/convoy/{id}/add",
+      "operationId": "post-v0-city-by-city-name-convoy-by-id-add"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/convoy/{id}/close",
+      "operationId": "post-v0-city-by-city-name-convoy-by-id-close"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/convoy/{id}/remove",
+      "operationId": "post-v0-city-by-city-name-convoy-by-id-remove"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/convoys",
+      "operationId": "create-convoy"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/events",
+      "operationId": "emit-event"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/events/rotate",
+      "operationId": "rotate-events"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/extmsg/adapters",
+      "operationId": "delete-v0-city-by-city-name-extmsg-adapters"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/extmsg/adapters",
+      "operationId": "register-extmsg-adapter"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/extmsg/bind",
+      "operationId": "post-v0-city-by-city-name-extmsg-bind"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/extmsg/groups",
+      "operationId": "ensure-extmsg-group"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/extmsg/inbound",
+      "operationId": "post-v0-city-by-city-name-extmsg-inbound"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/extmsg/outbound",
+      "operationId": "post-v0-city-by-city-name-extmsg-outbound"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/extmsg/participants",
+      "operationId": "delete-v0-city-by-city-name-extmsg-participants"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/extmsg/participants",
+      "operationId": "post-v0-city-by-city-name-extmsg-participants"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/extmsg/transcript/ack",
+      "operationId": "post-v0-city-by-city-name-extmsg-transcript-ack"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/extmsg/unbind",
+      "operationId": "post-v0-city-by-city-name-extmsg-unbind"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/formulas/{name}",
+      "operationId": "delete-v0-city-by-city-name-formulas-by-name"
+    },
+    {
+      "key": "GC PUT /v0/city/{cityName}/formulas/{name}",
+      "operationId": "put-v0-city-by-city-name-formulas-by-name"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/formulas/{name}/preview",
+      "operationId": "post-v0-city-by-city-name-formulas-by-name-preview"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/formulas/{name}/validate",
+      "operationId": "post-v0-city-by-city-name-formulas-by-name-validate"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/mail",
+      "operationId": "send-mail"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/mail/{id}",
+      "operationId": "delete-v0-city-by-city-name-mail-by-id"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/mail/{id}/archive",
+      "operationId": "post-v0-city-by-city-name-mail-by-id-archive"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/mail/{id}/mark-unread",
+      "operationId": "post-v0-city-by-city-name-mail-by-id-mark-unread"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/mail/{id}/read",
+      "operationId": "post-v0-city-by-city-name-mail-by-id-read"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/mail/{id}/reply",
+      "operationId": "reply-mail"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/maintenance/dolt-gc",
+      "operationId": "trigger-maintenance-dolt-gc"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/order/{name}/disable",
+      "operationId": "post-v0-city-by-city-name-order-by-name-disable"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/order/{name}/enable",
+      "operationId": "post-v0-city-by-city-name-order-by-name-enable"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/order/{name}/run",
+      "operationId": "post-v0-city-by-city-name-order-by-name-run"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/packs",
+      "operationId": "add-pack"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/packs/{name}",
+      "operationId": "delete-v0-city-by-city-name-packs-by-name"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/patches/agent/{base}",
+      "operationId": "delete-v0-city-by-city-name-patches-agent-by-base"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/patches/agent/{dir}/{base}",
+      "operationId": "delete-v0-city-by-city-name-patches-agent-by-dir-by-base"
+    },
+    {
+      "key": "GC PUT /v0/city/{cityName}/patches/agents",
+      "operationId": "put-v0-city-by-city-name-patches-agents"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/patches/provider/{name}",
+      "operationId": "delete-v0-city-by-city-name-patches-provider-by-name"
+    },
+    {
+      "key": "GC PUT /v0/city/{cityName}/patches/providers",
+      "operationId": "put-v0-city-by-city-name-patches-providers"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/patches/rig/{name}",
+      "operationId": "delete-v0-city-by-city-name-patches-rig-by-name"
+    },
+    {
+      "key": "GC PUT /v0/city/{cityName}/patches/rigs",
+      "operationId": "put-v0-city-by-city-name-patches-rigs"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/provider/{name}",
+      "operationId": "delete-v0-city-by-city-name-provider-by-name"
+    },
+    {
+      "key": "GC PATCH /v0/city/{cityName}/provider/{name}",
+      "operationId": "patch-v0-city-by-city-name-provider-by-name"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/providers",
+      "operationId": "create-provider"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/rig/{name}",
+      "operationId": "delete-v0-city-by-city-name-rig-by-name"
+    },
+    {
+      "key": "GC PATCH /v0/city/{cityName}/rig/{name}",
+      "operationId": "patch-v0-city-by-city-name-rig-by-name"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/rig/{name}/{action}",
+      "operationId": "post-v0-city-by-city-name-rig-by-name-by-action"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/rigs",
+      "operationId": "create-rig"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/runs/{run_id}/cancel",
+      "operationId": "post-v0-city-by-city-name-runs-by-run-id-cancel"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/service/{name}/restart",
+      "operationId": "post-v0-city-by-city-name-service-by-name-restart"
+    },
+    {
+      "key": "GC PATCH /v0/city/{cityName}/session/{id}",
+      "operationId": "patch-v0-city-by-city-name-session-by-id"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/session/{id}/close",
+      "operationId": "post-v0-city-by-city-name-session-by-id-close"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/session/{id}/kill",
+      "operationId": "post-v0-city-by-city-name-session-by-id-kill"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/session/{id}/messages",
+      "operationId": "send-session-message"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/session/{id}/permission-mode",
+      "operationId": "post-v0-city-by-city-name-session-by-id-permission-mode"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/session/{id}/rename",
+      "operationId": "post-v0-city-by-city-name-session-by-id-rename"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/session/{id}/respond",
+      "operationId": "respond-session"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/session/{id}/stop",
+      "operationId": "post-v0-city-by-city-name-session-by-id-stop"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/session/{id}/submit",
+      "operationId": "submit-session"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/session/{id}/suspend",
+      "operationId": "post-v0-city-by-city-name-session-by-id-suspend"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/session/{id}/wake",
+      "operationId": "post-v0-city-by-city-name-session-by-id-wake"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/sessions",
+      "operationId": "create-session"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/sling",
+      "operationId": "post-v0-city-by-city-name-sling"
+    },
+    {
+      "key": "GC POST /v0/city/{cityName}/unregister",
+      "operationId": "post-v0-city-by-city-name-unregister"
+    },
+    {
+      "key": "GC DELETE /v0/city/{cityName}/workflow/{workflow_id}",
+      "operationId": "delete-v0-city-by-city-name-workflow-by-workflow-id"
+    },
+    {
+      "key": "Front POST /v0/city/{cityName}/front/mr/{bead}/approve",
+      "operationId": "front-approve-merge"
+    },
+    {
+      "key": "Front POST /v0/city/{cityName}/front/merge/{run}",
+      "operationId": "front-merge"
+    },
+    {
+      "key": "Engine simulatePlanFailure",
+      "operationId": "simulatePlanFailure"
+    },
+    {
+      "key": "Engine usePlanAsTask",
+      "operationId": "usePlanAsTask"
+    },
+    {
+      "key": "Engine retryPlan",
+      "operationId": "retryPlan"
+    },
+    {
+      "key": "Engine simulateManualCommit",
+      "operationId": "simulateManualCommit"
+    },
+    {
+      "key": "Engine simulateConflict",
+      "operationId": "simulateConflict"
+    },
+    {
+      "key": "Engine requestSpecChange",
+      "operationId": "requestSpecChange"
+    },
+    {
+      "key": "Engine updateDefaults",
+      "operationId": "updateDefaults"
+    },
+    {
+      "key": "Engine createProject",
+      "operationId": "createProject"
+    },
+    {
+      "key": "Engine createQuickTask",
+      "operationId": "createQuickTask"
+    },
+    {
+      "key": "Engine saveSpecDraft",
+      "operationId": "saveSpecDraft"
+    },
+    {
+      "key": "Engine approveSpec",
+      "operationId": "approveSpec"
+    },
+    {
+      "key": "Engine approvePlan",
+      "operationId": "approvePlan"
+    },
+    {
+      "key": "Engine replan",
+      "operationId": "replan"
+    },
+    {
+      "key": "Engine answerRequest",
+      "operationId": "answerRequest"
+    },
+    {
+      "key": "Engine messageTask",
+      "operationId": "messageTask"
+    },
+    {
+      "key": "Engine pauseProject",
+      "operationId": "pauseProject"
+    },
+    {
+      "key": "Engine resumeProject",
+      "operationId": "resumeProject"
+    },
+    {
+      "key": "Engine stopProject",
+      "operationId": "stopProject"
+    },
+    {
+      "key": "Engine pauseTask",
+      "operationId": "pauseTask"
+    },
+    {
+      "key": "Engine resumeTask",
+      "operationId": "resumeTask"
+    },
+    {
+      "key": "Engine restartTask",
+      "operationId": "restartTask"
+    },
+    {
+      "key": "Engine stopTask",
+      "operationId": "stopTask"
+    },
+    {
+      "key": "Engine moveTask",
+      "operationId": "moveTask"
+    },
+    {
+      "key": "Engine verifyTask",
+      "operationId": "verifyTask"
+    },
+    {
+      "key": "Engine fixFindings",
+      "operationId": "fixFindings"
+    },
+    {
+      "key": "Engine recheckTask",
+      "operationId": "recheckTask"
+    },
+    {
+      "key": "Engine ignoreFinding",
+      "operationId": "ignoreFinding"
+    },
+    {
+      "key": "Engine updateSettings",
+      "operationId": "updateSettings"
+    },
+    {
+      "key": "Engine processMergeQueue",
+      "operationId": "processMergeQueue"
+    },
+    {
+      "key": "Engine resolveConflict",
+      "operationId": "resolveConflict"
+    },
+    {
+      "key": "Engine promote",
+      "operationId": "promote"
+    },
+    {
+      "key": "Engine acknowledgeDigest",
+      "operationId": "acknowledgeDigest"
+    },
+    {
+      "key": "Engine acceptPhase",
+      "operationId": "acceptPhase"
+    },
+    {
+      "key": "Engine acceptMilestone",
+      "operationId": "acceptMilestone"
+    },
+    {
+      "key": "Engine saveRole",
+      "operationId": "saveRole"
+    },
+    {
+      "key": "Engine deleteRole",
+      "operationId": "deleteRole"
+    },
+    {
+      "key": "Engine updateServer",
+      "operationId": "updateServer"
+    },
+    {
+      "key": "Engine deleteProject",
+      "operationId": "deleteProject"
+    },
+    {
+      "key": "Engine advance",
+      "operationId": "advance"
+    },
+    {
+      "key": "Engine undoMerge",
+      "operationId": "undoMerge"
+    }
+  ]
+}
