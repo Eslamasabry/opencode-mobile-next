@@ -640,6 +640,9 @@ class _ChatScreenState extends State<ChatScreen>
     return _pathLinkChecks.putIfAbsent(path, () => _checkPathLink(path));
   }
 
+  /// A reply's picture file, read for its thumbnail ([_loadPathImage]).
+  Future<Uint8List?> _readPathImage(String path) => _loadPathImage(path);
+
   Future<void> _openPathLink(String raw) async {
     final strings = _chatL10n(context);
     if (_conn.isIsolated || !_conn.capabilities.fileBrowsing) return;
