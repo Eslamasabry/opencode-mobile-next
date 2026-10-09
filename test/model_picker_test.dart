@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/paseo/gateway.dart'
+    show paseoServerCapabilities;
 import 'package:opencode_mobile/api/provider_presentation.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/state/connection.dart';
@@ -16,6 +18,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class _RefreshCountingController extends ConnectionController {
   _RefreshCountingController(super.store);
+
+  bool singleProvider = false;
+  String? canonicalDefaultVariant;
+
+  @override
+  ServerCapabilities get capabilities =>
+      singleProvider ? paseoServerCapabilities : super.capabilities;
 
   int refreshCalls = 0;
   int ensureCalls = 0;
@@ -46,7 +55,10 @@ class _RefreshCountingController extends ConnectionController {
   Future<void> selectModel(ModelRef ref, {String? variant}) async {
     await waitForModel;
     if (failSelection) throw StateError('disk unavailable');
-    await super.selectModel(ref, variant: variant);
+    await super.selectModel(
+      ref,
+      variant: variant == '' ? canonicalDefaultVariant ?? '' : variant,
+    );
   }
 
   @override
@@ -337,6 +349,123 @@ void main() {
       'google/gemini-wire-first',
       'local/local-last',
     ]);
+  });
+
+  testWidgets('single-provider session hides foreign models and agents', (
+    tester,
+  ) async {
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    controller.singleProvider = true;
+    await controller.selectModelForSession(
+      'chat',
+      ModelRef(providerID: 'local', modelID: 'small-local'),
+    );
+    await tester.pumpWidget(
+      _app(
+        controller,
+        applyScope: ModelPickerApplyScope.session,
+        sessionID: 'chat',
+        focusAgent: true,
+      ),
+    );
+    await _tap(tester, find.text('Choose model'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('model-picker-agent')), findsNothing);
+    expect(find.byKey(const ValueKey('model-picker-agent-plan')), findsNothing);
+    await tester.enterText(
+      find.byKey(const Key('model-picker-search')),
+      'pickle',
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('use-model-opencode-big-pickle')),
+      findsNothing,
+    );
+    expect(find.text('Big Pickle'), findsNothing);
+    await _tap(tester, find.byKey(const Key('model-picker-filters')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('model-provider-opencode')), findsNothing);
+    expect(find.byKey(const ValueKey('model-provider-local')), findsOneWidget);
+  });
+
+  test(
+    'a provider-bound unresolved session does not inherit the global provider',
+    () async {
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      controller.singleProvider = true;
+      expect(controller.selectedModel, isNotNull);
+      expect(controller.catalogForSession('unresolved')!.models, isEmpty);
+    },
+  );
+
+  testWidgets('Paseo thinking labels are shown and choices are saved', (
+    tester,
+  ) async {
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    controller.singleProvider = true;
+    controller.catalog = const CatalogSnapshot(
+      providers: [
+        CatalogProvider(id: 'claude', name: 'Claude Code', enabled: true),
+      ],
+      models: [
+        CatalogModel(
+          id: 'opus',
+          providerID: 'claude',
+          name: 'Opus',
+          enabled: true,
+          status: 'active',
+          contextLimit: 0,
+          outputLimit: 0,
+          reasoning: true,
+          attachments: false,
+          tools: false,
+          variants: [
+            CatalogVariant(id: 'ultracode', options: {'label': 'Ultra Code'}),
+            CatalogVariant(
+              id: 'high',
+              options: {'label': 'High', 'isDefault': true},
+            ),
+          ],
+        ),
+      ],
+      agents: [CatalogAgent(id: 'default', mode: 'primary', hidden: false)],
+    );
+    await controller.selectModel(
+      ModelRef(providerID: 'claude', modelID: 'opus'),
+      variant: 'ultracode',
+    );
+    await tester.pumpWidget(_app(controller));
+    await _tap(tester, find.text('Choose model'));
+    await tester.pumpAndSettle();
+    expect(find.text('Thinking: Ultra Code'), findsOneWidget);
+    expect(find.byKey(const Key('model-picker-agent')), findsNothing);
+    await _tap(tester, find.byKey(const Key('model-picker-thinking')));
+    await tester.pumpAndSettle();
+    expect(find.text('Ultra Code'), findsOneWidget);
+    await _tap(tester, find.byKey(const ValueKey('model-variant-opus-high')));
+    await tester.pumpAndSettle();
+    expect(find.text('Thinking: High'), findsOneWidget);
+    await _tap(tester, find.byKey(const Key('model-picker-apply')));
+    await tester.pumpAndSettle();
+    expect(controller.selectedVariant, 'high');
+    // Paseo reports the effective default ID after accepting a null reset.
+    controller.canonicalDefaultVariant = 'high';
+    await _tap(tester, find.text('Choose model'));
+    await tester.pumpAndSettle();
+    await _tap(tester, find.byKey(const Key('model-picker-thinking')));
+    await tester.pumpAndSettle();
+    await _tap(
+      tester,
+      find.byKey(const ValueKey('model-variant-opus-default')),
+    );
+    await tester.pumpAndSettle();
+    await _tap(tester, find.byKey(const Key('model-picker-apply')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('model-picker-thinking')), findsNothing);
+    expect(controller.selectedVariant, 'high');
   });
 
   testWidgets('model selector searches and persists a new selection', (

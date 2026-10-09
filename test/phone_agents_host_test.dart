@@ -102,7 +102,14 @@ void main() {
             architectureEntered!.complete();
             await architectureRelease!.future;
           }
-          return {'abi': abi, 'running': running};
+          return {
+            'abi': abi,
+            'running': running,
+            'lastExitCode': 137,
+            'lastExitAtMs': 1700000001000,
+            'lastStopRequested': false,
+            'exitReason': 'memory_or_phantom_kill',
+          };
         case 'startAgentHost':
           final args = call.arguments as Map;
           expect(args['port'], 4099);
@@ -166,6 +173,21 @@ void main() {
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(_storage, null);
     messenger.setMockMethodCallHandler(_native, null);
+  });
+
+  test('BD13 helper status reads only persisted narrow native facts', () async {
+    final status = await host.helperStatus();
+    expect(status.running, isFalse);
+    expect(status.lastExitCode, 137);
+    expect(
+      status.lastExitAt,
+      DateTime.fromMillisecondsSinceEpoch(1700000001000, isUtc: true),
+    );
+    expect(status.notice, contains('Android may have'));
+    running = true;
+    final restarted = await host.helperStatus();
+    expect(restarted.lastExitCode, 137);
+    expect(restarted.notice, isNull);
   });
 
   test(

@@ -45,11 +45,15 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
       backend._turnStallProbe = () async {
         final agent = _paHostProbeAgent;
         bool? running;
-        if (host is PhoneAgentLivenessPort) {
+        final status = host is PhoneAgentDiagnosticsPort
+            ? await (host as PhoneAgentDiagnosticsPort).helperStatus()
+            : null;
+        running = status?.running;
+        if (status == null && host is PhoneAgentLivenessPort) {
           try {
             running = await (host as PhoneAgentLivenessPort).helperRunning();
           } catch (_) {}
-        } else if (agent != null) {
+        } else if (status == null && agent != null) {
           try {
             running = (await host.inspect(agent)).hostAvailable;
           } catch (_) {}
@@ -58,6 +62,7 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
           return TurnStallEvidence(
             transportConnected: watched.isConnected,
             helperRunning: false,
+            helperStatus: status,
           );
         }
         bool? reachable;

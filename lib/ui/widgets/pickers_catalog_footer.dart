@@ -5,7 +5,7 @@ extension _ModelCatalogFooter on _ModelCatalogViewState {
   /// agent, each a chip that opens its menu. A chip that has nothing to
   /// choose is left out (a model with one level, a server without agents).
   Widget _footer(BuildContext context) {
-    final catalog = widget.controller.catalog;
+    final catalog = _catalog;
     if (catalog == null || catalog.models.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -75,9 +75,12 @@ extension _ModelCatalogFooter on _ModelCatalogViewState {
   }
 
   /// The agents a person picks from: primary ones the server does not hide.
-  List<CatalogAgent> _choosableAgents(CatalogSnapshot catalog) => catalog.agents
-      .where((agent) => !agent.hidden && agent.mode != 'subagent')
-      .toList();
+  List<CatalogAgent> _choosableAgents(CatalogSnapshot catalog) =>
+      widget.controller.capabilities.agentSelection
+      ? catalog.agents
+            .where((agent) => !agent.hidden && agent.mode != 'subagent')
+            .toList()
+      : const [];
 
   Future<void> _chooseThinking(
     BuildContext anchor,
@@ -125,7 +128,7 @@ extension _ModelCatalogFooter on _ModelCatalogViewState {
   }
 
   Future<void> _chooseAgent(BuildContext anchor) async {
-    final catalog = widget.controller.catalog;
+    final catalog = _catalog;
     if (catalog == null) return;
     final agents = _choosableAgents(catalog);
     if (agents.isEmpty) return;
@@ -174,7 +177,9 @@ extension _ModelCatalogFooter on _ModelCatalogViewState {
     if (widget.applyScope != ModelPickerApplyScope.classic || drafted == null) {
       return _applyLabel(_strings, widget.applyScope);
     }
-    final agent = _draftAgent;
+    final agent = widget.controller.capabilities.agentSelection
+        ? _draftAgent
+        : '';
     return agent.isEmpty
         ? _strings.modelPickerUseModel(drafted.name)
         : _strings.e7ModelUiUseModelMode(drafted.name, _agentTitle(agent));
@@ -212,7 +217,7 @@ extension _ModelCatalogFooter on _ModelCatalogViewState {
   Future<void> _applyDraft() async {
     final model = _draftModel;
     if (_applying || !_sameScope) return;
-    final catalog = widget.controller.catalog;
+    final catalog = _catalog;
     if (model == null || catalog == null || _draftedModel(catalog) == null) {
       _set(() => _saveError = _strings.modelPickerChooseFirst);
       return;
@@ -236,15 +241,26 @@ extension _ModelCatalogFooter on _ModelCatalogViewState {
         await widget.controller.selectModel(model, variant: variant);
       }
       if (!_sameScope) return;
+      // A runtime may resolve Default to the model's advertised default ID.
+      final effectiveDefault =
+          variant.isEmpty &&
+          _draftedModel(catalog)!.variants.any(
+            (option) =>
+                !option.disabled &&
+                option.id == _currentVariant &&
+                option.options['isDefault'] == true,
+          );
       if (!ModelLibrary.sameModel(_currentModel, model) ||
-          _currentVariant != variant) {
+          (_currentVariant != variant && !effectiveDefault)) {
         if (mounted) {
           _set(() => _saveError = _strings.e7ModelUiSelectionGone);
         }
         return;
       }
       modelConfirmed = true;
-      if (agent.isNotEmpty && agent != _currentAgent) {
+      if (widget.controller.capabilities.agentSelection &&
+          agent.isNotEmpty &&
+          agent != _currentAgent) {
         if (sessionID != null) {
           await widget.controller.selectAgentForSession(sessionID, agent);
         } else {

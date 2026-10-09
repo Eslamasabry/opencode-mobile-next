@@ -9,6 +9,7 @@ import '../../domain/tool_label.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../kit/chat/kit_markdown.dart';
+import '../kit/chat/kit_step_timeline.dart';
 import '../kit/chat/kit_tool_row.dart';
 import '../kit/kit_bidi.dart';
 import '../kit/kit_buttons.dart';
@@ -223,6 +224,56 @@ class _ToolCardState extends State<ToolCard> {
     setState(() => _previewLoads[file.identity] = _loadPreview(file));
   }
 
+  ToolState? _previewFor;
+  KitStepPreview? _preview;
+
+  /// A few lines of what a write, edit or patch changed, for the timeline's
+  /// preview card. Built once per call state, and only on a timeline.
+  KitStepPreview? _previewOf(_ToolContract contract) {
+    if (!KitStepTimeline.inside(context)) return null;
+    final state = widget.state;
+    if (identical(_previewFor, state)) return _preview;
+    _previewFor = state;
+    final metadata = state.metadata ?? const <String, dynamic>{};
+    KitStepPreview? preview;
+    switch (contract.kind) {
+      case _ToolKind.write:
+        final content = _rawString(state.input['content']);
+        if (content?.trim().isNotEmpty == true) {
+          preview = KitStepPreview.fromText(content!);
+        }
+      case _ToolKind.edit:
+        final filediff = metadata['filediff'];
+        final patch = filediff is Map ? _rawString(filediff['patch']) : null;
+        final diff = patch ?? _rawString(metadata['diff']);
+        final oldText = _rawString(state.input['oldString']);
+        final newText = _rawString(state.input['newString']);
+        if (diff?.trim().isNotEmpty == true) {
+          preview = KitStepPreview.fromPatch(diff!);
+        } else if (oldText != null || newText != null) {
+          preview = KitStepPreview.fromTexts(before: oldText, after: newText);
+        }
+      case _ToolKind.patch:
+        String? diff;
+        final files = metadata['files'];
+        if (files is List) {
+          for (final raw in files.whereType<Map>()) {
+            diff = _rawString(raw['patch']);
+            if (diff != null) break;
+          }
+        }
+        diff ??=
+            _rawString(metadata['diff']) ??
+            _rawString(state.input['patchText']);
+        if (diff?.trim().isNotEmpty == true) {
+          preview = KitStepPreview.fromPatch(diff!);
+        }
+      default:
+        break;
+    }
+    return _preview = (preview == null || preview.isEmpty) ? null : preview;
+  }
+
   bool get _backgroundLaunch =>
       widget.toolName.trim().toLowerCase() == 'subagent' &&
       _nativeSubagentLaunched(widget.state);
@@ -386,6 +437,7 @@ class _ToolCardState extends State<ToolCard> {
               selectable: false,
             )
           : null,
+      preview: _previewOf(contract),
       body: hasBody
           ? [
               _ToolBody(

@@ -8452,5 +8452,6 @@
   "chatUiConnectorSearchNotLoaded": "الفهرس غير محمّل. افتح الأدوات > MCP لتحميله.",
   "chatUiConnectorSearchUnavailable": "البحث في الموصّلات غير متاح. حاول مجددًا من الأدوات.",
   "chatUiConnectorSearchInvalid": "طلب بحث الموصّلات غير صالح.",
-  "chatUiConnectorSearchNotConnected": "غير متصل"
+  "chatUiConnectorSearchNotConnected": "غير متصل",
+  "kitMarkdownImage": "صورة"
 }

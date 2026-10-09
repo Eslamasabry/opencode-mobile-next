@@ -54,6 +54,19 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   );
   static const _maxPaseoSources = 4;
 
+  /// Read-only evidence for a helper-stop notice. Never starts/restarts work.
+  /// The caller should discard a late result after changing profiles.
+  Future<AgentHelperStatus?> phoneAgentHelperStatus() async {
+    final host = _paHost;
+    if (host is! PhoneAgentDiagnosticsPort) return null;
+    try {
+      final status = await (host as PhoneAgentDiagnosticsPort).helperStatus();
+      return identical(host, _paHost) && !_self._disposed ? status : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   PhoneAgentHostPort? _paHost;
   String? _paHostProfile;
   AgentSignInForegroundBinding? _paForegroundBinding;

@@ -121,6 +121,23 @@ class KitMarkdown extends StatefulWidget {
 
 **Kit copy** (ARB, `kit` prefix, en + ar in the same change, COPY-1, COPY-3): `kitMarkdownOpenLink` "Open link" (link semantics hint), `kitMarkdownOpenFile` "Open file" (path chip hint), `kitMarkdownTable` "Table, {rows} rows" (ICU plural; table semantics). Code block words are KitCodeBlock's.
 
+## Pictures
+
+`![alt](target)` never shows as syntax (`lib/ui/kit/chat/kit_markdown_image.dart`, a part of the same library). The scanner takes each picture out of its line (nested brackets in the description, `<angle>` and titled destinations, `[![alt](src)](href)`; inline code is left alone) and each one is drawn as a kit part by what it points at:
+
+| Target | Look | Tap |
+| --- | --- | --- |
+| A path or `file:` URI on the server or phone, confirmed by `fileLinks.validate` | A 96 dp thumbnail (`KitImage`, cover, tile corners) with its name under it, when `fileLinks.readImage` returns the bytes and Flutter can draw the type. Otherwise a `KitChip` (picture glyph, "Image · name") | `fileLinks.open(path)`: the file viewer the path links use |
+| An http(s) address | `KitChip`: "Image · host". Never loaded: no `Image.network`, no fetch | `openExternalLink` (SEC-1): it names the host and asks first |
+| `data:`, another scheme, or a path the host cannot confirm | `KitChip`, plain, with the description | none (no dead affordance) |
+
+- The description is the alt text; empty or the bare word "Image" gets the app's own word (`kitMarkdownImage`). A file's name or a host follows it, isolated left to right (COPY-30).
+- A line of only pictures, with the picture-only lines after it (blank lines between them too), is one wrapping group, not one per line. A picture inside a sentence is a link-like run (glyph, words, accent and underlined when it opens) that wraps with the words; it has no thumbnail.
+- The last line of a streaming reply holds back a picture that is still being written, so syntax never flashes.
+- Selection reads the words on the tiles. `proseForSpeech` speaks the alt text (nothing for an empty one), never the target. The reply's own Copy stays verbatim Markdown (a reply is the person's to paste).
+- `KitMarkdownFileLinks.readImage` (host-supplied, null: chips only) is the same file transport FC4's sent-photo thumbnails use; the chat caps it at 8 MiB.
+- Copy (ARB, en + ar): `kitMarkdownImage` "Image"; a thumbnail's semantics reuse `kitAttachmentOpen` ("Preview {label}").
+
 ## States
 
 Declared (KIT-12): **default**; **streaming** (the last fence is unclosed: plain mono, no highlight; nothing flickers as it closes); **non-interactive** (`interactive: false`); **empty** (`data` blank: renders `SizedBox.shrink`, no semantics node). No loading or error (the text is given), no disabled, no working.
@@ -193,6 +210,7 @@ KitMarkdown lays out at the width its host gives it. The chat host caps the conv
 11. Semantics: header nodes for headings, link nodes for links; no live region anywhere.
 12. RTL: an English paragraph under `TextDirection.rtl` lays out LTR; inline code is LTR-isolated inside an Arabic paragraph.
 13. 200 % text at 320 dp and 412 dp, LTR and RTL: no overflow (G6).
+14. Pictures (`test/kit/kit_markdown_image_test.dart`, `test/reply_picture_tiles_test.dart`): the scanner (picture vs link, `!` before text, nested brackets, several per line, alt text, path vs http vs `data:`); file thumbnail and chip taps reach `open`; a web picture is never read and its tap shows the `openExternalLink` confirmation; consecutive pictures are one group; no raw syntax anywhere; speech and selection read the alt text.
 
 ## Galleries required
 
@@ -202,13 +220,14 @@ KitMarkdown lays out at the width its host gives it. The chat host caps the conv
 - Default at 360×800, 915×412, 800×1280, 1280×800 (in a 700 dp pane) and 1600×1000, dark and light.
 - Default at text 2.0 and in Arabic RTL (an Arabic reply with English inline code) at 412×915 and 1280×800, dark.
 - G5 and G6 cover the rest. About 26 PNGs.
+- Pictures, `test/goldens/kit/kit_markdown_images_golden_test.dart`, 412×915, dark and light: `kit_markdown_images_reply` (three thumbnails, a web chip, a `data:` chip), `_reply_ar` (the same in Arabic, right to left), `_inline` (pictures inside a sentence), `_unread` (a host with no file reader: named chips).
 
 ## Non-goals
 
 - The agent blocks (choices, checklist, command): they stay in `agent_blocks.dart` (shared-shell-1) and reach the kit through `blockBuilder`.
 - The search engine and match counting (`transcript_highlight.dart` stays the host's; chat-2 owns it).
 - Syntax colouring (KitCodeBlock's `KitCodeHighlight`).
-- A full Markdown spec: no images, HTML, footnotes or nested tables. They render as their source text.
+- A full Markdown spec: no HTML, footnotes or nested tables. They render as their source text. Pictures are tiles (see Pictures), not a gallery: no editing, no download, no loading of web pictures.
 - Changing any caller: callers keep `MarkdownText` until their chain link or screen unit moves them.
 
 ## Open questions

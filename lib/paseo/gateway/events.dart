@@ -52,6 +52,10 @@ extension _PaseoEvents on PaseoGateway {
   void _emitStatus(String id, String status) {
     if (_statuses[id] == status) return;
     _statuses[id] = status;
+    if (status == 'idle') {
+      final live = _live[id];
+      if (live != null) _finishOpen(live);
+    }
     _emit('session.status', {
       'sessionID': id,
       'status': {'type': status},
@@ -117,7 +121,6 @@ extension _PaseoEvents on PaseoGateway {
     if (realID is! String) return;
     final id = _app(realID);
     final known = _agents.containsKey(id);
-    final before = _statuses[id];
     if (agent['archivedAt'] is String) {
       _removed(id);
       return;
@@ -127,13 +130,6 @@ extension _PaseoEvents on PaseoGateway {
     _emit(known ? 'session.updated' : 'session.created', {
       'info': paseoSessionJson(session),
     });
-    final status = _statuses[id]!;
-    if (before != status) {
-      // _remember already stored the new value; announce the change.
-      _statuses[id] = before ?? 'idle';
-      _emitStatus(id, status);
-      if (status == 'idle') _emit('session.idle', {'sessionID': id});
-    }
   }
 
   void _removed(Object? id) {

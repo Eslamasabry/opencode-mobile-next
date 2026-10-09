@@ -33933,5 +33933,9 @@
   "chatUiConnectorSearchNotConnected": "Not connected",
   "@chatUiConnectorSearchNotConnected": {
     "description": "Tool step: a found connector is not connected on this server."
+  },
+  "kitMarkdownImage": "Image",
+  "@kitMarkdownImage": {
+    "description": "KitMarkdown: the name of a picture in an agent's reply whose Markdown gave no description (empty, or just the word Image)"
   }
 }
