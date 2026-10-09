@@ -1,0 +1,30 @@
+EEE
+======================================================================
+ERROR: test_install_success_survives_later_identity_failure_in_report (tool.qa.test_fb1_install_diagnostic.InstallDiagnosticTest.test_install_success_survives_later_identity_failure_in_report)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/test_fb1_install_diagnostic.py", line 36, in test_install_success_survives_later_identity_failure_in_report
+    self.assertEqual(report['installDiagnostic']['success'], True)
+                     ~~~~~~^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'installDiagnostic'
+
+======================================================================
+ERROR: test_native_error_from_stderr_is_retained_without_details (tool.qa.test_fb1_install_diagnostic.InstallDiagnosticTest.test_native_error_from_stderr_is_retained_without_details)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/test_fb1_install_diagnostic.py", line 14, in test_native_error_from_stderr_is_retained_without_details
+    from tool.qa.fb1_install_diagnostic import project
+ModuleNotFoundError: No module named 'tool.qa.fb1_install_diagnostic'
+
+======================================================================
+ERROR: test_success_and_unknown_output_are_not_confused (tool.qa.test_fb1_install_diagnostic.InstallDiagnosticTest.test_success_and_unknown_output_are_not_confused)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/test_fb1_install_diagnostic.py", line 22, in test_success_and_unknown_output_are_not_confused
+    from tool.qa.fb1_install_diagnostic import project
+ModuleNotFoundError: No module named 'tool.qa.fb1_install_diagnostic'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.005s
+
+FAILED (errors=3)

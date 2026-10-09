@@ -1,0 +1,31 @@
+{
+  "scope": "retained FB1 AVD install-only diagnosis",
+  "sharedDeviceTouched": false,
+  "fullPassRerun": false,
+  "resources": {
+    "availableRamBytes": 7411220480,
+    "storageFreeBytes": 18050953216,
+    "rootFreeBytes": 4204535808,
+    "kvmAccessible": true,
+    "admitted": true
+  },
+  "guestAbis": "x86_64,arm64-v8a",
+  "dataAvailableKiB": 7227984,
+  "packagePresentBefore": true,
+  "adbInstall": {
+    "returnCode": 0,
+    "successLine": true,
+    "androidError": null,
+    "nativeResult": null,
+    "usedReplace": true
+  },
+  "identityCheck": {
+    "state": "pass",
+    "build": 2203,
+    "version": "1.2.0",
+    "sha256": "82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7",
+    "signer": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+    "uid": 10209
+  },
+  "ownedEmulatorStopped": true
+}
