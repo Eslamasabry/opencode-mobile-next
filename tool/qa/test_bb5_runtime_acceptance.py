@@ -300,10 +300,16 @@ class NormalArtifactTest(unittest.TestCase):
             B.validate_normal(device, SimpleNamespace(version=2198, normal_version=2198))
         device.run.assert_not_called()
 
+    def test_previous_normal_refuses_without_any_device_command(self):
+        device = Mock()
+        with self.assertRaisesRegex(H.Q.Refused, 'bb5_known_versions_restore_required'):
+            B.validate_normal(device, SimpleNamespace(version=2198, normal_version=2199, normal_sha='invalid'))
+        device.run.assert_not_called()
+
     def test_wrong_version_refuses_without_any_device_command(self):
         device = Mock()
         with self.assertRaises(H.Q.Refused):
-            B.validate_normal(device, SimpleNamespace(version=2200, normal_version=2199))
+            B.validate_normal(device, SimpleNamespace(version=2200, normal_version=2202))
         device.run.assert_not_called()
 
     def test_normal_hash_sidecar_and_signer_are_all_checked_before_mutation(self):
@@ -311,13 +317,13 @@ class NormalArtifactTest(unittest.TestCase):
             apk = Path(directory) / 'normal.apk'; apk.write_bytes(b'private-test-artifact')
             digest = B.hashlib.sha256(apk.read_bytes()).hexdigest()
             sidecar = Path(directory) / 'normal.sha256'; sidecar.write_text(digest + '  normal.apk\n')
-            args = SimpleNamespace(version=2198, normal_version=2199, normal_sha=digest,
+            args = SimpleNamespace(version=2198, normal_version=2202, normal_sha=digest,
                 normal_apk=apk, normal_sidecar=sidecar, apksigner=Path('apksigner'), aapt=Path('aapt'))
             device = Mock()
             device.run.side_effect = [SimpleNamespace(returncode=0, stdout='Signer #1 certificate SHA-256 digest: ' + H.Q.CERT),
-                SimpleNamespace(returncode=0, stdout="package: name='" + H.PACKAGE + "' versionCode='2199'")]
+                SimpleNamespace(returncode=0, stdout="package: name='" + H.PACKAGE + "' versionCode='2202'")]
             try: B.validate_normal(device, args)
-            except H.Q.Refused: self.fail('Verified normal2199 unexpectedly refused')
+            except H.Q.Refused: self.fail('Verified normal2202 unexpectedly refused')
             device.adb.assert_not_called(); device.write_dead.assert_not_called()
             sidecar.write_text('0'*64)
             with self.assertRaises(H.Q.Refused):
@@ -325,7 +331,7 @@ class NormalArtifactTest(unittest.TestCase):
 
     def test_normal_restore_install_r_never_downgrades_or_uninstalls(self):
         device = Mock(); device.cat.return_value = None
-        device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2199', stderr='')
+        device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2202', stderr='')
         device.installed_hash.return_value = 'a'*64
         args = SimpleNamespace(normal_apk=Path('normal.apk'), normal_sha='a'*64)
         with patch.object(B, 'validate_normal') as validate, patch.object(B, 'restore_metadata') as restore, patch.object(H, 'real_start') as start, \
@@ -335,6 +341,19 @@ class NormalArtifactTest(unittest.TestCase):
         self.assertIn(('install', '-r', 'normal.apk'), commands)
         self.assertTrue(all('-d' not in command and 'uninstall' not in command for command in commands))
         validate.assert_called_once(); restore.assert_called_once(); start.assert_called_once()
+
+    def test_stale_installed_normal_cannot_claim_restoration(self):
+        device = Mock(); device.cat.return_value = None
+        device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2199', stderr='')
+        device.installed_hash.return_value = 'a'*64
+        evidence = []
+        args = SimpleNamespace(normal_apk=Path('normal.apk'), normal_sha='a'*64)
+        with patch.object(B, 'validate_normal'), patch.object(B, 'restore_metadata'), \
+             patch.object(H, 'real_start') as start, patch.object(H, 'selected_profile', return_value='owner'):
+            with self.assertRaises(H.Q.Refused):
+                B.restore_normal(device, args, 'private', evidence)
+        start.assert_not_called()
+        self.assertEqual([], evidence)
 
     def test_storage_failure_preserves_installed_app_data_and_never_claims_restore(self):
         device = Mock(); device.cat.return_value = None
@@ -440,7 +459,7 @@ class QaDowngradeAdmissionTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / 'target.apk'; target.write_bytes(b'qa-target')
             runner = Path(directory) / 'runner.apk'; runner.write_bytes(b'qa-runner')
-            args = SimpleNamespace(version=2198, normal_version=2199, normal_sha='a'*64,
+            args = SimpleNamespace(version=2198, normal_version=2202, normal_sha='a'*64,
                 qa_normal_downgrade=authorized, apk=target, runner_apk=runner,
                 target_sha=B.hashlib.sha256(target.read_bytes()).hexdigest(),
                 runner_sha=B.hashlib.sha256(runner.read_bytes()).hexdigest(),
@@ -452,7 +471,7 @@ class QaDowngradeAdmissionTest(unittest.TestCase):
                 SimpleNamespace(returncode=0, stdout='Signer #1 certificate SHA-256 digest: '+H.Q.CERT),
                 SimpleNamespace(returncode=0, stdout="package: name='"+H.PACKAGE+".test' versionCode=''"),
             ]
-            device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2199')
+            device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2202')
             H.validate_candidates(device, args)
             self.assertEqual([('shell','dumpsys','package',H.PACKAGE)], [c.args for c in device.adb.call_args_list])
     def test_exact_known_normal_permits_private_qa_downgrade(self):
