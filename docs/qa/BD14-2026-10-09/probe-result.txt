@@ -1,0 +1,5 @@
+machine_lock: got test slot 1 after 39s
+Inbound attachment/image/file operations: ["checkout.commits.file_diff.request","file_explorer_request","fs.file.subscribe.request","fs.file.unsubscribe.request","fs.file.write.request","fs.entry.create.request","fs.entry.rename.request","fs.entry.duplicate.request","fs.entry.delete.request","file_download_token_request","file.upload.request"]
+Image filename: SHA-256(bytes) + .png; markdown target: full file:// path.
+Known complete path reads fixture image; bare hash does not resolve.
+PASS: no attachment-ID read operation in the shipped inbound union.
