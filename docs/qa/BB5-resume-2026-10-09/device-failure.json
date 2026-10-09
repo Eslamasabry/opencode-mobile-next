@@ -1,0 +1,7 @@
+{
+  "primary": "bb5_fixture_owner_changed",
+  "secondaryCleanup": "bb5_cleanup_owner_changed",
+  "runtimePrepared": false,
+  "idleWaitEntered": false,
+  "normalRestored": false
+}
