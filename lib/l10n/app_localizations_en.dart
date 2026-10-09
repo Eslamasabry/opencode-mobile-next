@@ -28693,4 +28693,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get exportMarkdownUnredacted =>
       'The transcript is not redacted. It holds exactly what you see, including any secrets or private paths in the conversation.';
+
+  @override
+  String teamUiGateAnswerConfirmCancelNamedBody(String task) {
+    return '“$task” stops. Its open work stays as it is.';
+  }
+
+  @override
+  String teamProjectStopNamedBody(String project) {
+    return '“$project” stops. Its running tasks stop and their work and history stay.';
+  }
+
+  @override
+  String teamProjectTaskStopNamedBody(String task) {
+    return '“$task” stops. Its conversation and changes stay for review.';
+  }
 }

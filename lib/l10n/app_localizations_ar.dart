@@ -28741,4 +28741,19 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get exportMarkdownUnredacted =>
       'النص المحفوظ غير منقّح. يحتوي بالضبط على ما تراه، بما في ذلك أي أسرار أو مسارات خاصة في المحادثة.';
+
+  @override
+  String teamUiGateAnswerConfirmCancelNamedBody(String task) {
+    return 'تتوقف «$task». ويبقى عملها المفتوح كما هو.';
+  }
+
+  @override
+  String teamProjectStopNamedBody(String project) {
+    return 'يتوقف «$project». تتوقف مهامه الجارية ويبقى عملها وسجله.';
+  }
+
+  @override
+  String teamProjectTaskStopNamedBody(String task) {
+    return 'تتوقف «$task». وتبقى محادثتها وتغييراتها للمراجعة.';
+  }
 }

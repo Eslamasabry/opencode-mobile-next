@@ -45202,6 +45202,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The transcript is not redacted. It holds exactly what you see, including any secrets or private paths in the conversation.'**
   String get exportMarkdownUnredacted;
+
+  /// Two-step sheet body before a failed run is cancelled; names the task it stops
+  ///
+  /// In en, this message translates to:
+  /// **'“{task}” stops. Its open work stays as it is.'**
+  String teamUiGateAnswerConfirmCancelNamedBody(String task);
+
+  /// Body of the Stop project confirm; names the project
+  ///
+  /// In en, this message translates to:
+  /// **'“{project}” stops. Its running tasks stop and their work and history stay.'**
+  String teamProjectStopNamedBody(String project);
+
+  /// Body of the Stop task confirm; names the task
+  ///
+  /// In en, this message translates to:
+  /// **'“{task}” stops. Its conversation and changes stay for review.'**
+  String teamProjectTaskStopNamedBody(String task);
 }
 
 class _AppLocalizationsDelegate
