@@ -109,7 +109,7 @@ def run(row, config, context):
     if row not in ("fq9-upgrade", "fq9-background"):
         return _result("blocked", "protocol_row_unsupported")
     next_upgrade = (
-        row == "fq9-upgrade"
+        row in ("fq9-upgrade", "fq9-background")
         and type(context.candidate_build) is int
         and 2202 < context.candidate_build <= 999999
     )
@@ -299,17 +299,17 @@ def run(row, config, context):
 
 def _fq3(config, context):
     from tool.qa.fq3.update_matrix import validate_run, InvalidEvidence
-    if context.candidate_build != 2202:
-        return _result("blocked", "fq3_requires_build_2202")
+    if context.candidate_build != 2203:
+        return _result("blocked", "fq3_requires_build_2203")
     if type(config) is not dict or set(config) - {"oc1_model", "oc2_model"}:
         return _result("blocked", "fq3_configuration_invalid")
     run_id = "fq3-" + context.run_id
     dart = Path.home() / ".shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart"
-    receipt = context.root / "docs/qa/FQ3d-2026-10-09" / (run_id + ".json")
+    receipt = context.root / "docs/qa/FQ3e-2026-10-09" / (run_id + ".json")
     if receipt.exists():
         return _result("blocked", "evidence_already_exists")
     argv = [str(dart), "run", "tool/qa/fq3_certify.dart", "--run-id", run_id,
-            "--inherited-emulator-lock-fd", str(context.lock_fd), "--no-matrix"]
+            "--inherited-emulator-lock-fd", str(context.lock_fd)]
     for key in ("oc1_model", "oc2_model"):
         if key in config:
             value = config[key]

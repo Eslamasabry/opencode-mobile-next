@@ -107,3 +107,19 @@ class NavigationPrivacyTests(unittest.TestCase):
         capture.assert_called_once_with('navigation-not-ready')
 
 if __name__=='__main__':unittest.main()
+
+class PreparationTests(unittest.TestCase):
+    def test_partial_target_is_removed_only_through_product_before_fresh_install(self):
+        import device_install as subject
+        ports=Mock()
+        ports.target_inventory.side_effect=[{'leftovers':True,'targetPids':[]},
+            {'leftovers':False,'targetPids':[],'allocatedBytes':0,'staging':[],'lockPresent':False}]
+        ports.app_remove.return_value=True
+        self.assertTrue(subject.prepare_absent_target(ports,'fx','fx'))
+        ports.app_remove.assert_called_once_with('fx','fx')
+
+    def test_running_target_never_receives_product_removal(self):
+        import device_install as subject
+        ports=Mock();ports.target_inventory.return_value={'leftovers':True,'targetPids':[17]}
+        with self.assertRaises(RuntimeError): subject.prepare_absent_target(ports,'fx','fx')
+        ports.app_remove.assert_not_called()

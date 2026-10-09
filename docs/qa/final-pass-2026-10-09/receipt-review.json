@@ -1,0 +1,22 @@
+{
+  "deviceRerun": false,
+  "changesAfterAttempt": {
+    "tool/qa/final_pass.py": {
+      "attemptSha256": "58fc39e46ea6f6a11bb6210152ba1b8c41e7fccffb01f2316deda58e92626725",
+      "currentSha256": "079d81e0506ade23864f3ef33a46067373a44920c2d822a434ae03d2aa2cabc0"
+    },
+    "tool/qa/fq3/update_matrix.py": {
+      "attemptSha256": "80b8cdf2402e6f517c4d3bc546c121f95d25d2972f466d2dcfe1c44b218a5b47",
+      "currentSha256": "c1cb9a012d2c69b1065f3f2a460966f9d6cbaafac0fc93fda98e547dacc1652c"
+    }
+  },
+  "fq9Upgrade": {
+    "state": "fail",
+    "code": "protocol_response_invalid"
+  },
+  "fq3": {
+    "receiptValidAfterDirectoryFix": true,
+    "cleanupCompleted": true,
+    "matrixProjectedOffline": true
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "result": "FAIL",
+  "candidateBuild": 2203,
+  "candidateSha256": "82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7",
+  "screens": [],
+  "cleanInstall": false,
+  "phoneSetup": false,
+  "firstReply": false,
+  "candidateRetained": false,
+  "screenPolicy": "public-copy-only-blackout",
+  "providerEnrollment": false,
+  "failureCode": "fb1_install_failed"
+}

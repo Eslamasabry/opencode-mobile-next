@@ -199,7 +199,7 @@ class NextUpgradeTests(unittest.TestCase):
     def test_next_build_does_not_enable_other_rows(self):
         with patch.object(driver, "main") as main:
             result = protocols.run("fq9-background", self.config, self.ctx)
-        self.assertEqual(result["reason"], "fq9_requires_build_2202")
+        self.assertEqual(result["reason"], "fq9_configuration_invalid")
         main.assert_not_called()
 
     def test_seed_collision_or_mixed_receipts_refuse_before_driver(self):
@@ -218,8 +218,8 @@ class NextUpgradeTests(unittest.TestCase):
     def test_cli_next_upgrade_plan_is_inert_and_other_cases_refuse_override(self):
         for case, expected in (
             ("upgrade", 0),
-            ("background", 1),
-            ("fresh", 1),
+            ("background", 0),
+            ("fresh", 0),
             ("stable", 1),
         ):
             with (

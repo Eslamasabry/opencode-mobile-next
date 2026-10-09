@@ -1,0 +1,37 @@
+FFF
+======================================================================
+FAIL: test_explicit_2203_background_plan_is_allowed_without_device_access (tool.qa.test_final_pass_2203.FinalCandidateTests.test_explicit_2203_background_plan_is_allowed_without_device_access)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/test_final_pass_2203.py", line 16, in test_explicit_2203_background_plan_is_allowed_without_device_access
+    self.assertEqual(fq9.main(['--case','background','--candidate-build','2203']), 0)
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_final_pass_can_explicitly_skip_stale_floor_with_receipt (tool.qa.test_final_pass_2203.FinalCandidateTests.test_final_pass_can_explicitly_skip_stale_floor_with_receipt)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/test_final_pass_2203.py", line 26, in test_final_pass_can_explicitly_skip_stale_floor_with_receipt
+    self.assertEqual(value['reason'], 'stale_storage_floor_artifact')
+AssertionError: 'invalid_configuration' != 'stale_storage_floor_artifact'
+- invalid_configuration
++ stale_storage_floor_artifact
+
+
+======================================================================
+FAIL: test_normal_restoration_targets_2203 (tool.qa.test_final_pass_2203.FinalCandidateTests.test_normal_restoration_targets_2203)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/test_final_pass_2203.py", line 11, in test_normal_restoration_targets_2203
+    self.assertEqual(args.normal_apk.name, 'oc-2203.apk')
+AssertionError: 'oc-2202.apk' != 'oc-2203.apk'
+- oc-2202.apk
+?       ^
++ oc-2203.apk
+?       ^
+
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.005s
+
+FAILED (failures=3)

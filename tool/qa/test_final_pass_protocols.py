@@ -108,7 +108,7 @@ class ProtocolWrapperTests(unittest.TestCase):
     def test_fq3_rejects_old_build_before_any_device_call(self):
         self.context.candidate_build = 2197
         result = protocols.run("fq3", {}, self.context)
-        self.assertEqual(result['reason'], 'fq3_requires_build_2202')
+        self.assertEqual(result['reason'], 'fq3_requires_build_2203')
         self.assertEqual(self.context.events, [])
 
     def test_unreviewed_next_build_blocks_before_driver_or_output_creation(self):
@@ -118,7 +118,7 @@ class ProtocolWrapperTests(unittest.TestCase):
                 with self.subTest(row=row):
                     result = protocols.run(row, {}, self.context)
                     self.assertEqual(result["status"], "blocked")
-                    self.assertEqual(result["reason"], "fq9_configuration_invalid" if row == "fq9-upgrade" else "fq9_requires_build_2202")
+                    self.assertEqual(result["reason"], "fq9_configuration_invalid")
             main.assert_not_called()
         self.assertFalse(self.context.output.exists())
         self.assertEqual(self.context.events, [])

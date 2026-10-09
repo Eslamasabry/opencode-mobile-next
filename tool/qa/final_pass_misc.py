@@ -53,8 +53,8 @@ def _borrowed(context):
 
 
 def _bd7(context):
-    if context.candidate_build != 2202:
-        return _result("blocked", "bd7_requires_build_2202")
+    if context.candidate_build != 2203:
+        return _result("blocked", "bd7_requires_build_2203")
     from tool.qa import bd7_device_saved_report as driver
     from tool.qa.fq9.common import SHARED_SERIAL
     from tool.qa.fq9.ports import AndroidPorts
@@ -81,7 +81,7 @@ def _bd7(context):
     preview = report.get("share_preview")
     qualified = (
         report.get("result") == "PASS"
-        and report.get("version_code") == 2202
+        and report.get("version_code") == 2203
         and report.get("scope") == "real_crash_saved_report_share_preview"
         and report.get("consent_enabled") is True
         and type(crash) is dict
@@ -100,7 +100,7 @@ def _bd7(context):
         "saved_report_device_verified" if qualified else "bd7_proof_incomplete",
         [receipt],
         device_qualified=qualified,
-        candidate_build=2202,
+        candidate_build=2203,
         external_share_opened=False if qualified else None,
         anr_triggered=False if qualified else None,
     )

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'common.dart';
 
-const currentCertificationBuild = 2202;
+const currentCertificationBuild = 2203;
 
 bool isPublicModelReference(Object? value) =>
     value is String &&
