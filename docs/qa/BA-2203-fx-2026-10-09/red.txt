@@ -1,0 +1,44 @@
+.....{"navigation": 0, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 1, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 2, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 3, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 4, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 5, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 6, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 7, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 8, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 9, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 10, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 11, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 12, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 13, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 14, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 15, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 16, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 17, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 18, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 19, "settings": false, "agents": false, "serverList": false, "scrim": false}
+.....................................................F..............F.......
+======================================================================
+FAIL: test_merged_completion_is_captured_before_done_and_fresh_row (test_run.Tests.test_merged_completion_is_captured_before_done_and_fresh_row)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_run.py", line 126, in test_merged_completion_is_captured_before_done_and_fresh_row
+    self.assertTrue(ports.target_not_installed_visible('fx'))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_absent_payload_waits_for_completion_sheet_and_fresh_row (test_uninstall.Tests.test_absent_payload_waits_for_completion_sheet_and_fresh_row)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_uninstall.py", line 32, in test_absent_payload_waits_for_completion_sheet_and_fresh_row
+    self.assertEqual(result['state'],'pass')
+AssertionError: 'partial' != 'pass'
+- partial
++ pass
+
+
+----------------------------------------------------------------------
+Ran 81 tests in 0.033s
+
+FAILED (failures=2)

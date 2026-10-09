@@ -1,0 +1,16 @@
+.F...........
+======================================================================
+FAIL: test_android_repeated_status_hint_stays_target_scoped (test_launch.LaunchTests.test_android_repeated_status_hint_stays_target_scoped)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_launch.py", line 115, in test_android_repeated_status_hint_stays_target_scoped
+    self.assertEqual(facts['state'],'blocked_by_certification')
+AssertionError: 'entrypoint_missing' != 'blocked_by_certification'
+- entrypoint_missing
++ blocked_by_certification
+
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.002s
+
+FAILED (failures=1)

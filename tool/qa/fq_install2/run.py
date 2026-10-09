@@ -75,6 +75,7 @@ def verify_artifact(artifact):
 
 
 class Ports:
+    freed_display = None
     def __init__(self, d, p, a, metadata, agent_id):
         self.d,self.p,self.a = d,p,a
         self.agent_id,self.name = agent_id,metadata[agent_id]['name']
@@ -182,9 +183,12 @@ class Ports:
         nodes=self.ui()
         # Success is displayed in the target sheet. Close only its confirmed
         # success frame before requiring fresh list truth.
-        labels={self.text(node) for node in nodes}
-        if any(label.startswith(self.name+' removed. Freed ') or
-               label==self.name+' is already removed.' for label in labels):
+        lines={line for node in nodes for line in self.text(node).splitlines()}
+        freed=next((line for line in lines if re.fullmatch(
+            re.escape(self.name)+r' removed\. Freed [0-9]+(?:\.[0-9]+)? (?:B|KB|MB|GB|KiB|MiB|GiB)\.',line)),None)
+        if freed is not None or self.name+' is already removed.' in lines:
+            if freed is not None:
+                self.freed_display=freed
             done=self.unique_action(nodes,{'Done'})
             if done is None: return False
             self.tap_node(done)

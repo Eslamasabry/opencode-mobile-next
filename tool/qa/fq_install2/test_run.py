@@ -118,6 +118,20 @@ class Tests(unittest.TestCase):
         self.assertFalse(ports.target_not_installed_visible('fx'))
         self.assertEqual(taps,[('Done','')])
 
+    def test_merged_completion_is_captured_before_done_and_fresh_row(self):
+        ports,taps=self.current_ports([
+            [node('fx\nfx removed. Freed \u206613 MB\u2069.'),node('Done')],
+            [node('fx\nNot installed'),node('Install','Install fx')],
+        ])
+        self.assertTrue(ports.target_not_installed_visible('fx'))
+        self.assertEqual(getattr(ports,'freed_display',None),'fx removed. Freed 13 MB.')
+        self.assertEqual(taps,[('Done','')])
+
+    def test_foreign_completion_never_dismisses_done(self):
+        ports,taps=self.current_ports([[node('Codex\nCodex removed. Freed 13 MB.'),node('Done')]])
+        self.assertFalse(ports.target_not_installed_visible('fx'))
+        self.assertEqual(taps,[])
+
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
         self.path=Path(self.tmp.name)/'receipt.json'

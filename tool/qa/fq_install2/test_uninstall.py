@@ -25,6 +25,13 @@ class Tests(unittest.TestCase):
         d=Device()
         with self.assertRaises(ValueError): run_uninstall('claude','Claude Code',d)
         self.assertEqual(d.calls,[])
+    def test_absent_payload_waits_for_completion_sheet_and_fresh_row(self):
+        d=Device(); frames=iter([False,False,True])
+        d.target_not_installed_visible=lambda _: next(frames)
+        result=self.run_case(d)
+        self.assertEqual(result['state'],'pass')
+        self.assertEqual(d.t,.5)
+
     def test_stale_ready_row_is_partial(self):
         d=Device();d.visible=False;self.assertEqual(self.run_case(d)['state'],'partial')
     def test_orphan_process_prevents_pass(self):

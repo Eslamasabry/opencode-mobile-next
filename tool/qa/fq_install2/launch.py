@@ -112,8 +112,14 @@ def run_launch(device, agentId, name, deadlineSeconds=30):
         while True:
             rows = read()
             if "What should we work on?" in {text for _, text in rows}:
-                if tap(rows, {"Agent OpenCode. Change agent", "OpenCode",
-                              "Agent Claude Code. Change agent"}):
+                # Current KitChip.summary exposes the selected name alone.
+                # Only the new-conversation prompt scopes this inspection tap;
+                # never tap a Claude row or a Use action in the picker.
+                chip_labels = set(TARGETS.values()) | {
+                    "OpenCode", "Claude Code", "Agent OpenCode. Change agent",
+                    "Agent Claude Code. Change agent"}
+                choices = [node for node, text in rows if text in chip_labels]
+                if len(choices) == 1 and tap(rows, chip_labels):
                     break
             wait()
         while True:
@@ -127,6 +133,10 @@ def run_launch(device, agentId, name, deadlineSeconds=30):
                 break
             picker_observed = True
             target_copy = {line for text in target_rows for line in text.splitlines()}
+            # Android appends the disabled row's hint to its identical label.
+            # Normalize only exact repetitions of known public blocker copy.
+            target_copy |= {word for word in _BLOCKERS
+                            if word + ", " + word in target_copy}
             plain = sorted(target_copy & _BLOCKERS)
             if "Not certified on this version yet" in target_copy:
                 state, code = "blocked_by_certification", "chat_not_certified"
