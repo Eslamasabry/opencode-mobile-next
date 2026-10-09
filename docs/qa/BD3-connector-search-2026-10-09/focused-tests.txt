@@ -1,0 +1,154 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: unloaded catalogue is distinct from a loaded catalogue with no match
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: matches all case-insensitive tokens and returns canonical sorted IDs
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: projects existing catalogue runtimes and never infers OAuth from keys
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: default and requested limits apply after matching and deduplication
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: search inspects at most 100 records including nonmatching entries
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: prose is single-line, bounded by scalars, redacted and URL-free
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: invalid requests fail with fixed copy and never echo input
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: 100 Unicode scalars are accepted regardless of UTF-16 length
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: search covers description text beyond the returned prose limit
+00:00 +9: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: binds loopback with an ephemeral port and independent bearer
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: returns only the supplied search response for an authorized map
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: rejects missing or incorrect bearer without calling search
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: accepts only POST on the fixed path
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: rejects malformed JSON and non-map JSON
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: enforces request limit in UTF8 bytes
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: rejects a stale source before invoking search
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: rejects a source that changes during asynchronous search
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: limits concurrent search calls to four
+00:00 +18: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: returns a generic error without leaking search failures
+00:00 +19: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: rejects a response exceeding 16384 UTF8 bytes
+00:00 +20: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: times out search after five seconds without releasing its slot
+00:05 +21: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_bridge_test.dart: close is idempotent and stops accepting connections
+00:05 +22: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart
+00:06 +22: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: initializes, handles notifications and advertises scoped card tools
+00:06 +23: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: negotiates unknown version and requires initialization
+00:06 +24: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: valid call returns immediately without claiming delivery
+00:06 +25: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: invalid, disabled and unknown calls share safe generic error
+00:06 +26: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: every call rereads marker and refuses symlinks or bad contents
+00:06 +27: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: bounds raw frame bytes before parsing and recovers next frame
+00:06 +28: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: split frames, invalid UTF-8 and malformed JSON stay protocol-only
+00:06 +29: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: marker path rejects relative or embedded control paths
+00:06 +30: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: connector search without a bridge returns a safe actionable result
+00:06 +31: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: connector search reads current bridge and sends bounded authorized query
+00:06 +32: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: invalid connector queries and bridge paths never reach the bridge
+00:06 +33: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: search trims before Unicode bounds and maps rejected bridge input safely
+00:06 +34: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_server_test.dart: connector bridge responses are bounded and strictly validated
+00:06 +35: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_search_publish_test.dart
+00:07 +35: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_search_publish_test.dart: publishes private descriptor only in existing app-owned rootfs
+00:07 +36: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_search_publish_test.dart: refuses invalid input, missing rootfs, symlinks and public directory
+00:07 +37: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_search_roundtrip_test.dart
+00:07 +37: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_search_roundtrip_test.dart: generated helper searches loaded catalogue through the real app bridge
+00:07 +38: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart
+00:08 +38: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: agent search uses current cached Tools catalogue and exact inventory
+00:09 +39: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: agent search never applies another project inventory
+00:09 +40: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: agent search reports missing cache without inventory request
+00:09 +41: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: agent search rejects source changes during inventory read
+00:09 +42: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: old search endpoint cannot serve after cards are disabled
+00:09 +43: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: search observes cache changes without a helper restart
+00:09 +44: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: failed descriptor publishing can retry after cooldown
+00:09 +45: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: authoritative connector admission coalesces the same card
+00:09 +46: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: unobserved and mismatched catalog suggestions cannot be admitted
+00:09 +47: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: changed authoritative transcript rejects the earlier card controller
+00:09 +48: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: changed project invalidates an admitted connector before dispatch
+00:09 +49: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: changed active profile invalidates an admitted connector
+00:09 +50: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: same-profile replacement retains the card and uses its fresh repository
+00:09 +51: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: disabling Agent cards invalidates retained connector actions
+00:09 +52: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: disposed card controllers do not exhaust the pending card budget
+00:09 +53: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: source change during history recovery never calls the stale repository
+00:09 +54: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart
+00:10 +54: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: connector search identities are exact and separate from cards
+00:10 +55: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: every adapter keeps the registry contract ids and Paseo providers are unique
+00:10 +56: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: every adapter keeps the registry contract an agent with tools names them and stores them, run by the user its config format expects
+00:10 +57: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: every adapter keeps the registry contract only an agent with tools can be qualified or pre-allow cards
+00:10 +58: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: every adapter keeps the registry contract a plan or question tool only exists with native answers
+00:10 +59: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: each naming scheme gives the name captured from its runtime
+00:10 +60: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: OpenCode product names distinguish the runtime generations
+00:10 +61: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: a Paseo provider finds its agent; anything else finds none
+00:10 +62: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: tools are registered only for agents that support them; only Claude Code and captured OC1 are qualified for cards
+00:10 +63: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: BA6 captured OC1 direct call parses only the accepted valid card
+00:10 +64: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_tool_adapter_test.dart: ids stay the former enum names (they name helper folders)
+00:10 +65: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart
+00:11 +65: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: stages all tools and only verifies evidence-backed transports
+00:11 +66: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: review 1 failed verifier reports verification failure not restart
+00:11 +67: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: review 1 missing verifier reports unqualified not restart
+00:11 +68: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: registration never claims a ready runtime
+00:11 +69: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: OpenCode collision reports partial while Claude remains ready
+00:11 +70: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: OpenCode 2 registration cannot become ready through a permissive verifier
+00:11 +71: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: BA6 qualified OC1 registration still needs live verification
+00:11 +72: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: BA6 builtin verifier runs OC1 as root and Claude in the agent view
+00:11 +73: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: verified Claude registration becomes ready
+00:11 +74: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: verified Claude remains ready when OpenCode runtime is missing
+00:11 +75: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: missing installation disables successfully without verification
+00:11 +76: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: reject invalid profile before invoking setup
+00:11 +77: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: serialize across installer instances
+00:11 +78: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 schema-only JSONC receives the effective registration
+00:11 +79: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC preserves string-array separator with trailing comma false
+00:11 +80: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC preserves string-array separator with trailing comma true
+00:11 +81: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC merges owned entry without changing user content
+00:11 +82: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 disable preserves JSONC and later user edits
+00:12 +83: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a genuine collision in opencode.jsonc
+00:12 +84: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a genuine collision in opencode.json
+00:12 +85: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 current JSON refuses flat null collision
+00:12 +86: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 current JSON refuses nested compatibility collision
+00:12 +87: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a nonobject MCP override null
+00:12 +88: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a nonobject MCP override []
+00:12 +89: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC refuses a nonobject MCP override false
+00:12 +90: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config.json {"mcp":{"oc-ui":null}}
+00:12 +91: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"oc-ui":null}}
+00:12 +92: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config.json {"mcp":{"servers":{"oc-ui":null}}}
+00:12 +93: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"servers":{"oc-ui":null}}}
+00:12 +94: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config.json {"mcp":{"oc-ui":null},"mcp":{}}
+00:12 +95: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"oc-ui":null},"mcp":{}}
+00:12 +96: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp":{"other":{},"other":{}}}
+00:12 +97: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay opencode.jsonc {"mcp": {/* unfinished
+00:13 +98: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses unsafe overlay config model = "user-model"
+
+00:13 +99: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 refuses symlinked JSONC without touching its target
+00:13 +100: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 1 JSONC self-check rollback preserves user settings
+00:13 +101: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode uses existing root-owned pinned Node without a system alias
+00:13 +102: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode retains and removes a legacy system Node registration after runtime removal
+00:13 +103: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode unsafe preferred runtime never falls back to another candidate
+00:13 +104: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode refuses writable or foreign-owned helper ancestors
+00:13 +105: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction OpenCode 2 persists direct tools in isolated mcp servers config
+00:14 +106: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction BA6 OC1 readiness requires pinned live connected server and owned helper
+00:14 +107: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction two owners install idempotently and last disable removes only own entry
+00:15 +108: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude CLI uses profile environment and user scope for add/remove
+00:15 +109: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow is exact, idempotent and removed on disable
+00:15 +110: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow preserves user-owned exact permission
+00:15 +111: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow verifies and repairs missing permission
+00:16 +112: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow rejects malformed or symlinked settings
+00:16 +113: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow rolls back its rule on self-check failure
+00:16 +114: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow migrates an existing owned registration
+00:16 +115: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude show preallow resets ownership after disable
+00:16 +116: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction Claude readiness checks pinned CLI and discovery in owned profile
+00:17 +117: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction disable absent runtime does not create directories or invoke runtime
+00:17 +118: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 5 unchanged enable keeps marker throughout verification
+00:17 +119: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 repairs owned helper and marker corruption
+00:17 +120: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 modified owned helper cannot block disable
+00:17 +121: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 recovers exact helper orphan from interrupted first install
+00:18 +122: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction review 6 unknown orphan remains an unowned collision
+00:18 +123: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction unowned entry collision preserves existing config
+00:18 +124: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction symlinked managed directory refuses writes
+00:18 +125: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction edited owned entry is never removed
+00:18 +126: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_install_test.dart: isolated persistent ownership transaction failed self-check rolls back only newly managed writes
+00:18 +127: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart
+00:19 +127: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: qualified exact show is allowed once without an approval card
+00:19 +128: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: hydrated show for a non-open session is allowed once
+00:19 +129: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: disable is checked again for every request
+00:19 +130: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: qualification sweeps an already pending show request
+00:19 +131: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: known Claude agent qualifies when request omits provider
+00:19 +132: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: revoked qualification before queued reply leaves request visible
+00:19 +133: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: location change retires a queued show approval
+00:19 +134: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: qualification failure keeps the ordinary permission request
+00:19 +135: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: failed show approval is not retried when a listener rebinds qualification
+00:19 +136: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: unqualified gateway never auto-allows
+00:19 +137: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: unqualified daemon version never auto-allows
+00:19 +138: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: exact raw name and tool kind are required, not normalized names
+00:19 +139: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_show_permission_test.dart: foreign, unknown and non-Claude sessions never auto-allow
+00:19 +140: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/file_size_ratchet_test.dart
+00:19 +140: /home/eslam/Storage/Code/oc_app-sol-bd/test/file_size_ratchet_test.dart: no lib file grows past its line budget
+00:20 +141: /home/eslam/Storage/Code/oc_app-sol-bd/test/file_size_ratchet_test.dart: the baseline only lists files over the limit
+00:20 +142: All tests passed!

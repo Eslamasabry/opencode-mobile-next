@@ -1,0 +1,30 @@
+{
+  "contractFirstCommit": "35488eb81",
+  "implementationBase": "35488eb8183bcb5e4e8a1d0a09c14b0131a9cb18",
+  "toolchain": "Flutter 3.47.1 (Shorebird 91f8bd75076e9c740aa13cf67eb9ec1a093f68f5)",
+  "focusedDistinctTests": 142,
+  "finalAffectedTests": 25,
+  "scope": "backend only; no UI, native, device, provider, public registry, build or release",
+  "sourceSha256": {
+    "lib/builtin/agents/gen_ui_connector_search_js.dart": "8048e84f21a5a67e08699df5d602dc3335fa1ea170e37a754bfe07e16060ad1c",
+    "lib/builtin/agents/gen_ui_install_scripts.dart": "120b4b5d075c22d3deeed39b11c9d3c61e66789fdba57a8cac26f83ef8820b7a",
+    "lib/builtin/agents/gen_ui_search_publish.dart": "c82804eba4f27eed886c573565e2db419bc7a8f00f478c30f422557c63f0ee3b",
+    "lib/builtin/agents/gen_ui_server.dart": "55d73d034fbf4d58df6bd1a7fb24bd87f2dc6e1191378efedf4149b18cf89324",
+    "lib/domain/agent_tools/agent_tool_adapter.dart": "beb79a52e689799b9a05438410e45cfc02d5ac1c2dd9e517d7c980ede69bed49",
+    "lib/domain/mcp_connector_search.dart": "e7f56ebd5c742bd9cb4286f0dc2c73287f7fff2952e92a8434ec87479464c4cf",
+    "lib/domain/tool_label.dart": "1210245f891605199824b33a4e5c7cbe3e2bb118b77785869899d3738fda90fd",
+    "lib/state/connection.dart": "4b8331294c8d0f026a686bb817d700018a36126ce5fdcc361b21d24f0e45af28",
+    "lib/state/connection/connector_search.dart": "01b1b5141070d5fd6b8d11744bf6d8e453cbd0705f4dae2cbbe087cab206ef55",
+    "lib/state/mcp_connector_search_bridge.dart": "445512780da436739114c5ba5d07f11c4011eeb706e2f5b79b8036c54377d40f",
+    "test/agent_tool_adapter_test.dart": "875dcd140360b89f66238020f7624219019e3e1600301f687c31f17adfa0807e",
+    "test/gen_ui_install_test.dart": "9ea11fb1b8d3ca17f76b1a6c682c38f9299ce9f7976c9ed8353bd901f5cda210",
+    "test/gen_ui_search_publish_test.dart": "c2bff252ea5078c6ce04c46406a8f683cda4cf295822310b7c4756b49269db85",
+    "test/gen_ui_search_roundtrip_test.dart": "a88f19b7663cb2b8d7bfb9768bcf7f25e4fd7b4f1c5c10a86259bbf5660bb723",
+    "test/gen_ui_server_test.dart": "39dec765cf19eab7ec3fe030954cf1dcc9a639e4251b0c64046101f5e2fc7b3d",
+    "test/mcp_chat_connection_test.dart": "e93635b4fd62305383b1ad5f0a89b803c24a6532f3845b79efb8cb602e54cd95",
+    "test/mcp_connector_search_bridge_test.dart": "7ca127028c960ca01444c2e51184ab1de4d46a5f23e942887f8b91de8a6bcde7",
+    "test/mcp_connector_search_test.dart": "491c905f7e55471d94facfb482ac412113c183363592cb6520857043227270a7"
+  },
+  "implementationCommit": "e3c72c90bfe6e427f30f75945d929a4faab7796f",
+  "analyzer": "No issues found (21.5s)"
+}
