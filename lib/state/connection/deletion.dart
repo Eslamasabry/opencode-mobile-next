@@ -167,6 +167,10 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
     // A failed write must not prevent the user from removing a profile.
     try {
       await _modelLibraryWrite;
+      if (_displayModelsOwner == profileId) {
+        _displayModelsCache = null;
+        _displayModelsOwner = null;
+      }
     } catch (_) {}
     try {
       await _sessionReadStore.drain(profileId);

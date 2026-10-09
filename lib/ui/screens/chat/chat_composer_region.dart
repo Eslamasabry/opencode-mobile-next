@@ -25,13 +25,13 @@ extension _ChatComposerRegion on _ChatScreenState {
     busy: _conn.busySessions.contains(widget.sessionID) || _live != null,
     selectedAgent: _conn.agentForSession(widget.sessionID),
     defaultAgent: _defaultAgentName,
-    selectedModel: _conn.modelForSession(widget.sessionID),
+    selectedModel: _conn.displayModelForSession(widget.sessionID),
     modelLabel: _presentedModelLabel,
     selectionFallback: !_conn.serverOwnsSessionSelection
         ? null
         : _conn.selectionForSession(widget.sessionID).modelKnown
         ? _chatL10n(context).modelServerDefault
-        : _chatL10n(context).modelSelectionLoading,
+        : _chatL10n(context).modelChooseTitle,
     selectedVariant: _conn.variantForSession(widget.sessionID),
     onChooseModel: () => showModelPicker(
       context,
@@ -88,6 +88,7 @@ extension _ChatComposerRegion on _ChatScreenState {
           key: const ValueKey('auto-approval-indicator-slot'),
           effective: approval,
           connected: _conn.isConnected,
+          starting: _conn.connectionStarting,
           approved: _conn.autoApprovedFor(widget.sessionID),
           onOpen: (chipContext) =>
               unawaited(_showApprovalModeMenu(chipContext)),

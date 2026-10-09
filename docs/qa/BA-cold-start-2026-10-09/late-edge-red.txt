@@ -1,0 +1,17 @@
+Before preserving a busy launch window:
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: cold start busy response preserves the automatic start window
+Expected: empty
+  Actual: [Instance of 'PhoneAgentStatusLine']
+00:00 +0 -1: cold start busy response preserves the automatic start window [E]
+00:00 +0 -1: (tearDownAll)
+00:00 +0 -1: Some tests failed.
+
+Before preserving server-owned selection without a gateway:
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/session_selection_sync_test.dart
+00:00 +0: cold start phone selection stays unknown before its gateway exists
+00:00 +0 -1: cold start phone selection stays unknown before its gateway exists [E]
+  Expected: false
+    Actual: <true>
+00:00 +0 -1: Some tests failed.
