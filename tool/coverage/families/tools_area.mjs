@@ -210,5 +210,29 @@ export function toolsFamilies({ oc1File, protocolMessages }) {
       ] },
     ],
   };
+  // ------------------------------------------------------------------- web
+  const webSchema = {
+    location: Object.fromEntries(Object.keys(schema.location).map((k) => [k, { kind: 'string' }])),
+    provider: { id: { kind: 'string' }, name: { kind: 'string' } },
+    result: { url: { kind: 'string' }, title: { kind: 'string' }, content: { kind: 'string' }, 'time.published': { kind: 'number' } },
+    response: { providerID: { kind: 'string' } },
+  };
+  const prov = { id: 'prov_exa', name: 'Exa search' };
+  const resA = { url: 'https://docs.flutter.dev/cookbook/networking', title: 'Networking cookbook', content: 'Fetch data from the internet', time: { published: 1788960001000 } };
+  const resB = { url: 'https://dart.dev/guides/libraries', time: { published: 1788960002000 } };
+  out.tools_web = {
+    schema: webSchema,
+    source: 'lib/api2/gateway.dart (GET /websearch/provider, POST /websearch)',
+    excluded: {},
+    cases: [
+      { id: 'web_search_results', kind: 'websearch', payload: { providers: { data: [prov], location: LOC }, search: { data: { providerID: 'prov_exa', results: [resA, resB] }, location: LOC } }, parts: [
+        { group: 'location', value: LOC, probes: Object.fromEntries(Object.keys(webSchema.location).map((k) => [k, []])) },
+        { group: 'provider', value: prov, probes: { id: [], name: ['Exa search'] } },
+        { group: 'response', value: { providerID: 'prov_exa' }, probes: { providerID: [] } },
+        { group: 'result', value: resA, probes: { url: ['docs.flutter.dev'], title: ['Networking cookbook'], content: ['Fetch data from the internet'], 'time.published': [] } },
+        { group: 'result', value: resB, probes: { url: ['dart.dev'], 'time.published': [] } },
+      ] },
+    ],
+  };
   return out;
 }

@@ -375,7 +375,7 @@
   "promptStashMigrationPending": "تعذّر نقل بعض المرفقات المحفوظة إلى تخزين المرفقات المحلي حتى الآن. احتُفظ بمحتواك المحفوظ. وفّر مساحة على الجهاز وأعد المحاولة.",
   "commonRetry": "إعادة المحاولة",
   "shareWaitingForServer": "اتصل بخادم لفتح النص المشترك في محادثة جديدة.",
-  "webSourcesDisclosure": "لا يتاح البحث في الويب عبر بوابة التطبيق لهذا الخادم. الصق رابطًا عامًا، ويمكنك إضافة مقتطف تريد تضمينه. لن تُجلب أي صفحة، ولن يُرسل شيء إلى النموذج هنا.",
+  "webSourcesDisclosure": "لا يستطيع هذا الخادم البحث في الويب. الصق رابطًا عامًا، ومقتطفًا إن شئت. لن تُفتح الصفحة، ولن يُرسل شيء قبل أن ترسل رسالتك.",
   "webSourcesScopeChanged": "تغيّر الخادم. أغلق «إضافة مصدر ويب» وافتحه مجددًا.",
   "webSourcesUrl": "رابط عام",
   "webSourcesLabel": "العنوان (اختياري)",
@@ -8529,5 +8529,8 @@
   "sessionArchiveBody": "تنتقل إلى المؤرشفة ويمكنك قراءتها هناك.",
   "sessionDeleteTitle": "حذف «{title}»؟",
   "sessionDeleteBody": "تُزال المحادثة وسجلها نهائيًا. لا يمكن التراجع عن ذلك.",
-  "modelPickerAgentUses": "يستخدم {model}"
+  "modelPickerAgentUses": "يستخدم {model}",
+  "monitorUnreachableTitle": "تعذر الوصول إلى {server}",
+  "monitorUnreachableDetail": "ستظهر أسئلته هنا عند عودته.",
+  "monitorUnreachableCheck": "تحقق من {server} مجددا"
 }

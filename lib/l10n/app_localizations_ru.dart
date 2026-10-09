@@ -1098,7 +1098,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get webSourcesDisclosure =>
-      'Web search is not available through this server’s app gateway. Paste a public URL and optionally an excerpt you want to include. No page is fetched. Nothing is sent to the model here.';
+      'This server can\'t search the web. Paste a public link, and an excerpt if you like. The page is not opened, and nothing is sent until you send your message.';
 
   @override
   String get webSourcesScopeChanged =>
@@ -28655,5 +28655,69 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String integrationsMcpDetails(String name) {
     return 'Details for $name';
+  }
+
+  @override
+  String get usageBusiestDays => 'Busiest days';
+
+  @override
+  String usageDaySteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count steps',
+      one: '1 step',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String modelPickerAgentUses(String model) {
+    return 'Uses $model';
+  }
+
+  @override
+  String get sessionMenuArchive => 'Archive conversation';
+
+  @override
+  String get sessionMenuArchiveHint =>
+      'Moves it to Archived; the server keeps it';
+
+  @override
+  String get sessionMenuDelete => 'Delete conversation';
+
+  @override
+  String get sessionMenuDeleteHint => 'Removes it and its history for good';
+
+  @override
+  String sessionArchiveTitle(String title) {
+    return 'Archive “$title”?';
+  }
+
+  @override
+  String get sessionArchiveBody =>
+      'It moves to Archived, where you can still read it.';
+
+  @override
+  String sessionDeleteTitle(String title) {
+    return 'Delete “$title”?';
+  }
+
+  @override
+  String get sessionDeleteBody =>
+      'The conversation and its history are removed for good. This cannot be undone.';
+
+  @override
+  String monitorUnreachableTitle(String server) {
+    return '$server can\'t be reached';
+  }
+
+  @override
+  String get monitorUnreachableDetail =>
+      'Its questions will show here once it\'s back.';
+
+  @override
+  String monitorUnreachableCheck(String server) {
+    return 'Check $server again';
   }
 }

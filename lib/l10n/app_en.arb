@@ -487,7 +487,7 @@
   "promptStashMigrationPending": "Some saved attachments could not be moved to local attachment storage yet. Your saved content has been kept. Free device storage and retry.",
   "commonRetry": "Try again",
   "shareWaitingForServer": "Connect to a server and the shared text opens in a new conversation.",
-  "webSourcesDisclosure": "Web search is not available through this server’s app gateway. Paste a public URL and optionally an excerpt you want to include. No page is fetched. Nothing is sent to the model here.",
+  "webSourcesDisclosure": "This server can't search the web. Paste a public link, and an excerpt if you like. The page is not opened, and nothing is sent until you send your message.",
   "webSourcesScopeChanged": "Server changed. Close and reopen Add web source.",
   "webSourcesUrl": "Public URL",
   "webSourcesLabel": "Title (optional)",
@@ -34288,5 +34288,27 @@
       }
     }
   },
-  "sessionDeleteBody": "The conversation and its history are removed for good. This cannot be undone."
+  "sessionDeleteBody": "The conversation and its history are removed for good. This cannot be undone.",
+  "monitorUnreachableTitle": "{server} can't be reached",
+  "@monitorUnreachableTitle": {
+    "description": "Inbox: a server the monitor could not check",
+    "placeholders": {
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "monitorUnreachableDetail": "Its questions will show here once it's back.",
+  "@monitorUnreachableDetail": {
+    "description": "Inbox: what happens when the unreachable server returns"
+  },
+  "monitorUnreachableCheck": "Check {server} again",
+  "@monitorUnreachableCheck": {
+    "description": "Inbox: check the unreachable server again",
+    "placeholders": {
+      "server": {
+        "type": "String"
+      }
+    }
+  }
 }

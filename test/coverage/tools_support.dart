@@ -4,13 +4,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
-import 'package:opencode_mobile/api/sse.dart';
-import 'package:opencode_mobile/domain/active_context.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 
@@ -55,6 +52,11 @@ class ToolsRepo
   Object? commandsError;
 
   final calls = <String>[];
+
+  final connected = <String>[];
+
+  @override
+  Future<void> connectMcp(String name) async => connected.add(name);
 
   @override
   void setLocation({String? directory, String? workspace}) {}

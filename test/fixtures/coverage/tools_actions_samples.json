@@ -1,0 +1,25 @@
+{
+  "source": "contracts/opencode-openapi-f12e14cf.json, @getpaseo/protocol messages.js",
+  "wire": [
+    "oc1 DELETE /mcp/{name}/auth",
+    "oc1 PATCH /config",
+    "oc1 PATCH /global/config",
+    "oc1 POST /mcp",
+    "oc1 POST /mcp/{name}/auth",
+    "oc1 POST /mcp/{name}/auth/authenticate",
+    "oc1 POST /mcp/{name}/auth/callback",
+    "oc1 POST /mcp/{name}/connect",
+    "oc1 POST /mcp/{name}/disconnect",
+    "oc1 POST /session/{sessionID}/command",
+    "paseo agent.config.apply.request",
+    "paseo plugin.directory.install.request",
+    "paseo plugin.disable.request",
+    "paseo plugin.enable.request",
+    "paseo plugin.reload.request",
+    "paseo plugin.remove.request",
+    "paseo plugin.rpc.invoke.request",
+    "paseo plugin.source.install.request",
+    "paseo plugin.source.update.apply.request",
+    "paseo plugin.source.update.request"
+  ]
+}

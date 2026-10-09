@@ -123,8 +123,9 @@ void main() {
       final screen = seen.join('\n');
       final problems = checkCase(family, variant, screen, primaryText: screen);
       // The agent's key never reaches the screen.
-      if (screen.contains('fixture-token'))
+      if (screen.contains('fixture-token')) {
         problems.add('the key is on screen');
+      }
       await tester.pumpWidget(const SizedBox.shrink());
       expect(problems, isEmpty, reason: 'screen text:\n${flat(screen)}');
     });
