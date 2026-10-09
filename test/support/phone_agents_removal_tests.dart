@@ -58,6 +58,35 @@ class _ReplacementForegroundLease implements AgentSignInForegroundLease {
 
 void _phoneRemovalTests() {
   test(
+    'BA16 partial payload removal survives restart and unrelated setup',
+    () async {
+      for (final phase in [AgentSetupPhase.idle, AgentSetupPhase.done]) {
+        final w = await _world(null, removalSupported: true);
+        try {
+          w.state.runtimes = {
+            'fx': const PhoneAgentRuntime(agentId: 'fx', payloadPresent: true),
+          };
+          await w.controller.refreshAgentRows();
+          (w.host as _RemovableHost).progress = AgentSetupProgress(
+            agentId: 'codex',
+            phase: phase,
+          );
+          await w.controller.refreshAgentRows();
+          final row = w.controller.agentRows.singleWhere((r) => r.id == 'fx');
+          expect(row.status, PhoneAgentStatus.needsInstall);
+          expect(row.chatSelectable, isFalse);
+          expect(w.controller.canRemoveAgent('fx'), isTrue);
+          expect(w.controller.canRemoveAgent('claude'), isFalse);
+          w.state.runtimes['fx'] = const PhoneAgentRuntime(agentId: 'fx');
+          await w.controller.refreshAgentRows();
+          expect(w.controller.canRemoveAgent('fx'), isFalse);
+        } finally {
+          w.controller.dispose();
+        }
+      }
+    },
+  );
+  test(
     'BB6 main foreground binding exists before a terminal request',
     () async {
       final w = await _world(null);

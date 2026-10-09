@@ -3,6 +3,7 @@ import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 class BuiltinLinux(val home: File, var script: String = "read password; exec sleep 10") {
+    val rootfs = File(home, "ubuntu")
     var holdStart = false
     val startEntered = CountDownLatch(1)
     val releaseStart = CountDownLatch(1)
@@ -10,6 +11,7 @@ class BuiltinLinux(val home: File, var script: String = "read password; exec sle
     @Volatile var launches = 0
     var tracked = 0
     val installed = true
+    fun privateAgentDiagnostics(name: String): Map<String, Any?> = emptyMap()
     fun writeAgentConfig(profile: String, config: String) { configWrites++ }
     fun clearStaleAgentLoginLock(profile: String) {}
     fun startAgentProcess(profile: String, args: List<String>): Process {

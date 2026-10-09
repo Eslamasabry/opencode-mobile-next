@@ -37,6 +37,7 @@ void main() {
   var abi = 'arm64-v8a';
   var running = false;
   var versionValid = true;
+  Object? payloadPresent;
   var refuseDelete = false;
   var setupOwner = 'phone';
   var authOutput = '{"state":"signedOut"}';
@@ -55,6 +56,7 @@ void main() {
     abi = 'arm64-v8a';
     running = false;
     versionValid = true;
+    payloadPresent = null;
     refuseDelete = false;
     setupOwner = 'phone';
     authOutput = '{"state":"signedOut"}';
@@ -139,6 +141,7 @@ void main() {
           }
           return {
             'installed': versionValid,
+            'payloadPresent': payloadPresent,
             'version': versionValid ? (call.arguments as Map)['version'] : null,
           };
         case 'deleteAgentHost':
@@ -189,6 +192,21 @@ void main() {
     expect(restarted.lastExitCode, 137);
     expect(restarted.notice, isNull);
   });
+
+  test(
+    'BA16 failed version retains only strict native payload inventory',
+    () async {
+      versionValid = false;
+      payloadPresent = true;
+      final runtime = await host.inspect('fx');
+      expect(runtime.installed, isFalse);
+      expect(runtime.payloadPresent, isTrue);
+      for (final malformed in [null, false, 'true', 1, <String>[]]) {
+        payloadPresent = malformed;
+        expect((await host.inspect('fx')).payloadPresent, isFalse);
+      }
+    },
+  );
 
   test(
     'BA1 probe uses the stable private home and returns only narrow account facts',

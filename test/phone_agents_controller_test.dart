@@ -384,6 +384,7 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
     return PhoneAgentRuntime(
       agentId: agentId,
       installed: base.installed,
+      payloadPresent: base.payloadPresent,
       hostAvailable: base.hostAvailable,
       architectureQualified: base.architectureQualified,
       capabilities: state.projectCapabilities

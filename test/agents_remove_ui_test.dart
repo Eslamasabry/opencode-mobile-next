@@ -11,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/agent_auth_probe.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
+import 'package:opencode_mobile/domain/phone_agents.dart';
+import 'package:opencode_mobile/domain/server_gateway/capabilities.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart'
     show ProductException;
 import 'package:opencode_mobile/ui/kit/kit.dart';
@@ -83,6 +85,42 @@ void main() {
   setUpAll(loadCaptureFonts);
 
   group('Remove is offered only where the source can remove the agent', () {
+    testWidgets(
+      'BA16 partial inventory exposes Remove without failed setup progress',
+      (tester) async {
+        final agents = FakeRemovableAgentsSource(
+          rows: [
+            buildAgentRow(
+              descriptor: AgentCatalog.builtIn.byId('fx')!,
+              architecture: AgentArchitecture.x64,
+              serverCapabilities: ServerCapabilities.allV1,
+              runtime: const PhoneAgentRuntime(
+                agentId: 'fx',
+                payloadPresent: true,
+              ),
+            ),
+          ],
+        )..removable.add('fx');
+        agents.progress = const AgentSetupProgress(
+          agentId: 'codex',
+          phase: AgentSetupPhase.done,
+        );
+        await _pump(tester, agents);
+        await tester.tap(find.byKey(const ValueKey('agents-fix-fx')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('agents-install')), findsOneWidget);
+        expect(_remove, findsOneWidget);
+        await tester.tap(_remove);
+        await tester.pumpAndSettle();
+        expect(_confirm, findsOneWidget);
+        expect(
+          find.text(
+            'This removes the installed agent from this phone. Your accounts and conversations stay, and you can install it again.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
     testWidgets('a removable agent offers Remove, named after the agent', (
       tester,
     ) async {

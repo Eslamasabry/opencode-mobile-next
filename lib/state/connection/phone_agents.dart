@@ -505,6 +505,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
             runtime = PhoneAgentRuntime(
               agentId: runtime.agentId,
               installed: runtime.installed,
+              payloadPresent: runtime.payloadPresent,
               hostAvailable: runtime.hostAvailable,
               architectureQualified: runtime.architectureQualified,
               capabilities: runtime.capabilities,
