@@ -116,29 +116,29 @@ These results apply only to the recorded emulator build and in-app runtime. They
 
 | Agent | Expected | Observed | Build | Run | Base model scope | version | create | models | modelSwitch | stream | abort | reconnect | permissionAllow | permissionDeny | image | cards | protocolSwitch |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| OpenCode 1 | 1.18.32 | 1.18.32 | 2203 | fq3-final-d9342b7e395e | explicit: opencode/big-pickle | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| OpenCode 2 | 2.0.10 | 2.0.10 | 2203 | fq3-final-d9342b7e395e | explicit: opencode/big-pickle | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| OpenCode 1 | 1.18.32 | 1.18.32 | 2203 | fq3-final-513c3a2da207 | baseline: zai-coding-plan/glm-5.3 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| OpenCode 2 | 2.0.10 | 2.0.10 | 2203 | fq3-final-513c3a2da207 | explicit: opencode/big-pickle | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
 
 Model-dependent passes apply to the recorded base model selection. An explicit selection does not qualify server-default inference or other base models.
 
-FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed or prerequisite missing.
+FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed · 🔒 provider unavailable.
 
-**OpenCode 1** — [fq3-final-d9342b7e395e](../qa/FQ3e-2026-10-09/fq3-final-d9342b7e395e.json)
+**OpenCode 1** — [fq3-final-513c3a2da207](../qa/FQ3e-2026-10-09/fq3-final-513c3a2da207.json)
 
 - version: pass — `verified`; facts `{"asserted":true,"healthy":true}`
 - create: pass — `verified`; facts `{"asserted":true,"retained":true}`
 - models: pass — `verified`; facts `{"asserted":true,"connectedModels":18}`
 - stream: pass — `verified`; facts `{"asserted":true,"completedReply":true,"streamedDelta":true}`
 - reconnect: pass — `verified`; facts `{"asserted":true,"messages":2,"refetched":true}`
-- modelSwitch: fail — `oc1_prompt_error`; facts `{}`
+- modelSwitch: pass — `verified`; facts `{"asserted":true,"selectionObserved":true}`
 - abort: pass — `verified`; facts `{"asserted":true,"interrupted":true,"usableAfterAbort":true}`
-- permissionAllow: fail — `timeout`; facts `{}`
-- permissionDeny: fail — `timeout`; facts `{}`
-- image: fail — `oc1_image_content_unverified`; facts `{}`
-- cards: fail — `oc1_prompt_error`; facts `{}`
+- permissionAllow: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true}`
+- permissionDeny: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true}`
+- image: pass — `verified`; facts `{"asserted":true,"imageAnswerVerified":true}`
+- cards: pass — `verified`; facts `{"answerReceipt":true,"asserted":true,"cardsToolCall":true}`
 - protocolSwitch: pass — `verified`; facts `{"asserted":true,"bothHistoriesPreserved":true,"freshClients":true,"oc1Sessions":16,"oc2Sessions":16}`
 
-**OpenCode 2** — [fq3-final-d9342b7e395e](../qa/FQ3e-2026-10-09/fq3-final-d9342b7e395e.json)
+**OpenCode 2** — [fq3-final-513c3a2da207](../qa/FQ3e-2026-10-09/fq3-final-513c3a2da207.json)
 
 - version: pass — `verified`; facts `{"asserted":true,"healthy":true}`
 - create: pass — `verified`; facts `{"asserted":true,"created":true}`
@@ -146,7 +146,7 @@ FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed or prerequisit
 - stream: pass — `verified`; facts `{"asserted":true,"completedReply":true,"streamedDelta":true}`
 - reconnect: pass — `verified`; facts `{"asserted":true,"refetched":true,"retainedMessages":3}`
 - modelSwitch: fail — `inference_execution_failed`; facts `{}`
-- abort: pass — `verified`; facts `{"asserted":true,"interrupted":true,"midStreamObserved":true,"usableAfterAbort":true}`
+- abort: fail — `timeout`; facts `{}`
 - permissionAllow: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true,"toolOutcomeVerified":true}`
 - permissionDeny: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true,"toolOutcomeVerified":true}`
 - image: fail — `inference_execution_failed`; facts `{}`

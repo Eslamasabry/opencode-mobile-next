@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 2,
+  "runID": "fq3-final-513c3a2da207",
+  "device": "emulator-5554",
+  "appBuild": 2203,
+  "sourceRevision": "7c6c0a1e8e293e09ac7a1ac3734a029abc18ca06",
+  "startedAt": "2026-10-09T06:26:22.369846Z",
+  "scope": "phone-runtime",
+  "attestation": {
+    "runtime": "in-app-ubuntu",
+    "transport": "adb-forward",
+    "live": true,
+    "appUID": 10217,
+    "versionProbeUID": 10217,
+    "buildVerified": true,
+    "credentialSource": "runtime-launch-config",
+    "cleanupCompleted": true
+  },
+  "engines": {
+    "opencode": {
+      "expectedVersion": "1.18.32",
+      "observedVersion": "1.18.32",
+      "results": {
+        "version": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "healthy": true,
+            "asserted": true
+          }
+        },
+        "create": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "retained": true,
+            "asserted": true
+          }
+        },
+        "models": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "connectedModels": 18,
+            "asserted": true
+          }
+        },
+        "stream": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "streamedDelta": true,
+            "completedReply": true,
+            "asserted": true
+          }
+        },
+        "reconnect": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "refetched": true,
+            "messages": 2,
+            "asserted": true
+          }
+        },
+        "modelSwitch": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "selectionObserved": true,
+            "asserted": true
+          }
+        },
+        "abort": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "interrupted": true,
+            "usableAfterAbort": true,
+            "asserted": true
+          }
+        },
+        "permissionAllow": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "requestObserved": true,
+            "replyObserved": true,
+            "asserted": true
+          }
+        },
+        "permissionDeny": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "requestObserved": true,
+            "replyObserved": true,
+            "asserted": true
+          }
+        },
+        "image": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "imageAnswerVerified": true,
+            "asserted": true
+          }
+        },
+        "cards": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "cardsToolCall": true,
+            "answerReceipt": true,
+            "asserted": true
+          }
+        }
+      },
+      "modelSelection": {
+        "source": "baseline",
+        "requested": "zai-coding-plan/glm-5.3",
+        "selected": "zai-coding-plan/glm-5.3",
+        "baselineAvailable": true,
+        "inferenceAvailable": true,
+        "selectedByPhase": {
+          "stream": "zai-coding-plan/glm-5.3",
+          "reconnect": "zai-coding-plan/glm-5.3",
+          "model": "zai-coding-plan/glm-5.3",
+          "abort": "zai-coding-plan/glm-5.3",
+          "allow": "zai-coding-plan/glm-5.3",
+          "deny": "zai-coding-plan/glm-5.3",
+          "image": "zai-coding-plan/glm-5.3",
+          "cards": "zai-coding-plan/glm-5.3"
+        }
+      }
+    },
+    "opencode2": {
+      "expectedVersion": "2.0.10",
+      "observedVersion": "2.0.10",
+      "results": {
+        "version": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "healthy": true,
+            "asserted": true
+          }
+        },
+        "create": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "created": true,
+            "asserted": true
+          }
+        },
+        "models": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "enabledModels": 11,
+            "selectedModelAvailable": true,
+            "asserted": true
+          }
+        },
+        "stream": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "streamedDelta": true,
+            "completedReply": true,
+            "asserted": true
+          }
+        },
+        "reconnect": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "refetched": true,
+            "retainedMessages": 3,
+            "asserted": true
+          }
+        },
+        "modelSwitch": {
+          "state": "fail",
+          "code": "inference_execution_failed",
+          "facts": {}
+        },
+        "abort": {
+          "state": "fail",
+          "code": "timeout",
+          "facts": {}
+        },
+        "permissionAllow": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "requestObserved": true,
+            "replyObserved": true,
+            "toolOutcomeVerified": true,
+            "asserted": true
+          }
+        },
+        "permissionDeny": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "requestObserved": true,
+            "replyObserved": true,
+            "toolOutcomeVerified": true,
+            "asserted": true
+          }
+        },
+        "image": {
+          "state": "fail",
+          "code": "inference_execution_failed",
+          "facts": {}
+        },
+        "cards": {
+          "state": "pass",
+          "code": "verified",
+          "facts": {
+            "cardsToolCall": true,
+            "answerReceipt": true,
+            "asserted": true
+          }
+        }
+      },
+      "modelSelection": {
+        "source": "explicit",
+        "requested": "opencode/big-pickle"
+      }
+    }
+  },
+  "protocolSwitch": {
+    "state": "pass",
+    "code": "verified",
+    "facts": {
+      "asserted": true,
+      "bothHistoriesPreserved": true,
+      "freshClients": true,
+      "oc1Sessions": 16,
+      "oc2Sessions": 16
+    }
+  },
+  "evidence": "docs/qa/FQ3e-2026-10-09/fq3-final-513c3a2da207.json"
+}

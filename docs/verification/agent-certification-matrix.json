@@ -182,8 +182,8 @@
     "expectedVersion": "1.18.32",
     "observedVersion": "1.18.32",
     "deviceBuild": 2203,
-    "runID": "fq3-final-d9342b7e395e",
-    "evidence": "docs/qa/FQ3e-2026-10-09/fq3-final-d9342b7e395e.json",
+    "runID": "fq3-final-513c3a2da207",
+    "evidence": "docs/qa/FQ3e-2026-10-09/fq3-final-513c3a2da207.json",
     "capabilities": {
      "version": {
       "state": "pass",
@@ -228,9 +228,12 @@
       }
      },
      "modelSwitch": {
-      "state": "fail",
-      "code": "oc1_prompt_error",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "selectionObserved": true,
+       "asserted": true
+      }
      },
      "abort": {
       "state": "pass",
@@ -242,24 +245,39 @@
       }
      },
      "permissionAllow": {
-      "state": "fail",
-      "code": "timeout",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "requestObserved": true,
+       "replyObserved": true,
+       "asserted": true
+      }
      },
      "permissionDeny": {
-      "state": "fail",
-      "code": "timeout",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "requestObserved": true,
+       "replyObserved": true,
+       "asserted": true
+      }
      },
      "image": {
-      "state": "fail",
-      "code": "oc1_image_content_unverified",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "imageAnswerVerified": true,
+       "asserted": true
+      }
      },
      "cards": {
-      "state": "fail",
-      "code": "oc1_prompt_error",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "cardsToolCall": true,
+       "answerReceipt": true,
+       "asserted": true
+      }
      },
      "protocolSwitch": {
       "state": "pass",
@@ -274,8 +292,21 @@
      }
     },
     "modelSelection": {
-     "source": "explicit",
-     "requested": "opencode/big-pickle"
+     "source": "baseline",
+     "requested": "zai-coding-plan/glm-5.3",
+     "selected": "zai-coding-plan/glm-5.3",
+     "baselineAvailable": true,
+     "inferenceAvailable": true,
+     "selectedByPhase": {
+      "stream": "zai-coding-plan/glm-5.3",
+      "reconnect": "zai-coding-plan/glm-5.3",
+      "model": "zai-coding-plan/glm-5.3",
+      "abort": "zai-coding-plan/glm-5.3",
+      "allow": "zai-coding-plan/glm-5.3",
+      "deny": "zai-coding-plan/glm-5.3",
+      "image": "zai-coding-plan/glm-5.3",
+      "cards": "zai-coding-plan/glm-5.3"
+     }
     }
    }
   },
@@ -342,8 +373,8 @@
     "expectedVersion": "2.0.10",
     "observedVersion": "2.0.10",
     "deviceBuild": 2203,
-    "runID": "fq3-final-d9342b7e395e",
-    "evidence": "docs/qa/FQ3e-2026-10-09/fq3-final-d9342b7e395e.json",
+    "runID": "fq3-final-513c3a2da207",
+    "evidence": "docs/qa/FQ3e-2026-10-09/fq3-final-513c3a2da207.json",
     "capabilities": {
      "version": {
       "state": "pass",
@@ -394,14 +425,9 @@
       "facts": {}
      },
      "abort": {
-      "state": "pass",
-      "code": "verified",
-      "facts": {
-       "interrupted": true,
-       "usableAfterAbort": true,
-       "midStreamObserved": true,
-       "asserted": true
-      }
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
      },
      "permissionAllow": {
       "state": "pass",

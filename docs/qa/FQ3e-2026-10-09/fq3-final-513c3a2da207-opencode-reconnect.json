@@ -1,0 +1,80 @@
+{
+  "runID": "fq3-final-513c3a2da207",
+  "sourceRevision": "7c6c0a1e8e293e09ac7a1ac3734a029abc18ca06",
+  "attemptID": "attempt-1791527182376372-3954943",
+  "cleanupCode": null,
+  "engine": "opencode",
+  "case": "reconnect",
+  "cliVersion": "1.18.32",
+  "observedVersion": "1.18.32",
+  "appUID": 10217,
+  "appBuild": 2203,
+  "serverKind": "owned",
+  "testedModel": "zai-coding-plan/glm-5.3",
+  "modelSelection": {
+    "source": "baseline",
+    "requested": "zai-coding-plan/glm-5.3",
+    "selected": "zai-coding-plan/glm-5.3",
+    "baselineAvailable": true,
+    "inferenceAvailable": true
+  },
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "retained": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "connectedModels": 18,
+        "asserted": true
+      }
+    },
+    "reconnect": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "refetched": true,
+        "messages": 2,
+        "asserted": true
+      }
+    }
+  },
+  "ownedSessions": [
+    "ses_ee0a85490ffekPyDuDlsqYEiRJ",
+    "ses_ee0a84dc4ffeHVTtlP1m0Ga5eU"
+  ],
+  "observations": {
+    "version": {
+      "phase": "version",
+      "stage": "complete"
+    },
+    "create": {
+      "phase": "create",
+      "stage": "complete"
+    },
+    "models": {
+      "phase": "models",
+      "stage": "complete",
+      "model": "zai-coding-plan/glm-5.3"
+    },
+    "reconnect": {
+      "phase": "reconnect",
+      "stage": "complete",
+      "model": "zai-coding-plan/glm-5.3"
+    }
+  }
+}

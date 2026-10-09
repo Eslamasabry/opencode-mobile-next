@@ -71,3 +71,26 @@ class LivePreparationTests(unittest.TestCase):
             )
             self.assertEqual(value["reason"], "device_unavailable")
             self.assertFalse(value.get("data", {}).get("safe_to_continue") is False)
+
+
+class FreshRerunLocationTest(unittest.TestCase):
+    def test_new_run_does_not_reuse_previous_avd_directory(self):
+        from types import SimpleNamespace
+        from tool.qa import final_pass_live as live
+
+        checked = []
+
+        def exists(path):
+            checked.append(path)
+            return True
+
+        context = SimpleNamespace(output=Path("/evidence"), run_id="final-new-run")
+        with (
+            patch.object(live, "resources", return_value={"admitted": True}),
+            patch.object(Path, "exists", exists),
+            patch.object(live, "result", return_value={}),
+        ):
+            live.fresh(context)
+        self.assertEqual(
+            checked, [Path("/home/eslam/Storage/android-qa-fb1-final-new-run")]
+        )

@@ -1,0 +1,91 @@
+{
+  "runID": "fq3-final-513c3a2da207",
+  "sourceRevision": "7c6c0a1e8e293e09ac7a1ac3734a029abc18ca06",
+  "attemptID": "attempt-1791527182376372-3954943",
+  "cleanupCode": null,
+  "engine": "opencode2",
+  "case": "deny",
+  "cliVersion": "2.0.10",
+  "observedVersion": "2.0.10",
+  "appUID": 10217,
+  "appBuild": 2203,
+  "serverKind": "app-managed",
+  "testedModel": "opencode/big-pickle",
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "created": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "enabledModels": 11,
+        "selectedModelAvailable": true,
+        "asserted": true
+      }
+    },
+    "permissionDeny": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "requestObserved": true,
+        "replyObserved": true,
+        "toolOutcomeVerified": true,
+        "asserted": true
+      }
+    }
+  },
+  "ownedSessions": [
+    "ses_ee0a4236affenr54LmLxktAGvv",
+    "ses_ee0a42348ffe835j30LMVLBBtM"
+  ],
+  "observations": {
+    "permissionDeny": {
+      "stage": "complete",
+      "model": "opencode/big-pickle",
+      "retryCount": 0,
+      "modelSelectedCount": 0,
+      "executionStartedCount": 1,
+      "executionSucceededCount": 0,
+      "executionFailedCount": 0,
+      "executionInterruptedCount": 1,
+      "toolCalledCount": 1,
+      "toolProgressCount": 0,
+      "toolSuccessCount": 0,
+      "toolFailedCount": 1,
+      "permissionAskedCount": 1,
+      "permissionRepliedCount": 1,
+      "idleCount": 0,
+      "textDeltaCount": 0,
+      "http503Retries": 0,
+      "terminalCount": 1,
+      "providerNoRouteCount": 0,
+      "modelUnavailableCount": 0,
+      "providerAuthCount": 0,
+      "probeCardNestedAskCount": 0,
+      "probeCardTopLevelConfirmCount": 0,
+      "cardHelperRejectedCount": 0,
+      "retainedShowCallCount": 0,
+      "retainedShowVersionValidCount": 0,
+      "retainedShowIDValidCount": 0,
+      "retainedShowTopLevelConfirmCount": 0,
+      "retainedShowNestedAskCount": 0,
+      "retainedShowWrappedArgumentsCount": 0,
+      "retainedShowHelperRejectedCount": 0,
+      "eventWindowMayBeTruncated": false
+    }
+  }
+}

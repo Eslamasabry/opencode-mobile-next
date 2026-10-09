@@ -1,0 +1,86 @@
+{
+  "runID": "fq3-final-513c3a2da207",
+  "sourceRevision": "7c6c0a1e8e293e09ac7a1ac3734a029abc18ca06",
+  "attemptID": "attempt-1791527182376372-3954943",
+  "cleanupCode": null,
+  "engine": "opencode2",
+  "case": "model",
+  "cliVersion": "2.0.10",
+  "observedVersion": "2.0.10",
+  "appUID": 10217,
+  "appBuild": 2203,
+  "serverKind": "app-managed",
+  "testedModel": "opencode/big-pickle",
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "created": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "enabledModels": 11,
+        "selectedModelAvailable": true,
+        "asserted": true
+      }
+    },
+    "modelSwitch": {
+      "state": "fail",
+      "code": "inference_execution_failed",
+      "facts": {}
+    }
+  },
+  "ownedSessions": [
+    "ses_ee0a5dc81ffetYCLmYUHxEuQ1R",
+    "ses_ee0a5dc62ffej2zKsOL4cqd3u6"
+  ],
+  "observations": {
+    "modelSwitch": {
+      "stage": "await_terminal",
+      "model": "opencode/exo-free",
+      "retryCount": 0,
+      "modelSelectedCount": 1,
+      "executionStartedCount": 1,
+      "executionSucceededCount": 0,
+      "executionFailedCount": 1,
+      "executionInterruptedCount": 0,
+      "toolCalledCount": 0,
+      "toolProgressCount": 0,
+      "toolSuccessCount": 0,
+      "toolFailedCount": 0,
+      "permissionAskedCount": 0,
+      "permissionRepliedCount": 0,
+      "idleCount": 0,
+      "textDeltaCount": 0,
+      "http503Retries": 0,
+      "terminalCount": 1,
+      "providerNoRouteCount": 0,
+      "modelUnavailableCount": 0,
+      "providerAuthCount": 0,
+      "probeCardNestedAskCount": 0,
+      "probeCardTopLevelConfirmCount": 0,
+      "cardHelperRejectedCount": 0,
+      "retainedShowCallCount": 0,
+      "retainedShowVersionValidCount": 0,
+      "retainedShowIDValidCount": 0,
+      "retainedShowTopLevelConfirmCount": 0,
+      "retainedShowNestedAskCount": 0,
+      "retainedShowWrappedArgumentsCount": 0,
+      "retainedShowHelperRejectedCount": 0,
+      "eventWindowMayBeTruncated": false
+    }
+  }
+}
