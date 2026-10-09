@@ -1,5 +1,39 @@
 # BD7 — real device crash and ANR qualification
 
+## Current result: 2202 saved-report flow PASS — 2026-10-09
+
+The requested crash-only saved-report journey is **device verified on APK 2202**.
+[Complete receipt](2202-saved-report/report.json),
+[single-crash checkpoint](2202-saved-report/crash-trigger.json),
+[cleanup](2202-saved-report/cleanup.json).
+
+- Exact approved artifact SHA-256:
+  `e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0`;
+  build 2202, local release signer `1DE5BF08...`.
+- Empty/Off baseline, then real UI consent On. Exactly one `am crash --user 0`
+  targeted verified main PID 3222, start ticks 15531. Android recorded exact-main
+  reason 4/status 0; the fresh native report timestamp followed the trigger by
+  166 ms. [Capture status](2202-saved-report/native-capture-status.json).
+- After reopening, the [saved row](2202-saved-report/native-report.jpg),
+  [details preview](2202-saved-report/native-preview.jpg), and
+  [share preview](2202-saved-report/saved-report-share-preview.jpg) were visible.
+  The Share report button was not activated; no external share opened.
+- Switching [capture Off](2202-saved-report/consent-off-after.jpg) used the
+  product's automatic deletion path. Persisted consent was zero, saved count
+  zero, and the saved row absent. No separate Delete row remains when Off.
+- Same-lock `adb install -r` of the approved normal 2202 APK passed subsequent
+  artifact/signer/same-UID verification and app launch. The driver returned PASS,
+  exited successfully and released its reservation; no further ADB access ran.
+
+All six retained JPGs were visually reviewed and are under 100 KB each. They
+contain only fixed diagnostics copy, error category and timestamps. All 83
+focused host checks passed; current source hashes, JSON, images and links were
+checked. No product edit, build, ANR, account action, external share, push or
+release occurred. This qualifies the requested 2202 saved-report slice; the
+historical ANR/2196/2198/2199 results below remain separate.
+
+## Historical attempts and earlier scope
+
 ## 2198 saved-report follow-up — BC takeover, 2026-10-09
 
 Finish line: capture one real verified-process crash on normal2198, show the
@@ -312,5 +346,5 @@ the empty ring and records the automatic deletion.
 The 2202 host checkpoint passes all 83 focused Python cases serially through
 `OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test`. Changed-fixture controls failed
 against the preceding code: build admission, durable trigger, and Off-before-
-deletion behavior. [Host receipt](2202-saved-report-host.json). Fresh device
-evidence will be added after the run; this paragraph alone is not device proof.
+deletion behavior. [Host receipt](2202-saved-report-host.json). The [fresh device receipt](2202-saved-report/report.json) passes; see the current
+result at the top for the exact scope and cleanup.
