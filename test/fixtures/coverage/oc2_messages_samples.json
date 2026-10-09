@@ -1,0 +1,6711 @@
+{
+  "source": "contracts/opencode2-openapi-beta-18600.json",
+  "schema": {
+    "Session.Message.User": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "text",
+        "kind": "string"
+      },
+      {
+        "path": "files[]",
+        "kind": "any"
+      },
+      {
+        "path": "agents[]",
+        "kind": "any"
+      },
+      {
+        "path": "skills[]",
+        "kind": "any"
+      }
+    ],
+    "Prompt.FileAttachment": [
+      {
+        "path": "data",
+        "kind": "string"
+      },
+      {
+        "path": "mime",
+        "kind": "string"
+      },
+      {
+        "path": "source.uri",
+        "kind": "string"
+      },
+      {
+        "path": "source.type",
+        "kind": "enum"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "mention.start",
+        "kind": "number"
+      },
+      {
+        "path": "mention.end",
+        "kind": "number"
+      },
+      {
+        "path": "mention.text",
+        "kind": "string"
+      }
+    ],
+    "Prompt.AgentAttachment": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "mention.start",
+        "kind": "number"
+      },
+      {
+        "path": "mention.end",
+        "kind": "number"
+      },
+      {
+        "path": "mention.text",
+        "kind": "string"
+      }
+    ],
+    "Prompt.SkillAttachment": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "text",
+        "kind": "string"
+      },
+      {
+        "path": "mention.start",
+        "kind": "number"
+      },
+      {
+        "path": "mention.end",
+        "kind": "number"
+      },
+      {
+        "path": "mention.text",
+        "kind": "string"
+      }
+    ],
+    "Session.Message.Synthetic": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "text",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      }
+    ],
+    "Session.Message.System": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "text",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      }
+    ],
+    "Session.Message.Skill": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "skill",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "text",
+        "kind": "string"
+      }
+    ],
+    "Session.Message.Shell": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "time.completed",
+        "kind": "number"
+      },
+      {
+        "path": "shellID",
+        "kind": "string"
+      },
+      {
+        "path": "command",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      },
+      {
+        "path": "exit",
+        "kind": "any"
+      },
+      {
+        "path": "output.output",
+        "kind": "string"
+      },
+      {
+        "path": "output.cursor",
+        "kind": "number"
+      },
+      {
+        "path": "output.size",
+        "kind": "number"
+      },
+      {
+        "path": "output.truncated",
+        "kind": "boolean"
+      }
+    ],
+    "Session.Message.Assistant": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "time.streamed",
+        "kind": "number"
+      },
+      {
+        "path": "time.completed",
+        "kind": "number"
+      },
+      {
+        "path": "agent",
+        "kind": "string"
+      },
+      {
+        "path": "model.id",
+        "kind": "string"
+      },
+      {
+        "path": "model.providerID",
+        "kind": "string"
+      },
+      {
+        "path": "model.variant",
+        "kind": "string"
+      },
+      {
+        "path": "content[]",
+        "kind": "any"
+      },
+      {
+        "path": "snapshot.start",
+        "kind": "string"
+      },
+      {
+        "path": "snapshot.end",
+        "kind": "string"
+      },
+      {
+        "path": "snapshot.files[]",
+        "kind": "string"
+      },
+      {
+        "path": "finish",
+        "kind": "enum"
+      },
+      {
+        "path": "rawFinish",
+        "kind": "string"
+      },
+      {
+        "path": "providerState",
+        "kind": "any"
+      },
+      {
+        "path": "cost",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.input",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.output",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.reasoning",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.cache.read",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.cache.write",
+        "kind": "number"
+      },
+      {
+        "path": "error",
+        "kind": "any"
+      },
+      {
+        "path": "retry.attempt",
+        "kind": "number"
+      },
+      {
+        "path": "retry.at",
+        "kind": "number"
+      },
+      {
+        "path": "retry.error",
+        "kind": "any"
+      }
+    ],
+    "Session.Message.Assistant.Text": [
+      {
+        "path": "text",
+        "kind": "string"
+      },
+      {
+        "path": "state",
+        "kind": "any"
+      }
+    ],
+    "Session.Message.Assistant.Reasoning": [
+      {
+        "path": "text",
+        "kind": "string"
+      },
+      {
+        "path": "state",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "time.completed",
+        "kind": "number"
+      }
+    ],
+    "Session.Message.Assistant.Tool": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "executed",
+        "kind": "boolean"
+      },
+      {
+        "path": "providerState",
+        "kind": "any"
+      },
+      {
+        "path": "providerResultState",
+        "kind": "any"
+      },
+      {
+        "path": "state",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "time.ran",
+        "kind": "number"
+      },
+      {
+        "path": "time.completed",
+        "kind": "number"
+      }
+    ],
+    "Session.Message.ToolState.Streaming": [
+      {
+        "path": "input",
+        "kind": "string"
+      }
+    ],
+    "Session.Message.ToolState.Running": [
+      {
+        "path": "input",
+        "kind": "any"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      }
+    ],
+    "Session.Message.ToolState.Completed": [
+      {
+        "path": "input",
+        "kind": "any"
+      },
+      {
+        "path": "content[]",
+        "kind": "any"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      }
+    ],
+    "Session.Message.ToolState.Error": [
+      {
+        "path": "input",
+        "kind": "any"
+      },
+      {
+        "path": "error",
+        "kind": "any"
+      },
+      {
+        "path": "content[]",
+        "kind": "any"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      }
+    ],
+    "Tool.TextContent": [
+      {
+        "path": "text",
+        "kind": "string"
+      }
+    ],
+    "Tool.FileContent": [
+      {
+        "path": "uri",
+        "kind": "string"
+      },
+      {
+        "path": "mime",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      }
+    ],
+    "Session.StructuredError": [
+      {
+        "path": "type",
+        "kind": "string"
+      },
+      {
+        "path": "message",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "number"
+      }
+    ],
+    "Session.Message.Compaction.Running": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "reason",
+        "kind": "enum"
+      },
+      {
+        "path": "summary",
+        "kind": "string"
+      },
+      {
+        "path": "recent",
+        "kind": "string"
+      }
+    ],
+    "Session.Message.Compaction.Completed": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "reason",
+        "kind": "enum"
+      },
+      {
+        "path": "summary",
+        "kind": "string"
+      },
+      {
+        "path": "recent",
+        "kind": "string"
+      }
+    ],
+    "Session.Message.Compaction.Failed": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "reason",
+        "kind": "enum"
+      },
+      {
+        "path": "error",
+        "kind": "any"
+      }
+    ],
+    "Session.Message.AgentSelected": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "agent",
+        "kind": "string"
+      },
+      {
+        "path": "previous",
+        "kind": "string"
+      }
+    ],
+    "Session.Message.ModelSelected": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "model.id",
+        "kind": "string"
+      },
+      {
+        "path": "model.providerID",
+        "kind": "string"
+      },
+      {
+        "path": "model.variant",
+        "kind": "string"
+      },
+      {
+        "path": "previous.id",
+        "kind": "string"
+      },
+      {
+        "path": "previous.providerID",
+        "kind": "string"
+      },
+      {
+        "path": "previous.variant",
+        "kind": "string"
+      }
+    ],
+    "Session.Message.LocationSwitched": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "location.directory",
+        "kind": "string"
+      },
+      {
+        "path": "location.workspaceID",
+        "kind": "string"
+      },
+      {
+        "path": "projectID",
+        "kind": "string"
+      },
+      {
+        "path": "subpath",
+        "kind": "string"
+      },
+      {
+        "path": "previous.location.directory",
+        "kind": "string"
+      },
+      {
+        "path": "previous.location.workspaceID",
+        "kind": "string"
+      },
+      {
+        "path": "previous.projectID",
+        "kind": "string"
+      },
+      {
+        "path": "previous.subpath",
+        "kind": "string"
+      }
+    ],
+    "tool:bash": [
+      {
+        "path": "input.command",
+        "kind": "string"
+      },
+      {
+        "path": "input.description",
+        "kind": "string"
+      },
+      {
+        "path": "input.workdir",
+        "kind": "string"
+      },
+      {
+        "path": "input.timeout",
+        "kind": "number"
+      },
+      {
+        "path": "output",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.output",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.exit",
+        "kind": "number"
+      }
+    ],
+    "tool:read": [
+      {
+        "path": "input.filePath",
+        "kind": "string"
+      },
+      {
+        "path": "output",
+        "kind": "string"
+      },
+      {
+        "path": "input.offset",
+        "kind": "number"
+      },
+      {
+        "path": "input.limit",
+        "kind": "number"
+      },
+      {
+        "path": "metadata.truncated",
+        "kind": "boolean"
+      }
+    ],
+    "tool:edit": [
+      {
+        "path": "input.filePath",
+        "kind": "string"
+      },
+      {
+        "path": "input.oldString",
+        "kind": "string"
+      },
+      {
+        "path": "input.newString",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.filediff.file",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.filediff.before",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.filediff.after",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.diff",
+        "kind": "string"
+      },
+      {
+        "path": "input.replaceAll",
+        "kind": "boolean"
+      },
+      {
+        "path": "metadata.filediff.additions",
+        "kind": "number"
+      },
+      {
+        "path": "metadata.filediff.deletions",
+        "kind": "number"
+      },
+      {
+        "path": "metadata.diagnostics",
+        "kind": "any"
+      }
+    ],
+    "tool:write": [
+      {
+        "path": "input.filePath",
+        "kind": "string"
+      },
+      {
+        "path": "input.content",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.filepath",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.exists",
+        "kind": "boolean"
+      }
+    ],
+    "tool:grep": [
+      {
+        "path": "input.pattern",
+        "kind": "string"
+      },
+      {
+        "path": "input.path",
+        "kind": "string"
+      },
+      {
+        "path": "input.include",
+        "kind": "string"
+      },
+      {
+        "path": "output",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.matches",
+        "kind": "number"
+      },
+      {
+        "path": "metadata.truncated",
+        "kind": "boolean"
+      }
+    ],
+    "tool:glob": [
+      {
+        "path": "input.pattern",
+        "kind": "string"
+      },
+      {
+        "path": "input.path",
+        "kind": "string"
+      },
+      {
+        "path": "output",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.count",
+        "kind": "number"
+      },
+      {
+        "path": "metadata.truncated",
+        "kind": "boolean"
+      }
+    ],
+    "tool:webfetch": [
+      {
+        "path": "input.url",
+        "kind": "string"
+      },
+      {
+        "path": "input.format",
+        "kind": "string"
+      },
+      {
+        "path": "output",
+        "kind": "string"
+      },
+      {
+        "path": "input.timeout",
+        "kind": "number"
+      }
+    ],
+    "tool:task": [
+      {
+        "path": "input.description",
+        "kind": "string"
+      },
+      {
+        "path": "input.prompt",
+        "kind": "string"
+      },
+      {
+        "path": "input.subagent_type",
+        "kind": "string"
+      },
+      {
+        "path": "input.command",
+        "kind": "string"
+      },
+      {
+        "path": "output",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.sessionId",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.model.providerID",
+        "kind": "string"
+      },
+      {
+        "path": "metadata.model.modelID",
+        "kind": "string"
+      }
+    ],
+    "tool:todowrite": [
+      {
+        "path": "input.todos[].content",
+        "kind": "string"
+      },
+      {
+        "path": "input.todos[].status",
+        "kind": "string"
+      },
+      {
+        "path": "input.todos[].priority",
+        "kind": "string"
+      },
+      {
+        "path": "output",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "user_prompt_all_fields",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_001",
+          "metadata": {
+            "client": "mobile"
+          },
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Compare @screenshot.png and @upload_screen.dart",
+          "files": [
+            {
+              "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+              "mime": "image/png",
+              "source": {
+                "type": "inline"
+              },
+              "name": "screenshot.png",
+              "description": "The upload screen as it looks today",
+              "mention": {
+                "start": 0,
+                "end": 15,
+                "text": "@screenshot.png"
+              }
+            },
+            {
+              "data": "",
+              "mime": "text/x-dart",
+              "source": {
+                "type": "uri",
+                "uri": "file:///work/app/lib/upload/upload_screen.dart"
+              },
+              "name": "upload_screen.dart",
+              "mention": {
+                "start": 20,
+                "end": 40,
+                "text": "@upload_screen.dart"
+              }
+            }
+          ],
+          "agents": [
+            {
+              "name": "security-reviewer",
+              "mention": {
+                "start": 50,
+                "end": 68,
+                "text": "@security-reviewer"
+              }
+            }
+          ],
+          "skills": [
+            {
+              "id": "skill_flutter",
+              "name": "flutter-testing",
+              "text": "Always run the widget tests with --concurrency=1.",
+              "mention": {
+                "start": 70,
+                "end": 86,
+                "text": "/flutter-testing"
+              }
+            }
+          ]
+        }
+      ],
+      "fields": [
+        {
+          "key": "Prompt.FileAttachment.data",
+          "path": "data",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.mime",
+          "path": "mime",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.source.type",
+          "path": "source.type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "screenshot.png"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.mention.start",
+          "path": "mention.start",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.mention.end",
+          "path": "mention.end",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.mention.text",
+          "path": "mention.text",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.data",
+          "path": "data",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.mime",
+          "path": "mime",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.source.type",
+          "path": "source.type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.source.uri",
+          "path": "source.uri",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "upload_screen.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.mention.start",
+          "path": "mention.start",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.mention.end",
+          "path": "mention.end",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.FileAttachment.mention.text",
+          "path": "mention.text",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Prompt.AgentAttachment.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "security-reviewer"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Prompt.AgentAttachment.mention.start",
+          "path": "mention.start",
+          "kind": "number",
+          "probes": [
+            "50"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Prompt.AgentAttachment.mention.end",
+          "path": "mention.end",
+          "kind": "number",
+          "probes": [
+            "68"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Prompt.AgentAttachment.mention.text",
+          "path": "mention.text",
+          "kind": "string",
+          "probes": [
+            "@security-reviewer"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Prompt.SkillAttachment.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "skill_flutter"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Prompt.SkillAttachment.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "flutter-testing"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Prompt.SkillAttachment.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Always run the widget tests with --concurrency=1."
+          ],
+          "primary": false
+        },
+        {
+          "key": "Prompt.SkillAttachment.mention.start",
+          "path": "mention.start",
+          "kind": "number",
+          "probes": [
+            "70"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Prompt.SkillAttachment.mention.end",
+          "path": "mention.end",
+          "kind": "number",
+          "probes": [
+            "86"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Prompt.SkillAttachment.mention.text",
+          "path": "mention.text",
+          "kind": "string",
+          "probes": [
+            "/flutter-testing"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_001"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Compare @screenshot.png and @upload_screen.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.files[]",
+          "path": "files[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.agents[]",
+          "path": "agents[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.skills[]",
+          "path": "skills[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "assistant_all_fields",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_002",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_003",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "reasoning",
+              "text": "The retry button must keep the failed file name, so I will read the queue first.",
+              "state": {
+                "anthropic": {
+                  "signature": "sig-abc"
+                }
+              },
+              "time": {
+                "created": 1788960002000,
+                "completed": 1788960002900
+              }
+            },
+            {
+              "type": "text",
+              "text": "I added a Retry button next to every failed upload.",
+              "state": {
+                "openai": {
+                  "itemId": "msg_abc"
+                }
+              }
+            }
+          ],
+          "finish": "stop",
+          "metadata": {
+            "traceId": "tr-9"
+          },
+          "snapshot": {
+            "start": "snap_a1",
+            "end": "snap_b2",
+            "files": [
+              "lib/upload/upload_screen.dart"
+            ]
+          },
+          "rawFinish": "end_turn",
+          "providerState": {
+            "anthropic": {
+              "cacheKey": "ck-1"
+            }
+          },
+          "cost": 0.0421,
+          "tokens": {
+            "input": 9100,
+            "output": 1210,
+            "reasoning": 400,
+            "cache": {
+              "read": 4000,
+              "write": 500
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "Session.Message.Assistant.Text.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "I added a Retry button next to every failed upload."
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Text.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Reasoning.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "The retry button must keep the failed file name, so I will read the queue first."
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Reasoning.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Reasoning.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Reasoning.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_002"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_003"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.snapshot.start",
+          "path": "snapshot.start",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.snapshot.end",
+          "path": "snapshot.end",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.snapshot.files[]",
+          "path": "snapshot.files[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.rawFinish",
+          "path": "rawFinish",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.providerState",
+          "path": "providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.cost",
+          "path": "cost",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.tokens.input",
+          "path": "tokens.input",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.tokens.output",
+          "path": "tokens.output",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.tokens.reasoning",
+          "path": "tokens.reasoning",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.tokens.cache.read",
+          "path": "tokens.cache.read",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.tokens.cache.write",
+          "path": "tokens.cache.write",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_bash",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_005",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_006",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "tool",
+              "id": "call_004",
+              "name": "bash",
+              "executed": true,
+              "providerState": {
+                "anthropic": {
+                  "toolUse": "tu_1"
+                }
+              },
+              "providerResultState": {
+                "anthropic": {
+                  "cache": "c_1"
+                }
+              },
+              "state": {
+                "status": "completed",
+                "input": {
+                  "command": "flutter test test/upload_screen_test.dart",
+                  "description": "Run the upload screen tests",
+                  "workdir": "/work/app",
+                  "timeout": 120000
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "00:04 +12: All tests passed!"
+                  }
+                ],
+                "metadata": {
+                  "output": "00:04 +12: All tests passed!",
+                  "exit": 0
+                }
+              },
+              "time": {
+                "created": 1788960003000,
+                "ran": 1788960003100,
+                "completed": 1788960007100
+              }
+            }
+          ],
+          "finish": "tool-calls"
+        }
+      ],
+      "fields": [
+        {
+          "key": "Tool.TextContent.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "00:04 +12: All tests passed!"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:bash.input.command",
+          "path": "input.command",
+          "kind": "string",
+          "probes": [
+            "flutter test test/upload_screen_test.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:bash.input.description",
+          "path": "input.description",
+          "kind": "string",
+          "probes": [
+            "Run the upload screen tests"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:bash.input.workdir",
+          "path": "input.workdir",
+          "kind": "string",
+          "probes": [
+            "/work/app"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:bash.input.timeout",
+          "path": "input.timeout",
+          "kind": "number",
+          "probes": [
+            "120000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:bash.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [
+            "00:04 +12: All tests passed!"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:bash.metadata.output",
+          "path": "metadata.output",
+          "kind": "string",
+          "probes": [
+            "00:04 +12: All tests passed!"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:bash.metadata.exit",
+          "path": "metadata.exit",
+          "kind": "number",
+          "probes": [
+            "exit code 0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_004"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Shell"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.executed",
+          "path": "executed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerState",
+          "path": "providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerResultState",
+          "path": "providerResultState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "4 seconds"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.ran",
+          "path": "time.ran",
+          "kind": "number",
+          "probes": [
+            "4 seconds"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "4 seconds"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_005"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_006"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_read",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_008",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_009",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "tool",
+              "id": "call_007",
+              "name": "read",
+              "executed": true,
+              "providerState": {
+                "anthropic": {
+                  "toolUse": "tu_1"
+                }
+              },
+              "providerResultState": {
+                "anthropic": {
+                  "cache": "c_1"
+                }
+              },
+              "state": {
+                "status": "completed",
+                "input": {
+                  "filePath": "/work/app/lib/main.dart",
+                  "offset": 12,
+                  "limit": 40
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "00012| void main() {\n00013|   runApp(const App());"
+                  }
+                ],
+                "metadata": {
+                  "truncated": true
+                }
+              },
+              "time": {
+                "created": 1788960003000,
+                "ran": 1788960003100,
+                "completed": 1788960007100
+              }
+            }
+          ],
+          "finish": "tool-calls"
+        }
+      ],
+      "fields": [
+        {
+          "key": "Tool.TextContent.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "00012| void main() {"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:read.input.filePath",
+          "path": "input.filePath",
+          "kind": "string",
+          "probes": [
+            "main.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:read.input.offset",
+          "path": "input.offset",
+          "kind": "number",
+          "probes": [
+            "12"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:read.input.limit",
+          "path": "input.limit",
+          "kind": "number",
+          "probes": [
+            "40"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:read.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [
+            "00012| void main() {"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:read.metadata.truncated",
+          "path": "metadata.truncated",
+          "kind": "boolean",
+          "probes": [
+            "Truncated"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_007"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Read"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.executed",
+          "path": "executed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerState",
+          "path": "providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerResultState",
+          "path": "providerResultState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.ran",
+          "path": "time.ran",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_008"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_009"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_edit",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_011",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_012",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "tool",
+              "id": "call_010",
+              "name": "edit",
+              "executed": true,
+              "providerState": {
+                "anthropic": {
+                  "toolUse": "tu_1"
+                }
+              },
+              "providerResultState": {
+                "anthropic": {
+                  "cache": "c_1"
+                }
+              },
+              "state": {
+                "status": "completed",
+                "input": {
+                  "filePath": "/work/app/lib/upload/upload_screen.dart",
+                  "oldString": "final retries = 1;",
+                  "newString": "final retries = 3;",
+                  "replaceAll": true
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Edit applied successfully."
+                  }
+                ],
+                "metadata": {
+                  "diff": "--- a/lib/upload/upload_screen.dart\n+++ b/lib/upload/upload_screen.dart\n@@ -1 +1 @@\n-final retries = 1;\n+final retries = 3;",
+                  "filediff": {
+                    "file": "/work/app/lib/upload/upload_screen.dart",
+                    "before": "final retries = 1;",
+                    "after": "final retries = 3;",
+                    "additions": 6,
+                    "deletions": 4
+                  },
+                  "diagnostics": {
+                    "/work/app/lib/upload/upload_screen.dart": [
+                      {
+                        "message": "Unused import",
+                        "severity": 2
+                      }
+                    ]
+                  }
+                }
+              },
+              "time": {
+                "created": 1788960003000,
+                "ran": 1788960003100,
+                "completed": 1788960007100
+              }
+            }
+          ],
+          "finish": "tool-calls"
+        }
+      ],
+      "fields": [
+        {
+          "key": "Tool.TextContent.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:edit.input.filePath",
+          "path": "input.filePath",
+          "kind": "string",
+          "probes": [
+            "upload_screen.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:edit.input.oldString",
+          "path": "input.oldString",
+          "kind": "string",
+          "probes": [
+            "final retries = 1;"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:edit.input.newString",
+          "path": "input.newString",
+          "kind": "string",
+          "probes": [
+            "final retries = 3;"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:edit.input.replaceAll",
+          "path": "input.replaceAll",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:edit.metadata.diff",
+          "path": "metadata.diff",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:edit.metadata.filediff.file",
+          "path": "metadata.filediff.file",
+          "kind": "string",
+          "probes": [
+            "upload_screen.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:edit.metadata.filediff.before",
+          "path": "metadata.filediff.before",
+          "kind": "string",
+          "probes": [
+            "final retries = 1;"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:edit.metadata.filediff.after",
+          "path": "metadata.filediff.after",
+          "kind": "string",
+          "probes": [
+            "final retries = 3;"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:edit.metadata.filediff.additions",
+          "path": "metadata.filediff.additions",
+          "kind": "number",
+          "probes": [
+            "6"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:edit.metadata.filediff.deletions",
+          "path": "metadata.filediff.deletions",
+          "kind": "number",
+          "probes": [
+            "4"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:edit.metadata.diagnostics",
+          "path": "metadata.diagnostics",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_010"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Edit"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.executed",
+          "path": "executed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerState",
+          "path": "providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerResultState",
+          "path": "providerResultState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.ran",
+          "path": "time.ran",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_011"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_012"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_write",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_014",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_015",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "tool",
+              "id": "call_013",
+              "name": "write",
+              "executed": true,
+              "providerState": {
+                "anthropic": {
+                  "toolUse": "tu_1"
+                }
+              },
+              "providerResultState": {
+                "anthropic": {
+                  "cache": "c_1"
+                }
+              },
+              "state": {
+                "status": "completed",
+                "input": {
+                  "filePath": "/work/app/lib/upload/retry_button.dart",
+                  "content": "class RetryButton extends StatelessWidget {}"
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Wrote file successfully."
+                  }
+                ],
+                "metadata": {
+                  "filepath": "/work/app/lib/upload/retry_button.dart",
+                  "exists": false
+                }
+              },
+              "time": {
+                "created": 1788960003000,
+                "ran": 1788960003100,
+                "completed": 1788960007100
+              }
+            }
+          ],
+          "finish": "tool-calls"
+        }
+      ],
+      "fields": [
+        {
+          "key": "Tool.TextContent.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:write.input.filePath",
+          "path": "input.filePath",
+          "kind": "string",
+          "probes": [
+            "retry_button.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:write.input.content",
+          "path": "input.content",
+          "kind": "string",
+          "probes": [
+            "class RetryButton extends StatelessWidget {}"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:write.metadata.filepath",
+          "path": "metadata.filepath",
+          "kind": "string",
+          "probes": [
+            "retry_button.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:write.metadata.exists",
+          "path": "metadata.exists",
+          "kind": "boolean",
+          "probes": [
+            "new file"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_013"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Write"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.executed",
+          "path": "executed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerState",
+          "path": "providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerResultState",
+          "path": "providerResultState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.ran",
+          "path": "time.ran",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_014"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_015"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_grep",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_017",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_018",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "tool",
+              "id": "call_016",
+              "name": "grep",
+              "executed": true,
+              "providerState": {
+                "anthropic": {
+                  "toolUse": "tu_1"
+                }
+              },
+              "providerResultState": {
+                "anthropic": {
+                  "cache": "c_1"
+                }
+              },
+              "state": {
+                "status": "completed",
+                "input": {
+                  "pattern": "TODO",
+                  "path": "lib",
+                  "include": "*.dart"
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Found 5 matches\nlib/a.dart:\n  Line 12: // TODO tidy"
+                  }
+                ],
+                "metadata": {
+                  "matches": 5,
+                  "truncated": true
+                }
+              },
+              "time": {
+                "created": 1788960003000,
+                "ran": 1788960003100,
+                "completed": 1788960007100
+              }
+            }
+          ],
+          "finish": "tool-calls"
+        }
+      ],
+      "fields": [
+        {
+          "key": "Tool.TextContent.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Found 5 matches"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:grep.input.pattern",
+          "path": "input.pattern",
+          "kind": "string",
+          "probes": [
+            "TODO"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:grep.input.path",
+          "path": "input.path",
+          "kind": "string",
+          "probes": [
+            "lib"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:grep.input.include",
+          "path": "input.include",
+          "kind": "string",
+          "probes": [
+            "*.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:grep.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [
+            "Found 5 matches"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:grep.metadata.matches",
+          "path": "metadata.matches",
+          "kind": "number",
+          "probes": [
+            "5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:grep.metadata.truncated",
+          "path": "metadata.truncated",
+          "kind": "boolean",
+          "probes": [
+            "Truncated"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_016"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Search text"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.executed",
+          "path": "executed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerState",
+          "path": "providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerResultState",
+          "path": "providerResultState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.ran",
+          "path": "time.ran",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_017"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_018"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_glob",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_020",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_021",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "tool",
+              "id": "call_019",
+              "name": "glob",
+              "executed": true,
+              "providerState": {
+                "anthropic": {
+                  "toolUse": "tu_1"
+                }
+              },
+              "providerResultState": {
+                "anthropic": {
+                  "cache": "c_1"
+                }
+              },
+              "state": {
+                "status": "completed",
+                "input": {
+                  "pattern": "**/*_test.dart",
+                  "path": "test"
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "test/a_test.dart\ntest/b_test.dart"
+                  }
+                ],
+                "metadata": {
+                  "count": 2,
+                  "truncated": true
+                }
+              },
+              "time": {
+                "created": 1788960003000,
+                "ran": 1788960003100,
+                "completed": 1788960007100
+              }
+            }
+          ],
+          "finish": "tool-calls"
+        }
+      ],
+      "fields": [
+        {
+          "key": "Tool.TextContent.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "test/a_test.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:glob.input.pattern",
+          "path": "input.pattern",
+          "kind": "string",
+          "probes": [
+            "**/*_test.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:glob.input.path",
+          "path": "input.path",
+          "kind": "string",
+          "probes": [
+            "test"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:glob.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [
+            "test/a_test.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:glob.metadata.count",
+          "path": "metadata.count",
+          "kind": "number",
+          "probes": [
+            "2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:glob.metadata.truncated",
+          "path": "metadata.truncated",
+          "kind": "boolean",
+          "probes": [
+            "Truncated"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_019"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Find files"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.executed",
+          "path": "executed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerState",
+          "path": "providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerResultState",
+          "path": "providerResultState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.ran",
+          "path": "time.ran",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_020"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_021"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_webfetch",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_023",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_024",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "tool",
+              "id": "call_022",
+              "name": "webfetch",
+              "executed": true,
+              "providerState": {
+                "anthropic": {
+                  "toolUse": "tu_1"
+                }
+              },
+              "providerResultState": {
+                "anthropic": {
+                  "cache": "c_1"
+                }
+              },
+              "state": {
+                "status": "completed",
+                "input": {
+                  "url": "https://docs.flutter.dev/cookbook/networking",
+                  "format": "markdown",
+                  "timeout": 30
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Networking cookbook: fetch data from the internet"
+                  }
+                ],
+                "metadata": {}
+              },
+              "time": {
+                "created": 1788960003000,
+                "ran": 1788960003100,
+                "completed": 1788960007100
+              }
+            }
+          ],
+          "finish": "tool-calls"
+        }
+      ],
+      "fields": [
+        {
+          "key": "Tool.TextContent.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Networking cookbook: fetch data from the internet"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:webfetch.input.url",
+          "path": "input.url",
+          "kind": "string",
+          "probes": [
+            "https://docs.flutter.dev/cookbook/networking"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:webfetch.input.format",
+          "path": "input.format",
+          "kind": "string",
+          "probes": [
+            "markdown"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:webfetch.input.timeout",
+          "path": "input.timeout",
+          "kind": "number",
+          "probes": [
+            "30"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:webfetch.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [
+            "Networking cookbook: fetch data from the internet"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_022"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Fetch page"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.executed",
+          "path": "executed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerState",
+          "path": "providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerResultState",
+          "path": "providerResultState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.ran",
+          "path": "time.ran",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_023"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_024"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_task",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_026",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_027",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "tool",
+              "id": "call_025",
+              "name": "task",
+              "executed": true,
+              "providerState": {
+                "anthropic": {
+                  "toolUse": "tu_1"
+                }
+              },
+              "providerResultState": {
+                "anthropic": {
+                  "cache": "c_1"
+                }
+              },
+              "state": {
+                "status": "completed",
+                "input": {
+                  "description": "Audit the upload retry code",
+                  "prompt": "Read lib/upload and list every place a retry can loop forever",
+                  "subagent_type": "explore",
+                  "command": "audit-retries"
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "task_id: ses_child1 (for resuming)\n\n<task_result>\nTwo loops can retry forever.\n</task_result>"
+                  }
+                ],
+                "metadata": {
+                  "sessionId": "ses_child1",
+                  "model": {
+                    "providerID": "openrouter",
+                    "modelID": "claude-sonnet-5-5"
+                  }
+                }
+              },
+              "time": {
+                "created": 1788960003000,
+                "ran": 1788960003100,
+                "completed": 1788960007100
+              }
+            }
+          ],
+          "finish": "tool-calls"
+        }
+      ],
+      "fields": [
+        {
+          "key": "Tool.TextContent.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:task.input.description",
+          "path": "input.description",
+          "kind": "string",
+          "probes": [
+            "Audit the upload retry code"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:task.input.prompt",
+          "path": "input.prompt",
+          "kind": "string",
+          "probes": [
+            "Read lib/upload and list every place a retry can loop forever"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:task.input.subagent_type",
+          "path": "input.subagent_type",
+          "kind": "string",
+          "probes": [
+            "explore"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:task.input.command",
+          "path": "input.command",
+          "kind": "string",
+          "probes": [
+            "audit-retries"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:task.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:task.metadata.sessionId",
+          "path": "metadata.sessionId",
+          "kind": "string",
+          "probes": [
+            "ses_child1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:task.metadata.model.providerID",
+          "path": "metadata.model.providerID",
+          "kind": "string",
+          "probes": [
+            "openrouter"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:task.metadata.model.modelID",
+          "path": "metadata.model.modelID",
+          "kind": "string",
+          "probes": [
+            "claude-sonnet-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_025"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Delegated to explore"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.executed",
+          "path": "executed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerState",
+          "path": "providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerResultState",
+          "path": "providerResultState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.ran",
+          "path": "time.ran",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_026"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_027"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_todowrite",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_029",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_030",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "tool",
+              "id": "call_028",
+              "name": "todowrite",
+              "executed": true,
+              "providerState": {
+                "anthropic": {
+                  "toolUse": "tu_1"
+                }
+              },
+              "providerResultState": {
+                "anthropic": {
+                  "cache": "c_1"
+                }
+              },
+              "state": {
+                "status": "completed",
+                "input": {
+                  "todos": [
+                    {
+                      "content": "Read the upload queue",
+                      "status": "completed",
+                      "priority": "high"
+                    },
+                    {
+                      "content": "Add the retry button",
+                      "status": "in_progress",
+                      "priority": "medium"
+                    },
+                    {
+                      "content": "Write the widget test",
+                      "status": "pending",
+                      "priority": "low"
+                    }
+                  ]
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "[{\"content\":\"Read the upload queue\"}]"
+                  }
+                ],
+                "metadata": {}
+              },
+              "time": {
+                "created": 1788960003000,
+                "ran": 1788960003100,
+                "completed": 1788960007100
+              }
+            }
+          ],
+          "finish": "tool-calls"
+        }
+      ],
+      "fields": [
+        {
+          "key": "Tool.TextContent.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Completed.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool:todowrite.input.todos[].content",
+          "path": "input.todos[].content",
+          "kind": "string",
+          "probes": [
+            "Read the upload queue",
+            "Add the retry button",
+            "Write the widget test"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:todowrite.input.todos[].status",
+          "path": "input.todos[].status",
+          "kind": "string",
+          "probes": [
+            "Completed",
+            "In progress",
+            "Pending"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:todowrite.input.todos[].priority",
+          "path": "input.todos[].priority",
+          "kind": "string",
+          "probes": [
+            "High priority",
+            "Medium priority",
+            "Low priority"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool:todowrite.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_028"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Tasks"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.executed",
+          "path": "executed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerState",
+          "path": "providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.providerResultState",
+          "path": "providerResultState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.ran",
+          "path": "time.ran",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_029"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_030"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_running_streaming",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_033",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_034",
+          "time": {
+            "created": 1788960001000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "tool",
+              "id": "call_031",
+              "name": "bash",
+              "state": {
+                "status": "streaming",
+                "input": "{\"command\":\"npm run dev"
+              },
+              "time": {
+                "created": 1788960003000
+              }
+            },
+            {
+              "type": "tool",
+              "id": "call_032",
+              "name": "bash",
+              "executed": true,
+              "state": {
+                "status": "running",
+                "input": {
+                  "command": "npm run dev"
+                },
+                "metadata": {
+                  "output": "ready on port 5173"
+                }
+              },
+              "time": {
+                "created": 1788960003000,
+                "ran": 1788960003100
+              }
+            }
+          ],
+          "finish": "tool-calls"
+        }
+      ],
+      "fields": [
+        {
+          "key": "Session.Message.ToolState.Streaming.input",
+          "path": "input",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Running.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Running.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_031"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_032"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Shell"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.executed",
+          "path": "executed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.ran",
+          "path": "time.ran",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_033"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_034"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_failed_with_file",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_036",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_037",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [
+            {
+              "type": "tool",
+              "id": "call_035",
+              "name": "bash",
+              "executed": true,
+              "state": {
+                "status": "error",
+                "input": {
+                  "command": "git push origin main"
+                },
+                "error": {
+                  "type": "tool.failed",
+                  "message": "Command exited with code 128: fatal: could not read Username",
+                  "status": 128
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "remote: Invalid username or password."
+                  },
+                  {
+                    "type": "file",
+                    "uri": "file:///work/app/build/push.log",
+                    "mime": "text/plain",
+                    "name": "push.log"
+                  }
+                ],
+                "metadata": {
+                  "exit": 128
+                }
+              },
+              "time": {
+                "created": 1788960003000,
+                "ran": 1788960003100,
+                "completed": 1788960003900
+              }
+            }
+          ],
+          "finish": "tool-calls"
+        }
+      ],
+      "fields": [
+        {
+          "key": "Session.StructuredError.type",
+          "path": "type",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.StructuredError.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "Command exited with code 128: fatal: could not read Username"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.StructuredError.status",
+          "path": "status",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Tool.FileContent.uri",
+          "path": "uri",
+          "kind": "string",
+          "probes": [
+            "file:///work/app/build/push.log"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Tool.FileContent.mime",
+          "path": "mime",
+          "kind": "string",
+          "probes": [
+            "text/plain"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Tool.FileContent.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "push.log"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Tool.TextContent.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Error.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Error.error",
+          "path": "error",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Error.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ToolState.Error.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "call_035"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Shell"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.executed",
+          "path": "executed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.state",
+          "path": "state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.ran",
+          "path": "time.ran",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.Tool.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_036"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_037"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.content[]",
+          "path": "content[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "error_api_overloaded",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_038",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_039",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [],
+          "finish": "error",
+          "error": {
+            "type": "api",
+            "message": "The provider is overloaded, try again in a minute",
+            "status": 529
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "Session.StructuredError.type",
+          "path": "type",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.StructuredError.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "The provider is overloaded, try again in a minute"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.StructuredError.status",
+          "path": "status",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_038"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_039"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.error",
+          "path": "error",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "error_provider_auth_empty",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_040",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_041",
+          "time": {
+            "created": 1788960001000,
+            "streamed": 1788960005000,
+            "completed": 1788960009000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [],
+          "finish": "error",
+          "error": {
+            "type": "provider.auth",
+            "message": "",
+            "status": 401
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "Session.StructuredError.type",
+          "path": "type",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.StructuredError.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.StructuredError.status",
+          "path": "status",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_040"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_041"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.streamed",
+          "path": "time.streamed",
+          "kind": "number",
+          "probes": [
+            "1788960005000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [
+            "1788960009000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.error",
+          "path": "error",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "retry_scheduled",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_042",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "assistant",
+          "id": "msg_043",
+          "time": {
+            "created": 1788960001000
+          },
+          "agent": "build",
+          "model": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "high"
+          },
+          "content": [],
+          "finish": "unknown",
+          "retry": {
+            "attempt": 3,
+            "at": 1788960020000,
+            "error": {
+              "type": "api",
+              "message": "Rate limit reached for the model",
+              "status": 429
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "Session.StructuredError.type",
+          "path": "type",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.StructuredError.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.StructuredError.status",
+          "path": "status",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_042"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_043"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.finish",
+          "path": "finish",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.retry.attempt",
+          "path": "retry.attempt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.retry.at",
+          "path": "retry.at",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Assistant.retry.error",
+          "path": "retry.error",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "synthetic_system_skill",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_044",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "synthetic",
+          "id": "msg_045",
+          "metadata": {
+            "source": "subagent",
+            "childID": "ses_child1",
+            "agent": "explore",
+            "state": "completed"
+          },
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "The explore agent finished: two loops can retry forever.",
+          "description": "Helper agent finished"
+        },
+        {
+          "type": "system",
+          "id": "msg_046",
+          "metadata": {
+            "origin": "server"
+          },
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "The project rules file changed on disk.",
+          "description": "Rules updated"
+        },
+        {
+          "type": "skill",
+          "id": "msg_047",
+          "metadata": {
+            "origin": "slash"
+          },
+          "time": {
+            "created": 1788960001000
+          },
+          "skill": "skill_flutter",
+          "name": "flutter-testing",
+          "text": "Always run the widget tests with --concurrency=1."
+        }
+      ],
+      "fields": [
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_044"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Synthetic.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_045"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Synthetic.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Synthetic.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Synthetic.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "The explore agent finished: two loops can retry forever."
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Synthetic.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Helper agent finished"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.System.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_046"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.System.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.System.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.System.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "The project rules file changed on disk."
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.System.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Rules updated"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Skill.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_047"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Skill.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Skill.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Skill.skill",
+          "path": "skill",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Skill.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "flutter-testing"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Skill.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Always run the widget tests with --concurrency=1."
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "shell_messages",
+      "payload": [
+        {
+          "type": "shell",
+          "id": "msg_048",
+          "metadata": {
+            "origin": "composer"
+          },
+          "time": {
+            "created": 1788960001000,
+            "completed": 1788960003000
+          },
+          "shellID": "shl_1",
+          "command": "ls -la lib/upload",
+          "status": "exited",
+          "exit": 0,
+          "output": {
+            "output": "upload_screen.dart\nupload_queue.dart",
+            "cursor": 40,
+            "size": 40,
+            "truncated": true
+          }
+        },
+        {
+          "type": "shell",
+          "id": "msg_049",
+          "time": {
+            "created": 1788960004000,
+            "completed": 1788960009000
+          },
+          "shellID": "shl_2",
+          "command": "sleep 600",
+          "status": "timeout",
+          "output": {
+            "output": "partial output before the limit",
+            "cursor": 0,
+            "size": 0,
+            "truncated": false
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "Session.Message.Shell.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_048"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.shellID",
+          "path": "shellID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.command",
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "ls -la lib/upload"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.exit",
+          "path": "exit",
+          "kind": "any",
+          "probes": [
+            "exit code 0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.output.output",
+          "path": "output.output",
+          "kind": "string",
+          "probes": [
+            "upload_screen.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.output.cursor",
+          "path": "output.cursor",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.output.size",
+          "path": "output.size",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.output.truncated",
+          "path": "output.truncated",
+          "kind": "boolean",
+          "probes": [
+            "Truncated"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_049"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.shellID",
+          "path": "shellID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.command",
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "sleep 600"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Failed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.output.output",
+          "path": "output.output",
+          "kind": "string",
+          "probes": [
+            "partial output before the limit"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.output.cursor",
+          "path": "output.cursor",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.output.size",
+          "path": "output.size",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Shell.output.truncated",
+          "path": "output.truncated",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "compaction_states",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_050",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "compaction",
+          "status": "running",
+          "id": "msg_051",
+          "metadata": {
+            "by": "auto"
+          },
+          "time": {
+            "created": 1788960001000
+          },
+          "reason": "auto",
+          "summary": "Working on the upload retry button.",
+          "recent": "The last turns are kept as they are."
+        },
+        {
+          "type": "compaction",
+          "status": "completed",
+          "id": "msg_052",
+          "metadata": {
+            "by": "manual"
+          },
+          "time": {
+            "created": 1788960001000
+          },
+          "reason": "manual",
+          "summary": "Summary: the retry button was added and tested.",
+          "recent": "Kept the last two turns."
+        }
+      ],
+      "fields": [
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_050"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Running.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_051"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Running.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Running.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Running.reason",
+          "path": "reason",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Running.summary",
+          "path": "summary",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Running.recent",
+          "path": "recent",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Completed.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_052"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Completed.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Completed.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Completed.reason",
+          "path": "reason",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Completed.summary",
+          "path": "summary",
+          "kind": "string",
+          "probes": [
+            "Summary: the retry button was added and tested."
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Completed.recent",
+          "path": "recent",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "compaction_failed",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_053",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "compaction",
+          "status": "failed",
+          "id": "msg_054",
+          "metadata": {
+            "by": "auto"
+          },
+          "time": {
+            "created": 1788960001000
+          },
+          "reason": "auto",
+          "error": {
+            "type": "compaction",
+            "message": "The summary model refused the request",
+            "status": 400
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "Session.StructuredError.type",
+          "path": "type",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.StructuredError.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.StructuredError.status",
+          "path": "status",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_053"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Failed.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_054"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Failed.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Failed.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Failed.reason",
+          "path": "reason",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.Compaction.Failed.error",
+          "path": "error",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "switch_notices",
+      "payload": [
+        {
+          "type": "user",
+          "id": "msg_055",
+          "time": {
+            "created": 1788960001000
+          },
+          "text": "Add a retry button to the upload screen"
+        },
+        {
+          "type": "agent-switched",
+          "id": "msg_056",
+          "metadata": {
+            "by": "person"
+          },
+          "time": {
+            "created": 1788960001000
+          },
+          "agent": "plan",
+          "previous": "build"
+        },
+        {
+          "type": "model-switched",
+          "id": "msg_057",
+          "metadata": {
+            "by": "person"
+          },
+          "time": {
+            "created": 1788960001000
+          },
+          "model": {
+            "id": "gpt-6-sol",
+            "providerID": "openai",
+            "variant": "high"
+          },
+          "previous": {
+            "id": "claude-opus-5-5",
+            "providerID": "anthropic",
+            "variant": "max"
+          }
+        },
+        {
+          "type": "location-switched",
+          "id": "msg_058",
+          "metadata": {
+            "by": "person"
+          },
+          "time": {
+            "created": 1788960001000
+          },
+          "location": {
+            "directory": "/work/shopfront-web",
+            "workspaceID": "wrk_1"
+          },
+          "projectID": "prj_1",
+          "subpath": "packages/web",
+          "previous": {
+            "location": {
+              "directory": "/work/shopfront",
+              "workspaceID": "wrk_0"
+            },
+            "projectID": "prj_0",
+            "subpath": "packages/app"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "Session.Message.User.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_055"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.User.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.AgentSelected.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_056"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.AgentSelected.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.AgentSelected.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.AgentSelected.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "plan"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.AgentSelected.previous",
+          "path": "previous",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ModelSelected.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_057"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ModelSelected.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ModelSelected.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ModelSelected.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "gpt-6-sol"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ModelSelected.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ModelSelected.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "gpt-6-sol · high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ModelSelected.previous.id",
+          "path": "previous.id",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ModelSelected.previous.providerID",
+          "path": "previous.providerID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.ModelSelected.previous.variant",
+          "path": "previous.variant",
+          "kind": "string",
+          "probes": [
+            "claude-opus-5-5 · max"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.LocationSwitched.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "msg_058"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.LocationSwitched.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.LocationSwitched.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "1788960001000"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.LocationSwitched.location.directory",
+          "path": "location.directory",
+          "kind": "string",
+          "probes": [
+            "shopfront-web"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.LocationSwitched.location.workspaceID",
+          "path": "location.workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.LocationSwitched.projectID",
+          "path": "projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.LocationSwitched.subpath",
+          "path": "subpath",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.LocationSwitched.previous.location.directory",
+          "path": "previous.location.directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.LocationSwitched.previous.location.workspaceID",
+          "path": "previous.location.workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.LocationSwitched.previous.projectID",
+          "path": "previous.projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Message.LocationSwitched.previous.subpath",
+          "path": "previous.subpath",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1286 @@
+{
+  "source": "contracts/opencode-openapi-f12e14cf.json",
+  "schema": {
+    "PermissionRequest": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "permission",
+        "kind": "string"
+      },
+      {
+        "path": "patterns[]",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "always[]",
+        "kind": "string"
+      },
+      {
+        "path": "tool.messageID",
+        "kind": "string"
+      },
+      {
+        "path": "tool.callID",
+        "kind": "string"
+      }
+    ],
+    "permission:metadata": [
+      {
+        "path": "command",
+        "kind": "string"
+      },
+      {
+        "path": "filepath",
+        "kind": "string"
+      },
+      {
+        "path": "diff",
+        "kind": "string"
+      },
+      {
+        "path": "url",
+        "kind": "string"
+      },
+      {
+        "path": "format",
+        "kind": "string"
+      },
+      {
+        "path": "parentDir",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "subagent_type",
+        "kind": "string"
+      },
+      {
+        "path": "offset",
+        "kind": "number"
+      },
+      {
+        "path": "limit",
+        "kind": "number"
+      }
+    ],
+    "QuestionRequest": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "questions[].question",
+        "kind": "string"
+      },
+      {
+        "path": "questions[].header",
+        "kind": "string"
+      },
+      {
+        "path": "questions[].options[].label",
+        "kind": "string"
+      },
+      {
+        "path": "questions[].options[].description",
+        "kind": "string"
+      },
+      {
+        "path": "questions[].multiple",
+        "kind": "boolean"
+      },
+      {
+        "path": "questions[].custom",
+        "kind": "boolean"
+      },
+      {
+        "path": "tool.messageID",
+        "kind": "string"
+      },
+      {
+        "path": "tool.callID",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "perm_bash",
+      "payload": {
+        "id": "per_perm_bash",
+        "sessionID": "ses_checkout",
+        "permission": "bash",
+        "patterns": [
+          "git push origin main"
+        ],
+        "metadata": {
+          "command": "git push origin main",
+          "description": "Publish the retry button branch"
+        },
+        "always": [
+          "git push *"
+        ],
+        "tool": {
+          "messageID": "msg_ask01",
+          "callID": "call_ask01"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.command",
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "git push origin main"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Publish the retry button branch"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm_bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.permission",
+          "path": "permission",
+          "kind": "string",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.patterns[]",
+          "path": "patterns[]",
+          "kind": "string",
+          "probes": [
+            "git push origin main"
+          ],
+          "primary": true
+        },
+        {
+          "key": "PermissionRequest.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.always[]",
+          "path": "always[]",
+          "kind": "string",
+          "probes": [
+            "git push *"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.messageID",
+          "path": "tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_ask01"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.callID",
+          "path": "tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ask01"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm_bash_patterns_only",
+      "payload": {
+        "id": "per_perm_bash_patterns_only",
+        "sessionID": "ses_checkout",
+        "permission": "bash",
+        "patterns": [
+          "flutter test test/upload_screen_test.dart"
+        ],
+        "metadata": {},
+        "always": [
+          "flutter test *"
+        ],
+        "tool": {
+          "messageID": "msg_ask01",
+          "callID": "call_ask01"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "PermissionRequest.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm_bash_patterns_only"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.permission",
+          "path": "permission",
+          "kind": "string",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.patterns[]",
+          "path": "patterns[]",
+          "kind": "string",
+          "probes": [
+            "flutter test test/upload_screen_test.dart"
+          ],
+          "primary": true
+        },
+        {
+          "key": "PermissionRequest.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.always[]",
+          "path": "always[]",
+          "kind": "string",
+          "probes": [
+            "flutter test *"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.messageID",
+          "path": "tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_ask01"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.callID",
+          "path": "tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ask01"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm_edit",
+      "payload": {
+        "id": "per_perm_edit",
+        "sessionID": "ses_checkout",
+        "permission": "edit",
+        "patterns": [
+          "lib/upload/upload_screen.dart"
+        ],
+        "metadata": {
+          "filepath": "/work/app/lib/upload/upload_screen.dart",
+          "diff": "--- a/lib/upload/upload_screen.dart\n+++ b/lib/upload/upload_screen.dart\n@@ -1 +1 @@\n-final retries = 1;\n+final retries = 3;"
+        },
+        "always": [
+          "lib/upload/*"
+        ],
+        "tool": {
+          "messageID": "msg_ask01",
+          "callID": "call_ask01"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.filepath",
+          "path": "filepath",
+          "kind": "string",
+          "probes": [
+            "upload_screen.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.diff",
+          "path": "diff",
+          "kind": "string",
+          "probes": [
+            "final retries = 3;"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm_edit"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.permission",
+          "path": "permission",
+          "kind": "string",
+          "probes": [
+            "edit"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.patterns[]",
+          "path": "patterns[]",
+          "kind": "string",
+          "probes": [
+            "lib/upload/upload_screen.dart"
+          ],
+          "primary": true
+        },
+        {
+          "key": "PermissionRequest.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.always[]",
+          "path": "always[]",
+          "kind": "string",
+          "probes": [
+            "lib/upload/*"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.messageID",
+          "path": "tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_ask01"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.callID",
+          "path": "tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ask01"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm_read_range",
+      "payload": {
+        "id": "per_perm_read_range",
+        "sessionID": "ses_checkout",
+        "permission": "read",
+        "patterns": [
+          "/work/app/lib/main.dart"
+        ],
+        "metadata": {
+          "offset": 20,
+          "limit": 80
+        },
+        "always": [
+          "/work/app/*"
+        ],
+        "tool": {
+          "messageID": "msg_ask01",
+          "callID": "call_ask01"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.offset",
+          "path": "offset",
+          "kind": "number",
+          "probes": [
+            "from line 20"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.limit",
+          "path": "limit",
+          "kind": "number",
+          "probes": [
+            "80 lines"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm_read_range"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.permission",
+          "path": "permission",
+          "kind": "string",
+          "probes": [
+            "read"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.patterns[]",
+          "path": "patterns[]",
+          "kind": "string",
+          "probes": [
+            "/work/app/lib/main.dart"
+          ],
+          "primary": true
+        },
+        {
+          "key": "PermissionRequest.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.always[]",
+          "path": "always[]",
+          "kind": "string",
+          "probes": [
+            "/work/app/*"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.messageID",
+          "path": "tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_ask01"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.callID",
+          "path": "tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ask01"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm_webfetch",
+      "payload": {
+        "id": "per_perm_webfetch",
+        "sessionID": "ses_checkout",
+        "permission": "webfetch",
+        "patterns": [
+          "https://docs.flutter.dev/cookbook/networking"
+        ],
+        "metadata": {
+          "url": "https://docs.flutter.dev/cookbook/networking",
+          "format": "markdown"
+        },
+        "always": [
+          "https://docs.flutter.dev/*"
+        ],
+        "tool": {
+          "messageID": "msg_ask01",
+          "callID": "call_ask01"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.url",
+          "path": "url",
+          "kind": "string",
+          "probes": [
+            "https://docs.flutter.dev/cookbook/networking"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.format",
+          "path": "format",
+          "kind": "string",
+          "probes": [
+            "markdown"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm_webfetch"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.permission",
+          "path": "permission",
+          "kind": "string",
+          "probes": [
+            "webfetch"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.patterns[]",
+          "path": "patterns[]",
+          "kind": "string",
+          "probes": [
+            "https://docs.flutter.dev/cookbook/networking"
+          ],
+          "primary": true
+        },
+        {
+          "key": "PermissionRequest.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.always[]",
+          "path": "always[]",
+          "kind": "string",
+          "probes": [
+            "https://docs.flutter.dev/*"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.messageID",
+          "path": "tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_ask01"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.callID",
+          "path": "tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ask01"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm_external_directory",
+      "payload": {
+        "id": "per_perm_external_directory",
+        "sessionID": "ses_checkout",
+        "permission": "external_directory",
+        "patterns": [
+          "/etc/hosts/*"
+        ],
+        "metadata": {
+          "filepath": "/etc/hosts",
+          "parentDir": "/etc"
+        },
+        "always": [
+          "/etc/hosts/*"
+        ],
+        "tool": {
+          "messageID": "msg_ask01",
+          "callID": "call_ask01"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.filepath",
+          "path": "filepath",
+          "kind": "string",
+          "probes": [
+            "/etc/hosts"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.parentDir",
+          "path": "parentDir",
+          "kind": "string",
+          "probes": [
+            "/etc"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm_external_directory"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.permission",
+          "path": "permission",
+          "kind": "string",
+          "probes": [
+            "external_directory"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.patterns[]",
+          "path": "patterns[]",
+          "kind": "string",
+          "probes": [],
+          "primary": true
+        },
+        {
+          "key": "PermissionRequest.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.always[]",
+          "path": "always[]",
+          "kind": "string",
+          "probes": [
+            "/etc/hosts/*"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.messageID",
+          "path": "tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_ask01"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.callID",
+          "path": "tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ask01"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm_task",
+      "payload": {
+        "id": "per_perm_task",
+        "sessionID": "ses_checkout",
+        "permission": "task",
+        "patterns": [
+          "explore"
+        ],
+        "metadata": {
+          "description": "Audit the upload retry code",
+          "subagent_type": "explore"
+        },
+        "always": [
+          "explore"
+        ],
+        "tool": {
+          "messageID": "msg_ask01",
+          "callID": "call_ask01"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Audit the upload retry code"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.subagent_type",
+          "path": "subagent_type",
+          "kind": "string",
+          "probes": [
+            "explore"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm_task"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.permission",
+          "path": "permission",
+          "kind": "string",
+          "probes": [
+            "task"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.patterns[]",
+          "path": "patterns[]",
+          "kind": "string",
+          "probes": [
+            "explore"
+          ],
+          "primary": true
+        },
+        {
+          "key": "PermissionRequest.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.always[]",
+          "path": "always[]",
+          "kind": "string",
+          "probes": [
+            "explore"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.messageID",
+          "path": "tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_ask01"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionRequest.tool.callID",
+          "path": "tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ask01"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "question_single_custom",
+      "payload": {
+        "id": "que_question_single_custom",
+        "sessionID": "ses_checkout",
+        "questions": [
+          {
+            "question": "Which retry limit should the upload screen use?",
+            "header": "Retry limit",
+            "options": [
+              {
+                "label": "Three tries",
+                "description": "Stops after three failed attempts"
+              },
+              {
+                "label": "Keep trying",
+                "description": "Retries until the network is back"
+              }
+            ],
+            "multiple": false,
+            "custom": true
+          }
+        ],
+        "tool": {
+          "messageID": "msg_ask01",
+          "callID": "call_ask01"
+        }
+      },
+      "kind": "question",
+      "fields": [
+        {
+          "key": "QuestionRequest.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "que_question_single_custom"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].question",
+          "path": "questions[].question",
+          "kind": "string",
+          "probes": [
+            "Which retry limit should the upload screen use?"
+          ],
+          "primary": true
+        },
+        {
+          "key": "QuestionRequest.questions[].header",
+          "path": "questions[].header",
+          "kind": "string",
+          "probes": [
+            "Retry limit"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].options[].label",
+          "path": "questions[].options[].label",
+          "kind": "string",
+          "probes": [
+            "Three tries",
+            "Keep trying"
+          ],
+          "primary": true
+        },
+        {
+          "key": "QuestionRequest.questions[].options[].description",
+          "path": "questions[].options[].description",
+          "kind": "string",
+          "probes": [
+            "Stops after three failed attempts",
+            "Retries until the network is back"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].multiple",
+          "path": "questions[].multiple",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].custom",
+          "path": "questions[].custom",
+          "kind": "boolean",
+          "probes": [
+            "Something else"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.tool.messageID",
+          "path": "tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_ask01"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.tool.callID",
+          "path": "tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ask01"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "question_multiple",
+      "payload": {
+        "id": "que_question_multiple",
+        "sessionID": "ses_checkout",
+        "questions": [
+          {
+            "question": "Which screens should get the new retry button?",
+            "header": "Screens",
+            "options": [
+              {
+                "label": "Uploads",
+                "description": "The upload queue screen"
+              },
+              {
+                "label": "Downloads",
+                "description": "The download history"
+              },
+              {
+                "label": "Backups",
+                "description": "The nightly backup list"
+              }
+            ],
+            "multiple": true,
+            "custom": false
+          }
+        ],
+        "tool": {
+          "messageID": "msg_ask01",
+          "callID": "call_ask01"
+        }
+      },
+      "kind": "question",
+      "fields": [
+        {
+          "key": "QuestionRequest.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "que_question_multiple"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].question",
+          "path": "questions[].question",
+          "kind": "string",
+          "probes": [
+            "Which screens should get the new retry button?"
+          ],
+          "primary": true
+        },
+        {
+          "key": "QuestionRequest.questions[].header",
+          "path": "questions[].header",
+          "kind": "string",
+          "probes": [
+            "Screens"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].options[].label",
+          "path": "questions[].options[].label",
+          "kind": "string",
+          "probes": [
+            "Uploads",
+            "Downloads",
+            "Backups"
+          ],
+          "primary": true
+        },
+        {
+          "key": "QuestionRequest.questions[].options[].description",
+          "path": "questions[].options[].description",
+          "kind": "string",
+          "probes": [
+            "The upload queue screen",
+            "The download history",
+            "The nightly backup list"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].multiple",
+          "path": "questions[].multiple",
+          "kind": "boolean",
+          "probes": [
+            "None selected"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].custom",
+          "path": "questions[].custom",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.tool.messageID",
+          "path": "tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_ask01"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.tool.callID",
+          "path": "tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ask01"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "question_two_questions",
+      "payload": {
+        "id": "que_question_two_questions",
+        "sessionID": "ses_checkout",
+        "questions": [
+          {
+            "question": "Should the retry run in the background?",
+            "header": "Background",
+            "options": [
+              {
+                "label": "Yes",
+                "description": "Keep going when the app is closed"
+              },
+              {
+                "label": "No",
+                "description": "Only while the screen is open"
+              }
+            ],
+            "multiple": false,
+            "custom": false
+          },
+          {
+            "question": "What should the button say?",
+            "header": "Label",
+            "options": [
+              {
+                "label": "Retry",
+                "description": "Short and plain"
+              },
+              {
+                "label": "Try again",
+                "description": "Friendlier"
+              }
+            ],
+            "multiple": false,
+            "custom": true
+          }
+        ],
+        "tool": {
+          "messageID": "msg_ask01",
+          "callID": "call_ask01"
+        }
+      },
+      "kind": "question",
+      "fields": [
+        {
+          "key": "QuestionRequest.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "que_question_two_questions"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].question",
+          "path": "questions[].question",
+          "kind": "string",
+          "probes": [
+            "Should the retry run in the background?",
+            "What should the button say?"
+          ],
+          "primary": true
+        },
+        {
+          "key": "QuestionRequest.questions[].header",
+          "path": "questions[].header",
+          "kind": "string",
+          "probes": [
+            "Background",
+            "Label"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].options[].label",
+          "path": "questions[].options[].label",
+          "kind": "string",
+          "probes": [
+            "Yes",
+            "No",
+            "Retry",
+            "Try again"
+          ],
+          "primary": true
+        },
+        {
+          "key": "QuestionRequest.questions[].options[].description",
+          "path": "questions[].options[].description",
+          "kind": "string",
+          "probes": [
+            "Keep going when the app is closed",
+            "Only while the screen is open",
+            "Short and plain",
+            "Friendlier"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].multiple",
+          "path": "questions[].multiple",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.questions[].custom",
+          "path": "questions[].custom",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.tool.messageID",
+          "path": "tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_ask01"
+          ],
+          "primary": false
+        },
+        {
+          "key": "QuestionRequest.tool.callID",
+          "path": "tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ask01"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

@@ -259,7 +259,9 @@ KitRequestCard permissionRequestCard(
     ifIgnored: ifIgnored ?? l10n.chatRequestIfIgnored,
     announcement: l10n.chatUiPermissionNeeded(title),
     icon: permissionActionIcon(permission.permission),
-    detail: detail ?? permission.message,
+    // OpenCode's bash and task tools say in words what they are for.
+    detail:
+        detail ?? permission.message ?? _metaText(permission, 'description'),
     summary: permissionSummary(permission),
     since: since,
     phase: held

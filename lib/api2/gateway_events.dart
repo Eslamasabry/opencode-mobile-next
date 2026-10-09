@@ -29,6 +29,11 @@ class Api2EventAdapter {
   final _toolCalls = <String, _ToolCall>{};
   final _stepCreated = <String, int>{};
 
+  /// The agent and model a step started with: `step.ended` and `step.failed`
+  /// do not repeat them, and an info without them would drop the reply's
+  /// model line.
+  final _stepModels = <String, ({String? agent, Api2ModelRef? model})>{};
+
   /// Adapts one v2 envelope into zero or more v1 envelopes.
   List<EventEnvelope> adapt(Api2EventEnvelope envelope) {
     final event = envelope.event;
@@ -297,6 +302,10 @@ class Api2EventAdapter {
         switch (event.phase) {
           case Api2Phase.started:
             _remember(_stepCreated, event.assistantMessageID, created);
+            _remember(_stepModels, event.assistantMessageID, (
+              agent: event.agent,
+              model: event.model,
+            ));
             return [
               // A step starts only inside a running execution. Saying so
               // restores a busy state the app lost (a missed event, or a
@@ -437,25 +446,19 @@ class Api2EventAdapter {
             },
         ];
         return [
-          _toolPart(
-            event.sessionID,
-            event.assistantMessageID,
-            event.callID,
-            {
-              'status': event.succeeded ? 'completed' : 'error',
-              'input': call?.input ?? const <String, dynamic>{},
-              if (event.succeeded)
-                'output': text
-              else
-                'error':
-                    event.error?.message ??
-                    (text.isNotEmpty ? text : 'Tool failed'),
-              'attachments': attachments,
-              if (event.metadata != null) 'metadata': event.metadata,
-              if (event.executed != null) 'executed': event.executed,
-            },
-            toolName: call?.name,
-          ),
+          _toolPart(event.sessionID, event.assistantMessageID, event.callID, {
+            'status': event.succeeded ? 'completed' : 'error',
+            'input': call?.input ?? const <String, dynamic>{},
+            if (event.succeeded)
+              'output': text
+            else
+              'error':
+                  event.error?.message ??
+                  (text.isNotEmpty ? text : 'Tool failed'),
+            'attachments': attachments,
+            if (event.metadata != null) 'metadata': event.metadata,
+            if (event.executed != null) 'executed': event.executed,
+          }, toolName: call?.name),
         ];
 
       case Api2SessionMessageContentUpdatedEvent():
@@ -640,23 +643,28 @@ class Api2EventAdapter {
     int? completed,
     String? errorMessage,
     String? errorName,
-  }) => {
-    'id': event.assistantMessageID,
-    'sessionID': event.sessionID,
-    'role': 'assistant',
-    if (event.agent != null) 'agent': event.agent,
-    if (event.model != null) 'providerID': event.model!.providerID,
-    if (event.model != null) 'modelID': event.model!.id,
-    if (event.cost != null) 'cost': event.cost,
-    if (event.tokens != null) 'tokens': _tokensJson(event.tokens!),
-    if (event.finish != null) 'finish': event.finish,
-    'time': {
-      'created': _stepCreated[event.assistantMessageID] ?? created,
-      'completed': ?completed,
-    },
-    if (errorMessage != null)
-      'error': {'message': errorMessage, 'name': ?errorName},
-  };
+  }) {
+    final known = _stepModels[event.assistantMessageID];
+    final agent = event.agent ?? known?.agent;
+    final model = event.model ?? known?.model;
+    return {
+      'id': event.assistantMessageID,
+      'sessionID': event.sessionID,
+      'role': 'assistant',
+      'agent': ?agent,
+      'providerID': ?model?.providerID,
+      'modelID': ?model?.id,
+      if (event.cost != null) 'cost': event.cost,
+      if (event.tokens != null) 'tokens': _tokensJson(event.tokens!),
+      if (event.finish != null) 'finish': event.finish,
+      'time': {
+        'created': _stepCreated[event.assistantMessageID] ?? created,
+        'completed': ?completed,
+      },
+      if (errorMessage != null)
+        'error': {'message': errorMessage, 'name': ?errorName},
+    };
+  }
 
   Map<String, dynamic> _tokensJson(Api2Tokens tokens) => {
     'input': tokens.input,

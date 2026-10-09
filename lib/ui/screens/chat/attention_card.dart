@@ -612,6 +612,13 @@ class _RetryAttentionCard extends StatelessWidget {
         ? null
         : words.headline;
     final hasMessage = message != null && message.isNotEmpty;
+    // A server that says what to do (upgrade, add credit) is heard: its
+    // words and one labelled button, the address opened only through
+    // openExternalLink.
+    final action = retry.action;
+    final ask = action == null
+        ? null
+        : [action.title, action.message].where((t) => t.isNotEmpty).join('. ');
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: KitLayout.readingWidth),
@@ -621,10 +628,21 @@ class _RetryAttentionCard extends StatelessWidget {
             vertical: tokens.space1,
           ),
           child: KitNotice(
-            title: hasMessage ? title : null,
-            message: hasMessage ? message : title,
+            title: hasMessage || ask != null ? title : null,
+            message: ask ?? (hasMessage ? message : title),
             tone: AppStatusTone.progress,
             icon: AppIcons.retry,
+            actions: [
+              if (action != null &&
+                  action.link != null &&
+                  action.label.isNotEmpty)
+                KitAction(
+                  key: const ValueKey('retry-action'),
+                  label: action.label,
+                  onPressed: () =>
+                      unawaited(openExternalLink(context, action.link)),
+                ),
+            ],
           ),
         ),
       ),

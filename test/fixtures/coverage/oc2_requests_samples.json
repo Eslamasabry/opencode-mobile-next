@@ -1,0 +1,2101 @@
+{
+  "source": "contracts/opencode2-openapi-beta-18600.json",
+  "schema": {
+    "Permission.Request": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "action",
+        "kind": "string"
+      },
+      {
+        "path": "resources[]",
+        "kind": "string"
+      },
+      {
+        "path": "save[]",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "source.messageID",
+        "kind": "string"
+      },
+      {
+        "path": "source.id",
+        "kind": "string"
+      },
+      {
+        "path": "message",
+        "kind": "string"
+      }
+    ],
+    "permission:metadata": [
+      {
+        "path": "command",
+        "kind": "string"
+      },
+      {
+        "path": "filepath",
+        "kind": "string"
+      },
+      {
+        "path": "diff",
+        "kind": "string"
+      },
+      {
+        "path": "url",
+        "kind": "string"
+      },
+      {
+        "path": "format",
+        "kind": "string"
+      },
+      {
+        "path": "parentDir",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "subagent_type",
+        "kind": "string"
+      },
+      {
+        "path": "offset",
+        "kind": "number"
+      },
+      {
+        "path": "limit",
+        "kind": "number"
+      }
+    ],
+    "Form.Info": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "fields",
+        "kind": "any"
+      }
+    ],
+    "Form.StringField": [
+      {
+        "path": "key",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "required",
+        "kind": "boolean"
+      },
+      {
+        "path": "when[].key",
+        "kind": "string"
+      },
+      {
+        "path": "when[].op",
+        "kind": "enum"
+      },
+      {
+        "path": "when[].value",
+        "kind": "any"
+      },
+      {
+        "path": "format",
+        "kind": "enum"
+      },
+      {
+        "path": "minLength",
+        "kind": "number"
+      },
+      {
+        "path": "maxLength",
+        "kind": "number"
+      },
+      {
+        "path": "pattern",
+        "kind": "string"
+      },
+      {
+        "path": "placeholder",
+        "kind": "string"
+      },
+      {
+        "path": "default",
+        "kind": "string"
+      },
+      {
+        "path": "options[].value",
+        "kind": "string"
+      },
+      {
+        "path": "options[].label",
+        "kind": "string"
+      },
+      {
+        "path": "options[].description",
+        "kind": "string"
+      },
+      {
+        "path": "custom",
+        "kind": "boolean"
+      }
+    ],
+    "Form.NumberField": [
+      {
+        "path": "key",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "required",
+        "kind": "boolean"
+      },
+      {
+        "path": "when[].key",
+        "kind": "string"
+      },
+      {
+        "path": "when[].op",
+        "kind": "enum"
+      },
+      {
+        "path": "when[].value",
+        "kind": "any"
+      },
+      {
+        "path": "minimum",
+        "kind": "any"
+      },
+      {
+        "path": "maximum",
+        "kind": "any"
+      },
+      {
+        "path": "default",
+        "kind": "any"
+      }
+    ],
+    "Form.IntegerField": [
+      {
+        "path": "key",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "required",
+        "kind": "boolean"
+      },
+      {
+        "path": "when[].key",
+        "kind": "string"
+      },
+      {
+        "path": "when[].op",
+        "kind": "enum"
+      },
+      {
+        "path": "when[].value",
+        "kind": "any"
+      },
+      {
+        "path": "minimum",
+        "kind": "any"
+      },
+      {
+        "path": "maximum",
+        "kind": "any"
+      },
+      {
+        "path": "default",
+        "kind": "any"
+      }
+    ],
+    "Form.BooleanField": [
+      {
+        "path": "key",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "required",
+        "kind": "boolean"
+      },
+      {
+        "path": "when[].key",
+        "kind": "string"
+      },
+      {
+        "path": "when[].op",
+        "kind": "enum"
+      },
+      {
+        "path": "when[].value",
+        "kind": "any"
+      },
+      {
+        "path": "default",
+        "kind": "boolean"
+      }
+    ],
+    "Form.MultiselectField": [
+      {
+        "path": "key",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "required",
+        "kind": "boolean"
+      },
+      {
+        "path": "when[].key",
+        "kind": "string"
+      },
+      {
+        "path": "when[].op",
+        "kind": "enum"
+      },
+      {
+        "path": "when[].value",
+        "kind": "any"
+      },
+      {
+        "path": "options[].value",
+        "kind": "string"
+      },
+      {
+        "path": "options[].label",
+        "kind": "string"
+      },
+      {
+        "path": "options[].description",
+        "kind": "string"
+      },
+      {
+        "path": "minItems",
+        "kind": "number"
+      },
+      {
+        "path": "maxItems",
+        "kind": "number"
+      },
+      {
+        "path": "custom",
+        "kind": "boolean"
+      },
+      {
+        "path": "default[]",
+        "kind": "string"
+      }
+    ],
+    "Form.ExternalField": [
+      {
+        "path": "key",
+        "kind": "string"
+      },
+      {
+        "path": "url",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "perm2_bash",
+      "payload": {
+        "id": "per_perm2_bash",
+        "sessionID": "ses_checkout",
+        "action": "bash",
+        "resources": [
+          "git push origin main"
+        ],
+        "save": [
+          "git push *"
+        ],
+        "metadata": {
+          "command": "git push origin main",
+          "description": "Publish the retry button branch"
+        },
+        "source": {
+          "messageID": "msg_p1",
+          "id": "call_p1"
+        },
+        "message": "The agent wants to publish the branch it just finished"
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.command",
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "git push origin main"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm2_bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.action",
+          "path": "action",
+          "kind": "string",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.resources[]",
+          "path": "resources[]",
+          "kind": "string",
+          "probes": [
+            "git push origin main"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Permission.Request.save[]",
+          "path": "save[]",
+          "kind": "string",
+          "probes": [
+            "git push *"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.messageID",
+          "path": "source.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_p1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.id",
+          "path": "source.id",
+          "kind": "string",
+          "probes": [
+            "call_p1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "The agent wants to publish the branch it just finished"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm2_bash_no_message",
+      "payload": {
+        "id": "per_perm2_bash_no_message",
+        "sessionID": "ses_checkout",
+        "action": "bash",
+        "resources": [
+          "flutter test test/upload_screen_test.dart"
+        ],
+        "save": [
+          "flutter test *"
+        ],
+        "metadata": {},
+        "source": {
+          "messageID": "msg_p2",
+          "id": "call_p2"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "Permission.Request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm2_bash_no_message"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.action",
+          "path": "action",
+          "kind": "string",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.resources[]",
+          "path": "resources[]",
+          "kind": "string",
+          "probes": [
+            "flutter test test/upload_screen_test.dart"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Permission.Request.save[]",
+          "path": "save[]",
+          "kind": "string",
+          "probes": [
+            "flutter test *"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.messageID",
+          "path": "source.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_p2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.id",
+          "path": "source.id",
+          "kind": "string",
+          "probes": [
+            "call_p2"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm2_edit",
+      "payload": {
+        "id": "per_perm2_edit",
+        "sessionID": "ses_checkout",
+        "action": "edit",
+        "resources": [
+          "lib/upload/upload_screen.dart"
+        ],
+        "save": [
+          "lib/upload/*"
+        ],
+        "metadata": {
+          "filepath": "/work/app/lib/upload/upload_screen.dart",
+          "diff": "--- a/lib/upload/upload_screen.dart\n+++ b/lib/upload/upload_screen.dart\n@@ -1 +1 @@\n-final retries = 1;\n+final retries = 3;"
+        },
+        "source": {
+          "messageID": "msg_p3",
+          "id": "call_p3"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.filepath",
+          "path": "filepath",
+          "kind": "string",
+          "probes": [
+            "upload_screen.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.diff",
+          "path": "diff",
+          "kind": "string",
+          "probes": [
+            "final retries = 3;"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm2_edit"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.action",
+          "path": "action",
+          "kind": "string",
+          "probes": [
+            "edit"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.resources[]",
+          "path": "resources[]",
+          "kind": "string",
+          "probes": [
+            "lib/upload/upload_screen.dart"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Permission.Request.save[]",
+          "path": "save[]",
+          "kind": "string",
+          "probes": [
+            "lib/upload/*"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.messageID",
+          "path": "source.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_p3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.id",
+          "path": "source.id",
+          "kind": "string",
+          "probes": [
+            "call_p3"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm2_read_range",
+      "payload": {
+        "id": "per_perm2_read_range",
+        "sessionID": "ses_checkout",
+        "action": "read",
+        "resources": [
+          "/work/app/lib/main.dart"
+        ],
+        "save": [
+          "/work/app/*"
+        ],
+        "metadata": {
+          "offset": 20,
+          "limit": 80
+        },
+        "source": {
+          "messageID": "msg_p4",
+          "id": "call_p4"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.offset",
+          "path": "offset",
+          "kind": "number",
+          "probes": [
+            "from line 20"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.limit",
+          "path": "limit",
+          "kind": "number",
+          "probes": [
+            "80 lines"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm2_read_range"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.action",
+          "path": "action",
+          "kind": "string",
+          "probes": [
+            "read"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.resources[]",
+          "path": "resources[]",
+          "kind": "string",
+          "probes": [
+            "/work/app/lib/main.dart"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Permission.Request.save[]",
+          "path": "save[]",
+          "kind": "string",
+          "probes": [
+            "/work/app/*"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.messageID",
+          "path": "source.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_p4"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.id",
+          "path": "source.id",
+          "kind": "string",
+          "probes": [
+            "call_p4"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm2_webfetch",
+      "payload": {
+        "id": "per_perm2_webfetch",
+        "sessionID": "ses_checkout",
+        "action": "webfetch",
+        "resources": [
+          "https://docs.flutter.dev/cookbook/networking"
+        ],
+        "save": [
+          "https://docs.flutter.dev/*"
+        ],
+        "metadata": {
+          "url": "https://docs.flutter.dev/cookbook/networking",
+          "format": "markdown"
+        },
+        "source": {
+          "messageID": "msg_p5",
+          "id": "call_p5"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.url",
+          "path": "url",
+          "kind": "string",
+          "probes": [
+            "https://docs.flutter.dev/cookbook/networking"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.format",
+          "path": "format",
+          "kind": "string",
+          "probes": [
+            "markdown"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm2_webfetch"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.action",
+          "path": "action",
+          "kind": "string",
+          "probes": [
+            "webfetch"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.resources[]",
+          "path": "resources[]",
+          "kind": "string",
+          "probes": [
+            "https://docs.flutter.dev/cookbook/networking"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Permission.Request.save[]",
+          "path": "save[]",
+          "kind": "string",
+          "probes": [
+            "https://docs.flutter.dev/*"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.messageID",
+          "path": "source.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_p5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.id",
+          "path": "source.id",
+          "kind": "string",
+          "probes": [
+            "call_p5"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm2_external_directory",
+      "payload": {
+        "id": "per_perm2_external_directory",
+        "sessionID": "ses_checkout",
+        "action": "external_directory",
+        "resources": [
+          "/etc/hosts/*"
+        ],
+        "save": [
+          "/etc/hosts/*"
+        ],
+        "metadata": {
+          "filepath": "/etc/hosts",
+          "parentDir": "/etc"
+        },
+        "source": {
+          "messageID": "msg_p6",
+          "id": "call_p6"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.filepath",
+          "path": "filepath",
+          "kind": "string",
+          "probes": [
+            "/etc/hosts"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.parentDir",
+          "path": "parentDir",
+          "kind": "string",
+          "probes": [
+            "/etc"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm2_external_directory"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.action",
+          "path": "action",
+          "kind": "string",
+          "probes": [
+            "external_directory"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.resources[]",
+          "path": "resources[]",
+          "kind": "string",
+          "probes": [],
+          "primary": true
+        },
+        {
+          "key": "Permission.Request.save[]",
+          "path": "save[]",
+          "kind": "string",
+          "probes": [
+            "/etc/hosts/*"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.messageID",
+          "path": "source.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_p6"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.id",
+          "path": "source.id",
+          "kind": "string",
+          "probes": [
+            "call_p6"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perm2_task",
+      "payload": {
+        "id": "per_perm2_task",
+        "sessionID": "ses_checkout",
+        "action": "task",
+        "resources": [
+          "explore"
+        ],
+        "save": [
+          "explore"
+        ],
+        "metadata": {
+          "description": "Audit the upload retry code",
+          "subagent_type": "explore"
+        },
+        "source": {
+          "messageID": "msg_p7",
+          "id": "call_p7"
+        }
+      },
+      "kind": "permission",
+      "fields": [
+        {
+          "key": "permission:metadata.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Audit the upload retry code"
+          ],
+          "primary": false
+        },
+        {
+          "key": "permission:metadata.subagent_type",
+          "path": "subagent_type",
+          "kind": "string",
+          "probes": [
+            "explore"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "per_perm2_task"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.action",
+          "path": "action",
+          "kind": "string",
+          "probes": [
+            "task"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.resources[]",
+          "path": "resources[]",
+          "kind": "string",
+          "probes": [
+            "explore"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Permission.Request.save[]",
+          "path": "save[]",
+          "kind": "string",
+          "probes": [
+            "explore"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.messageID",
+          "path": "source.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_p7"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Permission.Request.source.id",
+          "path": "source.id",
+          "kind": "string",
+          "probes": [
+            "call_p7"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "form_choose_and_type",
+      "payload": {
+        "id": "frm_form_choose_and_type",
+        "sessionID": "ses_checkout",
+        "title": "Connect to Sentry",
+        "metadata": {
+          "server": "sentry",
+          "elicitation": "oauth-setup"
+        },
+        "fields": [
+          {
+            "type": "string",
+            "key": "target_env",
+            "title": "Environment",
+            "description": "Where the project runs",
+            "required": true,
+            "options": [
+              {
+                "value": "prod",
+                "label": "Production",
+                "description": "Live traffic"
+              },
+              {
+                "value": "stage",
+                "label": "Staging",
+                "description": "Test traffic"
+              }
+            ],
+            "custom": true,
+            "default": "prod"
+          },
+          {
+            "type": "string",
+            "key": "contact_addr",
+            "title": "Contact email",
+            "description": "Where alerts are sent",
+            "required": false,
+            "format": "email",
+            "minLength": 6,
+            "maxLength": 80,
+            "pattern": "^[^@]+@[^@]+$",
+            "placeholder": "you@example.com",
+            "default": "oncall@example.com",
+            "when": [
+              {
+                "key": "target_env",
+                "op": "eq",
+                "value": "prod"
+              }
+            ]
+          }
+        ]
+      },
+      "kind": "form",
+      "fields": [
+        {
+          "key": "Form.StringField.key",
+          "path": "key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Environment"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Where the project runs"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [
+            "Environment *"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.options[].value",
+          "path": "options[].value",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.options[].label",
+          "path": "options[].label",
+          "kind": "string",
+          "probes": [
+            "Production",
+            "Staging"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.options[].description",
+          "path": "options[].description",
+          "kind": "string",
+          "probes": [
+            "Live traffic",
+            "Test traffic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.custom",
+          "path": "custom",
+          "kind": "boolean",
+          "probes": [
+            "Other…"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.default",
+          "path": "default",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.key",
+          "path": "key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Contact email"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Where alerts are sent"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.format",
+          "path": "format",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.minLength",
+          "path": "minLength",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.maxLength",
+          "path": "maxLength",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.pattern",
+          "path": "pattern",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.placeholder",
+          "path": "placeholder",
+          "kind": "string",
+          "probes": [
+            "you@example.com"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.default",
+          "path": "default",
+          "kind": "string",
+          "probes": [
+            "oncall@example.com"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.when[].key",
+          "path": "when[].key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.when[].op",
+          "path": "when[].op",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.StringField.when[].value",
+          "path": "when[].value",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "frm_form_choose_and_type"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Connect to Sentry"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Form.Info.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.fields",
+          "path": "fields",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "form_numbers_and_switch",
+      "payload": {
+        "id": "frm_form_numbers_and_switch",
+        "sessionID": "ses_checkout",
+        "title": "Upload settings",
+        "metadata": {},
+        "fields": [
+          {
+            "type": "integer",
+            "key": "tries",
+            "title": "Retries",
+            "description": "How many times to try again",
+            "required": true,
+            "minimum": 1,
+            "maximum": 50,
+            "default": 17
+          },
+          {
+            "type": "integer",
+            "key": "pause",
+            "title": "Delay in seconds",
+            "description": "Wait before each retry",
+            "required": false,
+            "minimum": 0,
+            "maximum": 60,
+            "default": 42,
+            "when": [
+              {
+                "key": "tries",
+                "op": "eq",
+                "value": 17
+              }
+            ]
+          },
+          {
+            "type": "number",
+            "key": "squeeze",
+            "title": "Compression ratio",
+            "description": "Between 0 and 1",
+            "required": true,
+            "minimum": 0.1,
+            "maximum": 0.9,
+            "default": 0.5,
+            "when": [
+              {
+                "key": "tries",
+                "op": "neq",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "type": "boolean",
+            "key": "keep_running",
+            "title": "Keep going in the background",
+            "description": "Continue when the app is closed",
+            "required": false,
+            "default": true,
+            "when": [
+              {
+                "key": "tries",
+                "op": "eq",
+                "value": 17
+              }
+            ]
+          }
+        ]
+      },
+      "kind": "form",
+      "fields": [
+        {
+          "key": "Form.IntegerField.key",
+          "path": "key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Retries"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "How many times to try again"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [
+            "Retries *"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.minimum",
+          "path": "minimum",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.maximum",
+          "path": "maximum",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.default",
+          "path": "default",
+          "kind": "any",
+          "probes": [
+            "17"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.key",
+          "path": "key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Delay in seconds"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Wait before each retry"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.minimum",
+          "path": "minimum",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.maximum",
+          "path": "maximum",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.default",
+          "path": "default",
+          "kind": "any",
+          "probes": [
+            "42"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.when[].key",
+          "path": "when[].key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.when[].op",
+          "path": "when[].op",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.IntegerField.when[].value",
+          "path": "when[].value",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.NumberField.key",
+          "path": "key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.NumberField.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Compression ratio"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.NumberField.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Between 0 and 1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.NumberField.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [
+            "Compression ratio *"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.NumberField.minimum",
+          "path": "minimum",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.NumberField.maximum",
+          "path": "maximum",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.NumberField.default",
+          "path": "default",
+          "kind": "any",
+          "probes": [
+            "0.5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.NumberField.when[].key",
+          "path": "when[].key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.NumberField.when[].op",
+          "path": "when[].op",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.NumberField.when[].value",
+          "path": "when[].value",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.key",
+          "path": "key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Keep going in the background"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Continue when the app is closed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.default",
+          "path": "default",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.when[].key",
+          "path": "when[].key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.when[].op",
+          "path": "when[].op",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.when[].value",
+          "path": "when[].value",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "frm_form_numbers_and_switch"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Upload settings"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Form.Info.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.fields",
+          "path": "fields",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "form_multiselect_and_link",
+      "payload": {
+        "id": "frm_form_multiselect_and_link",
+        "sessionID": "ses_checkout",
+        "title": "Choose screens",
+        "metadata": {},
+        "fields": [
+          {
+            "type": "boolean",
+            "key": "everywhere",
+            "title": "Every screen",
+            "description": "Skip the choice below",
+            "required": false,
+            "default": false
+          },
+          {
+            "type": "external",
+            "key": "sso_step",
+            "url": "https://sentry.io/oauth/authorize?client=oc",
+            "title": "Sign in to Sentry",
+            "description": "Opens your browser to sign in"
+          },
+          {
+            "type": "multiselect",
+            "key": "targets",
+            "title": "Screens",
+            "description": "Which screens get the retry button",
+            "required": true,
+            "options": [
+              {
+                "value": "uploads",
+                "label": "Uploads",
+                "description": "The upload queue"
+              },
+              {
+                "value": "downloads",
+                "label": "Downloads",
+                "description": "The download history"
+              }
+            ],
+            "minItems": 1,
+            "maxItems": 2,
+            "custom": true,
+            "default": [
+              "uploads"
+            ],
+            "when": [
+              {
+                "key": "everywhere",
+                "op": "eq",
+                "value": false
+              }
+            ]
+          }
+        ]
+      },
+      "kind": "form",
+      "fields": [
+        {
+          "key": "Form.BooleanField.key",
+          "path": "key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Every screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Skip the choice below"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.BooleanField.default",
+          "path": "default",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.ExternalField.key",
+          "path": "key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.ExternalField.url",
+          "path": "url",
+          "kind": "string",
+          "probes": [
+            "sentry.io"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.ExternalField.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Sign in to Sentry"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.ExternalField.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Opens your browser to sign in"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.key",
+          "path": "key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Screens"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Which screens get the retry button"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [
+            "Screens *"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.options[].value",
+          "path": "options[].value",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.options[].label",
+          "path": "options[].label",
+          "kind": "string",
+          "probes": [
+            "Uploads",
+            "Downloads"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.options[].description",
+          "path": "options[].description",
+          "kind": "string",
+          "probes": [
+            "The upload queue",
+            "The download history"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.minItems",
+          "path": "minItems",
+          "kind": "number",
+          "probes": [
+            "Pick 1–2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.maxItems",
+          "path": "maxItems",
+          "kind": "number",
+          "probes": [
+            "Pick 1–2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.custom",
+          "path": "custom",
+          "kind": "boolean",
+          "probes": [
+            "Add your own"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.default[]",
+          "path": "default[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.when[].key",
+          "path": "when[].key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.when[].op",
+          "path": "when[].op",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.MultiselectField.when[].value",
+          "path": "when[].value",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "frm_form_multiselect_and_link"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.sessionID",
+          "path": "sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Choose screens"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Form.Info.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Form.Info.fields",
+          "path": "fields",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

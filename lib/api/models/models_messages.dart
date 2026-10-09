@@ -610,10 +610,19 @@ class Part {
           type == 'file');
 
   factory Part.fromJson(Map<String, dynamic> j) {
+    // A command that runs as a sub-agent arrives as a user message holding
+    // only a `subtask` part. Its description is what the person asked for;
+    // without it the conversation would show an empty turn.
+    final subtask = j['type'] == 'subtask';
+    final request = subtask
+        ? (j['description'] as String?)?.trim().isNotEmpty == true
+              ? j['description'] as String
+              : (j['prompt'] as String?) ?? ''
+        : null;
     return Part(
       id: (j['id'] ?? j['callID'])?.toString(),
-      type: (j['type'] as String?) ?? 'text',
-      text: (j['text'] as String?) ?? '',
+      type: subtask ? 'text' : (j['type'] as String?) ?? 'text',
+      text: request ?? (j['text'] as String?) ?? '',
       messageID: j['messageID']?.toString(),
       callID: j['callID']?.toString(),
       toolName: j['tool']?.toString(),
