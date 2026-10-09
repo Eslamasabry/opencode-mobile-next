@@ -1,0 +1,19 @@
+native_qa_refusal=bb5_cleanup_fixture_invalid
+test_native_idle_fixed_reason_is_not_replaced_by_generic_failure (test_bb5_runtime_acceptance.AdapterTest.test_native_idle_fixed_reason_is_not_replaced_by_generic_failure) ... FAIL
+
+======================================================================
+FAIL: test_native_idle_fixed_reason_is_not_replaced_by_generic_failure (test_bb5_runtime_acceptance.AdapterTest.test_native_idle_fixed_reason_is_not_replaced_by_generic_failure)
+----------------------------------------------------------------------
+bb3_runtime_acceptance.Refused: instrument_failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 45, in test_native_idle_fixed_reason_is_not_replaced_by_generic_failure
+    with self.assertRaisesRegex(H.Q.Refused, '^bb5_cleanup_fixture_invalid$'):
+AssertionError: "^bb5_cleanup_fixture_invalid$" does not match "instrument_failed"
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

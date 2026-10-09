@@ -1,0 +1,8 @@
+{
+  "entireUIDDead": true,
+  "onlyNewQAMarkerPolicyAndFixtureRemoved": true,
+  "qaHelperHomeAbsent": true,
+  "idlePolicyDefaultOff": true,
+  "credentialsUnchanged": true,
+  "fixtureHadNoMembers": true
+}

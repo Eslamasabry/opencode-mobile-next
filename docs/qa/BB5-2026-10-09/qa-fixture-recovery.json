@@ -1,0 +1,11 @@
+{
+  "removedNewQANativeKeys": [
+    "oc.builtinRecoveryBudget.qa_bb5_idle",
+    "oc.builtinRuntimeOwnership.qa_bb5_idle",
+    "oc.builtinRuntimeRecipe.qa_bb5_idle"
+  ],
+  "wholeUIDDead": true,
+  "noOriginalKeyRemoved": true,
+  "noCredentialsChanged": true,
+  "fixtureOwnerChangedDuringRestoration": true
+}

@@ -1,0 +1,41 @@
+{
+  "normalVersion": 2199,
+  "installedSHA": "be1bf7b80a5901a4041fbe8b7a2e754631f05ed04486b70c9e33c0ac1e12061a",
+  "app": {
+    "pid": 2805,
+    "startTicks": 4867,
+    "parent": 378,
+    "group": 378,
+    "session": 0,
+    "state": "S"
+  },
+  "operation": "CHECK",
+  "ticketId": "443cb7fd9d2c7f24bdec67aac903e30f79f7b0b20d09ff49217a17c676bd911d",
+  "recorded": [
+    {
+      "pid": 3593,
+      "startTicks": 8615,
+      "sameIdentityPresent": false,
+      "procMissing": true,
+      "killZeroDenied": true
+    },
+    {
+      "pid": 3596,
+      "startTicks": 8622,
+      "sameIdentityPresent": false,
+      "procMissing": true,
+      "killZeroDenied": true
+    }
+  ],
+  "sameUidInventory": {
+    "2805": 378,
+    "3125": 2805,
+    "3130": 3125,
+    "3310": 2805,
+    "3315": 3310,
+    "3470": 3315,
+    "3543": 3470,
+    "3700": 3543
+  },
+  "observedCount": 0
+}

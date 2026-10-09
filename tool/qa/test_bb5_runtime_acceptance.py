@@ -35,6 +35,16 @@ class AdapterTest(unittest.TestCase):
         H.ConcurrentSession = self.session; H.STEPS = self.steps; H.FIELDS = self.fields
         H.PHASE_NAMES = self.phases; H.Q.merge_person_preferences = self.merge
 
+    def test_native_idle_fixed_reason_is_not_replaced_by_generic_failure(self):
+        device = H.Device(); app = dict(pid=111, startTicks=12, state="S")
+        payload = 'INSTRUMENTATION_RESULT: builtinRuntimeResult=FAIL\n' + \
+                  'INSTRUMENTATION_RESULT: builtinRuntimeFailure=bb5_cleanup_fixture_invalid\n'
+        with patch.object(device, 'app_identity', return_value=app), \
+             patch.object(device, 'wait_detached'), \
+             patch.object(device, 'adb', return_value=SimpleNamespace(returncode=0,stdout=payload,stderr='')):
+            with self.assertRaisesRegex(H.Q.Refused, '^bb5_cleanup_fixture_invalid$'):
+                device._instrument('bb5Idle', (), None, None)
+
     def test_every_native_flag_is_required(self):
         for missing in B.IDLE_FIELDS:
             self.device.instrument.return_value = {key: 'true' for key in B.IDLE_FIELDS - {missing}}
@@ -79,6 +89,20 @@ class NotificationTapTest(unittest.TestCase):
         ET.SubElement(root, 'node', {'package': package, 'text': body or next(iter(B.IDLE_BODIES)),
                       'enabled': 'true', 'bounds': bounds})
         return ET.tostring(root, encoding='unicode', xml_declaration=True)
+
+    def test_native_failure_before_notice_keeps_its_fixed_reason(self):
+        payload = 'INSTRUMENTATION_RESULT: builtinRuntimeResult=FAIL\n' + \
+                  'INSTRUMENTATION_RESULT: builtinRuntimeFailure=bb5_cleanup_fixture_invalid\n'
+        process = Mock(); process.finished = True
+        returned = SimpleNamespace(returncode=0, stdout=payload, stderr='')
+        process.result.return_value = returned
+        with patch.object(H, 'inherited_lock'), patch.object(B, '_BoundedProcess', return_value=process):
+            try:
+                result = B.run_idle_instrumentation(('shell', 'am', 'instrument', '--no-restart', '-e', 'step', 'bb5Idle'), 180)
+            except H.Q.Refused:
+                self.fail('Native refusal was replaced with a missing-tap error')
+        self.assertIs(returned, result)
+        process.close.assert_called_once()
 
     def test_fixed_english_and_arabic_actual_systemui_bounds(self):
         for body in B.IDLE_BODIES:
@@ -251,10 +275,16 @@ class MetadataRestoreTest(unittest.TestCase):
 
 
 class NormalArtifactTest(unittest.TestCase):
+    def test_older_normal_refuses_before_any_device_command(self):
+        device = Mock()
+        with self.assertRaises(H.Q.Refused):
+            B.validate_normal(device, SimpleNamespace(version=2198, normal_version=2198))
+        device.run.assert_not_called()
+
     def test_wrong_version_refuses_without_any_device_command(self):
         device = Mock()
         with self.assertRaises(H.Q.Refused):
-            B.validate_normal(device, SimpleNamespace(version=2200, normal_version=2198))
+            B.validate_normal(device, SimpleNamespace(version=2200, normal_version=2199))
         device.run.assert_not_called()
 
     def test_normal_hash_sidecar_and_signer_are_all_checked_before_mutation(self):
@@ -262,12 +292,13 @@ class NormalArtifactTest(unittest.TestCase):
             apk = Path(directory) / 'normal.apk'; apk.write_bytes(b'private-test-artifact')
             digest = B.hashlib.sha256(apk.read_bytes()).hexdigest()
             sidecar = Path(directory) / 'normal.sha256'; sidecar.write_text(digest + '  normal.apk\n')
-            args = SimpleNamespace(version=2198, normal_version=2198, normal_sha=digest,
+            args = SimpleNamespace(version=2198, normal_version=2199, normal_sha=digest,
                 normal_apk=apk, normal_sidecar=sidecar, apksigner=Path('apksigner'), aapt=Path('aapt'))
             device = Mock()
             device.run.side_effect = [SimpleNamespace(returncode=0, stdout='Signer #1 certificate SHA-256 digest: ' + H.Q.CERT),
-                SimpleNamespace(returncode=0, stdout="package: name='" + H.PACKAGE + "' versionCode='2198'")]
-            B.validate_normal(device, args)
+                SimpleNamespace(returncode=0, stdout="package: name='" + H.PACKAGE + "' versionCode='2199'")]
+            try: B.validate_normal(device, args)
+            except H.Q.Refused: self.fail('Verified normal2199 unexpectedly refused')
             device.adb.assert_not_called(); device.write_dead.assert_not_called()
             sidecar.write_text('0'*64)
             with self.assertRaises(H.Q.Refused):
@@ -275,7 +306,7 @@ class NormalArtifactTest(unittest.TestCase):
 
     def test_normal_restore_install_r_never_downgrades_or_uninstalls(self):
         device = Mock(); device.cat.return_value = None
-        device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2198', stderr='')
+        device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2199', stderr='')
         device.installed_hash.return_value = 'a'*64
         args = SimpleNamespace(normal_apk=Path('normal.apk'), normal_sha='a'*64)
         with patch.object(B, 'validate_normal') as validate, patch.object(B, 'restore_metadata') as restore, patch.object(H, 'real_start') as start, \
@@ -383,3 +414,31 @@ class InitialKernelAdmissionTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class QaDowngradeAdmissionTest(unittest.TestCase):
+    def candidate(self, installed_hash, authorized=True):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / 'target.apk'; target.write_bytes(b'qa-target')
+            runner = Path(directory) / 'runner.apk'; runner.write_bytes(b'qa-runner')
+            args = SimpleNamespace(version=2198, normal_version=2199, normal_sha='a'*64,
+                qa_normal_downgrade=authorized, apk=target, runner_apk=runner,
+                target_sha=B.hashlib.sha256(target.read_bytes()).hexdigest(),
+                runner_sha=B.hashlib.sha256(runner.read_bytes()).hexdigest(),
+                apksigner=Path('apksigner'), aapt=Path('aapt'))
+            device = Mock(); device.installed_hash.return_value = installed_hash
+            device.run.side_effect = [
+                SimpleNamespace(returncode=0, stdout='Signer #1 certificate SHA-256 digest: '+H.Q.CERT),
+                SimpleNamespace(returncode=0, stdout="package: name='"+H.PACKAGE+"' versionCode='2198'"),
+                SimpleNamespace(returncode=0, stdout='Signer #1 certificate SHA-256 digest: '+H.Q.CERT),
+                SimpleNamespace(returncode=0, stdout="package: name='"+H.PACKAGE+".test' versionCode=''"),
+            ]
+            device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2199')
+            H.validate_candidates(device, args)
+            self.assertEqual([('shell','dumpsys','package',H.PACKAGE)], [c.args for c in device.adb.call_args_list])
+    def test_exact_known_normal_permits_private_qa_downgrade(self):
+        self.candidate('a'*64)
+    def test_other_installed_bytes_refuse_even_when_version_matches(self):
+        with self.assertRaises(H.Q.Refused): self.candidate('b'*64)
+    def test_version_alone_cannot_authorize_qa_downgrade(self):
+        with self.assertRaises(H.Q.Refused): self.candidate('a'*64, authorized=False)

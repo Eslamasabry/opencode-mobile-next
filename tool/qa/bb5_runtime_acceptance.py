@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """BB5 private emulator session. Import is inert; whole-session inherited flock is required.
 
-The QA and known normal APK both use versionCode2198. A different version refuses
+The QA APK uses versionCode2198; the known normal restore uses2199. A different version refuses
 before mutation rather than requesting a downgrade, uninstall or data clearing.
 Initial authorized replacement/force-stop is QA setup, not proof that existing
 chats are idle. Native scenario admission proves logical work quiescence after
@@ -31,6 +31,7 @@ IDLE_FIELDS = {'bb5IdlePassed', 'bb5RealIdlePassed', 'bb5ExactDrainPassed',
                'bb5HelperAcknowledgementPassed', 'bb5BudgetPreserved', 'bb5ExplicitStopPassed',
                'bb5IdleNotificationPassed', 'bb5NotificationTapPassed'}
 VERSION = 2198
+NORMAL_VERSION = 2199
 IDLE_BODIES = {
     'Phone server paused while idle. Tap to open OpenCode.',
     'خادم الهاتف متوقف مؤقتًا لعدم وجود نشاط. اضغط لفتح OpenCode.',
@@ -172,8 +173,13 @@ def run_idle_instrumentation(arguments, timeout):
             if not tapped and NOTIFICATION_MARKER in complete_lines:
                 tap_idle_notification(min(deadline, time.monotonic()+20))
                 tapped = True
+        result = process.result(command)
+        # A native refusal before the idle notice must retain its fixed reason.
+        # A successful run still requires an actual observed SystemUI body tap.
+        if H.parse_status(result.stdout).get('builtinRuntimeResult') == 'FAIL':
+            return result
         H.require(tapped, 'bb5_systemui_notification_tap_not_observed')
-        return process.result(command)
+        return result
     finally:
         process.close()
 
@@ -339,7 +345,7 @@ class Device(H.Device):
 
 
 def validate_normal(device, args):
-    H.require(args.version == VERSION and args.normal_version == VERSION, 'bb5_same_version_restore_required')
+    H.require(args.version == VERSION and args.normal_version == NORMAL_VERSION, 'bb5_known_versions_restore_required')
     H.require(isinstance(args.normal_sha, str) and re.fullmatch('[a-f0-9]{64}', args.normal_sha),
               'bb5_normal_hash_invalid')
     with args.normal_apk.open('rb') as stream:
@@ -355,7 +361,7 @@ def validate_normal(device, args):
     H.require(signature.returncode == 0 and found == [H.Q.CERT], 'bb5_normal_signer_mismatch')
     metadata = device.run([str(args.aapt), 'dump', 'badging', str(args.normal_apk)], text=True, timeout=15)
     match = re.search(r"package: name='([^']+)' versionCode='(\d+)'", metadata.stdout)
-    H.require(metadata.returncode == 0 and match and match[1] == H.PACKAGE and int(match[2]) == VERSION,
+    H.require(metadata.returncode == 0 and match and match[1] == H.PACKAGE and int(match[2]) == NORMAL_VERSION,
               'bb5_normal_metadata_mismatch')
 
 
@@ -411,11 +417,11 @@ def restore_normal(device, args, original_flutter, evidence):
         raise H.Q.Refused('bb5_normal_restore_unproven')
     H.require(device.installed_hash(H.PACKAGE) == args.normal_sha, 'bb5_normal_installed_hash_mismatch')
     metadata = device.adb('shell', 'dumpsys', 'package', H.PACKAGE, timeout=5)
-    H.require(metadata.returncode == 0 and re.search(r'\bversionCode=2198\b', metadata.stdout),
+    H.require(metadata.returncode == 0 and re.search(r'\bversionCode=2199\b', metadata.stdout),
               'bb5_normal_installed_version_mismatch')
     # Actual normal app/UI proves Connected, not an HTTP response or stale QA boolean.
     H.real_start(device, H.selected_profile(original_flutter), evidence)
-    evidence.append('PASS normal_2198_same_signer_install_r_data_preserved_actual_Connected_OC2')
+    evidence.append('PASS normal_2199_same_signer_install_r_data_preserved_actual_Connected_OC2')
 
 
 def main():
@@ -426,7 +432,7 @@ def main():
     for option in ['target-sha', 'runner-sha', 'normal-sha']:
         parser.add_argument('--' + option, required=True)
     parser.add_argument('--version', type=int, required=True)
-    parser.add_argument('--normal-version', type=int, default=VERSION)
+    parser.add_argument('--normal-version', type=int, default=NORMAL_VERSION)
     parser.add_argument('--inherited-emulator-lock-fd', type=int)
     args = parser.parse_args(); args.scenario = 'queue'
     evidence = []; device = None; original_flutter = None; mutation = False; code = 1
@@ -434,6 +440,7 @@ def main():
         H.inherited_lock(args.inherited_emulator_lock_fd)
         device = Device()
         validate_normal(device, args)  # All normal artifact gates precede any installation/preferences write.
+        args.qa_normal_downgrade = True
         H.validate_candidates(device, args)
         original_flutter = device.cat(H.FLUTTER)
         H.selected_profile(original_flutter)
@@ -450,9 +457,9 @@ def main():
             try:
                 restore_normal(device, args, original_flutter, evidence)
             except Exception as error:
-                evidence.append('FAIL normal_2198_restoration_' + H.safe_error(error)); code = 1
+                evidence.append('FAIL normal_2199_restoration_' + H.safe_error(error)); code = 1
         if code == 0:
-            evidence.append('PASS BB5_locked_actual_idle_stop_resume_and_normal_2198_restoration')
+            evidence.append('PASS BB5_locked_actual_idle_stop_resume_and_normal_2199_restoration')
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text('\n'.join(evidence) + '\n')
         print('\n'.join(evidence), flush=True)
