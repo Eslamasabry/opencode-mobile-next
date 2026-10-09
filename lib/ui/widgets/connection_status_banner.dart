@@ -126,9 +126,11 @@ KitStatus? connectionKitStatus(
       key: const ValueKey('connection-status-banner'),
       icon: AppIconography.locked,
       tone: AppStatusTone.failure,
+      // Names the server, as every other line here does: with several
+      // saved, "the password changed" alone leaves the person guessing.
       message: snapshot.usesToken
-          ? l10n.connectionTokenRejected
-          : l10n.e7BannerReconnectPassword,
+          ? l10n.connectionTokenRejectedFor(server)
+          : l10n.connectionPasswordRejectedFor(server),
       supporting: note,
       action: KitAction(
         key: ValueKey(

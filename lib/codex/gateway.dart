@@ -303,7 +303,8 @@ class CodexGateway
   @override
   Future<Health> health() async {
     await transport.connect();
-    return Health(healthy: true, version: 'Codex app-server (experimental)');
+    // The app-server reports no version; server pages say so in words.
+    return Health(healthy: true);
   }
 
   @override

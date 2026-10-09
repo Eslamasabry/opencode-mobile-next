@@ -1,0 +1,2062 @@
+{
+  "source": "contracts/opencode-openapi-f12e14cf.json, contracts/opencode2-openapi-beta-18600.json, docs/opencode2-protocol-notes.md, @getpaseo/protocol messages.js",
+  "schema": {
+    "oc1.health": [
+      {
+        "path": "version",
+        "kind": "string"
+      }
+    ],
+    "oc1.path": [
+      {
+        "path": "home",
+        "kind": "string"
+      },
+      {
+        "path": "state",
+        "kind": "string"
+      },
+      {
+        "path": "config",
+        "kind": "string"
+      },
+      {
+        "path": "worktree",
+        "kind": "string"
+      },
+      {
+        "path": "directory",
+        "kind": "string"
+      }
+    ],
+    "oc1.experimental_capabilities": [
+      {
+        "path": "backgroundSubagents",
+        "kind": "boolean"
+      }
+    ],
+    "oc2.health": [
+      {
+        "path": "version",
+        "kind": "string"
+      },
+      {
+        "path": "pid",
+        "kind": "number"
+      }
+    ],
+    "oc2.info": [
+      {
+        "path": "version",
+        "kind": "string"
+      },
+      {
+        "path": "pid",
+        "kind": "number"
+      },
+      {
+        "path": "urls[]",
+        "kind": "string"
+      }
+    ],
+    "paseo.server_info": [
+      {
+        "path": "serverId",
+        "kind": "string"
+      },
+      {
+        "path": "hostname",
+        "kind": "any"
+      },
+      {
+        "path": "version",
+        "kind": "any"
+      },
+      {
+        "path": "permissions[]",
+        "kind": "enum"
+      },
+      {
+        "path": "desktopManaged",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities",
+        "kind": "any"
+      },
+      {
+        "path": "features.agentRequestReceipts",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.workspaceRequestReceipts",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.creationLifecycle",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.hubAgentRpc",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.providersSnapshot",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.providersSnapshotCwd",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.directorySync",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.workspaceLabels",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.workspaceSetupRun",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.workspaceTerminals",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.checkoutForgeSetAutoMerge",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.checkoutGithubSetAutoMerge",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.githubCheckDetails",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.forgeCheckDetails",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.forgeSearch",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.daemonStatusRpc",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.daemonConfigReload",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.relayConfig",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.pushTokenRevocation",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.plugins",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.pluginManagement",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.pluginLogs",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.pluginGitManagement",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.pluginSourceInstallation",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.pluginSourceUpdates",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.pluginThemes",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.pluginSettings",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.pluginTimelineItems",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.skillManagement",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.terminal-restore-modes",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.terminal-input-mode-replay",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.terminal-size-ownership",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.rewind",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.agentTimelinePromptIndex",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.agentHistorySearch",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.checkoutRefresh",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.workspaceMultiplicity",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.projectRemove",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.projectAdd",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.worktreeRestore",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.workspaceRecovery",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.workspaceFileEditing",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.providerUsageList",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.agentDetach",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.agentThinkingUpdate",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.daemonDiagnostics",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.daemonSelfUpdate",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.agentForkContext",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.agentForkContextCursor",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.providerSubagents",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.projectedSubagentTimeline",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.providerSubagentNesting",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.workspacePinning",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.workspaceMarkUnread",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.hubRelationship",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.projectGithubClone",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.workspaceGithubRepositorySearch",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.projectCreateDirectory",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.projectList",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.commitsList",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.commitBaseClassification",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.providerRemoval",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.importSessionWorkspaceTarget",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.importSessionSearch",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.forgeProviders",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.selectiveAgentTimeline",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.explicitEventSubscriptions",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.ownedSubscriptions",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.canonicalSubmittedPrompts",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.agentTurnIdentity",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.stableProjectIdentity",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.workspaceScriptManagement",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.projectCustomIcon",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.fsEntryOps",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.fsEntryDuplicate",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.checkoutDiscardChanges",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.agentProfiles",
+        "kind": "boolean"
+      },
+      {
+        "path": "features.agentConfigApply",
+        "kind": "boolean"
+      }
+    ],
+    "paseo.provider": [
+      {
+        "path": "provider",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      },
+      {
+        "path": "enabled",
+        "kind": "boolean"
+      },
+      {
+        "path": "source",
+        "kind": "enum"
+      },
+      {
+        "path": "error",
+        "kind": "string"
+      },
+      {
+        "path": "models[].provider",
+        "kind": "string"
+      },
+      {
+        "path": "models[].id",
+        "kind": "string"
+      },
+      {
+        "path": "models[].aliases[]",
+        "kind": "string"
+      },
+      {
+        "path": "models[].isSelectable",
+        "kind": "boolean"
+      },
+      {
+        "path": "models[].label",
+        "kind": "string"
+      },
+      {
+        "path": "models[].description",
+        "kind": "string"
+      },
+      {
+        "path": "models[].isDefault",
+        "kind": "boolean"
+      },
+      {
+        "path": "models[].metadata",
+        "kind": "any"
+      },
+      {
+        "path": "models[].contextWindowMaxTokens",
+        "kind": "number"
+      },
+      {
+        "path": "models[].thinkingOptions[].id",
+        "kind": "string"
+      },
+      {
+        "path": "models[].thinkingOptions[].label",
+        "kind": "string"
+      },
+      {
+        "path": "models[].thinkingOptions[].description",
+        "kind": "string"
+      },
+      {
+        "path": "models[].thinkingOptions[].isDefault",
+        "kind": "boolean"
+      },
+      {
+        "path": "models[].thinkingOptions[].metadata",
+        "kind": "any"
+      },
+      {
+        "path": "models[].defaultThinkingOptionId",
+        "kind": "string"
+      },
+      {
+        "path": "modes[].id",
+        "kind": "string"
+      },
+      {
+        "path": "modes[].label",
+        "kind": "string"
+      },
+      {
+        "path": "modes[].description",
+        "kind": "string"
+      },
+      {
+        "path": "modes[].icon",
+        "kind": "string"
+      },
+      {
+        "path": "modes[].colorTier",
+        "kind": "string"
+      },
+      {
+        "path": "fetchedAt",
+        "kind": "string"
+      },
+      {
+        "path": "label",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "iconSvg",
+        "kind": "string"
+      },
+      {
+        "path": "defaultModeId",
+        "kind": "string"
+      }
+    ],
+    "paseo.daemon_status": [
+      {
+        "path": "serverId",
+        "kind": "string"
+      },
+      {
+        "path": "version",
+        "kind": "string"
+      },
+      {
+        "path": "pid",
+        "kind": "number"
+      },
+      {
+        "path": "nodePath",
+        "kind": "string"
+      },
+      {
+        "path": "startedAt",
+        "kind": "string"
+      },
+      {
+        "path": "listen",
+        "kind": "string"
+      },
+      {
+        "path": "relay.enabled",
+        "kind": "boolean"
+      },
+      {
+        "path": "relay.endpoint",
+        "kind": "string"
+      },
+      {
+        "path": "relay.publicEndpoint",
+        "kind": "string"
+      },
+      {
+        "path": "relay.useTls",
+        "kind": "boolean"
+      },
+      {
+        "path": "relay.publicUseTls",
+        "kind": "boolean"
+      },
+      {
+        "path": "providers[].provider",
+        "kind": "string"
+      },
+      {
+        "path": "providers[].available",
+        "kind": "boolean"
+      },
+      {
+        "path": "providers[].error",
+        "kind": "string"
+      }
+    ],
+    "paseo.pairing_offer": [
+      {
+        "path": "url",
+        "kind": "string"
+      },
+      {
+        "path": "qr",
+        "kind": "string"
+      },
+      {
+        "path": "relayEnabled",
+        "kind": "boolean"
+      }
+    ],
+    "paseo.daemon_config": [
+      {
+        "path": "config.relay.enabled",
+        "kind": "boolean"
+      },
+      {
+        "path": "config.mcp.enabled",
+        "kind": "boolean"
+      },
+      {
+        "path": "config.mcp.injectIntoAgents",
+        "kind": "boolean"
+      },
+      {
+        "path": "config.hostnames",
+        "kind": "any"
+      },
+      {
+        "path": "config.cors.allowedOrigins[]",
+        "kind": "string"
+      },
+      {
+        "path": "config.trustedProxies",
+        "kind": "any"
+      },
+      {
+        "path": "config.git.maxProcessesPerSecond",
+        "kind": "number"
+      },
+      {
+        "path": "config.git.maxProcessConcurrency",
+        "kind": "number"
+      },
+      {
+        "path": "config.app.baseUrl",
+        "kind": "string"
+      },
+      {
+        "path": "config.catalogRefreshTimeoutMs",
+        "kind": "number"
+      },
+      {
+        "path": "config.browserTools.enabled",
+        "kind": "boolean"
+      },
+      {
+        "path": "config.providers",
+        "kind": "any"
+      },
+      {
+        "path": "config.metadataGeneration.providers[].provider",
+        "kind": "string"
+      },
+      {
+        "path": "config.metadataGeneration.providers[].model",
+        "kind": "string"
+      },
+      {
+        "path": "config.metadataGeneration.providers[].thinkingOptionId",
+        "kind": "string"
+      },
+      {
+        "path": "config.autoArchiveAfterMerge",
+        "kind": "boolean"
+      },
+      {
+        "path": "config.enableTerminalAgentHooks",
+        "kind": "boolean"
+      },
+      {
+        "path": "config.appendSystemPrompt",
+        "kind": "string"
+      },
+      {
+        "path": "config.terminalProfiles[].id",
+        "kind": "string"
+      },
+      {
+        "path": "config.terminalProfiles[].name",
+        "kind": "string"
+      },
+      {
+        "path": "config.terminalProfiles[].command",
+        "kind": "string"
+      },
+      {
+        "path": "config.terminalProfiles[].args[]",
+        "kind": "string"
+      },
+      {
+        "path": "config.terminalProfiles[].icon",
+        "kind": "string"
+      },
+      {
+        "path": "config.agentProfiles[].id",
+        "kind": "string"
+      },
+      {
+        "path": "config.agentProfiles[].name",
+        "kind": "string"
+      },
+      {
+        "path": "config.agentProfiles[].icon",
+        "kind": "string"
+      },
+      {
+        "path": "config.agentProfiles[].color",
+        "kind": "string"
+      },
+      {
+        "path": "config.agentProfiles[].provider",
+        "kind": "string"
+      },
+      {
+        "path": "config.agentProfiles[].model",
+        "kind": "string"
+      },
+      {
+        "path": "config.agentProfiles[].modeId",
+        "kind": "string"
+      },
+      {
+        "path": "config.agentProfiles[].thinkingOptionId",
+        "kind": "string"
+      },
+      {
+        "path": "config.agentProfiles[].featureValues",
+        "kind": "any"
+      },
+      {
+        "path": "config.agentProfiles[].notes",
+        "kind": "string"
+      },
+      {
+        "path": "config.skills.selection",
+        "kind": "any"
+      },
+      {
+        "path": "config.pluginsEnabled",
+        "kind": "boolean"
+      },
+      {
+        "path": "config.plugins",
+        "kind": "any"
+      }
+    ],
+    "paseo.config_reload": [
+      {
+        "path": "appliedPaths[]",
+        "kind": "string"
+      },
+      {
+        "path": "restartRequiredPaths[]",
+        "kind": "string"
+      },
+      {
+        "path": "overrideControlledPaths[]",
+        "kind": "string"
+      }
+    ],
+    "paseo.available_providers": [
+      {
+        "path": "providers[].provider",
+        "kind": "string"
+      },
+      {
+        "path": "providers[].available",
+        "kind": "boolean"
+      },
+      {
+        "path": "providers[].error",
+        "kind": "string"
+      },
+      {
+        "path": "error",
+        "kind": "string"
+      },
+      {
+        "path": "fetchedAt",
+        "kind": "string"
+      }
+    ],
+    "paseo.daemon_update": [
+      {
+        "path": "success",
+        "kind": "boolean"
+      },
+      {
+        "path": "error",
+        "kind": "string"
+      },
+      {
+        "path": "previousVersion",
+        "kind": "string"
+      },
+      {
+        "path": "newVersion",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {
+    "oc1.path.home": "ignored: the app never asks for the server paths; the folder a person works in comes from the project they pick",
+    "oc1.path.state": "ignored: the app never asks for the server paths; the folder a person works in comes from the project they pick",
+    "oc1.path.config": "ignored: the app never asks for the server paths; the folder a person works in comes from the project they pick",
+    "oc1.path.worktree": "ignored: the app never asks for the server paths; the folder a person works in comes from the project they pick",
+    "oc1.path.directory": "ignored: the app never asks for the server paths; the folder a person works in comes from the project they pick",
+    "oc1.experimental_capabilities.backgroundSubagents": "ignored: read for the Tools page, not a server page; that page says in words when background helpers are missing",
+    "paseo.daemon_status.serverId": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.version": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.pid": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.nodePath": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.startedAt": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.listen": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.relay.enabled": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.relay.endpoint": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.relay.publicEndpoint": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.relay.useTls": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.relay.publicUseTls": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.providers[].provider": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.providers[].available": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_status.providers[].error": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.pairing_offer.url": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.pairing_offer.qr": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.pairing_offer.relayEnabled": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.relay.enabled": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.mcp.enabled": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.mcp.injectIntoAgents": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.hostnames": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.cors.allowedOrigins[]": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.trustedProxies": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.git.maxProcessesPerSecond": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.git.maxProcessConcurrency": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.app.baseUrl": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.catalogRefreshTimeoutMs": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.browserTools.enabled": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.providers": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.metadataGeneration.providers[].provider": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.metadataGeneration.providers[].model": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.metadataGeneration.providers[].thinkingOptionId": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.autoArchiveAfterMerge": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.enableTerminalAgentHooks": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.appendSystemPrompt": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.terminalProfiles[].id": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.terminalProfiles[].name": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.terminalProfiles[].command": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.terminalProfiles[].args[]": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.terminalProfiles[].icon": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.agentProfiles[].id": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.agentProfiles[].name": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.agentProfiles[].icon": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.agentProfiles[].color": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.agentProfiles[].provider": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.agentProfiles[].model": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.agentProfiles[].modeId": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.agentProfiles[].thinkingOptionId": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.agentProfiles[].featureValues": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.agentProfiles[].notes": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.skills.selection": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.pluginsEnabled": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_config.config.plugins": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.config_reload.appliedPaths[]": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.config_reload.restartRequiredPaths[]": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.config_reload.overrideControlledPaths[]": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.available_providers.providers[].provider": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.available_providers.providers[].available": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.available_providers.providers[].error": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.available_providers.error": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.available_providers.fetchedAt": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_update.success": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_update.error": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_update.previousVersion": "ignored: the app never asks the server for this message, so no page shows it",
+    "paseo.daemon_update.newVersion": "ignored: the app never asks the server for this message, so no page shows it"
+  },
+  "cases": [
+    {
+      "id": "oc1_health",
+      "kind": "probe",
+      "flavor": "oc1",
+      "payload": {
+        "healthy": true,
+        "version": "1.14.52"
+      },
+      "fields": [
+        {
+          "key": "oc1.health.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "1.14.52"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "oc2_beta_health",
+      "kind": "probe",
+      "flavor": "oc2",
+      "payload": {
+        "healthy": true,
+        "version": "0.0.0-beta-18600",
+        "pid": 41871
+      },
+      "fields": [
+        {
+          "key": "oc2.health.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "0.0.0-beta-18600"
+          ],
+          "primary": false
+        },
+        {
+          "key": "oc2.health.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [
+            "41871"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "oc2_stable_info",
+      "kind": "probe",
+      "flavor": "oc2",
+      "payload": {
+        "version": "2.0.10",
+        "pid": 52713,
+        "urls": [
+          "http://127.0.0.1:4096"
+        ]
+      },
+      "fields": [
+        {
+          "key": "oc2.info.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "2.0.10"
+          ],
+          "primary": false
+        },
+        {
+          "key": "oc2.info.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [
+            "52713"
+          ],
+          "primary": false
+        },
+        {
+          "key": "oc2.info.urls[]",
+          "path": "urls[]",
+          "kind": "string",
+          "probes": [
+            "127.0.0.1:4096"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "paseo_daemon",
+      "kind": "probe",
+      "flavor": "paseo",
+      "payload": {
+        "status": "server_info",
+        "serverId": "srv_9d41c0",
+        "hostname": "build-box",
+        "version": "0.9.2",
+        "permissions": [
+          "daemon.read"
+        ],
+        "desktopManaged": false,
+        "capabilities": {
+          "voice": {
+            "enabled": false
+          }
+        },
+        "features": {
+          "agentRequestReceipts": true,
+          "workspaceRequestReceipts": true,
+          "creationLifecycle": true,
+          "hubAgentRpc": true,
+          "providersSnapshot": true,
+          "providersSnapshotCwd": true,
+          "directorySync": true,
+          "workspaceLabels": true,
+          "workspaceSetupRun": true,
+          "workspaceTerminals": true,
+          "checkoutForgeSetAutoMerge": true,
+          "checkoutGithubSetAutoMerge": true,
+          "githubCheckDetails": true,
+          "forgeCheckDetails": true,
+          "forgeSearch": true,
+          "daemonStatusRpc": true,
+          "daemonConfigReload": true,
+          "relayConfig": true,
+          "pushTokenRevocation": true,
+          "plugins": true,
+          "pluginManagement": true,
+          "pluginLogs": true,
+          "pluginGitManagement": true,
+          "pluginSourceInstallation": true,
+          "pluginSourceUpdates": true,
+          "pluginThemes": true,
+          "pluginSettings": true,
+          "pluginTimelineItems": true,
+          "skillManagement": true,
+          "terminal-restore-modes": true,
+          "terminal-input-mode-replay": true,
+          "terminal-size-ownership": true,
+          "rewind": true,
+          "agentTimelinePromptIndex": true,
+          "agentHistorySearch": true,
+          "checkoutRefresh": true,
+          "workspaceMultiplicity": true,
+          "projectRemove": true,
+          "projectAdd": true,
+          "worktreeRestore": true,
+          "workspaceRecovery": true,
+          "workspaceFileEditing": true,
+          "providerUsageList": true,
+          "agentDetach": true,
+          "agentThinkingUpdate": true,
+          "daemonDiagnostics": true,
+          "daemonSelfUpdate": true,
+          "agentForkContext": true,
+          "agentForkContextCursor": true,
+          "providerSubagents": true,
+          "projectedSubagentTimeline": true,
+          "providerSubagentNesting": true,
+          "workspacePinning": true,
+          "workspaceMarkUnread": true,
+          "hubRelationship": true,
+          "projectGithubClone": true,
+          "workspaceGithubRepositorySearch": true,
+          "projectCreateDirectory": true,
+          "projectList": true,
+          "commitsList": true,
+          "commitBaseClassification": true,
+          "providerRemoval": true,
+          "importSessionWorkspaceTarget": true,
+          "importSessionSearch": true,
+          "forgeProviders": true,
+          "selectiveAgentTimeline": true,
+          "explicitEventSubscriptions": true,
+          "ownedSubscriptions": true,
+          "canonicalSubmittedPrompts": true,
+          "agentTurnIdentity": true,
+          "stableProjectIdentity": true,
+          "workspaceScriptManagement": true,
+          "projectCustomIcon": true,
+          "fsEntryOps": true,
+          "fsEntryDuplicate": true,
+          "checkoutDiscardChanges": true,
+          "agentProfiles": true,
+          "agentConfigApply": true
+        }
+      },
+      "providers": [
+        {
+          "provider": "claude",
+          "status": "ready",
+          "enabled": true,
+          "source": "builtin",
+          "error": null,
+          "models": [
+            {
+              "provider": "claude",
+              "id": "opus",
+              "aliases": [
+                "best"
+              ],
+              "isSelectable": true,
+              "label": "Opus",
+              "description": "Most capable",
+              "isDefault": true,
+              "metadata": {
+                "family": "opus"
+              },
+              "contextWindowMaxTokens": 200000,
+              "thinkingOptions": [
+                {
+                  "id": "high",
+                  "label": "High",
+                  "description": "Think longer",
+                  "isDefault": true,
+                  "metadata": {}
+                }
+              ],
+              "defaultThinkingOptionId": "high"
+            }
+          ],
+          "modes": [
+            {
+              "id": "default",
+              "label": "Always Ask",
+              "description": "Asks before it acts",
+              "icon": "shield",
+              "colorTier": "safe"
+            }
+          ],
+          "fetchedAt": "2026-10-09T08:00:00.000Z",
+          "label": "Claude Code",
+          "description": "Anthropic coding agent",
+          "iconSvg": "<svg/>",
+          "defaultModeId": "default"
+        },
+        {
+          "provider": "pi",
+          "status": "ready",
+          "enabled": true,
+          "source": "builtin",
+          "models": [],
+          "modes": []
+        },
+        {
+          "provider": "codex",
+          "status": "error",
+          "enabled": true,
+          "source": "builtin",
+          "error": "codex is not installed on this machine",
+          "models": [],
+          "modes": []
+        },
+        {
+          "provider": "copilot",
+          "status": "unavailable",
+          "enabled": false,
+          "source": "custom",
+          "models": [],
+          "modes": []
+        },
+        {
+          "provider": "opencode",
+          "status": "loading",
+          "enabled": true,
+          "source": "builtin",
+          "models": [],
+          "modes": []
+        }
+      ],
+      "fields": [
+        {
+          "key": "paseo.server_info.serverId",
+          "path": "serverId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.hostname",
+          "path": "hostname",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.version",
+          "path": "version",
+          "kind": "any",
+          "probes": [
+            "0.9.2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.permissions[]",
+          "path": "permissions[]",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.desktopManaged",
+          "path": "desktopManaged",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.capabilities",
+          "path": "capabilities",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.agentRequestReceipts",
+          "path": "features.agentRequestReceipts",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.workspaceRequestReceipts",
+          "path": "features.workspaceRequestReceipts",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.creationLifecycle",
+          "path": "features.creationLifecycle",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.hubAgentRpc",
+          "path": "features.hubAgentRpc",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.providersSnapshot",
+          "path": "features.providersSnapshot",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.providersSnapshotCwd",
+          "path": "features.providersSnapshotCwd",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.directorySync",
+          "path": "features.directorySync",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.workspaceLabels",
+          "path": "features.workspaceLabels",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.workspaceSetupRun",
+          "path": "features.workspaceSetupRun",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.workspaceTerminals",
+          "path": "features.workspaceTerminals",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.checkoutForgeSetAutoMerge",
+          "path": "features.checkoutForgeSetAutoMerge",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.checkoutGithubSetAutoMerge",
+          "path": "features.checkoutGithubSetAutoMerge",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.githubCheckDetails",
+          "path": "features.githubCheckDetails",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.forgeCheckDetails",
+          "path": "features.forgeCheckDetails",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.forgeSearch",
+          "path": "features.forgeSearch",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.daemonStatusRpc",
+          "path": "features.daemonStatusRpc",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.daemonConfigReload",
+          "path": "features.daemonConfigReload",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.relayConfig",
+          "path": "features.relayConfig",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.pushTokenRevocation",
+          "path": "features.pushTokenRevocation",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.plugins",
+          "path": "features.plugins",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.pluginManagement",
+          "path": "features.pluginManagement",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.pluginLogs",
+          "path": "features.pluginLogs",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.pluginGitManagement",
+          "path": "features.pluginGitManagement",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.pluginSourceInstallation",
+          "path": "features.pluginSourceInstallation",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.pluginSourceUpdates",
+          "path": "features.pluginSourceUpdates",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.pluginThemes",
+          "path": "features.pluginThemes",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.pluginSettings",
+          "path": "features.pluginSettings",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.pluginTimelineItems",
+          "path": "features.pluginTimelineItems",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.skillManagement",
+          "path": "features.skillManagement",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.terminal-restore-modes",
+          "path": "features.terminal-restore-modes",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.terminal-input-mode-replay",
+          "path": "features.terminal-input-mode-replay",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.terminal-size-ownership",
+          "path": "features.terminal-size-ownership",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.rewind",
+          "path": "features.rewind",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.agentTimelinePromptIndex",
+          "path": "features.agentTimelinePromptIndex",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.agentHistorySearch",
+          "path": "features.agentHistorySearch",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.checkoutRefresh",
+          "path": "features.checkoutRefresh",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.workspaceMultiplicity",
+          "path": "features.workspaceMultiplicity",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.projectRemove",
+          "path": "features.projectRemove",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.projectAdd",
+          "path": "features.projectAdd",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.worktreeRestore",
+          "path": "features.worktreeRestore",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.workspaceRecovery",
+          "path": "features.workspaceRecovery",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.workspaceFileEditing",
+          "path": "features.workspaceFileEditing",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.providerUsageList",
+          "path": "features.providerUsageList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.agentDetach",
+          "path": "features.agentDetach",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.agentThinkingUpdate",
+          "path": "features.agentThinkingUpdate",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.daemonDiagnostics",
+          "path": "features.daemonDiagnostics",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.daemonSelfUpdate",
+          "path": "features.daemonSelfUpdate",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.agentForkContext",
+          "path": "features.agentForkContext",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.agentForkContextCursor",
+          "path": "features.agentForkContextCursor",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.providerSubagents",
+          "path": "features.providerSubagents",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.projectedSubagentTimeline",
+          "path": "features.projectedSubagentTimeline",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.providerSubagentNesting",
+          "path": "features.providerSubagentNesting",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.workspacePinning",
+          "path": "features.workspacePinning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.workspaceMarkUnread",
+          "path": "features.workspaceMarkUnread",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.hubRelationship",
+          "path": "features.hubRelationship",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.projectGithubClone",
+          "path": "features.projectGithubClone",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.workspaceGithubRepositorySearch",
+          "path": "features.workspaceGithubRepositorySearch",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.projectCreateDirectory",
+          "path": "features.projectCreateDirectory",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.projectList",
+          "path": "features.projectList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.commitsList",
+          "path": "features.commitsList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.commitBaseClassification",
+          "path": "features.commitBaseClassification",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.providerRemoval",
+          "path": "features.providerRemoval",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.importSessionWorkspaceTarget",
+          "path": "features.importSessionWorkspaceTarget",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.importSessionSearch",
+          "path": "features.importSessionSearch",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.forgeProviders",
+          "path": "features.forgeProviders",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.selectiveAgentTimeline",
+          "path": "features.selectiveAgentTimeline",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.explicitEventSubscriptions",
+          "path": "features.explicitEventSubscriptions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.ownedSubscriptions",
+          "path": "features.ownedSubscriptions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.canonicalSubmittedPrompts",
+          "path": "features.canonicalSubmittedPrompts",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.agentTurnIdentity",
+          "path": "features.agentTurnIdentity",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.stableProjectIdentity",
+          "path": "features.stableProjectIdentity",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.workspaceScriptManagement",
+          "path": "features.workspaceScriptManagement",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.projectCustomIcon",
+          "path": "features.projectCustomIcon",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.fsEntryOps",
+          "path": "features.fsEntryOps",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.fsEntryDuplicate",
+          "path": "features.fsEntryDuplicate",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.checkoutDiscardChanges",
+          "path": "features.checkoutDiscardChanges",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.agentProfiles",
+          "path": "features.agentProfiles",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.server_info.features.agentConfigApply",
+          "path": "features.agentConfigApply",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "Claude Code"
+          ],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.enabled",
+          "path": "enabled",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.source",
+          "path": "source",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].provider",
+          "path": "models[].provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].id",
+          "path": "models[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].aliases[]",
+          "path": "models[].aliases[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].isSelectable",
+          "path": "models[].isSelectable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].label",
+          "path": "models[].label",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].description",
+          "path": "models[].description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].isDefault",
+          "path": "models[].isDefault",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].metadata",
+          "path": "models[].metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].contextWindowMaxTokens",
+          "path": "models[].contextWindowMaxTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].thinkingOptions[].id",
+          "path": "models[].thinkingOptions[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].thinkingOptions[].label",
+          "path": "models[].thinkingOptions[].label",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].thinkingOptions[].description",
+          "path": "models[].thinkingOptions[].description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].thinkingOptions[].isDefault",
+          "path": "models[].thinkingOptions[].isDefault",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].thinkingOptions[].metadata",
+          "path": "models[].thinkingOptions[].metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.models[].defaultThinkingOptionId",
+          "path": "models[].defaultThinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.modes[].id",
+          "path": "modes[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.modes[].label",
+          "path": "modes[].label",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.modes[].description",
+          "path": "modes[].description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.modes[].icon",
+          "path": "modes[].icon",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.modes[].colorTier",
+          "path": "modes[].colorTier",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.fetchedAt",
+          "path": "fetchedAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.label",
+          "path": "label",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.iconSvg",
+          "path": "iconSvg",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.defaultModeId",
+          "path": "defaultModeId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "Pi"
+          ],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.enabled",
+          "path": "enabled",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.source",
+          "path": "source",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.enabled",
+          "path": "enabled",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.source",
+          "path": "source",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.error",
+          "path": "error",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.enabled",
+          "path": "enabled",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.source",
+          "path": "source",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.enabled",
+          "path": "enabled",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "paseo.provider.source",
+          "path": "source",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

@@ -52,7 +52,7 @@ Future<CodexConnectionProbeResult> probePaseoConnection({
       password: password,
       directory: directory.trim(),
     );
-    final health = await gateway.health();
+    await gateway.health();
     await gateway.sessionPage(limit: 1);
     final runtimes = (await gateway.providers()).providers
         .map((provider) => provider.name)
@@ -62,7 +62,9 @@ Future<CodexConnectionProbeResult> probePaseoConnection({
       message: runtimes.isEmpty
           ? 'Paseo daemon verified. It reports no ready agent runtimes yet.'
           : 'Paseo daemon verified. Ready: ${runtimes.join(', ')}.',
-      version: health.version,
+      // The daemon's own number, not the gateway's display line.
+      version: gateway.transport.serverVersion,
+      runtimes: runtimes,
     );
   } on PaseoFailure catch (error) {
     return CodexConnectionProbeResult(ok: false, message: error.message);

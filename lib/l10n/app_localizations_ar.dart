@@ -28549,4 +28549,82 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kitRequestShowLess => 'عرض أقل';
+
+  @override
+  String paseoCheckReady(String agents) {
+    return 'جاهز على ذلك الحاسوب: $agents.';
+  }
+
+  @override
+  String get paseoCheckNoneReady => 'لا يوجد وكيل جاهز على ذلك الحاسوب بعد.';
+
+  @override
+  String get serverRowDetailsVersion => 'الإصدار';
+
+  @override
+  String get capabilityDevServices => 'خوادم التطوير';
+
+  @override
+  String get capabilityDevServicesDetail =>
+      'شغّل خادم المشروع أو المعاينة وأوقفه عند الحاجة';
+
+  @override
+  String get capabilityWebSearch => 'البحث في الويب';
+
+  @override
+  String get capabilityWebSearchDetail => 'اسمح للوكيل بالبحث في الويب';
+
+  @override
+  String get capabilityDeleteMessage => 'حذف رسالة';
+
+  @override
+  String get capabilityDeleteMessageDetail => 'احذف رسالة من المحادثة';
+
+  @override
+  String get capabilitySavedPermissions => 'الموافقات المحفوظة';
+
+  @override
+  String get capabilitySavedPermissionsDetail =>
+      'اطلع على الإجراءات التي سمحت بها دائما واحذفها';
+
+  @override
+  String get capabilityMcpAdd => 'إضافة خوادم MCP';
+
+  @override
+  String get capabilityMcpAddDetail =>
+      'أضف خادم MCP أو غيّر إعداداته من التطبيق';
+
+  @override
+  String get capabilityApprovals => 'السؤال قبل التنفيذ';
+
+  @override
+  String get capabilityApprovalsDetail =>
+      'اختر أن يطلب الوكيل موافقتك أو يعمل من تلقاء نفسه';
+
+  @override
+  String get capabilitySteer => 'الإرسال أثناء العمل';
+
+  @override
+  String get capabilitySteerDetail =>
+      'أضف رسالة أثناء انشغال الوكيل: وجّهه بها أو ضعها في الطابور';
+
+  @override
+  String get serverSettingsAuthPasswordSaved =>
+      'كلمة المرور محفوظة على هذا الهاتف';
+
+  @override
+  String get serverSettingsAuthTokenSaved => 'رمز الاتصال محفوظ على هذا الهاتف';
+
+  @override
+  String get serverSettingsAuthTokenMissing => 'لا يوجد رمز اتصال محفوظ';
+
+  @override
+  String connectionPasswordRejectedFor(String server) {
+    return 'تغيّرت كلمة مرور $server. حدّثها لإعادة الاتصال.';
+  }
+
+  @override
+  String connectionTokenRejectedFor(String server) {
+    return 'رفض $server رمز الاتصال. حدّثه لإعادة الاتصال.';
+  }
 }

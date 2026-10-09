@@ -8,10 +8,15 @@ class CodexConnectionProbeResult {
   final String message;
   final String? version;
 
+  /// The agents the server reports ready (Paseo): null where the server
+  /// does not report any, an empty list when it reports none.
+  final List<String>? runtimes;
+
   const CodexConnectionProbeResult({
     required this.ok,
     required this.message,
     this.version,
+    this.runtimes,
   });
 }
 

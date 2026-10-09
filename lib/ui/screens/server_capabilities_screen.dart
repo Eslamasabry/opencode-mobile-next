@@ -79,6 +79,13 @@ final List<ServerFeature> serverFeatures = [
     available: (facts) => facts.server.shellSettings,
   ),
   ServerFeature(
+    id: 'dev-services',
+    capability: 'flag:developmentServices',
+    title: (l10n) => l10n.capabilityDevServices,
+    detail: (l10n) => l10n.capabilityDevServicesDetail,
+    available: (facts) => facts.server.developmentServices,
+  ),
+  ServerFeature(
     id: 'projects',
     title: (l10n) => l10n.capabilityProjects,
     detail: (l10n) => l10n.capabilityProjectsDetail,
@@ -104,6 +111,12 @@ final List<ServerFeature> serverFeatures = [
     title: (l10n) => l10n.capabilityAttachments,
     detail: (l10n) => l10n.capabilityAttachmentsDetail,
     available: (facts) => facts.server.promptAttachments,
+  ),
+  ServerFeature(
+    id: 'web-search',
+    title: (l10n) => l10n.capabilityWebSearch,
+    detail: (l10n) => l10n.capabilityWebSearchDetail,
+    available: (facts) => facts.server.webSearch,
   ),
   ServerFeature(
     id: 'subagents',
@@ -144,6 +157,12 @@ final List<ServerFeature> serverFeatures = [
     available: (facts) => facts.server.sessionArchive,
   ),
   ServerFeature(
+    id: 'delete-message',
+    title: (l10n) => l10n.capabilityDeleteMessage,
+    detail: (l10n) => l10n.capabilityDeleteMessageDetail,
+    available: (facts) => facts.server.messageDelete,
+  ),
+  ServerFeature(
     id: 'todos',
     title: (l10n) => l10n.capabilityTodos,
     detail: (l10n) => l10n.capabilityTodosDetail,
@@ -175,10 +194,28 @@ final List<ServerFeature> serverFeatures = [
     available: (facts) => facts.server.persistentPermissionGrants,
   ),
   ServerFeature(
+    id: 'saved-permissions',
+    title: (l10n) => l10n.capabilitySavedPermissions,
+    detail: (l10n) => l10n.capabilitySavedPermissionsDetail,
+    available: (facts) => facts.server.savedPermissionList,
+  ),
+  ServerFeature(
+    id: 'approvals',
+    title: (l10n) => l10n.capabilityApprovals,
+    detail: (l10n) => l10n.capabilityApprovalsDetail,
+    available: (facts) => facts.server.permissionRequests,
+  ),
+  ServerFeature(
     id: 'send-later',
     title: (l10n) => l10n.capabilityOfflineQueue,
     detail: (l10n) => l10n.capabilityOfflineQueueDetail,
     available: (facts) => facts.server.offlinePromptQueue,
+  ),
+  ServerFeature(
+    id: 'send-while-working',
+    title: (l10n) => l10n.capabilitySteer,
+    detail: (l10n) => l10n.capabilitySteerDetail,
+    available: (facts) => facts.server.inbox,
   ),
   ServerFeature(
     id: 'continue-on-computer',
@@ -206,6 +243,13 @@ final List<ServerFeature> serverFeatures = [
     title: (l10n) => l10n.capabilityMcp,
     detail: (l10n) => l10n.capabilityMcpDetail,
     available: (facts) => facts.server.serverCatalog,
+  ),
+  ServerFeature(
+    id: 'mcp-add',
+    title: (l10n) => l10n.capabilityMcpAdd,
+    detail: (l10n) => l10n.capabilityMcpAddDetail,
+    available: (facts) =>
+        facts.server.mcpConfigWrites || facts.server.mcpRuntimeAdds,
   ),
   ServerFeature(
     id: 'plugins',

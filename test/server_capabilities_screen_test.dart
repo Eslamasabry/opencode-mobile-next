@@ -220,7 +220,12 @@ void main() {
       ]),
     );
     // allV1 leaves the plugin inventory off: it is the one server-side gap.
-    expect(_listed(tester, 'unavailable'), {'plugins'});
+    expect(_listed(tester, 'unavailable'), {
+      'plugins',
+      'dev-services',
+      'web-search',
+      'send-while-working',
+    });
     expect(_listed(tester, 'device'), isEmpty);
     // Nothing is listed twice.
     expect(available.intersection(_listed(tester, 'unavailable')), isEmpty);
@@ -325,7 +330,12 @@ void main() {
         platform: TargetPlatform.linux,
       );
       final controller = await _controller(
-        const ServerCapabilities(pluginInventory: true),
+        const ServerCapabilities(
+          pluginInventory: true,
+          developmentServices: true,
+          webSearch: true,
+          inbox: true,
+        ),
       );
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(controller));

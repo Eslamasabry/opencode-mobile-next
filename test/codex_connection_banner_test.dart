@@ -87,7 +87,9 @@ void main() {
         ),
       );
       expect(
-        find.text('The connection token was rejected. Update it to reconnect.'),
+        find.textContaining(
+          'rejected the connection token. Update it to reconnect.',
+        ),
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('banner-update-token')), findsOneWidget);

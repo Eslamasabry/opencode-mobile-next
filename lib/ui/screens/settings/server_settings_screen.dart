@@ -358,7 +358,17 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   title: copy.serverSettingsChangeSignIn(serverName),
                   titleMaxLines: 2,
                   supporting: TextSpan(
-                    text: hasPassword
+                    text: profile.usesAgentSocket
+                        // Claude Code, Pi and Codex keep a password or a
+                        // token, not a Basic sign-in.
+                        ? profile.codexToken.isNotEmpty
+                              ? (profile.backend == ServerBackend.codex
+                                    ? copy.serverSettingsAuthTokenSaved
+                                    : copy.serverSettingsAuthPasswordSaved)
+                              : (profile.backend == ServerBackend.codex
+                                    ? copy.serverSettingsAuthTokenMissing
+                                    : copy.e7SettingsUi62)
+                        : hasPassword
                         ? copy.serverSettingsAuthBasic(
                             profile.username.isNotEmpty
                                 ? profile.username
@@ -398,7 +408,12 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   ),
                 ),
               // The app's own server has no Linux service to set up.
-              if (!managedLocally && !looksLikeInAppServer(profile))
+              // (The helper script installs OpenCode: Claude Code, Pi and Codex
+              // servers have no such page.)
+              if (!managedLocally &&
+                  !looksLikeInAppServer(profile) &&
+                  (profile == null ||
+                      profile.backend == ServerBackend.openCode))
                 KitRow(
                   key: const Key('host-management-entry'),
                   leading: KitRow.icon(context, AppIconography.terminal),

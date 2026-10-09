@@ -76,6 +76,13 @@ class _ServerRow extends StatelessWidget {
         sheetKey: ValueKey('server-details-sheet-${profile.id}'),
         values: [
           KitTechnicalValue(copy.connectionServerAddress, profile.baseUrl),
+          // What the last check found out, so a person can tell which
+          // build a server runs without leaving the list.
+          if (profile.serverVersion?.trim().isNotEmpty == true)
+            KitTechnicalValue(
+              copy.serverRowDetailsVersion,
+              _plainServerVersion(profile.serverVersion!),
+            ),
           if (profile.usesAgentSocket && profile.codexDirectory.isNotEmpty)
             KitTechnicalValue(copy.codexProjectFolder, profile.codexDirectory),
         ],
@@ -169,6 +176,12 @@ class _ServerRow extends StatelessWidget {
     );
   }
 }
+
+/// A version as a person reads it: the number alone, without the label an
+/// older build saved beside it ("Paseo daemon 0.9.2 (experimental)").
+String _plainServerVersion(String raw) =>
+    RegExp(r'\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?').firstMatch(raw)?.group(0) ??
+    raw.trim();
 
 /// First run asks the only real fork, one question with plain answers (UX
 /// plan 5.6 step 1). Product names, private networks and the guide are met

@@ -28538,4 +28538,84 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get kitRequestShowLess => 'Show less';
+
+  @override
+  String paseoCheckReady(String agents) {
+    return 'Ready on that computer: $agents.';
+  }
+
+  @override
+  String get paseoCheckNoneReady => 'No agent is ready on that computer yet.';
+
+  @override
+  String get serverRowDetailsVersion => 'Version';
+
+  @override
+  String get capabilityDevServices => 'Dev servers';
+
+  @override
+  String get capabilityDevServicesDetail =>
+      'Start a project\'s server or preview, and stop it again';
+
+  @override
+  String get capabilityWebSearch => 'Web search';
+
+  @override
+  String get capabilityWebSearchDetail =>
+      'Let the agent look things up on the web';
+
+  @override
+  String get capabilityDeleteMessage => 'Delete a message';
+
+  @override
+  String get capabilityDeleteMessageDetail =>
+      'Remove a message from a conversation';
+
+  @override
+  String get capabilitySavedPermissions => 'Saved approvals';
+
+  @override
+  String get capabilitySavedPermissionsDetail =>
+      'See and remove the actions you always allowed';
+
+  @override
+  String get capabilityMcpAdd => 'Add MCP servers';
+
+  @override
+  String get capabilityMcpAddDetail =>
+      'Add an MCP server or change its settings from the app';
+
+  @override
+  String get capabilityApprovals => 'Ask before acting';
+
+  @override
+  String get capabilityApprovalsDetail =>
+      'Choose whether the agent asks for approval or acts on its own';
+
+  @override
+  String get capabilitySteer => 'Send while it works';
+
+  @override
+  String get capabilitySteerDetail =>
+      'Add a message while the agent is busy: steer it or queue it';
+
+  @override
+  String get serverSettingsAuthPasswordSaved => 'Password saved on this phone';
+
+  @override
+  String get serverSettingsAuthTokenSaved =>
+      'Connection token saved on this phone';
+
+  @override
+  String get serverSettingsAuthTokenMissing => 'No connection token saved';
+
+  @override
+  String connectionPasswordRejectedFor(String server) {
+    return 'The password for $server changed. Update it to reconnect.';
+  }
+
+  @override
+  String connectionTokenRejectedFor(String server) {
+    return '$server rejected the connection token. Update it to reconnect.';
+  }
 }

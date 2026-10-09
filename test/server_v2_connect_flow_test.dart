@@ -487,7 +487,10 @@ void main() {
       ),
     );
 
-    expect(find.text('Server password changed — reconnect.'), findsOneWidget);
+    expect(
+      find.textContaining('changed. Update it to reconnect.'),
+      findsOneWidget,
+    );
     // Never a modal: the state renders as a MaterialBanner with one action.
     expect(find.byType(AlertDialog), findsNothing);
     final action = find.byKey(const ValueKey('banner-update-password'));
