@@ -204,6 +204,7 @@
             android:exported="false"
             android:isolatedProcess="true"
             android:process=":local_pdf" />
+        <receiver android:name=".BuiltinIdleReceiver" android:exported="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

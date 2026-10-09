@@ -449,6 +449,9 @@ class MainActivity : FlutterActivity() {
                             result.error("engine_unavailable", "The phone engine is unavailable.", null)
                         } else if (call.method in setOf("startAgentHost", "agentHostStatus", "stopAgentHost", "deleteAgentHost", "agentHostVersion", "agentHostWorkspace", "startAgentSignIn", "readAgentSignInChallenge", "submitAgentSignInCode", "cancelAgentSignIn", "agentSignInStatus")) {
                             result.error("agent_unavailable", "The agent is unavailable. Try again.", null)
+                        } else if (call.method in setOf("setPhoneServerIdlePolicy", "observePhoneAgentWork",
+                            "resumeIdleStoppedPhoneServer", "completePhoneServerIdleResume")) {
+                            result.error("idle_resume_unavailable", "The phone server could not start. Open setup or try Start again.", null)
                         } else if (call.method in setOf("restartServer", "stageServerRecovery", "bindServerRecovery",
                             "serverRecoveryBudget", "serverRecoveryReceipts", "ackServerRecoveryReceipt",
                             "updateServerRecoveryReceipt", "confirmManualServerStart", "unbindServerRecovery",
@@ -467,13 +470,29 @@ class MainActivity : FlutterActivity() {
             "agentAuthProbe" -> inBackground {
                 linux.agentAuthProbe(call.arguments as? Map<*, *> ?: emptyMap<Any, Any>())
             }
-            "startAgentHost", "agentHostStatus", "stopAgentHost", "deleteAgentHost", "agentHostVersion", "agentHostWorkspace" -> inBackground {
+            "startAgentHost" -> {
+                val args = call.arguments as? Map<*, *> ?: emptyMap<Any, Any>()
+                val profile = args["profileId"] as? String ?: ""
+                val generation = when (val value = args["expectedIdleGeneration"]) {
+                    is Int -> value.toLong()
+                    is Long -> value
+                    else -> null
+                }
+                val ticket = try { linux.captureAgentHostStart(profile, args["idleResume"] == true, generation) }
+                    catch (_: Exception) { null }
+                if (ticket == null) result.error("idle_resume_stale", "The agents could not reconnect. Open agent setup and try again.", null)
+                else inBackground {
+                    linux.withAgentHostStart(ticket) {
+                        linux.agentHost.start(profile,
+                            call.argument<String>("password") ?: error("Agent unavailable"),
+                            call.argument<Int>("port") ?: 4099,
+                            call.argument<String>("config") ?: error("Agent unavailable"))
+                    }
+                }
+            }
+            "agentHostStatus", "stopAgentHost", "deleteAgentHost", "agentHostVersion", "agentHostWorkspace" -> inBackground {
                 val profile = call.argument<String>("profileId") ?: error("Agent unavailable")
                 when (call.method) {
-                    "startAgentHost" -> linux.agentHost.start(profile,
-                        call.argument<String>("password") ?: error("Agent unavailable"),
-                        call.argument<Int>("port") ?: 4099,
-                        call.argument<String>("config") ?: error("Agent unavailable"))
                     "agentHostWorkspace" -> linux.agentHost.workspace(profile)
                     "agentHostStatus" -> linux.agentHost.status(profile)
                     "stopAgentHost" -> linux.agentHost.stop(profile)
@@ -540,7 +559,30 @@ class MainActivity : FlutterActivity() {
                     "services" to linux.runningServices(),
                     "abi" to (Build.SUPPORTED_ABIS.firstOrNull() ?: ""),
                     "bytesUsed" to linux.bytesUsed(),
-                )
+                ) + linux.serverIdleStatus()
+            }
+            "setPhoneServerIdlePolicy" -> inBackground {
+                val args = call.arguments as? Map<*, *> ?: error("idle_policy_invalid")
+                linux.setPhoneServerIdlePolicy(args["enabled"] as? Boolean ?: error("idle_policy_invalid"),
+                    args["idleMinutes"] as? Int ?: error("idle_policy_invalid"))
+            }
+            "observePhoneAgentWork" -> inBackground {
+                val args = call.arguments as? Map<*, *> ?: error("idle_policy_invalid")
+                val busy = args["busy"]
+                check(busy == null || busy is Boolean)
+                linux.observePhoneAgentWork(args["profileId"] as? String ?: error("idle_policy_invalid"), busy as? Boolean)
+                null
+            }
+            "resumeIdleStoppedPhoneServer", "completePhoneServerIdleResume" -> inBackground {
+                val args = call.arguments as? Map<*, *> ?: error("idle_resume_stale")
+                val profile = args["profileId"] as? String ?: error("idle_resume_stale")
+                val generation = when (val value = args["expectedIdleGeneration"]) {
+                    is Int -> value.toLong()
+                    is Long -> value
+                    else -> error("idle_resume_stale")
+                }
+                if (call.method == "resumeIdleStoppedPhoneServer") linux.resumeIdleStoppedPhoneServer(profile, generation)
+                else linux.completePhoneServerIdleResume(profile, generation)
             }
             "installUbuntu" -> inBackground {
                 linux.installInBackground()
@@ -649,6 +691,19 @@ class MainActivity : FlutterActivity() {
                 val on = call.argument<Boolean>("on") == true
                 val forMs = call.argument<Number>("forMs")?.toLong() ?: 0L
                 inBackground { linux.holdAwakeForWork(on, forMs) }
+            }
+            "setChatWorkLease" -> {
+                val leaseId = call.argument<String>("leaseId") ?: ""
+                val on = call.argument<Boolean>("on") == true
+                val forMs = call.argument<Number>("forMs")?.toLong() ?: 0L
+                inBackground { linux.setChatWorkLease(leaseId, on, forMs) }
+            }
+            "setPhoneAgentChatWorkLease" -> {
+                val profile = call.argument<String>("profileId") ?: ""
+                val leaseId = call.argument<String>("leaseId") ?: ""
+                val on = call.argument<Boolean>("on") == true
+                val forMs = call.argument<Number>("forMs")?.toLong() ?: 0L
+                inBackground { linux.setPhoneAgentChatWorkLease(profile, leaseId, on, forMs) }
             }
             "performance" -> inBackground { linux.performance() }
             // Named long-running services beside the OpenCode server (the AI

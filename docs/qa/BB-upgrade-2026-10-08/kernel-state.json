@@ -1,0 +1,26 @@
+{
+  "utc": "2026-10-08T20:10:33.246000+00:00",
+  "readOnly": true,
+  "appIdentities": [
+    {
+      "pid": 3829,
+      "parent": 369,
+      "group": 369,
+      "session": 0,
+      "startTicks": 48061,
+      "nativeConstructorAccepts": true
+    }
+  ],
+  "projects": {
+    "directory": true,
+    "nonempty": true
+  },
+  "legacyProjects": {
+    "directory": true,
+    "nonempty": true
+  },
+  "guestRoot": {
+    "directory": true,
+    "nonempty": true
+  }
+}

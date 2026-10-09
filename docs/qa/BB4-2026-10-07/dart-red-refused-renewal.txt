@@ -1,0 +1,36 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart
+00:00 +0: rejected renewal closes only its lease and stops renewing
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: Set:['setup.job', 'sign-in.run', 'terminal.session']
+  Actual: Set:[
+            'setup.job',
+            'sign-in.run',
+            'terminal.session',
+            'chat.327a8c526e98b852af9f641520d4865d'
+          ]
+   Which: larger than expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart:447:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart line 447
+The test description was:
+  rejected renewal closes only its lease and stops renewing
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: rejected renewal closes only its lease and stops renewing [E]
+  Test failed. See exception logs above.
+  The test description was: rejected renewal closes only its lease and stops renewing
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/reply_watch_test.dart: rejected renewal closes only its lease and stops renewing

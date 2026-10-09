@@ -1,0 +1,10 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_run_native_test.dart
+00:00 +0: (setUpAll)
+00:04 +0: native agent setup run: receipts
+00:04 +1: native agent setup run: reader-failure
+00:04 +2: native agent setup run: stdin-failure
+00:04 +3: native agent setup run: wait-failure
+00:04 +4: native agent setup run: log-failure
+00:04 +5: native agent setup run: timeout
+00:04 +6: (tearDownAll)
+00:04 +6: All tests passed!

@@ -1,0 +1,7 @@
+obsolete-on: expected behavior assertion failure
+required-off: expected behavior assertion failure
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb4_dart_regression.py", line 28, in <module>
+    assert code==1 and '[E]' in log and 'Expected:' in log and 'Some tests failed.' in log,label
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: late-acquire

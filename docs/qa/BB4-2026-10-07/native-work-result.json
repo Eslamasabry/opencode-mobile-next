@@ -1,0 +1,20 @@
+[
+  {
+    "name": "WorkLeasesTest",
+    "tests": "19",
+    "failures": "0",
+    "errors": "0"
+  },
+  {
+    "name": "NativeWorkLeaseHostTest",
+    "tests": "22",
+    "failures": "0",
+    "errors": "0"
+  },
+  {
+    "name": "SetupWorkScopesTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0"
+  }
+]

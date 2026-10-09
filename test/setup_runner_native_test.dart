@@ -23,6 +23,8 @@ void main() {
   const scenarios = [
     'ordered-terminal',
     'installer-routed',
+    'setup-work-owned',
+    'setup-work-revoked-before-worker',
     'typed-write-failure',
     'failed-start-status',
     'service-start-denied',
@@ -61,6 +63,7 @@ void main() {
       compiler: compiler,
       sources: [
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt',
+        'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupWorkScopes.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupJob.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRuntimeOwnership.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeInstallerOwnership.kt',

@@ -13,7 +13,7 @@ void main() {
       : File(sdkman).existsSync()
       ? sdkman
       : null;
-  final runs = <String, Future<ProcessResult>>{};
+  String? jar;
   const scenarios = [
     'setup-main-denied',
     'daemon-main-denied',
@@ -22,13 +22,22 @@ void main() {
     'daemon-stop-denied',
     'result-notification-denied',
     'dispatch-denied',
+    'armed-null-sticky',
+    'unarmed-null-rejected',
+    'restoration-disarmed-not-sticky',
+    'explicit-unarmed-not-sticky',
+    'daemon-timeout-async-revocation',
+    'daemon-stop-async-revocation',
+    'daemon-request-threw-after-revocation',
+    'setup-timeout-async-revocation',
+    'destroy-revokes-kind',
     'localized-copy-ar',
     'localized-copy-en',
   ];
 
   setUpAll(() async {
     if (compiler == null) return;
-    final jar = await cachedKotlinJar(
+    jar = await cachedKotlinJar(
       compiler: compiler,
       sources: [
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupService.kt',
@@ -40,14 +49,6 @@ void main() {
           ..sort()),
       ],
     );
-    for (final scenario in scenarios) {
-      runs[scenario] = Process.run(Platform.environment['JAVA'] ?? 'java', [
-        '-cp',
-        jar,
-        'io.github.eslamasabry.opencode_mobile.Phone_agent_service_harnessKt',
-        scenario,
-      ]);
-    }
   });
 
   for (final scenario in scenarios) {
@@ -55,7 +56,13 @@ void main() {
       'native agent service callback: $scenario',
       skip: compiler == null ? 'kotlinc not available' : null,
       () async {
-        final result = await runs[scenario]!;
+        final result = await Process.run(Platform.environment['JAVA'] ?? 'java', [
+          '-Xmx64m',
+          '-cp',
+          jar!,
+          'io.github.eslamasabry.opencode_mobile.Phone_agent_service_harnessKt',
+          scenario,
+        ]);
         expect(
           result.exitCode,
           0,

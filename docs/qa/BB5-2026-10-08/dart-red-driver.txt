@@ -1,0 +1,8 @@
+{"case": "strict-integer", "exit": 1, "behavioralFailure": true, "exactBytesRestored": true}
+{"case": "identity", "exit": 1, "behavioralFailure": true, "exactBytesRestored": true}
+{"case": "first-read-fence", "exit": 1, "behavioralFailure": true, "exactBytesRestored": true}
+{"case": "server-return-fence", "exit": 1, "behavioralFailure": true, "exactBytesRestored": true}
+{"case": "previous-helper-intent", "exit": 1, "behavioralFailure": true, "exactBytesRestored": true}
+{"case": "fresh-stop-generation", "exit": 1, "behavioralFailure": true, "exactBytesRestored": true}
+{"restoredFile": "test/builtin_idle_policy_test.dart", "exit": 0}
+{"restoredFile": "test/phone_server_idle_test.dart", "exit": 0}

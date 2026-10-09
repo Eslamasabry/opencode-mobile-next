@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_legacy_server_only_proof_cannot_qualify_agent_scope (test_bb4_runtime_acceptance.LeaseAdapterTest.test_legacy_server_only_proof_cannot_qualify_agent_scope)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb4_runtime_acceptance.py", line 22, in test_legacy_server_only_proof_cannot_qualify_agent_scope
+    with self.assertRaises(H.Q.Refused):self.session().run()
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)

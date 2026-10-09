@@ -1,0 +1,106 @@
+{
+  "owned": [
+    {
+      "pid": 2950776,
+      "startTicks": 93253655,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2951381,
+      "startTicks": 93257189,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2951406,
+      "startTicks": 93257196,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2951428,
+      "startTicks": 93257315,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2951476,
+      "startTicks": 93257381,
+      "gradleDaemon": true
+    },
+    {
+      "pid": 2952704,
+      "startTicks": 93265726,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2952732,
+      "startTicks": 93265734,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2952743,
+      "startTicks": 93265937,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2952777,
+      "startTicks": 93266169,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2955176,
+      "startTicks": 93271264,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2955463,
+      "startTicks": 93271336,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2955464,
+      "startTicks": 93271337,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2955465,
+      "startTicks": 93271338,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2957973,
+      "startTicks": 93278806,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2958059,
+      "startTicks": 93278923,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2958076,
+      "startTicks": 93278987,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2958094,
+      "startTicks": 93279105,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2958103,
+      "startTicks": 93279178,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2960420,
+      "startTicks": 93285307,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2964519,
+      "startTicks": 93299792,
+      "gradleDaemon": false
+    }
+  ],
+  "remaining": [],
+  "intermediatesAbsent": true
+}

@@ -1,0 +1,14 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart
+00:00 +0: supporting status requires every correctly typed admission field
+00:00 +0 -1: supporting status requires every correctly typed admission field [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/builtin_idle_policy_test.dart 141:7            main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: supporting status requires every correctly typed admission field

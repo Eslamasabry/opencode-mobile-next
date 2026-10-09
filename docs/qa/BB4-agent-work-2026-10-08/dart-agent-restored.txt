@@ -1,0 +1,29 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: unknown never creates a hold; known busy renews the same ID
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: idle before queued on skips obsolete acquire but still sends off
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: late acquire after idle is drained before the next busy run
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: late acquire after dispose releases only its own ID
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: owner switch drains delayed old hold and uses a new opaque ID
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: rapid idle busy retains mandatory old off before new on
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: native cap never reopens on true or unknown until confirmed idle
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: six-hour cap shortens TTL and releases without busy reopening
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: backward and negative clock fail closed until known idle
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: six-hour limit drains an acquisition still waiting for native
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: refused renewal releases the old token and stops retries
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: independent watchers never release each other
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: partial acquire and release exceptions cannot poison later work
+00:00 +13: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: agent chat lease carries the separate profile and opaque name
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: agent off preserves its profile even after helper loss
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: agent profile and opaque name are validated before native handoff
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: agent malformed receipt and unsupported platform deny admission
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: named chat acquisition uses the frozen channel contract
+00:00 +18: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: named chat release retains its ID and requested duration
+00:00 +19: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: native exhausted lease reports capped without reporting held
+00:00 +20: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: other work holding the lock does not claim this chat lease
+00:00 +21: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: absent and malformed replies never fabricate admission
+00:00 +22: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: invalid opaque IDs are refused before native handoff
+00:00 +23: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: maximum length opaque ID reaches native unchanged
+00:00 +24: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: unsupported platforms return no admission without native handoff
+00:00 +25: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: legacy timed hold keeps its bool return and original arguments
+00:00 +26: All tests passed!

@@ -1,0 +1,11 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart
+00:00 +0: idle policy carries authored booleans and minute bounds
+00:00 +1: resume and completion retain the exact owner generation and have no start fallback
+00:00 +2: unsafe owners and nonpositive generations never reach the native channel
+00:00 +3: supporting status requires every correctly typed admission field
+00:00 +4: unknown or malformed native replies expose only the fixed recovery error
+00:00 +5: tri-state work heartbeat carries no work text and validates the readable alias
+00:00 +6: an old channel can refuse a heartbeat without authorizing or exposing output
+00:00 +7: unsupported platforms never dispatch idle start or heartbeat methods
+00:00 +8: a stalled native completion is bounded and has no manual fallback
+00:00 +9: All tests passed!

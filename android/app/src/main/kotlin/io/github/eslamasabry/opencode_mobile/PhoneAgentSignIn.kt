@@ -92,7 +92,7 @@ class PhoneAgentSignIn(private val linux: BuiltinLinux) {
                 throw AuthFailure("cancelled")
             }
             // Starting/registering atomically ensures cancel cannot miss a new child.
-            linux.startAgentProcess(run.profileId, args, foreground).also {
+            linux.startSignInProcess(run.profileId, args, foreground).also {
                 run.processes.add(it)
                 if (foreground) { run.loginProcess = it; run.readerStarted = true }
             }

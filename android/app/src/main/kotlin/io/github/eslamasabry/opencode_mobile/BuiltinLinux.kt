@@ -71,6 +71,8 @@ class BuiltinLinux(private val context: Context) {
     private var latestBoundaryControls = emptyMap<String, Any?>()
     internal fun phoneBoundaryControls(): Map<String, Any?> = latestBoundaryControls.toMap()
     private val processConfinement = java.util.IdentityHashMap<Process, Boolean>()
+    // Captured before an authored foreground launch; a late registration cannot recapture after Stop.
+    private val agentWorkAdmissions = java.util.IdentityHashMap<Process, Long>()
 
     // A corrupt/symlink marker still requires protection. Never fall back to
     // legacy execution merely because marker bytes or a packaged ELF changed.
@@ -258,6 +260,7 @@ class BuiltinLinux(private val context: Context) {
         var admitted: Process? = null
         while (admitted == null) {
             admitted = synchronized(this) {
+                reclaimDeadInstaller()
                 if (installerProcess == null) {
                     check(SystemClock.elapsedRealtime() - began <= timeoutMillis) {
                         "Another phone task is running. Wait a moment and try again."
@@ -393,6 +396,36 @@ class BuiltinLinux(private val context: Context) {
         check(plan().server.isEmpty()) { componentUpdateFailure }
     }
 
+    /** A failed launch/completion must not permanently reserve a dead warm writer. Never signals. */
+    @Synchronized
+    private fun reclaimDeadInstaller(): Boolean = synchronized(installerGuard) {
+        val cached = installerProcess
+        if (cached?.isAlive == true) return@synchronized false
+        // The first cold admission retains its existing boot/rollback recovery authority.
+        if (!componentUpdatesRecovered && cached == null) return@synchronized false
+        val launchId = installerLaunchId
+        val currentOwner = {
+            installerProcess === cached && installerLaunchId == launchId && cached?.isAlive != true
+        }
+        NativeInstallerAdmission.reclaim(installerTicket(), false, currentOwner, ::installerTicket,
+            { ticket ->
+                val plan = if (cached == null) installerPlan(ticket)
+                    else liveInstallerPlan(ticket, cached, launchId ?: error(componentUpdateFailure))
+                plan.server.isEmpty()
+            },
+            { ticket ->
+                check(currentOwner() && installerTicket() == ticket) { componentUpdateFailure }
+                if (!installerPreferences.edit().remove("ticket").commit()) false else {
+                    installerProcess = null
+                    installerLaunchId = null
+                    // A dead INSTALL can leave a journal: rollback still precedes the next guest command.
+                    componentUpdatesRecovered = false
+                    cached?.let { workLeases.release(it) }
+                    true
+                }
+            })
+    }
+
     /** One cold admission precedes the first guest command; no live install is rolled back. */
     @Synchronized
     private fun recoverColdComponentUpdates() {
@@ -455,7 +488,9 @@ class BuiltinLinux(private val context: Context) {
 
     private fun startQualifiedInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
         agentUser: Boolean = false): Process {
-        check(installed && installerProcess == null) { componentUpdateFailure }
+        check(installed) { componentUpdateFailure }
+        reclaimDeadInstaller()
+        check(installerProcess == null) { componentUpdateFailure }
         recoverColdComponentUpdates()
         check(installerTicket() == null) { componentUpdateFailure }
         val nonce = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
@@ -492,6 +527,7 @@ class BuiltinLinux(private val context: Context) {
             committedTicket = committed
             installerPlan(committed) // No unknown previous writer can pass the workload gate.
             synchronized(installerGuard) { saveInstaller(committed) }
+            if (setupWorkScopes.childNeedsLease()) trackWork(launched, WorkLeases.Kind.SETUP)
             launched.outputStream.write("$nonce\n".toByteArray(Charsets.US_ASCII))
             launched.outputStream.flush(); launched.outputStream.close()
             monitorInstallerOwnership(launched, nonce, committed)
@@ -579,6 +615,7 @@ class BuiltinLinux(private val context: Context) {
 
     @Synchronized
     internal fun finishInstaller(process: Process) {
+        workLeases.release(process)
         try {
             check(installerProcess === process) { componentUpdateFailure }
             synchronized(installerGuard) {
@@ -639,6 +676,7 @@ class BuiltinLinux(private val context: Context) {
             "TERM=xterm-256color",
             "TMPDIR=/tmp",
         ) + program
+        workLeases.observeTerminalsSoon()
         return if (prootIsConfined && protectionTier() != "proot") protectedCommand(command) else command
     }
 
@@ -707,26 +745,50 @@ class BuiltinLinux(private val context: Context) {
     /** Private agent process: fixed uid, private host home, no transcript/log. */
     @Synchronized
     fun startAgentProcess(profileId: String, argv: List<String>, foreground: Boolean = false,
-        privateOutput: Boolean = false): Process {
+        privateOutput: Boolean = false): Process =
+        startPrivateAgentProcess(profileId, argv, foreground, privateOutput, null)
+
+    @Synchronized
+    internal fun startSignInProcess(profileId: String, argv: List<String>, foreground: Boolean): Process =
+        startPrivateAgentProcess(profileId, argv, foreground, false, WorkLeases.Kind.SIGN_IN)
+
+    private fun startPrivateAgentProcess(profileId: String, argv: List<String>, foreground: Boolean,
+        privateOutput: Boolean, workKind: WorkLeases.Kind?): Process {
         check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId)) { "The agent host is unavailable." }
         check(installed && argv.isNotEmpty() && profileId !in blockedAgentProfiles) { "The agent host is unavailable." }
+        val hostTicket = agentHostTicket.get()
+        if (hostTicket != null) synchronized(recoveryLock) {
+            check(hostTicket.profile == profileId && agentHostAdmissionCurrent(hostTicket))
+        }
+        val workGeneration = if (synchronized(recoveryLock) { activityResumed })
+            workLeases.foregroundGeneration() else null
         val profileHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId")
         Os.chmod(profileHome.absolutePath, 448)
         val guestHome = "/home/oc/.oc-profiles/$profileId"
         val command = listOf("/usr/bin/env", "HOME=$guestHome", "CLAUDE_CONFIG_DIR=$guestHome/claude",
             "CODEX_HOME=$guestHome/codex", "DISABLE_AUTOUPDATER=1", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1") + argv
-        val process = ProcessBuilder(prootCommand(command, agentUser = true)).apply {
+        val builder = ProcessBuilder(prootCommand(command, agentUser = true)).apply {
             environment().clear()
             environment().putAll(prootEnvironment())
             if (privateOutput) redirectError(File("/dev/null")) else redirectErrorStream(true)
-        }.start()
+        }
+        val process = if (hostTicket == null) builder.start() else synchronized(recoveryLock) {
+            check(agentHostAdmissionCurrent(hostTicket))
+            if (hostTicket.idleGeneration != null) check(serverRunning)
+            builder.start()
+        }
+        agentHostAdmissions.entries.removeAll { !it.key.isAlive }
+        hostTicket?.let { agentHostAdmissions[process] = it }
         processes.add(process)
         agentProcessProfiles.entries.removeAll { !it.key.isAlive }
         agentProcessProfiles[process] = profileId
+        agentWorkAdmissions.entries.removeAll { !it.key.isAlive }
+        workGeneration?.let { agentWorkAdmissions[process] = it }
         authOtherOwners.register(process, privateOutput)
         processConfinement[process] = prootIsConfined
         try {
             if (foreground) trackPrivateAgentService("agent-auth.$profileId", process, null)
+            workKind?.let { trackWork(process, it) }
             return process
         } catch (_: Throwable) {
             try { stopAgentProcess(process) } catch (_: Throwable) { }
@@ -739,10 +801,29 @@ class BuiltinLinux(private val context: Context) {
     @Synchronized
     fun trackPrivateAgentService(name: String, process: Process, port: Int?) {
         check(name.startsWith("agent-auth.") || name.startsWith("agent-host."))
+        val hostTicket = if (name.startsWith("agent-host.")) {
+            agentHostAdmissions[process]?.also { ticket ->
+                synchronized(recoveryLock) {
+                    check(name == "agent-host.${ticket.profile}" && agentHostAdmissionCurrent(ticket))
+                    if (ticket.idleGeneration != null) check(serverRunning)
+                }
+            } ?: error("idle_resume_stale")
+        } else null
         removeService(name)
         services[name] = serviceStarted(name, process, port, "Agents are working on this phone")
         recordRunning()
-        try { BuiltinServerService.start(context, currentNotice()) }
+        try {
+            BuiltinServerService.start(context, currentNotice())
+            if (hostTicket != null) synchronized(recoveryLock) {
+                check(agentHostAdmissionCurrent(hostTicket))
+                val state = idleState.snapshot()
+                if (hostTicket.idleGeneration == null && state.generation > 0) {
+                    check(state.owner != null && idleState.clearCompletedHelperGate(state.owner, state.generation))
+                }
+                agentHostAdmissions.remove(process)
+            }
+            agentWorkAdmissions.remove(process)?.let { workLeases.authorizeForegroundWork(it) }
+        }
         catch (_: Throwable) {
             try { stopAgentProcess(process) } catch (_: Throwable) { }
             removeStoppedService(name)
@@ -760,7 +841,13 @@ class BuiltinLinux(private val context: Context) {
                                 val exited = services.getValue(name)
                                 recordServiceExit(name, exited)
                                 services.remove(name)
-                                if (name == SERVER) scheduleNativeRecovery(exited)
+                                if (name == SERVER) {
+                                    synchronized(recoveryLock) {
+                                        val idle = idleState.snapshot()
+                                        if (idle.helperStopped && idle.owner != null) idleState.markServerLost(idle.owner, idle.generation)
+                                    }
+                                    scheduleNativeRecovery(exited)
+                                }
                                 serviceSetChanged()
                             }
                         }
@@ -1593,6 +1680,8 @@ class BuiltinLinux(private val context: Context) {
     private var recoveryGeneration = try { recoveryPreferences.getLong("runtimeGeneration", 0L) }
         catch (_: Throwable) { 0L }
     private val processBirthGeneration = recoveryGeneration
+    private var activityEpoch = 0L
+    @Volatile private var idleServerLive = false
     private var wantedRevision = 0L
     private var userStopped = recoveryPreferences.getBoolean("userStopped",
         !recoveryPreferences.getBoolean("wanted", false))
@@ -1607,6 +1696,272 @@ class BuiltinLinux(private val context: Context) {
     private var manualStartGeneration: Long? = null
     // Pinned shared_preferences_android 2.4.27 legacy backend; READ ONLY.
     private val flutterPreferences = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+    // Device-runtime intent only: no script, password, authentication or CPU lease is saved.
+    private var captureIdleDrain = false
+    private val idleState by lazy {
+        val initial = try {
+            recoveryPreferences.getString("idleState", null)?.let {
+                NativeIdleState.Snapshot.read(jsonMap(it))
+            } ?: NativeIdleState.Snapshot()
+        } catch (_: Exception) { null }
+        NativeIdleState(initial) { state ->
+            val edit = recoveryPreferences.edit().putString("idleState", JSONObject(state.map()).toString())
+            if (captureIdleDrain && state.stopped) capturePendingDrain(edit, state.owner, includeOther = true)
+            edit.commit()
+        }
+    }
+    private val idleHeartbeat = NativeIdleHeartbeat()
+    private val idlePolicy by lazy {
+        idleState.snapshot().let { IdleStopPolicy(it.enabled, it.idleMinutes) }
+    }
+    private val idleTimer by lazy { NativeIdleTimer(context) { checkIdleStop() } }
+    private val idleReturnNotification by lazy {
+        NativeIdleReturnNotification(
+            { NativeIdleReturnNotificationHost.show(context) },
+            { NativeIdleReturnNotificationHost.clear(context) },
+        )
+    }
+
+    private fun showIdleReturnNotification() = synchronized(recoveryLock) {
+        val state = idleState.snapshot()
+        idleReturnNotification.update(NativeIdleReturnNotification.State(
+            idleState.available, state.owner.takeIf { it == supervisionProfile && supervisionEnabled },
+            state.generation, state.stopped,
+            restartWanted, userStopped, activityResumed, idleServerLive,
+        ))
+    }
+
+    private fun idleBlocksRestoration(): Boolean {
+        val state = idleState.snapshot()
+        return !idleState.available || state.stopped || state.helperStopped
+    }
+
+    private fun revokeIdleTransition() {
+        idleReturnNotification.clear()
+        idleTimer.cancel()
+        check(idleState.revoke()) { "idle_policy_unavailable" }
+        val state = idleState.snapshot()
+        idlePolicy.configure(state.enabled, state.idleMinutes)
+        idleHeartbeat.clear()
+    }
+
+    @Synchronized fun serverIdleStatus(): Map<String, Any?> {
+        val state = idleState.snapshot()
+        val available = idleState.available
+        return mapOf(
+            "installed" to installed, "phase" to phase,
+            "serverRunning" to serverRunning, "serverRestartWanted" to serverRestartWanted,
+            "serverRecoveryAuthority" to true, "serverRecoveryGeneration" to serverRecoveryGeneration,
+            "serverRecoveryScheduled" to serverRecoveryScheduled,
+            "serverIdlePolicySupported" to true, "serverIdleEnabled" to state.enabled,
+            "serverIdleMinutes" to if (available) state.idleMinutes else null,
+            "serverIdleStopped" to state.stopped, "serverIdleHelperStopped" to state.helperStopped,
+            "serverIdleGeneration" to if (available) state.generation else null,
+        )
+    }
+
+    @Synchronized fun setPhoneServerIdlePolicy(enabled: Boolean, minutes: Int): Map<String, Any?> {
+        synchronized(recoveryLock) {
+            check(activityResumed && idleState.configure(enabled, minutes)) { "idle_policy_unavailable" }
+            idlePolicy.configure(enabled, minutes)
+            idleTimer.cancel()
+        }
+        return serverIdleStatus()
+    }
+
+    @Synchronized fun observePhoneAgentWork(profile: String, busy: Boolean?) {
+        if (!Regex("[A-Za-z0-9_-]{1,80}").matches(profile)) return
+        // A late observation from a previous readable alias cannot replace the
+        // current runtime owner's evidence or cancel its confirmed idle interval.
+        if (synchronized(recoveryLock) { supervisionProfile != profile }) return
+        idleHeartbeat.observe(profile, busy, SystemClock.elapsedRealtime())
+        checkIdleStop()
+    }
+
+    private fun helperOwner(profile: String): String? {
+        val value = flutterPreferences.getString("flutter.oc.phoneAgentOwner.$profile", null) ?: profile
+        return value.takeIf { Regex("[A-Za-z0-9_-]{1,80}").matches(it) }
+    }
+
+    // Timer/receiver is stop-only. Every wake rechecks volatile busy proof and durable authority.
+    @Synchronized fun checkIdleStop() {
+        if (Thread.currentThread().isInterrupted) return
+        val now = SystemClock.elapsedRealtime()
+        if (synchronized(recoveryLock) { activityResumed || !restartWanted || idleBlocksRestoration() } || !serverRunning) {
+            idlePolicy.observe(now, true, null)
+            idleTimer.cancel()
+            return
+        }
+        val owner = synchronized(recoveryLock) { supervisionProfile }
+        val busy = if (owner != null && workLeases.logicalWorkBusy() == false)
+            idleHeartbeat.busy(owner, now) else null
+        val foreground = synchronized(recoveryLock) { activityResumed }
+        val observation = idlePolicy.observe(now, foreground, busy)
+        if (!observation.stopDue) {
+            idleTimer.schedule(observation.deadlineMillis)
+            return
+        }
+        try {
+            val profile = owner ?: error("idle_resume_unavailable")
+            val recipe = currentIdleRecipe(profile)
+            val helper = helperOwner(profile) ?: error("idle_resume_unavailable")
+            val helperName = "agent-host.$helper"
+            val allowed = setOf(SERVER, helperName)
+            check(services.filterValues { it.process.isAlive }.keys.all { it in allowed })
+            val roots = services.filterValues { it.process.isAlive }.values.map { it.process }
+            check(processes.filter { it.isAlive }.all { process -> roots.any { it === process } })
+            recordRunning()
+            val receipt = ownership(profile)
+            NativeRuntimeOwnership.plan(receipt, bootIdentity(), sameUidInventory(), registeredRuntimePids(),
+                requireCompleteInventory = true, nonceMatches = ::nonceMatches)
+            synchronized(recoveryLock) {
+                check(!Thread.currentThread().isInterrupted && !activityResumed && serverRunning &&
+                    nativeAdmitted(profile, supervisionGeneration) &&
+                    workLeases.logicalWorkBusy() == false && idleHeartbeat.busy(profile, now) == false)
+                check(recipe.compatible(packageIdentity(), rootfsIdentity()))
+                val helperWasLive = services[helperName]?.process?.isAlive == true
+                captureIdleDrain = true
+                try {
+                    check(idleState.beginStop(profile, if (helperWasLive) helper else null, helperWasLive) != null)
+                } finally { captureIdleDrain = false }
+                wantedRevision++
+                supervisionGeneration++
+                recoveryScheduleId++
+                scheduledRecovery = false
+                recoveryGeneration++
+                recoveryAttempt = null
+                confirmedRecoveryAttempt = null
+                nativeRecoveryAttempt = null
+                manualStartGeneration = null
+                restoreUnavailable("idleStopped")
+            }
+            idleTimer.cancel()
+            drainPendingOwnedServer()
+            // Already-drained exact tracked objects only; never clear wanted or recipe here.
+            removeService(SERVER)
+            if (services[helperName] != null) removeService(helperName)
+            serviceSetChanged()
+            // A successful exact drain precedes this plain return shortcut.
+            showIdleReturnNotification()
+        } catch (_: Exception) {
+            // A failed proof leaves runtime intent intact. No uncertain PID is signalled.
+            idleTimer.cancel()
+        }
+    }
+
+    private fun currentIdleRecipe(profile: String): NativeServerRecipe {
+        check(supervisionProfile == profile && migrationMarkerValid(profile) && policyPermits(profile))
+        val recipe = NativeServerRecipe.read(jsonMap(recoveryPreferences.getString(recipeKey(profile), null)
+            ?: error("idle_resume_unavailable")))
+        check(recipe.profileId == profile && recipe.compatible(packageIdentity(), rootfsIdentity()) &&
+            readBudget(profile).attempts < 3)
+        return recipe
+    }
+
+    private fun idleResumeCurrent(profile: String, generation: Long, epoch: Long): Boolean =
+        activityResumed && activityEpoch == epoch && restartWanted && !userStopped &&
+            supervisionEnabled && supervisionProfile == profile && idleState.resumeAllowed(profile, generation) &&
+            migrationMarkerValid(profile) && policyPermits(profile)
+
+    @Synchronized fun resumeIdleStoppedPhoneServer(profile: String, generation: Long): Map<String, Any?> {
+        val workGeneration = workLeases.foregroundGeneration()
+        val epoch = synchronized(recoveryLock) {
+            check(idleResumeCurrent(profile, generation, activityEpoch)) { "idle_resume_stale" }
+            activityEpoch
+        }
+        val recipe = currentIdleRecipe(profile)
+        val state = idleState.snapshot()
+        if (state.stopped) {
+            drainPendingOwnedServer()
+            check(!serverRunning) { "idle_resume_stale" }
+            BuiltinServerService.start(context, currentNotice())
+            val deadline = SystemClock.elapsedRealtime() + 3000L
+            while (!BuiltinServerService.isForegroundRunning && SystemClock.elapsedRealtime() < deadline) {
+                Thread.sleep(25L)
+            }
+            synchronized(recoveryLock) {
+                check(idleResumeCurrent(profile, generation, epoch) && BuiltinServerService.isForegroundRunning)
+            }
+            serverRecipe = recipe
+            val launch = ServiceLaunch(nativeOwned = true, idleOwner = profile, idleGeneration = generation,
+                idleActivityEpoch = epoch)
+            val process = launchService(SERVER, recipe.restorationScript(), SERVER_DEFAULT_PORT, null, launch)
+            try {
+                synchronized(recoveryLock) {
+                    check(idleResumeCurrent(profile, generation, epoch) && process.isAlive)
+                    check(idleState.markServerResumed(profile, generation))
+                    manualStartGeneration = null
+                    workLeases.authorizeForegroundWork(workGeneration)
+                }
+            } catch (error: Exception) {
+                if (services[SERVER]?.process === process) {
+                    synchronized(recoveryLock) {
+                        if (!recoveryPreferences.contains("drainOwner")) {
+                            val edit = recoveryPreferences.edit()
+                            capturePendingDrain(edit, profile)
+                            check(edit.commit())
+                        }
+                    }
+                    removeService(SERVER)
+                    drainPendingOwnedServer()
+                }
+                throw error
+            }
+        }
+        return serverIdleStatus()
+    }
+
+    @Synchronized fun completePhoneServerIdleResume(profile: String, generation: Long): Map<String, Any?> {
+        synchronized(recoveryLock) {
+            val state = idleState.snapshot()
+            check(activityResumed && restartWanted && !userStopped && state.owner == profile &&
+                state.generation == generation && serverRunning && supervisionProfile == profile &&
+                supervisionEnabled && migrationMarkerValid(profile) && policyPermits(profile))
+            val helperRunning = state.helper?.let { services["agent-host.$it"]?.process?.isAlive == true } ?: false
+            check(idleState.complete(profile, generation, helperRunning)) { "idle_resume_stale" }
+        }
+        return serverIdleStatus()
+    }
+
+    internal data class AgentHostTicket(val profile: String, val owner: String?, val revision: Long,
+        val epoch: Long, val idleGeneration: Long?)
+    private val agentHostTicket = ThreadLocal<AgentHostTicket?>()
+    private val agentHostAdmissions = java.util.IdentityHashMap<Process, AgentHostTicket>()
+
+    internal fun captureAgentHostStart(profile: String, idleResume: Boolean, generation: Long?): AgentHostTicket? =
+        synchronized(recoveryLock) {
+            if (!activityResumed || !Regex("[A-Za-z0-9_-]{1,80}").matches(profile)) null else {
+                val owner = supervisionProfile
+                val ticket = AgentHostTicket(profile, owner, wantedRevision, activityEpoch,
+                    if (idleResume) generation else null)
+                if (idleResume && (generation == null || generation <= 0)) null
+                else ticket.takeIf { agentHostAdmissionCurrent(it) }
+            }
+        }
+
+    private fun agentHostAdmissionCurrent(ticket: AgentHostTicket): Boolean {
+        val state = idleState.snapshot()
+        val authorityOwner = ticket.owner.takeIf { ticket.idleGeneration != null }
+        val helper = if (ticket.idleGeneration == null && state.generation > 0 && ticket.owner != null)
+            helperOwner(ticket.owner) else null
+        return NativeAgentHostAdmission.admitted(
+            NativeAgentHostAdmission.Ticket(ticket.profile, ticket.owner, ticket.revision,
+                ticket.epoch, ticket.idleGeneration),
+            NativeAgentHostAdmission.Snapshot(idleState.available, activityResumed, activityEpoch,
+                wantedRevision, supervisionProfile, restartWanted, userStopped, supervisionEnabled,
+                idleServerLive, authorityOwner?.let(::migrationMarkerValid) == true,
+                authorityOwner?.let(::policyPermits) == true, helper, state))
+    }
+
+    internal fun <T> withAgentHostStart(ticket: AgentHostTicket, work: () -> T): T {
+        check(agentHostTicket.get() == null)
+        agentHostTicket.set(ticket)
+        try {
+            synchronized(recoveryLock) { check(agentHostAdmissionCurrent(ticket)) { "idle_resume_stale" } }
+            return work()
+        } finally { agentHostTicket.remove() }
+    }
+
     private data class RecoveryAttempt(val process: Process, val generation: Long)
     private var recoveryAttempt: RecoveryAttempt? = null
     private var confirmedRecoveryAttempt: RecoveryAttempt? = null
@@ -1801,6 +2156,9 @@ class BuiltinLinux(private val context: Context) {
         val nativeSupervisionGeneration: Long? = null,
         val nativeAttemptGeneration: Long? = null,
         val nativeScheduleId: Long? = null,
+        val idleOwner: String? = null,
+        val idleGeneration: Long? = null,
+        val idleActivityEpoch: Long? = null,
     )
 
     /** Workload cannot pass stdin gate until kernel/session identity has been durably committed. */
@@ -1834,7 +2192,7 @@ class BuiltinLinux(private val context: Context) {
             // Test-only checkpoint is outside admission lock: Stop can still revoke a blocked gate.
             gateCheckpointForQa("prepared", launchedIdentity)
             synchronized(recoveryLock) {
-                check(gateAdmissionCurrent(recipe.profileId, generation, supervisorGeneration, scheduleId)) {
+                check(gateAdmissionCurrent(recipe.profileId, generation, supervisorGeneration, scheduleId, launch)) {
                     "ownershipUnknown"
                 }
                 commitServerGate(recipe, launchedIdentity, gateState, process, nonce)
@@ -1891,10 +2249,13 @@ class BuiltinLinux(private val context: Context) {
 
     private fun gateAdmissionCurrent(
         profile: String, generation: Long, supervisorGeneration: Long?, scheduleId: Long?,
+        launch: ServiceLaunch,
     ): Boolean = restartWanted && !userStopped && supervisionProfile == profile &&
         generation == recoveryGeneration &&
         (supervisorGeneration == null || nativeAdmitted(profile, supervisorGeneration)) &&
-        (scheduleId == null || scheduleId == recoveryScheduleId)
+        (scheduleId == null || scheduleId == recoveryScheduleId) &&
+        (if (launch.idleGeneration != null) idleResumeCurrent(profile, launch.idleGeneration,
+            launch.idleActivityEpoch ?: -1L) else !idleBlocksRestoration())
 
     private fun readServerIdentity(
         process: Process, nonce: String, prepared: NativeRuntimeReceipt,
@@ -2192,6 +2553,7 @@ class BuiltinLinux(private val context: Context) {
         check(recoveryPreferences.edit().putString("owner", profile).putBoolean("enabled", enabled).commit())
         synchronized(recoveryLock) {
             if (supervisionProfile != profile || supervisionEnabled != enabled) {
+                revokeIdleTransition()
                 supervisionGeneration++
                 scheduledRecovery = false
             }
@@ -2243,6 +2605,7 @@ class BuiltinLinux(private val context: Context) {
     fun unbindServerRecovery(profile: String) {
         synchronized(recoveryLock) {
             if (supervisionProfile == profile) {
+                revokeIdleTransition()
                 supervisionEnabled = false
                 supervisionProfile = null
                 supervisionGeneration++
@@ -2300,7 +2663,7 @@ class BuiltinLinux(private val context: Context) {
     } catch (_: Throwable) { false }
 
     private fun nativeAdmitted(profile: String, generation: Long): Boolean = synchronized(recoveryLock) {
-        NativeRecoveryBudget.admitted(supervisionEnabled && supervisionProfile == profile,
+        NativeRecoveryBudget.admitted(!idleBlocksRestoration() && supervisionEnabled && supervisionProfile == profile,
             restartWanted, userStopped, supervisionGeneration, generation,
             migrationMarkerValid(profile), policyPermits(profile))
     }
@@ -2342,7 +2705,8 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
-    private fun recoveryScheduleAllowed(): Boolean = supervisionEnabled && restartWanted && !userStopped
+    private fun recoveryScheduleAllowed(): Boolean =
+        !idleBlocksRestoration() && supervisionEnabled && restartWanted && !userStopped
 
     private fun claimRecoverySchedule(): RecoverySchedule? = synchronized(recoveryLock) {
         val profile = supervisionProfile
@@ -2399,13 +2763,19 @@ class BuiltinLinux(private val context: Context) {
 
     /** Called on the main thread: invalidation never waits for runtime I/O. */
     fun setActivityResumed(resumed: Boolean) {
-        synchronized(recoveryLock) { activityResumed = resumed }
+        synchronized(recoveryLock) {
+            activityResumed = resumed
+            activityEpoch++
+            if (resumed) idleReturnNotification.clear()
+        }
+        idleTimer.schedule(SystemClock.elapsedRealtime())
         if (!resumed) cancelServerRecovery()
     }
 
     /** Revokes admission immediately, before an asynchronous explicit stop. */
     fun requestServerStop(reason: String = "stopped", includeOther: Boolean = false,
         onRevoked: ((Long) -> Unit)? = null): Long = synchronized(recoveryLock) {
+        idleReturnNotification.clear()
         restartWanted = false
         userStopped = true
         supervisionGeneration++
@@ -2428,6 +2798,7 @@ class BuiltinLinux(private val context: Context) {
         check(NativeRuntimeOwnership.revocationMayCommit(stopRevision, wantedRevision) && edit.commit()) {
             "The phone server setting could not be saved."
         }
+        revokeIdleTransition()
         stopRevision
     }
 
@@ -2473,6 +2844,7 @@ class BuiltinLinux(private val context: Context) {
 
     private fun setServerWanted(wanted: Boolean) {
         val revision = synchronized(recoveryLock) {
+            idleReturnNotification.clear()
             restartWanted = false
             wantedRevision++
             recoveryGeneration++
@@ -2502,6 +2874,7 @@ class BuiltinLinux(private val context: Context) {
             check(edit.commit()) { "The phone server setting could not be saved." }
             if (!wanted) { serverRecipe = null; restoreUnavailable(reason!!) }
             else { restorePhase = "idle"; restoreReason = null }
+            revokeIdleTransition()
             restartWanted = wanted; userStopped = !wanted
         }
     }
@@ -2607,6 +2980,7 @@ class BuiltinLinux(private val context: Context) {
      */
     @Synchronized
     fun startService(name: String, script: String, port: Int?, notice: String?) {
+        val workGeneration = workLeases.foregroundGeneration()
         check(installed) { "Ubuntu is not installed in the app yet" }
         require(NAME.matches(name)) { "Invalid service name: $name" }
         require(name != PHONE_ENGINE) { "The native phone engine has a dedicated launcher." }
@@ -2626,7 +3000,10 @@ class BuiltinLinux(private val context: Context) {
             synchronized(recoveryLock) { manualStartGeneration = recoveryGeneration }
         }
         launchService(name, script, port, notice)
-        if (name == SERVER) synchronized(recoveryLock) { manualStartGeneration = recoveryGeneration }
+        if (name == SERVER) {
+            workLeases.authorizeForegroundWork(workGeneration)
+            synchronized(recoveryLock) { manualStartGeneration = recoveryGeneration }
+        }
     }
 
     private fun launchService(
@@ -2648,7 +3025,7 @@ class BuiltinLinux(private val context: Context) {
         val process = launchServiceProcess(name, script, log, launch)
         process.outputStream.close()
         services[name] = serviceStarted(name, process, port, notice, script)
-        if (name == SERVER && nativeOwned) synchronized(recoveryLock) {
+        if (name == SERVER && nativeOwned && launch.idleGeneration == null) synchronized(recoveryLock) {
             nativeRecoveryAttempt = RecoveryAttempt(process, nativeAttemptGeneration ?: error("recovery_unavailable"))
             recoveryAttempt = null
         }
@@ -2670,7 +3047,12 @@ class BuiltinLinux(private val context: Context) {
         val nativeOwned = launch.nativeOwned
         val expectedGeneration = launch.expectedGeneration
         val nativeSupervisionGeneration = launch.nativeSupervisionGeneration
-        return if (nativeOwned) {
+        return if (launch.idleGeneration != null) {
+            val profile = launch.idleOwner ?: error("idle_resume_stale")
+            val epoch = launch.idleActivityEpoch ?: error("idle_resume_stale")
+            synchronized(recoveryLock) { check(idleResumeCurrent(profile, launch.idleGeneration, epoch)) }
+            startGatedServer(script, log, serverRecipe ?: error("idle_resume_unavailable"), launch)
+        } else if (nativeOwned) {
             val profile = synchronized(recoveryLock) { supervisionProfile } ?: error("recovery_unavailable")
             val supervisorGeneration = nativeSupervisionGeneration ?: error("recovery_unavailable")
             check(nativeAdmitted(profile, supervisorGeneration))
@@ -2709,7 +3091,13 @@ class BuiltinLinux(private val context: Context) {
                                 val exited = services.getValue(name)
                                 recordServiceExit(name, exited)
                                 services.remove(name)
-                                if (name == SERVER) scheduleNativeRecovery(exited)
+                                if (name == SERVER) {
+                                    synchronized(recoveryLock) {
+                                        val idle = idleState.snapshot()
+                                        if (idle.helperStopped && idle.owner != null) idleState.markServerLost(idle.owner, idle.generation)
+                                    }
+                                    scheduleNativeRecovery(exited)
+                                }
                                 serviceSetChanged()
                             }
                         }
@@ -2775,8 +3163,11 @@ class BuiltinLinux(private val context: Context) {
         recordRunning()
         // A reply cannot run on a server that is gone: never keep the phone
         // awake for it.
-        if (!serverRunning) releaseWork()
-        val running = services.values.any { it.process.isAlive }
+        if (!serverRunning) workLeases.serverGone()
+        workLeases.agentProfiles().forEach { profile ->
+            if (services["agent-host.$profile"]?.process?.isAlive != true) workLeases.helperGone(profile)
+        }
+        val running = services.values.any { it.process.isAlive } || workLeases.foregroundHeld
         val holdsRecovery = try {
             val profile = synchronized(recoveryLock) { supervisionProfile }
             profile != null && NativeRecoveryBudget.keepsForeground(false,
@@ -2804,6 +3195,7 @@ class BuiltinLinux(private val context: Context) {
      * so the next start knows what to bring back.
      */
     private fun recordRunning() {
+        idleServerLive = serverRunning
         try {
             val owner = recoveryPreferences.getString("restoreOwner", null)
             if (owner != null && serverRunning) {
@@ -2839,59 +3231,48 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
-    // ---- a reply in flight ---------------------------------------------------
+    // ---- bounded independent CPU work ownership -----------------------------
 
-    /**
-     * Keeps the CPU running while the in-app server works on a reply, as
-     * Termux's wake lock does for a server there. The foreground service
-     * keeps the process alive, but without a wake lock the phone still
-     * sleeps with the screen off, and a reply (or a tool it runs) stalls
-     * until something wakes it.
-     *
-     * Never unbounded: every hold ends by itself after at most
-     * [MAX_WORK_HOLD_MS]; the app renews it while a reply is still running
-     * and releases it as soon as none is. It is held only while the server
-     * runs, and a server that stops releases it (serviceSetChanged).
-     */
-    private val workLock: PowerManager.WakeLock? by lazy {
-        context.getSystemService(PowerManager::class.java)
-            ?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "OpenCode:reply")
-            ?.apply { setReferenceCounted(false) }
+    private val workLeases by lazy {
+        NativeWorkLeaseHost(context,
+            terminalWork = { LocalTerminal.get(context).list().filter { it.running }
+                .associate { it.id to (it.toMap()["signIn"] == true) } },
+            protectTerminal = {
+                if (synchronized(recoveryLock) { activityResumed }) {
+                    BuiltinServerService.start(context, "Terminal is working on this phone")
+                    true
+                } else BuiltinServerService.isForegroundRunning
+            },
+            changed = { synchronized(this@BuiltinLinux) { serviceSetChanged() } })
     }
-
-    /** Whether the phone is kept awake for a reply now. */
-    val workHeld: Boolean get() = synchronized(workLockGuard) { workLock?.isHeld == true }
-
-    private val workLockGuard = Any()
-
-    /**
-     * [on]: hold (or renew) the wake lock for [forMs], capped; off releases
-     * it. Returns whether it is held afterwards.
-     */
-    fun holdAwakeForWork(on: Boolean, forMs: Long): Boolean {
-        if (!on || !serverRunning) {
-            releaseWork()
-            return false
+    val workHeld: Boolean get() = workLeases.held
+    internal fun idleWorkBusy(): Boolean? = workLeases.logicalWorkBusy()
+    fun setChatWorkLease(name: String, on: Boolean, forMs: Long): Map<String, Boolean> =
+        workLeases.chat(name, on, forMs, serverRunning)
+    /** A helper chat owns a different lease scope from OpenCode server replies. */
+    fun setPhoneAgentChatWorkLease(profile: String, name: String, on: Boolean, forMs: Long): Map<String, Boolean> {
+        return synchronized(this) {
+            val admitted = profile !in blockedAgentProfiles &&
+                services["agent-host.$profile"]?.process?.isAlive == true &&
+                BuiltinServerService.isForegroundRunning
+            workLeases.agentChat(profile, name, on, forMs, admitted)
         }
-        val lock = workLock ?: return false
-        synchronized(workLockGuard) {
-            // Not reference-counted: acquiring again only moves the timeout.
-            lock.acquire(forMs.coerceIn(1_000L, MAX_WORK_HOLD_MS))
-        }
-        return true
     }
-
-    private fun releaseWork() {
-        synchronized(workLockGuard) {
-            val lock = workLock ?: return
-            if (lock.isHeld) {
-                try {
-                    lock.release()
-                } catch (_: RuntimeException) {
-                    // Its timeout released it a moment ago.
-                }
-            }
-        }
+    fun holdAwakeForWork(on: Boolean, forMs: Long): Boolean =
+        setChatWorkLease("legacy.reply", on, forMs)["held"] == true
+    internal fun revokeForegroundWork() = workLeases.revokeForegroundWork()
+    internal fun revokeSetupWork() = workLeases.revokeSetupWork()
+    private val setupWorkScopes by lazy {
+        SetupWorkScopes({ owner, alive -> workLeases.adopt(owner, WorkLeases.Kind.SETUP, alive) }, workLeases::release)
+    }
+    internal fun prepareSetupWork(): SetupWorkScopes.Scope = setupWorkScopes.prepare()
+    internal fun closeSetupWork(scope: SetupWorkScopes.Scope) = setupWorkScopes.close(scope)
+    internal fun <T> withSetupWork(scope: SetupWorkScopes.Scope, work: () -> T): T = setupWorkScopes.run(scope, work)
+    internal fun <T> withSetupWork(work: () -> T): T {
+        return withSetupWork(prepareSetupWork(), work)
+    }
+    private fun trackWork(process: Process, kind: WorkLeases.Kind) {
+        workLeases.adopt(process, kind) { process.isAlive }
     }
 
     /**
@@ -2922,6 +3303,7 @@ class BuiltinLinux(private val context: Context) {
             "prootFilters" to prootFilters,
             "serverFilters" to serverFilters,
             "workHeld" to workHeld,
+            "workLeases" to workLeases.diagnostics(),
             "services" to serviceDiagnostics(),
         )
     }
@@ -2974,6 +3356,7 @@ class BuiltinLinux(private val context: Context) {
         check(!installingRuntime && phase != "installing" && !SetupRunner.get(context).running) {
             "Finish or cancel setup before removing the runtime"
         }
+        reclaimDeadInstaller()
         check(installerProcess == null) { "Finish or cancel setup before removing the runtime" }
         recoverColdComponentUpdates()
         // Every service first (OpenCode, AI Team with its store and agents):

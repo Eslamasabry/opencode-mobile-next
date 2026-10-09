@@ -1,0 +1,14 @@
+test_normal_restore_install_r_never_downgrades_or_uninstalls (test_bb5_runtime_acceptance.NormalArtifactTest.test_normal_restore_install_r_never_downgrades_or_uninstalls) ... FAIL
+
+======================================================================
+FAIL: test_normal_restore_install_r_never_downgrades_or_uninstalls (test_bb5_runtime_acceptance.NormalArtifactTest.test_normal_restore_install_r_never_downgrades_or_uninstalls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 198, in test_normal_restore_install_r_never_downgrades_or_uninstalls
+    self.assertIn(('install', '-r', 'normal.apk'), commands)
+AssertionError: ('install', '-r', 'normal.apk') not found in [('install', '-r', '-d', 'normal.apk'), ('shell', 'dumpsys', 'package', 'io.github.eslamasabry.opencode_mobile')]
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (failures=1)

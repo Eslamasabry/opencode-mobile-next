@@ -1,0 +1,9 @@
+IdleStopPolicyTest 16 0 0 0
+NativeAgentHostAdmissionTest 22 0 0 0
+NativeIdleHeartbeatTest 17 0 0 0
+NativeIdleReceiverDispatchTest 8 0 0 0
+NativeIdleReturnNotificationTest 14 0 0 0
+NativeIdleStateTest 29 0 0 0
+NativeIdleTimerTest 17 0 0 0
+NativeWorkLeaseHostTest 49 0 0 0
+totalPassed=172

@@ -161,10 +161,14 @@ class SetupRunner private constructor(private val context: Context) {
                 }
                 lastNotifiedText = progressText(state.overall())
                 lastNotified = System.currentTimeMillis()
+                var workScope: SetupWorkScopes.Scope? = null
                 try {
+                    val prepared = linux.prepareSetupWork()
+                    workScope = prepared
                     SetupService.start(context, texts.channel, texts.title, lastNotifiedText)
-                    worker = Thread({ runJob(specs) }, "oc-setup").apply { start() }
+                    worker = Thread({ linux.withSetupWork(prepared) { runJob(specs) } }, "oc-setup").apply { start() }
                 } catch (_: Throwable) {
+                    workScope?.let { linux.closeSetupWork(it) }
                     state.state = "failed"
                     state.error = "The phone setup could not start. Try again."
                     try { writeNow() } catch (_: SetupPersistenceException) { persistenceFailed() }

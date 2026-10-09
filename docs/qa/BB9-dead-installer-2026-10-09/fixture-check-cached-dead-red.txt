@@ -1,0 +1,22 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/installer_admission_native_test.dart
+00:00 +0: (setUpAll)
+00:06 +0: native installer admission: check-cached-dead
+00:06 +0 -1: native installer admission: check-cached-dead [E]
+  Expected: <0>
+    Actual: <1>
+
+  Exception in thread "main" java.lang.IllegalStateException: Another phone task is running. Wait a moment and try again.
+    at io.github.eslamasabry.opencode_mobile.BuiltinLinux.admitCheckProcess(ProductionAdmission.kt:165)
+    at io.github.eslamasabry.opencode_mobile.BuiltinLinux.attempt(ProductionAdmission.kt:116)
+    at io.github.eslamasabry.opencode_mobile.ProductionAdmissionKt.main(ProductionAdmission.kt:198)
+
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/installer_admission_native_test.dart 124:7     main.<fn>
+
+00:06 +0 -1: (tearDownAll)
+00:06 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/installer_admission_native_test.dart: native installer admission: check-cached-dead

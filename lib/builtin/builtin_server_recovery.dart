@@ -313,6 +313,14 @@ class BuiltinServerRecovery extends ChangeNotifier {
     return false;
   }
 
+  /// An idle transition is never a request to reserve or reset crash retries.
+  bool _idleBlocksRecovery(BuiltinLinuxStatus status) =>
+      status.serverIdlePolicySupported &&
+      (!status.serverIdleReceiptValid ||
+          status.serverIdleStopped ||
+          status.serverIdleHelperStopped ||
+          (status.serverIdleGeneration! > 0 && !status.serverRunning));
+
   /// Safe to call concurrently: only one native start/health confirmation can
   /// be in flight. A profile change invalidates the old operation immediately.
   Future<void> check(ServerProfile? profile) async {
@@ -392,6 +400,10 @@ class BuiltinServerRecovery extends ChangeNotifier {
       } else {
         budget = _Budget.read(store.prefs.getString(keyFor(phone.id)));
       }
+      if (_idleBlocksRecovery(initialStatus)) {
+        _publish(BuiltinRecoveryPhase.stopped, budget);
+        return;
+      }
       if (_nativeAuthority) {
         for (final value in await linux.serverRecoveryReceipts(phone.id)) {
           final receipt = _Budget.readMap(value);
@@ -439,6 +451,10 @@ class BuiltinServerRecovery extends ChangeNotifier {
       final status = await linux.status();
       if (!_eligible(phone, generation)) return;
       starter.observeStatus(status);
+      if (_idleBlocksRecovery(status)) {
+        _publish(BuiltinRecoveryPhase.stopped, budget);
+        return;
+      }
       if (!status.installed ||
           !status.serverRestartWanted ||
           status.serverRecoveryGeneration == null) {
@@ -460,7 +476,9 @@ class BuiltinServerRecovery extends ChangeNotifier {
         // Recheck stop intent after asynchronous health; Stop wins.
         final confirmed = await linux.status();
         if (!_eligible(phone, generation)) return;
-        if (!confirmed.serverRunning || !confirmed.serverRestartWanted) {
+        if (_idleBlocksRecovery(confirmed) ||
+            !confirmed.serverRunning ||
+            !confirmed.serverRestartWanted) {
           _publish(BuiltinRecoveryPhase.stopped, budget);
           return;
         }
@@ -537,7 +555,9 @@ class BuiltinServerRecovery extends ChangeNotifier {
       if (failure == null) {
         final confirmed = await linux.status();
         if (!_eligible(phone, generation)) return;
-        if (confirmed.serverRunning && confirmed.serverRestartWanted) {
+        if (!_idleBlocksRecovery(confirmed) &&
+            confirmed.serverRunning &&
+            confirmed.serverRestartWanted) {
           await _confirm(phone, budget, generation);
           return;
         }

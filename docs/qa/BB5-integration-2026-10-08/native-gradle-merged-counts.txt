@@ -1,0 +1,13 @@
+('io.github.eslamasabry.opencode_mobile.IdleStopPolicyTest', 16, 0, 0)
+('io.github.eslamasabry.opencode_mobile.NativeAgentHostAdmissionTest', 22, 0, 0)
+('io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest', 21, 0, 0)
+('io.github.eslamasabry.opencode_mobile.NativeIdleHeartbeatTest', 17, 0, 0)
+('io.github.eslamasabry.opencode_mobile.NativeIdleReceiverDispatchTest', 8, 0, 0)
+('io.github.eslamasabry.opencode_mobile.NativeIdleReturnNotificationTest', 14, 0, 0)
+('io.github.eslamasabry.opencode_mobile.NativeIdleStateTest', 29, 0, 0)
+('io.github.eslamasabry.opencode_mobile.NativeIdleTimerTest', 17, 0, 0)
+('io.github.eslamasabry.opencode_mobile.NativeInstallerAdmissionTest', 18, 0, 0)
+('io.github.eslamasabry.opencode_mobile.NativeInstallerOwnershipTest', 35, 0, 0)
+('io.github.eslamasabry.opencode_mobile.NativeInstallerVisibilityTest', 13, 0, 0)
+('io.github.eslamasabry.opencode_mobile.NativeWorkLeaseHostTest', 49, 0, 0)
+TOTAL=259

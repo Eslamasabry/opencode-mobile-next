@@ -1,0 +1,355 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: unknown never creates a hold; known busy renews the same ID
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following StateError was thrown running a test:
+Bad state: No element
+
+When the exception was thrown, this was the stack:
+#0      List.single (dart:core-patch/growable_array.dart:362:22)
+#1      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:49:29)
+<asynchronous suspension>
+#2      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  unknown never creates a hold; known busy renews the same ID
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: unknown never creates a hold; known busy renews the same ID [E]
+  Test failed. See exception logs above.
+  The test description was: unknown never creates a hold; known busy renews the same ID
+
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: idle before queued on skips obsolete acquire but still sends off
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: [false]
+  Actual: MappedListIterable<(String, String, bool, Duration), bool>:[]
+   Which: at location [0] is MappedListIterable<(String, String, bool, Duration), bool>:[] which
+shorter than expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:69:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart line 69
+The test description was:
+  idle before queued on skips obsolete acquire but still sends off
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -2: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: idle before queued on skips obsolete acquire but still sends off [E]
+  Test failed. See exception logs above.
+  The test description was: idle before queued on skips obsolete acquire but still sends off
+
+00:00 +0 -2: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: late acquire after idle is drained before the next busy run
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following StateError was thrown running a test:
+Bad state: No element
+
+When the exception was thrown, this was the stack:
+#0      List.first (dart:core-patch/growable_array.dart:352:5)
+#1      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:82:30)
+<asynchronous suspension>
+#2      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  late acquire after idle is drained before the next busy run
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -3: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: late acquire after idle is drained before the next busy run [E]
+  Test failed. See exception logs above.
+  The test description was: late acquire after idle is drained before the next busy run
+
+00:00 +0 -3: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: late acquire after dispose releases only its own ID
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <1>
+  Actual: WhereIterable<(String, String, bool, Duration)>:[]
+   Which: has length of <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:105:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart line 105
+The test description was:
+  late acquire after dispose releases only its own ID
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -4: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: late acquire after dispose releases only its own ID [E]
+  Test failed. See exception logs above.
+  The test description was: late acquire after dispose releases only its own ID
+
+00:00 +0 -4: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: owner switch drains delayed old hold and uses a new opaque ID
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following StateError was thrown running a test:
+Bad state: No element
+
+When the exception was thrown, this was the stack:
+#0      List.first (dart:core-patch/growable_array.dart:352:5)
+#1      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:119:30)
+<asynchronous suspension>
+#2      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  owner switch drains delayed old hold and uses a new opaque ID
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -5: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: owner switch drains delayed old hold and uses a new opaque ID [E]
+  Test failed. See exception logs above.
+  The test description was: owner switch drains delayed old hold and uses a new opaque ID
+
+00:00 +0 -5: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: rapid idle busy retains mandatory old off before new on
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: [true, false, true]
+  Actual: MappedListIterable<(String, String, bool, Duration), bool>:[]
+   Which: at location [0] is MappedListIterable<(String, String, bool, Duration), bool>:[] which
+shorter than expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:139:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart line 139
+The test description was:
+  rapid idle busy retains mandatory old off before new on
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -6: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: rapid idle busy retains mandatory old off before new on [E]
+  Test failed. See exception logs above.
+  The test description was: rapid idle busy retains mandatory old off before new on
+
+00:00 +0 -6: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: native cap never reopens on true or unknown until confirmed idle
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: [true]
+  Actual: MappedListIterable<(String, String, bool, Duration), bool>:[]
+   Which: at location [0] is MappedListIterable<(String, String, bool, Duration), bool>:[] which
+shorter than expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:153:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart line 153
+The test description was:
+  native cap never reopens on true or unknown until confirmed idle
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -7: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: native cap never reopens on true or unknown until confirmed idle [E]
+  Test failed. See exception logs above.
+  The test description was: native cap never reopens on true or unknown until confirmed idle
+
+00:00 +0 -7: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: six-hour cap shortens TTL and releases without busy reopening
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following StateError was thrown running a test:
+Bad state: No element
+
+When the exception was thrown, this was the stack:
+#0      List.last (dart:core-patch/growable_array.dart:357:5)
+#1      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:169:25)
+<asynchronous suspension>
+#2      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  six-hour cap shortens TTL and releases without busy reopening
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -8: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: six-hour cap shortens TTL and releases without busy reopening [E]
+  Test failed. See exception logs above.
+  The test description was: six-hour cap shortens TTL and releases without busy reopening
+
+00:00 +0 -8: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: backward and negative clock fail closed until known idle
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following StateError was thrown running a test:
+Bad state: No element
+
+When the exception was thrown, this was the stack:
+#0      List.last (dart:core-patch/growable_array.dart:357:5)
+#1      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:189:25)
+<asynchronous suspension>
+#2      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  backward and negative clock fail closed until known idle
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -9: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: backward and negative clock fail closed until known idle [E]
+  Test failed. See exception logs above.
+  The test description was: backward and negative clock fail closed until known idle
+
+00:00 +0 -9: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: six-hour limit drains an acquisition still waiting for native
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <1>
+  Actual: WhereIterable<(String, String, bool, Duration)>:[]
+   Which: has length of <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:212:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart line 212
+The test description was:
+  six-hour limit drains an acquisition still waiting for native
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -10: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: six-hour limit drains an acquisition still waiting for native [E]
+  Test failed. See exception logs above.
+  The test description was: six-hour limit drains an acquisition still waiting for native
+
+00:00 +0 -10: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: refused renewal releases the old token and stops retries
+Pending timers:
+Timer (duration: 0:05:00.000000, periodic: true), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:187:15)
+#5      PhoneAgentWorkWatch.observe (package:opencode_mobile/builtin/phone_agent_work_watch.dart:61:23)
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:226:11)
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  refused renewal releases the old token and stops retries
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -11: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: refused renewal releases the old token and stops retries [E]
+  Test failed. See exception logs above.
+  The test description was: refused renewal releases the old token and stops retries
+
+00:00 +0 -11: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: independent watchers never release each other
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <2>
+  Actual: Set:['agent.e6e53dff54d81c54f028e5437f11452f']
+   Which: has length of <1>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:243:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart line 243
+The test description was:
+  independent watchers never release each other
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -12: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: independent watchers never release each other [E]
+  Test failed. See exception logs above.
+  The test description was: independent watchers never release each other
+
+00:00 +0 -12: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: partial acquire and release exceptions cannot poison later work
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following StateError was thrown running a test:
+Bad state: No element
+
+When the exception was thrown, this was the stack:
+#0      List.last (dart:core-patch/growable_array.dart:357:5)
+#1      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart:273:27)
+<asynchronous suspension>
+#2      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  partial acquire and release exceptions cannot poison later work
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: partial acquire and release exceptions cannot poison later work [E]
+  Test failed. See exception logs above.
+  The test description was: partial acquire and release exceptions cannot poison later work
+
+00:00 +0 -13: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart
+00:00 +0 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: agent chat lease carries the separate profile and opaque name
+00:00 +1 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: agent off preserves its profile even after helper loss
+00:00 +2 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: agent profile and opaque name are validated before native handoff
+00:00 +3 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: agent malformed receipt and unsupported platform deny admission
+00:00 +4 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: named chat acquisition uses the frozen channel contract
+00:00 +5 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: named chat release retains its ID and requested duration
+00:00 +6 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: native exhausted lease reports capped without reporting held
+00:00 +7 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: other work holding the lock does not claim this chat lease
+00:00 +8 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: absent and malformed replies never fabricate admission
+00:00 +9 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: invalid opaque IDs are refused before native handoff
+00:00 +10 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: maximum length opaque ID reaches native unchanged
+00:00 +11 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: unsupported platforms return no admission without native handoff
+00:00 +12 -13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_work_leases_test.dart: legacy timed hold keeps its bool return and original arguments
+00:00 +13 -13: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: backward and negative clock fail closed until known idle
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: idle before queued on skips obsolete acquire but still sends off
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: independent watchers never release each other
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_watch_test.dart: late acquire after dispose releases only its own ID
+  ... and 9 more

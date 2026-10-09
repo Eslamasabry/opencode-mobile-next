@@ -1,0 +1,7 @@
+2026-10-08T19:38:25.393881+00:00
+               total        used        free      shared  buff/cache   available
+Mem:           15763       11534         622          61        4969        4228
+Swap:          19858       14955        4902
+
+Required >=6GB available. No native compiler/Gradle/APK/device job started.
+Required GRADLE_OPTS=-Dorg.gradle.jvmargs=-Xmx4g -Dkotlin.compiler.execution.strategy=in-process -Dorg.gradle.workers.max=2

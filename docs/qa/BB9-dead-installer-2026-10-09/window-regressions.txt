@@ -1,0 +1,18 @@
+AVAILABLE_MIB=5222
+AVAILABLE_MIB=5308
+JUNIT_BASELINE=18_PASS
+AVAILABLE_MIB=5297
+FIXTURE restored-all PASS
+AVAILABLE_MIB=5125
+FIXTURE check-cached-dead ASSERTION_RED
+AVAILABLE_MIB=5100
+Traceback (most recent call last):
+  File "/home/eslam/Storage/tmp/bb9-window-checks.py", line 36, in <module>
+    linux.write_text(mutated);fixture(scenario,True);linux.write_bytes(original)
+                              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eslam/Storage/tmp/bb9-window-checks.py", line 14, in fixture
+    gate()
+  File "/home/eslam/Storage/tmp/bb9-window-checks.py", line 12, in gate
+    if available<5120: raise RuntimeError('memory_gate_denied')
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: memory_gate_denied

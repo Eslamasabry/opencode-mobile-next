@@ -86,6 +86,7 @@ class BuiltinServerService : Service() {
     private fun stopRuntime(startId: Int, reason: String = "stopped") {
         try {
             val linux = BuiltinLinux.get(applicationContext)
+            linux.revokeForegroundWork()
             var revision: Long? = null
             try { linux.requestServerStop(reason, includeOther = true, onRevoked = { revision = it }) }
             catch (_: Throwable) { /* Retain the exact invalidation revision even if durable storage failed. */ }
@@ -103,6 +104,7 @@ class BuiltinServerService : Service() {
     }
 
     override fun onDestroy() {
+        try { BuiltinLinux.get(applicationContext).revokeForegroundWork() } catch (_: Throwable) { }
         // A destroyed service owes Android nothing; the next start decides.
         foregroundShown = false
         stopPending = false
@@ -197,6 +199,7 @@ class BuiltinServerService : Service() {
         }
 
         // Written on the main thread (onStartCommand) and callers' threads.
+        internal val isForegroundRunning: Boolean get() = foregroundShown
         @Volatile private var foregroundShown = false
         @Volatile private var stopPending = false
         @Volatile private var promised = false

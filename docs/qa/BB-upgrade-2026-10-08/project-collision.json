@@ -1,0 +1,14 @@
+{
+  "utc": "2026-10-08T20:11:32.194267+00:00",
+  "readOnly": true,
+  "persistent": {
+    "directEntries": 5,
+    "fq9FixturePresent": false,
+    "modeAllowsOwnerReadAndSearch": true
+  },
+  "legacy": {
+    "directEntries": 1,
+    "fq9FixturePresent": true,
+    "modeAllowsOwnerReadAndSearch": true
+  }
+}

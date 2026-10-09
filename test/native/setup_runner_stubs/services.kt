@@ -12,6 +12,12 @@ class BuiltinLinux private constructor(context: Context) {
         val cancelled: Boolean
     }
     fun install(progress: InstallProgress) {}
+    private val workScopes = SetupWorkScopes({ _, _ -> setupWorkAcquires++; setupWorkHeld = true },
+        { setupWorkHeld = false; setupWorkFinishes++ })
+    internal fun prepareSetupWork() = workScopes.prepare()
+    internal fun closeSetupWork(scope: SetupWorkScopes.Scope) = workScopes.close(scope)
+    internal fun <T> withSetupWork(scope: SetupWorkScopes.Scope, work: () -> T): T = workScopes.run(scope, work)
+    fun <T> withSetupWork(work: () -> T): T = withSetupWork(prepareSetupWork(), work)
     fun start(script: String, directory: String?, agentUser: Boolean = false): Process = ProcessBuilder("sh", "-c", script).start()
     internal fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation, agentUser: Boolean = false): Process {
         check(operation == InstallerOperation.INSTALL && targets.isNotEmpty())
@@ -26,6 +32,9 @@ class BuiltinLinux private constructor(context: Context) {
     companion object {
         const val TAG = "test"
         const val VERSION = "test"
+        @Volatile var setupWorkHeld = false
+        @Volatile var setupWorkAcquires = 0
+        @Volatile var setupWorkFinishes = 0
         var installerStarts = 0
         var installerFinishes = 0
         fun get(context: Context) = BuiltinLinux(context)
@@ -33,17 +42,21 @@ class BuiltinLinux private constructor(context: Context) {
     }
 }
 object SetupService {
+    var revokeWorkOnStart = false
     var denyStart = false
     var denyFinish = false
     var denyUpdate = false
     var updateAttempts = 0
     var finishAttempts = 0
+    var finishSawSetupWork = false
     fun start(context: Context, channel: String, title: String, text: String) {
+        if (revokeWorkOnStart) BuiltinLinux.setupWorkHeld = false
         if (denyStart) throw SecurityException("notification denied")
     }
     fun stop(context: Context) {}
     fun finish(context: Context, channel: String, title: String, done: Boolean) {
         finishAttempts++
+        finishSawSetupWork = BuiltinLinux.setupWorkHeld
         if (denyFinish) throw SecurityException("notification denied")
     }
     fun update(context: Context, channel: String, title: String, text: String) {

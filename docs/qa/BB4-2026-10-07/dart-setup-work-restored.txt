@@ -1,0 +1,17 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/setup_runner_native_test.dart
+00:00 +0: (setUpAll)
+00:09 +0: native setup persistence: ordered-terminal
+00:10 +1: native setup persistence: installer-routed
+00:10 +2: native setup persistence: setup-work-owned
+00:10 +3: native setup persistence: typed-write-failure
+00:10 +4: native setup persistence: failed-start-status
+00:10 +5: native setup persistence: service-start-denied
+00:10 +6: native setup persistence: service-finish-denied
+00:10 +7: native setup persistence: service-update-denied
+00:10 +8: native setup persistence: agent-output-private
+00:10 +9: native setup persistence: low-space-first
+00:10 +10: native setup persistence: low-space-next
+00:10 +11: native setup persistence: paseo-checksum-failed
+00:10 +12: native setup persistence: paseo-launch-failed
+00:10 +13: (tearDownAll)
+00:10 +13: All tests passed!

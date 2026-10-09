@@ -1,0 +1,7 @@
+machine_lock: waiting for a test slot (60s)
+machine_lock: waiting for a test slot (120s)
+machine_lock: waiting for a test slot (180s)
+machine_lock: waiting for a test slot (240s)
+machine_lock: got test slot 1 after 270s
+Analyzing 4 items...
+No issues found! (ran in 0.9s)

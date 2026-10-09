@@ -135,7 +135,7 @@ void main() {
       var micros = 0;
       final source = _Source();
       final replies = ReplyWatch(
-        holdAwake: (_, _) async => false,
+        setChatLease: (_, _, _) async => const BuiltinWorkLeaseStatus(),
         nowMicros: () => micros,
       )..attach(source);
       addTearDown(replies.dispose);

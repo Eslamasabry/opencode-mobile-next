@@ -1,0 +1,84 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: confirmed crash recovery records one act and retains consumed budget
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: idle and malformed supporting receipts cannot dispatch or change budget
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: explicit stop and background never dispatch a restart
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: shared restart and poll policy each prevent healing
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: three failures exhaust across resume and owner recreation
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: manual confirmed Start resets exhausted budget
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: policy revoked during password write prevents native dispatch
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: explicit stop during password write wins native generation race
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: background during health confirmation cannot record success
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: unhealthy live process is never overlapped with another attempt
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: late healthy answer confirms same attempt without another restart
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: bound phone owner rejects another profile at the same address
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: manual owner persistence failure prevents native launch
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: confirmed receipt logs after recreation even when the server stopped
+00:00 +14: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: failed healing still exposes installed server and safe failure for cards
+00:00 +15: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: malformed durable budget fails closed
+00:00 +16: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_test.dart: profile deletion during start drains before scoped preference sweep
+00:00 +17: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart
+00:00 +17: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: foreground idle resume awaits helper and preserves exhausted budget
+00:01 +18: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: idle prior helper absent never calls BA and retains generation
+00:01 +19: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: completed idle generation cannot refill budget through stale launch
+00:01 +20: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: legacy launch cannot retry or connect after pause during its own claim
+00:01 +21: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: legacy launch cannot retry or connect after pause and resume during its own claim
+00:01 +22: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: legacy launch cannot retry or connect after deletion during its own claim
+00:01 +23: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: legacy launch cannot retry or connect after transfer during its own claim
+00:01 +24: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: malformed native idle receipt cannot reach launch fallback
+00:01 +25: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: failed helper restore keeps idle generation and forbids manual fallback
+00:01 +26: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: idle server completion cannot restore helper after pause
+00:01 +27: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: idle server completion cannot restore helper after deletion
+00:01 +28: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: idle server completion cannot restore helper after transfer
+00:01 +29: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: idle server completion cannot restore helper after dispose
+00:01 +30: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: idle server completion cannot restore helper after stop
+00:01 +31: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: local agent truth owns a separate lease across background and unknown
+00:01 +32: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: agent lease closes when its runtime profile becomes unreadable
+00:01 +33: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: missing or throwing local agent inventory never creates a CPU lease
+00:01 +34: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: app-lifetime owner heals only in foreground and reconnects once
+00:01 +35: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: persisted runtime owner wins over another selected local profile
+00:01 +36: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a restart confirmed after its initial timeout still reconnects
+00:01 +37: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: explicit Start waits for native owner binding before its launch
+00:01 +38: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: late native binding cannot launch after profile deletion
+00:01 +39: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: late native binding cannot launch after owner transfer
+00:01 +40: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: ambiguous legacy profiles wait for an explicit Start to claim ownership
+00:01 +41: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the shared restart policy and explicit Stop each prevent healing
+00:01 +42: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: explicit connect works with automatic reconnect off and shares deduplication
+00:01 +43: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: profile deletion admission cannot be reopened by a store notification
+00:01 +44: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: native exhausted budget survives opening and owner recreation
+00:01 +45: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: opening cannot supersede a scheduled native retry
+00:01 +46: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) starts a stopped server past an exhausted crash budget, connects, and gives the budget back once it answers
+00:01 +47: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) waits for the first resume before it does anything
+00:01 +48: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) leaves an explicitly stopped server stopped
+00:01 +49: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) leaves it stopped when restarting the phone server is off
+00:01 +50: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) only connects to a server that already runs
+00:01 +51: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) tries once more after a fast failure, then leaves the reason
+00:01 +52: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) a timeout is not tried again on its own
+00:01 +53: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: the launch start (QA B1) a failed crash restart counts as the first try
+00:01 +54: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) one that rejects our password is replaced at launch
+00:01 +55: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) one older than the stale age that stays silent is replaced
+00:01 +56: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) a young one that is still booting is waited for, not killed
+00:01 +57: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) a young one that never answers is replaced once it is stale
+00:01 +58: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) a healthy server whose connect failed is connected again by the health poll, once per back-off
+00:01 +59: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_healing_test.dart: a running server that does not answer (QA-03) the back-off holds automatic reconnects; Try again does not wait
+00:01 +60: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_provider_test.dart
+00:02 +60: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_provider_test.dart: real provider wires guarded idle helper restoration for readable alias
+00:02 +61: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_provider_test.dart: real provider queries the readable alias and holds canonical agent work
+00:02 +62: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_provider_test.dart: unknown provider work acquires nothing and owner deletion releases a later run
+00:02 +63: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_work_provider_test.dart: disposing the real provider releases its active canonical hold
+00:02 +64: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart
+00:03 +64: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: guarded server then helper completion preserves the exhausted retry budget
+00:03 +65: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: prior stopped helper is never resumed and completion retains its positive generation
+00:03 +66: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: already restored server only restores its owed helper
+00:03 +67: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: unsupported and normal running receipts never authorize restoration
+00:03 +68: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: supported incomplete or malformed idle receipts fail closed
+00:03 +69: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: initial Stop foreground and owner guards prevent every launch
+00:03 +70: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: same owner check coalesces while status is pending
+00:03 +71: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: owner or foreground change after the first read cancels continuation
+00:03 +72: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: owner change during native server restore cannot start its helper
+00:03 +73: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: background or disposal during helper readiness prevents completion
+00:03 +74: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: Stop or changed generation during helper readiness prevents native completion
+00:03 +75: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: native or helper failure exposes only a fixed code without fallback
+00:03 +76: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: foreground loss during the final fresh receipt prevents completion
+00:03 +77: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: late native completion after disposal cannot publish a failure or change
+00:03 +78: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: invalidated stale check cannot finish or clear a newer pending check
+00:03 +79: All tests passed!

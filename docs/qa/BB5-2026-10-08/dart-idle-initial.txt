@@ -1,0 +1,17 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart
+00:00 +0: guarded server then helper completion preserves the exhausted retry budget
+00:00 +1: prior stopped helper is never resumed and completion retains its positive generation
+00:00 +2: already restored server only restores its owed helper
+00:00 +3: unsupported and normal running receipts never authorize restoration
+00:00 +4: supported incomplete or malformed idle receipts fail closed
+00:00 +5: initial Stop foreground and owner guards prevent every launch
+00:00 +6: same owner check coalesces while status is pending
+00:00 +7: owner or foreground change after the first read cancels continuation
+00:00 +8: owner change during native server restore cannot start its helper
+00:00 +9: background or disposal during helper readiness prevents completion
+00:00 +10: Stop or changed generation during helper readiness prevents native completion
+00:00 +11: native or helper failure exposes only a fixed code without fallback
+00:00 +12: foreground loss during the final fresh receipt prevents completion
+00:00 +13: late native completion after disposal cannot publish a failure or change
+00:00 +14: invalidated stale check cannot finish or clear a newer pending check
+00:00 +15: All tests passed!

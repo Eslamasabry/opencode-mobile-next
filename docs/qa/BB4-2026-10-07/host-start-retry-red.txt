@@ -1,0 +1,22 @@
+E
+======================================================================
+ERROR: test_only_initial_identity_replacement_is_retried_once (test_bb4_runtime_acceptance.StartupAdmissionTest.test_only_initial_identity_replacement_is_retried_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb4_runtime_acceptance.py", line 40, in test_only_initial_identity_replacement_is_retried_once
+    with patch.object(B.time,'sleep'):host.real_start(None,'owner',evidence)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1197, in _execute_mock_call
+    raise result
+bb3_runtime_acceptance.Refused: instrumentation_replaced_app
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (errors=1)

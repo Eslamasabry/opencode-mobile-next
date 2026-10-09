@@ -1,0 +1,51 @@
+{
+  "owned": [
+    {
+      "pid": 2799701,
+      "startTicks": 92431723,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2799705,
+      "startTicks": 92431724,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2799743,
+      "startTicks": 92431798,
+      "gradleDaemon": true
+    },
+    {
+      "pid": 2800020,
+      "startTicks": 92434065,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2800048,
+      "startTicks": 92434074,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2800105,
+      "startTicks": 92434513,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2800106,
+      "startTicks": 92434514,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2800638,
+      "startTicks": 92438842,
+      "gradleDaemon": false
+    },
+    {
+      "pid": 2800738,
+      "startTicks": 92439416,
+      "gradleDaemon": false
+    }
+  ],
+  "remaining": [],
+  "intermediatesAbsent": true
+}

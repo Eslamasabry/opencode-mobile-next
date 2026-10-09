@@ -1,0 +1,15 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart
+00:00 +0: unsafe owners and nonpositive generations never reach the native channel
+00:00 +0 -1: unsafe owners and nonpositive generations never reach the native channel [E]
+  Expected: throws <Instance of 'BuiltinLinuxException'>
+    Actual: <Closure: () => Future<BuiltinLinuxStatus>>
+     Which: returned a Future that emitted <Instance of 'BuiltinLinuxStatus'>
+
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/builtin_idle_policy_test.dart 92:15           main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: unsafe owners and nonpositive generations never reach the native channel

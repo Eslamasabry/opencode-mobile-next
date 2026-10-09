@@ -1,0 +1,14 @@
+test_every_native_flag_is_required (test_bb5_runtime_acceptance.AdapterTest.test_every_native_flag_is_required) ... FAIL
+
+======================================================================
+FAIL: test_every_native_flag_is_required (test_bb5_runtime_acceptance.AdapterTest.test_every_native_flag_is_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 41, in test_every_native_flag_is_required
+    with self.assertRaises(H.Q.Refused):
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

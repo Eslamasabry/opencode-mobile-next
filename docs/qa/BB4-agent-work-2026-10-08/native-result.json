@@ -1,0 +1,33 @@
+{
+  "scope": "native Android compile plus focused JVM tests; Flutter AOT excluded",
+  "results": [
+    {
+      "class": "WorkLeasesTest",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "NativeWorkLeaseHostTest",
+      "tests": 49,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "SetupWorkScopesTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "IdleStopPolicyTest",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ]
+}

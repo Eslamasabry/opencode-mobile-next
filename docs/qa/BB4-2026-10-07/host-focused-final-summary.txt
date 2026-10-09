@@ -1,0 +1,3 @@
+Recorded focused host command: PYTHONPATH=tool/qa python3 -m unittest tool/qa/test_bb4_runtime_acceptance.py
+8 tests PASS, including refusal for each of five actual native flags, bounded pre-fixture startup retry and strict failure propagation.
+Removed startup retry: selected test fails; host-start-retry-red.txt.

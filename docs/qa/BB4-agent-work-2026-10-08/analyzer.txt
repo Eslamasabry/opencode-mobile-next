@@ -1,0 +1,6 @@
+Analyzing oc_app-sol-bb...
+
+   info • Field overrides a field inherited from '_Linux'. Try removing the field, overriding the getter and setter if necessary • test/phone_server_healing_test.dart:183:9 • overridden_fields
+   info • The member 'agentHolds' overrides an inherited member but isn't annotated with '@override'. Try adding the '@override' annotation • test/phone_server_healing_test.dart:183:9 • annotate_overrides
+
+2 issues found. (ran in 45.5s)

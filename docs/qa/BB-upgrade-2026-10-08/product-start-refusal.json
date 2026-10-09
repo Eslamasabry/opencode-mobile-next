@@ -1,0 +1,17 @@
+{
+  "utc": "2026-10-08T20:07:47.627436+00:00",
+  "productAction": "Start and connect",
+  "dataWiped": false,
+  "buttonPresent": true,
+  "predicates": {
+    "Start and connect": true,
+    "could not start": false,
+    "Details": true,
+    "Run setup": false,
+    "Restart": true,
+    "Reboot": false,
+    "Connected": false,
+    "operation could not finish": false,
+    "update could not be restored": false
+  }
+}

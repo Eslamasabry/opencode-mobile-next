@@ -1,0 +1,10 @@
+BB4 focused removed-fix controls; pure JVM; caller-held machine build lock and source freeze required.
+toolchain=Temurin17.0.20.1+1 Kotlin2.3.20 AndroidAPI37.0 JUnit4.13.2 compilerHeapMiB=256 testHeapMiB=128
+NoDeviceNoGradleNoApk=true assertionFailuresRequired=true
+control=earlier_timer_preemption test=NativeWorkLeaseHostTest.terminalObservationPreemptsPendingChatExpiryAndCancelledCallbackIsInert exit=1 run=1 failures=1 assertions=1
+control=stale_timer_callback test=NativeWorkLeaseHostTest.terminalObservationPreemptsPendingChatExpiryAndCancelledCallbackIsInert exit=1 run=1 failures=1 assertions=1
+control=unknown_terminal_retention test=NativeWorkLeaseHostTest.unknownTerminalSnapshotCannotReviveCappedSameSessionOrRepeatProtection exit=1 run=1 failures=1 assertions=1
+control=missing_wake_clear test=NativeWorkLeaseHostTest.missingWakeCannotGrantCpuOrForegroundEligibilityForAnyWorkKind exit=1 run=1 failures=1 assertions=1
+control=setup_kind_revocation test=NativeWorkLeaseHostTest.setupServiceLossRevokesJobAndInstallerWhileIndependentChatRemains exit=1 run=1 failures=1 assertions=1
+control=continuous_six_hour_cap test=NativeWorkLeaseHostTest.automaticallyRenewedSetupAndSignInStopAtSixHourContinuousCap exit=1 run=1 failures=1 assertions=1
+PASS controls=6 expectedSingleAssertionFailures=6 restoredGatePassed=true
