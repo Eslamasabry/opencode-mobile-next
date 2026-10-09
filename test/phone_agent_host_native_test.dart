@@ -33,6 +33,7 @@ void main() {
       compiler: compiler,
       sources: [
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentHost.kt',
+        'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentInventory.kt',
         helper.path,
         'test/native/phone_agent_host_harness.kt',
         'test/native/phone_agent_host_stubs/os.kt',
@@ -48,6 +49,7 @@ void main() {
     'healthy-launch',
     'exited-at-once',
     'concurrent-start',
+    'partial-inventory',
   ]) {
     test('native phone host: $scenario', skip: skip, () async {
       final result = await Process.run('java', [

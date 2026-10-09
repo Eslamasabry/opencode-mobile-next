@@ -1,0 +1,87 @@
+Production implementation reverted, interfaces retained; native host reset to HEAD.
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agent_host_native_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agent_host_native_test.dart: (setUpAll)
+00:05 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agent_host_native_test.dart: native phone host: partial-inventory
+00:05 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agent_host_native_test.dart: native phone host: partial-inventory [E]
+  Expected: <0>
+    Actual: <1>
+  
+  Exception in thread "main" java.lang.IllegalStateException: incorrect inventory for fx: {installed=false, version=null}
+  	at io.github.eslamasabry.opencode_mobile.Phone_agent_host_harnessKt.main$partial(phone_agent_host_harness.kt:24)
+  	at io.github.eslamasabry.opencode_mobile.Phone_agent_host_harnessKt.main(phone_agent_host_harness.kt:27)
+  
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agent_host_native_test.dart 61:7         main.<fn>
+  
+00:05 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agent_host_native_test.dart: (tearDownAll)
+00:05 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart
+00:06 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: BA16 failed version retains only strict native payload inventory
+00:06 +0 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: BA16 failed version retains only strict native payload inventory [E]
+  Expected: true
+    Actual: <false>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agents_host_test.dart 203:7              main.<fn>
+  
+00:06 +0 -2: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:09 +0 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (setUpAll)
+00:09 +0 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA16 partial payload removal survives restart and unrelated setup
+00:10 +0 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA16 partial payload removal survives restart and unrelated setup [E]
+  Expected: true
+    Actual: <false>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/support/phone_agents_removal_tests.dart 78:11  _phoneRemovalTests.<fn>
+  
+00:10 +0 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (tearDownAll)
+00:10 +0 -3: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_test.dart
+00:10 +0 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_test.dart: BA16 partial files permit recovery without installation or capability proof
+00:10 +0 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_test.dart: BA16 partial files permit recovery without installation or capability proof [E]
+  Expected: true
+    Actual: <false>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/phone_agents_test.dart 103:7                   main.<fn>
+  
+00:10 +0 -4: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_remove_ui_test.dart
+00:11 +0 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_remove_ui_test.dart: (setUpAll)
+00:11 +0 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_remove_ui_test.dart: Remove is offered only where the source can remove the agent BA16 partial inventory exposes Remove without failed setup progress
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _KeyWidgetFinder:<Found 0 widgets with key [<'agents-remove'>]: []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_remove_ui_test.dart:112:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_remove_ui_test.dart line 112
+The test description was:
+  BA16 partial inventory exposes Remove without failed setup progress
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:12 +0 -5: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_remove_ui_test.dart: Remove is offered only where the source can remove the agent BA16 partial inventory exposes Remove without failed setup progress [E]
+  Test failed. See exception logs above.
+  The test description was: BA16 partial inventory exposes Remove without failed setup progress
+  
+00:12 +0 -5: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_remove_ui_test.dart: (tearDownAll)
+00:12 +0 -5: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_remove_ui_test.dart: Remove is offered only where the source can remove the agent BA16 partial inventory exposes Remove without failed setup progress
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agent_host_native_test.dart: native phone host: partial-inventory
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA16 partial payload removal survives restart and unrelated setup
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_host_test.dart: BA16 failed version retains only strict native payload inventory
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_test.dart: BA16 partial files permit recovery without installation or capability proof

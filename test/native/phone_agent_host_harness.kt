@@ -13,7 +13,52 @@ fun main(args: Array<String>) {
     val linux = BuiltinLinux(HostSpaceFile(dir.path, if (low) 1L else 2_000_000_000L))
     val host = PhoneAgentHost(linux)
     try {
-        if (args.single() == "concurrent-start") {
+        if (args.single() == "partial-inventory") {
+            linux.script = "printf private-version-failure; exit 1"
+            val guest = File(linux.rootfs, "home/oc")
+            val parent = File(guest, ".local/share/oc-agents").apply { mkdirs() }
+            val bin = File(guest, ".local/bin").apply { mkdirs() }
+            fun partial(executable: String, expected: Boolean?) {
+                val value = PhoneAgentHost(linux).version("qa", executable, "1.2.3")
+                check(value["installed"] == false)
+                check(value["payloadPresent"] == expected) { "incorrect inventory for $executable: $value" }
+                check(!value.toString().contains("private-version-failure"))
+            }
+            partial("fx", false)
+            for ((id, exe) in mapOf("fx" to "fx", "codex" to "codex", "gemini" to "gemini",
+                    "qwen" to "qwen", "goose" to "goose", "omp-acp" to "omp")) {
+                val payload = File(parent, "$id/1.2.3.new").apply { mkdirs() }
+                partial(exe, true)
+                // A new host and unrelated setup still observe disk truth.
+                File(linux.home, "setup.json").writeText("unrelated job")
+                partial(exe, true)
+                payload.parentFile.deleteRecursively()
+            }
+            val link = File(bin, "fx").toPath()
+            Files.createSymbolicLink(link, File("/home/oc/.local/share/oc-agents/fx/0.0.12/launch").toPath())
+            partial("fx", true) // Dangling authored launcher is still removable.
+            Files.delete(link)
+            Files.createSymbolicLink(link, File(dir, "foreign").toPath())
+            partial("fx", false)
+            Files.delete(link)
+            val stage = File(bin, "fx.new.123").toPath()
+            Files.createSymbolicLink(stage, File("/home/oc/.local/share/oc-agents/fx/0.0.12/launch").toPath())
+            partial("fx", true)
+            Files.delete(stage)
+            val lock = File(parent, ".lock-fx").apply { mkdirs() }
+            partial("fx", true)
+            lock.delete()
+            partial("fx", false)
+            File(parent, "claude").mkdirs()
+            partial("fx", false)
+            partial("claude", false) // Owner-managed Claude is never removable.
+            val outside = File(dir, "outside").apply { mkdirs() }
+            guest.deleteRecursively()
+            Files.createSymbolicLink(guest.toPath(), outside.toPath())
+            File(outside, ".local/share/oc-agents/fx").mkdirs()
+            partial("fx", null) // Do not follow an untrusted ancestor.
+            check(File(outside, ".local/share/oc-agents/fx").isDirectory)
+        } else if (args.single() == "concurrent-start") {
             linux.holdStart = true
             val firstFailure = AtomicReference<Throwable?>()
             val secondFailure = AtomicReference<Throwable?>()

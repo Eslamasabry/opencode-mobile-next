@@ -53,6 +53,7 @@ final class PhoneAgentRuntime {
   const PhoneAgentRuntime({
     required this.agentId,
     this.installed = false,
+    this.payloadPresent = false,
     this.hostAvailable = false,
     this.architectureQualified = false,
     this.capabilities = const AgentCapabilities(),
@@ -63,6 +64,9 @@ final class PhoneAgentRuntime {
 
   final String agentId;
   final bool installed;
+
+  /// Fresh authored installation files exist, independently of version health.
+  final bool payloadPresent;
   final bool hostAvailable;
   final bool architectureQualified;
   final AgentCapabilities capabilities;
@@ -92,6 +96,7 @@ final class AgentRow {
     this.resumeLabel,
     this.resumeNote,
     this.resetAt,
+    this.hasPartialPayload = false,
   });
 
   final String id;
@@ -104,6 +109,7 @@ final class AgentRow {
   final bool chatVisible;
   final bool chatSelectable;
   final bool installable;
+  final bool hasPartialPayload;
   final AgentCapabilities capabilities;
 
   /// Explains why the agent is absent from chat selection, not setup inventory.
@@ -174,6 +180,7 @@ AgentRow buildAgentRow({
     chatVisible: false,
     chatSelectable: false,
     installable: installable,
+    hasPartialPayload: fact?.payloadPresent == true && fact?.installed == false,
     capabilities: noProof,
     hiddenReason: reason,
     resumeLabel: fact?.capabilities.resumeVerified == true

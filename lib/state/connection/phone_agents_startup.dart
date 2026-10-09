@@ -35,6 +35,7 @@ extension _PhoneAgentStartup on _ConnectionControllerPhoneAgents {
     return PhoneAgentRuntime(
       agentId: runtime.agentId,
       installed: runtime.installed,
+      payloadPresent: runtime.payloadPresent,
       hostAvailable: true,
       architectureQualified: runtime.architectureQualified,
       capabilities: runtime.capabilities,
