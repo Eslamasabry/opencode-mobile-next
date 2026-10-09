@@ -1,0 +1,30 @@
+{
+  "sourceRevision": "9c99e609a7187d5f38e5364cc56a9f3900b8d78f",
+  "qaEnabled": true,
+  "buildConfigSha256": "d7d2053fe8da9fdc07cc6117f2c3d062691e906dbf53bff649a03b26ea0e8ab9",
+  "artifacts": {
+    "qa_apk": {
+      "path": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/flutter-apk/app-release.apk",
+      "sha256": "813042b33278a6fb7c18d15b15e0d8249f431d15b947113dabacb9115249db57",
+      "bytes": 65650169,
+      "versionCode": "2203",
+      "certificateSHA256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+    },
+    "runner_apk": {
+      "path": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/apk/androidTest/release/app-release-androidTest.apk",
+      "sha256": "16fee14e4e87da6fb8c1ef529d46382051b111c314862c326b1a2fffc0180b0e",
+      "bytes": 199886,
+      "versionCode": "",
+      "certificateSHA256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+    },
+    "normal_apk": {
+      "path": "/home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk",
+      "sha256": "82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7",
+      "bytes": 101107435,
+      "versionCode": "2203",
+      "certificateSHA256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+    }
+  },
+  "deviceRun": false,
+  "driverCompatibility": "BB5 driver still pins QA/normal2202; do not execute until its2203 guards are updated and tested"
+}

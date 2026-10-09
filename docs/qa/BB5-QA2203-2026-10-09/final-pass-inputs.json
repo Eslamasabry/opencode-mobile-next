@@ -1,0 +1,14 @@
+{
+  "bb5": {
+    "qa_apk": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/flutter-apk/app-release.apk",
+    "runner_apk": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/apk/androidTest/release/app-release-androidTest.apk",
+    "normal_apk": "/home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk",
+    "target_sha": "813042b33278a6fb7c18d15b15e0d8249f431d15b947113dabacb9115249db57",
+    "runner_sha": "16fee14e4e87da6fb8c1ef529d46382051b111c314862c326b1a2fffc0180b0e",
+    "normal_sha": "82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7",
+    "normal_version": 2203,
+    "normal_sidecar": "/home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk.sha256",
+    "apksigner": "/home/eslam/Android/Sdk/build-tools/36.1.0/apksigner",
+    "aapt": "/home/eslam/Android/Sdk/build-tools/36.1.0/aapt"
+  }
+}
