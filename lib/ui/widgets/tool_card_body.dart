@@ -98,6 +98,7 @@ class _ToolBody extends StatelessWidget {
     this.facts = const [],
     this.suppressOutput = false,
     this.onRerunCommand,
+    this.onEnableConnectorCatalogue,
   });
 
   final _ToolContract contract;
@@ -105,6 +106,7 @@ class _ToolBody extends StatelessWidget {
   final bool embedded;
   final List<String> facts;
   final ValueChanged<String>? onRerunCommand;
+  final Future<bool> Function()? onEnableConnectorCatalogue;
 
   /// True when the ordered segment rendering already shows the output; the
   /// body then only adds the input JSON.
@@ -603,6 +605,8 @@ class _ToolBody extends StatelessWidget {
           ConnectorSearchStatus.ok => l10n.chatUiConnectorSearchEmpty,
           ConnectorSearchStatus.catalogueNotLoaded =>
             l10n.chatUiConnectorSearchNotLoaded,
+          ConnectorSearchStatus.catalogueOff =>
+            l10n.chatUiConnectorSearchOffBody,
           ConnectorSearchStatus.unavailable =>
             l10n.chatUiConnectorSearchUnavailable,
         },
@@ -610,6 +614,9 @@ class _ToolBody extends StatelessWidget {
         role: KitTextRole.secondary,
         tone: KitTextTone.secondary,
       ),
+      if (result.status == ConnectorSearchStatus.catalogueOff &&
+          onEnableConnectorCatalogue != null)
+        _CatalogueOffAction(enable: onEnableConnectorCatalogue!),
     ];
   }
 
@@ -653,4 +660,67 @@ class _ToolBody extends StatelessWidget {
     text: const JsonEncoder.withIndent(' ').convert(_metadata['diagnostics']),
     name: 'diagnostics.json',
   );
+}
+
+/// The one action in a "catalogue is off" connector search step: turn the
+/// catalogue on for this profile, then say so in plain words.
+class _CatalogueOffAction extends StatefulWidget {
+  const _CatalogueOffAction({required this.enable});
+
+  final Future<bool> Function() enable;
+
+  @override
+  State<_CatalogueOffAction> createState() => _CatalogueOffActionState();
+}
+
+class _CatalogueOffActionState extends State<_CatalogueOffAction> {
+  bool _working = false;
+  bool? _done;
+
+  Future<void> _turnOn() async {
+    if (_working) return;
+    setState(() => _working = true);
+    var ok = false;
+    try {
+      ok = await widget.enable();
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      _working = false;
+      _done = ok;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = _chatL10n(context);
+    if (_done == true) {
+      return KitText(
+        l10n.chatUiConnectorSearchTurnedOn,
+        key: const Key('connector-search-turned-on'),
+        role: KitTextRole.secondary,
+        tone: KitTextTone.secondary,
+      );
+    }
+    return _Stack(
+      children: [
+        if (_done == false)
+          KitText(
+            l10n.chatUiConnectorSearchTurnOnFailed,
+            role: KitTextRole.secondary,
+            tone: KitTextTone.secondary,
+          ),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: KitButton.secondary(
+            key: const Key('connector-search-turn-on'),
+            label: l10n.chatUiConnectorSearchTurnOn,
+            expand: false,
+            working: _working,
+            onPressed: _turnOn,
+          ),
+        ),
+      ],
+    );
+  }
 }

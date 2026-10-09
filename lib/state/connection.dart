@@ -3,6 +3,7 @@ import '../builtin/agents/gen_ui_search_publish.dart';
 import '../domain/mcp_connector_search.dart';
 import 'mcp_connector_search_bridge.dart';
 import 'setup_registry_store.dart';
+import '../domain/setup_registry.dart';
 import '../domain/genui/gen_ui.dart';
 import '../domain/mcp_catalog.dart';
 import 'mcp_chat_controller.dart';

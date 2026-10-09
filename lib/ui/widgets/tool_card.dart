@@ -99,6 +99,11 @@ class ToolCard extends StatefulWidget {
   /// host passes this.
   final VoidCallback? onRetry;
 
+  /// Turns the connector catalogue on for the active profile (the button in
+  /// a "catalogue is off" connector search step); true when it is saved.
+  /// Null hides the button.
+  final Future<bool> Function()? onEnableConnectorCatalogue;
+
   const ToolCard({
     super.key,
     required this.toolName,
@@ -115,6 +120,7 @@ class ToolCard extends StatefulWidget {
     this.waitingForYou = false,
     this.onRerunCommand,
     this.onRetry,
+    this.onEnableConnectorCatalogue,
   });
 
   @override
@@ -450,6 +456,7 @@ class _ToolCardState extends State<ToolCard> {
                 // keeps the input only.
                 suppressOutput: interleaved != null,
                 onRerunCommand: widget.onRerunCommand,
+                onEnableConnectorCatalogue: widget.onEnableConnectorCatalogue,
               ),
             ]
           : const [],

@@ -44690,8 +44690,38 @@ abstract class AppLocalizations {
   /// Tool step: the connector catalogue has not been loaded on this phone.
   ///
   /// In en, this message translates to:
-  /// **'Catalogue not loaded. Open Tools > MCP to load it.'**
+  /// **'The catalogue could not be loaded right now. Ask again in a moment.'**
   String get chatUiConnectorSearchNotLoaded;
+
+  /// Tool step detail: the person has not turned the connector catalogue on.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalogue is off'**
+  String get chatUiConnectorSearchOff;
+
+  /// Tool step: explains what turning the connector catalogue on does.
+  ///
+  /// In en, this message translates to:
+  /// **'The connector catalogue is a public list of connectors. Turning it on lets this app download that list and send the words searched for to the public registry. Nothing is connected.'**
+  String get chatUiConnectorSearchOffBody;
+
+  /// Button in a connector search step: turn the catalogue on for this profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on connector catalogue'**
+  String get chatUiConnectorSearchTurnOn;
+
+  /// Shown after the person turned the connector catalogue on from a search step.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalogue is on. Ask the agent to search again.'**
+  String get chatUiConnectorSearchTurnedOn;
+
+  /// Shown when turning the connector catalogue on from a search step failed.
+  ///
+  /// In en, this message translates to:
+  /// **'The catalogue could not be turned on. Try again.'**
+  String get chatUiConnectorSearchTurnOnFailed;
 
   /// Tool step: the connector search could not run.
   ///

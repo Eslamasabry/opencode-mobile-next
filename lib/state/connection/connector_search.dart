@@ -7,7 +7,25 @@ mixin _ConnectionControllerConnectorSearch on ChangeNotifier {
   DateTime? _connectorSearchRetryAfter;
   Future<void> _connectorSearchTail = Future<void>.value();
   final _connectorSearchBridges = <McpConnectorSearchBridge>[];
+
+  /// Tests only: the registry client the connector search and the in-chat
+  /// "Turn on" use, so no run reaches the public registry.
+  @visibleForTesting
+  SetupRegistryClient? connectorRegistryClientOverride;
+
+  /// Turns the connector catalogue on for the active profile and loads it,
+  /// from the "Turn on" in a connector search step. True when the choice is
+  /// saved; a failed load still leaves it on, and the next search retries.
+  Future<bool> enableConnectorCatalogue() =>
+      (this as ConnectionController)._enableConnectorCatalogueImpl();
 }
+
+/// A saved catalogue older than this is refreshed before a search.
+const _connectorCatalogueMaxAge = Duration(hours: 24);
+
+/// Total time the online parts of a search may take, inside the helper's
+/// 5-second request deadline.
+const _connectorSearchOnlineBudget = Duration(seconds: 4);
 
 extension _ConnectionControllerConnectorSearchImpl on ConnectionController {
   void _connectorSearchSync() {
@@ -155,18 +173,77 @@ extension _ConnectionControllerConnectorSearchImpl on ConnectionController {
         genUiEnabled &&
         genUiStatus.agents.contains(agent);
     if (!sourceCurrent()) throw StateError('Source changed');
-    final registry = SetupRegistryStore(store.prefs, profileId: profileId);
+    final client = connectorRegistryClientOverride;
+    final registry = SetupRegistryStore(
+      store.prefs,
+      profileId: profileId,
+      client: client,
+    );
+    SetupRegistryStore? searcher;
     try {
       await registry.load();
       if (!sourceCurrent()) throw StateError('Source changed');
-      final snapshot = registry.snapshot;
-      final entries = snapshot.cachedAt == null ? null : snapshot.entries;
+      if (!registry.snapshot.optedIn) {
+        // No consent, no request: the agent is told to ask the person.
+        return mcpConnectorCatalogueOff();
+      }
+      final cachedAt = registry.snapshot.cachedAt;
+      final stale =
+          cachedAt == null ||
+          clock.now().toUtc().difference(cachedAt.toUtc()) >
+              _connectorCatalogueMaxAge;
+      final query = ((request['arguments'] as Map)['query'] as String).trim();
+      // The registry's own answer to the words searched for. Transient: the
+      // store shows it and never saves it.
+      searcher = SetupRegistryStore(
+        store.prefs,
+        profileId: profileId,
+        client: client,
+      );
+      await searcher.load();
+      final online = <RegistryEntry>[];
+      Future<void> refreshSaved() async {
+        if (!stale) return;
+        await registry.refresh();
+      }
+
+      final asked = searcher;
+      Future<void> askRegistry() async {
+        await asked.refresh(query: query);
+        if (asked.snapshot.query == query &&
+            asked.snapshot.status == SetupRegistryStatus.ready) {
+          online.addAll(asked.snapshot.entries);
+        }
+      }
+
+      try {
+        await Future.wait([
+          refreshSaved(),
+          askRegistry(),
+        ]).timeout(_connectorSearchOnlineBudget);
+      } catch (_) {
+        // Offline, slow or refused: the saved catalogue answers.
+      }
+      if (!sourceCurrent()) throw StateError('Source changed');
+      final saved = registry.snapshot;
+      List<RegistryEntry>? entries =
+          saved.cachedAt == null && saved.entries.isEmpty
+          ? null
+          : saved.entries;
+      if (entries == null && online.isNotEmpty) entries = const [];
       if (entries == null) {
         return searchMcpConnectors(
           arguments: request['arguments'],
           entries: null,
           connected: null,
         );
+      }
+      if (online.isNotEmpty) {
+        final seen = <String>{};
+        entries = [
+          for (final entry in [...online, ...entries])
+            if (seen.add(entry.name)) entry,
+        ];
       }
       Map<String, bool>? connected;
       // The helper's cwd cannot establish a workspace ID. Ambiguous sources
@@ -181,7 +258,9 @@ extension _ConnectionControllerConnectorSearchImpl on ConnectionController {
       if (exactSource) {
         try {
           if (!sourceCurrent()) throw StateError('Source changed');
-          final inventory = await operations.listMcpServers();
+          final inventory = await operations.listMcpServers().timeout(
+            const Duration(milliseconds: 900),
+          );
           if (!identical(api, gateway) ||
               !identical(repository, operations) ||
               locationRevision != revision ||
@@ -209,6 +288,29 @@ extension _ConnectionControllerConnectorSearchImpl on ConnectionController {
         entries: entries,
         connected: connected,
       );
+    } finally {
+      await searcher?.dispose();
+      await registry.dispose();
+    }
+  }
+
+  Future<bool> _enableConnectorCatalogueImpl() async {
+    final profileId = store.activeId;
+    if (_disposed || profileId == null) return false;
+    final registry = SetupRegistryStore(
+      store.prefs,
+      profileId: profileId,
+      client: connectorRegistryClientOverride,
+    );
+    try {
+      await registry.load();
+      await registry.setOptIn(true);
+      try {
+        await registry.refresh().timeout(const Duration(seconds: 30));
+      } catch (_) {}
+      return registry.snapshot.optedIn;
+    } catch (_) {
+      return false;
     } finally {
       await registry.dispose();
     }

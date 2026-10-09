@@ -13,6 +13,25 @@ final _spacing = RegExp(
 
 const _invalidRequest = FormatException('Invalid connector search request.');
 
+/// What the agent is told while the person has not turned the catalogue on.
+/// Fixed text: the agent can pass it on, and no request is made.
+const mcpConnectorCatalogueOffMessage =
+    'The connector catalogue is off. Ask the person to tap Turn on in this '
+    'step, then search again.';
+
+/// What the agent is told when the catalogue is on but could not be loaded.
+const mcpConnectorCatalogueNotLoadedMessage =
+    'The connector catalogue could not be loaded right now. Try again in a '
+    'moment.';
+
+/// The reply for a person who has not turned the catalogue on. Callers
+/// validate the request first; this makes no request of any kind.
+Map<String, Object?> mcpConnectorCatalogueOff() => {
+  'status': 'catalogue_off',
+  'message': mcpConnectorCatalogueOffMessage,
+  'matches': <Map<String, Object?>>[],
+};
+
 /// Bounded, read-only discovery in metadata already loaded by the person.
 ///
 /// The result deliberately excludes endpoint URLs, commands, settings, and
@@ -43,7 +62,7 @@ Map<String, Object?> searchMcpConnectors({
   if (entries == null) {
     return {
       'status': 'catalogue_not_loaded',
-      'message': 'Catalogue not loaded. Open Tools > MCP to load it.',
+      'message': mcpConnectorCatalogueNotLoadedMessage,
       'matches': <Map<String, Object?>>[],
     };
   }

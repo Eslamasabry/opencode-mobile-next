@@ -28416,7 +28416,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatUiConnectorSearchNotLoaded =>
-      'الفهرس غير محمّل. افتح الأدوات > MCP لتحميله.';
+      'تعذّر تحميل الفهرس الآن. اسأل مجددًا بعد قليل.';
+
+  @override
+  String get chatUiConnectorSearchOff => 'الفهرس متوقف';
+
+  @override
+  String get chatUiConnectorSearchOffBody =>
+      'فهرس الموصّلات قائمة عامة بالموصّلات. تشغيله يسمح للتطبيق بتنزيل القائمة وإرسال كلمات البحث إلى السجل العام. لا يتم توصيل أي شيء.';
+
+  @override
+  String get chatUiConnectorSearchTurnOn => 'تشغيل فهرس الموصّلات';
+
+  @override
+  String get chatUiConnectorSearchTurnedOn =>
+      'الفهرس يعمل. اطلب من الوكيل البحث مجددًا.';
+
+  @override
+  String get chatUiConnectorSearchTurnOnFailed =>
+      'تعذّر تشغيل الفهرس. حاول مجددًا.';
 
   @override
   String get chatUiConnectorSearchUnavailable =>

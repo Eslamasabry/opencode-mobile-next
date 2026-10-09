@@ -2,7 +2,7 @@ import 'dart:convert';
 
 /// How a connector search step ended, as the helper reports it
 /// (docs/design/BD3-mcp-chat-contract.md "Agent connector search").
-enum ConnectorSearchStatus { ok, catalogueNotLoaded, unavailable }
+enum ConnectorSearchStatus { ok, catalogueNotLoaded, catalogueOff, unavailable }
 
 /// One match in plain fields. Registry prose is untrusted: the helper already
 /// strips URLs and secrets, and this reads only bounded text.
@@ -49,6 +49,7 @@ ConnectorSearchResult? parseConnectorSearchResult({
   final status = switch (data['status']) {
     'ok' => ConnectorSearchStatus.ok,
     'catalogue_not_loaded' => ConnectorSearchStatus.catalogueNotLoaded,
+    'catalogue_off' => ConnectorSearchStatus.catalogueOff,
     'unavailable' => ConnectorSearchStatus.unavailable,
     _ => null,
   };

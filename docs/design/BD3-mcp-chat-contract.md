@@ -170,7 +170,8 @@ names may be `oc-ui_find_connectors` / `mcp__oc-ui__find_connectors`). Arguments
 `{"query":"design inspiration","limit":5}`. Query is 1–100 Unicode scalars after
 trim, limit is an integer 1–10 (default 5); unknown properties, URLs, credentials
 and malformed inputs fail with **“Invalid connector search request.”** No query
-is sent to the public registry. Matching is case-insensitive across catalog ID,
+is sent to the public registry unless the person has turned the catalogue on
+(see "Instant discovery" below). Matching is case-insensitive across catalog ID,
 name and description, requiring all whitespace-separated terms; canonical IDs
 are sorted and deduplicated. At most 100 cached rows and 10 results are inspected
 and returned respectively.
@@ -193,13 +194,33 @@ catalogue's name mapping, is not proof of endpoint identity, and never authorize
 attaching to a name collision. Description is single-line, at most 300 scalars;
 name at most 120. Registry prose is untrusted, redacted and URL-stripped.
 
-A missing or unreadable cache returns:
-`{"status":"catalogue_not_loaded","message":"Catalogue not loaded. Open Tools > MCP to load it.","matches":[]}`.
+**Instant discovery (catalogue consent).** The catalogue is the MCP registry
+list cached per profile (`SetupRegistryStore`); fetching it needs the person's
+opt-in. Search behaves by consent:
+
+- **Not opted in** (no saved choice, opted out, or unreadable): no network
+  request at all; the reply is
+  `{"status":"catalogue_off","message":"The connector catalogue is off. Ask the person to tap Turn on in this step, then search again.","matches":[]}`.
+  The step offers the button (below); search never changes consent itself.
+- **Opted in, saved list missing or older than 24 h**: the app refreshes the
+  saved default list online first (this one is saved), then searches.
+- **Opted in, any query**: the app also asks the registry with the query
+  (`refresh(query:)`, transient, never saved as the default list) in parallel
+  and merges those entries first with the saved ones, deduplicated by
+  `catalogId`. Still at most 100 inspected and `limit` <= 10 returned.
+- All online work shares a 4 s budget inside the helper's 5 s deadline. A
+  failure, timeout or refusal falls back to the saved list silently; no raw
+  error text reaches the agent or the screen.
+
+A missing cache that cannot be loaded (opted in, nothing saved, network down)
+returns:
+`{"status":"catalogue_not_loaded","message":"The connector catalogue could not be loaded right now. Try again in a moment.","matches":[]}`.
 A valid empty cache/search returns `ok` with no matches. UI copy for that case:
-**“No connectors found in the loaded catalogue.”** Search uses the saved
-default catalogue, not transient online search results in another screen.
-The existing profile cache and its deletion rules are reused; search never
-changes opt-in, fetches, installs, connects or saves credentials.
+**“No connectors found in the loaded catalogue.”** The existing profile cache and its deletion rules are reused; search never
+changes opt-in, installs, connects or saves credentials. Only the person's
+tap on the step's Turn on button sets opt-in
+(`ConnectionController.enableConnectorCatalogue`: save consent for the active
+profile, then load the default list).
 
 **Transport decision:** round-trip to the app, rather than reading the public
 registry directly. The app alone owns the Tools catalogue cache and current
@@ -228,8 +249,13 @@ only the trusted Agent-cards tool name/provider using the existing runtime tool
 identity rules (`isConnectorSearchTool` recognizes exact names, but does not
 establish provenance) and show **“Searched connectors ›”** on completion (and normal
 working/failure state during the call). Its bounded `structuredContent` and
-JSON text contain the same result; expand the step to show matches or the fixed
-empty/unloaded/unavailable message. Do not interpret search as user consent.
+JSON text contain the same result; the step shows the query as its subtitle (also for
+Claude Code's "Load tools"); expand it to show matches or the fixed
+empty/unloaded/off/unavailable message. For `catalogue_off` the detail line
+says "Catalogue is off" and the expanded step explains what turning it on does
+and offers one button, "Turn on connector catalogue"; afterwards it reads
+"Catalogue is on. Ask the agent to search again."
+ Do not interpret search as user consent.
 The agent may pass a returned `catalogId` into `show.connector`; Connect still
 requires the existing reviewed card flow. No new `ServerCapabilities` override:
 search exists only on the same installed and qualified Agent-cards MCP helper.
