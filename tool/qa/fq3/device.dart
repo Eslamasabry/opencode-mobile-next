@@ -61,7 +61,7 @@ class PhoneRuntime {
     }
 
     if (await installed() == currentCertificationBuild) return;
-    const apk = '/home/eslam/Storage/tmp/oc-apk-share/oc-2197.apk';
+    const apk = '/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk';
     if (!File(apk).existsSync() || FileSystemEntity.isLinkSync(apk)) {
       throw const ProbeFailure('normal_apk_unavailable');
     }

@@ -13,8 +13,8 @@ from tool.qa.fq9.common import Artifact, DriverFailure, LOCAL_SIGNER
 class SavedReportTest(unittest.TestCase):
     def artifact(self):
         return Artifact(
-            Path("/approved/2198.apk"),
-            2198,
+            Path("/approved/2202.apk"),
+            2202,
             "1.2.0",
             "a" * 64,
             LOCAL_SIGNER,
@@ -26,7 +26,7 @@ class SavedReportTest(unittest.TestCase):
         device, session = Mock(), Mock()
         device.locked = session.locked = True
         device.installed_identity.return_value = dict(
-            build=2198, version="1.2.0", sha256="a" * 64, signer=LOCAL_SIGNER, uid=10217
+            build=2202, version="1.2.0", sha256="a" * 64, signer=LOCAL_SIGNER, uid=10217
         )
         session.require_clean_baseline.return_value = {
             "consent_enabled": False,
@@ -218,7 +218,7 @@ class SavedReportTest(unittest.TestCase):
         self.assertEqual(proof.failure_code(error), "device_failure")
 
     def test_outer_lock_caller_rejects_wrong_build_or_signer_before_device(self):
-        for build, signer in ((2197, LOCAL_SIGNER), (2198, "b" * 64)):
+        for build, signer in ((2197, LOCAL_SIGNER), (2202, "b" * 64)):
             artifact = Artifact(
                 Path("/approved/candidate.apk"),
                 build,
@@ -237,7 +237,7 @@ class SavedReportTest(unittest.TestCase):
 
     def test_bad_artifact_host_preflight_never_acquires_lock(self):
         output = Path(self.addCleanupDirectory())
-        args = argparse.Namespace(apk=Path("/missing/2198.apk"), output=output)
+        args = argparse.Namespace(apk=Path("/missing/2202.apk"), output=output)
         with (
             patch.object(
                 proof,

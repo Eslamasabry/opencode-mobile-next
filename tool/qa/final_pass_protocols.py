@@ -1,10 +1,10 @@
-"""Final-pass adapters for unchanged, build-pinned FQ3/FQ9 drivers.
+"""Final-pass adapters for the APK 2202 FQ3/FQ9 drivers.
 
 FQ9 rows require config {manifest, session_receipt}; both are existing absolute
 file paths. Optional run_id must be the fixture's fq9-prefixed run ID (otherwise
 context.run_id is used). Upgrade needs a reviewed previous artifact and history
-receipt. Because the outer batch already installs the candidate, a different
-previous build/hash is blocked; this adapter never downgrades to a baseline.
+receipt. This row runs before candidate installation so the driver can verify
+the actual installed baseline; the adapter never downgrades to manufacture one.
 Background needs one operator-started OC1 turn titled
 <run_id>-background; a single invocation observes both 5/30-minute checkpoints.
 
@@ -14,7 +14,7 @@ ONLY the driver's LOCK/fcntl references, validate the inherited descriptor,
 and retain the outer lock when the driver requests LOCK_UN. capture returns
 the callable's value while capturing output privately. No standalone locking
 CLI, fixture creation, provider credential read, build, or download is added.
-FQ3 has no inherited-lock adapter and remains explicitly blocked.
+FQ3 borrows the same descriptor and runs its phases in-process without nested flock.
 """
 
 import math
@@ -104,13 +104,11 @@ def _background_facts(report, terminal):
 def run(row, config, context):
     """Return pass/fail/blocked with fixed reasons and existing receipt paths."""
     if row == "fq3":
-        reason = ("fq3_requires_build_2197" if context.candidate_build != 2197
-                  else "fq3_inherited_lock_unsupported")
-        return _result("blocked", reason)
+        return _fq3(config, context)
     if row not in ("fq9-upgrade", "fq9-background"):
         return _result("blocked", "protocol_row_unsupported")
-    if type(context.candidate_build) is not int or context.candidate_build != 2198:
-        return _result("blocked", "fq9_requires_build_2198")
+    if type(context.candidate_build) is not int or context.candidate_build != 2202:
+        return _result("blocked", "fq9_requires_build_2202")
     if not callable(getattr(context, "adopt_lock", None)) or not callable(
         getattr(context, "capture", None)
     ):
@@ -129,7 +127,7 @@ def run(row, config, context):
         manifest = _file(config.get("manifest"))
         session_receipt = _file(config.get("session_receipt"))
         candidate = _file(context.candidate)
-        run_id = config.get("run_id", context.run_id)
+        run_id = config.get("run_id", context.run_id if context.run_id.startswith("fq9-") else "fq9-" + context.run_id)
         if type(run_id) is not str or not re.fullmatch(r"fq9-[A-Za-z0-9_-]{1,80}", run_id):
             raise ValueError()
         artifacts = common.load_manifest(manifest)
@@ -148,11 +146,6 @@ def run(row, config, context):
             "previous" not in artifacts or artifacts["previous"].signer != artifact.signer
         ):
             return _result("blocked", "fq9_upgrade_baseline_unavailable")
-        if case == "upgrade" and any(
-            getattr(artifacts["previous"], key) != getattr(artifact, key)
-            for key in ("build", "version", "sha256", "signer")
-        ):
-            return _result("blocked", "fq9_upgrade_requires_installed_baseline")
         if case == "background" and receipt["engine"] != "opencode":
             return _result("blocked", "fq9_background_requires_oc1")
         output = Path(context.output) / row
@@ -223,3 +216,39 @@ def run(row, config, context):
             return _result("fail", "fq9_background_proof_incomplete", receipts, **facts)
         facts.update(background)
     return _result("pass", "fq9_device_verified", receipts, **facts)
+
+
+def _fq3(config, context):
+    from tool.qa.fq3.update_matrix import validate_run, InvalidEvidence
+    if context.candidate_build != 2202:
+        return _result("blocked", "fq3_requires_build_2202")
+    if type(config) is not dict or set(config) - {"oc1_model", "oc2_model"}:
+        return _result("blocked", "fq3_configuration_invalid")
+    run_id = "fq3-" + context.run_id
+    dart = Path.home() / ".shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart"
+    receipt = context.root / "docs/qa/FQ3d-2026-10-09" / (run_id + ".json")
+    if receipt.exists():
+        return _result("blocked", "evidence_already_exists")
+    argv = [str(dart), "run", "tool/qa/fq3_certify.dart", "--run-id", run_id,
+            "--inherited-emulator-lock-fd", str(context.lock_fd), "--no-matrix"]
+    for key in ("oc1_model", "oc2_model"):
+        if key in config:
+            value = config[key]
+            if type(value) is not str or not re.fullmatch(r"[A-Za-z0-9._-]+/[A-Za-z0-9._-]+", value):
+                return _result("blocked", "fq3_configuration_invalid")
+            argv.extend(["--" + key.replace("_", "-"), value])
+    result = context.command(argv, timeout=1800)
+    try:
+        from tool.qa.fq9.common import load_json
+        report = load_json(receipt, limit=262144)
+        validate_run(report)
+        if report["runID"] != run_id or report["appBuild"] != context.candidate_build:
+            raise ValueError()
+        clean = report["attestation"]["cleanupCompleted"] is True
+        checks = [report["protocolSwitch"], *[check for engine in report["engines"].values()
+                  for check in engine["results"].values()]]
+        passed = result.returncode == 0 and clean and all(check["state"] == "pass" for check in checks)
+    except (ValueError, KeyError, TypeError, OSError, InvalidEvidence):
+        return _result("fail", "fq3_receipt_invalid", [receipt], safe_to_continue=False)
+    return _result("pass" if passed else "fail", "fq3_verified" if passed else "fq3_checks_failed",
+                   [receipt], safe_to_continue=clean)

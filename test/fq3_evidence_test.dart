@@ -14,7 +14,7 @@ Map<String, dynamic> _phase({String engine = 'opencode'}) => {
   'engine': engine,
   'case': 'stream',
   'appUID': 10123,
-  'appBuild': 2197,
+  'appBuild': 2202,
   'cliVersion': engine == 'opencode' ? '1.18.32' : '2.0.10',
   'observedVersion': engine == 'opencode' ? '1.18.32' : '2.0.10',
   'cleanupCode': null,
@@ -58,8 +58,8 @@ Matcher _failure(String code) => throwsA(
 );
 
 void main() {
-  test('current phase requires build 2197 and rejects archived 2196', () {
-    final current = _phase()..['appBuild'] = 2197;
+  test('current phase requires build 2202 and rejects archived 2196', () {
+    final current = _phase()..['appBuild'] = 2202;
     expect(_validate(current), 10123);
     final archived = _phase()..['appBuild'] = 2196;
     expect(() => _validate(archived), _failure('phase_build_mismatch'));
@@ -127,7 +127,7 @@ void main() {
       final evidence = _phase()..['appUID'] = value;
       expect(() => _validate(evidence), _failure('phase_uid_invalid'));
     }
-    for (final value in [null, 2194, 2195, 2196, 2197.0, '2197', true]) {
+    for (final value in [null, 2194, 2195, 2196, 2202.0, '2202', true]) {
       final evidence = _phase()..['appBuild'] = value;
       expect(() => _validate(evidence), _failure('phase_build_mismatch'));
     }

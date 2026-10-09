@@ -17,7 +17,7 @@ Map<String, dynamic> _phase({
   'engine': engine,
   'case': 'stream',
   'appUID': 10123,
-  'appBuild': 2197,
+  'appBuild': 2202,
   'cliVersion': engine == 'opencode' ? '1.18.32' : '2.0.10',
   'observedVersion': engine == 'opencode' ? '1.18.32' : '2.0.10',
   'testedModel': 'server-default',
@@ -35,7 +35,7 @@ Map<String, dynamic> _history(String manifest) => {
   'attemptID': _attemptID,
   'phaseManifest': manifest,
   'appUID': 10123,
-  'appBuild': 2197,
+  'appBuild': 2202,
   'cleanupCompleted': true,
   'result': {
     'state': 'pass',

@@ -1,0 +1,67 @@
+{
+  "agentId": "fx",
+  "appBuild": 2202,
+  "sourceRevision": "02670b857f8ee3a382f5127b9c20bd11522eb76a",
+  "normalRestored": false,
+  "availableBeforeBytes": 1679511552,
+  "errorType": "RuntimeError",
+  "errorCode": "target_not_absent",
+  "terminalSetup": {
+    "jobId": "setup-1791509267468314",
+    "state": "done",
+    "components": {
+      "linux": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "essentials": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "python": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-user": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-node": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-paseo": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-fx": {
+        "state": "done",
+        "done": 5482652,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      }
+    }
+  },
+  "terminalInventory": {
+    "allocatedBytes": 45056,
+    "pinMatches": false,
+    "linkMatches": true,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": true,
+    "staging": [],
+    "lockPresent": false
+  }
+}

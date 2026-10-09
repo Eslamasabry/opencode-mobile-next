@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from unittest.mock import patch, Mock
 from xml.etree.ElementTree import Element
-from device_2198 import account_mask_boxes, closed_error_code
+from device_install import account_mask_boxes, closed_error_code
 
 class Tests(unittest.TestCase):
     def test_masks_claude_and_signed_in_account_nodes_without_returning_copy(self):

@@ -24,10 +24,10 @@ if __package__ in (None, ''):
 
 ROOT = Path(__file__).resolve().parents[2]
 LOCK = Path('/home/eslam/Storage/tmp/oc-emulator.lock')
-NORMAL = Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2199.apk')
+NORMAL = Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk')
 PACKAGE = 'io.github.eslamasabry.opencode_mobile'
-ROWS = ('ba-install', 'ba-removal', 'ba-storage-floor', 'bb5', 'fq3',
-        'fq9-upgrade', 'fq9-background', 'bd7', 'fb1', 'demo')
+ROWS = ('fq9-upgrade', 'ba-install', 'ba-removal', 'ba-storage-floor', 'bb5',
+        'fq3', 'fq9-background', 'bd7', 'fb1', 'demo')
 
 
 class BatchError(Exception):
@@ -43,17 +43,25 @@ def parser():
     p.add_argument('--candidate-build', type=int)
     p.add_argument('--normal-apk', type=Path, default=NORMAL)
     p.add_argument('--inputs', type=Path, help='Private per-row JSON; see final-pass-runner.md')
+    p.add_argument('--fast', action='store_true', help='Defer 30-minute background and operator GIF rows')
+    p.add_argument('--output', type=Path, help='New evidence directory; existing directories are refused')
     p.add_argument('--date', type=date.fromisoformat, default=date.today())
     return p
+
+
+def selected_rows(args):
+    return tuple(row for row in ROWS if not args.fast or row not in ('fq9-background', 'demo'))
 
 
 def plan(args):
     return {'mode': 'execute' if args.execute else 'dry-run', 'deviceTouched': False,
             'serial': 'emulator-5554', 'lock': str(LOCK), 'lockWaitSeconds': 3600,
-            'rows': list(ROWS), 'backgroundCheckpointsSeconds': [300, 1800],
-            'normalBuild': 2199, 'summary': f'docs/qa/final-pass-{args.date}/README.md',
+            'rows': list(selected_rows(args)),
+            'deferredRows': [row for row in ROWS if row not in selected_rows(args)],
+            'backgroundCheckpointsSeconds': [] if args.fast else [300, 1800],
+            'normalBuild': 2202, 'summary': str((args.output or Path(f'docs/qa/final-pass-{args.date}')) / 'README.md'),
             'requirements': ['reviewed_candidate_apk', 'matching_signer', 'compatible_driver_inputs',
-                             'prepared_synthetic_fixtures', 'manual_demo_operator'],
+                             'prepared_synthetic_fixtures'] + ([] if args.fast else ['manual_demo_operator']),
             'qualification': 'FB1 checks a plan only; demo requires a separate privacy review.'}
 
 
@@ -105,7 +113,7 @@ def verify_apks(args):
     if args.candidate_apk is None or args.candidate_build is None:
         raise BatchError('candidate_required')
     identities = []
-    for path, build in ((args.candidate_apk, args.candidate_build), (args.normal_apk, 2199)):
+    for path, build in ((args.candidate_apk, args.candidate_build), (args.normal_apk, 2202)):
         path = path.absolute()
         if any(p.is_symlink() for p in (path, *path.parents)) or not path.is_file():
             raise BatchError('artifact_unavailable')
@@ -143,7 +151,7 @@ class Context:
     def __init__(self, root, output, args, fd, command=None):
         self.root, self.output = root, output
         self.candidate, self.candidate_build = args.candidate_apk.absolute(), args.candidate_build
-        self.normal_apk, self.normal_build = args.normal_apk.absolute(), 2199
+        self.normal_apk, self.normal_build = args.normal_apk.absolute(), 2202
         self.lock_fd, self.run_id = fd, 'final-' + uuid.uuid4().hex[:12]
         self._command = command
     def validate_fd(self, fd):
@@ -224,35 +232,37 @@ def write_summary(output, results, identities):
 def execute(args, *, root=ROOT, lock=reservation, command=None, verify=verify_apks, dispatch=dispatch):
     if args.candidate_apk is None or args.candidate_build is None:
         raise BatchError('candidate_required')
+    rows = selected_rows(args)
     configs = load_inputs(args.inputs)
-    output = root / 'docs/qa' / f'final-pass-{args.date}'
+    output = args.output or root / 'docs/qa' / f'final-pass-{args.date}'
     if output.exists():
         raise BatchError('output_already_exists')
     output.mkdir(parents=True)
     try:
         identities = verify(args)
     except Exception:
-        write_summary(output, [outcome(row, 'blocked', 'artifact_preflight_failed') for row in ROWS], {})
+        write_summary(output, [outcome(row, 'blocked', 'artifact_preflight_failed') for row in rows], {})
         return 1
     results, interrupted = [], False
     with ExitStack() as stack:
         try:
             fd = stack.enter_context(lock())
         except Exception:
-            write_summary(output, [outcome(row, 'blocked', 'lock_unavailable') for row in ROWS], identities)
+            write_summary(output, [outcome(row, 'blocked', 'lock_unavailable') for row in rows], identities)
             return 1
         context = Context(root, output, args, fd, command)
         device_safe, candidate_selected = True, False
         try:
-            for row in ROWS:
+            for row in rows:
                 if not device_safe and row != 'fb1':
                     results.append(outcome(row, 'blocked', 'device_prerequisite_failed'))
                     write_summary(output, results, identities)
                     continue
                 try:
+                    # Upgrade must observe the pre-existing baseline before any install.
                     # Some drivers restore their own normal APK. Re-establish
                     # the candidate before the next independent device row.
-                    if row != 'fb1' and (not candidate_selected or context.installed_build() != context.candidate_build):
+                    if row not in ('fb1', 'fq9-upgrade') and (not candidate_selected or context.installed_build() != context.candidate_build):
                         installed = context.command(['adb', '-s', 'emulator-5554', 'install', '-r', str(context.candidate)])
                         if installed.returncode:
                             device_safe = False
@@ -273,7 +283,7 @@ def execute(args, *, root=ROOT, lock=reservation, command=None, verify=verify_ap
         except KeyboardInterrupt:
             interrupted = True
             done = {result['row'] for result in results}
-            results += [outcome(row, 'blocked', 'interrupted') for row in ROWS if row not in done]
+            results += [outcome(row, 'blocked', 'interrupted') for row in rows if row not in done]
         finally:
             try:
                 restored = context.command(['adb', '-s', 'emulator-5554', 'install', '-r', '-d', str(context.normal_apk)])

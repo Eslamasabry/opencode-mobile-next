@@ -1,0 +1,31 @@
+{
+  "mode": "dry-run",
+  "deviceTouched": false,
+  "serial": "emulator-5554",
+  "lock": "/home/eslam/Storage/tmp/oc-emulator.lock",
+  "lockWaitSeconds": 3600,
+  "rows": [
+    "fq9-upgrade",
+    "ba-install",
+    "ba-removal",
+    "ba-storage-floor",
+    "bb5",
+    "fq3",
+    "bd7",
+    "fb1"
+  ],
+  "deferredRows": [
+    "fq9-background",
+    "demo"
+  ],
+  "backgroundCheckpointsSeconds": [],
+  "normalBuild": 2202,
+  "summary": "docs/qa/BD16-2026-10-09/fast-run/README.md",
+  "requirements": [
+    "reviewed_candidate_apk",
+    "matching_signer",
+    "compatible_driver_inputs",
+    "prepared_synthetic_fixtures"
+  ],
+  "qualification": "FB1 checks a plan only; demo requires a separate privacy review."
+}
