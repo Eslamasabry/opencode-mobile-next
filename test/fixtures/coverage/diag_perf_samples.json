@@ -1,0 +1,288 @@
+{
+  "source": "lib/diagnostics/perf_trace.dart (PerfSpan)",
+  "schema": {
+    "span": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "durationMs",
+        "kind": "number"
+      },
+      {
+        "path": "attrs.status",
+        "kind": "string"
+      },
+      {
+        "path": "parent",
+        "kind": "string"
+      },
+      {
+        "path": "outcome",
+        "kind": "enum"
+      },
+      {
+        "path": "isMark",
+        "kind": "boolean"
+      },
+      {
+        "path": "startMicros",
+        "kind": "number"
+      },
+      {
+        "path": "wallStart",
+        "kind": "string"
+      },
+      {
+        "path": "id",
+        "kind": "number"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "perf_ok",
+      "kind": "perf",
+      "payload": {
+        "name": "GET /api/session",
+        "durationMs": 120,
+        "attrs": {
+          "status": "200"
+        },
+        "parent": "open-chat",
+        "outcome": "ok",
+        "isMark": false,
+        "id": 1,
+        "startMicros": 5000,
+        "wallStart": "2026-10-09T10:00:00Z"
+      },
+      "fields": [
+        {
+          "key": "span.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "GET /api/session"
+          ],
+          "primary": false
+        },
+        {
+          "key": "span.durationMs",
+          "path": "durationMs",
+          "kind": "number",
+          "probes": [
+            "120ms"
+          ],
+          "primary": false
+        },
+        {
+          "key": "span.attrs.status",
+          "path": "attrs.status",
+          "kind": "string",
+          "probes": [
+            "status=200"
+          ],
+          "primary": false
+        },
+        {
+          "key": "span.parent",
+          "path": "parent",
+          "kind": "string",
+          "probes": [
+            "in open-chat"
+          ],
+          "primary": false
+        },
+        {
+          "key": "span.outcome",
+          "path": "outcome",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "span.isMark",
+          "path": "isMark",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "span.id",
+          "path": "id",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "span.startMicros",
+          "path": "startMicros",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "span.wallStart",
+          "path": "wallStart",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perf_failed",
+      "kind": "perf",
+      "payload": {
+        "name": "GET /api/files",
+        "durationMs": 80,
+        "outcome": "error",
+        "isMark": false,
+        "id": 2,
+        "startMicros": 6000,
+        "wallStart": "2026-10-09T10:00:01Z"
+      },
+      "fields": [
+        {
+          "key": "span.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "GET /api/files"
+          ],
+          "primary": false
+        },
+        {
+          "key": "span.durationMs",
+          "path": "durationMs",
+          "kind": "number",
+          "probes": [
+            "80ms"
+          ],
+          "primary": false
+        },
+        {
+          "key": "span.outcome",
+          "path": "outcome",
+          "kind": "enum",
+          "probes": [
+            "1 failed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "span.isMark",
+          "path": "isMark",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "span.id",
+          "path": "id",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "span.startMicros",
+          "path": "startMicros",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "span.wallStart",
+          "path": "wallStart",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "perf_mark",
+      "kind": "perf",
+      "payload": {
+        "name": "first-frame",
+        "durationMs": 0,
+        "attrs": {
+          "status": "ready"
+        },
+        "outcome": "ok",
+        "isMark": true,
+        "id": 3,
+        "startMicros": 7000,
+        "wallStart": "2026-10-09T10:00:02Z"
+      },
+      "fields": [
+        {
+          "key": "span.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "first-frame"
+          ],
+          "primary": false
+        },
+        {
+          "key": "span.durationMs",
+          "path": "durationMs",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "span.attrs.status",
+          "path": "attrs.status",
+          "kind": "string",
+          "probes": [
+            "status=ready"
+          ],
+          "primary": false
+        },
+        {
+          "key": "span.outcome",
+          "path": "outcome",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "span.isMark",
+          "path": "isMark",
+          "kind": "boolean",
+          "probes": [
+            "at "
+          ],
+          "primary": false
+        },
+        {
+          "key": "span.id",
+          "path": "id",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "span.startMicros",
+          "path": "startMicros",
+          "kind": "number",
+          "probes": [
+            "at "
+          ],
+          "primary": false
+        },
+        {
+          "key": "span.wallStart",
+          "path": "wallStart",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

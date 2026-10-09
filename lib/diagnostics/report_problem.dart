@@ -198,7 +198,7 @@ class ReportProblem extends ChangeNotifier {
   static String logText(String text) => _text(text, 2048);
 
   static String _text(String text, int limit) {
-    final safe = KitRedact.text(text);
+    final safe = KitRedact.opaqueTokens(KitRedact.text(text));
     // Rune boundaries avoid leaving a half-surrogate at the truncation point.
     return String.fromCharCodes(safe.runes.take(limit));
   }

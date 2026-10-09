@@ -161,6 +161,15 @@ abstract final class KitRedact {
     RegExp(r'(?<![A-Za-z0-9_\-])(xox[abpr]-)[A-Za-z0-9\-]{10,}'),
   ];
 
+  /// Long opaque tokens: 32 or more letters, digits and `_+./=-` in one run
+  /// that include a digit, replaced by [mask]. Long letters-only words are
+  /// code names a diagnostic needs, so they stay. For text that leaves the
+  /// phone (reports, logs); apply after [text].
+  static String opaqueTokens(String s) => s.replaceAll(
+    RegExp(r'\b(?=[A-Za-z0-9_+./=-]*[0-9])[A-Za-z0-9_+./=-]{32,}\b'),
+    mask,
+  );
+
   /// [s] with registered exact values masked longest first, followed by the
   /// credential patterns. Exact matching is case-sensitive and literal.
   static String text(String s) {

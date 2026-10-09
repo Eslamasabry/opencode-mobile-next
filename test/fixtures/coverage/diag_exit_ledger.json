@@ -1,0 +1,10 @@
+{
+  "entry.description": "ignored: free text from Android or an error; never read or stored, so it can never show or be shared",
+  "entry.importance": "shown",
+  "entry.reason": "shown",
+  "entry.status": "ignored: Android's exit status number says nothing a person can act on; not read",
+  "entry.subReason": "ignored: only decides which plain category an exit gets (updated, stopped, needed memory); the category is what shows",
+  "entry.timestamp": "shown",
+  "wire.error": "shown",
+  "wire.supported": "shown"
+}

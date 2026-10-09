@@ -1,0 +1,295 @@
+{
+  "source": "android AppLifecycle.exitHistory (oc/lifecycle) read by lib/platform/app_exit.dart",
+  "schema": {
+    "wire": [
+      {
+        "path": "supported",
+        "kind": "boolean"
+      },
+      {
+        "path": "error",
+        "kind": "string"
+      }
+    ],
+    "entry": [
+      {
+        "path": "reason",
+        "kind": "number"
+      },
+      {
+        "path": "subReason",
+        "kind": "number"
+      },
+      {
+        "path": "importance",
+        "kind": "number"
+      },
+      {
+        "path": "timestamp",
+        "kind": "number"
+      },
+      {
+        "path": "status",
+        "kind": "number"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "exit_problems",
+      "kind": "exit",
+      "payload": {
+        "wire": {
+          "supported": true
+        },
+        "entries": [
+          {
+            "reason": 4,
+            "subReason": -1,
+            "importance": 100,
+            "timestamp": -3600000,
+            "status": 0,
+            "description": "MARKER-EXIT-TEXT-1"
+          },
+          {
+            "reason": 3,
+            "subReason": -1,
+            "importance": 400,
+            "timestamp": -7200000,
+            "status": 0,
+            "description": "MARKER-EXIT-TEXT-2"
+          },
+          {
+            "reason": 10,
+            "subReason": -1,
+            "importance": 100,
+            "timestamp": -10800000,
+            "status": 0,
+            "description": "MARKER-EXIT-TEXT-3"
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "wire.supported",
+          "path": "supported",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.reason",
+          "path": "reason",
+          "kind": "number",
+          "probes": [
+            "Reason code 4"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.subReason",
+          "path": "subReason",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.importance",
+          "path": "importance",
+          "kind": "number",
+          "probes": [
+            "Importance 100"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.timestamp",
+          "path": "timestamp",
+          "kind": "number",
+          "probes": [
+            "Today"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.status",
+          "path": "status",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.reason",
+          "path": "reason",
+          "kind": "number",
+          "probes": [
+            "Reason code 3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.subReason",
+          "path": "subReason",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.importance",
+          "path": "importance",
+          "kind": "number",
+          "probes": [
+            "Importance 400"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.timestamp",
+          "path": "timestamp",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.status",
+          "path": "status",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.reason",
+          "path": "reason",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.subReason",
+          "path": "subReason",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.importance",
+          "path": "importance",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.timestamp",
+          "path": "timestamp",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.status",
+          "path": "status",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "entry.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "exit_none",
+      "kind": "exit",
+      "payload": {
+        "wire": {
+          "supported": true
+        },
+        "entries": []
+      },
+      "fields": [
+        {
+          "key": "wire.supported",
+          "path": "supported",
+          "kind": "boolean",
+          "probes": [
+            "No unexpected closes recently."
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "exit_unsupported",
+      "kind": "exit",
+      "payload": {
+        "wire": {
+          "supported": false
+        },
+        "entries": []
+      },
+      "fields": [
+        {
+          "key": "wire.supported",
+          "path": "supported",
+          "kind": "boolean",
+          "probes": [
+            "Not available on this phone"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "exit_error",
+      "kind": "exit",
+      "payload": {
+        "wire": {
+          "supported": true,
+          "error": "unavailable"
+        },
+        "entries": []
+      },
+      "fields": [
+        {
+          "key": "wire.supported",
+          "path": "supported",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "wire.error",
+          "path": "error",
+          "kind": "string",
+          "probes": [
+            "Couldn't read recent app exits"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

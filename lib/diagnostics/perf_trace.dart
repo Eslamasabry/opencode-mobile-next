@@ -237,7 +237,7 @@ abstract final class PerfTrace {
     }
     return PerfSpanHandle._(
       id: _nextId++,
-      name: name,
+      name: _safeName(name),
       startMicros: nowMicros,
       wallStart: DateTime.now(),
       parent: parent ?? current,
@@ -293,7 +293,7 @@ abstract final class PerfTrace {
       _add(
         PerfSpan(
           id: _nextId++,
-          name: name,
+          name: _safeName(name),
           startMicros: nowMicros,
           durationMicros: 0,
           wallStart: DateTime.now(),
@@ -370,7 +370,7 @@ abstract final class PerfTrace {
     _add(
       PerfSpan(
         id: _nextId++,
-        name: name,
+        name: _safeName(name),
         startMicros: startMicros,
         durationMicros: micros,
         wallStart: DateTime.now().subtract(Duration(microseconds: micros)),
@@ -499,6 +499,12 @@ abstract final class PerfTrace {
     caseSensitive: false,
   );
   static final _tokenLike = RegExp(r'[A-Za-z0-9_+/=.-]{32,}');
+
+  /// A step's name as it may be recorded: names are written in code, but one
+  /// that carried a registered secret, a credential pattern or a long opaque
+  /// token (an id spliced into a path) must never reach a report or the log.
+  static String _safeName(String name) =>
+      KitRedact.opaqueTokens(KitRedact.text(name));
 
   static void _putAttr(Map<String, String> into, String key, Object? value) {
     if (value == null) return;

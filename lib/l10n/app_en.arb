@@ -34329,5 +34329,9 @@
         "type": "String"
       }
     }
+  },
+  "exportMarkdownUnredacted": "The transcript is not redacted. It holds exactly what you see, including any secrets or private paths in the conversation.",
+  "@exportMarkdownUnredacted": {
+    "description": "Export conversation: shown when the readable transcript is chosen, which is never redacted"
   }
 }

@@ -1,0 +1,13 @@
+{
+  "source": "lib/ui/screens/session_export_screen.dart, lib/diagnostics/*, lib/platform/share_intent.dart",
+  "wire": [
+    "oc2 GET /api/session/{sessionID}/export",
+    "oc1 GET /session/{sessionID}/export",
+    "device share sheet",
+    "device clipboard copy",
+    "device file save",
+    "github issue link",
+    "device crash store write",
+    "device crash store delete"
+  ]
+}

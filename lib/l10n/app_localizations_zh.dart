@@ -28584,4 +28584,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String agentsStateLimitReset(String time) {
     return 'Plan limit reached · resets $time';
   }
+
+  @override
+  String get exportMarkdownUnredacted =>
+      'The transcript is not redacted. It holds exactly what you see, including any secrets or private paths in the conversation.';
 }

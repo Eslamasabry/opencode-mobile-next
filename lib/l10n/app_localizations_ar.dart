@@ -28737,4 +28737,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String agentsStateLimitReset(String time) {
     return 'تم بلوغ حد الخطة · يُعاد ضبطه $time';
   }
+
+  @override
+  String get exportMarkdownUnredacted =>
+      'النص المحفوظ غير منقّح. يحتوي بالضبط على ما تراه، بما في ذلك أي أسرار أو مسارات خاصة في المحادثة.';
 }
