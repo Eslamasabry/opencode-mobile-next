@@ -1,0 +1,8 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart
+00:00 +0: authoritative connector admission coalesces the same card
+00:00 +1: unobserved and mismatched catalog suggestions cannot be admitted
+00:00 +2: changed authoritative transcript rejects the earlier card controller
+00:00 +3: changed project invalidates an admitted connector before dispatch
+00:00 +4: changed active profile invalidates an admitted connector
+00:00 +5: source change during history recovery never calls the stale repository
+00:00 +6: All tests passed!

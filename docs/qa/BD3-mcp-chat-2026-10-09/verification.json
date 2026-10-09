@@ -1,0 +1,63 @@
+{
+  "base": "f0443a349c77b4904f7f2dac2ce77307090b4833",
+  "implementationCandidate": "a0354c92b90acb2a9dd03ed4563cce08bffc8a40",
+  "contractFirstCommit": "2fff6ee7a",
+  "protocolCommit": "c5f2171e0",
+  "toolchain": "Flutter 3.47.1 / Dart format language-version 3.10",
+  "checks": {
+    "finalFocused": {
+      "passed": 45,
+      "log": "final-focused.txt"
+    },
+    "affectedRegression": {
+      "passed": 117,
+      "log": "affected-tests.txt"
+    },
+    "analyzer": {
+      "result": "No issues found",
+      "log": "analyze-final.txt"
+    },
+    "mutants": {
+      "source-guard-revert.txt": "expected failure",
+      "late-auth-revert.txt": "expected failure"
+    },
+    "commitCheck": "commit-check.txt"
+  },
+  "runtime": {
+    "opencode1": "live isolated runtime add/connect/session retention plus exact-version source; no model or real OAuth",
+    "opencode2": "source and adapter checks only; isolated beta health unavailable; OAuth and Loaded tools disabled",
+    "paseo": "published 0.9.2 source verified with lockfile integrity; all chat MCP mutations disabled"
+  },
+  "notRun": [
+    "full suite",
+    "APK/Gradle",
+    "device/emulator",
+    "real provider OAuth",
+    "real Claude",
+    "model request",
+    "CI",
+    "push/tag/release"
+  ],
+  "sha256": {
+    "lib/api/product_repository/ops_catalog.dart": "4743948bfadd2766df613e079f8fc553d829c88458e6c85c1035c602e3909211",
+    "lib/api2/gateway_mappers.dart": "18e01b7efe8f2f6acdf74eeeadd394fb73038b291ec797a7f9643016cc6cbd99",
+    "lib/builtin/agents/gen_ui_server.dart": "2b27e8de1164bb4521fe114132d983edbdabff1bbe019a8a10d9c9952f1e3f77",
+    "lib/domain/genui/gen_ui_codec.dart": "e8f676abb4dfc9af50fae2fab703d7c65493c531df8edd407e1f9b51a3a4c6a7",
+    "lib/domain/genui/gen_ui_types.dart": "b02f01cff71843d2f65ba6aed85c23dd628b16b3ed3fee4013badb5059827afe",
+    "lib/domain/genui/gen_ui_validation.dart": "dd097f24a4ba1eb428fb018a7203a0711d8d0331072f7755e5a52d78883bef19",
+    "lib/domain/genui/gen_ui_validation_js.dart": "5ccd072c06b6d051a626aa3760f3045552bd633ac0b7f274b60a1678685220f9",
+    "lib/domain/mcp_chat.dart": "b982aa77dfedefa6a4c0ac2aa3abdfb8241ec59638b0f0076e140c2ba308e78c",
+    "lib/domain/server_gateway/capabilities.dart": "1e8132669e35d3d49de1af8279eaab2862068a88e5f8bd39a1363cfa26f9b7ed",
+    "lib/state/connection.dart": "d736fd5177e64c201fab45ca48ffcee0561dfc6736126504c22722432fc60a38",
+    "lib/state/connection/mcp_chat.dart": "c019b7a482153469696895d4b0d791f7f7274d3efc07113436716580db724572",
+    "lib/state/gen_ui_state.dart": "e26687d33df2536992bddea9ba09f422dcb3e725b3985e541dc0f519030db9c2",
+    "lib/state/mcp_chat_controller.dart": "1316ac6b254da8fb312669b57ac81e590e75585c09c61113aba5ee14d49a2414",
+    "test/api2_gateway_mappers_test.dart": "ff18a4a39acd20f31421f7b6e5b1eb4fc49c26cb99500d1c61b958a25b4658e8",
+    "test/gen_ui_connector_test.dart": "23a2aec6c83aad5b1698876ff32cd0ee22277e3942b1fc2b3526b205aee96ec0",
+    "test/mcp_chat_capabilities_test.dart": "a2bb711caaaca45c58a12ab9961dcfcfcc706cf117ddea8a43a4a0d48159b426",
+    "test/mcp_chat_card_authority_test.dart": "a96a011f61351d05577ce88d54590353918346c29a20ce3ae25c54bec1492b29",
+    "test/mcp_chat_connection_test.dart": "3f6100f9e58362f335e743e6ad0d5c55f5034db89458e17815b74f5db6b11f30",
+    "test/mcp_chat_controller_test.dart": "cd0bd068dac8e845973edfa237070553dc289e93be9566438cc2c440a3425f9e",
+    "test/mcp_chat_oc1_gateway_test.dart": "c4c7a313ddcda97a740ae89be2285ed2fb4ea2bd0e3f1c49003f9cce6a02612f"
+  }
+}

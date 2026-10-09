@@ -1,0 +1,31 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: runtime add followed by authoritative status makes next-turn tools ready
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: double tap coalesces and successful connect never adds again
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: unrelated existing same name is never reused or overwritten
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: unsupported runtime makes no calls
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: wrong requested server cannot mutate
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: required configuration stays in Tools
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: no refresh contract never claims ready
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: source changes during add cannot publish success
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: gateway errors never escape or expose raw credential text
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: authentication is explicit and uses validated code
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: valid manual callback completes and rechecks inventory
+00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: OAuth off and unsafe launch fail closed
+00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: dispose never revokes server credentials
+00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: cancel only acts on owned pending authentication
+00:00 +14: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart
+00:03 +14: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart: chat connector uses runtime add at the current location
+00:03 +15: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart: chat connector cannot replace an existing runtime name
+00:03 +16: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart: invalid chat connector is rejected before contacting the server
+00:03 +17: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart: changing location during inventory read prevents runtime mutation
+00:03 +18: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart
+00:04 +18: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: unqualified gateways do not promise chat connector actions
+00:04 +19: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: OpenCode 1 can connect and refresh chat connectors with OAuth
+00:04 +20: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: OpenCode 2 supports runtime chat connectors without chat OAuth
+00:04 +21: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: managed Agent cards preserve connector capability decisions
+00:04 +22: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart
+00:04 +22: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: connector suggestion preserves identity and normalizes plain reason
+00:04 +23: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: connector keeps executed tool provenance requirements
+00:04 +24: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: Dart and helper reject malformed or actionable connector payloads
+00:04 +25: /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: MCP helper advertises connector suggestions and accepts their calls
+00:04 +26: All tests passed!

@@ -1,0 +1,51 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart
+00:00 +0: chat connector uses runtime add at the current location
+00:00 +0 -1: chat connector uses runtime add at the current location [E]
+  This server saves MCP configuration by project or globally
+  package:opencode_mobile/api/product_repository/ops_catalog.dart 327:9  _SdkCatalogOps.addMcpServer.<fn>
+  package:opencode_mobile/api/product_repository.dart 616:24             _guard
+  package:opencode_mobile/api/product_repository/ops_catalog.dart 320:9  _SdkCatalogOps.addMcpServer
+  test/mcp_chat_oc1_gateway_test.dart 66:26                              main.<fn>.<fn>
+  test/mcp_chat_oc1_gateway_test.dart 46:14                              _withGateway.<fn>
+  
+00:00 +0 -1: chat connector cannot replace an existing runtime name
+00:00 +0 -2: chat connector cannot replace an existing runtime name [E]
+  Expected: throws <Instance of 'ProductException'> with `message`: contains 'already exists'
+    Actual: <Instance of 'Future<void>'>
+     Which: threw ProductException:<This server saves MCP configuration by project or globally>
+            stack package:opencode_mobile/api/product_repository/ops_catalog.dart 327:9  _SdkCatalogOps.addMcpServer.<fn>
+                  package:opencode_mobile/api/product_repository.dart 616:24             _guard
+                  package:opencode_mobile/api/product_repository/ops_catalog.dart 320:9  _SdkCatalogOps.addMcpServer
+                  test/mcp_chat_oc1_gateway_test.dart 98:22                              main.<fn>.<fn>
+                  test/mcp_chat_oc1_gateway_test.dart 46:14                              _withGateway.<fn>
+                  ===== asynchronous gap ===========================
+                  package:matcher                                                        expectLater
+                  package:flutter_test/src/widget_tester.dart 507:8                      expectLater
+                  test/mcp_chat_oc1_gateway_test.dart 97:15                              main.<fn>.<fn>
+                  test/mcp_chat_oc1_gateway_test.dart 46:14                              _withGateway.<fn>
+                  ===== asynchronous gap ===========================
+                  dart:async                                                             _CustomZone.registerUnaryCallback
+                  test/mcp_chat_oc1_gateway_test.dart 19:18                              _withGateway.<fn>
+                  dart:_http                                                             HttpOverrides.runZoned
+                  test/mcp_chat_oc1_gateway_test.dart 18:21                              _withGateway
+                  test/mcp_chat_oc1_gateway_test.dart 92:11                              main.<fn>
+                  
+            which has `message` with value 'This server saves MCP configuration by project or globally' which does not contain 'already exists'
+  
+  package:matcher                                    expectLater
+  package:flutter_test/src/widget_tester.dart 507:8  expectLater
+  test/mcp_chat_oc1_gateway_test.dart 97:15          main.<fn>.<fn>
+  test/mcp_chat_oc1_gateway_test.dart 46:14          _withGateway.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                         _CustomZone.registerUnaryCallback
+  test/mcp_chat_oc1_gateway_test.dart 19:18          _withGateway.<fn>
+  dart:_http                                         HttpOverrides.runZoned
+  test/mcp_chat_oc1_gateway_test.dart 18:21          _withGateway
+  test/mcp_chat_oc1_gateway_test.dart 92:11          main.<fn>
+  
+00:00 +0 -2: invalid chat connector is rejected before contacting the server
+00:00 +1 -2: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart: chat connector cannot replace an existing runtime name
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_oc1_gateway_test.dart: chat connector uses runtime add at the current location

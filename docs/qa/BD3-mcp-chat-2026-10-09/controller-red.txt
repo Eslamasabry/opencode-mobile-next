@@ -1,0 +1,152 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart
+test/mcp_chat_controller_test.dart:6:8: Error: Error when reading 'lib/domain/mcp_chat.dart': No such file or directory
+import 'package:opencode_mobile/domain/mcp_chat.dart';
+       ^
+test/mcp_chat_controller_test.dart:9:8: Error: Error when reading 'lib/state/mcp_chat_controller.dart': No such file or directory
+import 'package:opencode_mobile/state/mcp_chat_controller.dart';
+       ^
+test/mcp_chat_controller_test.dart:67:8: Error: 'McpChatController' isn't a type.
+  late McpChatController controller;
+       ^^^^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:70:27: Error: No named parameter with the name 'mcpChatConnect'.
+    mcpRuntimeAdds: true, mcpChatConnect: enabled,
+                          ^^^^^^^^^^^^^^
+lib/domain/server_gateway/capabilities.dart:162:9: Context: Found this candidate, but the arguments don't match.
+  const ServerCapabilities({
+        ^^^^^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:73:3: Error: 'McpChatController' isn't a type.
+  McpChatController make({ServerCapabilities? capabilities, McpCatalogItem? catalogItem}) => McpChatController(
+  ^^^^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:73:94: Error: Method not found: 'McpChatController'.
+  McpChatController make({ServerCapabilities? capabilities, McpCatalogItem? catalogItem}) => McpChatController(
+                                                                                          ^^^^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:86:39: Error: Undefined name 'McpChatPhase'.
+    expect(controller.snapshot.phase, McpChatPhase.toolsReady);
+                                      ^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:103:41: Error: Undefined name 'McpChatFailure'.
+    expect(controller.snapshot.failure, McpChatFailure.nameConflict);
+                                        ^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:106:45: Error: Undefined name 'McpChatPhase'.
+    expect(controller.snapshot.phase, isNot(McpChatPhase.toolsReady));
+                                            ^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:111:41: Error: Undefined name 'McpChatFailure'.
+    expect(controller.snapshot.failure, McpChatFailure.unavailable);
+                                        ^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:116:41: Error: Undefined name 'McpChatFailure'.
+    expect(controller.snapshot.failure, McpChatFailure.invalidSuggestion);
+                                        ^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:122:41: Error: Undefined name 'McpChatFailure'.
+    expect(controller.snapshot.failure, McpChatFailure.setupRequired);
+                                        ^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:128:39: Error: Undefined name 'McpChatPhase'.
+    expect(controller.snapshot.phase, McpChatPhase.connectedNeedsNewConversation);
+                                      ^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:137:41: Error: Undefined name 'McpChatFailure'.
+    expect(controller.snapshot.failure, McpChatFailure.sourceChanged);
+                                        ^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:143:41: Error: Undefined name 'McpChatFailure'.
+    expect(controller.snapshot.failure, McpChatFailure.connectFailed);
+                                        ^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:149:39: Error: Undefined name 'McpChatPhase'.
+    expect(controller.snapshot.phase, McpChatPhase.needsAuthentication);
+                                      ^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:152:39: Error: Undefined name 'McpChatPhase'.
+    expect(controller.snapshot.phase, McpChatPhase.authorizing);
+                                      ^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:156:41: Error: Undefined name 'McpChatFailure'.
+    expect(controller.snapshot.failure, McpChatFailure.authenticationFailed);
+                                        ^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:164:39: Error: Undefined name 'McpChatPhase'.
+    expect(controller.snapshot.phase, McpChatPhase.toolsReady);
+                                      ^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:172:41: Error: Undefined name 'McpChatFailure'.
+    expect(controller.snapshot.failure, McpChatFailure.oauthUnavailable);
+                                        ^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:180:41: Error: Undefined name 'McpChatFailure'.
+    expect(controller.snapshot.failure, McpChatFailure.authenticationFailed);
+                                        ^^^^^^^^^^^^^^
+test/mcp_chat_controller_test.dart:96:23: Error: The argument type 'List<dynamic>' can't be assigned to the parameter type 'Iterable<Future<dynamic>>'.
+ - 'List' is from 'dart:core'.
+ - 'Iterable' is from 'dart:core'.
+ - 'Future' is from 'dart:async'.
+    await Future.wait([a, b]);
+                      ^
+00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart [E]
+  Failed to load "/home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart":
+  Compilation failed for testPath=/home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: test/mcp_chat_controller_test.dart:6:8: Error: Error when reading 'lib/domain/mcp_chat.dart': No such file or directory
+  import 'package:opencode_mobile/domain/mcp_chat.dart';
+         ^
+  test/mcp_chat_controller_test.dart:9:8: Error: Error when reading 'lib/state/mcp_chat_controller.dart': No such file or directory
+  import 'package:opencode_mobile/state/mcp_chat_controller.dart';
+         ^
+  test/mcp_chat_controller_test.dart:67:8: Error: 'McpChatController' isn't a type.
+    late McpChatController controller;
+         ^^^^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:70:27: Error: No named parameter with the name 'mcpChatConnect'.
+      mcpRuntimeAdds: true, mcpChatConnect: enabled,
+                            ^^^^^^^^^^^^^^
+  lib/domain/server_gateway/capabilities.dart:162:9: Context: Found this candidate, but the arguments don't match.
+    const ServerCapabilities({
+          ^^^^^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:73:3: Error: 'McpChatController' isn't a type.
+    McpChatController make({ServerCapabilities? capabilities, McpCatalogItem? catalogItem}) => McpChatController(
+    ^^^^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:73:94: Error: Method not found: 'McpChatController'.
+    McpChatController make({ServerCapabilities? capabilities, McpCatalogItem? catalogItem}) => McpChatController(
+                                                                                               ^^^^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:86:39: Error: Undefined name 'McpChatPhase'.
+      expect(controller.snapshot.phase, McpChatPhase.toolsReady);
+                                        ^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:103:41: Error: Undefined name 'McpChatFailure'.
+      expect(controller.snapshot.failure, McpChatFailure.nameConflict);
+                                          ^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:106:45: Error: Undefined name 'McpChatPhase'.
+      expect(controller.snapshot.phase, isNot(McpChatPhase.toolsReady));
+                                              ^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:111:41: Error: Undefined name 'McpChatFailure'.
+      expect(controller.snapshot.failure, McpChatFailure.unavailable);
+                                          ^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:116:41: Error: Undefined name 'McpChatFailure'.
+      expect(controller.snapshot.failure, McpChatFailure.invalidSuggestion);
+                                          ^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:122:41: Error: Undefined name 'McpChatFailure'.
+      expect(controller.snapshot.failure, McpChatFailure.setupRequired);
+                                          ^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:128:39: Error: Undefined name 'McpChatPhase'.
+      expect(controller.snapshot.phase, McpChatPhase.connectedNeedsNewConversation);
+                                        ^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:137:41: Error: Undefined name 'McpChatFailure'.
+      expect(controller.snapshot.failure, McpChatFailure.sourceChanged);
+                                          ^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:143:41: Error: Undefined name 'McpChatFailure'.
+      expect(controller.snapshot.failure, McpChatFailure.connectFailed);
+                                          ^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:149:39: Error: Undefined name 'McpChatPhase'.
+      expect(controller.snapshot.phase, McpChatPhase.needsAuthentication);
+                                        ^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:152:39: Error: Undefined name 'McpChatPhase'.
+      expect(controller.snapshot.phase, McpChatPhase.authorizing);
+                                        ^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:156:41: Error: Undefined name 'McpChatFailure'.
+      expect(controller.snapshot.failure, McpChatFailure.authenticationFailed);
+                                          ^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:164:39: Error: Undefined name 'McpChatPhase'.
+      expect(controller.snapshot.phase, McpChatPhase.toolsReady);
+                                        ^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:172:41: Error: Undefined name 'McpChatFailure'.
+      expect(controller.snapshot.failure, McpChatFailure.oauthUnavailable);
+                                          ^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:180:41: Error: Undefined name 'McpChatFailure'.
+      expect(controller.snapshot.failure, McpChatFailure.authenticationFailed);
+                                          ^^^^^^^^^^^^^^
+  test/mcp_chat_controller_test.dart:96:23: Error: The argument type 'List<dynamic>' can't be assigned to the parameter type 'Iterable<Future<dynamic>>'.
+   - 'List' is from 'dart:core'.
+   - 'Iterable' is from 'dart:core'.
+   - 'Future' is from 'dart:async'.
+      await Future.wait([a, b]);
+                        ^
+  .
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart

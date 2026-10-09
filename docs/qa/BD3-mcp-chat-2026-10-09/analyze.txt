@@ -1,0 +1,19 @@
+Analyzing oc_app-sol-bd...                                      
+
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/state/connection/mcp_chat.dart:95:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/state/connection/mcp_chat.dart:100:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/state/gen_ui_state.dart:360:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/state/gen_ui_state.dart:366:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/state/mcp_chat_controller.dart:209:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/state/mcp_chat_controller.dart:209:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/state/mcp_chat_controller.dart:209:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/state/mcp_chat_controller.dart:247:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/state/mcp_chat_controller.dart:247:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/state/mcp_chat_controller.dart:248:7 • curly_braces_in_flow_control_structures
+warning • The value of the local variable 'lateLaunch' isn't used. Try removing the variable or using it • test/mcp_chat_controller_test.dart:278:11 • unused_local_variable
+warning • The value of the local variable 'lateLaunch' isn't used. Try removing the variable or using it • test/mcp_chat_controller_test.dart:281:11 • unused_local_variable
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • test/mcp_chat_controller_test.dart:324:13 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • test/mcp_chat_controller_test.dart:325:13 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • test/mcp_chat_controller_test.dart:326:13 • curly_braces_in_flow_control_structures
+
+15 issues found. (ran in 43.8s)
