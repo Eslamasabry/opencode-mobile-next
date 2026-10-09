@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/builtin/agents/gen_ui_install.dart';
+import 'package:opencode_mobile/builtin/agents/gen_ui_search_publish.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui_history.dart';
 import 'package:opencode_mobile/domain/mcp_catalog.dart';
@@ -95,11 +98,14 @@ class _Api extends OpenCodeApi {
 
 class _Repository implements ProductRepository {
   int lists = 0, adds = 0;
+  Completer<void>? listStarted, listHold;
   List<McpServerInfo> inventory = [];
 
   @override
   Future<List<McpServerInfo>> listMcpServers() async {
     lists++;
+    if (listStarted?.isCompleted == false) listStarted!.complete();
+    await listHold?.future;
     return inventory;
   }
 
@@ -146,7 +152,7 @@ McpCatalogItem _item([String name = 'com.example/design']) =>
     );
 
 Future<({ConnectionController connection, _Api api, _Repository repository})>
-_harness({bool observe = true}) async {
+_harness({bool observe = true, GenUiSearchPublisher? searchPublisher}) async {
   SharedPreferences.setMockInitialValues({
     'oc.profiles': jsonEncode([
       {'id': 'phone', 'name': 'Phone', 'baseUrl': 'http://127.0.0.1:4097'},
@@ -163,6 +169,7 @@ _harness({bool observe = true}) async {
           store,
           isIsolated: true,
           genUiInstaller: _Installer(),
+          genUiSearchPublisher: searchPublisher,
           phoneEngineBridge: _EngineBridge(),
         )
         ..api = api
@@ -185,16 +192,181 @@ GenUiCard _card(ConnectionController connection, _Api api) =>
             as GenUiParsed)
         .card;
 
+class _SearchPublisher implements GenUiSearchPublisher {
+  final ready = Completer<void>();
+  int calls = 0;
+  bool succeeds = true;
+  Uri? endpoint;
+  String? bearer;
+  @override
+  Future<bool> publish({
+    required String profileId,
+    required GenUiAgent agent,
+    required Uri endpoint,
+    required String bearer,
+  }) async {
+    calls++;
+    expect(profileId, 'phone');
+    expect(agent, GenUiAgent.openCode1);
+    this.endpoint = endpoint;
+    this.bearer = bearer;
+    if (!ready.isCompleted) ready.complete();
+    return succeeds;
+  }
+
+  Future<({int status, Map<String, dynamic> body})> search({
+    String directory = '/work/project',
+  }) async {
+    await ready.future.timeout(const Duration(seconds: 5));
+    final client = HttpClient();
+    try {
+      final request = await client.postUrl(endpoint!);
+      request.headers.set('Authorization', 'Bearer $bearer');
+      request.write(
+        jsonEncode({
+          'arguments': {'query': 'design'},
+          'directory': directory,
+        }),
+      );
+      final response = await request.close();
+      return (
+        status: response.statusCode,
+        body:
+            jsonDecode(await utf8.decoder.bind(response).join())
+                as Map<String, dynamic>,
+      );
+    } finally {
+      client.close(force: true);
+    }
+  }
+}
+
+Future<void> _cache(ConnectionController connection) => connection.store.prefs
+    .setString(
+      'oc.setupRegistry.phone',
+      jsonEncode({
+        'version': 1,
+        'optedIn': true,
+        'cachedAt': '2026-10-09T00:00:00Z',
+        'entries': [
+          {
+            'name': 'com.example/design',
+            'version': '1',
+            'title': 'Design',
+            'description': 'Design reference',
+            'remotes': [
+              {'type': 'streamable-http', 'url': 'https://example.com/mcp'},
+            ],
+          },
+        ],
+      }),
+    )
+    .then((_) {});
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const secure = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
   setUp(() {
+    HttpOverrides.global = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(secure, (_) async => null);
   });
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(secure, null);
+  });
+
+  test(
+    'agent search uses current cached Tools catalogue and exact inventory',
+    () async {
+      final publisher = _SearchPublisher();
+      final h = await _harness(searchPublisher: publisher);
+      await _cache(h.connection);
+      h.repository.inventory = [
+        const McpServerInfo(name: 'design', status: 'connected'),
+      ];
+      final result = await publisher.search();
+      expect(result.status, 200);
+      final match = (result.body['matches'] as List).single as Map;
+      expect(match['catalogId'], 'com.example/design');
+      expect(match['connected'], isTrue);
+      expect(match['needsSignIn'], 'unknown');
+      expect(h.repository.lists, 1);
+      expect(h.repository.adds, 0);
+    },
+  );
+
+  test('agent search never applies another project inventory', () async {
+    final publisher = _SearchPublisher();
+    final h = await _harness(searchPublisher: publisher);
+    await _cache(h.connection);
+    final result = await publisher.search(directory: '/different/project');
+    expect(result.status, 200);
+    expect(
+      ((result.body['matches'] as List).single as Map)['connected'],
+      isNull,
+    );
+    expect(h.repository.lists, 0);
+  });
+
+  test(
+    'agent search reports missing cache without inventory request',
+    () async {
+      final publisher = _SearchPublisher();
+      final h = await _harness(searchPublisher: publisher);
+      final result = await publisher.search();
+      expect(result.body['status'], 'catalogue_not_loaded');
+      expect(h.repository.lists, 0);
+    },
+  );
+
+  test('agent search rejects source changes during inventory read', () async {
+    final publisher = _SearchPublisher();
+    final h = await _harness(searchPublisher: publisher);
+    await _cache(h.connection);
+    h.repository.listStarted = Completer<void>();
+    h.repository.listHold = Completer<void>();
+    final request = publisher.search();
+    await h.repository.listStarted!.future.timeout(const Duration(seconds: 5));
+    h.connection.directory = '/changed';
+    h.repository.listHold!.complete();
+    expect((await request).status, 403);
+  });
+
+  test('old search endpoint cannot serve after cards are disabled', () async {
+    final publisher = _SearchPublisher();
+    final h = await _harness(searchPublisher: publisher);
+    await _cache(h.connection);
+    await publisher.search();
+    await h.connection.setGenUiEnabled(false);
+    await expectLater(publisher.search(), throwsA(isA<SocketException>()));
+  });
+
+  test('search observes cache changes without a helper restart', () async {
+    final publisher = _SearchPublisher();
+    final h = await _harness(searchPublisher: publisher);
+    expect((await publisher.search()).body['status'], 'catalogue_not_loaded');
+    await _cache(h.connection);
+    expect((await publisher.search()).body['status'], 'ok');
+    await h.connection.store.prefs.remove('oc.setupRegistry.phone');
+    expect((await publisher.search()).body['status'], 'catalogue_not_loaded');
+  });
+
+  test('failed descriptor publishing can retry after cooldown', () async {
+    var now = DateTime.utc(2026, 10, 9);
+    await withClock(Clock(() => now), () async {
+      final publisher = _SearchPublisher()..succeeds = false;
+      final h = await _harness(searchPublisher: publisher);
+      await publisher.ready.future.timeout(const Duration(seconds: 5));
+      await Future<void>.delayed(Duration.zero);
+      expect(publisher.calls, 1);
+      now = now.add(const Duration(seconds: 6));
+      publisher.succeeds = true;
+      await h.connection.setTranscriptTimestampsVisible(true);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(publisher.calls, 2);
+      expect((await publisher.search()).status, 200);
+    });
   });
 
   test('authoritative connector admission coalesces the same card', () async {

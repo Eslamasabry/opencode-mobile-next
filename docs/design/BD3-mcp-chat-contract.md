@@ -195,7 +195,8 @@ name at most 120. Registry prose is untrusted, redacted and URL-stripped.
 
 A missing or unreadable cache returns:
 `{"status":"catalogue_not_loaded","message":"Catalogue not loaded. Open Tools > MCP to load it.","matches":[]}`.
-A valid empty cache/search returns `ok` with no matches. Search uses the saved
+A valid empty cache/search returns `ok` with no matches. UI copy for that case:
+**“No connectors found in the loaded catalogue.”** Search uses the saved
 default catalogue, not transient online search results in another screen.
 The existing profile cache and its deletion rules are reused; search never
 changes opt-in, fetches, installs, connects or saves credentials.
@@ -209,7 +210,11 @@ directory (not supplied by the agent). The app validates profile/generation,
 Agent-cards qualification and source before and after asynchronous reads.
 Only the matching source can supply connected status; ambiguity yields null.
 The descriptor is at `<enabled-marker>.search.json`, atomically written with
-private permissions through the existing managed host bridge. It contains no
+private permissions directly in the existing app-private rootfs (the same
+filesDir mapping used by the native runtime). The app resolves its trusted
+support-directory anchor, refuses descendant symlinks and missing/private-mode
+violations, creates an empty temporary file, chmods it to 0600, then writes and
+atomically renames it. No bearer enters shell scripts, argv, logs or preferences. It contains no
 MCP credentials. It expires in effect when the in-memory HTTP server closes;
 it grants only this bounded read-only search. A stale helper returns
 `{"status":"unavailable","message":"Connector search is unavailable. Try again from Tools.","matches":[]}`.
@@ -220,13 +225,24 @@ rejects symlink descriptors. No transport token or raw exception is logged.
 
 **UI contract:** this is a normal tool step, not a card or question. Recognize
 only the trusted Agent-cards tool name/provider using the existing runtime tool
-identity rules and show **“Searched connectors ›”** on completion (and normal
+identity rules (`isConnectorSearchTool` recognizes exact names, but does not
+establish provenance) and show **“Searched connectors ›”** on completion (and normal
 working/failure state during the call). Its bounded `structuredContent` and
 JSON text contain the same result; expand the step to show matches or the fixed
 empty/unloaded/unavailable message. Do not interpret search as user consent.
 The agent may pass a returned `catalogId` into `show.connector`; Connect still
 requires the existing reviewed card flow. No new `ServerCapabilities` override:
 search exists only on the same installed and qualified Agent-cards MCP helper.
-OC1/OC2/Paseo keep their existing cards qualification; search does not turn on
+OC1/OC2/Paseo keep their existing cards qualification; search uses the runtime's normal tool permission flow; only `show` retains
+its existing exact preallow. Search does not turn on
 Paseo runtime add/OAuth/refresh. Helper/bridge host tests do not qualify a real
 phone agent or provider.
+
+The new tool is advertised by the updated managed helper. An already-running
+old helper keeps its loaded script until its normal MCP reconnect/reload; this
+change does not force a runtime restart or claim that an old helper has learned
+a new tool. OC1 readiness still proves existing card connectivity, not a live
+search-tool call. The helper's process cwd can differ from the chat project;
+in that case search returns cached matches with `connected: null`. The app does
+not guess the requesting conversation from another active chat. Device agent
+search remains unqualified until the coordinator exercises the updated helper.

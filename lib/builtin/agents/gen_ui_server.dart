@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../domain/genui/gen_ui_validation_js.dart';
+import 'gen_ui_connector_search_js.dart';
 
 /// Zero-dependency MCP stdio helper, installed only at app-owned fixed paths.
 ///
@@ -15,7 +16,9 @@ String genUiServerScript({required String enabledMarkerPath}) {
   }
   return ''''use strict';
 const enabledMarkerPath = ${jsonEncode(enabledMarkerPath)};
+const connectorSearchPath = ${jsonEncode('$enabledMarkerPath.search.json')};
 $genUiValidationJavascript
+$genUiConnectorSearchJavascript
 $_server
 ''';
 }
@@ -103,7 +106,8 @@ const tool = {
     + 'Maximum compact JSON is 32768 UTF-8 bytes. This returns immediately; '
     + 'for a question, end your turn and wait for a normal user answer message. '
     + 'Card confirmation is not permission to execute commands. '
-    + 'To suggest an MCP connector, use connector with an actual catalogId '
+    + 'First call find_connectors to get a real catalogId; never invent IDs. '
+    + 'To suggest an MCP connector, use connector with that catalogId '
     + '(namespace/name) and a plain reason, without ask. Never supply connector '
     + 'URLs, commands, headers or credentials. A suggestion does not connect it; '
     + 'the person must review the catalog entry and choose Connect.',
@@ -179,12 +183,24 @@ async function frame(bytes) {
   } else if (!initialized) {
     await send(error(id, -32000, 'Server not initialized'));
   } else if (request.method === 'tools/list') {
-    await send(result(id, {tools: [tool]}));
+    await send(result(id, {tools: [tool, genUiConnectorSearchTool]}));
   } else if (request.method === 'tools/call') {
-    if (!record(params) || params.name !== 'show' || !record(params.arguments)) {
+    if (!record(params) || !['show', 'find_connectors'].includes(params.name)
+        || !record(params.arguments)) {
       await send(failedCall(id)); return;
     }
     if (!enabled()) { await send(failedCall(id)); return; }
+    if (params.name === 'find_connectors') {
+      let args;
+      try { args = validateGenUiConnectorSearchArguments(params.arguments); }
+      catch (_) { await send(failedCall(id)); return; }
+      let found;
+      try { found = await findGenUiConnectors(args); }
+      catch (_) { await send(failedCall(id)); return; }
+      await send(result(id, {content: [{type: 'text', text: JSON.stringify(found)}],
+        structuredContent: found}));
+      return;
+    }
     try { normalizeGenUiCard(params.arguments); }
     catch (_) { await send(failedCall(id)); return; }
     await send(result(id, {content: [{type: 'text', text:

@@ -441,7 +441,7 @@ def check(*args, **kwargs):
     elif data['verify']:
         messages = [json.loads(row) for row in kwargs['input'].splitlines()]
         assert messages[-1]['method'] == 'tools/list'
-        output += b'{"jsonrpc":"2.0","id":2,"result":{"tools":[{"name":"show","inputSchema":{}}]}}\\n'
+        output += b'{"jsonrpc":"2.0","id":2,"result":{"tools":[{"name":"show","inputSchema":{}},{"name":"find_connectors","inputSchema":{}}]}}\\n'
     return subprocess.CompletedProcess(args, ${failCheck ? 1 : 0}, output)
 subprocess.run = check
 def fake_cli(args, env):
