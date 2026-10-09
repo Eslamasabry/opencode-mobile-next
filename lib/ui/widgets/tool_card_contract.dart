@@ -236,6 +236,10 @@ class _ToolContract {
         title = strings.activeContextShell;
         subtitle = _valueString(input['command']);
         technical = true;
+        // OpenCode's bash tool says in words what the command is for.
+        if (_valueString(input['description']) case final purpose?) {
+          details.add(purpose);
+        }
         exitCode = _valueNumber(metadata['exit'])?.toInt();
         break;
       case 'edit':

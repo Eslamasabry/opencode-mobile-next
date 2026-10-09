@@ -165,14 +165,66 @@ class PermissionRequest {
 /// A session's provider-retry backoff, from `session.status`
 /// `{type: 'retry', attempt, message, next}` (v1 and v2) or the v2
 /// `session.retry.scheduled` event. Cleared once the session goes busy/idle.
+/// What the server asks the person to do about a retry it will not get past
+/// by itself (`action` on a retry status): a title and message in the
+/// server's words, and a labelled link (an upgrade page, a billing screen).
+class SessionRetryAction {
+  final String title;
+  final String message;
+  final String label;
+
+  /// An address the server supplied: opened only through `openExternalLink`.
+  final String? link;
+
+  const SessionRetryAction({
+    required this.title,
+    required this.message,
+    required this.label,
+    this.link,
+  });
+
+  static SessionRetryAction? fromJson(dynamic v) {
+    if (v is! Map) return null;
+    final title = v['title']?.toString().trim() ?? '';
+    final message = v['message']?.toString().trim() ?? '';
+    if (title.isEmpty && message.isEmpty) return null;
+    final link = v['link']?.toString().trim();
+    return SessionRetryAction(
+      title: title,
+      message: message,
+      label: v['label']?.toString().trim() ?? '',
+      link: link == null || link.isEmpty ? null : link,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is SessionRetryAction &&
+      other.title == title &&
+      other.message == message &&
+      other.label == label &&
+      other.link == link;
+
+  @override
+  int get hashCode => Object.hash(title, message, label, link);
+}
+
 class SessionRetryState {
   final int attempt;
   final String? message;
 
+  /// What to do about it, when the server says (v1 `action`).
+  final SessionRetryAction? action;
+
   /// When the next attempt is scheduled; null when the server gave no time.
   final DateTime? next;
 
-  const SessionRetryState({required this.attempt, this.message, this.next});
+  const SessionRetryState({
+    required this.attempt,
+    this.message,
+    this.next,
+    this.action,
+  });
 
   /// Parses a status object; null unless `type` is `retry`.
   static SessionRetryState? fromStatusJson(dynamic v) {
@@ -181,6 +233,7 @@ class SessionRetryState {
     return SessionRetryState(
       attempt: _asInt(v['attempt']) ?? 0,
       message: v['message']?.toString(),
+      action: SessionRetryAction.fromJson(v['action']),
       next: next == null || next <= 0
           ? null
           : DateTime.fromMillisecondsSinceEpoch(next),
@@ -200,10 +253,11 @@ class SessionRetryState {
       other is SessionRetryState &&
       other.attempt == attempt &&
       other.message == message &&
+      other.action == action &&
       other.next == next;
 
   @override
-  int get hashCode => Object.hash(attempt, message, next);
+  int get hashCode => Object.hash(attempt, message, next, action);
 
   @override
   String toString() =>

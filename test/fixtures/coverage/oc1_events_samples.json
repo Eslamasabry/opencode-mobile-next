@@ -1,0 +1,3058 @@
+{
+  "source": "contracts/opencode-openapi-f12e14cf.json",
+  "schema": {
+    "EventMessageUpdated": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info",
+        "kind": "any"
+      }
+    ],
+    "EventMessageRemoved": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.messageID",
+        "kind": "string"
+      }
+    ],
+    "EventMessagePartUpdated": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.part",
+        "kind": "any"
+      },
+      {
+        "path": "properties.time",
+        "kind": "number"
+      }
+    ],
+    "EventMessagePartRemoved": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.messageID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.partID",
+        "kind": "string"
+      }
+    ],
+    "EventMessagePartDelta": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.messageID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.partID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.field",
+        "kind": "string"
+      },
+      {
+        "path": "properties.delta",
+        "kind": "string"
+      }
+    ],
+    "EventSessionError": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.error",
+        "kind": "any"
+      }
+    ],
+    "EventSessionStatus": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.status.attempt",
+        "kind": "number"
+      },
+      {
+        "path": "properties.status.message",
+        "kind": "string"
+      },
+      {
+        "path": "properties.status.action.reason",
+        "kind": "string"
+      },
+      {
+        "path": "properties.status.action.provider",
+        "kind": "string"
+      },
+      {
+        "path": "properties.status.action.title",
+        "kind": "string"
+      },
+      {
+        "path": "properties.status.action.message",
+        "kind": "string"
+      },
+      {
+        "path": "properties.status.action.label",
+        "kind": "string"
+      },
+      {
+        "path": "properties.status.action.link",
+        "kind": "string"
+      },
+      {
+        "path": "properties.status.next",
+        "kind": "number"
+      },
+      {
+        "path": "properties.status.type",
+        "kind": "enum"
+      }
+    ],
+    "EventSessionIdle": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      }
+    ],
+    "EventSessionCompacted": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      }
+    ],
+    "EventPermissionAsked": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.permission",
+        "kind": "string"
+      },
+      {
+        "path": "properties.patterns[]",
+        "kind": "string"
+      },
+      {
+        "path": "properties.metadata",
+        "kind": "any"
+      },
+      {
+        "path": "properties.always[]",
+        "kind": "string"
+      },
+      {
+        "path": "properties.tool.messageID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.tool.callID",
+        "kind": "string"
+      }
+    ],
+    "EventPermissionReplied": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.requestID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.reply",
+        "kind": "enum"
+      }
+    ],
+    "EventQuestionAsked": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.questions[].question",
+        "kind": "string"
+      },
+      {
+        "path": "properties.questions[].header",
+        "kind": "string"
+      },
+      {
+        "path": "properties.questions[].options[].label",
+        "kind": "string"
+      },
+      {
+        "path": "properties.questions[].options[].description",
+        "kind": "string"
+      },
+      {
+        "path": "properties.questions[].multiple",
+        "kind": "boolean"
+      },
+      {
+        "path": "properties.questions[].custom",
+        "kind": "boolean"
+      },
+      {
+        "path": "properties.tool.messageID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.tool.callID",
+        "kind": "string"
+      }
+    ],
+    "EventQuestionReplied": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.requestID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.answers[][]",
+        "kind": "string"
+      }
+    ],
+    "EventQuestionRejected": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.requestID",
+        "kind": "string"
+      }
+    ],
+    "EventTodoUpdated": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.todos[].content",
+        "kind": "string"
+      },
+      {
+        "path": "properties.todos[].status",
+        "kind": "string"
+      },
+      {
+        "path": "properties.todos[].priority",
+        "kind": "string"
+      }
+    ],
+    "EventSessionDiff": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.diff[].file",
+        "kind": "string"
+      },
+      {
+        "path": "properties.diff[].patch",
+        "kind": "string"
+      },
+      {
+        "path": "properties.diff[].additions",
+        "kind": "number"
+      },
+      {
+        "path": "properties.diff[].deletions",
+        "kind": "number"
+      },
+      {
+        "path": "properties.diff[].status",
+        "kind": "enum"
+      }
+    ],
+    "EventCommandExecuted": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.name",
+        "kind": "string"
+      },
+      {
+        "path": "properties.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "properties.arguments",
+        "kind": "string"
+      },
+      {
+        "path": "properties.messageID",
+        "kind": "string"
+      }
+    ],
+    "eventTypes": [
+      {
+        "path": "models-dev.refreshed",
+        "kind": "event"
+      },
+      {
+        "path": "integration.updated",
+        "kind": "event"
+      },
+      {
+        "path": "integration.connection.updated",
+        "kind": "event"
+      },
+      {
+        "path": "catalog.updated",
+        "kind": "event"
+      },
+      {
+        "path": "session.created",
+        "kind": "event"
+      },
+      {
+        "path": "session.updated",
+        "kind": "event"
+      },
+      {
+        "path": "session.deleted",
+        "kind": "event"
+      },
+      {
+        "path": "message.updated",
+        "kind": "event"
+      },
+      {
+        "path": "message.removed",
+        "kind": "event"
+      },
+      {
+        "path": "message.part.updated",
+        "kind": "event"
+      },
+      {
+        "path": "message.part.removed",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.agent.switched",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.model.switched",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.moved",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.prompted",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.prompt.admitted",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.context.updated",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.synthetic",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.shell.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.shell.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.step.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.step.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.step.failed",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.text.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.text.delta",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.text.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.reasoning.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.reasoning.delta",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.reasoning.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.tool.input.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.tool.input.delta",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.tool.input.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.tool.called",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.tool.progress",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.tool.success",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.tool.failed",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.retried",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.compaction.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.compaction.delta",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.compaction.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.revert.staged",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.revert.cleared",
+        "kind": "event"
+      },
+      {
+        "path": "session.next.revert.committed",
+        "kind": "event"
+      },
+      {
+        "path": "message.part.delta",
+        "kind": "event"
+      },
+      {
+        "path": "session.diff",
+        "kind": "event"
+      },
+      {
+        "path": "session.error",
+        "kind": "event"
+      },
+      {
+        "path": "installation.updated",
+        "kind": "event"
+      },
+      {
+        "path": "installation.update-available",
+        "kind": "event"
+      },
+      {
+        "path": "file.edited",
+        "kind": "event"
+      },
+      {
+        "path": "reference.updated",
+        "kind": "event"
+      },
+      {
+        "path": "permission.v2.asked",
+        "kind": "event"
+      },
+      {
+        "path": "permission.v2.replied",
+        "kind": "event"
+      },
+      {
+        "path": "plugin.added",
+        "kind": "event"
+      },
+      {
+        "path": "project.directories.updated",
+        "kind": "event"
+      },
+      {
+        "path": "file.watcher.updated",
+        "kind": "event"
+      },
+      {
+        "path": "pty.created",
+        "kind": "event"
+      },
+      {
+        "path": "pty.updated",
+        "kind": "event"
+      },
+      {
+        "path": "pty.exited",
+        "kind": "event"
+      },
+      {
+        "path": "pty.deleted",
+        "kind": "event"
+      },
+      {
+        "path": "question.v2.asked",
+        "kind": "event"
+      },
+      {
+        "path": "question.v2.replied",
+        "kind": "event"
+      },
+      {
+        "path": "question.v2.rejected",
+        "kind": "event"
+      },
+      {
+        "path": "todo.updated",
+        "kind": "event"
+      },
+      {
+        "path": "lsp.updated",
+        "kind": "event"
+      },
+      {
+        "path": "permission.asked",
+        "kind": "event"
+      },
+      {
+        "path": "permission.replied",
+        "kind": "event"
+      },
+      {
+        "path": "tui.prompt.append",
+        "kind": "event"
+      },
+      {
+        "path": "tui.command.execute",
+        "kind": "event"
+      },
+      {
+        "path": "tui.toast.show",
+        "kind": "event"
+      },
+      {
+        "path": "tui.session.select",
+        "kind": "event"
+      },
+      {
+        "path": "mcp.tools.changed",
+        "kind": "event"
+      },
+      {
+        "path": "mcp.browser.open.failed",
+        "kind": "event"
+      },
+      {
+        "path": "command.executed",
+        "kind": "event"
+      },
+      {
+        "path": "project.updated",
+        "kind": "event"
+      },
+      {
+        "path": "session.status",
+        "kind": "event"
+      },
+      {
+        "path": "session.idle",
+        "kind": "event"
+      },
+      {
+        "path": "question.asked",
+        "kind": "event"
+      },
+      {
+        "path": "question.replied",
+        "kind": "event"
+      },
+      {
+        "path": "question.rejected",
+        "kind": "event"
+      },
+      {
+        "path": "session.compacted",
+        "kind": "event"
+      },
+      {
+        "path": "vcs.branch.updated",
+        "kind": "event"
+      },
+      {
+        "path": "workspace.ready",
+        "kind": "event"
+      },
+      {
+        "path": "workspace.failed",
+        "kind": "event"
+      },
+      {
+        "path": "workspace.status",
+        "kind": "event"
+      },
+      {
+        "path": "worktree.ready",
+        "kind": "event"
+      },
+      {
+        "path": "worktree.failed",
+        "kind": "event"
+      },
+      {
+        "path": "server.connected",
+        "kind": "event"
+      },
+      {
+        "path": "global.disposed",
+        "kind": "event"
+      },
+      {
+        "path": "server.instance.disposed",
+        "kind": "event"
+      }
+    ]
+  },
+  "excluded": {
+    "eventTypes.models-dev.refreshed": "type-level",
+    "eventTypes.integration.updated": "type-level",
+    "eventTypes.integration.connection.updated": "type-level",
+    "eventTypes.catalog.updated": "type-level",
+    "eventTypes.session.created": "type-level",
+    "eventTypes.session.updated": "type-level",
+    "eventTypes.session.deleted": "type-level",
+    "eventTypes.session.next.agent.switched": "type-level",
+    "eventTypes.session.next.model.switched": "type-level",
+    "eventTypes.session.next.moved": "type-level",
+    "eventTypes.session.next.prompted": "type-level",
+    "eventTypes.session.next.prompt.admitted": "type-level",
+    "eventTypes.session.next.context.updated": "type-level",
+    "eventTypes.session.next.synthetic": "type-level",
+    "eventTypes.session.next.shell.started": "type-level",
+    "eventTypes.session.next.shell.ended": "type-level",
+    "eventTypes.session.next.step.started": "type-level",
+    "eventTypes.session.next.step.ended": "type-level",
+    "eventTypes.session.next.step.failed": "type-level",
+    "eventTypes.session.next.text.started": "type-level",
+    "eventTypes.session.next.text.delta": "type-level",
+    "eventTypes.session.next.text.ended": "type-level",
+    "eventTypes.session.next.reasoning.started": "type-level",
+    "eventTypes.session.next.reasoning.delta": "type-level",
+    "eventTypes.session.next.reasoning.ended": "type-level",
+    "eventTypes.session.next.tool.input.started": "type-level",
+    "eventTypes.session.next.tool.input.delta": "type-level",
+    "eventTypes.session.next.tool.input.ended": "type-level",
+    "eventTypes.session.next.tool.called": "type-level",
+    "eventTypes.session.next.tool.progress": "type-level",
+    "eventTypes.session.next.tool.success": "type-level",
+    "eventTypes.session.next.tool.failed": "type-level",
+    "eventTypes.session.next.retried": "type-level",
+    "eventTypes.session.next.compaction.started": "type-level",
+    "eventTypes.session.next.compaction.delta": "type-level",
+    "eventTypes.session.next.compaction.ended": "type-level",
+    "eventTypes.session.next.revert.staged": "type-level",
+    "eventTypes.session.next.revert.cleared": "type-level",
+    "eventTypes.session.next.revert.committed": "type-level",
+    "eventTypes.installation.updated": "type-level",
+    "eventTypes.installation.update-available": "type-level",
+    "eventTypes.file.edited": "type-level",
+    "eventTypes.reference.updated": "type-level",
+    "eventTypes.permission.v2.asked": "type-level",
+    "eventTypes.permission.v2.replied": "type-level",
+    "eventTypes.plugin.added": "type-level",
+    "eventTypes.project.directories.updated": "type-level",
+    "eventTypes.file.watcher.updated": "type-level",
+    "eventTypes.pty.created": "type-level",
+    "eventTypes.pty.updated": "type-level",
+    "eventTypes.pty.exited": "type-level",
+    "eventTypes.pty.deleted": "type-level",
+    "eventTypes.question.v2.asked": "type-level",
+    "eventTypes.question.v2.replied": "type-level",
+    "eventTypes.question.v2.rejected": "type-level",
+    "eventTypes.lsp.updated": "type-level",
+    "eventTypes.tui.prompt.append": "type-level",
+    "eventTypes.tui.command.execute": "type-level",
+    "eventTypes.tui.toast.show": "type-level",
+    "eventTypes.tui.session.select": "type-level",
+    "eventTypes.mcp.tools.changed": "type-level",
+    "eventTypes.mcp.browser.open.failed": "type-level",
+    "eventTypes.project.updated": "type-level",
+    "eventTypes.vcs.branch.updated": "type-level",
+    "eventTypes.workspace.ready": "type-level",
+    "eventTypes.workspace.failed": "type-level",
+    "eventTypes.workspace.status": "type-level",
+    "eventTypes.worktree.ready": "type-level",
+    "eventTypes.worktree.failed": "type-level",
+    "eventTypes.server.connected": "type-level",
+    "eventTypes.global.disposed": "type-level",
+    "eventTypes.server.instance.disposed": "type-level",
+    "eventTypes.message.updated": "field-level",
+    "eventTypes.message.removed": "field-level",
+    "eventTypes.message.part.updated": "field-level",
+    "eventTypes.message.part.removed": "field-level",
+    "eventTypes.message.part.delta": "field-level",
+    "eventTypes.session.error": "field-level",
+    "eventTypes.session.status": "field-level",
+    "eventTypes.session.idle": "field-level",
+    "eventTypes.session.compacted": "field-level",
+    "eventTypes.permission.asked": "field-level",
+    "eventTypes.permission.replied": "field-level",
+    "eventTypes.question.asked": "field-level",
+    "eventTypes.question.replied": "field-level",
+    "eventTypes.question.rejected": "field-level",
+    "eventTypes.todo.updated": "field-level",
+    "eventTypes.session.diff": "field-level",
+    "eventTypes.command.executed": "field-level"
+  },
+  "cases": [
+    {
+      "id": "live_text_stream",
+      "payload": [
+        {
+          "type": "message.updated",
+          "id": "evt_0001",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "info": {
+              "id": "msg_u1",
+              "sessionID": "ses_checkout",
+              "role": "user",
+              "time": {
+                "created": 1788960000000
+              },
+              "agent": "build",
+              "model": {
+                "providerID": "anthropic",
+                "modelID": "claude-opus-5-5"
+              }
+            }
+          }
+        },
+        {
+          "type": "message.part.updated",
+          "id": "evt_0002",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "part": {
+              "id": "prt_u1",
+              "sessionID": "ses_checkout",
+              "messageID": "msg_u1",
+              "type": "text",
+              "text": "Add a retry button to the upload screen"
+            },
+            "time": 1788960000005
+          }
+        },
+        {
+          "type": "message.updated",
+          "id": "evt_0003",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "info": {
+              "id": "msg_a1",
+              "sessionID": "ses_checkout",
+              "role": "assistant",
+              "time": {
+                "created": 1788960001000
+              },
+              "parentID": "msg_u1",
+              "modelID": "claude-opus-5-5",
+              "providerID": "anthropic",
+              "mode": "build",
+              "agent": "build",
+              "path": {
+                "cwd": "/w",
+                "root": "/w"
+              },
+              "cost": 0,
+              "tokens": {
+                "input": 0,
+                "output": 0,
+                "reasoning": 0,
+                "cache": {
+                  "read": 0,
+                  "write": 0
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "message.part.updated",
+          "id": "evt_0004",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "part": {
+              "id": "prt_a1",
+              "sessionID": "ses_checkout",
+              "messageID": "msg_a1",
+              "type": "text",
+              "text": ""
+            },
+            "time": 1788960001100
+          }
+        },
+        {
+          "type": "message.part.delta",
+          "id": "evt_0005",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "messageID": "msg_a1",
+            "partID": "prt_a1",
+            "field": "text",
+            "delta": "I am adding a Retry button next to every failed upload"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "EventMessageUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0001"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.info",
+          "path": "properties.info",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0002"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.part",
+          "path": "properties.part",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.time",
+          "path": "properties.time",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0003"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.info",
+          "path": "properties.info",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0004"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.part",
+          "path": "properties.part",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.time",
+          "path": "properties.time",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartDelta.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0005"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartDelta.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartDelta.properties.messageID",
+          "path": "properties.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_a1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartDelta.properties.partID",
+          "path": "properties.partID",
+          "kind": "string",
+          "probes": [
+            "prt_a1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartDelta.properties.field",
+          "path": "properties.field",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartDelta.properties.delta",
+          "path": "properties.delta",
+          "kind": "string",
+          "probes": [
+            "I am adding a Retry button next to every failed upload"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "live_removal",
+      "payload": [
+        {
+          "type": "message.updated",
+          "id": "evt_0006",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "info": {
+              "id": "msg_u1",
+              "sessionID": "ses_checkout",
+              "role": "user",
+              "time": {
+                "created": 1788960000000
+              },
+              "agent": "build",
+              "model": {
+                "providerID": "anthropic",
+                "modelID": "claude-opus-5-5"
+              }
+            }
+          }
+        },
+        {
+          "type": "message.part.updated",
+          "id": "evt_0007",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "part": {
+              "id": "prt_u1",
+              "sessionID": "ses_checkout",
+              "messageID": "msg_u1",
+              "type": "text",
+              "text": "Add a retry button to the upload screen"
+            },
+            "time": 1788960000005
+          }
+        },
+        {
+          "type": "message.updated",
+          "id": "evt_0008",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "info": {
+              "id": "msg_a1",
+              "sessionID": "ses_checkout",
+              "role": "assistant",
+              "time": {
+                "created": 1788960001000
+              },
+              "parentID": "msg_u1",
+              "modelID": "claude-opus-5-5",
+              "providerID": "anthropic",
+              "mode": "build",
+              "agent": "build",
+              "path": {
+                "cwd": "/w",
+                "root": "/w"
+              },
+              "cost": 0,
+              "tokens": {
+                "input": 0,
+                "output": 0,
+                "reasoning": 0,
+                "cache": {
+                  "read": 0,
+                  "write": 0
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "message.part.updated",
+          "id": "evt_0009",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "part": {
+              "id": "prt_a1",
+              "sessionID": "ses_checkout",
+              "messageID": "msg_a1",
+              "type": "text",
+              "text": "Draft answer that the server then discards"
+            },
+            "time": 1788960001100
+          }
+        },
+        {
+          "type": "message.updated",
+          "id": "evt_0010",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "info": {
+              "id": "msg_a2",
+              "sessionID": "ses_checkout",
+              "role": "assistant",
+              "time": {
+                "created": 1788960001000
+              },
+              "parentID": "msg_u1",
+              "modelID": "claude-opus-5-5",
+              "providerID": "anthropic",
+              "mode": "build",
+              "agent": "build",
+              "path": {
+                "cwd": "/w",
+                "root": "/w"
+              },
+              "cost": 0,
+              "tokens": {
+                "input": 0,
+                "output": 0,
+                "reasoning": 0,
+                "cache": {
+                  "read": 0,
+                  "write": 0
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "message.part.updated",
+          "id": "evt_0011",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "part": {
+              "id": "prt_a2",
+              "sessionID": "ses_checkout",
+              "messageID": "msg_a2",
+              "type": "text",
+              "text": "Reverted answer that is taken back"
+            },
+            "time": 1788960001200
+          }
+        },
+        {
+          "type": "message.part.removed",
+          "id": "evt_0012",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "messageID": "msg_a1",
+            "partID": "prt_a1"
+          }
+        },
+        {
+          "type": "message.removed",
+          "id": "evt_0013",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "messageID": "msg_a2"
+          }
+        }
+      ],
+      "hidden": [
+        "Draft answer that the server then discards",
+        "Reverted answer that is taken back"
+      ],
+      "fields": [
+        {
+          "key": "EventMessageUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0006"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.info",
+          "path": "properties.info",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0007"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.part",
+          "path": "properties.part",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.time",
+          "path": "properties.time",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0008"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.info",
+          "path": "properties.info",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0009"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.part",
+          "path": "properties.part",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.time",
+          "path": "properties.time",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0010"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.info",
+          "path": "properties.info",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0011"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.part",
+          "path": "properties.part",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.time",
+          "path": "properties.time",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartRemoved.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0012"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartRemoved.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartRemoved.properties.messageID",
+          "path": "properties.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_a1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartRemoved.properties.partID",
+          "path": "properties.partID",
+          "kind": "string",
+          "probes": [
+            "prt_a1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageRemoved.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0013"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageRemoved.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageRemoved.properties.messageID",
+          "path": "properties.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_a2"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "session_error",
+      "payload": [
+        {
+          "type": "message.updated",
+          "id": "evt_0014",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "info": {
+              "id": "msg_u1",
+              "sessionID": "ses_checkout",
+              "role": "user",
+              "time": {
+                "created": 1788960000000
+              },
+              "agent": "build",
+              "model": {
+                "providerID": "anthropic",
+                "modelID": "claude-opus-5-5"
+              }
+            }
+          }
+        },
+        {
+          "type": "message.part.updated",
+          "id": "evt_0015",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "part": {
+              "id": "prt_u1",
+              "sessionID": "ses_checkout",
+              "messageID": "msg_u1",
+              "type": "text",
+              "text": "Add a retry button to the upload screen"
+            },
+            "time": 1788960000005
+          }
+        },
+        {
+          "type": "session.error",
+          "id": "evt_0016",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "error": {
+              "name": "UnknownError",
+              "data": {
+                "message": "The connection to the model dropped in the middle of the reply"
+              }
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "EventMessageUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0014"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.info",
+          "path": "properties.info",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0015"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.part",
+          "path": "properties.part",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.time",
+          "path": "properties.time",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventSessionError.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0016"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionError.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionError.properties.error",
+          "path": "properties.error",
+          "kind": "any",
+          "probes": [
+            "The connection to the model dropped in the middle of the reply"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "status_retry",
+      "payload": [
+        {
+          "type": "message.updated",
+          "id": "evt_0017",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "info": {
+              "id": "msg_u1",
+              "sessionID": "ses_checkout",
+              "role": "user",
+              "time": {
+                "created": 1788960000000
+              },
+              "agent": "build",
+              "model": {
+                "providerID": "anthropic",
+                "modelID": "claude-opus-5-5"
+              }
+            }
+          }
+        },
+        {
+          "type": "message.part.updated",
+          "id": "evt_0018",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "part": {
+              "id": "prt_u1",
+              "sessionID": "ses_checkout",
+              "messageID": "msg_u1",
+              "type": "text",
+              "text": "Add a retry button to the upload screen"
+            },
+            "time": 1788960000005
+          }
+        },
+        {
+          "type": "session.status",
+          "id": "evt_0019",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "status": {
+              "type": "retry",
+              "attempt": 3,
+              "message": "Rate limit reached for the model",
+              "action": {
+                "reason": "rate_limit",
+                "provider": "anthropic",
+                "title": "Upgrade your plan",
+                "message": "Your plan allows 20 requests a minute",
+                "label": "See plans",
+                "link": "https://console.anthropic.com/settings/plans"
+              },
+              "next": 1788960020000
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "EventMessageUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0017"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.info",
+          "path": "properties.info",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0018"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.part",
+          "path": "properties.part",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.time",
+          "path": "properties.time",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0019"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.status.type",
+          "path": "properties.status.type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.status.attempt",
+          "path": "properties.status.attempt",
+          "kind": "number",
+          "probes": [
+            "Retrying 3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.status.message",
+          "path": "properties.status.message",
+          "kind": "string",
+          "probes": [
+            "Rate limited"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.status.action.reason",
+          "path": "properties.status.action.reason",
+          "kind": "string",
+          "probes": [
+            "rate_limit"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.status.action.provider",
+          "path": "properties.status.action.provider",
+          "kind": "string",
+          "probes": [
+            "anthropic"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.status.action.title",
+          "path": "properties.status.action.title",
+          "kind": "string",
+          "probes": [
+            "Upgrade your plan"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.status.action.message",
+          "path": "properties.status.action.message",
+          "kind": "string",
+          "probes": [
+            "Your plan allows 20 requests a minute"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.status.action.label",
+          "path": "properties.status.action.label",
+          "kind": "string",
+          "probes": [
+            "See plans"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.status.action.link",
+          "path": "properties.status.action.link",
+          "kind": "string",
+          "probes": [
+            "https://console.anthropic.com/settings/plans"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.status.next",
+          "path": "properties.status.next",
+          "kind": "number",
+          "probes": [
+            "in 0:"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "status_busy_idle_compacted",
+      "payload": [
+        {
+          "type": "message.updated",
+          "id": "evt_0020",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "info": {
+              "id": "msg_u1",
+              "sessionID": "ses_checkout",
+              "role": "user",
+              "time": {
+                "created": 1788960000000
+              },
+              "agent": "build",
+              "model": {
+                "providerID": "anthropic",
+                "modelID": "claude-opus-5-5"
+              }
+            }
+          }
+        },
+        {
+          "type": "message.part.updated",
+          "id": "evt_0021",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "part": {
+              "id": "prt_u1",
+              "sessionID": "ses_checkout",
+              "messageID": "msg_u1",
+              "type": "text",
+              "text": "Add a retry button to the upload screen"
+            },
+            "time": 1788960000005
+          }
+        },
+        {
+          "type": "session.status",
+          "id": "evt_0022",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "status": {
+              "type": "busy"
+            }
+          }
+        },
+        {
+          "type": "session.compacted",
+          "id": "evt_0023",
+          "properties": {
+            "sessionID": "ses_checkout"
+          }
+        },
+        {
+          "type": "session.idle",
+          "id": "evt_0024",
+          "properties": {
+            "sessionID": "ses_checkout"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "EventMessageUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0020"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.info",
+          "path": "properties.info",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0021"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.part",
+          "path": "properties.part",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.time",
+          "path": "properties.time",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0022"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionStatus.properties.status.type",
+          "path": "properties.status.type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventSessionCompacted.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0023"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionCompacted.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionIdle.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0024"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionIdle.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "permission_asked",
+      "payload": [
+        {
+          "type": "permission.asked",
+          "id": "evt_0025",
+          "properties": {
+            "id": "per_ev1",
+            "sessionID": "ses_checkout",
+            "permission": "bash",
+            "patterns": [
+              "git push origin main"
+            ],
+            "metadata": {},
+            "always": [
+              "git push *"
+            ],
+            "tool": {
+              "messageID": "msg_a1",
+              "callID": "call_ev1"
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "EventPermissionAsked.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0025"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.id",
+          "path": "properties.id",
+          "kind": "string",
+          "probes": [
+            "per_ev1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.permission",
+          "path": "properties.permission",
+          "kind": "string",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.patterns[]",
+          "path": "properties.patterns[]",
+          "kind": "string",
+          "probes": [
+            "git push origin main"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.metadata",
+          "path": "properties.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.always[]",
+          "path": "properties.always[]",
+          "kind": "string",
+          "probes": [
+            "git push *"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.tool.messageID",
+          "path": "properties.tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_a1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.tool.callID",
+          "path": "properties.tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ev1"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "permission_replied",
+      "payload": [
+        {
+          "type": "permission.asked",
+          "id": "evt_0026",
+          "properties": {
+            "id": "per_ev2",
+            "sessionID": "ses_checkout",
+            "permission": "bash",
+            "patterns": [
+              "rm -rf build/cache"
+            ],
+            "metadata": {},
+            "always": [
+              "rm *"
+            ],
+            "tool": {
+              "messageID": "msg_a1",
+              "callID": "call_ev2"
+            }
+          }
+        },
+        {
+          "type": "permission.replied",
+          "id": "evt_0027",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "requestID": "per_ev2",
+            "reply": "once"
+          }
+        }
+      ],
+      "hidden": [
+        "rm -rf build/cache"
+      ],
+      "fields": [
+        {
+          "key": "EventPermissionAsked.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0026"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.id",
+          "path": "properties.id",
+          "kind": "string",
+          "probes": [
+            "per_ev2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.permission",
+          "path": "properties.permission",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.patterns[]",
+          "path": "properties.patterns[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.metadata",
+          "path": "properties.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.always[]",
+          "path": "properties.always[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.tool.messageID",
+          "path": "properties.tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_a1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionAsked.properties.tool.callID",
+          "path": "properties.tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_ev2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionReplied.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0027"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionReplied.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionReplied.properties.requestID",
+          "path": "properties.requestID",
+          "kind": "string",
+          "probes": [
+            "per_ev2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventPermissionReplied.properties.reply",
+          "path": "properties.reply",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "question_asked",
+      "payload": [
+        {
+          "type": "question.asked",
+          "id": "evt_0028",
+          "properties": {
+            "id": "que_ev1",
+            "sessionID": "ses_checkout",
+            "questions": [
+              {
+                "question": "Which branch should I push to?",
+                "header": "Branch",
+                "options": [
+                  {
+                    "label": "main",
+                    "description": "The shared branch"
+                  },
+                  {
+                    "label": "retry-button",
+                    "description": "A new feature branch"
+                  }
+                ],
+                "multiple": true,
+                "custom": true
+              }
+            ],
+            "tool": {
+              "messageID": "msg_a1",
+              "callID": "call_q1"
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "EventQuestionAsked.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0028"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.id",
+          "path": "properties.id",
+          "kind": "string",
+          "probes": [
+            "que_ev1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].question",
+          "path": "properties.questions[].question",
+          "kind": "string",
+          "probes": [
+            "Which branch should I push to?"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].header",
+          "path": "properties.questions[].header",
+          "kind": "string",
+          "probes": [
+            "Branch"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].options[].label",
+          "path": "properties.questions[].options[].label",
+          "kind": "string",
+          "probes": [
+            "main",
+            "retry-button"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].options[].description",
+          "path": "properties.questions[].options[].description",
+          "kind": "string",
+          "probes": [
+            "The shared branch",
+            "A new feature branch"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].multiple",
+          "path": "properties.questions[].multiple",
+          "kind": "boolean",
+          "probes": [
+            "None selected"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].custom",
+          "path": "properties.questions[].custom",
+          "kind": "boolean",
+          "probes": [
+            "Or write your own answer"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.tool.messageID",
+          "path": "properties.tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_a1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.tool.callID",
+          "path": "properties.tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_q1"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "question_replied",
+      "payload": [
+        {
+          "type": "question.asked",
+          "id": "evt_0029",
+          "properties": {
+            "id": "que_ev2",
+            "sessionID": "ses_checkout",
+            "questions": [
+              {
+                "question": "Should the old screen stay?",
+                "header": "Old screen",
+                "options": [
+                  {
+                    "label": "Keep it",
+                    "description": "Leave it as is"
+                  }
+                ],
+                "multiple": false,
+                "custom": false
+              }
+            ],
+            "tool": {
+              "messageID": "msg_a1",
+              "callID": "call_q2"
+            }
+          }
+        },
+        {
+          "type": "question.replied",
+          "id": "evt_0030",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "requestID": "que_ev2",
+            "answers": [
+              [
+                "Keep it"
+              ]
+            ]
+          }
+        }
+      ],
+      "hidden": [
+        "Should the old screen stay?"
+      ],
+      "fields": [
+        {
+          "key": "EventQuestionAsked.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0029"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.id",
+          "path": "properties.id",
+          "kind": "string",
+          "probes": [
+            "que_ev2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].question",
+          "path": "properties.questions[].question",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].header",
+          "path": "properties.questions[].header",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].options[].label",
+          "path": "properties.questions[].options[].label",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].options[].description",
+          "path": "properties.questions[].options[].description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].multiple",
+          "path": "properties.questions[].multiple",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].custom",
+          "path": "properties.questions[].custom",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.tool.messageID",
+          "path": "properties.tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_a1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.tool.callID",
+          "path": "properties.tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_q2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionReplied.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0030"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionReplied.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionReplied.properties.requestID",
+          "path": "properties.requestID",
+          "kind": "string",
+          "probes": [
+            "que_ev2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionReplied.properties.answers[][]",
+          "path": "properties.answers[][]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "question_rejected",
+      "payload": [
+        {
+          "type": "question.asked",
+          "id": "evt_0031",
+          "properties": {
+            "id": "que_ev3",
+            "sessionID": "ses_checkout",
+            "questions": [
+              {
+                "question": "Delete the cache folder first?",
+                "header": "Cache",
+                "options": [
+                  {
+                    "label": "Delete",
+                    "description": "Remove it"
+                  }
+                ],
+                "multiple": false,
+                "custom": false
+              }
+            ],
+            "tool": {
+              "messageID": "msg_a1",
+              "callID": "call_q3"
+            }
+          }
+        },
+        {
+          "type": "question.rejected",
+          "id": "evt_0032",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "requestID": "que_ev3"
+          }
+        }
+      ],
+      "hidden": [
+        "Delete the cache folder first?"
+      ],
+      "fields": [
+        {
+          "key": "EventQuestionAsked.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0031"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.id",
+          "path": "properties.id",
+          "kind": "string",
+          "probes": [
+            "que_ev3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].question",
+          "path": "properties.questions[].question",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].header",
+          "path": "properties.questions[].header",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].options[].label",
+          "path": "properties.questions[].options[].label",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].options[].description",
+          "path": "properties.questions[].options[].description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].multiple",
+          "path": "properties.questions[].multiple",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.questions[].custom",
+          "path": "properties.questions[].custom",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.tool.messageID",
+          "path": "properties.tool.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_a1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionAsked.properties.tool.callID",
+          "path": "properties.tool.callID",
+          "kind": "string",
+          "probes": [
+            "call_q3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionRejected.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0032"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionRejected.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventQuestionRejected.properties.requestID",
+          "path": "properties.requestID",
+          "kind": "string",
+          "probes": [
+            "que_ev3"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "side_events",
+      "payload": [
+        {
+          "type": "message.updated",
+          "id": "evt_0033",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "info": {
+              "id": "msg_u1",
+              "sessionID": "ses_checkout",
+              "role": "user",
+              "time": {
+                "created": 1788960000000
+              },
+              "agent": "build",
+              "model": {
+                "providerID": "anthropic",
+                "modelID": "claude-opus-5-5"
+              }
+            }
+          }
+        },
+        {
+          "type": "message.part.updated",
+          "id": "evt_0034",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "part": {
+              "id": "prt_u1",
+              "sessionID": "ses_checkout",
+              "messageID": "msg_u1",
+              "type": "text",
+              "text": "Add a retry button to the upload screen"
+            },
+            "time": 1788960000005
+          }
+        },
+        {
+          "type": "todo.updated",
+          "id": "evt_0035",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "todos": [
+              {
+                "content": "Sketch the retry flow on paper",
+                "status": "in_progress",
+                "priority": "high"
+              }
+            ]
+          }
+        },
+        {
+          "type": "session.diff",
+          "id": "evt_0036",
+          "properties": {
+            "sessionID": "ses_checkout",
+            "diff": [
+              {
+                "file": "lib/side/never_shown.dart",
+                "patch": "@@ -1 +1 @@\n-a\n+b",
+                "additions": 13,
+                "deletions": 8,
+                "status": "modified"
+              }
+            ]
+          }
+        },
+        {
+          "type": "command.executed",
+          "id": "evt_0037",
+          "properties": {
+            "name": "compact-notes",
+            "sessionID": "ses_checkout",
+            "arguments": "quarterly",
+            "messageID": "msg_cmd1"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "EventMessageUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0033"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessageUpdated.properties.info",
+          "path": "properties.info",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0034"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.part",
+          "path": "properties.part",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventMessagePartUpdated.properties.time",
+          "path": "properties.time",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventTodoUpdated.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0035"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventTodoUpdated.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventTodoUpdated.properties.todos[].content",
+          "path": "properties.todos[].content",
+          "kind": "string",
+          "probes": [
+            "Sketch the retry flow on paper"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventTodoUpdated.properties.todos[].status",
+          "path": "properties.todos[].status",
+          "kind": "string",
+          "probes": [
+            "in_progress"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventTodoUpdated.properties.todos[].priority",
+          "path": "properties.todos[].priority",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionDiff.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0036"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionDiff.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionDiff.properties.diff[].file",
+          "path": "properties.diff[].file",
+          "kind": "string",
+          "probes": [
+            "lib/side/never_shown.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionDiff.properties.diff[].patch",
+          "path": "properties.diff[].patch",
+          "kind": "string",
+          "probes": [
+            "@@ -1 +1 @@"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionDiff.properties.diff[].additions",
+          "path": "properties.diff[].additions",
+          "kind": "number",
+          "probes": [
+            "13"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionDiff.properties.diff[].deletions",
+          "path": "properties.diff[].deletions",
+          "kind": "number",
+          "probes": [
+            "8"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventSessionDiff.properties.diff[].status",
+          "path": "properties.diff[].status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "EventCommandExecuted.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "evt_0037"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventCommandExecuted.properties.name",
+          "path": "properties.name",
+          "kind": "string",
+          "probes": [
+            "compact-notes"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventCommandExecuted.properties.sessionID",
+          "path": "properties.sessionID",
+          "kind": "string",
+          "probes": [
+            "ses_checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventCommandExecuted.properties.arguments",
+          "path": "properties.arguments",
+          "kind": "string",
+          "probes": [
+            "quarterly"
+          ],
+          "primary": false
+        },
+        {
+          "key": "EventCommandExecuted.properties.messageID",
+          "path": "properties.messageID",
+          "kind": "string",
+          "probes": [
+            "msg_cmd1"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

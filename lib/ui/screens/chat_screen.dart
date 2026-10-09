@@ -77,6 +77,7 @@ import '../widgets/command_sheet.dart';
 import '../widgets/session_menu.dart';
 import '../widgets/safety_confirms.dart';
 import '../widgets/default_notices.dart';
+import '../widgets/external_link.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/markdown.dart';
 import '../widgets/phone_server_card.dart' show serverDisplayName;

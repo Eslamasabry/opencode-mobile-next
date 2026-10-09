@@ -20,24 +20,27 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class CoverageFamily {
-  CoverageFamily(this.name)
+  /// [prefix] names the files: `paseo_<name>_*.json` for Paseo's families,
+  /// `<name>_*.json` for the OpenCode ones (empty prefix).
+  CoverageFamily(this.name, {this.prefix = 'paseo_'})
     : samples =
           jsonDecode(
                 File(
-                  'test/fixtures/coverage/paseo_${name}_samples.json',
+                  'test/fixtures/coverage/$prefix${name}_samples.json',
                 ).readAsStringSync(),
               )
               as Map<String, dynamic>,
       ledger =
           (jsonDecode(
                     File(
-                      'test/fixtures/coverage/paseo_${name}_ledger.json',
+                      'test/fixtures/coverage/$prefix${name}_ledger.json',
                     ).readAsStringSync(),
                   )
                   as Map)
               .cast<String, String>();
 
   final String name;
+  final String prefix;
   final Map<String, dynamic> samples;
   final Map<String, String> ledger;
 
@@ -74,24 +77,25 @@ String flat(String text) => text
 void registerLedgerTests(CoverageFamily family) {
   tearDownAll(() {
     File(
-      '${family.out.path}/paseo_${family.name}_report.json',
+      '${family.out.path}/${family.prefix}${family.name}_report.json',
     ).writeAsStringSync(
       const JsonEncoder.withIndent('  ').convert(family.report),
     );
   });
 
-  test('every Paseo field has a ledger decision', () {
+  test('every protocol field has a ledger decision', () {
     final keys = family.schemaKeys;
     final ledger = family.ledger;
     expect(
       keys.difference(ledger.keys.toSet()),
       isEmpty,
-      reason: 'Paseo fields with no entry in paseo_${family.name}_ledger.json',
+      reason:
+          'fields with no entry in ${family.prefix}${family.name}_ledger.json',
     );
     expect(
       ledger.keys.toSet().difference(keys),
       isEmpty,
-      reason: 'ledger entries for fields Paseo no longer has',
+      reason: 'ledger entries for fields the protocol no longer has',
     );
     for (final entry in ledger.entries) {
       expect(

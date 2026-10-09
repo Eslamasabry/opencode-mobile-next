@@ -1,0 +1,5824 @@
+{
+  "source": "docs/opencode2-protocol-notes.md section 3.2",
+  "schema": {
+    "envelope": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "created",
+        "kind": "number"
+      },
+      {
+        "path": "location.directory",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "durable.aggregateID",
+        "kind": "string"
+      },
+      {
+        "path": "durable.seq",
+        "kind": "number"
+      },
+      {
+        "path": "durable.version",
+        "kind": "number"
+      }
+    ],
+    "eventTypes": [
+      {
+        "path": "session.created",
+        "kind": "event"
+      },
+      {
+        "path": "session.renamed",
+        "kind": "event"
+      },
+      {
+        "path": "session.deleted",
+        "kind": "event"
+      },
+      {
+        "path": "session.moved",
+        "kind": "event"
+      },
+      {
+        "path": "session.forked",
+        "kind": "event"
+      },
+      {
+        "path": "session.viewed",
+        "kind": "event"
+      },
+      {
+        "path": "session.agent.selected",
+        "kind": "event"
+      },
+      {
+        "path": "session.model.selected",
+        "kind": "event"
+      },
+      {
+        "path": "session.usage.updated",
+        "kind": "event"
+      },
+      {
+        "path": "session.execution.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.execution.succeeded",
+        "kind": "event"
+      },
+      {
+        "path": "session.execution.failed",
+        "kind": "event"
+      },
+      {
+        "path": "session.execution.interrupted",
+        "kind": "event"
+      },
+      {
+        "path": "session.inbox.enqueued",
+        "kind": "event"
+      },
+      {
+        "path": "session.inbox.delivered",
+        "kind": "event"
+      },
+      {
+        "path": "session.inbox.cancelled",
+        "kind": "event"
+      },
+      {
+        "path": "session.inbox.delivery.changed",
+        "kind": "event"
+      },
+      {
+        "path": "session.instructions.updated",
+        "kind": "event"
+      },
+      {
+        "path": "session.synthetic",
+        "kind": "event"
+      },
+      {
+        "path": "session.skill.activated",
+        "kind": "event"
+      },
+      {
+        "path": "session.shell.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.shell.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.step.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.step.streamed",
+        "kind": "event"
+      },
+      {
+        "path": "session.step.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.step.failed",
+        "kind": "event"
+      },
+      {
+        "path": "session.text.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.text.delta",
+        "kind": "event"
+      },
+      {
+        "path": "session.text.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.reasoning.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.reasoning.delta",
+        "kind": "event"
+      },
+      {
+        "path": "session.reasoning.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.tool.input.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.tool.input.delta",
+        "kind": "event"
+      },
+      {
+        "path": "session.tool.input.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.tool.called",
+        "kind": "event"
+      },
+      {
+        "path": "session.tool.progress",
+        "kind": "event"
+      },
+      {
+        "path": "session.tool.success",
+        "kind": "event"
+      },
+      {
+        "path": "session.tool.failed",
+        "kind": "event"
+      },
+      {
+        "path": "session.retry.scheduled",
+        "kind": "event"
+      },
+      {
+        "path": "session.compaction.started",
+        "kind": "event"
+      },
+      {
+        "path": "session.compaction.delta",
+        "kind": "event"
+      },
+      {
+        "path": "session.compaction.ended",
+        "kind": "event"
+      },
+      {
+        "path": "session.compaction.failed",
+        "kind": "event"
+      },
+      {
+        "path": "session.revert.staged",
+        "kind": "event"
+      },
+      {
+        "path": "session.revert.cleared",
+        "kind": "event"
+      },
+      {
+        "path": "session.revert.committed",
+        "kind": "event"
+      },
+      {
+        "path": "session.message.content.updated",
+        "kind": "event"
+      },
+      {
+        "path": "session.status",
+        "kind": "event"
+      },
+      {
+        "path": "session.idle",
+        "kind": "event"
+      },
+      {
+        "path": "session.compacted",
+        "kind": "event"
+      },
+      {
+        "path": "permission.asked",
+        "kind": "event"
+      },
+      {
+        "path": "permission.replied",
+        "kind": "event"
+      },
+      {
+        "path": "form.created",
+        "kind": "event"
+      },
+      {
+        "path": "form.replied",
+        "kind": "event"
+      },
+      {
+        "path": "form.cancelled",
+        "kind": "event"
+      },
+      {
+        "path": "pty.created",
+        "kind": "event"
+      },
+      {
+        "path": "pty.updated",
+        "kind": "event"
+      },
+      {
+        "path": "pty.exited",
+        "kind": "event"
+      },
+      {
+        "path": "pty.deleted",
+        "kind": "event"
+      },
+      {
+        "path": "persistent-pty.added",
+        "kind": "event"
+      },
+      {
+        "path": "persistent-pty.removed",
+        "kind": "event"
+      },
+      {
+        "path": "shell.created",
+        "kind": "event"
+      },
+      {
+        "path": "shell.exited",
+        "kind": "event"
+      },
+      {
+        "path": "shell.deleted",
+        "kind": "event"
+      },
+      {
+        "path": "agent.updated",
+        "kind": "event"
+      },
+      {
+        "path": "command.updated",
+        "kind": "event"
+      },
+      {
+        "path": "config.updated",
+        "kind": "event"
+      },
+      {
+        "path": "skill.updated",
+        "kind": "event"
+      },
+      {
+        "path": "catalog.updated",
+        "kind": "event"
+      },
+      {
+        "path": "models-dev.refreshed",
+        "kind": "event"
+      },
+      {
+        "path": "integration.updated",
+        "kind": "event"
+      },
+      {
+        "path": "credential.updated",
+        "kind": "event"
+      },
+      {
+        "path": "credential.switched",
+        "kind": "event"
+      },
+      {
+        "path": "plugin.added",
+        "kind": "event"
+      },
+      {
+        "path": "plugin.updated",
+        "kind": "event"
+      },
+      {
+        "path": "reference.updated",
+        "kind": "event"
+      },
+      {
+        "path": "websearch.updated",
+        "kind": "event"
+      },
+      {
+        "path": "project.updated",
+        "kind": "event"
+      },
+      {
+        "path": "worktree.updated",
+        "kind": "event"
+      },
+      {
+        "path": "worktree.resolved",
+        "kind": "event"
+      },
+      {
+        "path": "filesystem.changed",
+        "kind": "event"
+      },
+      {
+        "path": "vcs.branch.updated",
+        "kind": "event"
+      },
+      {
+        "path": "mcp.status.changed",
+        "kind": "event"
+      },
+      {
+        "path": "mcp.resources.changed",
+        "kind": "event"
+      },
+      {
+        "path": "mcp.tools.changed",
+        "kind": "event"
+      },
+      {
+        "path": "installation.updated",
+        "kind": "event"
+      },
+      {
+        "path": "installation.update-available",
+        "kind": "event"
+      },
+      {
+        "path": "workspace.ready",
+        "kind": "event"
+      },
+      {
+        "path": "workspace.failed",
+        "kind": "event"
+      },
+      {
+        "path": "workspace.status",
+        "kind": "event"
+      },
+      {
+        "path": "worktree.ready",
+        "kind": "event"
+      },
+      {
+        "path": "worktree.failed",
+        "kind": "event"
+      },
+      {
+        "path": "server.connected",
+        "kind": "event"
+      },
+      {
+        "path": "global.disposed",
+        "kind": "event"
+      },
+      {
+        "path": "lsp.updated",
+        "kind": "event"
+      },
+      {
+        "path": "tui.prompt.append",
+        "kind": "event"
+      },
+      {
+        "path": "tui.command.execute",
+        "kind": "event"
+      },
+      {
+        "path": "tui.toast.show",
+        "kind": "event"
+      },
+      {
+        "path": "tui.session.select",
+        "kind": "event"
+      }
+    ],
+    "event:session.renamed": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.title",
+        "kind": "any"
+      }
+    ],
+    "event:session.execution.started": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      }
+    ],
+    "event:session.execution.succeeded": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      }
+    ],
+    "event:session.execution.failed": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.error",
+        "kind": "any"
+      }
+    ],
+    "event:session.execution.interrupted": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.reason",
+        "kind": "any"
+      }
+    ],
+    "event:session.inbox.enqueued": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.inboxID",
+        "kind": "any"
+      },
+      {
+        "path": "data.item",
+        "kind": "any"
+      }
+    ],
+    "event:session.inbox.delivered": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.inboxID",
+        "kind": "any"
+      }
+    ],
+    "event:session.inbox.cancelled": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.inboxID",
+        "kind": "any"
+      }
+    ],
+    "event:session.inbox.delivery.changed": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.inboxID",
+        "kind": "any"
+      },
+      {
+        "path": "data.delivery",
+        "kind": "any"
+      }
+    ],
+    "event:session.instructions.updated": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.delta",
+        "kind": "any"
+      },
+      {
+        "path": "data.text",
+        "kind": "any"
+      }
+    ],
+    "event:session.synthetic": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.text",
+        "kind": "any"
+      },
+      {
+        "path": "data.description",
+        "kind": "any"
+      },
+      {
+        "path": "data.metadata",
+        "kind": "any"
+      }
+    ],
+    "event:session.step.started": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.agent",
+        "kind": "any"
+      },
+      {
+        "path": "data.model",
+        "kind": "any"
+      },
+      {
+        "path": "data.snapshot",
+        "kind": "any"
+      }
+    ],
+    "event:session.step.streamed": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      }
+    ],
+    "event:session.step.ended": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.finish",
+        "kind": "any"
+      },
+      {
+        "path": "data.rawFinish",
+        "kind": "any"
+      },
+      {
+        "path": "data.providerState",
+        "kind": "any"
+      },
+      {
+        "path": "data.cost",
+        "kind": "any"
+      },
+      {
+        "path": "data.tokens",
+        "kind": "any"
+      },
+      {
+        "path": "data.snapshot",
+        "kind": "any"
+      },
+      {
+        "path": "data.files",
+        "kind": "any"
+      }
+    ],
+    "event:session.step.failed": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.error",
+        "kind": "any"
+      },
+      {
+        "path": "data.finish",
+        "kind": "any"
+      },
+      {
+        "path": "data.rawFinish",
+        "kind": "any"
+      },
+      {
+        "path": "data.providerState",
+        "kind": "any"
+      },
+      {
+        "path": "data.cost",
+        "kind": "any"
+      },
+      {
+        "path": "data.tokens",
+        "kind": "any"
+      },
+      {
+        "path": "data.snapshot",
+        "kind": "any"
+      },
+      {
+        "path": "data.files",
+        "kind": "any"
+      }
+    ],
+    "event:session.text.started": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.ordinal",
+        "kind": "any"
+      }
+    ],
+    "event:session.text.delta": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.ordinal",
+        "kind": "any"
+      },
+      {
+        "path": "data.delta",
+        "kind": "any"
+      }
+    ],
+    "event:session.text.ended": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.ordinal",
+        "kind": "any"
+      },
+      {
+        "path": "data.text",
+        "kind": "any"
+      },
+      {
+        "path": "data.state",
+        "kind": "any"
+      }
+    ],
+    "event:session.reasoning.started": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.ordinal",
+        "kind": "any"
+      },
+      {
+        "path": "data.state",
+        "kind": "any"
+      }
+    ],
+    "event:session.reasoning.delta": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.ordinal",
+        "kind": "any"
+      },
+      {
+        "path": "data.delta",
+        "kind": "any"
+      }
+    ],
+    "event:session.reasoning.ended": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.ordinal",
+        "kind": "any"
+      },
+      {
+        "path": "data.text",
+        "kind": "any"
+      },
+      {
+        "path": "data.state",
+        "kind": "any"
+      }
+    ],
+    "event:session.tool.input.started": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.id",
+        "kind": "any"
+      },
+      {
+        "path": "data.name",
+        "kind": "any"
+      }
+    ],
+    "event:session.tool.input.delta": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.id",
+        "kind": "any"
+      },
+      {
+        "path": "data.delta",
+        "kind": "any"
+      }
+    ],
+    "event:session.tool.input.ended": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.id",
+        "kind": "any"
+      },
+      {
+        "path": "data.text",
+        "kind": "any"
+      }
+    ],
+    "event:session.tool.called": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.id",
+        "kind": "any"
+      },
+      {
+        "path": "data.input",
+        "kind": "any"
+      },
+      {
+        "path": "data.executed",
+        "kind": "any"
+      },
+      {
+        "path": "data.state",
+        "kind": "any"
+      }
+    ],
+    "event:session.tool.progress": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.id",
+        "kind": "any"
+      },
+      {
+        "path": "data.metadata",
+        "kind": "any"
+      }
+    ],
+    "event:session.tool.success": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.id",
+        "kind": "any"
+      },
+      {
+        "path": "data.content",
+        "kind": "any"
+      },
+      {
+        "path": "data.metadata",
+        "kind": "any"
+      },
+      {
+        "path": "data.executed",
+        "kind": "any"
+      },
+      {
+        "path": "data.resultState",
+        "kind": "any"
+      }
+    ],
+    "event:session.tool.failed": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.id",
+        "kind": "any"
+      },
+      {
+        "path": "data.error",
+        "kind": "any"
+      },
+      {
+        "path": "data.content",
+        "kind": "any"
+      },
+      {
+        "path": "data.metadata",
+        "kind": "any"
+      },
+      {
+        "path": "data.executed",
+        "kind": "any"
+      },
+      {
+        "path": "data.resultState",
+        "kind": "any"
+      }
+    ],
+    "event:session.retry.scheduled": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.assistantMessageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.attempt",
+        "kind": "any"
+      },
+      {
+        "path": "data.at",
+        "kind": "any"
+      },
+      {
+        "path": "data.error",
+        "kind": "any"
+      }
+    ],
+    "event:session.compaction.started": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.reason",
+        "kind": "any"
+      },
+      {
+        "path": "data.recent",
+        "kind": "any"
+      },
+      {
+        "path": "data.inputID",
+        "kind": "any"
+      }
+    ],
+    "event:session.compaction.delta": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.text",
+        "kind": "any"
+      }
+    ],
+    "event:session.compaction.ended": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.reason",
+        "kind": "any"
+      },
+      {
+        "path": "data.text",
+        "kind": "any"
+      },
+      {
+        "path": "data.recent",
+        "kind": "any"
+      }
+    ],
+    "event:session.compaction.failed": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.reason",
+        "kind": "any"
+      },
+      {
+        "path": "data.error",
+        "kind": "any"
+      },
+      {
+        "path": "data.inputID",
+        "kind": "any"
+      }
+    ],
+    "event:session.revert.staged": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.revert",
+        "kind": "any"
+      }
+    ],
+    "event:session.revert.cleared": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      }
+    ],
+    "event:session.revert.committed": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.to",
+        "kind": "any"
+      }
+    ],
+    "event:session.message.content.updated": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.messageID",
+        "kind": "any"
+      },
+      {
+        "path": "data.content",
+        "kind": "any"
+      }
+    ],
+    "event:session.status": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.status",
+        "kind": "any"
+      }
+    ],
+    "event:session.idle": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      }
+    ],
+    "event:session.compacted": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      }
+    ],
+    "event:permission.asked": [
+      {
+        "path": "data.id",
+        "kind": "any"
+      },
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.action",
+        "kind": "any"
+      },
+      {
+        "path": "data.resources",
+        "kind": "any"
+      },
+      {
+        "path": "data.save",
+        "kind": "any"
+      },
+      {
+        "path": "data.metadata",
+        "kind": "any"
+      },
+      {
+        "path": "data.source",
+        "kind": "any"
+      },
+      {
+        "path": "data.message",
+        "kind": "any"
+      }
+    ],
+    "event:permission.replied": [
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.requestID",
+        "kind": "any"
+      },
+      {
+        "path": "data.reply",
+        "kind": "any"
+      }
+    ],
+    "event:form.created": [
+      {
+        "path": "data.form",
+        "kind": "any"
+      }
+    ],
+    "event:form.replied": [
+      {
+        "path": "data.id",
+        "kind": "any"
+      },
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      },
+      {
+        "path": "data.answer",
+        "kind": "any"
+      }
+    ],
+    "event:form.cancelled": [
+      {
+        "path": "data.id",
+        "kind": "any"
+      },
+      {
+        "path": "data.sessionID",
+        "kind": "any"
+      }
+    ]
+  },
+  "excluded": {
+    "eventTypes.session.created": "type-level",
+    "eventTypes.session.renamed": "field-level",
+    "eventTypes.session.deleted": "type-level",
+    "eventTypes.session.moved": "type-level",
+    "eventTypes.session.forked": "type-level",
+    "eventTypes.session.viewed": "type-level",
+    "eventTypes.session.agent.selected": "type-level",
+    "eventTypes.session.model.selected": "type-level",
+    "eventTypes.session.usage.updated": "type-level",
+    "eventTypes.session.execution.started": "field-level",
+    "eventTypes.session.execution.succeeded": "field-level",
+    "eventTypes.session.execution.failed": "field-level",
+    "eventTypes.session.execution.interrupted": "field-level",
+    "eventTypes.session.inbox.enqueued": "field-level",
+    "eventTypes.session.inbox.delivered": "field-level",
+    "eventTypes.session.inbox.cancelled": "field-level",
+    "eventTypes.session.inbox.delivery.changed": "field-level",
+    "eventTypes.session.instructions.updated": "field-level",
+    "eventTypes.session.synthetic": "field-level",
+    "eventTypes.session.skill.activated": "type-level",
+    "eventTypes.session.shell.started": "type-level",
+    "eventTypes.session.shell.ended": "type-level",
+    "eventTypes.session.step.started": "field-level",
+    "eventTypes.session.step.streamed": "field-level",
+    "eventTypes.session.step.ended": "field-level",
+    "eventTypes.session.step.failed": "field-level",
+    "eventTypes.session.text.started": "field-level",
+    "eventTypes.session.text.delta": "field-level",
+    "eventTypes.session.text.ended": "field-level",
+    "eventTypes.session.reasoning.started": "field-level",
+    "eventTypes.session.reasoning.delta": "field-level",
+    "eventTypes.session.reasoning.ended": "field-level",
+    "eventTypes.session.tool.input.started": "field-level",
+    "eventTypes.session.tool.input.delta": "field-level",
+    "eventTypes.session.tool.input.ended": "field-level",
+    "eventTypes.session.tool.called": "field-level",
+    "eventTypes.session.tool.progress": "field-level",
+    "eventTypes.session.tool.success": "field-level",
+    "eventTypes.session.tool.failed": "field-level",
+    "eventTypes.session.retry.scheduled": "field-level",
+    "eventTypes.session.compaction.started": "field-level",
+    "eventTypes.session.compaction.delta": "field-level",
+    "eventTypes.session.compaction.ended": "field-level",
+    "eventTypes.session.compaction.failed": "field-level",
+    "eventTypes.session.revert.staged": "field-level",
+    "eventTypes.session.revert.cleared": "field-level",
+    "eventTypes.session.revert.committed": "field-level",
+    "eventTypes.session.message.content.updated": "field-level",
+    "eventTypes.session.status": "field-level",
+    "eventTypes.session.idle": "field-level",
+    "eventTypes.session.compacted": "field-level",
+    "eventTypes.permission.asked": "field-level",
+    "eventTypes.permission.replied": "field-level",
+    "eventTypes.form.created": "field-level",
+    "eventTypes.form.replied": "field-level",
+    "eventTypes.form.cancelled": "field-level",
+    "eventTypes.pty.created": "type-level",
+    "eventTypes.pty.updated": "type-level",
+    "eventTypes.pty.exited": "type-level",
+    "eventTypes.pty.deleted": "type-level",
+    "eventTypes.persistent-pty.added": "type-level",
+    "eventTypes.persistent-pty.removed": "type-level",
+    "eventTypes.shell.created": "type-level",
+    "eventTypes.shell.exited": "type-level",
+    "eventTypes.shell.deleted": "type-level",
+    "eventTypes.agent.updated": "type-level",
+    "eventTypes.command.updated": "type-level",
+    "eventTypes.config.updated": "type-level",
+    "eventTypes.skill.updated": "type-level",
+    "eventTypes.catalog.updated": "type-level",
+    "eventTypes.models-dev.refreshed": "type-level",
+    "eventTypes.integration.updated": "type-level",
+    "eventTypes.credential.updated": "type-level",
+    "eventTypes.credential.switched": "type-level",
+    "eventTypes.plugin.added": "type-level",
+    "eventTypes.plugin.updated": "type-level",
+    "eventTypes.reference.updated": "type-level",
+    "eventTypes.websearch.updated": "type-level",
+    "eventTypes.project.updated": "type-level",
+    "eventTypes.worktree.updated": "type-level",
+    "eventTypes.worktree.resolved": "type-level",
+    "eventTypes.filesystem.changed": "type-level",
+    "eventTypes.vcs.branch.updated": "type-level",
+    "eventTypes.mcp.status.changed": "type-level",
+    "eventTypes.mcp.resources.changed": "type-level",
+    "eventTypes.mcp.tools.changed": "type-level",
+    "eventTypes.installation.updated": "type-level",
+    "eventTypes.installation.update-available": "type-level",
+    "eventTypes.workspace.ready": "type-level",
+    "eventTypes.workspace.failed": "type-level",
+    "eventTypes.workspace.status": "type-level",
+    "eventTypes.worktree.ready": "type-level",
+    "eventTypes.worktree.failed": "type-level",
+    "eventTypes.server.connected": "type-level",
+    "eventTypes.global.disposed": "type-level",
+    "eventTypes.lsp.updated": "type-level",
+    "eventTypes.tui.prompt.append": "type-level",
+    "eventTypes.tui.command.execute": "type-level",
+    "eventTypes.tui.toast.show": "type-level",
+    "eventTypes.tui.session.select": "type-level"
+  },
+  "cases": [
+    {
+      "id": "turn_done",
+      "payload": [
+        {
+          "id": "evt_0001",
+          "created": 1788960000001,
+          "location": {
+            "directory": "/work/app"
+          },
+          "metadata": {
+            "source": "tui"
+          },
+          "durable": {
+            "aggregateID": "ses_checkout",
+            "seq": 1,
+            "version": 1
+          },
+          "type": "session.execution.started",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
+        },
+        {
+          "id": "evt_0002",
+          "created": 1788960000002,
+          "type": "session.inbox.enqueued",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01",
+            "item": {
+              "type": "user",
+              "payload": {
+                "text": "Add a retry button to the upload screen"
+              },
+              "delivery": "steer"
+            }
+          }
+        },
+        {
+          "id": "evt_0003",
+          "created": 1788960000003,
+          "type": "session.instructions.updated",
+          "data": {
+            "sessionID": "ses_checkout",
+            "delta": {
+              "core/environment": "1adeb0c"
+            },
+            "text": "Prefer short answers"
+          }
+        },
+        {
+          "id": "evt_0004",
+          "created": 1788960000004,
+          "type": "session.inbox.delivered",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01"
+          }
+        },
+        {
+          "id": "evt_0005",
+          "created": 1788960000005,
+          "type": "session.step.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "agent": "build",
+            "model": {
+              "id": "claude-opus-5-5",
+              "providerID": "anthropic",
+              "variant": "high"
+            },
+            "snapshot": "snap_c5104f"
+          }
+        },
+        {
+          "id": "evt_0006",
+          "created": 1788960000006,
+          "type": "session.reasoning.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "ordinal": 0,
+            "state": {
+              "signature": "sig-r0"
+            }
+          }
+        },
+        {
+          "id": "evt_0007",
+          "created": 1788960000007,
+          "type": "session.reasoning.delta",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "ordinal": 0,
+            "delta": "Thinking about the queue first"
+          }
+        },
+        {
+          "id": "evt_0008",
+          "created": 1788960000008,
+          "type": "session.reasoning.ended",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "ordinal": 0,
+            "text": "The retry button must keep the failed file name, so I will read the queue first.",
+            "state": {
+              "signature": "sig-r0-end"
+            }
+          }
+        },
+        {
+          "id": "evt_0009",
+          "created": 1788960000009,
+          "type": "session.text.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "ordinal": 0
+          }
+        },
+        {
+          "id": "evt_0010",
+          "created": 1788960000010,
+          "type": "session.text.delta",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "ordinal": 0,
+            "delta": "I added a "
+          }
+        },
+        {
+          "id": "evt_0011",
+          "created": 1788960000011,
+          "type": "session.text.ended",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "ordinal": 0,
+            "text": "I added a Retry button next to every failed upload.",
+            "state": {
+              "itemId": "msg_item",
+              "phase": "final_answer"
+            }
+          }
+        },
+        {
+          "id": "evt_0012",
+          "created": 1788960000012,
+          "type": "session.step.streamed",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01"
+          }
+        },
+        {
+          "id": "evt_0013",
+          "created": 1788960000013,
+          "type": "session.step.ended",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "finish": "stop",
+            "rawFinish": "end_turn",
+            "providerState": {
+              "responseId": "resp_1"
+            },
+            "cost": 0.0421,
+            "tokens": {
+              "input": 9100,
+              "output": 1210,
+              "reasoning": 400,
+              "cache": {
+                "read": 4000,
+                "write": 500
+              }
+            },
+            "snapshot": "snap_d4e5f6",
+            "files": [
+              "lib/upload/upload_screen.dart"
+            ]
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.location.directory",
+          "path": "location.directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.durable.aggregateID",
+          "path": "durable.aggregateID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.durable.seq",
+          "path": "durable.seq",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.durable.version",
+          "path": "durable.version",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.item",
+          "path": "data.item",
+          "kind": "any",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.instructions.updated.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.instructions.updated.data.delta",
+          "path": "data.delta",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.instructions.updated.data.text",
+          "path": "data.text",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.agent",
+          "path": "data.agent",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.model",
+          "path": "data.model",
+          "kind": "any",
+          "probes": [
+            "claude-opus-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.snapshot",
+          "path": "data.snapshot",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.started.data.ordinal",
+          "path": "data.ordinal",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.started.data.state",
+          "path": "data.state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.delta.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.delta.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.delta.data.ordinal",
+          "path": "data.ordinal",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.delta.data.delta",
+          "path": "data.delta",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.ended.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.ended.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.ended.data.ordinal",
+          "path": "data.ordinal",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.ended.data.text",
+          "path": "data.text",
+          "kind": "any",
+          "probes": [
+            "The retry button must keep the failed file name, so I will read the queue first."
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.ended.data.state",
+          "path": "data.state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.started.data.ordinal",
+          "path": "data.ordinal",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.delta.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.delta.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.delta.data.ordinal",
+          "path": "data.ordinal",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.delta.data.delta",
+          "path": "data.delta",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.ended.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.ended.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.ended.data.ordinal",
+          "path": "data.ordinal",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.ended.data.text",
+          "path": "data.text",
+          "kind": "any",
+          "probes": [
+            "I added a Retry button next to every failed upload."
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.ended.data.state",
+          "path": "data.state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.streamed.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.streamed.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.ended.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.ended.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.ended.data.finish",
+          "path": "data.finish",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.ended.data.rawFinish",
+          "path": "data.rawFinish",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.ended.data.providerState",
+          "path": "data.providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.ended.data.cost",
+          "path": "data.cost",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.ended.data.tokens",
+          "path": "data.tokens",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.ended.data.snapshot",
+          "path": "data.snapshot",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.ended.data.files",
+          "path": "data.files",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "live_streaming",
+      "payload": [
+        {
+          "id": "evt_0014",
+          "created": 1788960000014,
+          "type": "session.execution.started",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
+        },
+        {
+          "id": "evt_0015",
+          "created": 1788960000015,
+          "type": "session.inbox.enqueued",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01",
+            "item": {
+              "type": "user",
+              "payload": {
+                "text": "Explain the retry loop"
+              },
+              "delivery": "steer"
+            }
+          }
+        },
+        {
+          "id": "evt_0016",
+          "created": 1788960000016,
+          "type": "session.inbox.delivered",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01"
+          }
+        },
+        {
+          "id": "evt_0017",
+          "created": 1788960000017,
+          "type": "session.step.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "agent": "build",
+            "model": {
+              "id": "claude-opus-5-5",
+              "providerID": "anthropic"
+            }
+          }
+        },
+        {
+          "id": "evt_0018",
+          "created": 1788960000018,
+          "type": "session.reasoning.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "ordinal": 0
+          }
+        },
+        {
+          "id": "evt_0019",
+          "created": 1788960000019,
+          "type": "session.reasoning.delta",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "ordinal": 0,
+            "delta": "Looking at how the queue retries"
+          }
+        },
+        {
+          "id": "evt_0020",
+          "created": 1788960000020,
+          "type": "session.text.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "ordinal": 0
+          }
+        },
+        {
+          "id": "evt_0021",
+          "created": 1788960000021,
+          "type": "session.text.delta",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "ordinal": 0,
+            "delta": "The queue retries three times"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.item",
+          "path": "data.item",
+          "kind": "any",
+          "probes": [
+            "Explain the retry loop"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.agent",
+          "path": "data.agent",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.model",
+          "path": "data.model",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.started.data.ordinal",
+          "path": "data.ordinal",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.delta.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.delta.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.delta.data.ordinal",
+          "path": "data.ordinal",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.reasoning.delta.data.delta",
+          "path": "data.delta",
+          "kind": "any",
+          "probes": [
+            "Looking at how the queue retries"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.started.data.ordinal",
+          "path": "data.ordinal",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.delta.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.delta.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.delta.data.ordinal",
+          "path": "data.ordinal",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.text.delta.data.delta",
+          "path": "data.delta",
+          "kind": "any",
+          "probes": [
+            "The queue retries three times"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_run",
+      "payload": [
+        {
+          "id": "evt_0022",
+          "created": 1788960000022,
+          "type": "session.execution.started",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
+        },
+        {
+          "id": "evt_0023",
+          "created": 1788960000023,
+          "type": "session.inbox.enqueued",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01",
+            "item": {
+              "type": "user",
+              "payload": {
+                "text": "Push the branch"
+              },
+              "delivery": "steer"
+            }
+          }
+        },
+        {
+          "id": "evt_0024",
+          "created": 1788960000024,
+          "type": "session.inbox.delivered",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01"
+          }
+        },
+        {
+          "id": "evt_0025",
+          "created": 1788960000025,
+          "type": "session.step.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "agent": "build",
+            "model": {
+              "id": "claude-opus-5-5",
+              "providerID": "anthropic"
+            }
+          }
+        },
+        {
+          "id": "evt_0026",
+          "created": 1788960000026,
+          "type": "session.tool.input.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "id": "call_t1",
+            "name": "bash"
+          }
+        },
+        {
+          "id": "evt_0027",
+          "created": 1788960000027,
+          "type": "session.tool.input.delta",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "id": "call_t1",
+            "delta": "{\"command\":\"git pu"
+          }
+        },
+        {
+          "id": "evt_0028",
+          "created": 1788960000028,
+          "type": "session.tool.input.ended",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "id": "call_t1",
+            "text": "{\"command\":\"git push origin main\"}"
+          }
+        },
+        {
+          "id": "evt_0029",
+          "created": 1788960000029,
+          "type": "session.tool.called",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "id": "call_t1",
+            "input": {
+              "command": "git push origin main",
+              "description": "Publish the branch"
+            },
+            "executed": true,
+            "state": {
+              "provider": "anthropic"
+            }
+          }
+        },
+        {
+          "id": "evt_0030",
+          "created": 1788960000030,
+          "type": "session.tool.progress",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "id": "call_t1",
+            "metadata": {
+              "output": "Enumerating objects: 12, done."
+            }
+          }
+        },
+        {
+          "id": "evt_0031",
+          "created": 1788960000031,
+          "type": "session.tool.success",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "id": "call_t1",
+            "content": [
+              {
+                "type": "text",
+                "text": "Everything up-to-date"
+              }
+            ],
+            "metadata": {
+              "exit": 0
+            },
+            "executed": true,
+            "resultState": {
+              "provider": "anthropic"
+            }
+          }
+        },
+        {
+          "id": "evt_0032",
+          "created": 1788960000032,
+          "type": "session.tool.called",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "id": "call_t2",
+            "input": {
+              "command": "rm -rf build/cache"
+            },
+            "executed": false
+          }
+        },
+        {
+          "id": "evt_0033",
+          "created": 1788960000033,
+          "type": "session.tool.failed",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "id": "call_t2",
+            "error": {
+              "type": "tool.failed",
+              "message": "Permission denied while removing build/cache",
+              "status": 126
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "rm: cannot remove build/cache"
+              }
+            ],
+            "metadata": {
+              "exit": 126
+            },
+            "executed": true,
+            "resultState": {
+              "provider": "anthropic"
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.item",
+          "path": "data.item",
+          "kind": "any",
+          "probes": [
+            "Push the branch"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.agent",
+          "path": "data.agent",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.model",
+          "path": "data.model",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.started.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.started.data.name",
+          "path": "data.name",
+          "kind": "any",
+          "probes": [
+            "Shell"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.delta.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.delta.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.delta.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.delta.data.delta",
+          "path": "data.delta",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.ended.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.ended.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.ended.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.ended.data.text",
+          "path": "data.text",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.input",
+          "path": "data.input",
+          "kind": "any",
+          "probes": [
+            "git push origin main"
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.executed",
+          "path": "data.executed",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.state",
+          "path": "data.state",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.progress.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.progress.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.progress.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.progress.data.metadata",
+          "path": "data.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.success.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.success.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.success.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.success.data.content",
+          "path": "data.content",
+          "kind": "any",
+          "probes": [
+            "Everything up-to-date"
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.success.data.metadata",
+          "path": "data.metadata",
+          "kind": "any",
+          "probes": [
+            "exit code 0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.success.data.executed",
+          "path": "data.executed",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.success.data.resultState",
+          "path": "data.resultState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.input",
+          "path": "data.input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.executed",
+          "path": "data.executed",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.failed.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.failed.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.failed.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.failed.data.error",
+          "path": "data.error",
+          "kind": "any",
+          "probes": [
+            "Permission denied while removing build/cache"
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.failed.data.content",
+          "path": "data.content",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.failed.data.metadata",
+          "path": "data.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.failed.data.executed",
+          "path": "data.executed",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.failed.data.resultState",
+          "path": "data.resultState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "step_failed_and_retry",
+      "payload": [
+        {
+          "id": "evt_0034",
+          "created": 1788960000034,
+          "type": "session.execution.started",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
+        },
+        {
+          "id": "evt_0035",
+          "created": 1788960000035,
+          "type": "session.inbox.enqueued",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01",
+            "item": {
+              "type": "user",
+              "payload": {
+                "text": "Add a retry button to the upload screen"
+              },
+              "delivery": "steer"
+            }
+          }
+        },
+        {
+          "id": "evt_0036",
+          "created": 1788960000036,
+          "type": "session.inbox.delivered",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01"
+          }
+        },
+        {
+          "id": "evt_0037",
+          "created": 1788960000037,
+          "type": "session.step.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "agent": "build",
+            "model": {
+              "id": "claude-opus-5-5",
+              "providerID": "anthropic"
+            }
+          }
+        },
+        {
+          "id": "evt_0038",
+          "created": 1788960000038,
+          "type": "session.step.failed",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "error": {
+              "type": "api",
+              "message": "The provider is overloaded, try again in a minute",
+              "status": 529
+            },
+            "finish": "content-filter",
+            "rawFinish": "blocked",
+            "providerState": {
+              "responseId": "resp_2"
+            },
+            "cost": 0.002,
+            "tokens": {
+              "input": 500,
+              "output": 0,
+              "reasoning": 0,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            },
+            "snapshot": "snap_f1",
+            "files": [
+              "lib/a.dart"
+            ]
+          }
+        },
+        {
+          "id": "evt_0039",
+          "created": 1788960000039,
+          "type": "session.execution.failed",
+          "data": {
+            "sessionID": "ses_checkout",
+            "error": {
+              "type": "provider.auth",
+              "message": "",
+              "status": 401
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.item",
+          "path": "data.item",
+          "kind": "any",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.agent",
+          "path": "data.agent",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.model",
+          "path": "data.model",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.failed.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.failed.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.failed.data.error",
+          "path": "data.error",
+          "kind": "any",
+          "probes": [
+            "The provider is overloaded, try again in a minute"
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.failed.data.finish",
+          "path": "data.finish",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.failed.data.rawFinish",
+          "path": "data.rawFinish",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.failed.data.providerState",
+          "path": "data.providerState",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.failed.data.cost",
+          "path": "data.cost",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.failed.data.tokens",
+          "path": "data.tokens",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.failed.data.snapshot",
+          "path": "data.snapshot",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.failed.data.files",
+          "path": "data.files",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.failed.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.failed.data.error",
+          "path": "data.error",
+          "kind": "any",
+          "probes": [
+            "credentials"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "retry_only",
+      "payload": [
+        {
+          "id": "evt_0040",
+          "created": 1788960000040,
+          "type": "session.execution.started",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
+        },
+        {
+          "id": "evt_0041",
+          "created": 1788960000041,
+          "type": "session.inbox.enqueued",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01",
+            "item": {
+              "type": "user",
+              "payload": {
+                "text": "Add a retry button to the upload screen"
+              },
+              "delivery": "steer"
+            }
+          }
+        },
+        {
+          "id": "evt_0042",
+          "created": 1788960000042,
+          "type": "session.inbox.delivered",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01"
+          }
+        },
+        {
+          "id": "evt_0043",
+          "created": 1788960000043,
+          "type": "session.step.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "agent": "build",
+            "model": {
+              "id": "claude-opus-5-5",
+              "providerID": "anthropic"
+            }
+          }
+        },
+        {
+          "id": "evt_0044",
+          "created": 1788960000044,
+          "type": "session.retry.scheduled",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "attempt": 3,
+            "at": 1788960020000,
+            "error": {
+              "type": "api",
+              "message": "Rate limit reached for the model",
+              "status": 429
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.item",
+          "path": "data.item",
+          "kind": "any",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.agent",
+          "path": "data.agent",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.model",
+          "path": "data.model",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.retry.scheduled.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.retry.scheduled.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.retry.scheduled.data.attempt",
+          "path": "data.attempt",
+          "kind": "any",
+          "probes": [
+            "Retrying 3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:session.retry.scheduled.data.at",
+          "path": "data.at",
+          "kind": "any",
+          "probes": [
+            "in 0:"
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:session.retry.scheduled.data.error",
+          "path": "data.error",
+          "kind": "any",
+          "probes": [
+            "Rate limited"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_progress_only",
+      "payload": [
+        {
+          "id": "evt_0045",
+          "created": 1788960000045,
+          "type": "session.execution.started",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
+        },
+        {
+          "id": "evt_0046",
+          "created": 1788960000046,
+          "type": "session.inbox.enqueued",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01",
+            "item": {
+              "type": "user",
+              "payload": {
+                "text": "Push the branch"
+              },
+              "delivery": "steer"
+            }
+          }
+        },
+        {
+          "id": "evt_0047",
+          "created": 1788960000047,
+          "type": "session.inbox.delivered",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01"
+          }
+        },
+        {
+          "id": "evt_0048",
+          "created": 1788960000048,
+          "type": "session.step.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "agent": "build",
+            "model": {
+              "id": "claude-opus-5-5",
+              "providerID": "anthropic"
+            }
+          }
+        },
+        {
+          "id": "evt_0049",
+          "created": 1788960000049,
+          "type": "session.tool.input.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "id": "call_t9",
+            "name": "bash"
+          }
+        },
+        {
+          "id": "evt_0050",
+          "created": 1788960000050,
+          "type": "session.tool.called",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "id": "call_t9",
+            "input": {
+              "command": "git push origin main"
+            },
+            "executed": true
+          }
+        },
+        {
+          "id": "evt_0051",
+          "created": 1788960000051,
+          "type": "session.tool.progress",
+          "data": {
+            "sessionID": "ses_checkout",
+            "assistantMessageID": "msg_asst01",
+            "id": "call_t9",
+            "metadata": {
+              "output": "Enumerating objects: 12, done."
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.item",
+          "path": "data.item",
+          "kind": "any",
+          "probes": [
+            "Push the branch"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.agent",
+          "path": "data.agent",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.step.started.data.model",
+          "path": "data.model",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.started.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.started.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.input.started.data.name",
+          "path": "data.name",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.input",
+          "path": "data.input",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.called.data.executed",
+          "path": "data.executed",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.progress.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.progress.data.assistantMessageID",
+          "path": "data.assistantMessageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.progress.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.tool.progress.data.metadata",
+          "path": "data.metadata",
+          "kind": "any",
+          "probes": [
+            "Enumerating objects: 12, done."
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "interrupted_and_inbox",
+      "payload": [
+        {
+          "id": "evt_0052",
+          "created": 1788960000052,
+          "type": "session.execution.started",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
+        },
+        {
+          "id": "evt_0053",
+          "created": 1788960000053,
+          "type": "session.inbox.enqueued",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01",
+            "item": {
+              "type": "user",
+              "payload": {
+                "text": "First message"
+              },
+              "delivery": "steer"
+            }
+          }
+        },
+        {
+          "id": "evt_0054",
+          "created": 1788960000054,
+          "type": "session.inbox.delivered",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01"
+          }
+        },
+        {
+          "id": "evt_0055",
+          "created": 1788960000055,
+          "type": "session.inbox.enqueued",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox02",
+            "item": {
+              "type": "user",
+              "payload": {
+                "text": "Second message that gets cancelled"
+              },
+              "delivery": "queue"
+            }
+          }
+        },
+        {
+          "id": "evt_0056",
+          "created": 1788960000056,
+          "type": "session.inbox.delivery.changed",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox02",
+            "delivery": "steer"
+          }
+        },
+        {
+          "id": "evt_0057",
+          "created": 1788960000057,
+          "type": "session.inbox.cancelled",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox02"
+          }
+        },
+        {
+          "id": "evt_0058",
+          "created": 1788960000058,
+          "type": "session.execution.interrupted",
+          "data": {
+            "sessionID": "ses_checkout",
+            "reason": "user"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.item",
+          "path": "data.item",
+          "kind": "any",
+          "probes": [
+            "First message"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.item",
+          "path": "data.item",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivery.changed.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivery.changed.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivery.changed.data.delivery",
+          "path": "data.delivery",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.cancelled.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.cancelled.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.interrupted.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.interrupted.data.reason",
+          "path": "data.reason",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "compaction_run",
+      "payload": [
+        {
+          "id": "evt_0059",
+          "created": 1788960000059,
+          "type": "session.compaction.started",
+          "data": {
+            "sessionID": "ses_checkout",
+            "reason": "auto",
+            "recent": "Last two turns kept",
+            "inputID": "msg_inbox03"
+          }
+        },
+        {
+          "id": "evt_0060",
+          "created": 1788960000060,
+          "type": "session.compaction.delta",
+          "data": {
+            "sessionID": "ses_checkout",
+            "text": "Summarising the upload work"
+          }
+        },
+        {
+          "id": "evt_0061",
+          "created": 1788960000061,
+          "type": "session.compaction.ended",
+          "data": {
+            "sessionID": "ses_checkout",
+            "reason": "auto",
+            "text": "Summary: the retry button was added and tested.",
+            "recent": "Last two turns kept"
+          }
+        },
+        {
+          "id": "evt_0062",
+          "created": 1788960000062,
+          "type": "session.compacted",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.started.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.started.data.reason",
+          "path": "data.reason",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.started.data.recent",
+          "path": "data.recent",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.started.data.inputID",
+          "path": "data.inputID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.delta.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.delta.data.text",
+          "path": "data.text",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.ended.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.ended.data.reason",
+          "path": "data.reason",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.ended.data.text",
+          "path": "data.text",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.ended.data.recent",
+          "path": "data.recent",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compacted.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "compaction_failed",
+      "payload": [
+        {
+          "id": "evt_0063",
+          "created": 1788960000063,
+          "type": "session.compaction.failed",
+          "data": {
+            "sessionID": "ses_checkout",
+            "reason": "manual",
+            "error": {
+              "type": "compaction",
+              "message": "The summary model refused the request",
+              "status": 400
+            },
+            "inputID": "msg_inbox04"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.failed.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.failed.data.reason",
+          "path": "data.reason",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.failed.data.error",
+          "path": "data.error",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.compaction.failed.data.inputID",
+          "path": "data.inputID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "notices_and_revert",
+      "payload": [
+        {
+          "id": "evt_0064",
+          "created": 1788960000064,
+          "type": "session.inbox.enqueued",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01",
+            "item": {
+              "type": "user",
+              "payload": {
+                "text": "Add a retry button to the upload screen"
+              },
+              "delivery": "steer"
+            }
+          }
+        },
+        {
+          "id": "evt_0065",
+          "created": 1788960000065,
+          "type": "session.inbox.delivered",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01"
+          }
+        },
+        {
+          "id": "evt_0066",
+          "created": 1788960000066,
+          "type": "session.synthetic",
+          "data": {
+            "sessionID": "ses_checkout",
+            "text": "The explore agent finished: two loops can retry forever.",
+            "description": "Helper agent finished",
+            "metadata": {
+              "source": "subagent",
+              "childID": "ses_child1",
+              "agent": "explore",
+              "state": "completed"
+            }
+          }
+        },
+        {
+          "id": "evt_0067",
+          "created": 1788960000067,
+          "type": "session.revert.staged",
+          "data": {
+            "sessionID": "ses_checkout",
+            "revert": {
+              "messageID": "msg_inbox01",
+              "diff": "@@ -1 +1 @@"
+            }
+          }
+        },
+        {
+          "id": "evt_0068",
+          "created": 1788960000068,
+          "type": "session.revert.cleared",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
+        },
+        {
+          "id": "evt_0069",
+          "created": 1788960000069,
+          "type": "session.revert.committed",
+          "data": {
+            "sessionID": "ses_checkout",
+            "to": "msg_inbox01"
+          }
+        },
+        {
+          "id": "evt_0070",
+          "created": 1788960000070,
+          "type": "session.message.content.updated",
+          "data": {
+            "sessionID": "ses_checkout",
+            "messageID": "msg_asst01",
+            "content": [
+              {
+                "type": "text",
+                "text": "Edited answer from a PATCH"
+              }
+            ]
+          }
+        },
+        {
+          "id": "evt_0071",
+          "created": 1788960000071,
+          "type": "session.renamed",
+          "data": {
+            "sessionID": "ses_checkout",
+            "title": "Retry upload button"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.item",
+          "path": "data.item",
+          "kind": "any",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.synthetic.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.synthetic.data.text",
+          "path": "data.text",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.synthetic.data.description",
+          "path": "data.description",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.synthetic.data.metadata",
+          "path": "data.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.revert.staged.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.revert.staged.data.revert",
+          "path": "data.revert",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.revert.cleared.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.revert.committed.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.revert.committed.data.to",
+          "path": "data.to",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.message.content.updated.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.message.content.updated.data.messageID",
+          "path": "data.messageID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.message.content.updated.data.content",
+          "path": "data.content",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.renamed.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.renamed.data.title",
+          "path": "data.title",
+          "kind": "any",
+          "probes": [
+            "Retry upload button"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "status_busy_idle",
+      "payload": [
+        {
+          "id": "evt_0072",
+          "created": 1788960000072,
+          "type": "session.inbox.enqueued",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01",
+            "item": {
+              "type": "user",
+              "payload": {
+                "text": "Add a retry button to the upload screen"
+              },
+              "delivery": "steer"
+            }
+          }
+        },
+        {
+          "id": "evt_0073",
+          "created": 1788960000073,
+          "type": "session.inbox.delivered",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01"
+          }
+        },
+        {
+          "id": "evt_0074",
+          "created": 1788960000074,
+          "type": "session.status",
+          "data": {
+            "sessionID": "ses_checkout",
+            "status": {
+              "type": "busy"
+            }
+          }
+        },
+        {
+          "id": "evt_0075",
+          "created": 1788960000075,
+          "type": "session.execution.succeeded",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
+        },
+        {
+          "id": "evt_0076",
+          "created": 1788960000076,
+          "type": "session.idle",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.item",
+          "path": "data.item",
+          "kind": "any",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.status.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.status.data.status",
+          "path": "data.status",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.succeeded.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.idle.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "status_retry_with_action",
+      "payload": [
+        {
+          "id": "evt_0077",
+          "created": 1788960000077,
+          "type": "session.inbox.enqueued",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01",
+            "item": {
+              "type": "user",
+              "payload": {
+                "text": "Add a retry button to the upload screen"
+              },
+              "delivery": "steer"
+            }
+          }
+        },
+        {
+          "id": "evt_0078",
+          "created": 1788960000078,
+          "type": "session.inbox.delivered",
+          "data": {
+            "sessionID": "ses_checkout",
+            "inboxID": "msg_inbox01"
+          }
+        },
+        {
+          "id": "evt_0079",
+          "created": 1788960000079,
+          "type": "session.status",
+          "data": {
+            "sessionID": "ses_checkout",
+            "status": {
+              "type": "retry",
+              "attempt": 3,
+              "message": "Rate limit reached for the model",
+              "next": 1788960020000,
+              "action": {
+                "reason": "rate_limit",
+                "provider": "anthropic",
+                "title": "Upgrade your plan",
+                "message": "Your plan allows 20 requests a minute",
+                "label": "See plans",
+                "link": "https://console.anthropic.com/settings/plans"
+              }
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.enqueued.data.item",
+          "path": "data.item",
+          "kind": "any",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.inbox.delivered.data.inboxID",
+          "path": "data.inboxID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.status.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.status.data.status",
+          "path": "data.status",
+          "kind": "any",
+          "probes": [
+            "Retrying 3",
+            "Upgrade your plan",
+            "See plans"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "permission_asked",
+      "payload": [
+        {
+          "id": "evt_0080",
+          "created": 1788960000080,
+          "type": "permission.asked",
+          "data": {
+            "id": "per_ev1",
+            "sessionID": "ses_checkout",
+            "action": "bash",
+            "resources": [
+              "git push origin main"
+            ],
+            "save": [
+              "git push *"
+            ],
+            "metadata": {
+              "command": "git push origin main"
+            },
+            "source": {
+              "type": "tool",
+              "messageID": "msg_asst01",
+              "id": "call_t1"
+            },
+            "message": "The agent wants to publish the branch"
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.action",
+          "path": "data.action",
+          "kind": "any",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.resources",
+          "path": "data.resources",
+          "kind": "any",
+          "probes": [
+            "git push origin main"
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.save",
+          "path": "data.save",
+          "kind": "any",
+          "probes": [
+            "git push *"
+          ],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.metadata",
+          "path": "data.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.source",
+          "path": "data.source",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.message",
+          "path": "data.message",
+          "kind": "any",
+          "probes": [
+            "The agent wants to publish the branch"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "permission_replied",
+      "payload": [
+        {
+          "id": "evt_0081",
+          "created": 1788960000081,
+          "type": "permission.asked",
+          "data": {
+            "id": "per_ev2",
+            "sessionID": "ses_checkout",
+            "action": "bash",
+            "resources": [
+              "rm -rf build/cache"
+            ],
+            "save": [
+              "rm *"
+            ],
+            "metadata": {},
+            "source": {
+              "type": "tool",
+              "messageID": "msg_asst01",
+              "id": "call_t2"
+            },
+            "message": "The agent wants to clear the cache"
+          }
+        },
+        {
+          "id": "evt_0082",
+          "created": 1788960000082,
+          "type": "permission.replied",
+          "data": {
+            "sessionID": "ses_checkout",
+            "requestID": "per_ev2",
+            "reply": "once"
+          }
+        }
+      ],
+      "hidden": [
+        "rm -rf build/cache"
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.action",
+          "path": "data.action",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.resources",
+          "path": "data.resources",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.save",
+          "path": "data.save",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.metadata",
+          "path": "data.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.source",
+          "path": "data.source",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.asked.data.message",
+          "path": "data.message",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.replied.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.replied.data.requestID",
+          "path": "data.requestID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:permission.replied.data.reply",
+          "path": "data.reply",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "form_created",
+      "payload": [
+        {
+          "id": "evt_0083",
+          "created": 1788960000083,
+          "type": "form.created",
+          "data": {
+            "form": {
+              "id": "frm_ev1",
+              "sessionID": "ses_checkout",
+              "title": "Connect to Sentry",
+              "fields": [
+                {
+                  "key": "env",
+                  "type": "string",
+                  "title": "Environment",
+                  "required": true,
+                  "options": [
+                    {
+                      "value": "prod",
+                      "label": "Production"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:form.created.data.form",
+          "path": "data.form",
+          "kind": "any",
+          "probes": [
+            "Connect to Sentry"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "form_replied_cancelled",
+      "payload": [
+        {
+          "id": "evt_0084",
+          "created": 1788960000084,
+          "type": "form.created",
+          "data": {
+            "form": {
+              "id": "frm_ev2",
+              "sessionID": "ses_checkout",
+              "title": "Pick a branch for the push",
+              "fields": [
+                {
+                  "key": "b",
+                  "type": "boolean",
+                  "title": "Create it"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "evt_0085",
+          "created": 1788960000085,
+          "type": "form.replied",
+          "data": {
+            "id": "frm_ev2",
+            "sessionID": "ses_checkout",
+            "answer": {
+              "b": true
+            }
+          }
+        },
+        {
+          "id": "evt_0086",
+          "created": 1788960000086,
+          "type": "form.created",
+          "data": {
+            "form": {
+              "id": "frm_ev3",
+              "sessionID": "ses_checkout",
+              "title": "Choose a cache policy",
+              "fields": [
+                {
+                  "key": "c",
+                  "type": "boolean",
+                  "title": "Clear it"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "evt_0087",
+          "created": 1788960000087,
+          "type": "form.cancelled",
+          "data": {
+            "id": "frm_ev3",
+            "sessionID": "ses_checkout"
+          }
+        }
+      ],
+      "hidden": [
+        "Pick a branch for the push",
+        "Choose a cache policy"
+      ],
+      "fields": [
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:form.created.data.form",
+          "path": "data.form",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:form.replied.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:form.replied.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:form.replied.data.answer",
+          "path": "data.answer",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:form.created.data.form",
+          "path": "data.form",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:form.cancelled.data.id",
+          "path": "data.id",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:form.cancelled.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

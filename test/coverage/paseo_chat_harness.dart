@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/domain/form_request.dart' show Api2FormInfo;
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_tool_row.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
@@ -12,6 +13,7 @@ import 'package:opencode_mobile/ui/widgets/connection_status_banner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../tool/capture/fixtures.dart';
+import 'paseo_coverage_support.dart' show screenText, writeCasePng;
 
 /// One page of history.
 class CoverageApi extends CaptureApi {
@@ -19,6 +21,12 @@ class CoverageApi extends CaptureApi {
 
   /// The server's abilities; Paseo's for the permission cases.
   final ServerCapabilities? caps;
+
+  /// Forms an OpenCode 2 server is waiting on.
+  List<Api2FormInfo> forms = const [];
+
+  @override
+  Future<List<Api2FormInfo>> pendingForms() async => forms;
 
   @override
   ServerCapabilities get capabilities => caps ?? super.capabilities;
@@ -48,6 +56,7 @@ Future<CaptureController> pumpCoverageChat(
   void Function(CaptureController controller)? setUp,
   bool busy = false,
   ServerCapabilities? capabilities,
+  List<Api2FormInfo> forms = const [],
   Size size = const Size(412, 915),
 }) async {
   tester.view.physicalSize = size;
@@ -55,6 +64,7 @@ Future<CaptureController> pumpCoverageChat(
   addTearDown(tester.view.reset);
   SharedPreferences.setMockInitialValues({});
   final api = CoverageApi(capabilities)
+    ..forms = forms
     ..busy = busy ? {checkoutSessionID} : {}
     ..messagesHandler = (_) async => messages;
   final controller = await captureController(
@@ -98,22 +108,115 @@ Future<CaptureController> pumpCoverageChat(
 /// Taps every fold a person would open to read a conversation, once each:
 /// the work line, a step in it, a thought, an error's details and a
 /// compaction's notice.
-Future<void> openFolds(WidgetTester tester) async {
+/// A step that opens another conversation (a sub-agent's) is left shut with
+/// [rows] false: tapping it leaves the screen.
+Future<void> openFolds(WidgetTester tester, {bool rows = true}) async {
   Future<void> tapOnce(Finder target) async {
     if (target.evaluate().isEmpty) return;
     await tester.tap(target.first, warnIfMissed: false);
     await frames(tester, 6);
   }
 
+  // Every item of a kind, once each (the tree changes as folds open).
+  Future<void> tapEach(Finder target) async {
+    final count = target.evaluate().length;
+    for (var i = 0; i < count; i++) {
+      if (i >= target.evaluate().length) return;
+      await tester.tap(target.at(i), warnIfMissed: false);
+      await frames(tester, 6);
+    }
+  }
+
   await tapOnce(find.byKey(const Key('work-group-header')));
-  await tapOnce(find.byType(KitToolRow));
+  // Commands run on their own (no prompt before them) fold under one line.
+  await tapOnce(find.textContaining(RegExp(r'^Ran \d+ commands?')));
+  if (rows) await tapEach(find.byType(KitToolRow));
   await tapOnce(find.byKey(const Key('reasoning-toggle')));
   await tapOnce(find.byKey(const Key('error-action-details')));
-  await tapOnce(
+  // Notices that start shut (an open one would close if tapped).
+  await tapEach(
     find.byWidgetPredicate(
       (widget) =>
           widget is TranscriptNotice &&
-          widget.key.toString().contains('compaction-completed'),
+          !widget.error &&
+          !widget.initiallyOpen &&
+          widget.text.trim().isNotEmpty,
     ),
   );
+}
+
+/// Opens what a pending permission or question card hides, and returns the
+/// text readable at each step joined: the card, its Details sheet and, for a
+/// question that needs more than a tap, the answer sheet.
+Future<String> openRequestCards(
+  WidgetTester tester, {
+  GlobalKey? boundary,
+  String? name,
+}) async {
+  final seen = <String>[];
+  String read() => screenText(tester).join('\n');
+  final review = find.byKey(const Key('permission-card-review'));
+  if (review.evaluate().isNotEmpty) {
+    await tester.tap(review.first, warnIfMissed: false);
+    await frames(tester);
+  }
+  seen.add(read());
+  final fold = find.text('Details');
+  if (find.byKey(const Key('permission-sheet')).evaluate().isNotEmpty &&
+      fold.evaluate().isNotEmpty) {
+    await tester.tap(fold.last, warnIfMissed: false);
+    await frames(tester);
+    seen.add(read());
+  }
+  final answer = find.text('Answer');
+  if (answer.evaluate().isNotEmpty) {
+    await tester.tap(answer.first, warnIfMissed: false);
+    await frames(tester);
+    seen.add(read());
+    if (boundary != null && name != null) {
+      await writeCasePng(tester, boundary, '${name}_answer');
+    }
+  }
+  return seen.join('\n');
+}
+
+/// Opens the status line's menu and its Details (an error's own words).
+Future<void> openStatusDetails(WidgetTester tester) async {
+  final more = find.byKey(const ValueKey('kit-status-more'));
+  if (more.evaluate().isEmpty) return;
+  await tester.tap(more.first, warnIfMissed: false);
+  await frames(tester);
+  final details = find.text('Details');
+  if (details.evaluate().isEmpty) return;
+  await tester.tap(details.last, warnIfMissed: false);
+  await frames(tester);
+}
+
+/// Everything a person can open in a conversation, each step read before the
+/// next (a sheet that stays open would swallow the next tap): the folds, the
+/// status line's Details and the request cards. Returns all the text seen.
+Future<String> openEverything(
+  WidgetTester tester, {
+  bool rows = true,
+  GlobalKey? boundary,
+  String? name,
+}) async {
+  final seen = <String>[];
+  String read() => screenText(tester).join('\n');
+  Future<void> closeSheets() async {
+    final navigator = tester.state<NavigatorState>(
+      find.byType(Navigator).first,
+    );
+    await navigator.maybePop();
+    await frames(tester, 4);
+  }
+
+  await openFolds(tester, rows: rows);
+  seen.add(read());
+  await closeSheets();
+  await openStatusDetails(tester);
+  seen.add(read());
+  await closeSheets();
+  seen.add(await openRequestCards(tester, boundary: boundary, name: name));
+  return seen.join('\n');
 }
