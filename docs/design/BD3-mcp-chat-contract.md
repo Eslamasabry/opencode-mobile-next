@@ -156,3 +156,77 @@ Failures have fixed enum keys and plain copy (localize in frontend):
 Credentials stay in runtime-owned storage. URLs remain inert outside the normal
 external-link gate. Runtime-only add does not persist config and never rewrites
 project/global configuration, restarts a server, or starts a new conversation.
+
+
+## Agent connector search (owner addition, 2026-10-09)
+
+Finish line: the agent discovers real catalog IDs using a read-only tool before
+suggesting a connector; cached results work offline without installing anything.
+Non-goal: automatic registry downloads, inferring OAuth support, or expanding
+which runtimes qualify for Agent cards.
+
+The same `oc-ui` MCP helper advertises `find_connectors` next to `show` (runtime
+names may be `oc-ui_find_connectors` / `mcp__oc-ui__find_connectors`). Arguments:
+`{"query":"design inspiration","limit":5}`. Query is 1–100 Unicode scalars after
+trim, limit is an integer 1–10 (default 5); unknown properties, URLs, credentials
+and malformed inputs fail with **“Invalid connector search request.”** No query
+is sent to the public registry. Matching is case-insensitive across catalog ID,
+name and description, requiring all whitespace-separated terms; canonical IDs
+are sorted and deduplicated. At most 100 cached rows and 10 results are inspected
+and returned respectively.
+
+Success shape (no URLs, packages, commands, headers, keys or raw metadata):
+
+```json
+{"status":"ok","matches":[{"catalogId":"com.example/design","name":"Design",
+"description":"Search design inspiration.","runtime":"hosted",
+"needsSignIn":"unknown","connected":null}]}
+```
+
+`runtime` is `hosted`, `npx`, `uvx`, `docker` or `unavailable`, projected using
+`McpCatalogItem` exactly as Tools > MCP. `needsSignIn` is `required`,
+`not_required` or `unknown`: the current registry has no reliable OAuth field,
+so **all current entries return `unknown`**. Required key declarations are not
+OAuth evidence. `connected` is boolean only from an exact-name current source
+inventory; null means that inventory could not be confirmed. It follows the
+catalogue's name mapping, is not proof of endpoint identity, and never authorizes
+attaching to a name collision. Description is single-line, at most 300 scalars;
+name at most 120. Registry prose is untrusted, redacted and URL-stripped.
+
+A missing or unreadable cache returns:
+`{"status":"catalogue_not_loaded","message":"Catalogue not loaded. Open Tools > MCP to load it.","matches":[]}`.
+A valid empty cache/search returns `ok` with no matches. Search uses the saved
+default catalogue, not transient online search results in another screen.
+The existing profile cache and its deletion rules are reused; search never
+changes opt-in, fetches, installs, connects or saves credentials.
+
+**Transport decision:** round-trip to the app, rather than reading the public
+registry directly. The app alone owns the Tools catalogue cache and current
+profile/source truth. The helper reads an app-published adjacent ephemeral
+bridge descriptor, then POSTs to a fixed IPv4 loopback endpoint with an
+unpredictable bearer. It sends validated arguments plus its own process working
+directory (not supplied by the agent). The app validates profile/generation,
+Agent-cards qualification and source before and after asynchronous reads.
+Only the matching source can supply connected status; ambiguity yields null.
+The descriptor is at `<enabled-marker>.search.json`, atomically written with
+private permissions through the existing managed host bridge. It contains no
+MCP credentials. It expires in effect when the in-memory HTTP server closes;
+it grants only this bounded read-only search. A stale helper returns
+`{"status":"unavailable","message":"Connector search is unavailable. Try again from Tools.","matches":[]}`.
+No daemon, arbitrary URL, remote registry request, or new persistent app format.
+HTTP request <=2 KiB, response <=16 KiB, <=4 concurrent searches, 5-second
+request deadline. The helper rechecks the enabled marker on every call and
+rejects symlink descriptors. No transport token or raw exception is logged.
+
+**UI contract:** this is a normal tool step, not a card or question. Recognize
+only the trusted Agent-cards tool name/provider using the existing runtime tool
+identity rules and show **“Searched connectors ›”** on completion (and normal
+working/failure state during the call). Its bounded `structuredContent` and
+JSON text contain the same result; expand the step to show matches or the fixed
+empty/unloaded/unavailable message. Do not interpret search as user consent.
+The agent may pass a returned `catalogId` into `show.connector`; Connect still
+requires the existing reviewed card flow. No new `ServerCapabilities` override:
+search exists only on the same installed and qualified Agent-cards MCP helper.
+OC1/OC2/Paseo keep their existing cards qualification; search does not turn on
+Paseo runtime add/OAuth/refresh. Helper/bridge host tests do not qualify a real
+phone agent or provider.
