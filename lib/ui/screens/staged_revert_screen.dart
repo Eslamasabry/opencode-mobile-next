@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../api/models.dart';
 import '../../domain/server_gateway.dart';
 import '../../domain/staged_revert_message_count.dart';
+import '../widgets/session_title.dart' show presentedSessionTitleText;
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../app_iconography.dart';
@@ -284,6 +285,12 @@ class StagedRevertScreen extends StatefulWidget {
 }
 
 class _StagedRevertScreenState extends State<StagedRevertScreen> {
+  /// The conversation as the person knows it, to name in the questions.
+  String _conversationTitle(AppLocalizations l10n) => presentedSessionTitleText(
+    widget.controller.sessionsById[widget.sessionID]?.title,
+    l10n: l10n,
+  );
+
   late SessionRevertReview _review;
   String? _error;
   String? _prompt;
@@ -414,7 +421,7 @@ class _StagedRevertScreenState extends State<StagedRevertScreen> {
     if (commit) {
       confirmed = await showKitConfirm(
         context,
-        title: l10n.reviewRevertKeepConfirmTitle,
+        title: l10n.reviewRevertKeepConfirmTitle(_conversationTitle(l10n)),
         body: l10n.reviewRevertKeepConfirmBody,
         confirmLabel: l10n.reviewRevertKeepConfirmAction,
         icon: AppIconography.delete,
@@ -442,7 +449,7 @@ class _StagedRevertScreenState extends State<StagedRevertScreen> {
       final overwrites = files == null || files.isNotEmpty;
       confirmed = await showKitConfirm(
         context,
-        title: l10n.reviewRevertRestoreConfirmTitle,
+        title: l10n.reviewRevertRestoreConfirmTitle(_conversationTitle(l10n)),
         body: l10n.reviewRevertRestoreConfirmBody,
         confirmLabel: l10n.reviewRevertRestoreTitle,
         icon: AppIconography.restore,

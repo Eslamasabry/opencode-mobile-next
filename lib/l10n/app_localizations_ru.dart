@@ -18061,7 +18061,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get reviewRevertKeepTitle => 'Delete the hidden messages';
 
   @override
-  String get reviewRevertKeepConfirmTitle => 'Delete hidden messages forever?';
+  String reviewRevertKeepConfirmTitle(String title) {
+    return 'Delete messages in “$title”?';
+  }
 
   @override
   String get reviewRevertKeepConfirmBody => 'This can\'t be undone.';
@@ -18077,7 +18079,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get reviewRevertKeepConsequenceFiles => 'Files stay as they are now';
 
   @override
-  String get reviewRevertRestoreConfirmTitle => 'Put everything back?';
+  String reviewRevertRestoreConfirmTitle(String title) {
+    return 'Restore “$title”?';
+  }
 
   @override
   String get reviewRevertRestoreConfirmBody =>

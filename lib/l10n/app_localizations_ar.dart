@@ -18124,8 +18124,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reviewRevertKeepTitle => 'حذف الرسائل المخفية';
 
   @override
-  String get reviewRevertKeepConfirmTitle =>
-      'هل تريد حذف الرسائل المخفية نهائيًا؟';
+  String reviewRevertKeepConfirmTitle(String title) {
+    return 'حذف الرسائل في «$title»؟';
+  }
 
   @override
   String get reviewRevertKeepConfirmBody => 'لا يمكن التراجع عن ذلك.';
@@ -18142,7 +18143,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'تبقى الملفات على حالتها الحالية';
 
   @override
-  String get reviewRevertRestoreConfirmTitle => 'هل تريد استعادة كل شيء؟';
+  String reviewRevertRestoreConfirmTitle(String title) {
+    return 'استعادة «$title»؟';
+  }
 
   @override
   String get reviewRevertRestoreConfirmBody =>

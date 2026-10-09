@@ -1,0 +1,1125 @@
+{
+  "source": "contracts/opencode-openapi-f12e14cf.json",
+  "schema": {
+    "FileNode": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "path",
+        "kind": "string"
+      },
+      {
+        "path": "absolute",
+        "kind": "string"
+      },
+      {
+        "path": "type",
+        "kind": "enum"
+      },
+      {
+        "path": "ignored",
+        "kind": "boolean"
+      }
+    ],
+    "FileContent": [
+      {
+        "path": "type",
+        "kind": "enum"
+      },
+      {
+        "path": "content",
+        "kind": "string"
+      },
+      {
+        "path": "diff",
+        "kind": "string"
+      },
+      {
+        "path": "patch.oldFileName",
+        "kind": "string"
+      },
+      {
+        "path": "patch.newFileName",
+        "kind": "string"
+      },
+      {
+        "path": "patch.oldHeader",
+        "kind": "string"
+      },
+      {
+        "path": "patch.newHeader",
+        "kind": "string"
+      },
+      {
+        "path": "patch.hunks[].oldStart",
+        "kind": "number"
+      },
+      {
+        "path": "patch.hunks[].oldLines",
+        "kind": "number"
+      },
+      {
+        "path": "patch.hunks[].newStart",
+        "kind": "number"
+      },
+      {
+        "path": "patch.hunks[].newLines",
+        "kind": "number"
+      },
+      {
+        "path": "patch.hunks[].lines[]",
+        "kind": "string"
+      },
+      {
+        "path": "patch.index",
+        "kind": "string"
+      },
+      {
+        "path": "mimeType",
+        "kind": "string"
+      }
+    ],
+    "find:match": [
+      {
+        "path": "path.text",
+        "kind": "string"
+      },
+      {
+        "path": "lines.text",
+        "kind": "string"
+      },
+      {
+        "path": "line_number",
+        "kind": "number"
+      },
+      {
+        "path": "absolute_offset",
+        "kind": "number"
+      },
+      {
+        "path": "submatches[].match.text",
+        "kind": "string"
+      },
+      {
+        "path": "submatches[].start",
+        "kind": "number"
+      },
+      {
+        "path": "submatches[].end",
+        "kind": "number"
+      }
+    ],
+    "Symbol": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "kind",
+        "kind": "number"
+      },
+      {
+        "path": "location.uri",
+        "kind": "string"
+      },
+      {
+        "path": "location.range.start.line",
+        "kind": "number"
+      },
+      {
+        "path": "location.range.start.character",
+        "kind": "number"
+      },
+      {
+        "path": "location.range.end.line",
+        "kind": "number"
+      },
+      {
+        "path": "location.range.end.character",
+        "kind": "number"
+      }
+    ],
+    "VcsInfo": [
+      {
+        "path": "branch",
+        "kind": "string"
+      },
+      {
+        "path": "default_branch",
+        "kind": "string"
+      }
+    ],
+    "VcsFileStatus": [
+      {
+        "path": "file",
+        "kind": "string"
+      },
+      {
+        "path": "additions",
+        "kind": "number"
+      },
+      {
+        "path": "deletions",
+        "kind": "number"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      }
+    ],
+    "VcsFileDiff": [
+      {
+        "path": "file",
+        "kind": "string"
+      },
+      {
+        "path": "patch",
+        "kind": "string"
+      },
+      {
+        "path": "additions",
+        "kind": "number"
+      },
+      {
+        "path": "deletions",
+        "kind": "number"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      }
+    ],
+    "SnapshotFileDiff": [
+      {
+        "path": "file",
+        "kind": "string"
+      },
+      {
+        "path": "patch",
+        "kind": "string"
+      },
+      {
+        "path": "additions",
+        "kind": "number"
+      },
+      {
+        "path": "deletions",
+        "kind": "number"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      }
+    ],
+    "Worktree": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "branch",
+        "kind": "string"
+      },
+      {
+        "path": "directory",
+        "kind": "string"
+      }
+    ],
+    "Workspace": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "type",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "branch",
+        "kind": "string"
+      },
+      {
+        "path": "directory",
+        "kind": "string"
+      },
+      {
+        "path": "extra",
+        "kind": "any"
+      },
+      {
+        "path": "projectID",
+        "kind": "string"
+      },
+      {
+        "path": "timeUsed",
+        "kind": "any"
+      }
+    ],
+    "WorkspaceEventConnectionStatus": [
+      {
+        "path": "workspaceID",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      }
+    ],
+    "workspace:adapter": [
+      {
+        "path": "type",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "tree",
+      "payload": [
+        {
+          "name": "checkout",
+          "path": "lib/checkout",
+          "absolute": "/work/shopfront/lib/checkout",
+          "type": "directory",
+          "ignored": false
+        },
+        {
+          "name": "cart_total.dart",
+          "path": "lib/cart_total.dart",
+          "absolute": "/work/shopfront/lib/cart_total.dart",
+          "type": "file",
+          "ignored": false
+        },
+        {
+          "name": "build",
+          "path": "lib/build",
+          "absolute": "/work/shopfront/lib/build",
+          "type": "directory",
+          "ignored": true
+        }
+      ],
+      "kind": "tree",
+      "fields": [
+        {
+          "key": "FileNode.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileNode.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileNode.absolute",
+          "path": "absolute",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileNode.type",
+          "path": "type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileNode.ignored",
+          "path": "ignored",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileNode.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "cart_total.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileNode.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileNode.absolute",
+          "path": "absolute",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileNode.type",
+          "path": "type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileNode.ignored",
+          "path": "ignored",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileNode.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileNode.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileNode.absolute",
+          "path": "absolute",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileNode.type",
+          "path": "type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileNode.ignored",
+          "path": "ignored",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "file_text",
+      "payload": {
+        "type": "text",
+        "content": "double total(List<double> items) {\n  return items.fold(0, (a, b) => a + b);\n}\n",
+        "diff": "@@ -10,3 +10,4 @@\n-final total = sum;\n+final total = sum.roundToDouble();\n+log(total);",
+        "patch": {
+          "oldFileName": "a/lib/cart_total.dart",
+          "newFileName": "b/lib/cart_total.dart",
+          "oldHeader": "cart total before",
+          "newHeader": "cart total after",
+          "hunks": [
+            {
+              "oldStart": 10,
+              "oldLines": 3,
+              "newStart": 10,
+              "newLines": 4,
+              "lines": [
+                "-final total = sum;",
+                "+final total = sum.roundToDouble();",
+                "+log(total);"
+              ]
+            }
+          ],
+          "index": "abc123..def456"
+        },
+        "mimeType": "text/x-dart"
+      },
+      "kind": "file",
+      "path": "lib/cart_total.dart",
+      "fields": [
+        {
+          "key": "FileContent.type",
+          "path": "type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.content",
+          "path": "content",
+          "kind": "string",
+          "probes": [
+            "double total(List<double> items)"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileContent.diff",
+          "path": "diff",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.patch.oldFileName",
+          "path": "patch.oldFileName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.patch.newFileName",
+          "path": "patch.newFileName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.patch.oldHeader",
+          "path": "patch.oldHeader",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.patch.newHeader",
+          "path": "patch.newHeader",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.patch.hunks[].oldStart",
+          "path": "patch.hunks[].oldStart",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.patch.hunks[].oldLines",
+          "path": "patch.hunks[].oldLines",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.patch.hunks[].newStart",
+          "path": "patch.hunks[].newStart",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.patch.hunks[].newLines",
+          "path": "patch.hunks[].newLines",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.patch.hunks[].lines[]",
+          "path": "patch.hunks[].lines[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.patch.index",
+          "path": "patch.index",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.mimeType",
+          "path": "mimeType",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "file_binary",
+      "payload": {
+        "encoding": "base64",
+        "type": "binary",
+        "content": "iVBORw0KGgo=",
+        "mimeType": "image/png"
+      },
+      "kind": "file",
+      "path": "assets/logo.png",
+      "fields": [
+        {
+          "key": "FileContent.type",
+          "path": "type",
+          "kind": "enum",
+          "probes": [
+            "show this image"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileContent.content",
+          "path": "content",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileContent.mimeType",
+          "path": "mimeType",
+          "kind": "string",
+          "probes": [
+            "image"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "find",
+      "payload": {
+        "files": [
+          "lib/cart_total.dart",
+          "test/cart_total_test.dart"
+        ],
+        "text": [
+          {
+            "path": {
+              "text": "lib/cart_total.dart"
+            },
+            "lines": {
+              "text": "  final total = sum.roundToDouble();\\n"
+            },
+            "line_number": 42,
+            "absolute_offset": 1280,
+            "submatches": [
+              {
+                "match": {
+                  "text": "roundToDouble"
+                },
+                "start": 18,
+                "end": 31
+              }
+            ]
+          }
+        ],
+        "symbols": [
+          {
+            "name": "CartTotal",
+            "kind": 5,
+            "location": {
+              "uri": "file:///work/shopfront/lib/cart_total.dart",
+              "range": {
+                "start": {
+                  "line": 3,
+                  "character": 0
+                },
+                "end": {
+                  "line": 20,
+                  "character": 1
+                }
+              }
+            }
+          }
+        ]
+      },
+      "kind": "find",
+      "fields": [
+        {
+          "key": "find:match.path.text",
+          "path": "path.text",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "find:match.lines.text",
+          "path": "lines.text",
+          "kind": "string",
+          "probes": [
+            "final total = sum.roundToDouble();"
+          ],
+          "primary": false
+        },
+        {
+          "key": "find:match.line_number",
+          "path": "line_number",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "find:match.absolute_offset",
+          "path": "absolute_offset",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "find:match.submatches[].match.text",
+          "path": "submatches[].match.text",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "find:match.submatches[].start",
+          "path": "submatches[].start",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "find:match.submatches[].end",
+          "path": "submatches[].end",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Symbol.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "CartTotal"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Symbol.kind",
+          "path": "kind",
+          "kind": "number",
+          "probes": [
+            "Class"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Symbol.location.uri",
+          "path": "location.uri",
+          "kind": "string",
+          "probes": [
+            "cart_total.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Symbol.location.range.start.line",
+          "path": "location.range.start.line",
+          "kind": "number",
+          "probes": [
+            "cart_total.dart:4"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Symbol.location.range.start.character",
+          "path": "location.range.start.character",
+          "kind": "number",
+          "probes": [
+            ":1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Symbol.location.range.end.line",
+          "path": "location.range.end.line",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Symbol.location.range.end.character",
+          "path": "location.range.end.character",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "changes",
+      "payload": {
+        "info": {
+          "branch": "fix/cart-total",
+          "default_branch": "main"
+        },
+        "status": [
+          {
+            "file": "lib/cart_total.dart",
+            "additions": 17,
+            "deletions": 5,
+            "status": "modified"
+          }
+        ],
+        "working": [
+          {
+            "file": "lib/cart_total.dart",
+            "patch": "@@ -10,3 +10,4 @@\n-final total = sum;\n+final total = sum.roundToDouble();\n+log(total);",
+            "additions": 17,
+            "deletions": 5,
+            "status": "modified"
+          }
+        ],
+        "session": [
+          {
+            "file": "lib/receipt.dart",
+            "patch": "@@ -10,3 +10,4 @@\n-final total = sum;\n+final total = sum.roundToDouble();\n+log(total);",
+            "additions": 23,
+            "deletions": 0,
+            "status": "added"
+          }
+        ]
+      },
+      "kind": "changes",
+      "fields": [
+        {
+          "key": "VcsInfo.branch",
+          "path": "branch",
+          "kind": "string",
+          "probes": [
+            "fix/cart-total"
+          ],
+          "primary": false
+        },
+        {
+          "key": "VcsInfo.default_branch",
+          "path": "default_branch",
+          "kind": "string",
+          "probes": [
+            "Default branch: main"
+          ],
+          "primary": false
+        },
+        {
+          "key": "VcsFileStatus.file",
+          "path": "file",
+          "kind": "string",
+          "probes": [
+            "lib/cart_total.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "VcsFileStatus.additions",
+          "path": "additions",
+          "kind": "number",
+          "probes": [
+            "+17"
+          ],
+          "primary": false
+        },
+        {
+          "key": "VcsFileStatus.deletions",
+          "path": "deletions",
+          "kind": "number",
+          "probes": [
+            "-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "VcsFileStatus.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Modified"
+          ],
+          "primary": false
+        },
+        {
+          "key": "VcsFileDiff.file",
+          "path": "file",
+          "kind": "string",
+          "probes": [
+            "cart_total.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "VcsFileDiff.patch",
+          "path": "patch",
+          "kind": "string",
+          "probes": [
+            "sum.roundToDouble()"
+          ],
+          "primary": false
+        },
+        {
+          "key": "VcsFileDiff.additions",
+          "path": "additions",
+          "kind": "number",
+          "probes": [
+            "+17"
+          ],
+          "primary": false
+        },
+        {
+          "key": "VcsFileDiff.deletions",
+          "path": "deletions",
+          "kind": "number",
+          "probes": [
+            "−5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "VcsFileDiff.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Modified"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SnapshotFileDiff.file",
+          "path": "file",
+          "kind": "string",
+          "probes": [
+            "receipt.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SnapshotFileDiff.patch",
+          "path": "patch",
+          "kind": "string",
+          "probes": [
+            "sum.roundToDouble()"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SnapshotFileDiff.additions",
+          "path": "additions",
+          "kind": "number",
+          "probes": [
+            "+23"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SnapshotFileDiff.deletions",
+          "path": "deletions",
+          "kind": "number",
+          "probes": [
+            "−0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SnapshotFileDiff.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "New file"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "worktrees",
+      "payload": {
+        "list": [
+          "/work/shopfront-review",
+          "/work/shopfront-spike"
+        ],
+        "created": {
+          "name": "shopfront-retry",
+          "branch": "opencode/shopfront-retry",
+          "directory": "/work/shopfront-retry"
+        }
+      },
+      "kind": "worktrees",
+      "fields": [
+        {
+          "key": "Worktree.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "shopfront-retry"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Worktree.branch",
+          "path": "branch",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Worktree.directory",
+          "path": "directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "workspaces",
+      "payload": {
+        "statuses": [
+          {
+            "workspaceID": "wrk_review",
+            "status": "connected"
+          }
+        ],
+        "list": [
+          {
+            "id": "wrk_review",
+            "type": "worktree",
+            "name": "Review box",
+            "branch": "review/cart",
+            "directory": "/work/shopfront-review",
+            "extra": {
+              "region": "eu"
+            },
+            "projectID": "prj_shopfront",
+            "timeUsed": 1788960000000
+          }
+        ],
+        "adapters": [
+          {
+            "type": "worktree",
+            "name": "Git worktree",
+            "description": "A separate checkout on this server"
+          }
+        ]
+      },
+      "kind": "workspaces",
+      "fields": [
+        {
+          "key": "WorkspaceEventConnectionStatus.workspaceID",
+          "path": "workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "WorkspaceEventConnectionStatus.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Connected"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Workspace.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Workspace.type",
+          "path": "type",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Workspace.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Review box"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Workspace.branch",
+          "path": "branch",
+          "kind": "string",
+          "probes": [
+            "review/cart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Workspace.directory",
+          "path": "directory",
+          "kind": "string",
+          "probes": [
+            "shopfront-review"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Workspace.extra",
+          "path": "extra",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Workspace.projectID",
+          "path": "projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Workspace.timeUsed",
+          "path": "timeUsed",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "workspace:adapter.type",
+          "path": "type",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "workspace:adapter.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Git worktree"
+          ],
+          "primary": false
+        },
+        {
+          "key": "workspace:adapter.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "A separate checkout on this server"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}
