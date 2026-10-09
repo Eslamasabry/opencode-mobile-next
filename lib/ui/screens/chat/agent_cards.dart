@@ -62,6 +62,13 @@ extension _ChatAgentCards on _ChatScreenState {
             _conn.busySessions.contains(widget.sessionID) ||
             _localTurnSince != null,
         photos: _agentCardPhotos,
+        connectors: ConnectionConnectorCardHost(_conn),
+        onOpenConnectors: () => unawaited(
+          pushKitPage<void>(
+            context,
+            (_) => McpCatalogScreen(controller: _conn),
+          ),
+        ),
       ),
     );
   }

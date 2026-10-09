@@ -163,6 +163,7 @@ class _ToolBody extends StatelessWidget {
       _ToolKind.grep => [_searchBody(context)],
       _ToolKind.lsp => [_lspBody()],
       _ToolKind.skill => [_skillBody()],
+      _ToolKind.connectorSearch => _connectorSearchBody(context),
       _ToolKind.generic => _genericBody(),
     };
   }
@@ -554,6 +555,62 @@ class _ToolBody extends StatelessWidget {
     return output?.trim().isNotEmpty == true
         ? _Prose(text: output!, name: 'skill.md')
         : _genericInput();
+  }
+
+  /// What a connector search found, in words: one row per connector with
+  /// where it runs and whether it is connected on this server, or the fixed
+  /// line for an empty, unloaded or unavailable search. Anything else is the
+  /// plain output.
+  List<Widget> _connectorSearchBody(BuildContext context) {
+    final l10n = _chatL10n(context);
+    final result = parseConnectorSearchResult(
+      value: state.outputValue,
+      text: state.output,
+    );
+    if (result == null) return _genericBody();
+    String runs(String runtime) => switch (runtime) {
+      'hosted' => l10n.connectorCardRunsHosted,
+      'npx' => l10n.connectorCardRunsNode,
+      'uvx' => l10n.connectorCardRunsPython,
+      'docker' => l10n.connectorCardRunsDocker,
+      _ => l10n.connectorCardRunsNone,
+    };
+    if (result.status == ConnectorSearchStatus.ok &&
+        result.matches.isNotEmpty) {
+      return [
+        KitKeyValue(
+          key: const Key('connector-search-matches'),
+          rows: [
+            for (final match in result.matches.take(KitKeyValue.maxRows))
+              KitKeyValueRow(
+                label: KitBidi.auto(match.name),
+                value: [
+                  runs(match.runtime),
+                  ?switch (match.connected) {
+                    true => l10n.connectorCardConnected,
+                    false => l10n.chatUiConnectorSearchNotConnected,
+                    null => null,
+                  },
+                ].join(' · '),
+              ),
+          ],
+        ),
+      ];
+    }
+    return [
+      KitText(
+        switch (result.status) {
+          ConnectorSearchStatus.ok => l10n.chatUiConnectorSearchEmpty,
+          ConnectorSearchStatus.catalogueNotLoaded =>
+            l10n.chatUiConnectorSearchNotLoaded,
+          ConnectorSearchStatus.unavailable =>
+            l10n.chatUiConnectorSearchUnavailable,
+        },
+        key: const Key('connector-search-message'),
+        role: KitTextRole.secondary,
+        tone: KitTextTone.secondary,
+      ),
+    ];
   }
 
   List<Widget> _genericBody() {

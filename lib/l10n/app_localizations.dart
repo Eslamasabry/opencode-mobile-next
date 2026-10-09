@@ -44422,6 +44422,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Русский'**
   String get e7LocaleUiRussian;
+
+  /// Suggested-connector card eyebrow: who recommends adding a connector.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} suggests a connector'**
+  String connectorCardSuggests(String agent);
+
+  /// Suggested-connector card: spoken once when the card appears.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} suggests a connector: {name}'**
+  String connectorCardAnnouncement(String agent, String name);
+
+  /// Suggested-connector card: label for where the connector runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs'**
+  String get connectorCardRuns;
+
+  /// Suggested-connector card: label for how long the connection lasts.
+  ///
+  /// In en, this message translates to:
+  /// **'Lasts'**
+  String get connectorCardLasts;
+
+  /// Suggested-connector card: the connection is runtime-only and is not saved to configuration.
+  ///
+  /// In en, this message translates to:
+  /// **'While this server runs'**
+  String get connectorCardLastsValue;
+
+  /// Suggested-connector card: an npm package runs on the server.
+  ///
+  /// In en, this message translates to:
+  /// **'On this server, with Node'**
+  String get connectorCardRunsNode;
+
+  /// Suggested-connector card: a PyPI package runs on the server.
+  ///
+  /// In en, this message translates to:
+  /// **'On this server, with Python'**
+  String get connectorCardRunsPython;
+
+  /// Suggested-connector card: a container listing the app cannot start.
+  ///
+  /// In en, this message translates to:
+  /// **'In Docker, which the app cannot start'**
+  String get connectorCardRunsDocker;
+
+  /// Suggested-connector card: a listing with no address or package the app can use.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing the app can start'**
+  String get connectorCardRunsNone;
+
+  /// Connector search step: the connector is hosted by someone else (one word).
+  ///
+  /// In en, this message translates to:
+  /// **'Hosted'**
+  String get connectorCardRunsHosted;
+
+  /// Suggested-connector card: the one primary button.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connectorCardConnect;
+
+  /// Suggested-connector card: progress on the Connect button.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get connectorCardConnecting;
+
+  /// Suggested-connector card: progress while the server status is read again.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the connection…'**
+  String get connectorCardChecking;
+
+  /// Suggested-connector card: the server asks for sign-in.
+  ///
+  /// In en, this message translates to:
+  /// **'This connector needs you to sign in.'**
+  String get connectorCardSignInNeeded;
+
+  /// Suggested-connector card: starts the sign-in in the browser.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get connectorCardSignIn;
+
+  /// Suggested-connector card: opens the sign-in page again.
+  ///
+  /// In en, this message translates to:
+  /// **'Open sign-in page'**
+  String get connectorCardOpenSignIn;
+
+  /// Suggested-connector card: the browser sign-in is in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for sign-in to finish in your browser.'**
+  String get connectorCardSignInWaiting;
+
+  /// Suggested-connector card: the phone could not listen for the browser return, so the person pastes it.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the browser return URL or authorization code to finish sign-in.'**
+  String get connectorCardManualCode;
+
+  /// Suggested-connector card: label of the field for the pasted sign-in return.
+  ///
+  /// In en, this message translates to:
+  /// **'Return URL or code'**
+  String get connectorCardCodeLabel;
+
+  /// Suggested-connector card: why Finish sign-in is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the return URL or code first.'**
+  String get connectorCardCodeRequired;
+
+  /// Suggested-connector card: sends the pasted return to finish sign-in.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish sign-in'**
+  String get connectorCardFinishSignIn;
+
+  /// Suggested-connector card: reads the connector status again.
+  ///
+  /// In en, this message translates to:
+  /// **'Check status'**
+  String get connectorCardCheckStatus;
+
+  /// Suggested-connector card: stops waiting for the browser sign-in.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel sign-in'**
+  String get connectorCardCancelSignIn;
+
+  /// Suggested-connector card: title of the question before cancelling sign-in.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel sign-in?'**
+  String get connectorCardCancelTitle;
+
+  /// Suggested-connector card: what cancelling sign-in does on OpenCode 1 (saved sign-in is cleared).
+  ///
+  /// In en, this message translates to:
+  /// **'{name} stops waiting, and its saved sign-in is cleared. You would sign in again to use it.'**
+  String connectorCardCancelBody(String name);
+
+  /// Suggested-connector card: the safe answer to the cancel-sign-in question.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep waiting'**
+  String get connectorCardKeepWaiting;
+
+  /// Suggested-connector card: the connector is connected (a check mark beside it).
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get connectorCardConnected;
+
+  /// Suggested-connector card: the server confirmed the tools can be used on the next step.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools ready'**
+  String get connectorCardToolsReady;
+
+  /// Suggested-connector card: readiness confirmed; nothing is sent automatically.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded tools. Continue this conversation to use them.'**
+  String get connectorCardLoadedTools;
+
+  /// Suggested-connector card: connected, but this server cannot confirm the tools are ready.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected. Tool availability has not been confirmed.'**
+  String get connectorCardConnectedUnconfirmed;
+
+  /// Suggested-connector card: this agent cannot connect connectors from chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting tools from chat is not available for this agent.'**
+  String get connectorCardFailureUnavailable;
+
+  /// Suggested-connector card: the suggestion cannot be used.
+  ///
+  /// In en, this message translates to:
+  /// **'This connector suggestion is not available. Browse connectors in Tools.'**
+  String get connectorCardFailureInvalidSuggestion;
+
+  /// Suggested-connector card: the connector needs a key, settings or a local package.
+  ///
+  /// In en, this message translates to:
+  /// **'This connector needs setup in Tools before it can connect.'**
+  String get connectorCardFailureSetupRequired;
+
+  /// Suggested-connector card: a server with this name is already set up.
+  ///
+  /// In en, this message translates to:
+  /// **'A connector with this name already exists. Check it in Tools.'**
+  String get connectorCardFailureNameConflict;
+
+  /// Suggested-connector card: the profile, project or server changed.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation\'s connection changed. Reopen the connector card.'**
+  String get connectorCardFailureSourceChanged;
+
+  /// Suggested-connector card: the connect request had no confirmed result.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm the connection. Check its status before trying again.'**
+  String get connectorCardFailureConnectFailed;
+
+  /// Suggested-connector card: the sign-in had no confirmed result.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in could not be confirmed. Check its status before trying again.'**
+  String get connectorCardFailureAuthenticationFailed;
+
+  /// Suggested-connector card: this server cannot finish sign-in from chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in for this connector is not available in this chat.'**
+  String get connectorCardFailureOauthUnavailable;
+
+  /// Suggested-connector card: the status read says it is not connected.
+  ///
+  /// In en, this message translates to:
+  /// **'The connector is not connected yet. Check its setup in Tools.'**
+  String get connectorCardFailureNotConnected;
+
+  /// Suggested-connector card: the way forward to the MCP catalogue.
+  ///
+  /// In en, this message translates to:
+  /// **'Open connectors in Tools'**
+  String get connectorCardOpenTools;
+
+  /// Suggested-connector card: connect again (an add that was already sent is only checked, never repeated).
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get connectorCardTryAgain;
+
+  /// Suggested-connector card: builds the card again after the connection changed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen card'**
+  String get connectorCardReopen;
+
+  /// Tool step: the agent searched the connector catalogue already loaded on this phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Searched connectors'**
+  String get chatUiToolSearchedConnectors;
+
+  /// Tool step: a connector search matched nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No connectors found in the loaded catalogue.'**
+  String get chatUiConnectorSearchEmpty;
+
+  /// Tool step: the connector catalogue has not been loaded on this phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalogue not loaded. Open Tools > MCP to load it.'**
+  String get chatUiConnectorSearchNotLoaded;
+
+  /// Tool step: the connector search could not run.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector search is unavailable. Try again from Tools.'**
+  String get chatUiConnectorSearchUnavailable;
+
+  /// Tool step: the connector search request was refused.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid connector search request.'**
+  String get chatUiConnectorSearchInvalid;
+
+  /// Tool step: a found connector is not connected on this server.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get chatUiConnectorSearchNotConnected;
 }
 
 class _AppLocalizationsDelegate

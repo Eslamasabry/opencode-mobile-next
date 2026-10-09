@@ -28261,4 +28261,170 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get e7LocaleUiRussian => 'Русский';
+
+  @override
+  String connectorCardSuggests(String agent) {
+    return '$agent يقترح موصّلًا';
+  }
+
+  @override
+  String connectorCardAnnouncement(String agent, String name) {
+    return '$agent يقترح موصّلًا: $name';
+  }
+
+  @override
+  String get connectorCardRuns => 'يعمل';
+
+  @override
+  String get connectorCardLasts => 'المدة';
+
+  @override
+  String get connectorCardLastsValue => 'ما دام هذا الخادم يعمل';
+
+  @override
+  String get connectorCardRunsNode => 'على هذا الخادم، عبر Node';
+
+  @override
+  String get connectorCardRunsPython => 'على هذا الخادم، عبر Python';
+
+  @override
+  String get connectorCardRunsDocker =>
+      'داخل Docker، ولا يستطيع التطبيق تشغيله';
+
+  @override
+  String get connectorCardRunsNone => 'لا شيء يستطيع التطبيق تشغيله';
+
+  @override
+  String get connectorCardRunsHosted => 'مستضاف';
+
+  @override
+  String get connectorCardConnect => 'اتصال';
+
+  @override
+  String get connectorCardConnecting => 'جارٍ الاتصال…';
+
+  @override
+  String get connectorCardChecking => 'جارٍ فحص الاتصال…';
+
+  @override
+  String get connectorCardSignInNeeded => 'يحتاج هذا الموصّل إلى تسجيل دخولك.';
+
+  @override
+  String get connectorCardSignIn => 'تسجيل الدخول';
+
+  @override
+  String get connectorCardOpenSignIn => 'فتح صفحة تسجيل الدخول';
+
+  @override
+  String get connectorCardSignInWaiting =>
+      'بانتظار اكتمال تسجيل الدخول في المتصفح.';
+
+  @override
+  String get connectorCardManualCode =>
+      'الصق عنوان العودة من المتصفح أو رمز التفويض لإكمال تسجيل الدخول.';
+
+  @override
+  String get connectorCardCodeLabel => 'عنوان العودة أو الرمز';
+
+  @override
+  String get connectorCardCodeRequired => 'الصق عنوان العودة أو الرمز أولًا.';
+
+  @override
+  String get connectorCardFinishSignIn => 'إكمال تسجيل الدخول';
+
+  @override
+  String get connectorCardCheckStatus => 'فحص الحالة';
+
+  @override
+  String get connectorCardCancelSignIn => 'إلغاء تسجيل الدخول';
+
+  @override
+  String get connectorCardCancelTitle => 'إلغاء تسجيل الدخول؟';
+
+  @override
+  String connectorCardCancelBody(String name) {
+    return 'يتوقف $name عن الانتظار ويُمسح تسجيل دخوله المحفوظ. ستسجّل الدخول مجددًا لاستخدامه.';
+  }
+
+  @override
+  String get connectorCardKeepWaiting => 'متابعة الانتظار';
+
+  @override
+  String get connectorCardConnected => 'متصل';
+
+  @override
+  String get connectorCardToolsReady => 'الأدوات جاهزة';
+
+  @override
+  String get connectorCardLoadedTools =>
+      'تم تحميل الأدوات. تابع هذه المحادثة لاستخدامها.';
+
+  @override
+  String get connectorCardConnectedUnconfirmed =>
+      'متصل. لم يتم تأكيد توفّر الأدوات.';
+
+  @override
+  String get connectorCardFailureUnavailable =>
+      'ربط الأدوات من المحادثة غير متاح لهذا الوكيل.';
+
+  @override
+  String get connectorCardFailureInvalidSuggestion =>
+      'اقتراح هذا الموصّل غير متاح. تصفّح الموصّلات في الأدوات.';
+
+  @override
+  String get connectorCardFailureSetupRequired =>
+      'يحتاج هذا الموصّل إلى إعداد في الأدوات قبل أن يتصل.';
+
+  @override
+  String get connectorCardFailureNameConflict =>
+      'يوجد موصّل بهذا الاسم بالفعل. تحقق منه في الأدوات.';
+
+  @override
+  String get connectorCardFailureSourceChanged =>
+      'تغيّر اتصال هذه المحادثة. أعد فتح بطاقة الموصّل.';
+
+  @override
+  String get connectorCardFailureConnectFailed =>
+      'تعذّر تأكيد الاتصال. افحص حالته قبل المحاولة مجددًا.';
+
+  @override
+  String get connectorCardFailureAuthenticationFailed =>
+      'تعذّر تأكيد تسجيل الدخول. افحص حالته قبل المحاولة مجددًا.';
+
+  @override
+  String get connectorCardFailureOauthUnavailable =>
+      'تسجيل الدخول لهذا الموصّل غير متاح في هذه المحادثة.';
+
+  @override
+  String get connectorCardFailureNotConnected =>
+      'الموصّل غير متصل بعد. تحقق من إعداده في الأدوات.';
+
+  @override
+  String get connectorCardOpenTools => 'فتح الموصّلات في الأدوات';
+
+  @override
+  String get connectorCardTryAgain => 'إعادة المحاولة';
+
+  @override
+  String get connectorCardReopen => 'إعادة فتح البطاقة';
+
+  @override
+  String get chatUiToolSearchedConnectors => 'بحث في الموصّلات';
+
+  @override
+  String get chatUiConnectorSearchEmpty => 'لا موصّلات في الفهرس المحمّل.';
+
+  @override
+  String get chatUiConnectorSearchNotLoaded =>
+      'الفهرس غير محمّل. افتح الأدوات > MCP لتحميله.';
+
+  @override
+  String get chatUiConnectorSearchUnavailable =>
+      'البحث في الموصّلات غير متاح. حاول مجددًا من الأدوات.';
+
+  @override
+  String get chatUiConnectorSearchInvalid => 'طلب بحث الموصّلات غير صالح.';
+
+  @override
+  String get chatUiConnectorSearchNotConnected => 'غير متصل';
 }
