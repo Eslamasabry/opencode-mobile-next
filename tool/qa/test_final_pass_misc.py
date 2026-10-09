@@ -36,9 +36,10 @@ class FinalPassMiscTests(unittest.TestCase):
         )
 
     def test_bd7_incompatible_build_never_reads_artifact_or_touches_device(self):
+        self.context.candidate_build = 2204
         result = subject.run("bd7", {}, self.context)
         self.assertEqual(result, {
-            "status": "blocked", "reason": "bd7_requires_build_2202", "receipts": [],
+            "status": "blocked", "reason": "bd7_requires_build_2203", "receipts": [],
         })
         self.context.command.assert_not_called()
         self.context.capture.assert_not_called()

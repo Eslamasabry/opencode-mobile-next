@@ -18,7 +18,7 @@ class FinalPassTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.args = batch.parser().parse_args(['--execute', '--candidate-apk', '/candidate.apk',
-                                               '--candidate-build', '2203', '--date', '2026-10-09'])
+                                               '--candidate-build', '2204', '--date', '2026-10-09'])
         self.events = []
         self.locked = False
         self.build = None
@@ -39,7 +39,7 @@ class FinalPassTests(unittest.TestCase):
         if 'dumpsys' in argv:
             return type('Result', (), {'returncode': 0, 'stdout': f'versionCode={self.build}'.encode()})()
         self.events.append('restore' if argv[-1] == str(self.args.normal_apk) else 'install')
-        self.build = 2202 if self.events[-1] == 'restore' else 2203
+        self.build = 2203 if self.events[-1] == 'restore' else 2204
         return type('Result', (), {'returncode': 0, 'stdout': b''})()
 
     def dispatch(self, row, config, context):
@@ -201,7 +201,7 @@ class FinalPassTests(unittest.TestCase):
         def dispatch(row, config, context):
             result = self.dispatch(row, config, context)
             if row == 'ba-removal':
-                self.build = 2202
+                self.build = 2203
             return result
         self.assertEqual(self.execute(dispatch), 0)
         self.assertEqual(self.events.count('install'), 2)
@@ -213,7 +213,7 @@ class FinalPassTests(unittest.TestCase):
         def command(argv, **kwargs):
             result = self.command(argv, **kwargs)
             if self.events[-1] == 'restore' and 'dumpsys' in argv:
-                result.stdout = b'versionCode=2203'
+                result.stdout = b'versionCode=2204'
             return result
         self.assertEqual(self.execute(command=command), 1)
         self.assertIn('normal_restore_failed', (self.root/'docs/qa/final-pass-2026-10-09/README.md').read_text())

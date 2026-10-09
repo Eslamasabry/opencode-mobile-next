@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 import re
 import sys
+import time
 import xml.etree.ElementTree as ET
 
 from PIL import Image, ImageDraw
@@ -136,6 +137,26 @@ def make_ports(agent_id, output):
 confirm_continuation = run.confirm_continuation
 
 
+def prepare_absent_target(ports, agent_id, name):
+    """Remove only this row's idle partial payload through the product UI."""
+    inv = ports.target_inventory(agent_id)
+    if inv.get('targetPids') != []:
+        raise RuntimeError('target_not_absent')
+    if inv.get('leftovers') is False:
+        return False
+    if ports.app_remove(agent_id, name) is not True:
+        raise RuntimeError('target_not_absent')
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
+        after = ports.target_inventory(agent_id)
+        if (after.get('leftovers') is False and after.get('targetPids') == []
+                and after.get('allocatedBytes') == 0 and after.get('staging') == []
+                and after.get('lockPresent') is False):
+            return True
+        time.sleep(.25)
+    raise RuntimeError('target_not_absent')
+
+
 def run_case(agent_id, *, artifact, output, ports_factory=None):
     if agent_id not in run.TARGETS:
         raise RuntimeError('unsupported_agent')
@@ -150,6 +171,7 @@ def run_case(agent_id, *, artifact, output, ports_factory=None):
             raise RuntimeError('insufficient_real_storage')
         p.require_idle_setup()
         run.verify_artifact(artifact)
+        result['partialTargetRemovedViaApp'] = prepare_absent_target(ports, agent_id, metadata.get(agent_id, {}).get('name', agent_id))
         for other in run.TARGETS:
             inv = ports.target_inventory(other)
             if inv['leftovers'] or inv['targetPids']:

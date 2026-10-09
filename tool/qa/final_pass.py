@@ -24,7 +24,7 @@ if __package__ in (None, ''):
 
 ROOT = Path(__file__).resolve().parents[2]
 LOCK = Path('/home/eslam/Storage/tmp/oc-emulator.lock')
-NORMAL = Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk')
+NORMAL = Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk')
 PACKAGE = 'io.github.eslamasabry.opencode_mobile'
 ROWS = ('fq9-upgrade', 'ba-install', 'ba-removal', 'ba-storage-floor', 'bb5',
         'fq3', 'fq9-background', 'bd7', 'fb1', 'demo')
@@ -59,10 +59,10 @@ def plan(args):
             'rows': list(selected_rows(args)),
             'deferredRows': [row for row in ROWS if row not in selected_rows(args)],
             'backgroundCheckpointsSeconds': [] if args.fast else [300, 1800],
-            'normalBuild': 2202, 'summary': str((args.output or Path(f'docs/qa/final-pass-{args.date}')) / 'README.md'),
+            'normalBuild': 2203, 'summary': str((args.output or Path(f'docs/qa/final-pass-{args.date}')) / 'README.md'),
             'requirements': ['reviewed_candidate_apk', 'matching_signer', 'compatible_driver_inputs',
                              'prepared_synthetic_fixtures'] + ([] if args.fast else ['manual_demo_operator']),
-            'qualification': 'FB1 checks a plan only; demo requires a separate privacy review.'}
+            'qualification': 'Only observed driver receipts qualify; fresh-device execution needs explicit inputs and demo needs privacy review.'}
 
 
 def load_inputs(path):
@@ -113,7 +113,7 @@ def verify_apks(args):
     if args.candidate_apk is None or args.candidate_build is None:
         raise BatchError('candidate_required')
     identities = []
-    for path, build in ((args.candidate_apk, args.candidate_build), (args.normal_apk, 2202)):
+    for path, build in ((args.candidate_apk, args.candidate_build), (args.normal_apk, 2203)):
         path = path.absolute()
         if any(p.is_symlink() for p in (path, *path.parents)) or not path.is_file():
             raise BatchError('artifact_unavailable')
@@ -151,7 +151,7 @@ class Context:
     def __init__(self, root, output, args, fd, command=None):
         self.root, self.output = root, output
         self.candidate, self.candidate_build = args.candidate_apk.absolute(), args.candidate_build
-        self.normal_apk, self.normal_build = args.normal_apk.absolute(), 2202
+        self.normal_apk, self.normal_build = args.normal_apk.absolute(), 2203
         self.lock_fd, self.run_id = fd, 'final-' + uuid.uuid4().hex[:12]
         self._command = command
     def validate_fd(self, fd):
@@ -186,6 +186,24 @@ class Context:
 
 
 def dispatch(row, config, context):
+    if row == 'ba-storage-floor' and config == {'skip_reason': 'stale_storage_floor_artifact'}:
+        receipt = context.output / 'ba-storage-floor.json'
+        receipt.write_text(json.dumps({'state': 'blocked', 'reason': 'stale_storage_floor_artifact',
+                                      'deviceTouched': False}, indent=2) + '\n')
+        return {'status': 'blocked', 'reason': 'stale_storage_floor_artifact', 'receipts': [str(receipt)]}
+    if row == 'bb5' and config == {'skip_reason': 'qa_2203_artifact_unavailable'}:
+        receipt = context.output / 'bb5-prerequisite.json'
+        receipt.write_text(json.dumps({'state': 'blocked', 'reason': 'qa_2203_artifact_unavailable', 'deviceTouched': False}) + '\n')
+        return {'status': 'blocked', 'reason': 'qa_2203_artifact_unavailable', 'receipts': [str(receipt)]}
+    if row == 'fb1' and config.get('provision_fresh') is True:
+        from tool.qa.final_pass_live import fresh
+        return fresh(context)
+    if row == 'fq9-background' and config.get('prepare_fixture') is True:
+        from tool.qa.final_pass_live import background
+        return background(context, config)
+    if row == 'demo' and config.get('offline_demo') is True:
+        from tool.qa.final_pass_live import demo
+        return demo(context)
     if row.startswith('ba-') or row == 'bb5':
         from tool.qa.final_pass_install import run
     elif row.startswith('fq'):
@@ -235,6 +253,9 @@ def execute(args, *, root=ROOT, lock=reservation, command=None, verify=verify_ap
     rows = selected_rows(args)
     configs = load_inputs(args.inputs)
     output = args.output or root / 'docs/qa' / f'final-pass-{args.date}'
+    if not output.is_absolute():
+        output = root / output
+    output = output.absolute()
     if output.exists():
         raise BatchError('output_already_exists')
     output.mkdir(parents=True)
@@ -254,7 +275,8 @@ def execute(args, *, root=ROOT, lock=reservation, command=None, verify=verify_ap
         device_safe, candidate_selected = True, False
         try:
             for row in rows:
-                if not device_safe and row != 'fb1':
+                if (not device_safe and row not in ('fb1', 'ba-storage-floor')
+                        and not (row == 'bb5' and configs.get(row, {}).get('skip_reason'))):
                     results.append(outcome(row, 'blocked', 'device_prerequisite_failed'))
                     write_summary(output, results, identities)
                     continue

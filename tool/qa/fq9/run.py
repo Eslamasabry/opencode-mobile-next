@@ -359,7 +359,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if not CANDIDATE_BUILD <= args.candidate_build <= 999999 or (
-            args.candidate_build != CANDIDATE_BUILD and args.case != "upgrade"
+            args.candidate_build != CANDIDATE_BUILD and args.case not in ("upgrade", "background", "fresh")
         ):
             raise DriverFailure("invalid_candidate_build")
         if not re.fullmatch(r"fq9-[A-Za-z0-9_-]{1,80}", args.run_id):
