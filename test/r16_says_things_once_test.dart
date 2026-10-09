@@ -328,7 +328,16 @@ void main() {
         'missing ones work elsewhere', (tester) async {
       _size(tester, const Size(412, 2000));
       final controller = await systemController(
-        const ServerCapabilities(pluginInventory: true),
+        const ServerCapabilities(
+          pluginInventory: true,
+          developmentServices: true,
+          webSearch: true,
+          messageDelete: true,
+          savedPermissionList: true,
+          permissionRequests: true,
+          inbox: true,
+          mcpConfigWrites: true,
+        ),
       );
       addTearDown(controller.dispose);
       await tester.pumpWidget(
