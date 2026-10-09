@@ -1,0 +1,20 @@
+{
+  "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt": "0ca06e6ea267a712588085dbc619570eaa8161ae24d03fd5115b1b15e2f36c6b",
+  "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentHost.kt": "2eeeba13cdee5234e2b431e4bab96fbf105518a3a63c87f209fb2765c2d47593",
+  "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ServiceDiagnostics.kt": "105a054da83953e40c7ba4b960a11ed4da09babb0d475243e3fba3cb66abaab9",
+  "android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile/ServiceDiagnosticsTest.kt": "d3c9e8bf28dee0814d6feffe96b5713c5f2cef3e389f12631e98fbcc286ef53f",
+  "lib/builtin/agent_helper_diagnostics.dart": "82d89b7f6f78fa1a90d835f047827680caf7da35ab735f155691c2ceb5a3f34d",
+  "lib/builtin/agents/phone_agents_host.dart": "b4df3d917b2dd460fed4e783c3139a4c5c6e8f71eb9fc140ffc9707e4afb0cd7",
+  "lib/builtin/builtin_linux.dart": "53973453967dfb09500a78a8078bbc434d7b197737e2490fe681be9669661609",
+  "lib/diagnostics/device_diagnostics_gateway.dart": "b6fa676368c0f84f72fc55e5cf67c06970bf0a3ea6f576523406f985a036078a",
+  "lib/domain/agent_helper_status.dart": "370e2b9a8c2fa6fa221039f3c20a40efe54121e924f5c83f5d5607c3fa431e41",
+  "lib/domain/app_exit_history.dart": "87c22a5227877a774fddd7be90a536b9613200feb6acf9e0bfbe8aeeebbb36d3",
+  "lib/domain/turn_stall.dart": "94575cacb7f07622f0e099445c0a6b9729693542dfecbf8af570a583be16a3c0",
+  "lib/state/connection/phone_agents.dart": "7d0a0934a5db15e4442c3433beb0e7245f790426d8e7487858c70f9ad2ff484f",
+  "lib/state/connection/phone_agents_backend.dart": "3b6085b56baf8734efb3e14de4e07667d6e13167a3c18ec37562c5a1a7558d6c",
+  "lib/state/phone_agent_host_port.dart": "07a31a7b0574db6354ef4a9ddecb183ce984b5757e507f1991cad887478a77ca",
+  "test/agent_helper_diagnostics_test.dart": "d05067de647cd420999c1bbd79ed296c9052753dc9f838f168a6ef55c3297950",
+  "test/device_diagnostics_gateway_test.dart": "d87b6a751e0f8160218e66922ea8a21cafe5e27720acfa8e89221cf4c6412922",
+  "test/phone_agents_controller_test.dart": "973e7ae3844de15b0907fc227ded15e074512ed46763bae8e6477a2f1f1429c6",
+  "test/phone_agents_host_test.dart": "600028fbd6136a907e97fbda4a8d13a447568d7f4692cd773e723dbdbc9e8429"
+}

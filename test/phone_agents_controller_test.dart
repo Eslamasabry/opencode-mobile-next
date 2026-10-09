@@ -266,6 +266,7 @@ class _BrowserPort implements BrowserClaudeLaunchPort {
 }
 
 class _HostState {
+  Future<AgentHelperStatus> Function()? readHelperStatus;
   Future<AgentPhoneCheckResult> Function(String)? selfTestHandler;
   Future<AgentAuthProbeResult> Function(String)? probeHandler;
   final auth = <String, AgentAuthProbeResult>{};
@@ -294,6 +295,13 @@ class _HostState {
 
   /// How many next connects fail like a helper Android stopped.
   int failOpens = 0;
+}
+
+class _DiagnosticHost extends _FakeHost implements PhoneAgentDiagnosticsPort {
+  _DiagnosticHost(super.events, super.profileId, super.state);
+  @override
+  Future<AgentHelperStatus> helperStatus() async =>
+      await state.readHelperStatus?.call() ?? const AgentHelperStatus();
 }
 
 class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
@@ -636,6 +644,7 @@ Future<_World> _world(
   BrowserClaudeLaunchRegistry? browserClaudeLaunchRegistry,
   bool removalSupported = false,
   bool idleSupported = false,
+  bool diagnosticsSupported = false,
 }) async {
   final profileJson = {
     'id': 'local',
@@ -687,6 +696,8 @@ Future<_World> _world(
           ? _IdleHost(events, profile.id, state)
           : removalSupported
           ? _RemovableHost(events, profile.id, state)
+          : diagnosticsSupported
+          ? _DiagnosticHost(events, profile.id, state)
           : _FakeHost(events, profile.id, state);
       hosts.add(host);
       return host;
@@ -715,6 +726,37 @@ void main() {
       (_) async => null,
     );
   });
+
+  test(
+    'BD13 helper evidence is read-only and rejects late disposed results',
+    () async {
+      final w = await _world(null, diagnosticsSupported: true);
+      w.state.runtimes = {'claude': _ready('claude')};
+      await w.controller.refreshAgentRows();
+      final expected = AgentHelperStatus(
+        running: false,
+        lastExitAt: DateTime.utc(2026, 10, 9),
+        lastExitCode: 137,
+        lastStopRequested: false,
+        possibleResourceKill: true,
+      );
+      w.state.readHelperStatus = () async => expected;
+      final before = w.events.log
+          .where((entry) => entry == 'host.start')
+          .length;
+      expect(await w.controller.phoneAgentHelperStatus(), same(expected));
+      expect(
+        w.events.log.where((entry) => entry == 'host.start').length,
+        before,
+      );
+      final delayed = Completer<AgentHelperStatus>();
+      w.state.readHelperStatus = () => delayed.future;
+      final pending = w.controller.phoneAgentHelperStatus();
+      w.controller.dispose();
+      delayed.complete(expected);
+      expect(await pending, isNull);
+    },
+  );
 
   _genUiFeedRefreshTests();
   _nativeQuestionControllerTests();

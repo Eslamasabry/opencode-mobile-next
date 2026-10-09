@@ -1,0 +1,15 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_helper_diagnostics_test.dart
+00:00 +0: recent exits names only observed unexpected helper exits without profile data
+00:00 +0 -1: recent exits names only observed unexpected helper exits without profile data [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/agent_helper_diagnostics_test.dart 104:7       main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_helper_diagnostics_test.dart: recent exits names only observed unexpected helper exits without profile data

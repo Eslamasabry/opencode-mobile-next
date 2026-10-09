@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'agent_helper_status.dart';
+
 /// A 5-second timer starts a bounded probe after 45 seconds of silence. Even
 /// the latest tick completes its 10-second probe within 60 seconds.
 const turnStallSilence = Duration(seconds: 45);
@@ -14,11 +16,13 @@ final class TurnStallEvidence {
   const TurnStallEvidence({
     required this.transportConnected,
     this.helperRunning,
+    this.helperStatus,
     this.endpointReachable,
   });
 
   final bool transportConnected;
   final bool? helperRunning;
+  final AgentHelperStatus? helperStatus;
   final bool? endpointReachable;
 }
 
@@ -85,7 +89,8 @@ final class TurnStallDiagnosis {
     TurnStallKind.modelSlow =>
       'The model may be taking longer. Wait or stop and try again.',
     TurnStallKind.helperDown =>
-      'The agent helper stopped. Restart it and try again.',
+      evidence.helperStatus?.notice ??
+          'The agent helper stopped. Restart it and try again.',
     TurnStallKind.network =>
       evidence.endpointReachable == false || !evidence.transportConnected
           ? 'The connection to the agent was lost. Reconnect and try again.'

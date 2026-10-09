@@ -1,0 +1,74 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_helper_diagnostics_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_helper_diagnostics_test.dart: helper metadata survives restart and has cautious plain notice
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_helper_diagnostics_test.dart: malformed and old metadata cannot invent a dated kill
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bd/test/agent_helper_diagnostics_test.dart: recent exits names only observed unexpected helper exits without profile data
+00:00 +3: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/device_diagnostics_gateway_test.dart
+00:01 +3: /home/eslam/Storage/Code/oc_app-sol-bd/test/device_diagnostics_gateway_test.dart: BD13 device diagnostics separates helper deaths from Android app exits
+00:01 +4: /home/eslam/Storage/Code/oc_app-sol-bd/test/device_diagnostics_gateway_test.dart: gateway history is repeatable and never consumes launch recovery
+00:01 +5: /home/eslam/Storage/Code/oc_app-sol-bd/test/device_diagnostics_gateway_test.dart: gateway preview stays off until consent and shares exact safe text
+00:01 +6: /home/eslam/Storage/Code/oc_app-sol-bd/test/device_diagnostics_gateway_test.dart: clearing captured evidence invalidates a gateway preview
+00:01 +7: /home/eslam/Storage/Code/oc_app-sol-bd/test/device_diagnostics_gateway_test.dart: gateway notifies listeners of the existing background owner pause
+00:01 +8: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart
+00:02 +8: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: BD13 helper status reads only persisted narrow native facts
+00:02 +9: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: BA1 probe uses the stable private home and returns only narrow account facts
+00:02 +10: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: BA1 missing private bridge stays unavailable and never uses setup output
+00:02 +11: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: shared engine installs as oc with Python and conditional host Node
+00:02 +12: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: the native host launches Paseo 0.9.2 without removed launch flags
+00:02 +13: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: ARM64 gate requires install version daemon and exact Paseo hello
+00:02 +14: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: x64 pass cannot qualify ARM64 and changed architecture invalidates gate
+00:02 +15: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: legacy fx check still qualifies after owner migration and never after failed retry
+00:02 +16: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: failed retry clears prior proof and never starts daemon after wrong version
+00:02 +17: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: stopped self-test cannot start a daemon after a late version check
+00:02 +18: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: restore and cancel cannot operate another profile setup job
+00:02 +19: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: cancel after handoff still stops an exactly owned setup job
+00:02 +20: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: cancel during local checks never hands an install to native
+00:02 +21: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: cancel retires an install awaiting architecture
+00:02 +22: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: cancel retires an install awaiting preparation
+00:02 +23: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: native storage guard includes codex catalog install peak
+00:02 +24: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: native storage guard includes goose catalog install peak
+00:02 +25: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: native storage guard includes omp-acp catalog install peak
+00:02 +26: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: native storage guard includes fx catalog install peak
+00:02 +27: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: running installation requires continue instead of a second install
+00:02 +28: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: background loss exposes resume and reuses the Keystore slot
+00:02 +29: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: restore resumes same persisted component selection with safe progress
+00:02 +30: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: profile removal drains native account home before deleting password
+00:02 +31: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: failed native drain preserves profile and secure slot for retry
+00:02 +32: /home/eslam/Storage/Code/oc_app-sol-bd/test/phone_agents_host_test.dart: saved-sign-in reset includes orphan agent slots and preserves unrelated secrets
+00:02 +33: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_performance_diagnostics_test.dart
+00:03 +33: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_performance_diagnostics_test.dart: performance reads each service lifetime through the channel
+00:03 +34: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_performance_diagnostics_test.dart: older APKs and absent channel results have no service records
+00:03 +35: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_performance_diagnostics_test.dart: malformed service containers and entries are ignored
+00:03 +36: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_performance_diagnostics_test.dart: malformed numeric fields never fabricate an exit or uptime
+00:03 +37: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_performance_diagnostics_test.dart: an unknown reason stays unknown even with exit 137
+00:03 +38: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_performance_diagnostics_test.dart: zero durations are observations rather than missing values
+00:03 +39: /home/eslam/Storage/Code/oc_app-sol-bd/test/builtin_performance_diagnostics_test.dart: unsupported platforms return an empty snapshot without a call
+00:03 +40: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/turn_stall_test.dart
+00:04 +40: /home/eslam/Storage/Code/oc_app-sol-bd/test/turn_stall_test.dart: changed liveness evidence rechecks without resetting silence
+00:04 +41: /home/eslam/Storage/Code/oc_app-sol-bd/test/turn_stall_test.dart: BA7 classifies healthy silence as model slow, stopped helper and connection loss
+00:04 +42: /home/eslam/Storage/Code/oc_app-sol-bd/test/turn_stall_test.dart: BA7 timer cadence and one hung probe remain within sixty seconds
+00:04 +43: /home/eslam/Storage/Code/oc_app-sol-bd/test/turn_stall_test.dart: BA7 throwing probe returns only safe unknown evidence
+00:04 +44: /home/eslam/Storage/Code/oc_app-sol-bd/test/turn_stall_test.dart: BA7 silence is per turn and progress invalidates an in-flight probe
+00:04 +45: /home/eslam/Storage/Code/oc_app-sol-bd/test/turn_stall_test.dart: BA7 waiting for user suppresses stalls and restarts silence when answered
+00:04 +46: /home/eslam/Storage/Code/oc_app-sol-bd/test/turn_stall_test.dart: BA7 completed, replaced and reset connections discard old probes
+00:04 +47: /home/eslam/Storage/Code/oc_app-sol-bd/test/turn_stall_test.dart: BA7 repeated busy statuses do not keep resetting silence
+00:04 +48: /home/eslam/Storage/Code/oc_app-sol-bd/test/turn_stall_test.dart: BA7 tracker memory is bounded and blank session ids are ignored
+00:04 +49: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart
+00:05 +49: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: exit history bridge invalid limits make no native request
+00:05 +50: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: exit history bridge supported empty, unsupported and absent channel are distinct
+00:05 +51: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: exit history bridge read errors expose a typed failure without native text
+00:05 +52: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: exit history bridge history is newest first, capped, immutable and UTC
+00:05 +53: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: exit history bridge default and boundary limits are forwarded unchanged
+00:05 +54: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: exit history bridge classification reuses recovery including update subreasons
+00:05 +55: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: exit history bridge malformed metadata cannot become a successful empty history
+00:05 +56: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: exit history bridge history reads leave the startup recovery operation independent
+00:05 +57: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: domain history snapshots its input and normalizes entry time
+00:05 +58: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: native exit history policy (setUpAll)
+00:05 +58: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: native exit history policy query-bounds
+00:05 +59: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: native exit history policy main-process-history
+00:05 +60: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: native exit history policy safe-summaries
+00:05 +61: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: native exit history policy read-failure
+00:05 +62: /home/eslam/Storage/Code/oc_app-sol-bd/test/app_exit_history_test.dart: native exit history policy (tearDownAll)
+00:05 +62: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/file_size_ratchet_test.dart
+00:06 +62: /home/eslam/Storage/Code/oc_app-sol-bd/test/file_size_ratchet_test.dart: no lib file grows past its line budget
+00:06 +63: /home/eslam/Storage/Code/oc_app-sol-bd/test/file_size_ratchet_test.dart: the baseline only lists files over the limit
+00:06 +64: All tests passed!

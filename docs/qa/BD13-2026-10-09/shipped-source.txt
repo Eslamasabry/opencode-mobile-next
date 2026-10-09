@@ -1,0 +1,60 @@
+Paseo local shipped-package source evidence (offline).
+Package versions: @getpaseo/cli=0.9.2, @getpaseo/server=0.9.2, @anthropic-ai/claude-agent-sdk=0.3.246
+SHA-256 pins package files; selected lines below preserve the relevant source observations, not runtime proof.
+
+@getpaseo/cli/dist/commands/daemon/start.js sha256=0f78c30f71d905b75f182d5befcc505894316a1d35a34b5d1446e4f7d3100b5f
+  L4: import { launchLocalDaemon, parseTimeoutMs, rejectRemovedLaunchFlags } from "./local-daemon.js";
+  L16: const result = await launchLocalDaemon({ home, timeoutMs: parseTimeoutMs(options.timeout) });
+  L40: const result = await launchLocalDaemon({
+  L42: foreground: true,
+
+@getpaseo/cli/dist/commands/daemon/local-daemon.js sha256=9f60e5ddedeebd6ea7a493af8306ea63569a21f7319b7bce1f3726894b0366f7
+  L5: import { startDaemonInstance, resolvePaseoHome } from "@getpaseo/server/daemon-control";
+  L41: export async function launchLocalDaemon(options) {
+  L48: return await startDaemonInstance({
+  L50: command: process.execPath,
+
+@getpaseo/server/dist/server/server/daemon-instance.js sha256=2d647dbbc0968cd70d0a93d7a0c00e3486c3dfc9acda9c2e3e82a3939f8d4830
+  L141: export async function startDaemonInstance(input) {
+  L147: const child = spawn(input.command, input.args, {
+  L160: exit = { code: code ?? 1 };
+  L196: ...(foreground ? { exitCode: await exited } : {}),
+
+@getpaseo/server/dist/scripts/supervisor-entrypoint.js sha256=3664afe7b06cb94dc7af7d8d956357a9d2a74ba344c52104ac29d99d79eca51e
+  L130: command: process.execPath,
+  L143: restartOnCrash: true,
+
+@getpaseo/server/dist/scripts/supervisor.js sha256=4e8e55ce4dcd0f160f240f0fca94e7e37e976c32d1bf3d268c737f1f629e58bf
+  L163: child = spawn(spawnSpec.command, spawnSpec.args, {
+  L169: child = fork(workerEntry, workerArgs, {
+  L241: child.on("exit", (code, signal) => {
+  L253: writeLifecycleLog("Worker exited", { code, signal, exit: exitDescriptor });
+  L255: log(`Worker exited before successful readiness (${exitDescriptor}). Supervisor exiting.`);
+  L260: log(`Worker exited (${exitDescriptor}). Supervisor shutting down.`);
+  L270: : `Worker exited (${exitDescriptor}). Restarting worker...`);
+  L274: log(`Worker exited (${exitDescriptor}). Supervisor exiting.`);
+
+@getpaseo/server/dist/server/server/bootstrap.js sha256=299bed0f99255c52d892302f4b7ef52628fa0298856c3223b4e13fa2115c483a
+  L388: const terminalManager = createConfiguredTerminalManager({
+
+@getpaseo/server/dist/server/terminal/terminal-manager-factory.js sha256=208b2db1879c81db9e2b86206772d433567e6114aaf19dc52e72fa2dd2fc1f8d
+  L3: return createWorkerTerminalManager(options);
+
+@getpaseo/server/dist/server/terminal/worker-terminal-manager.js sha256=4cb831c26c40b6ab3af58eb9c00c33c8b3435c2574916af64b3307e0188392f8
+  L57: return fork(fileURLToPath(resolveWorkerUrl()), [], {
+  L64: const worker = managerOptions.forkWorker ? managerOptions.forkWorker() : forkTerminalWorker();
+
+@getpaseo/server/dist/server/server/agent/providers/claude/query.js sha256=8e3c8cb6e7c09c6cd3b1a88d8fba3569333922556b35c718122bf82872f60842
+  L31: spawnClaudeCodeProcess: (spawnOptions) => {
+  L54: const child = spawnProcess(command, args, {
+  L64: shell: false,
+
+@getpaseo/server/dist/server/server/agent/providers/claude/agent.js sha256=a7f44bc07db03f05ebae85ea59b93cb40e85cf6e880a751cb2d5082247c44e3d
+  L2635: pathToClaudeCodeExecutable: claudeBinary,
+  L2643: settingSources: CLAUDE_SETTING_SOURCES,
+
+@getpaseo/server/dist/server/server/agent/providers/claude/subagents/live-source.js sha256=e8d0fad4a66e32ceab38af2b54b84f9fe401c4f36160d8a6e7711275f4df2036
+  L3: /** Task-tool subagents. Backgrounded shell commands announce as `local_bash`. */
+  L5: /** Workflow executions use the same announced task lifecycle as Task-tool subagents. */
+  L10: *   Task subagent      task_type "local_agent", subagent_type "general-purpose"
+
