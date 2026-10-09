@@ -92,16 +92,10 @@ extension _PhoneAgentIdle on _ConnectionControllerPhoneAgents {
     }
   }
 
-  bool _paIdleCurrent(
-    PhoneAgentHostPort host,
-    String owner,
-    int epoch,
-    int generation,
-  ) =>
+  bool _paIdleCurrent(PhoneAgentHostPort host, String owner, int epoch) =>
       !_self._disposed &&
       !_self._lifecycleWasBackgrounded &&
       _paIdleLifecycleEpoch == epoch &&
-      _self._generation == generation &&
       identical(_paHost, host) &&
       _paHostProfile == owner &&
       _paProfile?.id == owner &&
@@ -134,8 +128,10 @@ extension _PhoneAgentIdle on _ConnectionControllerPhoneAgents {
     }
     if (host is! PhoneAgentIdleHostPort) return Future.error(_idleUnavailable);
     final epoch = _paIdleLifecycleEpoch;
-    final generation = _self._generation;
-    bool current() => _paIdleCurrent(host, owner, epoch, generation);
+    // Reconnecting this owner's OpenCode transport does not revoke the
+    // helper's native idle receipt. Owner/lifecycle changes have their own
+    // epoch, and every completion still checks the native generation.
+    bool current() => _paIdleCurrent(host, owner, epoch);
     final token = Object();
     _paIdleToken = token;
     _paIdleOwner = owner;
@@ -239,7 +235,9 @@ extension _PhoneAgentIdle on _ConnectionControllerPhoneAgents {
     final epoch = _paIdleLifecycleEpoch;
     final generation = _self._generation;
     bool current() =>
-        owner != null && _paIdleCurrent(host, owner, epoch, generation);
+        owner != null &&
+        _self._generation == generation &&
+        _paIdleCurrent(host, owner, epoch);
     if (!current()) throw _idleStale;
     if (host is PhoneAgentIdleHostPort) {
       final state = await (host as PhoneAgentIdleHostPort).idleState().timeout(
