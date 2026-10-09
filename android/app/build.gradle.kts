@@ -86,7 +86,8 @@ android {
             signingConfig = signingConfigs.getByName("release")
             // Release instrumentation shares the target's Kotlin/native ABI.
             // R8 prototype rewrites otherwise break test-APK calls into it.
-            if (ocPreview || ocStableEngineQa || ocBd9Smoke) proguardFiles("phone-engine-instrumentation.pro")
+            if (ocPreview || ocStableEngineQa || ocBd9Smoke || ocBuiltinRuntimeQa)
+                proguardFiles("phone-engine-instrumentation.pro")
         }
     }
 }
@@ -148,7 +149,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     // Flutter 3.47 excludes dev plugins from release configurations. The
     // explicit AOT smoke needs the native result bridge in this test build.
-    if (ocBd9Smoke) add("releaseImplementation", project(":integration_test"))
+    // Runtime QA also retains the generated integration-test plugin registrant.
+    if (ocBd9Smoke || ocBuiltinRuntimeQa) add("releaseImplementation", project(":integration_test"))
     // All instrumentation sources compile together, including the BD9 runner.
     // Its bridge stays in the test APK for other QA/production target variants.
     androidTestImplementation(project(":integration_test"))

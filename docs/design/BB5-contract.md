@@ -221,8 +221,9 @@ opt into manual Start. Exact wording/localization is frontend-owned.
 ## Acceptance and current blockers
 
 BA busy truth and guarded helper restoration are merged, and foreground
-orchestration passes focused Dart tests. Native compile/JVM, rollback regressions
-and emulator qualification remain gates. BB4's
+orchestration passes focused Dart tests. Merged native Kotlin/Java compile and259 focused JVM cases now pass, including
+rollback/admission regressions. QA target/runner builds and emulator qualification
+remain gates. BB4's
 OpenCode ReplyWatch lease does not establish all-agent busy truth.
 Do not enable a partial timer that can interrupt a live agent or immediately
 restart a helper after stopping it.
@@ -242,3 +243,12 @@ prove no late replacement. Host/JVM tests do not establish this device behavior.
 
 Native release and all-agent BA integration/device proof remain separate gates;
 this document is a dependency contract, not completion evidence.
+
+
+2026-10-09 build-window checkpoint: default-off policy, channel methods and state
+copy above are implemented; merged native compile/unit proof is recorded in
+[BB5 evidence](../qa/BB5-integration-2026-10-08/README.md). Device acceptance is
+still pending. Explicit runtime-QA builds retain the same Kotlin/Flutter ABI as
+the separate instrumentation APK via existing QA-only ProGuard rules and supply
+the generated integration-test plugin's release dependency. Ordinary builds
+retain their existing configuration; the one-QA-runner limit remains in force.

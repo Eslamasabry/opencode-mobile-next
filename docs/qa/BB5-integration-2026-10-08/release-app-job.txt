@@ -1,0 +1,3 @@
+START_CAPPED_APP availableMiB=5182
+OWNED_DAEMON_CLEANUP tracked=[3290663] remaining=[] intermediatesAbsent=True
+BUILD_EXIT=0

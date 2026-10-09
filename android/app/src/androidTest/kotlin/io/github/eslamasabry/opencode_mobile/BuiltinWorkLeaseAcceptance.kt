@@ -41,7 +41,11 @@ internal class BuiltinWorkLeaseAcceptance(private val instrumentation: Instrumen
             linux.setChatWorkLease(name, false, 1000)
             linux.withSetupWork {
                 requireSafe(linux.workHeld && count(linux, "setup") == 1)
-                val host = linux.startAgentProcess(profile, listOf("/bin/sh", "-c", "IFS= read -r unused"))
+                val ticket = linux.captureAgentHostStart(profile, false, null)
+                    ?: error("bb4_work_leases_refused")
+                val host = linux.withAgentHostStart(ticket) {
+                    linux.startAgentProcess(profile, listOf("/bin/sh", "-c", "IFS= read -r unused"))
+                }
                 helper = host
                 linux.trackPrivateAgentService("agent-host.$profile", host, null)
                 requireSafe(linux.setPhoneAgentChatWorkLease(profile, name, true, 15000)["held"] == true)

@@ -1,0 +1,11 @@
+Source context c8e6e5ef2 plus owned BB5 integration, compiled in target/runner builds; no device execution.
+55946b707f37eab0daf8b485b149176475e39bc19de30936cb2128cf55194b96  android/app/build.gradle.kts
+05df141d93b7bc02308a82b6fdc5a567efab202c372eaaa36ce33a54aea1d3f1  android/app/src/main/AndroidManifest.xml
+b779aa63bf1a2ecc3b7f3d3d40f883ee226f56aaf832860dca8a1f8deceecae5  android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt
+bb67bd77b5063cfe2974866e276bbf6839efb999b9033190562a5496327ef956  android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/MainActivity.kt
+5be70649ce92cb759b6711db123dc6a6d4fdc1cba2a0a3fb409cd8d82a433d36  android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeIdleReturnNotificationHost.kt
+b8d110f0e4fc7d02ef3012a0f47898a09c7e24557096447004df674a8dd206d8  android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinIdleAcceptance.kt
+a53e04775f60886751800c03b2eff76a9e730790718e65c03a97bba5c127ee9a  android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinRuntimeAcceptance.kt
+9407214010a9535ebd7f7dfa9c1a1b46fd2c12064b0e29d1d2d72e5115ffeb19  android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinWorkLeaseAcceptance.kt
+9f1cfd45715fbac32db09663a41bdfd199e41fe872065acc55f3db725561f234  android/app/src/main/res/values/bb_idle_strings.xml
+95fa8529a0aadb243b8d9681b354d32d2deb5092659bb5a7cb9f72be6d9e52da  android/app/src/main/res/values-ar/bb_idle_strings.xml

@@ -1,9 +1,10 @@
 # BB5 integration checkpoint — 2026-10-08
 
-State: Dart integration and focused native/JVM regression proof passed before
-the latest coordinator merge. The merged native candidate and QA release APK
-remain in progress; no new APK or BB device qualification exists. Idle policy
-defaults off. This is not BB5 completion, a release or all-agent certification.
+State: implemented; merged native Kotlin/Java compile and259 focused Gradle/JVM
+tests pass. Signed release target and instrumentation runner builds pass, with
+artifact hash/signer/version verification and exact owned daemon/intermediate
+cleanup. BB5 device qualification remains pending the coordinator's emulator
+restart. Idle policy defaults off; this is not completion or release.
 
 Finish line: stop the owned server and previously live helper after known idle
 work in background, then resume their recorded intent on foreground return or
@@ -247,3 +248,57 @@ is closed. No merged native job started. The coordinator then assigned the
 Its uncompiled production draft changes BuiltinLinux, so the older native
 manifest is a historical BB5-only snapshot; the new follow-up manifest records
 the combined candidate. Native/APK work still requires BB BUILD WINDOW OPEN.
+
+
+## 2026-10-09 exclusive build window
+
+Merged candidate is b263e23c0 plus the native idle and BB9 dead-ticket follow-up
+working changes. Actual release Kotlin/Java compile and all 259 selected JVM
+tests passed ([log](native-gradle-focused.txt),
+[counts](native-gradle-merged-counts.txt)). This includes the previous 172 idle/
+work tests plus installer admission18, ownership35, visibility13 and component
+recovery21. One duplicate annotation compile failure was corrected; it is not
+a behavioral red ([failure](native-gradle-duplicate-annotation-failure.txt)).
+
+Fresh memory admission was 5154 MiB for the passing Gradle run. The window-only
+cap is 3 GB, two workers, Kotlin in-process. Exact owned daemon3286790 was
+removed; none remained and own intermediates were deleted. Failed compile
+daemon3285152 was likewise removed. No watchdog kill occurred in either job.
+The coordinator holds the stopped emulator; no device command ran.
+
+
+## Signed QA APK checkpoint
+
+Pinned Flutter release target2198 built successfully in240.1seconds, with native
+engine/sandbox/boundary packaging gates passing. The separate release runner
+built successfully in97seconds; the new Android idle fixture Kotlin/Java compiles.
+The runner task graph does not register Flutter tasks, so the first runner helper
+failed on nonexistent task exclusions; removing those helper exclusions corrected
+the command. This is not a product regression or behavioral red.
+[Target log](release-app.txt), [target cleanup](release-app-job.txt),
+[runner log](release-runner.txt), [runner cleanup](release-runner-job.txt),
+[initial runner failure](release-runner-task-selection-failure.txt).
+
+Fresh admission was5182MiB for target and7312MiB for the passing runner; every
+Gradle job used3GB heap, Kotlin in-process/two workers and one runtime-QA flag.
+Exact owned daemons3290663(target),3292868(failed runner command),3293495(passing
+runner) were cleaned; no owned daemon remained and intermediates were deleted
+after each build. No watchdog kill. This window's earlier compile daemons were
+also cleaned as recorded above.
+
+[Artifact receipt](signed-qa-artifacts.json) proves the full authorized signer
+1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C for both
+APKs, target package/version2198, runner package/instrumentation class and SHA256.
+The test-only APK has no versionCode/versionName in its manifest (normal AGP
+output); the initial artifact checker rejected that empty field, then correctly
+validated the runner package/class/signature without inventing a version.
+Only the newest target and runner remain in this worktree; the matching duplicate
+target under outputs/apk/release was removed. No APK was copied or installed.
+
+The QA-only Gradle configuration supplies integration_test release dependency
+and existing ABI keep rules to the runtime flag. Normal builds retain their
+configuration; the one-QA-runner guard remains. Device admission, actual idle
+stop/notification tap/helper return, busy-work protection and final normal-app
+restoration remain separate, unexecuted gates. The runner's reflective lock
+lookup has a nullable platform-type compiler warning; actual non-null runtime
+field existence is checked by the pending fixture, not claimed from compilation.

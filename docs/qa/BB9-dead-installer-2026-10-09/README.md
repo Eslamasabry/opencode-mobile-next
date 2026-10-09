@@ -85,9 +85,10 @@ so treating that reservation as stale would erase an in-progress launch.
 The existing run-output fixture gains only a no-op admission stub; independent
 new fixtures exercise real production ownership/admission behavior.
 
-## Queued checks after BB BUILD WINDOW OPEN
+## Preparation before the exclusive window
 
-18 JUnit methods and19 production-method fixture scenarios are **authored/unrun**.
+18 JUnit methods and19 production-method fixture scenarios were authored but unrun
+at preparation. Completed exclusive-window results are recorded below.
 The fixture extracts actual reclaim/check/install pre-launch source and uses the
 real ownership classifier, with only external launch replaced by a sentinel.
 
