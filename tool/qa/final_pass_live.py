@@ -41,9 +41,9 @@ def resources():
 
 def fresh(context):
     facts = resources()
-    root = Path("/home/eslam/Storage/android-qa-fb1-2203-final")
     if not facts["admitted"]:
         return result(context, "fb1", "blocked", "fresh_avd_resource_budget", facts)
+    root = Path("/home/eslam/Storage") / ("android-qa-fb1-" + context.run_id)
     if root.exists():
         return result(context, "fb1", "blocked", "fresh_avd_directory_exists", facts)
     held = []

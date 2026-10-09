@@ -1,0 +1,7 @@
+{
+  "beforeBuild": 2203,
+  "upgradeBaselineBuild": 2202,
+  "baselineSha256": "e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0",
+  "replaceInstall": true,
+  "dataClearPerformed": false
+}

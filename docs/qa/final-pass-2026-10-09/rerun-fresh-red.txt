@@ -1,0 +1,24 @@
+F
+======================================================================
+FAIL: test_new_run_does_not_reuse_previous_avd_directory (tool.qa.test_final_pass_2203.FreshRerunLocationTest.test_new_run_does_not_reuse_previous_avd_directory)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/test_final_pass_2203.py", line 86, in test_new_run_does_not_reuse_previous_avd_directory
+    self.assertEqual(checked, [Path('/home/eslam/Storage/android-qa-fb1-final-new-run')])
+AssertionError: Lists differ: [PosixPath('/home/eslam/Storage/android-qa-fb1-2203-final')] != [PosixPath('/home/eslam/Storage/android-qa-fb1-final-new-run')]
+
+First differing element 0:
+PosixPath('/home/eslam/Storage/android-qa-fb1-2203-final')
+PosixPath('/home/eslam/Storage/android-qa-fb1-final-new-run')
+
+- [PosixPath('/home/eslam/Storage/android-qa-fb1-2203-final')]
+?                                                -----
+
++ [PosixPath('/home/eslam/Storage/android-qa-fb1-final-new-run')]
+?                                                     ++++++++
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (failures=1)

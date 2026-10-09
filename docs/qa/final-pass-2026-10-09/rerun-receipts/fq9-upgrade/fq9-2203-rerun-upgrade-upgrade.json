@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "case": "upgrade",
+  "runID": "fq9-2203-rerun-upgrade",
+  "candidateBuild": 2203,
+  "candidateSha256": "82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7",
+  "signerSha256": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+  "device": "emulator-5554",
+  "state": "fail",
+  "deviceTouched": true,
+  "normalRestored": false,
+  "deviceQualified": false,
+  "automatedChecksPassed": false,
+  "manualChecksPending": true,
+  "sourceRevision": "7c6c0a1e8e293e09ac7a1ac3734a029abc18ca06",
+  "code": "app_managed_socket_unavailable",
+  "runtimeTransaction": {
+    "prior": null,
+    "selected": "opencode",
+    "restored": false
+  }
+}
