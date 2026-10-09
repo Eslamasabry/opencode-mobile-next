@@ -1,0 +1,568 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart
+00:00 +0: opening after a confirmed in-app crash starts it once, then connects; Start and connect on the card starts it again
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+<asynchronous suspension>
+(elided 11 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  opening after a confirmed in-app crash starts it once, then connects; Start and connect on the
+  card starts it again
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -1: opening after a confirmed in-app crash starts it once, then connects; Start and connect on the card starts it again [E]
+  Test failed. See exception logs above.
+  The test description was: opening after a confirmed in-app crash starts it once, then connects; Start and connect on the card starts it again
+
+00:01 +0 -1: explicit Stop intent stays stopped on launch and resume
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+<asynchronous suspension>
+(elided 11 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  explicit Stop intent stays stopped on launch and resume
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -2: explicit Stop intent stays stopped on launch and resume [E]
+  Test failed. See exception logs above.
+  The test description was: explicit Stop intent stays stopped on launch and resume
+
+00:01 +0 -2: a server that is already running is only connected to
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+#20     FakeAsync.run.<anonymous closure>.<anonymous closure> (package:fake_async/fake_async.dart:189:18)
+#21     FakeAsync.flushMicrotasks (package:fake_async/fake_async.dart:200:32)
+#22     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2263:26)
+#25     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#26     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:240:11)
+#34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 20 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  a server that is already running is only connected to
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -3: a server that is already running is only connected to [E]
+  Test failed. See exception logs above.
+  The test description was: a server that is already running is only connected to
+
+00:01 +0 -3: a start that fails is tried once more, then the card says why in plain words (QA B1)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+<asynchronous suspension>
+(elided 11 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  a start that fails is tried once more, then the card says why in plain words (QA B1)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -4: a start that fails is tried once more, then the card says why in plain words (QA B1) [E]
+  Test failed. See exception logs above.
+  The test description was: a start that fails is tried once more, then the card says why in plain words (QA B1)
+
+00:01 +0 -4: its Open setup lands on phone setup, not the old in-app page (builtin-server-setup merged into phone-setup-start, P1.3)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+<asynchronous suspension>
+(elided 11 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  its Open setup lands on phone setup, not the old in-app page (builtin-server-setup merged into
+  phone-setup-start, P1.3)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -5: its Open setup lands on phone setup, not the old in-app page (builtin-server-setup merged into phone-setup-start, P1.3) [E]
+  Test failed. See exception logs above.
+  The test description was: its Open setup lands on phone setup, not the old in-app page (builtin-server-setup merged into phone-setup-start, P1.3)
+
+00:02 +0 -5: resume preserves backoff before healing a later crash
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+#20     FakeAsync.run.<anonymous closure>.<anonymous closure> (package:fake_async/fake_async.dart:189:18)
+#21     FakeAsync.flushMicrotasks (package:fake_async/fake_async.dart:200:32)
+#22     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2263:26)
+#25     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#26     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:316:11)
+#34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 20 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  resume preserves backoff before healing a later crash
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -6: resume preserves backoff before healing a later crash [E]
+  Test failed. See exception logs above.
+  The test description was: resume preserves backoff before healing a later crash
+
+00:02 +0 -6: every cold launch starts a stopped in-app server, also past the crash-restart budget (QA B1)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+#20     FakeAsync.run.<anonymous closure>.<anonymous closure> (package:fake_async/fake_async.dart:189:18)
+#21     FakeAsync.flushMicrotasks (package:fake_async/fake_async.dart:200:32)
+#22     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2263:26)
+#25     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#26     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
+#34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 20 frames from dart:async and package:stack_trace)
+
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+#20     FakeAsync.run.<anonymous closure>.<anonymous closure> (package:fake_async/fake_async.dart:189:18)
+#21     FakeAsync.flushMicrotasks (package:fake_async/fake_async.dart:200:32)
+#22     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2263:26)
+#25     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#26     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
+<asynchronous suspension>
+#34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 20 frames from dart:async and package:stack_trace)
+
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+#20     FakeAsync.run.<anonymous closure>.<anonymous closure> (package:fake_async/fake_async.dart:189:18)
+#21     FakeAsync.flushMicrotasks (package:fake_async/fake_async.dart:200:32)
+#22     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2263:26)
+#25     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#26     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
+<asynchronous suspension>
+#34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 20 frames from dart:async and package:stack_trace)
+
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+#20     FakeAsync.run.<anonymous closure>.<anonymous closure> (package:fake_async/fake_async.dart:189:18)
+#21     FakeAsync.flushMicrotasks (package:fake_async/fake_async.dart:200:32)
+#22     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2263:26)
+#25     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#26     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
+<asynchronous suspension>
+#34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 20 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  every cold launch starts a stopped in-app server, also past the crash-restart budget (QA B1)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -7: every cold launch starts a stopped in-app server, also past the crash-restart budget (QA B1) [E]
+  Test failed. See exception logs above.
+  The test description was: every cold launch starts a stopped in-app server, also past the crash-restart budget (QA B1)
+
+00:02 +0 -7: no stopped or failure page flashes while the launch start is still deciding (QA B7)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+#20     FakeAsync.run.<anonymous closure>.<anonymous closure> (package:fake_async/fake_async.dart:189:18)
+#21     FakeAsync.flushMicrotasks (package:fake_async/fake_async.dart:200:32)
+#22     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2263:26)
+#25     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#26     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:350:11)
+#34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 20 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  no stopped or failure page flashes while the launch start is still deciding (QA B7)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -8: no stopped or failure page flashes while the launch start is still deciding (QA B7) [E]
+  Test failed. See exception logs above.
+  The test description was: no stopped or failure page flashes while the launch start is still deciding (QA B7)
+
+00:02 +0 -8: a running in-app server whose first connect failed is not called stopped, and is connected again while it answers (QA-03)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+<asynchronous suspension>
+(elided 11 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  a running in-app server whose first connect failed is not called stopped, and is connected again
+  while it answers (QA-03)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -9: a running in-app server whose first connect failed is not called stopped, and is connected again while it answers (QA-03) [E]
+  Test failed. See exception logs above.
+  The test description was: a running in-app server whose first connect failed is not called stopped, and is connected again while it answers (QA-03)
+
+00:02 +0 -9: a running server that rejects our password is replaced at launch, by the app's own start (QA-03)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+#20     FakeAsync.run.<anonymous closure>.<anonymous closure> (package:fake_async/fake_async.dart:189:18)
+#21     FakeAsync.flushMicrotasks (package:fake_async/fake_async.dart:200:32)
+#22     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2263:26)
+#25     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#26     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:389:11)
+#34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 20 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  a running server that rejects our password is replaced at launch, by the app's own start (QA-03)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -10: a running server that rejects our password is replaced at launch, by the app's own start (QA-03) [E]
+  Test failed. See exception logs above.
+  The test description was: a running server that rejects our password is replaced at launch, by the app's own start (QA-03)
+
+00:02 +0 -10: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a running in-app server whose first connect failed is not called stopped, and is connected again while it answers (QA-03)
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a running server that rejects our password is replaced at launch, by the app's own start (QA-03)
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a server that is already running is only connected to
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a start that fails is tried once more, then the card says why in plain words (QA B1)
+  ... and 6 more

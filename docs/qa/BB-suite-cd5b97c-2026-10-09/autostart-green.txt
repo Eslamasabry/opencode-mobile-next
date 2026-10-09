@@ -1,0 +1,117 @@
+machine_lock: got test slot 1 after 9s
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart
+00:00 +0: opening after a confirmed in-app crash starts it once, then connects; Start and connect on the card starts it again
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:01 +1: explicit Stop intent stays stopped on launch and resume
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:01 +2: a server that is already running is only connected to
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:01 +3: a start that fails is tried once more, then the card says why in plain words (QA B1)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:01 +4: its Open setup lands on phone setup, not the old in-app page (builtin-server-setup merged into phone-setup-start, P1.3)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:01 +5: resume preserves backoff before healing a later crash
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:02 +6: every cold launch starts a stopped in-app server, also past the crash-restart budget (QA B1)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:02 +7: no stopped or failure page flashes while the launch start is still deciding (QA B7)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:02 +8: a running in-app server whose first connect failed is not called stopped, and is connected again while it answers (QA-03)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:02 +9: a running server that rejects our password is replaced at launch, by the app's own start (QA-03)
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+00:02 +10: All tests passed!
