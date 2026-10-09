@@ -28416,4 +28416,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatUiConnectorSearchNotConnected => 'Not connected';
+
+  @override
+  String get kitMarkdownImage => 'Image';
 }

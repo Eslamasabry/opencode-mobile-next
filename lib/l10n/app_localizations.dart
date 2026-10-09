@@ -44710,6 +44710,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not connected'**
   String get chatUiConnectorSearchNotConnected;
+
+  /// KitMarkdown: the name of a picture in an agent's reply whose Markdown gave no description (empty, or just the word Image)
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get kitMarkdownImage;
 }
 
 class _AppLocalizationsDelegate

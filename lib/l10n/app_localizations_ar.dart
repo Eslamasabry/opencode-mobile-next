@@ -28427,4 +28427,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatUiConnectorSearchNotConnected => 'غير متصل';
+
+  @override
+  String get kitMarkdownImage => 'صورة';
 }
