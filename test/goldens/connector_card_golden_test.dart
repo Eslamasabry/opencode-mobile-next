@@ -1,7 +1,7 @@
 // Golden renders of the suggested-connector card (FC8): suggested, connecting
 // and connected, dark, light and Arabic, at 412x915.
 //
-// Regenerate deliberately:
+// Regenerate deliberately, and look at every changed image before committing it:
 //   flutter test --update-goldens test/goldens/connector_card_golden_test.dart
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -75,7 +75,7 @@ void main() {
   setUpAll(loadKitGalleryFonts);
 
   for (final entry in _phases.entries) {
-    for (final variant in ['dark', 'light', 'ar']) {
+    for (final variant in ['dark', 'light', 'ar_dark']) {
       testWidgets('connector_card_${entry.key} · $variant', (tester) async {
         tester.view.physicalSize = const Size(412, 915);
         tester.view.devicePixelRatio = 1;
@@ -90,9 +90,9 @@ void main() {
               debugShowCheckedModeBanner: false,
               theme: _theme(
                 light: variant == 'light',
-                locale: Locale(variant == 'ar' ? 'ar' : 'en'),
+                locale: Locale(variant == 'ar_dark' ? 'ar' : 'en'),
               ),
-              locale: Locale(variant == 'ar' ? 'ar' : 'en'),
+              locale: Locale(variant == 'ar_dark' ? 'ar' : 'en'),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Builder(
