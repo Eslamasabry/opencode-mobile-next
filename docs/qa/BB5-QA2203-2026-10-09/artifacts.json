@@ -26,5 +26,5 @@
     }
   },
   "deviceRun": false,
-  "driverCompatibility": "BB5 driver still pins QA/normal2202; do not execute until its2203 guards are updated and tested"
+  "driverCompatibility": "2203 version, exact reviewed artifact hashes, installed-version check, and restoration receipts updated; 101 offline tests passed; device run still pending"
 }

@@ -41,7 +41,7 @@ The existing normal 2203 checksum sidecar matched. Adjacent checksum sidecars we
 written for both new artifacts. [final-pass-inputs.json](final-pass-inputs.json)
 contains the BB5 row configuration for `final_pass.py`.
 
-## Remaining final-pass blocker
+## Initial final-pass blocker (resolved below)
 
 The artifacts are ready, but the driver in this source revision still declares
 `VERSION = 2202` and `NORMAL_VERSION = 2202` in `tool/qa/bb5_runtime_acceptance.py`.
@@ -51,3 +51,24 @@ It also retains normal-2202 source/hash guards and restoration markers. Meanwhil
 before a 2203 final pass. No guards were weakened and no final pass was attempted.
 
 Captured build logs have trailing whitespace normalized.
+
+## 2203 driver follow-up
+
+Updated the BB5 driver to require QA and normal version 2203, the three recorded
+artifact hashes, actual installed normal version 2203, and matching restoration
+receipt markers. Wrong hashes refuse before constructing the device adapter.
+The retained GenUI script's immutable revision, length, and hash are unchanged;
+its admission is now tied to the reviewed normal 2203 APK. Existing signer,
+sidecar, installed-hash, UID/owner, and no-downgrade checks remain active.
+
+Failing-first evidence: [guards-red.txt](guards-red.txt) shows the new 2203
+acceptance/old-version rejection and adapter handoff failing on the previous
+driver. [guards-green.txt](guards-green.txt) records 101 offline tests passing:
+
+```sh
+OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test -- env PYTHONPATH=tool/qa python3 -m unittest tool.qa.test_bb5_runtime_acceptance tool.qa.test_bb5_native_guard tool.qa.test_final_pass tool.qa.test_final_pass_2202 tool.qa.test_final_pass_install tool.qa.test_final_pass_misc tool.qa.test_final_pass_protocols
+```
+
+The adapter test drives the real driver constants with a mocked command and
+accepts the normal-2203 receipt. Artifact inputs and binaries are unchanged.
+No device command, installation, APK rebuild, or final-pass device run occurred.

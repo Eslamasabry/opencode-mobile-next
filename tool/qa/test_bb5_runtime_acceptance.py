@@ -338,6 +338,23 @@ class MetadataRestoreTest(unittest.TestCase):
 
 
 class NormalArtifactTest(unittest.TestCase):
+    def test_recorded_2203_artifacts_are_required_before_device_use(self):
+        inputs = Path(__file__).resolve().parents[2] / 'docs/qa/BB5-QA2203-2026-10-09/final-pass-inputs.json'
+        config = B.json.loads(inputs.read_text())['bb5']
+        args = SimpleNamespace(**config)
+        B.validate_reviewed_artifacts(args)
+        for key in ('target_sha', 'runner_sha', 'normal_sha'):
+            with self.subTest(key=key):
+                changed = SimpleNamespace(**(config | {key: '0' * 64}))
+                with self.assertRaisesRegex(H.Q.Refused, 'bb5_reviewed_artifacts_required'):
+                    B.validate_reviewed_artifacts(changed)
+
+    def test_2202_normal_is_no_longer_admitted(self):
+        device = Mock()
+        with self.assertRaisesRegex(H.Q.Refused, 'bb5_known_versions_restore_required'):
+            B.validate_normal(device, SimpleNamespace(version=2202, normal_version=2202))
+        device.run.assert_not_called()
+
     def test_older_normal_refuses_before_any_device_command(self):
         device = Mock()
         with self.assertRaises(H.Q.Refused):
@@ -353,7 +370,7 @@ class NormalArtifactTest(unittest.TestCase):
     def test_wrong_version_refuses_without_any_device_command(self):
         device = Mock()
         with self.assertRaises(H.Q.Refused):
-            B.validate_normal(device, SimpleNamespace(version=2200, normal_version=2202))
+            B.validate_normal(device, SimpleNamespace(version=2200, normal_version=2203))
         device.run.assert_not_called()
 
     def test_normal_hash_sidecar_and_signer_are_all_checked_before_mutation(self):
@@ -361,13 +378,13 @@ class NormalArtifactTest(unittest.TestCase):
             apk = Path(directory) / 'normal.apk'; apk.write_bytes(b'private-test-artifact')
             digest = B.hashlib.sha256(apk.read_bytes()).hexdigest()
             sidecar = Path(directory) / 'normal.sha256'; sidecar.write_text(digest + '  normal.apk\n')
-            args = SimpleNamespace(version=2202, normal_version=2202, normal_sha=digest,
+            args = SimpleNamespace(version=2203, normal_version=2203, normal_sha=digest,
                 normal_apk=apk, normal_sidecar=sidecar, apksigner=Path('apksigner'), aapt=Path('aapt'))
             device = Mock()
             device.run.side_effect = [SimpleNamespace(returncode=0, stdout='Signer #1 certificate SHA-256 digest: ' + H.Q.CERT),
-                SimpleNamespace(returncode=0, stdout="package: name='" + H.PACKAGE + "' versionCode='2202'")]
+                SimpleNamespace(returncode=0, stdout="package: name='" + H.PACKAGE + "' versionCode='2203'")]
             try: B.validate_normal(device, args)
-            except H.Q.Refused: self.fail('Verified normal2202 unexpectedly refused')
+            except H.Q.Refused: self.fail('Verified normal2203 unexpectedly refused')
             device.adb.assert_not_called(); device.write_dead.assert_not_called()
             sidecar.write_text('0'*64)
             with self.assertRaises(H.Q.Refused):
@@ -375,7 +392,7 @@ class NormalArtifactTest(unittest.TestCase):
 
     def test_normal_restore_install_r_never_downgrades_or_uninstalls(self):
         device = Mock(); device.cat.return_value = None
-        device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2202', stderr='')
+        device.adb.return_value = SimpleNamespace(returncode=0, stdout='versionCode=2203', stderr='')
         device.installed_hash.return_value = 'a'*64
         args = SimpleNamespace(normal_apk=Path('normal.apk'), normal_sha='a'*64)
         with patch.object(B, 'validate_normal') as validate, patch.object(B, 'restore_metadata') as restore, patch.object(H, 'real_start') as start, \
@@ -520,10 +537,10 @@ class InitialKernelAdmissionTest(unittest.TestCase):
             with self.subTest(normal=normal):
                 device, original = self.fixture(genui=True, script_sha=B.GENUI_NORMAL_SHA)
                 evidence = []
-                with patch.object(B, 'genui_source_proofs', return_value={B.GENUI_NORMAL_SHA: 'normal2202_source'}):
+                with patch.object(B, 'genui_source_proofs', return_value={B.GENUI_NORMAL_SHA: 'normal2203_source'}):
                     if normal == B.GENUI_NORMAL_APK_SHA:
                         B.inspect_server_only_before_bootstrap(device, original, evidence, normal_sha=normal)
-                        self.assertTrue(any('normal2202_source' in line for line in evidence))
+                        self.assertTrue(any('normal2203_source' in line for line in evidence))
                     else:
                         with self.assertRaisesRegex(H.Q.Refused, 'bb5_genui_retained_normal_unproven'):
                             B.inspect_server_only_before_bootstrap(device, original, evidence, normal_sha=normal)
@@ -531,7 +548,7 @@ class InitialKernelAdmissionTest(unittest.TestCase):
 
     def test_current_and_immutable_retained_scripts_generate_from_pure_dart(self):
         proofs = B.genui_source_proofs()
-        self.assertEqual('normal2202_' + B.GENUI_NORMAL_REVISION, proofs[B.GENUI_NORMAL_SHA])
+        self.assertEqual('normal2203_' + B.GENUI_NORMAL_REVISION, proofs[B.GENUI_NORMAL_SHA])
         self.assertIn('current', proofs.values())
         self.assertTrue(all(B.re.fullmatch('[a-f0-9]{64}', digest) for digest in proofs))
 

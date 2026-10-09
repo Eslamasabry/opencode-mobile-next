@@ -1,0 +1,8 @@
+.....native_qa_bb5RuntimePrepared=unproven
+native_qa_bb5IdleWaitEntered=unproven
+native_qa_refusal=bb5_cleanup_fixture_invalid
+................................................................................................
+----------------------------------------------------------------------
+Ran 101 tests in 1.374s
+
+OK
