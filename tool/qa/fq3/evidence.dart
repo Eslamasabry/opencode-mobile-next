@@ -21,6 +21,34 @@ Map<String, Object?> modelSelectionFor(String? model) {
   };
 }
 
+/// New live OC1 receipts name both the requested and actually selected model.
+/// Legacy model-selection receipts retain their original validator path.
+void validateActualModelSelection(Object? value) {
+  if (value is! Map ||
+      value.length != 5 ||
+      !value.keys.toSet().containsAll({
+        'source',
+        'requested',
+        'selected',
+        'baselineAvailable',
+        'inferenceAvailable',
+      }) ||
+      !const {
+        'explicit',
+        'baseline',
+        'catalog-fallback',
+      }.contains(value['source']) ||
+      !isPublicModelReference(value['requested']) ||
+      (value['selected'] != null &&
+          !isPublicModelReference(value['selected'])) ||
+      value['baselineAvailable'] is! bool ||
+      value['inferenceAvailable'] is! bool ||
+      (value['inferenceAvailable'] == true &&
+          value['selected'] != value['requested'])) {
+    throw const ProbeFailure('phase_model_invalid');
+  }
+}
+
 /// Late cleanup cannot leave capability passes in the current run's report.
 Map<String, dynamic> reportAfterCleanup(
   Map<String, dynamic> report, {
@@ -89,6 +117,7 @@ int validatePhaseEvidence(
   required String caseName,
   int? expectedAppUID,
   String? expectedTestedModel,
+  String? expectedModelRequest,
 }) {
   final version = _versions[engine];
   if (version == null ||
@@ -127,7 +156,20 @@ int validatePhaseEvidence(
     throw const ProbeFailure('phase_server_kind_invalid');
   }
   final testedModel = evidence['testedModel'];
-  if (testedModel != 'server-default' && !isPublicModelReference(testedModel)) {
+  final actualSelection = evidence['modelSelection'];
+  if (actualSelection != null) {
+    validateActualModelSelection(actualSelection);
+    if ((actualSelection as Map)['selected'] != testedModel ||
+        (expectedModelRequest != null &&
+            actualSelection['requested'] != expectedModelRequest)) {
+      throw const ProbeFailure('phase_model_mismatch');
+    }
+  } else if (expectedModelRequest != null) {
+    throw const ProbeFailure('phase_model_invalid');
+  }
+  if (!(actualSelection != null && testedModel == null) &&
+      testedModel != 'server-default' &&
+      !isPublicModelReference(testedModel)) {
     throw const ProbeFailure('phase_model_invalid');
   }
   if (expectedTestedModel != null && testedModel != expectedTestedModel) {

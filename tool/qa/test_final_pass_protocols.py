@@ -178,6 +178,7 @@ class ProtocolWrapperTests(unittest.TestCase):
             {"driver": {"cleanupSucceeded": False}},
             {"protocolCleanupError": "driver_failure"},
             {"restoreError": "normal_restore_failed"},
+            {"runtimeRestoreError": "runtime_restore_failed"},
         )):
             with self.subTest(failure=failure):
                 self.context.output = self.root / f"cleanup-{index}"

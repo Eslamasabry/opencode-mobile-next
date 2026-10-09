@@ -266,6 +266,7 @@ def run(row, config, context):
         )
         or "protocolCleanupError" in report
         or "restoreError" in report
+        or "runtimeRestoreError" in report
     ):
         # Preserve the failed session/evidence from subsequent device rows.
         # The coordinator still owns the final normal-APK restoration policy.
@@ -315,7 +316,11 @@ def _fq3(config, context):
             value = config[key]
             if type(value) is not str or not re.fullmatch(r"[A-Za-z0-9._-]+/[A-Za-z0-9._-]+", value):
                 return _result("blocked", "fq3_configuration_invalid")
-            argv.extend(["--" + key.replace("_", "-"), value])
+            # Reruns use the historical OC1 baseline preference discovered from
+            # the live catalog. Accept old row files without letting their
+            # Big Pickle override silently defeat that policy.
+            if key != "oc1_model":
+                argv.extend(["--" + key.replace("_", "-"), value])
     result = context.command(argv, timeout=1800)
     try:
         from tool.qa.fq9.common import load_json
@@ -327,7 +332,15 @@ def _fq3(config, context):
         checks = [report["protocolSwitch"], *[check for engine in report["engines"].values()
                   for check in engine["results"].values()]]
         passed = result.returncode == 0 and clean and all(check["state"] == "pass" for check in checks)
+        provider_blocked = (result.returncode in (0, 1) and clean
+                            and any(check["state"] == "blocked" for check in checks)
+                            and all(check["state"] == "pass" or
+                                    (check["state"] == "blocked" and
+                                     check["code"] == "provider_unavailable")
+                                    for check in checks))
     except (ValueError, KeyError, TypeError, OSError, InvalidEvidence):
         return _result("fail", "fq3_receipt_invalid", [receipt], safe_to_continue=False)
+    if provider_blocked:
+        return _result("blocked", "fq3_provider_unavailable", [receipt], safe_to_continue=clean)
     return _result("pass" if passed else "fail", "fq3_verified" if passed else "fq3_checks_failed",
                    [receipt], safe_to_continue=clean)

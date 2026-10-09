@@ -150,6 +150,9 @@ Future<void> phase(List<String> args, String runID) async {
       directory: runtime.directory,
       title: '$runID-$engine-$caseName',
       model: requestedModel,
+      baselineModel: engine == 'opencode' && requestedModel == null
+          ? baselineOc1Model
+          : null,
       capabilities: phases[caseName],
       onSessionCreated: ownership.recordCreated,
     );
@@ -223,7 +226,8 @@ Future<void> phase(List<String> args, String runID) async {
     'appUID': runtime?.uid,
     'appBuild': runtime?.appBuild,
     'serverKind': serverKind,
-    'testedModel': testedModel,
+    'testedModel': engine == 'opencode' ? run?.selectedModel : testedModel,
+    if (engine == 'opencode') 'modelSelection': run?.modelSelection,
     'results':
         run?.results ??
         {
@@ -524,6 +528,16 @@ Future<void> _orchestrate(List<String> args, String runID) async {
       engine == 'opencode2' ? '--oc2-model' : '--oc1-model',
     );
     final selection = modelSelectionFor(model);
+    final selectedByPhase = <String, String?>{};
+    Map<String, dynamic>? actualSelection = engine == 'opencode'
+        ? {
+            'source': model == null ? 'baseline' : 'explicit',
+            'requested': model ?? baselineOc1Model,
+            'selected': null,
+            'baselineAvailable': false,
+            'inferenceAvailable': false,
+          }
+        : null;
     final results = <String, Object?>{};
     String? observed;
     for (final entry in phases.entries) {
@@ -587,8 +601,17 @@ Future<void> _orchestrate(List<String> args, String runID) async {
           engine: engine,
           caseName: entry.key,
           expectedAppUID: uid,
-          expectedTestedModel: model ?? 'server-default',
+          expectedTestedModel: engine == 'opencode'
+              ? null
+              : model ?? 'server-default',
+          expectedModelRequest: engine == 'opencode'
+              ? model ?? baselineOc1Model
+              : null,
         );
+        if (engine == 'opencode') {
+          actualSelection = map(data['modelSelection']);
+          selectedByPhase[entry.key] = data['testedModel'] as String?;
+        }
         observed = data['observedVersion'] as String;
         for (final item in map(data['results']).entries) {
           if (!capabilityKeys.contains(item.key)) continue;
@@ -623,13 +646,37 @@ Future<void> _orchestrate(List<String> args, String runID) async {
       'expectedVersion': engine == 'opencode2' ? '2.0.10' : '1.18.32',
       'observedVersion': observed,
       'results': results,
-      'modelSelection': selection,
+      'modelSelection': engine == 'opencode'
+          ? {...?actualSelection, 'selectedByPhase': selectedByPhase}
+          : selection,
     };
   }
   Map<String, Object?> switchResult = fail(
     fence ?? 'history_probe_unavailable',
   );
-  if (fence == null) {
+  final historyProviderUnavailable = engines.values.any((engine) {
+    final results = map(engine['results']);
+    return capabilityKeys.skip(3).every((key) {
+      final result = map(results[key]);
+      return result['state'] == 'blocked' &&
+          result['code'] == 'provider_unavailable' &&
+          const {
+            'oc1_baseline_model_unavailable',
+            'oc1_requested_model_unavailable',
+            'oc1_no_usable_model',
+          }.contains(result['originalCode']);
+    });
+  });
+  if (fence == null && historyProviderUnavailable) {
+    switchResult = {
+      'state': 'blocked',
+      'code': 'provider_unavailable',
+      'classification': 'provider',
+      'originalCode': 'nonempty_histories_missing',
+      'facts': <String, Object?>{},
+    };
+  }
+  if (fence == null && !historyProviderUnavailable) {
     stdout.writeln('FQ3 history switch; waiting for shared emulator lock');
     final code = await lockedChild([
       '--histories',
@@ -682,12 +729,12 @@ Future<void> _orchestrate(List<String> args, String runID) async {
             engine: engine,
             caseName: scenario,
             expectedAppUID: uid,
-            expectedTestedModel:
-                argument(
-                  args,
-                  engine == 'opencode2' ? '--oc2-model' : '--oc1-model',
-                ) ??
-                'server-default',
+            expectedTestedModel: engine == 'opencode'
+                ? null
+                : argument(args, '--oc2-model') ?? 'server-default',
+            expectedModelRequest: engine == 'opencode'
+                ? argument(args, '--oc1-model') ?? baselineOc1Model
+                : null,
           );
           admitted.add(phaseData);
           owned[engine]!.addAll(
@@ -774,12 +821,12 @@ Future<void> histories(List<String> args, String runID) async {
             engine: engine,
             caseName: caseName,
             expectedAppUID: int.tryParse(argument(args, '--uid') ?? ''),
-            expectedTestedModel:
-                argument(
-                  args,
-                  engine == 'opencode2' ? '--oc2-model' : '--oc1-model',
-                ) ??
-                'server-default',
+            expectedTestedModel: engine == 'opencode'
+                ? null
+                : argument(args, '--oc2-model') ?? 'server-default',
+            expectedModelRequest: engine == 'opencode'
+                ? argument(args, '--oc1-model') ?? baselineOc1Model
+                : null,
           );
           admitted.add(phaseData);
           ids[engine]!.addAll(
