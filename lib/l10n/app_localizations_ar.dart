@@ -22808,6 +22808,35 @@ class AppLocalizationsAr extends AppLocalizations {
       'يعرض رمزًا يفتحه التطبيق على ذلك الهاتف';
 
   @override
+  String get sessionMenuArchive => 'أرشفة المحادثة';
+
+  @override
+  String get sessionMenuArchiveHint => 'تنتقل إلى المؤرشفة ويحتفظ بها الخادم';
+
+  @override
+  String get sessionMenuDelete => 'حذف المحادثة';
+
+  @override
+  String get sessionMenuDeleteHint => 'تُزال هي وسجلها نهائيًا';
+
+  @override
+  String sessionArchiveTitle(String title) {
+    return 'أرشفة «$title»؟';
+  }
+
+  @override
+  String get sessionArchiveBody => 'تنتقل إلى المؤرشفة ويمكنك قراءتها هناك.';
+
+  @override
+  String sessionDeleteTitle(String title) {
+    return 'حذف «$title»؟';
+  }
+
+  @override
+  String get sessionDeleteBody =>
+      'تُزال المحادثة وسجلها نهائيًا. لا يمكن التراجع عن ذلك.';
+
+  @override
   String get sessionMenuNeedsPrompt => 'متاح بعد الطلب الأول';
 
   @override

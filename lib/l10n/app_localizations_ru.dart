@@ -22775,6 +22775,37 @@ class AppLocalizationsRu extends AppLocalizations {
       'Shows a code the app on that phone opens';
 
   @override
+  String get sessionMenuArchive => 'Archive conversation';
+
+  @override
+  String get sessionMenuArchiveHint =>
+      'Moves it to Archived; the server keeps it';
+
+  @override
+  String get sessionMenuDelete => 'Delete conversation';
+
+  @override
+  String get sessionMenuDeleteHint => 'Removes it and its history for good';
+
+  @override
+  String sessionArchiveTitle(String title) {
+    return 'Archive “$title”?';
+  }
+
+  @override
+  String get sessionArchiveBody =>
+      'It moves to Archived, where you can still read it.';
+
+  @override
+  String sessionDeleteTitle(String title) {
+    return 'Delete “$title”?';
+  }
+
+  @override
+  String get sessionDeleteBody =>
+      'The conversation and its history are removed for good. This cannot be undone.';
+
+  @override
   String get sessionMenuNeedsPrompt => 'Available after the first prompt';
 
   @override

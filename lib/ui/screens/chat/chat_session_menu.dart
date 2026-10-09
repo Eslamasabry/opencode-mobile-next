@@ -184,7 +184,48 @@ extension _ChatSessionMenu on _ChatScreenState {
         if (_conn.capabilities.cliSessionResume) await _continueOnComputer();
       case SessionMenuAction.continueOnPhone:
         if (_conn.profile != null) await _continueOnPhone();
+      case SessionMenuAction.archive:
+        if (_conn.capabilities.sessionArchive) await _leaveConversation(false);
+      case SessionMenuAction.delete:
+        if (_conn.capabilities.sessionDelete) await _leaveConversation(true);
     }
+  }
+
+  /// "Archive conversation" / "Delete conversation": asks first, naming the
+  /// conversation, runs inside the question (a failure keeps it open with
+  /// Try again), then leaves the conversation and refreshes the list.
+  Future<void> _leaveConversation(bool delete) async {
+    final strings = _chatL10n(context);
+    final title = presentedSessionTitleText(
+      _conn.sessionsById[widget.sessionID]?.title,
+      l10n: strings,
+    );
+    final done = await showKitConfirm(
+      context,
+      title: delete
+          ? strings.sessionDeleteTitle(title)
+          : strings.sessionArchiveTitle(title),
+      body: delete ? strings.sessionDeleteBody : strings.sessionArchiveBody,
+      confirmLabel: delete
+          ? strings.sessionMenuDelete
+          : strings.sessionMenuArchive,
+      kind: delete ? KitConfirmKind.destructive : KitConfirmKind.neutral,
+      icon: delete ? AppIconography.delete : AppIconography.archive,
+      confirmKey: ValueKey(
+        delete ? 'session-delete-confirm' : 'session-archive-confirm',
+      ),
+      action: () async {
+        if (delete) {
+          await _conn.deleteSession(widget.sessionID);
+        } else {
+          await _conn.archiveSession(widget.sessionID);
+        }
+      },
+    );
+    if (!done || !mounted) return;
+    unawaited(_conn.refreshSessions());
+    unawaited(_conn.refreshChatFeed());
+    Navigator.of(context).maybePop();
   }
 
   void _runRouteMenuAction() {

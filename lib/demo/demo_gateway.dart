@@ -71,6 +71,7 @@ class DemoGateway implements ServerGateway, ServerOperationsGateway {
     mcpConfigWrites: false,
     sessionShare: false,
     sessionArchive: false,
+    sessionDelete: false,
     sessionTodos: false,
     messageDelete: false,
     workspaceSymbols: false,

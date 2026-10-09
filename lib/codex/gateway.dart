@@ -46,6 +46,7 @@ const codexServerCapabilities = ServerCapabilities(
   webSearch: false,
   sessionShare: false,
   sessionArchive: false,
+  sessionDelete: false,
   sessionTodos: false,
   messageDelete: false,
   workspaceSymbols: false,

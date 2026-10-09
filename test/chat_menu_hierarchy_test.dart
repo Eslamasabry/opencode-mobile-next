@@ -23,6 +23,8 @@ const _acts = [
   'Rename conversation',
   'Continue on computer',
   'Open on another phone',
+  'Archive conversation',
+  'Delete conversation',
 ];
 
 Future<void> _pumpMenu(
@@ -79,7 +81,7 @@ void main() {
     final picked = <SessionMenuAction>[];
     await _pumpMenu(tester, picked: picked);
     final goTo = tester.getTopLeft(find.text('Go to')).dy;
-    final act = tester.getTopLeft(find.text('Do')).dy;
+    final act = tester.getTopLeft(find.text('Do').first).dy;
     for (final title in _destinations) {
       final y = tester.getTopLeft(find.text(title)).dy;
       expect(y, greaterThan(goTo), reason: title);

@@ -206,13 +206,20 @@ void main() {
         'session-menu-rename',
         'session-menu-continue-computer',
         'session-menu-continue-phone',
+        'session-menu-archive',
+        'session-menu-delete',
       ]);
       expect(items.take(5).map((item) => item.group).toSet(), {
         const KitMenuGroup('Go to'),
       });
-      expect(items.skip(5).map((item) => item.group).toSet(), {
-        const KitMenuGroup('Do'),
-      });
+      expect(
+        items
+            .skip(5)
+            .where((item) => !item.destructive)
+            .map((i) => i.group)
+            .toSet(),
+        {const KitMenuGroup('Do')},
+      );
       // Before the first prompt, Compact and Fork wait with the reason.
       final fork = items.firstWhere(
         (item) => item.key == const ValueKey('session-menu-fork'),

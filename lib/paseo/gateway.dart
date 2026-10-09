@@ -604,6 +604,9 @@ class PaseoGateway
   /// Archives rather than deletes: the daemon keeps the provider's own
   /// session, so the conversation can be restored from the computer.
   @override
+  Future<void> archiveSession(String id) => deleteSession(id);
+
+  @override
   Future<void> deleteSession(String id) async {
     if (_isSubagent(id)) throw _PaseoSubagents._readOnly;
     await _revokeBrowserSession(id);

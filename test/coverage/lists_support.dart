@@ -473,11 +473,11 @@ class ListsScreens {
           sessionID: sessionID,
           mode: SessionDestinationMode.move,
         ),
-        child: const Text('open'),
+        child: const SizedBox(width: 8, height: 8),
       ),
     ),
     then: () async {
-      await tester.tap(find.text('open'));
+      await tester.tap(find.byType(TextButton));
     },
   );
 }

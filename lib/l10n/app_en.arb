@@ -27301,6 +27301,22 @@
   "@sessionMenuContinuePhoneHint": {
     "description": "Conversation menu › Open on another phone: what happens"
   },
+  "sessionMenuArchive": "Archive conversation",
+  "sessionMenuArchiveHint": "Moves it to Archived; the server keeps it",
+  "sessionMenuDelete": "Delete conversation",
+  "sessionMenuDeleteHint": "Removes it and its history for good",
+  "sessionArchiveTitle": "Archive “{title}”?",
+  "@sessionArchiveTitle": {
+    "description": "Question before archiving the open conversation, naming it",
+    "placeholders": {"title": {"type": "String"}}
+  },
+  "sessionArchiveBody": "It moves to Archived, where you can still read it.",
+  "sessionDeleteTitle": "Delete “{title}”?",
+  "@sessionDeleteTitle": {
+    "description": "Question before deleting the open conversation, naming it",
+    "placeholders": {"title": {"type": "String"}}
+  },
+  "sessionDeleteBody": "The conversation and its history are removed for good. This cannot be undone.",
   "sessionMenuNeedsPrompt": "Available after the first prompt",
   "@sessionMenuNeedsPrompt": {
     "description": "Conversation menu: why Compact or Fork is dimmed in a conversation with no prompt yet"
