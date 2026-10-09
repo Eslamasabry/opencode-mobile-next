@@ -1,0 +1,321 @@
+{
+  "source": "contracts/opencode2-openapi-beta-18600.json",
+  "schema": {
+    "PermissionSaved.Info": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "projectID",
+        "kind": "string"
+      },
+      {
+        "path": "action",
+        "kind": "string"
+      },
+      {
+        "path": "resource",
+        "kind": "string"
+      }
+    ],
+    "Shell.Info": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      },
+      {
+        "path": "command",
+        "kind": "string"
+      },
+      {
+        "path": "cwd",
+        "kind": "string"
+      },
+      {
+        "path": "shell",
+        "kind": "string"
+      },
+      {
+        "path": "file",
+        "kind": "string"
+      },
+      {
+        "path": "pid",
+        "kind": "number"
+      },
+      {
+        "path": "exit",
+        "kind": "number"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "time.started",
+        "kind": "number"
+      },
+      {
+        "path": "time.completed",
+        "kind": "number"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "saved",
+      "payload": [
+        {
+          "id": "psv_settings1",
+          "projectID": "prj_shopfront",
+          "action": "bash",
+          "resource": "git push *"
+        }
+      ],
+      "kind": "saved",
+      "fields": [
+        {
+          "key": "PermissionSaved.Info.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionSaved.Info.projectID",
+          "path": "projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionSaved.Info.action",
+          "path": "action",
+          "kind": "string",
+          "probes": [
+            "Run a shell command"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionSaved.Info.resource",
+          "path": "resource",
+          "kind": "string",
+          "probes": [
+            "git push *"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "shell_running",
+      "payload": [
+        {
+          "id": "sh_settings1",
+          "status": "running",
+          "command": "npm run dev",
+          "cwd": "/work/shopfront",
+          "shell": "/bin/bash",
+          "file": "/tmp/oc-shell-1.log",
+          "pid": 4242,
+          "metadata": {
+            "ocDevelopmentServiceOwner": "owner_settings",
+            "sessionID": "ses_settings1"
+          },
+          "time": {
+            "started": 1788960000000
+          }
+        }
+      ],
+      "kind": "shell",
+      "fields": [
+        {
+          "key": "Shell.Info.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Running command"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.command",
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "npm run dev"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "/work/shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.shell",
+          "path": "shell",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.file",
+          "path": "file",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.time.started",
+          "path": "time.started",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "shell_exited",
+      "payload": [
+        {
+          "id": "sh_settings2",
+          "status": "exited",
+          "command": "npm run dev",
+          "cwd": "/work/shopfront",
+          "shell": "/bin/bash",
+          "file": "/tmp/oc-shell-2.log",
+          "pid": 4243,
+          "exit": 137,
+          "metadata": {
+            "ocDevelopmentServiceOwner": "owner_settings"
+          },
+          "time": {
+            "started": 1788960000000,
+            "completed": 1788960060000
+          }
+        }
+      ],
+      "kind": "shell",
+      "fields": [
+        {
+          "key": "Shell.Info.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Stopped"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.command",
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "npm run dev"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "/work/shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.shell",
+          "path": "shell",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.file",
+          "path": "file",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.exit",
+          "path": "exit",
+          "kind": "number",
+          "probes": [
+            "Recorded exit code: 137"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.time.started",
+          "path": "time.started",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Shell.Info.time.completed",
+          "path": "time.completed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

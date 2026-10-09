@@ -1,0 +1,17 @@
+{
+  "OC1 PATCH /global/config": "reachable: Settings › Terminal › Default shell (a row per shell; writes it, then reads it back to confirm) -> selectTerminalShell [test: test/settings_server_updates_test.dart ~ selectTerminalShell]",
+  "OC1 PATCH /config": "covered elsewhere: adding a tool server writes the server's settings (models_actions_ledger.json); no settings control edits them directly",
+  "OC1 POST /global/dispose": "covered elsewhere: the server reload after a provider change (test/provider_reload_running_reply_test.dart); not a settings control",
+  "OC1 POST /instance/dispose": "covered elsewhere: the project reload after a provider change (test/provider_reload_running_reply_test.dart); not a settings control",
+  "OC1 DELETE /api/permission/saved/{id}": "reachable: Settings › Always allowed › Revoke (names the action, asks first) -> removeSavedPermission [test: test/saved_permissions_screen_test.dart ~ removeSavedPermission]",
+  "OC2 DELETE /api/permission/saved/{id}": "reachable: Settings › Always allowed › Revoke (names the action, asks first) -> removeSavedPermission [test: test/saved_permissions_screen_test.dart ~ removeSavedPermission]",
+  "OC2 POST /api/shell": "reachable: Development services › Start -> startManagedShell [test: test/development_service_gateway_test.dart ~ startManagedShell]",
+  "OC2 DELETE /api/shell/{id}": "reachable: Development services › Stop, and Undo after Start -> stopManagedShell [test: test/running_work_sheet_test.dart ~ stopManagedShell]",
+  "OC2 PATCH /api/shell/{id}/timeout": "reachable: Running work › running command › timeout choice (1 minute to No timeout) -> setManagedShellTimeout [test: test/running_work_sheet_test.dart ~ setManagedShellTimeout]",
+  "Paseo agent.config.apply.request": "not offered: the app changes an agent's model, thinking and mode one at a time; it never applies a whole configuration (models_actions_ledger.json)",
+  "Paseo daemon.config.reload.request": "not offered: no settings page reads or reloads the Paseo daemon's configuration; owner decision needed if a daemon settings page is wanted",
+  "Paseo daemon.update.request": "not offered: the app never updates the Paseo daemon; owner decision needed if self-update from the phone is wanted",
+  "Paseo hub.management.daemon.permissions.update.request": "not offered: hub management belongs to the Paseo hub, which the app does not drive; owner decision needed",
+  "Paseo set_daemon_config_request": "not offered: no settings page reads or writes the Paseo daemon's configuration; owner decision needed if a daemon settings page is wanted",
+  "Paseo write_project_config_request": "not offered: the app does not edit a project's Paseo configuration file; owner decision needed"
+}

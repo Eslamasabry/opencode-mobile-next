@@ -1,0 +1,538 @@
+{
+  "oc.a2aBearer.": {
+    "scope": "other",
+    "why": "keyed by an external agent id, removed by ExternalAgentStore tombstones"
+  },
+  "oc.a2aTasks.": {
+    "scope": "other",
+    "why": "keyed by an external agent id, removed by ExternalAgentStore tombstones"
+  },
+  "oc.activeProfile": {
+    "scope": "global",
+    "why": "pointer to the active server, cleared by ProfileStore.remove"
+  },
+  "oc.agent.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.agentFeed.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.agentHostSecret.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.agentInstall.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.agentModel.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.agentPhoneGate.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.appLocale": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.appearance": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.attentionTile": {
+    "scope": "shared",
+    "why": "shared blob: its entries for a profile are removed by deleteProfileAndLocalData (test/profile_deletion_test.dart)"
+  },
+  "oc.autoApprove.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.automaticActivity.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.automation.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.backgroundPauseDismissed": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.budgets.": {
+    "scope": "other",
+    "why": "retired key, only read to be deleted"
+  },
+  "oc.builtinRecovery.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.builtinServerOwner": {
+    "scope": "shared",
+    "why": "names the built-in server profile, cleared by its deletion (audit2_builtin_owner_deletion_test)"
+  },
+  "oc.byoHost.": {
+    "scope": "other",
+    "why": "keyed by host record id, removed with its server"
+  },
+  "oc.byoHostSecrets.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.byoHostSsh.": {
+    "scope": "other",
+    "why": "key alias in the Keystore, not a preference"
+  },
+  "oc.chat": {
+    "scope": "other",
+    "why": "route name, not a preference"
+  },
+  "oc.chatAgent.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.chatListShown.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.chatTail.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.cleartextOk.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.codexToken.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.consumptionBudgets.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.defaultNotices.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.defaultProject.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.developmentServices.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.draft.": {
+    "scope": "profile",
+    "why": "draft target prefix, profile id is the suffix"
+  },
+  "oc.draftAttachmentVault": {
+    "scope": "shared",
+    "why": "shared blob: its entries for a profile are removed by deleteProfileAndLocalData (test/profile_deletion_test.dart)"
+  },
+  "oc.effectsActivityGlow": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.effectsCelebrations": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.effectsGlowColours": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.effectsGlowSpeed": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.effectsGlowStyle": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.effectsMotion": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.externalAgents": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.firstRun.notifyAsk": {
+    "scope": "other",
+    "why": "app-wide first-run state"
+  },
+  "oc.firstRun.state": {
+    "scope": "other",
+    "why": "app-wide first-run state"
+  },
+  "oc.freeModelNoteDismissed.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.genui.enabled.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.genui.journal.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.glassLiquidActive": {
+    "scope": "other",
+    "why": "retired liquid-glass guard, read for cleanup only"
+  },
+  "oc.glassLiquidOffUntil": {
+    "scope": "other",
+    "why": "retired liquid-glass guard, read for cleanup only"
+  },
+  "oc.glassLiquidStrikes": {
+    "scope": "other",
+    "why": "retired liquid-glass guard, read for cleanup only"
+  },
+  "oc.inFlowConsent.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.keepLiveInBackground": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.keptQueuedPrompts": {
+    "scope": "shared",
+    "why": "shared blob: its entries for a profile are removed by deleteProfileAndLocalData (test/profile_deletion_test.dart)"
+  },
+  "oc.lastProject.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.location.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.managedServerRecovery.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.mobileDownloadConsent.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.model.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.modelExplicit.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.modelLibrary.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.modelNames.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.monitorAlerts.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.monitorBusy.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.monitorRoutes.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.notify.checkInAfterMinutes": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.notify.finishedRuns": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.notify.quietEnd": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.notify.quietStart": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.notify.quotaAlerts": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.notify.requests": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.notify.version": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.notify.wifiOnly": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.notifyRules.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.nudges.firstReplySeen": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.nudges.projects": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.nudges.shown": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.offlineQueue": {
+    "scope": "shared",
+    "why": "shared blob: its entries for a profile are removed by deleteProfileAndLocalData (test/profile_deletion_test.dart)"
+  },
+  "oc.olderDraftsBackupV1.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.orchestration.": {
+    "scope": "profile",
+    "why": "profile id infix, swept"
+  },
+  "oc.pendingAuth.": {
+    "scope": "other",
+    "why": "keyed by sign-in attempt id"
+  },
+  "oc.pendingCommands.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.pendingPromptPhoto": {
+    "scope": "shared",
+    "why": "shared blob: its entries for a profile are removed by deleteProfileAndLocalData (test/profile_deletion_test.dart)"
+  },
+  "oc.permissionConsent.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.phoneAgentGateMigration.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.phoneAgentOwner.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.phoneAgentsUsed.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.phoneServerStopped.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.pinnedShortcuts": {
+    "scope": "shared",
+    "why": "shared blob: its entries for a profile are removed by deleteProfileAndLocalData (test/profile_deletion_test.dart)"
+  },
+  "oc.profiles": {
+    "scope": "other",
+    "why": "the profile list itself, not scoped"
+  },
+  "oc.promptHistory.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.promptStash.": {
+    "scope": "profile",
+    "why": "profile id infix, swept"
+  },
+  "oc.providerRuntimeRefresh.": {
+    "scope": "profile",
+    "why": "version then profile id infix, swept"
+  },
+  "oc.providerRuntimeUnloadable.": {
+    "scope": "profile",
+    "why": "profile id infix, swept"
+  },
+  "oc.quotaAnswers.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.quotaMonitor.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.readAloudConsent": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.readerPreferences.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.recentLocations.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.replySpeed.inApp": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.returnBrief.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.savedPromptMigrationV1.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.secure.probe": {
+    "scope": "other",
+    "why": "secure-storage probe, not a preference"
+  },
+  "oc.sessionDisplayModels.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.sessionDrafts": {
+    "scope": "shared",
+    "why": "shared blob: its entries for a profile are removed by deleteProfileAndLocalData (test/profile_deletion_test.dart)"
+  },
+  "oc.sessionInventory.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.sessionLinkBinding.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.sessionModels.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.sessionPins.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.sessionViews.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.session_id": {
+    "scope": "other",
+    "why": "server metadata field name, not a preference"
+  },
+  "oc.setupAudit.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.setupRegistry.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.shareSessionViews": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.sharedProjects.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.sideFeed.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.stashAttachmentVault.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.tailscale.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.teamEditorDrafts.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.teamEngineAuth.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.teamEngineDeleted.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.teamMigrationKept.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.teamModel.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.teamRoles.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.teamTaskRoles.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.teamWorkerStart.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.teamWorkspace.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.termuxMigration.": {
+    "scope": "other",
+    "why": "keyed by migration id, removed when it finishes"
+  },
+  "oc.termuxMigrationOffer.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.themePack": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.thermalGuard": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.thermalPause.": {
+    "scope": "other",
+    "why": "keyed by team id, cleared when the team is removed"
+  },
+  "oc.transcript.reasoningExpanded": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.transcript.timestampsVisible": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.variant.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.widgetSessions": {
+    "scope": "shared",
+    "why": "shared blob: its entries for a profile are removed by deleteProfileAndLocalData (test/profile_deletion_test.dart)"
+  }
+}

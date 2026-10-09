@@ -1,0 +1,10 @@
+{
+  "PermissionSavedInfo.action": "shown",
+  "PermissionSavedInfo.id": "ignored: an internal id the server uses to tell things apart; nothing a person reads; the page lists the current project's actions under its own heading",
+  "PermissionSavedInfo.projectID": "ignored: an internal id the server uses to tell things apart; nothing a person reads; the page lists the current project's actions under its own heading",
+  "PermissionSavedInfo.resource": "shown",
+  "config:shell.shell": "shown",
+  "pty:shell.acceptable": "shown",
+  "pty:shell.name": "shown",
+  "pty:shell.path": "shown"
+}

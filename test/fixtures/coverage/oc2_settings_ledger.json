@@ -1,0 +1,17 @@
+{
+  "PermissionSaved.Info.action": "shown",
+  "PermissionSaved.Info.id": "ignored: an internal id the server uses to tell things apart; nothing a person reads; the page lists the current project's actions under its own heading",
+  "PermissionSaved.Info.projectID": "ignored: an internal id the server uses to tell things apart; nothing a person reads; the page lists the current project's actions under its own heading",
+  "PermissionSaved.Info.resource": "shown",
+  "Shell.Info.command": "shown",
+  "Shell.Info.cwd": "shown",
+  "Shell.Info.exit": "shown",
+  "Shell.Info.file": "ignored: how the server runs the command and where it keeps its output; the page shows the command and its status",
+  "Shell.Info.id": "ignored: an internal id the server uses to tell things apart; nothing a person reads",
+  "Shell.Info.metadata": "ignored: carries the app's own ownership mark and the conversation that started it; used to match a command to its service, never shown",
+  "Shell.Info.pid": "ignored: how the server runs the command and where it keeps its output; the page shows the command and its status",
+  "Shell.Info.shell": "ignored: how the server runs the command and where it keeps its output; the page shows the command and its status",
+  "Shell.Info.status": "shown",
+  "Shell.Info.time.completed": "ignored: the page says whether the command is running or stopped, not when",
+  "Shell.Info.time.started": "ignored: the page says whether the command is running or stopped, not when"
+}

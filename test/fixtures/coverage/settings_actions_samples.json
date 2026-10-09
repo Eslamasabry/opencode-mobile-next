@@ -1,0 +1,63 @@
+{
+  "sources": [
+    "contracts/opencode-openapi-f12e14cf.json",
+    "contracts/opencode2-openapi-beta-18600.json",
+    "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js"
+  ],
+  "operations": [
+    {
+      "key": "OC1 PATCH /global/config",
+      "operationId": "global.config.update"
+    },
+    {
+      "key": "OC1 POST /global/dispose",
+      "operationId": "global.dispose"
+    },
+    {
+      "key": "OC1 PATCH /config",
+      "operationId": "config.update"
+    },
+    {
+      "key": "OC1 POST /instance/dispose",
+      "operationId": "instance.dispose"
+    },
+    {
+      "key": "OC1 DELETE /api/permission/saved/{id}",
+      "operationId": "v2.permission.saved.remove"
+    },
+    {
+      "key": "OC2 DELETE /api/permission/saved/{id}",
+      "operationId": "v2.permission.saved.remove"
+    },
+    {
+      "key": "OC2 POST /api/shell",
+      "operationId": "v2.shell.create"
+    },
+    {
+      "key": "OC2 DELETE /api/shell/{id}",
+      "operationId": "v2.shell.remove"
+    },
+    {
+      "key": "OC2 PATCH /api/shell/{id}/timeout",
+      "operationId": "v2.shell.timeout"
+    },
+    {
+      "key": "Paseo agent.config.apply.request"
+    },
+    {
+      "key": "Paseo daemon.config.reload.request"
+    },
+    {
+      "key": "Paseo daemon.update.request"
+    },
+    {
+      "key": "Paseo hub.management.daemon.permissions.update.request"
+    },
+    {
+      "key": "Paseo set_daemon_config_request"
+    },
+    {
+      "key": "Paseo write_project_config_request"
+    }
+  ]
+}
