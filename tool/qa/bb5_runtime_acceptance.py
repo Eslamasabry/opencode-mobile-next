@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """BB5 private emulator session. Import is inert; whole-session inherited flock is required.
 
-The QA and known normal APK both use versionCode2202. A different version refuses
+The QA and known normal APK both use versionCode2203. A different version refuses
 before mutation rather than requesting a downgrade, uninstall or data clearing.
 Initial authorized replacement/force-stop is QA setup, not proof that existing
 chats are idle. Native scenario admission proves logical work quiescence after
@@ -37,8 +37,8 @@ RETURN_FIELDS = {'bb5ReturnServerRunning', 'bb5ReturnHelperTracked',
                  'bb5ReturnTokenPending', 'bb5ReturnOwnerCurrent'}
 OBSERVATION_FIELDS = IDLE_FIELDS | RESUME_FIELDS | RETURN_FIELDS | {
     'bb5RuntimePrepared', 'bb5IdleWaitEntered'}
-VERSION = 2202
-NORMAL_VERSION = 2202
+VERSION = 2203
+NORMAL_VERSION = 2203
 IDLE_BODIES = {
     'Phone server paused while idle. Tap to open OpenCode.',
     'خادم الهاتف متوقف مؤقتًا لعدم وجود نشاط. اضغط لفتح OpenCode.',
@@ -191,10 +191,13 @@ def run_idle_instrumentation(arguments, timeout):
         process.close()
 
 
-# This one historical source is tied to the exact normal APK used for restoration.
+# Retained on-device script from the earlier normal app; admitted only with the
+# reviewed 2203 normal APK. Keep its immutable source/hash proof unchanged.
 GENUI_NORMAL_REVISION = '6015aea474e470ada3b3a661f6165b64682d7cf9'
 GENUI_NORMAL_SHA = '19be25af7575ac6e17958980cb07d4e253f0f32a20f5ad2d65e545be96bf8a7e'
-GENUI_NORMAL_APK_SHA = 'e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0'
+GENUI_NORMAL_APK_SHA = '82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7'
+QA_TARGET_SHA = '813042b33278a6fb7c18d15b15e0d8249f431d15b947113dabacb9115249db57'
+QA_RUNNER_SHA = '16fee14e4e87da6fb8c1ef529d46382051b111c314862c326b1a2fffc0180b0e'
 GENUI_SCRIPT = '/root/.oc-genui/openCode2/server.cjs'
 GENUI_NODES = {'/opt/node/bin/node', '/usr/bin/node'}
 PINNED_DART = Path.home() / '.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart'
@@ -226,7 +229,7 @@ def genui_source_proofs():
         retained = run([str(PINNED_DART), str(historical / entry)], historical)
     H.require(len(retained) == 18204 and hashlib.sha256(retained).hexdigest() == GENUI_NORMAL_SHA,
               'bb5_genui_retained_source_mismatch')
-    return {GENUI_NORMAL_SHA: 'normal2202_' + GENUI_NORMAL_REVISION,
+    return {GENUI_NORMAL_SHA: 'normal2203_' + GENUI_NORMAL_REVISION,
             hashlib.sha256(current).hexdigest(): 'current'}
 
 
@@ -358,7 +361,7 @@ def inspect_server_only_before_bootstrap(device, original_flutter, evidence, *, 
                 proofs = genui_source_proofs()
                 H.require(script[5] in proofs, 'bb5_genui_script_source_mismatch')
                 if script[5] == GENUI_NORMAL_SHA:
-                    H.require(normal_sha == GENUI_NORMAL_APK_SHA and NORMAL_VERSION == 2202,
+                    H.require(normal_sha == GENUI_NORMAL_APK_SHA and NORMAL_VERSION == 2203,
                               'bb5_genui_retained_normal_unproven')
                 genui = (pid, argv, maps, canonical, node, script)
             else:
@@ -488,6 +491,13 @@ class Device(H.Device):
         return super().adb(*args, timeout=timeout)
 
 
+def validate_reviewed_artifacts(args):
+    """Only the reviewed QA target/runner and normal 2203 may enter this run."""
+    H.require((args.target_sha, args.runner_sha, args.normal_sha) ==
+              (QA_TARGET_SHA, QA_RUNNER_SHA, GENUI_NORMAL_APK_SHA),
+              'bb5_reviewed_artifacts_required')
+
+
 def validate_normal(device, args):
     H.require(args.version == VERSION and args.normal_version == NORMAL_VERSION, 'bb5_known_versions_restore_required')
     H.require(isinstance(args.normal_sha, str) and re.fullmatch('[a-f0-9]{64}', args.normal_sha),
@@ -561,11 +571,11 @@ def restore_normal(device, args, original_flutter, evidence):
         raise H.Q.Refused('bb5_normal_restore_unproven')
     H.require(device.installed_hash(H.PACKAGE) == args.normal_sha, 'bb5_normal_installed_hash_mismatch')
     metadata = device.adb('shell', 'dumpsys', 'package', H.PACKAGE, timeout=5)
-    H.require(metadata.returncode == 0 and re.search(r'\bversionCode=2202\b', metadata.stdout),
+    H.require(metadata.returncode == 0 and re.search(r'\bversionCode=2203\b', metadata.stdout),
               'bb5_normal_installed_version_mismatch')
     # Actual normal app/UI proves Connected, not an HTTP response or stale QA boolean.
     H.real_start(device, H.selected_profile(original_flutter), evidence)
-    evidence.append('PASS normal_2202_same_signer_install_r_data_preserved_actual_Connected_OC2')
+    evidence.append('PASS normal_2203_same_signer_install_r_data_preserved_actual_Connected_OC2')
 
 
 def main():
@@ -582,6 +592,7 @@ def main():
     evidence = []; device = None; original_flutter = None; mutation = False; code = 1
     try:
         H.inherited_lock(args.inherited_emulator_lock_fd)
+        validate_reviewed_artifacts(args)
         device = Device()
         validate_normal(device, args)  # All normal artifact gates precede any installation/preferences write.
         H.validate_candidates(device, args)
@@ -600,11 +611,11 @@ def main():
             try:
                 restore_normal(device, args, original_flutter, evidence)
             except Exception as error:
-                evidence.append('FAIL normal_2202_restoration_' + H.safe_error(error)); code = 1
+                evidence.append('FAIL normal_2203_restoration_' + H.safe_error(error)); code = 1
         if device is not None and device.idle_observations:
             evidence.append('native_idle_observations=' + json.dumps(device.idle_observations, sort_keys=True))
         if code == 0:
-            evidence.append('PASS BB5_locked_actual_idle_stop_resume_and_normal_2202_restoration')
+            evidence.append('PASS BB5_locked_actual_idle_stop_resume_and_normal_2203_restoration')
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text('\n'.join(evidence) + '\n')
         print('\n'.join(evidence), flush=True)

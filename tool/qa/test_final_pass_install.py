@@ -166,7 +166,7 @@ class FinalPassInstallTests(unittest.TestCase):
         self.assert_no_execution()
 
     def test_bb5_uses_distinct_reviewed_qa_artifact_and_restores_normal(self):
-        self.context.candidate_build = self.context.normal_build = 2202
+        self.context.candidate_build = self.context.normal_build = 2203
         qa = self.base / 'qa.apk'
         qa.write_bytes(b'QA hooks enabled')
         runner = self.base / 'runner.apk'
@@ -176,13 +176,13 @@ class FinalPassInstallTests(unittest.TestCase):
             runner_sha=hashlib.sha256(runner.read_bytes()).hexdigest(),
             normal_apk=str(self.candidate), normal_sidecar=str(self.candidate),
             normal_sha=hashlib.sha256(self.candidate.read_bytes()).hexdigest(),
-            normal_version=2202, apksigner=str(runner), aapt=str(runner))
+            normal_version=2203, apksigner=str(runner), aapt=str(runner))
         self.context.output.mkdir()
         def command(argv, **kwargs):
             self.assertEqual(argv[argv.index('--apk') + 1], str(qa))
             self.assertNotIn('--qa-apk', argv)
             (self.context.output / 'bb5.txt').write_text(
-                'PASS BB5_locked_actual_idle_stop_resume_and_normal_2202_restoration\n')
+                'PASS BB5_locked_actual_idle_stop_resume_and_normal_2203_restoration\n')
             return SimpleNamespace(returncode=0)
         self.context.command.side_effect = command
         result = subject.run('bb5', config, self.context)
