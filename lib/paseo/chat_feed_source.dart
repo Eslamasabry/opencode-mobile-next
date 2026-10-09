@@ -224,6 +224,9 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
           final status = switch (statuses[session.id]) {
             'busy' || 'retry' => ChatStatus.running,
             'error' => ChatStatus.failed,
+            // The daemon's own word for an agent whose last turn failed
+            // (the status map only says busy or idle).
+            _ when gateway.agentFailed(session.id) => ChatStatus.failed,
             _ => ChatStatus.idle,
           };
           return ChatFeedItem(

@@ -14,6 +14,8 @@ import { oc2RequestsFamily } from './families/oc2_requests.mjs';
 import { oc2MessagesFamily } from './families/oc2_messages.mjs';
 import { oc2EventsFamily } from './families/oc2_events.mjs';
 import { oc1RequestsFamily } from './families/oc1_requests.mjs';
+import { oc1ListsFamily } from './families/oc1_lists.mjs';
+import { oc2ListsFamily } from './families/oc2_lists.mjs';
 
 const outDir = process.argv[2] ?? 'test/fixtures/coverage';
 const OC1 = 'contracts/opencode-openapi-f12e14cf.json';
@@ -25,6 +27,8 @@ const run = (name, built, source) =>
 run('oc1_parts', oc1PartsFamily(OC1), OC1);
 run('oc1_requests', oc1RequestsFamily(OC1), OC1);
 run('oc1_events', oc1EventsFamily(OC1), OC1);
+run('oc1_lists', oc1ListsFamily(OC1), OC1);
+run('oc2_lists', oc2ListsFamily(OC2), OC2);
 run('oc2_events', oc2EventsFamily(), 'docs/opencode2-protocol-notes.md section 3.2');
 run('oc2_messages', oc2MessagesFamily(OC2), OC2);
 run('oc2_requests', oc2RequestsFamily(OC2), OC2);

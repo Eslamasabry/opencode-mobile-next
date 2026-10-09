@@ -582,6 +582,7 @@
   "chatsHomeNeedsYouCount": "需要你处理 · {count}",
   "chatsHomeRunning": "运行中",
   "chatsHomeDone": "已完成",
+  "chatsHomeFailed": "已失败",
   "chatsHomeToday": "今天",
   "chatsHomeEarlier": "更早",
   "chatsHomeIncomplete": "部分对话无法加载",

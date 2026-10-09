@@ -582,6 +582,7 @@
   "chatsHomeNeedsYouCount": "Ждёт вас · {count}",
   "chatsHomeRunning": "В работе",
   "chatsHomeDone": "Готово",
+  "chatsHomeFailed": "Ошибка",
   "chatsHomeToday": "Сегодня",
   "chatsHomeEarlier": "Ранее",
   "chatsHomeIncomplete": "Некоторые чаты не удалось загрузить",

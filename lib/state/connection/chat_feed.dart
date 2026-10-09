@@ -184,11 +184,14 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     _self._notifyListeners();
   }
 
-  /// Only a server that keeps projects for git repositories alone tells a
-  /// git folder by its project; otherwise no Git badge rather than a wrong one.
-  bool _feedFolderIsGit(String directory) =>
-      _self.capabilities.projectsAreGitRepositories &&
-      _feedProjectFor(directory) != null;
+  /// A project the server calls Git (OpenCode 2 says so per project) or a
+  /// server that keeps projects for git repositories alone tells a git
+  /// folder; otherwise no Git badge rather than a wrong one.
+  bool _feedFolderIsGit(String directory) {
+    final project = _feedProjectFor(directory);
+    if (project == null) return false;
+    return project.isGit ?? _self.capabilities.projectsAreGitRepositories;
+  }
 
   WorkspaceProject? _feedProjectFor(String directory) {
     for (final project in _feedProjects) {
@@ -286,6 +289,10 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
           : running.contains(id)
           ? ChatStatus.running
           : failed.contains(id)
+          ? ChatStatus.failed
+          // OpenCode 2 says outright that the last run failed; it stays
+          // marked until the conversation is opened (the Done rule).
+          : session.lastRunFailed && _self.isSessionUnread(session)
           ? ChatStatus.failed
           : ChatStatus.idle;
       final stamp = session.time?.updated ?? session.time?.created ?? 0;
@@ -419,7 +426,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
         addEmpty(
           project.directory,
           name: project.name,
-          isGit: _self.capabilities.projectsAreGitRepositories,
+          isGit: project.isGit ?? _self.capabilities.projectsAreGitRepositories,
         );
       }
     }

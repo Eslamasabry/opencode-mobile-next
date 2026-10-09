@@ -1,0 +1,2216 @@
+{
+  "source": "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js",
+  "schema": {
+    "agent": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "provider",
+        "kind": "string"
+      },
+      {
+        "path": "cwd",
+        "kind": "string"
+      },
+      {
+        "path": "workspaceId",
+        "kind": "string"
+      },
+      {
+        "path": "model",
+        "kind": "string"
+      },
+      {
+        "path": "features[]",
+        "kind": "any"
+      },
+      {
+        "path": "thinkingOptionId",
+        "kind": "string"
+      },
+      {
+        "path": "effectiveThinkingOptionId",
+        "kind": "string"
+      },
+      {
+        "path": "createdAt",
+        "kind": "string"
+      },
+      {
+        "path": "updatedAt",
+        "kind": "string"
+      },
+      {
+        "path": "lastUserMessageAt",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      },
+      {
+        "path": "activeTurn.turnId",
+        "kind": "string"
+      },
+      {
+        "path": "activeTurn.startedAt",
+        "kind": "string"
+      },
+      {
+        "path": "capabilities.supportsStreaming",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.supportsSessionPersistence",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.supportsSessionListing",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.supportsDynamicModes",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.supportsMcpServers",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.supportsReasoningStream",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.supportsToolInvocations",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.supportsRewindConversation",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.supportsRewindFiles",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.supportsRewindBoth",
+        "kind": "boolean"
+      },
+      {
+        "path": "currentModeId",
+        "kind": "string"
+      },
+      {
+        "path": "availableModes[].id",
+        "kind": "string"
+      },
+      {
+        "path": "availableModes[].label",
+        "kind": "string"
+      },
+      {
+        "path": "availableModes[].description",
+        "kind": "string"
+      },
+      {
+        "path": "availableModes[].icon",
+        "kind": "string"
+      },
+      {
+        "path": "availableModes[].colorTier",
+        "kind": "string"
+      },
+      {
+        "path": "pendingPermissions[].id",
+        "kind": "string"
+      },
+      {
+        "path": "pendingPermissions[].provider",
+        "kind": "string"
+      },
+      {
+        "path": "pendingPermissions[].name",
+        "kind": "string"
+      },
+      {
+        "path": "pendingPermissions[].kind",
+        "kind": "enum"
+      },
+      {
+        "path": "pendingPermissions[].title",
+        "kind": "string"
+      },
+      {
+        "path": "pendingPermissions[].description",
+        "kind": "string"
+      },
+      {
+        "path": "pendingPermissions[].input",
+        "kind": "any"
+      },
+      {
+        "path": "pendingPermissions[].detail",
+        "kind": "any"
+      },
+      {
+        "path": "pendingPermissions[].suggestions[]",
+        "kind": "any"
+      },
+      {
+        "path": "pendingPermissions[].actions[].id",
+        "kind": "string"
+      },
+      {
+        "path": "pendingPermissions[].actions[].label",
+        "kind": "string"
+      },
+      {
+        "path": "pendingPermissions[].actions[].behavior",
+        "kind": "enum"
+      },
+      {
+        "path": "pendingPermissions[].actions[].variant",
+        "kind": "enum"
+      },
+      {
+        "path": "pendingPermissions[].actions[].intent",
+        "kind": "enum"
+      },
+      {
+        "path": "pendingPermissions[].metadata",
+        "kind": "any"
+      },
+      {
+        "path": "persistence.provider",
+        "kind": "string"
+      },
+      {
+        "path": "persistence.sessionId",
+        "kind": "string"
+      },
+      {
+        "path": "persistence.nativeHandle",
+        "kind": "string"
+      },
+      {
+        "path": "persistence.metadata",
+        "kind": "any"
+      },
+      {
+        "path": "runtimeInfo.provider",
+        "kind": "string"
+      },
+      {
+        "path": "runtimeInfo.sessionId",
+        "kind": "string"
+      },
+      {
+        "path": "runtimeInfo.model",
+        "kind": "string"
+      },
+      {
+        "path": "runtimeInfo.thinkingOptionId",
+        "kind": "string"
+      },
+      {
+        "path": "runtimeInfo.modeId",
+        "kind": "string"
+      },
+      {
+        "path": "runtimeInfo.extra",
+        "kind": "any"
+      },
+      {
+        "path": "lastUsage.inputTokens",
+        "kind": "number"
+      },
+      {
+        "path": "lastUsage.cachedInputTokens",
+        "kind": "number"
+      },
+      {
+        "path": "lastUsage.outputTokens",
+        "kind": "number"
+      },
+      {
+        "path": "lastUsage.totalCostUsd",
+        "kind": "number"
+      },
+      {
+        "path": "lastUsage.contextWindowMaxTokens",
+        "kind": "number"
+      },
+      {
+        "path": "lastUsage.contextWindowUsedTokens",
+        "kind": "number"
+      },
+      {
+        "path": "lastError",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "labels",
+        "kind": "any"
+      },
+      {
+        "path": "requiresAttention",
+        "kind": "boolean"
+      },
+      {
+        "path": "attentionReason",
+        "kind": "enum"
+      },
+      {
+        "path": "attentionTimestamp",
+        "kind": "string"
+      },
+      {
+        "path": "archivedAt",
+        "kind": "string"
+      },
+      {
+        "path": "providerUnavailable",
+        "kind": "boolean"
+      }
+    ],
+    "project": [
+      {
+        "path": "projectKey",
+        "kind": "string"
+      },
+      {
+        "path": "projectName",
+        "kind": "string"
+      },
+      {
+        "path": "workspaceName",
+        "kind": "string"
+      },
+      {
+        "path": "checkout",
+        "kind": "any"
+      }
+    ],
+    "page": [
+      {
+        "path": "nextCursor",
+        "kind": "string"
+      },
+      {
+        "path": "prevCursor",
+        "kind": "string"
+      },
+      {
+        "path": "hasMore",
+        "kind": "boolean"
+      }
+    ]
+  },
+  "excluded": {
+    "agent.pendingPermissions[].id": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].provider": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].name": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].kind": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].title": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].description": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].input": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].detail": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].suggestions[]": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].actions[].id": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].actions[].label": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].actions[].behavior": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].actions[].variant": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].actions[].intent": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json",
+    "agent.pendingPermissions[].metadata": "ignored: the same request card is drawn by the conversation and the list; its fields are decided in paseo_permissions_ledger.json"
+  },
+  "cases": [
+    {
+      "id": "page_two_agents",
+      "family": "lists",
+      "payload": {
+        "entries": [
+          {
+            "agent": {
+              "id": "agt_lists01",
+              "provider": "claude",
+              "cwd": "/root/projects/shopfront",
+              "workspaceId": "wsp_lists01",
+              "model": "claude-sonnet-5-5",
+              "features": [
+                {
+                  "type": "toggle",
+                  "id": "fast_mode",
+                  "label": "Fast mode",
+                  "value": false
+                }
+              ],
+              "thinkingOptionId": "high",
+              "effectiveThinkingOptionId": "high",
+              "createdAt": "2026-09-30T09:00:00.000Z",
+              "updatedAt": "2026-09-30T09:00:00.000Z",
+              "lastUserMessageAt": "2026-09-30T09:00:00.000Z",
+              "status": "running",
+              "activeTurn": {
+                "turnId": "turn_lists01",
+                "startedAt": "2026-09-30T09:00:00.000Z"
+              },
+              "capabilities": {
+                "supportsStreaming": true,
+                "supportsSessionPersistence": true,
+                "supportsSessionListing": true,
+                "supportsDynamicModes": true,
+                "supportsMcpServers": true,
+                "supportsReasoningStream": true,
+                "supportsToolInvocations": true,
+                "supportsRewindConversation": true,
+                "supportsRewindFiles": false,
+                "supportsRewindBoth": false
+              },
+              "currentModeId": "default",
+              "availableModes": [
+                {
+                  "id": "default",
+                  "label": "Ask first",
+                  "description": "Asks before it changes files",
+                  "icon": "shield",
+                  "colorTier": "safe"
+                }
+              ],
+              "pendingPermissions": [],
+              "persistence": {
+                "provider": "claude",
+                "sessionId": "claude_sess_01",
+                "nativeHandle": "native_01",
+                "metadata": {
+                  "resumeFrom": "transcript"
+                }
+              },
+              "runtimeInfo": {
+                "provider": "claude",
+                "sessionId": "claude_sess_01",
+                "model": "claude-sonnet-5-5",
+                "thinkingOptionId": "high",
+                "modeId": "default",
+                "extra": {
+                  "effort": "high"
+                }
+              },
+              "lastUsage": {
+                "inputTokens": 15200,
+                "cachedInputTokens": 8800,
+                "outputTokens": 2310,
+                "totalCostUsd": 0.4271,
+                "contextWindowMaxTokens": 200000,
+                "contextWindowUsedTokens": 61400
+              },
+              "title": "Add a retry button to uploads",
+              "labels": {
+                "source": "mobile"
+              }
+            },
+            "project": {
+              "projectKey": "shopfront-01",
+              "projectName": "Shopfront",
+              "workspaceName": "main",
+              "checkout": {
+                "cwd": "/root/projects/shopfront",
+                "isGit": true,
+                "currentBranch": "main"
+              }
+            }
+          },
+          {
+            "agent": {
+              "id": "agt_lists02",
+              "provider": "codex",
+              "cwd": "/root/projects/shopfront",
+              "workspaceId": "wsp_lists02",
+              "model": "claude-sonnet-5-5",
+              "features": [
+                {
+                  "type": "toggle",
+                  "id": "fast_mode",
+                  "label": "Fast mode",
+                  "value": false
+                }
+              ],
+              "thinkingOptionId": "high",
+              "effectiveThinkingOptionId": "high",
+              "createdAt": "2026-09-30T09:00:00.000Z",
+              "updatedAt": "2026-09-30T09:00:00.000Z",
+              "lastUserMessageAt": "2026-09-30T09:00:00.000Z",
+              "status": "error",
+              "capabilities": {
+                "supportsStreaming": true,
+                "supportsSessionPersistence": true,
+                "supportsSessionListing": true,
+                "supportsDynamicModes": true,
+                "supportsMcpServers": true,
+                "supportsReasoningStream": true,
+                "supportsToolInvocations": true,
+                "supportsRewindConversation": true,
+                "supportsRewindFiles": false,
+                "supportsRewindBoth": false
+              },
+              "currentModeId": "default",
+              "availableModes": [
+                {
+                  "id": "default",
+                  "label": "Ask first",
+                  "description": "Asks before it changes files",
+                  "icon": "shield",
+                  "colorTier": "safe"
+                }
+              ],
+              "pendingPermissions": [],
+              "persistence": {
+                "provider": "codex",
+                "sessionId": "codex_sess_02"
+              },
+              "runtimeInfo": {
+                "provider": "codex",
+                "sessionId": "codex_sess_02"
+              },
+              "lastUsage": {
+                "inputTokens": 15200,
+                "cachedInputTokens": 8800,
+                "outputTokens": 2310,
+                "totalCostUsd": 0.4271,
+                "contextWindowMaxTokens": 200000,
+                "contextWindowUsedTokens": 61400
+              },
+              "title": "Fix the flaky checkout test",
+              "labels": {
+                "source": "mobile"
+              },
+              "lastError": "Codex stopped: the provider returned an overload error",
+              "requiresAttention": true,
+              "attentionReason": "error",
+              "attentionTimestamp": "2026-09-30T09:00:00.000Z"
+            },
+            "project": {
+              "projectKey": "shopfront-02",
+              "projectName": "Shopfront",
+              "workspaceName": "main",
+              "checkout": {
+                "cwd": "/root/projects/shopfront",
+                "isGit": true,
+                "currentBranch": "main"
+              }
+            }
+          }
+        ],
+        "pageInfo": {
+          "nextCursor": "cur_agents_p2",
+          "prevCursor": "cur_agents_p0",
+          "hasMore": true
+        }
+      },
+      "fields": [
+        {
+          "key": "agent.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "Claude Code"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.workspaceId",
+          "path": "workspaceId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.model",
+          "path": "model",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.features[]",
+          "path": "features[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.thinkingOptionId",
+          "path": "thinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.effectiveThinkingOptionId",
+          "path": "effectiveThinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.createdAt",
+          "path": "createdAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.updatedAt",
+          "path": "updatedAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUserMessageAt",
+          "path": "lastUserMessageAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Running"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.activeTurn.turnId",
+          "path": "activeTurn.turnId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.activeTurn.startedAt",
+          "path": "activeTurn.startedAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsStreaming",
+          "path": "capabilities.supportsStreaming",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsSessionPersistence",
+          "path": "capabilities.supportsSessionPersistence",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsSessionListing",
+          "path": "capabilities.supportsSessionListing",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsDynamicModes",
+          "path": "capabilities.supportsDynamicModes",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsMcpServers",
+          "path": "capabilities.supportsMcpServers",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsReasoningStream",
+          "path": "capabilities.supportsReasoningStream",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsToolInvocations",
+          "path": "capabilities.supportsToolInvocations",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindConversation",
+          "path": "capabilities.supportsRewindConversation",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindFiles",
+          "path": "capabilities.supportsRewindFiles",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindBoth",
+          "path": "capabilities.supportsRewindBoth",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.currentModeId",
+          "path": "currentModeId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].id",
+          "path": "availableModes[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].label",
+          "path": "availableModes[].label",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].description",
+          "path": "availableModes[].description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].icon",
+          "path": "availableModes[].icon",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].colorTier",
+          "path": "availableModes[].colorTier",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.provider",
+          "path": "persistence.provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.sessionId",
+          "path": "persistence.sessionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.nativeHandle",
+          "path": "persistence.nativeHandle",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.metadata",
+          "path": "persistence.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.provider",
+          "path": "runtimeInfo.provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.sessionId",
+          "path": "runtimeInfo.sessionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.model",
+          "path": "runtimeInfo.model",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.thinkingOptionId",
+          "path": "runtimeInfo.thinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.modeId",
+          "path": "runtimeInfo.modeId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.extra",
+          "path": "runtimeInfo.extra",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.inputTokens",
+          "path": "lastUsage.inputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.cachedInputTokens",
+          "path": "lastUsage.cachedInputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.outputTokens",
+          "path": "lastUsage.outputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.totalCostUsd",
+          "path": "lastUsage.totalCostUsd",
+          "kind": "number",
+          "probes": [
+            "$0.4271"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.contextWindowMaxTokens",
+          "path": "lastUsage.contextWindowMaxTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.contextWindowUsedTokens",
+          "path": "lastUsage.contextWindowUsedTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to uploads"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.labels",
+          "path": "labels",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "Codex"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.workspaceId",
+          "path": "workspaceId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.model",
+          "path": "model",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.features[]",
+          "path": "features[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.thinkingOptionId",
+          "path": "thinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.effectiveThinkingOptionId",
+          "path": "effectiveThinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.createdAt",
+          "path": "createdAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.updatedAt",
+          "path": "updatedAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUserMessageAt",
+          "path": "lastUserMessageAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Failed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsStreaming",
+          "path": "capabilities.supportsStreaming",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsSessionPersistence",
+          "path": "capabilities.supportsSessionPersistence",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsSessionListing",
+          "path": "capabilities.supportsSessionListing",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsDynamicModes",
+          "path": "capabilities.supportsDynamicModes",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsMcpServers",
+          "path": "capabilities.supportsMcpServers",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsReasoningStream",
+          "path": "capabilities.supportsReasoningStream",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsToolInvocations",
+          "path": "capabilities.supportsToolInvocations",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindConversation",
+          "path": "capabilities.supportsRewindConversation",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindFiles",
+          "path": "capabilities.supportsRewindFiles",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindBoth",
+          "path": "capabilities.supportsRewindBoth",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.currentModeId",
+          "path": "currentModeId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].id",
+          "path": "availableModes[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].label",
+          "path": "availableModes[].label",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].description",
+          "path": "availableModes[].description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].icon",
+          "path": "availableModes[].icon",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].colorTier",
+          "path": "availableModes[].colorTier",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.provider",
+          "path": "persistence.provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.sessionId",
+          "path": "persistence.sessionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.provider",
+          "path": "runtimeInfo.provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.sessionId",
+          "path": "runtimeInfo.sessionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.inputTokens",
+          "path": "lastUsage.inputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.cachedInputTokens",
+          "path": "lastUsage.cachedInputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.outputTokens",
+          "path": "lastUsage.outputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.totalCostUsd",
+          "path": "lastUsage.totalCostUsd",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.contextWindowMaxTokens",
+          "path": "lastUsage.contextWindowMaxTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.contextWindowUsedTokens",
+          "path": "lastUsage.contextWindowUsedTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Fix the flaky checkout test"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.labels",
+          "path": "labels",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastError",
+          "path": "lastError",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.requiresAttention",
+          "path": "requiresAttention",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.attentionReason",
+          "path": "attentionReason",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.attentionTimestamp",
+          "path": "attentionTimestamp",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.projectKey",
+          "path": "projectKey",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.projectName",
+          "path": "projectName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.workspaceName",
+          "path": "workspaceName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.checkout",
+          "path": "checkout",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.projectKey",
+          "path": "projectKey",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.projectName",
+          "path": "projectName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.workspaceName",
+          "path": "workspaceName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.checkout",
+          "path": "checkout",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "page.nextCursor",
+          "path": "nextCursor",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "page.prevCursor",
+          "path": "prevCursor",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "page.hasMore",
+          "path": "hasMore",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "agent_idle_finished",
+      "family": "lists",
+      "payload": {
+        "entries": [
+          {
+            "agent": {
+              "id": "agt_lists03",
+              "provider": "claude",
+              "cwd": "/root/projects/shopfront",
+              "workspaceId": "wsp_lists03",
+              "model": "claude-sonnet-5-5",
+              "features": [
+                {
+                  "type": "toggle",
+                  "id": "fast_mode",
+                  "label": "Fast mode",
+                  "value": false
+                }
+              ],
+              "thinkingOptionId": "high",
+              "effectiveThinkingOptionId": "high",
+              "createdAt": "2026-09-30T09:00:00.000Z",
+              "updatedAt": "2026-09-30T09:00:00.000Z",
+              "lastUserMessageAt": "2026-09-30T09:00:00.000Z",
+              "status": "idle",
+              "capabilities": {
+                "supportsStreaming": true,
+                "supportsSessionPersistence": true,
+                "supportsSessionListing": true,
+                "supportsDynamicModes": true,
+                "supportsMcpServers": true,
+                "supportsReasoningStream": true,
+                "supportsToolInvocations": true,
+                "supportsRewindConversation": true,
+                "supportsRewindFiles": false,
+                "supportsRewindBoth": false
+              },
+              "currentModeId": "default",
+              "availableModes": [
+                {
+                  "id": "default",
+                  "label": "Ask first",
+                  "description": "Asks before it changes files",
+                  "icon": "shield",
+                  "colorTier": "safe"
+                }
+              ],
+              "pendingPermissions": [],
+              "persistence": {
+                "provider": "claude",
+                "sessionId": "claude_sess_03",
+                "nativeHandle": "native_03",
+                "metadata": {
+                  "resumeFrom": "transcript"
+                }
+              },
+              "runtimeInfo": {
+                "provider": "claude",
+                "sessionId": "claude_sess_03",
+                "model": "claude-sonnet-5-5",
+                "thinkingOptionId": "high",
+                "modeId": "default",
+                "extra": {
+                  "effort": "high"
+                }
+              },
+              "lastUsage": {
+                "inputTokens": 15200,
+                "cachedInputTokens": 8800,
+                "outputTokens": 2310,
+                "totalCostUsd": 0.4271,
+                "contextWindowMaxTokens": 200000,
+                "contextWindowUsedTokens": 61400
+              },
+              "title": "Explain the receipt layout",
+              "labels": {
+                "source": "mobile"
+              },
+              "requiresAttention": true,
+              "attentionReason": "finished",
+              "attentionTimestamp": "2026-09-30T09:00:00.000Z"
+            },
+            "project": {
+              "projectKey": "shopfront-03",
+              "projectName": "Shopfront",
+              "workspaceName": "main",
+              "checkout": {
+                "cwd": "/root/projects/shopfront",
+                "isGit": true,
+                "currentBranch": "main"
+              }
+            }
+          },
+          {
+            "agent": {
+              "id": "agt_lists04",
+              "provider": "claude",
+              "cwd": "/root/projects/shopfront",
+              "workspaceId": "wsp_lists04",
+              "model": "claude-sonnet-5-5",
+              "features": [
+                {
+                  "type": "toggle",
+                  "id": "fast_mode",
+                  "label": "Fast mode",
+                  "value": false
+                }
+              ],
+              "thinkingOptionId": "high",
+              "effectiveThinkingOptionId": "high",
+              "createdAt": "2026-09-30T09:00:00.000Z",
+              "updatedAt": "2026-09-30T09:00:00.000Z",
+              "lastUserMessageAt": "2026-09-30T09:00:00.000Z",
+              "status": "closed",
+              "capabilities": {
+                "supportsStreaming": true,
+                "supportsSessionPersistence": true,
+                "supportsSessionListing": true,
+                "supportsDynamicModes": true,
+                "supportsMcpServers": true,
+                "supportsReasoningStream": true,
+                "supportsToolInvocations": true,
+                "supportsRewindConversation": true,
+                "supportsRewindFiles": false,
+                "supportsRewindBoth": false
+              },
+              "currentModeId": "default",
+              "availableModes": [
+                {
+                  "id": "default",
+                  "label": "Ask first",
+                  "description": "Asks before it changes files",
+                  "icon": "shield",
+                  "colorTier": "safe"
+                }
+              ],
+              "pendingPermissions": [],
+              "persistence": {
+                "provider": "claude",
+                "sessionId": "claude_sess_04",
+                "nativeHandle": "native_04",
+                "metadata": {
+                  "resumeFrom": "transcript"
+                }
+              },
+              "runtimeInfo": {
+                "provider": "claude",
+                "sessionId": "claude_sess_04",
+                "model": "claude-sonnet-5-5",
+                "thinkingOptionId": "high",
+                "modeId": "default",
+                "extra": {
+                  "effort": "high"
+                }
+              },
+              "lastUsage": {
+                "inputTokens": 15200,
+                "cachedInputTokens": 8800,
+                "outputTokens": 2310,
+                "totalCostUsd": 0.4271,
+                "contextWindowMaxTokens": 200000,
+                "contextWindowUsedTokens": 61400
+              },
+              "title": "Old refactor nobody needs",
+              "labels": {
+                "source": "mobile"
+              },
+              "archivedAt": "2026-09-30T09:00:00.000Z",
+              "providerUnavailable": true
+            },
+            "project": {
+              "projectKey": "shopfront-04",
+              "projectName": "Shopfront",
+              "workspaceName": "main",
+              "checkout": {
+                "cwd": "/root/projects/shopfront",
+                "isGit": true,
+                "currentBranch": "main"
+              }
+            }
+          }
+        ],
+        "pageInfo": {
+          "nextCursor": null,
+          "prevCursor": null,
+          "hasMore": false
+        }
+      },
+      "fields": [
+        {
+          "key": "agent.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.workspaceId",
+          "path": "workspaceId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.model",
+          "path": "model",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.features[]",
+          "path": "features[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.thinkingOptionId",
+          "path": "thinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.effectiveThinkingOptionId",
+          "path": "effectiveThinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.createdAt",
+          "path": "createdAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.updatedAt",
+          "path": "updatedAt",
+          "kind": "string",
+          "probes": [
+            "1h ago"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUserMessageAt",
+          "path": "lastUserMessageAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsStreaming",
+          "path": "capabilities.supportsStreaming",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsSessionPersistence",
+          "path": "capabilities.supportsSessionPersistence",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsSessionListing",
+          "path": "capabilities.supportsSessionListing",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsDynamicModes",
+          "path": "capabilities.supportsDynamicModes",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsMcpServers",
+          "path": "capabilities.supportsMcpServers",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsReasoningStream",
+          "path": "capabilities.supportsReasoningStream",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsToolInvocations",
+          "path": "capabilities.supportsToolInvocations",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindConversation",
+          "path": "capabilities.supportsRewindConversation",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindFiles",
+          "path": "capabilities.supportsRewindFiles",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindBoth",
+          "path": "capabilities.supportsRewindBoth",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.currentModeId",
+          "path": "currentModeId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].id",
+          "path": "availableModes[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].label",
+          "path": "availableModes[].label",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].description",
+          "path": "availableModes[].description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].icon",
+          "path": "availableModes[].icon",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].colorTier",
+          "path": "availableModes[].colorTier",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.provider",
+          "path": "persistence.provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.sessionId",
+          "path": "persistence.sessionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.nativeHandle",
+          "path": "persistence.nativeHandle",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.metadata",
+          "path": "persistence.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.provider",
+          "path": "runtimeInfo.provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.sessionId",
+          "path": "runtimeInfo.sessionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.model",
+          "path": "runtimeInfo.model",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.thinkingOptionId",
+          "path": "runtimeInfo.thinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.modeId",
+          "path": "runtimeInfo.modeId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.extra",
+          "path": "runtimeInfo.extra",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.inputTokens",
+          "path": "lastUsage.inputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.cachedInputTokens",
+          "path": "lastUsage.cachedInputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.outputTokens",
+          "path": "lastUsage.outputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.totalCostUsd",
+          "path": "lastUsage.totalCostUsd",
+          "kind": "number",
+          "probes": [
+            "$0.4271"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.contextWindowMaxTokens",
+          "path": "lastUsage.contextWindowMaxTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.contextWindowUsedTokens",
+          "path": "lastUsage.contextWindowUsedTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Explain the receipt layout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.labels",
+          "path": "labels",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.requiresAttention",
+          "path": "requiresAttention",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.attentionReason",
+          "path": "attentionReason",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.attentionTimestamp",
+          "path": "attentionTimestamp",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.workspaceId",
+          "path": "workspaceId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.model",
+          "path": "model",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.features[]",
+          "path": "features[]",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.thinkingOptionId",
+          "path": "thinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.effectiveThinkingOptionId",
+          "path": "effectiveThinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.createdAt",
+          "path": "createdAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.updatedAt",
+          "path": "updatedAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUserMessageAt",
+          "path": "lastUserMessageAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsStreaming",
+          "path": "capabilities.supportsStreaming",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsSessionPersistence",
+          "path": "capabilities.supportsSessionPersistence",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsSessionListing",
+          "path": "capabilities.supportsSessionListing",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsDynamicModes",
+          "path": "capabilities.supportsDynamicModes",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsMcpServers",
+          "path": "capabilities.supportsMcpServers",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsReasoningStream",
+          "path": "capabilities.supportsReasoningStream",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsToolInvocations",
+          "path": "capabilities.supportsToolInvocations",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindConversation",
+          "path": "capabilities.supportsRewindConversation",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindFiles",
+          "path": "capabilities.supportsRewindFiles",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.capabilities.supportsRewindBoth",
+          "path": "capabilities.supportsRewindBoth",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.currentModeId",
+          "path": "currentModeId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].id",
+          "path": "availableModes[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].label",
+          "path": "availableModes[].label",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].description",
+          "path": "availableModes[].description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].icon",
+          "path": "availableModes[].icon",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.availableModes[].colorTier",
+          "path": "availableModes[].colorTier",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.provider",
+          "path": "persistence.provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.sessionId",
+          "path": "persistence.sessionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.nativeHandle",
+          "path": "persistence.nativeHandle",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.persistence.metadata",
+          "path": "persistence.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.provider",
+          "path": "runtimeInfo.provider",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.sessionId",
+          "path": "runtimeInfo.sessionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.model",
+          "path": "runtimeInfo.model",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.thinkingOptionId",
+          "path": "runtimeInfo.thinkingOptionId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.modeId",
+          "path": "runtimeInfo.modeId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.runtimeInfo.extra",
+          "path": "runtimeInfo.extra",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.inputTokens",
+          "path": "lastUsage.inputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.cachedInputTokens",
+          "path": "lastUsage.cachedInputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.outputTokens",
+          "path": "lastUsage.outputTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.totalCostUsd",
+          "path": "lastUsage.totalCostUsd",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.contextWindowMaxTokens",
+          "path": "lastUsage.contextWindowMaxTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.lastUsage.contextWindowUsedTokens",
+          "path": "lastUsage.contextWindowUsedTokens",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.labels",
+          "path": "labels",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "agent.archivedAt",
+          "path": "archivedAt",
+          "kind": "string",
+          "probes": [
+            "Old refactor nobody needs"
+          ],
+          "primary": false
+        },
+        {
+          "key": "agent.providerUnavailable",
+          "path": "providerUnavailable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.projectKey",
+          "path": "projectKey",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.projectName",
+          "path": "projectName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.workspaceName",
+          "path": "workspaceName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.checkout",
+          "path": "checkout",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.projectKey",
+          "path": "projectKey",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.projectName",
+          "path": "projectName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.workspaceName",
+          "path": "workspaceName",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.checkout",
+          "path": "checkout",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "page.nextCursor",
+          "path": "nextCursor",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "page.prevCursor",
+          "path": "prevCursor",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "page.hasMore",
+          "path": "hasMore",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

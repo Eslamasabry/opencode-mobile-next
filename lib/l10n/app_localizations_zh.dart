@@ -940,9 +940,8 @@ class AppLocalizationsZh extends AppLocalizations {
       'This file contains redacted placeholders. Import cannot recover the original text; use an unredacted export if you need it.';
 
   @override
-  String importParent(String id) {
-    return 'Parent conversation $id must already exist on this server. Import the parent first.';
-  }
+  String get importParent =>
+      'This conversation was started by another one, which must already exist on this server. Import that one first.';
 
   @override
   String get importArchived =>
@@ -26794,6 +26793,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatsHomeDone => '已完成';
+
+  @override
+  String get chatsHomeFailed => '已失败';
 
   @override
   String get chatsHomeToday => '今天';

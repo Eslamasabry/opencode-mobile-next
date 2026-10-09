@@ -1,0 +1,2631 @@
+{
+  "source": "contracts/opencode2-openapi-beta-18600.json",
+  "schema": {
+    "Session.Info": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "parentID",
+        "kind": "string"
+      },
+      {
+        "path": "fork.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "fork.boundary.messageID",
+        "kind": "string"
+      },
+      {
+        "path": "fork.boundary.type",
+        "kind": "enum"
+      },
+      {
+        "path": "projectID",
+        "kind": "string"
+      },
+      {
+        "path": "agent",
+        "kind": "string"
+      },
+      {
+        "path": "model.id",
+        "kind": "string"
+      },
+      {
+        "path": "model.providerID",
+        "kind": "string"
+      },
+      {
+        "path": "model.variant",
+        "kind": "string"
+      },
+      {
+        "path": "cost",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.input",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.output",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.reasoning",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.cache.read",
+        "kind": "number"
+      },
+      {
+        "path": "tokens.cache.write",
+        "kind": "number"
+      },
+      {
+        "path": "outcome",
+        "kind": "enum"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "time.updated",
+        "kind": "number"
+      },
+      {
+        "path": "time.idle",
+        "kind": "number"
+      },
+      {
+        "path": "time.viewed",
+        "kind": "number"
+      },
+      {
+        "path": "time.archived",
+        "kind": "number"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "location.directory",
+        "kind": "string"
+      },
+      {
+        "path": "location.workspaceID",
+        "kind": "string"
+      },
+      {
+        "path": "subpath",
+        "kind": "string"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      },
+      {
+        "path": "revert.messageID",
+        "kind": "string"
+      },
+      {
+        "path": "revert.partID",
+        "kind": "string"
+      },
+      {
+        "path": "revert.snapshot",
+        "kind": "string"
+      },
+      {
+        "path": "revert.files[].file",
+        "kind": "string"
+      },
+      {
+        "path": "revert.files[].patch",
+        "kind": "string"
+      },
+      {
+        "path": "revert.files[].additions",
+        "kind": "number"
+      },
+      {
+        "path": "revert.files[].deletions",
+        "kind": "number"
+      },
+      {
+        "path": "revert.files[].status",
+        "kind": "enum"
+      }
+    ],
+    "SessionsResponse": [
+      {
+        "path": "data[]",
+        "kind": "any"
+      },
+      {
+        "path": "cursor.previous",
+        "kind": "string"
+      },
+      {
+        "path": "cursor.next",
+        "kind": "string"
+      }
+    ],
+    "Project": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "canonical",
+        "kind": "string"
+      },
+      {
+        "path": "vcs",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "icon.url",
+        "kind": "string"
+      },
+      {
+        "path": "icon.override",
+        "kind": "string"
+      },
+      {
+        "path": "icon.color",
+        "kind": "string"
+      },
+      {
+        "path": "commands.start",
+        "kind": "string"
+      },
+      {
+        "path": "time.created",
+        "kind": "number"
+      },
+      {
+        "path": "time.updated",
+        "kind": "number"
+      },
+      {
+        "path": "time.initialized",
+        "kind": "number"
+      },
+      {
+        "path": "sandboxes[]",
+        "kind": "string"
+      }
+    ],
+    "Worktree.List": [
+      {
+        "path": "[].directory",
+        "kind": "string"
+      },
+      {
+        "path": "[].strategy",
+        "kind": "string"
+      }
+    ],
+    "SessionTransfer.Data": [
+      {
+        "path": "info.id",
+        "kind": "string"
+      },
+      {
+        "path": "info.parentID",
+        "kind": "string"
+      },
+      {
+        "path": "info.fork.sessionID",
+        "kind": "string"
+      },
+      {
+        "path": "info.fork.boundary.messageID",
+        "kind": "string"
+      },
+      {
+        "path": "info.fork.boundary.type",
+        "kind": "enum"
+      },
+      {
+        "path": "info.projectID",
+        "kind": "string"
+      },
+      {
+        "path": "info.agent",
+        "kind": "string"
+      },
+      {
+        "path": "info.model.id",
+        "kind": "string"
+      },
+      {
+        "path": "info.model.providerID",
+        "kind": "string"
+      },
+      {
+        "path": "info.model.variant",
+        "kind": "string"
+      },
+      {
+        "path": "info.cost",
+        "kind": "number"
+      },
+      {
+        "path": "info.tokens.input",
+        "kind": "number"
+      },
+      {
+        "path": "info.tokens.output",
+        "kind": "number"
+      },
+      {
+        "path": "info.tokens.reasoning",
+        "kind": "number"
+      },
+      {
+        "path": "info.tokens.cache.read",
+        "kind": "number"
+      },
+      {
+        "path": "info.tokens.cache.write",
+        "kind": "number"
+      },
+      {
+        "path": "info.outcome",
+        "kind": "enum"
+      },
+      {
+        "path": "info.time.created",
+        "kind": "number"
+      },
+      {
+        "path": "info.time.updated",
+        "kind": "number"
+      },
+      {
+        "path": "info.time.idle",
+        "kind": "number"
+      },
+      {
+        "path": "info.time.viewed",
+        "kind": "number"
+      },
+      {
+        "path": "info.time.archived",
+        "kind": "number"
+      },
+      {
+        "path": "info.title",
+        "kind": "string"
+      },
+      {
+        "path": "info.location.directory",
+        "kind": "string"
+      },
+      {
+        "path": "info.location.workspaceID",
+        "kind": "string"
+      },
+      {
+        "path": "info.subpath",
+        "kind": "string"
+      },
+      {
+        "path": "info.metadata",
+        "kind": "any"
+      },
+      {
+        "path": "info.revert.messageID",
+        "kind": "string"
+      },
+      {
+        "path": "info.revert.partID",
+        "kind": "string"
+      },
+      {
+        "path": "info.revert.snapshot",
+        "kind": "string"
+      },
+      {
+        "path": "info.revert.files[].file",
+        "kind": "string"
+      },
+      {
+        "path": "info.revert.files[].patch",
+        "kind": "string"
+      },
+      {
+        "path": "info.revert.files[].additions",
+        "kind": "number"
+      },
+      {
+        "path": "info.revert.files[].deletions",
+        "kind": "number"
+      },
+      {
+        "path": "info.revert.files[].status",
+        "kind": "enum"
+      },
+      {
+        "path": "messages[]",
+        "kind": "any"
+      }
+    ],
+    "InstructionEntry.Info": [
+      {
+        "path": "key",
+        "kind": "string"
+      },
+      {
+        "path": "value",
+        "kind": "any"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "session_full",
+      "payload": {
+        "id": "ses_lists01",
+        "projectID": "prj_shopfront",
+        "agent": "build",
+        "model": {
+          "id": "claude-sonnet-5-5",
+          "providerID": "openrouter",
+          "variant": "high"
+        },
+        "cost": 0.4271,
+        "tokens": {
+          "input": 15200,
+          "output": 2310,
+          "reasoning": 640,
+          "cache": {
+            "read": 8800,
+            "write": 1200
+          }
+        },
+        "outcome": "failed",
+        "time": {
+          "created": 1788960000000,
+          "updated": 1788963600000,
+          "idle": 1788963500000,
+          "viewed": 1788963000000
+        },
+        "title": "Fix the cart total rounding",
+        "location": {
+          "directory": "/work/shopfront",
+          "workspaceID": "wrk_review"
+        },
+        "subpath": "src/checkout",
+        "metadata": {
+          "mobile.note": "Rerun the cart tests before merging"
+        },
+        "revert": {
+          "messageID": "msg_lists_r1",
+          "partID": "prt_lists_r1",
+          "snapshot": "snap_lists1",
+          "files": [
+            {
+              "file": "lib/checkout/cart_total.dart",
+              "patch": "@@ -10,3 +10,4 @@\n-final total = sum;\n+final total = sum.roundToDouble();",
+              "additions": 17,
+              "deletions": 5,
+              "status": "modified"
+            }
+          ]
+        },
+        "fork": {
+          "sessionID": "ses_lists00",
+          "boundary": {
+            "type": "before",
+            "messageID": "msg_lists_f1"
+          }
+        }
+      },
+      "kind": "session",
+      "route": "session",
+      "fields": [
+        {
+          "key": "Session.Info.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.projectID",
+          "path": "projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-sonnet-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "openrouter"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.cost",
+          "path": "cost",
+          "kind": "number",
+          "probes": [
+            "$0.4271"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.input",
+          "path": "tokens.input",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.output",
+          "path": "tokens.output",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.reasoning",
+          "path": "tokens.reasoning",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.cache.read",
+          "path": "tokens.cache.read",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.cache.write",
+          "path": "tokens.cache.write",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.outcome",
+          "path": "outcome",
+          "kind": "enum",
+          "probes": [
+            "Failed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "2h ago"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.updated",
+          "path": "time.updated",
+          "kind": "number",
+          "probes": [
+            "1h ago"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.idle",
+          "path": "time.idle",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.viewed",
+          "path": "time.viewed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Fix the cart total rounding"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Session.Info.location.directory",
+          "path": "location.directory",
+          "kind": "string",
+          "probes": [
+            "/work/shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.location.workspaceID",
+          "path": "location.workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.subpath",
+          "path": "subpath",
+          "kind": "string",
+          "probes": [
+            "src/checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [
+            "Rerun the cart tests before merging"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.messageID",
+          "path": "revert.messageID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.partID",
+          "path": "revert.partID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.snapshot",
+          "path": "revert.snapshot",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].file",
+          "path": "revert.files[].file",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].patch",
+          "path": "revert.files[].patch",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].additions",
+          "path": "revert.files[].additions",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].deletions",
+          "path": "revert.files[].deletions",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].status",
+          "path": "revert.files[].status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.fork.sessionID",
+          "path": "fork.sessionID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.fork.boundary.type",
+          "path": "fork.boundary.type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.fork.boundary.messageID",
+          "path": "fork.boundary.messageID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "session_child",
+      "payload": {
+        "id": "ses_lists02",
+        "projectID": "prj_shopfront",
+        "agent": "build",
+        "model": {
+          "id": "claude-sonnet-5-5",
+          "providerID": "openrouter",
+          "variant": "high"
+        },
+        "cost": 0.4271,
+        "tokens": {
+          "input": 15200,
+          "output": 2310,
+          "reasoning": 640,
+          "cache": {
+            "read": 8800,
+            "write": 1200
+          }
+        },
+        "outcome": "succeeded",
+        "time": {
+          "created": 1788960000000,
+          "updated": 1788963600000,
+          "idle": 1788963500000,
+          "viewed": 1788963000000
+        },
+        "title": "Audit the cart tests (@explore subagent)",
+        "location": {
+          "directory": "/work/shopfront",
+          "workspaceID": "wrk_review"
+        },
+        "subpath": "src/checkout",
+        "parentID": "ses_lists01"
+      },
+      "kind": "session",
+      "route": "session",
+      "fields": [
+        {
+          "key": "Session.Info.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.projectID",
+          "path": "projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-sonnet-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "openrouter"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.cost",
+          "path": "cost",
+          "kind": "number",
+          "probes": [
+            "$0.4271"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.input",
+          "path": "tokens.input",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.output",
+          "path": "tokens.output",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.reasoning",
+          "path": "tokens.reasoning",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.cache.read",
+          "path": "tokens.cache.read",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.cache.write",
+          "path": "tokens.cache.write",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.outcome",
+          "path": "outcome",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "2h ago"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.updated",
+          "path": "time.updated",
+          "kind": "number",
+          "probes": [
+            "1h ago"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.idle",
+          "path": "time.idle",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.viewed",
+          "path": "time.viewed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Audit the cart tests (@explore subagent)"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Session.Info.location.directory",
+          "path": "location.directory",
+          "kind": "string",
+          "probes": [
+            "/work/shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.location.workspaceID",
+          "path": "location.workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.subpath",
+          "path": "subpath",
+          "kind": "string",
+          "probes": [
+            "src/checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.parentID",
+          "path": "parentID",
+          "kind": "string",
+          "probes": [
+            "Started from"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "session_archived",
+      "payload": {
+        "id": "ses_lists03",
+        "projectID": "prj_shopfront",
+        "agent": "build",
+        "model": {
+          "id": "claude-sonnet-5-5",
+          "providerID": "openrouter",
+          "variant": "high"
+        },
+        "cost": 0.4271,
+        "tokens": {
+          "input": 15200,
+          "output": 2310,
+          "reasoning": 640,
+          "cache": {
+            "read": 8800,
+            "write": 1200
+          }
+        },
+        "outcome": "interrupted",
+        "time": {
+          "created": 1788182400000,
+          "updated": 1788268800000,
+          "archived": 1788355200000
+        },
+        "title": "Old checkout experiment",
+        "location": {
+          "directory": "/work/shopfront",
+          "workspaceID": "wrk_review"
+        },
+        "subpath": "src/checkout",
+        "metadata": {
+          "mobile.note": "Rerun the cart tests before merging"
+        },
+        "revert": {
+          "messageID": "msg_lists_r1",
+          "partID": "prt_lists_r1",
+          "snapshot": "snap_lists1",
+          "files": [
+            {
+              "file": "lib/checkout/cart_total.dart",
+              "patch": "@@ -10,3 +10,4 @@\n-final total = sum;\n+final total = sum.roundToDouble();",
+              "additions": 17,
+              "deletions": 5,
+              "status": "modified"
+            }
+          ]
+        }
+      },
+      "kind": "session",
+      "route": "session",
+      "archived": true,
+      "fields": [
+        {
+          "key": "Session.Info.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.projectID",
+          "path": "projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-sonnet-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "openrouter"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.cost",
+          "path": "cost",
+          "kind": "number",
+          "probes": [
+            "$0.4271"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.input",
+          "path": "tokens.input",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.output",
+          "path": "tokens.output",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.reasoning",
+          "path": "tokens.reasoning",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.cache.read",
+          "path": "tokens.cache.read",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.cache.write",
+          "path": "tokens.cache.write",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.outcome",
+          "path": "outcome",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.updated",
+          "path": "time.updated",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.archived",
+          "path": "time.archived",
+          "kind": "number",
+          "probes": [
+            "Archived ·"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Old checkout experiment"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Session.Info.location.directory",
+          "path": "location.directory",
+          "kind": "string",
+          "probes": [
+            "/work/shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.location.workspaceID",
+          "path": "location.workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.subpath",
+          "path": "subpath",
+          "kind": "string",
+          "probes": [
+            "src/checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [
+            "Rerun the cart tests before merging"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.messageID",
+          "path": "revert.messageID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.partID",
+          "path": "revert.partID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.snapshot",
+          "path": "revert.snapshot",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].file",
+          "path": "revert.files[].file",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].patch",
+          "path": "revert.files[].patch",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].additions",
+          "path": "revert.files[].additions",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].deletions",
+          "path": "revert.files[].deletions",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].status",
+          "path": "revert.files[].status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "session_done",
+      "payload": {
+        "id": "ses_lists08",
+        "projectID": "prj_shopfront",
+        "agent": "build",
+        "model": {
+          "id": "claude-sonnet-5-5",
+          "providerID": "openrouter",
+          "variant": "high"
+        },
+        "cost": 0.4271,
+        "tokens": {
+          "input": 15200,
+          "output": 2310,
+          "reasoning": 640,
+          "cache": {
+            "read": 8800,
+            "write": 1200
+          }
+        },
+        "outcome": "succeeded",
+        "time": {
+          "created": 1788960000000,
+          "updated": 1788963600000,
+          "idle": 1788963500000,
+          "viewed": 1788963000000
+        },
+        "title": "Explain the receipt layout",
+        "location": {
+          "directory": "/work/shopfront",
+          "workspaceID": "wrk_review"
+        },
+        "subpath": "src/checkout"
+      },
+      "kind": "session",
+      "route": "session",
+      "fields": [
+        {
+          "key": "Session.Info.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.projectID",
+          "path": "projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-sonnet-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "openrouter"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.cost",
+          "path": "cost",
+          "kind": "number",
+          "probes": [
+            "$0.4271"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.input",
+          "path": "tokens.input",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.output",
+          "path": "tokens.output",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.reasoning",
+          "path": "tokens.reasoning",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.cache.read",
+          "path": "tokens.cache.read",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.cache.write",
+          "path": "tokens.cache.write",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.outcome",
+          "path": "outcome",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "2h ago"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.updated",
+          "path": "time.updated",
+          "kind": "number",
+          "probes": [
+            "1h ago"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.idle",
+          "path": "time.idle",
+          "kind": "number",
+          "probes": [
+            "Done"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.viewed",
+          "path": "time.viewed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Explain the receipt layout"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Session.Info.location.directory",
+          "path": "location.directory",
+          "kind": "string",
+          "probes": [
+            "/work/shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.location.workspaceID",
+          "path": "location.workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.subpath",
+          "path": "subpath",
+          "kind": "string",
+          "probes": [
+            "src/checkout"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "session_fork_through",
+      "payload": {
+        "id": "ses_lists04",
+        "projectID": "prj_shopfront",
+        "agent": "build",
+        "model": {
+          "id": "claude-sonnet-5-5",
+          "providerID": "openrouter",
+          "variant": "high"
+        },
+        "cost": 0.4271,
+        "tokens": {
+          "input": 15200,
+          "output": 2310,
+          "reasoning": 640,
+          "cache": {
+            "read": 8800,
+            "write": 1200
+          }
+        },
+        "outcome": "failed",
+        "time": {
+          "created": 1788960000000,
+          "updated": 1788963600000,
+          "idle": 1788963500000,
+          "viewed": 1788963000000
+        },
+        "title": "Cart total, second try",
+        "location": {
+          "directory": "/work/shopfront",
+          "workspaceID": "wrk_review"
+        },
+        "subpath": "src/checkout",
+        "metadata": {
+          "mobile.note": "Rerun the cart tests before merging"
+        },
+        "revert": {
+          "messageID": "msg_lists_r1",
+          "partID": "prt_lists_r1",
+          "snapshot": "snap_lists1",
+          "files": [
+            {
+              "file": "lib/checkout/cart_total.dart",
+              "patch": "@@ -10,3 +10,4 @@\n-final total = sum;\n+final total = sum.roundToDouble();",
+              "additions": 17,
+              "deletions": 5,
+              "status": "modified"
+            }
+          ]
+        },
+        "fork": {
+          "sessionID": "ses_lists01",
+          "boundary": {
+            "type": "through",
+            "messageID": "msg_lists_f2"
+          }
+        }
+      },
+      "kind": "session",
+      "route": "session",
+      "fields": [
+        {
+          "key": "Session.Info.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.projectID",
+          "path": "projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [
+            "claude-sonnet-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [
+            "openrouter"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.cost",
+          "path": "cost",
+          "kind": "number",
+          "probes": [
+            "$0.4271"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.input",
+          "path": "tokens.input",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.output",
+          "path": "tokens.output",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.reasoning",
+          "path": "tokens.reasoning",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.cache.read",
+          "path": "tokens.cache.read",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.tokens.cache.write",
+          "path": "tokens.cache.write",
+          "kind": "number",
+          "probes": [
+            "28,150"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.outcome",
+          "path": "outcome",
+          "kind": "enum",
+          "probes": [
+            "Failed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [
+            "2h ago"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.updated",
+          "path": "time.updated",
+          "kind": "number",
+          "probes": [
+            "1h ago"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.idle",
+          "path": "time.idle",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.time.viewed",
+          "path": "time.viewed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Cart total, second try"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Session.Info.location.directory",
+          "path": "location.directory",
+          "kind": "string",
+          "probes": [
+            "/work/shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.location.workspaceID",
+          "path": "location.workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.subpath",
+          "path": "subpath",
+          "kind": "string",
+          "probes": [
+            "src/checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [
+            "Rerun the cart tests before merging"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.messageID",
+          "path": "revert.messageID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.partID",
+          "path": "revert.partID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.snapshot",
+          "path": "revert.snapshot",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].file",
+          "path": "revert.files[].file",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].patch",
+          "path": "revert.files[].patch",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].additions",
+          "path": "revert.files[].additions",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].deletions",
+          "path": "revert.files[].deletions",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.revert.files[].status",
+          "path": "revert.files[].status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.fork.sessionID",
+          "path": "fork.sessionID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.fork.boundary.type",
+          "path": "fork.boundary.type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Info.fork.boundary.messageID",
+          "path": "fork.boundary.messageID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "page_cursor",
+      "payload": {
+        "data": [
+          {
+            "id": "ses_lists05",
+            "projectID": "prj_shopfront",
+            "agent": "build",
+            "model": {
+              "id": "claude-sonnet-5-5",
+              "providerID": "openrouter",
+              "variant": "high"
+            },
+            "cost": 0.4271,
+            "tokens": {
+              "input": 15200,
+              "output": 2310,
+              "reasoning": 640,
+              "cache": {
+                "read": 8800,
+                "write": 1200
+              }
+            },
+            "outcome": "failed",
+            "time": {
+              "created": 1788960000000,
+              "updated": 1788963600000,
+              "idle": 1788963500000,
+              "viewed": 1788963000000
+            },
+            "title": "Page one conversation",
+            "location": {
+              "directory": "/work/shopfront",
+              "workspaceID": "wrk_review"
+            },
+            "subpath": "src/checkout",
+            "metadata": {
+              "mobile.note": "Rerun the cart tests before merging"
+            },
+            "revert": {
+              "messageID": "msg_lists_r1",
+              "partID": "prt_lists_r1",
+              "snapshot": "snap_lists1",
+              "files": [
+                {
+                  "file": "lib/checkout/cart_total.dart",
+                  "patch": "@@ -10,3 +10,4 @@\n-final total = sum;\n+final total = sum.roundToDouble();",
+                  "additions": 17,
+                  "deletions": 5,
+                  "status": "modified"
+                }
+              ]
+            }
+          }
+        ],
+        "cursor": {
+          "previous": "cur_prev_a1",
+          "next": "cur_next_b2"
+        }
+      },
+      "kind": "page",
+      "route": "page",
+      "fields": [
+        {
+          "key": "SessionsResponse.data[]",
+          "path": "data[]",
+          "kind": "any",
+          "probes": [
+            "Page one conversation"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionsResponse.cursor.previous",
+          "path": "cursor.previous",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionsResponse.cursor.next",
+          "path": "cursor.next",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "active_running",
+      "payload": {
+        "type": "running"
+      },
+      "kind": "active",
+      "route": "active",
+      "fields": []
+    },
+    {
+      "id": "project_full",
+      "payload": {
+        "id": "prj_shopfront",
+        "canonical": "/work/shopfront",
+        "vcs": "git",
+        "name": "Shopfront",
+        "icon": {
+          "url": "https://example.com/shop.png",
+          "override": "cart",
+          "color": "blue"
+        },
+        "commands": {
+          "start": "npm install && npm run dev"
+        },
+        "time": {
+          "created": 1786368000000,
+          "updated": 1788960000000,
+          "initialized": 1786454400000
+        },
+        "sandboxes": [
+          "/work/shopfront-review"
+        ]
+      },
+      "kind": "project",
+      "route": "project",
+      "fields": [
+        {
+          "key": "Project.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Project.canonical",
+          "path": "canonical",
+          "kind": "string",
+          "probes": [
+            "/work/shopfront"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Project.vcs",
+          "path": "vcs",
+          "kind": "string",
+          "probes": [
+            "Git"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Project.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Shopfront"
+          ],
+          "primary": true
+        },
+        {
+          "key": "Project.icon.url",
+          "path": "icon.url",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Project.icon.override",
+          "path": "icon.override",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Project.icon.color",
+          "path": "icon.color",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Project.commands.start",
+          "path": "commands.start",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Project.time.created",
+          "path": "time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Project.time.updated",
+          "path": "time.updated",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Project.time.initialized",
+          "path": "time.initialized",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Project.sandboxes[]",
+          "path": "sandboxes[]",
+          "kind": "string",
+          "probes": [
+            "1 worktree"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "worktrees",
+      "payload": [
+        {
+          "directory": "/work/shopfront-review",
+          "strategy": "worktree"
+        },
+        {
+          "directory": "/work/shopfront-spike",
+          "strategy": "copy"
+        }
+      ],
+      "kind": "worktrees",
+      "route": "worktrees",
+      "fields": [
+        {
+          "key": "Worktree.List.[].directory",
+          "path": "[].directory",
+          "kind": "string",
+          "probes": [
+            "shopfront-review",
+            "shopfront-spike"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Worktree.List.[].strategy",
+          "path": "[].strategy",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "note_entries",
+      "payload": {
+        "data": [
+          {
+            "key": "mobile.note",
+            "value": "Rerun the cart tests before merging"
+          },
+          {
+            "key": "team.style",
+            "value": "Prefer tabs in generated code"
+          }
+        ]
+      },
+      "kind": "notes",
+      "route": "notes",
+      "fields": [
+        {
+          "key": "InstructionEntry.Info.key",
+          "path": "key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "InstructionEntry.Info.value",
+          "path": "value",
+          "kind": "any",
+          "probes": [
+            "Rerun the cart tests before merging"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "transfer_file",
+      "payload": {
+        "info": {
+          "id": "ses_lists06",
+          "projectID": "prj_shopfront",
+          "agent": "build",
+          "model": {
+            "id": "claude-sonnet-5-5",
+            "providerID": "openrouter",
+            "variant": "high"
+          },
+          "cost": 0.4271,
+          "tokens": {
+            "input": 15200,
+            "output": 2310,
+            "reasoning": 640,
+            "cache": {
+              "read": 8800,
+              "write": 1200
+            }
+          },
+          "outcome": "failed",
+          "time": {
+            "created": 1788960000000,
+            "updated": 1788963600000,
+            "idle": 1788963500000,
+            "viewed": 1788963000000
+          },
+          "title": "Fix the cart total rounding",
+          "location": {
+            "directory": "/work/shopfront",
+            "workspaceID": "wrk_review"
+          },
+          "subpath": "src/checkout",
+          "metadata": {
+            "mobile.note": "Rerun the cart tests before merging"
+          },
+          "revert": {
+            "messageID": "msg_lists_r1",
+            "partID": "prt_lists_r1",
+            "snapshot": "snap_lists1",
+            "files": [
+              {
+                "file": "lib/checkout/cart_total.dart",
+                "patch": "@@ -10,3 +10,4 @@\n-final total = sum;\n+final total = sum.roundToDouble();",
+                "additions": 17,
+                "deletions": 5,
+                "status": "modified"
+              }
+            ]
+          },
+          "fork": {
+            "sessionID": "ses_lists00",
+            "boundary": {
+              "type": "before",
+              "messageID": "msg_lists_f1"
+            }
+          }
+        },
+        "messages": [
+          {
+            "id": "msg_lists_m1",
+            "type": "user",
+            "time": {
+              "created": 1788960000000
+            },
+            "text": "Round the cart total"
+          },
+          {
+            "id": "msg_lists_m2",
+            "type": "assistant",
+            "time": {
+              "created": 1788960001000
+            },
+            "content": []
+          }
+        ]
+      },
+      "kind": "transfer",
+      "route": "transfer",
+      "fields": [
+        {
+          "key": "SessionTransfer.Data.info.id",
+          "path": "info.id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.projectID",
+          "path": "info.projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.agent",
+          "path": "info.agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.model.id",
+          "path": "info.model.id",
+          "kind": "string",
+          "probes": [
+            "claude-sonnet-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.model.providerID",
+          "path": "info.model.providerID",
+          "kind": "string",
+          "probes": [
+            "openrouter"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.model.variant",
+          "path": "info.model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.cost",
+          "path": "info.cost",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.tokens.input",
+          "path": "info.tokens.input",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.tokens.output",
+          "path": "info.tokens.output",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.tokens.reasoning",
+          "path": "info.tokens.reasoning",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.tokens.cache.read",
+          "path": "info.tokens.cache.read",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.tokens.cache.write",
+          "path": "info.tokens.cache.write",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.outcome",
+          "path": "info.outcome",
+          "kind": "enum",
+          "probes": [
+            "Failed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.time.created",
+          "path": "info.time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.time.updated",
+          "path": "info.time.updated",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.time.idle",
+          "path": "info.time.idle",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.time.viewed",
+          "path": "info.time.viewed",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.title",
+          "path": "info.title",
+          "kind": "string",
+          "probes": [
+            "Fix the cart total rounding"
+          ],
+          "primary": true
+        },
+        {
+          "key": "SessionTransfer.Data.info.location.directory",
+          "path": "info.location.directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.location.workspaceID",
+          "path": "info.location.workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.subpath",
+          "path": "info.subpath",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.metadata",
+          "path": "info.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.revert.messageID",
+          "path": "info.revert.messageID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.revert.partID",
+          "path": "info.revert.partID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.revert.snapshot",
+          "path": "info.revert.snapshot",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.revert.files[].file",
+          "path": "info.revert.files[].file",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.revert.files[].patch",
+          "path": "info.revert.files[].patch",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.revert.files[].additions",
+          "path": "info.revert.files[].additions",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.revert.files[].deletions",
+          "path": "info.revert.files[].deletions",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.revert.files[].status",
+          "path": "info.revert.files[].status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.fork.sessionID",
+          "path": "info.fork.sessionID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.fork.boundary.type",
+          "path": "info.fork.boundary.type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.fork.boundary.messageID",
+          "path": "info.fork.boundary.messageID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.messages[]",
+          "path": "messages[]",
+          "kind": "any",
+          "probes": [
+            "2 messages"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "transfer_child_archived",
+      "payload": {
+        "info": {
+          "id": "ses_lists07",
+          "projectID": "prj_shopfront",
+          "agent": "build",
+          "model": {
+            "id": "claude-sonnet-5-5",
+            "providerID": "openrouter",
+            "variant": "high"
+          },
+          "cost": 0.4271,
+          "tokens": {
+            "input": 15200,
+            "output": 2310,
+            "reasoning": 640,
+            "cache": {
+              "read": 8800,
+              "write": 1200
+            }
+          },
+          "outcome": "failed",
+          "time": {
+            "created": 1788700800000,
+            "updated": 1788787200000,
+            "archived": 1788873600000
+          },
+          "title": "Archived subagent run",
+          "location": {
+            "directory": "/work/shopfront",
+            "workspaceID": "wrk_review"
+          },
+          "subpath": "src/checkout",
+          "metadata": {
+            "mobile.note": "Rerun the cart tests before merging"
+          },
+          "parentID": "ses_lists06"
+        },
+        "messages": [
+          {
+            "id": "msg_lists_m1",
+            "type": "user",
+            "time": {
+              "created": 1788960000000
+            },
+            "text": "Round the cart total"
+          }
+        ]
+      },
+      "kind": "transfer",
+      "route": "transfer",
+      "fields": [
+        {
+          "key": "SessionTransfer.Data.info.id",
+          "path": "info.id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.projectID",
+          "path": "info.projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.agent",
+          "path": "info.agent",
+          "kind": "string",
+          "probes": [
+            "build"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.model.id",
+          "path": "info.model.id",
+          "kind": "string",
+          "probes": [
+            "claude-sonnet-5-5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.model.providerID",
+          "path": "info.model.providerID",
+          "kind": "string",
+          "probes": [
+            "openrouter"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.model.variant",
+          "path": "info.model.variant",
+          "kind": "string",
+          "probes": [
+            "high"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.cost",
+          "path": "info.cost",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.tokens.input",
+          "path": "info.tokens.input",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.tokens.output",
+          "path": "info.tokens.output",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.tokens.reasoning",
+          "path": "info.tokens.reasoning",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.tokens.cache.read",
+          "path": "info.tokens.cache.read",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.tokens.cache.write",
+          "path": "info.tokens.cache.write",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.outcome",
+          "path": "info.outcome",
+          "kind": "enum",
+          "probes": [
+            "Failed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.time.created",
+          "path": "info.time.created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.time.updated",
+          "path": "info.time.updated",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.time.archived",
+          "path": "info.time.archived",
+          "kind": "number",
+          "probes": [
+            "This conversation is archived"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.title",
+          "path": "info.title",
+          "kind": "string",
+          "probes": [
+            "Archived subagent run"
+          ],
+          "primary": true
+        },
+        {
+          "key": "SessionTransfer.Data.info.location.directory",
+          "path": "info.location.directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.location.workspaceID",
+          "path": "info.location.workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.subpath",
+          "path": "info.subpath",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.metadata",
+          "path": "info.metadata",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.info.parentID",
+          "path": "info.parentID",
+          "kind": "string",
+          "probes": [
+            "started by another one"
+          ],
+          "primary": false
+        },
+        {
+          "key": "SessionTransfer.Data.messages[]",
+          "path": "messages[]",
+          "kind": "any",
+          "probes": [
+            "1 message"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}
