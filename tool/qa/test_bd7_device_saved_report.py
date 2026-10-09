@@ -80,6 +80,44 @@ class SavedReportTest(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         return temp.name
 
+    def test_saved_report_proof_does_not_require_recent_exit_ui(self):
+        session = proof.SavedReportSession(
+            "adb", Path(self.addCleanupDirectory()), ports=Mock()
+        )
+        session.ui = Mock()
+        session.ui.nodes.return_value = []
+        session.ui.scroll_find.side_effect = lambda label: (
+            None
+            if label == "The app closed unexpectedly"
+            else (_ for _ in ()).throw(
+                proof.Bd7UiFailure("navigation_target_unavailable")
+            )
+        )
+        os_exit = {"reason": 4, "pid": 42}
+        record = {
+            "source": "native",
+            "category": "Native application error",
+            "time": 100,
+        }
+        with (
+            patch.object(session, "execute", return_value=b"[]"),
+            patch.object(session, "root", return_value=b"1"),
+            patch(
+                "tool.qa.bd7_device_crash_smoke.parse_exit_history",
+                return_value=os_exit,
+            ),
+            patch(
+                "tool.qa.bd7_device_crash_smoke.parse_crash_ring", return_value=record
+            ),
+        ):
+            result = session.proof(
+                (42, 1), 4, "native", 99, "The app closed unexpectedly"
+            )
+        self.assertTrue(result["visible_report"])
+        self.assertEqual(result["os_exit"], os_exit)
+        session.ui.details_number.assert_not_called()
+        self.assertEqual(session.ui.scroll_find.call_count, 1)
+
     def test_crash_preview_delete_off_and_restore_under_owned_lock(self):
         receipt, order, session, _ = self.fixture()
         self.assertEqual(receipt["result"], "PASS")

@@ -1,0 +1,18 @@
+{
+  "device": "emulator-5554",
+  "version_code": 2199,
+  "result": "FAIL",
+  "apk_sha256": "be1bf7b80a5901a4041fbe8b7a2e754631f05ed04486b70c9e33c0ac1e12061a",
+  "scope": "real_crash_saved_report_share_preview",
+  "external_share_opened": false,
+  "anr_triggered": false,
+  "baseline": {
+    "consent_enabled": false,
+    "saved_count": 0
+  },
+  "consent_enabled": true,
+  "failure_stage": "native_crash",
+  "failure_code": "navigation_target_unavailable",
+  "owned_report_cleanup": "PASS",
+  "normal_app_restore": "PASS"
+}

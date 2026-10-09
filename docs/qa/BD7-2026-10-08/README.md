@@ -274,3 +274,21 @@ driver now reuses the visible report page, scrolls Settings upward, and opens
 share preview directly from inline exit history. All 81 focused checks pass
 serially through machine_lock; no app source changed. Complete device proof
 still requires a new reservation.
+
+## Crash recovery review — 2026-10-09
+
+The recovered [2199 attempt](2199-saved-report-verified/report.json), despite its
+directory name, is **FAIL**, not a completed qualification. Its safe screenshots
+show consent, the saved native row and its details preview; the share-preview
+image is absent. It stopped at `native_crash/navigation_target_unavailable`.
+[Restoration](2199-saved-report-verified/restoration.json) confirms consent Off
+and zero saved reports. The old host manifests remain historical and unchanged.
+
+The reviewed QA-only correction lets this saved-report driver omit the separate
+Recent app exits UI journey while retaining exact-main Android reason 4, the
+post-trigger saved native record, its row and details preview. The historical
+crash/ANR driver's default still requires exit UI. All 82 focused Python tests
+passed serially through `OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test`;
+[recovery host receipt](recovery-host.json) binds that result to source hashes.
+This is host verification only. Fresh 2202 device qualification follows in a
+separate evidence directory; no failed 2199 result is promoted.

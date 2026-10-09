@@ -225,6 +225,13 @@ class SavedReportSession(DeviceSession):
         self.consent_owned = True
         return super().enable_consent()
 
+    def proof(self, identity, reason, source, after, label):
+        # BD7 qualifies saved capture and its previews. FD1's separate UI
+        # navigation must not block this flow; exact OS exit proof stays required.
+        return super().proof(
+            identity, reason, source, after, label, include_exit_ui=False
+        )
+
     def crash(self):
         # Consent/navigation can outlive the outer setup preflight. Never
         # interrupt a newly admitted installer or its durable restoration ticket.

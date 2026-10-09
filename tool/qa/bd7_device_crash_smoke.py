@@ -212,7 +212,7 @@ class DeviceSession:
             time.sleep(.25)
         raise DeviceFailure('process_did_not_exit')
 
-    def proof(self, identity, reason, source, after, label):
+    def proof(self, identity, reason, source, after, label, *, include_exit_ui=True):
         raw = self.execute(['shell', 'dumpsys', 'activity', 'exit-info', PACKAGE])
         exit_entry = parse_exit_history(raw, PACKAGE, identity[0], reason)
         native_exists = self.root('if test -f ' + shlex.quote(FILES + '/native-last-crash.properties') + '; then printf 1; else printf 0; fi').strip()
@@ -233,13 +233,14 @@ class DeviceSession:
         self.ui.tap(label, contains=True)
         self.ui.screenshot(self.output / (source + '-preview.jpg'), section='preview')
         self.execute(['shell', 'input', 'keyevent', '4'])
-        self.ui.scroll_find('Recent app exits')
-        self.ui.tap('App stopped unexpectedly', contains=True)
-        if self.ui.details_number('Reason code') != reason:
-            raise DeviceFailure('visible_exit_reason_mismatch')
-        self.ui.screenshot(self.output / (source + '-exit.jpg'), section='Recent app exits')
+        if include_exit_ui:
+            self.ui.scroll_find('Recent app exits')
+            self.ui.tap('App stopped unexpectedly', contains=True)
+            if self.ui.details_number('Reason code') != reason:
+                raise DeviceFailure('visible_exit_reason_mismatch')
+            self.ui.screenshot(self.output / (source + '-exit.jpg'), section='Recent app exits')
         return {'os_exit': exit_entry, 'saved_report': record,
-                'visible_report': True, 'visible_recent_exit': True}
+                'visible_report': True, 'visible_recent_exit': include_exit_ui}
 
     def crash(self):
         identity = self.identity()
