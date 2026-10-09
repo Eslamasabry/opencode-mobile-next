@@ -18,7 +18,7 @@ ToolState _tool(String name, Map<String, dynamic> detail) {
     id: 'call-1',
     provider: 'claude',
   );
-  return message!.parts.single.toolState!;
+  return message!.parts.single.toolState;
 }
 
 void main() {
@@ -133,7 +133,7 @@ void main() {
       id: 'call-2',
       provider: 'claude',
     );
-    final state = message!.parts.single.toolState!;
+    final state = message!.parts.single.toolState;
     expect(state.output, isNot(contains('secret detail')));
   });
 }
