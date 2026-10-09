@@ -1,0 +1,447 @@
+BD15 offline source evidence. No account files or user transcripts read.
+Package cache: /home/eslam/Storage/tmp/claude-tmp/oc-paseo-lock-4pyx6dwm/node_modules
+
+@getpaseo/server/dist/server/server/agent/providers/claude/agent.js
+SHA-256 a7f44bc07db03f05ebae85ea59b93cb40e85cf6e880a751cb2d5082247c44e3d
+392:     return deterministicStringify(content);
+393: }
+394: function toBase64ImageOutput(block) {
+395:     const record = toObjectRecord(block);
+396:     if (!record || record.type !== "image") {
+397:         return null;
+398:     }
+399:     const source = toObjectRecord(record.source);
+400:     if (!source || source.type !== "base64" || typeof source.data !== "string") {
+401:         return null;
+402:     }
+403:     return {
+404:         data: source.data,
+405:         mimeType: typeof source.media_type === "string" ? source.media_type : null,
+406:     };
+407: }
+408: // Claude returns images inside tool_result content as base64 Anthropic blocks. Left in place they
+409: // reach coerceToolResultContentToString, which JSON.stringifies the whole array — dumping base64
+410: // into the tool output. We pull those blocks out to render them as image markdown and leave a
+411: // "[image]" placeholder so image-only results still produce non-empty output.
+412: function splitClaudeToolResultImages(content) {
+413:     if (!Array.isArray(content)) {
+414:         return { images: [], text: content };
+415:     }
+416:     const images = [];
+417:     const text = content.map((block) => {
+418:         const image = toBase64ImageOutput(block);
+419:         if (image) {
+420:             images.push(image);
+421:             return { type: "text", text: "[image]" };
+422:         }
+423:         return block;
+424:     });
+425:     return { images, text };
+484: export function extractUserMessageText(content) {
+485:     if (typeof content === "string") {
+486:         const normalized = content.trim();
+487:         if (!normalized || isClaudeTranscriptNoiseText(normalized)) {
+488:             return null;
+489:         }
+490:         return normalizeClaudeUserPromptText(normalized);
+491:     }
+492:     if (!Array.isArray(content)) {
+493:         return null;
+494:     }
+495:     const parts = [];
+496:     for (const block of content) {
+497:         if (!block || typeof block !== "object") {
+498:             continue;
+499:         }
+500:         const text = typeof block.text === "string" ? block.text : undefined;
+501:         if (text && text.trim()) {
+502:             const trimmed = text.trim();
+503:             if (!isClaudeTranscriptNoiseText(trimmed)) {
+504:                 const normalized = normalizeClaudeUserPromptText(trimmed);
+505:                 if (normalized) {
+506:                     parts.push(normalized);
+507:                 }
+508:             }
+509:             continue;
+510:         }
+511:         const input = typeof block.input === "string" ? block.input : undefined;
+512:         if (input && input.trim()) {
+513:             const trimmed = input.trim();
+514:             if (!isClaudeTranscriptNoiseText(trimmed)) {
+515:                 const normalized = normalizeClaudeUserPromptText(trimmed);
+516:                 if (normalized) {
+517:                     parts.push(normalized);
+518:                 }
+519:             }
+520:         }
+521:     }
+522:     if (parts.length === 0) {
+523:         return null;
+524:     }
+525:     const combined = parts.join("\n\n").trim();
+526:     return combined.length > 0 ? combined : null;
+527: }
+528: function isMetadata(value) {
+529:     return typeof value === "object" && value !== null;
+2706:     toSdkUserMessage(prompt) {
+2707:         const content = [];
+2708:         // Claude Code expands a slash command only when it is the last content block of the user
+2709:         // message. buildAgentPrompt places the typed text ahead of images and rendered attachments,
+2710:         // so a "/command" sent with a pasted link or a screenshot would otherwise reach the model as
+2711:         // literal text instead of the command it names.
+2712:         let typedSlashCommandIndex = -1;
+2713:         if (Array.isArray(prompt)) {
+2714:             for (const chunk of prompt) {
+2715:                 if (chunk.type === "text") {
+2716:                     // Attachments rendered as text always carry a mimeType; the composer's typed text does
+2717:                     // not. Only the typed block can be a slash command the user meant to invoke.
+2718:                     if (!("mimeType" in chunk) && this.parseSlashCommandInput(chunk.text)) {
+2719:                         typedSlashCommandIndex = content.length;
+2720:                     }
+2721:                     content.push({ type: "text", text: chunk.text });
+2722:                 }
+2723:                 else if (chunk.type === "image") {
+2724:                     if (isImageMimeType(chunk.mimeType)) {
+2725:                         content.push({
+2726:                             type: "image",
+2727:                             source: {
+2728:                                 type: "base64",
+2729:                                 media_type: chunk.mimeType,
+2730:                                 data: chunk.data,
+2731:                             },
+2732:                         });
+2733:                     }
+2734:                 }
+2735:                 else {
+2736:                     content.push({ type: "text", text: renderPromptAttachmentAsText(chunk) });
+2737:                 }
+2738:             }
+2739:         }
+2740:         else {
+2741:             content.push({ type: "text", text: prompt });
+2742:         }
+2743:         if (typedSlashCommandIndex >= 0 && typedSlashCommandIndex < content.length - 1) {
+2744:             const [slashCommand] = content.splice(typedSlashCommandIndex, 1);
+2745:             content.push(slashCommand);
+2746:         }
+2747:         const messageId = randomUUID();
+2748:         this.rememberUserMessageId(messageId);
+2749:         return {
+2750:             type: "user",
+2751:             message: {
+2752:                 role: "user",
+2753:                 content,
+2754:             },
+2755:             parent_tool_use_id: null,
+2756:             uuid: messageId,
+2757:             session_id: this.claudeSessionId ?? "",
+2758:         };
+2759:     }
+2760:     transitionTurnState(next, reason) {
+3876:     loadPersistedHistory(sessionId) {
+3877:         try {
+3878:             this.taskState.reset();
+3879:             const historyPath = this.resolveHistoryPath(sessionId);
+3880:             if (!historyPath || !fs.existsSync(historyPath)) {
+3881:                 return;
+3882:             }
+3883:             const content = fs.readFileSync(historyPath, "utf8");
+3884:             const replay = this.ingestPersistedSidechains(content, readClaudeSidechainHistory(historyPath));
+3885:             this.ingestPersistedHistory(content, replay);
+3886:         }
+3887:         catch {
+3888:             // ignore history load failures
+3889:         }
+4016:     }
+4017:     resolveHistoryPath(sessionId) {
+4018:         const cwd = this.config.cwd;
+4019:         if (!cwd)
+4020:             return null;
+4021:         const configDir = process.env.CLAUDE_CONFIG_DIR ?? path.join(os.homedir(), ".claude");
+4022:         const candidates = [cwd];
+4023:         try {
+4024:             const realCwd = fs.realpathSync(cwd);
+4025:             if (realCwd !== cwd) {
+4026:                 candidates.push(realCwd);
+4027:             }
+4028:         }
+4029:         catch {
+4030:             // Fall back to the configured cwd when the path has already disappeared.
+4031:         }
+4032:         for (const candidate of candidates) {
+4033:             const historyPath = path.join(claudeProjectDirSync(candidate, { configDir }), `${sessionId}.jsonl`);
+4034:             if (fs.existsSync(historyPath)) {
+4035:                 return historyPath;
+4036:             }
+4037:         }
+4038:         return path.join(claudeProjectDirSync(cwd, { configDir }), `${sessionId}.jsonl`);
+4039:     }
+4040:     convertHistoryEntry(entry) {
+4041:         return convertClaudeHistoryEntry(entry, (content) => this.mapBlocksToTimeline(content));
+4042:     }
+4043:     // Maps Claude content blocks into AgentTimelineItems.
+4184:         }
+4185:         for (const image of images) {
+4186:             const imageItem = renderProviderImageOutputAsAssistantMarkdown(image, {
+4187:                 materialize: materializeProviderImage,
+4188:             });
+4189:             if (imageItem) {
+4190:                 items.push(imageItem);
+4191:             }
+4192:         }
+4193:         if (typeof block.tool_use_id === "string") {
+4827: export function convertClaudeHistoryEntry(entry, mapBlocks) {
+4828:     const preamble = convertClaudeHistoryEntryPreamble(entry);
+4829:     if ("shortCircuit" in preamble) {
+4830:         return preamble.shortCircuit;
+4831:     }
+4832:     const { content } = preamble.proceed;
+4833:     const normalizedBlocks = normalizeHistoryBlocks(content);
+4834:     const contentValue = typeof content === "string" ? content : normalizedBlocks;
+4835:     const hasToolBlock = normalizedBlocks?.some((block) => hasToolLikeBlock(block)) ?? false;
+4836:     const userMessageId = entry.type === "user" && typeof entry.uuid === "string" && entry.uuid.length > 0
+4837:         ? entry.uuid
+4838:         : null;
+4839:     if (entry.type === "user") {
+4840:         const userTaskNotificationItem = mapTaskNotificationUserContentToToolCall({
+4841:             content,
+4842:             messageId: userMessageId,
+4843:         });
+4844:         if (userTaskNotificationItem) {
+4845:             return [userTaskNotificationItem];
+4846:         }
+4847:     }
+4848:     const timeline = [];
+4849:     if (entry.type === "user") {
+4850:         const text = extractUserMessageText(content);
+4851:         if (text) {
+4852:             timeline.push({
+4853:                 type: "user_message",
+4854:                 text,
+4855:                 ...(userMessageId ? { messageId: userMessageId } : {}),
+4856:             });
+4857:         }
+4858:     }
+4859:     if (hasToolBlock && normalizedBlocks) {
+4860:         const mapped = mapBlocks(normalizedBlocks);
+4861:         if (entry.type === "user") {
+4862:             // tool_result handling (handleToolResult) emits image markdown as an assistant_message
+4863:             // alongside the tool_call. User-entry text blocks also map to assistant_message in this path
+4864:             // and must stay suppressed, so keep tool_calls plus only the image assistant_messages.
+4865:             const toolItems = mapped.filter((item) => item.type === "tool_call" || isProviderImageMessage(item));
+4866:             return timeline.length ? [...timeline, ...toolItems] : toolItems;
+4867:         }
+4868:         return mapped;
+4869:     }
+4870:     if (entry.type === "assistant" && contentValue) {
+4871:         return mapAssistantHistoryBlocksWithMessageId(entry, contentValue, mapBlocks);
+4872:     }
+4873:     return timeline;
+4874: }
+4875: function createAsyncMessageInput() {
+4876:     const queue = [];
+4877:     const resolvers = [];
+4878:     let closed = false;
+
+@getpaseo/server/dist/server/server/agent/providers/claude/project-dir.js
+SHA-256 c980cce2d25fd65cbdfa20206f225f99c23f22e3d578ea599a1d75850c27b051
+1: import { realpathSync } from "node:fs";
+2: import { realpath } from "node:fs/promises";
+3: import { homedir } from "node:os";
+4: import { join } from "node:path";
+5: // Verbatim port of the Claude Agent SDK's project-directory encoding so
+6: // paseo computes the same `~/.claude/projects/<dir>` path the SDK does.
+7: // The SDK ships only as a precompiled bundle; grep the JS source at
+8: // node_modules/@anthropic-ai/claude-agent-sdk/sdk.mjs for `function Ar`,
+9: // `function So`, `async function wn`, `function Dy`, `Ni=200`.
+10: const PROJECT_DIR_LENGTH_CAP = 200;
+11: export async function claudeProjectDir(cwd, options) {
+12:     const canonical = await canonicalize(cwd);
+13:     const projectsRoot = join(resolveConfigDir(options), "projects");
+14:     return join(projectsRoot, encode(canonical));
+15: }
+16: export function claudeProjectDirSync(cwd, options) {
+17:     const canonical = canonicalizeSync(cwd);
+18:     const projectsRoot = join(resolveConfigDir(options), "projects");
+19:     return join(projectsRoot, encode(canonical));
+20: }
+21: async function canonicalize(input) {
+39: }
+40: function encode(input) {
+41:     const replaced = input.replace(/[^a-zA-Z0-9]/g, "-");
+42:     if (replaced.length <= PROJECT_DIR_LENGTH_CAP) {
+43:         return replaced;
+44:     }
+45:     return `${replaced.slice(0, PROJECT_DIR_LENGTH_CAP)}-${hashSuffix(input)}`;
+46: }
+47: function hashSuffix(input) {
+48:     let hash = 0;
+49:     for (let i = 0; i < input.length; i++) {
+50:         hash = ((hash << 5) - hash + input.charCodeAt(i)) | 0;
+51:     }
+52:     return Math.abs(hash).toString(36);
+53: }
+54: function resolveConfigDir(options) {
+55:     return options?.configDir ?? process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), ".claude");
+56: }
+57: //# sourceMappingURL=project-dir.js.map
+
+@getpaseo/server/dist/server/server/agent/providers/provider-image-output.js
+SHA-256 b8d8fb750112b3799f34f01cab9f053abc2d4803c27a3bf7f01247faea03112a
+59: // Filenames are a content hash of the bytes so re-materializing the same image
+60: // within a process reuses the existing temp file instead of leaking a fresh one
+61: // for repeated image blocks or history replay.
+62: export function materializeProviderImage(image) {
+63:     const attachmentsDir = getMaterializedImageAttachmentDir();
+64:     const normalized = normalizeImageData(image.mimeType ?? "image/png", image.data);
+65:     const bytes = Buffer.from(normalized.data, "base64");
+66:     const extension = getImageExtension(normalized.mimeType);
+67:     const hash = createHash("sha256").update(bytes).digest("hex");
+68:     const filePath = path.join(attachmentsDir, `${hash}.${extension}`);
+69:     fsSync.writeFileSync(filePath, bytes, { mode: MATERIALIZED_IMAGE_FILE_MODE });
+70:     fsSync.chmodSync(filePath, MATERIALIZED_IMAGE_FILE_MODE);
+71:     return { path: filePath };
+72: }
+73: // Recognizes markdown rendered for a materialized provider image: its source is a content-hashed
+74: // file in the attachments dir. Matching the full <hash>.<ext> shape (not just a leading "![")
+75: // keeps user-authored text from being mistaken for a provider image during history replay. The
+76: // separator still accepts old doubled-backslash Windows history; new Windows output uses file URIs.
+77: const PROVIDER_IMAGE_MARKDOWN = new RegExp(`^!\\[[^\\]]*\\]\\([^)]*${PROVIDER_IMAGE_ATTACHMENT_DIR}(?:-[^/\\\\)]+)?[/\\\\]+(?:[^/\\\\)]+[/\\\\]+)?[0-9a-f]{64}\\.[a-z0-9]+\\)`);
+78: export function isProviderImageMarkdown(text) {
+79:     return PROVIDER_IMAGE_MARKDOWN.test(text);
+80: }
+128: export function renderProviderImageOutputAsAssistantMarkdown(image, options = {}) {
+129:     const source = nonEmptyString(image.path) ?? nonEmptyString(image.url);
+130:     if (source && !isDataImageSource(source)) {
+131:         const altText = escapeMarkdownImageAlt(nonEmptyString(image.altText) ?? "Image");
+132:         return {
+133:             type: "assistant_message",
+134:             text: `![${altText}](${escapeMarkdownImageSource(source)})`,
+135:         };
+136:     }
+137:     const data = nonEmptyString(image.data) ?? (source && isDataImageSource(source) ? source : null);
+138:     if (!data) {
+
+@anthropic-ai/claude-agent-sdk/sdk.d.ts
+SHA-256 c53c3613d55d5147f4e4f9ae5174a2b675286c478798e8a635de74f722142a62
+5170:  * Returned by `getSessionMessages` for reading historical session data.
+5171:  */
+5172: export declare type SessionMessage = {
+5173:     type: 'user' | 'assistant' | 'system';
+5174:     uuid: string;
+5175:     session_id: string;
+5176:     message: unknown;
+5177:     parent_tool_use_id: string | null;
+5178:     /**
+5179:      * agentId of the subagent that spawned this subagent, or null when this
+5180:      * message belongs to a depth-1 subagent (spawned by the main loop) or to
+5181:      * the main session itself. Sessions whose metadata lacks the field report
+5182:      * null.
+5183:      */
+5184:     parent_agent_id: string | null;
+5185: };
+5186:
+5187: /**
+5188:  * Options shared by session mutation functions (renameSession, tagSession,
+5189:  * deleteSession, forkSession).
+
+android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt
+SHA-256 0ca06e6ea267a712588085dbc619570eaa8161ae24d03fd5115b1b15e2f36c6b
+754:
+755:     private fun startPrivateAgentProcess(profileId: String, argv: List<String>, foreground: Boolean,
+756:         privateOutput: Boolean, workKind: WorkLeases.Kind?): Process {
+757:         check(Regex("^[A-Za-z0-9_-]{1,80}$").matches(profileId)) { "The agent host is unavailable." }
+758:         check(installed && argv.isNotEmpty() && profileId !in blockedAgentProfiles) { "The agent host is unavailable." }
+759:         val hostTicket = agentHostTicket.get()
+760:         if (hostTicket != null) synchronized(recoveryLock) {
+761:             check(hostTicket.profile == profileId && agentHostAdmissionCurrent(hostTicket))
+762:         }
+763:         val workGeneration = if (synchronized(recoveryLock) { activityResumed })
+764:             workLeases.foregroundGeneration() else null
+765:         val profileHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId")
+766:         Os.chmod(profileHome.absolutePath, 448)
+767:         val guestHome = "/home/oc/.oc-profiles/$profileId"
+768:         val command = listOf("/usr/bin/env", "HOME=$guestHome", "CLAUDE_CONFIG_DIR=$guestHome/claude",
+769:             "CODEX_HOME=$guestHome/codex", "DISABLE_AUTOUPDATER=1", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1") + argv
+770:         val builder = ProcessBuilder(prootCommand(command, agentUser = true)).apply {
+771:             environment().clear()
+772:             environment().putAll(prootEnvironment())
+773:             if (privateOutput) redirectError(File("/dev/null")) else redirectErrorStream(true)
+774:         }
+775:         val process = if (hostTicket == null) builder.start() else synchronized(recoveryLock) {
+
+lib/builtin/builtin_folders.dart
+SHA-256 f99ad2fa251d567c8493960b52bc4de7288ab9473afece6dba7af923c4706930
+101:   static Future<Directory?> locateRootfs() async {
+102:     if (!BuiltinLinux.supported) return null;
+103:     final Directory support;
+104:     try {
+105:       support = await getApplicationSupportDirectory();
+106:     } catch (_) {
+107:       return null;
+108:     }
+109:     final home = '${support.path}/linux';
+110:     if (!await File('$home/ubuntu.ready').exists()) return null;
+111:     final rootfs = Directory('$home/ubuntu');
+112:     return await rootfs.exists() ? rootfs : null;
+113:   }
+114:
+150:   /// The folder on the phone that holds Ubuntu's [path] (for reading it with
+151:   /// dart:io), or null when it is missing, not a real folder, or Ubuntu's
+152:   /// files are not there. Never follows a link.
+153:   Future<String?> hostDirectory(String path) async {
+154:     final ubuntuPath = normalize(path);
+155:     if (ubuntuPath == null) return null;
+156:     try {
+157:       final projects = await _locateProjects();
+158:       final external = projects == null
+159:           ? null
+160:           : await _hostPath(projects.path, '/');
+161:       const projectsPath = BuiltinLinux.projectsDir;
+162:       if (external != null &&
+163:           (ubuntuPath == projectsPath ||
+164:               ubuntuPath.startsWith('$projectsPath/'))) {
+165:         return await _hostPath(
+166:           external,
+167:           ubuntuPath.substring(projectsPath.length),
+168:         );
+169:       }
+170:       final rootfs = await _locate();
+171:       return rootfs == null ? null : await _hostPath(rootfs.path, ubuntuPath);
+172:     } on FolderListException {
+173:       return null;
+174:     } on FileSystemException {
+175:       return null;
+176:     }
+177:   }
+261:   /// The phone path of [ubuntuPath], checking every folder on the way is a
+262:   /// real folder (not a link). Null when a part of it is missing.
+263:   static Future<String?> _hostPath(String rootfs, String ubuntuPath) async {
+264:     var host = rootfs;
+265:     final segments = ubuntuPath.split('/').where((s) => s.isNotEmpty);
+266:     for (final segment in ['', ...segments]) {
+267:       if (segment.isNotEmpty) host = '$host/$segment';
+268:       final type = await FileSystemEntity.type(host, followLinks: false);
+269:       if (type == FileSystemEntityType.notFound) return null;
+270:       if (type == FileSystemEntityType.link) {
+271:         throw FolderListException(FolderListProblem.linked, ubuntuPath);
+272:       }
+273:       if (type != FileSystemEntityType.directory) {
+274:         throw FolderListException(FolderListProblem.missing, ubuntuPath);
+275:       }
+276:     }
+277:     return host;
+278:   }
+279:
+
+lib/builtin/setup/claude_scripts.dart
+SHA-256 cdd04b0255405473ff55c706437ac8836829cc6ca1093b6e6dfeaedf6ad414ad
+1: /// Original pinned manifest and installer retained for compatibility.
+2: /// Phone agents register these same payload pins through AgentPhoneScripts,
+3: /// installing as oc. Device qualification is the explicit four-step self-test.
+4: abstract final class ClaudeScripts {
+5:   static const version = '2.1.283';
+6:   static const arm64Sha256 =
+7:       '346d294f0103d6fc0de11ac953579b5c62dfa90698a4cfc486b6f927c615e697';
+8:   static const x64Sha256 =
+9:       '1859583ce32920595c61ef868bee52e1b1594f7486db209935e01f1e5e804ae2';
