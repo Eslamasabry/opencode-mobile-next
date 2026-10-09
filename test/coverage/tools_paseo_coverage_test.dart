@@ -112,4 +112,46 @@ void main() {
       expect(problems, isEmpty, reason: 'screen text:\n${flat(screen)}');
     });
   }
+
+  testWidgets('a daemon error on list_commands fails the call and raises no '
+      'zone error', (tester) async {
+    final daemon = WireDaemon({'status': 'server_info', 'version': '0.9.2'});
+    daemon.handlers['get_providers_snapshot_request'] = (_) => (
+      'get_providers_snapshot_response',
+      {
+        'entries': [
+          {
+            'provider': 'claude',
+            'status': 'ready',
+            'enabled': true,
+            'source': 'builtin',
+            'models': [
+              {
+                'provider': 'claude',
+                'id': 'opus',
+                'label': 'Opus',
+                'isDefault': true,
+              },
+            ],
+            'modes': <Object>[],
+          },
+        ],
+        'generatedAt': '2026-10-09T08:00:00.000Z',
+      },
+    );
+    daemon.handlers['list_commands_request'] = (_) => (
+      'list_commands_response',
+      {'agentId': '', 'commands': <Object>[], 'error': 'daemon words'},
+    );
+    final gateway = PaseoGateway(
+      transport: PaseoTransport(
+        endpoint: 'ws://127.0.0.1:6767',
+        socketFactory: (_, _) async => daemon,
+      ),
+      directory: '/work/shop',
+    );
+    await tester.runAsync(
+      () => expectLater(gateway.listCommands(), throwsA(isA<PaseoFailure>())),
+    );
+  });
 }
