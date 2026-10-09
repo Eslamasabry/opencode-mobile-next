@@ -1,0 +1,45 @@
+{
+  "suites": [
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.NativeRecoveryBudgetTest",
+      "tests": "21",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest",
+      "tests": "28",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.NativeServerRecipeTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "io.github.eslamasabry.opencode_mobile.NativeIdleStateTest",
+      "tests": "29",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "count": 99,
+  "gradleExit": 0,
+  "availableMiB": 7365,
+  "daemon": 3653275,
+  "daemonCleaned": true,
+  "intermediatesRemoved": true
+}

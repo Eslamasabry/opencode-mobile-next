@@ -15,6 +15,12 @@ void main() {
       : null;
   String? jar;
   const scenarios = [
+    'event-foreground-before-restore',
+    'event-dispatch-denied',
+    'event-stale-settles',
+    'event-foreground-denied',
+    'event-stop-cancels',
+    'event-untrusted-ignored',
     'setup-main-denied',
     'daemon-main-denied',
     'setup-channel-denied',
@@ -42,6 +48,7 @@ void main() {
       sources: [
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupService.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinServerService.kt',
+        'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinRestoreReceiver.kt',
         'test/native/phone_agent_service_harness.kt',
         ...(Directory(
             'test/native/phone_agent_service_stubs',

@@ -1,0 +1,317 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+======================================================================
+FAIL: test_actual_boot_all_predicates_are_required (test_bb7_runtime_acceptance.ObservationTest.test_actual_boot_all_predicates_are_required) (key='boot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 23, in test_actual_boot_all_predicates_are_required
+    self.assertFalse(B.observation_proven(before, changed, 'boot', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_actual_boot_all_predicates_are_required (test_bb7_runtime_acceptance.ObservationTest.test_actual_boot_all_predicates_are_required) (key='version')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 23, in test_actual_boot_all_predicates_are_required
+    self.assertFalse(B.observation_proven(before, changed, 'boot', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_actual_boot_all_predicates_are_required (test_bb7_runtime_acceptance.ObservationTest.test_actual_boot_all_predicates_are_required) (key='rootfs')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 23, in test_actual_boot_all_predicates_are_required
+    self.assertFalse(B.observation_proven(before, changed, 'boot', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_actual_boot_all_predicates_are_required (test_bb7_runtime_acceptance.ObservationTest.test_actual_boot_all_predicates_are_required) (key='attempts')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 23, in test_actual_boot_all_predicates_are_required
+    self.assertFalse(B.observation_proven(before, changed, 'boot', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_actual_boot_all_predicates_are_required (test_bb7_runtime_acceptance.ObservationTest.test_actual_boot_all_predicates_are_required) (key='healthy')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 23, in test_actual_boot_all_predicates_are_required
+    self.assertFalse(B.observation_proven(before, changed, 'boot', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_actual_boot_all_predicates_are_required (test_bb7_runtime_acceptance.ObservationTest.test_actual_boot_all_predicates_are_required) (key='foreground')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 23, in test_actual_boot_all_predicates_are_required
+    self.assertFalse(B.observation_proven(before, changed, 'boot', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_actual_boot_all_predicates_are_required (test_bb7_runtime_acceptance.ObservationTest.test_actual_boot_all_predicates_are_required) (key='activity')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 23, in test_actual_boot_all_predicates_are_required
+    self.assertFalse(B.observation_proven(before, changed, 'boot', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_actual_boot_all_predicates_are_required (test_bb7_runtime_acceptance.ObservationTest.test_actual_boot_all_predicates_are_required) (key='helper')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 23, in test_actual_boot_all_predicates_are_required
+    self.assertFalse(B.observation_proven(before, changed, 'boot', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_actual_boot_all_predicates_are_required (test_bb7_runtime_acceptance.ObservationTest.test_actual_boot_all_predicates_are_required) (key='owned')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 23, in test_actual_boot_all_predicates_are_required
+    self.assertFalse(B.observation_proven(before, changed, 'boot', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_actual_boot_all_predicates_are_required (test_bb7_runtime_acceptance.ObservationTest.test_actual_boot_all_predicates_are_required) (key='owner_current')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 23, in test_actual_boot_all_predicates_are_required
+    self.assertFalse(B.observation_proven(before, changed, 'boot', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='idle_enabled', key='attempts')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='idle_enabled', key='healthy')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='idle_enabled', key='foreground')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='idle_enabled', key='helper')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='idle_enabled', key='activity')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='idle_enabled', key='rootfs')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='policy_disabled', key='attempts')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='policy_disabled', key='healthy')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='policy_disabled', key='foreground')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='policy_disabled', key='helper')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='policy_disabled', key='activity')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='policy_disabled', key='rootfs')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='stopped', key='attempts')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='stopped', key='healthy')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='stopped', key='foreground')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='stopped', key='helper')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='stopped', key='activity')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='stopped', key='rootfs')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='timeout', key='attempts')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='timeout', key='healthy')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='timeout', key='foreground')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='timeout', key='helper')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='timeout', key='activity')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_denials_require_no_runtime_or_attempt_and_stable_rootfs (test_bb7_runtime_acceptance.ObservationTest.test_denials_require_no_runtime_or_attempt_and_stable_rootfs) (mode='timeout', key='rootfs')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 41, in test_denials_require_no_runtime_or_attempt_and_stable_rootfs
+    self.assertFalse(B.observation_proven(before, dict(mode_after, **{key: bad}), 'boot', mode))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_unknown_events_and_modes_never_pass (test_bb7_runtime_acceptance.ObservationTest.test_unknown_events_and_modes_never_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 45, in test_unknown_events_and_modes_never_pass
+    self.assertFalse(B.observation_proven(before, after, 'synthetic_broadcast', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_update_requires_increase_same_boot_and_exact_old_tree_drain (test_bb7_runtime_acceptance.ObservationTest.test_update_requires_increase_same_boot_and_exact_old_tree_drain) (key='boot', bad='new')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 31, in test_update_requires_increase_same_boot_and_exact_old_tree_drain
+    self.assertFalse(B.observation_proven(before, dict(after, **{key: bad}), 'update', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_update_requires_increase_same_boot_and_exact_old_tree_drain (test_bb7_runtime_acceptance.ObservationTest.test_update_requires_increase_same_boot_and_exact_old_tree_drain) (key='version', bad=2201)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 31, in test_update_requires_increase_same_boot_and_exact_old_tree_drain
+    self.assertFalse(B.observation_proven(before, dict(after, **{key: bad}), 'update', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_update_requires_increase_same_boot_and_exact_old_tree_drain (test_bb7_runtime_acceptance.ObservationTest.test_update_requires_increase_same_boot_and_exact_old_tree_drain) (key='version', bad=2200)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 31, in test_update_requires_increase_same_boot_and_exact_old_tree_drain
+    self.assertFalse(B.observation_proven(before, dict(after, **{key: bad}), 'update', 'wanted'))
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_update_requires_increase_same_boot_and_exact_old_tree_drain (test_bb7_runtime_acceptance.ObservationTest.test_update_requires_increase_same_boot_and_exact_old_tree_drain) (key='old_alive', bad=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 31, in test_update_requires_increase_same_boot_and_exact_old_tree_drain
+    self.assertFalse(B.observation_proven(before, dict(after, **{key: bad}), 'update', 'wanted'))
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.006s
+
+FAILED (failures=39)

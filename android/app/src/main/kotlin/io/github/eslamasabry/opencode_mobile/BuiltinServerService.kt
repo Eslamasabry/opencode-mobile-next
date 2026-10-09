@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Keeps the app alive while the OpenCode server (and, when it is on, AI Team)
@@ -30,8 +31,15 @@ class BuiltinServerService : Service() {
         return try {
             startOrStopRuntime(intent, startId)
         } catch (_: Throwable) {
-            // Policy rejection cannot throw through the caller's channel guard.
-            stopRuntime(startId)
+            // Event dispatch denial must not turn saved wanted intent into user Stop.
+            if (intent?.action == ACTION_RESTORE) {
+                cancelPendingRestore(applicationContext)
+                try { BuiltinLinux.get(applicationContext).settleServerEventService() } catch (_: Throwable) { }
+                if (!foregroundShown) try { stopSelf(startId) } catch (_: Throwable) { }
+            } else {
+                // Policy rejection cannot throw through the caller's channel guard.
+                stopRuntime(startId)
+            }
             START_NOT_STICKY
         }
     }
@@ -64,6 +72,17 @@ class BuiltinServerService : Service() {
 
     private fun restoreRuntimeForStart(intent: Intent?, startId: Int): Int {
         val linux = BuiltinLinux.get(applicationContext)
+        if (intent?.action == ACTION_RESTORE) {
+            val ticket = pendingRestore.getAndSet(null)
+            val accepted = ticket != null && linux.restoreServerAfterSystemEvent(ticket)
+            if (!accepted) {
+                if (ticket != null) linux.cancelServerEventRestore(ticket)
+                linux.settleServerEventService()
+            }
+            // A later null-intent reclaim still passes the strict saved-recipe gates.
+            // START_STICKY does not redeliver this single-use event Intent.
+            return if (accepted) START_STICKY else START_NOT_STICKY
+        }
         return if (intent == null && !linux.serverRestorationArmed) {
             linux.rejectServerRestoration()
             try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Throwable) { }
@@ -84,6 +103,7 @@ class BuiltinServerService : Service() {
     }
 
     private fun stopRuntime(startId: Int, reason: String = "stopped") {
+        cancelPendingRestore(applicationContext)
         try {
             val linux = BuiltinLinux.get(applicationContext)
             linux.revokeForegroundWork()
@@ -104,6 +124,7 @@ class BuiltinServerService : Service() {
     }
 
     override fun onDestroy() {
+        cancelPendingRestore(applicationContext)
         try { BuiltinLinux.get(applicationContext).revokeForegroundWork() } catch (_: Throwable) { }
         // A destroyed service owes Android nothing; the next start decides.
         foregroundShown = false
@@ -163,7 +184,31 @@ class BuiltinServerService : Service() {
         private const val CHANNEL_ID = "opencode_builtin_server"
         private const val NOTIFICATION_ID = 4097
         private const val ACTION_STOP = "stop"
+        private const val ACTION_RESTORE = "io.github.eslamasabry.opencode_mobile.RESTORE_SERVER_EVENT"
+        private val pendingRestore = AtomicReference<NativeServerRestoreTicket?>()
+
+        private fun cancelPendingRestore(context: Context) {
+            val ticket = pendingRestore.getAndSet(null) ?: return
+            try { BuiltinLinux.get(context).cancelServerEventRestore(ticket) } catch (_: Throwable) { }
+        }
         private const val EXTRA_TITLE = "title"
+
+        /** Native system-event entry point; the capability never leaves this process. */
+        internal fun startForRestore(context: Context, ticket: NativeServerRestoreTicket): Boolean {
+            if (!pendingRestore.compareAndSet(null, ticket)) return false
+            stopPending = false
+            promised = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+            return try {
+                val intent = Intent(context, BuiltinServerService::class.java).setAction(ACTION_RESTORE)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(intent)
+                else context.startService(intent)
+                true
+            } catch (_: Throwable) {
+                pendingRestore.compareAndSet(ticket, null)
+                if (!foregroundShown) promised = false
+                false
+            }
+        }
 
         /** Starts the service, or updates its notification to [title]. */
         fun start(context: Context, title: String? = null) {
@@ -189,6 +234,7 @@ class BuiltinServerService : Service() {
         }
 
         fun stop(context: Context) {
+            cancelPendingRestore(context)
             if (promised && !foregroundShown) {
                 stopPending = true
                 return

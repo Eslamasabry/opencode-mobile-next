@@ -1,0 +1,15 @@
+{
+  "artifacts": [
+    {
+      "kind": "target",
+      "path": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/flutter-apk/app-release.apk",
+      "sha256": "6a25fbdb804bd8a3bc729834fb0222f941dc12243b44b9c0bfebdd89fa634f7e",
+      "bytes": 65650745,
+      "package": "io.github.eslamasabry.opencode_mobile",
+      "versionCode": "2202",
+      "certificateSHA256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+    }
+  ],
+  "sourceHashesUnchanged": true,
+  "installed": false
+}

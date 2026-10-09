@@ -64,6 +64,56 @@ fun main(args: Array<String>) {
     val uncaught = AtomicReference<Throwable?>()
     Thread.setDefaultUncaughtExceptionHandler { _, error -> uncaught.set(error) }
     when (args.single()) {
+        "event-foreground-before-restore" -> {
+            val context = Context()
+            BuiltinRestoreReceiver().onReceive(context, Intent(context, BuiltinRestoreReceiver::class.java)
+                .setAction("android.intent.action.BOOT_COMPLETED"))
+            check(Context.foregroundDispatches == 1)
+            val service = BuiltinServerService()
+            check(service.onStartCommand(checkNotNull(Context.dispatched), 0, 1) == Service.START_STICKY)
+            check(BuiltinLinux.eventRestored == 1 && BuiltinLinux.restored == 0)
+            before("foreground.start", "event.restore")
+            service.onStartCommand(Context.dispatched, 0, 2)
+            check(BuiltinLinux.eventRestored == 1) { "event capability was replayed" }
+        }
+        "event-dispatch-denied" -> {
+            Context.denyDispatch = true
+            val context = Context()
+            BuiltinRestoreReceiver().onReceive(context, Intent(context, BuiltinRestoreReceiver::class.java)
+                .setAction("android.intent.action.MY_PACKAGE_REPLACED"))
+            check(BuiltinLinux.eventCancelled == 1 && BuiltinLinux.eventRestored == 0)
+            check(BuiltinLinux.foregroundWork && BuiltinLinux.stopReason == null)
+        }
+        "event-foreground-denied" -> {
+            val context = Context()
+            check(BuiltinServerService.startForRestore(context, NativeServerRestoreTicket()))
+            Service.denyForeground = true
+            val service = BuiltinServerService()
+            check(service.onStartCommand(Context.dispatched, 0, 1) == Service.START_NOT_STICKY)
+            check(BuiltinLinux.eventRestored == 0 && BuiltinLinux.eventCancelled == 1)
+            check(BuiltinLinux.stopReason == null && BuiltinLinux.foregroundWork)
+        }
+        "event-stale-settles" -> {
+            val context = Context()
+            check(BuiltinServerService.startForRestore(context, NativeServerRestoreTicket()))
+            BuiltinLinux.eventAllowed = false
+            BuiltinServerService().onStartCommand(Context.dispatched, 0, 1)
+            check(BuiltinLinux.eventSettled == 1)
+            check(BuiltinLinux.stopReason == null && BuiltinLinux.foregroundWork)
+        }
+        "event-stop-cancels" -> {
+            val context = Context()
+            check(BuiltinServerService.startForRestore(context, NativeServerRestoreTicket()))
+            BuiltinServerService.stop(context)
+            BuiltinServerService().onStartCommand(Context.dispatched, 0, 1)
+            check(BuiltinLinux.eventCancelled == 1 && BuiltinLinux.eventRestored == 0)
+        }
+        "event-untrusted-ignored" -> {
+            val context = Context()
+            BuiltinRestoreReceiver().onReceive(context, Intent(context, BuiltinRestoreReceiver::class.java)
+                .setAction("android.intent.action.PACKAGE_REPLACED"))
+            check(ServiceEvents.values.isEmpty() && Context.foregroundDispatches == 0)
+        }
         "setup-main-denied" -> {
             Service.denyForeground = true
             val service = SetupService()

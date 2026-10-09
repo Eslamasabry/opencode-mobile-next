@@ -1,0 +1,15 @@
+{
+  "tests": 24,
+  "red": 4,
+  "additionalForegroundDenialRed": 1,
+  "files": {
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinServerService.kt": "d3ee84bc984b06b410a5d2656f2e635c3545e97f8efa867bf0d877af83c8e573",
+    "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinRestoreReceiver.kt": "40ac26e4e99a3557c26b6975e2c1db6b20534a819348a8a5a19ec43446b9f6a8",
+    "test/phone_agent_service_native_test.dart": "ad635d0d483f65c6b1f7c1806fb05e1d5b9d1ab07c53b92919af84cc87bf5844",
+    "test/native/phone_agent_service_harness.kt": "7449c54d2fb715d5b1ba48b00b80022e8b24a06915212ab9bc7a9773624d66a0",
+    "test/native/phone_agent_service_stubs/context.kt": "55d1c2ead7cdd4392833d98e790605cc02c7ee08a24b190eeae5c08cf9f605ef",
+    "test/native/phone_agent_service_stubs/runtime.kt": "83f90308cf06b7d5505e0dd05c263e105255ad36f8c85b6e9c8dd78c38fd20f2"
+  },
+  "finalEvidence": "service-final-green.txt",
+  "stickyEventRed": "sticky-event-red.txt"
+}

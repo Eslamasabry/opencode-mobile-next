@@ -1,0 +1,28 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_service_native_test.dart
+00:00 +0: (setUpAll)
+00:06 +0: native agent service callback: event-foreground-before-restore
+00:06 +1: native agent service callback: event-dispatch-denied
+00:06 +2: native agent service callback: event-stale-settles
+00:06 +3: native agent service callback: event-foreground-denied
+00:06 +4: native agent service callback: event-stop-cancels
+00:06 +5: native agent service callback: event-untrusted-ignored
+00:06 +6: native agent service callback: setup-main-denied
+00:06 +7: native agent service callback: daemon-main-denied
+00:06 +8: native agent service callback: setup-channel-denied
+00:06 +9: native agent service callback: daemon-timeout-denied
+00:06 +10: native agent service callback: daemon-stop-denied
+00:06 +11: native agent service callback: result-notification-denied
+00:06 +12: native agent service callback: dispatch-denied
+00:06 +13: native agent service callback: armed-null-sticky
+00:06 +14: native agent service callback: unarmed-null-rejected
+00:06 +15: native agent service callback: restoration-disarmed-not-sticky
+00:07 +16: native agent service callback: explicit-unarmed-not-sticky
+00:07 +17: native agent service callback: daemon-timeout-async-revocation
+00:07 +18: native agent service callback: daemon-stop-async-revocation
+00:07 +19: native agent service callback: daemon-request-threw-after-revocation
+00:07 +20: native agent service callback: setup-timeout-async-revocation
+00:07 +21: native agent service callback: destroy-revokes-kind
+00:07 +22: native agent service callback: localized-copy-ar
+00:07 +23: native agent service callback: localized-copy-en
+00:07 +24: (tearDownAll)
+00:07 +24: All tests passed!

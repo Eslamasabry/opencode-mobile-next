@@ -1,0 +1,5 @@
+Analyzing oc_app-sol-bb...
+
+   info • Can't use a relative path to import a library in 'lib'. Try fixing the relative path or changing the import to a 'package:' import • tool/qa/bb5_genui_source.dart:4:8 • avoid_relative_lib_imports
+
+1 issue found. (ran in 21.3s)

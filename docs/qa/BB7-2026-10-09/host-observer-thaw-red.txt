@@ -1,0 +1,103 @@
+.......FFFFFFF......F............
+======================================================================
+FAIL: test_instrument_thaws_before_detachment_and_native_invoke (test_bb7_runtime_acceptance.ObserverThawTest.test_instrument_thaws_before_detachment_and_native_invoke)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 381, in test_instrument_thaws_before_detachment_and_native_invoke
+    self.assertEqual(calls, ['thaw', 'detached', 'instrument', 'detached'])
+AssertionError: Lists differ: ['detached', 'instrument', 'detached'] != ['thaw', 'detached', 'instrument', 'detached']
+
+First differing element 0:
+'detached'
+'thaw'
+
+Second list contains 1 additional elements.
+First extra element 3:
+'detached'
+
+- ['detached', 'instrument', 'detached']
++ ['thaw', 'detached', 'instrument', 'detached']
+?  ++++++++
+
+
+======================================================================
+FAIL: test_pid_reuse_cannot_thaw_another_process (test_bb7_runtime_acceptance.ObserverThawTest.test_pid_reuse_cannot_thaw_another_process)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 366, in test_pid_reuse_cannot_thaw_another_process
+    with self.assertRaises(B.H.Q.Refused):
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_pre_observation_or_prepare_never_thaws (test_bb7_runtime_acceptance.ObserverThawTest.test_pre_observation_or_prepare_never_thaws) (step='bb7RebootVerify', phase='prepared')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 359, in test_pre_observation_or_prepare_never_thaws
+    with self.subTest(step=step, phase=phase), self.assertRaises(B.H.Q.Refused):
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_pre_observation_or_prepare_never_thaws (test_bb7_runtime_acceptance.ObserverThawTest.test_pre_observation_or_prepare_never_thaws) (step='bb7UpdateVerify', phase=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 359, in test_pre_observation_or_prepare_never_thaws
+    with self.subTest(step=step, phase=phase), self.assertRaises(B.H.Q.Refused):
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_pre_observation_or_prepare_never_thaws (test_bb7_runtime_acceptance.ObserverThawTest.test_pre_observation_or_prepare_never_thaws) (step='bb7RebootPrepare', phase='observed')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 359, in test_pre_observation_or_prepare_never_thaws
+    with self.subTest(step=step, phase=phase), self.assertRaises(B.H.Q.Refused):
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_pre_observation_or_prepare_never_thaws (test_bb7_runtime_acceptance.ObserverThawTest.test_pre_observation_or_prepare_never_thaws) (step='bb7Cleanup', phase='prepared')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 359, in test_pre_observation_or_prepare_never_thaws
+    with self.subTest(step=step, phase=phase), self.assertRaises(B.H.Q.Refused):
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_thaw_rechecks_exact_identity_and_uses_only_nonsticky_pid (test_bb7_runtime_acceptance.ObserverThawTest.test_thaw_rechecks_exact_identity_and_uses_only_nonsticky_pid)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 352, in test_thaw_rechecks_exact_identity_and_uses_only_nonsticky_pid
+    self.assertEqual(calls, ['identity', (('shell', 'am', 'unfreeze', '123'), 5), 'identity'])
+AssertionError: Lists differ: [] != ['identity', (('shell', 'am', 'unfreeze', '123'), 5), 'identity']
+
+Second list contains 3 additional elements.
+First extra element 0:
+'identity'
+
+- []
++ ['identity', (('shell', 'am', 'unfreeze', '123'), 5), 'identity']
+
+======================================================================
+FAIL: test_event_observation_is_persisted_before_native_verify (test_bb7_runtime_acceptance.SafetyTest.test_event_observation_is_persisted_before_native_verify)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 130, in test_event_observation_is_persisted_before_native_verify
+    B.execute(Device(), args)
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/bb7_runtime_acceptance.py", line 516, in execute
+    fields = instrument(device, 'bb7RebootVerify' if event == 'boot' else 'bb7UpdateVerify', observation=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1199, in _execute_mock_call
+    result = effect(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 121, in instrument
+    self.assertEqual(kwargs.get('phase'), 'observed')
+AssertionError: None != 'observed'
+
+----------------------------------------------------------------------
+Ran 30 tests in 0.061s
+
+FAILED (failures=8)

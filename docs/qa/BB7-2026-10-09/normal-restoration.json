@@ -1,0 +1,18 @@
+{
+  "normalVersion": 2202,
+  "normalSha256": "e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0",
+  "normalCertificateSHA256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
+  "exactInstalledHash": true,
+  "healthyAuthenticatedOpenCode2": true,
+  "ownedServerOnly": true,
+  "idleDefaultOff": true,
+  "wanted": true,
+  "ownerCurrent": true,
+  "rootfsUnchanged": true,
+  "bb5AndBb7FixtureAndTemporaryFilesAbsent": true,
+  "actualManagementStartConnected": true,
+  "androidSdk": 35,
+  "budgetAttemptsAfterManualStart": 0,
+  "privateSnapshotDeleted": true,
+  "emulatorLockReleased": true
+}
