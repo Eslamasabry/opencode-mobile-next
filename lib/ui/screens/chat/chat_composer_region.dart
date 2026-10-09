@@ -348,14 +348,22 @@ extension _ChatComposerRegion on _ChatScreenState {
               : _ComposerNote(key: _composerNoteKey, text: _composerNote!),
         ),
         // The chips wrap at a narrow width or a large text size; in the room
-        // left over the composer they scroll instead of overflowing.
-        Flexible(
-          child: SingleChildScrollView(
-            reverse: true,
-            primary: false,
-            child: _composerStatusStrip(bodyConstraints),
+        // left over the composer they scroll instead of overflowing. While a
+        // request waits it owns that room (its own Flexible above), so the
+        // strip keeps its natural height and does not split the room with it.
+        if (bodyConstraints.hasBoundedHeight &&
+            _attentionPending(pendingPermissions))
+          _composerStatusStrip(bodyConstraints)
+        else
+          Flexible(
+            child: ListView(
+              reverse: true,
+              primary: false,
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              children: [_composerStatusStrip(bodyConstraints)],
+            ),
           ),
-        ),
       ],
     );
   }
