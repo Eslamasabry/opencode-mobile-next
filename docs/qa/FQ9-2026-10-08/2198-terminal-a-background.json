@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "runID": "fq9-20261009-2198-terminal-a",
+  "candidateBuild": 2198,
+  "sourceRevision": "5bcc52cef5a6745faa96b1a78434c1ec7e82584a",
+  "oneContinuousReservation": true,
+  "promptSentThroughAppUI": true,
+  "fixtureMinimumSuccessfulDurationSeconds": 2700,
+  "state": "fail",
+  "restorePending": true,
+  "code": "live_fixture_command_invalid",
+  "admissionEvidenceCaptured": false,
+  "sessionRetained": true,
+  "ownedForwardClosed": true,
+  "normalIdentityVerified": true
+}

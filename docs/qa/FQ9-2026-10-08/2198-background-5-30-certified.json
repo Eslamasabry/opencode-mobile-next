@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "runID": "fq9-20261009-2198-next2",
+  "case": "background",
+  "candidateBuild": 2198,
+  "sourceRevision": "da32bd0a8a0fac11d3ca74fa51d7f553fd73f74f",
+  "oneContinuousReservation": true,
+  "promptSentThroughAppUI": true,
+  "readinessAttempt": 2,
+  "model": "opencode/big-pickle",
+  "state": "fail",
+  "normalRestored": true,
+  "modelChoiceVerified": true,
+  "driver": {
+    "state": "fail",
+    "code": "background_turn_inactive",
+    "checkpoints": [
+      {
+        "seconds": 300,
+        "elapsedSeconds": 300.7123299250379,
+        "background": true,
+        "turnActive": true,
+        "progressDelta": 2
+      }
+    ],
+    "dwellSeconds": 1179.8645323269302,
+    "homeAttempted": true,
+    "resumed": true,
+    "cleanupAttempted": true,
+    "cleanupSucceeded": true,
+    "errorCodes": [
+      "background_turn_inactive"
+    ],
+    "adapterFailure": {
+      "stage": "background_observation_failed",
+      "code": "background_turn_inactive"
+    },
+    "lastGoodObservation": {
+      "elapsedSeconds": 1149.8643983959919,
+      "snapshot": {
+        "ownedTurn": true,
+        "appManaged": true,
+        "appVisible": false,
+        "appAlive": true,
+        "serverAlive": true,
+        "foregroundService": true,
+        "ongoingNotification": true,
+        "turnActive": true,
+        "completed": false,
+        "failed": false,
+        "progressCounter": 7
+      }
+    }
+  },
+  "normalIdentityVerified": true,
+  "deviceQualified": false,
+  "restorePending": false,
+  "finalRestorationReceipt": "2198-final-restoration.json"
+}

@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from . import run
-from .common import Artifact, LOCAL_SIGNER, STABLE_SIGNER
+from .common import Artifact, CANDIDATE_BUILD, LOCAL_SIGNER, STABLE_SIGNER
 
 
 class RunTests(unittest.TestCase):
@@ -21,7 +21,7 @@ class RunTests(unittest.TestCase):
         self.lock = self.root / "emulator.lock"
         self.artifact = Artifact(
             Path("/unused/candidate.apk"),
-            2197,
+            CANDIDATE_BUILD,
             "1.2.0",
             "a" * 64,
             LOCAL_SIGNER,
@@ -204,7 +204,7 @@ class RunTests(unittest.TestCase):
         device, calls = self.fake()
         self.args.seed_history_receipt = self.root / "private-receipt.json"
         device.installed_identity = lambda: dict(
-            build=2197, version="1.2.0", sha256="a" * 64, signer=LOCAL_SIGNER
+            build=CANDIDATE_BUILD, version="1.2.0", sha256="a" * 64, signer=LOCAL_SIGNER
         )
         with patch.object(
             run.fixture,
@@ -273,14 +273,23 @@ class RunTests(unittest.TestCase):
         device, calls = self.fake()
         self.args.case = "background"
         device.installed_identity = lambda: dict(
-            build=2197, version="1.2.0", sha256="a" * 64, signer=LOCAL_SIGNER, uid=10217
+            build=CANDIDATE_BUILD,
+            version="1.2.0",
+            sha256="a" * 64,
+            signer=LOCAL_SIGNER,
+            uid=10217,
         )
+        device.monotonic = lambda: 0
+        device.diagnostic_epoch_ms = lambda: 1000000
+        device.home = lambda: None
+        device.sleep = lambda seconds: None
         with patch.object(
             run.background,
             "run_background",
             return_value=dict(state="fail", code="background_turn_finished_early"),
-        ):
+        ) as driver:
             result = self.locked(device)
+        self.assertTrue(callable(driver.call_args.kwargs["before_cleanup"]))
         self.assertFalse(result["deviceQualified"])
         self.assertEqual(result["driver"]["code"], "background_turn_finished_early")
 
@@ -326,7 +335,11 @@ class RunTests(unittest.TestCase):
             ],
         }
         device.installed_identity = lambda: dict(
-            build=2197, version="1.2.0", sha256="a" * 64, signer=LOCAL_SIGNER, uid=10217
+            build=CANDIDATE_BUILD,
+            version="1.2.0",
+            sha256="a" * 64,
+            signer=LOCAL_SIGNER,
+            uid=10217,
         )
 
         def find(directory):

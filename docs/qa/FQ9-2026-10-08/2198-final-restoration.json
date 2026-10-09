@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "sourceRevision": "59329d567e482e3c0f32fd7d318138c823f641d0",
+  "apkBuild": 2198,
+  "sha256": "2069cc0ca62554e3fd798f8ba8bfa46f44ae84be4ff82142e87b495cdc8b89a3",
+  "signer": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+  "uid": 10217,
+  "sameUid": true,
+  "normalRestore": "PASS",
+  "adbInstallReplace": true,
+  "backgroundOriginalOffRestored": true,
+  "crashConsentOff": true,
+  "savedReportCount": 0,
+  "ownedSessionsCleaned": 2,
+  "ownedEmptyCanonicalProjectsRemoved": 2,
+  "claudeActions": false,
+  "uninstallOrClearData": false,
+  "nativePrivateTicketEdited": false,
+  "bd7Admission": {
+    "code": "setup_active_or_unknown",
+    "waitSeconds": 120,
+    "durableTicketPresent": true,
+    "operation": "CHECK",
+    "rootProcessPresent": false,
+    "leaderProcessPresent": false,
+    "crashTriggered": false
+  }
+}

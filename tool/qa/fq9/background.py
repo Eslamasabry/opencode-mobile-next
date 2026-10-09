@@ -9,8 +9,12 @@ import math
 
 try:
     from .common import DriverFailure
+    from .ports import FAIL_CODES as ADAPTER_FAIL_CODES
+    from .runtime import ProtocolHTTPFailure
 except ImportError:
-    from common import DriverFailure
+    from tool.qa.fq9.common import DriverFailure
+    from tool.qa.fq9.ports import FAIL_CODES as ADAPTER_FAIL_CODES
+    from tool.qa.fq9.runtime import ProtocolHTTPFailure
 
 
 _BOOLS = (
@@ -52,6 +56,7 @@ FAIL_CODES = frozenset(
         "background_sleep_failed",
         "background_resume_failed",
         "background_cleanup_failed",
+        "background_evidence_capture_failed",
     }
 )
 
@@ -98,18 +103,26 @@ def _check_live(snapshot, *, background=False, initial=False):
         raise DriverFailure("background_real_progress_missing")
 
 
-def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
+def run_background(
+    ports, *, checkpoints=(300, 1800), poll_seconds=30, before_cleanup=None
+):
     """Return safe qualification and restoration facts, including failures.
 
     Ports must bound each operation themselves; Python cannot preempt a hung
     device adapter. Clock and sleep are injected, so offline tests use virtual
     time. Initial real tool progress excludes admission/retry-only fixtures.
     Each checkpoint requires newer transitions than the previous checkpoint;
-    use an operator-started fixture with 20 sequential sleep-120 tool calls.
+    use an operator-started fixture whose real work exceeds the dwell budget.
     Qualification requires the turn to stay active until the last checkpoint;
     a completed result is accepted only after the explicit resume operation.
     Cleanup is attempted only after positive dedicated ownership and runtime
     scope evidence, and restoration errors cannot preserve a pass.
+    A supplied zero-argument before_cleanup callback must durably capture
+    terminal and log evidence before returning literal True. It runs before
+    foregrounding, aborting, or deleting the owned turn, even after setup
+    failure. Any other return or exception retains the session and skips
+    restoration mutations. None preserves legacy callers without claiming
+    evidence capture; new device callers must supply the callback.
     """
     result = {
         "state": "fail",
@@ -121,6 +134,10 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
         "cleanupAttempted": False,
         "cleanupSucceeded": False,
         "errorCodes": [],
+        "adapterFailure": None,
+        "lastGoodObservation": None,
+        "evidenceCaptured": None,
+        "sessionRetained": False,
     }
     if not isinstance(checkpoints, (tuple, list)) or not checkpoints:
         result["errorCodes"] = ["background_plan_invalid"]
@@ -137,6 +154,35 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
     cleanup_allowed = False
     previous_time = None
     stage = "background_setup_failed"
+
+    def diagnose(error, failed_stage):
+        # Capture only the first failure. Restoration must not erase the
+        # reason qualification stopped, and exception text is never evidence.
+        if result["adapterFailure"] is not None:
+            return
+        category = "unexpected_exception"
+        if (
+            isinstance(error, DriverFailure)
+            and type(error.code) is str
+            and error.code in (ADAPTER_FAIL_CODES | FAIL_CODES)
+        ):
+            category = error.code
+        detail = {"stage": failed_stage, "code": category}
+        if (
+            isinstance(error, ProtocolHTTPFailure)
+            and type(error.status) is int
+            and 100 <= error.status <= 599
+        ):
+            detail["httpStatus"] = error.status
+        result["adapterFailure"] = detail
+
+    def remember(snapshot, elapsed):
+        # Retain only validated live observations, detached from mutable port
+        # data. Resumed/final snapshots are restoration, not background proof.
+        result["lastGoodObservation"] = {
+            "elapsedSeconds": elapsed,
+            "snapshot": _snapshot(snapshot),
+        }
 
     def clock():
         nonlocal previous_time
@@ -161,6 +207,7 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
         )
         initial = _snapshot(raw)
         _check_live(initial, initial=True)
+        remember(initial, 0)
         baseline = initial["progressCounter"]
         previous_count = baseline
         checkpoint_count = baseline
@@ -174,6 +221,7 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
         if current["progressCounter"] < previous_count:
             raise DriverFailure("background_progress_regressed")
         previous_count = current["progressCounter"]
+        remember(current, clock() - began)
         for checkpoint in checkpoints:
             while True:
                 elapsed = clock() - began
@@ -193,6 +241,7 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
                 if current["progressCounter"] < previous_count:
                     raise DriverFailure("background_progress_regressed")
                 previous_count = current["progressCounter"]
+                remember(current, clock() - began)
             # A slow adapter read must not make a pre-deadline snapshot count as
             # proof at the checkpoint. Re-observe at or after its deadline.
             current = _snapshot(ports.live_snapshot())
@@ -200,6 +249,7 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
             if current["progressCounter"] < previous_count:
                 raise DriverFailure("background_progress_regressed")
             previous_count = current["progressCounter"]
+            remember(current, clock() - began)
             if previous_count <= checkpoint_count:
                 raise DriverFailure("background_checkpoint_progress_missing")
             checkpoint_count = previous_count
@@ -219,13 +269,36 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
     except DriverFailure as error:
         # Only driver-authored codes escape. A port may also throw DriverFailure
         # carrying an arbitrary server/command detail, which is never exported.
-        result["code"] = error.code if error.code in FAIL_CODES else stage
-    except Exception:
+        result["code"] = (
+            error.code
+            if type(error.code) is str and error.code in FAIL_CODES
+            else stage
+        )
+        diagnose(error, stage)
+    except Exception as error:
         result["code"] = stage
+        diagnose(error, stage)
     finally:
         if result["state"] == "fail":
             result["errorCodes"].append(result["code"])
-        if result["homeAttempted"]:
+        evidence_allows_restoration = True
+        if cleanup_allowed and before_cleanup is not None:
+            try:
+                captured = callable(before_cleanup) and before_cleanup() is True
+            except Exception:
+                # Exception details may contain server responses or secrets.
+                # Only the fixed evidence failure category leaves this layer.
+                captured = False
+            result["evidenceCaptured"] = captured
+            if not captured:
+                evidence_allows_restoration = False
+                result["sessionRetained"] = True
+                result["errorCodes"].append("background_evidence_capture_failed")
+                diagnose(
+                    DriverFailure("background_evidence_capture_failed"),
+                    "background_evidence_capture_failed",
+                )
+        if result["homeAttempted"] and evidence_allows_restoration:
             try:
                 ports.resume()
                 final = _snapshot(ports.live_snapshot())
@@ -241,15 +314,17 @@ def run_background(ports, *, checkpoints=(300, 1800), poll_seconds=30):
                 ):
                     raise DriverFailure("background_resume_failed")
                 result["resumed"] = True
-            except Exception:
+            except Exception as error:
                 result["errorCodes"].append("background_resume_failed")
-        if cleanup_allowed:
+                diagnose(error, "background_resume_failed")
+        if cleanup_allowed and evidence_allows_restoration:
             result["cleanupAttempted"] = True
             try:
                 ports.cleanup_turn()
                 result["cleanupSucceeded"] = True
-            except Exception:
+            except Exception as error:
                 result["errorCodes"].append("background_cleanup_failed")
+                diagnose(error, "background_cleanup_failed")
         if result["errorCodes"]:
             result["state"] = "fail"
             result["code"] = result["errorCodes"][0]

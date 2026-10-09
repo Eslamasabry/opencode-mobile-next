@@ -23,6 +23,12 @@ _DEGRADED_COPY = {
 }
 _FIXED = {
     'Report a problem', 'Crash reports', 'Recent app exits', 'Details', 'Close',
+    'Preview crash report', 'Share report', 'OpenCode Mobile crash report',
+    'Captured error categories and times only.',
+    'No messages, stacks or conversations are included.',
+    'Only error categories and times, no messages or conversations. Nothing leaves this phone until you tap Share report.',
+    'Delete saved crash reports?', 'Delete crash reports',
+    'Deletes the saved crash reports. Saving crash reports stays on.',
     'Save crash reports on this phone', 'Kept on this phone. Never sent automatically.',
     'Only what kind of problem happened and when is kept: no error messages, conversations or passwords. Keeps the latest 20 reports.',
     'No crash reports yet', 'One appears here if the app closes or stops responding.',
@@ -69,6 +75,20 @@ def _normalize(value):
 
 
 def _safe_text(value):
+    if re.fullmatch(
+        r"[1-9][0-9]? reports? · [1-9][0-9]{0,4}(?:\.[0-9])? (?:B|KB)", value
+    ):
+        return True
+    # Issued FD2 previews contain only fixed source/category plus ISO time.
+    if re.fullmatch(
+        r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
+        r"(?:\.[0-9]{1,6})?Z? \| (?:flutter|platform|widget|native|anr) \| "
+        r"(?:Invalid state|Invalid argument|Missing value|Unsupported operation|Application error|"
+        r"Native application error|Permission denied|Input/output failure|Interrupted operation|"
+        r"Android reported that the app stopped responding)",
+        value,
+    ):
+        return True
     if value in _FIXED or _GENERATED.fullmatch(value):
         return True
     # Android can expose a disabled row's authored hint after an empty label.
@@ -227,6 +247,8 @@ class Bd7Ui:
     def _crop(self, section, nodes):
         if section in ('Crash reports', 'Recent app exits'):
             title = self._find(section, nodes)
+        elif section == 'share':
+            title = self._find('Preview crash report', nodes)
         elif section == 'preview':
             choices = [node for node in nodes if _rect(node) and any(
                 self._matches(node, label) for label in
@@ -279,13 +301,20 @@ class Bd7Ui:
 
     def screenshot(self, path, section='Crash reports'):
         try:
-            first = self._crop(section, self.nodes())
-            raw = self.execute(['exec-out', 'screencap', '-p'], timeout=10)
-            if not isinstance(raw, bytes) or len(raw) > 8_000_000:
-                raise ValueError()
-            second = self._crop(section, self.nodes())
-            if first != second:
-                raise ValueError()
+            for layout_retries in range(2):
+                first = self._crop(section, self.nodes())
+                raw = self.execute(['exec-out', 'screencap', '-p'], timeout=10)
+                if not isinstance(raw, bytes) or len(raw) > 8_000_000:
+                    raise ValueError()
+                second = self._crop(section, self.nodes())
+                if first == second:
+                    break
+                # Only two independently validated, safe rectangles that
+                # moved can retry. Invalid text/editable input raises above.
+                # Discard the old PNG; the retry captures a new guarded frame.
+                raw = None
+                if layout_retries == 1:
+                    raise ValueError()
             with Image.open(BytesIO(raw)) as original:
                 if original.format != 'PNG' or original.width * original.height > 16_000_000:
                     raise ValueError()
@@ -301,7 +330,8 @@ class Bd7Ui:
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     destination.write_bytes(output.getvalue())
                     return {'bytes': output.tell(), 'width': image.width,
-                            'height': image.height, 'section': section}
+                            'height': image.height, 'section': section,
+                            'layout_retries': layout_retries}
             raise ValueError()
         except Exception:
             raise Bd7UiFailure('unsafe_screenshot') from None

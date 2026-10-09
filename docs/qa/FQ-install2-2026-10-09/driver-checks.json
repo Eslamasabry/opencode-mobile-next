@@ -1,0 +1,22 @@
+{
+  "driverCompatibilityRed": {
+    "cases": 16,
+    "failures": 4
+  },
+  "compatibilityRevertRed": {
+    "cases": 18,
+    "failures": 4,
+    "errors": 2
+  },
+  "privacyRed": {
+    "cases": 2,
+    "failures": 2
+  },
+  "restoredGreen": {
+    "cases": 64,
+    "pass": 64
+  },
+  "command": "tool/qa/machine_lock.sh test -- python3 -m unittest discover -s tool/qa/fq_install2 -p test_*.py -v",
+  "apkBuild": false,
+  "deviceResult": "fx install pilot timed out; no promotion"
+}

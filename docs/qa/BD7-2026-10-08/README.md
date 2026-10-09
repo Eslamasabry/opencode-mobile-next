@@ -1,5 +1,60 @@
 # BD7 — real device crash and ANR qualification
 
+## 2198 saved-report follow-up — BC takeover, 2026-10-09
+
+Finish line: capture one real verified-process crash on normal2198, show the
+saved report and share preview through Settings, then delete that owned report,
+restore capture OFF and reinstall normal2198 inside the same emulator lock.
+ANR qualification, external sharing, Claude/account actions and app changes
+are outside this follow-up.
+
+The crash-only driver is [bd7_device_saved_report.py](../../../tool/qa/bd7_device_saved_report.py).
+It reuses BD7's exact PID/UID/start-time and native/OS exit proof, adds the FD2
+share-preview crop, and refuses to replace existing saved errors. All private
+contents stay in memory. Automatic timing/exit observations may be cleared by
+the explicitly authorized consent switch; existing error reports block the run.
+The wrapper pins approved2198 and supports the outer reservation with
+`run_locked`, avoiding a nested lock or the old driver's ANR/rollback path.
+
+Host checks: **70** focused Python checks passed serially through machine_lock.
+Failing-first controls cover the share crop, hostile exception projection,
+outer-call2198 admission, stable recapture after safe geometry movement and a
+new installer ticket arriving before `am crash`.
+[Host proof](2198-saved-report-host-verification.json).
+
+The first2198 wrapper passed installer admission and the empty disabled
+baseline, then stopped at `app_navigation_not_ready` before consent or crash.
+[Initial receipt](2198-saved-report-admission/report.json). Normal2198 restoration
+passed. Its durable CHECK ticket cleared through the app's normal path and
+Settings became reachable after product Start and connect on verified OC1.
+
+The [consent-only attempt](2198-saved-report-device/report.json) rejected the
+ON and cleanup screenshots as `unsafe_screenshot`; subsequent private reads
+confirmed OFF and zero saved reports. A settled consent-only probe passed the
+same crop guard. The camera now recaptures once only when both independently
+privacy-validated rectangles differ; it discards the first PNG and accepts only
+a new stable guarded capture. Unknown text, editable regions and persistent
+movement still refuse. `layout_retries` records successful use. This recovery
+is host-tested; it has not qualified a successful enabled-state device photo.
+
+The [fresh attempt](2198-saved-report-device-reflow/report.json) stopped at
+`setup_active_or_unknown`. A bounded120-second read-only wait kept refusing:
+a durable all-component CHECK ticket was present, with its root and leader
+PIDs absent. Their absence does not prove descendant quiescence. No ticket
+was edited and no real crash was triggered. The wrapper now repeats installer
+admission immediately before PID lookup/date/`am crash`, because UI work can
+outlive the original preflight.
+
+**2198 saved capture and share preview remain BLOCKED/unqualified.**
+[Blocked receipt](2198-saved-report-blocked.json) and
+[final restoration](../FQ9-2026-10-08/2198-final-restoration.json) confirm exact
+normal2198 `adb install -r`, same UID10217, original background OFF, crash consent
+OFF and ring0. Both owned FQ9 sessions and empty canonical fixture directories
+were cleaned. The locked shell exited; no BC reservation or waiter remains.
+The next device proof needs healthy product-resolved installer admission. Native
+recovery changes, ANR, Claude/account actions and external sharing were not
+performed. The historical2196 qualification below stays separate.
+
 Status: BLOCKED — real exits qualified; saved-report capture and preview remain
 unqualified on APK2196. Do not mark this sequence complete.
 

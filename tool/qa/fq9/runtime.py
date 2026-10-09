@@ -15,6 +15,8 @@ import urllib.parse
 import urllib.request
 
 from .common import PACKAGE, DriverFailure
+from .live_fixture import COMMAND, tick_progress
+from .terminal import project_terminal
 from .observations import (
     ongoing_notification,
     process_start,
@@ -37,6 +39,15 @@ class ProtocolHTTPFailure(DriverFailure):
 
 
 class AndroidRuntimeMixin:
+    def terminal_snapshot(self):
+        if self.turn is None:
+            raise DriverFailure("live_receipt_required")
+        history = self._session_history(self.turn, self.turn["sessions"][0])
+        status = self.protocol(
+            "GET", "/session/status", query={"directory": self.turn["directory"]}
+        )
+        return project_terminal(history, status, self.turn)
+
     def find_live_receipt(self, directory):
         """Export only the dedicated app-started fixture's public identities."""
         self._connect("opencode")
@@ -296,18 +307,31 @@ class AndroidRuntimeMixin:
                         raise DriverFailure("live_scope_mismatch")
                     tools.append(part)
         transitions = set()
+        ticks = 0
         for tool in tools:
             if tool.get("sessionID") != session["id"] or tool.get("tool") != "bash":
                 raise DriverFailure("live_scope_mismatch")
             state = tool.get("state", {})
             command = state.get("input", {}).get("command")
-            if command != "sleep 120":
-                raise DriverFailure("live_fixture_command_invalid")
             call = tool.get("callID")
             if not isinstance(call, str) or not re.fullmatch(ID_PATTERN, call):
                 raise DriverFailure("live_scope_mismatch")
+            # OC1 persists pending tool parts before parsing their arguments.
+            # They are zero progress, not proof of an executed foreign command.
+            if state.get("status") == "pending" and command in (None, ""):
+                continue
+            if command not in ("sleep 120", COMMAND):
+                raise DriverFailure("live_fixture_command_invalid")
             if state.get("status") in ("running", "completed"):
-                transitions.add((call, state["status"]))
+                if command == COMMAND:
+                    if (
+                        "FQ9_BACKGROUND_FIXTURE_V2" not in prompt_text
+                        or len(tools) != 1
+                    ):
+                        raise DriverFailure("live_fixture_command_invalid")
+                    ticks = tick_progress(state)
+                else:
+                    transitions.add((call, state["status"]))
         status = self.protocol(
             "GET", "/session/status", query={"directory": self.turn["directory"]}
         )
@@ -358,11 +382,11 @@ class AndroidRuntimeMixin:
             # fixture tool calls, still requiring increasing tool progress
             # at both checkpoints and no newer prompt in this session.
             "turnActive": active
-            and bool(transitions)
+            and bool(transitions or ticks)
             and not failed
             and not completed
             and not pending,
-            "progressCounter": len(transitions),
+            "progressCounter": len(transitions) + ticks,
             "completed": bool(completed),
             "failed": failed,
         }

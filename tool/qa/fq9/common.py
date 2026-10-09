@@ -9,7 +9,7 @@ import re
 PACKAGE = "io.github.eslamasabry.opencode_mobile"
 SHARED_SERIAL = "emulator-5554"
 LOCK = Path("/home/eslam/Storage/tmp/oc-emulator.lock")
-CANDIDATE_BUILD = 2197
+CANDIDATE_BUILD = 2198
 LOCAL_SIGNER = "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c"
 STABLE_SIGNER = "2d010c2103cb2f78abaaca690ead4d45f8003a6c0a02082cd2a2ae62fd18d0ec"
 

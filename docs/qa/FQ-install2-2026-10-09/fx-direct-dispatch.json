@@ -1,0 +1,109 @@
+{
+  "availableBytes": 1690320896,
+  "actionBounds": "[53,2164][1028,2295]",
+  "before": {
+    "appAuthoredCopy": [
+      "Choose an agent"
+    ],
+    "job": {
+      "jobId": "setup-1791488001755808",
+      "state": "done",
+      "components": {
+        "linux": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "essentials": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "node": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "opencode": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "start": {
+          "state": "done",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        }
+      }
+    },
+    "fx": {
+      "allocatedBytes": 0,
+      "pinMatches": false,
+      "linkMatches": false,
+      "targetPids": [],
+      "removed": false,
+      "leftovers": false,
+      "staging": [],
+      "lockPresent": false
+    }
+  },
+  "after": {
+    "appAuthoredCopy": [
+      "Choose an agent",
+      "Install again",
+      "Setup didn't finish",
+      "Setup didn't finish. Install again to try once more."
+    ],
+    "job": {
+      "jobId": "setup-1791488001755808",
+      "state": "done",
+      "components": {
+        "linux": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "essentials": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "node": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "opencode": {
+          "state": "skipped",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        },
+        "start": {
+          "state": "done",
+          "done": null,
+          "declaredMinimumFreeBytes": null,
+          "errorCode": null
+        }
+      }
+    },
+    "fx": {
+      "allocatedBytes": 0,
+      "pinMatches": false,
+      "linkMatches": false,
+      "targetPids": [],
+      "removed": false,
+      "leftovers": false,
+      "staging": [],
+      "lockPresent": false
+    }
+  }
+}

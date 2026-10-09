@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "beforeResumeAndCleanup": true,
+  "terminal": [],
+  "logs": [
+    {
+      "elapsedSeconds": 0.2853136450285092,
+      "snapshots": {
+        "app": {
+          "source": "app",
+          "captured": true,
+          "windowStartMs": 1791501932992,
+          "windowEndMs": 1791502052992,
+          "inputBytes": 167865,
+          "processedBytes": 167865,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1187,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        },
+        "server": {
+          "source": "server",
+          "captured": true,
+          "windowStartMs": 1791501932992,
+          "windowEndMs": 1791502052992,
+          "inputBytes": 51,
+          "processedBytes": 51,
+          "truncated": false,
+          "eventsTruncated": false,
+          "matchedLines": 0,
+          "omittedLines": 1,
+          "timeUnavailableLines": 0,
+          "categoryCounts": {},
+          "events": []
+        }
+      }
+    }
+  ],
+  "errors": [
+    "terminal_history_invalid"
+  ],
+  "windowStartMs": 1791501932992,
+  "windowEndMs": 1791502052992,
+  "capturedThroughElapsedSeconds": 0.5774993509985507,
+  "windowReached": false,
+  "windowEndReached": false
+}

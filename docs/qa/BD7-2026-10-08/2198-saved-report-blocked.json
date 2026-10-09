@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "result": "BLOCKED",
+  "crashTriggered": false,
+  "consentOff": true,
+  "savedReportCount": 0,
+  "normalRestore": "PASS",
+  "sourceRevision": "59329d567e482e3c0f32fd7d318138c823f641d0",
+  "admission": {
+    "code": "setup_active_or_unknown",
+    "waitSeconds": 120,
+    "durableTicketPresent": true,
+    "operation": "CHECK",
+    "rootProcessPresent": false,
+    "leaderProcessPresent": false,
+    "crashTriggered": false
+  },
+  "restorationReceipt": "../FQ9-2026-10-08/2198-final-restoration.json"
+}

@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "retrospective": true,
+  "rawTextPersisted": false,
+  "state": "pass",
+  "sources": {
+    "app": {
+      "severity": {
+        "source": "app",
+        "windowStartMs": 1791502460229,
+        "windowEndMs": 1791502580229,
+        "matchedLines": 0,
+        "omittedLines": 2157,
+        "levelCounts": {},
+        "firstTimestampMs": null,
+        "lastTimestampMs": null
+      },
+      "categories": {
+        "source": "app",
+        "captured": true,
+        "windowStartMs": 1791502460229,
+        "windowEndMs": 1791502580229,
+        "inputBytes": 291846,
+        "processedBytes": 291846,
+        "truncated": false,
+        "eventsTruncated": false,
+        "matchedLines": 0,
+        "omittedLines": 2157,
+        "timeUnavailableLines": 0,
+        "categoryCounts": {},
+        "events": []
+      },
+      "boundedInputMayBeTruncated": false
+    },
+    "serverApplication": {
+      "severity": {
+        "source": "server",
+        "windowStartMs": 1791502460229,
+        "windowEndMs": 1791502580229,
+        "matchedLines": 0,
+        "omittedLines": 0,
+        "levelCounts": {},
+        "firstTimestampMs": null,
+        "lastTimestampMs": null
+      },
+      "categories": {
+        "source": "server",
+        "captured": true,
+        "windowStartMs": 1791502460229,
+        "windowEndMs": 1791502580229,
+        "inputBytes": 0,
+        "processedBytes": 0,
+        "truncated": false,
+        "eventsTruncated": false,
+        "matchedLines": 0,
+        "omittedLines": 0,
+        "timeUnavailableLines": 0,
+        "categoryCounts": {},
+        "events": []
+      },
+      "boundedInputMayBeTruncated": false
+    }
+  }
+}
