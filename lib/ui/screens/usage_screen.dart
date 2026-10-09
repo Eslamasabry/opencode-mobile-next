@@ -652,6 +652,13 @@ String _money(BuildContext context, double value) {
   ).format(value);
 }
 
+/// A day the server names as `YYYY-MM-DD`, as the person's calendar writes
+/// it; a value that is not a date is shown as the server sent it.
+String _dayLabel(String date, String locale) {
+  final parsed = DateTime.tryParse(date);
+  return parsed == null ? date : DateFormat.MMMd(locale).format(parsed);
+}
+
 /// The breakdowns under the total: activity, tokens, providers, models and
 /// tool reliability.
 class _UsageReport extends StatelessWidget {
@@ -714,6 +721,27 @@ class _UsageReport extends StatelessWidget {
             ],
           ),
         ),
+        if (stats.activity.isNotEmpty) ...[
+          section(),
+          KitRowGroup(
+            margin: EdgeInsetsDirectional.zero,
+            label: l10n.usageBusiestDays,
+            leadingIcons: false,
+            children: [
+              for (final day in ([
+                ...stats.activity,
+              ]..sort((a, b) => b.steps.compareTo(a.steps))).take(5))
+                KitRow(
+                  key: ValueKey('usage-day-${day.date}'),
+                  title: _dayLabel(day.date, locale),
+                  trailing: KitRowValue(
+                    l10n.usageDaySteps(day.steps),
+                    chevron: false,
+                  ),
+                ),
+            ],
+          ),
+        ],
         section(),
         _Label(l10n.usageTokens),
         KitSurface.panel(

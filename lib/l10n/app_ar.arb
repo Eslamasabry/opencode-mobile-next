@@ -8509,5 +8509,16 @@
   "serverSettingsAuthTokenSaved": "رمز الاتصال محفوظ على هذا الهاتف",
   "serverSettingsAuthTokenMissing": "لا يوجد رمز اتصال محفوظ",
   "connectionPasswordRejectedFor": "تغيّرت كلمة مرور {server}. حدّثها لإعادة الاتصال.",
-  "connectionTokenRejectedFor": "رفض {server} رمز الاتصال. حدّثه لإعادة الاتصال."
+  "connectionTokenRejectedFor": "رفض {server} رمز الاتصال. حدّثه لإعادة الاتصال.",
+  "usageBusiestDays": "أكثر الأيام نشاطًا",
+  "usageDaySteps": "{count, plural, one {خطوة واحدة} two {خطوتان} few {{count} خطوات} many {{count} خطوة} other {{count} خطوة}}",
+  "sessionMenuArchive": "أرشفة المحادثة",
+  "sessionMenuArchiveHint": "تنتقل إلى المؤرشفة ويحتفظ بها الخادم",
+  "sessionMenuDelete": "حذف المحادثة",
+  "sessionMenuDeleteHint": "تُزال هي وسجلها نهائيًا",
+  "sessionArchiveTitle": "أرشفة «{title}»؟",
+  "sessionArchiveBody": "تنتقل إلى المؤرشفة ويمكنك قراءتها هناك.",
+  "sessionDeleteTitle": "حذف «{title}»؟",
+  "sessionDeleteBody": "تُزال المحادثة وسجلها نهائيًا. لا يمكن التراجع عن ذلك.",
+  "modelPickerAgentUses": "يستخدم {model}"
 }

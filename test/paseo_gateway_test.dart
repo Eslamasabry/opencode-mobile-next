@@ -952,6 +952,17 @@ void main() {
     },
   );
 
+  test('archiveSession sends the archive request (menu: Archive)', () async {
+    await gateway.sessions();
+    daemon.handlers['archive_agent_request'] = (m) => (
+      'agent_archived',
+      {'agentId': m['agentId'], 'archivedAt': '2026-09-19T05:00:00.000Z'},
+    );
+    await gateway.archiveSession('a1');
+    expect(daemon.of('archive_agent_request').single['agentId'], 'a1');
+    expect(daemon.of('delete_agent_request'), isEmpty);
+  });
+
   test(
     'a refused request is a fixed failure, never the daemon\'s text',
     () async {

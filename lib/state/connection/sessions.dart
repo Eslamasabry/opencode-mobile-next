@@ -75,6 +75,10 @@ mixin _ConnectionControllerSessions on ChangeNotifier {
   Future<void> deleteSession(String sessionID) =>
       _self._deleteSession(sessionID);
 
+  /// Moves a conversation to Archived (the server keeps it).
+  Future<void> archiveSession(String sessionID) =>
+      _self._archiveSession(sessionID);
+
   List<Session>? _sortedSessionInputs;
   Set<String>? _sortedSessionPins;
   List<Session> _sortedSessionResult = const [];
@@ -699,6 +703,18 @@ extension _ConnectionControllerSessionsImpl on ConnectionController {
     final generation = _generation;
     await currentApi.deleteSession(sessionID);
     if (_isCurrent(generation, currentApi)) _removeSession(sessionID);
+  }
+
+  /// The body of [archiveSession].
+  Future<void> _archiveSession(String sessionID) async {
+    final repository = await prepareActionRepository();
+    if (repository == null) throw StateError('Not connected');
+    final generation = _generation;
+    final currentApi = api;
+    await repository.archiveSession(sessionID);
+    if (currentApi != null && _isCurrent(generation, currentApi)) {
+      _removeSession(sessionID);
+    }
   }
 
   String get _pinProfile => (_connectedProfile ?? profile)?.id ?? '';

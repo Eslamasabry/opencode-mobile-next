@@ -1,0 +1,20 @@
+{
+  "account:limits.limitId": "ignored: an internal name for the limit; the page uses its readable name",
+  "account:limits.limitName": "shown",
+  "account:limits.primary.resetsAt": "shown",
+  "account:limits.primary.usedPercent": "shown",
+  "account:limits.primary.windowDurationMins": "shown",
+  "account:limits.secondary.resetsAt": "shown",
+  "account:limits.secondary.usedPercent": "shown",
+  "account:limits.secondary.windowDurationMins": "shown",
+  "account:login.loginId": "ignored: the app checks the answer is a device-code sign-in and keeps the login id to cancel it; neither is shown",
+  "account:login.type": "ignored: the app checks the answer is a device-code sign-in and keeps the login id to cancel it; neither is shown",
+  "account:login.userCode": "shown",
+  "account:login.verificationUrl": "shown",
+  "account:read.account.email": "shown",
+  "account:read.account.planType": "shown",
+  "account:read.account.type": "shown",
+  "account:read.requiresOpenaiAuth": "ignored: decides whether Sign in is offered; the page says Signed in or Ready to sign in instead",
+  "account:usage.summary.lifetimeTokens": "shown",
+  "account:usage.summary.peakDailyTokens": "shown"
+}

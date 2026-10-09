@@ -1,0 +1,137 @@
+{
+  "sources": [
+    "contracts/opencode-openapi-f12e14cf.json",
+    "contracts/opencode2-openapi-beta-18600.json",
+    "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js"
+  ],
+  "operations": [
+    {
+      "key": "OC1 PUT /auth/{providerID}",
+      "operationId": "auth.set"
+    },
+    {
+      "key": "OC1 DELETE /auth/{providerID}",
+      "operationId": "auth.remove"
+    },
+    {
+      "key": "OC1 PATCH /global/config",
+      "operationId": "global.config.update"
+    },
+    {
+      "key": "OC1 PATCH /config",
+      "operationId": "config.update"
+    },
+    {
+      "key": "OC1 POST /provider/{providerID}/oauth/authorize",
+      "operationId": "provider.oauth.authorize"
+    },
+    {
+      "key": "OC1 POST /provider/{providerID}/oauth/callback",
+      "operationId": "provider.oauth.callback"
+    },
+    {
+      "key": "OC1 POST /api/session/{sessionID}/agent",
+      "operationId": "v2.session.switchAgent"
+    },
+    {
+      "key": "OC1 POST /api/session/{sessionID}/model",
+      "operationId": "v2.session.switchModel"
+    },
+    {
+      "key": "OC1 POST /api/integration/{integrationID}/connect/key",
+      "operationId": "v2.integration.connect.key"
+    },
+    {
+      "key": "OC1 POST /api/integration/{integrationID}/connect/oauth",
+      "operationId": "v2.integration.connect.oauth"
+    },
+    {
+      "key": "OC1 DELETE /api/integration/attempt/{attemptID}",
+      "operationId": "v2.integration.attempt.cancel"
+    },
+    {
+      "key": "OC1 POST /api/integration/attempt/{attemptID}/complete",
+      "operationId": "v2.integration.attempt.complete"
+    },
+    {
+      "key": "OC1 PATCH /api/credential/{credentialID}",
+      "operationId": "v2.credential.update"
+    },
+    {
+      "key": "OC1 DELETE /api/credential/{credentialID}",
+      "operationId": "v2.credential.remove"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/agent",
+      "operationId": "v2.session.switchAgent"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/model",
+      "operationId": "v2.session.switchModel"
+    },
+    {
+      "key": "OC2 POST /api/experimental/integration/wellknown",
+      "operationId": "v2.experimental.integration.wellknown.add"
+    },
+    {
+      "key": "OC2 POST /api/integration/{integrationID}/connect/key",
+      "operationId": "v2.integration.connect.key"
+    },
+    {
+      "key": "OC2 POST /api/integration/{integrationID}/connect/oauth",
+      "operationId": "v2.integration.oauth.connect"
+    },
+    {
+      "key": "OC2 DELETE /api/integration/{integrationID}/connect/oauth/{attemptID}",
+      "operationId": "v2.integration.oauth.cancel"
+    },
+    {
+      "key": "OC2 POST /api/integration/{integrationID}/connect/oauth/{attemptID}/complete",
+      "operationId": "v2.integration.oauth.complete"
+    },
+    {
+      "key": "OC2 POST /api/integration/{integrationID}/connect/command",
+      "operationId": "v2.integration.command.connect"
+    },
+    {
+      "key": "OC2 DELETE /api/integration/{integrationID}/connect/command/{attemptID}",
+      "operationId": "v2.integration.command.cancel"
+    },
+    {
+      "key": "OC2 PATCH /api/credential/{credentialID}",
+      "operationId": "v2.credential.update"
+    },
+    {
+      "key": "OC2 DELETE /api/credential/{credentialID}",
+      "operationId": "v2.credential.remove"
+    },
+    {
+      "key": "OC2 POST /api/credential/{credentialID}/activate",
+      "operationId": "v2.credential.activate"
+    },
+    {
+      "key": "Paseo agent.config.apply.request"
+    },
+    {
+      "key": "Paseo refresh_providers_snapshot_request"
+    },
+    {
+      "key": "Paseo set_agent_feature_request"
+    },
+    {
+      "key": "Paseo set_agent_mode_request"
+    },
+    {
+      "key": "Paseo set_agent_model_request"
+    },
+    {
+      "key": "Paseo set_agent_thinking_request"
+    },
+    {
+      "key": "Codex account/login/start"
+    },
+    {
+      "key": "Codex account/login/cancel"
+    }
+  ]
+}
