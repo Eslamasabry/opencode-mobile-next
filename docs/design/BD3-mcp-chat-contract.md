@@ -14,16 +14,16 @@ an in-flight model request, or implying unsupported runtimes have this feature.
 | Runtime | Add while running | OAuth from phone | Same conversation tools |
 | --- | --- | --- | --- |
 | OpenCode 1 | POST `/mcp` stores runtime config; no config rewrite/instance disposal | POST `/mcp/{name}/auth`, validated phone callback forwarded to `/auth/callback`; runtime config lookup supported | Connection finishes tool listing; next model step reads current MCP tool registry. Current in-flight model request cannot change. |
-| OpenCode 2 | PUT `/api/mcp/{name}`, scoped to location, lost on restart | Disabled for this flow. Existing app gateway has no MCP OAuth bridge; remote-host loopback callbacks are not a phone callback contract. | Connect lists tools; tools-changed refreshes registry; later model step in same conversation sees it. |
+| OpenCode 2 | PUT `/api/mcp/{name}`, scoped to location, lost on restart | Disabled for this flow. Existing app gateway has no MCP OAuth bridge; remote-host loopback callbacks are not a phone callback contract. | Connect lists tools; asynchronous tools-changed eventually refreshes registry, but no callable post-connect readiness barrier exists. Never show Loaded tools. |
 | Claude Code / ACP via Paseo 0.9.2 | No callable add/update RPC exposed by app/protocol | No callable MCP OAuth API | MCP config supplied only at launch/load/resume. No in-chat mutation or hot-refresh promise. |
 
-OC1 evidence: local upstream checkout `opencode-abort-fix-20260914` commit
-39ffda7d2ad9c64c8ba2fa88d5579f3d1c639cbf, `packages/opencode/src/mcp/index.ts`
-(`storeClient`, `add`, `getMcpConfig`, `startAuth`, `tools`) and session tools
-resolution. Installed native binary v1.18.23 is separately probed; checkout says
-v1.18.29, so source evidence and live evidence are not interchangeable.
+OC1 evidence: installed native binary v1.18.23 probed with an isolated
+synthetic MCP server; exact official v1.18.23 source independently inspected at
+`packages/opencode/src/mcp/index.ts`, `session/prompt.ts`, `session/tools.ts`.
+Runtime add/reconnect and retained session were live verified with no model call.
+Next-step tool discovery and OAuth semantics are source-backed, not model/provider proof.
 OC2 evidence: upstream commit b8cedc1a7a5e2916bbb65dc1d4b620729c261638,
-`packages/opencode/src/mcp/service.ts`, `tool/mcp.ts`, `session/context.ts`;
+`packages/core/src/mcp/index.ts`, `tool/mcp.ts`, `session/context.ts`;
 app `lib/api2/` retains location-scoped runtime add/connect. Exact probe results
 and source references belong in `docs/qa/BD3-mcp-chat-2026-10-09/README.md`.
 Paseo: published protocol/server 0.9.2 tarballs verified against the shipped
@@ -90,24 +90,40 @@ profile/location/source. UI observes `snapshot`; dispose when card/chat is gone.
   return or uncertain network outcome. No automatic resend of add/auth.
 - `Future<void> cancelOAuth()` — close owned callback listener, cancel the pending
   server authentication when still on the original source. Does not disconnect
-  or delete the MCP server. Dispose closes local resources only.
+  or delete the MCP server. **The OC1 endpoint clears saved OAuth credentials
+  for that connector**; UI must label/confirm this consequence before calling.
+  Dispose and source invalidation close local resources only and never invoke
+  that endpoint. No-op cancellation preserves existing state.
 
 Snapshot phases: `suggested`, `connecting`, `needsAuthentication`,
-`authorizing`, `checkingTools`, `toolsReady`, `connectedNeedsNewConversation`,
-`failed`, `unavailable`. Snapshot carries only phase, fixed failure enum and an
-inert launch URI during authorizing. No tokens, raw server errors, callback
-codes, or tool arguments. Controller holds no persistent preferences/blobs.
-Profile deletion/transport or location change invalidates it, closes listener,
-and prevents later results from updating another conversation.
+`authorizing`, `checkingTools`, `toolsReady`, `connectedReadinessUnknown`,
+`failed`, `unavailable`. Snapshot carries phase, fixed failure enum,
+`manualCodeRequired` and an inert launch URI during authorizing. When
+`manualCodeRequired` is true, show
+“Paste the browser return URL or authorization code to finish sign-in.” Do not
+claim browser return alone completes authentication. OC1 starts its own
+loopback listener before returning the launch URL; on the same phone that port
+can already be occupied. Its `/auth` start does not register a callback waiter,
+so this path requires the explicit manual fallback. Remote-host OAuth can use
+the phone-owned loopback listener. Actual provider/device OAuth remains
+unqualified. Snapshots contain no tokens, raw server errors, callback codes,
+or tool arguments. Controller holds no persistent preferences/blobs.
+Profile deletion, card replacement, lost qualification, or location change
+invalidates it and closes the listener. Browser suspension may replace the
+transport; the controller retains accepted intent but recovers the authoritative
+card before any further request. Later results cannot update another conversation.
 
 Fresh exact-name `connected` status means that runtime's MCP handshake/tool
 listing finished, not that a particular tool count is known. `toolsReady` also
 requires `mcpChatToolRefresh`. It means available for the next model step in this
 same conversation. UI copy: **“Loaded tools. Continue this conversation to use
 them.”** Do not auto-send a model prompt or claim an in-flight request updated.
-If connection is proven but refresh is unsupported, use
-**“Connected. Start a new conversation to use these tools.”** Only use this for a
-runtime with an actual successful connection; Paseo remains unavailable.
+If connection is proven but registry readiness cannot be confirmed, use
+**“Connected. Tool availability has not been confirmed.”** OC2 uses this state.
+Do not imply a new conversation fixes an unconfirmed registry. For any future
+runtime proven to require a new conversation, copy must be “Connected. Start a
+new conversation to use these tools.” No current adapter advertises that path;
+Paseo cannot connect from chat at all.
 
 ## Capabilities and copy
 
@@ -117,7 +133,7 @@ Add default-false fields to `ServerCapabilities`, preserved by `withGenUi`:
 | --- | --- | --- | --- |
 | `mcpChatConnect` | true | true | false |
 | `mcpChatOAuth` | true (phone browser flow still needs device qualification) | false | false |
-| `mcpChatToolRefresh` | true | true | false |
+| `mcpChatToolRefresh` | true | false | false |
 
 Recommendation display/connect UI also requires `genUi`; no flavor checks.
 Existing `mcpRuntimeAdds`, `mcpOAuth`, and `serverCatalog` remain additional
@@ -133,7 +149,7 @@ Failures have fixed enum keys and plain copy (localize in frontend):
 | nameConflict | A connector with this name already exists. Check it in Tools. |
 | sourceChanged | This conversation's connection changed. Reopen the connector card. |
 | connectFailed | Could not confirm the connection. Check its status before trying again. |
-| authenticationFailed | Sign-in could not be confirmed. Check its status or try sign-in again. |
+| authenticationFailed | Sign-in could not be confirmed. Check its status before trying again. |
 | oauthUnavailable | Sign-in for this connector is not available in this chat. |
 | notConnected | The connector is not connected yet. Check its setup in Tools. |
 

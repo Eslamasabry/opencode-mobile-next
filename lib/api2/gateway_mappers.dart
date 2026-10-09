@@ -20,6 +20,8 @@ import 'transport.dart';
 /// - `mcpRuntimeAdds` supports location-scoped MCP additions until restart.
 ///   `mcpRuntimeRemovals` removes servers from that runtime location only.
 ///   `mcpConfigWrites` is false: the route does not persist configuration.
+///   Tool-registry reload is asynchronous with no callable readiness barrier;
+///   chat cannot confirm Loaded tools. Its OAuth bridge is also unavailable.
 /// - `integrationCredentials` manages stored credentials by their safe IDs.
 /// - `globalEventStream` is true because the single `/api/event` stream
 ///   carries every location (events are tagged with `location`), so a global
@@ -40,6 +42,9 @@ const ServerCapabilities api2ServerCapabilities = ServerCapabilities(
   sessionSteal: false,
   consoleOrganizations: false,
   mcpOAuth: false,
+  mcpChatConnect: true,
+  mcpChatOAuth: false,
+  mcpChatToolRefresh: false,
   mcpConfigWrites: false,
   mcpRuntimeAdds: true,
   mcpRuntimeRemovals: true,

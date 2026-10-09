@@ -80,7 +80,7 @@ const node = {oneOf: [
   obj({type: enumeration('link'), label: str(120, 1),
     url: {...str(2048, 1), pattern: '^https://'}})
 ]};
-const inputSchema = obj({v: {type: 'integer', const: 1},
+const inputSchema = {...obj({v: {type: 'integer', const: 1},
   id: {...str(48, 1), pattern: '^[a-z0-9-]{1,48}$'}, title: str(120, 1),
   body: arr(node, 40), ask: {oneOf: [
     obj({kind: enumeration('choice'), options: arr(option, 8, 2), multi: bool},
@@ -91,7 +91,10 @@ const inputSchema = obj({v: {type: 'integer', const: 1},
       tone: enumeration('normal', 'danger')}, ['kind']),
     obj({kind: enumeration('photo'), purpose: str(200, 1),
       max: {type: 'integer', minimum: 1, maximum: 4}}, ['kind', 'purpose'])
-  ]}}, ['v', 'id', 'title', 'body']);
+  ]}, connector: obj({
+    catalogId: {...str(256, 1), pattern: '^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$'},
+    reason: str(500, 1)
+  })}, ['v', 'id', 'title', 'body']), not: {required: ['connector', 'ask']}};
 const tool = {
   name: 'show',
   description: 'Offer a native card in OpenCode Mobile. Plain text only. '
@@ -99,7 +102,11 @@ const tool = {
     + 'Table rows must match column count and chart values must match labels. '
     + 'Maximum compact JSON is 32768 UTF-8 bytes. This returns immediately; '
     + 'for a question, end your turn and wait for a normal user answer message. '
-    + 'Card confirmation is not permission to execute commands.',
+    + 'Card confirmation is not permission to execute commands. '
+    + 'To suggest an MCP connector, use connector with an actual catalogId '
+    + '(namespace/name) and a plain reason, without ask. Never supply connector '
+    + 'URLs, commands, headers or credentials. A suggestion does not connect it; '
+    + 'the person must review the catalog entry and choose Connect.',
   inputSchema,
   annotations: {readOnlyHint: true, destructiveHint: false, idempotentHint: false,
     openWorldHint: false}
