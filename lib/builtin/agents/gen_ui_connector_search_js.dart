@@ -59,9 +59,13 @@ async function findGenUiConnectors(args) {
   const object = (value, keys) => value !== null && typeof value === 'object'
     && !Array.isArray(value) && Object.keys(value).length === keys.length
     && keys.every(key => Object.hasOwn(value, key));
+  // Direction controls by code point, as gen_ui_validation_js does.
+  const direction = cp => cp === 0x061c || cp === 0x200e || cp === 0x200f
+    || (cp >= 0x202a && cp <= 0x202e) || (cp >= 0x2066 && cp <= 0x2069);
   const plain = (value, max, min = 0) => typeof value === 'string'
     && [...value].length >= min && [...value].length <= max
-    && !/[\x00-\x1f\x7f-\x9f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069\uD800-\uDFFF]/u.test(value)
+    && !/[\x00-\x1f\x7f-\x9f\uD800-\uDFFF]/u.test(value)
+    && ![...value].some(ch => direction(ch.codePointAt(0)))
     && !connectorSearchUrl.test(value) && !connectorSearchSecret(value);
   let bridge;
   let fd;
