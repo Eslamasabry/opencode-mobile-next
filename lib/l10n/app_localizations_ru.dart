@@ -28620,4 +28620,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String connectionTokenRejectedFor(String server) {
     return '$server rejected the connection token. Update it to reconnect.';
   }
+
+  @override
+  String serverSettingsEditTitle(String server) {
+    return 'Edit $server';
+  }
+
+  @override
+  String get serverSettingsEditDetail => 'Change its name, address or sign-in';
+
+  @override
+  String serverSettingsRemoveTitle(String server) {
+    return 'Remove $server';
+  }
+
+  @override
+  String get serverSettingsRemoveDetail =>
+      'Forget it on this phone. Its conversations stay on the server.';
+
+  @override
+  String get serverSettingsRecheckAgents => 'Check for agents again';
+
+  @override
+  String get serverSettingsRecheckAgentsDetail =>
+      'Use it after signing in to an agent on that computer.';
+
+  @override
+  String get serverSettingsRecheckChecking => 'Checking for agents…';
+
+  @override
+  String get serverSettingsRecheckFailed =>
+      'Could not check for agents. Try again in a moment.';
 }

@@ -8509,5 +8509,13 @@
   "serverSettingsAuthTokenSaved": "رمز الاتصال محفوظ على هذا الهاتف",
   "serverSettingsAuthTokenMissing": "لا يوجد رمز اتصال محفوظ",
   "connectionPasswordRejectedFor": "تغيّرت كلمة مرور {server}. حدّثها لإعادة الاتصال.",
-  "connectionTokenRejectedFor": "رفض {server} رمز الاتصال. حدّثه لإعادة الاتصال."
+  "connectionTokenRejectedFor": "رفض {server} رمز الاتصال. حدّثه لإعادة الاتصال.",
+  "serverSettingsEditTitle": "تعديل {server}",
+  "serverSettingsEditDetail": "غيّر اسمه أو عنوانه أو تسجيل الدخول",
+  "serverSettingsRemoveTitle": "إزالة {server}",
+  "serverSettingsRemoveDetail": "انسَه على هذا الهاتف. تبقى محادثاته على الخادم.",
+  "serverSettingsRecheckAgents": "التحقق من الوكلاء مجددا",
+  "serverSettingsRecheckAgentsDetail": "استخدمه بعد تسجيل الدخول إلى وكيل على ذلك الحاسوب.",
+  "serverSettingsRecheckChecking": "جارٍ التحقق من الوكلاء…",
+  "serverSettingsRecheckFailed": "تعذر التحقق من الوكلاء. حاول بعد قليل."
 }

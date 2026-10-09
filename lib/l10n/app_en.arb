@@ -34194,5 +34194,47 @@
         "type": "String"
       }
     }
+  },
+  "serverSettingsEditTitle": "Edit {server}",
+  "@serverSettingsEditTitle": {
+    "description": "Server settings: edit the saved server",
+    "placeholders": {
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "serverSettingsEditDetail": "Change its name, address or sign-in",
+  "@serverSettingsEditDetail": {
+    "description": "Server settings: edit row detail"
+  },
+  "serverSettingsRemoveTitle": "Remove {server}",
+  "@serverSettingsRemoveTitle": {
+    "description": "Server settings: remove the saved server",
+    "placeholders": {
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "serverSettingsRemoveDetail": "Forget it on this phone. Its conversations stay on the server.",
+  "@serverSettingsRemoveDetail": {
+    "description": "Server settings: remove row detail"
+  },
+  "serverSettingsRecheckAgents": "Check for agents again",
+  "@serverSettingsRecheckAgents": {
+    "description": "Server settings, Paseo: ask the daemon which agents are ready"
+  },
+  "serverSettingsRecheckAgentsDetail": "Use it after signing in to an agent on that computer.",
+  "@serverSettingsRecheckAgentsDetail": {
+    "description": "Server settings: recheck detail"
+  },
+  "serverSettingsRecheckChecking": "Checking for agents…",
+  "@serverSettingsRecheckChecking": {
+    "description": "Server settings: recheck in progress"
+  },
+  "serverSettingsRecheckFailed": "Could not check for agents. Try again in a moment.",
+  "@serverSettingsRecheckFailed": {
+    "description": "Server settings: recheck failed"
   }
 }

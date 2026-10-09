@@ -28629,4 +28629,35 @@ class AppLocalizationsAr extends AppLocalizations {
   String connectionTokenRejectedFor(String server) {
     return 'رفض $server رمز الاتصال. حدّثه لإعادة الاتصال.';
   }
+
+  @override
+  String serverSettingsEditTitle(String server) {
+    return 'تعديل $server';
+  }
+
+  @override
+  String get serverSettingsEditDetail => 'غيّر اسمه أو عنوانه أو تسجيل الدخول';
+
+  @override
+  String serverSettingsRemoveTitle(String server) {
+    return 'إزالة $server';
+  }
+
+  @override
+  String get serverSettingsRemoveDetail =>
+      'انسَه على هذا الهاتف. تبقى محادثاته على الخادم.';
+
+  @override
+  String get serverSettingsRecheckAgents => 'التحقق من الوكلاء مجددا';
+
+  @override
+  String get serverSettingsRecheckAgentsDetail =>
+      'استخدمه بعد تسجيل الدخول إلى وكيل على ذلك الحاسوب.';
+
+  @override
+  String get serverSettingsRecheckChecking => 'جارٍ التحقق من الوكلاء…';
+
+  @override
+  String get serverSettingsRecheckFailed =>
+      'تعذر التحقق من الوكلاء. حاول بعد قليل.';
 }

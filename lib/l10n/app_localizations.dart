@@ -45052,6 +45052,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{server} rejected the connection token. Update it to reconnect.'**
   String connectionTokenRejectedFor(String server);
+
+  /// Server settings: edit the saved server
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {server}'**
+  String serverSettingsEditTitle(String server);
+
+  /// Server settings: edit row detail
+  ///
+  /// In en, this message translates to:
+  /// **'Change its name, address or sign-in'**
+  String get serverSettingsEditDetail;
+
+  /// Server settings: remove the saved server
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {server}'**
+  String serverSettingsRemoveTitle(String server);
+
+  /// Server settings: remove row detail
+  ///
+  /// In en, this message translates to:
+  /// **'Forget it on this phone. Its conversations stay on the server.'**
+  String get serverSettingsRemoveDetail;
+
+  /// Server settings, Paseo: ask the daemon which agents are ready
+  ///
+  /// In en, this message translates to:
+  /// **'Check for agents again'**
+  String get serverSettingsRecheckAgents;
+
+  /// Server settings: recheck detail
+  ///
+  /// In en, this message translates to:
+  /// **'Use it after signing in to an agent on that computer.'**
+  String get serverSettingsRecheckAgentsDetail;
+
+  /// Server settings: recheck in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for agents…'**
+  String get serverSettingsRecheckChecking;
+
+  /// Server settings: recheck failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check for agents. Try again in a moment.'**
+  String get serverSettingsRecheckFailed;
 }
 
 class _AppLocalizationsDelegate
