@@ -1749,8 +1749,8 @@ abstract class AppLocalizations {
   /// No description provided for @importParent.
   ///
   /// In en, this message translates to:
-  /// **'Parent conversation {id} must already exist on this server. Import the parent first.'**
-  String importParent(String id);
+  /// **'This conversation was started by another one, which must already exist on this server. Import that one first.'**
+  String get importParent;
 
   /// No description provided for @importArchived.
   ///
@@ -42448,6 +42448,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Done'**
   String get chatsHomeDone;
+
+  /// Chats home: row tag for a conversation whose last run ended in failure and that the person has not opened since
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get chatsHomeFailed;
 
   /// Chats home: section name
   ///

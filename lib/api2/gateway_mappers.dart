@@ -134,6 +134,7 @@ Session mapApi2Session(Api2Session session) => Session(
       ? null
       : '${session.model!.providerID}/${session.model!.id}',
   compactingSince: null, // v2 signals compaction via events, not session time.
+  lastRunFailed: session.outcome == Api2SessionOutcome.failed,
 );
 
 // ---------------- Messages ----------------

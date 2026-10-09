@@ -52,12 +52,17 @@ class WorkspaceProject {
   final List<String> worktrees;
   final int updatedAt;
 
+  /// Whether the server says the project is a Git repository; null when it
+  /// does not say (the server's capabilities decide).
+  final bool? isGit;
+
   const WorkspaceProject({
     required this.id,
     required this.name,
     required this.directory,
     required this.worktrees,
     required this.updatedAt,
+    this.isGit,
   });
 }
 

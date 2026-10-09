@@ -14,13 +14,17 @@ enum KitStatusTagTone {
 
   /// "Done": the success tone (green).
   done,
+
+  /// "Failed": the last run ended in an error (the danger tone).
+  failed,
 }
 
-/// A small worded tag at the end of a feed row ("Needs you", "Running", "Done").
+/// A small worded tag at the end of a feed row ("Needs you", "Running", "Done",
+/// "Failed").
 /// It is a fact, not a control: it never takes a tap and always carries its
 /// word, never colour alone (STATE-9). For a tap target see KitChip.
 ///
-/// States: none — a fixed word in one of three tones, with nothing to press.
+/// States: none — a fixed word in one of four tones, with nothing to press.
 class KitStatusTag extends StatelessWidget {
   const KitStatusTag({super.key, required this.label, required this.tone});
 
@@ -37,6 +41,7 @@ class KitStatusTag extends StatelessWidget {
       KitStatusTagTone.running => roles.accent,
       // Calm, not a second green beside Running: news to read, nothing to do.
       KitStatusTagTone.done => roles.text2,
+      KitStatusTagTone.failed => roles.danger,
     };
     final fill = Color.alphaBlend(base.withValues(alpha: .18), roles.surface1);
     final ink = readableOn(base, [fill], 4.7, toward: roles.text1);

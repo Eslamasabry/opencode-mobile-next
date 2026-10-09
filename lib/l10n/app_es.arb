@@ -582,6 +582,7 @@
   "chatsHomeNeedsYouCount": "Te necesita · {count}",
   "chatsHomeRunning": "En curso",
   "chatsHomeDone": "Listo",
+  "chatsHomeFailed": "Fallida",
   "chatsHomeToday": "Hoy",
   "chatsHomeEarlier": "Anteriores",
   "chatsHomeIncomplete": "Algunas conversaciones no se pudieron cargar",

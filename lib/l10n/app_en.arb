@@ -446,14 +446,7 @@
   "importAction": "Import conversation",
   "importUntitled": "Untitled conversation",
   "importRedacted": "This file contains redacted placeholders. Import cannot recover the original text; use an unredacted export if you need it.",
-  "importParent": "Parent conversation {id} must already exist on this server. Import the parent first.",
-  "@importParent": {
-    "placeholders": {
-      "id": {
-        "type": "String"
-      }
-    }
-  },
+  "importParent": "This conversation was started by another one, which must already exist on this server. Import that one first.",
   "importArchived": "This conversation is archived. Import will keep its archived status.",
   "importDestination": "Import into",
   "importChooseDestination": "Choose a project on this server",
@@ -31900,6 +31893,10 @@
   "chatsHomeDone": "Done",
   "@chatsHomeDone": {
     "description": "Chats home: green row tag for a conversation whose last run finished after the person last opened it"
+  },
+  "chatsHomeFailed": "Failed",
+  "@chatsHomeFailed": {
+    "description": "Chats home: row tag for a conversation whose last run ended in failure and that the person has not opened since"
   },
   "chatsHomeToday": "Today",
   "@chatsHomeToday": {

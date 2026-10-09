@@ -942,9 +942,8 @@ class AppLocalizationsAr extends AppLocalizations {
       'يحتوي هذا الملف على نصوص بديلة لبيانات محجوبة. لا يمكن للاستيراد استعادة النص الأصلي؛ استخدم ملفًا مصدّرًا دون حجب إذا كنت تحتاجه.';
 
   @override
-  String importParent(String id) {
-    return 'يجب أن تكون المحادثة الأم $id موجودة على هذا الخادم. استورد المحادثة الأم أولًا.';
-  }
+  String get importParent =>
+      'بدأت هذه المحادثة من محادثة أخرى يجب أن تكون موجودة على هذا الخادم. استورد تلك المحادثة أولًا.';
 
   @override
   String get importArchived =>
@@ -26937,6 +26936,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatsHomeDone => 'تم';
+
+  @override
+  String get chatsHomeFailed => 'فشلت';
 
   @override
   String get chatsHomeToday => 'اليوم';

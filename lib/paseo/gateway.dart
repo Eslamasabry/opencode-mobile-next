@@ -394,6 +394,10 @@ class PaseoGateway
     return id is String && id.isNotEmpty ? '$provider:$id' : null;
   }
 
+  /// True while the daemon reports [appID]'s agent in an error state (its last
+  /// turn ended in a failure and nothing has run since).
+  bool agentFailed(String appID) => _agents[appID]?['status'] == 'error';
+
   /// Whether [appID]'s record has a title of its own (not the
   /// "Claude Code conversation" stand-in).
   bool hasOwnTitle(String appID) {

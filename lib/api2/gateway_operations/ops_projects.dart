@@ -13,7 +13,8 @@ mixin _Api2ProjectOps on _Api2Core {
   WorkspaceProject _project(Map<String, dynamic> json) {
     final directory = (json['directory'] ?? json['canonical'] ?? '').toString();
     final time = json['time'];
-    final worktrees = json['worktrees'];
+    // The beta lists a project's separate copies as `sandboxes`.
+    final worktrees = json['worktrees'] ?? json['sandboxes'];
     return WorkspaceProject(
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString().isNotEmpty
@@ -23,6 +24,7 @@ mixin _Api2ProjectOps on _Api2Core {
       worktrees: worktrees is List
           ? worktrees.map((value) => value.toString()).toList()
           : const [],
+      isGit: json['vcs'] == 'git',
       updatedAt: time is Map
           ? ((time['updated'] ?? time['created']) as num?)?.toInt() ?? 0
           : 0,

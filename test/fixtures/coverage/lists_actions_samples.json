@@ -1,0 +1,405 @@
+{
+  "sources": [
+    "contracts/opencode-openapi-f12e14cf.json",
+    "contracts/opencode2-openapi-beta-18600.json",
+    "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js"
+  ],
+  "operations": [
+    {
+      "key": "OC1 POST /experimental/control-plane/move-session",
+      "operationId": "experimental.controlPlane.moveSession"
+    },
+    {
+      "key": "OC1 POST /experimental/worktree",
+      "operationId": "worktree.create"
+    },
+    {
+      "key": "OC1 DELETE /experimental/worktree",
+      "operationId": "worktree.remove"
+    },
+    {
+      "key": "OC1 POST /experimental/worktree/reset",
+      "operationId": "worktree.reset"
+    },
+    {
+      "key": "OC1 POST /experimental/session/{sessionID}/background",
+      "operationId": "experimental.session.background"
+    },
+    {
+      "key": "OC1 POST /project/git/init",
+      "operationId": "project.initGit"
+    },
+    {
+      "key": "OC1 PATCH /project/{projectID}",
+      "operationId": "project.update"
+    },
+    {
+      "key": "OC1 POST /experimental/project/{projectID}/copy/generate-name",
+      "operationId": "experimental.projectCopy.generateName"
+    },
+    {
+      "key": "OC1 POST /session",
+      "operationId": "session.create"
+    },
+    {
+      "key": "OC1 DELETE /session/{sessionID}",
+      "operationId": "session.delete"
+    },
+    {
+      "key": "OC1 PATCH /session/{sessionID}",
+      "operationId": "session.update"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/message",
+      "operationId": "session.prompt"
+    },
+    {
+      "key": "OC1 DELETE /session/{sessionID}/message/{messageID}",
+      "operationId": "session.deleteMessage"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/fork",
+      "operationId": "session.fork"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/abort",
+      "operationId": "session.abort"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/init",
+      "operationId": "session.init"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/share",
+      "operationId": "session.share"
+    },
+    {
+      "key": "OC1 DELETE /session/{sessionID}/share",
+      "operationId": "session.unshare"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/summarize",
+      "operationId": "session.summarize"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/prompt_async",
+      "operationId": "session.prompt_async"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/command",
+      "operationId": "session.command"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/shell",
+      "operationId": "session.shell"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/revert",
+      "operationId": "session.revert"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/unrevert",
+      "operationId": "session.unrevert"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/permissions/{permissionID}",
+      "operationId": "permission.respond"
+    },
+    {
+      "key": "OC1 DELETE /session/{sessionID}/message/{messageID}/part/{partID}",
+      "operationId": "part.delete"
+    },
+    {
+      "key": "OC1 PATCH /session/{sessionID}/message/{messageID}/part/{partID}",
+      "operationId": "part.update"
+    },
+    {
+      "key": "OC1 POST /sync/start",
+      "operationId": "sync.start"
+    },
+    {
+      "key": "OC1 POST /sync/steal",
+      "operationId": "sync.steal"
+    },
+    {
+      "key": "OC1 POST /tui/open-sessions",
+      "operationId": "tui.openSessions"
+    },
+    {
+      "key": "OC1 POST /tui/select-session",
+      "operationId": "tui.selectSession"
+    },
+    {
+      "key": "OC1 POST /experimental/workspace",
+      "operationId": "experimental.workspace.create"
+    },
+    {
+      "key": "OC1 POST /experimental/workspace/sync-list",
+      "operationId": "experimental.workspace.syncList"
+    },
+    {
+      "key": "OC1 DELETE /experimental/workspace/{id}",
+      "operationId": "experimental.workspace.remove"
+    },
+    {
+      "key": "OC1 POST /experimental/workspace/warp",
+      "operationId": "experimental.workspace.warp"
+    },
+    {
+      "key": "OC1 POST /experimental/project/{projectID}/copy",
+      "operationId": "v2.projectCopy.create"
+    },
+    {
+      "key": "OC1 DELETE /experimental/project/{projectID}/copy",
+      "operationId": "v2.projectCopy.remove"
+    },
+    {
+      "key": "OC1 POST /experimental/project/{projectID}/copy/refresh",
+      "operationId": "v2.projectCopy.refresh"
+    },
+    {
+      "key": "OC2 POST /api/session",
+      "operationId": "v2.session.create"
+    },
+    {
+      "key": "OC2 POST /api/session/import",
+      "operationId": "v2.session.import"
+    },
+    {
+      "key": "OC2 DELETE /api/session/{sessionID}",
+      "operationId": "v2.session.remove"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/fork",
+      "operationId": "v2.session.fork"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/agent",
+      "operationId": "v2.session.switchAgent"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/model",
+      "operationId": "v2.session.switchModel"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/rename",
+      "operationId": "v2.session.rename"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/move",
+      "operationId": "v2.session.move"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/prompt",
+      "operationId": "v2.session.prompt"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/command",
+      "operationId": "v2.session.command"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/skill",
+      "operationId": "v2.session.skill"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/synthetic",
+      "operationId": "v2.session.synthetic"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/shell",
+      "operationId": "v2.session.shell"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/compact",
+      "operationId": "v2.session.compact"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/wait",
+      "operationId": "v2.session.wait"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/revert/stage",
+      "operationId": "v2.session.revert.stage"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/revert/clear",
+      "operationId": "v2.session.revert.clear"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/revert/commit",
+      "operationId": "v2.session.revert.commit"
+    },
+    {
+      "key": "OC2 DELETE /api/session/{sessionID}/inbox/{inboxID}",
+      "operationId": "v2.session.inbox.cancel"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/inbox/{inboxID}/steer",
+      "operationId": "v2.session.inbox.steer"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/inbox/{inboxID}/queue",
+      "operationId": "v2.session.inbox.queue"
+    },
+    {
+      "key": "OC2 PUT /api/session/{sessionID}/instructions/entries/{key}",
+      "operationId": "v2.session.instructions.entry.put"
+    },
+    {
+      "key": "OC2 DELETE /api/session/{sessionID}/instructions/entries/{key}",
+      "operationId": "v2.session.instructions.entry.remove"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/generate",
+      "operationId": "v2.session.generate"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/interrupt",
+      "operationId": "v2.session.interrupt"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/background",
+      "operationId": "v2.session.background"
+    },
+    {
+      "key": "OC2 PATCH /api/session/{sessionID}/message/{messageID}",
+      "operationId": "v2.session.messageUpdate"
+    },
+    {
+      "key": "OC2 PUT /api/session/{sessionID}/environment",
+      "operationId": "v2.session.environment"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/view",
+      "operationId": "v2.session.view"
+    },
+    {
+      "key": "OC2 PATCH /api/project/{projectID}",
+      "operationId": "v2.project.update"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/form",
+      "operationId": "v2.session.form.create"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/form/{formID}/reply",
+      "operationId": "v2.session.form.reply"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/form/{formID}/cancel",
+      "operationId": "v2.session.form.cancel"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/permission",
+      "operationId": "v2.session.permission.create"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/permission/{requestID}/reply",
+      "operationId": "v2.session.permission.reply"
+    },
+    {
+      "key": "OC2 POST /api/worktree/{projectID}",
+      "operationId": "v2.worktree.create"
+    },
+    {
+      "key": "OC2 DELETE /api/worktree/{projectID}",
+      "operationId": "v2.worktree.remove"
+    },
+    {
+      "key": "OC2 POST /api/worktree/{projectID}/refresh",
+      "operationId": "v2.worktree.refresh"
+    },
+    {
+      "key": "OC2 POST /api/workspace",
+      "operationId": "v2.workspace.create"
+    },
+    {
+      "key": "OC2 DELETE /api/workspace/{workspaceID}",
+      "operationId": "v2.workspace.destroy"
+    },
+    {
+      "key": "Paseo agent.create.request"
+    },
+    {
+      "key": "Paseo agent.fork_context.request"
+    },
+    {
+      "key": "Paseo archive_agent_request"
+    },
+    {
+      "key": "Paseo archive_workspace_request"
+    },
+    {
+      "key": "Paseo close_items_request"
+    },
+    {
+      "key": "Paseo create_agent_request"
+    },
+    {
+      "key": "Paseo create_paseo_worktree_request"
+    },
+    {
+      "key": "Paseo delete_agent_request"
+    },
+    {
+      "key": "Paseo import_agent_request"
+    },
+    {
+      "key": "Paseo open_project_request"
+    },
+    {
+      "key": "Paseo paseo_worktree_archive_request"
+    },
+    {
+      "key": "Paseo project.add.request"
+    },
+    {
+      "key": "Paseo project.create_directory.request"
+    },
+    {
+      "key": "Paseo project.github.clone.request"
+    },
+    {
+      "key": "Paseo project.icon.set.request"
+    },
+    {
+      "key": "Paseo project.remove.request"
+    },
+    {
+      "key": "Paseo project.rename.request"
+    },
+    {
+      "key": "Paseo resume_agent_request"
+    },
+    {
+      "key": "Paseo update_agent_request"
+    },
+    {
+      "key": "Paseo workspace.clear_attention.request"
+    },
+    {
+      "key": "Paseo workspace.create.request"
+    },
+    {
+      "key": "Paseo workspace.label.assignment.set.request"
+    },
+    {
+      "key": "Paseo workspace.label.delete.request"
+    },
+    {
+      "key": "Paseo workspace.label.update.request"
+    },
+    {
+      "key": "Paseo workspace.mark_unread.request"
+    },
+    {
+      "key": "Paseo workspace.pin.set.request"
+    },
+    {
+      "key": "Paseo workspace.recovery.restore.request"
+    },
+    {
+      "key": "Paseo workspace.title.set.request"
+    }
+  ]
+}

@@ -566,8 +566,7 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
               ),
               for (final note in [
                 if (document.hasRedactions) l10n.importRedacted,
-                if (document.parentID != null)
-                  l10n.importParent(document.parentID!),
+                if (document.parentID != null) l10n.importParent,
                 if (document.archived) l10n.importArchived,
               ])
                 Padding(

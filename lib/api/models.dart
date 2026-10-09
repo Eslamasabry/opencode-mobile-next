@@ -235,6 +235,9 @@ class Session {
   /// no compaction is in progress.
   final DateTime? compactingSince;
 
+  /// OpenCode 2 only: the server says the last run ended in failure.
+  final bool lastRunFailed;
+
   Session({
     required this.id,
     this.title,
@@ -254,6 +257,7 @@ class Session {
     this.model,
     this.selection,
     this.compactingSince,
+    this.lastRunFailed = false,
   });
 
   factory Session.fromJson(Map<String, dynamic> j) {
@@ -337,6 +341,7 @@ class Session {
         : model as String?,
     selection: selection ?? this.selection,
     compactingSince: compactingSince,
+    lastRunFailed: lastRunFailed,
   );
 }
 

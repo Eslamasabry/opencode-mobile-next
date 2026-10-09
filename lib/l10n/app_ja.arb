@@ -582,6 +582,7 @@
   "chatsHomeNeedsYouCount": "対応が必要 · {count}",
   "chatsHomeRunning": "実行中",
   "chatsHomeDone": "完了",
+  "chatsHomeFailed": "失敗",
   "chatsHomeToday": "今日",
   "chatsHomeEarlier": "それ以前",
   "chatsHomeIncomplete": "読み込めなかった会話があります",
