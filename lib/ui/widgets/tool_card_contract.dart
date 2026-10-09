@@ -16,6 +16,8 @@ enum _ToolKind {
   question,
   lsp,
   skill,
+  plan,
+  worktreeSetup,
   connectorSearch,
   generic,
 }
@@ -221,6 +223,9 @@ class _ToolContract {
         if (_valueNumber(metadata['matches']) case final value?) {
           details.add(strings.chatUiMatchCount(value));
         }
+        if (_valueNumber(metadata['count']) case final value? when value > 0) {
+          details.add(strings.chatUiFileCount(value));
+        }
         if (_valueString(input['include']) case final value?) {
           details.add(value);
         }
@@ -280,6 +285,13 @@ class _ToolContract {
         subtitle = _valueString(input['url']);
         technical = true;
         if (_valueString(input['format']) case final value?) details.add(value);
+        if (_valueNumber(metadata['httpCode']) case final code?) {
+          details.add(
+            strings.toolCardPageStatus(
+              [code.toInt(), ?_valueString(metadata['httpText'])].join(' '),
+            ),
+          );
+        }
         break;
       case 'websearch':
         kind = _ToolKind.webSearch;
@@ -340,6 +352,16 @@ class _ToolContract {
         subtitle = path == null ? null : _fileName(path);
         technical = true;
         break;
+      case 'plan':
+        // The agent's plan: the first line of it is the step's one line.
+        kind = _ToolKind.plan;
+        title = strings.toolCardPlan;
+        subtitle = _firstWords(state.output);
+      case 'worktree_setup':
+        kind = _ToolKind.worktreeSetup;
+        title = strings.toolCardWorktreeSetup;
+        subtitle = _valueString(metadata['branchName']);
+        technical = true;
       case 'skill':
         kind = _ToolKind.skill;
         title = strings.activeContextSkill;
@@ -445,6 +467,16 @@ class _ToolContract {
     return words.isEmpty ? strings.chatUiTool : KitText.sentenceCase(words);
   }
 
+  /// The first line of Markdown as plain words ("# Add login" → "Add
+  /// login"); null when there is none.
+  static String? _firstWords(String? markdown) {
+    for (final line in (markdown ?? '').split('\n')) {
+      final words = line.replaceFirst(RegExp(r'^[\s#>*\-]+'), '').trim();
+      if (words.isNotEmpty) return words;
+    }
+    return null;
+  }
+
   static int? _positive(dynamic raw) {
     final value = _valueNumber(raw)?.toInt();
     return value != null && value > 0 ? value : null;
@@ -459,11 +491,11 @@ class _ToolContract {
     _ToolKind.edit || _ToolKind.write || _ToolKind.patch => KitToolKind.edit,
     _ToolKind.webFetch || _ToolKind.webSearch => KitToolKind.web,
     _ToolKind.task => KitToolKind.agent,
-    _ToolKind.todo => KitToolKind.todo,
+    _ToolKind.todo || _ToolKind.plan => KitToolKind.todo,
     _ToolKind.question => KitToolKind.question,
     _ToolKind.skill => KitToolKind.skill,
     _ToolKind.connectorSearch => KitToolKind.search,
-    _ToolKind.generic => KitToolKind.other,
+    _ToolKind.generic || _ToolKind.worktreeSetup => KitToolKind.other,
   };
 }
 

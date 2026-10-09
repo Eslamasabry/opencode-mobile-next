@@ -28448,4 +28448,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kitMarkdownImage => 'صورة';
+
+  @override
+  String get toolCardPlan => 'الخطة';
+
+  @override
+  String get toolCardWorktreeSetup => 'إعداد نسخة منفصلة';
+
+  @override
+  String get toolCardWhatItDid => 'ما فعله';
+
+  @override
+  String get toolCardTechnicalDetails => 'تفاصيل تقنية';
+
+  @override
+  String toolCardPageStatus(String status) {
+    return 'ردّت الصفحة $status';
+  }
+
+  @override
+  String toolCardAsked(String prompt) {
+    return 'السؤال: $prompt';
+  }
 }

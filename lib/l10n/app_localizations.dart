@@ -44746,6 +44746,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Image'**
   String get kitMarkdownImage;
+
+  /// Chat step: the agent's plan for the work, shown as the step's title.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get toolCardPlan;
+
+  /// Chat step: the title of the setup that prepares a separate copy of the project for an agent.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up a separate copy'**
+  String get toolCardWorktreeSetup;
+
+  /// Chat sub-agent step: label of the fold listing the steps the sub-agent took.
+  ///
+  /// In en, this message translates to:
+  /// **'What it did'**
+  String get toolCardWhatItDid;
+
+  /// Chat step: label of the fold that holds a tool's nested technical values, kept out of the plain list above.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical details'**
+  String get toolCardTechnicalDetails;
+
+  /// Chat web page step: how the page answered, such as 200 OK or 404 Not Found.
+  ///
+  /// In en, this message translates to:
+  /// **'Page answered {status}'**
+  String toolCardPageStatus(String status);
+
+  /// Chat web page step: what the agent asked of the page.
+  ///
+  /// In en, this message translates to:
+  /// **'Asked: {prompt}'**
+  String toolCardAsked(String prompt);
 }
 
 class _AppLocalizationsDelegate
