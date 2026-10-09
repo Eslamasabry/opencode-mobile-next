@@ -8517,5 +8517,6 @@
   "serverSettingsRecheckAgents": "التحقق من الوكلاء مجددا",
   "serverSettingsRecheckAgentsDetail": "استخدمه بعد تسجيل الدخول إلى وكيل على ذلك الحاسوب.",
   "serverSettingsRecheckChecking": "جارٍ التحقق من الوكلاء…",
-  "serverSettingsRecheckFailed": "تعذر التحقق من الوكلاء. حاول بعد قليل."
+  "serverSettingsRecheckFailed": "تعذر التحقق من الوكلاء. حاول بعد قليل.",
+  "integrationsMcpDetails": "تفاصيل {name}"
 }

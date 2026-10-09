@@ -1,0 +1,17 @@
+{
+  "command.agentId": "ignored: an internal id the app uses to match records; nothing a person reads",
+  "command.commands[].argumentHint": "ignored: the sheet starts a command by its name and the person types the rest in the message; the hint is not asked for",
+  "command.commands[].description": "shown",
+  "command.commands[].kind": "ignored: tells commands from skills inside the daemon; the sheet lists both the same way",
+  "command.commands[].name": "shown",
+  "command.error": "ignored: when the daemon cannot list commands the sheet shows none; the daemon's own words are technical",
+  "config_apply.accepted": "ignored: the app never asks the daemon for this message, so no page shows it",
+  "config_apply.agentId": "ignored: the app never asks the daemon for this message, so no page shows it",
+  "config_apply.error": "ignored: the app never asks the daemon for this message, so no page shows it",
+  "config_apply.notice": "ignored: the app never asks the daemon for this message, so no page shows it",
+  "skills_status.available[]": "ignored: the app never asks the daemon for this message, so no page shows it",
+  "skills_status.installed[]": "ignored: the app never asks the daemon for this message, so no page shows it",
+  "skills_status.ops[]": "ignored: the app never asks the daemon for this message, so no page shows it",
+  "skills_status.selection": "ignored: the app never asks the daemon for this message, so no page shows it",
+  "skills_status.state": "ignored: the app never asks the daemon for this message, so no page shows it"
+}

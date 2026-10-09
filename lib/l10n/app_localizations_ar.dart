@@ -28660,4 +28660,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get serverSettingsRecheckFailed =>
       'تعذر التحقق من الوكلاء. حاول بعد قليل.';
+
+  @override
+  String integrationsMcpDetails(String name) {
+    return 'تفاصيل $name';
+  }
 }

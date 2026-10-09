@@ -45100,6 +45100,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not check for agents. Try again in a moment.'**
   String get serverSettingsRecheckFailed;
+
+  /// MCP server row: opens what the server said when it failed
+  ///
+  /// In en, this message translates to:
+  /// **'Details for {name}'**
+  String integrationsMcpDetails(String name);
 }
 
 class _AppLocalizationsDelegate

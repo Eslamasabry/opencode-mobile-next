@@ -34236,5 +34236,14 @@
   "serverSettingsRecheckFailed": "Could not check for agents. Try again in a moment.",
   "@serverSettingsRecheckFailed": {
     "description": "Server settings: recheck failed"
+  },
+  "integrationsMcpDetails": "Details for {name}",
+  "@integrationsMcpDetails": {
+    "description": "MCP server row: opens what the server said when it failed",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -161,15 +161,30 @@ class _McpServerRow extends StatelessWidget {
         ],
       ),
       supportingMaxLines: 3,
-      below: act == null
+      below: (act == null && (server.error?.trim().isEmpty ?? true))
           ? null
           : KitActionBlock(
               tertiary: [
-                KitAction(
-                  key: ValueKey('mcp-action-${server.name}'),
-                  label: act,
-                  onPressed: canAct ? onAct : null,
-                ),
+                if (act != null)
+                  KitAction(
+                    key: ValueKey('mcp-action-${server.name}'),
+                    label: act,
+                    onPressed: canAct ? onAct : null,
+                  ),
+                // What the server said, in a sheet: plain words lead on the
+                // row, the technical text waits here.
+                if (server.error?.trim().isNotEmpty ?? false)
+                  KitAction(
+                    key: ValueKey('mcp-error-${server.name}'),
+                    label: l10n.integrationsMcpDetails(server.name),
+                    onPressed: () => unawaited(
+                      showKitTechnicalDetails(
+                        context,
+                        title: l10n.integrationsMcpDetails(server.name),
+                        text: server.error!.trim(),
+                      ),
+                    ),
+                  ),
               ],
             ),
       menuLabel: l10n.integrationsMcpActions(server.name),

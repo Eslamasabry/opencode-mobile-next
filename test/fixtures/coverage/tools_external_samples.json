@@ -1,0 +1,264 @@
+{
+  "source": "lib/domain/external_agent.dart",
+  "schema": {
+    "card": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "cardUrl",
+        "kind": "string"
+      },
+      {
+        "path": "endpoint",
+        "kind": "string"
+      },
+      {
+        "path": "version",
+        "kind": "string"
+      },
+      {
+        "path": "auth",
+        "kind": "enum"
+      },
+      {
+        "path": "supported",
+        "kind": "boolean"
+      },
+      {
+        "path": "skills[].name",
+        "kind": "string"
+      },
+      {
+        "path": "skills[].description",
+        "kind": "string"
+      }
+    ],
+    "task": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "contextId",
+        "kind": "string"
+      },
+      {
+        "path": "state",
+        "kind": "enum"
+      },
+      {
+        "path": "statusMessageId",
+        "kind": "string"
+      },
+      {
+        "path": "parts[].text",
+        "kind": "string"
+      },
+      {
+        "path": "parts[].url",
+        "kind": "string"
+      },
+      {
+        "path": "parts[].name",
+        "kind": "string"
+      },
+      {
+        "path": "omittedContent",
+        "kind": "boolean"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "external_card_and_task",
+      "kind": "external",
+      "payload": {
+        "card": {
+          "name": "Colour agent",
+          "description": "Picks colours for a screen",
+          "cardUrl": "https://agent.example/.well-known/agent-card.json",
+          "endpoint": "https://agent.example/rpc",
+          "version": "3.1",
+          "auth": "bearer",
+          "supported": true,
+          "skills": [
+            {
+              "name": "Palette",
+              "description": "Suggest a palette"
+            }
+          ]
+        },
+        "task": {
+          "id": "task-77",
+          "contextId": "ctx-77",
+          "state": "completed",
+          "statusMessageId": "msg-77",
+          "parts": [
+            {
+              "text": "Blue result"
+            },
+            {
+              "url": "https://agent.example/files/palette.png",
+              "name": "palette.png"
+            }
+          ],
+          "omittedContent": true
+        }
+      },
+      "fields": [
+        {
+          "key": "card.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Colour agent"
+          ],
+          "primary": false
+        },
+        {
+          "key": "card.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Picks colours for a screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "card.cardUrl",
+          "path": "cardUrl",
+          "kind": "string",
+          "probes": [
+            "agent.example/.well-known/agent-card.json"
+          ],
+          "primary": false
+        },
+        {
+          "key": "card.endpoint",
+          "path": "endpoint",
+          "kind": "string",
+          "probes": [
+            "agent.example/rpc"
+          ],
+          "primary": false
+        },
+        {
+          "key": "card.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "3.1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "card.auth",
+          "path": "auth",
+          "kind": "enum",
+          "probes": [
+            "Key"
+          ],
+          "primary": false
+        },
+        {
+          "key": "card.supported",
+          "path": "supported",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "card.skills[].name",
+          "path": "skills[].name",
+          "kind": "string",
+          "probes": [
+            "Palette"
+          ],
+          "primary": false
+        },
+        {
+          "key": "card.skills[].description",
+          "path": "skills[].description",
+          "kind": "string",
+          "probes": [
+            "Suggest a palette"
+          ],
+          "primary": false
+        },
+        {
+          "key": "task.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "task.contextId",
+          "path": "contextId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "task.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Completed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "task.statusMessageId",
+          "path": "statusMessageId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "task.parts[].text",
+          "path": "parts[].text",
+          "kind": "string",
+          "probes": [
+            "Blue result"
+          ],
+          "primary": false
+        },
+        {
+          "key": "task.parts[].url",
+          "path": "parts[].url",
+          "kind": "string",
+          "probes": [
+            "Review external link"
+          ],
+          "primary": false
+        },
+        {
+          "key": "task.parts[].name",
+          "path": "parts[].name",
+          "kind": "string",
+          "probes": [
+            "palette.png"
+          ],
+          "primary": false
+        },
+        {
+          "key": "task.omittedContent",
+          "path": "omittedContent",
+          "kind": "boolean",
+          "probes": [
+            "Some output is omitted"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

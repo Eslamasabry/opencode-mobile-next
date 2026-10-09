@@ -28628,4 +28628,9 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get serverSettingsRecheckFailed =>
       'Could not check for agents. Try again in a moment.';
+
+  @override
+  String integrationsMcpDetails(String name) {
+    return 'Details for $name';
+  }
 }
