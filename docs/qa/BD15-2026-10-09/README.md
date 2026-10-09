@@ -114,3 +114,36 @@ cross-session scan, persistent copy or raw-content logging. Advertise its
 capability only when that local access and identity contract is supported.
 
 [Three-line coordinator contract](../../design/BD15-contract.md).
+
+## Approved phone check — access unavailable
+
+The owner subsequently authorized one read-only check on their connected real
+phone. One `adb -s <approved-device> shell` command attempted to enter and list
+the expected app-private profile root:
+
+```text
+/data/user/0/io.github.eslamasabry.opencode_mobile/files/linux/ubuntu/home/oc/.oc-profiles
+```
+
+The command suppressed the directory listing and shell errors; it emitted only
+the following result fields:
+
+```text
+ids found: unavailable (app-private files not readable via adb)
+hashes computed: 0
+match: undetermined
+```
+
+The shell could not enter/list that directory. This establishes that the
+required files were unavailable through this adb access path, not whether the
+transcripts exist or which Android restriction prevented access. Per the
+owner's stop condition, no further phone access was attempted. `run-as`, root,
+alternate access paths, installs, writes, process kills and logins were not
+attempted. No message text, account data, picture bytes, IDs or computed hashes
+were printed, copied off the phone or committed. There are no hash values to
+truncate to 12 characters.
+
+The image-to-ID match was **neither proved nor disproved**. The conditional
+implementation prerequisite remains unmet, so the reader/capability stays
+unavailable and the existing contract remains accurate. This follow-up changes
+documentation only; the diff was checked, with no Flutter tests or builds run.
