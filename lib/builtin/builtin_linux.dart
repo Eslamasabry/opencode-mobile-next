@@ -275,6 +275,8 @@ class BuiltinServiceDiagnostics {
     this.running = false,
     this.lastExitCode,
     this.lastUptimeMs,
+    this.lastExitAtMs,
+    this.lastStopRequested,
     this.uptimeMs,
     this.restartCount = 0,
     this.exitReason = BuiltinServiceExitReason.unknown,
@@ -292,6 +294,13 @@ class BuiltinServiceDiagnostics {
       running: map['running'] == true,
       lastExitCode: asInt(map['lastExitCode']),
       lastUptimeMs: nonNegativeInt(map['lastUptimeMs']),
+      lastExitAtMs: switch (map['lastExitAtMs']) {
+        final int at when at > 0 && at <= 8640000000000000 => at,
+        _ => null,
+      },
+      lastStopRequested: map['lastStopRequested'] is bool
+          ? map['lastStopRequested'] as bool
+          : null,
       uptimeMs: nonNegativeInt(map['uptimeMs']),
       restartCount: nonNegativeInt(map['restartCount']) ?? 0,
       exitReason: BuiltinServiceExitReason.parse(map['exitReason']),
@@ -303,6 +312,12 @@ class BuiltinServiceDiagnostics {
 
   /// Completed run duration. Null means no valid observation is available.
   final int? lastUptimeMs;
+
+  /// Wall-clock time of the observed exit, never fabricated after app death.
+  final int? lastExitAtMs;
+
+  /// Null on older APKs. True when our runtime deliberately stopped the child.
+  final bool? lastStopRequested;
 
   /// Current run duration. Null means no run or no valid observation.
   final int? uptimeMs;

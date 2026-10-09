@@ -40,20 +40,45 @@ class AppExitEntry {
   String get description => category.safeDescription;
 }
 
+/// A separately identified helper exit, never an Android app-process exit.
+@immutable
+class AgentHelperExit {
+  AgentHelperExit({
+    required DateTime at,
+    required this.exitCode,
+    required this.possibleResourceKill,
+  }) : at = at.toUtc();
+
+  final DateTime at;
+  final int? exitCode;
+  final bool possibleResourceKill;
+
+  String get description => possibleResourceKill
+      ? 'Agent helper stopped (possible memory or process limit)'
+      : 'Agent helper stopped unexpectedly';
+}
+
 @immutable
 class AppExitHistory {
   AppExitHistory({
     required this.supported,
     Iterable<AppExitEntry> entries = const [],
+    Iterable<AgentHelperExit> helperExits = const [],
     this.error,
-  }) : entries = List<AppExitEntry>.unmodifiable(entries);
+  }) : entries = List<AppExitEntry>.unmodifiable(entries),
+       helperExits = List<AgentHelperExit>.unmodifiable(helperExits);
 
   const AppExitHistory.unsupported()
     : supported = false,
       entries = const [],
+      helperExits = const [],
       error = null;
 
   final bool supported;
   final List<AppExitEntry> entries;
+
+  /// Latest unexpected exit per helper. Render with its own title and details;
+  /// the Android category/importance fields above do not apply.
+  final List<AgentHelperExit> helperExits;
   final DiagnosticsError? error;
 }

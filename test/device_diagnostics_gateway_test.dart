@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/background/live_background.dart';
+import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/diagnostics/app_diagnostics.dart';
 import 'package:opencode_mobile/diagnostics/crash_diagnostics.dart';
 import 'package:opencode_mobile/diagnostics/crash_report.dart';
@@ -24,6 +25,7 @@ void main() {
   late DeviceDiagnosticsGateway gateway;
   late List<String> shared;
   late List<String> lifecycleCalls;
+  var failPerformance = false;
 
   setUp(() async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -52,6 +54,7 @@ void main() {
     );
     shared = [];
     lifecycleCalls = [];
+    failPerformance = false;
     messenger.setMockMethodCallHandler(channel, (call) async {
       lifecycleCalls.add(call.method);
       return {
@@ -67,6 +70,20 @@ void main() {
       };
     });
     gateway = DeviceDiagnosticsGateway(
+      readPerformance: () async {
+        if (failPerformance) throw StateError('private native details');
+        return BuiltinPerformance.fromMap({
+          'services': {
+            'agent-host.private-profile': {
+              'running': false,
+              'lastExitCode': 137,
+              'lastExitAtMs': 1700000001000,
+              'lastStopRequested': false,
+              'exitReason': 'memory_or_phantom_kill',
+            },
+          },
+        });
+      },
       lifecycle: AppLifecycleBridge(channel: channel),
       background: background,
       reports: CrashReportBuilder(
@@ -78,6 +95,26 @@ void main() {
       ),
     );
   });
+
+  test(
+    'BD13 device diagnostics separates helper deaths from Android app exits',
+    () async {
+      final history = await gateway.exitHistory();
+      expect(history.entries, hasLength(1));
+      expect(history.entries.single.category, AppExitCategory.crash);
+      expect(history.helperExits, hasLength(1));
+      expect(history.helperExits.single.exitCode, 137);
+      expect(history.helperExits.single.description, contains('Agent helper'));
+      expect(
+        history.helperExits.single.description,
+        isNot(contains('private-profile')),
+      );
+      failPerformance = true;
+      final fallback = await gateway.exitHistory();
+      expect(fallback.entries, hasLength(1));
+      expect(fallback.helperExits, isEmpty);
+    },
+  );
 
   tearDown(() {
     gateway.dispose();

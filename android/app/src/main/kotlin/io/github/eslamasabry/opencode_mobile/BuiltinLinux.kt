@@ -864,6 +864,9 @@ class BuiltinLinux(private val context: Context) {
     /** A cancelled private flow cannot report drained while captured children survive. */
     fun stopAgentProcess(process: Process) {
         if (!process.isAlive) return
+        synchronized(this) {
+            services.values.filter { it.process === process }.forEach { it.stopRequested = true }
+        }
         fun token(pid: Int): String? = try {
             File("/proc/$pid/stat").readText().substringAfterLast(") ").split(' ').getOrNull(19)
         } catch (_: Exception) { null }
@@ -939,7 +942,7 @@ class BuiltinLinux(private val context: Context) {
         val retained = diagnosticsPreferences.getStringSet("names", emptySet()).orEmpty() - names
         val edit = diagnosticsPreferences.edit().putStringSet("names", retained)
         names.forEach { name ->
-            listOf("exit", "uptime", "restarts", "launched").forEach { edit.remove("$name.$it") }
+            listOf("exit", "uptime", "restarts", "launched", "exitAt", "stopRequested").forEach { edit.remove("$name.$it") }
         }
         check(edit.commit()) { "The agent sign-in could not be removed." }
     }
@@ -1612,6 +1615,7 @@ class BuiltinLinux(private val context: Context) {
         /** When this run began, on the clock that keeps counting in deep sleep. */
         val startedAt: Long = SystemClock.elapsedRealtime()
         var exitRecorded = false
+        var stopRequested = false
     }
 
     private val services = LinkedHashMap<String, Service>()
@@ -1625,6 +1629,10 @@ class BuiltinLinux(private val context: Context) {
             diagnosticsPreferences.getInt("$name.exit", 0) else null,
         lastUptimeMs = if (diagnosticsPreferences.contains("$name.uptime"))
             diagnosticsPreferences.getLong("$name.uptime", 0) else null,
+        lastExitAtMs = if (diagnosticsPreferences.contains("$name.exitAt"))
+            diagnosticsPreferences.getLong("$name.exitAt", 0) else null,
+        lastStopRequested = if (diagnosticsPreferences.contains("$name.stopRequested"))
+            diagnosticsPreferences.getBoolean("$name.stopRequested", false) else null,
         restartCount = diagnosticsPreferences.getInt("$name.restarts", 0),
         hasLaunched = diagnosticsPreferences.getBoolean("$name.launched", false),
     )
@@ -1637,6 +1645,9 @@ class BuiltinLinux(private val context: Context) {
             .putBoolean("$name.launched", record.hasLaunched)
         record.lastExitCode?.let { edit.putInt("$name.exit", it) } ?: edit.remove("$name.exit")
         record.lastUptimeMs?.let { edit.putLong("$name.uptime", it) } ?: edit.remove("$name.uptime")
+        record.lastExitAtMs?.let { edit.putLong("$name.exitAt", it) } ?: edit.remove("$name.exitAt")
+        record.lastStopRequested?.let { edit.putBoolean("$name.stopRequested", it) }
+            ?: edit.remove("$name.stopRequested")
         if (!edit.commit()) Log.w(TAG, "Service diagnostics could not be saved")
     }
 
@@ -1652,12 +1663,23 @@ class BuiltinLinux(private val context: Context) {
         val code = try { service.process.exitValue() } catch (_: Throwable) { null }
         saveDiagnosticRecord(name, diagnosticRecord(name).exited(
             code, SystemClock.elapsedRealtime() - service.startedAt,
+            System.currentTimeMillis(), service.stopRequested,
         ))
     }
 
     private fun removeStoppedService(name: String) {
         services[name]?.let { recordServiceExit(name, it) }
         services.remove(name)
+    }
+
+    @Synchronized
+    fun privateAgentDiagnostics(name: String): Map<String, Any?> {
+        check(name.startsWith("agent-host."))
+        val service = services[name]
+        if (service != null && !service.process.isAlive) recordServiceExit(name, service)
+        val running = service?.process?.isAlive == true
+        return diagnosticRecord(name).snapshot(running,
+            if (running) SystemClock.elapsedRealtime() - service!!.startedAt else null)
     }
 
     private fun serviceDiagnostics(): Map<String, Map<String, Any?>> {
@@ -3127,6 +3149,7 @@ class BuiltinLinux(private val context: Context) {
                 catch (error: Exception) { failure = error }
             val service = services[name]
             if (service != null) {
+                if (service.process.isAlive) service.stopRequested = true
                 if (name.startsWith("agent-auth.") || name.startsWith("agent-host.")) stopAgentProcess(service.process)
                 else stopTree(service.process)
                 if (service.process.isAlive) throw PhoneEngineNative.Failure("engine_stop_failed")
