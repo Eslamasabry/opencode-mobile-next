@@ -1,0 +1,49 @@
+{
+  "runID": "fq3-final-d9342b7e395e",
+  "sourceRevision": "ec778efa3de1730402f096fc126e16fd2e83264e",
+  "attemptID": "attempt-1791524969514169-3920866",
+  "cleanupCode": null,
+  "engine": "opencode",
+  "case": "model",
+  "cliVersion": "1.18.32",
+  "observedVersion": "1.18.32",
+  "appUID": 10217,
+  "appBuild": 2203,
+  "serverKind": "owned",
+  "testedModel": "opencode/big-pickle",
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "retained": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "connectedModels": 18,
+        "asserted": true
+      }
+    },
+    "modelSwitch": {
+      "state": "fail",
+      "code": "oc1_prompt_error",
+      "facts": {}
+    }
+  },
+  "ownedSessions": [
+    "ses_ee0c9cb06ffeHrIB4UEBt8D5tW",
+    "ses_ee0c9c135ffeN3EgS7WBM4eW55"
+  ]
+}

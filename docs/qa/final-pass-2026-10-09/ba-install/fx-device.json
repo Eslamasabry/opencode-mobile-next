@@ -1,0 +1,168 @@
+{
+  "agentId": "fx",
+  "appBuild": 2203,
+  "sourceRevision": "ec778efa3de1730402f096fc126e16fd2e83264e",
+  "normalRestored": true,
+  "availableBeforeBytes": 1830502400,
+  "partialTargetRemovedViaApp": false,
+  "installProof": {
+    "installedViaApp": true,
+    "freshJob": true,
+    "checksumVerified": true,
+    "jobId": "setup-1791524714016876"
+  },
+  "installed": {
+    "allocatedBytes": 12591104,
+    "pinMatches": true,
+    "linkMatches": true,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": true,
+    "staging": [],
+    "lockPresent": false
+  },
+  "version": {
+    "exactVersion": true
+  },
+  "retainedBeforeRemoval": {
+    "claudeSignedInVisible": false,
+    "phoneGateDigest": "6d88a3324dcdf6b3192b395af275e88d9fd0f968671b6925fc632c1a7391962e",
+    "claudeChatIdDigest": "0726bbaa34819a5a5af9f7107d37bfe52f755e76efbb2733a57fd1b0fd651897",
+    "claudeChatCount": 27,
+    "nodePresent": true,
+    "paseoPresent": true,
+    "claudeHomes": 2,
+    "targetHomes": {
+      "codex": 0,
+      "gemini": 0,
+      "qwen": 0,
+      "goose": 0,
+      "omp-acp": 0,
+      "fx": 0
+    }
+  },
+  "launch": {
+    "agentId": "fx",
+    "state": "entrypoint_missing",
+    "code": "deadline_exceeded",
+    "appPathObserved": false,
+    "plainError": false,
+    "noHang": false,
+    "daemonLaunchObserved": false,
+    "navigationUnwound": true,
+    "rejectionCaptured": false,
+    "plainCopy": [],
+    "elapsedSeconds": 30.023
+  },
+  "uninstall": {
+    "state": "pass",
+    "code": "verified",
+    "facts": {
+      "asserted": true,
+      "removedViaApp": true,
+      "leftoversRemoved": true,
+      "noOrphans": true,
+      "bytesFreed": 12595200,
+      "freeSpaceDeltaBytes": 12541952,
+      "notInstalledRow": true,
+      "elapsedSeconds": 8.747
+    }
+  },
+  "appFreedDisplay": null,
+  "retainedAfterRemoval": {
+    "claudeSignedInVisible": false,
+    "phoneGateDigest": "6d88a3324dcdf6b3192b395af275e88d9fd0f968671b6925fc632c1a7391962e",
+    "claudeChatIdDigest": "0726bbaa34819a5a5af9f7107d37bfe52f755e76efbb2733a57fd1b0fd651897",
+    "claudeChatCount": 27,
+    "nodePresent": true,
+    "paseoPresent": true,
+    "claudeHomes": 2,
+    "targetHomes": {
+      "codex": 0,
+      "gemini": 0,
+      "qwen": 0,
+      "goose": 0,
+      "omp-acp": 0,
+      "fx": 0
+    }
+  },
+  "retainedStateMatches": true,
+  "finalInventory": {
+    "allocatedBytes": 0,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  },
+  "availableAfterBytes": 1418215424,
+  "errorType": "RuntimeError",
+  "errorCode": "removal_not_qualified",
+  "terminalSetup": {
+    "jobId": "setup-1791524714016876",
+    "state": "done",
+    "components": {
+      "linux": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "essentials": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "python": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-user": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-node": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-paseo": {
+        "state": "done",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-fx": {
+        "state": "done",
+        "done": 5482652,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      }
+    }
+  },
+  "terminalInventory": {
+    "allocatedBytes": 0,
+    "pinMatches": false,
+    "linkMatches": false,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": false,
+    "staging": [],
+    "lockPresent": false
+  },
+  "continuation": {
+    "confirmed": true,
+    "normalVerified": true,
+    "setupIdle": true,
+    "targetsAbsent": true,
+    "storageAvailable": true
+  }
+}

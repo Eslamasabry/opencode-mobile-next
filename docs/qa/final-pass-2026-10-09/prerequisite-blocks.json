@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "basis": "recorded runner summary",
+  "rows": [
+    "fq9-background",
+    "bd7",
+    "demo"
+  ],
+  "state": "blocked",
+  "reason": "device_prerequisite_failed",
+  "trigger": "fq3_receipt_invalid",
+  "deviceWorkStarted": false,
+  "correctedAfterAttempt": true,
+  "deviceRerun": false
+}

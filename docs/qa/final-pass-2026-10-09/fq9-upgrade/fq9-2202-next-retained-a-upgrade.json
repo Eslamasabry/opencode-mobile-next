@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "case": "upgrade",
+  "runID": "fq9-2202-next-retained-a",
+  "candidateBuild": 2203,
+  "candidateSha256": "82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7",
+  "signerSha256": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+  "device": "emulator-5554",
+  "state": "fail",
+  "deviceTouched": true,
+  "normalRestored": false,
+  "deviceQualified": false,
+  "automatedChecksPassed": false,
+  "manualChecksPending": true,
+  "sourceRevision": "ec778efa3de1730402f096fc126e16fd2e83264e",
+  "code": "protocol_response_invalid"
+}

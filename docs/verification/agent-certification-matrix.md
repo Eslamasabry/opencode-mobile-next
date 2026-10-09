@@ -116,120 +116,39 @@ These results apply only to the recorded emulator build and in-app runtime. They
 
 | Agent | Expected | Observed | Build | Run | Base model scope | version | create | models | modelSwitch | stream | abort | reconnect | permissionAllow | permissionDeny | image | cards | protocolSwitch |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| OpenCode 1 | 1.18.32 | 1.18.32 | 2196 | fq3-20261008b-cert | explicit: zai-coding-plan/glm-5.3 | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| OpenCode 2 | 2.0.10 | 2.0.10 | 2196 | fq3-20261008b-cert | explicit: opencode/big-pickle | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| OpenCode 1 | 1.18.32 | 1.18.32 | 2203 | fq3-final-d9342b7e395e | explicit: opencode/big-pickle | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| OpenCode 2 | 2.0.10 | 2.0.10 | 2203 | fq3-final-d9342b7e395e | explicit: opencode/big-pickle | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
 
 Model-dependent passes apply to the recorded base model selection. An explicit selection does not qualify server-default inference or other base models.
 
 FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed or prerequisite missing.
 
-**OpenCode 1** — [fq3-20261008b-cert](../qa/FQ3b-2026-10-08/fq3-20261008b-cert.json)
+**OpenCode 1** — [fq3-final-d9342b7e395e](../qa/FQ3e-2026-10-09/fq3-final-d9342b7e395e.json)
 
 - version: pass — `verified`; facts `{"asserted":true,"healthy":true}`
 - create: pass — `verified`; facts `{"asserted":true,"retained":true}`
 - models: pass — `verified`; facts `{"asserted":true,"connectedModels":18}`
-- stream: fail — `oc1_prompt_error`; facts `{}`
+- stream: pass — `verified`; facts `{"asserted":true,"completedReply":true,"streamedDelta":true}`
 - reconnect: pass — `verified`; facts `{"asserted":true,"messages":2,"refetched":true}`
-- modelSwitch: pass — `verified`; facts `{"asserted":true,"selectionObserved":true}`
+- modelSwitch: fail — `oc1_prompt_error`; facts `{}`
 - abort: pass — `verified`; facts `{"asserted":true,"interrupted":true,"usableAfterAbort":true}`
-- permissionAllow: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true}`
-- permissionDeny: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true}`
-- image: pass — `verified`; facts `{"asserted":true,"imageAnswerVerified":true}`
-- cards: pass — `verified`; facts `{"answerReceipt":true,"asserted":true,"cardsToolCall":true}`
+- permissionAllow: fail — `timeout`; facts `{}`
+- permissionDeny: fail — `timeout`; facts `{}`
+- image: fail — `oc1_image_content_unverified`; facts `{}`
+- cards: fail — `oc1_prompt_error`; facts `{}`
 - protocolSwitch: pass — `verified`; facts `{"asserted":true,"bothHistoriesPreserved":true,"freshClients":true,"oc1Sessions":16,"oc2Sessions":16}`
 
-**OpenCode 2** — [fq3-20261008b-cert](../qa/FQ3b-2026-10-08/fq3-20261008b-cert.json)
+**OpenCode 2** — [fq3-final-d9342b7e395e](../qa/FQ3e-2026-10-09/fq3-final-d9342b7e395e.json)
 
 - version: pass — `verified`; facts `{"asserted":true,"healthy":true}`
 - create: pass — `verified`; facts `{"asserted":true,"created":true}`
 - models: pass — `verified`; facts `{"asserted":true,"enabledModels":11,"selectedModelAvailable":true}`
 - stream: pass — `verified`; facts `{"asserted":true,"completedReply":true,"streamedDelta":true}`
 - reconnect: pass — `verified`; facts `{"asserted":true,"refetched":true,"retainedMessages":3}`
-- modelSwitch: fail — `timeout`; facts `{}`
+- modelSwitch: fail — `inference_execution_failed`; facts `{}`
 - abort: pass — `verified`; facts `{"asserted":true,"interrupted":true,"midStreamObserved":true,"usableAfterAbort":true}`
-- permissionAllow: fail — `timeout`; facts `{}`
-- permissionDeny: fail — `timeout`; facts `{}`
-- image: fail — `timeout`; facts `{}`
-- cards: fail — `cards_tool_call_missing`; facts `{}`
+- permissionAllow: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true,"toolOutcomeVerified":true}`
+- permissionDeny: pass — `verified`; facts `{"asserted":true,"replyObserved":true,"requestObserved":true,"toolOutcomeVerified":true}`
+- image: fail — `inference_execution_failed`; facts `{}`
+- cards: pass — `verified`; facts `{"answerReceipt":true,"asserted":true,"cardsToolCall":true}`
 - protocolSwitch: pass — `verified`; facts `{"asserted":true,"bothHistoriesPreserved":true,"freshClients":true,"oc1Sessions":16,"oc2Sessions":16}`
-
-## Phone-agent install certification
-
-App installation on x64 emulator; signed-out, no account qualification.
-
-These cells qualify installation only. Phone check means the check completed; a signed-out agent remains unavailable for authenticated chat. No account sign-in, prompt smoke, or runtime capabilities are granted here.
-
-| Agent | Expected | Observed | Build | install | version | signedOut | phoneCheck | launchNoAccount | cancelRetry | lowStorage | uninstall |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| fx | 0.0.12 | 0.0.12 | 2196 | ✅ | ✅ | ✅ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
-| Codex | 0.160.0 | 0.160.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
-| Gemini CLI | 0.62.0 | 0.62.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
-| Qwen Code | 0.24.7 | 0.24.7 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
-| Goose | 1.53.0 | 1.53.0 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
-| Oh My Pi | 18.5.1 | 18.5.1 | 2196 | ✅ | ✅ | ❌ | ✅ | 🟡 | ✅ | 🟡 | 🟡 |
-
-**fx** — fq-install-fx-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#fx
-
-- install: pass — `verified`; facts `{"asserted":true,"checksumVerified":true,"installedViaApp":true}`
-- version: pass — `verified`; facts `{"asserted":true}`
-- signedOut: pass — `verified`; facts `{"asserted":true,"namedSignedOut":true}`
-- phoneCheck: pass — `verified`; facts `{"asserted":true,"completed":true}`
-- launchNoAccount: partial — `cli_only_app_route_unavailable`; facts `{"asserted":false,"emptyHome":true,"noHang":true,"noOrphans":true,"sentLogin":false,"sentPrompt":false}`
-- cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
-- lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
-- uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":11952128,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`
-
-**Codex** — fq-install-codex-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#codex
-
-- install: pass — `verified`; facts `{"asserted":true,"checksumVerified":true,"installedViaApp":true}`
-- version: pass — `verified`; facts `{"asserted":true}`
-- signedOut: fail — `probe_unsupported`; facts `{"asserted":false,"namedSignedOut":false}`
-- phoneCheck: pass — `verified`; facts `{"asserted":true,"completed":true}`
-- launchNoAccount: partial — `cli_only_app_route_unavailable`; facts `{"asserted":false,"emptyHome":true,"noHang":true,"noOrphans":true,"sentLogin":false,"sentPrompt":false}`
-- cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
-- lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
-- uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":289132544,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`
-
-**Gemini CLI** — fq-install-gemini-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#gemini
-
-- install: pass — `verified`; facts `{"asserted":true,"checksumVerified":true,"installedViaApp":true}`
-- version: pass — `verified`; facts `{"asserted":true}`
-- signedOut: fail — `probe_unsupported`; facts `{"asserted":false,"namedSignedOut":false}`
-- phoneCheck: pass — `verified`; facts `{"asserted":true,"completed":true}`
-- launchNoAccount: partial — `cli_only_app_route_unavailable`; facts `{"asserted":false,"emptyHome":true,"noHang":true,"noOrphans":true,"sentLogin":false,"sentPrompt":false}`
-- cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
-- lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
-- uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":99860480,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`
-
-**Qwen Code** — fq-install-qwen-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#qwen
-
-- install: pass — `verified`; facts `{"asserted":true,"checksumVerified":true,"installedViaApp":true}`
-- version: pass — `verified`; facts `{"asserted":true}`
-- signedOut: fail — `probe_unsupported`; facts `{"asserted":false,"namedSignedOut":false}`
-- phoneCheck: pass — `verified`; facts `{"asserted":true,"completed":true}`
-- launchNoAccount: partial — `cli_only_app_route_unavailable`; facts `{"asserted":false,"emptyHome":true,"noHang":true,"noOrphans":true,"sentLogin":false,"sentPrompt":false}`
-- cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
-- lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
-- uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":112664576,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`
-
-**Goose** — fq-install-goose-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#goose
-
-- install: pass — `verified`; facts `{"asserted":true,"checksumVerified":true,"installedViaApp":true}`
-- version: pass — `verified`; facts `{"asserted":true}`
-- signedOut: fail — `probe_unsupported`; facts `{"asserted":false,"namedSignedOut":false}`
-- phoneCheck: pass — `verified`; facts `{"asserted":true,"completed":true}`
-- launchNoAccount: partial — `cli_only_app_route_unavailable`; facts `{"asserted":false,"emptyHome":true,"noHang":true,"noOrphans":true,"sentLogin":false,"sentPrompt":false}`
-- cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
-- lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
-- uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":298692608,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`
-
-**Oh My Pi** — fq-install-omp-acp-2196-20261008; docs/qa/FQ-install-2026-10-08/README.md#omp-acp
-
-- install: pass — `verified`; facts `{"asserted":true,"checksumVerified":true,"installedViaApp":true}`
-- version: pass — `verified`; facts `{"asserted":true}`
-- signedOut: fail — `probe_unsupported`; facts `{"asserted":false,"namedSignedOut":false}`
-- phoneCheck: pass — `verified`; facts `{"asserted":true,"completed":true}`
-- launchNoAccount: partial — `cli_only_app_route_unavailable`; facts `{"asserted":false,"emptyHome":true,"noHang":true,"noOrphans":true,"sentLogin":false,"sentPrompt":false}`
-- cancelRetry: pass — `verified`; facts `{"asserted":true,"cancelObserved":true,"retryCompleted":true}`
-- lowStorage: partial — `policy_harness_only`; facts `{"appThresholdOverride":false,"asserted":false,"deviceFilled":false,"guardPolicyVerified":true}`
-- uninstall: partial — `no_app_removal_path`; facts `{"asserted":false,"bytesFreed":280174592,"leftoversRemoved":true,"noOrphans":true,"removedViaApp":false}`

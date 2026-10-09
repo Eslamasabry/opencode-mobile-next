@@ -1,0 +1,29 @@
+{
+  "agentId": "fx",
+  "case": "uninstall",
+  "appBuild": 2203,
+  "sourceRevision": "ec778efa3de1730402f096fc126e16fd2e83264e",
+  "normalRestored": true,
+  "availableBytes": 1413971968,
+  "uninstall": {
+    "state": "partial",
+    "code": "removal_row_not_refreshed",
+    "facts": {
+      "asserted": false,
+      "removedViaApp": true,
+      "leftoversRemoved": true,
+      "noOrphans": true,
+      "bytesFreed": 12591104,
+      "freeSpaceDeltaBytes": 12591104,
+      "notInstalledRow": false,
+      "elapsedSeconds": 2.808
+    }
+  },
+  "continuation": {
+    "confirmed": true,
+    "normalVerified": true,
+    "setupIdle": true,
+    "targetsAbsent": true,
+    "storageAvailable": true
+  }
+}
