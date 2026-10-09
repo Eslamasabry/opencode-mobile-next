@@ -35,8 +35,15 @@ without changing the global certification matrix. Other subprocess drivers
 receive the descriptor through `pass_fds` and validate it themselves.
 
 Rows retain their evidence checks. An ordinary failure does not hide later
-independent results. Installation failures, timeouts and retained/unclean work
-block later device work, while FB1 can still check its offline plan. Finally the
+independent results. BA install/removal/storage drivers now confirm continuation
+with fresh observations: the normal APK's signer/hash/build, idle native setup
+and app checks, at least 800 MB available, and all six managed targets absent
+(zero allocated bytes, no launcher/payload/staging/lock or target processes).
+A failed row stays failed. Only a complete confirmation permits later device
+rows; missing observations or retained/unclean work block them. Multi-agent rows
+preserve that decision when stopping on an agent failure. FB1 can still check
+its offline plan. Rejected preflight is observed without replacing the APK or
+deleting unexpected files. Finally the
 runner restores normal 2202 and verifies its installed version before unlocking,
 including on failure or interruption. Summary updates occur after every row.
 Exit codes: 0 all selected rows passed, 1 failed/blocked, 130 interrupted.

@@ -217,6 +217,20 @@ class Ports:
         raise RuntimeError('app_install_timeout')
 
 
+def verify_installed_apk(ports, artifact):
+    """Read-only identity check, also usable after rejected preflight."""
+    verify_artifact(artifact)
+    _check_installed_apk(ports, artifact)
+
+
+def _check_installed_apk(ports, artifact):
+    if 'versionCode='+str(artifact['build'])+' ' not in ports.d.adb('shell','dumpsys','package',ports.d.PKG):
+        raise RuntimeError('app_build_mismatch')
+    package=ports.d.adb('shell','cmd','package','path',ports.d.PKG).strip().removeprefix('package:')
+    if ports.d.adb('shell','sha256sum',package).split()[0] != artifact['sha256']:
+        raise RuntimeError('installed_app_hash_mismatch')
+
+
 def select_apk(ports, artifact):
     # Reverify under the lock, including restoration. --wait may have queued
     # after the initial offline verification while a build pathname changed.
@@ -229,11 +243,29 @@ def select_apk(ports, artifact):
         if 'Success' not in ports.d.adb('install','-r','-d',artifact['apk'],timeout=90):
             raise RuntimeError('app_restore_failed')
         require_artifact_unchanged(artifact,identity)
-    if 'versionCode='+str(artifact['build'])+' ' not in ports.d.adb('shell','dumpsys','package',ports.d.PKG):
-        raise RuntimeError('app_build_mismatch')
-    package=ports.d.adb('shell','cmd','package','path',ports.d.PKG).strip().removeprefix('package:')
-    if ports.d.adb('shell','sha256sum',package).split()[0] != artifact['sha256']:
-        raise RuntimeError('installed_app_hash_mismatch')
+    _check_installed_apk(ports, artifact)
+
+
+def confirm_continuation(ports, artifact):
+    """Confirm a clean handoff without repairing or deleting unexpected state."""
+    facts = {'confirmed': False, 'normalVerified': False, 'setupIdle': False,
+             'targetsAbsent': False, 'storageAvailable': False}
+    try:
+        verify_installed_apk(ports, artifact)
+        facts['normalVerified'] = True
+        ports.p.require_idle_setup()
+        facts['setupIdle'] = True
+        inventories = [ports.target_inventory(target) for target in TARGETS]
+        facts['targetsAbsent'] = all(
+            inv.get('leftovers') is False and inv.get('targetPids') == [] and
+            inv.get('allocatedBytes') == 0 and inv.get('staging') == [] and
+            inv.get('lockPresent') is False for inv in inventories)
+        facts['storageAvailable'] = ports.available_storage_bytes() >= 800000000
+        facts['confirmed'] = all(facts[key] for key in facts if key != 'confirmed')
+    except Exception:
+        # No raw bridge errors or optimistic defaults in the shared receipt.
+        pass
+    return facts
 
 
 def main():
@@ -319,6 +351,9 @@ def main():
             except Exception:
                 result['restorationBlocked']=True
                 restoration_failed=True
+            result['continuation']=confirm_continuation(ports,artifacts['normal'])
+            if restoration_failed:
+                result['continuation']['confirmed']=False
             try:
                 args.output.mkdir(parents=True,exist_ok=True)
                 (args.output/(args.agent+'-'+args.case+'-observations.json')).write_text(json.dumps(result,indent=2)+'\n')

@@ -137,6 +137,19 @@ class FinalPassTests(unittest.TestCase):
         self.assertIn('fb1', self.events)
         self.assertNotIn('demo', self.events)
 
+    def test_failed_ba_row_with_confirmed_recovery_allows_later_rows(self):
+        def dispatch(row, config, context):
+            if row == 'ba-install':
+                self.events.append(row)
+                return {'status': 'fail', 'reason': 'row_not_qualified', 'receipts': [],
+                        'data': {'safe_to_continue': True}}
+            return self.dispatch(row, config, context)
+        self.assertEqual(self.execute(dispatch), 1)
+        self.assertIn('ba-removal', self.events)
+        self.assertIn('ba-storage-floor', self.events)
+        self.assertIn('bd7', self.events)
+        self.assertEqual(self.events[-2:], ['restore', 'unlock'])
+
     def test_lock_failure_writes_blocked_summary_without_device_access(self):
         @contextmanager
         def refused():

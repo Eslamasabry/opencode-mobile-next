@@ -98,3 +98,12 @@ Observed results:
 Remaining prerequisites are a product-path cleanup/repair decision for the
 existing fx payload, reviewed BB5 QA2202 artifacts, and an actual FQ9 baseline
 with its history receipt. A subsequent full successful fast pass is still needed.
+
+## BA follow-up
+
+[APK 2202 observation and driver recovery fix](../BA10-2202-2026-10-09/README.md):
+the 45,056-byte fx leftover is confirmed, but 2202 reports Not installed and
+offers no Remove action. Removal remains blocked; it is not a fresh-install
+pass. The driver now requires explicit, fresh recovery facts before allowing
+later rows and preserves that decision through multi-agent failures. The
+original final-pass attempt above has not been rerun or reclassified.

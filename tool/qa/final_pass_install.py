@@ -126,6 +126,12 @@ def _removed(value):
         ('asserted', 'removedViaApp', 'leftoversRemoved', 'noOrphans', 'notInstalledRow'))
 
 
+def _continuation_confirmed(value):
+    facts = value.get('continuation')
+    return isinstance(facts, dict) and all(facts.get(key) is True for key in
+        ('confirmed', 'normalVerified', 'setupIdle', 'targetsAbsent', 'storageAvailable'))
+
+
 def _generic_ba(row, config, context):
     if set(config) != {'agent', 'manifest'} or config.get('agent') not in _AGENTS:
         return _result('blocked', 'invalid_configuration')
@@ -171,7 +177,10 @@ def _generic_ba(row, config, context):
                      retry.get('linkMatches') is True and retry.get('targetPids') == [])
         return _result('pass' if valid else 'fail',
                        'verified' if valid else 'row_not_qualified', [receipt],
-                       **({'safe_to_continue': False} if value.get('normalRestored') is not True else {}))
+                       **({'safe_to_continue': False}
+                          if (value.get('agentId') != config['agent'] or
+                              value.get('appBuild') != context.candidate_build or
+                              not _continuation_confirmed(value)) else {}))
 
 
 def _install(config, context):
@@ -206,7 +215,9 @@ def _install(config, context):
              value.get('version', {}).get('exactVersion') is True and
              value.get('retainedStateMatches') is True and _removed(value.get('uninstall')))
     return _result('pass' if valid else 'fail', 'verified' if valid else 'row_not_qualified', [receipt],
-                   safe_to_continue=value.get('normalRestored') is True)
+                   safe_to_continue=(value.get('agentId') == config['agent'] and
+                       value.get('appBuild') == context.candidate_build and
+                       _continuation_confirmed(value)))
 
 
 def _bb5(config, context):
@@ -274,7 +285,9 @@ def run(row, config, context):
                 receipts.extend(Path(path) for path in result['receipts'])
                 if result['status'] != 'pass':
                     return _result(result['status'], 'stopped_on_agent_failure', receipts,
-                                   completedAgents=index)
+                                   completedAgents=index,
+                                   **({'safe_to_continue': result['data']['safe_to_continue']}
+                                      if 'safe_to_continue' in result.get('data', {}) else {}))
             return _result('pass', 'verified', receipts, completedAgents=len(agents))
         if row == 'bb5':
             return _bb5(config, context)

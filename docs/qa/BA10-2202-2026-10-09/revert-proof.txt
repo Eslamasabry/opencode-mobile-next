@@ -1,0 +1,206 @@
+Production files reverted to HEAD; new regression tests retained.
+EEEEEEEEEEEEFEEEEEE
+======================================================================
+ERROR: test_active_setup_or_incomplete_inventory_fails_closed (tool.qa.fq_install2.test_device_install.ContinuationTests.test_active_setup_or_incomplete_inventory_fails_closed) (key='targetPids')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_device_install.py", line 67, in test_active_setup_or_incomplete_inventory_fails_closed
+    with self.subTest(key=key), patch.object(subject.run, 'verify_installed_apk'):
+  File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <module 'run' from '/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/run.py'> does not have the attribute 'verify_installed_apk'
+
+======================================================================
+ERROR: test_active_setup_or_incomplete_inventory_fails_closed (tool.qa.fq_install2.test_device_install.ContinuationTests.test_active_setup_or_incomplete_inventory_fails_closed) (key='allocatedBytes')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_device_install.py", line 67, in test_active_setup_or_incomplete_inventory_fails_closed
+    with self.subTest(key=key), patch.object(subject.run, 'verify_installed_apk'):
+  File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <module 'run' from '/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/run.py'> does not have the attribute 'verify_installed_apk'
+
+======================================================================
+ERROR: test_active_setup_or_incomplete_inventory_fails_closed (tool.qa.fq_install2.test_device_install.ContinuationTests.test_active_setup_or_incomplete_inventory_fails_closed) (key='staging')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_device_install.py", line 67, in test_active_setup_or_incomplete_inventory_fails_closed
+    with self.subTest(key=key), patch.object(subject.run, 'verify_installed_apk'):
+  File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <module 'run' from '/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/run.py'> does not have the attribute 'verify_installed_apk'
+
+======================================================================
+ERROR: test_active_setup_or_incomplete_inventory_fails_closed (tool.qa.fq_install2.test_device_install.ContinuationTests.test_active_setup_or_incomplete_inventory_fails_closed) (key='lockPresent')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_device_install.py", line 67, in test_active_setup_or_incomplete_inventory_fails_closed
+    with self.subTest(key=key), patch.object(subject.run, 'verify_installed_apk'):
+  File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <module 'run' from '/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/run.py'> does not have the attribute 'verify_installed_apk'
+
+======================================================================
+ERROR: test_active_setup_or_incomplete_inventory_fails_closed (tool.qa.fq_install2.test_device_install.ContinuationTests.test_active_setup_or_incomplete_inventory_fails_closed) (key='leftovers')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_device_install.py", line 67, in test_active_setup_or_incomplete_inventory_fails_closed
+    with self.subTest(key=key), patch.object(subject.run, 'verify_installed_apk'):
+  File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <module 'run' from '/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/run.py'> does not have the attribute 'verify_installed_apk'
+
+======================================================================
+ERROR: test_active_setup_or_incomplete_inventory_fails_closed (tool.qa.fq_install2.test_device_install.ContinuationTests.test_active_setup_or_incomplete_inventory_fails_closed) (key='activeSetup')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_device_install.py", line 67, in test_active_setup_or_incomplete_inventory_fails_closed
+    with self.subTest(key=key), patch.object(subject.run, 'verify_installed_apk'):
+  File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <module 'run' from '/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/run.py'> does not have the attribute 'verify_installed_apk'
+
+======================================================================
+ERROR: test_active_setup_or_incomplete_inventory_fails_closed (tool.qa.fq_install2.test_device_install.ContinuationTests.test_active_setup_or_incomplete_inventory_fails_closed) (key='storage')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_device_install.py", line 67, in test_active_setup_or_incomplete_inventory_fails_closed
+    with self.subTest(key=key), patch.object(subject.run, 'verify_installed_apk'):
+  File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+    raise AttributeError(
+AttributeError: <module 'run' from '/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/run.py'> does not have the attribute 'verify_installed_apk'
+
+======================================================================
+ERROR: test_failed_install_can_continue_only_after_fresh_quiescent_clean_observation (tool.qa.fq_install2.test_device_install.ContinuationTests.test_failed_install_can_continue_only_after_fresh_quiescent_clean_observation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_device_install.py", line 41, in test_failed_install_can_continue_only_after_fresh_quiescent_clean_observation
+    self.assertTrue(result['continuation']['confirmed'])
+                    ~~~~~~^^^^^^^^^^^^^^^^
+KeyError: 'continuation'
+
+======================================================================
+ERROR: test_failed_normal_observation_prevents_continuation (tool.qa.fq_install2.test_device_install.ContinuationTests.test_failed_normal_observation_prevents_continuation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_device_install.py", line 54, in test_failed_normal_observation_prevents_continuation
+    self.assertFalse(result['continuation']['confirmed'])
+                     ~~~~~~^^^^^^^^^^^^^^^^
+KeyError: 'continuation'
+
+======================================================================
+ERROR: test_failed_restore_prevents_continuation (tool.qa.fq_install2.test_device_install.ContinuationTests.test_failed_restore_prevents_continuation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_device_install.py", line 58, in test_failed_restore_prevents_continuation
+    self.assertFalse(result['continuation']['confirmed'])
+                     ~~~~~~^^^^^^^^^^^^^^^^
+KeyError: 'continuation'
+
+======================================================================
+ERROR: test_leftover_payload_prevents_continuation_even_with_normal_apk (tool.qa.fq_install2.test_device_install.ContinuationTests.test_leftover_payload_prevents_continuation_even_with_normal_apk)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/fq_install2/test_device_install.py", line 50, in test_leftover_payload_prevents_continuation_even_with_normal_apk
+    self.assertFalse(result['continuation']['confirmed'])
+                     ~~~~~~^^^^^^^^^^^^^^^^
+KeyError: 'continuation'
+
+======================================================================
+ERROR: test_agent_failure_preserves_confirmed_continuation_for_later_rows (tool.qa.test_final_pass_install.FinalPassInstallTests.test_agent_failure_preserves_confirmed_continuation_for_later_rows)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/test_final_pass_install.py", line 120, in test_agent_failure_preserves_confirmed_continuation_for_later_rows
+    self.assertIs(result['data']['safe_to_continue'], True)
+                  ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+KeyError: 'safe_to_continue'
+
+======================================================================
+ERROR: test_removal_failure_needs_confirmed_clean_state_to_continue (tool.qa.test_final_pass_install.FinalPassInstallTests.test_removal_failure_needs_confirmed_clean_state_to_continue)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/test_final_pass_install.py", line 242, in test_removal_failure_needs_confirmed_clean_state_to_continue
+    self.assertIs(result['data']['safe_to_continue'], False)
+                  ~~~~~~^^^^^^^^
+KeyError: 'data'
+
+======================================================================
+ERROR: test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation (tool.qa.test_final_pass_install.FinalPassInstallTests.test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation) (facts=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/test_final_pass_install.py", line 127, in test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation
+    self.assertFalse(subject._continuation_confirmed({'continuation': facts}))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'tool.qa.final_pass_install' has no attribute '_continuation_confirmed'
+
+======================================================================
+ERROR: test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation (tool.qa.test_final_pass_install.FinalPassInstallTests.test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation) (facts=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/test_final_pass_install.py", line 127, in test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation
+    self.assertFalse(subject._continuation_confirmed({'continuation': facts}))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'tool.qa.final_pass_install' has no attribute '_continuation_confirmed'
+
+======================================================================
+ERROR: test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation (tool.qa.test_final_pass_install.FinalPassInstallTests.test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation) (facts=[])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/test_final_pass_install.py", line 127, in test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation
+    self.assertFalse(subject._continuation_confirmed({'continuation': facts}))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'tool.qa.final_pass_install' has no attribute '_continuation_confirmed'
+
+======================================================================
+ERROR: test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation (tool.qa.test_final_pass_install.FinalPassInstallTests.test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation) (facts={'confirmed': True})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/test_final_pass_install.py", line 127, in test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation
+    self.assertFalse(subject._continuation_confirmed({'continuation': facts}))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'tool.qa.final_pass_install' has no attribute '_continuation_confirmed'
+
+======================================================================
+ERROR: test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation (tool.qa.test_final_pass_install.FinalPassInstallTests.test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation) (facts={'confirmed': True, 'normalVerified': True, 'setupIdle': True, 'targetsAbsent': False, 'storageAvailable': True})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/test_final_pass_install.py", line 127, in test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation
+    self.assertFalse(subject._continuation_confirmed({'continuation': facts}))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'tool.qa.final_pass_install' has no attribute '_continuation_confirmed'
+
+======================================================================
+FAIL: test_install_continuation_requires_explicit_recovery_not_only_restored_apk (tool.qa.test_final_pass_install.FinalPassInstallTests.test_install_continuation_requires_explicit_recovery_not_only_restored_apk) (confirmed=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-ba/tool/qa/test_final_pass_install.py", line 152, in test_install_continuation_requires_explicit_recovery_not_only_restored_apk
+    self.assertIs(result['data']['safe_to_continue'], confirmed)
+AssertionError: True is not False
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.019s
+
+FAILED (failures=1, errors=18)
+
+Exit: 1

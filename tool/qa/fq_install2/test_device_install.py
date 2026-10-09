@@ -1,10 +1,76 @@
 import unittest
 import importlib.util
 import sys
+import contextlib
+import io
+import json
+import tempfile
 from pathlib import Path
 from unittest.mock import patch, Mock
 from xml.etree.ElementTree import Element
 from device_install import account_mask_boxes, closed_error_code
+import device_install as subject
+
+
+class ContinuationTests(unittest.TestCase):
+    def run_failed_install(self, *, leftover=False, observation_fails=False, restore_fails=False):
+        absent = {'leftovers': False, 'targetPids': [], 'allocatedBytes': 0,
+                  'staging': [], 'lockPresent': False}
+        ports = Mock()
+        ports.available_storage_bytes.return_value = 900000000
+        ports.target_inventory.return_value = dict(absent, leftovers=leftover)
+        ports.install_if_absent.side_effect = RuntimeError('app_install_failed')
+        ports.setup_snapshot.return_value = {'state': 'done', 'components': {}}
+        d, p = Mock(), Mock()
+        ports.p = p
+        artifact = {'build': 2202, 'sourceRevision': '1' * 40}
+        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stdout(io.StringIO()), \
+                patch.object(subject.run, 'verify_artifact'), \
+                patch.object(subject.run, 'select_apk', side_effect=RuntimeError('app_restore_failed') if restore_fails else None), \
+                patch.object(subject.run, 'verify_installed_apk', create=True,
+                             side_effect=RuntimeError('installed_app_hash_mismatch') if observation_fails else None):
+            code = subject.run_case('fx', artifact=artifact, output=Path(directory),
+                                   ports_factory=lambda _: (d, p, ports, {}))
+            result = json.loads((Path(directory) / 'fx-device.json').read_text())
+        self.assertEqual(code, 1)  # Recovery never promotes the failed row.
+        return result, p
+
+    def test_failed_install_can_continue_only_after_fresh_quiescent_clean_observation(self):
+        result, p = self.run_failed_install()
+        self.assertEqual(result['errorCode'], 'app_install_failed')
+        self.assertTrue(result['continuation']['confirmed'])
+        self.assertTrue(result['continuation']['normalVerified'])
+        self.assertTrue(result['continuation']['setupIdle'])
+        self.assertTrue(result['continuation']['targetsAbsent'])
+        self.assertGreaterEqual(p.require_idle_setup.call_count, 2)
+
+    def test_leftover_payload_prevents_continuation_even_with_normal_apk(self):
+        result, _ = self.run_failed_install(leftover=True)
+        self.assertEqual(result['errorCode'], 'target_not_absent')
+        self.assertFalse(result['continuation']['confirmed'])
+
+    def test_failed_normal_observation_prevents_continuation(self):
+        result, _ = self.run_failed_install(observation_fails=True)
+        self.assertFalse(result['continuation']['confirmed'])
+
+    def test_failed_restore_prevents_continuation(self):
+        result, _ = self.run_failed_install(restore_fails=True)
+        self.assertFalse(result['continuation']['confirmed'])
+
+    def test_active_setup_or_incomplete_inventory_fails_closed(self):
+        absent = {'leftovers': False, 'targetPids': [], 'allocatedBytes': 0,
+                  'staging': [], 'lockPresent': False}
+        for key, value in [('targetPids', [123]), ('allocatedBytes', 4096),
+                           ('staging', ['pending']), ('lockPresent', True),
+                           ('leftovers', None), ('activeSetup', True),
+                           ('storage', 799999999)]:
+            with self.subTest(key=key), patch.object(subject.run, 'verify_installed_apk'):
+                ports = Mock()
+                ports.target_inventory.return_value = dict(absent, **{key: value})
+                ports.available_storage_bytes.return_value = value if key == 'storage' else 900000000
+                if key == 'activeSetup':
+                    ports.p.require_idle_setup.side_effect = RuntimeError('active')
+                self.assertFalse(subject.confirm_continuation(ports, {})['confirmed'])
 
 class Tests(unittest.TestCase):
     def test_masks_claude_and_signed_in_account_nodes_without_returning_copy(self):
