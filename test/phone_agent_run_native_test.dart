@@ -52,6 +52,8 @@ enum class InstallerTarget { OPENCODE1, OPENCODE2, PASEO, CLAUDE, LEGACY_CLAUDE 
 class BuiltinLinux(private val process: RunProcess) {
     data class Result(val exitCode: Int, val output: String)
     private var installerProcess: Process? = null
+    // Admission ownership is exercised by installer_admission_native_test.
+    private fun reclaimDeadInstaller(): Boolean = false
     fun start(script: String, log: File?, agentUser: Boolean): Process = process
     fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
                        agentUser: Boolean): Process {

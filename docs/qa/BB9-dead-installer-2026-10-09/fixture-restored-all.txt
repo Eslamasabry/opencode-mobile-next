@@ -1,0 +1,23 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/installer_admission_native_test.dart
+00:00 +0: (setUpAll)
+00:06 +0: native installer admission: check-cached-dead
+00:06 +1: native installer admission: check-durable-dead
+00:06 +2: native installer admission: install-cached-dead
+00:06 +3: native installer admission: install-durable-dead
+00:06 +4: native installer admission: check-living-owner
+00:07 +5: native installer admission: install-living-owner
+00:07 +6: native installer admission: check-orphan
+00:07 +7: native installer admission: install-orphan
+00:07 +8: native installer admission: check-unknown
+00:07 +9: native installer admission: install-unknown
+00:07 +10: native installer admission: check-uncertain-absence
+00:07 +11: native installer admission: install-uncertain-absence
+00:07 +12: native installer admission: install-prepared-dead
+00:07 +13: native installer admission: install-clear-failed
+00:07 +14: native installer admission: install-cached-clear-failed
+00:07 +15: native installer admission: cold-durable-dead
+00:08 +16: native installer admission: cold-install-durable-dead
+00:08 +17: native installer admission: normal-check
+00:08 +18: native installer admission: normal-install
+00:08 +19: (tearDownAll)
+00:08 +19: All tests passed!

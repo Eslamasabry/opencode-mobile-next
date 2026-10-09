@@ -260,6 +260,7 @@ class BuiltinLinux(private val context: Context) {
         var admitted: Process? = null
         while (admitted == null) {
             admitted = synchronized(this) {
+                reclaimDeadInstaller()
                 if (installerProcess == null) {
                     check(SystemClock.elapsedRealtime() - began <= timeoutMillis) {
                         "Another phone task is running. Wait a moment and try again."
@@ -395,6 +396,36 @@ class BuiltinLinux(private val context: Context) {
         check(plan().server.isEmpty()) { componentUpdateFailure }
     }
 
+    /** A failed launch/completion must not permanently reserve a dead warm writer. Never signals. */
+    @Synchronized
+    private fun reclaimDeadInstaller(): Boolean = synchronized(installerGuard) {
+        val cached = installerProcess
+        if (cached?.isAlive == true) return@synchronized false
+        // The first cold admission retains its existing boot/rollback recovery authority.
+        if (!componentUpdatesRecovered && cached == null) return@synchronized false
+        val launchId = installerLaunchId
+        val currentOwner = {
+            installerProcess === cached && installerLaunchId == launchId && cached?.isAlive != true
+        }
+        NativeInstallerAdmission.reclaim(installerTicket(), false, currentOwner, ::installerTicket,
+            { ticket ->
+                val plan = if (cached == null) installerPlan(ticket)
+                    else liveInstallerPlan(ticket, cached, launchId ?: error(componentUpdateFailure))
+                plan.server.isEmpty()
+            },
+            { ticket ->
+                check(currentOwner() && installerTicket() == ticket) { componentUpdateFailure }
+                if (!installerPreferences.edit().remove("ticket").commit()) false else {
+                    installerProcess = null
+                    installerLaunchId = null
+                    // A dead INSTALL can leave a journal: rollback still precedes the next guest command.
+                    componentUpdatesRecovered = false
+                    cached?.let { workLeases.release(it) }
+                    true
+                }
+            })
+    }
+
     /** One cold admission precedes the first guest command; no live install is rolled back. */
     @Synchronized
     private fun recoverColdComponentUpdates() {
@@ -457,7 +488,9 @@ class BuiltinLinux(private val context: Context) {
 
     private fun startQualifiedInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
         agentUser: Boolean = false): Process {
-        check(installed && installerProcess == null) { componentUpdateFailure }
+        check(installed) { componentUpdateFailure }
+        reclaimDeadInstaller()
+        check(installerProcess == null) { componentUpdateFailure }
         recoverColdComponentUpdates()
         check(installerTicket() == null) { componentUpdateFailure }
         val nonce = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
@@ -2991,6 +3024,7 @@ class BuiltinLinux(private val context: Context) {
         check(!installingRuntime && phase != "installing" && !SetupRunner.get(context).running) {
             "Finish or cancel setup before removing the runtime"
         }
+        reclaimDeadInstaller()
         check(installerProcess == null) { "Finish or cancel setup before removing the runtime" }
         recoverColdComponentUpdates()
         // Every service first (OpenCode, AI Team with its store and agents):

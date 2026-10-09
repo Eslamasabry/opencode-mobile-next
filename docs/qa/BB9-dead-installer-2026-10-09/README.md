@@ -1,10 +1,10 @@
 # BB9 follow-up: stale CHECK installer admission — 2026-10-09
 
-State: source diagnosis and uncommitted fix/regression draft. **No JVM regression,
-Kotlin compile or device proof has run for this fix.** The coordinator's explicit
-build-window hold remains in force. Dart fixture formatting and focused static
-analysis pass ([log](dart-fixture-analyze.txt)); this is not Kotlin/runtime proof.
-Source bytes are captured in [draft-manifest.txt](draft-manifest.txt).
+State: implemented; actual app release Kotlin/Java compile, 18 new JUnit cases,
+19 production-method fixture scenarios and 6 existing run cases pass. Both
+production hook removals and four independent safety guard removals fail at
+behavioral assertions. Source restored exactly. Device proof remains pending
+the coordinator's emulator restart; this is not device qualification.
 
 Finish line: a later product check/install/remove can reclaim a dead warm writer
 only after complete exact ownership proves it quiescent, preserving pending
@@ -121,3 +121,32 @@ are18 JUnit methods and19 scenarios. [Receipt](extraction-preflight.json). This
 checks fixture preparation only and is not a Kotlin compile, behavioral red or
 passing regression result. Focused Dart analysis remained clean after adding
 the cached-owner durable-save-failure scenario.
+
+
+## Exclusive-window results
+
+All 259 focused Gradle/JVM cases passed, including admission18, ownership35,
+visibility13 and component recovery21. See the merged BB5
+[compile log](../BB5-integration-2026-10-08/native-gradle-focused.txt) and
+[counts](../BB5-integration-2026-10-08/native-gradle-merged-counts.txt).
+Window-specific fresh admission is5120MiB; Gradle heap3GB/two workers/in-process.
+No watchdog kill. One duplicate annotation compilation failure was corrected
+and excluded from red proof. Exact owned daemons were cleaned.
+
+[Initial regression receipt](window-regressions.txt) records18 pure and19 fixture
+baseline passes plus the CHECK behavioral red. A subsequent fresh5100MiB check
+refused to launch; finally restored all source bytes.
+[Resumed receipt](window-regressions-resumed.txt) records the INSTALL behavioral
+red, live-owner/second-proof/second-owner/durable-clear-result assertion reds,
+18 restored pure tests,19 restored fixture cases and6 existing run cases.
+Named fixtures: [CHECK red](fixture-check-cached-dead-red.txt),
+[INSTALL red](fixture-install-durable-dead-red.txt),
+[restored19](fixture-restored-all.txt),
+[existing run6](phone-agent-run-restored.txt). The private runner compiles the
+actual unchanged ownership classes with Kotlin2.3.20/JDK17 using256MiB compiler
+and128MiB test heaps. Every heavy step passes the shared build lock and a fresh
+5120MiB check; Flutter fixtures also take the serial test lock.
+
+No device ticket, account or data was changed. BC's exact observed ticket creator
+and complete quiescence remain unproven. This fix addresses the independently
+reproduced warm admission defect; it does not claim to clear an unsafe BC ticket.
