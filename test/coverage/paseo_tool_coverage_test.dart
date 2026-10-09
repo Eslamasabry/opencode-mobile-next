@@ -102,7 +102,7 @@ void main() {
                 padding: const EdgeInsets.all(16),
                 child: ToolCard(
                   toolName: part.toolName ?? 'tool',
-                  state: part.toolState!,
+                  state: part.toolState,
                 ),
               ),
             ),
