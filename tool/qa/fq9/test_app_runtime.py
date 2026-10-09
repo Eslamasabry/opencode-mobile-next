@@ -243,8 +243,10 @@ class AppRuntimeUiTests(unittest.TestCase):
     def test_settings_tab_returns_to_conversations_before_runtime_navigation(self):
         device = Device()
         ui = AppRuntimeUi(device)
+        settings = ET.fromstring(self.page(["Conversations", "Settings", "Conversations"]))
+        settings.findall(".//node")[-1].set("clickable", "true")
         pages = [
-            self.page(["Settings", "Conversations"]),
+            ET.tostring(settings),
             self.page(["In-app Ubuntu", "Switch to OpenCode 1"]),
             self.page([
                 next(iter(ui.labels("setupSwitchConfirmTitle", "opencode"))),
@@ -265,6 +267,7 @@ class AppRuntimeUiTests(unittest.TestCase):
         device.adb = adb
         ui.switch("opencode")
         self.assertEqual(len(taps), 3)
+        self.assertEqual(taps[0][-2:], ("235", "140"))
 
     def test_foreign_app_copy_is_never_tapped(self):
         device = Device()

@@ -64,7 +64,9 @@ class AppRuntimeUi:
                 )
         return labels
 
-    def find(self, nodes, labels):
+    def find(self, nodes, labels, *, clickable=False):
+        if clickable:
+            nodes = [node for node in nodes if node.get("clickable") == "true"]
         matches = [self.ui._find(label, nodes) for label in labels]
         return min(
             (
@@ -138,7 +140,7 @@ class AppRuntimeUi:
                     self.tap(switcher)
                 elif page is not None:
                     self.ui.scroll("down")
-                elif (chats := self.find(nodes, self.labels("shellTabChats"))) is not None:
+                elif (chats := self.find(nodes, self.labels("shellTabChats"), clickable=True)) is not None:
                     self.tap(chats)
                 elif (back := self.find(nodes, {"Back", "رجوع"})) is not None:
                     self.tap(back)
