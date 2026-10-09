@@ -16,6 +16,7 @@ import { oc2EventsFamily } from './families/oc2_events.mjs';
 import { oc1RequestsFamily } from './families/oc1_requests.mjs';
 import { oc1ListsFamily } from './families/oc1_lists.mjs';
 import { oc2ListsFamily } from './families/oc2_lists.mjs';
+import { oc1FilesFamily, oc2FilesFamily } from './families/files.mjs';
 import { oc2ModelsFamily, oc1ModelsFamily, oc2UsageFamily, quotaFamily, codexAccountFamily } from './families/models.mjs';
 
 const outDir = process.argv[2] ?? 'test/fixtures/coverage';
@@ -30,6 +31,8 @@ run('oc1_requests', oc1RequestsFamily(OC1), OC1);
 run('oc1_events', oc1EventsFamily(OC1), OC1);
 run('oc1_lists', oc1ListsFamily(OC1), OC1);
 run('oc2_lists', oc2ListsFamily(OC2), OC2);
+run('oc1_files', oc1FilesFamily(OC1), OC1);
+run('oc2_files', oc2FilesFamily(OC2), OC2);
 run('oc1_models', oc1ModelsFamily(OC1), OC1);
 run('oc2_models', oc2ModelsFamily(OC2), OC2);
 run('oc2_usage', oc2UsageFamily(OC2), OC2);

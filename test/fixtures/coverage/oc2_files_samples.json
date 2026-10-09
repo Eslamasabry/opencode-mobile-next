@@ -1,0 +1,388 @@
+{
+  "source": "contracts/opencode2-openapi-beta-18600.json",
+  "schema": {
+    "FileSystem.Entry": [
+      {
+        "path": "path",
+        "kind": "string"
+      },
+      {
+        "path": "type",
+        "kind": "enum"
+      }
+    ],
+    "Vcs.Info": [
+      {
+        "path": "branch.current",
+        "kind": "string"
+      },
+      {
+        "path": "branch.default",
+        "kind": "string"
+      }
+    ],
+    "Vcs.FileStatus": [
+      {
+        "path": "file",
+        "kind": "string"
+      },
+      {
+        "path": "additions",
+        "kind": "number"
+      },
+      {
+        "path": "deletions",
+        "kind": "number"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      }
+    ],
+    "FileDiff.Info": [
+      {
+        "path": "file",
+        "kind": "string"
+      },
+      {
+        "path": "patch",
+        "kind": "string"
+      },
+      {
+        "path": "additions",
+        "kind": "number"
+      },
+      {
+        "path": "deletions",
+        "kind": "number"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      }
+    ],
+    "Worktree.Info": [
+      {
+        "path": "directory",
+        "kind": "string"
+      }
+    ],
+    "Session.Revert": [
+      {
+        "path": "messageID",
+        "kind": "string"
+      },
+      {
+        "path": "partID",
+        "kind": "string"
+      },
+      {
+        "path": "snapshot",
+        "kind": "string"
+      },
+      {
+        "path": "files[].file",
+        "kind": "string"
+      },
+      {
+        "path": "files[].patch",
+        "kind": "string"
+      },
+      {
+        "path": "files[].additions",
+        "kind": "number"
+      },
+      {
+        "path": "files[].deletions",
+        "kind": "number"
+      },
+      {
+        "path": "files[].status",
+        "kind": "enum"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "fs",
+      "payload": [
+        {
+          "path": "lib/checkout",
+          "type": "directory"
+        },
+        {
+          "path": "lib/cart_total.dart",
+          "type": "file"
+        }
+      ],
+      "kind": "fs",
+      "fields": [
+        {
+          "key": "FileSystem.Entry.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [
+            "checkout"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileSystem.Entry.type",
+          "path": "type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "FileSystem.Entry.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [
+            "cart_total.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileSystem.Entry.type",
+          "path": "type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "changes",
+      "payload": {
+        "info": {
+          "branch": {
+            "current": "fix/cart-total",
+            "default": "main"
+          }
+        },
+        "status": [
+          {
+            "file": "lib/cart_total.dart",
+            "additions": 17,
+            "deletions": 5,
+            "status": "modified"
+          }
+        ],
+        "diff": [
+          {
+            "file": "lib/cart_total.dart",
+            "patch": "@@ -10,3 +10,4 @@\n-final total = sum;\n+final total = sum.roundToDouble();\n+log(total);",
+            "additions": 17,
+            "deletions": 5,
+            "status": "modified"
+          }
+        ]
+      },
+      "kind": "changes",
+      "fields": [
+        {
+          "key": "Vcs.Info.branch.current",
+          "path": "branch.current",
+          "kind": "string",
+          "probes": [
+            "fix/cart-total"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Vcs.Info.branch.default",
+          "path": "branch.default",
+          "kind": "string",
+          "probes": [
+            "main"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Vcs.FileStatus.file",
+          "path": "file",
+          "kind": "string",
+          "probes": [
+            "cart_total.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Vcs.FileStatus.additions",
+          "path": "additions",
+          "kind": "number",
+          "probes": [
+            "+17"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Vcs.FileStatus.deletions",
+          "path": "deletions",
+          "kind": "number",
+          "probes": [
+            "−5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Vcs.FileStatus.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Modified"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileDiff.Info.file",
+          "path": "file",
+          "kind": "string",
+          "probes": [
+            "cart_total.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileDiff.Info.patch",
+          "path": "patch",
+          "kind": "string",
+          "probes": [
+            "sum.roundToDouble()"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileDiff.Info.additions",
+          "path": "additions",
+          "kind": "number",
+          "probes": [
+            "+17"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileDiff.Info.deletions",
+          "path": "deletions",
+          "kind": "number",
+          "probes": [
+            "−5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "FileDiff.Info.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Modified"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "undo_staged",
+      "payload": {
+        "messageID": "msg_files_r1",
+        "partID": "prt_files_r1",
+        "snapshot": "snap_files1",
+        "files": [
+          {
+            "file": "lib/cart_total.dart",
+            "patch": "@@ -10,3 +10,4 @@\n-final total = sum;\n+final total = sum.roundToDouble();\n+log(total);",
+            "additions": 17,
+            "deletions": 5,
+            "status": "modified"
+          }
+        ]
+      },
+      "kind": "undo",
+      "fields": [
+        {
+          "key": "Session.Revert.messageID",
+          "path": "messageID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Revert.partID",
+          "path": "partID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Revert.snapshot",
+          "path": "snapshot",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "Session.Revert.files[].file",
+          "path": "files[].file",
+          "kind": "string",
+          "probes": [
+            "cart_total.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Revert.files[].patch",
+          "path": "files[].patch",
+          "kind": "string",
+          "probes": [
+            "sum.roundToDouble()"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Revert.files[].additions",
+          "path": "files[].additions",
+          "kind": "number",
+          "probes": [
+            "+17"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Revert.files[].deletions",
+          "path": "files[].deletions",
+          "kind": "number",
+          "probes": [
+            "−5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "Session.Revert.files[].status",
+          "path": "files[].status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "worktree_created",
+      "payload": {
+        "directory": "/work/shopfront-retry"
+      },
+      "kind": "worktree",
+      "fields": [
+        {
+          "key": "Worktree.Info.directory",
+          "path": "directory",
+          "kind": "string",
+          "probes": [
+            "shopfront-retry"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

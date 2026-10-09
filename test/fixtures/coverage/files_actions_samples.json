@@ -1,0 +1,171 @@
+{
+  "sources": [
+    "contracts/opencode-openapi-f12e14cf.json",
+    "contracts/opencode2-openapi-beta-18600.json",
+    "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js"
+  ],
+  "operations": [
+    {
+      "key": "OC1 POST /experimental/worktree",
+      "operationId": "worktree.create"
+    },
+    {
+      "key": "OC1 DELETE /experimental/worktree",
+      "operationId": "worktree.remove"
+    },
+    {
+      "key": "OC1 POST /experimental/worktree/reset",
+      "operationId": "worktree.reset"
+    },
+    {
+      "key": "OC1 POST /vcs/apply",
+      "operationId": "vcs.apply"
+    },
+    {
+      "key": "OC1 POST /experimental/project/{projectID}/copy/generate-name",
+      "operationId": "experimental.projectCopy.generateName"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/revert",
+      "operationId": "session.revert"
+    },
+    {
+      "key": "OC1 POST /session/{sessionID}/unrevert",
+      "operationId": "session.unrevert"
+    },
+    {
+      "key": "OC1 POST /experimental/workspace",
+      "operationId": "experimental.workspace.create"
+    },
+    {
+      "key": "OC1 POST /experimental/workspace/sync-list",
+      "operationId": "experimental.workspace.syncList"
+    },
+    {
+      "key": "OC1 DELETE /experimental/workspace/{id}",
+      "operationId": "experimental.workspace.remove"
+    },
+    {
+      "key": "OC1 POST /api/session/{sessionID}/revert/stage",
+      "operationId": "v2.session.revert.stage"
+    },
+    {
+      "key": "OC1 POST /api/session/{sessionID}/revert/clear",
+      "operationId": "v2.session.revert.clear"
+    },
+    {
+      "key": "OC1 POST /api/session/{sessionID}/revert/commit",
+      "operationId": "v2.session.revert.commit"
+    },
+    {
+      "key": "OC1 POST /experimental/project/{projectID}/copy",
+      "operationId": "v2.projectCopy.create"
+    },
+    {
+      "key": "OC1 DELETE /experimental/project/{projectID}/copy",
+      "operationId": "v2.projectCopy.remove"
+    },
+    {
+      "key": "OC1 POST /experimental/project/{projectID}/copy/refresh",
+      "operationId": "v2.projectCopy.refresh"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/revert/stage",
+      "operationId": "v2.session.revert.stage"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/revert/clear",
+      "operationId": "v2.session.revert.clear"
+    },
+    {
+      "key": "OC2 POST /api/session/{sessionID}/revert/commit",
+      "operationId": "v2.session.revert.commit"
+    },
+    {
+      "key": "OC2 POST /api/worktree/{projectID}",
+      "operationId": "v2.worktree.create"
+    },
+    {
+      "key": "OC2 DELETE /api/worktree/{projectID}",
+      "operationId": "v2.worktree.remove"
+    },
+    {
+      "key": "OC2 POST /api/worktree/{projectID}/refresh",
+      "operationId": "v2.worktree.refresh"
+    },
+    {
+      "key": "OC2 POST /api/workspace",
+      "operationId": "v2.workspace.create"
+    },
+    {
+      "key": "OC2 DELETE /api/workspace/{workspaceID}",
+      "operationId": "v2.workspace.destroy"
+    },
+    {
+      "key": "Paseo checkout_commit_request"
+    },
+    {
+      "key": "Paseo checkout_merge_from_base_request"
+    },
+    {
+      "key": "Paseo checkout_merge_request"
+    },
+    {
+      "key": "Paseo checkout_pr_create_request"
+    },
+    {
+      "key": "Paseo checkout_pr_merge_request"
+    },
+    {
+      "key": "Paseo checkout_pull_request"
+    },
+    {
+      "key": "Paseo checkout_push_request"
+    },
+    {
+      "key": "Paseo checkout_switch_branch_request"
+    },
+    {
+      "key": "Paseo checkout.discard_changes.request"
+    },
+    {
+      "key": "Paseo checkout.forge.set_auto_merge.request"
+    },
+    {
+      "key": "Paseo checkout.github.set_auto_merge.request"
+    },
+    {
+      "key": "Paseo checkout.rename_branch.request"
+    },
+    {
+      "key": "Paseo create_paseo_worktree_request"
+    },
+    {
+      "key": "Paseo file.upload.request"
+    },
+    {
+      "key": "Paseo fs.entry.create.request"
+    },
+    {
+      "key": "Paseo fs.entry.delete.request"
+    },
+    {
+      "key": "Paseo fs.entry.duplicate.request"
+    },
+    {
+      "key": "Paseo fs.entry.rename.request"
+    },
+    {
+      "key": "Paseo fs.file.write.request"
+    },
+    {
+      "key": "Paseo paseo_worktree_archive_request"
+    },
+    {
+      "key": "Paseo stash_pop_request"
+    },
+    {
+      "key": "Paseo stash_save_request"
+    }
+  ]
+}

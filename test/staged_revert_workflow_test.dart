@@ -409,7 +409,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('commit-staged-revert')));
     await tester.pumpAndSettle();
-    expect(find.text('Delete hidden messages forever?'), findsOneWidget);
+    expect(find.text('Delete messages in “Keep my title”?'), findsOneWidget);
     expect(find.text("This can't be undone."), findsOneWidget);
     expect(
       find.text('The hidden prompt and every message after it are deleted'),
@@ -435,7 +435,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('clear-staged-revert')));
     await tester.pumpAndSettle();
-    expect(find.text('Put everything back?'), findsOneWidget);
+    expect(find.text('Restore “Keep my title”?'), findsOneWidget);
     expect(
       find.text('1 file is replaced, with any edits made since'),
       findsOneWidget,

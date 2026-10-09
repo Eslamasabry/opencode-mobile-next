@@ -479,19 +479,29 @@ class _ChangedFileRow extends StatelessWidget {
   const _ChangedFileRow({required this.file});
 
   @override
-  Widget build(BuildContext context) => KitRow(
-    leading: KitRowIcon(switch (file.status) {
-      'added' => AppIconography.addCircle,
-      'deleted' => AppIconography.removeCircle,
-      _ => AppIconography.edit,
-    }),
-    title: file.path,
-    supporting: TextSpan(text: file.status),
-    trailing: _ChangeCounts(
-      additions: file.additions,
-      deletions: file.deletions,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    // The change in words, never the server's own word.
+    final word = switch (file.status) {
+      'added' => l10n.kitDiffAddedFile,
+      'deleted' => l10n.readerUiDeleted,
+      'modified' => l10n.readerUiModified,
+      _ => null,
+    };
+    return KitRow(
+      leading: KitRowIcon(switch (file.status) {
+        'added' => AppIconography.addCircle,
+        'deleted' => AppIconography.removeCircle,
+        _ => AppIconography.edit,
+      }),
+      title: file.path,
+      supporting: word == null ? null : TextSpan(text: word),
+      trailing: _ChangeCounts(
+        additions: file.additions,
+        deletions: file.deletions,
+      ),
+    );
+  }
 }
 
 /// "+24 -3": added lines in the success tone with their sign, removed

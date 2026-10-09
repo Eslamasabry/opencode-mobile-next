@@ -20938,9 +20938,14 @@
   "@reviewRevertKeepTitle": {
     "description": "Review the undo page: the destructive tertiary in the bottom block; deletes the hidden prompt and everything after it for good."
   },
-  "reviewRevertKeepConfirmTitle": "Delete hidden messages forever?",
+  "reviewRevertKeepConfirmTitle": "Delete messages in “{title}”?",
   "@reviewRevertKeepConfirmTitle": {
-    "description": "Review the undo page: title of the question before the hidden messages are deleted."
+    "description": "Review the undo page: title of the question before the hidden messages are deleted; names the conversation.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "reviewRevertKeepConfirmBody": "This can't be undone.",
   "@reviewRevertKeepConfirmBody": {
@@ -20958,9 +20963,14 @@
   "@reviewRevertKeepConsequenceFiles": {
     "description": "Confirmation before making the undo permanent: what is kept."
   },
-  "reviewRevertRestoreConfirmTitle": "Put everything back?",
+  "reviewRevertRestoreConfirmTitle": "Restore “{title}”?",
   "@reviewRevertRestoreConfirmTitle": {
-    "description": "Confirmation before clearing the staged undo."
+    "description": "Confirmation before clearing the staged undo; names the conversation.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "reviewRevertRestoreConfirmBody": "The hidden messages come back, and the files in this undo return to how they were when you set it up. You can undo from a prompt again later.",
   "@reviewRevertRestoreConfirmBody": {
