@@ -47,6 +47,17 @@ void main() {
       ]);
     });
 
+    test('a stored attachment id is never shown as a name', () {
+      const id =
+          '78879b2a53e0a38ed447ab2a7416b15cb2b7a0d1e5f6a7b8c9d0e1f2a3b4c5d6';
+      final image = _one('![Image]($id)');
+      expect(image.kind, KitMarkdownImageKind.inert);
+      expect(image.path, isNull);
+      expect(image.fileName, isNull);
+      // A file name that only starts with hex stays a file.
+      expect(_one('![Image](abc123.png)').kind, KitMarkdownImageKind.file);
+    });
+
     test('a ! before something that is not a picture stays text', () {
       for (final text in [
         'Wow! [link](https://example.com)',

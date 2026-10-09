@@ -294,8 +294,12 @@ class KitMarkdownImage {
     required String target,
     String? href,
   }) {
-    final path = _pathOf(target);
-    final web = _webAddress(href) ?? _webAddress(target);
+    // A bare content id ("![Image](<64 hex>)", how Paseo keeps a picture
+    // sent earlier) is a stored attachment, not a file name: say "Image"
+    // only, never the id.
+    final attachmentId = _attachmentId.hasMatch(target);
+    final path = attachmentId ? null : _pathOf(target);
+    final web = attachmentId ? null : _webAddress(href) ?? _webAddress(target);
     final kind = path != null
         ? KitMarkdownImageKind.file
         : web != null
@@ -309,6 +313,8 @@ class KitMarkdownImage {
       url: kind == KitMarkdownImageKind.web ? web : null,
     );
   }
+
+  static final _attachmentId = RegExp(r'^[0-9a-fA-F]{32,128}$');
 
   /// [value] when it is an http(s) address with a host, else null.
   static String? _webAddress(String? value) {
