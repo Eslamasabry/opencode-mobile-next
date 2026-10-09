@@ -1,0 +1,53 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (setUpAll)
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: cold start stays quiet until the helper answers at 14 seconds
+Expected: empty
+  Actual: WhereIterable<PhoneAgentStatusLine>:[Instance of 'PhoneAgentStatusLine']
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: cold start stays quiet until the helper answers at 14 seconds [E]
+00:00 +0 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: cold start helper already up overrides a stale stopped process row
+Expected: empty
+  Actual: [Instance of 'PhoneAgentStatusLine']
+00:00 +0 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: cold start helper already up overrides a stale stopped process row [E]
+00:00 +0 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: cold start timeout still exposes a genuinely stopped helper
+00:00 +1 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: cold start Paseo metadata read survives its own status event
+00:00 +2 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: (tearDownAll)
+00:00 +2 -2: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/approval_mode_chip_test.dart
+00:01 +2 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/approval_mode_chip_test.dart: cold start shows the conversation model then fresh selection
+Expected: no matching candidates
+  Actual: _TextContainingWidgetFinder:<Found 1 widget with text containing Loading conversation
+   Which: means one was found but none were expected
+00:03 +2 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/approval_mode_chip_test.dart: cold start shows the conversation model then fresh selection [E]
+00:03 +2 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/approval_mode_chip_test.dart: cold start without a saved model offers a choice immediately
+Expected: no matching candidates
+  Actual: _TextContainingWidgetFinder:<Found 1 widget with text containing Loading conversation
+   Which: means one was found but none were expected
+00:04 +2 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/approval_mode_chip_test.dart: cold start without a saved model offers a choice immediately [E]
+00:04 +2 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/approval_mode_chip_test.dart: cold start does not label automatic approval paused
+Expected: no matching candidates
+  Actual: _TextWidgetFinder:<Found 1 widget with text "Auto-approve paused": [
+   Which: means one was found but none were expected
+00:05 +2 -5: /home/eslam/Storage/Code/oc_app-sol-ba/test/approval_mode_chip_test.dart: cold start does not label automatic approval paused [E]
+00:05 +2 -5: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/session_selection_sync_test.dart
+00:06 +2 -5: /home/eslam/Storage/Code/oc_app-sol-ba/test/session_selection_sync_test.dart: cold start model fallback is per conversation and survives restart
+00:06 +2 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/session_selection_sync_test.dart: cold start model fallback is per conversation and survives restart [E]
+  Expected: 'one'
+    Actual: <null>
+     Which: not an <Instance of 'String'>
+00:06 +2 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/session_selection_sync_test.dart: cold start v1 status does not discard selection hydration
+00:06 +2 -7: /home/eslam/Storage/Code/oc_app-sol-ba/test/session_selection_sync_test.dart: cold start v1 status does not discard selection hydration [E]
+  Expected: 'fresh'
+    Actual: 'one'
+     Which: is different.
+            Expected: fresh
+              Actual: one
+00:06 +2 -7: /home/eslam/Storage/Code/oc_app-sol-ba/test/session_selection_sync_test.dart: cold start v2 status does not discard selection hydration
+00:06 +2 -8: /home/eslam/Storage/Code/oc_app-sol-ba/test/session_selection_sync_test.dart: cold start v2 status does not discard selection hydration [E]
+  Expected: 'fresh'
+    Actual: 'one'
+     Which: is different.
+            Expected: fresh
+              Actual: one
+00:06 +2 -8: Some tests failed.
+
+reverted test exit: 1
+restored source SHA256: ac87b2161e8fa6adf26be7876b4cb281d1c8266ccda4b7bb11915814a3fff6eb

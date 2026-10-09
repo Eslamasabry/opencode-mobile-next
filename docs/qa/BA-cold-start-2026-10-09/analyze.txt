@@ -1,0 +1,4 @@
+OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test -- <pinned-flutter> analyze --no-pub lib/state/connection.dart lib/state/connection lib/ui/screens/chat_screen.dart lib/ui/screens/chat test/phone_agents_controller_test.dart test/approval_mode_chip_test.dart test/session_selection_sync_test.dart test/profile_deletion_test.dart
+
+Analyzing 8 items...
+No issues found! (ran in 8.1s)
