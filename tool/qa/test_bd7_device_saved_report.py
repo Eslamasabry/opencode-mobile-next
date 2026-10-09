@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
+import xml.etree.ElementTree as ET
 
 from tool.qa import bd7_device_saved_report as proof
 from tool.qa.fq9.common import Artifact, DriverFailure, LOCAL_SIGNER
@@ -110,6 +111,54 @@ class SavedReportTest(unittest.TestCase):
         with self.assertRaisesRegex(DriverFailure, "^device_unavailable$"):
             proof.run_locked(self.artifact(), Path("."), device=device)
         device.device_ready.assert_not_called()
+
+    def test_existing_app_agents_page_returns_before_settings_navigation(self):
+        session = proof.SavedReportSession("adb", Path("."), ports=Mock())
+        session.ports.app_visible.return_value = True
+        session.ui = Mock()
+        returned = [False]
+        node = ET.Element("node", {"package": proof.PACKAGE})
+
+        def find(label):
+            if label == "Settings":
+                return node if returned[0] else None
+            return node if label in ("Agents", "Back") else None
+
+        def execute(command, **_):
+            if command == ["shell", "input", "keyevent", "4"]:
+                returned[0] = True
+
+        session.ui.find.side_effect = find
+        with (
+            patch.object(session, "execute", side_effect=execute) as command,
+            patch.object(proof.time, "monotonic", side_effect=[0, 1, 16]),
+            patch.object(proof.time, "sleep"),
+        ):
+            session.launch()
+        self.assertTrue(returned[0])
+        session.ui.navigate_report.assert_called_once()
+        self.assertLess(
+            command.call_args_list.index(
+                unittest.mock.call(["shell", "input", "keyevent", "4"])
+            ),
+            next(i for i, c in enumerate(command.call_args_list) if "am" in c.args[0]),
+        )
+
+    def test_foreign_agents_label_never_receives_back_navigation(self):
+        session = proof.SavedReportSession("adb", Path("."), ports=Mock())
+        session.ports.app_visible.return_value = True
+        session.ui = Mock()
+        session.ui.find.side_effect = lambda label: (
+            None
+            if label == "Settings"
+            else ET.Element("node", {"package": "other.app"})
+        )
+        with (
+            patch.object(proof.DeviceSession, "launch"),
+            patch.object(session, "execute") as command,
+        ):
+            session.launch()
+        command.assert_not_called()
 
     def test_reused_pid_starttime_never_receives_am_crash(self):
         session = proof.SavedReportSession("adb", Path("."), ports=Mock())

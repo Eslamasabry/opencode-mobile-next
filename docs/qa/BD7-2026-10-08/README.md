@@ -220,3 +220,22 @@ Candidate and lock-wait regression control: updated 2199 fixture against the
 old 2198-only driver failed (3 assertions, 3 admission errors); the lock assertion
 observed 1800 instead of 3600 seconds. Device proof is pending, not qualified by
 these offline controls.
+
+[2199 host receipt](2199-saved-report-host.json): all 71 focused Python checks
+pass serially through machine_lock; formatting, F/E9 lint and diff checks clean.
+The approved APK SHA-256 is `be1bf7b80a5901a4041fbe8b7a2e754631f05ed04486b70c9e33c0ac1e12061a`;
+build 2199, version 1.2.0 and local signer `1DE5BF08...` are host-verified.
+Run after the BB/BA handoff: `python3 tool/qa/bd7_device_saved_report.py --output
+docs/qa/BD7-2026-10-08/2199-saved-report`. No APK build is required.
+
+The [initial 2199 attempt](2199-saved-report/report.json) passed the empty/Off
+baseline and installer-idle guard, then stopped at `app_navigation_not_ready`
+before consent or crash. Normal 2199 reinstall/identity verification passed.
+A new reservation found the exact app visible on its retained Agents route,
+with Back and no root Settings tab. This is a harness navigation assumption,
+not saved-capture failure. A deterministic route fixture failed before the fix;
+the saved-report driver now returns only from the visible app-owned Agents/Back
+page before normal Settings navigation. Unknown/foreign pages are untouched.
+All 73 focused Python checks pass serially through machine_lock; lint/format and
+diff checks are clean. No app-source edit or build. The first receipt remains
+unchanged, and the device retry uses a separate output directory.

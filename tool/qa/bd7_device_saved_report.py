@@ -22,6 +22,7 @@ from tool.qa.bd7_device_ui import Bd7UiFailure
 from tool.qa.bd7_exit_proof import ProofFailure
 from tool.qa.fq9.common import (
     Artifact,
+    PACKAGE,
     DriverFailure,
     LOCAL_SIGNER,
     LOCK,
@@ -111,6 +112,22 @@ class SavedReportSession(DeviceSession):
         super().__init__(adb, output)
         self.ports = ports
         self.consent_owned = False
+
+    def launch(self):
+        # A retained Agents route has no root Settings tab. Only return from
+        # this exact visible app page; never back through an unknown surface.
+        if self.ports is not None and self.ports.app_visible():
+            try:
+                if self.ui.find("Settings") is None:
+                    agents, back = self.ui.find("Agents"), self.ui.find("Back")
+                    if all(
+                        node is not None and node.get("package") == PACKAGE
+                        for node in (agents, back)
+                    ):
+                        self.execute(["shell", "input", "keyevent", "4"])
+            except Bd7UiFailure:
+                pass  # The normal bounded launch still owns readiness.
+        return super().launch()
 
     def ring(self):
         path = FILES + "/crash-diagnostics.json"
