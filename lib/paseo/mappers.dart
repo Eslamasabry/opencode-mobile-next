@@ -6,6 +6,8 @@
 /// item and the same item read back from history carry the same id.
 library;
 
+import 'dart:convert';
+
 import '../api/models.dart';
 import '../domain/server_gateway.dart' show ProductException;
 import 'transport.dart';
@@ -194,7 +196,14 @@ Map<String, dynamic> _toolInput(Map<String, dynamic> detail) {
   };
 }
 
-String _toolOutput(Map<String, dynamic> item, Map<String, dynamic> detail) {
+/// What a tool answered, as text or as its structured value (a map or list
+/// the tool card can read, such as a connector search result).
+///
+/// Paseo puts the answer in a different field per detail type: `output` for
+/// shell, `{output: <text or parsed JSON>}` for every tool it has no parser
+/// for (MCP tools, ToolSearch), `content`/`filePaths` for grep and glob,
+/// `webResults` for web search, `result` for fetch and `text` for skills.
+Object _toolOutput(Map<String, dynamic> item, Map<String, dynamic> detail) {
   final error = item['error'];
   if (error is String && error.isNotEmpty) return 'The tool could not finish.';
   if (error is Map && error['message'] is String) {
@@ -202,12 +211,43 @@ String _toolOutput(Map<String, dynamic> item, Map<String, dynamic> detail) {
   }
   final output = detail['output'];
   if (output is String) return paseoText(output);
-  if (output is Map && output['text'] is String) {
-    return paseoText(output['text']);
+  if (output is Map) {
+    if (output['text'] is String) return paseoText(output['text']);
+    final inner = output['output'];
+    if (inner is String) return paseoText(inner);
+    if (inner is Map || inner is List) return _structured(inner);
   }
+  if (output is List) return _structured(output);
   final content = detail['content'];
-  if (detail['type'] == 'read' && content is String) return paseoText(content);
+  final type = detail['type'];
+  if (type == 'read' && content is String) return paseoText(content);
+  if (type == 'search') {
+    if (content is String && content.isNotEmpty) return paseoText(content);
+    final paths = detail['filePaths'];
+    if (paths is List && paths.isNotEmpty) {
+      return paseoText(paths.whereType<String>().join('\n'));
+    }
+    final web = detail['webResults'];
+    if (web is List && web.isNotEmpty) return _structured(web);
+  }
+  if (type == 'fetch' && detail['result'] is String) {
+    return paseoText(detail['result']);
+  }
+  if (type == 'plain_text' && detail['text'] is String) {
+    return paseoText(detail['text']);
+  }
   return '';
+}
+
+/// A structured answer kept as a value when it fits, otherwise its text cut
+/// to the usual bound.
+Object _structured(Object value) {
+  try {
+    final text = jsonEncode(value);
+    return text.length > _textMax ? paseoText(text) : value;
+  } catch (_) {
+    return '';
+  }
 }
 
 /// An agent's own words for a sign-in it can no longer use. Not the
