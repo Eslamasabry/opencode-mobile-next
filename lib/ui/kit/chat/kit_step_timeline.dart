@@ -320,24 +320,30 @@ class KitStepTimeline extends StatelessWidget {
       spoken: spoken ?? label,
       lineKey: lineKey,
     );
-    if (!expanded || !hasSteps) return line;
+    final open = expanded && hasSteps;
     final count = steps.length + (head == null ? 0 : 1);
-    Widget rail = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (head != null) _RailSlot(last: count == 1, child: head!),
-        for (var i = 0; i < steps.length; i++)
-          _RailSlot(last: i == steps.length - 1, child: steps[i]),
-      ],
-    );
-    if (fade != null) rail = FadeTransition(opacity: fade!, child: rail);
+    // One shape open or shut: the line never remounts, so keyboard focus
+    // stays on it when it toggles.
+    Widget? rail = open
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (head != null) _RailSlot(last: count == 1, child: head!),
+              for (var i = 0; i < steps.length; i++)
+                _RailSlot(last: i == steps.length - 1, child: steps[i]),
+            ],
+          )
+        : null;
+    if (rail != null && fade != null) {
+      rail = FadeTransition(opacity: fade!, child: rail);
+    }
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         line,
-        KeyedSubtree(key: stepsKey, child: rail),
+        if (rail != null) KeyedSubtree(key: stepsKey, child: rail),
       ],
     );
   }
@@ -573,18 +579,20 @@ class _StepLine extends StatelessWidget {
       ),
     );
 
-    if (!railBelow) return tappable;
-    // The rail leaves the glyph and runs on into the first step.
+    // Always wrapped, so opening never remounts the line (keyboard focus
+    // stays on it); the rail's stub is drawn only while the steps show.
     final startY = pad + first / 2 + rail.glyph / 2 + tokens.space1;
     return CustomPaint(
-      painter: _RailPainter(
-        color: rail.color,
-        stroke: rail.stroke,
-        centre: rail.centre,
-        dpr: rail.dpr,
-        rtl: rtl,
-        top: startY,
-      ),
+      painter: railBelow
+          ? _RailPainter(
+              color: rail.color,
+              stroke: rail.stroke,
+              centre: rail.centre,
+              dpr: rail.dpr,
+              rtl: rtl,
+              top: startY,
+            )
+          : null,
       child: tappable,
     );
   }

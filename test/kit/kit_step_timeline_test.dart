@@ -5,7 +5,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/ui/app_iconography.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_markdown.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_message.dart';
@@ -14,6 +13,8 @@ import 'package:opencode_mobile/ui/kit/chat/kit_tool_row.dart';
 import 'package:opencode_mobile/ui/kit/kit_code_block.dart';
 import 'package:opencode_mobile/ui/kit/kit_status_mark.dart';
 import 'package:opencode_mobile/ui/kit/kit_text.dart';
+
+import 'kit_motion_still.dart';
 
 const _lineKey = ValueKey('timeline-line');
 const _stepsKey = ValueKey('timeline-steps');
@@ -99,6 +100,37 @@ KitToolRow _writeRow({
 );
 
 void main() {
+  // Reduced motion (G8x): nothing ticks after one pump, opened or running.
+  kitMotionStillTests(
+    'KitStepTimeline',
+    builds: {
+      'closed': () => _timeline(expanded: false),
+      'running': () => _timeline(
+        expanded: true,
+        steps: const [
+          KitToolRow(
+            kind: KitToolKind.edit,
+            title: 'Edit',
+            path: 'b.dart',
+            status: KitToolStatus.running,
+          ),
+        ],
+      ),
+    },
+    changes: {
+      'steps open': KitMotionChange(
+        build: () => _timeline(expanded: false),
+        act: (tester, stage) => stage.rebuild(_timeline(expanded: true)),
+        shows: 'A plain step',
+      ),
+      'steps close': KitMotionChange(
+        build: () => _timeline(expanded: true),
+        act: (tester, stage) => stage.rebuild(_timeline(expanded: false)),
+        hides: 'A plain step',
+      ),
+    },
+  );
+
   group('the line', () {
     testWidgets('closed it is the glyph, the words and a chevron', (
       tester,

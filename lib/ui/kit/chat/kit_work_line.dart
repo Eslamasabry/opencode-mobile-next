@@ -8,15 +8,15 @@
 // folded or expanded. No loading, empty, disabled or error state of its own:
 // a turn without work has no work line, the chip always opens, and
 // endedFailed is the work's state, not the part's.
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../kit_buttons.dart';
-import '../kit_chip.dart';
 import '../kit_motion.dart';
 import '../kit_status_mark.dart';
-import '../kit_text.dart';
-import '../kit_tokens.dart';
+import 'kit_step_timeline.dart';
 
 /// Where a turn's work stands. The host decides; the line only says it.
 enum KitWorkState {
@@ -226,8 +226,12 @@ class _KitWorkLineState extends State<KitWorkLine>
   /// folds it on its own.
   bool _touched = false;
 
-  /// "Show earlier steps" was pressed.
-  bool _showAll = false;
+  /// How many earlier steps "Show earlier steps" has revealed, in chunks
+  /// of [KitWorkLine.stepCap] (PERF-2: a long turn never lays out at once).
+  int _revealed = 0;
+
+  /// The step the last reveal began with: focus lands there.
+  int? _focusIndex;
 
   /// Wraps the first revealed step so focus can land there (Accessibility).
   /// Never a Tab stop: it takes focus itself only once, when that step has
@@ -293,8 +297,23 @@ class _KitWorkLineState extends State<KitWorkLine>
     widget.onExpansionChanged?.call(next);
   }
 
+  /// The steps folded behind "Show earlier steps".
+  int get _hidden {
+    final steps = widget.steps;
+    final tail = widget.tail;
+    final window = tail != null && steps.length >= tail + 3
+        ? tail
+        : KitWorkLine.stepCap;
+    return math.max(0, steps.length - window - _revealed);
+  }
+
   void _revealEarlier() {
-    setState(() => _showAll = true);
+    final before = _hidden;
+    final added = math.min(before, KitWorkLine.stepCap);
+    setState(() {
+      _revealed += added;
+      _focusIndex = before - added;
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       // The step's own first control takes focus, so its ring shows.
@@ -316,18 +335,19 @@ class _KitWorkLineState extends State<KitWorkLine>
 
   @override
   Widget build(BuildContext context) {
-    final tokens = KitTokens.of(context);
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final summary = KitWorkLine.summaryOf(context, widget.counts);
     final expanded = _expanded;
+    final sep = l10n.kitWorkSeparator;
+    final c = widget.counts;
 
     final (String label, String spoken, Widget? mark) = switch (widget.state) {
-      // Opened while a step runs: the running step in the list carries the
-      // progress and its words, so the chip is only the way to fold them
-      // again. One spinner, the step named once (owner, 2026-10-08).
+      // Opened while a step runs: the running step on the rail carries the
+      // progress and its words, so the line keeps the summary and no mark.
+      // One live mark, the step named once (owner, 2026-10-08).
       KitWorkState.running when expanded => (
-        l10n.kitWorkHideSteps,
-        '${l10n.kitWorkWorking}, ${l10n.kitWorkHideSteps}',
+        summary,
+        '${l10n.kitWorkWorking}, $summary',
         null,
       ),
       KitWorkState.running => (
@@ -342,90 +362,25 @@ class _KitWorkLineState extends State<KitWorkLine>
       ),
       KitWorkState.done => (summary, summary, null),
       KitWorkState.endedFailed => (
-        summary,
+        '$summary$sep${l10n.kitWorkDidntFinish}',
         '${l10n.kitWorkDidntFinish}, $summary',
-        _FailedMark(word: l10n.kitWorkDidntFinish),
+        KitStatusMark(
+          state: KitMarkState.failed,
+          label: l10n.kitWorkDidntFinish,
+        ),
       ),
       KitWorkState.stopped => (
-        '$summary${l10n.kitWorkSeparator}${l10n.kitWorkStopped}',
+        '$summary$sep${l10n.kitWorkStopped}',
         '${l10n.kitWorkStopped}, $summary',
         null,
       ),
     };
 
-    // The chip is the one button: its words and expanded state in one node
-    // (Accessibility); the leading mark's word is in that label, so the
-    // mark says nothing of its own.
-    final Widget chip = Semantics(
-      container: true,
-      button: true,
-      expanded: expanded,
-      label: spoken,
-      onTap: _toggle,
-      excludeSemantics: true,
-      child: KitChip.summary(
-        key: widget.lineKey,
-        label: label,
-        expanded: expanded,
-        onPressed: _toggle,
-      ),
-    );
-
-    // The working mark is one glyph: it keeps the chip's line and the chip
-    // shortens. The failed mark carries its word, so at large text the chip
-    // moves under it rather than being squeezed (A11Y-8, G6).
-    final Widget line = switch (mark) {
-      null => chip,
-      _FailedMark() => Wrap(
-        spacing: tokens.space2,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          ExcludeSemantics(child: mark),
-          chip,
-        ],
-      ),
-      _ => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ExcludeSemantics(child: mark),
-          SizedBox(width: tokens.space2),
-          Flexible(child: chip),
-        ],
-      ),
-    };
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [line, if (expanded) _buildSteps(context, tokens, l10n)],
-    );
-  }
-
-  Widget _buildSteps(
-    BuildContext context,
-    KitTokens tokens,
-    AppLocalizations l10n,
-  ) {
     final steps = widget.steps;
-    final tail = widget.tail;
-    final hidden = _showAll
-        ? 0
-        : tail != null && steps.length >= tail + 3
-        ? steps.length - tail
-        : steps.length <= KitWorkLine.stepCap
-        ? 0
-        : steps.length - KitWorkLine.stepCap;
-    final children = <Widget>[
-      if (hidden > 0)
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: KitButton.tertiary(
-            label: l10n.kitWorkEarlierSteps(hidden),
-            onPressed: _revealEarlier,
-          ),
-        ),
+    final hidden = expanded ? _hidden : 0;
+    final shown = <Widget>[
       for (var i = hidden; i < steps.length; i++)
-        if (i == 0 && _showAll)
+        if (i == _focusIndex)
           Focus(
             focusNode: _firstRevealed,
             onFocusChange: _onFirstRevealedFocus,
@@ -434,57 +389,39 @@ class _KitWorkLineState extends State<KitWorkLine>
         else
           steps[i],
     ];
-    final spaced = <Widget>[
-      for (var i = 0; i < children.length; i++) ...[
-        if (i > 0) SizedBox(height: tokens.space1),
-        children[i],
-      ],
-    ];
-    // The steps sit on the transcript's one gutter: no stroke, no start
-    // indent (a second inset would cost the words their width).
-    Widget body = Padding(
-      padding: EdgeInsetsDirectional.only(
-        top: tokens.space1,
-        bottom: tokens.space1,
+    return KitStepTimeline(
+      label: label,
+      spoken: spoken,
+      icon: KitStepTimeline.iconFor(
+        read: c.read,
+        searched: c.searched,
+        listed: c.listed,
+        edited: c.edited,
+        ran: c.ran,
+        fetched: c.fetched,
+        delegated: c.delegated,
+        other: c.other,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: spaced,
-      ),
-    );
-    // The steps appear at once and fade in (paint only, no size change;
-    // MOT-5). Under reduced motion they are simply there.
-    if (!KitMotion.reduced(context)) {
-      body = FadeTransition(opacity: _fade, child: body);
-    }
-    return KeyedSubtree(key: widget.stepsKey, child: body);
-  }
-}
-
-/// The endedFailed lead: the neutral error glyph and "Didn't finish" in
-/// `text1` (STATE-15 read under LOOK-5's B2 interim: no `danger`).
-class _FailedMark extends StatelessWidget {
-  const _FailedMark({required this.word});
-
-  final String word;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = KitTokens.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        KitStatusMark(state: KitMarkState.failed, label: word),
-        SizedBox(width: tokens.labelGap),
-        Flexible(
-          child: KitText(
-            word,
-            role: KitTextRole.secondary,
-            tone: KitTextTone.primary,
-          ),
-        ),
-      ],
+      mark: mark,
+      expanded: expanded,
+      onPressed: _toggle,
+      head: hidden > 0
+          ? Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: KitButton.tertiary(
+                label: l10n.kitWorkEarlierSteps(
+                  math.min(hidden, KitWorkLine.stepCap),
+                ),
+                onPressed: _revealEarlier,
+              ),
+            )
+          : null,
+      steps: shown,
+      // The steps appear at once and fade in (paint only, no size change;
+      // MOT-5). Under reduced motion they are simply there.
+      fade: KitMotion.reduced(context) ? null : _fade,
+      lineKey: widget.lineKey,
+      stepsKey: widget.stepsKey,
     );
   }
 }
