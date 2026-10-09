@@ -1,0 +1,16 @@
+{
+  "source": "contracts/opencode-openapi-f12e14cf.json, @getpaseo/protocol messages.js",
+  "wire": [
+    "oc1 DELETE /api/pty/{ptyID}",
+    "oc1 DELETE /pty/{ptyID}",
+    "oc1 POST /api/pty",
+    "oc1 POST /api/pty/{ptyID}/connect-token",
+    "oc1 POST /pty",
+    "oc1 POST /pty/{ptyID}/connect-token",
+    "oc1 PUT /api/pty/{ptyID}",
+    "oc1 PUT /pty/{ptyID}",
+    "paseo create_terminal_request",
+    "paseo kill_terminal_request",
+    "paseo terminal.rename.request"
+  ]
+}

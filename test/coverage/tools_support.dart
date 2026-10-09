@@ -48,6 +48,61 @@ class ToolsRepo
     required String providerID,
   }) async => searchResponse!;
 
+  List<TerminalProcess> terminals = const [];
+  TerminalShellSettings shellSettings = const TerminalShellSettings(
+    selected: '',
+    options: [],
+  );
+
+  @override
+  Future<List<TerminalProcess>> listTerminals() async => terminals;
+
+  @override
+  Future<TerminalShellSettings> loadTerminalShellSettings() async =>
+      shellSettings;
+
+  final created = <String?>[];
+  final selectedShells = <String>[];
+  final resizes = <String>[];
+  final renamed = <String>[];
+  final removedTerminals = <String>[];
+
+  @override
+  Future<TerminalProcess> createTerminal({String? title}) async {
+    created.add(title);
+    return TerminalProcess(
+      id: 'pty_new',
+      title: title ?? 'Terminal',
+      command: 'bash',
+      arguments: const [],
+      directory: '/work/shop',
+      running: true,
+      pid: 1,
+    );
+  }
+
+  @override
+  Future<void> selectTerminalShell(String value) async =>
+      selectedShells.add(value);
+
+  @override
+  Future<TerminalChannel> connectTerminal(String id, {int? cursor}) async =>
+      _EmptyChannel();
+
+  @override
+  Future<void> resizeTerminal(
+    String id, {
+    required int rows,
+    required int cols,
+  }) async => resizes.add('$id:$rows:$cols');
+
+  @override
+  Future<void> renameTerminal(String id, String title) async =>
+      renamed.add('$id:$title');
+
+  @override
+  Future<void> removeTerminal(String id) async => removedTerminals.add(id);
+
   /// A failed read of the command list (what the app was told).
   Object? commandsError;
 
@@ -97,6 +152,20 @@ class ToolsRepo
     calls.add(invocation.memberName.toString());
     return super.noSuchMethod(invocation);
   }
+}
+
+class _EmptyChannel implements TerminalChannel {
+  @override
+  Stream<String> get output => const Stream.empty();
+
+  @override
+  int? get cursor => 0;
+
+  @override
+  void write(String value) {}
+
+  @override
+  Future<void> close() async {}
 }
 
 /// A connected server whose repository is [repo].

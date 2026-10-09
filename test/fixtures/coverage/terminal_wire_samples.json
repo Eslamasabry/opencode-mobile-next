@@ -1,0 +1,489 @@
+{
+  "source": "contracts/opencode-openapi-f12e14cf.json",
+  "schema": {
+    "location": [
+      {
+        "path": "directory",
+        "kind": "string"
+      },
+      {
+        "path": "workspaceID",
+        "kind": "string"
+      },
+      {
+        "path": "project.id",
+        "kind": "string"
+      },
+      {
+        "path": "project.directory",
+        "kind": "string"
+      }
+    ],
+    "pty": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "command",
+        "kind": "string"
+      },
+      {
+        "path": "args[]",
+        "kind": "string"
+      },
+      {
+        "path": "cwd",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      },
+      {
+        "path": "pid",
+        "kind": "number"
+      },
+      {
+        "path": "exitCode",
+        "kind": "number"
+      }
+    ],
+    "shell": [
+      {
+        "path": "path",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "acceptable",
+        "kind": "boolean"
+      }
+    ],
+    "config": [
+      {
+        "path": "shell",
+        "kind": "string"
+      }
+    ],
+    "ticket": [
+      {
+        "path": "ticket",
+        "kind": "string"
+      },
+      {
+        "path": "expires_in",
+        "kind": "number"
+      }
+    ],
+    "event_created": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.title",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.command",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.args[]",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.cwd",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.status",
+        "kind": "enum"
+      },
+      {
+        "path": "properties.info.pid",
+        "kind": "number"
+      },
+      {
+        "path": "properties.info.exitCode",
+        "kind": "number"
+      }
+    ],
+    "event_updated": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.title",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.command",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.args[]",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.cwd",
+        "kind": "string"
+      },
+      {
+        "path": "properties.info.status",
+        "kind": "enum"
+      },
+      {
+        "path": "properties.info.pid",
+        "kind": "number"
+      },
+      {
+        "path": "properties.info.exitCode",
+        "kind": "number"
+      }
+    ],
+    "event_exited": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.exitCode",
+        "kind": "number"
+      }
+    ],
+    "event_deleted": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "properties.id",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {
+    "ticket.ticket": "ignored: a one-time pass the app uses to open the live connection; it is never shown",
+    "ticket.expires_in": "ignored: a one-time pass the app uses to open the live connection; it is never shown",
+    "event_created.id": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_created.properties.info.id": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_created.properties.info.title": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_created.properties.info.command": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_created.properties.info.args[]": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_created.properties.info.cwd": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_created.properties.info.status": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_created.properties.info.pid": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_created.properties.info.exitCode": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_updated.id": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_updated.properties.info.id": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_updated.properties.info.title": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_updated.properties.info.command": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_updated.properties.info.args[]": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_updated.properties.info.cwd": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_updated.properties.info.status": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_updated.properties.info.pid": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_updated.properties.info.exitCode": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_exited.id": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_exited.properties.id": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_exited.properties.exitCode": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_deleted.id": "ignored: the event only tells the app the list changed; it reads the list again and shows that",
+    "event_deleted.properties.id": "ignored: the event only tells the app the list changed; it reads the list again and shows that"
+  },
+  "cases": [
+    {
+      "id": "pty_running_and_exited",
+      "kind": "pty_list",
+      "payload": {
+        "list": [
+          {
+            "id": "pty_run1",
+            "title": "Build watcher",
+            "command": "bash",
+            "args": [
+              "-l"
+            ],
+            "cwd": "/work/shop",
+            "status": "running",
+            "pid": 4242
+          },
+          {
+            "id": "pty_done1",
+            "title": "Test run",
+            "command": "flutter",
+            "args": [
+              "test",
+              "test/upload_test.dart"
+            ],
+            "cwd": "/work/shop/app",
+            "status": "exited",
+            "pid": 4343,
+            "exitCode": 1
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "location.directory",
+          "path": "directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.workspaceID",
+          "path": "workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.project.id",
+          "path": "project.id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.project.directory",
+          "path": "project.directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "pty.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "pty.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Build watcher"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.command",
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.args[]",
+          "path": "args[]",
+          "kind": "string",
+          "probes": [
+            "bash -l"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "/work/shop"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Running"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [
+            "4242"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "pty.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Test run"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.command",
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "flutter"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.args[]",
+          "path": "args[]",
+          "kind": "string",
+          "probes": [
+            "test/upload_test.dart"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "/work/shop/app"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Ended"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [
+            "4343"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty.exitCode",
+          "path": "exitCode",
+          "kind": "number",
+          "probes": [
+            "1"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "shells_and_default",
+      "kind": "shells",
+      "payload": {
+        "shells": [
+          {
+            "path": "/bin/bash",
+            "name": "bash",
+            "acceptable": true
+          },
+          {
+            "path": "/usr/bin/fish",
+            "name": "fish",
+            "acceptable": false
+          }
+        ],
+        "config": {
+          "shell": "fish"
+        }
+      },
+      "fields": [
+        {
+          "key": "shell.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "shell.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "shell.acceptable",
+          "path": "acceptable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "shell.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "shell.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "fish"
+          ],
+          "primary": false
+        },
+        {
+          "key": "shell.acceptable",
+          "path": "acceptable",
+          "kind": "boolean",
+          "probes": [
+            "terminal"
+          ],
+          "primary": false
+        },
+        {
+          "key": "config.shell",
+          "path": "shell",
+          "kind": "string",
+          "probes": [
+            "fish"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}
