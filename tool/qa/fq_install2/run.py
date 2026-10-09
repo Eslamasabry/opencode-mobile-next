@@ -87,11 +87,12 @@ class Ports:
         if len(raw)>2*1024*1024: raise RuntimeError('ui_snapshot_too_large')
         return ET.fromstring(raw).findall('.//node')
     def text(self, node):
-        text=self.d.text(node).replace('\u2068','').replace('\u2069','')
+        isolates={ord(char): None for char in '\u2066\u2067\u2068\u2069'}
+        text=self.d.text(node).translate(isolates)
         # Current chips show the act alone; their accessibility label names
         # the target. Only this driver's exact target can supply that label.
         if hasattr(node,'get'):
-            description=(node.get('content-desc') or '').replace('\u2068','').replace('\u2069','')
+            description=(node.get('content-desc') or '').translate(isolates)
             scoped={'Install':'Install '+self.name,'Sign in':'Sign in to '+self.name,
                     'Check':'Check '+self.name}
             if scoped.get(text)==description:
@@ -167,7 +168,9 @@ class Ports:
             if action is None: return False
         self.tap_node(action)
         nodes=self.ui()
-        labels={self.text(node) for node in nodes}
+        # KitConfirm exposes its title and explanation in one semantics node.
+        # Keep both exact lines and a unique target-specific destructive action.
+        labels={line for node in nodes for line in self.text(node).splitlines()}
         confirmation='Remove '+name+'?'
         explanation='This removes the installed agent from this phone. Your accounts and conversations stay, and you can install it again.'
         if confirmation not in labels or explanation not in labels: return False

@@ -39,6 +39,14 @@ class Tests(unittest.TestCase):
         self.assertFalse(ports.app_remove('fx','fx'))
         self.assertEqual(taps,['Remove fx'])
 
+    def test_remove_accepts_current_kit_merged_title_and_body(self):
+        ports,taps=self.current_ports([
+            [node('Remove fx')],
+            [node('Remove fx?\n'+REMOVE_BODY),node('Cancel'),node('Remove fx')],
+        ])
+        self.assertTrue(ports.app_remove('fx','fx'))
+        self.assertEqual(taps,[('Remove fx',''),('Remove fx','')])
+
     def current_ports(self, pages):
         taps=[]
         d=types.SimpleNamespace(launch_agents=lambda: None,
@@ -67,6 +75,12 @@ class Tests(unittest.TestCase):
         ports,_=self.current_ports([])
         self.assertEqual(ports.text(node('Sign in','Sign in to fx')),'Sign in to fx')
         self.assertEqual(ports.text(node('Install','Install fx')),'Install fx')
+
+    def test_current_ltr_size_isolates_do_not_hide_removal_success(self):
+        ports,_=self.current_ports([])
+        self.assertEqual(ports.text(node('fx removed. Freed \u206613 MB\u2069.')),
+                         'fx removed. Freed 13 MB.')
+        self.assertEqual(ports.text(node('Install','\u2067Install fx\u2069')),'Install fx')
 
     def test_install_opens_scoped_sheet_then_uses_its_unique_install_action(self):
         ports,taps=self.current_ports([

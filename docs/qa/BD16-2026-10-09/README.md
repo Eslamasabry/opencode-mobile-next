@@ -101,9 +101,11 @@ with its history receipt. A subsequent full successful fast pass is still needed
 
 ## BA follow-up
 
-[APK 2202 observation and driver recovery fix](../BA10-2202-2026-10-09/README.md):
-the 45,056-byte fx leftover is confirmed, but 2202 reports Not installed and
-offers no Remove action. Removal remains blocked; it is not a fresh-install
-pass. The driver now requires explicit, fresh recovery facts before allowing
-later rows and preserves that decision through multi-agent failures. The
-original final-pass attempt above has not been rerun or reclassified.
+[Authorized app install/removal on 2202](../BA10-2202-2026-10-09/app-install-remove/README.md)
+repaired then removed the 45,056-byte partial fx leftover: the app reported
+13 MB freed and retained account/chat projections matched. Normal 2202 is
+verified. The driver confirms fresh recovery before allowing later rows and
+preserves that decision through multi-agent failures. The original final-pass
+attempt above has not been rerun or reclassified. The missing-Remove affordance
+for a partial payload has a separate three-line contract; clean reinstall via
+the existing Install action is now device-proven.

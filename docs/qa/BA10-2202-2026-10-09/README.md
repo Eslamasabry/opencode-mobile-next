@@ -1,5 +1,11 @@
 # BA10 / BD16 follow-up on APK 2202
 
+**Update: the authorized [app install and removal](app-install-remove/README.md) succeeded.**
+The app freed 13 MB, fx is absent, retained state matches, and normal 2202 is
+verified. The earlier read-only blocker below is preserved as historical evidence.
+
+## Earlier read-only observation
+
 **Device removal blocked: APK 2202 offers no Remove fx action for this leftover.**
 Driver recovery confirmation is implemented and tested; this is not a passing
 fresh-install or BA10 removal row. No certification matrix was promoted.

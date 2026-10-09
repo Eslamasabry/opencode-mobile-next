@@ -1,0 +1,7 @@
+{
+  "appFreedDisplay": "fx removed. Freed 13 MB.",
+  "allocatedTargetBeforeBytes": 12591104,
+  "allocatedTargetAfterBytes": 0,
+  "dataFreeSpaceDeltaBytes": 12554240,
+  "freeSpaceDeltaIsNotRemovalReceipt": true
+}

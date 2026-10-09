@@ -1,0 +1,27 @@
+{"navigation": 0, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 1, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 2, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 3, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 4, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 5, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 6, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 7, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 8, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 9, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 10, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 11, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 12, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 13, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 14, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 15, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 16, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 17, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 18, "settings": false, "agents": false, "serverList": false, "scrim": false}
+{"navigation": 19, "settings": false, "agents": false, "serverList": false, "scrim": false}
+............................................................................
+----------------------------------------------------------------------
+Ran 76 tests in 0.028s
+
+OK
+
+Exit: 0

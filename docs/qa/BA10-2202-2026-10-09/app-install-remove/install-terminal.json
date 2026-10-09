@@ -1,0 +1,61 @@
+{
+  "freshJob": true,
+  "job": {
+    "jobId": "setup-1791513455921605",
+    "state": "done",
+    "components": {
+      "linux": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "essentials": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "python": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-user": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-node": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-paseo": {
+        "state": "skipped",
+        "done": null,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      },
+      "agent-fx": {
+        "state": "done",
+        "done": 5482652,
+        "declaredMinimumFreeBytes": null,
+        "errorCode": null
+      }
+    }
+  },
+  "inventory": {
+    "allocatedBytes": 12591104,
+    "pinMatches": true,
+    "linkMatches": true,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": true,
+    "staging": [],
+    "lockPresent": false
+  }
+}
