@@ -74,6 +74,7 @@ class _AlwaysAllowInvitationState extends State<AlwaysAllowInvitation> {
         .firstOrNull;
     if (profileId == null ||
         request == null ||
+        !request.canAlwaysAllow ||
         !controller.capabilities.persistentPermissionGrants) {
       return;
     }

@@ -44782,6 +44782,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Asked: {prompt}'**
   String toolCardAsked(String prompt);
+
+  /// Chat journey: Note
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get chatUiAgentNote;
+
+  /// Chat journey: Warning
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get chatUiAgentWarning;
+
+  /// Chat journey: Problem
+  ///
+  /// In en, this message translates to:
+  /// **'Problem'**
+  String get chatUiAgentProblem;
+
+  /// Chat journey: Compacted automatically to make room.
+  ///
+  /// In en, this message translates to:
+  /// **'Compacted automatically to make room.'**
+  String get chatUiCompactedAutomatically;
+
+  /// Chat journey: Compacted when you asked.
+  ///
+  /// In en, this message translates to:
+  /// **'Compacted when you asked.'**
+  String get chatUiCompactedWhenAsked;
+
+  /// Chat journey: It was about {tokens} tokens long.
+  ///
+  /// In en, this message translates to:
+  /// **'It was about {tokens} tokens long.'**
+  String chatUiCompactedFrom(String tokens);
+
+  /// Chat journey: Open a web page
+  ///
+  /// In en, this message translates to:
+  /// **'Open a web page'**
+  String get chatRequestTitleFetch;
+
+  /// Chat journey: Search the web
+  ///
+  /// In en, this message translates to:
+  /// **'Search the web'**
+  String get chatRequestTitleWebSearch;
+
+  /// Chat journey: Search the project
+  ///
+  /// In en, this message translates to:
+  /// **'Search the project'**
+  String get chatRequestTitleSearch;
+
+  /// Chat journey: Start a helper agent
+  ///
+  /// In en, this message translates to:
+  /// **'Start a helper agent'**
+  String get chatRequestTitleTask;
+
+  /// Chat journey: Use a skill
+  ///
+  /// In en, this message translates to:
+  /// **'Use a skill'**
+  String get chatRequestTitleSkill;
+
+  /// Chat journey: Switch the agent's mode
+  ///
+  /// In en, this message translates to:
+  /// **'Switch the agent\'s mode'**
+  String get chatRequestTitleMode;
+
+  /// Chat journey: Runs in
+  ///
+  /// In en, this message translates to:
+  /// **'Runs in'**
+  String get chatRequestDetailRunsIn;
+
+  /// Chat journey: What it asks for
+  ///
+  /// In en, this message translates to:
+  /// **'What it asks for'**
+  String get chatRequestDetailAsks;
+
+  /// Chat journey: Part of the file
+  ///
+  /// In en, this message translates to:
+  /// **'Part of the file'**
+  String get chatRequestDetailRange;
+
+  /// Chat journey: Helper type
+  ///
+  /// In en, this message translates to:
+  /// **'Helper type'**
+  String get chatRequestDetailHelper;
+
+  /// Chat journey: from line {line}
+  ///
+  /// In en, this message translates to:
+  /// **'from line {line}'**
+  String chatRequestReadFrom(String line);
+
+  /// Chat journey: {count, plural, one{1 line} other{{count} lines}}
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 line} other{{count} lines}}'**
+  String chatRequestReadLines(num count);
+
+  /// Chat journey: What was sent
+  ///
+  /// In en, this message translates to:
+  /// **'What was sent'**
+  String get toolCardWhatWasSent;
+
+  /// Chat journey: What came back
+  ///
+  /// In en, this message translates to:
+  /// **'What came back'**
+  String get toolCardWhatCameBack;
+
+  /// Request card: Show more
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get kitRequestShowMore;
+
+  /// Request card: Show less
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get kitRequestShowLess;
 }
 
 class _AppLocalizationsDelegate

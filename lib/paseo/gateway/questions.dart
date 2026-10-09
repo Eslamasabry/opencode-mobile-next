@@ -93,6 +93,7 @@ extension _PaseoQuestions on PaseoGateway {
       prompts.add({
         'header': 'Plan',
         'question': text,
+        'markdown': true,
         'multiple': false,
         'custom': false,
         'optional': false,

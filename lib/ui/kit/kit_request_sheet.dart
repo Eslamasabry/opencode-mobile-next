@@ -14,7 +14,9 @@ import 'kit_buttons.dart';
 import 'kit_choice_list.dart';
 import 'kit_code_block.dart';
 import 'kit_diff_view.dart';
+import 'chat/kit_markdown.dart';
 import 'kit_field.dart';
+import 'kit_key_value.dart';
 import 'kit_layout.dart';
 import 'kit_request_card.dart';
 import 'kit_row_parts.dart';
@@ -147,11 +149,28 @@ class KitRequestMessage {
 ///
 /// A card that is no longer `waiting` (answered here and still sending)
 /// opens without answers: there is nothing left to press.
+/// How a request sheet draws its [showKitRequestSheet] `fullText`.
+enum KitRequestText {
+  /// A shell command: the mono block with its `$` prompt.
+  command,
+
+  /// A path, address or pattern list: the mono block, copyable, no prompt.
+  block,
+
+  /// Plain words (a mode change, a question).
+  words,
+
+  /// Markdown (a plan).
+  markdown,
+}
+
 Future<KitRequestSheetOutcome> showKitRequestSheet(
   BuildContext context, {
   required KitRequestCard card,
   required RequestRoutes routes,
   String? fullText,
+  KitRequestText? fullTextStyle,
+  List<KitKeyValueRow> facts = const [],
   KitDiffView? change,
   KitRequestAlwaysAllow? alwaysAllow,
   KitRequestMessage? message,
@@ -205,6 +224,8 @@ Future<KitRequestSheetOutcome> showKitRequestSheet(
         session: session,
         card: card,
         fullText: fullText,
+        fullTextStyle: fullTextStyle,
+        facts: facts,
         change: change,
         alwaysAllow: alwaysAllow,
         message: message,
@@ -443,6 +464,8 @@ class _KitRequestSheetBody extends StatefulWidget {
     required this.session,
     required this.card,
     required this.fullText,
+    required this.fullTextStyle,
+    required this.facts,
     required this.change,
     required this.alwaysAllow,
     required this.message,
@@ -453,6 +476,8 @@ class _KitRequestSheetBody extends StatefulWidget {
   final _KitRequestSession session;
   final KitRequestCard card;
   final String? fullText;
+  final KitRequestText? fullTextStyle;
+  final List<KitKeyValueRow> facts;
   final KitDiffView? change;
   final KitRequestAlwaysAllow? alwaysAllow;
   final KitRequestMessage? message;
@@ -596,13 +621,20 @@ class _KitRequestSheetBodyState extends State<_KitRequestSheetBody> {
         ),
       ...switch (kind) {
         KitRequestKind.permission => [
-          if (hasFullText) _command(fullText, path: change != null),
+          if (hasFullText)
+            _text(fullText, widget.fullTextStyle, change != null),
+          if (widget.facts.isNotEmpty) KitKeyValue(rows: widget.facts),
           ?change,
           if (alwaysAllow != null && waiting) _always(alwaysAllow),
           if (message != null && waiting) _note(message),
         ],
         KitRequestKind.question || KitRequestKind.choice => [
-          if (hasFullText) _words(fullText),
+          if (hasFullText)
+            _text(
+              fullText,
+              widget.fullTextStyle ?? KitRequestText.words,
+              false,
+            ),
           ?_options(context),
         ],
         KitRequestKind.form => [
@@ -643,6 +675,14 @@ class _KitRequestSheetBodyState extends State<_KitRequestSheetBody> {
   /// the tail of a command the person is asked to allow is never hidden
   /// behind a sideways scroll and its edge fade (KitRequestSheet.md: the
   /// full text wraps and never truncates).
+  Widget _text(String text, KitRequestText? style, bool hasChange) =>
+      switch (style ??
+      (hasChange ? KitRequestText.block : KitRequestText.command)) {
+        KitRequestText.words => _words(text),
+        KitRequestText.markdown => KitMarkdown(text, selectable: true),
+        final style => _command(text, path: style == KitRequestText.block),
+      };
+
   Widget _command(String text, {required bool path}) => KitCodeBlock(
     text: text,
     kind: path ? KitCodeKind.output : KitCodeKind.command,

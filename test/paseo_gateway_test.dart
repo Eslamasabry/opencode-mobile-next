@@ -740,7 +740,11 @@ void main() {
       expect(asked.properties['permission'], 'edit');
       expect(asked.properties['patterns'], ['$_dir/hello.txt']);
       expect(asked.properties['always'], ['$_dir/hello.txt']);
-      expect((asked.properties['metadata'] as Map)['diff'], 'hi');
+      // A new file is a patch of added lines, so the diff view can draw it.
+      expect(
+        (asked.properties['metadata'] as Map)['diff'],
+        '--- /dev/null\n+++ b/$_dir/hello.txt\n@@ -0,0 +1,1 @@\n+hi',
+      );
       expect((await gateway.pendingPermissions()).single.id, 'perm-1');
     });
 
@@ -1236,7 +1240,13 @@ void main() {
       'description': 'Fetch a page',
     });
     expect(other.permission, 'webfetch');
-    expect(other.metadata, {'url': 'https://example.com'});
+    expect(other.metadata, {
+      'url': 'https://example.com',
+      // What the card draws as labelled rows.
+      'facts': [
+        {'key': 'url', 'value': 'https://example.com'},
+      ],
+    });
     expect(other.message, 'Fetch a page');
   });
 }

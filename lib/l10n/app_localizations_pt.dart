@@ -28436,4 +28436,83 @@ class AppLocalizationsPt extends AppLocalizations {
   String toolCardAsked(String prompt) {
     return 'Asked: $prompt';
   }
+
+  @override
+  String get chatUiAgentNote => 'Note';
+
+  @override
+  String get chatUiAgentWarning => 'Warning';
+
+  @override
+  String get chatUiAgentProblem => 'Problem';
+
+  @override
+  String get chatUiCompactedAutomatically =>
+      'Compacted automatically to make room.';
+
+  @override
+  String get chatUiCompactedWhenAsked => 'Compacted when you asked.';
+
+  @override
+  String chatUiCompactedFrom(String tokens) {
+    return 'It was about $tokens tokens long.';
+  }
+
+  @override
+  String get chatRequestTitleFetch => 'Open a web page';
+
+  @override
+  String get chatRequestTitleWebSearch => 'Search the web';
+
+  @override
+  String get chatRequestTitleSearch => 'Search the project';
+
+  @override
+  String get chatRequestTitleTask => 'Start a helper agent';
+
+  @override
+  String get chatRequestTitleSkill => 'Use a skill';
+
+  @override
+  String get chatRequestTitleMode => 'Switch the agent\'s mode';
+
+  @override
+  String get chatRequestDetailRunsIn => 'Runs in';
+
+  @override
+  String get chatRequestDetailAsks => 'What it asks for';
+
+  @override
+  String get chatRequestDetailRange => 'Part of the file';
+
+  @override
+  String get chatRequestDetailHelper => 'Helper type';
+
+  @override
+  String chatRequestReadFrom(String line) {
+    return 'from line $line';
+  }
+
+  @override
+  String chatRequestReadLines(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines',
+      one: '1 line',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get toolCardWhatWasSent => 'What was sent';
+
+  @override
+  String get toolCardWhatCameBack => 'What came back';
+
+  @override
+  String get kitRequestShowMore => 'Show more';
+
+  @override
+  String get kitRequestShowLess => 'Show less';
 }

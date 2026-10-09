@@ -28470,4 +28470,83 @@ class AppLocalizationsAr extends AppLocalizations {
   String toolCardAsked(String prompt) {
     return 'السؤال: $prompt';
   }
+
+  @override
+  String get chatUiAgentNote => 'ملاحظة';
+
+  @override
+  String get chatUiAgentWarning => 'تحذير';
+
+  @override
+  String get chatUiAgentProblem => 'مشكلة';
+
+  @override
+  String get chatUiCompactedAutomatically =>
+      'ضُغطت المحادثة تلقائيًا لتوفير المساحة.';
+
+  @override
+  String get chatUiCompactedWhenAsked => 'ضُغطت المحادثة عندما طلبت ذلك.';
+
+  @override
+  String chatUiCompactedFrom(String tokens) {
+    return 'كان طولها نحو $tokens رمز.';
+  }
+
+  @override
+  String get chatRequestTitleFetch => 'فتح صفحة ويب';
+
+  @override
+  String get chatRequestTitleWebSearch => 'البحث في الويب';
+
+  @override
+  String get chatRequestTitleSearch => 'البحث في المشروع';
+
+  @override
+  String get chatRequestTitleTask => 'تشغيل وكيل مساعد';
+
+  @override
+  String get chatRequestTitleSkill => 'استخدام مهارة';
+
+  @override
+  String get chatRequestTitleMode => 'تغيير وضع الوكيل';
+
+  @override
+  String get chatRequestDetailRunsIn => 'يعمل في';
+
+  @override
+  String get chatRequestDetailAsks => 'ما يطلبه';
+
+  @override
+  String get chatRequestDetailRange => 'جزء من الملف';
+
+  @override
+  String get chatRequestDetailHelper => 'نوع المساعد';
+
+  @override
+  String chatRequestReadFrom(String line) {
+    return 'من السطر $line';
+  }
+
+  @override
+  String chatRequestReadLines(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count أسطر',
+      one: 'سطر واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get toolCardWhatWasSent => 'ما أُرسل';
+
+  @override
+  String get toolCardWhatCameBack => 'ما عاد';
+
+  @override
+  String get kitRequestShowMore => 'عرض المزيد';
+
+  @override
+  String get kitRequestShowLess => 'عرض أقل';
 }

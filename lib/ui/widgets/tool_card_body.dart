@@ -172,20 +172,28 @@ class _ToolBody extends StatelessWidget {
       _ToolKind.lsp => [_lspBody()],
       _ToolKind.skill => [_skillBody()],
       _ToolKind.connectorSearch => _connectorSearchBody(context),
-      _ToolKind.generic => _genericBody(),
+      _ToolKind.generic => _genericBody(context),
     };
   }
 
   /// An error in the tool's own words, as capped output (LOOK-5: no danger
   /// colour; the row already says Failed).
-  Widget _error(BuildContext context, String message) => _Output(
-    key: Key(
-      embedded ? 'embedded-tool-error-output' : 'standalone-tool-error-output',
-    ),
-    text: message.replaceFirst(RegExp(r'^Error:\s*'), ''),
-    name: 'tool-error.txt',
-    caption: _chatL10n(context).chatUiToolFailed,
-  );
+  Widget _error(BuildContext context, String message) {
+    final words = message.replaceFirst(RegExp(r'^Error:\s*'), '').trim();
+    final failed = _chatL10n(context).chatUiToolFailed;
+    // With no words of its own the failure is said once, not as a caption
+    // over a second sentence that says the same.
+    return _Output(
+      key: Key(
+        embedded
+            ? 'embedded-tool-error-output'
+            : 'standalone-tool-error-output',
+      ),
+      text: words.isEmpty ? failed : words,
+      name: 'tool-error.txt',
+      caption: words.isEmpty ? null : failed,
+    );
+  }
 
   Widget _readBody(BuildContext context) {
     final l10n = _chatL10n(context);
@@ -693,7 +701,7 @@ class _ToolBody extends StatelessWidget {
       value: state.outputValue,
       text: state.output,
     );
-    if (result == null) return _genericBody();
+    if (result == null) return _genericBody(context);
     String runs(String runtime) => switch (runtime) {
       'hosted' => l10n.connectorCardRunsHosted,
       'npx' => l10n.connectorCardRunsNode,
@@ -744,21 +752,36 @@ class _ToolBody extends StatelessWidget {
     ];
   }
 
-  List<Widget> _genericBody() {
+  List<Widget> _genericBody(BuildContext context) {
     final hasInput =
         state.input.isNotEmpty || state.inputJson?.isNotEmpty == true;
     final value = state.outputValue;
+    // Two technical folds would read the same: name them.
+    final both =
+        hasInput &&
+        _Readable.hasNested(state.input) &&
+        _Readable.hasNested(value);
+    final l10n = _chatL10n(context);
     return [
-      if (hasInput) _genericInput(),
+      if (hasInput)
+        _genericInput(foldLabel: both ? l10n.toolCardWhatWasSent : null),
       if (value is Map || value is List)
-        _Readable(value: value, name: 'tool-output.json')
+        _Readable(
+          value: value,
+          name: 'tool-output.json',
+          foldLabel: both ? l10n.toolCardWhatCameBack : null,
+        )
       else if (state.output?.trim().isNotEmpty == true)
         _Output(text: state.output!, name: 'tool-output.txt'),
     ];
   }
 
-  Widget _genericInput() => state.input.isNotEmpty
-      ? _Readable(value: state.input, name: 'tool-input.json')
+  Widget _genericInput({String? foldLabel}) => state.input.isNotEmpty
+      ? _Readable(
+          value: state.input,
+          name: 'tool-input.json',
+          foldLabel: foldLabel,
+        )
       : _Output(text: state.inputJson ?? '', name: 'tool-input.json');
 
   Widget _plainOutput(BuildContext context, String name, {String? caption}) =>

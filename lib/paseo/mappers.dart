@@ -309,11 +309,11 @@ Map<String, dynamic>? _toolMetadata(Map<String, dynamic> detail) {
 /// `webResults` for web search, `result` for fetch, `text` for skills and
 /// plans, `log` for sub-agents and worktree setups.
 Object _toolOutput(Map<String, dynamic> item, Map<String, dynamic> detail) {
+  // A failed step says Failed once, in the card's own words; the provider's
+  // error text is raw and is not the copy.
   final error = item['error'];
-  if (error is String && error.isNotEmpty) return 'The tool could not finish.';
-  if (error is Map && error['message'] is String) {
-    return 'The tool could not finish.';
-  }
+  if (error is String && error.isNotEmpty) return '';
+  if (error is Map && error['message'] is String) return '';
   final output = detail['output'];
   if (output is String) return paseoText(output);
   if (output is Map) {
@@ -479,24 +479,43 @@ MessageWithParts? paseoItemMessage(
         ),
       );
     case 'todo':
+      // The agent's task list is the same Tasks step OpenCode's todo tool
+      // draws: a count, and one row per task with its state.
       final todos = item['items'] is List ? item['items'] as List : const [];
       parts.add(
         Part(
           id: '$id:0',
           messageID: id,
-          type: 'text',
-          text: [
-            for (final raw in todos.take(200))
-              if (raw is Map)
-                '${raw['completed'] == true || raw['status'] == 'completed' ? '[x]' : '[ ]'} '
-                    '${paseoText(raw['text'], max: 2000)}',
-          ].join('\n'),
+          callID: id,
+          type: 'tool',
+          toolName: 'todowrite',
+          toolState: ToolState.fromJson({
+            'status': 'completed',
+            'input': {
+              'todos': [
+                for (final raw in todos.take(200))
+                  if (raw is Map && paseoText(raw['text']).trim().isNotEmpty)
+                    {
+                      'content': paseoText(raw['text'], max: 2000),
+                      'status': switch (raw['status']) {
+                        'pending' ||
+                        'in_progress' ||
+                        'completed' => raw['status'],
+                        _ => raw['completed'] == true ? 'completed' : 'pending',
+                      },
+                    },
+              ],
+            },
+            'output': '',
+          }),
         ),
       );
     case 'compaction':
       // The same notice OpenCode 2's compaction draws: a line in the
-      // transcript, not an assistant reply.
+      // transcript, not an assistant reply. What started it and how long the
+      // conversation was travel with the part; the notice words them.
       final done = item['status'] == 'completed';
+      final pre = item['preTokens'];
       return MessageWithParts(
         info: MessageInfo(
           id: id,
@@ -511,18 +530,58 @@ MessageWithParts? paseoItemMessage(
             type: 'v2:compaction',
             toolName: done ? 'completed' : 'running',
             text: done ? 'Conversation compacted.' : 'Compacting conversation…',
+            toolState: ToolState(
+              status: 'completed',
+              metadata: {
+                if (item['trigger'] == 'auto' || item['trigger'] == 'manual')
+                  'trigger': item['trigger'],
+                if (done && pre is num && pre > 0) 'preTokens': pre.round(),
+              },
+            ),
+          ),
+        ],
+      );
+    case 'notification':
+      // A line from the agent or its host: a note, a warning or a problem.
+      final level = switch (item['level']) {
+        'warning' => 'warning',
+        'error' => 'error',
+        _ => 'info',
+      };
+      final message = paseoText(item['message'], max: 4000);
+      if (message.trim().isEmpty) return null;
+      return MessageWithParts(
+        info: MessageInfo(
+          id: id,
+          sessionID: agentID,
+          role: 'user',
+          time: MsgTime(created: created, completed: completed ?? created),
+        ),
+        parts: [
+          Part(
+            id: '$id:0',
+            messageID: id,
+            type: 'v2:notice',
+            toolName: 'agent-$level',
+            text: message,
           ),
         ],
       );
     case 'error':
-      parts.add(
-        Part(
-          id: '$id:0',
-          messageID: id,
-          type: 'text',
-          text:
-              'The agent could not finish this reply. Check it on your computer.',
+      // The agent's own words go to the error row's details; the row says
+      // what happened in the app's words.
+      return MessageWithParts(
+        info: MessageInfo(
+          id: id,
+          sessionID: agentID,
+          role: 'assistant',
+          providerID: provider,
+          time: MsgTime(created: created, completed: completed ?? created),
+          errorText: paseoText(item['message'], max: 4000).trim().isEmpty
+              ? 'The agent could not finish this reply.'
+              : paseoText(item['message'], max: 4000),
         ),
+        parts: const [],
       );
     default:
       return null;
@@ -594,6 +653,8 @@ Map<String, dynamic> paseoPartJson(Part part) => {
   'text': part.text,
   if (part.callID != null) 'callID': part.callID,
   if (part.toolName != null) 'tool': part.toolName,
+  if (part.type == 'v2:compaction' && part.toolState.metadata != null)
+    'state': {'status': 'completed', 'metadata': part.toolState.metadata},
   if (part.type == 'tool')
     'state': {
       'status': part.toolState.status,
@@ -622,35 +683,93 @@ PermissionRequest paseoPermission(
       : const <String, dynamic>{};
   String permission;
   var patterns = <String>[];
+  // What "Always allow" would cover; defaults to the patterns.
+  List<String>? covers;
   final metadata = <String, dynamic>{};
+  // Labelled rows for what the agent asks, for the card to draw as facts.
+  final facts = <Map<String, String>>[];
+  String text(String key, {int max = 4096}) => paseoText(detail[key], max: max);
   switch (detail['type']) {
     case 'write' || 'edit':
       permission = 'edit';
-      final path = paseoText(detail['filePath'], max: 4096);
+      final path = text('filePath');
       if (path.isNotEmpty) {
         patterns = [path];
         metadata['filePath'] = path;
       }
-      if (detail['type'] == 'write') {
-        metadata['diff'] = paseoText(detail['content'], max: 1024 * 1024);
-      } else {
-        metadata['diff'] =
-            '- ${paseoText(detail['oldString'], max: 512 * 1024)}\n'
-            '+ ${paseoText(detail['newString'], max: 512 * 1024)}';
-      }
+      final unified = text('unifiedDiff', max: 1024 * 1024);
+      metadata['diff'] = detail['type'] == 'write'
+          ? _unifiedPatch(path, null, text('content', max: 1024 * 1024))
+          : unified.isNotEmpty
+          ? unified
+          : _unifiedPatch(
+              path,
+              text('oldString', max: 512 * 1024),
+              text('newString', max: 512 * 1024),
+            );
     case 'shell':
       permission = 'bash';
-      final command = paseoText(detail['command'], max: 65536);
+      final command = text('command', max: 65536);
       patterns = [command];
       metadata['command'] = command;
+      if (text('cwd').isNotEmpty) metadata['cwd'] = text('cwd');
+    case 'read':
+      permission = 'read';
+      final path = text('filePath');
+      if (path.isNotEmpty) {
+        patterns = [path];
+        metadata['filePath'] = path;
+      }
+      if (detail['offset'] is num) metadata['offset'] = detail['offset'];
+      if (detail['limit'] is num) metadata['limit'] = detail['limit'];
+    case 'fetch':
+      permission = 'webfetch';
+      final url = text('url');
+      if (url.isNotEmpty) patterns = [url];
+      metadata['url'] = url;
+      if (text('prompt').isNotEmpty) metadata['prompt'] = text('prompt');
+      covers = [permission];
+    case 'search':
+      permission = switch (detail['toolName']) {
+        'web_search' => 'websearch',
+        'glob' => 'glob',
+        _ => 'grep',
+      };
+      final query = text('query');
+      if (query.isNotEmpty) patterns = [query];
+      metadata['query'] = query;
+      facts.add({'key': 'query', 'value': query});
+      covers = [permission];
+    case 'sub_agent':
+      permission = 'task';
+      final description = text('description');
+      if (description.isNotEmpty) patterns = [description];
+      metadata['description'] = description;
+      if (description.isNotEmpty) {
+        facts.add({'key': 'task', 'value': description});
+      }
+      if (text('subAgentType').isNotEmpty) {
+        metadata['subagent_type'] = text('subAgentType', max: 256);
+      }
+      covers = [permission];
+    case 'plain_text' when name.toLowerCase() == 'skill':
+      permission = 'skill';
+      final label = text('label', max: 512);
+      if (label.isNotEmpty) patterns = [label];
+      metadata['label'] = label;
+      if (label.isNotEmpty) facts.add({'key': 'skill', 'value': label});
+      covers = [permission];
     default:
       permission = switch (request['kind']) {
         'plan' => 'plan',
         'question' => 'question',
         'mode' => 'mode',
-        _ => name.isEmpty ? 'tool' : name.toLowerCase(),
+        _ => name.isEmpty ? 'tool' : _toolId(name),
       };
-      for (final entry in input.entries.take(32)) {
+      final shown = detail['type'] == 'unknown' && detail['input'] is Map
+          ? Map<String, dynamic>.from(detail['input'] as Map)
+          : input;
+      for (final entry in shown.entries.take(32)) {
         if (entry.value is String ||
             entry.value is num ||
             entry.value is bool) {
@@ -659,29 +778,126 @@ PermissionRequest paseoPermission(
               : entry.value;
         }
       }
+      // What the agent asked to do, one plain line per value, so the
+      // request can be read in full rather than as "all matching requests".
+      patterns = [
+        for (final entry in metadata.entries.take(6))
+          '${_askLabel(entry.key)}: ${entry.value}',
+      ];
+      for (final entry in metadata.entries.take(6)) {
+        facts.add({'key': entry.key, 'value': '${entry.value}'});
+      }
+      covers = [permission];
   }
+  covers ??= List.of(patterns);
+  // What the agent passed besides what its detail already says (the folder
+  // a search runs in, the note on a command): one plain line each.
+  if (detail['type'] != null && detail['type'] != 'unknown') {
+    final said = {
+      ...patterns,
+      for (final value in metadata.values)
+        if (value is String) value,
+    };
+    for (final entry in input.entries.take(16)) {
+      final value = entry.value;
+      if (patterns.length >= 6) break;
+      if (value is! String ||
+          value.trim().isEmpty ||
+          value.length > 300 ||
+          value.contains('\n') ||
+          _inputShownElsewhere.contains(entry.key) ||
+          said.contains(value)) {
+        continue;
+      }
+      patterns.add('${_askLabel(entry.key)}: $value');
+      facts.add({'key': entry.key, 'value': value});
+    }
+  }
+  if (facts.isNotEmpty) metadata['facts'] = facts;
   final toolUse = request['metadata'] is Map
       ? (request['metadata'] as Map)['toolUseId']
       : null;
   final title = request['title'];
   final description = request['description'];
   final suggestions = request['suggestions'];
+  final words = [
+    if (title is String && title.trim().isNotEmpty) title.trim(),
+    if (description is String &&
+        description.trim().isNotEmpty &&
+        description.trim() != (title is String ? title.trim() : null))
+      description.trim(),
+  ];
+  final grantable = suggestions is List && suggestions.isNotEmpty;
   return PermissionRequest(
     id: id,
     sessionID: agentID,
     permission: permission,
     patterns: patterns,
     metadata: metadata,
-    always: suggestions is List && suggestions.isNotEmpty
-        ? (patterns.isEmpty ? [permission] : patterns)
-        : const [],
-    message: description is String && description.isNotEmpty
-        ? paseoText(description, max: 4096)
-        : title is String && title.isNotEmpty
-        ? paseoText(title, max: 4096)
-        : null,
+    always: grantable ? (covers.isEmpty ? [permission] : covers) : const [],
+    // Paseo keeps a standing rule only when the provider suggested one.
+    canAlwaysAllow: grantable,
+    message: words.isEmpty ? null : paseoText(words.join('\n'), max: 4096),
     tool: toolUse is String && toolUse.isNotEmpty && toolUse.length <= 256
         ? PermissionTool(messageID: toolUse, callID: toolUse)
         : null,
   );
+}
+
+/// A tool's name as the lowercase id the app words ("NotebookEdit" as
+/// "notebook_edit"; a connector's "mcp__drive__search" is kept).
+String _toolId(String name) {
+  final lower = name.toLowerCase();
+  // Names the app already words as one id keep it.
+  if (const {
+    'webfetch',
+    'websearch',
+    'todowrite',
+    'todoread',
+    'multiedit',
+  }.contains(lower)) {
+    return lower;
+  }
+  return name
+      .replaceAllMapped(RegExp('([a-z0-9])([A-Z])'), (m) => '${m[1]}_${m[2]}')
+      .toLowerCase();
+}
+
+/// Input values the card shows another way (the change as a diff, the plan).
+const _inputShownElsewhere = {
+  'old_string',
+  'new_string',
+  'content',
+  'command',
+  'new_source',
+  'plan',
+};
+
+/// "maxResults" and "max_results" as "Max results".
+String _askLabel(String key) {
+  final spaced = key
+      .replaceAllMapped(RegExp('([a-z0-9])([A-Z])'), (m) => '${m[1]} ${m[2]}')
+      .replaceAll(RegExp('[_-]+'), ' ')
+      .trim()
+      .toLowerCase();
+  return spaced.isEmpty
+      ? key
+      : '${spaced[0].toUpperCase()}${spaced.substring(1)}';
+}
+
+/// A unified patch for a change given as before and after text (a missing
+/// [before] is a new file), so the change reads as the diff view draws any
+/// other change.
+String _unifiedPatch(String path, String? before, String after) {
+  List<String> lines(String text) => text.isEmpty ? const [] : text.split('\n');
+  final removed = before == null ? const <String>[] : lines(before);
+  final added = lines(after);
+  return [
+    '--- ${before == null ? '/dev/null' : 'a/$path'}',
+    '+++ b/$path',
+    '@@ -${removed.isEmpty ? 0 : 1},${removed.length} '
+        '+${added.isEmpty ? 0 : 1},${added.length} @@',
+    for (final line in removed) '-$line',
+    for (final line in added) '+$line',
+  ].join('\n');
 }

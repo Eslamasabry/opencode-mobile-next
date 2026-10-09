@@ -674,7 +674,10 @@ void main() {
       final card = (await gateway.pendingPermissions()).single;
       expect(card.permission, 'edit');
       expect(card.metadata['filePath'], '$_cwd/result.txt');
-      expect(card.metadata['diff'], 'hello');
+      expect(
+        card.metadata['diff'],
+        '--- /dev/null\n+++ b/$_cwd/result.txt\n@@ -0,0 +1,1 @@\n+hello',
+      );
       expect(card.always, isEmpty);
       expect(
         jsonEncode(events.map((event) => event.properties).toList()),

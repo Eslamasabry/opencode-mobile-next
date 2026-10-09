@@ -1,0 +1,1812 @@
+{
+  "source": "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js",
+  "schema": {
+    "request": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "provider",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "kind",
+        "kind": "enum"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "input",
+        "kind": "any"
+      },
+      {
+        "path": "suggestions[]",
+        "kind": "any"
+      },
+      {
+        "path": "actions[].id",
+        "kind": "string"
+      },
+      {
+        "path": "actions[].label",
+        "kind": "string"
+      },
+      {
+        "path": "actions[].behavior",
+        "kind": "enum"
+      },
+      {
+        "path": "actions[].variant",
+        "kind": "enum"
+      },
+      {
+        "path": "actions[].intent",
+        "kind": "enum"
+      },
+      {
+        "path": "metadata",
+        "kind": "any"
+      }
+    ],
+    "detail.worktree_setup": [
+      {
+        "path": "worktreePath",
+        "kind": "string"
+      },
+      {
+        "path": "branchName",
+        "kind": "string"
+      },
+      {
+        "path": "log",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].index",
+        "kind": "number"
+      },
+      {
+        "path": "commands[].command",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].cwd",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].log",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].status",
+        "kind": "enum"
+      },
+      {
+        "path": "commands[].exitCode",
+        "kind": "number"
+      },
+      {
+        "path": "commands[].durationMs",
+        "kind": "number"
+      },
+      {
+        "path": "truncated",
+        "kind": "boolean"
+      }
+    ],
+    "detail.shell": [
+      {
+        "path": "command",
+        "kind": "string"
+      },
+      {
+        "path": "cwd",
+        "kind": "string"
+      },
+      {
+        "path": "output",
+        "kind": "string"
+      },
+      {
+        "path": "exitCode",
+        "kind": "number"
+      }
+    ],
+    "detail.read": [
+      {
+        "path": "filePath",
+        "kind": "string"
+      },
+      {
+        "path": "content",
+        "kind": "string"
+      },
+      {
+        "path": "offset",
+        "kind": "number"
+      },
+      {
+        "path": "limit",
+        "kind": "number"
+      }
+    ],
+    "detail.edit": [
+      {
+        "path": "filePath",
+        "kind": "string"
+      },
+      {
+        "path": "oldString",
+        "kind": "string"
+      },
+      {
+        "path": "newString",
+        "kind": "string"
+      },
+      {
+        "path": "unifiedDiff",
+        "kind": "string"
+      }
+    ],
+    "detail.write": [
+      {
+        "path": "filePath",
+        "kind": "string"
+      },
+      {
+        "path": "content",
+        "kind": "string"
+      }
+    ],
+    "detail.search": [
+      {
+        "path": "query",
+        "kind": "string"
+      },
+      {
+        "path": "toolName",
+        "kind": "enum"
+      },
+      {
+        "path": "content",
+        "kind": "string"
+      },
+      {
+        "path": "filePaths[]",
+        "kind": "string"
+      },
+      {
+        "path": "webResults[].title",
+        "kind": "string"
+      },
+      {
+        "path": "webResults[].url",
+        "kind": "string"
+      },
+      {
+        "path": "annotations[]",
+        "kind": "string"
+      },
+      {
+        "path": "numFiles",
+        "kind": "number"
+      },
+      {
+        "path": "numMatches",
+        "kind": "number"
+      },
+      {
+        "path": "durationMs",
+        "kind": "number"
+      },
+      {
+        "path": "durationSeconds",
+        "kind": "number"
+      },
+      {
+        "path": "truncated",
+        "kind": "boolean"
+      },
+      {
+        "path": "mode",
+        "kind": "enum"
+      }
+    ],
+    "detail.fetch": [
+      {
+        "path": "url",
+        "kind": "string"
+      },
+      {
+        "path": "prompt",
+        "kind": "string"
+      },
+      {
+        "path": "result",
+        "kind": "string"
+      },
+      {
+        "path": "code",
+        "kind": "number"
+      },
+      {
+        "path": "codeText",
+        "kind": "string"
+      },
+      {
+        "path": "bytes",
+        "kind": "number"
+      },
+      {
+        "path": "durationMs",
+        "kind": "number"
+      }
+    ],
+    "detail.sub_agent": [
+      {
+        "path": "subAgentType",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "childSessionId",
+        "kind": "string"
+      },
+      {
+        "path": "log",
+        "kind": "string"
+      },
+      {
+        "path": "actions[].index",
+        "kind": "number"
+      },
+      {
+        "path": "actions[].toolName",
+        "kind": "string"
+      },
+      {
+        "path": "actions[].summary",
+        "kind": "string"
+      }
+    ],
+    "detail.plain_text": [
+      {
+        "path": "label",
+        "kind": "string"
+      },
+      {
+        "path": "text",
+        "kind": "string"
+      },
+      {
+        "path": "icon",
+        "kind": "enum"
+      }
+    ],
+    "detail.plan": [
+      {
+        "path": "text",
+        "kind": "string"
+      }
+    ],
+    "detail.unknown": [
+      {
+        "path": "input",
+        "kind": "any"
+      },
+      {
+        "path": "output",
+        "kind": "any"
+      }
+    ]
+  },
+  "excluded": {
+    "detail.shell.output": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.shell.exitCode": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.read.content": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.search.content": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.search.filePaths[]": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.search.webResults[].title": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.search.webResults[].url": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.search.annotations[]": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.search.numFiles": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.search.numMatches": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.search.durationMs": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.search.durationSeconds": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.search.truncated": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.fetch.result": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.fetch.code": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.fetch.codeText": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.fetch.bytes": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.fetch.durationMs": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.sub_agent.childSessionId": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.sub_agent.log": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.sub_agent.actions[].index": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.sub_agent.actions[].toolName": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.sub_agent.actions[].summary": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.unknown.output": "ignored: this is what a tool answered; a request is sent before the tool runs, so it never has one",
+    "detail.worktree_setup.worktreePath": "ignored: Paseo prepares a new work copy on its own and never asks the person first",
+    "detail.worktree_setup.branchName": "ignored: Paseo prepares a new work copy on its own and never asks the person first",
+    "detail.worktree_setup.log": "ignored: Paseo prepares a new work copy on its own and never asks the person first",
+    "detail.worktree_setup.truncated": "ignored: Paseo prepares a new work copy on its own and never asks the person first",
+    "detail.worktree_setup.commands[].index": "ignored: Paseo prepares a new work copy on its own and never asks the person first",
+    "detail.worktree_setup.commands[].command": "ignored: Paseo prepares a new work copy on its own and never asks the person first",
+    "detail.worktree_setup.commands[].cwd": "ignored: Paseo prepares a new work copy on its own and never asks the person first",
+    "detail.worktree_setup.commands[].log": "ignored: Paseo prepares a new work copy on its own and never asks the person first",
+    "detail.worktree_setup.commands[].status": "ignored: Paseo prepares a new work copy on its own and never asks the person first",
+    "detail.worktree_setup.commands[].exitCode": "ignored: Paseo prepares a new work copy on its own and never asks the person first",
+    "detail.worktree_setup.commands[].durationMs": "ignored: Paseo prepares a new work copy on its own and never asks the person first"
+  },
+  "cases": [
+    {
+      "id": "bash",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_8f2a41",
+        "provider": "claude",
+        "name": "Bash",
+        "kind": "tool",
+        "title": "Run flutter test on the upload screen",
+        "description": "Runs the widget tests for the upload screen",
+        "input": {
+          "command": "flutter test test/upload_screen_test.dart",
+          "description": "Run the upload tests"
+        },
+        "suggestions": [
+          {
+            "type": "addRules",
+            "rules": [
+              {
+                "toolName": "Bash",
+                "ruleContent": "flutter test:*"
+              }
+            ],
+            "behavior": "allow",
+            "destination": "localSettings"
+          }
+        ],
+        "metadata": {
+          "toolUseId": "toolu_01UploadTests"
+        },
+        "detail": {
+          "type": "shell",
+          "command": "flutter test test/upload_screen_test.dart",
+          "cwd": "/home/dev/app"
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_8f2a41"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Run a shell command"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Run flutter test on the upload screen"
+          ],
+          "primary": true
+        },
+        {
+          "key": "request.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Runs the widget tests for the upload screen"
+          ],
+          "primary": true
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "flutter test test/upload_screen_test.dart",
+            "Run the upload tests"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.suggestions[]",
+          "path": "suggestions[]",
+          "kind": "any",
+          "probes": [
+            "Always allow"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [
+            "toolu_01UploadTests"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.shell.command",
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "flutter test test/upload_screen_test.dart"
+          ],
+          "primary": true
+        },
+        {
+          "key": "detail.shell.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "/home/dev/app"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "edit_strings",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_c19d02",
+        "provider": "claude",
+        "name": "Edit",
+        "kind": "tool",
+        "input": {
+          "file_path": "/home/dev/app/lib/upload/retry_button.dart",
+          "old_string": "onPressed: null",
+          "new_string": "onPressed: queue.requeue"
+        },
+        "suggestions": [
+          {
+            "type": "setMode",
+            "mode": "acceptEdits",
+            "destination": "session"
+          }
+        ],
+        "metadata": {
+          "toolUseId": "toolu_01EditRetry"
+        },
+        "detail": {
+          "type": "edit",
+          "filePath": "/home/dev/app/lib/upload/retry_button.dart",
+          "oldString": "onPressed: null,",
+          "newString": "onPressed: queue.requeue,"
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_c19d02"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Edit a file"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "/home/dev/app/lib/upload/retry_button.dart",
+            "onPressed: null",
+            "onPressed: queue.requeue"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.suggestions[]",
+          "path": "suggestions[]",
+          "kind": "any",
+          "probes": [
+            "Always allow"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [
+            "toolu_01EditRetry"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.edit.filePath",
+          "path": "filePath",
+          "kind": "string",
+          "probes": [
+            "/home/dev/app/lib/upload/retry_button.dart"
+          ],
+          "primary": true
+        },
+        {
+          "key": "detail.edit.oldString",
+          "path": "oldString",
+          "kind": "string",
+          "probes": [
+            "onPressed: null,"
+          ],
+          "primary": true
+        },
+        {
+          "key": "detail.edit.newString",
+          "path": "newString",
+          "kind": "string",
+          "probes": [
+            "onPressed: queue.requeue,"
+          ],
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "edit_diff",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_77ab90",
+        "provider": "codex",
+        "name": "apply_patch",
+        "kind": "tool",
+        "description": "Change the retry limit",
+        "detail": {
+          "type": "edit",
+          "filePath": "/home/dev/app/lib/upload/limits.dart",
+          "unifiedDiff": "--- a/lib/upload/limits.dart\n+++ b/lib/upload/limits.dart\n@@ -1 +1 @@\n-const retryLimit = 1;\n+const retryLimit = 3;"
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_77ab90"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "codex"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Edit a file"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Change the retry limit"
+          ],
+          "primary": true
+        },
+        {
+          "key": "detail.edit.filePath",
+          "path": "filePath",
+          "kind": "string",
+          "probes": [
+            "/home/dev/app/lib/upload/limits.dart"
+          ],
+          "primary": true
+        },
+        {
+          "key": "detail.edit.unifiedDiff",
+          "path": "unifiedDiff",
+          "kind": "string",
+          "probes": [
+            "const retryLimit = 3;"
+          ],
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "write",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_5e03d7",
+        "provider": "claude",
+        "name": "Write",
+        "kind": "tool",
+        "input": {
+          "file_path": "/home/dev/app/lib/upload/upload_status.dart",
+          "content": "enum UploadStatus { queued, failed }"
+        },
+        "suggestions": [
+          {
+            "type": "setMode",
+            "mode": "acceptEdits",
+            "destination": "session"
+          }
+        ],
+        "detail": {
+          "type": "write",
+          "filePath": "/home/dev/app/lib/upload/upload_status.dart",
+          "content": "enum UploadStatus { queued, failed }"
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_5e03d7"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Edit a file"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "/home/dev/app/lib/upload/upload_status.dart",
+            "enum UploadStatus { queued, failed }"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.suggestions[]",
+          "path": "suggestions[]",
+          "kind": "any",
+          "probes": [
+            "Always allow"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.write.filePath",
+          "path": "filePath",
+          "kind": "string",
+          "probes": [
+            "/home/dev/app/lib/upload/upload_status.dart"
+          ],
+          "primary": true
+        },
+        {
+          "key": "detail.write.content",
+          "path": "content",
+          "kind": "string",
+          "probes": [
+            "enum UploadStatus { queued, failed }"
+          ],
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "read",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_a4410b",
+        "provider": "claude",
+        "name": "Read",
+        "kind": "tool",
+        "input": {
+          "file_path": "/home/dev/.config/app/settings.json"
+        },
+        "detail": {
+          "type": "read",
+          "filePath": "/home/dev/.config/app/settings.json",
+          "offset": 20,
+          "limit": 80
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_a4410b"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Read a file"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "/home/dev/.config/app/settings.json"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.read.filePath",
+          "path": "filePath",
+          "kind": "string",
+          "probes": [
+            "/home/dev/.config/app/settings.json"
+          ],
+          "primary": true
+        },
+        {
+          "key": "detail.read.offset",
+          "path": "offset",
+          "kind": "number",
+          "probes": [
+            "from line 20"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.read.limit",
+          "path": "limit",
+          "kind": "number",
+          "probes": [
+            "80 lines"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "fetch",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_0b7e66",
+        "provider": "claude",
+        "name": "WebFetch",
+        "kind": "tool",
+        "input": {
+          "url": "https://docs.flutter.dev/release/breaking-changes",
+          "prompt": "List the breaking changes in 3.47"
+        },
+        "suggestions": [
+          {
+            "type": "addRules",
+            "rules": [
+              {
+                "toolName": "WebFetch",
+                "ruleContent": "domain:docs.flutter.dev"
+              }
+            ],
+            "behavior": "allow",
+            "destination": "localSettings"
+          }
+        ],
+        "detail": {
+          "type": "fetch",
+          "url": "https://docs.flutter.dev/release/breaking-changes",
+          "prompt": "List the breaking changes in 3.47"
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_0b7e66"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Open a web page"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "https://docs.flutter.dev/release/breaking-changes",
+            "List the breaking changes in 3.47"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.suggestions[]",
+          "path": "suggestions[]",
+          "kind": "any",
+          "probes": [
+            "Always allow"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.fetch.url",
+          "path": "url",
+          "kind": "string",
+          "probes": [
+            "https://docs.flutter.dev/release/breaking-changes"
+          ],
+          "primary": true
+        },
+        {
+          "key": "detail.fetch.prompt",
+          "path": "prompt",
+          "kind": "string",
+          "probes": [
+            "List the breaking changes in 3.47"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "web_search",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_d83f15",
+        "provider": "claude",
+        "name": "WebSearch",
+        "kind": "tool",
+        "input": {
+          "query": "flutter 3.47 impeller android regression"
+        },
+        "detail": {
+          "type": "search",
+          "query": "flutter 3.47 impeller android regression",
+          "toolName": "web_search"
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_d83f15"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Search the web"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "flutter 3.47 impeller android regression"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.search.query",
+          "path": "query",
+          "kind": "string",
+          "probes": [
+            "flutter 3.47 impeller android regression"
+          ],
+          "primary": true
+        },
+        {
+          "key": "detail.search.toolName",
+          "path": "toolName",
+          "kind": "enum",
+          "probes": [
+            "Search the web"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "grep",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_19c2ee",
+        "provider": "claude",
+        "name": "Grep",
+        "kind": "tool",
+        "input": {
+          "pattern": "requeue",
+          "path": "/home/dev/other-project"
+        },
+        "detail": {
+          "type": "search",
+          "query": "requeue",
+          "toolName": "grep",
+          "mode": "files_with_matches"
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_19c2ee"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Search the project"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "requeue",
+            "/home/dev/other-project"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.search.query",
+          "path": "query",
+          "kind": "string",
+          "probes": [
+            "requeue"
+          ],
+          "primary": true
+        },
+        {
+          "key": "detail.search.toolName",
+          "path": "toolName",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "detail.search.mode",
+          "path": "mode",
+          "kind": "enum",
+          "probes": [
+            "file names"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "sub_agent",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_62aa07",
+        "provider": "claude",
+        "name": "Task",
+        "kind": "tool",
+        "input": {
+          "subagent_type": "Explore",
+          "description": "Find where uploads are retried",
+          "prompt": "Look through lib/upload"
+        },
+        "detail": {
+          "type": "sub_agent",
+          "subAgentType": "Explore",
+          "description": "Find where uploads are retried"
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_62aa07"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Start a helper agent"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "Explore",
+            "Find where uploads are retried",
+            "Look through lib/upload"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.sub_agent.subAgentType",
+          "path": "subAgentType",
+          "kind": "string",
+          "probes": [
+            "Explore"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.sub_agent.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Find where uploads are retried"
+          ],
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "skill",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_b90c3d",
+        "provider": "claude",
+        "name": "Skill",
+        "kind": "tool",
+        "input": {
+          "skill": "frontend-design"
+        },
+        "detail": {
+          "type": "plain_text",
+          "label": "frontend-design",
+          "text": "Use a clear visual hierarchy.",
+          "icon": "sparkles"
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_b90c3d"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Use a skill"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "frontend-design"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.plain_text.label",
+          "path": "label",
+          "kind": "string",
+          "probes": [
+            "frontend-design"
+          ],
+          "primary": true
+        },
+        {
+          "key": "detail.plain_text.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "detail.plain_text.icon",
+          "path": "icon",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "mcp",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_e47a28",
+        "provider": "claude",
+        "name": "mcp__drive__search",
+        "kind": "tool",
+        "title": "Search Google Drive",
+        "input": {
+          "query": "quarterly report",
+          "maxResults": 5
+        },
+        "suggestions": [
+          {
+            "type": "addRules",
+            "rules": [
+              {
+                "toolName": "mcp__drive__search",
+                "ruleContent": ""
+              }
+            ],
+            "behavior": "allow",
+            "destination": "localSettings"
+          }
+        ],
+        "detail": {
+          "type": "unknown",
+          "input": {
+            "query": "quarterly report",
+            "maxResults": 5
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_e47a28"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Use search · drive"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Search Google Drive"
+          ],
+          "primary": true
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "quarterly report"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.suggestions[]",
+          "path": "suggestions[]",
+          "kind": "any",
+          "probes": [
+            "Always allow"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.unknown.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "quarterly report"
+          ],
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_3c58f1",
+        "provider": "claude",
+        "name": "ExitPlanMode",
+        "kind": "plan",
+        "title": "Plan ready",
+        "input": {
+          "plan": "# Add the retry button\n\n1. Read the upload queue.\n2. Add the button.\n3. Test it."
+        },
+        "actions": [
+          {
+            "id": "reject",
+            "label": "Keep planning",
+            "behavior": "deny",
+            "variant": "secondary",
+            "intent": "dismiss"
+          },
+          {
+            "id": "implement",
+            "label": "Implement",
+            "behavior": "allow",
+            "variant": "primary",
+            "intent": "implement"
+          },
+          {
+            "id": "implement_resume",
+            "label": "Implement without asking",
+            "behavior": "allow",
+            "variant": "danger",
+            "intent": "implement_resume"
+          }
+        ],
+        "metadata": {
+          "planText": "# Add the retry button\n\n1. Read the upload queue.\n2. Add the button.\n3. Test it.",
+          "toolUseId": "toolu_01Plan"
+        },
+        "detail": {
+          "type": "plan",
+          "text": "# Add the retry button\n\n1. Read the upload queue.\n2. Add the button.\n3. Test it."
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_3c58f1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "Add the retry button"
+          ],
+          "primary": true
+        },
+        {
+          "key": "request.actions[].id",
+          "path": "actions[].id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.actions[].label",
+          "path": "actions[].label",
+          "kind": "string",
+          "probes": [
+            "Implement without asking"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.actions[].behavior",
+          "path": "actions[].behavior",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.actions[].variant",
+          "path": "actions[].variant",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.actions[].intent",
+          "path": "actions[].intent",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [
+            "toolu_01Plan"
+          ],
+          "primary": false
+        },
+        {
+          "key": "detail.plan.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add the retry button",
+            "Read the upload queue"
+          ],
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "question",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_f1d6a9",
+        "provider": "claude",
+        "name": "AskUserQuestion",
+        "kind": "question",
+        "input": {
+          "questions": [
+            {
+              "header": "Retry style",
+              "question": "Should the retry button retry once or keep retrying?",
+              "options": [
+                {
+                  "label": "Retry once",
+                  "description": "One more attempt, then stop"
+                },
+                {
+                  "label": "Keep retrying",
+                  "description": "Retry until it works"
+                }
+              ],
+              "multiSelect": false,
+              "allowOther": true
+            }
+          ]
+        },
+        "metadata": {
+          "toolUseId": "toolu_01Question"
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_f1d6a9"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "Should the retry button retry once or keep retrying?",
+            "Retry once",
+            "One more attempt, then stop"
+          ],
+          "primary": true
+        },
+        {
+          "key": "request.metadata",
+          "path": "metadata",
+          "kind": "any",
+          "probes": [
+            "toolu_01Question"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "mode",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_2ad740",
+        "provider": "claude",
+        "name": "EnterPlanMode",
+        "kind": "mode",
+        "title": "Switch to plan mode",
+        "description": "The agent wants to plan before it changes anything"
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_2ad740"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Switch to plan mode"
+          ],
+          "primary": true
+        },
+        {
+          "key": "request.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "The agent wants to plan before it changes anything"
+          ],
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "other",
+      "family": "permissions",
+      "payload": {
+        "id": "perm_req_9e0b35",
+        "provider": "claude",
+        "name": "NotebookEdit",
+        "kind": "other",
+        "description": "Change a cell in analysis.ipynb",
+        "input": {
+          "notebook_path": "/home/dev/app/analysis.ipynb",
+          "new_source": "print(total)"
+        }
+      },
+      "fields": [
+        {
+          "key": "request.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "perm_req_9e0b35"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.provider",
+          "path": "provider",
+          "kind": "string",
+          "probes": [
+            "claude"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Use Notebook edit"
+          ],
+          "primary": false
+        },
+        {
+          "key": "request.kind",
+          "path": "kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "request.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Change a cell in analysis.ipynb"
+          ],
+          "primary": true
+        },
+        {
+          "key": "request.input",
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "analysis.ipynb"
+          ],
+          "primary": true
+        }
+      ]
+    }
+  ]
+}

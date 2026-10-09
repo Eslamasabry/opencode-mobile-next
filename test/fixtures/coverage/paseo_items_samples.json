@@ -1,0 +1,594 @@
+{
+  "source": "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js",
+  "schema": {
+    "user_message": [
+      {
+        "path": "text",
+        "kind": "string"
+      },
+      {
+        "path": "messageId",
+        "kind": "string"
+      },
+      {
+        "path": "clientMessageId",
+        "kind": "string"
+      }
+    ],
+    "assistant_message": [
+      {
+        "path": "text",
+        "kind": "string"
+      },
+      {
+        "path": "messageId",
+        "kind": "string"
+      }
+    ],
+    "reasoning": [
+      {
+        "path": "text",
+        "kind": "string"
+      }
+    ],
+    "todo": [
+      {
+        "path": "items[].text",
+        "kind": "string"
+      },
+      {
+        "path": "items[].completed",
+        "kind": "boolean"
+      },
+      {
+        "path": "items[].id",
+        "kind": "string"
+      },
+      {
+        "path": "items[].status",
+        "kind": "enum"
+      },
+      {
+        "path": "items[].activeForm",
+        "kind": "string"
+      }
+    ],
+    "error": [
+      {
+        "path": "message",
+        "kind": "string"
+      }
+    ],
+    "notification": [
+      {
+        "path": "level",
+        "kind": "enum"
+      },
+      {
+        "path": "message",
+        "kind": "string"
+      }
+    ],
+    "compaction": [
+      {
+        "path": "status",
+        "kind": "enum"
+      },
+      {
+        "path": "trigger",
+        "kind": "enum"
+      },
+      {
+        "path": "preTokens",
+        "kind": "number"
+      }
+    ],
+    "plugin": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "pluginId",
+        "kind": "string"
+      },
+      {
+        "path": "kind",
+        "kind": "string"
+      },
+      {
+        "path": "version",
+        "kind": "number"
+      },
+      {
+        "path": "data",
+        "kind": "any"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "user_message",
+      "family": "items",
+      "payload": {
+        "type": "user_message",
+        "text": "Add a retry button to the upload screen",
+        "messageId": "msg_01HZX8Q3N5V2",
+        "clientMessageId": "c0a8e1f2-77b1-4d0e-9a52-3f1d6a8b9c10"
+      },
+      "fields": [
+        {
+          "key": "user_message.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "Add a retry button to the upload screen"
+          ],
+          "primary": false
+        },
+        {
+          "key": "user_message.messageId",
+          "path": "messageId",
+          "kind": "string",
+          "probes": [
+            "msg_01HZX8Q3N5V2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "user_message.clientMessageId",
+          "path": "clientMessageId",
+          "kind": "string",
+          "probes": [
+            "c0a8e1f2-77b1-4d0e-9a52-3f1d6a8b9c10"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "assistant_message",
+      "family": "items",
+      "payload": {
+        "type": "assistant_message",
+        "text": "I added the retry button and wired it to the upload queue.\n\n- It shows only after a failed upload\n- It keeps the file you picked",
+        "messageId": "msg_01HZX8R7K2T9"
+      },
+      "fields": [
+        {
+          "key": "assistant_message.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "I added the retry button and wired it to the upload queue.",
+            "It shows only after a failed upload"
+          ],
+          "primary": false
+        },
+        {
+          "key": "assistant_message.messageId",
+          "path": "messageId",
+          "kind": "string",
+          "probes": [
+            "msg_01HZX8R7K2T9"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "reasoning",
+      "family": "items",
+      "payload": {
+        "type": "reasoning",
+        "text": "The upload screen keeps its queue in UploadQueue, so the retry button can call requeue() without touching the picker."
+      },
+      "fields": [
+        {
+          "key": "reasoning.text",
+          "path": "text",
+          "kind": "string",
+          "probes": [
+            "The upload screen keeps its queue in UploadQueue, so the retry button can call requeue() without touching the picker."
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "todo_mixed",
+      "family": "items",
+      "payload": {
+        "type": "todo",
+        "items": [
+          {
+            "id": "todo-1",
+            "text": "Read the upload queue",
+            "completed": true,
+            "status": "completed",
+            "activeForm": "Reading the upload queue"
+          },
+          {
+            "id": "todo-2",
+            "text": "Add the retry button",
+            "completed": false,
+            "status": "in_progress",
+            "activeForm": "Adding the retry button"
+          },
+          {
+            "id": "todo-3",
+            "text": "Write the widget test",
+            "completed": false,
+            "status": "pending",
+            "activeForm": "Writing the widget test"
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "todo.items[].id",
+          "path": "items[].id",
+          "kind": "string",
+          "probes": [
+            "todo-1",
+            "todo-2",
+            "todo-3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "todo.items[].text",
+          "path": "items[].text",
+          "kind": "string",
+          "probes": [
+            "Read the upload queue",
+            "Add the retry button",
+            "Write the widget test"
+          ],
+          "primary": false
+        },
+        {
+          "key": "todo.items[].completed",
+          "path": "items[].completed",
+          "kind": "boolean",
+          "probes": [
+            "1 of 3 done"
+          ],
+          "primary": false
+        },
+        {
+          "key": "todo.items[].status",
+          "path": "items[].status",
+          "kind": "enum",
+          "probes": [
+            "In progress"
+          ],
+          "primary": false
+        },
+        {
+          "key": "todo.items[].activeForm",
+          "path": "items[].activeForm",
+          "kind": "string",
+          "probes": [
+            "Reading the upload queue",
+            "Adding the retry button",
+            "Writing the widget test"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "todo_plain",
+      "family": "items",
+      "payload": {
+        "type": "todo",
+        "items": [
+          {
+            "text": "Update the changelog",
+            "completed": true
+          },
+          {
+            "text": "Tag the release",
+            "completed": false
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "todo.items[].text",
+          "path": "items[].text",
+          "kind": "string",
+          "probes": [
+            "Update the changelog",
+            "Tag the release"
+          ],
+          "primary": false
+        },
+        {
+          "key": "todo.items[].completed",
+          "path": "items[].completed",
+          "kind": "boolean",
+          "probes": [
+            "1 of 2 done"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "error",
+      "family": "items",
+      "payload": {
+        "type": "error",
+        "message": "Rate limit reached for claude-opus-5. Try again in 4 minutes."
+      },
+      "fields": [
+        {
+          "key": "error.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "Rate limit reached for claude-opus-5. Try again in 4 minutes."
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "notification_info",
+      "family": "items",
+      "payload": {
+        "type": "notification",
+        "level": "info",
+        "message": "Switched to the faster model for this step."
+      },
+      "fields": [
+        {
+          "key": "notification.level",
+          "path": "level",
+          "kind": "enum",
+          "probes": [
+            "Note"
+          ],
+          "primary": false
+        },
+        {
+          "key": "notification.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "Switched to the faster model for this step."
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "notification_warning",
+      "family": "items",
+      "payload": {
+        "type": "notification",
+        "level": "warning",
+        "message": "This conversation is close to its context limit."
+      },
+      "fields": [
+        {
+          "key": "notification.level",
+          "path": "level",
+          "kind": "enum",
+          "probes": [
+            "Warning"
+          ],
+          "primary": false
+        },
+        {
+          "key": "notification.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "This conversation is close to its context limit."
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "notification_error",
+      "family": "items",
+      "payload": {
+        "type": "notification",
+        "level": "error",
+        "message": "The agent lost its connection to the language server."
+      },
+      "fields": [
+        {
+          "key": "notification.level",
+          "path": "level",
+          "kind": "enum",
+          "probes": [
+            "Problem"
+          ],
+          "primary": false
+        },
+        {
+          "key": "notification.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "The agent lost its connection to the language server."
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "compaction_running",
+      "family": "items",
+      "payload": {
+        "type": "compaction",
+        "status": "loading",
+        "trigger": "auto"
+      },
+      "fields": [
+        {
+          "key": "compaction.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Compacting conversation"
+          ],
+          "primary": false
+        },
+        {
+          "key": "compaction.trigger",
+          "path": "trigger",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "compaction_auto",
+      "family": "items",
+      "payload": {
+        "type": "compaction",
+        "status": "completed",
+        "trigger": "auto",
+        "preTokens": 168400
+      },
+      "fields": [
+        {
+          "key": "compaction.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Earlier messages were summarized"
+          ],
+          "primary": false
+        },
+        {
+          "key": "compaction.trigger",
+          "path": "trigger",
+          "kind": "enum",
+          "probes": [
+            "automatically"
+          ],
+          "primary": false
+        },
+        {
+          "key": "compaction.preTokens",
+          "path": "preTokens",
+          "kind": "number",
+          "probes": [
+            "168k tokens"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "compaction_manual",
+      "family": "items",
+      "payload": {
+        "type": "compaction",
+        "status": "completed",
+        "trigger": "manual",
+        "preTokens": 91250
+      },
+      "fields": [
+        {
+          "key": "compaction.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Earlier messages were summarized"
+          ],
+          "primary": false
+        },
+        {
+          "key": "compaction.trigger",
+          "path": "trigger",
+          "kind": "enum",
+          "probes": [
+            "when you asked"
+          ],
+          "primary": false
+        },
+        {
+          "key": "compaction.preTokens",
+          "path": "preTokens",
+          "kind": "number",
+          "probes": [
+            "91k tokens"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "plugin",
+      "family": "items",
+      "payload": {
+        "type": "plugin",
+        "id": "plugin-item-7f3a",
+        "pluginId": "release-notes",
+        "kind": "summary-card",
+        "version": 2,
+        "data": {
+          "title": "Release notes draft",
+          "sections": 3
+        }
+      },
+      "fields": [
+        {
+          "key": "plugin.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "plugin-item-7f3a"
+          ],
+          "primary": false
+        },
+        {
+          "key": "plugin.pluginId",
+          "path": "pluginId",
+          "kind": "string",
+          "probes": [
+            "release-notes"
+          ],
+          "primary": false
+        },
+        {
+          "key": "plugin.kind",
+          "path": "kind",
+          "kind": "string",
+          "probes": [
+            "summary-card"
+          ],
+          "primary": false
+        },
+        {
+          "key": "plugin.version",
+          "path": "version",
+          "kind": "number",
+          "probes": [
+            "2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "plugin.data",
+          "path": "data",
+          "kind": "any",
+          "probes": [
+            "Release notes draft"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}
