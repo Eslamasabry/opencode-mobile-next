@@ -15566,6 +15566,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kitMarkdownOpenFile => 'فتح الملف';
 
   @override
+  String get kitMarkdownImage => 'صورة';
+
+  @override
   String kitMarkdownTable(int rows) {
     String _temp0 = intl.Intl.pluralLogic(
       rows,

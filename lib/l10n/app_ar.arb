@@ -7273,6 +7273,7 @@
   "kitBoardLane": "{column}، {count, plural, =0{لا توجد مهام} =1{مهمة واحدة} other{{count} من المهام}}",
   "kitBoardLaneLoading": "جارٍ تحميل {column}",
   "kitMarkdownOpenFile": "فتح الملف",
+  "kitMarkdownImage": "صورة",
   "kitMarkdownTable": "{rows, plural, =1{جدول، صف واحد} other{جدول، {rows} من الصفوف}}",
   "kitToolNotRun": "لم يُنفّذ",
   "kitToolWaiting": "بانتظار",

@@ -3,6 +3,9 @@ part of '../chat_screen.dart';
 // Files, links and references: path links in replies, tool output files,
 // dropped files, and review references staged for the next prompt.
 
+/// The largest picture a reply's thumbnail reads (8 MiB).
+const _maxPathImageBytes = 8 * 1024 * 1024;
+
 mixin _ChatFileFields {
   final Map<String, Future<List<FileNode>>> _pathLinkDirs = {};
   final Map<String, DateTime> _pathLinkDirsAt = {};
@@ -124,6 +127,24 @@ extension _ChatFiles on _ChatScreenState {
       _pathLinkDirs.remove(dir);
       _pathLinkChecks.remove(path);
       return false;
+    }
+  }
+
+  /// The bytes of a picture file a reply names (`![shot](/tmp/shot.png)`),
+  /// for its thumbnail in the transcript. Null when the file cannot be read
+  /// or is too large to keep as a thumbnail's source; the reply then shows
+  /// the picture as a named chip that still opens the viewer.
+  Future<Uint8List?> _loadPathImage(String path) async {
+    if (_conn.isIsolated || !_conn.capabilities.fileBrowsing) return null;
+    try {
+      final api = await _conn.prepareActionTransport();
+      if (api == null) return null;
+      final content = await api.fileContent(path);
+      if (!content.isBinary && content.encoding != 'base64') return null;
+      final bytes = content.bytes();
+      return bytes.isEmpty || bytes.length > _maxPathImageBytes ? null : bytes;
+    } catch (_) {
+      return null;
     }
   }
 

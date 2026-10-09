@@ -17496,6 +17496,10 @@
   "@kitMarkdownOpenFile": {
     "description": "KitMarkdown: the screen-reader hint on a file path in an agent's reply that the server confirmed it can open"
   },
+  "kitMarkdownImage": "Image",
+  "@kitMarkdownImage": {
+    "description": "KitMarkdown: the name of a picture in an agent's reply whose Markdown gave no description (empty, or just the word Image)"
+  },
   "kitMarkdownTable": "{rows, plural, =1{Table, 1 row} other{Table, {rows} rows}}",
   "@kitMarkdownTable": {
     "description": "KitMarkdown: what a screen reader says for a table in an agent's reply; rows counts the body rows (the header row is not counted)",

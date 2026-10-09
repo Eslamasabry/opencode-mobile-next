@@ -89,6 +89,7 @@ extension _ChatBody on _ChatScreenState {
                       child: MarkdownFileLinks(
                         validate: _validatePathLink,
                         open: _openPathLink,
+                        readImage: _readPathImage,
                         child: NotificationListener<ScrollNotification>(
                           onNotification: _onTranscriptScroll,
                           child: _transcript(
