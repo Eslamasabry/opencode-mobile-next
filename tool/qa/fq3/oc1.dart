@@ -4,12 +4,95 @@ import 'dart:io';
 import 'dart:math';
 
 import 'common.dart';
+import 'evidence.dart' show isPublicModelReference;
 
 Map<String, dynamic> _map(Object? value) =>
     value is Map<String, dynamic> ? value : <String, dynamic>{};
 String _string(Object? value) => value is String ? value : '';
 Map<String, dynamic> _event(Map<String, dynamic> event) =>
     event['payload'] is Map<String, dynamic> ? _map(event['payload']) : event;
+
+/// Closed error metadata only. Messages, bodies, headers and unknown names stay
+/// private, including when the server nests API metadata in `data`.
+Map<String, Object?> oc1FailureFacts(Object? error) {
+  const names = {
+    'APIError',
+    'ProviderAuthError',
+    'ProviderModelNotFoundError',
+    'TypeValidationError',
+    'UnknownError',
+    'MessageAbortedError',
+    'ContextOverflowError',
+    'MessageOutputLengthError',
+  };
+  final value = _map(error);
+  final result = <String, Object?>{};
+  if (names.contains(value['name'])) result['errorName'] = value['name'];
+  var data = value;
+  for (var depth = 0; depth < 4 && data.isNotEmpty; depth++) {
+    for (final key in const ['statusCode', 'status']) {
+      final status = data[key];
+      if (!result.containsKey('httpStatus') &&
+          status is num &&
+          status.isFinite &&
+          status >= 100 &&
+          status <= 599 &&
+          status == status.truncateToDouble()) {
+        result['httpStatus'] = status.toInt();
+      }
+    }
+    final retryable = data['isRetryable'] ?? data['retryable'];
+    if (!result.containsKey('retryable') && retryable is bool) {
+      result['retryable'] = retryable;
+    }
+    data = _map(data['data']);
+  }
+  return result;
+}
+
+/// Classify only exact owned assistant history after a permission wait failed.
+/// Absence means no tool was observed in this snapshot, not model incapability.
+Map<String, Object?> oc1PermissionFailureFacts(
+  List<Map<String, dynamic>> history, {
+  required String sessionID,
+  required String promptID,
+}) {
+  var toolObserved = false;
+  for (final message in history) {
+    final info = _map(message['info']);
+    if (info['role'] != 'assistant' ||
+        info['sessionID'] != sessionID ||
+        info['parentID'] != promptID ||
+        info['synthetic'] == true) {
+      continue;
+    }
+    if (info['error'] != null) {
+      return {
+        'permissionTimeoutKind': 'assistant_error',
+        ...oc1FailureFacts(info['error']),
+      };
+    }
+    final parts = message['parts'];
+    if (parts is! List) continue;
+    toolObserved |= parts
+        .map(_map)
+        .any(
+          (part) =>
+              part['type'] == 'tool' &&
+              part['tool'] == 'bash' &&
+              part['sessionID'] == sessionID &&
+              part['messageID'] == info['id'] &&
+              part['synthetic'] != true &&
+              _string(part['callID']).isNotEmpty,
+        );
+  }
+  return {
+    'permissionTimeoutKind': toolObserved
+        ? 'event_missing'
+        : 'tool_not_requested',
+    'permissionToolObserved': toolObserved,
+  };
+}
 
 /// Returns only a real nonempty text delta, scoped to the requested session.
 /// Completion and assistant ownership still require authoritative HTTP history.
@@ -191,15 +274,32 @@ class _Oc1 {
   String? streamSession;
   int serial = 0;
   DateTime? deadline;
+  Map<String, Object?>? observation;
   _Oc1(this.run);
   Fq3Wire get wire => run.wire;
   Map<String, String> get query => {'directory': run.options.directory};
 
   Future<Map<String, Object?>> scenario(
+    String capability,
     Future<Map<String, Object?>> Function() action,
   ) async {
     deadline = DateTime.now().add(const Duration(seconds: 170));
-    return action();
+    final current = <String, Object?>{'phase': capability, 'stage': 'start'};
+    observation = current;
+    try {
+      final result = await action();
+      current['stage'] = 'complete';
+      return result;
+    } finally {
+      run.observations[capability] = current;
+      observation = null;
+    }
+  }
+
+  void checkpoint(String stage, {_Model? choice}) {
+    observation?['stage'] = stage;
+    final reference = choice?.key;
+    if (isPublicModelReference(reference)) observation?['model'] = reference;
   }
 
   Duration budget(Duration maximum) {
@@ -301,12 +401,17 @@ class _Oc1 {
     List<Map<String, Object?>>? attachments,
   }) async {
     final id = messageID();
+    final selectedModel = choice ?? model();
+    if (isPublicModelReference(selectedModel.key)) {
+      observation?['model'] = selectedModel.key;
+    }
+    if (observation?['stage'] == 'start') checkpoint('prompt_reply');
     await request(
       'POST',
       '/session/$session/prompt_async',
       body: {
         'messageID': id,
-        'model': (choice ?? model()).wire,
+        'model': selectedModel.wire,
         'parts': [
           <String, Object?>{'type': 'text', 'text': text},
           ...?attachments,
@@ -360,10 +465,13 @@ class _Oc1 {
         run.require(!requireStream || streamed, 'oc1_no_assistant_delta');
         return _Turn(prompt, messages, replies, streamed);
       }
-      run.require(
-        !replies.any((m) => _map(m['info'])['error'] != null),
-        'oc1_prompt_error',
-      );
+      for (final reply in replies) {
+        final error = _map(reply['info'])['error'];
+        if (error != null) {
+          observation?.addAll(oc1FailureFacts(error));
+          throw const ProbeFailure('oc1_prompt_error');
+        }
+      }
       await Future<void>.delayed(const Duration(milliseconds: 250));
     }
     throw const ProbeFailure('oc1_completion_timeout');
@@ -474,6 +582,10 @@ class _Oc1 {
     final alternatives = models.where((m) => m.key != first.key);
     run.require(alternatives.isNotEmpty, 'oc1_second_model_unavailable');
     final session = await create('model-switch');
+    if (isPublicModelReference(first.key)) {
+      observation?['firstModel'] = first.key;
+    }
+    checkpoint('initial_reply', choice: first);
     final initial = await turn(
       session,
       'Reply with exactly ${token('first')}.',
@@ -491,6 +603,10 @@ class _Oc1 {
       (candidate) => candidate.provider == first.provider,
       orElse: () => alternatives.first,
     );
+    if (isPublicModelReference(alternative.key)) {
+      observation?['alternativeModel'] = alternative.key;
+    }
+    checkpoint('alternative_reply', choice: alternative);
     final changed = await turn(
       session,
       'Reply with exactly ${token('second')}.',
@@ -616,6 +732,7 @@ class _Oc1 {
   }
 
   Future<Map<String, Object?>> permission(bool allow) async {
+    checkpoint('create_permission_session', choice: model());
     await events();
     final session = await create(
       allow ? 'permission-allow' : 'permission-deny',
@@ -632,73 +749,110 @@ class _Oc1 {
       'Use the bash tool exactly once to execute this harmless command:\n'
       '$command\nDo not substitute another tool. Then report its outcome.',
     );
-    final event = await waitFor((e) {
-      final value = _event(e);
-      final p = _map(value['properties']);
-      return !prior.contains(e) &&
-          value['type'] == 'permission.asked' &&
-          p['sessionID'] == session &&
-          p['permission'] == 'bash';
-    }, const Duration(seconds: 50));
-    final asked = _map(_event(event)['properties']);
-    final requestID = _string(asked['id']);
-    final tool = _map(asked['tool']);
-    final callID = _string(tool['callID']);
-    final pending = await request('GET', '/permission');
-    run.require(
-      requestID.isNotEmpty &&
-          callID.isNotEmpty &&
-          pending is List &&
-          pending
-              .map(_map)
-              .any((p) => p['id'] == requestID && p['sessionID'] == session),
-      'oc1_permission_not_pending',
-    );
-    final liveCalls = assistants(await history(session), prompt)
-        .expand((m) => (m['parts'] as List).map(_map))
-        .where(
-          (p) =>
-              p['type'] == 'tool' &&
-              p['tool'] == 'bash' &&
-              p['sessionID'] == session &&
-              p['callID'] == callID &&
-              p['messageID'] == tool['messageID'] &&
-              p['synthetic'] != true,
-        );
-    run.require(
-      liveCalls.length == 1 &&
-          _map(_map(liveCalls.single['state'])['input'])['command'] == command,
-      'oc1_permission_command_mismatch',
-    );
-    final reply = allow ? 'once' : 'reject';
-    await request(
-      'POST',
-      '/permission/$requestID/reply',
-      body: {'reply': reply},
-    );
-    await waitFor((e) {
-      final value = _event(e);
-      final p = _map(value['properties']);
-      return !prior.contains(e) &&
-          value['type'] == 'permission.replied' &&
-          p['sessionID'] == session &&
-          p['requestID'] == requestID &&
-          p['reply'] == reply;
-    }, const Duration(seconds: 20));
-    await oc1VerifyPermissionOutcome(
-      () => history(session),
-      () => request('GET', '/permission'),
-      sessionID: session,
-      promptID: prompt,
-      messageID: _string(tool['messageID']),
-      callID: callID,
-      requestID: requestID,
-      command: command,
-      marker: answer,
-      allow: allow,
-      timeout: budget(const Duration(seconds: 50)),
-    );
-    return {'requestObserved': true, 'replyObserved': true};
+    try {
+      checkpoint('await_permission_asked', choice: model());
+      final event = await waitFor((e) {
+        final value = _event(e);
+        final p = _map(value['properties']);
+        return !prior.contains(e) &&
+            value['type'] == 'permission.asked' &&
+            p['sessionID'] == session &&
+            p['permission'] == 'bash';
+      }, const Duration(seconds: 50));
+      final asked = _map(_event(event)['properties']);
+      final requestID = _string(asked['id']);
+      final tool = _map(asked['tool']);
+      final callID = _string(tool['callID']);
+      final pending = await request('GET', '/permission');
+      run.require(
+        requestID.isNotEmpty &&
+            callID.isNotEmpty &&
+            pending is List &&
+            pending
+                .map(_map)
+                .any((p) => p['id'] == requestID && p['sessionID'] == session),
+        'oc1_permission_not_pending',
+      );
+      final liveCalls = assistants(await history(session), prompt)
+          .expand((m) => (m['parts'] as List).map(_map))
+          .where(
+            (p) =>
+                p['type'] == 'tool' &&
+                p['tool'] == 'bash' &&
+                p['sessionID'] == session &&
+                p['callID'] == callID &&
+                p['messageID'] == tool['messageID'] &&
+                p['synthetic'] != true,
+          );
+      run.require(
+        liveCalls.length == 1 &&
+            _map(_map(liveCalls.single['state'])['input'])['command'] ==
+                command,
+        'oc1_permission_command_mismatch',
+      );
+      final reply = allow ? 'once' : 'reject';
+      checkpoint('reply_permission', choice: model());
+      await request(
+        'POST',
+        '/permission/$requestID/reply',
+        body: {'reply': reply},
+      );
+      checkpoint('await_permission_replied', choice: model());
+      await waitFor((e) {
+        final value = _event(e);
+        final p = _map(value['properties']);
+        return !prior.contains(e) &&
+            value['type'] == 'permission.replied' &&
+            p['sessionID'] == session &&
+            p['requestID'] == requestID &&
+            p['reply'] == reply;
+      }, const Duration(seconds: 20));
+      checkpoint('verify_permission_outcome', choice: model());
+      await oc1VerifyPermissionOutcome(
+        () => history(session),
+        () => request('GET', '/permission'),
+        sessionID: session,
+        promptID: prompt,
+        messageID: _string(tool['messageID']),
+        callID: callID,
+        requestID: requestID,
+        command: command,
+        marker: answer,
+        allow: allow,
+        timeout: budget(const Duration(seconds: 50)),
+      );
+      return {'requestObserved': true, 'replyObserved': true};
+    } on ProbeFailure catch (error) {
+      if (error.code == 'timeout' ||
+          error.code == 'oc1_permission_outcome_timeout') {
+        try {
+          // Separate bounded diagnostic read: no prompt retry, event injection,
+          // permission change or relaxed qualification follows a timeout.
+          final raw = await wire
+              .request(
+                'GET',
+                '/session/$session/message',
+                query: {...query, 'limit': '50'},
+              )
+              .timeout(const Duration(seconds: 5));
+          if (raw is List && raw.length <= 50) {
+            observation?.addAll(
+              oc1PermissionFailureFacts(
+                raw.map(_map).toList(),
+                sessionID: session,
+                promptID: prompt,
+              ),
+            );
+            observation?['diagnosticHistoryAvailable'] = true;
+          } else {
+            observation?['diagnosticHistoryAvailable'] = false;
+          }
+        } catch (_) {
+          observation?['diagnosticHistoryAvailable'] = false;
+        }
+      }
+      rethrow;
+    }
   }
 
   Future<Map<String, Object?>> image() async {
@@ -778,6 +932,7 @@ class _Oc1 {
   }
 
   Future<Map<String, Object?>> cards() async {
+    checkpoint('cards_inventory', choice: model());
     final inventory = _map(await request('GET', '/mcp'));
     run.require(
       _map(inventory['oc-ui'])['status'] == 'connected',
@@ -801,6 +956,7 @@ class _Oc1 {
       'ask': {'kind': 'confirm'},
     };
     final ack = token('card_ack');
+    checkpoint('cards_tool_reply', choice: model());
     final result = await turn(
       session,
       'Call oc-ui_show exactly once with this exact JSON input: '
@@ -814,6 +970,7 @@ class _Oc1 {
       result.prompt,
       'oc-ui_show',
     );
+    checkpoint('cards_tool_verification', choice: model());
     run.require(call != null, 'oc1_cards_tool_not_executed');
     final input = _map(_map(call!['state'])['input']);
     run.require(_sameJson(input, card), 'oc1_cards_input_mismatch');
@@ -825,6 +982,7 @@ class _Oc1 {
           'callId': callID,
           'value': {'confirm': true},
         })}';
+    checkpoint('cards_answer_reply', choice: model());
     final answered = await turn(session, receipt);
     final user = answered.history.where(
       (m) => _map(m['info'])['id'] == answered.prompt,
@@ -904,7 +1062,7 @@ Future<ProbeRun> runProtocol1(Fq3Wire wire, ProbeOptions options) async {
   Future<void> check(
     String key,
     Future<Map<String, Object?>> Function() action,
-  ) => run.check(key, () => probe.scenario(action));
+  ) => run.check(key, () => probe.scenario(key, action));
   await check('version', probe.version);
   await check('create', () async {
     await probe.create('create');

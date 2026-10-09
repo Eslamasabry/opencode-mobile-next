@@ -1,0 +1,17 @@
+F
+======================================================================
+FAIL: test_oc1_invalid_json_or_404_detects_oc2_without_switching (tool.qa.fq9.test_protocol_failures.ProtocolFailureTests.test_oc1_invalid_json_or_404_detects_oc2_without_switching)
+----------------------------------------------------------------------
+tool.qa.fq9.runtime.ProtocolResponseFailure: protocol_response_invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bc/tool/qa/fq9/test_protocol_failures.py", line 99, in test_oc1_invalid_json_or_404_detects_oc2_without_switching
+    with self.assertRaisesRegex(
+AssertionError: "app_managed_engine_unavailable" does not match "protocol_response_invalid"
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)

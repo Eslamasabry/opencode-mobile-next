@@ -1,0 +1,23 @@
+{
+  "readOnly": true,
+  "fixtureCreated": false,
+  "appUpdated": false,
+  "installed": {
+    "build": 2203,
+    "version": "1.2.0",
+    "sha256": "82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7",
+    "signer": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+    "uid": 10217
+  },
+  "state": "blocked",
+  "code": "app_managed_engine_unavailable",
+  "protocolFailure": {
+    "stage": "oc1_health",
+    "kind": "invalid_json",
+    "httpStatus": 200
+  },
+  "runtimeMismatch": {
+    "expected": "opencode1",
+    "observed": "opencode2"
+  }
+}

@@ -231,7 +231,7 @@ Future<void> phase(List<String> args, String runID) async {
             key: fail(preflightCode),
         },
     'ownedSessions': run?.sessionIDs ?? [],
-    if (engine == 'opencode2') 'observations': run?.observations ?? {},
+    'observations': run?.observations ?? {},
   };
   File('$evidenceDirectory/$runID-$engine-$caseName.json').writeAsStringSync(
     '${const JsonEncoder.withIndent('  ').convert(output)}\n',

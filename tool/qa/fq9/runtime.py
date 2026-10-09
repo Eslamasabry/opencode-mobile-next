@@ -30,11 +30,77 @@ FGS = PACKAGE + "/.BackgroundConnectionService"
 BUILTIN_FGS = PACKAGE + "/.BuiltinServerService"
 
 
-class ProtocolHTTPFailure(DriverFailure):
+_PROTOCOL_STAGES = frozenset(
+    {
+        "oc1_health",
+        "oc2_health",
+        "oc2_info",
+        "session_status",
+        "session_create",
+        "session_read",
+        "session_messages",
+        "session_message_create",
+        "other",
+    }
+)
+_PROTOCOL_FAILURE_KINDS = frozenset({"http", "transport", "invalid_json"})
+
+
+def _protocol_stage(method, path):
+    fixed = {
+        ("GET", "/global/health"): "oc1_health",
+        ("GET", "/api/health"): "oc2_health",
+        ("GET", "/api/info"): "oc2_info",
+        ("GET", "/session/status"): "session_status",
+        ("GET", "/api/session/active"): "session_status",
+        ("POST", "/session"): "session_create",
+    }
+    if (method, path) in fixed:
+        return fixed[method, path]
+    if re.fullmatch(r"/(?:api/)?session/" + ID_PATTERN, path):
+        return "session_read" if method == "GET" else "other"
+    if re.fullmatch(r"/(?:api/)?session/" + ID_PATTERN + r"/message", path):
+        return {"GET": "session_messages", "POST": "session_message_create"}.get(
+            method, "other"
+        )
+    return "other"
+
+
+def safe_protocol_failure(value):
+    """Project only closed failure facts, including when a caller masks errors."""
+    if (
+        type(value) is not dict
+        or set(value) - {"stage", "kind", "httpStatus"}
+        or type(value.get("stage")) is not str
+        or value["stage"] not in _PROTOCOL_STAGES
+        or type(value.get("kind")) is not str
+        or value["kind"] not in _PROTOCOL_FAILURE_KINDS
+        or (
+            "httpStatus" in value
+            and (
+                type(value["httpStatus"]) is not int
+                or not 100 <= value["httpStatus"] <= 599
+            )
+        )
+    ):
+        return None
+    return dict(value)
+
+
+class ProtocolResponseFailure(DriverFailure):
+    def __init__(self, kind, stage="other", status=None):
+        super().__init__("protocol_response_invalid")
+        facts = {"stage": stage, "kind": kind}
+        if type(status) is int and 100 <= status <= 599:
+            facts["httpStatus"] = status
+        self.safe_facts = safe_protocol_failure(facts)
+
+
+class ProtocolHTTPFailure(ProtocolResponseFailure):
     """Retain only HTTP status internally, never response bodies or headers."""
 
-    def __init__(self, status):
-        super().__init__("protocol_response_invalid")
+    def __init__(self, status, stage="other"):
+        super().__init__("http", stage, status)
         self.status = status
 
 
@@ -109,6 +175,7 @@ class AndroidRuntimeMixin:
         return receipt
 
     def _connect(self, engine):
+        self._runtime_mismatch = None
         if self._forward is None:
             socket = socket_identity(
                 self.text("shell", "cat", "/proc/net/tcp", "/proc/net/tcp6"), self._uid
@@ -137,8 +204,42 @@ class AndroidRuntimeMixin:
             health = self.protocol(
                 "GET", "/api/health" if engine == "opencode2" else "/global/health"
             )
-        except ProtocolHTTPFailure as failure:
-            if engine != "opencode2" or failure.status != 404:
+        except ProtocolResponseFailure as failure:
+            if engine == "opencode" and (
+                (failure.safe_facts or {}).get("kind") == "invalid_json"
+                or isinstance(failure, ProtocolHTTPFailure)
+                and failure.status == 404
+            ):
+                original_facts = getattr(
+                    self, "_protocol_failure_facts", failure.safe_facts
+                )
+                info = None
+                try:
+                    # Diagnose the other generation; never switch or seed it.
+                    info = self.protocol("GET", "/api/info")
+                except Exception:
+                    pass
+                finally:
+                    self._protocol_failure_facts = original_facts
+                if (
+                    type(info) is dict
+                    and type(info.get("version")) is str
+                    and re.fullmatch(
+                        r"2\.[0-9]{1,5}\.[0-9]{1,5}(?:[-+][A-Za-z0-9.-]{1,40})?",
+                        info["version"],
+                    )
+                ):
+                    self._runtime_mismatch = {
+                        "expected": "opencode1",
+                        "observed": "opencode2",
+                    }
+                    raise DriverFailure("app_managed_engine_unavailable") from None
+                raise
+            if (
+                engine != "opencode2"
+                or not isinstance(failure, ProtocolHTTPFailure)
+                or failure.status != 404
+            ):
                 raise
             info = self.protocol("GET", "/api/info")
             health = {"healthy": True, **info} if type(info) is dict else None
@@ -156,8 +257,10 @@ class AndroidRuntimeMixin:
         self._runtime_version = version
 
     def protocol(self, method, path, *, query=None, body=None):
+        self._protocol_failure_facts = None
         if self._forward is None or self._password is None:
             raise DriverFailure("protocol_unavailable")
+        stage = _protocol_stage(method, path)
         url = f"http://127.0.0.1:{self._forward}{path}"
         if query:
             url += "?" + urllib.parse.urlencode(query)
@@ -177,18 +280,28 @@ class AndroidRuntimeMixin:
                 urllib.request.ProxyHandler({}), _NoRedirect()
             )
             with opener.open(request, timeout=5) as response:
+                status = getattr(response, "status", None)
                 raw = response.read(2 * 1024 * 1024 + 1)
             if len(raw) > 2 * 1024 * 1024:
                 raise DriverFailure("history_too_large")
-            return json.loads(raw)
+            try:
+                return json.loads(raw)
+            except (ValueError, UnicodeError):
+                failure = ProtocolResponseFailure("invalid_json", stage, status)
+                self._protocol_failure_facts = failure.safe_facts
+                raise failure from None
         except DriverFailure:
             raise
         except urllib.error.HTTPError as error:
             status = error.code
             error.close()
-            raise ProtocolHTTPFailure(status) from None
+            failure = ProtocolHTTPFailure(status, stage)
+            self._protocol_failure_facts = failure.safe_facts
+            raise failure from None
         except (OSError, ValueError, urllib.error.URLError):
-            raise DriverFailure("protocol_response_invalid") from None
+            failure = ProtocolResponseFailure("transport", stage)
+            self._protocol_failure_facts = failure.safe_facts
+            raise failure from None
 
     def _session_history(self, receipt, session):
         engine, directory = receipt["engine"], receipt["directory"]
