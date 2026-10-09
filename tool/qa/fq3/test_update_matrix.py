@@ -72,6 +72,43 @@ def model_scoped_run():
     return run
 
 
+class ProviderEvidenceTest(unittest.TestCase):
+    def blocked(self, original="oc1_prompt_error"):
+        return dict(state="blocked", code="provider_unavailable", classification="provider",
+                    originalCode=original, facts={})
+
+    def test_only_provider_inference_blockers_are_accepted(self):
+        value = self.blocked()
+        self.assertEqual(updater.validate_result(value, "cards"), value)
+        for capability in ("version", "create", "models", "protocolSwitch"):
+            with self.assertRaises(updater.InvalidEvidence):
+                updater.validate_result(value, capability)
+        history = self.blocked("nonempty_histories_missing")
+        self.assertEqual(updater.validate_result(history, "protocolSwitch"), history)
+        for patch in ({"code": "unknown"}, {"classification": "app"},
+                      {"originalCode": "private error"}, {"facts": {"asserted": True}},
+                      {"facts": {"message": "private reply"}}):
+            with self.assertRaises(updater.InvalidEvidence):
+                updater.validate_result({**value, **patch}, "cards")
+
+    def test_actual_model_selection_is_retained_with_provider_block(self):
+        run = model_scoped_run()
+        engine = run["engines"]["opencode"]
+        selection = dict(source="catalog-fallback", requested="zai-coding-plan/glm-5.3",
+                         selected="opencode/big-pickle", baselineAvailable=False,
+                         inferenceAvailable=False,
+                         selectedByPhase={"stream": "opencode/big-pickle"})
+        engine["modelSelection"] = selection
+        engine["results"]["stream"] = self.blocked("oc1_baseline_model_unavailable")
+        self.assertEqual(updater.validate_run(run), run)
+        for change in ({"selected": "Bearer private"}, {"inferenceAvailable": True},
+                       {"selectedByPhase": {"stream": "private reply"}},
+                       {"source": "server-default"}):
+            engine["modelSelection"] = {**selection, **change}
+            with self.assertRaises(updater.InvalidEvidence):
+                updater.validate_run(run)
+
+
 def existing_matrix():
     """Distinct existing cells and an unrelated agent catch accidental promotion."""
     return {

@@ -6,6 +6,61 @@ import 'dart:math';
 import 'common.dart';
 import 'evidence.dart' show isPublicModelReference;
 
+const baselineOc1Model = 'zai-coding-plan/glm-5.3';
+const _inferenceCapabilities = {
+  'modelSwitch',
+  'stream',
+  'abort',
+  'reconnect',
+  'permissionAllow',
+  'permissionDeny',
+  'image',
+  'cards',
+};
+
+/// Only provider-specific evidence reclassifies a failed inference assertion.
+/// Invalid payloads, missing events, generic timeouts and answer mismatches keep
+/// their original failed assertion status.
+Map<String, Object?> oc1ClassifyResult(
+  String capability,
+  Map<String, Object?> result,
+  Map<String, Object?> observation,
+) {
+  if (!_inferenceCapabilities.contains(capability) ||
+      result['state'] != 'fail') {
+    return result;
+  }
+  final original = result['code'];
+  final status = observation['httpStatus'];
+  final providerError =
+      const {
+        'ProviderAuthError',
+        'ProviderModelNotFoundError',
+      }.contains(observation['errorName']) ||
+      (observation['errorName'] == 'APIError' &&
+          status is int &&
+          (const {401, 403, 429}.contains(status) ||
+              status >= 500 && status <= 599));
+  if (original != 'oc1_baseline_model_unavailable' &&
+      original != 'oc1_requested_model_unavailable' &&
+      !(original == 'oc1_no_usable_model' &&
+          observation['stage'] == 'provider_admission') &&
+      original != 'oc1_second_model_unavailable' &&
+      original != 'oc1_image_model_unavailable' &&
+      !(providerError &&
+          (original == 'oc1_prompt_error' ||
+              observation['permissionTimeoutKind'] == 'assistant_error'))) {
+    return result;
+  }
+  return {
+    'state': 'blocked',
+    'code': 'provider_unavailable',
+    'classification': 'provider',
+    'originalCode': original,
+    'facts': <String, Object?>{},
+  };
+}
+
 Map<String, dynamic> _map(Object? value) =>
     value is Map<String, dynamic> ? value : <String, dynamic>{};
 String _string(Object? value) => value is String ? value : '';
@@ -275,6 +330,7 @@ class _Oc1 {
   int serial = 0;
   DateTime? deadline;
   Map<String, Object?>? observation;
+  String? unavailableModelCode;
   _Oc1(this.run);
   Fq3Wire get wire => run.wire;
   Map<String, String> get query => {'directory': run.options.directory};
@@ -287,6 +343,11 @@ class _Oc1 {
     final current = <String, Object?>{'phase': capability, 'stage': 'start'};
     observation = current;
     try {
+      if (_inferenceCapabilities.contains(capability) &&
+          unavailableModelCode != null) {
+        checkpoint('provider_admission', choice: selected);
+        throw ProbeFailure(unavailableModelCode!);
+      }
       final result = await action();
       current['stage'] = 'complete';
       return result;
@@ -537,12 +598,36 @@ class _Oc1 {
         );
       }
     }
-    run.require(models.isNotEmpty, 'oc1_no_connected_model');
+    if (models.isEmpty) {
+      unavailableModelCode = 'oc1_no_usable_model';
+      throw const ProbeFailure('oc1_no_connected_model');
+    }
     final wanted = run.options.model;
-    if (wanted != null) {
-      final matches = models.where((m) => m.key == wanted);
-      run.require(matches.length == 1, 'oc1_requested_model_unavailable');
-      selected = matches.single;
+    final baseline = run.options.baselineModel;
+    final target = wanted ?? baseline;
+    if (target != null) {
+      run.require(isPublicModelReference(target), 'phase_model_invalid');
+      final matches = models.where((m) => m.key == target).toList();
+      run.require(matches.length <= 1, 'oc1_invalid_models');
+      selected = matches.isEmpty ? models.first : matches.single;
+      if (matches.isEmpty) {
+        unavailableModelCode = wanted == null
+            ? 'oc1_baseline_model_unavailable'
+            : 'oc1_requested_model_unavailable';
+      }
+      run.modelSelection = {
+        'source': wanted != null
+            ? 'explicit'
+            : matches.isEmpty
+            ? 'catalog-fallback'
+            : 'baseline',
+        'requested': target,
+        'selected': isPublicModelReference(selected?.key)
+            ? selected!.key
+            : null,
+        'baselineAvailable': models.any((m) => m.key == baselineOc1Model),
+        'inferenceAvailable': unavailableModelCode == null,
+      };
     } else {
       // Config can include credentials: inspect only model, never emit its body.
       var savedModel = '';
@@ -560,6 +645,10 @@ class _Oc1 {
         ),
       );
     }
+    run.selectedModel = isPublicModelReference(selected?.key)
+        ? selected!.key
+        : null;
+    checkpoint('model_catalog_selected', choice: selected);
     return {'connectedModels': models.length};
   }
 
@@ -1058,11 +1147,31 @@ List<int> _bluePng() {
 
 Future<ProbeRun> runProtocol1(Fq3Wire wire, ProbeOptions options) async {
   final run = ProbeRun(wire, options);
+  final requested = options.model ?? options.baselineModel;
+  if (isPublicModelReference(requested)) {
+    run.modelSelection = {
+      'source': options.model == null ? 'baseline' : 'explicit',
+      'requested': requested,
+      'selected': null,
+      'baselineAvailable': false,
+      'inferenceAvailable': false,
+    };
+  }
   final probe = _Oc1(run);
   Future<void> check(
     String key,
     Future<Map<String, Object?>> Function() action,
-  ) => run.check(key, () => probe.scenario(key, action));
+  ) async {
+    await run.check(key, () => probe.scenario(key, action));
+    if (run.results.containsKey(key)) {
+      run.results[key] = oc1ClassifyResult(
+        key,
+        run.results[key]!,
+        run.observations[key] ?? {},
+      );
+    }
+  }
+
   await check('version', probe.version);
   await check('create', () async {
     await probe.create('create');

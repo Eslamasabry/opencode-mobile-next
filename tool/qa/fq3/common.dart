@@ -29,12 +29,14 @@ class ProbeOptions {
   final String directory;
   final String title;
   final String? model;
+  final String? baselineModel;
   final Set<String>? capabilities;
   final Future<void> Function(String id)? onSessionCreated;
   const ProbeOptions({
     required this.directory,
     required this.title,
     this.model,
+    this.baselineModel,
     this.capabilities,
     this.onSessionCreated,
   });
@@ -247,6 +249,8 @@ class ProbeRun {
   final sessionIDs = <String>[];
   final historyCounts = <String, int>{};
   String? observedVersion;
+  String? selectedModel;
+  Map<String, Object?>? modelSelection;
   ProbeRun(this.wire, this.options);
 
   void require(bool condition, String code) {

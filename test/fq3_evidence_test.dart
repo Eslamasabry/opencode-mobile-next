@@ -38,6 +38,7 @@ int _validate(
   Map<String, dynamic> evidence, {
   int? expectedAppUID,
   String? expectedTestedModel,
+  String? expectedModelRequest,
 }) => validatePhaseEvidence(
   evidence,
   runID: _runID,
@@ -47,6 +48,7 @@ int _validate(
   caseName: 'stream',
   expectedAppUID: expectedAppUID,
   expectedTestedModel: expectedTestedModel,
+  expectedModelRequest: expectedModelRequest,
 );
 
 Matcher _failure(String code) => throwsA(
@@ -58,6 +60,31 @@ Matcher _failure(String code) => throwsA(
 );
 
 void main() {
+  test(
+    'actual model receipt binds selection and preserves requested baseline',
+    () {
+      final evidence = _phase()
+        ..['testedModel'] = 'opencode/big-pickle'
+        ..['modelSelection'] = {
+          'source': 'catalog-fallback',
+          'requested': 'zai-coding-plan/glm-5.3',
+          'selected': 'opencode/big-pickle',
+          'baselineAvailable': false,
+          'inferenceAvailable': false,
+        };
+      expect(
+        _validate(evidence, expectedModelRequest: 'zai-coding-plan/glm-5.3'),
+        10123,
+      );
+      expect(
+        () => _validate(evidence, expectedModelRequest: 'provider/other'),
+        _failure('phase_model_mismatch'),
+      );
+      (evidence['modelSelection'] as Map)['inferenceAvailable'] = true;
+      expect(() => _validate(evidence), _failure('phase_model_invalid'));
+    },
+  );
+
   test('current phase requires build 2203 and rejects archived 2196', () {
     final current = _phase()..['appBuild'] = 2203;
     expect(_validate(current), 10123);

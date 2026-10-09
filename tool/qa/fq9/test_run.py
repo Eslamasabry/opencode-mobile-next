@@ -190,7 +190,19 @@ class RunTests(unittest.TestCase):
             save(receipt)
             port.history = receipt
 
-        with patch.object(run.fixture, "seed_history_fixture", side_effect=seed):
+        transaction = types.SimpleNamespace(
+            begin=lambda: calls.append("runtime-begin"),
+            restore=lambda: calls.append("runtime-restore"),
+            facts=lambda: {
+                "prior": "opencode2",
+                "selected": "opencode",
+                "restored": True,
+            },
+        )
+        with (
+            patch.object(run.fixture, "seed_history_fixture", side_effect=seed),
+            patch.object(run, "RuntimeTransaction", return_value=transaction),
+        ):
             result = self.locked(device)
         self.assertTrue(result["historySeeded"])
         self.assertTrue(result["fixtureUsesAppProjectBacking"])
@@ -198,7 +210,10 @@ class RunTests(unittest.TestCase):
             json.loads(self.args.seed_history_receipt.read_text()), receipt
         )
         self.assertEqual(self.args.seed_history_receipt.stat().st_mode & 0o777, 0o600)
-        self.assertEqual(calls, ["ready", "seed", "close", "restore"])
+        self.assertEqual(
+            calls,
+            ["ready", "runtime-begin", "seed", "close", "restore", "runtime-restore"],
+        )
 
     def test_seed_never_manufactures_a_previous_baseline(self):
         device, calls = self.fake()

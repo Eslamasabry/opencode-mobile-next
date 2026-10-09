@@ -15,6 +15,7 @@ import sys
 
 from . import background, fixture, fresh, ports, upgrade
 from .capture import BackgroundCapture
+from .app_runtime import RuntimeTransaction, FAIL_CODES as RUNTIME_FAIL_CODES
 from .runtime import safe_protocol_failure
 from .common import (
     CANDIDATE_BUILD,
@@ -28,6 +29,7 @@ from .common import (
 
 FAIL_CODES = (
     ports.FAIL_CODES
+    | RUNTIME_FAIL_CODES
     | upgrade.FAIL_CODES
     | background.FAIL_CODES
     | fresh.FAIL_CODES
@@ -182,6 +184,7 @@ def run_locked(args, artifacts, receipt, output, *, port_factory=ports.AndroidPo
         turn=receipt if args.case == "background" else None,
         dedicated_avd=args.dedicated_avd,
     )
+    runtime_transaction = None
     LOCK.parent.mkdir(parents=True, exist_ok=True)
     with LOCK.open("a") as handle:
         try:
@@ -201,6 +204,8 @@ def run_locked(args, artifacts, receipt, output, *, port_factory=ports.AndroidPo
                 if seed_output is not None:
                     if not exact_identity(device.installed_identity(), baseline):
                         raise DriverFailure("upgrade_previous_mismatch")
+                    runtime_transaction = RuntimeTransaction(device)
+                    runtime_transaction.begin()
                     fixture.seed_history_fixture(
                         device, lambda value: write_private_receipt(seed_output, value)
                     )
@@ -286,6 +291,15 @@ def run_locked(args, artifacts, receipt, output, *, port_factory=ports.AndroidPo
                         )
                 except Exception:
                     result.update(state="fail", restoreError="normal_restore_failed")
+            if runtime_transaction is not None:
+                try:
+                    runtime_transaction.restore()
+                except Exception:
+                    result.update(
+                        state="fail", runtimeRestoreError="runtime_restore_failed"
+                    )
+                    result.setdefault("code", "runtime_restore_failed")
+                result["runtimeTransaction"] = runtime_transaction.facts()
             result["automatedChecksPassed"] = (
                 result["state"] == "pass" and result["normalRestored"]
             )

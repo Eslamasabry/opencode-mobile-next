@@ -66,8 +66,22 @@ def exact_keys(value, keys):
 
 
 def validate_result(value, capability):
-    exact_keys(value, ("state", "code", "facts"))
-    require(value["state"] in ("pass", "fail"), "Invalid assertion state.")
+    blocked = type(value) is dict and value.get("state") == "blocked"
+    exact_keys(value, ("state", "code", "facts", "classification", "originalCode")
+               if blocked else ("state", "code", "facts"))
+    require(value["state"] in ("pass", "fail", "blocked"), "Invalid assertion state.")
+    if blocked:
+        require(capability not in ("version", "create", "models")
+                and value["code"] == "provider_unavailable"
+                and value["classification"] == "provider"
+                and value["originalCode"] in (
+                    "oc1_baseline_model_unavailable", "oc1_requested_model_unavailable",
+                    "oc1_no_usable_model", "oc1_second_model_unavailable",
+                    "oc1_image_model_unavailable", "oc1_prompt_error", "timeout",
+                    "oc1_permission_outcome_timeout", "nonempty_histories_missing")
+                and ((capability == "protocolSwitch") ==
+                     (value["originalCode"] == "nonempty_histories_missing")),
+                "Only scoped provider inference blockers are accepted.")
     code = value["code"]
     require(type(code) is str and re.fullmatch(r"[a-z][a-z0-9_]{0,63}", code),
             "Invalid fixed assertion code.")
@@ -90,6 +104,38 @@ def validate_result(value, capability):
         require(code != "verified" and facts.get("asserted") is not True,
                 "A failed assertion cannot claim verification.")
     return copy.deepcopy(value)
+
+
+def validate_model_selection(selection):
+    if type(selection) is dict and "selected" in selection:
+        exact_keys(selection, ("source", "requested", "selected", "baselineAvailable",
+                               "inferenceAvailable", "selectedByPhase"))
+        require(selection["source"] in ("explicit", "baseline", "catalog-fallback")
+                and type(selection["requested"]) is str
+                and re.fullmatch(MODEL_REFERENCE, selection["requested"]),
+                "Invalid live model selection source.")
+        selected = selection["selected"]
+        require(selected is None or (type(selected) is str and re.fullmatch(MODEL_REFERENCE, selected)),
+                "Invalid actual model reference.")
+        require(type(selection["baselineAvailable"]) is bool
+                and type(selection["inferenceAvailable"]) is bool
+                and (not selection["inferenceAvailable"] or selected == selection["requested"]),
+                "Invalid model availability evidence.")
+        phases = selection["selectedByPhase"]
+        require(type(phases) is dict and len(phases) <= 8
+                and all(key in ("stream", "reconnect", "model", "abort", "allow", "deny", "image", "cards")
+                        and (model is None or (type(model) is str and re.fullmatch(MODEL_REFERENCE, model)))
+                        for key, model in phases.items()),
+                "Invalid phase model references.")
+        return
+    exact_keys(selection, ("source", "requested"))
+    require(selection["source"] in ("explicit", "server-default"),
+            "Invalid base model selection source.")
+    requested = selection["requested"]
+    require((selection["source"] == "server-default" and requested is None) or
+            (selection["source"] == "explicit" and type(requested) is str and
+             re.fullmatch(MODEL_REFERENCE, requested)),
+            "Invalid public base model reference.")
 
 
 def validate_run(run):
@@ -163,14 +209,7 @@ def validate_run(run):
         exact_keys(engine, engine_keys)
         if run["schemaVersion"] == 2:
             selection = engine["modelSelection"]
-            exact_keys(selection, ("source", "requested"))
-            require(selection["source"] in ("explicit", "server-default"),
-                    "Invalid base model selection source.")
-            requested = selection["requested"]
-            require((selection["source"] == "server-default" and requested is None) or
-                    (selection["source"] == "explicit" and type(requested) is str and
-                     re.fullmatch(MODEL_REFERENCE, requested)),
-                    "Invalid public base model reference.")
+            validate_model_selection(selection)
         require(engine["expectedVersion"] == expected, "Unexpected engine pin.")
         observed = engine["observedVersion"]
         require(observed is None or (type(observed) is str and
@@ -225,7 +264,7 @@ def markdown_text(value):
 def state_symbol(state):
     return {
         "pass": "✅", "partial": "🟡", "untested": "·", "off": "⛔", "n/a": "—",
-        "fail": "❌",
+        "fail": "❌", "blocked": "🔒",
     }.get(state, "🔒" if state.startswith("blocked:") else markdown_text(state))
 
 
@@ -281,6 +320,8 @@ def render_markdown(matrix):
         protocol = agent["protocolCertification"]
         selection = protocol.get("modelSelection")
         base_model = ("historical: not recorded" if selection is None else
+                      selection["source"] + ": " + (selection["selected"] or "unavailable")
+                      if "selected" in selection else
                       "server-default" if selection["source"] == "server-default" else
                       "explicit: " + selection["requested"])
         rows.append([
@@ -292,14 +333,16 @@ def render_markdown(matrix):
     lines += table(["Agent", "Expected", "Observed", "Build", "Run", "Base model scope", *ALL_CAPABILITIES], rows)
     lines += ["", "Model-dependent passes apply to the recorded base model selection. "
               "An explicit selection does not qualify server-default inference or other base models."]
-    lines += ["", "FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed or prerequisite missing.", ""]
+    lines += ["", "FQ3 legend: ✅ protocol assertion passed · ❌ assertion failed · 🔒 provider unavailable.", ""]
     for agent in certified:
         protocol = agent["protocolCertification"]
         evidence_link = "../" + protocol["evidence"].removeprefix("docs/")
         lines += [f'**{agent["name"]}** — [{protocol["runID"]}]({evidence_link})', ""]
         for capability, result in protocol["capabilities"].items():
             facts = json.dumps(result["facts"], sort_keys=True, separators=(",", ":"))
-            lines.append(f'- {capability}: {result["state"]} — `{result["code"]}`; facts `{facts}`')
+            cause = (f'; classification `{result["classification"]}`; original `{result["originalCode"]}`'
+                     if result["state"] == "blocked" else "")
+            lines.append(f'- {capability}: {result["state"]} — `{result["code"]}`{cause}; facts `{facts}`')
         lines += [""]
     return "\n".join(lines)
 
