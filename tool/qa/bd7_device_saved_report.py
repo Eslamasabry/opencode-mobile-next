@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Crash-only saved-report and share-preview proof on approved APK 2198.
+"""Crash-only saved-report and share-preview proof on approved APK 2199.
 
-The standalone command waits at most 1800 seconds for the shared emulator lock.
+The standalone command waits at most 3600 seconds for the shared emulator lock.
 An outer lock owner may instead call run_locked. No ANR, provider interaction,
 external share, synthetic report, private diagnostics write or baseline erase.
 """
@@ -29,7 +29,7 @@ from tool.qa.fq9.common import (
 )
 from tool.qa.fq9.ports import AndroidPorts, apk_identity, verify_artifact, FAIL_CODES
 
-NORMAL_APK = Path("/home/eslam/Storage/tmp/oc-apk-share/oc-2198.apk")
+NORMAL_APK = Path("/home/eslam/Storage/tmp/oc-apk-share/oc-2199.apk")
 SAVED_CODES = (
     frozenset(
         {
@@ -92,11 +92,11 @@ def load_artifact(apk):
     except (OSError, ValueError, IndexError):
         raise DriverFailure("artifact_checksum_unavailable") from None
     identity = apk_identity(apk)
-    if identity["build"] != 2198 or identity["signer"] != LOCAL_SIGNER:
+    if identity["build"] != 2199 or identity["signer"] != LOCAL_SIGNER:
         raise DriverFailure("candidate_identity_mismatch")
     artifact = Artifact(
         apk,
-        2198,
+        2199,
         identity["version"],
         checksum.lower(),
         LOCAL_SIGNER,
@@ -271,7 +271,7 @@ class SavedReportSession(DeviceSession):
 
 def run_locked(artifact, output, *, device=None, session=None):
     """Caller holds one emulator reservation; no nested flock or old driver run."""
-    if artifact.build != 2198 or artifact.signer != LOCAL_SIGNER:
+    if artifact.build != 2199 or artifact.signer != LOCAL_SIGNER:
         raise DriverFailure("candidate_identity_mismatch")
     device = device or AndroidPorts(SHARED_SERIAL, "bd7-saved-" + str(time.time_ns()))
     if not device.locked:
@@ -332,7 +332,7 @@ def run_locked(artifact, output, *, device=None, session=None):
                 actual = device.installed_identity()
                 if actual["signer"] != artifact.signer or actual["uid"] != uid:
                     raise DriverFailure("normal_restore_identity_mismatch")
-                # User requested installation of normal2198 after every run.
+                # User requested installation of normal2199 after every run.
                 device.adb("install", "-r", str(artifact.apk), timeout=180)
                 actual = device.installed_identity()
                 if not same_artifact(actual, artifact) or actual["uid"] != uid:
@@ -352,15 +352,15 @@ def run_locked(artifact, output, *, device=None, session=None):
 def locked_run(artifact, output):
     with LOCK.open("a") as lock:
         try:
-            # flock receives this open FD, waits bounded1800, and leaves the
+            # flock receives this open FD, waits bounded3600, and leaves the
             # parent descriptor locked until restoration finishes and closes.
             subprocess.run(
-                ["flock", "-w", "1800", str(lock.fileno())],
+                ["flock", "-w", "3600", str(lock.fileno())],
                 pass_fds=(lock.fileno(),),
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 check=True,
-                timeout=1805,
+                timeout=3605,
             )
         except (OSError, subprocess.SubprocessError):
             raise DriverFailure("lock_timeout") from None

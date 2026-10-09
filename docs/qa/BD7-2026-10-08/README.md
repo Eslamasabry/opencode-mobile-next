@@ -206,3 +206,17 @@ requires a rerun against the coordinator's2197 candidate, including real
 native-crash and ANR capture, saved rows and previews, private diagnostics
 rollback, and normal-app restoration inside the same emulator lock. Until those
 receipts exist, saved-report qualification remains **BLOCKED**.
+
+## 2199 saved-report follow-up — 2026-10-09
+
+Finish line: on approved normal 2199, enable capture through Settings, crash only
+the verified app PID, reopen and verify the saved row and local share preview,
+then delete the owned report, restore capture Off and reinstall normal 2199
+inside the same emulator reservation. Non-goals: ANR, external sharing, provider
+interaction, installer-ticket repair, app-data reset, UI/native changes or builds.
+Emulator order is BB, BA, then BC; the driver waits with `flock -w 3600`.
+
+Candidate and lock-wait regression control: updated 2199 fixture against the
+old 2198-only driver failed (3 assertions, 3 admission errors); the lock assertion
+observed 1800 instead of 3600 seconds. Device proof is pending, not qualified by
+these offline controls.
