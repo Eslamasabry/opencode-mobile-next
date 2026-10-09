@@ -1,0 +1,119 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: fresh agent snapshot restores busy after cached idle
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: hydrating a running agent publishes status without a turn event
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect running restores chat and composer
+00:01 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect idle restores chat and composer
+00:01 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: idle snapshot completes a streamed reply without a terminal event
+00:01 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: subagent running and completed events reach controller busy state
+00:01 +6: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart
+00:02 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: endpoint policy cleartext is limited to this device and Tailscale
+00:02 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: endpoint policy profile validators agree and an empty password is allowed
+00:02 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: endpoint policy a paseo profile round-trips without its password
+00:02 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a rejected password is an authentication failure
+00:02 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: hello claims only what the client implements
+00:02 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: the agent's own commands are listed without its plumbing
+00:02 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: an update keeps the conversation's model and mode
+00:02 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sessions are this folder's unarchived agents
+00:02 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: ready runtimes become providers; modes become agents
+00:02 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a daemon still listing its models is waited for, not believed
+00:02 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation stays local until its first prompt names the runtime
+00:02 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation keeps its app id while the daemon uses its own
+00:02 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation replays events that raced ahead of the create answer
+00:02 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a new conversation a spawn-time idle snapshot does not end the run
+00:02 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a finished turn finishes its replies
+00:02 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming assistant text is announced once, then streamed as deltas
+00:02 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a replayed sequence number is ignored
+00:02 +23: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming reasoning deltas share one message until another item
+00:02 +24: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a tool call is one message updated by snapshots
+00:02 +25: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming a failed turn surfaces safe fixed copy
+00:02 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: streaming events for another folder's agent are dropped
+00:02 +27: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions a write request becomes an edit card with its file
+00:02 +28: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions once allows; always also applies the provider's rule
+00:02 +29: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions reject denies with the reason; cancel also interrupts
+00:02 +30: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions an answered request does not return from a stale snapshot
+00:02 +31: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permissions a request answered elsewhere is retired by the next snapshot
+00:02 +32: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: history maps the merged timeline and primes the live stream
+00:02 +33: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: delete archives, and an archive elsewhere removes the session
+00:02 +34: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a refused request is a fixed failure, never the daemon's text
+00:02 +35: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: a dropped socket reconnects and re-reads the agent list
+00:04 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents a sub-agent is its conversation's child, and its card opens it
+00:04 +37: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents its steps stream into its own conversation
+00:04 +38: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents its history is read from the helper; it takes no replies
+00:04 +39: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: sub-agents an old conversation's cards link to the sub-agents the helper still knows
+00:04 +40: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: probe bad input never opens a socket
+00:04 +41: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: probe a verified daemon names its ready runtimes
+00:04 +42: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_gateway_test.dart: permission mapping covers shell and unknown tools
+00:04 +43: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart
+00:04 +43: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: complete all-helper idle inventory establishes known idle
+00:05 +44: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: live work outside the selected directory blocks helper idle
+00:05 +45: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: a partial inventory cannot authorize idle
+00:05 +46: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: initializing and permissions elsewhere keep the helper busy
+00:05 +47: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: subagent work elsewhere survives an idle parent snapshot
+00:05 +48: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: malformed inventory is unknown while known work takes precedence
+00:05 +49: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: disconnect and closure revoke known idle without reading a clock
+00:05 +50: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: cold idle parent cannot conceal a running subagent
+00:05 +51: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: unsupported subagent inventory cannot prove idle
+00:05 +52: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: a new idle agent needs cold child coverage before known idle
+00:05 +53: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: empty complete helper inventory proves idle
+00:05 +54: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: new parent during child inventory cannot restore known idle
+00:05 +55: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: running push during fetch outranks stale idle inventory
+00:05 +56: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: closed parent status does not prove independent children idle
+00:05 +57: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: malformed completion ordering cannot erase an active turn
+00:05 +58: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: stale archived snapshot cannot erase active turn or child
+00:05 +59: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: unseen completed parent needs child inventory before idle
+00:05 +60: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: unseen permission parent needs child inventory after resolution
+00:05 +61: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_idle_busy_test.dart: unseen subagent parent needs inventory after child completion
+00:05 +62: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_prompt_test.dart
+00:05 +62: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_prompt_test.dart: correlated prompt forwards exact caller ID after final fence
+00:05 +63: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_prompt_test.dart: caller refusal prevents dispatch and releases awaiting turn
+00:05 +64: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_prompt_test.dart: correlated draft is rejected before any server mutation
+00:05 +65: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_prompt_test.dart: photo answer accepts the daemon ID of a locally created chat
+00:05 +66: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_prompt_test.dart: daemon ID idle check preserves the pending turn guard
+00:05 +67: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_prompt_test.dart: daemon ID idle check preserves the running turn guard
+00:05 +68: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_correlated_prompt_test.dart: transport fence runs after async connection and propagates refusal
+00:05 +69: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart
+00:06 +69: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: scoped feed preserves provider identity without a selected model
+00:06 +70: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: agent filtering and clearing retain the original filter contract
+00:06 +71: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: bounded pagination reports partial rows without inventing global inventory
+00:06 +72: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: repeated cursors stop the bounded read
+00:06 +73: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: a failed refresh retains rows and exposes only partial truth
+00:06 +74: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: coalesced refresh and disposal fence a late response
+00:06 +75: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: changing gateway scope hides held rows and prevents retargeting
+00:06 +76: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: timeout keeps bounded partial state and rejects late completion
+00:06 +77: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: unknown agents and other projects are refused before a draft is made
+00:06 +78: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: pending permission outranks a running row without exposing details
+00:06 +79: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: selected runtime survives an empty initial draft until first prompt
+00:06 +80: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: phone Claude always asks for the asking mode: listed [default]
+00:06 +81: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: phone Claude always asks for the asking mode: listed []
+00:06 +82: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: phone Claude always asks for the asking mode: listed [bypassPermissions]
+00:06 +83: /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_chat_feed_source_test.dart: remember callback is optional and scope-fenced
+00:06 +84: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart
+00:08 +84: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: request replies cannot cross scope while waking
+00:08 +85: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: request replies cannot cross contents while waking
+00:08 +86: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: request replies cannot cross resolved then reused while waking
+00:08 +87: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: question answer and reject share a write slot before transport wake
+00:08 +88: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: late question failure after remote resolution does not surface an error
+00:08 +89: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: V2 HTTP hydration envelopes and session-scoped mutations
+00:08 +90: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: loose successful V2 request envelopes remain compatible
+00:08 +91: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: generated V2 request errors retain OpenCode identity
+00:08 +92: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: V2 hydration rejects mismatched and malformed envelopes
+00:08 +93: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: V2-only hydration routes mutations and blocks stale resurrection
+00:08 +94: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: permission and question replies wait for wake transport
+00:08 +95: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: partial V2 hydration failure preserves V2 reply provenance
+00:08 +96: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: QuestionNotFoundError resolves V2 and legacy requests locally
+00:08 +97: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: SSE reconnect refreshes pending questions
+00:08 +98: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: question hydration merges an independent concurrent SSE request
+00:08 +99: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: session snapshots merge around newer per-session events
+00:08 +100: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: connected stream reconciles a missed idle event
+00:08 +101: /home/eslam/Storage/Code/oc_app-sol-ba/test/connection_v2_requests_test.dart: a run missing from one status read, between two steps, stays running
+00:08 +102: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart
+00:09 +102: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: mid-stream drop the partial answer stays on screen while the stream is down and the refetch completes it once
+00:11 +103: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: mid-stream drop a delta arriving after the refetch extends the refetched text exactly once
+00:11 +104: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: long sleep and resume resuming after a sleep reconciles to the server transcript and shows the finished answer once
+00:11 +105: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: network switch a Wi-Fi to LTE flap with a prompt on the wire sends nothing twice
+00:11 +106: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: network switch the queue flushes once after the network returns, in order
+00:11 +107: /home/eslam/Storage/Code/oc_app-sol-ba/test/reconnect_hardening_test.dart: network switch a prompt whose send was cut by the switch is held for review, not resent on the new network
+00:11 +108: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart
+00:11 +108: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: no lib file grows past its line budget
+00:12 +109: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: the baseline only lists files over the limit
+00:12 +110: All tests passed!

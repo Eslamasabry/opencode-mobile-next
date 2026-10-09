@@ -3,7 +3,10 @@ part of '../gateway.dart';
 extension _PaseoSessions on PaseoGateway {
   /// Records a daemon agent snapshot. Returns null when it belongs to another
   /// project folder or is archived.
-  Session? _remember(Map<String, dynamic> agent) {
+  Session? _remember(
+    Map<String, dynamic> agent, {
+    bool reconcileStatus = true,
+  }) {
     final realID = agent['id'];
     if (realID is String && _appIDs.containsKey(realID)) {
       agent = {...agent, 'id': _appIDs[realID]};
@@ -31,10 +34,19 @@ extension _PaseoSessions on PaseoGateway {
       _awaitingTurn.remove(session.id);
       _turnActive.remove(session.id);
     }
-    _statuses[session.id] =
-        _awaitingTurn.contains(session.id) || _turnActive.contains(session.id)
-        ? 'busy'
-        : paseoSessionStatus(agent);
+    if (reconcileStatus) {
+      // Snapshot reads are authoritative too: the controller may still hold
+      // idle from before this read (or before a transport reconnect).
+      final next =
+          _awaitingTurn.contains(session.id) || _turnActive.contains(session.id)
+          ? 'busy'
+          : paseoSessionStatus(agent);
+      final previous = _statuses[session.id];
+      _emitStatus(session.id, next);
+      if (previous != next && next == 'idle') {
+        _emit('session.idle', {'sessionID': session.id});
+      }
+    }
     _drafts.remove(session.id);
     _draftProviders.remove(session.id);
     _syncPermissions(session.id, agent['pendingPermissions']);
@@ -73,7 +85,10 @@ extension _PaseoSessions on PaseoGateway {
     if (realID != null) _appIDs.remove(realID);
   }
 
-  Future<Map<String, dynamic>> _fetchAgent(String id) async {
+  Future<Map<String, dynamic>> _fetchAgent(
+    String id, {
+    bool reconcileStatus = true,
+  }) async {
     final scope = _scope;
     final epoch = _locationEpoch;
     final workRevision = _localWork.revision;
@@ -94,7 +109,7 @@ extension _PaseoSessions on PaseoGateway {
       _localWork.changed();
     }
 
-    if (_remember(agent) == null) {
+    if (_remember(agent, reconcileStatus: reconcileStatus) == null) {
       throw PaseoFailure(PaseoFailureKind.scopeMismatch);
     }
     return agent;

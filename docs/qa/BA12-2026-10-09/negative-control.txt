@@ -1,0 +1,188 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart
+00:00 +0: fresh agent snapshot restores busy after cached idle
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: contains 'claude-live'
+  Actual: Set:[]
+   Which: does not contain 'claude-live'
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:160:7)
+<asynchronous suspension>
+#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:155:5)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 160
+The test description was:
+  fresh agent snapshot restores busy after cached idle
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: fresh agent snapshot restores busy after cached idle [E]
+  Test failed. See exception logs above.
+  The test description was: fresh agent snapshot restores busy after cached idle
+  
+00:00 +0 -1: hydrating a running agent publishes status without a turn event
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: contains 'claude-live'
+  Actual: Set:[]
+   Which: does not contain 'claude-live'
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:171:9)
+<asynchronous suspension>
+#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:167:7)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 171
+The test description was:
+  hydrating a running agent publishes status without a turn event
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -2: hydrating a running agent publishes status without a turn event [E]
+  Test failed. See exception logs above.
+  The test description was: hydrating a running agent publishes status without a turn event
+  
+00:00 +0 -2: drop mid-reply then reconnect running restores chat and composer
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: contains 'claude-live'
+  Actual: Set:[]
+   Which: does not contain 'claude-live'
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:192:11)
+<asynchronous suspension>
+#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:180:9)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 192
+The test description was:
+  drop mid-reply then reconnect running restores chat and composer
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -3: drop mid-reply then reconnect running restores chat and composer [E]
+  Test failed. See exception logs above.
+  The test description was: drop mid-reply then reconnect running restores chat and composer
+  
+00:01 +0 -3: drop mid-reply then reconnect idle restores chat and composer
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: contains 'claude-live'
+  Actual: Set:[]
+   Which: does not contain 'claude-live'
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:192:11)
+<asynchronous suspension>
+#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:180:9)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 192
+The test description was:
+  drop mid-reply then reconnect idle restores chat and composer
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -4: drop mid-reply then reconnect idle restores chat and composer [E]
+  Test failed. See exception logs above.
+  The test description was: drop mid-reply then reconnect idle restores chat and composer
+  
+00:01 +0 -4: idle snapshot completes a streamed reply without a terminal event
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: contains 'streamed-answer'
+  Actual: Set:[]
+   Which: does not contain 'streamed-answer'
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:283:9)
+<asynchronous suspension>
+#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:261:7)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 283
+The test description was:
+  idle snapshot completes a streamed reply without a terminal event
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -5: idle snapshot completes a streamed reply without a terminal event [E]
+  Test failed. See exception logs above.
+  The test description was: idle snapshot completes a streamed reply without a terminal event
+  
+00:01 +0 -5: subagent running and completed events reach controller busy state
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <true>
+  Actual: <false>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:301:11)
+<asynchronous suspension>
+#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+<asynchronous suspension>
+#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:294:7)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 301
+The test description was:
+  subagent running and completed events reach controller busy state
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -6: subagent running and completed events reach controller busy state [E]
+  Test failed. See exception logs above.
+  The test description was: subagent running and completed events reach controller busy state
+  
+00:01 +0 -6: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect idle restores chat and composer
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect running restores chat and composer
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: fresh agent snapshot restores busy after cached idle
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: hydrating a running agent publishes status without a turn event
+  ... and 2 more

@@ -106,7 +106,6 @@ extension _PaseoSubagents on PaseoGateway {
     });
     final status = descriptor['status'] == 'running' ? 'busy' : 'idle';
     if (_statuses[id] != status) {
-      _statuses[id] = status;
       _emitStatus(id, status);
       if (status == 'idle' && known) _emit('session.idle', {'sessionID': id});
     }
@@ -181,16 +180,13 @@ extension _PaseoSubagents on PaseoGateway {
   /// A sub-agent's own conversation.
   Future<List<MessageWithParts>> _subagentMessages(String id) async {
     final subagent = _subagents[id]!;
-    final result = await transport.request(
-      'agent.provider_subagents.timeline.get.request',
-      {
-        'parentAgentId': subagent.parentReal,
-        'subagentId': subagent.subagentId,
-        'direction': 'tail',
-        'limit': 200,
-      },
-      timeout: const Duration(seconds: 45),
-    );
+    final result = await transport
+        .request('agent.provider_subagents.timeline.get.request', {
+          'parentAgentId': subagent.parentReal,
+          'subagentId': subagent.subagentId,
+          'direction': 'tail',
+          'limit': 200,
+        }, timeout: const Duration(seconds: 45));
     final provider = result['provider'];
     final busy = _statuses[id] == 'busy';
     final messages = paseoTimelineMessages(id, {

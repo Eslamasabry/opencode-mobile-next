@@ -684,7 +684,8 @@ class PaseoGateway
         if (_closed || _turnActive.contains(id)) return;
         final Map<String, dynamic> agent;
         try {
-          agent = await _fetchAgent(id);
+          // Keep the two-idle debounce owned by this watcher.
+          agent = await _fetchAgent(id, reconcileStatus: false);
         } catch (_) {
           continue;
         }
