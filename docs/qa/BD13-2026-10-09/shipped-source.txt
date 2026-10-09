@@ -57,4 +57,3 @@ SHA-256 pins package files; selected lines below preserve the relevant source ob
   L3: /** Task-tool subagents. Backgrounded shell commands announce as `local_bash`. */
   L5: /** Workflow executions use the same announced task lifecycle as Task-tool subagents. */
   L10: *   Task subagent      task_type "local_agent", subagent_type "general-purpose"
-
