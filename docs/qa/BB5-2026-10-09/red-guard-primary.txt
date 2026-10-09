@@ -1,0 +1,18 @@
+F
+======================================================================
+FAIL: test_startup_failure_is_preserved_even_when_cleanup_and_reporting_fail (test_bb5_native_guard.NativeGuardTest.test_startup_failure_is_preserved_even_when_cleanup_and_reporting_fail)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 83, in test_startup_failure_is_preserved_even_when_cleanup_and_reporting_fail
+    self.run_case('failure')
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 77, in run_case
+    self.assertEqual(0, result.returncode, result.stderr)
+AssertionError: 0 != 1 : Exception in thread "main" java.lang.AssertionError: primary replaced by cleanup
+	at io.github.eslamasabry.opencode_mobile.GuardHost.check(GuardHost.java:42)
+	at io.github.eslamasabry.opencode_mobile.GuardHost.main(GuardHost.java:30)
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.481s
+
+FAILED (failures=1)

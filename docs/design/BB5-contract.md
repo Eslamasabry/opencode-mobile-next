@@ -1,9 +1,11 @@
 # BB5 — idle stop and guarded foreground resume
 
-Status: Dart foreground/heartbeat integration verified; BB4 qualified at
-`30e5d9027`, BA hooks merged at `f561c3584`, and integration head `9485f0c7c`
-merged at `7af5b544c`. Native wiring is drafted but not yet compiled or device
-qualified. The coordinator lifted the memory hold with a
+Status: Dart/native integration committed at `7b650152b` and merged into the
+2199 integration candidate. Native compilation and unit checks passed in the
+authorized build window; device idle qualification failed before the background
+wait and remains pending. BB5 stays default-off. Private QA cleanup/diagnostics
+were repaired offline; the modified runner still needs Android compilation and
+a new device run after BC's turn. The coordinator lifted the memory hold with a
 4GB Gradle heap, in-process Kotlin, at most two workers and at least 6GB available
 memory before builds. Native/lifecycle wiring is in progress; supporting-device
 qualification is still required before enabling the feature.

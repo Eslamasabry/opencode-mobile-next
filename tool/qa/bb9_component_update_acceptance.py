@@ -173,6 +173,12 @@ class Device(Q.Device):
                        self.adb('shell', 'am', 'instrument', '--no-restart', '-w', '-e', 'step', step, *extra, Q.RUNNER, timeout=90))
         fields = parse_status(result.stdout)
         fixed_reason = fields.get('builtinRuntimeFailure')
+        if step == 'bb5Idle' and fields.get('builtinRuntimeResult') == 'FAIL':
+            for key in ['bb5RuntimePrepared', 'bb5IdleWaitEntered']:
+                print('native_qa_' + key + '=' + ('true' if fields.get(key) == 'true' else 'unproven'), flush=True)
+            cleanup_reason = fields.get('bb5CleanupFailure')
+            if isinstance(cleanup_reason, str) and re.fullmatch(r'bb5_[a-z_]{1,80}', cleanup_reason):
+                print('native_qa_cleanup_refusal=' + cleanup_reason, flush=True)
         if fields.get('builtinRuntimeResult') != 'PASS' and isinstance(fixed_reason, str) and re.fullmatch(r'(?:bb5|bb9)_[a-z_]{1,80}', fixed_reason):
             print('native_qa_refusal=' + fixed_reason, flush=True)
         if expected_failure is not None:

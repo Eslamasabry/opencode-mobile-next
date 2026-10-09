@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_failed_startup_reports_primary_secondary_and_unentered_timer_safely (test_bb5_runtime_acceptance.AdapterTest.test_failed_startup_reports_primary_secondary_and_unentered_timer_safely)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_runtime_acceptance.py", line 64, in test_failed_startup_reports_primary_secondary_and_unentered_timer_safely
+    self.assertIn('native_qa_cleanup_refusal=bb5_cleanup_fixture_path_invalid', output.getvalue())
+AssertionError: 'native_qa_cleanup_refusal=bb5_cleanup_fixture_path_invalid' not found in 'native_qa_bb5RuntimePrepared=unproven\nnative_qa_bb5IdleWaitEntered=unproven\nnative_qa_refusal=bb5_fixture_owner_changed\n'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

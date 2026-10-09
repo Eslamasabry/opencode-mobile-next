@@ -64,26 +64,35 @@ internal class BuiltinIdleAcceptance(
             .put("priorIdleEnabled", enabled).put("priorIdleMinutes", minutes))
         var helper: Process? = null
         var replacement: Process? = null
-        try {
+        var phase = "bb5_person_stop_failed"
+        RuntimeQaGuard.runWithCleanup({ try {
             linux.requestServerStop()
             linux.stopServer()
             await(8_000L, "bb5_person_runtime_not_drained") { !linux.serverRunning }
+            phase = "bb5_recovery_stage_failed"
             linux.stageServerRecovery(PROFILE, NativeRecoveryBudget(attempts = 1).map())
             requireSafe(flutter.edit().putString(marker, "{\"version\":2,\"nativeAuthority\":true}")
                 .putString(policy, QA_POLICY).commit(), "bb5_fixture_save_failed")
+            phase = "bb5_owner_bind_failed"
             linux.bindServerRecovery(PROFILE, null, true)
+            requireOwner()
+            phase = "bb5_canonical_start_failed"
             val recipe = NativeServerRecipe(PROFILE, "openCode2", 1L, "0".repeat(64))
             linux.startServer(recipe.restorationScript(), 4097,
                 mapOf("version" to 1, "profileId" to PROFILE, "runtime" to "openCode2"))
             awaitHealth(linux)
             requireOwner()
+            phase = "bb5_helper_start_failed"
             val firstHelper = startHelper(linux, false, null)
             helper = firstHelper
+            phase = "bb5_idle_policy_failed"
             linux.setPhoneServerIdlePolicy(true, 1)
             val budget = linux.serverRecoveryBudget(PROFILE)
             val old = runtimeMembers(linux)
             requireSafe(old.isNotEmpty() && firstHelper.isAlive, "bb5_original_runtime_unproven")
             save(JSONObject(fixture.readText()).put("members", org.json.JSONArray(old.map { JSONObject(it.map()) })))
+            emit("bb5RuntimePrepared")
+            phase = "bb5_background_setup_failed"
 
             // Foreground and unknown work must not create an idle-stop token.
             linux.observePhoneAgentWork(PROFILE, false)
@@ -100,6 +109,8 @@ internal class BuiltinIdleAcceptance(
 
             val started = SystemClock.elapsedRealtime()
             var nextHeartbeat = started
+            emit("bb5IdleWaitEntered")
+            phase = "bb5_idle_wait_failed"
             await(75_000L, "bb5_real_idle_deadline_not_reached") {
                 requireOwner()
                 requireSafe(!resumed(linux), "bb5_background_lost")
@@ -129,6 +140,7 @@ internal class BuiltinIdleAcceptance(
                 (linux.serverIdleStatus()["serverIdleGeneration"] as? Number)?.toLong() == generation &&
                 linux.serverRecoveryBudget(PROFILE) == budget, "bb5_idle_resurrected_or_spent_budget")
             emit("bb5RealIdlePassed", "bb5ExactDrainPassed", "bb5StoppedIntentPassed")
+            phase = "bb5_notification_validation_failed"
 
             val notices = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val notice = notices.activeNotifications.singleOrNull {
@@ -149,6 +161,7 @@ internal class BuiltinIdleAcceptance(
                 it.id == NativeIdleReturnNotificationHost.ID
             }, "bb5_foreground_idle_notification_retained")
             emit("bb5NotificationTapPassed")
+            phase = "bb5_foreground_resume_failed"
             requireOwner() // Main/Dart owner rebinding is a refusal, never an acceptance bypass.
             linux.resumeIdleStoppedPhoneServer(PROFILE, generation)
             awaitHealth(linux)
@@ -165,6 +178,7 @@ internal class BuiltinIdleAcceptance(
                 linux.serverRecoveryBudget(PROFILE) == budget, "bb5_helper_completion_unproven")
             emit("bb5ForegroundResumePassed", "bb5HelperAcknowledgementPassed", "bb5BudgetPreserved")
 
+            phase = "bb5_explicit_stop_failed"
             linux.requestServerStop()
             requireSafe(runCatching { linux.resumeIdleStoppedPhoneServer(PROFILE, generation) }.isFailure &&
                 linux.captureAgentHostStart(PROFILE, true, generation) == null,
@@ -176,11 +190,18 @@ internal class BuiltinIdleAcceptance(
                 (linux.serverIdleStatus()["serverIdleGeneration"] as? Number)?.toLong() == 0L &&
                 linux.serverRecoveryBudget(PROFILE) == budget, "bb5_explicit_stop_intent_unproven")
             emit("bb5ExplicitStopPassed", "bb5IdlePassed")
-        } finally {
+        } catch (failure: Refused) {
+            throw failure
+        } catch (_: Throwable) {
+            // Fixed phase only; neither exception messages nor process output leave the runner.
+            throw Refused(phase)
+        } }, {
             // Exact Process objects we created; no PID selection, credential or helper lock operations.
             for (process in listOfNotNull(helper, replacement)) if (process.isAlive) linux.stopAgentProcess(process)
             cleanup(linux)
-        }
+        }, { failure -> instrumentation.sendStatus(0, Bundle().apply {
+            putString("bb5CleanupFailure", (failure as? Refused)?.safeCode ?: "bb5_cleanup_failed")
+        }) })
     }
 
     private fun startHelper(linux: BuiltinLinux, resume: Boolean, generation: Long?): Process {
@@ -196,17 +217,18 @@ internal class BuiltinIdleAcceptance(
 
     private fun cleanup(linux: BuiltinLinux) {
         if (!fixture.exists()) { emit("bb5CleanupComplete"); return }
-        requireSafe(fixture.canonicalFile == fixture.absoluteFile && fixture.length() in 1..65_536L,
-            "bb5_cleanup_fixture_invalid")
+        requireSafe(RuntimeQaGuard.fixturePathSafe(context.filesDir, fixture, "bb5-runtime-qa.json"),
+            "bb5_cleanup_fixture_path_invalid")
+        requireSafe(fixture.length() in 1..65_536L, "bb5_cleanup_fixture_size_invalid")
         val saved = JSONObject(fixture.readText())
         val keys = saved.keys().asSequence().toSet()
         requireSafe(keys == setOf("version", "owner", "priorIdleEnabled", "priorIdleMinutes") ||
             keys == setOf("version", "owner", "priorIdleEnabled", "priorIdleMinutes", "members"),
-            "bb5_cleanup_fixture_invalid")
+            "bb5_cleanup_fixture_keys_invalid")
         requireSafe(saved.opt("version") == 1 && saved.opt("owner") == PROFILE &&
             saved.opt("priorIdleEnabled") is Boolean && saved.opt("priorIdleMinutes") is Int &&
             saved.getInt("priorIdleMinutes") in 1..60,
-            "bb5_cleanup_fixture_invalid")
+            "bb5_cleanup_fixture_values_invalid")
         val owner = native.getString("owner", null)
         requireSafe(owner == PROFILE || (owner != PROFILE && !native.contains("oc.builtinRecoveryBudget.$PROFILE")),
             "bb5_cleanup_owner_changed")

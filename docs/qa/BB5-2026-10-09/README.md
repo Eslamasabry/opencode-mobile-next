@@ -69,3 +69,43 @@ BB5 native fixture diagnosis/rebuild and a new whole-session rerun remain requir
 Available memory after release was4231MiB, below the ordinary6144MiB Gradle gate;
 the temporary5120MiB allowance applied only to the previous exclusive window.
 No build was started. BB7 remains skipped for this unmet qualification dependency.
+
+## Offline fixture diagnosis after releasing the emulator
+
+Finish line: preserve the first admission failure and prove whether runtime setup
+and the background idle wait were entered. Non-goal: changing production owner,
+work admission or timer policy to make a private QA run pass.
+
+The four-field saved fixture precedes helper creation, policy configuration,
+runtime inventory capture and the actual background transition. No helper home
+existed. Therefore the observed run never reached its background idle wait; it
+does not establish a defective idle timer. Start/health, owner validation and
+helper admission remain candidates. Later owner changes during restoration do
+not identify the first failure.
+
+The original `finally` could replace any of those failures with cleanup's error.
+Its path check also rejects a valid trusted app files-directory alias because
+literal and canonical paths differ. The host now reproduces both problems using
+the **actual private Java guard** loaded by the Android fixture. Trusted parent
+aliases work; fixture symlinks, outside paths and directories refuse. Restoring
+the old path predicate produces an assertion failure; making cleanup replace
+the primary error produces a separate assertion failure. These establish fixture
+bugs, **not the unrecorded device startup cause or its exact Android path**.
+
+The fixture retains the original fixed refusal, reports a secondary cleanup code
+separately, maps otherwise unknown errors to fixed startup/owner/helper/policy/
+background/return phases, and emits `bb5RuntimePrepared`/`bb5IdleWaitEntered` only
+at their actual boundaries. Cleanup path/size/keys/value checks now have distinct
+fixed codes. The host prints only these allowed diagnostics. No raw exception,
+guest output, script, password, provider response or account data is added.
+
+37 focused host tests pass after byte-exact restoration; three removed fixes fail
+at behavioral assertions (alias, primary preservation, diagnostic fields).
+120 affected BB9 host tests pass. Evidence: [restored host run](host-guard-restored.txt),
+[affected hosts](host-guard-bb9-affected.txt), [alias red](red-guard-alias.txt),
+[primary red](red-guard-primary.txt), [field red](red-guard-phase-fields.txt).
+The host compiler/JVM are capped at96/64MiB, under the shared test lock; no
+Gradle/APK build or emulator session was started. Android Kotlin integration and
+the private runner rebuild are pending the memory/build gate. The actual device
+primary cause remains unproven until a corrected runner is exercised after BC's
+turn. BB5 remains default-off and device-unqualified; BB7 remains deferred.

@@ -301,7 +301,8 @@ def preserve_idle_highwater(original, current, merger):
 
 def configure(host=H):
     host.STEPS.update({'bb5Idle': 'bb5IdlePassed', 'bb5Cleanup': 'bb5CleanupComplete'})
-    host.FIELDS |= IDLE_FIELDS | {'bb5CleanupComplete', 'bb5AwaitNotificationTap'}
+    host.FIELDS |= IDLE_FIELDS | {'bb5CleanupComplete', 'bb5AwaitNotificationTap',
+                                 'bb5RuntimePrepared', 'bb5IdleWaitEntered', 'bb5CleanupFailure'}
     host.PHASE_NAMES |= {'instrument_' + step + suffix for step in ['bb5Idle', 'bb5Cleanup']
                        for suffix in ['', '_identity_check', '_pre_detach', '_invoke', '_post_detach']}
 

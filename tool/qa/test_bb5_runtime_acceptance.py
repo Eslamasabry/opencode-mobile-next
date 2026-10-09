@@ -1,4 +1,6 @@
 import copy
+import io
+from contextlib import redirect_stdout
 import json
 from pathlib import Path
 import tempfile
@@ -44,6 +46,23 @@ class AdapterTest(unittest.TestCase):
              patch.object(device, 'adb', return_value=SimpleNamespace(returncode=0,stdout=payload,stderr='')):
             with self.assertRaisesRegex(H.Q.Refused, '^bb5_cleanup_fixture_invalid$'):
                 device._instrument('bb5Idle', (), None, None)
+
+    def test_failed_startup_reports_primary_secondary_and_unentered_timer_safely(self):
+        device = H.Device(); app = dict(pid=111, startTicks=12, state="S")
+        payload = ('INSTRUMENTATION_STATUS: bb5CleanupFailure=bb5_cleanup_fixture_path_invalid\n'
+                   'INSTRUMENTATION_RESULT: builtinRuntimeResult=FAIL\n'
+                   'INSTRUMENTATION_RESULT: builtinRuntimeFailure=bb5_fixture_owner_changed\n'
+                   'INSTRUMENTATION_STATUS: secret=provider_key\n')
+        output = io.StringIO()
+        with patch.object(device, 'app_identity', return_value=app), \
+             patch.object(device, 'wait_detached'), redirect_stdout(output), \
+             patch.object(device, 'adb', return_value=SimpleNamespace(returncode=0,stdout=payload,stderr='')):
+            with self.assertRaisesRegex(H.Q.Refused, '^bb5_fixture_owner_changed$'):
+                device._instrument('bb5Idle', (), None, None)
+        self.assertIn('native_qa_bb5IdleWaitEntered=unproven', output.getvalue())
+        self.assertIn('native_qa_bb5RuntimePrepared=unproven', output.getvalue())
+        self.assertIn('native_qa_cleanup_refusal=bb5_cleanup_fixture_path_invalid', output.getvalue())
+        self.assertNotIn('provider_key', output.getvalue())
 
     def test_every_native_flag_is_required(self):
         for missing in B.IDLE_FIELDS:

@@ -1,0 +1,18 @@
+F
+======================================================================
+FAIL: test_trusted_android_app_alias_works_without_admitting_fixture_symlinks (test_bb5_native_guard.NativeGuardTest.test_trusted_android_app_alias_works_without_admitting_fixture_symlinks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 80, in test_trusted_android_app_alias_works_without_admitting_fixture_symlinks
+    self.run_case('path')
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 77, in run_case
+    self.assertEqual(0, result.returncode, result.stderr)
+AssertionError: 0 != 1 : Exception in thread "main" java.lang.AssertionError: trusted app alias
+	at io.github.eslamasabry.opencode_mobile.GuardHost.check(GuardHost.java:42)
+	at io.github.eslamasabry.opencode_mobile.GuardHost.main(GuardHost.java:14)
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.592s
+
+FAILED (failures=1)
