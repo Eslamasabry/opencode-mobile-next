@@ -1,0 +1,19 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/revamp/queued_prompt_move_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: behaviour the row says how many wait and its menu names the move
+00:01 +1: behaviour choose a conversation, confirm, and the picked prompts move there while the rest stay
+00:01 +2: behaviour a new conversation is the default; unpicking a prompt keeps it waiting
+00:01 +3: behaviour Undo puts the prompts back exactly as they were
+00:02 +4: behaviour Cancel moves nothing and starts no conversation
+00:02 +5: behaviour a failure keeps the sheet open in plain words, with the technical text only under Details
+00:02 +6: behaviour with no connected server there is nowhere to move to
+00:02 +7: controller a picked prompt no longer waiting is counted, not moved
+00:02 +8: controller Undo leaves a prompt that already started sending
+00:02 +9: controller profile isolation: no move to the source itself, to an unconnected server, or of another server's prompts
+00:02 +10: controller a model or agent the destination lacks is not kept
+00:02 +11: goldens server row menu
+00:02 +12: goldens move sheet
+00:02 +13: goldens server row menu wide
+00:03 +14: goldens move sheet wide
+00:03 +15: (tearDownAll)
+00:03 +15: All tests passed!

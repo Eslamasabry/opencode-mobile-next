@@ -1,0 +1,9 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart
+00:00 +0: first load: one loading bar and placeholder turns, no text
+00:01 +1: a conversation that could not load says so plainly, with Try again, and the raw error only under Details
+00:01 +2: a Claude history failure names its helper and can retry
+00:01 +3: a message that was not sent stays on the status line, with its text back in the box, until dismissed or sent again
+00:02 +4: reconnecting: quiet for 15 s, then a recovery action, and no stale progress once connected
+00:02 +5: one status line: a lost connection outranks a prompt error, which comes back when the connection does
+00:03 +6: a permission request: Allow once is the one primary, answered in place
+00:03 +7: All tests passed!

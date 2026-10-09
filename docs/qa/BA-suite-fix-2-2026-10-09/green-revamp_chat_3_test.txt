@@ -1,0 +1,9 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/revamp/chat_3_test.dart
+00:00 +0: a withdrawn message returns to the draft, and Undo takes it back out and queues it again
+00:00 +1: KitComposer: an attachment alone makes Send live, and a note or attachment appearing keeps the field
+00:01 +2: with no model signed in the chip says so before the first send, and never asks to choose while a model answers
+00:01 +3: offline, Send says it will send when back online
+00:01 +4: the history sheet says when nothing matches and clears the search
+00:02 +5: the prompt editor asks before discarding and hands its text back with Use in draft
+00:02 +6: on a server that takes files the attach row is live
+00:02 +7: All tests passed!

@@ -572,6 +572,7 @@ void main() {
         'studio',
         'desk',
       ]);
+      c.dispose();
     });
 
     test('a model or agent the destination lacks is not kept', () {

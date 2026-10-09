@@ -1,0 +1,137 @@
+machine_lock: got test slot 2 after 18s
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/chat_live_events_test.dart
+00:00 +0: UXCHAT uncached child Open rejects a project change during fetch
+00:01 +1: UXCHAT child Open rejects a superseded location selection
+00:01 +2: UXCHAT every parent inbox delivery loads canonical server result without sending
+00:02 +3: UXCHAT server-returned child result appears in parent without a client prompt
+00:02 +4: UXCHAT v2 subagent tools are summarized as delegated tasks
+00:02 +5: UXCHAT single foreground Stop preserves draft and targets this session
+00:02 +6: staged revert skips hidden pages when reopening older boundary
+00:02 +7: staged revert commit never reveals removed cached messages on refresh failure
+00:03 +8: staged revert keeps a composer draft until explicitly resolved
+00:03 +9: staged revert clear restores the hidden conversation
+00:03 +10: paged history preserves newest rows through older and duplicate pages
+00:03 +11: paged history retry keeps the cursor and transcript
+00:03 +12: paged history does not resurrect a message removed during loading
+00:04 +13: paged history preserves deltas newer than an older snapshot
+00:04 +14: paged history anchors the reader while older rows and live messages arrive
+00:05 +15: paged history retains older prefix on overlapping head refresh
+00:05 +16: paged history reconnect invalidates pending older page and updates open timeline
+00:05 +17: unloaded part edits wait for history and retain updates newer than its page
+00:05 +18: provisional session with an empty page and cursor is not discarded
+00:06 +19: message errors surface nested data.message
+00:06 +20: back discards only the exact verified empty mobile session
+00:06 +21: back preserves a newly created session after server messages
+00:06 +22: failed empty-session verification keeps server state
+00:06 +23: leaving with a typed draft keeps it silently
+00:06 +24: leaving an empty conversation keeps its pending photo destination
+00:06 +25: mobile new command stays when an attachment cannot persist
+00:06 +26: a running sibling agent appears in the switch strip
+00:07 +27: child chat exposes parent and sibling navigation
+00:07 +28: offline chat keeps its transcript and shows recovery actions
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _KeyWidgetFinder:<Found 0 widgets with key [<'connection-status-banner'>]: []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      _historyAndNavigationTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/chat_live_events/history_navigation_tests.dart:1105:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/chat_live_events/history_navigation_tests.dart line 1105
+The test description was:
+  offline chat keeps its transcript and shows recovery actions
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:07 +28 -1: offline chat keeps its transcript and shows recovery actions [E]
+  Test failed. See exception logs above.
+  The test description was: offline chat keeps its transcript and shows recovery actions
+
+00:07 +28 -1: rehydrate never flashes a skeleton over existing messages
+00:07 +29 -1: renders current OpenCode unified patches and server counts
+00:08 +30 -1: stages a selected diff comment as a composer reference
+00:08 +31 -1: foreground data refresh rehydrates messages missed while away
+00:08 +32 -1: composer keeps focus when the Android keyboard opens
+00:08 +33 -1: send waits for the wake-time replacement transport
+00:08 +34 -1: stop waits for the wake-time replacement transport
+00:09 +35 -1: stop failure remains visible instead of being swallowed
+00:09 +36 -1: session mutations wait for the wake-time replacement transport
+00:09 +37 -1: renders a generated image from a tool output filePath
+00:09 +38 -1: tool output previews wait for the wake-time transport
+00:09 +39 -1: opens non-image tool files in the shared preview
+00:09 +40 -1: generated CSV opens as a literal table without sending a prompt
+00:10 +41 -1: a finished turn gathers its tool chain into one work line; the words it said stay in view
+00:10 +42 -1: renders grouped tool failures as flat inline results
+00:10 +43 -1: keeps a tool chain growing across assistant records
+00:10 +44 -1: shows model changes and aggregates usage once per turn
+00:10 +45 -1: applies split text, reasoning, and tool input deltas
+00:10 +46 -1: merges consecutive reasoning and assistant text blocks
+00:10 +47 -1: transcript controls update old messages and persist state
+00:11 +48 -1: the transcript-wide reasoning toggle replaces per-part choices instead of stamping over them
+00:12 +49 -1: command launcher maps diff to the native session viewer
+00:12 +50 -1: command launcher maps context to the native usage surface
+00:12 +51 -1: debug command opens native app diagnostics
+00:12 +52 -1: health command opens native project health
+00:13 +53 -1: sessions command opens the all-project native finder
+00:13 +54 -1: status command opens its Settings hub destination
+00:13 +55 -1: connect command opens its Settings hub destination
+00:14 +56 -1: mcps command opens its Settings hub destination
+00:14 +57 -1: tools command opens its Settings hub destination
+00:14 +58 -1: themes command opens Settings › Appearance
+00:15 +59 -1: the menu's Tasks lands on the plan in the transcript, open
+00:15 +60 -1: no plan in the transcript, no Tasks entry in the menu
+00:15 +61 -1: launcher combines mobile actions with server commands
+00:16 +62 -1: /files attaches a project artifact back to the chat
+00:16 +63 -1: move, warp, and org commands preserve their server semantics
+00:17 +64 -1: move fails closed when working changes cannot be inspected
+00:17 +65 -1: prompt editor preserves selection, attachments, and cancel
+00:18 +66 -1: timeline finds a stable anchor with reduced motion
+00:18 +67 -1: fork from prompt restores text and file in the new composer
+00:19 +68 -1: session repository actions wait for the wake-time replacement
+00:19 +69 -1: /fork lists prompts and forks the selected message point
+00:19 +70 -1: a prompt picked in the timeline forks from that point
+00:19 +71 -1: timeline remains usable at 320dp with 2x text
+00:20 +72 -1: project reference screen adds an upstream directory prompt part
+00:20 +73 -1: typing slash opens filtered inline command suggestions
+00:20 +74 -1: inline command suggestion rows meet 44dp targets
+00:20 +75 -1: nested code scrolling does not change follow latest and new events respect reading position
+00:20 +76 -1: floating transcript pills meet tap-target minimums
+00:21 +77 -1: searchable sheets keep drag handles and dismiss the keyboard on drag
+00:21 +78 -1: composer tools delegates only to visible server subagents
+00:21 +79 -1: typed agent autocomplete sends exact OpenCode agent parts
+00:21 +80 -1: removes individual parts and complete messages
+00:21 +81 -1: newer deltas survive an older hydration response
+00:21 +82 -1: a prompt with photos is not shown twice when the server re-homes them
+00:22 +83 -1: canonical user event replaces the optimistic bubble
+00:22 +84 -1: out-of-order canonical users reconcile by prompt instead of timestamp
+00:22 +85 -1: failed send removes optimism, restores input, and blocks repeats
+00:22 +86 -1: session errors stop thinking and remain visible in chat
+00:22 +87 -1: an error a reply carries is not repeated in a banner
+00:22 +88 -1: a dropped connection is said in plain words, once, and the banner leaves when the turn moves on
+00:22 +89 -1: a model-not-found session error shows one line and Choose model
+00:23 +90 -1: renders attachment-only and mixed user prompts accessibly
+00:23 +91 -1: retry preserves mixed and attachment-only file parts
+00:23 +92 -1: typed server command passes arguments and selected model
+00:23 +93 -1: attachment count limit is enforced before opening the picker
+00:23 +94 -1: attachment remove action is accessible and at least 48dp
+00:24 +95 -1: empty transcript starters fill the composer
+00:24 +96 -1: empty transcript starters are seeded from the active project
+00:24 +97 -1: long-pressing a user message offers copy and fork actions
+00:24 +98 -1: deleting a message confirms, calls the server, and prunes it
+00:24 +99 -1: a failed message delete keeps the transcript intact
+00:24 +100 -1: context usage at 25 percent is disclosed at the right level
+00:24 +101 -1: context usage at 75 percent is disclosed at the right level
+00:24 +102 -1: composer hides the context percentage without a known limit
+00:24 +103 -1: Ctrl+Enter sends the drafted prompt
+00:24 +104 -1: session sheets fit a 320dp phone at 2x text
+00:24 +105 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/chat_live_events_test.dart: offline chat keeps its transcript and shows recovery actions

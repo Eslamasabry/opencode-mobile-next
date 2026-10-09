@@ -1,0 +1,49 @@
+Waiting for another flutter command to release the startup lock...
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/revamp/chat_3_test.dart
+00:00 +0: a withdrawn message returns to the draft, and Undo takes it back out and queues it again
+00:00 +1: KitComposer: an attachment alone makes Send live, and a note or attachment appearing keeps the field
+00:01 +2: with no model signed in the chip says so before the first send, and never asks to choose while a model answers
+00:01 +3: offline, Send says it will send when back online
+Pending timers:
+Timer (duration: 0:00:15.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      _QuietReconnect._observeQuietReconnect (package:opencode_mobile/state/connection/quiet_reconnect.dart:20:28)
+#6      ConnectionController.status= (package:opencode_mobile/state/connection.dart:620:5)
+#7      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/revamp/chat_3_test.dart:148:10)
+<asynchronous suspension>
+#8      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#9      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  offline, Send says it will send when back online
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +3 -1: offline, Send says it will send when back online [E]
+  Test failed. See exception logs above.
+  The test description was: offline, Send says it will send when back online
+
+00:01 +3 -1: the history sheet says when nothing matches and clears the search
+00:02 +4 -1: the prompt editor asks before discarding and hands its text back with Use in draft
+00:02 +5 -1: on a server that takes files the attach row is live
+00:02 +6 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/revamp/chat_3_test.dart: offline, Send says it will send when back online

@@ -1,0 +1,10 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/runtime_switch_golden_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: the shell during a reconnecting of this phone's server, dark
+00:01 +1: the shell during a password of this phone's server, dark
+00:01 +2: the shell during a restart of this phone's server, dark
+00:01 +3: the shell during a reconnecting of this phone's server, light
+00:01 +4: the shell during a password of this phone's server, light
+00:01 +5: the shell during a restart of this phone's server, light
+00:01 +6: (tearDownAll)
+00:01 +6: All tests passed!

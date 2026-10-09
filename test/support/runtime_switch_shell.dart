@@ -104,6 +104,10 @@ class _Store extends ProfileStore {
 class SwitchController extends ConnectionController {
   SwitchController(super.store);
 
+  // Keep the phone-agent surface without starting unrelated native probes.
+  @override
+  Future<void> refreshAgentRows() async {}
+
   ConnectionStatusSnapshot snapshot = const ConnectionStatusSnapshot(
     phase: ConnectionStatusPhase.reconnecting,
     profileId: 'oc2',

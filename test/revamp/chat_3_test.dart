@@ -154,6 +154,8 @@ void main() {
     await tester.pump();
     expect(find.byTooltip('Send when back online'), findsOneWidget);
     expect(find.textContaining("sends when you're back online"), findsWidgets);
+    await tester.pumpWidget(const SizedBox.shrink());
+    conn.dispose();
   });
 
   testWidgets('the history sheet says when nothing matches and clears the '

@@ -1,0 +1,62 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/pending_sends_strip_test.dart
+00:00 +0: the strip shows offline drafts and server inbox items in one list
+00:01 +1: a queued message the server refused says why in plain words and offers Try again, which sends it
+00:01 +2: a queued message the server refused its menu has Try again first, then Edit and Discard
+00:01 +3: a queued message the server refused offline there is no Try again: it waits for the reconnect
+Pending timers:
+Timer (duration: 0:00:15.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#5      _QuietReconnect._observeQuietReconnect (package:opencode_mobile/state/connection/quiet_reconnect.dart:20:28)
+#6      ConnectionController.status= (package:opencode_mobile/state/connection.dart:620:5)
+#7      main.<anonymous closure>.pump (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/pending_sends_strip_test.dart:238:34)
+<asynchronous suspension>
+#8      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/pending_sends_strip_test.dart:292:7)
+<asynchronous suspension>
+#9      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#10     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  offline there is no Try again: it waits for the reconnect
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +3 -1: a queued message the server refused offline there is no Try again: it waits for the reconnect [E]
+  Test failed. See exception logs above.
+  The test description was: offline there is no Try again: it waits for the reconnect
+
+00:02 +3 -1: cancelling an inbox item returns its text to the draft, and Undo sends it again the same way
+00:02 +4 -1: the bubble offers only the inline flip that changes the mode
+00:02 +5 -1: a 409 flip toasts Already delivered and drops the bubble
+00:02 +6 -1: non-user inbox items are informational only
+00:03 +7 -1: a prompt waiting in the inbox is shown once, not twice
+00:03 +8 -1: the server's own copy of a waiting prompt is not repeated either
+00:03 +9 -1: steering several times in a row waiting steers are taken back and sent as one message
+00:03 +10 -1: steering several times in a row one the agent already took goes out on its own
+00:04 +11 -1: steering several times in a row a message for after the run merges nothing
+00:04 +12 -1: while busy on v2 Send is Stop and the mic stays; the toggle queues
+00:04 +13 -1: v1 keeps Send live while busy and queues after the run
+00:05 +14 -1: the delivery control is absent until a run is active and something is typed
+00:05 +15 -1: choosing Queue in the visible control sends with queue delivery
+00:05 +16 -1: the busy v2 composer with the delivery control survives 2.5x text on a 360dp phone
+00:05 +17 -1: the toggle is the only control and remembers its choice
+00:05 +18 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/pending_sends_strip_test.dart: a queued message the server refused offline there is no Try again: it waits for the reconnect

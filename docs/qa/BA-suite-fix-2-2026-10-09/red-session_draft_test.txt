@@ -1,0 +1,53 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/session_draft_test.dart
+00:00 +0: attachment-only drafts persist references and reject corrupt metadata writes
+00:00 +1: failed metadata save collects new bytes while retaining the previous draft
+00:00 +2: deleting a server collects its files without removing another server draft
+00:00 +3: closing during recovery does not replace the stored draft with empty attachments
+00:01 +4: restored attachment removal autosaves an attachment-only draft
+00:01 +5: declining partial recovery retains stored attachments until explicit acceptance
+00:01 +6: same session IDs on different servers retain independent drafts
+00:01 +7: failed saves retain the last persisted draft and retry can recover
+00:01 +8: draft save snapshots caller attachment metadata before waiting
+00:02 +9: serialized remove cannot be overtaken by a stale save
+00:02 +10: overlapping saves and clear preserve invocation order
+00:02 +11: late saves cannot recreate data after the owning profile was removed
+00:02 +12: failed save keeps the route and text until Retry succeeds
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: FlutterError:<A RenderFlex overflowed by 29 pixels on the bottom.>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/session_draft_test.dart:592:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/session_draft_test.dart line 592
+The test description was:
+  failed save keeps the route and text until Retry succeeds
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +12 -1: failed save keeps the route and text until Retry succeeds [E]
+  Test failed. See exception logs above.
+  The test description was: failed save keeps the route and text until Retry succeeds
+
+00:02 +12 -1: leaving with a draft that could not be saved the sheet offers what it says: copy and leave first, try saving again, or leave without saving
+00:02 +13 -1: leaving with a draft that could not be saved Copy draft and leave copies the text, then leaves
+00:03 +14 -1: leaving with a draft that could not be saved Try saving again says so when it fails, and leaves once the draft is saved
+00:03 +15 -1: leaving with a draft that could not be saved Leave without saving leaves
+00:03 +16 -1: session drafts persist and reload
+00:03 +17 -1: older drafts move into Saved prompts once; a refused write keeps them and says so; server-owned drafts stay
+00:03 +18 -1: an older draft shows up in Saved prompts and restores at once with Undo
+00:04 +19 -1: a full store refuses new drafts without evicting unsent work
+00:04 +20 -1: saving an empty draft clears the stored entry
+00:04 +21 -1: composer text survives leaving and reopening a chat
+00:04 +22 -1: sending clears the persisted draft
+00:04 +23 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-ba/test/session_draft_test.dart: failed save keeps the route and text until Retry succeeds

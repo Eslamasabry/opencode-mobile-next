@@ -1,0 +1,7 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/runtime_switch_status_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: a switch is said once, in the server pill, in every phase
+00:01 +1: a page without the pill says the switch in its status line
+00:01 +2: a plain reconnect is said once too; a real problem keeps its line and its action
+00:01 +3: (tearDownAll)
+00:01 +3: All tests passed!

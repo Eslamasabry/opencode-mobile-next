@@ -17,6 +17,7 @@ Future<void> _pump(
   double textScale = 1,
   TextDirection direction = TextDirection.ltr,
   List<Widget>? chips,
+  String modelLabel = _loading,
 }) async {
   tester.view.physicalSize = Size(width, 800);
   tester.view.devicePixelRatio = 1;
@@ -40,7 +41,7 @@ Future<void> _pump(
             chips:
                 chips ??
                 const [KitChip(icon: AppIconography.pause, label: _paused)],
-            model: KitComposerChips.model(label: _loading, onPressed: () {}),
+            model: KitComposerChips.model(label: modelLabel, onPressed: () {}),
           ),
         ),
       ),
@@ -51,6 +52,23 @@ Future<void> _pump(
 
 void main() {
   for (final direction in TextDirection.values) {
+    testWidgets('a lone model stays at the trailing edge · ${direction.name}', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        width: 412,
+        direction: direction,
+        chips: const [],
+        modelLabel: 'Sonnet',
+      );
+      final model = tester.getRect(find.byType(KitComposerChips));
+      final trailingGap = direction == TextDirection.ltr
+          ? 412 - model.right
+          : model.left;
+      expect(trailingGap, lessThanOrEqualTo(16));
+      expect(tester.takeException(), isNull);
+    });
     for (final (width, scale) in [
       (412.0, 1.0),
       (360.0, 1.0),

@@ -1,0 +1,152 @@
+[
+  {
+    "file": "test/goldens/agents_sheet_error_1280x800_dark.png",
+    "sha256": "aedbdfb5deb54d2c16275a38e0ff485f0e68201800d1be1f4938948150ae01cc",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/agents_sheet_error_1280x800_light.png",
+    "sha256": "360fbb0e9af823504ea6e0ffd4a9d5de670d4e138535cd3b1b7b98ea7b7e1bc1",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/agents_sheet_install_1280x800_dark.png",
+    "sha256": "f91c6d312fc706d9e82bf3ea5398b076793628c3470b2f859dba8de5af75f7a5",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/agents_sheet_install_1280x800_light.png",
+    "sha256": "2385cd9c283f54303017c1a30fd0aaefd003b843896f6f4c96672372472b77cf",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/agents_sheet_list_1280x800_dark.png",
+    "sha256": "0868dedea55a110e21df662ae9d932864faa3a5657c87b3c5172483ce4c5ed15",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/agents_sheet_list_1280x800_light.png",
+    "sha256": "b3aee29f549a617bbe163cc199f3548c7c9cb33cee79311ef61fb8719afc2a55",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/agents_sheet_mixed_1280x800_dark.png",
+    "sha256": "d7690f8316e4d32dc4e381f06d33788582809efb4dcdb60b706f5cb0117431c5",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/agents_sheet_mixed_1280x800_light.png",
+    "sha256": "d6e0dd88e3a854a432e23d78ac845be4525ec47007d4e7a5bfde784c0d8828ba",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/agents_sheet_signin_1280x800_dark.png",
+    "sha256": "160ae8ef2eb75517a1ed865a5c751ff638891a83607abb1c70edf6623a9276e7",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/agents_sheet_signin_1280x800_light.png",
+    "sha256": "854d0a5d9d7f0d6b1fd034b5f841febbed3988a387fc353a2fcfc32c4ca99154",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_choose_1280x800_dark.png",
+    "sha256": "c02473c55a9845a1663f7781cec9327c8bdc9a8d176f57ac7d537ed0bbd906bc",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_choose_1280x800_light.png",
+    "sha256": "0b3a909ce683f6db0a13ed84ba55352a6795e7d09f11c0d5377e1b5e8d664027",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_choose_dark.png",
+    "sha256": "991f51ad50e3eeff8228c207e31d7a14a5bbeec28ca8a0711b7a6fb806db3958",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_choose_light.png",
+    "sha256": "7f101c9054bebdcc3e2ae6a9b70aa8e56e9f8fd74b302da0fc7804e88d726968",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_copy_1280x800_dark.png",
+    "sha256": "361c88f4ff4aa8b7fb065d086022c53b69b866b00c555cd1cbf91a0bf4d3a7fd",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_copy_1280x800_light.png",
+    "sha256": "a6a73b452a2360d58154173effa45fe0a61ebab4915d8184a515d1eeb578296e",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_copy_dark.png",
+    "sha256": "5b20c57f826b1c3fa9106b536fcd992a3d7e71c579e44dc3b55a971f78c7aaab",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_copy_light.png",
+    "sha256": "9d117f5e1f59a93070a011cdebe8bbd380257e4e6b6d7741b50cfc1d14fd5cc2",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_project_1280x800_dark.png",
+    "sha256": "10208bc0d4f51759e43084ddaf404ae3871ad776888fbc2cfa75b18dd92fb742",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_project_1280x800_light.png",
+    "sha256": "42925cce8b70f93f0b2dc69502ffa26660f368ed9bc9b00a0b8c83b3ac9c4ddd",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_project_dark.png",
+    "sha256": "6b0d94b3e3032f3eca1d75dfab2419749fe982bee773eb0906da24ec9464cfd1",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chats_new_project_light.png",
+    "sha256": "06e1bd467861ab0f68c19e5f4f91ddbc0af6e1d8165d31dac81030342debc458",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chat_disconnected_dark.png",
+    "sha256": "b4d63c1df832e29e9f1499998af4f639273d900a69791789b47faf4e8a192ff1",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/chat_disconnected_light.png",
+    "sha256": "a3a571c654cdbc1d63f83dbaa87147a8584f22849113fce9dd021d7e9bb2ac8b",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/runtime_switch_password_dark.png",
+    "sha256": "00563c2033ce06b2505752ee4bb3ad21498b48e49ad3743dae203e42c10fed77",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/runtime_switch_password_light.png",
+    "sha256": "ddd1ab20228c05d83c4da213b18ff0a84334ea000ea7e036d6cd461d34b84810",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/runtime_switch_reconnecting_dark.png",
+    "sha256": "00563c2033ce06b2505752ee4bb3ad21498b48e49ad3743dae203e42c10fed77",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/runtime_switch_reconnecting_light.png",
+    "sha256": "ddd1ab20228c05d83c4da213b18ff0a84334ea000ea7e036d6cd461d34b84810",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/runtime_switch_restart_dark.png",
+    "sha256": "319565bd55af6186028051c7f8ee4b7033af8a0216167023e5e5396bab750f62",
+    "unchanged": true
+  },
+  {
+    "file": "test/goldens/runtime_switch_restart_light.png",
+    "sha256": "851b13ab0aa2fa761e433350310ef72f0b1560817275db01425120ce00b0ec72",
+    "unchanged": true
+  }
+]

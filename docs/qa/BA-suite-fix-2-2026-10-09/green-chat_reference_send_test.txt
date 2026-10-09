@@ -1,0 +1,8 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/chat_reference_send_test.dart
+00:00 +0: a staged reference does not turn a slash command into a prompt
+00:01 +1: the composer says staged references are not saved
+00:01 +2: references still ride along on an ordinary prompt
+00:02 +3: a failed send gives the reference text back to the composer
+00:02 +4: composing offline queues the prompt with its references
+00:02 +5: a transport failure queues the reference text for retry
+00:03 +6: All tests passed!

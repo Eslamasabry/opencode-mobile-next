@@ -352,6 +352,8 @@ void main() {
             ..lastError =
                 'Cannot reach http://192.168.1.20:4096: Connection refused';
           controller.notifyListeners();
+          // This golden depicts a sustained outage, after quiet recovery.
+          await tester.pump(const Duration(seconds: 16));
           await _frames(tester, 4);
           expect(find.text("Laptop isn't answering"), findsOneWidget);
         },

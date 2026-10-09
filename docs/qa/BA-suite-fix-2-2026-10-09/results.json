@@ -1,0 +1,156 @@
+[
+  {
+    "file": "test/kit/kit_composer_status_strip_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:01 +10: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/chat_live_events_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:24 +106: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/chat_reference_send_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:03 +6: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/chat_states_standard_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:03 +7: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/e7_session_approvals_layout_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:04 +7: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/goldens/agents_ui_golden_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:06 +44: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/goldens/chats_home_golden_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:04 +36: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/goldens/chat_states_golden_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:05 +24: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/goldens/runtime_switch_golden_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:01 +6: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/home_navigation_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:06 +31: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/pending_sends_strip_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:06 +19: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/plugins_screen_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:01 +8: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/release_blockers_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:04 +23: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/revamp/chat_3_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:02 +7: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/revamp/queued_prompt_move_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:03 +15: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/revamp/slice_aisetup_review_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:02 +13: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/server_switcher_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:04 +15: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/session_draft_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:04 +24: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/runtime_switch_status_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:01 +3: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/composer_layout_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:05 +20: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/kit_ratchet_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:00 +38: All tests passed!"
+    ]
+  },
+  {
+    "file": "test/file_size_ratchet_test.dart",
+    "exit": 0,
+    "summary": [
+      "00:00 +2: All tests passed!"
+    ]
+  }
+]

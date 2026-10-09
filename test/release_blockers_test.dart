@@ -1022,7 +1022,7 @@ void main() {
     await tester.pumpAndSettle();
     // The one status line says it; the staleness explanation and the raw
     // error live behind its Details action.
-    await tester.pump(const Duration(seconds: 9));
+    await tester.pump(const Duration(seconds: 16));
     await tester.pump(const Duration(milliseconds: 300));
     expect(
       find.byKey(const ValueKey('connection-status-banner')),

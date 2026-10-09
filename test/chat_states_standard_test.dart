@@ -297,7 +297,7 @@ void main() {
     expect(api.prompts, ['Run the full test suite']);
   });
 
-  testWidgets('reconnecting: progress at once, "isn\'t answering" after 8 s, '
+  testWidgets('reconnecting: quiet for 15 s, then a recovery action, '
       'and no stale progress once connected', (tester) async {
     final controller = await _chat(
       tester,
@@ -308,14 +308,13 @@ void main() {
     controller.status = StreamStatus.reconnecting;
     controller.notifyListeners();
     await tester.pump();
-    expect(_bar, findsOneWidget);
-    expect(_connectionLine, findsOneWidget);
-    expect(find.text('Reconnecting to Laptop…'), findsOneWidget);
-    expect(find.text("Laptop isn't answering"), findsNothing);
+    expect(_bar, findsNothing);
+    expect(_connectionLine, findsNothing);
+    expect(controller.isConnected, isFalse);
     expect(find.byType(CircularProgressIndicator), findsNothing);
 
-    await tester.pump(const Duration(seconds: 7));
-    expect(find.text('Reconnecting to Laptop…'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 14));
+    expect(_connectionLine, findsNothing);
     expect(find.text("Laptop isn't answering"), findsNothing);
     await tester.pump(const Duration(seconds: 2));
     expect(_connectionLine, findsOneWidget);
@@ -355,6 +354,10 @@ void main() {
       ..lastError = 'Cannot reach http://192.168.1.20:4096';
     controller.notifyListeners();
     await tester.pump();
+    // The existing prompt error stays visible during a short link drop.
+    expect(_connectionLine, findsNothing);
+    expect(find.byKey(const ValueKey('prompt-error-banner')), findsOneWidget);
+    await tester.pump(const Duration(seconds: 16));
     expect(find.byType(KitStatusLine), findsOneWidget);
     expect(_connectionLine, findsOneWidget);
     expect(find.byKey(const ValueKey('prompt-error-banner')), findsNothing);

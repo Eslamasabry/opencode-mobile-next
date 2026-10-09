@@ -252,6 +252,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('No plugins reported for this project.'), findsOneWidget);
     expect(repository.calls, 3);
+    await tester.pumpWidget(const SizedBox.shrink());
+    controller.dispose();
   });
 
   testWidgets('flat plugin rows fit a narrow phone with large text', (

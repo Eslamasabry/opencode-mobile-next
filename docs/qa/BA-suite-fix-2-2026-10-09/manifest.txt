@@ -1,0 +1,17 @@
+test/chat_live_events_test.dart
+test/chat_reference_send_test.dart
+test/chat_states_standard_test.dart
+test/e7_session_approvals_layout_test.dart
+test/goldens/agents_ui_golden_test.dart
+test/goldens/chats_home_golden_test.dart
+test/goldens/chat_states_golden_test.dart
+test/goldens/runtime_switch_golden_test.dart
+test/home_navigation_test.dart
+test/pending_sends_strip_test.dart
+test/plugins_screen_test.dart
+test/release_blockers_test.dart
+test/revamp/chat_3_test.dart
+test/revamp/queued_prompt_move_test.dart
+test/revamp/slice_aisetup_review_test.dart
+test/server_switcher_test.dart
+test/session_draft_test.dart
