@@ -200,6 +200,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   final _paBusySubscriptions = <PaseoGateway, StreamSubscription<void>>{};
   final _paOrdinaryStarts = <Object>{};
   bool? _paHelperObserved;
+  Timer? _paStartupExpiry;
+  Timer? _paStartupPoll;
+
+  /// An admitted helper launch is still waiting for readiness (at most 30 s).
+  bool get phoneAgentStarting => _self._paStarting;
   int _paIdleLifecycleEpoch = 0;
   Future<void>? _paIdleResume;
   Object? _paIdleToken;
@@ -475,6 +480,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     } catch (_) {
       arch = null;
     }
+    await _paObserveHelper(host, owner);
+    final helperWasAvailable = _paHelperAvailable;
     final helperVersion = _self._paObservedHelperVersion;
     final rows = <AgentRow>[];
     var running = false;
@@ -498,6 +505,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
             runtime = PhoneAgentRuntime(
               agentId: runtime.agentId,
               installed: runtime.installed,
+              payloadPresent: runtime.payloadPresent,
               hostAvailable: runtime.hostAvailable,
               architectureQualified: runtime.architectureQualified,
               capabilities: runtime.capabilities,
@@ -510,6 +518,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
               resetAt: runtime.resetAt,
             );
           }
+          runtime = _paWithHelperReadiness(runtime);
           running = running || runtime.hostAvailable;
         } catch (_) {
           runtime = null;
@@ -527,14 +536,19 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
     await _paObserveHelper(host, owner);
     if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
+    if (!helperWasAvailable && _paHelperAvailable) {
+      await _paRefreshRows(syncSources: syncSources);
+      return;
+    }
     final now = DateTime.now();
     final autoResume =
         !_self._lifecycleWasBackgrounded &&
+        !_paHelperAvailable &&
         rows.any((row) => row.status == PhoneAgentStatus.stoppedInBackground) &&
         (_paAutoResumedAt == null ||
             now.difference(_paAutoResumedAt!) > const Duration(minutes: 1));
     _paRows = List.unmodifiable(rows);
-    _paHostRunning = running;
+    _paHostRunning = running || _paHelperAvailable;
     _paScheduleSignInRecheck(rows);
     if (syncSources) {
       try {
@@ -655,7 +669,9 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       if (row.status == PhoneAgentStatus.limitReached ||
           row.status == PhoneAgentStatus.signedOut ||
           (row.status == PhoneAgentStatus.stoppedInBackground &&
-              !_paAutoResuming))
+              !_paAutoResuming &&
+              !_paStarting &&
+              !_paHelperAvailable))
         PhoneAgentStatusLine(
           agentId: row.id,
           agentName: row.name,
@@ -835,7 +851,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final profile = _paProfile;
     if (host == null || profile == null) return;
     final helperVersion = _self._paObservedHelperVersion;
-    final wanted = _paHostRunning || assumeRunning
+    final wanted =
+        _paHostRunning || _paHelperAvailable || _paStarting || assumeRunning
         ? _paDesiredDirectories().take(_maxPaseoSources).toList()
         : const <String>[];
     var changed = false;
@@ -872,7 +889,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       final wait = Duration(seconds: _paSyncRetries <= 10 ? 3 : 15);
       _paSyncTimer = Timer(wait, () {
         _paSyncTimer = null;
-        if (!_self._disposed) unawaited(_paSyncSources().catchError((_) {}));
+        if (!_self._disposed && identical(_paHost, host)) {
+          unawaited(
+            _paSyncSources(assumeRunning: assumeRunning).catchError((_) {}),
+          );
+        }
       });
     } else if (!missed) {
       _paSyncRetries = 0;
@@ -1251,7 +1272,11 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       loading: snapshot.loading && items.isEmpty,
       // Saved rows stand in while their folder loads; they are no failure.
       // A shown server that can't be reached is.
-      complete: snapshot.complete && !_self._sidesFailed,
+      complete:
+          (snapshot.complete ||
+              ((_paStarting || _paHelperAvailable) &&
+                  _self._ocChatFeed(filter).complete)) &&
+          !_self._sidesFailed,
     );
   }
 
@@ -1443,8 +1468,6 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       sourceIdForDirectory: _paseoSourceId,
     );
   }
-
-  // ---- closing ------------------------------------------------------------
 
   Future<void> _paCloseAll({required bool stopHost}) => _paCloseOwned(
     _paHostProfile ?? _paForegroundBinding?.profileId ?? _paProfile?.id,

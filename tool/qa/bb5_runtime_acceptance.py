@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """BB5 private emulator session. Import is inert; whole-session inherited flock is required.
 
-The QA APK uses versionCode2198; the known normal restore uses2202. A different version refuses
+The QA and known normal APK both use versionCode2202. A different version refuses
 before mutation rather than requesting a downgrade, uninstall or data clearing.
 Initial authorized replacement/force-stop is QA setup, not proof that existing
 chats are idle. Native scenario admission proves logical work quiescence after
@@ -37,7 +37,7 @@ RETURN_FIELDS = {'bb5ReturnServerRunning', 'bb5ReturnHelperTracked',
                  'bb5ReturnTokenPending', 'bb5ReturnOwnerCurrent'}
 OBSERVATION_FIELDS = IDLE_FIELDS | RESUME_FIELDS | RETURN_FIELDS | {
     'bb5RuntimePrepared', 'bb5IdleWaitEntered'}
-VERSION = 2198
+VERSION = 2202
 NORMAL_VERSION = 2202
 IDLE_BODIES = {
     'Phone server paused while idle. Tap to open OpenCode.',
@@ -581,7 +581,6 @@ def main():
         H.inherited_lock(args.inherited_emulator_lock_fd)
         device = Device()
         validate_normal(device, args)  # All normal artifact gates precede any installation/preferences write.
-        args.qa_normal_downgrade = True
         H.validate_candidates(device, args)
         original_flutter = device.cat(H.FLUTTER)
         H.selected_profile(original_flutter)

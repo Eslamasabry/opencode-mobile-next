@@ -1,0 +1,5 @@
+# Claude cold-start presentation contract
+
+1. `ConnectionController.phoneAgentStarting` stays true for an admitted helper start until liveness is observed or 30 seconds elapse; suppress stopped/incomplete agent notices during that window or while the helper is confirmed up (other server failures remain visible), and re-read rows as the helper becomes available. No new startup or permission policy.
+2. `displayModelForSession(id)` returns authoritative selection when known, otherwise that conversation's last confirmed model (profile-scoped, bounded, display only); unknown selection says “Choose a model”, never an indefinite loading label. Sends still use `selectionForSession`, and explicit server-default selection clears the fallback.
+3. `connectionStarting` distinguishes initial connection/helper startup from disconnected/reconnecting failure for the composer approval chip; startup keeps the chosen mode label, while an actual offline connection still says “Auto-approve paused”. History and selection rehydrate from the helper on connect; no replay or synthetic permission decisions.

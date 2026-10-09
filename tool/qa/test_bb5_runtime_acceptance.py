@@ -361,7 +361,7 @@ class NormalArtifactTest(unittest.TestCase):
             apk = Path(directory) / 'normal.apk'; apk.write_bytes(b'private-test-artifact')
             digest = B.hashlib.sha256(apk.read_bytes()).hexdigest()
             sidecar = Path(directory) / 'normal.sha256'; sidecar.write_text(digest + '  normal.apk\n')
-            args = SimpleNamespace(version=2198, normal_version=2202, normal_sha=digest,
+            args = SimpleNamespace(version=2202, normal_version=2202, normal_sha=digest,
                 normal_apk=apk, normal_sidecar=sidecar, apksigner=Path('apksigner'), aapt=Path('aapt'))
             device = Mock()
             device.run.side_effect = [SimpleNamespace(returncode=0, stdout='Signer #1 certificate SHA-256 digest: ' + H.Q.CERT),

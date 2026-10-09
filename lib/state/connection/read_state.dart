@@ -155,6 +155,10 @@ extension _ConnectionControllerReadStateImpl on ConnectionController {
   int _newerWatermark(int? a, int? b) => (a ?? 0) > (b ?? 0) ? a! : b ?? 0;
 
   Session _preserveReadState(Session incoming) {
+    final selection = incoming.selection;
+    if (selection?.modelKnown == true) {
+      _rememberDisplayModel(incoming.id, selection!.model);
+    }
     final previous = sessionsById[incoming.id];
     if (previous == null ||
         !supportsSessionReadState ||

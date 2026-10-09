@@ -66,6 +66,7 @@ extension _PhoneAgentRoutes on _ConnectionControllerPhoneAgents {
       revokeBrowser: () =>
           _self._browserLaunches.revokeProfile(profileId: owner),
       beforeHost: [
+        if (backend != null) () => backend._modelLibraryWrite,
         for (final cancellation in signInCancellations) () => cancellation,
         for (final session in signIns)
           () async {
@@ -163,6 +164,9 @@ extension _PhoneAgentRoutes on _ConnectionControllerPhoneAgents {
     }
     final row = _paRowFor(id);
     if (row == null || !row.setupVisible) return false;
+    // Disk inventory survives restart and unrelated native setup jobs. It
+    // permits repair/removal only; it never grants installed/chat readiness.
+    if (row.hasPartialPayload) return true;
     if ({
       PhoneAgentStatus.stoppedInBackground,
       PhoneAgentStatus.signedOut,

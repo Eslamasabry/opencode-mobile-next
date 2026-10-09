@@ -1,63 +1,76 @@
 # Final-pass runner
 
-`tool/qa/final_pass.py` runs the existing device drivers in one exclusive
-`/home/eslam/Storage/tmp/oc-emulator.lock` reservation, waiting at most 3600 seconds.
-It is a plan by default. The plan does not read manifests, run subprocesses,
-create directories or touch the device:
+`tool/qa/final_pass.py` runs the device drivers under one exclusive
+`/home/eslam/Storage/tmp/oc-emulator.lock` reservation (up to 3600 seconds to acquire).
+The default is an inert plan: no manifest reads, subprocesses, output files or adb.
 
 ```bash
-python3 tool/qa/final_pass.py --dry-run
+python3 tool/qa/final_pass.py --dry-run --fast
+python3 tool/qa/final_pass.py --execute --fast \
+  --candidate-apk /home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk \
+  --candidate-build 2202 --inputs /absolute/private/final-pass-inputs.json \
+  --output docs/qa/final-pass-2202
 ```
 
-Only the coordinator's final device pass should use `--execute`:
+Normal restoration defaults to the approved local-signed APK 2202. An alternate
+`--normal-apk` must have that build and signer. Candidate and normal identities
+are checked before taking the lock. Existing output directories are refused;
+`--date` chooses the default `docs/qa/final-pass-<date>` directory. No build,
+download, signing or publication is performed by the runner.
 
-```bash
-python3 tool/qa/final_pass.py --execute \
-  --candidate-apk /absolute/path/to/approved-candidate.apk \
-  --candidate-build BUILD_NUMBER --inputs /absolute/private/final-pass-inputs.json
-```
+## Sequencing
 
-`--date YYYY-MM-DD` selects `docs/qa/final-pass-<date>/README.md` (default: today).
-An existing output directory is refused, preserving prior receipts. Both APKs
-are checked with the existing APK identity verifier before device access. Normal
-is APK 2199 by default; an alternate `--normal-apk` must still be build 2199 with
-the approved local signer. No APK is built, downloaded, signed or published.
+Upgrade runs first, before candidate installation: its driver must observe the
+actual reviewed baseline already installed, with its existing history receipt
+or an explicit reviewed seed request. The seed path is new, private and outside
+the checkout; its real receipt is written under the same reservation after
+exact-baseline admission and before the no-reply history marker is posted.
+The runner does not install an older baseline. The remaining order is BA install,
+BA removal, BA storage floor, BB5 idle, FQ3 OC1/OC2, FQ9 background, BD7 saved
+report, FB1 fresh-plan check, demo. `--fast` omits background and demo entirely;
+it cannot start the 30-minute dwell or GIF recorder.
 
-Order is BA install, BA removal, BA storage floor, BB5 idle, FQ3 OC1/OC2,
-FQ9 upgrade, FQ9 background (one uninterrupted 300/1800-second observation),
-BD7 saved crash report, FB1 clean-run plan, demo GIF. The candidate is installed
-before the first device row and reselected if a driver restores another build.
-A failed row stops that row; later independent rows still run. An installation
-failure, timed-out external driver or explicitly retained/unclean device work
-blocks subsequent device rows, but FB1 still runs. Interrupts stop the batch.
-Normal installation and a build-number check are attempted before releasing the
-reservation, including on failures and interrupts. A restoration failure is a
-failed row, never a successful batch.
+Before each subsequent device row, the runner installs/reselects the candidate
+if needed. Drivers with module-local locks borrow the parent's descriptor and
+cannot unlock it. FQ3 validates an inherited descriptor and executes phases in
+that process without nested flock acquisition; `--no-matrix` retains receipts
+without changing the global certification matrix. Other subprocess drivers
+receive the descriptor through `pass_fds` and validate it themselves.
 
-The README is refreshed after each row and links to the driver's receipts. No
-raw process output or exception text is copied into the summary. A zero process
-exit alone does not qualify a row; adapters inspect fresh evidence. All rows
-must pass for exit 0; fail or blocked yields 1, interruption yields 130.
+Rows retain their evidence checks. An ordinary failure does not hide later
+independent results. BA install/removal/storage drivers now confirm continuation
+with fresh observations: the normal APK's signer/hash/build, idle native setup
+and app checks, at least 800 MB available, and all six managed targets absent
+(zero allocated bytes, no launcher/payload/staging/lock or target processes).
+A failed row stays failed. Only a complete confirmation permits later device
+rows; missing observations or retained/unclean work block them. Multi-agent rows
+preserve that decision when stopping on an agent failure. FB1 can still check
+its offline plan. Rejected preflight is observed without replacing the APK or
+deleting unexpected files. Finally the
+runner restores normal 2202 and verifies its installed version before unlocking,
+including on failure or interruption. Summary updates occur after every row.
+Exit codes: 0 all selected rows passed, 1 failed/blocked, 130 interrupted.
 
 ## Private inputs
 
-The JSON file is bounded to 64 KiB, rejects duplicate keys, and has only known
-row names. Omitted prerequisites produce blocked rows. It contains artifact and
-fixture paths, not provider credentials. Example shape (replace every path and
-hash with the reviewed value):
+Inputs are a duplicate-free JSON object, at most 64 KiB, with known row names.
+Only paths, public model names and reviewed hashes belong here; never credentials.
+Missing inputs remain explicit prerequisites rather than fabricated passes.
 
 ```json
 {
-  "ba-install": {"agent": "fx"},
+  "ba-install": {"agent": "fx", "manifest": "/private/ba-artifacts.json"},
   "ba-removal": {"agent": "fx", "manifest": "/private/ba-artifacts.json"},
   "ba-storage-floor": {"agent": "fx", "manifest": "/private/ba-artifacts.json"},
   "bb5": {
-    "runner_apk": "/private/runner.apk", "target_sha": "REVIEWED_SHA256",
-    "runner_sha": "REVIEWED_SHA256", "normal_apk": "/private/normal-2199.apk",
-    "normal_sidecar": "/private/normal-2199.apk.sha256", "normal_sha": "REVIEWED_SHA256",
-    "normal_version": 2199, "apksigner": "/absolute/path/to/apksigner",
-    "aapt": "/absolute/path/to/aapt"
+    "qa_apk": "/private/qa-2202.apk", "runner_apk": "/private/runner.apk",
+    "target_sha": "REVIEWED_SHA256", "runner_sha": "REVIEWED_SHA256",
+    "normal_apk": "/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk",
+    "normal_sidecar": "/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk.sha256",
+    "normal_sha": "REVIEWED_SHA256", "normal_version": 2202,
+    "apksigner": "/absolute/path/to/apksigner", "aapt": "/absolute/path/to/aapt"
   },
+  "fq3": {"oc1_model": "opencode/big-pickle", "oc2_model": "opencode/big-pickle"},
   "fq9-upgrade": {
     "manifest": "/private/fq9-artifacts.json", "session_receipt": "/private/history.json",
     "run_id": "fq9-final-upgrade"
@@ -70,59 +83,40 @@ hash with the reviewed value):
 }
 ```
 
-For a BA matrix, replace `agent` with `agents`, a unique list of up to six IDs:
-`codex`, `gemini`, `qwen`, `goose`, `omp-acp`, `fx`. One failed agent stops that row.
-The real Claude account is outside all driver selections.
+BA uses the reviewed `fq_install2` manifest schema, whose normal artifact must
+match the candidate path/hash/build. Storage also needs a separate reviewed
+8 GiB-floor guard artifact and restores normal afterwards. The parameterized
+fresh-install driver replaces the missing version-named driver and verifies
+fresh job, checksum, pinned executable, product removal and retained state.
+`agents` can replace `agent` with up to six unique targets: codex, gemini, qwen,
+goose, omp-acp, fx. Claude/account actions are excluded.
 
-The background fixture must already be running as specified by the existing
-FQ9 driver: an app-owned OC1 foreground tool with real 45-minute ticks, a session
-titled `<run_id>-background`, and matching private receipt. The batch does not
-enroll accounts, create fixtures or replace real credentials. The demo remains
-operator-driven: keep notifications and account values off screen, follow the
-printed setup → pick-agent → approve-tool cues. It uses the existing recorder's
-private output folder, not the website. Recording is blocked until synthetic-data
-attestation is supplied, and remains blocked for publication pending human
-privacy review. FB1 passes only its offline plan check; it does not certify a
-clean installation on the shared emulator.
+BB5 requires a separate **QA-enabled 2202** target built with
+`-PocBuiltinRuntimeQa=true`, its signed instrumentation runner, and normal 2202.
+The stock normal APK disables these native hooks; repinning it cannot qualify
+BB5. The driver verifies target/runner/normal hashes, package, signer and versions.
 
-## Driver compatibility at implementation
+FQ3 uses its 2202 evidence directory; historical certification remains separate.
+FQ9 verifies candidate/normal identity and the exact installed previous artifact.
+For upgrade only, the adapter accepts an explicitly reviewed build newer than
+2202 with previous=2202. Other FQ9 cases and FQ3 retain their 2202 guards. Use the
+[reviewed next-candidate input builder](FQ9-final-inputs-2026-10-09/README.md)
+to supply `seed_history_receipt` instead of `session_receipt`; never both.
+The builder does not seed or manufacture session IDs offline. FQ9's manifest
+`normal` is the candidate, while the outer batch still restores normal 2202.
+An identical previous artifact exercises in-place retention, not a cross-version
+upgrade. Its automated preservation checks do not establish Keystore sign-in or
+complete semantic history, so manual qualification remains pending.
 
-The runner preserves the existing drivers' eligibility rules; it does not change
-version constants or claim evidence for a different candidate:
+The background receipt must describe the existing app-sent OC1 tool turn with
+real 45-minute ticks and title `<run_id>-background`. No shortened dwell qualifies.
+BD7 requires actual crash, saved report, preview and cleanup evidence. FB1 checks
+only the offline clean-AVD plan; a real fresh install needs a separate clean AVD.
+The demo requires synthetic-data attestation, a human operator and subsequent
+privacy review. Neither FB1 plan nor recording is represented as device certification.
 
-| Row | Current prerequisite / integration gap |
-| --- | --- |
-| BA install | Newer `device_2199.py` is absent from this base; requires its exact artifact and fresh install receipt. Generic driver cannot prove fresh install. |
-| BA removal/storage | Existing generic driver accepts reviewed artifact manifests matching the candidate; storage also needs the separate flagged guard artifact. |
-| BB5 | Current driver pins QA/normal 2198, incompatible with required normal 2199. Integrate the newer BB driver first. |
-| FQ3 | Pins 2197 and reacquires the lock per phase. Explicitly blocked; its owner must provide a candidate-compatible inherited-lock entry point. |
-| FQ9 | Pins 2198. Other candidates are blocked. Upgrade additionally requires its installed baseline; the batch will not downgrade an already selected candidate to manufacture that baseline. |
-| BD7 | Pins 2198; other candidates are blocked. Complete saved-report, consent cleanup and normal-restore evidence are required. |
-| FB1 | Existing fresh-plan check works offline; actual fresh qualification needs a separate clean AVD. |
-| Demo | Existing 75-second recorder works with synthetic-data attestation and an operator; private review remains pending. |
+## Verification
 
-BA status references newer commits `1530daff8`, `19d46dd22`, `beabadb70`,
-`fdaef2ff4`; BB status references `39c582096`. They were not cherry-picked or
-rewritten by this slice. After integrating new drivers, rerun the adapter checks
-and update version eligibility with their owners before the device pass.
-
-Python drivers that expose a module-local lock receive a duplicate of the
-parent's already-locked descriptor. Their acquisition verifies the same inode;
-their local unlock is a no-op, and closing their duplicate retains the parent
-reservation. Module references are restored afterward. Drivers with an existing
-inherited-FD CLI receive that exact descriptor. Unsupported lock contracts are
-blocked; the runner never temporarily releases the reservation.
-
-## Offline verification
-
-```bash
-python3 -m unittest tool.qa.test_final_pass tool.qa.test_final_pass_install \
-  tool.qa.test_final_pass_protocols tool.qa.test_final_pass_misc
-```
-
-The tests use temporary files, mocked drivers and temporary local flock files.
-They do not invoke adb, APK verification, recording or ffmpeg. No final device
-pass has been performed by this implementation slice.
-
-Verification: 35 focused offline tests pass; the real emulator and all device
-drivers remain unrun in this slice.
+See [BD16 evidence](BD16-2026-10-09/README.md) for regression commands and the
+separate real-run results. Tests use synthetic files/mocked device operations;
+the real-run summary is the authority on which prerequisites and rows completed.

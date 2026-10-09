@@ -466,6 +466,7 @@ class FakeRemovableAgentsSource extends FakeAccountAgentsSource
     if (removing != null || !removable.contains(agentId)) return false;
     final row = agentRows.where((row) => row.id == agentId).firstOrNull;
     if (row == null) return false;
+    if (row.hasPartialPayload) return true;
     if (row.status != PhoneAgentStatus.needsInstall) return true;
     return progress.agentId == agentId &&
         (progress.phase == AgentSetupPhase.failed ||

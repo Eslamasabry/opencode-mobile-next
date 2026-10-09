@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "scope": "corrected_navigation_and_exact_public_sheet_copy",
+  "candidateBuild": 2199,
+  "focusedTests": 78,
+  "result": "PASS",
+  "deviceQualification": "pending_complete_retry",
+  "sourceSha256": {
+    "tool/qa/bd7_device_saved_report.py": "779b6da832f50dc72a7d7765feb09b7a573ae42e1055dffecd4006ced414f821",
+    "tool/qa/bd7_device_crash_smoke.py": "b1caaa5b73defe6dee1740727a01fe6773a9ab906d3e02c9235106447ccf6acb",
+    "tool/qa/bd7_device_ui.py": "d14e3316320ee63118597f92def7c43c508b07ce75c99ef4be2fd2a6ba364397",
+    "tool/qa/bd7_exit_proof.py": "ec032e72560e6bba9a8f7ca4879255f67adbbda876bb344d87e8edbee2a7cb63",
+    "tool/qa/test_bd7_device_saved_report.py": "aec27803ca5ae3b215531eea029c07b7f1af7c9d94b65d643d45f75f44b9954d"
+  },
+  "normalBuildAfterReleasedReservation": 2199,
+  "consentOffAfterReleasedReservation": true,
+  "savedCountAfterReleasedReservation": 0,
+  "unsafeImagesSaved": false,
+  "accountOrTicketWrites": false
+}

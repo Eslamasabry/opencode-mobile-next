@@ -89,6 +89,7 @@ extension _PhoneAgentIdle on _ConnectionControllerPhoneAgents {
         identical(_paHost, host) &&
         _paHostProfile == owner) {
       _paHelperObserved = observed;
+      if (_paHelperAvailable) _paEndStartup();
     }
   }
 
@@ -261,6 +262,7 @@ extension _PhoneAgentIdle on _ConnectionControllerPhoneAgents {
     final token = Object();
     _paOrdinaryStarts.add(token);
     _paHelperObserved = null;
+    _paBeginStartup();
     _self._notifyListeners();
     try {
       if (host is PhoneAgentGuardedStartPort) {
@@ -271,6 +273,14 @@ extension _PhoneAgentIdle on _ConnectionControllerPhoneAgents {
         await host.start();
       }
       if (!current()) throw _idleStale;
+    } catch (error) {
+      // A second caller can meet the launch already in progress. Its busy
+      // response does not end that launch's readiness window.
+      if (error is! AgentHostException ||
+          error.reason != AgentHostFailure.busy) {
+        _paEndStartup();
+      }
+      rethrow;
     } finally {
       _paOrdinaryStarts.remove(token);
       if (!_self._disposed) _self._notifyListeners();
@@ -286,6 +296,7 @@ extension _PhoneAgentIdle on _ConnectionControllerPhoneAgents {
   }
 
   void _paClearIdleOwner() {
+    _paEndStartup();
     ++_paIdleLifecycleEpoch;
     _paIdleToken = null;
     _paIdleResume = null;

@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "baseline": {
+    "apk": "/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk",
+    "build": 2202,
+    "version": "1.2.0",
+    "sha256": "e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0",
+    "signer": "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c",
+    "origin": "previous-approved"
+  },
+  "fixture": {
+    "engine": "opencode",
+    "run_id": "fq9-2202-next-retained-a",
+    "project_backing": "files/projects",
+    "guest_root": "/root/projects",
+    "title_suffix": "-retained",
+    "no_reply": true,
+    "marker": "FQ9_RETAINED_HISTORY: local upgrade fixture; do not execute anything."
+  }
+}

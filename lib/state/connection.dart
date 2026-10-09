@@ -170,6 +170,7 @@ part 'connection/phone_agents_check.dart';
 part 'connection/phone_agents_cache.dart';
 part 'connection/phone_agents_backend.dart';
 part 'connection/phone_agents_idle.dart';
+part 'connection/phone_agents_startup.dart';
 part 'connection/phone_agents_routes.dart';
 part 'connection/side_connections.dart';
 

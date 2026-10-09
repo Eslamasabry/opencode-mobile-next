@@ -228,7 +228,7 @@ class SessionOwnership {
         data['appUID'] is! int ||
         (data['appUID'] as int) < 10000 ||
         data['appBuild'] is! int ||
-        !const {2195, 2196, 2197}.contains(data['appBuild']) ||
+        !const {2195, 2196, 2197, 2202}.contains(data['appBuild']) ||
         data['legacy'] is! bool ||
         data['directory'] != '/root/projects/$run' ||
         data['titlePrefix'] !=

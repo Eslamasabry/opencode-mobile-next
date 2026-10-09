@@ -1038,6 +1038,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
     return PhoneAgentRuntime(
       agentId: agentId,
       installed: version['installed'] == true,
+      payloadPresent: version['payloadPresent'] == true,
       hostAvailable: host['running'] == true,
       architectureQualified: qualified,
       capabilities: capabilities,

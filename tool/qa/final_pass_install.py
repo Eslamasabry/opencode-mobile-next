@@ -1,14 +1,14 @@
 """Adapters for the existing BA/BB5 device drivers; no device work on import.
 
 Per-row private configuration:
-* ba-install: {agent}; needs the newer device_2199.py and its exact artifact.
+* ba-install: {agent, manifest}; requires a reviewed normal-artifact manifest and a fresh install receipt.
 * ba-removal / ba-storage-floor: {agent, manifest}; manifest is the existing
   fq_install2 artifact receipt. Its normal must exactly match the candidate.
   Any BA row may replace agent with agents: a unique list of 1..6 allowed
   targets. These run serially and stop at the first non-pass result.
-* bb5: {runner_apk, target_sha, runner_sha, normal_apk, normal_sidecar,
+* bb5: {qa_apk, runner_apk, target_sha, runner_sha, normal_apk, normal_sidecar,
   normal_sha, normal_version, apksigner, aapt}. Paths must be absolute files.
-  The candidate must match the existing driver's VERSION (currently 2198),
+  The QA-enabled artifact must match the existing driver's VERSION (currently 2202),
   and the normal must match both its restore version and the outer context.
 
 The context owns the whole-session emulator flock. adopt_lock(module) must
@@ -17,7 +17,7 @@ retain the lock on LOCK_UN, and restore references on exit. capture(callable)
 returns the callable's result while privately discarding its output. command()
 must inherit lock_fd, capture output privately and enforce its timeout. Existing
 BA generic drivers cannot prove a fresh install in their receipt, so that row
-requires the newer driver. A missing/new-build driver is a blocker, never a pass.
+uses the parameterized fresh-install driver. A missing/new-build driver is a blocker, never a pass.
 """
 import ast
 from contextlib import contextmanager
@@ -31,7 +31,7 @@ import sys
 
 
 _AGENTS = {'codex', 'gemini', 'qwen', 'goose', 'omp-acp', 'fx'}
-_IMPORTS = ('manifest', 'launch', 'low_storage', 'uninstall', 'device', 'probe', 'agent')
+_IMPORTS = ('manifest', 'launch', 'low_storage', 'uninstall', 'device', 'probe', 'agent', 'run', 'device_install')
 _LOCK = Path('/home/eslam/Storage/tmp/oc-emulator.lock')
 
 
@@ -126,6 +126,12 @@ def _removed(value):
         ('asserted', 'removedViaApp', 'leftoversRemoved', 'noOrphans', 'notInstalledRow'))
 
 
+def _continuation_confirmed(value):
+    facts = value.get('continuation')
+    return isinstance(facts, dict) and all(facts.get(key) is True for key in
+        ('confirmed', 'normalVerified', 'setupIdle', 'targetsAbsent', 'storageAvailable'))
+
+
 def _generic_ba(row, config, context):
     if set(config) != {'agent', 'manifest'} or config.get('agent') not in _AGENTS:
         return _result('blocked', 'invalid_configuration')
@@ -145,7 +151,7 @@ def _generic_ba(row, config, context):
         before = _signature(receipt)
         sys.argv = [str(context.root / 'tool/qa/fq_install2/run.py'), config['agent'],
                     '--case', case, '--manifest', str(manifest_path), '--execute',
-                    '--output', str(output)]
+                    '--output', str(output), '--private-observations']
         failed = False
         try:
             with context.adopt_lock(module):
@@ -171,23 +177,31 @@ def _generic_ba(row, config, context):
                      retry.get('linkMatches') is True and retry.get('targetPids') == [])
         return _result('pass' if valid else 'fail',
                        'verified' if valid else 'row_not_qualified', [receipt],
-                       **({'safe_to_continue': False} if value.get('normalRestored') is not True else {}))
+                       **({'safe_to_continue': False}
+                          if (value.get('agentId') != config['agent'] or
+                              value.get('appBuild') != context.candidate_build or
+                              not _continuation_confirmed(value)) else {}))
 
 
 def _install(config, context):
-    if set(config) != {'agent'} or config.get('agent') not in _AGENTS:
+    if set(config) != {'agent', 'manifest'} or config.get('agent') not in _AGENTS:
         return _result('blocked', 'invalid_configuration')
-    driver = context.root / 'tool/qa/fq_install2/device_2199.py'
+    driver = context.root / 'tool/qa/fq_install2/device_install.py'
     if not driver.is_file():
         return _result('blocked', 'install_receipt_unavailable')
-    artifact = _constants(driver).get('ARTIFACT', {})
-    if (artifact.get('build') != context.candidate_build or
-            _file(artifact.get('apk')) != _file(context.candidate) or
-            artifact.get('sha256') != _digest(context.candidate)):
+    with _driver(context.root) as module:
+        manifest = _file(config['manifest'])
+        artifact = module.manifest.load(manifest, 'install')['normal']
+    if (artifact['build'] != context.candidate_build or
+            _file(artifact['apk']) != _file(context.candidate) or
+            artifact['sha256'] != _digest(context.candidate)):
         return _result('blocked', 'candidate_incompatible')
-    receipt = context.root / 'docs/qa/FQ-install2-2199-2026-10-09' / (config['agent'] + '-device.json')
+    output = context.output / 'ba-install'
+    receipt = output / (config['agent'] + '-device.json')
     before = _signature(receipt)
-    completed = context.command([sys.executable, str(driver), config['agent'], '--lock-held'], timeout=900)
+    completed = context.command([sys.executable, str(driver), config['agent'],
+        '--manifest', str(manifest), '--output', str(output),
+        '--inherited-emulator-lock-fd', str(context.lock_fd)], timeout=900)
     if not _fresh(receipt, before):
         return _result('fail', 'fresh_receipt_missing', safe_to_continue=False)
     value = _json(receipt)
@@ -198,14 +212,18 @@ def _install(config, context):
              all(proof.get(k) is True for k in ('installedViaApp', 'freshJob', 'checksumVerified')) and
              isinstance(installed, dict) and installed.get('pinMatches') is True and
              installed.get('linkMatches') is True and
-             value.get('version', {}).get('exactVersion') is True)
-    return _result('pass' if valid else 'fail', 'verified' if valid else 'row_not_qualified', [receipt])
+             value.get('version', {}).get('exactVersion') is True and
+             value.get('retainedStateMatches') is True and _removed(value.get('uninstall')))
+    return _result('pass' if valid else 'fail', 'verified' if valid else 'row_not_qualified', [receipt],
+                   safe_to_continue=(value.get('agentId') == config['agent'] and
+                       value.get('appBuild') == context.candidate_build and
+                       _continuation_confirmed(value)))
 
 
 def _bb5(config, context):
     keys = {'runner_apk', 'target_sha', 'runner_sha', 'normal_apk', 'normal_sidecar',
             'normal_sha', 'normal_version', 'apksigner', 'aapt'}
-    if set(config) != keys:
+    if set(config) != keys | {'qa_apk'}:
         return _result('blocked', 'invalid_configuration')
     driver = context.root / 'tool/qa/bb5_runtime_acceptance.py'
     constants = _constants(driver)
@@ -219,17 +237,19 @@ def _bb5(config, context):
         if not isinstance(config[key], str) or not re.fullmatch('[a-f0-9]{64}', config[key]):
             return _result('blocked', 'invalid_configuration')
     paths = {key: _file(config[key]) for key in
-             ('runner_apk', 'normal_apk', 'normal_sidecar', 'apksigner', 'aapt')}
-    if (config['target_sha'] != _digest(context.candidate) or
+             ('qa_apk', 'runner_apk', 'normal_apk', 'normal_sidecar', 'apksigner', 'aapt')}
+    if (config['target_sha'] != _digest(paths['qa_apk']) or
             config['normal_sha'] != _digest(paths['normal_apk']) or
             config['runner_sha'] != _digest(paths['runner_apk'])):
         return _result('blocked', 'artifact_hash_mismatch')
     receipt = context.output / 'bb5.txt'
     before = _signature(receipt)
-    argv = [sys.executable, str(driver), '--emulator-go', '--apk', str(context.candidate),
+    argv = [sys.executable, str(driver), '--emulator-go', '--apk', str(paths['qa_apk']),
             '--version', str(context.candidate_build), '--out', str(receipt),
             '--inherited-emulator-lock-fd', str(context.lock_fd)]
     for key, value in config.items():
+        if key == 'qa_apk':
+            continue
         argv.extend(['--' + key.replace('_', '-'), str(value)])
     completed = context.command(argv, timeout=1200)
     if not _fresh(receipt, before):
@@ -265,7 +285,9 @@ def run(row, config, context):
                 receipts.extend(Path(path) for path in result['receipts'])
                 if result['status'] != 'pass':
                     return _result(result['status'], 'stopped_on_agent_failure', receipts,
-                                   completedAgents=index)
+                                   completedAgents=index,
+                                   **({'safe_to_continue': result['data']['safe_to_continue']}
+                                      if 'safe_to_continue' in result.get('data', {}) else {}))
             return _result('pass', 'verified', receipts, completedAgents=len(agents))
         if row == 'bb5':
             return _bb5(config, context)

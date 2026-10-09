@@ -259,12 +259,14 @@ class _AutoApprovalIndicator extends StatelessWidget {
     super.key,
     required this.effective,
     required this.connected,
+    required this.starting,
     required this.approved,
     required this.onOpen,
   });
 
   final EffectiveAutoApproval effective;
   final bool connected;
+  final bool starting;
   final List<AutoApprovedPermission> approved;
   final void Function(BuildContext chipContext) onOpen;
 
@@ -273,7 +275,7 @@ class _AutoApprovalIndicator extends StatelessWidget {
     final strings = _chatL10n(context);
     final last = approved.lastOrNull;
     final automatic = effective.automatic;
-    final paused = automatic && !connected;
+    final paused = automatic && !connected && !starting;
     final String label;
     final String? detail;
     final String text;

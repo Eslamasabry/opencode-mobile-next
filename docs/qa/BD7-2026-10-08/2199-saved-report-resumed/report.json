@@ -1,0 +1,26 @@
+{
+  "result": "FAIL",
+  "versionCode": 2199,
+  "apkSha256": "be1bf7b80a5901a4041fbe8b7a2e754631f05ed04486b70c9e33c0ac1e12061a",
+  "scope": "resume_owned_real_crash_saved_report_preview_cleanup",
+  "triggerReceipt": "../2199-saved-report-retry/report.json",
+  "externalShareOpened": false,
+  "secondCrashTriggered": false,
+  "osExitTimeMs": 1791507336232,
+  "savedReport": {
+    "source": "native",
+    "category": "Native application error",
+    "time": 1791507336215
+  },
+  "osExit": {
+    "pid": 14284,
+    "reason": 4,
+    "status": 0,
+    "exact_main": true
+  },
+  "failureCode": "unsafe_screenshot",
+  "ownedReportCleanup": "PASS",
+  "normalRestore": "PASS",
+  "finalConsentOff": true,
+  "finalSavedCount": 0
+}

@@ -73,7 +73,7 @@ class FinalPassInstallTests(unittest.TestCase):
 
     def test_absent_latest_install_driver_is_blocked(self):
         self.context.root = self.base / 'empty-checkout'
-        result = subject.run('ba-install', {'agent': 'fx'}, self.context)
+        result = subject.run('ba-install', {'agent': 'fx', 'manifest': '/not/read.json'}, self.context)
         self.assertEqual(result, {'status': 'blocked',
             'reason': 'install_receipt_unavailable', 'receipts': []})
         self.assert_no_execution()
@@ -110,6 +110,47 @@ class FinalPassInstallTests(unittest.TestCase):
             branch.assert_not_called()
         self.assert_no_execution()
 
+    def test_agent_failure_preserves_confirmed_continuation_for_later_rows(self):
+        with patch.object(subject, '_install', return_value={
+                'status': 'fail', 'reason': 'row_not_qualified', 'receipts': [],
+                'data': {'safe_to_continue': True}}):
+            result = subject.run('ba-install',
+                {'agents': ['fx', 'codex'], 'manifest': '/unused'}, self.context)
+        self.assertEqual(result['status'], 'fail')
+        self.assertIs(result['data']['safe_to_continue'], True)
+
+    def test_incomplete_or_malformed_recovery_facts_do_not_confirm_continuation(self):
+        for facts in (None, True, [], {'confirmed': True},
+                      {'confirmed': True, 'normalVerified': True, 'setupIdle': True,
+                       'targetsAbsent': False, 'storageAvailable': True}):
+            with self.subTest(facts=facts):
+                self.assertFalse(subject._continuation_confirmed({'continuation': facts}))
+
+    def test_install_continuation_requires_explicit_recovery_not_only_restored_apk(self):
+        manifest = self.base / 'manifest.json'
+        manifest.write_text('{}')
+        receipt = self.context.output / 'ba-install/fx-device.json'
+        module = SimpleNamespace(manifest=SimpleNamespace(load=Mock(
+            return_value={'normal': self.artifact()})))
+        @contextmanager
+        def driver(_):
+            yield module
+        for confirmed in (False, True):
+            with self.subTest(confirmed=confirmed):
+                def command(*args, **kwargs):
+                    receipt.parent.mkdir(parents=True, exist_ok=True)
+                    receipt.write_text(json.dumps({'agentId': 'fx', 'appBuild': 2203,
+                        'normalRestored': True, 'errorType': 'RuntimeError',
+                        'continuation': {'confirmed': confirmed, 'normalVerified': True,
+                            'setupIdle': True, 'targetsAbsent': True, 'storageAvailable': True}}))
+                    return SimpleNamespace(returncode=1)
+                self.context.command.side_effect = command
+                with patch.object(subject, '_driver', driver):
+                    result = subject.run('ba-install',
+                        {'agent': 'fx', 'manifest': str(manifest)}, self.context)
+                self.assertEqual(result['status'], 'fail')
+                self.assertIs(result['data']['safe_to_continue'], confirmed)
+
     def test_bb5_wrong_build_is_blocked_before_subprocess_or_artifact_reads(self):
         self.context.root = self.base / 'bb5-checkout'
         directory = self.context.root / 'tool/qa'
@@ -117,12 +158,35 @@ class FinalPassInstallTests(unittest.TestCase):
         (directory / 'bb5_runtime_acceptance.py').write_text('VERSION = 2198\n')
         config = {key: '/missing/private-input' for key in
                   ('runner_apk', 'normal_apk', 'normal_sidecar', 'apksigner', 'aapt')}
-        config.update(target_sha='a' * 64, runner_sha='b' * 64,
+        config.update(qa_apk='/missing/private-qa.apk', target_sha='a' * 64, runner_sha='b' * 64,
                       normal_sha='c' * 64, normal_version=2198)
         result = subject.run('bb5', config, self.context)
         self.assertEqual(result, {'status': 'blocked',
             'reason': 'candidate_incompatible', 'receipts': []})
         self.assert_no_execution()
+
+    def test_bb5_uses_distinct_reviewed_qa_artifact_and_restores_normal(self):
+        self.context.candidate_build = self.context.normal_build = 2202
+        qa = self.base / 'qa.apk'
+        qa.write_bytes(b'QA hooks enabled')
+        runner = self.base / 'runner.apk'
+        runner.write_bytes(b'instrumentation')
+        config = dict(qa_apk=str(qa), runner_apk=str(runner),
+            target_sha=hashlib.sha256(qa.read_bytes()).hexdigest(),
+            runner_sha=hashlib.sha256(runner.read_bytes()).hexdigest(),
+            normal_apk=str(self.candidate), normal_sidecar=str(self.candidate),
+            normal_sha=hashlib.sha256(self.candidate.read_bytes()).hexdigest(),
+            normal_version=2202, apksigner=str(runner), aapt=str(runner))
+        self.context.output.mkdir()
+        def command(argv, **kwargs):
+            self.assertEqual(argv[argv.index('--apk') + 1], str(qa))
+            self.assertNotIn('--qa-apk', argv)
+            (self.context.output / 'bb5.txt').write_text(
+                'PASS BB5_locked_actual_idle_stop_resume_and_normal_2202_restoration\n')
+            return SimpleNamespace(returncode=0)
+        self.context.command.side_effect = command
+        result = subject.run('bb5', config, self.context)
+        self.assertEqual(result['status'], 'pass')
 
     def generic_fixture(self, row, extra):
         """The current run.py result plus the current uninstall/guard shapes."""
@@ -133,6 +197,8 @@ class FinalPassInstallTests(unittest.TestCase):
         manifest_path.write_text('{}')
         result = {'agentId': 'fx', 'case': case, 'appBuild': 2203,
                   'sourceRevision': '1' * 40, 'normalRestored': True,
+                  'continuation': {'confirmed': True, 'normalVerified': True,
+                      'setupIdle': True, 'targetsAbsent': True, 'storageAvailable': True},
                   'uninstall': {'state': 'pass', 'code': 'verified', 'facts': {
                       'asserted': True, 'removedViaApp': True,
                       'leftoversRemoved': True, 'noOrphans': True,
@@ -166,6 +232,14 @@ class FinalPassInstallTests(unittest.TestCase):
                                   'receipts': [str(receipt)]})
         module.main.assert_called_once()
         self.context.command.assert_not_called()
+
+    def test_removal_failure_needs_confirmed_clean_state_to_continue(self):
+        driver, _, _, config = self.generic_fixture('ba-removal',
+            {'error': 'RuntimeError', 'continuation': {'confirmed': False}})
+        with patch.object(subject, '_driver', driver):
+            result = subject.run('ba-removal', config, self.context)
+        self.assertEqual(result['status'], 'fail')
+        self.assertIs(result['data']['safe_to_continue'], False)
 
     def test_storage_receipt_requires_visible_guidance_as_well_as_native_refusal(self):
         extra = {'guard': {'state': 'pass', 'code': 'verified', 'facts': {

@@ -92,6 +92,44 @@ void main() {
     expect(result.capabilities.resumeVerified, isFalse);
   });
 
+  test(
+    'BA16 partial files permit recovery without installation or capability proof',
+    () {
+      final fx = AgentCatalog.builtIn.byId('fx')!;
+      final partial = row(
+        descriptor: fx,
+        fact: const PhoneAgentRuntime(agentId: 'fx', payloadPresent: true),
+      );
+      expect(partial.hasPartialPayload, isTrue);
+      expect(partial.status, PhoneAgentStatus.needsInstall);
+      expect(partial.fixAction, PhoneAgentFixAction.install);
+      expect(partial.chatVisible, isFalse);
+      expect(partial.chatSelectable, isFalse);
+      expect(partial.capabilities.cancel, isFalse);
+      expect(
+        row(
+          descriptor: fx,
+          fact: const PhoneAgentRuntime(
+            agentId: 'claude',
+            payloadPresent: true,
+          ),
+        ).hasPartialPayload,
+        isFalse,
+      );
+      expect(
+        row(
+          descriptor: fx,
+          fact: const PhoneAgentRuntime(
+            agentId: 'fx',
+            installed: true,
+            payloadPresent: true,
+          ),
+        ).hasPartialPayload,
+        isFalse,
+      );
+    },
+  );
+
   test('a fresh install with no host yet goes to the phone check', () {
     // Emulator 2026-10-04: right after install the host is not running and
     // the agent is unqualified. The check starts the host, so Resume here

@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "state": "plan",
+  "deviceTouched": false,
+  "case": "fresh",
+  "requiredCandidateBuild": 2202,
+  "package": "io.github.eslamasabry.opencode_mobile",
+  "requirements": [
+    "coordinator_posted_apk_2202",
+    "reviewed_artifact_receipt",
+    "same_signer_before_update",
+    "shared_emulator_lock",
+    "preserve_application_data",
+    "normal_candidate_restoration",
+    "separately_provisioned_avd",
+    "no_prior_package_or_data",
+    "first_run_onboarding"
+  ],
+  "freshPlan": {
+    "state": "needs_second_avd",
+    "code": "shared_user_isolation_unqualified",
+    "mutatesUsers": false,
+    "requiresDedicatedAvd": true,
+    "requiresUserZero": true,
+    "requiresPackageAbsent": true,
+    "requiresAppDataAbsent": true
+  }
+}

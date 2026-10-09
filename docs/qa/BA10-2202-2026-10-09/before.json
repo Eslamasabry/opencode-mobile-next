@@ -1,0 +1,33 @@
+{
+  "appBuild": 2202,
+  "apkSha256": "e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0",
+  "normalVerified": true,
+  "inventory": {
+    "allocatedBytes": 45056,
+    "pinMatches": false,
+    "linkMatches": true,
+    "targetPids": [],
+    "removed": false,
+    "leftovers": true,
+    "staging": [],
+    "lockPresent": false
+  },
+  "availableBytes": 1678356480,
+  "retained": {
+    "claudeSignedInVisible": false,
+    "phoneGateDigest": "6d88a3324dcdf6b3192b395af275e88d9fd0f968671b6925fc632c1a7391962e",
+    "claudeChatIdDigest": "0726bbaa34819a5a5af9f7107d37bfe52f755e76efbb2733a57fd1b0fd651897",
+    "claudeChatCount": 27,
+    "nodePresent": true,
+    "paseoPresent": true,
+    "claudeHomes": 2,
+    "targetHomes": {
+      "codex": 0,
+      "gemini": 0,
+      "qwen": 0,
+      "goose": 0,
+      "omp-acp": 0,
+      "fx": 0
+    }
+  }
+}

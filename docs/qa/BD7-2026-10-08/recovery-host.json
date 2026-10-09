@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "result": "PASS",
+  "focusedTests": 82,
+  "scope": "recovered_saved_report_navigation",
+  "deviceQualification": false,
+  "sourceSha256": {
+    "tool/qa/bd7_device_saved_report.py": "3b82b96483575c96bb1152be84278cff2ef930f7ee38e8e5e94c0eaf3617c1ec",
+    "tool/qa/bd7_device_crash_smoke.py": "19278af3f1f5ce3031cfab699922a10a60c0c319a52488752547e554bbcab4a4",
+    "tool/qa/bd7_device_ui.py": "546a98280d9cebf3ff3a89d9b549e61239edefc21f75cd5163e8c696d20339f1",
+    "tool/qa/bd7_exit_proof.py": "ec032e72560e6bba9a8f7ca4879255f67adbbda876bb344d87e8edbee2a7cb63",
+    "tool/qa/test_bd7_device_saved_report.py": "f1c0f01830b3911448cfcd17cd2629cb5a835c406522316298939e949ebf7eb7"
+  }
+}

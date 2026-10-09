@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "checkedAtUtc": "2026-10-09T02:34:53.766981+00:00",
+  "scope": "offline_reviewed_upgrade_inputs",
+  "branchBase": "6796c8441",
+  "baseline": {
+    "build": 2202,
+    "sha256": "e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0",
+    "hostApkVerified": true
+  },
+  "nextCandidate": "not_yet_supplied_no_identity_fabricated",
+  "deviceTouched": false,
+  "fixtureSeeded": false,
+  "historyReceiptCreated": false,
+  "tests": {
+    "fq9": 174,
+    "runnerAndAdapter": 35,
+    "allPassed": true,
+    "runnerCommand": "python3 -m unittest tool.qa.test_final_upgrade_inputs tool.qa.test_final_pass_protocols tool.qa.test_final_pass tool.qa.test_final_pass_2202",
+    "fq9Command": "python3 -m unittest discover -t . -s tool/qa/fq9 -p 'test_*.py'",
+    "prefix": "OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test --"
+  },
+  "regressionControls": [
+    "Before implementation, explicit next-build CLI, manifest override and seeded adapter tests failed.",
+    "Canonical backing-path regression includes a deliberately reverted legacy-rootfs mutation.",
+    "Receipt fsync failure prevents the no-reply POST."
+  ],
+  "futureShellSyntax": "passed bash -n; no commands executed",
+  "sourceSha256": {
+    "tool/qa/final_pass_protocols.py": "ee8a308c7a6a507c5058fbef34f5236d93b764a3a57367d1713c2e7ce2d23d2f",
+    "tool/qa/fq9/common.py": "9eea6dcda0d25290865759b977f946f3f77388e7276f70f9a7c285bbdaf33a70",
+    "tool/qa/fq9/run.py": "7402bef2eb881561675f4ac4116a97ff424887399afe24324c47f28121349a33",
+    "tool/qa/fq9/prepare_final_inputs.py": "7d8e12138a10b912ecfcc77cbae9fba3006ed6b6cccfdfe90d0ebbba96c8959e",
+    "tool/qa/fq9/test_prepare_final_inputs.py": "3d8a4fea72495c2505825229b8bb6b77eeffac90b56055a963cb7f1ef53217aa",
+    "tool/qa/test_final_upgrade_inputs.py": "461525ab0cf2d0bd9ca99d0258da7996097b63407fb8ef2e49e507a1d52f8b92",
+    "tool/qa/test_final_pass_protocols.py": "dbc74fe11c07e9974244504811593fc9a153098adff60ce0425640e7fcff1b80"
+  }
+}

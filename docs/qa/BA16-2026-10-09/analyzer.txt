@@ -1,0 +1,5 @@
+Analyzing oc_app-sol-ba...                                      
+
+   info • The import of 'package:opencode_mobile/ui/theme_roles.dart' is unnecessary because all of the used elements are also provided by the import of 'package:opencode_mobile/ui/app_theme.dart'. Try removing the import directive • test/goldens/connector_card_golden_test.dart:17:8 • unnecessary_import
+
+1 issue found. (ran in 42.8s)

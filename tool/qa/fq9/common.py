@@ -9,7 +9,7 @@ import re
 PACKAGE = "io.github.eslamasabry.opencode_mobile"
 SHARED_SERIAL = "emulator-5554"
 LOCK = Path("/home/eslam/Storage/tmp/oc-emulator.lock")
-CANDIDATE_BUILD = 2198
+CANDIDATE_BUILD = 2202
 LOCAL_SIGNER = "1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c"
 STABLE_SIGNER = "2d010c2103cb2f78abaaca690ead4d45f8003a6c0a02082cd2a2ae62fd18d0ec"
 
@@ -64,7 +64,12 @@ def load_json(path, *, limit=32768):
         raise DriverFailure("input_unavailable_or_invalid") from None
 
 
-def load_manifest(path):
+def load_manifest(path, *, candidate_build=CANDIDATE_BUILD):
+    if (
+        type(candidate_build) is not int
+        or not CANDIDATE_BUILD <= candidate_build <= 999999
+    ):
+        raise DriverFailure("invalid_candidate_build")
     value = load_json(path)
     if (
         type(value) is not dict
@@ -116,8 +121,14 @@ def load_manifest(path):
             raw["origin"],
         )
     candidate, normal = artifacts["candidate"], artifacts["normal"]
-    if candidate.build != CANDIDATE_BUILD or normal != candidate:
+    if candidate.build != candidate_build or normal != candidate:
         raise DriverFailure("normal_candidate_mismatch")
+    if candidate_build != CANDIDATE_BUILD and (
+        "previous" not in artifacts
+        or artifacts["previous"].build != CANDIDATE_BUILD
+        or artifacts["previous"].signer != candidate.signer
+    ):
+        raise DriverFailure("invalid_upgrade_baseline")
     if candidate.signer not in (LOCAL_SIGNER, STABLE_SIGNER):
         raise DriverFailure("unapproved_candidate_signer")
     if "stable" in artifacts:

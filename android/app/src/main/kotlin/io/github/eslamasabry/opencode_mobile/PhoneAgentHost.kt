@@ -164,8 +164,14 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         identity(profile)
         check(Regex("^[a-z][a-z0-9-]{0,63}$").matches(executable) &&
             Regex("^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$").matches(expected)) { "The agent is unavailable." }
-        if (!linux.installed) return mapOf("installed" to false, "version" to null)
-        val child = linux.startAgentProcess(profile, listOf("/home/oc/.local/bin/$executable", "--version"))
+        fun projection(installed: Boolean) = mapOf(
+            "installed" to installed, "version" to if (installed) expected else null,
+            "payloadPresent" to PhoneAgentInventory.present(linux.rootfs, executable),
+        )
+        if (!linux.installed) return projection(false)
+        val child = try {
+            linux.startAgentProcess(profile, listOf("/home/oc/.local/bin/$executable", "--version"))
+        } catch (_: Exception) { return projection(false) }
         val output = StringBuilder()
         var reader: Thread? = null
         try {
@@ -195,7 +201,9 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
                 complete && child.exitValue() == 0 &&
                     Regex("(?<![0-9.])v?${Regex.escape(expected)}(?![0-9.])").containsMatchIn(value)
             }
-            return mapOf("installed" to installed, "version" to if (installed) expected else null)
+            return projection(installed)
+        } catch (_: Exception) {
+            return projection(false)
         } finally {
             cleanup(child, reader)
             synchronized(output) { output.setLength(0) }
