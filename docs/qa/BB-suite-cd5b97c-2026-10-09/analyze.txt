@@ -1,0 +1,3 @@
+machine_lock: got test slot 1 after 6s
+Analyzing 2 items...
+No issues found! (ran in 4.3s)

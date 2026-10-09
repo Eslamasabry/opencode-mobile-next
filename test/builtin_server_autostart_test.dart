@@ -58,6 +58,13 @@ class _RefusedConnection extends ConnectionController {
 class _FakeLinux extends BuiltinLinux {
   _FakeLinux(this.events);
 
+  // BB5 reports native idle work; this launch fake must not open a real channel.
+  @override
+  Future<void> observePhoneAgentWork({
+    required String profileId,
+    required bool? busy,
+  }) async {}
+
   final List<String> events;
   bool serverRunning = false;
   bool serverDies = false;

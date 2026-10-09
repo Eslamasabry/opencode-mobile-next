@@ -1,0 +1,46 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin/setup_finisher_lifetime_test.dart
+00:00 +0: the setup finisher still works after the shell that attached it was replaced
+-------------------------------------------------------------------------------
+The Shorebird Updater is unavailable in the current environment.
+-------------------------------------------------------------------------------
+This occurs when using pkg:shorebird_code_push in an app that does not
+contain the Shorebird Engine. Most commonly this is due to building with
+`flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
+It can also occur when running on an unsupported platform (e.g. web).
+
+Pending timers:
+Timer (duration: 0:00:08.000000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      BuiltinLinux.observePhoneAgentWork (package:opencode_mobile/builtin/builtin_linux.dart:648:10)
+#7      PhoneServerHealing._observeAgentWork.<anonymous closure> (package:opencode_mobile/builtin/phone_server_healing.dart:235:30)
+#19     FakeAsync.run.<anonymous closure>.<anonymous closure> (package:fake_async/fake_async.dart:189:18)
+#20     FakeAsync.flushMicrotasks (package:fake_async/fake_async.dart:200:32)
+#21     AutomatedTestWidgetsFlutterBinding.runTest.<anonymous closure> (package:flutter_test/src/binding.dart:2507:17)
+(elided 29 frames from dart:async and package:stack_trace)
+
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 2543 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  the setup finisher still works after the shell that attached it was replaced
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -1: the setup finisher still works after the shell that attached it was replaced [E]
+  Test failed. See exception logs above.
+  The test description was: the setup finisher still works after the shell that attached it was replaced
+
+00:01 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin/setup_finisher_lifetime_test.dart: the setup finisher still works after the shell that attached it was replaced
