@@ -1,6 +1,7 @@
 """FQ9 checklist CLI. Default is an offline plan; --execute is device-only.
 
-Device runs use coordinator-posted APK 2202. No builds, downloads, user
+Default runs use APK 2202; upgrade alone accepts an explicitly reviewed next build.
+No builds, downloads, user
 creation, uninstall, clearing, credential output or network uploads.
 """
 
@@ -34,6 +35,8 @@ FAIL_CODES = (
             "driver_failure",
             "driver_unexpected_failure",
             "manifest_required",
+            "invalid_candidate_build",
+            "invalid_upgrade_baseline",
             "baseline_artifact_required",
             "emulator_busy",
             "evidence_unavailable",
@@ -75,15 +78,16 @@ def failure_code(error):
 
 
 def plan(args, artifacts=None):
+    candidate_build = getattr(args, "candidate_build", CANDIDATE_BUILD)
     result = {
         "schema": 1,
         "state": "plan",
         "deviceTouched": False,
         "case": args.case,
-        "requiredCandidateBuild": CANDIDATE_BUILD,
+        "requiredCandidateBuild": candidate_build,
         "package": PACKAGE,
         "requirements": [
-            "coordinator_posted_apk_2202",
+            f"coordinator_posted_apk_{candidate_build}",
             "reviewed_artifact_receipt",
             "same_signer_before_update",
             "shared_emulator_lock",
@@ -158,7 +162,7 @@ def run_locked(args, artifacts, receipt, output, *, port_factory=ports.AndroidPo
         "schema": 1,
         "case": args.case,
         "runID": args.run_id,
-        "candidateBuild": CANDIDATE_BUILD,
+        "candidateBuild": artifacts["candidate"].build,
         "candidateSha256": artifacts["candidate"].sha256,
         "signerSha256": artifacts["candidate"].signer,
         "device": args.serial,
@@ -318,6 +322,13 @@ def write_private_receipt(output, receipt):
         with os.fdopen(fd, "w") as stream:
             json.dump(receipt, stream, indent=2)
             stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        parent_fd = os.open(output.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(parent_fd)
+        finally:
+            os.close(parent_fd)
     except FileExistsError:
         raise DriverFailure("evidence_already_exists") from None
     except OSError:
@@ -330,6 +341,12 @@ def main(argv=None):
         "--case", choices=("upgrade", "stable", "background", "fresh"), required=True
     )
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument(
+        "--candidate-build",
+        type=int,
+        default=CANDIDATE_BUILD,
+        help="explicit next-build override for upgrade from 2202 only",
+    )
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--session-receipt", type=Path)
     parser.add_argument("--seed-history-receipt", type=Path)
@@ -341,6 +358,10 @@ def main(argv=None):
     parser.add_argument("--output", type=Path, default=Path("docs/qa/FQ9-2026-10-08"))
     args = parser.parse_args(argv)
     try:
+        if not CANDIDATE_BUILD <= args.candidate_build <= 999999 or (
+            args.candidate_build != CANDIDATE_BUILD and args.case != "upgrade"
+        ):
+            raise DriverFailure("invalid_candidate_build")
         if not re.fullmatch(r"fq9-[A-Za-z0-9_-]{1,80}", args.run_id):
             raise DriverFailure("invalid_run_id")
         if not re.fullmatch(r"emulator-[0-9]{4,5}", args.serial):
@@ -350,7 +371,11 @@ def main(argv=None):
             or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", args.dedicated_avd)
         ):
             raise DriverFailure("dedicated_avd_required")
-        artifacts = load_manifest(args.manifest) if args.manifest else None
+        artifacts = (
+            load_manifest(args.manifest, candidate_build=args.candidate_build)
+            if args.manifest
+            else None
+        )
         if args.seed_history_receipt and (
             args.case != "upgrade"
             or args.session_receipt is not None

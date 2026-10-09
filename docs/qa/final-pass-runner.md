@@ -21,7 +21,10 @@ download, signing or publication is performed by the runner.
 ## Sequencing
 
 Upgrade runs first, before candidate installation: its driver must observe the
-actual reviewed baseline already installed, with its existing history receipt.
+actual reviewed baseline already installed, with its existing history receipt
+or an explicit reviewed seed request. The seed path is new, private and outside
+the checkout; its real receipt is written under the same reservation after
+exact-baseline admission and before the no-reply history marker is posted.
 The runner does not install an older baseline. The remaining order is BA install,
 BA removal, BA storage floor, BB5 idle, FQ3 OC1/OC2, FQ9 background, BD7 saved
 report, FB1 fresh-plan check, demo. `--fast` omits background and demo entirely;
@@ -88,6 +91,12 @@ BB5. The driver verifies target/runner/normal hashes, package, signer and versio
 
 FQ3 uses its 2202 evidence directory; historical certification remains separate.
 FQ9 verifies candidate/normal identity and the exact installed previous artifact.
+For upgrade only, the adapter accepts an explicitly reviewed build newer than
+2202 with previous=2202. Other FQ9 cases and FQ3 retain their 2202 guards. Use the
+[reviewed next-candidate input builder](FQ9-final-inputs-2026-10-09/README.md)
+to supply `seed_history_receipt` instead of `session_receipt`; never both.
+The builder does not seed or manufacture session IDs offline. FQ9's manifest
+`normal` is the candidate, while the outer batch still restores normal 2202.
 An identical previous artifact exercises in-place retention, not a cross-version
 upgrade. Its automated preservation checks do not establish Keystore sign-in or
 complete semantic history, so manual qualification remains pending.

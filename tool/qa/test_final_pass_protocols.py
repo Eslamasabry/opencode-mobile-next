@@ -111,14 +111,14 @@ class ProtocolWrapperTests(unittest.TestCase):
         self.assertEqual(result['reason'], 'fq3_requires_build_2202')
         self.assertEqual(self.context.events, [])
 
-    def test_fq9_wrong_build_blocks_before_driver_or_output_creation(self):
+    def test_unreviewed_next_build_blocks_before_driver_or_output_creation(self):
         self.context.candidate_build = 2203
         with patch.object(driver, "main") as main:
             for row in ("fq9-upgrade", "fq9-background"):
                 with self.subTest(row=row):
                     result = protocols.run(row, {}, self.context)
                     self.assertEqual(result["status"], "blocked")
-                    self.assertEqual(result["reason"], "fq9_requires_build_2202")
+                    self.assertEqual(result["reason"], "fq9_configuration_invalid" if row == "fq9-upgrade" else "fq9_requires_build_2202")
             main.assert_not_called()
         self.assertFalse(self.context.output.exists())
         self.assertEqual(self.context.events, [])
