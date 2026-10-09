@@ -193,7 +193,8 @@ class Ports:
         # Real storage check precedes every install dispatch.
         if self.available_storage_bytes()<800000000: raise RuntimeError('insufficient_real_storage')
         current=self.target_inventory(self.agent_id)
-        if current['pinMatches'] and current['linkMatches']: return
+        if current['pinMatches'] and current['linkMatches']:
+            return {'installedViaApp': False, 'freshJob': False, 'checksumVerified': True}
         if current['leftovers'] or current['targetPids']: raise RuntimeError('target_partial_or_in_use')
         baseline=self.setup_snapshot()['jobId']
         self.tap_install(self.agent_id)
@@ -207,7 +208,9 @@ class Ports:
                 if current['pinMatches'] and current['linkMatches']:
                     # Wait for automatic phone checks to drain before navigation.
                     for _ in range(90):
-                        if not any('Checking ' in self.text(n) and '…' in self.text(n) for n in self.ui()): return
+                        if not any('Checking ' in self.text(n) and '…' in self.text(n) for n in self.ui()):
+                            return {'installedViaApp': job.get('components', {}).get('agent-'+self.agent_id, {}).get('state') == 'done',
+                                    'freshJob': True, 'checksumVerified': True, 'jobId': job['jobId']}
                         time.sleep(1)
                     raise RuntimeError('phone_check_did_not_drain')
             time.sleep(.5)
@@ -239,6 +242,7 @@ def main():
     parser.add_argument('--case',choices=('launch','uninstall','low-storage'),required=True)
     parser.add_argument('--manifest',type=Path,required=True)
     parser.add_argument('--execute',action='store_true',help='Operate only after coordinator artifact delivery')
+    parser.add_argument('--private-observations', action='store_true')
     parser.add_argument('--wait',action='store_true')
     parser.add_argument('--output',type=Path,default=REPO/'docs/qa/FQ-install2-2026-10-08')
     args=parser.parse_args()
@@ -257,6 +261,9 @@ def main():
         try: fcntl.flock(lock,fcntl.LOCK_EX | (0 if args.wait else fcntl.LOCK_NB))
         except BlockingIOError: raise RuntimeError('emulator_in_use')
         d.configure(args.output.resolve())
+        if args.private_observations:
+            from device_install import configure_device
+            configure_device(d, args.output.resolve(), p)
         ports=Ports(d,p,a,metadata,args.agent)
         restore_required=False
         operation_error=None

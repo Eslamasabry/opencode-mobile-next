@@ -1,0 +1,58 @@
+Fusage: python3 -m unittest [-h] [--execute | --dry-run]
+                           [--candidate-apk CANDIDATE_APK]
+                           [--candidate-build CANDIDATE_BUILD]
+                           [--normal-apk NORMAL_APK] [--inputs INPUTS]
+                           [--date DATE]
+python3 -m unittest: error: unrecognized arguments: --fast
+EFE
+======================================================================
+ERROR: test_fast_selection_excludes_long_background_and_recording (tool.qa.test_final_pass_2202.CurrentBatchTests.test_fast_selection_excludes_long_background_and_recording)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/test_final_pass_2202.py", line 16, in test_fast_selection_excludes_long_background_and_recording
+    args = batch.parser().parse_args(['--fast'])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/argparse.py", line 1911, in parse_args
+    self.error(msg % ' '.join(argv))
+  File "/usr/lib/python3.12/argparse.py", line 2677, in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+  File "/usr/lib/python3.12/argparse.py", line 2664, in exit
+    _sys.exit(status)
+SystemExit: 2
+
+======================================================================
+ERROR: test_saved_report_accepts_verified_current_artifact (tool.qa.test_final_pass_2202.CurrentBatchTests.test_saved_report_accepts_verified_current_artifact)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/test_final_pass_2202.py", line 36, in test_saved_report_accepts_verified_current_artifact
+    self.assertEqual(bd7.load_artifact(apk).build, 2202)
+                     ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/bd7_device_saved_report.py", line 96, in load_artifact
+    raise DriverFailure("candidate_identity_mismatch")
+tool.qa.fq9.common.DriverFailure: candidate_identity_mismatch
+
+======================================================================
+FAIL: test_current_protocol_driver_targets_2202 (tool.qa.test_final_pass_2202.CurrentBatchTests.test_current_protocol_driver_targets_2202)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/test_final_pass_2202.py", line 25, in test_current_protocol_driver_targets_2202
+    self.assertEqual(common.CANDIDATE_BUILD, 2202)
+AssertionError: 2198 != 2202
+
+======================================================================
+FAIL: test_normal_is_2202 (tool.qa.test_final_pass_2202.CurrentBatchTests.test_normal_is_2202)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/test_final_pass_2202.py", line 12, in test_normal_is_2202
+    self.assertEqual(args.normal_apk.name, 'oc-2202.apk')
+AssertionError: 'oc-2199.apk' != 'oc-2202.apk'
+- oc-2199.apk
+?     ^^^
++ oc-2202.apk
+?     ^^^
+
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.004s
+
+FAILED (failures=2, errors=2)

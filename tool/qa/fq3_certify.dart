@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ffi';
 
 import 'fq3/common.dart';
 import 'fq3/device.dart';
@@ -11,7 +12,28 @@ import 'fq3/oc1.dart';
 import 'fq3/oc2.dart';
 import 'fq3/session_ownership.dart';
 
-const evidenceDirectory = 'docs/qa/FQ3c-2026-10-08';
+const evidenceDirectory = 'docs/qa/FQ3d-2026-10-09';
+bool inheritedReservation = false;
+typedef NativeFlock = Int32 Function(Int32, Int32);
+typedef HostFlock = int Function(int, int);
+
+void adoptReservation(String value) {
+  final fd = int.tryParse(value);
+  if (fd == null ||
+      fd < 3 ||
+      File('/proc/self/fd/$fd').resolveSymbolicLinksSync() !=
+          File(lock).resolveSymbolicLinksSync()) {
+    throw const ProbeFailure('invalid_inherited_lock');
+  }
+  final flock = DynamicLibrary.open(
+    'libc.so.6',
+  ).lookupFunction<NativeFlock, HostFlock>('flock');
+  if (flock(fd, 2 | 4) != 0) {
+    throw const ProbeFailure('invalid_inherited_lock');
+  }
+  inheritedReservation = true;
+}
+
 const lock = '/home/eslam/Storage/tmp/oc-emulator.lock';
 const phases = <String, Set<String>>{
   'stream': {'stream'},
@@ -42,6 +64,8 @@ Map<String, Object?> fail(String code) => {
 };
 
 Future<void> main(List<String> args) async {
+  final inherited = argument(args, '--inherited-emulator-lock-fd');
+  if (inherited != null) adoptReservation(inherited);
   final runID =
       argument(args, '--run-id') ??
       'fq3-${DateTime.now().toUtc().toIso8601String().replaceAll(RegExp(r'[^0-9]'), '')}';
@@ -217,6 +241,16 @@ Future<void> phase(List<String> args, String runID) async {
 }
 
 Future<int> lockedChild(List<String> arguments) async {
+  if (inheritedReservation) {
+    final previous = exitCode;
+    exitCode = 0;
+    try {
+      await main(arguments);
+      return exitCode;
+    } finally {
+      exitCode = previous;
+    }
+  }
   // Waiting holds no lock. No timeout can silently skip a shared-device phase.
   final child = await Process.start('flock', [
     lock,
@@ -268,6 +302,7 @@ Future<void> orchestrate(List<String> args, String runID) async {
       flush: true,
     );
   staged.renameSync(evidence);
+  if (args.contains('--no-matrix')) return;
   final generated = await Process.run('python3', [
     'tool/qa/fq3/update_matrix.py',
     '--run',

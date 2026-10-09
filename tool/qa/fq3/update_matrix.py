@@ -21,8 +21,9 @@ EVIDENCE_DIRECTORIES = (*HISTORICAL_EVIDENCE_DIRECTORIES, CURRENT_EVIDENCE_DIREC
 MODEL_SCOPED_DIRECTORIES = {
     2196: PREVIOUS_EVIDENCE_DIRECTORY,
     2197: CURRENT_EVIDENCE_DIRECTORY,
+    2202: "docs/qa/FQ3d-2026-10-09",
 }
-CERTIFIED_BUILDS = (2195, 2196, 2197)
+CERTIFIED_BUILDS = (2195, 2196, 2197, 2202)
 MATRIX_PATH = "docs/verification/agent-certification-matrix.json"
 MARKDOWN_PATH = "docs/verification/agent-certification-matrix.md"
 PROTOCOL_SCOPE = "in-app Ubuntu protocol; no UI/restart/install qualification"

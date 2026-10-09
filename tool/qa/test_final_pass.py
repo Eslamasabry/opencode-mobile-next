@@ -2,7 +2,6 @@
 from contextlib import contextmanager
 import io
 import fcntl
-import os
 from types import SimpleNamespace
 import json
 from pathlib import Path
@@ -40,7 +39,7 @@ class FinalPassTests(unittest.TestCase):
         if 'dumpsys' in argv:
             return type('Result', (), {'returncode': 0, 'stdout': f'versionCode={self.build}'.encode()})()
         self.events.append('restore' if argv[-1] == str(self.args.normal_apk) else 'install')
-        self.build = 2199 if self.events[-1] == 'restore' else 2203
+        self.build = 2202 if self.events[-1] == 'restore' else 2203
         return type('Result', (), {'returncode': 0, 'stdout': b''})()
 
     def dispatch(self, row, config, context):
@@ -73,6 +72,14 @@ class FinalPassTests(unittest.TestCase):
         self.assertIn('candidate_sha256', report)
         self.assertIn('[receipt 1](ba-install.json)', report)
 
+    def test_upgrade_runs_before_candidate_replacement(self):
+        self.args.fast = True
+        self.assertEqual(self.execute(), 0)
+        self.assertLess(self.events.index('fq9-upgrade'), self.events.index('install'))
+        self.assertNotIn('fq9-background', self.events)
+        self.assertNotIn('demo', self.events)
+        self.assertEqual(self.events[-2:], ['restore', 'unlock'])
+
     def test_failure_stops_row_but_next_independent_row_runs(self):
         def dispatch(row, config, context):
             if row == batch.ROWS[0]:
@@ -83,7 +90,7 @@ class FinalPassTests(unittest.TestCase):
         self.assertIn(batch.ROWS[-1], self.events)
         report = (self.root / 'docs/qa/final-pass-2026-10-09/README.md').read_text()
         self.assertNotIn('PRIVATE_ACCOUNT_VALUE', report)
-        self.assertIn('| ba-install | fail | driver_failed |', report)
+        self.assertIn('| fq9-upgrade | fail | driver_failed |', report)
 
     def test_blocked_row_does_not_prevent_later_checks(self):
         def dispatch(row, config, context):
@@ -100,7 +107,7 @@ class FinalPassTests(unittest.TestCase):
                 result.returncode = 1
             return result
         self.assertEqual(self.execute(command=command), 1)
-        self.assertEqual([event for event in self.events if event in batch.ROWS], ['fb1'])
+        self.assertEqual([event for event in self.events if event in batch.ROWS], ['fq9-upgrade', 'fb1'])
         self.assertEqual(self.events[-2:], ['restore', 'unlock'])
 
     def test_restore_failure_is_reported_and_fails_batch(self):
@@ -181,7 +188,7 @@ class FinalPassTests(unittest.TestCase):
         def dispatch(row, config, context):
             result = self.dispatch(row, config, context)
             if row == 'ba-removal':
-                self.build = 2199
+                self.build = 2202
             return result
         self.assertEqual(self.execute(dispatch), 0)
         self.assertEqual(self.events.count('install'), 2)
