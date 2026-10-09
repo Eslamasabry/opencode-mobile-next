@@ -1,0 +1,197 @@
+{
+  "source": "lib/diagnostics/crash_diagnostics.dart (the opt-in store) and the native crash record",
+  "schema": {
+    "record": [
+      {
+        "path": "source",
+        "kind": "string"
+      },
+      {
+        "path": "category",
+        "kind": "string"
+      },
+      {
+        "path": "time",
+        "kind": "number"
+      }
+    ],
+    "input": [
+      {
+        "path": "errorMessage",
+        "kind": "string"
+      },
+      {
+        "path": "errorStack",
+        "kind": "string"
+      },
+      {
+        "path": "nativeText",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "crash_flutter",
+      "kind": "crash",
+      "payload": {
+        "how": "flutter",
+        "record": {
+          "source": "flutter",
+          "category": "Invalid state",
+          "time": 0
+        },
+        "input": {
+          "errorMessage": "MARKER-CRASH-MESSAGE-1",
+          "errorStack": "#0 secretFunction (package:app/secret.dart:1:1)"
+        }
+      },
+      "fields": [
+        {
+          "key": "record.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [
+            "crash.flutter"
+          ],
+          "primary": false
+        },
+        {
+          "key": "record.category",
+          "path": "category",
+          "kind": "string",
+          "probes": [
+            "Invalid state"
+          ],
+          "primary": false
+        },
+        {
+          "key": "record.time",
+          "path": "time",
+          "kind": "number",
+          "probes": [
+            "{date}"
+          ],
+          "primary": false
+        },
+        {
+          "key": "input.errorMessage",
+          "path": "errorMessage",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "input.errorStack",
+          "path": "errorStack",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "crash_anr",
+      "kind": "crash",
+      "payload": {
+        "how": "anr",
+        "record": {
+          "source": "anr",
+          "category": "Android reported that the app stopped responding",
+          "time": 0
+        },
+        "input": {
+          "errorMessage": "MARKER-CRASH-MESSAGE-2"
+        }
+      },
+      "fields": [
+        {
+          "key": "record.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [
+            "crash.anr"
+          ],
+          "primary": false
+        },
+        {
+          "key": "record.category",
+          "path": "category",
+          "kind": "string",
+          "probes": [
+            "Android reported that the app stopped responding"
+          ],
+          "primary": false
+        },
+        {
+          "key": "record.time",
+          "path": "time",
+          "kind": "number",
+          "probes": [
+            "{date}"
+          ],
+          "primary": false
+        },
+        {
+          "key": "input.errorMessage",
+          "path": "errorMessage",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "crash_native",
+      "kind": "crash",
+      "payload": {
+        "how": "native",
+        "record": {
+          "source": "native",
+          "category": "Native application error",
+          "time": 0
+        },
+        "input": {
+          "nativeText": "MARKER-NATIVE-TEXT-1"
+        }
+      },
+      "fields": [
+        {
+          "key": "record.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [
+            "crash.native"
+          ],
+          "primary": false
+        },
+        {
+          "key": "record.category",
+          "path": "category",
+          "kind": "string",
+          "probes": [
+            "Native application error"
+          ],
+          "primary": false
+        },
+        {
+          "key": "record.time",
+          "path": "time",
+          "kind": "number",
+          "probes": [
+            "{date}"
+          ],
+          "primary": false
+        },
+        {
+          "key": "input.nativeText",
+          "path": "nativeText",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

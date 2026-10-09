@@ -8533,5 +8533,6 @@
   "monitorUnreachableTitle": "تعذر الوصول إلى {server}",
   "monitorUnreachableDetail": "ستظهر أسئلته هنا عند عودته.",
   "monitorUnreachableCheck": "تحقق من {server} مجددا",
-  "agentsStateLimitReset": "تم بلوغ حد الخطة · يُعاد ضبطه {time}"
+  "agentsStateLimitReset": "تم بلوغ حد الخطة · يُعاد ضبطه {time}",
+  "exportMarkdownUnredacted": "النص المحفوظ غير منقّح. يحتوي بالضبط على ما تراه، بما في ذلك أي أسرار أو مسارات خاصة في المحادثة."
 }

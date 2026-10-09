@@ -1,0 +1,11 @@
+{
+  "span.attrs.status": "shown",
+  "span.durationMs": "shown",
+  "span.id": "ignored: an internal number that keeps rows apart; nothing a person reads",
+  "span.isMark": "shown",
+  "span.name": "shown",
+  "span.outcome": "shown",
+  "span.parent": "shown",
+  "span.startMicros": "shown",
+  "span.wallStart": "ignored: the wall-clock start is used for ordering only; the list shows how long each step took"
+}

@@ -283,6 +283,16 @@ class _SessionExportScreenState extends State<SessionExportScreen> {
               ],
               onSelected: _choose,
             ),
+            if (!_json) ...[
+              // The transcript is the loaded messages as they are: say so
+              // before it is saved, since nothing in it is masked.
+              SizedBox(height: tokens.sectionGap),
+              KitNotice(
+                key: const ValueKey('export-markdown-unredacted'),
+                icon: AppIconography.warning,
+                message: l10n.exportMarkdownUnredacted,
+              ),
+            ],
             if (_json && _supported) ...[
               SizedBox(height: tokens.sectionGap),
               KitRowGroup(

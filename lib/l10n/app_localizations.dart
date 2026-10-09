@@ -45196,6 +45196,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plan limit reached · resets {time}'**
   String agentsStateLimitReset(String time);
+
+  /// Export conversation: shown when the readable transcript is chosen, which is never redacted
+  ///
+  /// In en, this message translates to:
+  /// **'The transcript is not redacted. It holds exactly what you see, including any secrets or private paths in the conversation.'**
+  String get exportMarkdownUnredacted;
 }
 
 class _AppLocalizationsDelegate

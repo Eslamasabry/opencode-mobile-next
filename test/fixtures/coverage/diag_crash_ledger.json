@@ -1,0 +1,8 @@
+{
+  "input.errorMessage": "ignored: free text from Android or an error; never read or stored, so it can never show or be shared",
+  "input.errorStack": "ignored: free text from Android or an error; never read or stored, so it can never show or be shared",
+  "input.nativeText": "ignored: free text from Android or an error; never read or stored, so it can never show or be shared",
+  "record.category": "shown",
+  "record.source": "shown",
+  "record.time": "shown"
+}

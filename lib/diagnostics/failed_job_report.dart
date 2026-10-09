@@ -173,12 +173,14 @@ class FailedJobReport {
       ? log
       : '';
 
-  static String _clean(String value) => KitRedact.text(
-    value
-        .replaceAll(RegExp(r'\x1B\][^\x07]*(?:\x07|\x1B\\)'), '')
-        .replaceAll(RegExp(r'\x1B\[[0-?]*[ -/]*[@-~]'), '')
-        .replaceAll('\r\n', '\n')
-        .replaceAll('\r', '\n'),
+  static String _clean(String value) => KitRedact.opaqueTokens(
+    KitRedact.text(
+      value
+          .replaceAll(RegExp(r'\x1B\][^\x07]*(?:\x07|\x1B\\)'), '')
+          .replaceAll(RegExp(r'\x1B\[[0-?]*[ -/]*[@-~]'), '')
+          .replaceAll('\r\n', '\n')
+          .replaceAll('\r', '\n'),
+    ),
   );
 
   static String _bounded(String value, int limit) {

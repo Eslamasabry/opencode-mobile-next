@@ -1,0 +1,124 @@
+{
+  "source": "lib/diagnostics/app_diagnostics.dart (AppDiagnosticEntry)",
+  "schema": {
+    "entry": [
+      {
+        "path": "source",
+        "kind": "string"
+      },
+      {
+        "path": "message",
+        "kind": "string"
+      },
+      {
+        "path": "stack",
+        "kind": "string"
+      },
+      {
+        "path": "occurrences",
+        "kind": "number"
+      },
+      {
+        "path": "timestamp",
+        "kind": "number"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "error_screen",
+      "kind": "error",
+      "payload": {
+        "source": "flutter",
+        "message": "Bad state: render failed in ChatList",
+        "stack": "#0 build (lib/chat.dart:42:3)",
+        "occurrences": 3,
+        "timestamp": -600000
+      },
+      "fields": [
+        {
+          "key": "entry.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [
+            "A screen couldn't be drawn"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "render failed in ChatList"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.stack",
+          "path": "stack",
+          "kind": "string",
+          "probes": [
+            "lib/chat.dart:42:3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.occurrences",
+          "path": "occurrences",
+          "kind": "number",
+          "probes": [
+            "3 occurrences"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.timestamp",
+          "path": "timestamp",
+          "kind": "number",
+          "probes": [
+            "{date}"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "error_connection",
+      "kind": "error",
+      "payload": {
+        "source": "sse",
+        "message": "Connection closed while reading events",
+        "timestamp": -3600000
+      },
+      "fields": [
+        {
+          "key": "entry.source",
+          "path": "source",
+          "kind": "string",
+          "probes": [
+            "Lost the live connection to the server"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "Connection closed while reading events"
+          ],
+          "primary": false
+        },
+        {
+          "key": "entry.timestamp",
+          "path": "timestamp",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}
