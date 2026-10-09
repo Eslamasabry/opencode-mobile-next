@@ -324,8 +324,36 @@ mixin _SdkCatalogOps on _SdkCore {
 
     switch (scope) {
       case McpConfigScope.runtimeLocation:
-        throw const ProductException(
-          'This server saves MCP configuration by project or globally',
+        final directory = _directory;
+        final workspace = _workspace;
+        final revision = _locationRevision;
+        final current = await _client.getMcpApi().mcpStatus(
+          directory: directory,
+          workspace: workspace,
+        );
+        final inventory = current.data;
+        if (inventory == null) {
+          throw const ProductException(
+            'Could not verify the existing MCP servers',
+          );
+        }
+        if (_locationRevision != revision) {
+          throw const ProductException(
+            'The connection changed. Reopen the connector card.',
+          );
+        }
+        if (inventory.containsKey(name)) {
+          throw ProductException(
+            'An MCP server named "$name" already exists at this location',
+          );
+        }
+        await _client.getMcpApi().mcpAdd(
+          directory: directory,
+          workspace: workspace,
+          mcpAddRequest: sdk.McpAddRequest(
+            name: name,
+            config: sdk.OpencodeSdkRawUnion056(config),
+          ),
         );
       case McpConfigScope.project:
         if (_directory?.trim().isNotEmpty != true) {

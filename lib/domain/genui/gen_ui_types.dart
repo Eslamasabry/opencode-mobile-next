@@ -26,6 +26,17 @@ final class GenUiScope {
   int get hashCode => Object.hash(profileID, sourceId, directory, workspace);
 }
 
+/// A display-only catalog suggestion, never a connection or command request.
+final class GenUiConnectorSuggestion {
+  const GenUiConnectorSuggestion({
+    required this.catalogId,
+    required this.reason,
+  });
+
+  final String catalogId;
+  final String reason;
+}
+
 final class GenUiCard {
   GenUiCard({
     required this.scope,
@@ -37,6 +48,7 @@ final class GenUiCard {
     required this.revision,
     required List<GenUiNode> body,
     this.ask,
+    this.connector,
   }) : body = List.unmodifiable(body);
   final GenUiScope scope;
   final String id;
@@ -47,6 +59,7 @@ final class GenUiCard {
   final String revision;
   final List<GenUiNode> body;
   final GenUiAsk? ask;
+  final GenUiConnectorSuggestion? connector;
 
   /// Transport identity; revisions are compared separately before dispatch.
   String get identity => jsonEncode([

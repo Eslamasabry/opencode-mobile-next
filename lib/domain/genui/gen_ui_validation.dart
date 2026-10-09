@@ -510,19 +510,30 @@ Map<String, dynamic> _node(Object? value) {
   }
 }
 
+Map<String, dynamic> _connector(Object? value) {
+  final o = _obj(value, ['catalogId', 'reason'], ['catalogId', 'reason']);
+  final catalogId = _id(o['catalogId'], r'^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$');
+  if (catalogId.length > 256) _fail();
+  final reason = _text(o['reason'], 32768, true, 1);
+  if (_scalars(reason) > 500) _fail();
+  return {'catalogId': catalogId, 'reason': reason};
+}
+
 Map<String, dynamic> _normalize(Object? input) {
   _bounded(input);
   final o = _obj(
     input,
-    ['v', 'id', 'title', 'body', 'ask'],
+    ['v', 'id', 'title', 'body', 'ask', 'connector'],
     ['v', 'id', 'title', 'body'],
   );
   if (o['v'] != 1 || o['v'] is! num) _fail(GenUiProblem.version);
+  if (o.containsKey('connector') && o.containsKey('ask')) _fail();
   return {
     'v': 1,
     'id': _id(o['id'], r'^[a-z0-9-]{1,48}$'),
     'title': _text(o['title'], 120, true, 1),
     'body': _arr(o['body'], 0, 40).map(_node).toList(),
     if (o.containsKey('ask')) 'ask': _ask(o['ask']),
+    if (o.containsKey('connector')) 'connector': _connector(o['connector']),
   };
 }

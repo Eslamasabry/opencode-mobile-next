@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../domain/genui/gen_ui_validation_js.dart';
+import 'gen_ui_connector_search_js.dart';
 
 /// Zero-dependency MCP stdio helper, installed only at app-owned fixed paths.
 ///
@@ -15,7 +16,9 @@ String genUiServerScript({required String enabledMarkerPath}) {
   }
   return ''''use strict';
 const enabledMarkerPath = ${jsonEncode(enabledMarkerPath)};
+const connectorSearchPath = ${jsonEncode('$enabledMarkerPath.search.json')};
 $genUiValidationJavascript
+$genUiConnectorSearchJavascript
 $_server
 ''';
 }
@@ -80,7 +83,7 @@ const node = {oneOf: [
   obj({type: enumeration('link'), label: str(120, 1),
     url: {...str(2048, 1), pattern: '^https://'}})
 ]};
-const inputSchema = obj({v: {type: 'integer', const: 1},
+const inputSchema = {...obj({v: {type: 'integer', const: 1},
   id: {...str(48, 1), pattern: '^[a-z0-9-]{1,48}$'}, title: str(120, 1),
   body: arr(node, 40), ask: {oneOf: [
     obj({kind: enumeration('choice'), options: arr(option, 8, 2), multi: bool},
@@ -91,7 +94,10 @@ const inputSchema = obj({v: {type: 'integer', const: 1},
       tone: enumeration('normal', 'danger')}, ['kind']),
     obj({kind: enumeration('photo'), purpose: str(200, 1),
       max: {type: 'integer', minimum: 1, maximum: 4}}, ['kind', 'purpose'])
-  ]}}, ['v', 'id', 'title', 'body']);
+  ]}, connector: obj({
+    catalogId: {...str(256, 1), pattern: '^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$'},
+    reason: str(500, 1)
+  })}, ['v', 'id', 'title', 'body']), not: {required: ['connector', 'ask']}};
 const tool = {
   name: 'show',
   description: 'Offer a native card in OpenCode Mobile. Plain text only. '
@@ -99,7 +105,12 @@ const tool = {
     + 'Table rows must match column count and chart values must match labels. '
     + 'Maximum compact JSON is 32768 UTF-8 bytes. This returns immediately; '
     + 'for a question, end your turn and wait for a normal user answer message. '
-    + 'Card confirmation is not permission to execute commands.',
+    + 'Card confirmation is not permission to execute commands. '
+    + 'First call find_connectors to get a real catalogId; never invent IDs. '
+    + 'To suggest an MCP connector, use connector with that catalogId '
+    + '(namespace/name) and a plain reason, without ask. Never supply connector '
+    + 'URLs, commands, headers or credentials. A suggestion does not connect it; '
+    + 'the person must review the catalog entry and choose Connect.',
   inputSchema,
   annotations: {readOnlyHint: true, destructiveHint: false, idempotentHint: false,
     openWorldHint: false}
@@ -172,12 +183,24 @@ async function frame(bytes) {
   } else if (!initialized) {
     await send(error(id, -32000, 'Server not initialized'));
   } else if (request.method === 'tools/list') {
-    await send(result(id, {tools: [tool]}));
+    await send(result(id, {tools: [tool, genUiConnectorSearchTool]}));
   } else if (request.method === 'tools/call') {
-    if (!record(params) || params.name !== 'show' || !record(params.arguments)) {
+    if (!record(params) || !['show', 'find_connectors'].includes(params.name)
+        || !record(params.arguments)) {
       await send(failedCall(id)); return;
     }
     if (!enabled()) { await send(failedCall(id)); return; }
+    if (params.name === 'find_connectors') {
+      let args;
+      try { args = validateGenUiConnectorSearchArguments(params.arguments); }
+      catch (_) { await send(failedCall(id)); return; }
+      let found;
+      try { found = await findGenUiConnectors(args); }
+      catch (_) { await send(failedCall(id)); return; }
+      await send(result(id, {content: [{type: 'text', text: JSON.stringify(found)}],
+        structuredContent: found}));
+      return;
+    }
     try { normalizeGenUiCard(params.arguments); }
     catch (_) { await send(failedCall(id)); return; }
     await send(result(id, {content: [{type: 'text', text:

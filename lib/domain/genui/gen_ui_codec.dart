@@ -57,6 +57,13 @@ GenUiParse? genUiFromPart(
         ask: normalized['ask'] == null
             ? null
             : _toAsk(normalized['ask'] as Map<String, dynamic>),
+        connector: normalized['connector'] == null
+            ? null
+            : GenUiConnectorSuggestion(
+                catalogId:
+                    (normalized['connector'] as Map)['catalogId'] as String,
+                reason: (normalized['connector'] as Map)['reason'] as String,
+              ),
       ),
     );
   } on _Invalid catch (failure) {

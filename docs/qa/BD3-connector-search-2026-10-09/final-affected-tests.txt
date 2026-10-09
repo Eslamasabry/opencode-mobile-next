@@ -1,0 +1,28 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: unloaded catalogue is distinct from a loaded catalogue with no match
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: matches all case-insensitive tokens and returns canonical sorted IDs
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: projects existing catalogue runtimes and never infers OAuth from keys
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: default and requested limits apply after matching and deduplication
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: search inspects at most 100 records including nonmatching entries
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: prose is single-line, bounded by scalars, redacted and URL-free
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: invalid requests fail with fixed copy and never echo input
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: 100 Unicode scalars are accepted regardless of UTF-16 length
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_connector_search_test.dart: search covers description text beyond the returned prose limit
+00:00 +9: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart
+00:01 +9: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: agent search uses current cached Tools catalogue and exact inventory
+00:01 +10: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: agent search never applies another project inventory
+00:01 +11: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: agent search reports missing cache without inventory request
+00:01 +12: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: agent search rejects source changes during inventory read
+00:01 +13: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: old search endpoint cannot serve after cards are disabled
+00:01 +14: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: search observes cache changes without a helper restart
+00:01 +15: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: failed descriptor publishing can retry after cooldown
+00:01 +16: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: authoritative connector admission coalesces the same card
+00:01 +17: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: unobserved and mismatched catalog suggestions cannot be admitted
+00:01 +18: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: changed authoritative transcript rejects the earlier card controller
+00:02 +19: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: changed project invalidates an admitted connector before dispatch
+00:02 +20: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: changed active profile invalidates an admitted connector
+00:02 +21: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: same-profile replacement retains the card and uses its fresh repository
+00:02 +22: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: disabling Agent cards invalidates retained connector actions
+00:02 +23: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: disposed card controllers do not exhaust the pending card budget
+00:02 +24: /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_connection_test.dart: source change during history recovery never calls the stale repository
+00:02 +25: All tests passed!

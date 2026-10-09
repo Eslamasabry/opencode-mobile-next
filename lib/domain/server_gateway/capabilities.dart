@@ -97,6 +97,18 @@ class ServerCapabilities {
   final bool consoleOrganizations;
   final bool mcpOAuth;
 
+  /// A reviewed connector can be added or connected from its chat card.
+  final bool mcpChatConnect;
+
+  /// Chat can complete this runtime's MCP authorization round trip.
+  final bool mcpChatOAuth;
+
+  /// Connected MCP tools appear on the next model step in this conversation.
+  /// Does not imply that an already-running model request gains new tools.
+  /// True only with a confirmed registry barrier; an asynchronous change
+  /// notification or connected transport alone is insufficient.
+  final bool mcpChatToolRefresh;
+
   /// Persistent project/global configuration writes, rather than runtime add.
   final bool mcpConfigWrites;
   final bool mcpRuntimeAdds;
@@ -201,6 +213,9 @@ class ServerCapabilities {
     this.sessionSteal = true,
     this.consoleOrganizations = true,
     this.mcpOAuth = true,
+    this.mcpChatConnect = false,
+    this.mcpChatOAuth = false,
+    this.mcpChatToolRefresh = false,
     this.mcpConfigWrites = true,
     this.mcpRuntimeAdds = false,
     this.mcpRuntimeRemovals = false,
@@ -277,6 +292,9 @@ class ServerCapabilities {
     sessionSteal: sessionSteal,
     consoleOrganizations: consoleOrganizations,
     mcpOAuth: mcpOAuth,
+    mcpChatConnect: mcpChatConnect,
+    mcpChatOAuth: mcpChatOAuth,
+    mcpChatToolRefresh: mcpChatToolRefresh,
     mcpConfigWrites: mcpConfigWrites,
     mcpRuntimeAdds: mcpRuntimeAdds,
     mcpRuntimeRemovals: mcpRuntimeRemovals,
@@ -316,5 +334,9 @@ class ServerCapabilities {
     commandReceipts: true,
     setupConfigRead: true,
     setupMcpInventory: true,
+    mcpRuntimeAdds: true,
+    mcpChatConnect: true,
+    mcpChatOAuth: true,
+    mcpChatToolRefresh: true,
   );
 }

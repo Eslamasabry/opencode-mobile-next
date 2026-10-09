@@ -1,0 +1,21 @@
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart
+00:00 +0: runtime add followed by authoritative status makes next-turn tools ready
+00:00 +1: double tap coalesces and successful connect never adds again
+00:00 +2: unrelated existing same name is never reused or overwritten
+00:00 +3: unsupported runtime makes no calls
+00:00 +4: wrong requested server cannot mutate
+00:00 +5: required configuration stays in Tools
+00:00 +6: no refresh contract never claims ready
+00:00 +7: source changes during add cannot publish success
+00:00 +8: gateway errors never escape or expose raw credential text
+00:00 +9: authentication is explicit and uses validated code
+00:00 +10: valid manual callback completes and rechecks inventory
+00:00 +11: OAuth off and unsafe launch fail closed
+00:00 +12: dispose never revokes server credentials
+00:00 +13: cancel only acts on owned pending authentication
+00:00 +14: client registration failure requires setup instead of OAuth
+00:00 +15: cancel during delayed OAuth start does not expose late launch
+00:00 +16: owned callback validates state and discovers without exposing code
+00:00 +17: busy callback port explicitly requires manual return URL
+00:00 +18: explicit invalidation cannot be undone by returning to source
+00:00 +19: All tests passed!
