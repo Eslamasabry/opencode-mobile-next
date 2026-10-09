@@ -214,7 +214,10 @@ def genui_source_proofs():
         historical = Path(directory)
         target = historical / entry
         target.parent.mkdir(parents=True)
-        target.write_bytes((root / entry).read_bytes())
+        # The isolated retained source has no project package configuration.
+        target.write_text((root / entry).read_text().replace(
+            "package:opencode_mobile/builtin/agents/gen_ui_server.dart",
+            "../../lib/builtin/agents/gen_ui_server.dart"))
         for relative in ['lib/builtin/agents/gen_ui_server.dart', 'lib/domain/genui/gen_ui_validation_js.dart']:
             data = run(['git', 'show', GENUI_NORMAL_REVISION + ':' + relative], root)
             target = historical / relative

@@ -44,6 +44,8 @@ class BuiltinRuntimeAcceptance : Instrumentation() {
                 failureCode = failure.safeCode
             } catch (failure: BuiltinIdleAcceptance.Refused) {
                 failureCode = failure.safeCode
+            } catch (failure: BuiltinRestoreAcceptance.Refused) {
+                failureCode = failure.safeCode
             } catch (failure: Refused) {
                 failureCode = failure.safeCode
             } catch (error: Throwable) {
@@ -289,6 +291,10 @@ class BuiltinRuntimeAcceptance : Instrumentation() {
         const val FIXTURE = "qa-bb1"
     }
     private fun executeStep() {
+        if (arguments.getString("step") in setOf("bb7RebootPrepare", "bb7RebootVerify", "bb7UpdatePrepare", "bb7UpdateVerify", "bb7Cleanup")) {
+            BuiltinRestoreAcceptance(this, arguments).execute()
+            return
+        }
         if (arguments.getString("step") in setOf("bb5Idle", "bb5Cleanup")) {
             BuiltinIdleAcceptance(this, arguments).execute()
             return

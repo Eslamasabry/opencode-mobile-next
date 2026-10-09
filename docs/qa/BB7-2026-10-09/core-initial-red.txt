@@ -1,0 +1,32 @@
+JUnit version 4.13.2
+.E..E.E.E
+Time: 0.026
+There were 4 failures:
+1) eventAdmissionRequiresNativeAuthorityDisabledIdleAndUnspentBudget(io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest)
+java.lang.AssertionError
+	at org.junit.Assert.fail(Assert.java:87)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertTrue(Assert.java:53)
+	at io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest.eventAdmissionRequiresNativeAuthorityDisabledIdleAndUnspentBudget(NativeServerRestoreEventTest.kt:35)
+2) completedHelperGateIsPreservedButOwedOrForeignHelperNeverAuthorizesBoot(io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest)
+java.lang.AssertionError
+	at org.junit.Assert.fail(Assert.java:87)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertTrue(Assert.java:53)
+	at io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest.completedHelperGateIsPreservedButOwedOrForeignHelperNeverAuthorizesBoot(NativeServerRestoreEventTest.kt:49)
+3) changedBootProvesOnlyAbsenceAndNeverAdoptsReusedOldPids(io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest)
+java.lang.AssertionError
+	at org.junit.Assert.fail(Assert.java:87)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertTrue(Assert.java:53)
+	at io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest.changedBootProvesOnlyAbsenceAndNeverAdoptsReusedOldPids(NativeServerRestoreEventTest.kt:77)
+4) bootRequiresExactRecipeAndPackageUpdatePromotesOnlyIncreasingVersion(io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest)
+java.lang.AssertionError: expected:<NativeServerRecipe(profileId=owner, runtime=openCode2, packageVersion=2202, rootfsGeneration=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)> but was:<null>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at org.junit.Assert.assertEquals(Assert.java:146)
+	at io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest.bootRequiresExactRecipeAndPackageUpdatePromotesOnlyIncreasingVersion(NativeServerRestoreEventTest.kt:59)
+
+FAILURES!!!
+Tests run: 5,  Failures: 4

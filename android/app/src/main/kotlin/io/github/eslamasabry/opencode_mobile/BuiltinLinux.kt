@@ -2013,6 +2013,9 @@ class BuiltinLinux(private val context: Context) {
         private set
     private var serverRecipe: NativeServerRecipe? = null
     private var coldRestoreStarted = false
+    // These capabilities never leave this Android process or survive a package replacement.
+    private var serverEventTicket: NativeServerRestoreTicket? = null
+    private var serverEventWorkerStarted = false
     @Volatile internal var runtimeQaGateCheckpoint: ((String, NativeRuntimeReceipt) -> Unit)? = null
     private fun gateCheckpointForQa(stage: String, receipt: NativeRuntimeReceipt) {
         if (BuildConfig.BUILTIN_RUNTIME_QA) runtimeQaGateCheckpoint?.invoke(stage, receipt)
@@ -2056,6 +2059,19 @@ class BuiltinLinux(private val context: Context) {
         return entries.mapNotNull { entry ->
             val pid = entry.name.toIntOrNull() ?: return@mapNotNull null
             if (processUid(pid) == AndroidProcess.myUid()) kernelIdentity(pid) else null
+        }
+    }
+    /** Event admission cannot silently omit a live same-UID process whose stat was unreadable. */
+    private fun serverEventInventory(): List<RuntimeProcessIdentity> {
+        val entries = File("/proc").listFiles() ?: error("ownershipUnknown")
+        return entries.mapNotNull { entry ->
+            val pid = entry.name.toIntOrNull() ?: return@mapNotNull null
+            if (processUid(pid) != AndroidProcess.myUid()) return@mapNotNull null
+            val identity = kernelIdentity(pid)
+            check(identity != null || processUid(pid) == null) { "ownershipUnknown" }
+            if (identity != null) check(processUid(pid) == AndroidProcess.myUid() &&
+                identity.sameProcess(kernelIdentity(pid))) { "ownershipUnknown" }
+            identity
         }
     }
     private fun registeredRuntimePids(): Set<Int> = registeredAppProcessIds(
@@ -2181,6 +2197,7 @@ class BuiltinLinux(private val context: Context) {
         val idleOwner: String? = null,
         val idleGeneration: Long? = null,
         val idleActivityEpoch: Long? = null,
+        val systemEvent: NativeServerRestoreTicket? = null,
     )
 
     /** Workload cannot pass stdin gate until kernel/session identity has been durably committed. */
@@ -2276,6 +2293,7 @@ class BuiltinLinux(private val context: Context) {
         generation == recoveryGeneration &&
         (supervisorGeneration == null || nativeAdmitted(profile, supervisorGeneration)) &&
         (scheduleId == null || scheduleId == recoveryScheduleId) &&
+        (launch.systemEvent == null || serverEventAuthorityCurrent(launch.systemEvent)) &&
         (if (launch.idleGeneration != null) idleResumeCurrent(profile, launch.idleGeneration,
             launch.idleActivityEpoch ?: -1L) else !idleBlocksRestoration())
 
@@ -2385,12 +2403,141 @@ class BuiltinLinux(private val context: Context) {
 
     private class ColdRestoreRevoked : IllegalStateException()
 
+    /** Bounded read-only admission plus an unspent, process-local dispatch reservation. */
+    internal fun prepareServerEventRestore(
+        event: NativeServerRestoreEvent,
+    ): NativeServerRestoreTicket? = synchronized(recoveryLock) {
+        // Receiver admission never waits for the Linux monitor held by a drain or installer.
+        // This volatile liveness hint can deny conservatively; the worker later checks the service map.
+        if (idleServerLive || coldRestoreStarted || scheduledRecovery || serverEventTicket != null) return null
+        try {
+            val profile = recoveryPreferences.getString("restoreOwner", null)
+                ?: return null
+            val original = NativeServerRecipe.read(jsonMap(recoveryPreferences.getString(recipeKey(profile), null)
+                ?: error("storageUnavailable")))
+            val budget = readBudget(profile)
+            val idle = idleState.snapshot()
+            if (!NativeServerEventPolicy.admitted(nativeAdmitted(profile, supervisionGeneration),
+                    idleState.available, idle, supervisionProfile, profile, original.profileId, budget.attempts) ||
+                !savedServerEventAuthority(profile)) {
+                restoreUnavailable(if (budget.attempts >= 3) "budgetExhausted" else "policyDisabled")
+                return null
+            }
+            check(!serverEventComponentPending()) { "componentRecoveryRequired" }
+            val recipe = NativeServerEventPolicy.recipeForEvent(event, original, packageIdentity(), rootfsIdentity())
+                ?: error("storageUnavailable")
+            val receipt = ownership(profile)
+            check(!receipt.prepared) { "ownershipUnknown" }
+            check(serverEventDrainCompatible(profile, receipt)) { "ownershipUnknown" }
+            val boot = bootIdentity()
+            check(event != NativeServerRestoreEvent.BOOT_COMPLETED || receipt.boot != boot) { "ownershipUnknown" }
+            val ticket = NativeServerRestoreTicket(event, original, recipe, receipt,
+                wantedRevision, supervisionGeneration, ++recoveryScheduleId, boot, idle.counter, budget)
+            serverEventTicket = ticket
+            serverEventWorkerStarted = false
+            scheduledRecovery = true
+            restorePhase = "waiting"; restoreReason = null
+            ticket
+        } catch (error: Throwable) {
+            restoreUnavailable(when (error.message) {
+                "ownershipUnknown" -> "ownershipUnknown"
+                "componentRecoveryRequired" -> "componentRecoveryRequired"
+                else -> "storageUnavailable"
+            })
+            null
+        }
+    }
+
+    private fun savedServerEventAuthority(profile: String): Boolean =
+        recoveryPreferences.getBoolean("wanted", false) &&
+            !recoveryPreferences.getBoolean("userStopped", true) &&
+            recoveryPreferences.getBoolean("enabled", false) &&
+            recoveryPreferences.getString("owner", null) == profile &&
+            recoveryPreferences.getString("restoreOwner", null) == profile
+
+    private fun serverEventDrainCompatible(profile: String, expected: NativeRuntimeReceipt): Boolean {
+        val owner = recoveryPreferences.getString("drainOwner", null)
+        return NativeServerEventPolicy.pendingDrainCompatible(owner, profile,
+            recoveryPreferences.getBoolean("drainAll", false),
+            owner?.let { ownership(it, drainKey(it)) }, expected)
+    }
+
+    private fun serverEventComponentPending(): Boolean = componentRecoveryPending() ||
+        componentRecovery.hasPending() || installerTicket() != null || installerProcess != null
+
+    // Call under recoveryLock. The budget is checked before reservation, not after spending attempt three.
+    private fun serverEventAuthorityCurrent(ticket: NativeServerRestoreTicket): Boolean = try {
+        val idle = idleState.snapshot()
+        NativeServerEventPolicy.ticketCurrent(ticket, serverEventTicket, wantedRevision,
+            supervisionGeneration, recoveryScheduleId, idle.counter, bootIdentity(), packageIdentity(), rootfsIdentity()) &&
+            NativeServerEventPolicy.admitted(nativeAdmitted(ticket.profile, ticket.generation),
+                idleState.available, idle, supervisionProfile,
+                recoveryPreferences.getString("restoreOwner", null), ticket.profile, 0) &&
+            (!serverEventWorkerStarted || BuiltinServerService.isForegroundRunning) &&
+            savedServerEventAuthority(ticket.profile) &&
+            serverEventDrainCompatible(ticket.profile, ticket.previousReceipt) && !serverEventComponentPending()
+    } catch (_: Throwable) { false }
+
+    /** Called after the service has shown its notification; never waits for a child or gate. */
+    internal fun restoreServerAfterSystemEvent(ticket: NativeServerRestoreTicket): Boolean {
+        val worker = synchronized(recoveryLock) {
+            if (serverEventWorkerStarted || coldRestoreStarted || !BuiltinServerService.isForegroundRunning ||
+                !serverEventAuthorityCurrent(ticket)) null
+            else {
+                serverEventWorkerStarted = true
+                coldRestoreStarted = true
+                NativeRuntimeOwnership.ColdWorker(ticket.generation, ticket.scheduleId)
+            }
+        }
+        if (worker == null) {
+            cancelServerEventRestore(ticket)
+            return false
+        }
+        return try {
+            Thread({ runColdRestore(worker, ticket.profile, ticket) }, "phone-runtime-system-restore").start()
+            true
+        } catch (_: Throwable) {
+            synchronized(recoveryLock) {
+                if (serverEventTicket === ticket) {
+                    serverEventWorkerStarted = false
+                    coldRestoreStarted = false
+                }
+            }
+            cancelServerEventRestore(ticket)
+            false
+        }
+    }
+
+    /** Dispatch denial releases only this unspent reservation, never wanted intent or another worker. */
+    internal fun cancelServerEventRestore(ticket: NativeServerRestoreTicket) {
+        synchronized(recoveryLock) {
+            if (serverEventTicket !== ticket || serverEventWorkerStarted) return
+            serverEventTicket = null
+            if (ticket.generation == supervisionGeneration && ticket.scheduleId == recoveryScheduleId) {
+                scheduledRecovery = false
+                recoveryScheduleId++
+                if (restartWanted && !userStopped) restoreUnavailable("storageUnavailable")
+            }
+        }
+    }
+
+    /** Lifecycle callbacks do not wait for tree drain; live helpers and held work retain their service. */
+    internal fun settleServerEventService() {
+        try {
+            Thread({
+                try { synchronized(this) { serviceSetChanged() } } catch (_: Throwable) { }
+            }, "phone-runtime-system-settle").start()
+        } catch (_: Throwable) { /* Never block a lifecycle callback on runtime cleanup. */ }
+    }
+
     // Call only with the BuiltinLinux monitor held when inspecting the service map.
     // Stop takes recoveryLock alone; never retain it across drain waits or gate I/O.
     private fun withColdRestoreAdmission(worker: NativeRuntimeOwnership.ColdWorker, profile: String,
+        event: NativeServerRestoreTicket? = null,
         action: () -> Unit) = synchronized(recoveryLock) {
         if (!worker.runIfIdle(supervisionGeneration, recoveryScheduleId, serverRunning) {
-            if (!nativeAdmitted(profile, worker.generation)) throw ColdRestoreRevoked()
+            if (!nativeAdmitted(profile, worker.generation) ||
+                (event != null && !serverEventAuthorityCurrent(event))) throw ColdRestoreRevoked()
             action()
         }) throw ColdRestoreRevoked()
     }
@@ -2411,7 +2558,7 @@ class BuiltinLinux(private val context: Context) {
     }
 
     private fun prepareColdRestore(): Boolean {
-        if (coldRestoreStarted || serverRunning) return false
+        if (coldRestoreStarted || serverRunning || serverEventTicket != null) return false
         return if (!serverRestorationArmed) {
             rejectServerRestoration()
             false
@@ -2432,38 +2579,46 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
-    private fun runColdRestore(worker: NativeRuntimeOwnership.ColdWorker, profile: String) {
+    private fun runColdRestore(worker: NativeRuntimeOwnership.ColdWorker, profile: String,
+        event: NativeServerRestoreTicket? = null) {
         try {
-            awaitColdRestoreDelay(worker, profile)
+            awaitColdRestoreDelay(worker, profile, event)
             synchronized(this) {
                 // Outside the short recovery admission lock: installer drain can wait.
-                recoverColdComponentUpdates()
-                val (recipe, oldReceipt) = readColdRestoreState(worker, profile)
-                drainColdServer(worker, profile, oldReceipt)
-                val reservedGeneration = reserveColdRestore(worker, profile, recipe)
-                withColdRestoreAdmission(worker, profile) { }
+                if (event == null) recoverColdComponentUpdates()
+                val (recipe, oldReceipt) = readColdRestoreState(worker, profile, event)
+                drainColdServer(worker, profile, oldReceipt, event)
+                val reservedGeneration = reserveColdRestore(worker, profile, recipe, event)
+                withColdRestoreAdmission(worker, profile, event) { }
                 launchService(SERVER, recipe.restorationScript(), SERVER_DEFAULT_PORT, null,
                     ServiceLaunch(nativeOwned = true, nativeSupervisionGeneration = worker.generation,
-                        nativeAttemptGeneration = reservedGeneration, nativeScheduleId = worker.scheduleId))
+                        nativeAttemptGeneration = reservedGeneration, nativeScheduleId = worker.scheduleId,
+                        systemEvent = event))
             }
         } catch (_: ColdRestoreRevoked) {
-            coldRestoreFailed(worker, profile, null)
+            coldRestoreFailed(worker, profile, null, event)
         } catch (error: Throwable) {
-            coldRestoreFailed(worker, profile, error)
+            coldRestoreFailed(worker, profile, error, event)
         } finally {
             synchronized(recoveryLock) {
                 worker.runIfCurrent(supervisionGeneration, recoveryScheduleId) { scheduledRecovery = false }
+                if (event != null && serverEventTicket === event) {
+                    serverEventTicket = null
+                    serverEventWorkerStarted = false
+                }
             }
             synchronized(this) { serviceSetChanged() }
         }
     }
 
-    private fun awaitColdRestoreDelay(worker: NativeRuntimeOwnership.ColdWorker, profile: String) {
+    private fun awaitColdRestoreDelay(worker: NativeRuntimeOwnership.ColdWorker, profile: String,
+        event: NativeServerRestoreTicket? = null) {
         val delayUntil = SystemClock.elapsedRealtime() + restoredDelay()
         while (SystemClock.elapsedRealtime() < delayUntil) {
             val current = synchronized(recoveryLock) {
                 worker.runIfCurrent(supervisionGeneration, recoveryScheduleId) {
-                    if (!nativeAdmitted(profile, worker.generation)) throw ColdRestoreRevoked()
+                    if (!nativeAdmitted(profile, worker.generation) ||
+                        (event != null && !serverEventAuthorityCurrent(event))) throw ColdRestoreRevoked()
                 }
             }
             if (!current) throw ColdRestoreRevoked()
@@ -2473,10 +2628,11 @@ class BuiltinLinux(private val context: Context) {
 
     private fun readColdRestoreState(
         worker: NativeRuntimeOwnership.ColdWorker, profile: String,
+        event: NativeServerRestoreTicket? = null,
     ): Pair<NativeServerRecipe, NativeRuntimeReceipt> {
         var recipe: NativeServerRecipe? = null
         var receipt: NativeRuntimeReceipt? = null
-        withColdRestoreAdmission(worker, profile) {
+        withColdRestoreAdmission(worker, profile, event) {
             if (readBudget(profile).attempts >= 3) {
                 restoreUnavailable("budgetExhausted"); throw ColdRestoreRevoked()
             }
@@ -2485,46 +2641,78 @@ class BuiltinLinux(private val context: Context) {
             }
             recipe = NativeServerRecipe.read(jsonMap(recoveryPreferences.getString(recipeKey(profile), null)
                 ?: error("storageUnavailable")))
-            check(recipe!!.compatible(packageIdentity(), rootfsIdentity())) { "storageUnavailable" }
             receipt = ownership(profile)
+            if (event == null) {
+                check(recipe!!.compatible(packageIdentity(), rootfsIdentity())) { "storageUnavailable" }
+            } else {
+                check(recipe == event.originalRecipe && receipt == event.previousReceipt &&
+                    readBudget(profile) == event.budget) { "ownershipUnknown" }
+                recipe = event.recipe
+            }
         }
         return recipe!! to receipt!!
     }
 
     private fun drainColdServer(
         worker: NativeRuntimeOwnership.ColdWorker, profile: String, oldReceipt: NativeRuntimeReceipt,
+        event: NativeServerRestoreTicket? = null,
     ) {
-        val plan = NativeRuntimeOwnership.plan(oldReceipt, bootIdentity(), sameUidInventory(),
+        if (event != null && oldReceipt.boot != bootIdentity()) {
+            withColdRestoreAdmission(worker, profile, event) { requireRebootQuiescence(event) }
+            return
+        }
+        val plan = NativeRuntimeOwnership.plan(oldReceipt, bootIdentity(),
+            if (event == null) sameUidInventory() else serverEventInventory(),
             registeredRuntimePids(), nonceMatches = ::nonceMatches)
         // Admission and each exact signal share Stop's short lock; no newer owner is selected.
-        for (identity in plan.server) withColdRestoreAdmission(worker, profile) {
+        for (identity in plan.server) withColdRestoreAdmission(worker, profile, event) {
             if (identity.sameProcess(kernelIdentity(identity.pid))) Os.kill(identity.pid, OsConstants.SIGTERM)
         }
         val deadline = SystemClock.elapsedRealtime() + 3000
         while (plan.server.any { it.sameProcess(kernelIdentity(it.pid)) } && SystemClock.elapsedRealtime() < deadline) {
-            withColdRestoreAdmission(worker, profile) { }
+            withColdRestoreAdmission(worker, profile, event) { }
             Thread.sleep(PROCESS_POLL_MS)
         }
-        for (identity in plan.server) withColdRestoreAdmission(worker, profile) {
+        for (identity in plan.server) withColdRestoreAdmission(worker, profile, event) {
             if (identity.sameProcess(kernelIdentity(identity.pid))) Os.kill(identity.pid, OsConstants.SIGKILL)
         }
         val drainDeadline = SystemClock.elapsedRealtime() + 2000
         while (plan.server.any { it.sameProcess(kernelIdentity(it.pid)) } &&
             SystemClock.elapsedRealtime() < drainDeadline) {
-            withColdRestoreAdmission(worker, profile) { }
+            withColdRestoreAdmission(worker, profile, event) { }
             Thread.sleep(PROCESS_POLL_MS)
         }
         check(plan.server.none { it.sameProcess(kernelIdentity(it.pid)) }) { "ownershipUnknown" }
-        NativeRuntimeOwnership.plan(oldReceipt, bootIdentity(), sameUidInventory(), registeredRuntimePids(),
+        NativeRuntimeOwnership.plan(oldReceipt, bootIdentity(),
+            if (event == null) sameUidInventory() else serverEventInventory(), registeredRuntimePids(),
             nonceMatches = ::nonceMatches)
             .also { check(it.server.isEmpty()) { "ownershipUnknown" } }
     }
 
     private fun reserveColdRestore(
         worker: NativeRuntimeOwnership.ColdWorker, profile: String, recipe: NativeServerRecipe,
+        event: NativeServerRestoreTicket? = null,
     ): Long? {
         var reservedGeneration: Long? = null
-        withColdRestoreAdmission(worker, profile) {
+        withColdRestoreAdmission(worker, profile, event) {
+            if (event != null) {
+                check(readBudget(profile) == event.budget) { "storageUnavailable" }
+                check(NativeServerRecipe.read(jsonMap(recoveryPreferences.getString(recipeKey(profile), null)
+                    ?: error("storageUnavailable"))) == event.originalRecipe) { "storageUnavailable" }
+                if (event.previousReceipt.boot != bootIdentity()) requireRebootQuiescence(event)
+                else NativeRuntimeOwnership.plan(event.previousReceipt, bootIdentity(), serverEventInventory(),
+                    registeredRuntimePids(), nonceMatches = ::nonceMatches)
+                    .also { check(it.server.isEmpty()) { "ownershipUnknown" } }
+                // A prior null-intent rejection may have queued the exact same server cleanup.
+                // The worker just proved it complete; never clear a foreign, newer or helper drain.
+                if (recoveryPreferences.contains("drainOwner")) {
+                    check(serverEventDrainCompatible(profile, event.previousReceipt)) { "ownershipUnknown" }
+                    check(recoveryPreferences.edit().remove("drainOwner").remove("drainAll")
+                        .remove(drainKey(profile)).commit()) { "storageUnavailable" }
+                }
+                if (event.originalRecipe != recipe) check(recoveryPreferences.edit()
+                    .putString(recipeKey(profile), JSONObject(recipe.map()).toString()).commit()) { "storageUnavailable" }
+            }
             restorePhase = "restoring"
             serverRecipe = recipe
             // Runtime identity generation is independent of the immutable admission ticket.
@@ -2534,12 +2722,19 @@ class BuiltinLinux(private val context: Context) {
         return reservedGeneration
     }
 
-    private fun coldRestoreFailed(worker: NativeRuntimeOwnership.ColdWorker, profile: String, error: Throwable?) {
+    private fun requireRebootQuiescence(ticket: NativeServerRestoreTicket) {
+        check(NativeServerEventPolicy.crossBootQuiescent(ticket.previousReceipt, bootIdentity(),
+            serverEventInventory(), registeredRuntimePids(), AndroidProcess.myPid())) { "ownershipUnknown" }
+    }
+
+    private fun coldRestoreFailed(worker: NativeRuntimeOwnership.ColdWorker, profile: String, error: Throwable?,
+        event: NativeServerRestoreTicket? = null) {
         synchronized(recoveryLock) {
             worker.runIfCurrent(supervisionGeneration, recoveryScheduleId) {
                 // Stop and system timeout own their published reason after revocation.
                 if (restartWanted && !userStopped) {
-                    if (!nativeAdmitted(profile, worker.generation)) restoreUnavailable("policyDisabled")
+                    if (!nativeAdmitted(profile, worker.generation) ||
+                        (event != null && !serverEventAuthorityCurrent(event))) restoreUnavailable("policyDisabled")
                     else if (error != null) restoreUnavailable(
                         if (error.message == "ownershipUnknown") "ownershipUnknown" else "storageUnavailable")
                 }
@@ -2799,6 +2994,8 @@ class BuiltinLinux(private val context: Context) {
         onRevoked: ((Long) -> Unit)? = null): Long = synchronized(recoveryLock) {
         idleReturnNotification.clear()
         restartWanted = false
+        serverEventTicket = null
+        serverEventWorkerStarted = false
         userStopped = true
         supervisionGeneration++
         scheduledRecovery = false
@@ -2868,6 +3065,8 @@ class BuiltinLinux(private val context: Context) {
         val revision = synchronized(recoveryLock) {
             idleReturnNotification.clear()
             restartWanted = false
+            serverEventTicket = null
+            serverEventWorkerStarted = false
             wantedRevision++
             recoveryGeneration++
             recoveryAttempt = null
@@ -3192,10 +3391,13 @@ class BuiltinLinux(private val context: Context) {
         }
         val running = services.values.any { it.process.isAlive } || workLeases.foregroundHeld
         val holdsRecovery = try {
-            val profile = synchronized(recoveryLock) { supervisionProfile }
-            profile != null && NativeRecoveryBudget.keepsForeground(false,
-                serverRecoveryScheduled, nativeAdmitted(profile, supervisionGeneration),
-                readBudget(profile).attempts)
+            synchronized(recoveryLock) {
+                val eventHolds = scheduledRecovery && serverEventTicket?.let(::serverEventAuthorityCurrent) == true
+                val profile = supervisionProfile
+                eventHolds || (profile != null && NativeRecoveryBudget.keepsForeground(false,
+                    serverRecoveryScheduled, nativeAdmitted(profile, supervisionGeneration),
+                    readBudget(profile).attempts))
+            }
         } catch (_: Throwable) { false }
         if (!running) {
             if (!holdsRecovery) try { BuiltinServerService.stop(context) } catch (_: Throwable) { }
@@ -3283,7 +3485,22 @@ class BuiltinLinux(private val context: Context) {
     }
     fun holdAwakeForWork(on: Boolean, forMs: Long): Boolean =
         setChatWorkLease("legacy.reply", on, forMs)["held"] == true
-    internal fun revokeForegroundWork() = workLeases.revokeForegroundWork()
+    internal fun revokeForegroundWork() {
+        // Service destruction invalidates event release under the same short lock as the stdin gate.
+        // It does not revoke ordinary BB3 wanted intent or touch already-running unrelated helpers.
+        synchronized(recoveryLock) {
+            serverEventTicket?.let { ticket ->
+                serverEventTicket = null
+                serverEventWorkerStarted = false
+                if (ticket.generation == supervisionGeneration && ticket.scheduleId == recoveryScheduleId) {
+                    scheduledRecovery = false
+                    recoveryScheduleId++
+                    if (restartWanted && !userStopped) restoreUnavailable("storageUnavailable")
+                }
+            }
+        }
+        workLeases.revokeForegroundWork()
+    }
     internal fun revokeSetupWork() = workLeases.revokeSetupWork()
     private val setupWorkScopes by lazy {
         SetupWorkScopes({ owner, alive -> workLeases.adopt(owner, WorkLeases.Kind.SETUP, alive) }, workLeases::release)

@@ -1,0 +1,21 @@
+...F.F...........................
+======================================================================
+FAIL: test_exact_known_external_sheet_selects_cancel_only (test_bb7_runtime_acceptance.ExternalSheetCancelTest.test_exact_known_external_sheet_selects_cancel_only)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 391, in test_exact_known_external_sheet_selects_cancel_only
+    self.assertEqual(B.external_sheet_cancel(self.nodes(['Open link', 'Copy link', 'Cancel']), self.locales), (120, 20))
+AssertionError: None != (120, 20)
+
+======================================================================
+FAIL: test_recognized_sheet_with_ambiguous_cancel_refuses (test_bb7_runtime_acceptance.ExternalSheetCancelTest.test_recognized_sheet_with_ambiguous_cancel_refuses)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 400, in test_recognized_sheet_with_ambiguous_cancel_refuses
+    with self.assertRaises(B.H.Q.Refused):
+AssertionError: Refused not raised
+
+----------------------------------------------------------------------
+Ran 33 tests in 0.074s
+
+FAILED (failures=2)

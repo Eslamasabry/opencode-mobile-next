@@ -1,0 +1,2 @@
+Exact test: dispatchTicketCannotBeCopiedOrAdoptANewerOwnerIdlePolicyOrRuntime: 1 run, 1 failures
+dispatchTicketCannotBeCopiedOrAdoptANewerOwnerIdlePolicyOrRuntime(io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest): null

@@ -1,0 +1,21 @@
+.............F.F.....
+======================================================================
+FAIL: test_duplicate_action_inside_exact_card_refuses (test_bb7_runtime_acceptance.ScopedCardTargetTest.test_duplicate_action_inside_exact_card_refuses)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 250, in test_duplicate_action_inside_exact_card_refuses
+    with self.assertRaises(B.H.Q.Refused):
+AssertionError: Refused not raised
+
+======================================================================
+FAIL: test_two_cards_more_is_scoped_to_exact_in_app_card (test_bb7_runtime_acceptance.ScopedCardTargetTest.test_two_cards_more_is_scoped_to_exact_in_app_card)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 243, in test_two_cards_more_is_scoped_to_exact_in_app_card
+    self.assertEqual(B.ui_card_target(self.tree(), {'In-app Ubuntu'}, {'More'}), (240, 120))
+AssertionError: None != (240, 120)
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.039s
+
+FAILED (failures=2)

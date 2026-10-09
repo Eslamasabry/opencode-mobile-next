@@ -34,6 +34,15 @@ class SetupRunner {
 }
 
 class BuiltinLinux {
+    internal fun prepareServerEventRestore(event: NativeServerRestoreEvent): NativeServerRestoreTicket? {
+        ServiceEvents.add("event.prepare")
+        return if (eventAllowed) NativeServerRestoreTicket() else null
+    }
+    internal fun restoreServerAfterSystemEvent(ticket: NativeServerRestoreTicket): Boolean {
+        eventRestored++; ServiceEvents.add("event.restore"); return eventAllowed
+    }
+    internal fun cancelServerEventRestore(ticket: NativeServerRestoreTicket) { eventCancelled++; ServiceEvents.add("event.cancel") }
+    fun settleServerEventService() { eventSettled++; ServiceEvents.add("event.settle") }
     val serverRestorationArmed: Boolean get() = armed
     fun rejectServerRestoration() { rejected++; ServiceEvents.add("runtime.reject") }
     fun restoreServerAfterProcessReclaim() {
@@ -65,6 +74,10 @@ class BuiltinLinux {
         } finally { stopped.countDown() }
     }
     companion object {
+        var eventAllowed = true
+        var eventRestored = 0
+        var eventCancelled = 0
+        var eventSettled = 0
         const val REVISION = 47L
         val stopped = CountDownLatch(1)
         val drainEntered = CountDownLatch(1)
@@ -118,5 +131,17 @@ object NativeStrings {
             else -> error("unknown resource")
         }
         return "${context.selectedLanguage}:$name"
+    }
+}
+
+internal class NativeServerRestoreTicket
+internal enum class NativeServerRestoreEvent {
+    BOOT_COMPLETED, PACKAGE_REPLACED;
+    companion object {
+        fun fromAction(action: String?): NativeServerRestoreEvent? = when (action) {
+            "android.intent.action.BOOT_COMPLETED" -> BOOT_COMPLETED
+            "android.intent.action.MY_PACKAGE_REPLACED" -> PACKAGE_REPLACED
+            else -> null
+        }
     }
 }

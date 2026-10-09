@@ -1,0 +1,2 @@
+Exact test: eventAdmissionRequiresNativeAuthorityDisabledIdleAndUnspentBudget: 1 run, 1 failures
+eventAdmissionRequiresNativeAuthorityDisabledIdleAndUnspentBudget(io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest): null

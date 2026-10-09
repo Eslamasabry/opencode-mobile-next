@@ -1,0 +1,35 @@
+....FF......
+======================================================================
+FAIL: test_atomic_update_failure_preserves_original_private_state (test_bb7_runtime_acceptance.RestoreMetadataTest.test_atomic_update_failure_preserves_original_private_state)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 166, in test_atomic_update_failure_preserves_original_private_state
+    with self.assertRaises(OSError):
+AssertionError: OSError not raised
+
+======================================================================
+FAIL: test_idle_count_is_never_lowered_and_transitions_are_revoked (test_bb7_runtime_acceptance.RestoreMetadataTest.test_idle_count_is_never_lowered_and_transitions_are_revoked)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 155, in test_idle_count_is_never_lowered_and_transitions_are_revoked
+    self.assertEqual(value, dict(old, counter=7))
+AssertionError: {'ver[52 chars]er': 2, 'generation': 0, 'stopped': False, 'he[46 chars]None} != {'ver[52 chars]er': 7, 'generation': 0, 'stopped': False, 'he[46 chars]None}
+- {'counter': 2,
+?             ^
+
++ {'counter': 7,
+?             ^
+
+   'enabled': False,
+   'generation': 0,
+   'helper': None,
+   'helperStopped': False,
+   'idleMinutes': 5,
+   'owner': None,
+   'stopped': False,
+   'version': 1}
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.025s
+
+FAILED (failures=2)

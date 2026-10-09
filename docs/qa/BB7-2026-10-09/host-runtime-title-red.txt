@@ -1,0 +1,22 @@
+FF......................
+======================================================================
+FAIL: test_both_runtime_titles_are_generated_only_from_authored_copy (test_bb7_runtime_acceptance.AuthoredRuntimeTitleTest.test_both_runtime_titles_are_generated_only_from_authored_copy)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 305, in test_both_runtime_titles_are_generated_only_from_authored_copy
+    self.assertEqual(B.phone_card_titles(self.locales(), 'openCode1'),
+AssertionError: Items in the second set but not the first:
+'In-app Ubuntu · OpenCode 1'
+
+======================================================================
+FAIL: test_real_combined_title_scopes_more_to_canonical_runtime (test_bb7_runtime_acceptance.AuthoredRuntimeTitleTest.test_real_combined_title_scopes_more_to_canonical_runtime)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 300, in test_real_combined_title_scopes_more_to_canonical_runtime
+    self.assertEqual(B.ui_card_target(nodes, titles, {'More'}), (240, 120))
+AssertionError: None != (240, 120)
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.054s
+
+FAILED (failures=2)

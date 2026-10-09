@@ -1,0 +1,13 @@
+JUnit version 4.13.2
+......E.
+Time: 0.028
+There was 1 failure:
+1) nullIntentCleanupCanOnlyJoinTheSameServerOnlyReceipt(io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest)
+java.lang.AssertionError
+	at org.junit.Assert.fail(Assert.java:87)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertTrue(Assert.java:53)
+	at io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest.nullIntentCleanupCanOnlyJoinTheSameServerOnlyReceipt(NativeServerRestoreEventTest.kt:120)
+
+FAILURES!!!
+Tests run: 7,  Failures: 1

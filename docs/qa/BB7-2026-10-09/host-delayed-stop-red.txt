@@ -1,0 +1,26 @@
+F.....................
+======================================================================
+FAIL: test_stop_requested_never_reopens_more_while_health_is_draining (test_bb7_runtime_acceptance.DelayedStopJourneyTest.test_stop_requested_never_reopens_more_while_health_is_draining)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 287, in test_stop_requested_never_reopens_more_while_health_is_draining
+    self.assertEqual(device.taps, [(10, 1), (20, 1), (30, 1), (40, 1), (50, 1)])
+AssertionError: Lists differ: [(10, 1), (20, 1), (30, 1), (40, 1), (30, 1), (50, 1)] != [(10, 1), (20, 1), (30, 1), (40, 1), (50, 1)]
+
+First differing element 4:
+(30, 1)
+(50, 1)
+
+First list contains 1 additional elements.
+First extra element 5:
+(50, 1)
+
+- [(10, 1), (20, 1), (30, 1), (40, 1), (30, 1), (50, 1)]
+?                                     ---------
+
++ [(10, 1), (20, 1), (30, 1), (40, 1), (50, 1)]
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.056s
+
+FAILED (failures=1)

@@ -4,10 +4,10 @@ open class Context {
     var selectedLanguage = "en"
     val applicationContext: Context get() = this
     fun <T> getSystemService(type: Class<T>): T? = type.cast(NotificationManager.instance)
-    fun startForegroundService(intent: Intent) { if (denyDispatch) throw SecurityException("policy") }
+    fun startForegroundService(intent: Intent) { if (denyDispatch) throw SecurityException("policy"); dispatched = intent; foregroundDispatches++ }
     fun startService(intent: Intent) { if (denyDispatch) throw SecurityException("policy") }
     fun stopService(intent: Intent): Boolean = true
-    companion object { var denyDispatch = false }
+    companion object { var denyDispatch = false; var dispatched: Intent? = null; var foregroundDispatches = 0 }
 }
 class Intent(context: Context, type: Class<*>) {
     private var selectedAction: String? = null
@@ -19,3 +19,5 @@ class Intent(context: Context, type: Class<*>) {
     fun setAction(value: String): Intent { selectedAction = value; return this }
     companion object { const val FLAG_ACTIVITY_SINGLE_TOP = 1; const val FLAG_ACTIVITY_CLEAR_TOP = 2 }
 }
+
+abstract class BroadcastReceiver { abstract fun onReceive(context: Context, intent: Intent) }

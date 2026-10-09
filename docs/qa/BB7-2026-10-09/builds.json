@@ -1,0 +1,29 @@
+{
+  "initialTarget": {
+    "versionCode": 2201,
+    "availableMiB": 6568,
+    "elapsedSeconds": 219.3,
+    "daemon": 3662470
+  },
+  "runner": {
+    "availableMiB": 7796,
+    "elapsedSeconds": 106,
+    "daemon": 3671766
+  },
+  "updateTarget": {
+    "versionCode": 2202,
+    "availableMiB": 7247,
+    "elapsedSeconds": 226.9,
+    "daemon": 3698901
+  },
+  "all": {
+    "gradleMaxHeap": "4g",
+    "kotlinInProcess": true,
+    "maxWorkers": 2,
+    "sharedBuildLock": true,
+    "watchdogAvailableMiB": 800,
+    "ownedDaemonsExited": true,
+    "ownedIntermediatesRemoved": true,
+    "copiedApks": false
+  }
+}
