@@ -1,0 +1,3 @@
+The conversation model picker uses `catalogForSession(sessionID)`: runtimes with `sessionModelProviderSwitching=false` show only the conversation provider; unresolved provider identity yields no choices.
+Paseo 0.9.2 model `thinkingOptions` become catalog variants with their exact IDs and labels; the existing Thinking menu saves them for drafts and existing chats, and Default resets via a null thinking option (the advertised effective default ID is accepted on confirmation).
+The existing Agent chip/menu and agent apply wording are gated by `agentSelection`; Paseo reports false because its permission modes are not selectable OpenCode agents. No new layout or copy.

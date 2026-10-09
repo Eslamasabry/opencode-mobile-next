@@ -1,0 +1,14 @@
+{
+  "lib/domain/server_gateway/capabilities.dart": "03dc467c99066f2c9a105469a04a0fdd0189dced96c70cb6ac12e115c7647825",
+  "lib/paseo/gateway.dart": "6f3b63b92907e725fe98ec3af2e381237864b44242dc21245b97238a0011163f",
+  "lib/paseo/gateway/capabilities.dart": "c00b180a236e8db7317cef7535a591837a907816a6802e2b27f27dae2270a786",
+  "lib/paseo/gateway/prompts.dart": "128969a16d8ba29c742e728a7eb28c3c6afe0153d486f12cac2212716aa198b3",
+  "lib/paseo/gateway/providers.dart": "450f28978fb43bd5e0c4af10ec9a2511ae566f1c00e17a00fbde157043587bce",
+  "lib/paseo/mappers.dart": "3acd88dc930b31870c0de4b378877ba064f901f2acd078d97d3fdfb8c1bf7601",
+  "lib/state/connection/catalog.dart": "95550cba4e310c2fcf87262109d9b939745ddce2fd0115bcd8eea3ef9e1edc1d",
+  "lib/ui/widgets/pickers.dart": "5fe18e06d7c77bdedd7f4e732841b39ed76030cf1e025bd980532b00ec0d30b6",
+  "lib/ui/widgets/pickers_catalog_footer.dart": "c04e32b5edbc4953330b2c6ac1235ee641d65bff5a57727f7ba78daea7a20530",
+  "lib/ui/widgets/pickers_catalog_sections.dart": "0c501b78f6e7d449f6d1a4fd0a331405219754b1228382f4958fe3de56c902fd",
+  "test/model_picker_test.dart": "63a32ea6b065f6868574204bec84308d32173ca7e3f0fd79a86f3d2b587cae3c",
+  "test/paseo_model_catalog_test.dart": "b42a1407d263f26413824cc5c1ab33ce83341767d832e3c6cf18c87363b077fb"
+}

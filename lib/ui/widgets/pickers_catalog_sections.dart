@@ -180,7 +180,7 @@ extension _ModelCatalogSections on _ModelCatalogViewState {
   }
 
   bool _hasModelsOf(String id) =>
-      widget.controller.catalog?.models.any((m) => m.providerID == id) ?? false;
+      _catalog?.models.any((m) => m.providerID == id) ?? false;
 
   /// Opens Providers (for [id], straight into its key dialog or sign-in)
   /// and comes back here with the catalog refreshed.

@@ -146,7 +146,9 @@ extension _PaseoPrompts on PaseoGateway {
     String id, {
     ModelRef? model,
     String? mode,
+    String? variant,
   }) async {
+    final scope = _scope, epoch = _locationEpoch;
     final agent = _agents[id];
     if (agent == null) return;
     final reservation = await _beforeBrowserLaunch(id);
@@ -178,5 +180,33 @@ extension _PaseoPrompts on PaseoGateway {
       );
       agent['model'] = model.modelID;
     }
+    _checkLocation(scope, epoch);
+    if (variant != null) {
+      await _setThinking(id, agent, variant, reservation);
+      _checkLocation(scope, epoch);
+      _remember(agent);
+    }
+  }
+
+  Future<void> _setThinking(
+    String id,
+    Map<String, dynamic> agent,
+    String variant,
+    BrowserLaunchReservation? reservation,
+  ) async {
+    final scope = _scope, epoch = _locationEpoch;
+    final thinking = variant.isEmpty ? null : variant;
+    if (thinking == null && agent['thinkingOptionId'] == null) return;
+    await transport.request(
+      'set_agent_thinking_request',
+      {'agentId': _real(id), 'thinkingOptionId': thinking},
+      mutation: true,
+      beforeSend: () {
+        _checkLocation(scope, epoch);
+        _checkBrowserLaunch(id, reservation);
+      },
+    );
+    _checkLocation(scope, epoch);
+    agent['thinkingOptionId'] = thinking;
   }
 }

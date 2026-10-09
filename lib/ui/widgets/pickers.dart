@@ -387,6 +387,9 @@ class _ModelCatalogViewState extends State<ModelCatalogView>
       ? widget.sessionID
       : null;
 
+  CatalogSnapshot? get _catalog =>
+      widget.controller.catalogForSession(_scopedSessionID);
+
   ModelRef? get _currentModel => _scopedSessionID == null
       ? widget.controller.selectedModel
       : widget.controller.modelForSession(_scopedSessionID!);
@@ -487,7 +490,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView>
     builder: (context, _) => LayoutBuilder(
       builder: (context, constraints) {
         final tokens = KitTokens.of(context);
-        final catalog = widget.controller.catalog;
+        final catalog = _catalog;
         final drafted = catalog == null ? null : _draftedModel(catalog);
         final items = _items(context, catalog, drafted);
         final inSheet = widget._apply != null;
@@ -548,6 +551,8 @@ class _ModelCatalogViewState extends State<ModelCatalogView>
   );
 
   String _variantLabel(CatalogVariant variant) {
+    final label = variant.options['label'];
+    if (label is String && label.isNotEmpty) return label;
     final effort = variant.reasoningEffort;
     if (effort == null || variant.id.toLowerCase() == effort.toLowerCase()) {
       return presentedEffort(variant.id, _strings);
