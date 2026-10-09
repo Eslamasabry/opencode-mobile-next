@@ -28732,4 +28732,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String monitorUnreachableCheck(String server) {
     return 'تحقق من $server مجددا';
   }
+
+  @override
+  String agentsStateLimitReset(String time) {
+    return 'تم بلوغ حد الخطة · يُعاد ضبطه $time';
+  }
 }

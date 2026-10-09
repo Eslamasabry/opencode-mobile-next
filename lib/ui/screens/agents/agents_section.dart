@@ -129,7 +129,7 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
     final opens = !removing && _opensSheet(row);
     final line = removing
         ? l10n.agentsRemoving(KitBidi.auto(row.name))
-        : agentRowLine(l10n, row, account: account);
+        : agentRowLine(l10n, row, account: account, context: context);
     return KitRow(
       key: ValueKey('agents-row-${row.id}'),
       title: KitBidi.auto(row.name),

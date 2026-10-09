@@ -1,0 +1,554 @@
+{
+  "source": "lib/termux/bridge_models.dart (TermuxSetupStatus, the manager status script)",
+  "schema": {
+    "status": [
+      {
+        "path": "phase",
+        "kind": "enum"
+      },
+      {
+        "path": "message",
+        "kind": "string"
+      },
+      {
+        "path": "port",
+        "kind": "number"
+      },
+      {
+        "path": "runner",
+        "kind": "string"
+      },
+      {
+        "path": "version",
+        "kind": "string"
+      },
+      {
+        "path": "pid",
+        "kind": "number"
+      },
+      {
+        "path": "started_at",
+        "kind": "number"
+      },
+      {
+        "path": "operation",
+        "kind": "string"
+      },
+      {
+        "path": "operation_result",
+        "kind": "string"
+      },
+      {
+        "path": "failure_kind",
+        "kind": "string"
+      },
+      {
+        "path": "runtime",
+        "kind": "enum"
+      },
+      {
+        "path": "switch_previous",
+        "kind": "string"
+      },
+      {
+        "path": "switch_target",
+        "kind": "string"
+      },
+      {
+        "path": "switch_phase",
+        "kind": "string"
+      },
+      {
+        "path": "switch_return",
+        "kind": "string"
+      }
+    ],
+    "log": [
+      {
+        "path": "output",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "termux_installing",
+      "kind": "termux",
+      "payload": {
+        "status": {
+          "port": 4096,
+          "runner": "proot",
+          "pid": 123,
+          "runtime": "opencode1",
+          "phase": "installing_opencode",
+          "message": "Fetching the OpenCode package",
+          "version": "",
+          "started_at": "NOW-90"
+        },
+        "log": "x"
+      },
+      "fields": [
+        {
+          "key": "status.port",
+          "path": "port",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.runner",
+          "path": "runner",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.runtime",
+          "path": "runtime",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Updating this phone"
+          ],
+          "primary": false
+        },
+        {
+          "key": "status.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "Fetching the OpenCode package"
+          ],
+          "primary": false
+        },
+        {
+          "key": "status.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.started_at",
+          "path": "started_at",
+          "kind": "number",
+          "probes": [
+            "elapsed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "log.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "termux_starting",
+      "kind": "termux",
+      "payload": {
+        "status": {
+          "port": 4096,
+          "runner": "proot",
+          "pid": 123,
+          "runtime": "opencode1",
+          "phase": "starting_server",
+          "message": "Starting the server",
+          "version": "1.18.29"
+        },
+        "log": "x"
+      },
+      "fields": [
+        {
+          "key": "status.port",
+          "path": "port",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.runner",
+          "path": "runner",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.runtime",
+          "path": "runtime",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Updating this phone"
+          ],
+          "primary": false
+        },
+        {
+          "key": "status.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "Starting the server"
+          ],
+          "primary": false
+        },
+        {
+          "key": "status.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "1.18.29"
+          ],
+          "primary": false
+        },
+        {
+          "key": "log.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "termux_failed",
+      "kind": "termux",
+      "payload": {
+        "status": {
+          "port": 4096,
+          "runner": "proot",
+          "pid": 123,
+          "runtime": "opencode1",
+          "phase": "failed",
+          "message": "OpenCode install failed",
+          "version": "",
+          "failure_kind": "crash",
+          "operation": "op1",
+          "operation_result": "failed"
+        },
+        "log": "[oc] ERROR: npm could not install"
+      },
+      "fields": [
+        {
+          "key": "status.port",
+          "path": "port",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.runner",
+          "path": "runner",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.runtime",
+          "path": "runtime",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Setup didn't finish"
+          ],
+          "primary": false
+        },
+        {
+          "key": "status.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "OpenCode install failed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "status.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.failure_kind",
+          "path": "failure_kind",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.operation",
+          "path": "operation",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.operation_result",
+          "path": "operation_result",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "log.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [
+            "npm could not install"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "termux_ready",
+      "kind": "termux",
+      "payload": {
+        "status": {
+          "port": 4096,
+          "runner": "proot",
+          "pid": 123,
+          "runtime": "opencode1",
+          "phase": "ready",
+          "message": "OpenCode is ready",
+          "version": "1.18.29",
+          "operation": "op2",
+          "operation_result": "completed"
+        },
+        "log": ""
+      },
+      "fields": [
+        {
+          "key": "status.port",
+          "path": "port",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.runner",
+          "path": "runner",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.runtime",
+          "path": "runtime",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "All set"
+          ],
+          "primary": false
+        },
+        {
+          "key": "status.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "1.18.29"
+          ],
+          "primary": false
+        },
+        {
+          "key": "status.operation",
+          "path": "operation",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.operation_result",
+          "path": "operation_result",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "log.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "termux_switch",
+      "kind": "termux",
+      "payload": {
+        "status": {
+          "port": 4096,
+          "runner": "proot",
+          "pid": 123,
+          "runtime": "opencode2",
+          "phase": "restarting",
+          "message": "Switching to OpenCode 2",
+          "version": "2.0.10",
+          "switch_previous": "opencode1",
+          "switch_target": "opencode2",
+          "switch_phase": "switching",
+          "switch_return": "opencode1"
+        },
+        "log": "x"
+      },
+      "fields": [
+        {
+          "key": "status.port",
+          "path": "port",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.runner",
+          "path": "runner",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.runtime",
+          "path": "runtime",
+          "kind": "enum",
+          "probes": [
+            "OpenCode 2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "status.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.message",
+          "path": "message",
+          "kind": "string",
+          "probes": [
+            "Switching to OpenCode 2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "status.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.switch_previous",
+          "path": "switch_previous",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.switch_target",
+          "path": "switch_target",
+          "kind": "string",
+          "probes": [
+            "OpenCode 2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "status.switch_phase",
+          "path": "switch_phase",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "status.switch_return",
+          "path": "switch_return",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "log.output",
+          "path": "output",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,336 @@
+{
+  "source": "lib/voice/device.dart (oc/voice getDeviceInfo) read by lib/builtin/setup/preflight.dart",
+  "schema": {
+    "device": [
+      {
+        "path": "availableStorageBytes",
+        "kind": "number"
+      },
+      {
+        "path": "memoryClassMb",
+        "kind": "number"
+      },
+      {
+        "path": "totalMemoryMb",
+        "kind": "number"
+      },
+      {
+        "path": "lowRamDevice",
+        "kind": "boolean"
+      },
+      {
+        "path": "supportedAbis[]",
+        "kind": "string"
+      },
+      {
+        "path": "hasMicrophone",
+        "kind": "boolean"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "device_ok",
+      "kind": "device",
+      "payload": {
+        "availableStorageBytes": 2000000000,
+        "memoryClassMb": 256,
+        "totalMemoryMb": 4096,
+        "lowRamDevice": false,
+        "supportedAbis": [
+          "arm64-v8a",
+          "armeabi-v7a"
+        ],
+        "hasMicrophone": false
+      },
+      "fields": [
+        {
+          "key": "device.availableStorageBytes",
+          "path": "availableStorageBytes",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.memoryClassMb",
+          "path": "memoryClassMb",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.totalMemoryMb",
+          "path": "totalMemoryMb",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.lowRamDevice",
+          "path": "lowRamDevice",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.supportedAbis[]",
+          "path": "supportedAbis[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.hasMicrophone",
+          "path": "hasMicrophone",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "device_arm32",
+      "kind": "device",
+      "payload": {
+        "availableStorageBytes": 2000000000,
+        "memoryClassMb": 256,
+        "totalMemoryMb": 4096,
+        "lowRamDevice": false,
+        "supportedAbis": [
+          "armeabi-v7a"
+        ],
+        "hasMicrophone": false
+      },
+      "fields": [
+        {
+          "key": "device.availableStorageBytes",
+          "path": "availableStorageBytes",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.memoryClassMb",
+          "path": "memoryClassMb",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.totalMemoryMb",
+          "path": "totalMemoryMb",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.lowRamDevice",
+          "path": "lowRamDevice",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.supportedAbis[]",
+          "path": "supportedAbis[]",
+          "kind": "string",
+          "probes": [
+            "armeabi-v7a"
+          ],
+          "primary": false
+        },
+        {
+          "key": "device.hasMicrophone",
+          "path": "hasMicrophone",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "device_low_memory",
+      "kind": "device",
+      "payload": {
+        "availableStorageBytes": 2000000000,
+        "memoryClassMb": 256,
+        "totalMemoryMb": 1200,
+        "lowRamDevice": false,
+        "supportedAbis": [
+          "arm64-v8a",
+          "armeabi-v7a"
+        ],
+        "hasMicrophone": false
+      },
+      "fields": [
+        {
+          "key": "device.availableStorageBytes",
+          "path": "availableStorageBytes",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.memoryClassMb",
+          "path": "memoryClassMb",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.totalMemoryMb",
+          "path": "totalMemoryMb",
+          "kind": "number",
+          "probes": [
+            "1,200 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "device.lowRamDevice",
+          "path": "lowRamDevice",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.supportedAbis[]",
+          "path": "supportedAbis[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.hasMicrophone",
+          "path": "hasMicrophone",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "device_low_space",
+      "kind": "device",
+      "payload": {
+        "availableStorageBytes": 100000000,
+        "memoryClassMb": 256,
+        "totalMemoryMb": 4096,
+        "lowRamDevice": false,
+        "supportedAbis": [
+          "arm64-v8a",
+          "armeabi-v7a"
+        ],
+        "hasMicrophone": false
+      },
+      "fields": [
+        {
+          "key": "device.availableStorageBytes",
+          "path": "availableStorageBytes",
+          "kind": "number",
+          "probes": [
+            "Free about"
+          ],
+          "primary": false
+        },
+        {
+          "key": "device.memoryClassMb",
+          "path": "memoryClassMb",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.totalMemoryMb",
+          "path": "totalMemoryMb",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.lowRamDevice",
+          "path": "lowRamDevice",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.supportedAbis[]",
+          "path": "supportedAbis[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.hasMicrophone",
+          "path": "hasMicrophone",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "device_slow",
+      "kind": "device",
+      "payload": {
+        "availableStorageBytes": 2000000000,
+        "memoryClassMb": 256,
+        "totalMemoryMb": 2048,
+        "lowRamDevice": false,
+        "supportedAbis": [
+          "arm64-v8a",
+          "armeabi-v7a"
+        ],
+        "hasMicrophone": false
+      },
+      "fields": [
+        {
+          "key": "device.availableStorageBytes",
+          "path": "availableStorageBytes",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.memoryClassMb",
+          "path": "memoryClassMb",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.totalMemoryMb",
+          "path": "totalMemoryMb",
+          "kind": "number",
+          "probes": [
+            "2,048 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "device.lowRamDevice",
+          "path": "lowRamDevice",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.supportedAbis[]",
+          "path": "supportedAbis[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "device.hasMicrophone",
+          "path": "hasMicrophone",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

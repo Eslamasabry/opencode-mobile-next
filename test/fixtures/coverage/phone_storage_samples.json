@@ -1,0 +1,504 @@
+{
+  "source": "lib/state/shared_storage_gate.dart and lib/ui/screens/shared_storage_access_flow.dart (what the phone says about file access)",
+  "schema": {
+    "gate": [
+      {
+        "path": "server",
+        "kind": "enum"
+      },
+      {
+        "path": "accessGranted",
+        "kind": "boolean"
+      },
+      {
+        "path": "accessAfterAllow",
+        "kind": "boolean"
+      },
+      {
+        "path": "termuxCanRead",
+        "kind": "boolean"
+      },
+      {
+        "path": "confinedRunning",
+        "kind": "boolean"
+      },
+      {
+        "path": "restartBack",
+        "kind": "boolean"
+      },
+      {
+        "path": "workRunning",
+        "kind": "boolean"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "storage_app_refused",
+      "kind": "storage",
+      "payload": {
+        "server": "inApp",
+        "accessGranted": false,
+        "accessAfterAllow": false,
+        "termuxCanRead": true,
+        "confinedRunning": false,
+        "restartBack": true,
+        "workRunning": false
+      },
+      "fields": [
+        {
+          "key": "gate.server",
+          "path": "server",
+          "kind": "enum",
+          "probes": [
+            "Allow access to files?"
+          ],
+          "primary": false
+        },
+        {
+          "key": "gate.accessGranted",
+          "path": "accessGranted",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.accessAfterAllow",
+          "path": "accessAfterAllow",
+          "kind": "boolean",
+          "probes": [
+            "Folder not opened"
+          ],
+          "primary": false
+        },
+        {
+          "key": "gate.termuxCanRead",
+          "path": "termuxCanRead",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.confinedRunning",
+          "path": "confinedRunning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.restartBack",
+          "path": "restartBack",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.workRunning",
+          "path": "workRunning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_app_granted",
+      "kind": "storage",
+      "payload": {
+        "server": "inApp",
+        "accessGranted": false,
+        "accessAfterAllow": true,
+        "termuxCanRead": true,
+        "confinedRunning": false,
+        "restartBack": true,
+        "workRunning": false
+      },
+      "fields": [
+        {
+          "key": "gate.server",
+          "path": "server",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.accessGranted",
+          "path": "accessGranted",
+          "kind": "boolean",
+          "probes": [
+            "Allow access to files?"
+          ],
+          "primary": false
+        },
+        {
+          "key": "gate.accessAfterAllow",
+          "path": "accessAfterAllow",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.termuxCanRead",
+          "path": "termuxCanRead",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.confinedRunning",
+          "path": "confinedRunning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.restartBack",
+          "path": "restartBack",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.workRunning",
+          "path": "workRunning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_termux",
+      "kind": "storage",
+      "payload": {
+        "server": "termux",
+        "accessGranted": false,
+        "accessAfterAllow": true,
+        "termuxCanRead": false,
+        "confinedRunning": false,
+        "restartBack": true,
+        "workRunning": false
+      },
+      "fields": [
+        {
+          "key": "gate.server",
+          "path": "server",
+          "kind": "enum",
+          "probes": [
+            "Allow Termux storage?"
+          ],
+          "primary": false
+        },
+        {
+          "key": "gate.accessGranted",
+          "path": "accessGranted",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.accessAfterAllow",
+          "path": "accessAfterAllow",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.termuxCanRead",
+          "path": "termuxCanRead",
+          "kind": "boolean",
+          "probes": [
+            "Allow storage in Termux"
+          ],
+          "primary": false
+        },
+        {
+          "key": "gate.confinedRunning",
+          "path": "confinedRunning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.restartBack",
+          "path": "restartBack",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.workRunning",
+          "path": "workRunning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_remote",
+      "kind": "storage",
+      "payload": {
+        "server": "remote",
+        "accessGranted": false,
+        "accessAfterAllow": true,
+        "termuxCanRead": true,
+        "confinedRunning": false,
+        "restartBack": true,
+        "workRunning": false
+      },
+      "fields": [
+        {
+          "key": "gate.server",
+          "path": "server",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.accessGranted",
+          "path": "accessGranted",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.accessAfterAllow",
+          "path": "accessAfterAllow",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.termuxCanRead",
+          "path": "termuxCanRead",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.confinedRunning",
+          "path": "confinedRunning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.restartBack",
+          "path": "restartBack",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.workRunning",
+          "path": "workRunning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_restart",
+      "kind": "storage",
+      "payload": {
+        "server": "inApp",
+        "accessGranted": true,
+        "accessAfterAllow": true,
+        "termuxCanRead": true,
+        "confinedRunning": true,
+        "restartBack": true,
+        "workRunning": false
+      },
+      "fields": [
+        {
+          "key": "gate.server",
+          "path": "server",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.accessGranted",
+          "path": "accessGranted",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.accessAfterAllow",
+          "path": "accessAfterAllow",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.termuxCanRead",
+          "path": "termuxCanRead",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.confinedRunning",
+          "path": "confinedRunning",
+          "kind": "boolean",
+          "probes": [
+            "Restart to open folder?"
+          ],
+          "primary": false
+        },
+        {
+          "key": "gate.restartBack",
+          "path": "restartBack",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.workRunning",
+          "path": "workRunning",
+          "kind": "boolean",
+          "probes": [
+            "pause and carry on"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_restart_busy",
+      "kind": "storage",
+      "payload": {
+        "server": "inApp",
+        "accessGranted": true,
+        "accessAfterAllow": true,
+        "termuxCanRead": true,
+        "confinedRunning": true,
+        "restartBack": true,
+        "workRunning": true
+      },
+      "fields": [
+        {
+          "key": "gate.server",
+          "path": "server",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.accessGranted",
+          "path": "accessGranted",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.accessAfterAllow",
+          "path": "accessAfterAllow",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.termuxCanRead",
+          "path": "termuxCanRead",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.confinedRunning",
+          "path": "confinedRunning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.restartBack",
+          "path": "restartBack",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.workRunning",
+          "path": "workRunning",
+          "kind": "boolean",
+          "probes": [
+            "running right now"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_restart_failed",
+      "kind": "storage",
+      "payload": {
+        "server": "inApp",
+        "accessGranted": true,
+        "accessAfterAllow": true,
+        "termuxCanRead": true,
+        "confinedRunning": true,
+        "restartBack": false,
+        "workRunning": false
+      },
+      "fields": [
+        {
+          "key": "gate.server",
+          "path": "server",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.accessGranted",
+          "path": "accessGranted",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.accessAfterAllow",
+          "path": "accessAfterAllow",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.termuxCanRead",
+          "path": "termuxCanRead",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.confinedRunning",
+          "path": "confinedRunning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "gate.restartBack",
+          "path": "restartBack",
+          "kind": "boolean",
+          "probes": [
+            "Restart did not finish"
+          ],
+          "primary": false
+        },
+        {
+          "key": "gate.workRunning",
+          "path": "workRunning",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

@@ -34320,5 +34320,14 @@
         "type": "String"
       }
     }
+  },
+  "agentsStateLimitReset": "Plan limit reached · resets {time}",
+  "@agentsStateLimitReset": {
+    "description": "Agents list: the plan limit was reached and the agent said when it resets",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   }
 }

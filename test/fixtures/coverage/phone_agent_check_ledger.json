@@ -1,0 +1,7 @@
+{
+  "check.agentId": "ignored: names the agent the check ran for; the sentence already names it",
+  "check.architecture": "ignored: the processor kind is used to qualify the agent; a failure says so in words",
+  "check.completed[]": "shown",
+  "check.failure": "shown",
+  "check.passed": "shown"
+}

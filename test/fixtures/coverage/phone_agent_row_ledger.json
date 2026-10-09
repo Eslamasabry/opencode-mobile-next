@@ -1,0 +1,17 @@
+{
+  "account.accountDisplayName": "shown",
+  "account.error": "ignored: why the sign-in check failed is technical; the row says Sign in needed and the sheet offers Sign in",
+  "account.state": "shown",
+  "runtime.architectureQualified": "shown",
+  "runtime.capabilities.cancel": "ignored: the new-conversation screen uses this (model list, attach, stop); the agents list does not",
+  "runtime.capabilities.images": "ignored: the new-conversation screen uses this (model list, attach, stop); the agents list does not",
+  "runtime.capabilities.modelList": "ignored: the new-conversation screen uses this (model list, attach, stop); the agents list does not",
+  "runtime.capabilities.permissions": "ignored: the new-conversation screen uses this (model list, attach, stop); the agents list does not",
+  "runtime.capabilities.resumeVerified": "shown",
+  "runtime.hostAvailable": "shown",
+  "runtime.installed": "shown",
+  "runtime.payloadPresent": "ignored: only decides whether Remove is offered in the agent sheet; the row itself reads Not installed",
+  "runtime.resetAt": "shown",
+  "runtime.signInPhase": "shown",
+  "runtime.stoppedInBackground": "shown"
+}

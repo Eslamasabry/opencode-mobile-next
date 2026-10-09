@@ -1,0 +1,23 @@
+{
+  "component.agentUser": "ignored: code and engine bookkeeping; never a value a person reads",
+  "component.app": "ignored: says the app installs it itself (voice typing); the row looks the same",
+  "component.checkScript": "ignored: code and engine bookkeeping; never a value a person reads",
+  "component.defaultOn": "shown",
+  "component.dependsOn[]": "ignored: the totals already count what a choice pulls in; the names of the pieces are not listed",
+  "component.downloadBytes": "shown",
+  "component.downloadSize": "ignored: code and engine bookkeeping; never a value a person reads",
+  "component.estimatedSeconds": "shown",
+  "component.id": "ignored: an internal id the app uses to match records; nothing a person reads",
+  "component.installScript": "ignored: code and engine bookkeeping; never a value a person reads",
+  "component.installedBytes": "ignored: code and engine bookkeeping; never a value a person reads",
+  "component.jobStep": "ignored: code and engine bookkeeping; never a value a person reads",
+  "component.native": "ignored: code and engine bookkeeping; never a value a person reads",
+  "component.presenceScript": "ignored: code and engine bookkeeping; never a value a person reads",
+  "component.removeScript": "ignored: code and engine bookkeeping; never a value a person reads",
+  "component.required": "shown",
+  "component.shortTitle": "shown",
+  "component.sizeScript": "ignored: code and engine bookkeeping; never a value a person reads",
+  "component.summary": "shown",
+  "component.title": "shown",
+  "component.why": "shown"
+}

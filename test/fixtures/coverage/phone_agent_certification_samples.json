@@ -1,0 +1,666 @@
+{
+  "source": "docs/verification/agent-certification-matrix.json (bundled as agent_certification_snapshot.dart)",
+  "schema": {
+    "cert": [
+      {
+        "path": "agentVersion",
+        "kind": "string"
+      },
+      {
+        "path": "helperVersion",
+        "kind": "string"
+      },
+      {
+        "path": "architecture",
+        "kind": "string"
+      },
+      {
+        "path": "cells.install.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.install.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.version.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.version.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.signedOut.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.signedOut.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.signIn.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.signIn.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.models.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.models.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.smoke.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.smoke.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.tools.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.tools.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.permission.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.permission.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.images.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.images.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.abort.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.abort.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.resume.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.resume.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.network.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.network.evidence",
+        "kind": "string"
+      },
+      {
+        "path": "cells.cards.state",
+        "kind": "string"
+      },
+      {
+        "path": "cells.cards.evidence",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "certification_claude",
+      "kind": "certification",
+      "payload": {
+        "id": "claude",
+        "row": {
+          "agentVersion": "2.1.283",
+          "helperVersion": "0.9.2",
+          "cells": {
+            "install": {
+              "state": "pass",
+              "evidence": "docs/verification/agents-on-phone-2026-10-03.md"
+            },
+            "version": {
+              "state": "pass",
+              "evidence": "docs/verification/agents-on-phone-2026-10-03.md"
+            },
+            "signedOut": {
+              "state": "untested",
+              "evidence": null
+            },
+            "signIn": {
+              "state": "untested",
+              "evidence": null
+            },
+            "models": {
+              "state": "pass",
+              "evidence": "docs/qa/FQ2-2026-10-07/README.md"
+            },
+            "smoke": {
+              "state": "pass",
+              "evidence": "docs/qa/agent-tools-2026-10-07/README.md"
+            },
+            "tools": {
+              "state": "pass",
+              "evidence": "docs/qa/agent-tools-2026-10-07/README.md"
+            },
+            "permission": {
+              "state": "pass",
+              "evidence": "docs/qa/agent-tools-2026-10-07/README.md #2"
+            },
+            "abort": {
+              "state": "pass",
+              "evidence": "docs/qa/FQ2-2026-10-07/README.md"
+            },
+            "resume": {
+              "state": "pass",
+              "evidence": "docs/qa/FQ2-2026-10-07/README.md"
+            },
+            "network": {
+              "state": "untested",
+              "evidence": null
+            },
+            "cards": {
+              "state": "pass",
+              "evidence": "docs/qa/agent-tools-2026-10-07/README.md #5"
+            },
+            "images": {
+              "state": "pass",
+              "evidence": "docs/qa/agent-tools-2026-10-07/README.md#5"
+            }
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "cert.agentVersion",
+          "path": "agentVersion",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.helperVersion",
+          "path": "helperVersion",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.install.state",
+          "path": "cells.install.state",
+          "kind": "string",
+          "probes": [
+            "Ready"
+          ],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.install.evidence",
+          "path": "cells.install.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.version.state",
+          "path": "cells.version.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.version.evidence",
+          "path": "cells.version.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.signedOut.state",
+          "path": "cells.signedOut.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.signedOut.evidence",
+          "path": "cells.signedOut.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.signIn.state",
+          "path": "cells.signIn.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.signIn.evidence",
+          "path": "cells.signIn.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.models.state",
+          "path": "cells.models.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.models.evidence",
+          "path": "cells.models.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.smoke.state",
+          "path": "cells.smoke.state",
+          "kind": "string",
+          "probes": [
+            "Ready"
+          ],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.smoke.evidence",
+          "path": "cells.smoke.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.tools.state",
+          "path": "cells.tools.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.tools.evidence",
+          "path": "cells.tools.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.permission.state",
+          "path": "cells.permission.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.permission.evidence",
+          "path": "cells.permission.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.abort.state",
+          "path": "cells.abort.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.abort.evidence",
+          "path": "cells.abort.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.resume.state",
+          "path": "cells.resume.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.resume.evidence",
+          "path": "cells.resume.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.network.state",
+          "path": "cells.network.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.network.evidence",
+          "path": "cells.network.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.cards.state",
+          "path": "cells.cards.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.cards.evidence",
+          "path": "cells.cards.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.images.state",
+          "path": "cells.images.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.images.evidence",
+          "path": "cells.images.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "certification_codex",
+      "kind": "certification",
+      "payload": {
+        "id": "codex",
+        "row": {
+          "agentVersion": "0.160.0",
+          "helperVersion": "0.9.2",
+          "architecture": "x64",
+          "cells": {
+            "install": {
+              "state": "pass",
+              "evidence": "docs/qa/FQ-install-2026-10-08/README.md#codex"
+            },
+            "version": {
+              "state": "pass",
+              "evidence": "docs/qa/FQ-install-2026-10-08/README.md#codex"
+            },
+            "signedOut": {
+              "state": "fail",
+              "evidence": "docs/qa/FQ-install-2026-10-08/README.md#codex"
+            },
+            "signIn": {
+              "state": "blocked:OW1",
+              "evidence": null
+            },
+            "models": {
+              "state": "blocked:OW1",
+              "evidence": null
+            },
+            "smoke": {
+              "state": "blocked:OW1",
+              "evidence": null
+            },
+            "tools": {
+              "state": "blocked:OW1",
+              "evidence": null
+            },
+            "permission": {
+              "state": "blocked:OW1",
+              "evidence": null
+            },
+            "abort": {
+              "state": "blocked:OW1",
+              "evidence": null
+            },
+            "resume": {
+              "state": "blocked:OW1",
+              "evidence": null
+            },
+            "network": {
+              "state": "blocked:OW1",
+              "evidence": null
+            },
+            "cards": {
+              "state": "n/a",
+              "evidence": "no cards adapter yet"
+            },
+            "images": {
+              "state": "blocked:OW1",
+              "evidence": null
+            }
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "cert.agentVersion",
+          "path": "agentVersion",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.helperVersion",
+          "path": "helperVersion",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.architecture",
+          "path": "architecture",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.install.state",
+          "path": "cells.install.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.install.evidence",
+          "path": "cells.install.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.version.state",
+          "path": "cells.version.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.version.evidence",
+          "path": "cells.version.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.signedOut.state",
+          "path": "cells.signedOut.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.signedOut.evidence",
+          "path": "cells.signedOut.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.signIn.state",
+          "path": "cells.signIn.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.signIn.evidence",
+          "path": "cells.signIn.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.models.state",
+          "path": "cells.models.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.models.evidence",
+          "path": "cells.models.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.smoke.state",
+          "path": "cells.smoke.state",
+          "kind": "string",
+          "probes": [
+            "Not certified on this version yet"
+          ],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.smoke.evidence",
+          "path": "cells.smoke.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.tools.state",
+          "path": "cells.tools.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.tools.evidence",
+          "path": "cells.tools.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.permission.state",
+          "path": "cells.permission.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.permission.evidence",
+          "path": "cells.permission.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.abort.state",
+          "path": "cells.abort.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.abort.evidence",
+          "path": "cells.abort.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.resume.state",
+          "path": "cells.resume.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.resume.evidence",
+          "path": "cells.resume.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.network.state",
+          "path": "cells.network.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.network.evidence",
+          "path": "cells.network.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.cards.state",
+          "path": "cells.cards.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.cards.evidence",
+          "path": "cells.cards.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.images.state",
+          "path": "cells.images.state",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "cert.cells.images.evidence",
+          "path": "cells.images.evidence",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

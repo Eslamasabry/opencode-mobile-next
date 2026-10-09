@@ -28579,4 +28579,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String monitorUnreachableCheck(String server) {
     return 'Check $server again';
   }
+
+  @override
+  String agentsStateLimitReset(String time) {
+    return 'Plan limit reached · resets $time';
+  }
 }

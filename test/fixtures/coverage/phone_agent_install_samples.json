@@ -1,0 +1,159 @@
+{
+  "source": "lib/domain/phone_agent_host.dart (AgentSetupProgress)",
+  "schema": {
+    "progress": [
+      {
+        "path": "phase",
+        "kind": "enum"
+      },
+      {
+        "path": "fraction",
+        "kind": "number"
+      },
+      {
+        "path": "componentId",
+        "kind": "string"
+      },
+      {
+        "path": "failure",
+        "kind": "enum"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "install_running",
+      "kind": "install",
+      "payload": {
+        "agent": "codex",
+        "progress": {
+          "phase": "installing",
+          "fraction": 0.4,
+          "componentId": "linux"
+        }
+      },
+      "fields": [
+        {
+          "key": "progress.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Installing Codex"
+          ],
+          "primary": false
+        },
+        {
+          "key": "progress.fraction",
+          "path": "fraction",
+          "kind": "number",
+          "probes": [
+            "[bar 40%]"
+          ],
+          "primary": false
+        },
+        {
+          "key": "progress.componentId",
+          "path": "componentId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "install_waiting",
+      "kind": "install",
+      "payload": {
+        "agent": "codex",
+        "progress": {
+          "phase": "installing"
+        }
+      },
+      "fields": [
+        {
+          "key": "progress.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Installing Codex"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "install_interrupted",
+      "kind": "install",
+      "payload": {
+        "agent": "codex",
+        "progress": {
+          "phase": "interrupted"
+        }
+      },
+      "fields": [
+        {
+          "key": "progress.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Setup stopped before it finished"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "install_failed_storage",
+      "kind": "install",
+      "payload": {
+        "agent": "codex",
+        "progress": {
+          "phase": "failed",
+          "failure": "storage"
+        }
+      },
+      "fields": [
+        {
+          "key": "progress.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Free some space"
+          ],
+          "primary": false
+        },
+        {
+          "key": "progress.failure",
+          "path": "failure",
+          "kind": "enum",
+          "probes": [
+            "Free some space"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "install_failed_plain",
+      "kind": "install",
+      "payload": {
+        "agent": "codex",
+        "progress": {
+          "phase": "failed"
+        }
+      },
+      "fields": [
+        {
+          "key": "progress.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Setup didn't finish"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

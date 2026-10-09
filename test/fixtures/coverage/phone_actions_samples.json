@@ -1,0 +1,31 @@
+{
+  "source": "lib/builtin/builtin_linux.dart (oc/builtin), lib/termux/bridge.dart, lib/builtin/setup/setup_contract.dart (SetupEngine), lib/domain/phone_agents_source.dart",
+  "wire": [
+    "native startSetup",
+    "native cancelSetup",
+    "native completeSetupStep",
+    "native installUbuntu",
+    "native openStorageSettings",
+    "native runAgentSetupCheck",
+    "native remove",
+    "termux startSetup",
+    "termux completeSetupStep",
+    "termux restart",
+    "engine run",
+    "engine cancel",
+    "engine restore",
+    "agents installAgent",
+    "agents cancelAgentInstall",
+    "agents runAgentPhoneCheck",
+    "agents resumeAgentHost",
+    "agents recheckAgentSignIn",
+    "agents confirmAgentSignIn",
+    "agents cancelAgentSignIn",
+    "agents signOutAgent",
+    "agents removeAgent",
+    "agents selectChatAgent",
+    "agents selectAgentModel",
+    "agents startNewChatReplacing",
+    "agents closePhoneAgentsForSignInReset"
+  ]
+}
