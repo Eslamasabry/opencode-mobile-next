@@ -147,7 +147,6 @@ void main() {
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
     final key = GlobalKey();
     await _open(tester, _Api(), boundaryKey: key);
     await tester.pump(const Duration(milliseconds: 500));
@@ -184,5 +183,6 @@ void main() {
       find.byKey(key),
       matchesGoldenFile('goldens/chat_cold_open_refreshing_dark.png'),
     );
+    debugDefaultTargetPlatformOverride = null;
   });
 }
