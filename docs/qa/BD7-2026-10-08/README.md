@@ -239,3 +239,27 @@ page before normal Settings navigation. Unknown/foreign pages are untouched.
 All 73 focused Python checks pass serially through machine_lock; lint/format and
 diff checks are clean. No app-source edit or build. The first receipt remains
 unchanged, and the device retry uses a separate output directory.
+
+The [crash-trigger retry](2199-saved-report-retry/report.json) enabled capture
+and called `am crash` after exact PID/UID/birth and installer-idle checks.
+Reopening failed because the managed server was stopped, leaving a connection
+page without Settings. The [resumed receipt](2199-saved-report-resumed/report.json)
+correlates the single owned native record (1791507336215 ms) with the exact-main
+Android reason-4 exit (1791507336232 ms, 17 ms later). Product Start and connect
+restored navigation and the saved row was visible. The preview screenshot guard
+then refused its sheet; no unsafe image was retained. Owned report deletion,
+capture Off/zero ring, and exact normal 2199 reinstall plus product startup all
+passed before this reservation was released for BA. These receipts remain FAIL
+and do not qualify share preview. No second crash occurred in that resumption.
+
+Offline harness corrections now cover recovery after cold activity launch,
+reusing the exact visible report page, and the authored kit actions Dismiss and
+Hide details. Public source: `kit_sheet_parts.dart` handle and
+`kitDetailsHide` copy. Private suffixes, unknown content and editable input remain
+refused. Report-page and sheet fixtures failed before their corrections; the
+cold stopped-server fixture also failed before recovery moved inside bounded
+launch navigation. The saved driver permits 60 seconds for real product startup
+and dispatches one guarded recovery per launch; the historical crash/ANR driver
+retains its 15-second default. All 78 focused host checks pass serially through
+machine_lock. App source, account data and ticket files are unchanged. A complete
+new crash/report/share/cleanup proof is still pending the next reservation.

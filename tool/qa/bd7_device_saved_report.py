@@ -113,21 +113,50 @@ class SavedReportSession(DeviceSession):
         self.ports = ports
         self.consent_owned = False
 
+    navigation_timeout_seconds = 60
+
+    @staticmethod
+    def owned_nodes(*nodes):
+        return all(
+            node is not None and node.get("package") == PACKAGE for node in nodes
+        )
+
     def launch(self):
-        # A retained Agents route has no root Settings tab. Only return from
-        # this exact visible app page; never back through an unknown surface.
-        if self.ports is not None and self.ports.app_visible():
-            try:
-                if self.ui.find("Settings") is None:
-                    agents, back = self.ui.find("Agents"), self.ui.find("Back")
-                    if all(
-                        node is not None and node.get("package") == PACKAGE
-                        for node in (agents, back)
-                    ):
-                        self.execute(["shell", "input", "keyevent", "4"])
-            except Bd7UiFailure:
-                pass  # The normal bounded launch still owns readiness.
+        self.navigation_recovered = False
         return super().launch()
+
+    def navigate_current_page(self):
+        if super().navigate_current_page():
+            return True
+        if self.ports is None or not self.ports.app_visible():
+            return False
+        # Reopening an already visible diagnostics page needs no root tab.
+        return self.owned_nodes(
+            self.ui.find("Report a problem"),
+            self.ui.find("Save crash reports on this phone"),
+            self.ui.find("Back"),
+        )
+
+    def recover_navigation(self):
+        if (
+            self.ports is None
+            or not self.ports.app_visible()
+            or getattr(self, "navigation_recovered", False)
+        ):
+            return
+        stopped = self.ui.find("OpenCode inside the app is stopped")
+        start = self.ui.find("Start and connect")
+        if self.owned_nodes(stopped, start) and start.get("enabled") == "true":
+            # Main-process crash/reinstall may stop the managed server. Use
+            # only this exact product action, after strict installer admission.
+            self.ports.require_idle_setup()
+            self.ui.tap("Start and connect")
+            self.navigation_recovered = True
+            return
+        agents, back = self.ui.find("Agents"), self.ui.find("Back")
+        if self.owned_nodes(agents, back):
+            self.execute(["shell", "input", "keyevent", "4"])
+            self.navigation_recovered = True
 
     def ring(self):
         path = FILES + "/crash-diagnostics.json"

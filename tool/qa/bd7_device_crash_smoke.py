@@ -125,17 +125,28 @@ class DeviceSession:
                 self.signal(self.suspended, 18)
             self.suspended = None
 
+    navigation_timeout_seconds = 15
+
+    def navigate_current_page(self):
+        if self.ui.find('Settings') is None:
+            return False
+        self.ui.navigate_report()
+        return True
+
+    def recover_navigation(self):
+        # Specialized proof drivers may recover an exact known product page.
+        pass
+
     def launch(self):
         self.execute(['shell', 'input', 'keyevent', '224'])
         self.execute(['shell', 'am', 'start', '-W', '-n', PACKAGE + '/.MainActivity'])
-        deadline = time.monotonic() + 15
+        deadline = time.monotonic() + self.navigation_timeout_seconds
         while time.monotonic() < deadline:
-            if self.ui.find('Settings') is not None:
-                break
+            if self.navigate_current_page():
+                return
+            self.recover_navigation()
             time.sleep(.25)
-        else:
-            raise DeviceFailure('app_navigation_not_ready')
-        self.ui.navigate_report()
+        raise DeviceFailure('app_navigation_not_ready')
 
     def backup_diagnostics(self):
         # Quiesce only this app before snapshotting its diagnostic artifacts.

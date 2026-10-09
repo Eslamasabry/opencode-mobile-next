@@ -6,6 +6,8 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 import xml.etree.ElementTree as ET
+from tool.qa.test_bd7_device_ui import UiFixture, node, xml
+from tool.qa.bd7_device_ui import Bd7Ui
 
 from tool.qa import bd7_device_saved_report as proof
 from tool.qa.fq9.common import Artifact, DriverFailure, LOCAL_SIGNER
@@ -117,7 +119,7 @@ class SavedReportTest(unittest.TestCase):
         session.ports.app_visible.return_value = True
         session.ui = Mock()
         returned = [False]
-        node = ET.Element("node", {"package": proof.PACKAGE})
+        node = ET.Element("node", {"package": proof.PACKAGE, "enabled": "true"})
 
         def find(label):
             if label == "Settings":
@@ -137,7 +139,7 @@ class SavedReportTest(unittest.TestCase):
             session.launch()
         self.assertTrue(returned[0])
         session.ui.navigate_report.assert_called_once()
-        self.assertLess(
+        self.assertGreater(
             command.call_args_list.index(
                 unittest.mock.call(["shell", "input", "keyevent", "4"])
             ),
@@ -153,12 +155,114 @@ class SavedReportTest(unittest.TestCase):
             if label == "Settings"
             else ET.Element("node", {"package": "other.app"})
         )
+        with patch.object(session, "execute") as command:
+            session.recover_navigation()
+        command.assert_not_called()
+        session.ui.tap.assert_not_called()
+        session.ports.require_idle_setup.assert_not_called()
+
+    def test_stopped_builtin_server_uses_product_start_before_navigation(self):
+        session = proof.SavedReportSession("adb", Path("."), ports=Mock())
+        session.ports.app_visible.return_value = True
+        session.ui = Mock()
+        node = ET.Element("node", {"package": proof.PACKAGE, "enabled": "true"})
+        session.ui.find.side_effect = lambda label: (
+            node
+            if label in ("OpenCode inside the app is stopped", "Start and connect")
+            else None
+        )
+        session.recover_navigation()
+        session.recover_navigation()  # A stalled restart must never redispatch.
+        session.ports.require_idle_setup.assert_called_once()
+        session.ui.tap.assert_called_once_with("Start and connect")
+
+    def test_active_setup_refuses_product_restart_without_tapping(self):
+        session = proof.SavedReportSession("adb", Path("."), ports=Mock())
+        session.ports.app_visible.return_value = True
+        session.ports.require_idle_setup.side_effect = DriverFailure(
+            "setup_active_or_unknown"
+        )
+        session.ui = Mock()
+        node = ET.Element("node", {"package": proof.PACKAGE, "enabled": "true"})
+        session.ui.find.side_effect = lambda label: (
+            node
+            if label in ("OpenCode inside the app is stopped", "Start and connect")
+            else None
+        )
+        with self.assertRaisesRegex(DriverFailure, "^setup_active_or_unknown$"):
+            session.recover_navigation()
+        session.ui.tap.assert_not_called()
+
+    def test_existing_report_page_does_not_wait_for_absent_settings_tab(self):
+        session = proof.SavedReportSession("adb", Path("."), ports=Mock())
+        session.ports.app_visible.return_value = True
+        session.ui = Mock()
+        owned = ET.Element("node", {"package": proof.PACKAGE, "enabled": "true"})
+        session.ui.find.side_effect = lambda label: (
+            owned
+            if label in ("Report a problem", "Save crash reports on this phone", "Back")
+            else None
+        )
+        with patch.object(
+            proof.DeviceSession, "navigate_current_page", return_value=False
+        ):
+            self.assertTrue(session.navigate_current_page())
+        session.ui.tap.assert_not_called()
+
+    def test_authored_sheet_actions_are_safe_without_allowing_private_suffixes(self):
+        for word in ("Dismiss", "Hide details"):
+            for private, accepted in ((False, True), (True, False)):
+                document = xml(
+                    node("The app closed unexpectedly", "[0,400][800,450]"),
+                    node(
+                        word + (" synthetic-private-value" if private else ""),
+                        "[0,500][800,550]",
+                    ),
+                )
+                ui = Bd7Ui(UiFixture(document).execute)
+                with tempfile.TemporaryDirectory() as directory:
+                    target = Path(directory) / "preview.jpg"
+                    if accepted:
+                        ui.screenshot(target, section="preview")
+                        self.assertTrue(target.exists())
+                    else:
+                        with self.assertRaises(proof.Bd7UiFailure):
+                            ui.screenshot(target, section="preview")
+                        self.assertFalse(target.exists())
+
+    def test_cold_stopped_server_recovers_after_activity_launch(self):
+        session = proof.SavedReportSession("adb", Path("."), ports=Mock())
+        session.ui = Mock()
+        state = {"visible": False, "connected": False}
+        owned = ET.Element("node", {"package": proof.PACKAGE, "enabled": "true"})
+        session.ports.app_visible.side_effect = lambda: state["visible"]
+
+        def find(label):
+            if not state["visible"]:
+                return None
+            if label == "Settings":
+                return owned if state["connected"] else None
+            return (
+                owned
+                if not state["connected"]
+                and label in ("OpenCode inside the app is stopped", "Start and connect")
+                else None
+            )
+
+        def execute(command, **_):
+            if "am" in command:
+                state["visible"] = True
+
+        session.ui.find.side_effect = find
+        session.ui.tap.side_effect = lambda label: state.update(connected=True)
         with (
-            patch.object(proof.DeviceSession, "launch"),
-            patch.object(session, "execute") as command,
+            patch.object(session, "execute", side_effect=execute),
+            patch.object(proof.time, "monotonic", side_effect=[0, 1, 16]),
+            patch.object(proof.time, "sleep"),
         ):
             session.launch()
-        command.assert_not_called()
+        session.ui.tap.assert_called_once_with("Start and connect")
+        session.ui.navigate_report.assert_called_once()
 
     def test_reused_pid_starttime_never_receives_am_crash(self):
         session = proof.SavedReportSession("adb", Path("."), ports=Mock())

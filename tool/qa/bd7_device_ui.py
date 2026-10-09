@@ -23,6 +23,7 @@ _DEGRADED_COPY = {
 }
 _FIXED = {
     'Report a problem', 'Crash reports', 'Recent app exits', 'Details', 'Close',
+    'Dismiss', 'Hide details',
     'Preview crash report', 'Share report', 'OpenCode Mobile crash report',
     'Captured error categories and times only.',
     'No messages, stacks or conversations are included.',
