@@ -46,6 +46,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   String? _healthError;
   bool _checking = false;
   bool _upgradingServer = false;
+
+  /// Paseo: asking the daemon which agents are ready again.
+  bool _recheckingAgents = false;
+  String? _agentsLine;
+  bool _agentsFailed = false;
   String? _serverUpgradeError;
 
   /// The update commands were copied from their row: its line says so.
@@ -83,6 +88,32 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
 
   /// The running version: the health probe's answer, else the connection's.
   String? get _runningVersion => _health?.version ?? widget.controller.version;
+
+  Future<void> _recheckAgents() async {
+    final gateway = widget.controller.api;
+    if (_recheckingAgents || gateway is! HostAgentProviderGateway) return;
+    final copy = _settingsCopy(context);
+    setState(() {
+      _recheckingAgents = true;
+      _agentsFailed = false;
+    });
+    try {
+      final catalog = await (gateway as HostAgentProviderGateway)
+          .loadHostAgentProviders(refresh: true);
+      final names = [for (final p in catalog.selectable) p.displayName];
+      if (mounted) {
+        setState(
+          () => _agentsLine = names.isEmpty
+              ? copy.paseoCheckNoneReady
+              : copy.paseoCheckReady(names.join(', ')),
+        );
+      }
+    } catch (_) {
+      if (mounted) setState(() => _agentsFailed = true);
+    } finally {
+      if (mounted) setState(() => _recheckingAgents = false);
+    }
+  }
 
   Future<void> _checkHealth() async {
     // Runs from initState, so inherited lookups are not yet allowed.
@@ -382,6 +413,37 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                     context,
                   ).pushNamed('/servers', arguments: 'edit-active'),
                 ),
+              // The server's own page edits it, not only its sign-in.
+              if (profile != null)
+                KitRow(
+                  key: const Key('server-edit'),
+                  leading: KitRow.icon(context, AppIconography.edit),
+                  title: copy.serverSettingsEditTitle(serverName),
+                  titleMaxLines: 2,
+                  supporting: TextSpan(text: copy.serverSettingsEditDetail),
+                  trailing: const _RowMark(AppIconography.chevronRight),
+                  onTap: () => Navigator.of(
+                    context,
+                  ).pushNamed('/servers', arguments: 'edit-active'),
+                ),
+              if (profile != null &&
+                  profile.backend == ServerBackend.paseo &&
+                  widget.controller.api is HostAgentProviderGateway)
+                KitRow(
+                  key: const Key('server-recheck-agents'),
+                  leading: KitRow.icon(context, AppIconography.retry),
+                  title: _recheckingAgents
+                      ? copy.serverSettingsRecheckChecking
+                      : copy.serverSettingsRecheckAgents,
+                  supporting: TextSpan(
+                    text: _agentsFailed
+                        ? copy.serverSettingsRecheckFailed
+                        : _agentsLine ?? copy.serverSettingsRecheckAgentsDetail,
+                  ),
+                  supportingMaxLines: 3,
+                  enabled: !_recheckingAgents,
+                  onTap: _recheckAgents,
+                ),
             ],
           ),
           SizedBox(height: tokens.sectionGap),
@@ -493,6 +555,19 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   ),
                   supportingMaxLines: 4,
                   onTap: _disconnect,
+                ),
+                KitRow(
+                  key: const ValueKey('server-remove'),
+                  destructive: true,
+                  leading: KitRow.icon(context, AppIconography.delete),
+                  title: copy.serverSettingsRemoveTitle(profile.name),
+                  titleMaxLines: 2,
+                  supporting: TextSpan(text: copy.serverSettingsRemoveDetail),
+                  supportingMaxLines: 3,
+                  onTap: () => Navigator.of(context).pushNamed(
+                    '/servers',
+                    arguments: ServersRouteRequest.forget(profile.id),
+                  ),
                 ),
               ],
             ),

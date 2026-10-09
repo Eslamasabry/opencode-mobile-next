@@ -1,0 +1,19 @@
+{
+  "card.auth": "ignored: decides whether a key is asked for when the agent is added; the saved key itself is never shown",
+  "card.cardUrl": "shown",
+  "card.description": "shown",
+  "card.endpoint": "shown",
+  "card.name": "shown",
+  "card.skills[].description": "shown",
+  "card.skills[].name": "shown",
+  "card.supported": "ignored: an agent the app cannot talk to cannot be saved, so a saved card is always supported",
+  "card.version": "shown",
+  "task.contextId": "ignored: an internal id the app uses to match records; nothing a person reads",
+  "task.id": "ignored: an internal id the app uses to match records; nothing a person reads",
+  "task.omittedContent": "shown",
+  "task.parts[].name": "shown",
+  "task.parts[].text": "shown",
+  "task.parts[].url": "shown",
+  "task.state": "shown",
+  "task.statusMessageId": "ignored: an internal id the app uses to match records; nothing a person reads"
+}

@@ -451,9 +451,12 @@ extension _IntegrationsPage on _IntegrationsScreenState {
                       text: resource.uri,
                       style: KitText.styleOf(context, KitTextRole.mono),
                     ),
+                    // What it holds, in the server's own words.
+                    if (resource.description?.trim().isNotEmpty ?? false)
+                      TextSpan(text: '\n${resource.description!.trim()}'),
                   ],
                 ),
-                supportingMaxLines: 2,
+                supportingMaxLines: 3,
                 menuLabel: resource.name,
                 menu: [
                   KitMenuItem.copy(

@@ -1093,7 +1093,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get webSourcesDisclosure =>
-      'Web search is not available through this server’s app gateway. Paste a public URL and optionally an excerpt you want to include. No page is fetched. Nothing is sent to the model here.';
+      'This server can\'t search the web. Paste a public link, and an excerpt if you like. The page is not opened, and nothing is sent until you send your message.';
 
   @override
   String get webSourcesScopeChanged =>
@@ -28477,6 +28477,42 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String serverSettingsEditTitle(String server) {
+    return 'Edit $server';
+  }
+
+  @override
+  String get serverSettingsEditDetail => 'Change its name, address or sign-in';
+
+  @override
+  String serverSettingsRemoveTitle(String server) {
+    return 'Remove $server';
+  }
+
+  @override
+  String get serverSettingsRemoveDetail =>
+      'Forget it on this phone. Its conversations stay on the server.';
+
+  @override
+  String get serverSettingsRecheckAgents => 'Check for agents again';
+
+  @override
+  String get serverSettingsRecheckAgentsDetail =>
+      'Use it after signing in to an agent on that computer.';
+
+  @override
+  String get serverSettingsRecheckChecking => 'Checking for agents…';
+
+  @override
+  String get serverSettingsRecheckFailed =>
+      'Could not check for agents. Try again in a moment.';
+
+  @override
+  String integrationsMcpDetails(String name) {
+    return 'Details for $name';
+  }
+
+  @override
   String get usageBusiestDays => 'Busiest days';
 
   @override
@@ -28525,4 +28561,18 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get sessionDeleteBody =>
       'The conversation and its history are removed for good. This cannot be undone.';
+
+  @override
+  String monitorUnreachableTitle(String server) {
+    return '$server can\'t be reached';
+  }
+
+  @override
+  String get monitorUnreachableDetail =>
+      'Its questions will show here once it\'s back.';
+
+  @override
+  String monitorUnreachableCheck(String server) {
+    return 'Check $server again';
+  }
 }

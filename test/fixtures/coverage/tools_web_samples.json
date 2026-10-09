@@ -1,0 +1,214 @@
+{
+  "source": "lib/api2/gateway.dart (GET /websearch/provider, POST /websearch)",
+  "schema": {
+    "location": [
+      {
+        "path": "directory",
+        "kind": "string"
+      },
+      {
+        "path": "workspaceID",
+        "kind": "string"
+      },
+      {
+        "path": "project.id",
+        "kind": "string"
+      },
+      {
+        "path": "project.directory",
+        "kind": "string"
+      }
+    ],
+    "provider": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      }
+    ],
+    "result": [
+      {
+        "path": "url",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "content",
+        "kind": "string"
+      },
+      {
+        "path": "time.published",
+        "kind": "number"
+      }
+    ],
+    "response": [
+      {
+        "path": "providerID",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "web_search_results",
+      "kind": "websearch",
+      "payload": {
+        "providers": {
+          "data": [
+            {
+              "id": "prov_exa",
+              "name": "Exa search"
+            }
+          ],
+          "location": {
+            "directory": "/work/shop",
+            "workspaceID": "wrk_main",
+            "project": {
+              "id": "prj_shop",
+              "directory": "/work/shop"
+            }
+          }
+        },
+        "search": {
+          "data": {
+            "providerID": "prov_exa",
+            "results": [
+              {
+                "url": "https://docs.flutter.dev/cookbook/networking",
+                "title": "Networking cookbook",
+                "content": "Fetch data from the internet",
+                "time": {
+                  "published": 1788960001000
+                }
+              },
+              {
+                "url": "https://dart.dev/guides/libraries",
+                "time": {
+                  "published": 1788960002000
+                }
+              }
+            ]
+          },
+          "location": {
+            "directory": "/work/shop",
+            "workspaceID": "wrk_main",
+            "project": {
+              "id": "prj_shop",
+              "directory": "/work/shop"
+            }
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "location.directory",
+          "path": "directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.workspaceID",
+          "path": "workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.project.id",
+          "path": "project.id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.project.directory",
+          "path": "project.directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "provider.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "provider.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "Exa search"
+          ],
+          "primary": false
+        },
+        {
+          "key": "response.providerID",
+          "path": "providerID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "result.url",
+          "path": "url",
+          "kind": "string",
+          "probes": [
+            "docs.flutter.dev"
+          ],
+          "primary": false
+        },
+        {
+          "key": "result.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Networking cookbook"
+          ],
+          "primary": false
+        },
+        {
+          "key": "result.content",
+          "path": "content",
+          "kind": "string",
+          "probes": [
+            "Fetch data from the internet"
+          ],
+          "primary": false
+        },
+        {
+          "key": "result.time.published",
+          "path": "time.published",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "result.url",
+          "path": "url",
+          "kind": "string",
+          "probes": [
+            "dart.dev"
+          ],
+          "primary": false
+        },
+        {
+          "key": "result.time.published",
+          "path": "time.published",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

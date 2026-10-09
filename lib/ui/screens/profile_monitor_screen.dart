@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../domain/profile_monitor.dart';
@@ -8,6 +10,7 @@ import '../../state/profile_monitor.dart' show ProfileMonitor;
 import '../../state/profiles.dart';
 import '../app_theme.dart';
 import '../navigation/attention_landing.dart' show chatLandingRoute;
+import '../kit/kit_buttons.dart' show KitAction, KitActionBlock;
 import '../kit/kit_dialog.dart';
 import '../kit/kit_icon.dart';
 import '../kit/kit_needs_you.dart';
@@ -201,13 +204,63 @@ class ProfileMonitorInbox extends StatelessWidget {
     );
   }
 
+  /// Servers the monitor is set to watch that did not answer its last
+  /// check: said in words, with a way to check again, so the list is never
+  /// blank when the only news is that a server cannot be reached.
+  static List<ServerProfile> unreachableOf(ConnectionController controller) {
+    if (controller.isIsolated) return const [];
+    final monitor = controller.profileMonitor;
+    return [
+      for (final profile in controller.store.profiles)
+        if (profile.id != controller.profile?.id &&
+            controller.isProfileReadable(profile.id) &&
+            monitor.rulesFor(profile.id).enabled &&
+            monitor.snapshotFor(profile.id).status ==
+                ProfileMonitorStatus.unavailable)
+          profile,
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     if (controller.isIsolated) return const SizedBox.shrink();
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final rows = rowsFor(controller);
+    final down = unreachableOf(controller);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [...rows.requests, ...rows.checkIns],
+      children: [
+        ...rows.requests,
+        ...rows.checkIns,
+        for (final profile in down)
+          Builder(
+            builder: (context) {
+              final server = serverDisplayName(
+                profile,
+                l10n,
+                among: controller.store.profiles,
+              );
+              return KitRow(
+                key: ValueKey('monitor-unreachable-${profile.id}'),
+                leading: KitRow.icon(context, AppIconography.cloudOff),
+                title: l10n.monitorUnreachableTitle(server),
+                titleMaxLines: 2,
+                supporting: TextSpan(text: l10n.monitorUnreachableDetail),
+                supportingMaxLines: 2,
+                below: KitActionBlock(
+                  tertiary: [
+                    KitAction(
+                      key: ValueKey('monitor-recheck-${profile.id}'),
+                      label: l10n.monitorUnreachableCheck(server),
+                      onPressed: () =>
+                          unawaited(controller.profileMonitor.refresh()),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ],
     );
   }
 }

@@ -1,0 +1,173 @@
+{
+  "source": "@getpaseo/protocol messages.js",
+  "schema": {
+    "command": [
+      {
+        "path": "agentId",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].name",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].description",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].argumentHint",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].kind",
+        "kind": "enum"
+      },
+      {
+        "path": "error",
+        "kind": "string"
+      }
+    ],
+    "skills_status": [
+      {
+        "path": "state",
+        "kind": "enum"
+      },
+      {
+        "path": "ops[]",
+        "kind": "any"
+      },
+      {
+        "path": "available[]",
+        "kind": "string"
+      },
+      {
+        "path": "installed[]",
+        "kind": "string"
+      },
+      {
+        "path": "selection",
+        "kind": "any"
+      }
+    ],
+    "config_apply": [
+      {
+        "path": "agentId",
+        "kind": "string"
+      },
+      {
+        "path": "accepted",
+        "kind": "boolean"
+      },
+      {
+        "path": "error",
+        "kind": "string"
+      },
+      {
+        "path": "notice",
+        "kind": "any"
+      }
+    ]
+  },
+  "excluded": {
+    "skills_status.state": "ignored: the app never asks the daemon for this message, so no page shows it",
+    "skills_status.ops[]": "ignored: the app never asks the daemon for this message, so no page shows it",
+    "skills_status.available[]": "ignored: the app never asks the daemon for this message, so no page shows it",
+    "skills_status.installed[]": "ignored: the app never asks the daemon for this message, so no page shows it",
+    "skills_status.selection": "ignored: the app never asks the daemon for this message, so no page shows it",
+    "config_apply.agentId": "ignored: the app never asks the daemon for this message, so no page shows it",
+    "config_apply.accepted": "ignored: the app never asks the daemon for this message, so no page shows it",
+    "config_apply.error": "ignored: the app never asks the daemon for this message, so no page shows it",
+    "config_apply.notice": "ignored: the app never asks the daemon for this message, so no page shows it"
+  },
+  "cases": [
+    {
+      "id": "paseo_commands",
+      "kind": "list_commands",
+      "payload": {
+        "agentId": "agent_1",
+        "commands": [
+          {
+            "name": "cmd0",
+            "description": "Command 0 does a thing",
+            "argumentHint": "<hint0>",
+            "kind": "command"
+          },
+          {
+            "name": "cmd1",
+            "description": "Command 1 does a thing",
+            "argumentHint": "<hint1>",
+            "kind": "skill"
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "command.agentId",
+          "path": "agentId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "command.commands[].name",
+          "path": "commands[].name",
+          "kind": "string",
+          "probes": [
+            "cmd0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "command.commands[].description",
+          "path": "commands[].description",
+          "kind": "string",
+          "probes": [
+            "Command 0 does a thing"
+          ],
+          "primary": false
+        },
+        {
+          "key": "command.commands[].argumentHint",
+          "path": "commands[].argumentHint",
+          "kind": "string",
+          "probes": [
+            "<hint0>"
+          ],
+          "primary": false
+        },
+        {
+          "key": "command.commands[].kind",
+          "path": "commands[].kind",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "paseo_commands_error",
+      "kind": "list_commands",
+      "payload": {
+        "agentId": "agent_1",
+        "commands": [],
+        "error": "The agent could not list its commands"
+      },
+      "fields": [
+        {
+          "key": "command.agentId",
+          "path": "agentId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "command.error",
+          "path": "error",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

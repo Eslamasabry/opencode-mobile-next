@@ -39,6 +39,7 @@ import 'settings/server_plugins_section.dart';
 import 'automation_settings_screen.dart' show AutomationSettingsSection;
 import 'keep_running_screen.dart' show KeepRunningSection;
 import 'host_management_screen.dart';
+import 'servers_screen.dart' show ServersRouteRequest;
 import 'server_capabilities_screen.dart';
 import 'this_phone_screen.dart' show openThisPhone;
 import '../widgets/team_discover.dart';

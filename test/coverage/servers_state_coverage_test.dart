@@ -326,9 +326,29 @@ void main() {
         ),
       );
       await frames(tester, 8);
+      final inbox = screenText(tester).where((t) => t.trim().isNotEmpty);
       seen.add(screenText(tester).join('\n'));
       await writeCasePng(tester, boundary, 'srvstate_${id}_inbox');
       final problems = checkCase(family, variant, seen.join('\n'));
+      // A list that says nothing at all is never the answer when the news is
+      // that a server cannot be reached, or that something waits.
+      if (unavailable) {
+        final text = flat(inbox.join(' '));
+        if (!text.contains("can't be reached") ||
+            !text.contains('its questions will show here') &&
+                !text.contains("Its questions will show here")) {
+          problems.add('an unreachable server left the list blank');
+        }
+        if (find
+            .byKey(const ValueKey('monitor-recheck-srv_oc2'))
+            .evaluate()
+            .isEmpty) {
+          problems.add('an unreachable server offers no way to check again');
+        }
+      } else if (inbox.isEmpty &&
+          ((record['requests'] as List).isNotEmpty || due)) {
+        problems.add('the list is blank though something waits');
+      }
       if (waiting && snapshot.isCurrent) {
         problems.add('expected a monitor that has not checked yet');
       }

@@ -1,0 +1,518 @@
+{
+  "source": "lib/domain/setup_registry.dart (registry.modelcontextprotocol.io /v0.1/servers)",
+  "schema": {
+    "server": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "version",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      }
+    ],
+    "meta": [
+      {
+        "path": "status",
+        "kind": "enum"
+      }
+    ],
+    "remote": [
+      {
+        "path": "type",
+        "kind": "enum"
+      },
+      {
+        "path": "url",
+        "kind": "string"
+      },
+      {
+        "path": "headers[].name",
+        "kind": "string"
+      },
+      {
+        "path": "headers[].isRequired",
+        "kind": "boolean"
+      },
+      {
+        "path": "headers[].isSecret",
+        "kind": "boolean"
+      },
+      {
+        "path": "headers[].value",
+        "kind": "string"
+      },
+      {
+        "path": "headers[].default",
+        "kind": "string"
+      },
+      {
+        "path": "headers[].description",
+        "kind": "string"
+      },
+      {
+        "path": "variables",
+        "kind": "any"
+      }
+    ],
+    "package": [
+      {
+        "path": "registryType",
+        "kind": "string"
+      },
+      {
+        "path": "identifier",
+        "kind": "string"
+      },
+      {
+        "path": "version",
+        "kind": "string"
+      },
+      {
+        "path": "transport.type",
+        "kind": "enum"
+      },
+      {
+        "path": "runtimeHint",
+        "kind": "string"
+      },
+      {
+        "path": "environmentVariables[].name",
+        "kind": "string"
+      },
+      {
+        "path": "environmentVariables[].isRequired",
+        "kind": "boolean"
+      },
+      {
+        "path": "environmentVariables[].isSecret",
+        "kind": "boolean"
+      },
+      {
+        "path": "environmentVariables[].value",
+        "kind": "string"
+      },
+      {
+        "path": "environmentVariables[].default",
+        "kind": "string"
+      },
+      {
+        "path": "environmentVariables[].description",
+        "kind": "string"
+      },
+      {
+        "path": "runtimeArguments[].isRequired",
+        "kind": "boolean"
+      },
+      {
+        "path": "runtimeArguments[].value",
+        "kind": "string"
+      },
+      {
+        "path": "packageArguments[].isRequired",
+        "kind": "boolean"
+      },
+      {
+        "path": "packageArguments[].value",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "registry_remote_with_header",
+      "kind": "registry",
+      "payload": {
+        "servers": [
+          {
+            "server": {
+              "name": "io.example/weather",
+              "version": "1.2.0",
+              "description": "Forecasts and alerts for any city",
+              "title": "Weather lookups",
+              "remotes": [
+                {
+                  "type": "streamable-http",
+                  "url": "https://mcp.weather.example/mcp",
+                  "headers": [
+                    {
+                      "name": "X-Api-Key",
+                      "isRequired": true,
+                      "isSecret": true,
+                      "value": "sk-test-0000000000000000",
+                      "default": "sk-default-000000000000",
+                      "description": "Your weather key"
+                    }
+                  ],
+                  "variables": {
+                    "region": {
+                      "description": "Region",
+                      "default": "eu"
+                    }
+                  }
+                }
+              ]
+            },
+            "_meta": {
+              "io.modelcontextprotocol.registry/official": {
+                "status": "active"
+              }
+            }
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "server.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "server.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "server.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Weather lookups"
+          ],
+          "primary": false
+        },
+        {
+          "key": "server.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Forecasts and alerts for any city"
+          ],
+          "primary": false
+        },
+        {
+          "key": "meta.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "remote.type",
+          "path": "type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "remote.url",
+          "path": "url",
+          "kind": "string",
+          "probes": [
+            "mcp.weather.example"
+          ],
+          "primary": false
+        },
+        {
+          "key": "remote.headers[].name",
+          "path": "headers[].name",
+          "kind": "string",
+          "probes": [
+            "X-Api-Key"
+          ],
+          "primary": false
+        },
+        {
+          "key": "remote.headers[].isRequired",
+          "path": "headers[].isRequired",
+          "kind": "boolean",
+          "probes": [
+            "The registry listing needs this one"
+          ],
+          "primary": false
+        },
+        {
+          "key": "remote.headers[].isSecret",
+          "path": "headers[].isSecret",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "remote.headers[].value",
+          "path": "headers[].value",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "remote.headers[].default",
+          "path": "headers[].default",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "remote.headers[].description",
+          "path": "headers[].description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "remote.variables",
+          "path": "variables",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "registry_package_and_old",
+      "kind": "registry",
+      "payload": {
+        "servers": [
+          {
+            "server": {
+              "name": "io.example/files",
+              "version": "0.4.1",
+              "description": "Read files in a folder",
+              "packages": [
+                {
+                  "registryType": "npm",
+                  "identifier": "@example/files-mcp",
+                  "version": "0.4.1",
+                  "transport": {
+                    "type": "stdio"
+                  },
+                  "runtimeHint": "npx",
+                  "environmentVariables": [
+                    {
+                      "name": "FILES_ROOT",
+                      "isRequired": true,
+                      "isSecret": false,
+                      "value": "/srv/files",
+                      "default": "/srv/default",
+                      "description": "Root folder"
+                    }
+                  ],
+                  "runtimeArguments": [
+                    {
+                      "isRequired": true,
+                      "value": "--root"
+                    }
+                  ],
+                  "packageArguments": [
+                    {
+                      "isRequired": false,
+                      "value": "--quiet"
+                    }
+                  ]
+                }
+              ]
+            },
+            "_meta": {
+              "io.modelcontextprotocol.registry/official": {
+                "status": "active"
+              }
+            }
+          },
+          {
+            "server": {
+              "name": "io.example/old",
+              "version": "0.1.0",
+              "description": "Retired listing",
+              "remotes": [
+                {
+                  "type": "sse",
+                  "url": "https://mcp.old.example/sse"
+                }
+              ]
+            },
+            "_meta": {
+              "io.modelcontextprotocol.registry/official": {
+                "status": "deprecated"
+              }
+            }
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "server.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "files"
+          ],
+          "primary": false
+        },
+        {
+          "key": "server.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "server.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Read files in a folder"
+          ],
+          "primary": false
+        },
+        {
+          "key": "meta.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "package.registryType",
+          "path": "registryType",
+          "kind": "string",
+          "probes": [
+            "Needs Node on the server"
+          ],
+          "primary": false
+        },
+        {
+          "key": "package.identifier",
+          "path": "identifier",
+          "kind": "string",
+          "probes": [
+            "@example/files-mcp"
+          ],
+          "primary": false
+        },
+        {
+          "key": "package.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "0.4.1"
+          ],
+          "primary": false
+        },
+        {
+          "key": "package.transport.type",
+          "path": "transport.type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "package.runtimeHint",
+          "path": "runtimeHint",
+          "kind": "string",
+          "probes": [
+            "npx"
+          ],
+          "primary": false
+        },
+        {
+          "key": "package.environmentVariables[].name",
+          "path": "environmentVariables[].name",
+          "kind": "string",
+          "probes": [
+            "FILES_ROOT"
+          ],
+          "primary": false
+        },
+        {
+          "key": "package.environmentVariables[].isRequired",
+          "path": "environmentVariables[].isRequired",
+          "kind": "boolean",
+          "probes": [
+            "The registry listing needs this one"
+          ],
+          "primary": false
+        },
+        {
+          "key": "package.environmentVariables[].isSecret",
+          "path": "environmentVariables[].isSecret",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "package.environmentVariables[].value",
+          "path": "environmentVariables[].value",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "package.environmentVariables[].default",
+          "path": "environmentVariables[].default",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "package.environmentVariables[].description",
+          "path": "environmentVariables[].description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "package.runtimeArguments[].isRequired",
+          "path": "runtimeArguments[].isRequired",
+          "kind": "boolean",
+          "probes": [
+            "Needs extra settings"
+          ],
+          "primary": false
+        },
+        {
+          "key": "package.runtimeArguments[].value",
+          "path": "runtimeArguments[].value",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "package.packageArguments[].isRequired",
+          "path": "packageArguments[].isRequired",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "package.packageArguments[].value",
+          "path": "packageArguments[].value",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "meta.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "Retired listing"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

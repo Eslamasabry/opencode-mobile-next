@@ -1103,7 +1103,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get webSourcesDisclosure =>
-      'لا يتاح البحث في الويب عبر بوابة التطبيق لهذا الخادم. الصق رابطًا عامًا، ويمكنك إضافة مقتطف تريد تضمينه. لن تُجلب أي صفحة، ولن يُرسل شيء إلى النموذج هنا.';
+      'لا يستطيع هذا الخادم البحث في الويب. الصق رابطًا عامًا، ومقتطفًا إن شئت. لن تُفتح الصفحة، ولن يُرسل شيء قبل أن ترسل رسالتك.';
 
   @override
   String get webSourcesScopeChanged =>
@@ -28631,6 +28631,42 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String serverSettingsEditTitle(String server) {
+    return 'تعديل $server';
+  }
+
+  @override
+  String get serverSettingsEditDetail => 'غيّر اسمه أو عنوانه أو تسجيل الدخول';
+
+  @override
+  String serverSettingsRemoveTitle(String server) {
+    return 'إزالة $server';
+  }
+
+  @override
+  String get serverSettingsRemoveDetail =>
+      'انسَه على هذا الهاتف. تبقى محادثاته على الخادم.';
+
+  @override
+  String get serverSettingsRecheckAgents => 'التحقق من الوكلاء مجددا';
+
+  @override
+  String get serverSettingsRecheckAgentsDetail =>
+      'استخدمه بعد تسجيل الدخول إلى وكيل على ذلك الحاسوب.';
+
+  @override
+  String get serverSettingsRecheckChecking => 'جارٍ التحقق من الوكلاء…';
+
+  @override
+  String get serverSettingsRecheckFailed =>
+      'تعذر التحقق من الوكلاء. حاول بعد قليل.';
+
+  @override
+  String integrationsMcpDetails(String name) {
+    return 'تفاصيل $name';
+  }
+
+  @override
   String get usageBusiestDays => 'أكثر الأيام نشاطًا';
 
   @override
@@ -28680,4 +28716,17 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get sessionDeleteBody =>
       'تُزال المحادثة وسجلها نهائيًا. لا يمكن التراجع عن ذلك.';
+
+  @override
+  String monitorUnreachableTitle(String server) {
+    return 'تعذر الوصول إلى $server';
+  }
+
+  @override
+  String get monitorUnreachableDetail => 'ستظهر أسئلته هنا عند عودته.';
+
+  @override
+  String monitorUnreachableCheck(String server) {
+    return 'تحقق من $server مجددا';
+  }
 }

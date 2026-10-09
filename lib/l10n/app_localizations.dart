@@ -1977,7 +1977,7 @@ abstract class AppLocalizations {
   /// No description provided for @webSourcesDisclosure.
   ///
   /// In en, this message translates to:
-  /// **'Web search is not available through this server’s app gateway. Paste a public URL and optionally an excerpt you want to include. No page is fetched. Nothing is sent to the model here.'**
+  /// **'This server can\'t search the web. Paste a public link, and an excerpt if you like. The page is not opened, and nothing is sent until you send your message.'**
   String get webSourcesDisclosure;
 
   /// No description provided for @webSourcesScopeChanged.
@@ -45053,6 +45053,60 @@ abstract class AppLocalizations {
   /// **'{server} rejected the connection token. Update it to reconnect.'**
   String connectionTokenRejectedFor(String server);
 
+  /// Server settings: edit the saved server
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {server}'**
+  String serverSettingsEditTitle(String server);
+
+  /// Server settings: edit row detail
+  ///
+  /// In en, this message translates to:
+  /// **'Change its name, address or sign-in'**
+  String get serverSettingsEditDetail;
+
+  /// Server settings: remove the saved server
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {server}'**
+  String serverSettingsRemoveTitle(String server);
+
+  /// Server settings: remove row detail
+  ///
+  /// In en, this message translates to:
+  /// **'Forget it on this phone. Its conversations stay on the server.'**
+  String get serverSettingsRemoveDetail;
+
+  /// Server settings, Paseo: ask the daemon which agents are ready
+  ///
+  /// In en, this message translates to:
+  /// **'Check for agents again'**
+  String get serverSettingsRecheckAgents;
+
+  /// Server settings: recheck detail
+  ///
+  /// In en, this message translates to:
+  /// **'Use it after signing in to an agent on that computer.'**
+  String get serverSettingsRecheckAgentsDetail;
+
+  /// Server settings: recheck in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for agents…'**
+  String get serverSettingsRecheckChecking;
+
+  /// Server settings: recheck failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check for agents. Try again in a moment.'**
+  String get serverSettingsRecheckFailed;
+
+  /// MCP server row: opens what the server said when it failed
+  ///
+  /// In en, this message translates to:
+  /// **'Details for {name}'**
+  String integrationsMcpDetails(String name);
+
   /// No description provided for @usageBusiestDays.
   ///
   /// In en, this message translates to:
@@ -45118,6 +45172,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The conversation and its history are removed for good. This cannot be undone.'**
   String get sessionDeleteBody;
+
+  /// Inbox: a server the monitor could not check
+  ///
+  /// In en, this message translates to:
+  /// **'{server} can\'t be reached'**
+  String monitorUnreachableTitle(String server);
+
+  /// Inbox: what happens when the unreachable server returns
+  ///
+  /// In en, this message translates to:
+  /// **'Its questions will show here once it\'s back.'**
+  String get monitorUnreachableDetail;
+
+  /// Inbox: check the unreachable server again
+  ///
+  /// In en, this message translates to:
+  /// **'Check {server} again'**
+  String monitorUnreachableCheck(String server);
 }
 
 class _AppLocalizationsDelegate

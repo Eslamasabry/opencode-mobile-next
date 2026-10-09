@@ -1,0 +1,13 @@
+{
+  "location.directory": "ignored: which folder the list is for; the person is already in that project",
+  "location.project.directory": "ignored: which folder the list is for; the person is already in that project",
+  "location.project.id": "ignored: which folder the list is for; the person is already in that project",
+  "location.workspaceID": "ignored: which folder the list is for; the person is already in that project",
+  "provider.id": "ignored: an internal id the app uses to match records; nothing a person reads",
+  "provider.name": "shown",
+  "response.providerID": "ignored: an internal id the app uses to match records; nothing a person reads",
+  "result.content": "shown",
+  "result.time.published": "ignored: when the page was published; the title and excerpt say what it is",
+  "result.title": "shown",
+  "result.url": "shown"
+}

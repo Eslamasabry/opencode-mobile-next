@@ -81,6 +81,9 @@ const _app = [
   'app server-settings.check-again',
   'app server-settings.change-sign-in',
   'app server-settings.host-management',
+  'app server-settings.edit',
+  'app server-settings.remove',
+  'app server-settings.recheck-agents',
   'app server-settings.disconnect',
   'app host.copy-command',
   'app capabilities.add-server',
@@ -128,6 +131,23 @@ class _Settings extends ConnectionController {
     bool keepActive = false,
     bool silent = false,
   }) async => disconnects++;
+}
+
+class _AgentApi extends _HealthApi implements HostAgentProviderGateway {
+  int rechecks = 0;
+  bool fail = false;
+
+  @override
+  Future<HostAgentProviderCatalog> loadHostAgentProviders({
+    bool refresh = false,
+  }) async {
+    if (refresh) rechecks++;
+    if (fail) throw StateError('daemon unreachable');
+    return HostAgentProviderCatalog(providers: const []);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 final _profile = ServerProfile(
@@ -510,6 +530,69 @@ void main() {
     await tester.tap(entry);
     await frames(tester, 10);
     expect(find.byKey(const ValueKey('host-service-intro')), findsOneWidget);
+  });
+
+  path('app server-settings.edit', (tester) async {
+    final (_, _, pushed) = await settings(tester);
+    await tester.tap(find.byKey(const Key('server-edit')));
+    await frames(tester, 10);
+    expect(pushed, ['/servers:edit-active']);
+  });
+
+  path('app server-settings.remove', (tester) async {
+    final (_, _, pushed) = await settings(tester);
+    final row = find.byKey(const ValueKey('server-remove'));
+    await tester.ensureVisible(row);
+    expect(find.text('Remove Lab OpenCode'), findsOneWidget);
+    await tester.tap(row);
+    await frames(tester, 10);
+    expect(pushed.single, contains('ServersRouteRequest'));
+  });
+
+  path('app server-settings.recheck-agents', (tester) async {
+    final (store, base) = await serversState(
+      profiles: [
+        ServerProfile(
+          id: 'srv',
+          name: 'Build box',
+          baseUrl: 'ws://build.example.net:6767',
+          backend: ServerBackend.paseo,
+          codexDirectory: '/work/shop',
+        ),
+      ],
+    );
+    base.dispose();
+    final api = _AgentApi();
+    final controller = ServersConnection(store)
+      ..api = api
+      ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      captureApp(
+        boundaryKey: GlobalKey(),
+        controller: controller,
+        store: store,
+        routes: _routes([]),
+        home: ServerSettingsScreen(controller: controller),
+      ),
+    );
+    await frames(tester, 10);
+    final row = find.byKey(const Key('server-recheck-agents'));
+    expect(row, findsOneWidget);
+    await tester.tap(row);
+    await frames(tester, 10);
+    expect(api.rechecks, 1);
+    expect(
+      find.text('No agent is ready on that computer yet.'),
+      findsOneWidget,
+    );
+    api.fail = true;
+    await tester.tap(row);
+    await frames(tester, 10);
+    expect(
+      find.text('Could not check for agents. Try again in a moment.'),
+      findsOneWidget,
+    );
   });
 
   path('app server-settings.disconnect', (tester) async {

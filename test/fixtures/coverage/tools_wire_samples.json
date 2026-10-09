@@ -1,0 +1,928 @@
+{
+  "source": "contracts/opencode-openapi-f12e14cf.json",
+  "schema": {
+    "location": [
+      {
+        "path": "directory",
+        "kind": "string"
+      },
+      {
+        "path": "workspaceID",
+        "kind": "string"
+      },
+      {
+        "path": "project.id",
+        "kind": "string"
+      },
+      {
+        "path": "project.directory",
+        "kind": "string"
+      }
+    ],
+    "command": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "template",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "agent",
+        "kind": "string"
+      },
+      {
+        "path": "model.id",
+        "kind": "string"
+      },
+      {
+        "path": "model.providerID",
+        "kind": "string"
+      },
+      {
+        "path": "model.variant",
+        "kind": "string"
+      },
+      {
+        "path": "subtask",
+        "kind": "boolean"
+      }
+    ],
+    "skill": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "slash",
+        "kind": "boolean"
+      },
+      {
+        "path": "location",
+        "kind": "string"
+      },
+      {
+        "path": "content",
+        "kind": "string"
+      }
+    ],
+    "reference": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "path",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "hidden",
+        "kind": "boolean"
+      },
+      {
+        "path": "source.path",
+        "kind": "string"
+      },
+      {
+        "path": "source.description",
+        "kind": "string"
+      },
+      {
+        "path": "source.hidden",
+        "kind": "boolean"
+      },
+      {
+        "path": "source.repository",
+        "kind": "string"
+      },
+      {
+        "path": "source.branch",
+        "kind": "string"
+      },
+      {
+        "path": "source.type",
+        "kind": "enum"
+      }
+    ],
+    "tool": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "parameters",
+        "kind": "any"
+      }
+    ],
+    "tool_id": [
+      {
+        "path": "[]",
+        "kind": "string"
+      }
+    ],
+    "experimental": [
+      {
+        "path": "backgroundSubagents",
+        "kind": "boolean"
+      }
+    ],
+    "mcp_status": [
+      {
+        "path": "error",
+        "kind": "string"
+      },
+      {
+        "path": "status",
+        "kind": "enum"
+      }
+    ],
+    "mcp_resource": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "uri",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "mimeType",
+        "kind": "string"
+      },
+      {
+        "path": "client",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "command_full_and_minimal",
+      "kind": "/api/command",
+      "endpoint": "/api/command",
+      "payload": {
+        "data": [
+          {
+            "name": "review-pr",
+            "template": "Review $ARGUMENTS carefully",
+            "description": "Review a pull request",
+            "agent": "plan",
+            "model": {
+              "id": "opus",
+              "providerID": "anthropic",
+              "variant": "high"
+            },
+            "subtask": true
+          },
+          {
+            "name": "ship-it",
+            "template": "Run the release checklist"
+          }
+        ],
+        "location": {
+          "directory": "/work/shop",
+          "workspaceID": "wrk_main",
+          "project": {
+            "id": "prj_shop",
+            "directory": "/work/shop"
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "location.directory",
+          "path": "directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.workspaceID",
+          "path": "workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.project.id",
+          "path": "project.id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.project.directory",
+          "path": "project.directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "command.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "review-pr"
+          ],
+          "primary": false
+        },
+        {
+          "key": "command.template",
+          "path": "template",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "command.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Review a pull request"
+          ],
+          "primary": false
+        },
+        {
+          "key": "command.agent",
+          "path": "agent",
+          "kind": "string",
+          "probes": [
+            "plan"
+          ],
+          "primary": false
+        },
+        {
+          "key": "command.model.id",
+          "path": "model.id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "command.model.providerID",
+          "path": "model.providerID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "command.model.variant",
+          "path": "model.variant",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "command.subtask",
+          "path": "subtask",
+          "kind": "boolean",
+          "probes": [
+            "Runs as a helper"
+          ],
+          "primary": false
+        },
+        {
+          "key": "command.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "ship-it"
+          ],
+          "primary": false
+        },
+        {
+          "key": "command.template",
+          "path": "template",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "skill_slash_and_plain",
+      "kind": "/api/skill",
+      "endpoint": "/api/skill",
+      "payload": {
+        "data": [
+          {
+            "name": "frontend-design",
+            "description": "Make a clear visual hierarchy",
+            "slash": true,
+            "location": "/home/dev/.claude/skills/frontend-design/SKILL.md",
+            "content": "# Frontend design\nUse a clear hierarchy."
+          },
+          {
+            "name": "plain-notes",
+            "description": "Keep short notes",
+            "slash": false,
+            "location": "/work/shop/.opencode/skills/plain-notes/SKILL.md",
+            "content": "Keep notes short."
+          }
+        ],
+        "location": {
+          "directory": "/work/shop",
+          "workspaceID": "wrk_main",
+          "project": {
+            "id": "prj_shop",
+            "directory": "/work/shop"
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "location.directory",
+          "path": "directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.workspaceID",
+          "path": "workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.project.id",
+          "path": "project.id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.project.directory",
+          "path": "project.directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "skill.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "frontend-design"
+          ],
+          "primary": false
+        },
+        {
+          "key": "skill.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Make a clear visual hierarchy"
+          ],
+          "primary": false
+        },
+        {
+          "key": "skill.slash",
+          "path": "slash",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "skill.location",
+          "path": "location",
+          "kind": "string",
+          "probes": [
+            "SKILL.md"
+          ],
+          "primary": false
+        },
+        {
+          "key": "skill.content",
+          "path": "content",
+          "kind": "string",
+          "probes": [
+            "Use a clear hierarchy"
+          ],
+          "primary": false
+        },
+        {
+          "key": "skill.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "plain-notes"
+          ],
+          "primary": false
+        },
+        {
+          "key": "skill.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Keep short notes"
+          ],
+          "primary": false
+        },
+        {
+          "key": "skill.slash",
+          "path": "slash",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "skill.location",
+          "path": "location",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "skill.content",
+          "path": "content",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "reference_visible_and_hidden",
+      "kind": "/api/reference",
+      "endpoint": "/api/reference",
+      "payload": {
+        "data": [
+          {
+            "name": "shop-docs",
+            "path": "/work/shop/docs",
+            "description": "The shop design docs",
+            "hidden": false,
+            "source": {
+              "type": "git",
+              "repository": "https://github.com/example/shop-docs",
+              "branch": "main",
+              "description": "docs checkout",
+              "hidden": false
+            }
+          },
+          {
+            "name": "style-guide",
+            "path": "/work/shop/style",
+            "description": "The style guide",
+            "source": {
+              "type": "local",
+              "path": "/work/shop/style",
+              "description": "local folder",
+              "hidden": false
+            }
+          },
+          {
+            "name": "secret-notes",
+            "path": "/work/shop/notes",
+            "hidden": true,
+            "source": {
+              "type": "local",
+              "path": "/work/shop/notes"
+            }
+          }
+        ],
+        "location": {
+          "directory": "/work/shop",
+          "workspaceID": "wrk_main",
+          "project": {
+            "id": "prj_shop",
+            "directory": "/work/shop"
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "location.directory",
+          "path": "directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.workspaceID",
+          "path": "workspaceID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.project.id",
+          "path": "project.id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "location.project.directory",
+          "path": "project.directory",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "shop-docs"
+          ],
+          "primary": false
+        },
+        {
+          "key": "reference.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [
+            "/work/shop/docs"
+          ],
+          "primary": false
+        },
+        {
+          "key": "reference.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "The shop design docs"
+          ],
+          "primary": false
+        },
+        {
+          "key": "reference.hidden",
+          "path": "hidden",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.source.type",
+          "path": "source.type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.source.repository",
+          "path": "source.repository",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.source.branch",
+          "path": "source.branch",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.source.description",
+          "path": "source.description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.source.hidden",
+          "path": "source.hidden",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "style-guide"
+          ],
+          "primary": false
+        },
+        {
+          "key": "reference.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [
+            "/work/shop/style"
+          ],
+          "primary": false
+        },
+        {
+          "key": "reference.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "The style guide"
+          ],
+          "primary": false
+        },
+        {
+          "key": "reference.source.type",
+          "path": "source.type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.source.path",
+          "path": "source.path",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.source.description",
+          "path": "source.description",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.source.hidden",
+          "path": "source.hidden",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.hidden",
+          "path": "hidden",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.source.type",
+          "path": "source.type",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "reference.source.path",
+          "path": "source.path",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "tool_inventory",
+      "kind": "/experimental/tool",
+      "endpoint": "/experimental/tool",
+      "payload": {
+        "tools": [
+          {
+            "id": "bash_run",
+            "description": "Run a shell command in the project",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "ids": [
+          "bash_run",
+          "read_file"
+        ],
+        "capabilities": {
+          "backgroundSubagents": true
+        }
+      },
+      "fields": [
+        {
+          "key": "tool.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [
+            "bash_run"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Run a shell command in the project"
+          ],
+          "primary": false
+        },
+        {
+          "key": "tool.parameters",
+          "path": "parameters",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "tool_id.[]",
+          "path": "[]",
+          "kind": "string",
+          "probes": [
+            "read_file"
+          ],
+          "primary": false
+        },
+        {
+          "key": "experimental.backgroundSubagents",
+          "path": "backgroundSubagents",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "mcp_every_status",
+      "kind": "/mcp",
+      "endpoint": "/mcp",
+      "payload": {
+        "github": {
+          "status": "connected"
+        },
+        "sentry": {
+          "status": "needs_auth"
+        },
+        "linear": {
+          "status": "failed",
+          "error": "connection refused by linear.example"
+        },
+        "notion": {
+          "status": "disabled"
+        },
+        "figma": {
+          "status": "needs_client_registration",
+          "error": "client registration is required"
+        }
+      },
+      "fields": [
+        {
+          "key": "mcp_status.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "github"
+          ],
+          "primary": false
+        },
+        {
+          "key": "mcp_status.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "sentry"
+          ],
+          "primary": false
+        },
+        {
+          "key": "mcp_status.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "linear"
+          ],
+          "primary": false
+        },
+        {
+          "key": "mcp_status.error",
+          "path": "error",
+          "kind": "string",
+          "probes": [
+            "connection refused by linear.example"
+          ],
+          "primary": false
+        },
+        {
+          "key": "mcp_status.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "notion"
+          ],
+          "primary": false
+        },
+        {
+          "key": "mcp_status.status",
+          "path": "status",
+          "kind": "enum",
+          "probes": [
+            "figma"
+          ],
+          "primary": false
+        },
+        {
+          "key": "mcp_status.error",
+          "path": "error",
+          "kind": "string",
+          "probes": [
+            "client registration is required"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "mcp_resource_one",
+      "kind": "/experimental/resource",
+      "endpoint": "/experimental/resource",
+      "payload": {
+        "github:readme": {
+          "name": "readme",
+          "uri": "file:///work/shop/README.md",
+          "description": "The project readme",
+          "mimeType": "text/markdown",
+          "client": "github"
+        }
+      },
+      "fields": [
+        {
+          "key": "mcp_resource.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "readme"
+          ],
+          "primary": false
+        },
+        {
+          "key": "mcp_resource.uri",
+          "path": "uri",
+          "kind": "string",
+          "probes": [
+            "README.md"
+          ],
+          "primary": false
+        },
+        {
+          "key": "mcp_resource.description",
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "The project readme"
+          ],
+          "primary": false
+        },
+        {
+          "key": "mcp_resource.mimeType",
+          "path": "mimeType",
+          "kind": "string",
+          "probes": [
+            "text/markdown"
+          ],
+          "primary": false
+        },
+        {
+          "key": "mcp_resource.client",
+          "path": "client",
+          "kind": "string",
+          "probes": [
+            "github"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}
