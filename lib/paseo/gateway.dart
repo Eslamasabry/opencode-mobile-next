@@ -533,7 +533,11 @@ class PaseoGateway
       _draftProviders[draft.id] = model.providerID;
     }
     final session = draft.copyWith(
-      selection: SessionSelection(model: model, agent: defaults.agent),
+      selection: SessionSelection(
+        model: model,
+        agent: defaults.agent,
+        variant: defaults.variant,
+      ),
     );
     _sessions[session.id] = session;
     return session;
@@ -547,33 +551,7 @@ class PaseoGateway
     ModelRef model,
     String variant,
   ) async {
-    if (_drafts.contains(sessionID)) {
-      _draftModels[sessionID] = model;
-      final draft = _sessions[sessionID];
-      if (draft != null) {
-        _sessions[sessionID] = draft.copyWith(
-          selection: SessionSelection(
-            model: model,
-            agent: draft.selection?.agent,
-          ),
-        );
-      }
-      return;
-    }
-    if (!_agents.containsKey(sessionID)) await _fetchAgent(sessionID);
-    final agent = _agents[sessionID];
-    if (agent == null || model.providerID != agent['provider']) {
-      throw PaseoFailure(PaseoFailureKind.unavailable);
-    }
-    final reservation = await _beforeBrowserLaunch(sessionID);
-    await transport.request(
-      'set_agent_model_request',
-      {'agentId': _real(sessionID), 'modelId': model.modelID},
-      mutation: true,
-      beforeSend: () => _checkBrowserLaunch(sessionID, reservation),
-    );
-    agent['model'] = model.modelID;
-    _remember(agent);
+    await _setSessionModel(sessionID, model, variant);
   }
 
   /// Changes how a running agent works (its mode: `set_agent_mode_request`).
@@ -866,7 +844,7 @@ class PaseoGateway
           messageID: messageID,
           model: model ?? _draftModels[sessionID],
           mode: agent,
-          variant: variant,
+          variant: variant ?? _sessions[sessionID]?.selection?.variant,
           images: images,
           beforeSend: beforeSend,
         );
@@ -890,7 +868,12 @@ class PaseoGateway
         _checkLocation(scope, epoch);
         final reservation = await _beforeBrowserLaunch(sessionID);
         _checkLocation(scope, epoch);
-        await _applySelection(sessionID, model: model, mode: agent);
+        await _applySelection(
+          sessionID,
+          model: model,
+          mode: agent,
+          variant: variant,
+        );
         final realID = _real(sessionID);
         await transport.request(
           'send_agent_message_request',
@@ -1254,6 +1237,7 @@ class PaseoGateway
         modelData[modelID] = {
           'id': modelID,
           'name': label is String && label.isNotEmpty ? label : modelID,
+          ..._thinkingModelData(raw),
         };
         if (raw['isDefault'] == true) {
           providerDefault ??= modelID;

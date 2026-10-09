@@ -110,6 +110,9 @@ Session paseoSession(Map<String, dynamic> agent) {
     // The agent's model and mode are its own state (the daemon applies a
     // change to the running agent): the conversation shows and keeps them.
     selection: SessionSelection(
+      variant: agent['thinkingOptionId'] is String
+          ? agent['thinkingOptionId'] as String
+          : '',
       model: model is String && model.isNotEmpty
           ? ModelRef(providerID: provider, modelID: model)
           : null,

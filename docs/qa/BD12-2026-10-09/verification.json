@@ -1,0 +1,43 @@
+{
+  "base": "17decdca4389198c007b768121aea2a8de3c722c",
+  "branch": "sol/bd-claude-picker",
+  "flutter": "3.47.1 (pinned Shorebird cache)",
+  "test_command_prefix": "OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter test --concurrency 1",
+  "runs": [
+    {
+      "files": [
+        "test/paseo_model_catalog_test.dart",
+        "test/model_picker_test.dart",
+        "test/paseo_gateway_test.dart",
+        "test/paseo_browser_launch_test.dart",
+        "test/paseo_correlated_prompt_test.dart",
+        "test/session_selection_sync_test.dart",
+        "test/kit_ratchet_test.dart"
+      ],
+      "passed": 148,
+      "exit_code": 0,
+      "log": "green.txt"
+    }
+  ],
+  "distinct_tests_passed": 148,
+  "failing_first": [
+    "red.txt",
+    "unresolved-red.txt",
+    "location-red.txt",
+    "default-red.txt"
+  ],
+  "analyzer": {
+    "command": "OC_TEST_SLOTS=1 tool/qa/machine_lock.sh analyze -- <pinned-flutter> analyze",
+    "exit_code": 0,
+    "result": "No issues found",
+    "log": "analyze.txt"
+  },
+  "not_run": [
+    "full suite",
+    "Gradle",
+    "APK build",
+    "emulator",
+    "real Claude provider"
+  ],
+  "pushed": false
+}

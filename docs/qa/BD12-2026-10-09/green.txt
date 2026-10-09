@@ -1,0 +1,159 @@
+machine_lock: got test slot 1 after 30s
+00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart
+00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: Paseo thinking options survive provider catalog mapping
+00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: Paseo snapshot restores the current thinking choice
+00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: existing session applies thinking after model and restores it
+00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: default thinking resets an existing choice with null
+00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: a provider-bound draft rejects another provider model
+00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: draft thinking survives model selection
+00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: controller catalog isolates each provider without changing the full catalog
+00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: a saved draft thinking level reaches the create request
+00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: follow-up thinking reaches the runtime before the message
+00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: thinking rejection does not send the follow-up prompt
+00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_model_catalog_test.dart: a location change after model update prevents thinking on the new scope
+00:00 +11: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart
+00:02 +11: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: (setUpAll)
+00:02 +11: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: model presentation leads with current model and provider family
+00:02 +12: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: single-provider session hides foreign models and agents
+00:04 +13: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: a provider-bound unresolved session does not inherit the global provider
+00:04 +14: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: Paseo thinking labels are shown and choices are saved
+00:04 +15: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: model selector searches and persists a new selection
+00:04 +16: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: "Use for this conversation" leaves every other session alone
+00:05 +17: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: a signed-in provider the server has not loaded is called out
+00:05 +18: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: unloaded-provider notice reads naturally for one or many providers
+00:05 +19: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: current model and provider family lead the unfiltered catalog
+00:05 +20: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: explicit fast thinking mode is selected and persisted
+00:05 +21: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: the thinking menu keeps edits bound to the displayed model
+00:05 +22: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: direct agent intent survives loading and opens only once
+00:06 +23: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: direct agent entry opens agent choice without saving
+00:06 +24: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: agent and mode are staged until apply: false
+00:06 +25: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: agent and mode are staged until apply: true
+00:06 +26: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: session apply changes agent only in its target session
+00:06 +27: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: dismissing after Apply still completes the authorized agent choice
+00:07 +28: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: partial apply names saved model and allows agent retry
+00:07 +29: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: primary agent picker excludes subagents
+00:07 +30: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: session picker labels and restores its own current model and mode
+00:07 +31: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: favorites have a dedicated list and stage a session choice
+00:07 +32: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: an empty search offers a working clear-search action
+00:08 +33: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: Z.AI aliases share a filter but retain exact backend routes
+00:08 +34: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: search and apply are usable at 320.0dp with 2.0x text
+00:08 +35: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: search and apply are usable at 360.0dp with 2.5x text
+00:08 +36: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: opening the keyboard preserves search focus and continued input
+00:08 +37: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: keyboard leaves the apply action above its inset
+00:08 +38: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: apply bar stays pinned while browsing models
+00:09 +39: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: a failed save keeps the picker open and allows retry
+00:09 +40: /home/eslam/Storage/Code/oc_app-sol-bd/test/model_picker_test.dart: (tearDownAll)
+00:09 +40: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart
+00:09 +40: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: endpoint policy cleartext is limited to this device and Tailscale
+00:09 +41: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: endpoint policy profile validators agree and an empty password is allowed
+00:09 +42: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: endpoint policy a paseo profile round-trips without its password
+00:09 +43: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: a rejected password is an authentication failure
+00:09 +44: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: hello claims only what the client implements
+00:09 +45: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: the agent's own commands are listed without its plumbing
+00:09 +46: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: an update keeps the conversation's model and mode
+00:09 +47: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: sessions are this folder's unarchived agents
+00:09 +48: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: ready runtimes become providers; modes become agents
+00:09 +49: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: a daemon still listing its models is waited for, not believed
+00:09 +50: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: a new conversation stays local until its first prompt names the runtime
+00:09 +51: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: a new conversation keeps its app id while the daemon uses its own
+00:09 +52: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: a new conversation replays events that raced ahead of the create answer
+00:09 +53: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: a new conversation a spawn-time idle snapshot does not end the run
+00:09 +54: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: streaming a finished turn finishes its replies
+00:09 +55: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: streaming assistant text is announced once, then streamed as deltas
+00:09 +56: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: streaming a replayed sequence number is ignored
+00:09 +57: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: streaming reasoning deltas share one message until another item
+00:09 +58: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: streaming a tool call is one message updated by snapshots
+00:09 +59: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: streaming a failed turn surfaces safe fixed copy
+00:09 +60: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: streaming events for another folder's agent are dropped
+00:09 +61: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: permissions a write request becomes an edit card with its file
+00:09 +62: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: permissions once allows; always also applies the provider's rule
+00:09 +63: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: permissions reject denies with the reason; cancel also interrupts
+00:09 +64: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: permissions an answered request does not return from a stale snapshot
+00:09 +65: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: permissions a request answered elsewhere is retired by the next snapshot
+00:09 +66: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: history maps the merged timeline and primes the live stream
+00:09 +67: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: delete archives, and an archive elsewhere removes the session
+00:10 +68: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: a refused request is a fixed failure, never the daemon's text
+00:10 +69: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: a dropped socket reconnects and re-reads the agent list
+00:11 +70: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: sub-agents a sub-agent is its conversation's child, and its card opens it
+00:11 +71: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: sub-agents its steps stream into its own conversation
+00:11 +72: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: sub-agents its history is read from the helper; it takes no replies
+00:11 +73: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: sub-agents an old conversation's cards link to the sub-agents the helper still knows
+00:11 +74: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: probe bad input never opens a socket
+00:11 +75: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: probe a verified daemon names its ready runtimes
+00:11 +76: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_gateway_test.dart: permission mapping covers shell and unknown tools
+00:11 +77: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart
+00:12 +77: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: ordinary first prompt retains the original create path
+00:12 +78: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: browser first prompt creates cold, maps, reserves then sends once
+00:12 +79: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: failed browser reserve sends nothing until explicitly turned off
+00:12 +80: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: reserve precedes direct modes models and scoped command discovery
+00:12 +81: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: abort and delete revoke before daemon mutation
+00:12 +82: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: resume retires old generation, maps new ID and reserves before send
+00:12 +83: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: explicit new chat replacement revokes old authority
+00:12 +84: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: late reservation after session deletion is revoked and never sends
+00:12 +85: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: profile revoke fences in-flight reservation without blocking cleanup
+00:12 +86: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: close retires authority before closing the transport
+00:12 +87: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: cleanup quarantine preserves intent and refuses an ordinary fallback
+00:12 +88: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: cancel or delete while cold creation is pending never resurrects a turn
+00:12 +89: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: enabling browser while provider discovery waits prevents ordinary create
+00:12 +90: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: shared request suppresses draft commands before local inventory loads
+00:12 +91: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_browser_launch_test.dart: trusted folder rebinding uses new source and retains old source intent
+00:12 +92: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_correlated_prompt_test.dart
+00:12 +92: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_correlated_prompt_test.dart: correlated prompt forwards exact caller ID after final fence
+00:12 +93: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_correlated_prompt_test.dart: caller refusal prevents dispatch and releases awaiting turn
+00:12 +94: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_correlated_prompt_test.dart: correlated draft is rejected before any server mutation
+00:12 +95: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_correlated_prompt_test.dart: photo answer accepts the daemon ID of a locally created chat
+00:12 +96: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_correlated_prompt_test.dart: daemon ID idle check preserves the pending turn guard
+00:12 +97: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_correlated_prompt_test.dart: daemon ID idle check preserves the running turn guard
+00:12 +98: /home/eslam/Storage/Code/oc_app-sol-bd/test/paseo_correlated_prompt_test.dart: transport fence runs after async connection and propagates refusal
+00:12 +99: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart
+00:13 +99: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:14 +100: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart: offline v2 metadata remains server-owned and writes require a connection
+00:14 +101: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart: a queued prompt cancelled during selection is never delivered
+00:14 +102: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart: selection wait rejects a retired dispatch transport
+00:14 +103: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart: v2 reads retain variants and distinguish inherited from unknown
+00:14 +104: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
+00:14 +105: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart: a model event cannot establish an unhydrated agent or clear with malformed data
+00:14 +106: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart: pending metadata cannot overwrite a newer remote selection
+00:14 +107: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart: intentional writes serialize and confirmation adopts server state
+00:14 +108: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart: failed writes retain confirmed selection and allow retry
+00:14 +109: /home/eslam/Storage/Code/oc_app-sol-bd/test/session_selection_sync_test.dart: new sessions receive defaults and offline replay applies its saved snapshot
+00:14 +110: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart
+00:17 +110: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit (absolute)
+00:17 +111: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G15: no width literals outside the kit (absolute)
+00:17 +112: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G16: every UI component comes from the kit (absolute)
+00:17 +113: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G1/G15/G16 have no baseline: the committed file holds none of them
+00:17 +114: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2: copy, haptics, links and motion go through the kit
+00:17 +115: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G7: layout is directional and bidi marks come from KitBidi
+00:17 +116: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G15 inside the kit: only kit_layout.dart owns widths
+00:17 +117: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G17 colour: every colour comes from a ThemeRoles role
+00:17 +118: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G21 look and motion: numbers and effects come from the kit
+00:17 +119: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G48 drafts: multiline input in a kit sheet keeps a draft
+00:17 +120: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G17/G21 inside the kit: only deferred files keep a baseline, and each deferral still needs it
+00:17 +121: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: allowlists never grow (KIT-5)
+00:17 +122: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: allowlist keys are exact paths or folders under lib/
+00:17 +123: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
+00:17 +124: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: every allowlist entry gives a real reason
+00:17 +125: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: the Flutter widget catalogue exists and is non-trivial
+00:17 +126: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
+00:17 +127: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
+00:17 +128: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
+00:17 +129: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) KIT-7: MaterialPageRoute( and PageRouteBuilder( fail G16, in lib/ui and in UI code elsewhere under lib/, with no baseline to lean on
+00:17 +130: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1/G15/G16 failures name the kit part and the way forward
+00:17 +131: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G17 is absolute: every colour row fails on any hit, with a fix that names what to use
+00:17 +132: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) Scrollbar has no home outside the kit any more (KIT-6)
+00:17 +133: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
+00:17 +134: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts uses of an old API, not its declaration
+00:17 +135: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts motion literals and seams, not KitMotion names
+00:17 +136: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
+00:17 +137: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 counts left/right layout, not the directional forms
+00:17 +138: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 is absolute in the kit, forced-LTR parts may align left
+00:17 +139: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G15x counts breakpoints and layout widths, not guards or gaps
+00:17 +140: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 counts literal colours and theme reads, not transparent
+00:17 +141: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 counts look literals the way the rulebook writes them
+00:17 +142: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 LOOK-21 in the kit: every stroke width comes from KitTokens
+00:17 +143: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 metal/chrome reads identifiers and file names
+00:17 +144: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G48 flags a sheet with a multiline field and no draft
+00:17 +145: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 and G21 also scan Flutter UI code outside lib/ui/
+00:17 +146: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings theme files, allowlist keys and scopes resolve as documented
+00:17 +147: /home/eslam/Storage/Code/oc_app-sol-bd/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
+00:17 +148: All tests passed!

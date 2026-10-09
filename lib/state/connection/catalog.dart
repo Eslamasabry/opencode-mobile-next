@@ -91,6 +91,29 @@ mixin _ConnectionControllerCatalog on ChangeNotifier {
   CatalogSnapshot? catalog;
   bool catalogDetailed = false;
 
+  /// The catalog this conversation can actually use. Provider-bound runtimes
+  /// retain their full catalog for new conversations and other provider chats.
+  CatalogSnapshot? catalogForSession(String? sessionID) {
+    final snapshot = catalog;
+    final self = this as ConnectionController;
+    if (snapshot == null ||
+        sessionID == null ||
+        self.capabilities.sessionModelProviderSwitching) {
+      return snapshot;
+    }
+    final gateway = self.api;
+    final provider = gateway is PaseoGateway
+        ? gateway.providerIdForSession(sessionID)
+        : (self.sessionsById[sessionID]?.selection?.model ??
+                  self.sessionModels[sessionID]?.model)
+              ?.providerID;
+    return CatalogSnapshot(
+      providers: snapshot.providers.where((p) => p.id == provider).toList(),
+      models: snapshot.models.where((m) => m.providerID == provider).toList(),
+      agents: snapshot.agents,
+    );
+  }
+
   /// Providers the server reports as connected (a credential exists) but has
   /// not loaded into its model runtime. OpenCode 1 caches provider state per
   /// instance, so a sign-in that lands after startup leaves the provider in
