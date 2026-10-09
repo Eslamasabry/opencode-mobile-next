@@ -758,6 +758,54 @@ void main() {
     },
   );
 
+  testWidgets(
+    'BA14 child backend keeps scoped BD13 exit evidence after recovery',
+    (tester) async {
+      final w = await _world(tester, diagnosticsSupported: true);
+      try {
+        w.state.runtimes = {'claude': _ready('claude')};
+        w.state.agents = [_agent('c1', _project)];
+        await w.controller.rememberLastUsedProject(_project);
+        await w.controller.refreshAgentRows();
+        await w.controller.refreshChatFeed();
+        final row = w.controller.chatFeed().items.firstWhere(
+          (r) => r.sourceId == 'paseo:$_project',
+        );
+        await w.controller.openChatFeedItem(row);
+        final backend = w.controller.backendForConversation('c1')!;
+        final exit = AgentHelperStatus(
+          running: false,
+          lastExitAt: DateTime.utc(2026, 10, 9),
+          lastExitCode: 137,
+          lastStopRequested: false,
+          possibleResourceKill: true,
+        );
+        w.state.readHelperStatus = () async => exit;
+        expect(await backend.readConnectionHelperExit(), same(exit));
+        // Missing/old-APK data after recovery must not erase known evidence.
+        w.state.readHelperStatus = () async =>
+            const AgentHelperStatus(running: true);
+        expect(await backend.readConnectionHelperExit(), same(exit));
+        // An intentional or older exit is not a new unexpected stop.
+        w.state.readHelperStatus = () async => AgentHelperStatus(
+          running: true,
+          lastExitAt: DateTime.utc(2026, 10, 10),
+          lastExitCode: 0,
+          lastStopRequested: true,
+        );
+        expect(await backend.readConnectionHelperExit(), same(exit));
+        final delayed = Completer<AgentHelperStatus>();
+        w.state.readHelperStatus = () => delayed.future;
+        final pending = backend.readConnectionHelperExit();
+        w.controller.dispose();
+        delayed.complete(exit);
+        expect(await pending, isNull);
+      } finally {
+        w.controller.dispose();
+      }
+    },
+  );
+
   _genUiFeedRefreshTests();
   _nativeQuestionControllerTests();
   _listQuestionTests();

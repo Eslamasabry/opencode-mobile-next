@@ -445,21 +445,23 @@ class _MessageView extends StatelessWidget {
         latest &&
         (chat._conn.busySessions.contains(chat.widget.sessionID) ||
             chat._localTurnSince != null);
-    // The connection was lost mid-reply (or the server went quiet for good):
-    // the turn stops "working" and says so. A refetch on reconnect brings
-    // the finished reply back and this line goes with it.
+    // A brief link handoff keeps the current turn running. Only the shared
+    // deadline exposes interruption; recovery refetches the agent's truth.
+    final deferInterruption = chat?._conn.defersTurnInterruption ?? false;
     final connectionLost =
         streaming &&
         endsTurn &&
         latest &&
         chat != null &&
         !chat._conn.isIsolated &&
-        !chat._conn.isConnected;
+        !chat._conn.isConnected &&
+        !deferInterruption;
     // Still trying to get back: the reply may yet finish, so no resend.
     final reconnecting = connectionLost && chat._conn.connectionLoading;
     final interrupted =
         connectionLost ||
         (streaming &&
+            !deferInterruption &&
             endsTurn &&
             chat != null &&
             !chat._conn.isIsolated &&
