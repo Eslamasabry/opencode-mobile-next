@@ -169,10 +169,18 @@ String paseoToolName(String name, Map<String, dynamic> detail) =>
       'read' => 'read',
       'edit' => 'edit',
       'write' => 'write',
-      'search' => 'grep',
+      'search' => switch (detail['toolName']) {
+        'glob' => 'glob',
+        'web_search' => 'websearch',
+        _ => 'grep',
+      },
       'fetch' => 'webfetch',
       // Claude Code's sub-agent (its Agent tool, Task before): the app's
       // sub-agent card, which says what the sub-agent was asked to do.
+      'sub_agent' => 'task',
+      'plan' => 'plan',
+      'worktree_setup' => 'worktree_setup',
+      'plain_text' when name.toLowerCase() == 'skill' => 'skill',
       _ when const {'agent', 'task'}.contains(name.toLowerCase()) => 'task',
       _ => name.isEmpty ? 'tool' : name.toLowerCase(),
     };
@@ -183,9 +191,54 @@ String paseoToolStatus(Object? status) => switch (status) {
   _ => 'running',
 };
 
-Map<String, dynamic> _toolInput(Map<String, dynamic> detail) {
-  final raw = detail['input'];
-  if (detail['type'] == 'unknown' && raw is Map<String, dynamic>) return raw;
+/// Paseo's detail fields under the names the tool card already reads for the
+/// same tool in OpenCode (`pattern`, `subagent_type`, `name`), so one card
+/// serves both. A step type this app has no words for keeps its plain fields.
+Object _toolInput(Map<String, dynamic> detail) {
+  Map<String, dynamic> pick(Map<String, String> names) => {
+    for (final entry in names.entries)
+      if (detail[entry.key] != null &&
+          detail[entry.key] is! Map &&
+          detail[entry.key] is! List)
+        entry.value: detail[entry.key],
+  };
+  switch (detail['type']) {
+    case 'shell':
+      return pick({'command': 'command'});
+    case 'read':
+      return pick({
+        'filePath': 'filePath',
+        'offset': 'offset',
+        'limit': 'limit',
+      });
+    case 'edit':
+      return pick({
+        'filePath': 'filePath',
+        'oldString': 'oldString',
+        'newString': 'newString',
+      });
+    case 'write':
+      return pick({'filePath': 'filePath', 'content': 'content'});
+    case 'search':
+      return pick({
+        'query': detail['toolName'] == 'web_search' ? 'query' : 'pattern',
+      });
+    case 'fetch':
+      return pick({'url': 'url', 'prompt': 'prompt'});
+    case 'sub_agent':
+      return pick({
+        'subAgentType': 'subagent_type',
+        'description': 'description',
+      });
+    case 'plain_text':
+      return pick({'label': 'name'});
+    case 'plan' || 'worktree_setup':
+      return const <String, dynamic>{};
+    case 'unknown':
+      final raw = detail['input'];
+      if (raw is Map<String, dynamic>) return raw;
+      return raw is String ? raw : const <String, dynamic>{};
+  }
   return {
     for (final entry in detail.entries)
       if (entry.key != 'type' &&
@@ -196,13 +249,65 @@ Map<String, dynamic> _toolInput(Map<String, dynamic> detail) {
   };
 }
 
+/// What the card reads beside the input and output: exit code, counts,
+/// the diff, a sub-agent's actions, a worktree setup's steps.
+Map<String, dynamic>? _toolMetadata(Map<String, dynamic> detail) {
+  final meta = <String, dynamic>{};
+  num? number(String key) => detail[key] is num ? detail[key] as num : null;
+  switch (detail['type']) {
+    case 'shell':
+      meta['exit'] = number('exitCode');
+    case 'edit':
+      meta['diff'] = detail['unifiedDiff'];
+    case 'search':
+      final web = detail['webResults'];
+      meta['matches'] = number('numMatches');
+      meta['count'] = number('numFiles');
+      meta['truncated'] = detail['truncated'];
+      if (web is List) meta['numResults'] = web.length;
+    case 'fetch':
+      meta['httpCode'] = number('code');
+      meta['httpText'] = detail['codeText'];
+    case 'sub_agent':
+      final actions = detail['actions'];
+      if (actions is List) {
+        meta['actions'] = [
+          for (final action in actions.whereType<Map>().take(50))
+            {
+              'tool': paseoText(action['toolName'], max: 128),
+              'summary': paseoText(action['summary'], max: 300),
+            },
+        ];
+      }
+    case 'worktree_setup':
+      final commands = detail['commands'];
+      meta['worktreePath'] = detail['worktreePath'];
+      meta['branchName'] = detail['branchName'];
+      meta['truncated'] = detail['truncated'];
+      if (commands is List) {
+        meta['commands'] = [
+          for (final command in commands.whereType<Map>().take(30))
+            {
+              'command': paseoText(command['command'], max: 2000),
+              'log': paseoText(command['log']),
+              'status': command['status'],
+              'exitCode': command['exitCode'],
+            },
+        ];
+      }
+  }
+  meta.removeWhere((_, value) => value == null);
+  return meta.isEmpty ? null : meta;
+}
+
 /// What a tool answered, as text or as its structured value (a map or list
 /// the tool card can read, such as a connector search result).
 ///
 /// Paseo puts the answer in a different field per detail type: `output` for
 /// shell, `{output: <text or parsed JSON>}` for every tool it has no parser
 /// for (MCP tools, ToolSearch), `content`/`filePaths` for grep and glob,
-/// `webResults` for web search, `result` for fetch and `text` for skills.
+/// `webResults` for web search, `result` for fetch, `text` for skills and
+/// plans, `log` for sub-agents and worktree setups.
 Object _toolOutput(Map<String, dynamic> item, Map<String, dynamic> detail) {
   final error = item['error'];
   if (error is String && error.isNotEmpty) return 'The tool could not finish.';
@@ -216,6 +321,7 @@ Object _toolOutput(Map<String, dynamic> item, Map<String, dynamic> detail) {
     final inner = output['output'];
     if (inner is String) return paseoText(inner);
     if (inner is Map || inner is List) return _structured(inner);
+    if (output.isNotEmpty) return _structured(output);
   }
   if (output is List) return _structured(output);
   final content = detail['content'];
@@ -227,16 +333,36 @@ Object _toolOutput(Map<String, dynamic> item, Map<String, dynamic> detail) {
     if (paths is List && paths.isNotEmpty) {
       return paseoText(paths.whereType<String>().join('\n'));
     }
-    final web = detail['webResults'];
-    if (web is List && web.isNotEmpty) return _structured(web);
+    return _webResultsText(detail);
   }
   if (type == 'fetch' && detail['result'] is String) {
     return paseoText(detail['result']);
   }
-  if (type == 'plain_text' && detail['text'] is String) {
+  if ((type == 'plain_text' || type == 'plan') && detail['text'] is String) {
     return paseoText(detail['text']);
   }
+  if ((type == 'sub_agent' || type == 'worktree_setup') &&
+      detail['log'] is String) {
+    return paseoText(detail['log']);
+  }
   return '';
+}
+
+/// A web search's results as Markdown: each title with its address under it,
+/// then the search's own notes.
+String _webResultsText(Map<String, dynamic> detail) {
+  final web = detail['webResults'];
+  final notes = detail['annotations'];
+  final blocks = [
+    if (web is List)
+      for (final result in web.whereType<Map>().take(50))
+        [
+          if (result['title'] is String) '**${result['title']}**',
+          if (result['url'] is String) result['url'],
+        ].join('  \n'),
+    if (notes is List) ...notes.whereType<String>(),
+  ].where((block) => block.isNotEmpty);
+  return paseoText(blocks.join('\n\n'));
 }
 
 /// A structured answer kept as a value when it fits, otherwise its text cut
@@ -345,6 +471,10 @@ MessageWithParts? paseoItemMessage(
             'status': paseoToolStatus(item['status']),
             'input': _toolInput(detail),
             'output': _toolOutput(item, detail),
+            // A failed step reads its words from `error`.
+            if (paseoToolStatus(item['status']) == 'error')
+              'error': _toolOutput(item, detail),
+            'metadata': _toolMetadata(detail),
           }),
         ),
       );
@@ -469,6 +599,7 @@ Map<String, dynamic> paseoPartJson(Part part) => {
       'status': part.toolState.status,
       'input': part.toolState.input,
       'output': part.toolState.output,
+      if (part.toolState.metadata != null) 'metadata': part.toolState.metadata,
     },
 };
 

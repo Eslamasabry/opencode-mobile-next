@@ -8458,5 +8458,11 @@
   "chatUiConnectorSearchUnavailable": "البحث في الموصّلات غير متاح. حاول مجددًا من الأدوات.",
   "chatUiConnectorSearchInvalid": "طلب بحث الموصّلات غير صالح.",
   "chatUiConnectorSearchNotConnected": "غير متصل",
-  "kitMarkdownImage": "صورة"
+  "kitMarkdownImage": "صورة",
+  "toolCardPlan": "الخطة",
+  "toolCardWorktreeSetup": "إعداد نسخة منفصلة",
+  "toolCardWhatItDid": "ما فعله",
+  "toolCardTechnicalDetails": "تفاصيل تقنية",
+  "toolCardPageStatus": "ردّت الصفحة {status}",
+  "toolCardAsked": "السؤال: {prompt}"
 }

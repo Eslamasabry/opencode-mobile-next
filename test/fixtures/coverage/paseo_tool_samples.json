@@ -1,22 +1,291 @@
 {
   "source": "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js",
-  "variants": [
+  "schema": {
+    "worktree_setup": [
+      {
+        "path": "worktreePath",
+        "kind": "string"
+      },
+      {
+        "path": "branchName",
+        "kind": "string"
+      },
+      {
+        "path": "log",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].index",
+        "kind": "number"
+      },
+      {
+        "path": "commands[].command",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].cwd",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].log",
+        "kind": "string"
+      },
+      {
+        "path": "commands[].status",
+        "kind": "enum"
+      },
+      {
+        "path": "commands[].exitCode",
+        "kind": "number"
+      },
+      {
+        "path": "commands[].durationMs",
+        "kind": "number"
+      },
+      {
+        "path": "truncated",
+        "kind": "boolean"
+      }
+    ],
+    "shell": [
+      {
+        "path": "command",
+        "kind": "string"
+      },
+      {
+        "path": "cwd",
+        "kind": "string"
+      },
+      {
+        "path": "output",
+        "kind": "string"
+      },
+      {
+        "path": "exitCode",
+        "kind": "number"
+      }
+    ],
+    "read": [
+      {
+        "path": "filePath",
+        "kind": "string"
+      },
+      {
+        "path": "content",
+        "kind": "string"
+      },
+      {
+        "path": "offset",
+        "kind": "number"
+      },
+      {
+        "path": "limit",
+        "kind": "number"
+      }
+    ],
+    "edit": [
+      {
+        "path": "filePath",
+        "kind": "string"
+      },
+      {
+        "path": "oldString",
+        "kind": "string"
+      },
+      {
+        "path": "newString",
+        "kind": "string"
+      },
+      {
+        "path": "unifiedDiff",
+        "kind": "string"
+      }
+    ],
+    "write": [
+      {
+        "path": "filePath",
+        "kind": "string"
+      },
+      {
+        "path": "content",
+        "kind": "string"
+      }
+    ],
+    "search": [
+      {
+        "path": "query",
+        "kind": "string"
+      },
+      {
+        "path": "toolName",
+        "kind": "enum"
+      },
+      {
+        "path": "content",
+        "kind": "string"
+      },
+      {
+        "path": "filePaths[]",
+        "kind": "string"
+      },
+      {
+        "path": "webResults[].title",
+        "kind": "string"
+      },
+      {
+        "path": "webResults[].url",
+        "kind": "string"
+      },
+      {
+        "path": "annotations[]",
+        "kind": "string"
+      },
+      {
+        "path": "numFiles",
+        "kind": "number"
+      },
+      {
+        "path": "numMatches",
+        "kind": "number"
+      },
+      {
+        "path": "durationMs",
+        "kind": "number"
+      },
+      {
+        "path": "durationSeconds",
+        "kind": "number"
+      },
+      {
+        "path": "truncated",
+        "kind": "boolean"
+      },
+      {
+        "path": "mode",
+        "kind": "enum"
+      }
+    ],
+    "fetch": [
+      {
+        "path": "url",
+        "kind": "string"
+      },
+      {
+        "path": "prompt",
+        "kind": "string"
+      },
+      {
+        "path": "result",
+        "kind": "string"
+      },
+      {
+        "path": "code",
+        "kind": "number"
+      },
+      {
+        "path": "codeText",
+        "kind": "string"
+      },
+      {
+        "path": "bytes",
+        "kind": "number"
+      },
+      {
+        "path": "durationMs",
+        "kind": "number"
+      }
+    ],
+    "sub_agent": [
+      {
+        "path": "subAgentType",
+        "kind": "string"
+      },
+      {
+        "path": "description",
+        "kind": "string"
+      },
+      {
+        "path": "childSessionId",
+        "kind": "string"
+      },
+      {
+        "path": "log",
+        "kind": "string"
+      },
+      {
+        "path": "actions[].index",
+        "kind": "number"
+      },
+      {
+        "path": "actions[].toolName",
+        "kind": "string"
+      },
+      {
+        "path": "actions[].summary",
+        "kind": "string"
+      }
+    ],
+    "plain_text": [
+      {
+        "path": "label",
+        "kind": "string"
+      },
+      {
+        "path": "text",
+        "kind": "string"
+      },
+      {
+        "path": "icon",
+        "kind": "enum"
+      }
+    ],
+    "plan": [
+      {
+        "path": "text",
+        "kind": "string"
+      }
+    ],
+    "unknown": [
+      {
+        "path": "input",
+        "kind": "any"
+      },
+      {
+        "path": "output",
+        "kind": "any"
+      }
+    ]
+  },
+  "cases": [
     {
+      "id": "worktree_setup",
       "type": "worktree_setup",
+      "tool": "paseo_worktree_setup",
+      "status": "completed",
+      "error": null,
       "detail": {
         "type": "worktree_setup",
-        "worktreePath": "MK7001",
-        "branchName": "MK7002",
-        "log": "MK7003",
+        "worktreePath": "/home/dev/.paseo/worktrees/app/feat-login",
+        "branchName": "feat/login-form",
+        "log": "Preparing worktree for feat/login-form",
         "commands": [
           {
-            "index": 7004,
-            "command": "MK7005",
-            "cwd": "MK7006",
-            "log": "MK7007",
+            "index": 14,
+            "command": "npm install",
+            "cwd": "packages/web",
+            "log": "added 212 packages",
+            "status": "completed",
+            "exitCode": 0,
+            "durationMs": 48213
+          },
+          {
+            "index": 15,
+            "command": "npm run build",
+            "cwd": "packages/web",
+            "log": "Build failed: missing env file",
             "status": "failed",
-            "exitCode": 7008,
-            "durationMs": 7009
+            "exitCode": 2,
+            "durationMs": 9120
           }
         ],
         "truncated": true
@@ -25,333 +294,731 @@
         {
           "path": "worktreePath",
           "kind": "string",
-          "marker": "MK7001"
+          "probes": [
+            "/home/dev/.paseo/worktrees/app/feat-login"
+          ]
         },
         {
           "path": "branchName",
           "kind": "string",
-          "marker": "MK7002"
+          "probes": [
+            "feat/login-form"
+          ]
         },
         {
           "path": "log",
           "kind": "string",
-          "marker": "MK7003"
+          "probes": [
+            "Preparing worktree for feat/login-form"
+          ]
         },
         {
           "path": "commands[].index",
           "kind": "number",
-          "marker": "7004"
+          "probes": [
+            "14",
+            "15"
+          ]
         },
         {
           "path": "commands[].command",
           "kind": "string",
-          "marker": "MK7005"
+          "probes": [
+            "npm install",
+            "npm run build"
+          ]
         },
         {
           "path": "commands[].cwd",
           "kind": "string",
-          "marker": "MK7006"
+          "probes": [
+            "packages/web",
+            "packages/web"
+          ]
         },
         {
           "path": "commands[].log",
           "kind": "string",
-          "marker": "MK7007"
+          "probes": [
+            "added 212 packages",
+            "Build failed: missing env file"
+          ]
         },
         {
           "path": "commands[].status",
           "kind": "enum",
-          "marker": "failed"
+          "probes": [
+            "Passed",
+            "Failed"
+          ]
         },
         {
           "path": "commands[].exitCode",
           "kind": "number",
-          "marker": "7008"
+          "probes": [
+            "exit code 0",
+            "exit code 2"
+          ]
         },
         {
           "path": "commands[].durationMs",
           "kind": "number",
-          "marker": "7009"
+          "probes": [
+            "48213",
+            "9120"
+          ]
         },
         {
           "path": "truncated",
           "kind": "boolean",
-          "marker": null
+          "probes": [
+            "Truncated"
+          ]
         }
       ]
     },
     {
+      "id": "shell_ok",
       "type": "shell",
+      "tool": "Bash",
+      "status": "completed",
+      "error": null,
       "detail": {
         "type": "shell",
-        "command": "MK7010",
-        "cwd": "MK7011",
-        "output": "MK7012",
-        "exitCode": 7013
+        "command": "flutter test test/login_test.dart",
+        "cwd": "/home/dev/app",
+        "output": "00:04 +12: All tests passed!",
+        "exitCode": 0
       },
       "fields": [
         {
           "path": "command",
           "kind": "string",
-          "marker": "MK7010"
+          "probes": [
+            "flutter test test/login_test.dart"
+          ]
         },
         {
           "path": "cwd",
           "kind": "string",
-          "marker": "MK7011"
+          "probes": [
+            "/home/dev/app"
+          ]
         },
         {
           "path": "output",
           "kind": "string",
-          "marker": "MK7012"
+          "probes": [
+            "00:04 +12: All tests passed!"
+          ]
         },
         {
           "path": "exitCode",
           "kind": "number",
-          "marker": "7013"
+          "probes": [
+            "Passed · exit code 0"
+          ]
         }
       ]
     },
     {
+      "id": "shell_exit_failed",
+      "type": "shell",
+      "tool": "Bash",
+      "status": "completed",
+      "error": null,
+      "detail": {
+        "type": "shell",
+        "command": "flutter analyze",
+        "cwd": "/home/dev/app",
+        "output": "2 issues found.",
+        "exitCode": 3
+      },
+      "fields": [
+        {
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "flutter analyze"
+          ]
+        },
+        {
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "/home/dev/app"
+          ]
+        },
+        {
+          "path": "output",
+          "kind": "string",
+          "probes": [
+            "2 issues found."
+          ]
+        },
+        {
+          "path": "exitCode",
+          "kind": "number",
+          "probes": [
+            "Failed · exit code 3"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shell_failed",
+      "type": "shell",
+      "tool": "Bash",
+      "status": "failed",
+      "error": {
+        "message": "Command failed"
+      },
+      "detail": {
+        "type": "shell",
+        "command": "git push origin main"
+      },
+      "fields": [
+        {
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "git push origin main"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shell_running",
+      "type": "shell",
+      "tool": "Bash",
+      "status": "running",
+      "error": null,
+      "detail": {
+        "type": "shell",
+        "command": "npm run dev"
+      },
+      "fields": [
+        {
+          "path": "command",
+          "kind": "string",
+          "probes": [
+            "npm run dev"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "read_ok",
       "type": "read",
+      "tool": "Read",
+      "status": "completed",
+      "error": null,
       "detail": {
         "type": "read",
-        "filePath": "MK7014",
-        "content": "MK7015",
-        "offset": 7016,
-        "limit": 7017
+        "filePath": "lib/main.dart",
+        "content": "void main() {\n  runApp(const App());\n}",
+        "offset": 12,
+        "limit": 40
       },
       "fields": [
         {
           "path": "filePath",
           "kind": "string",
-          "marker": "MK7014"
+          "probes": [
+            "main.dart"
+          ]
         },
         {
           "path": "content",
           "kind": "string",
-          "marker": "MK7015"
+          "probes": [
+            "void main() {"
+          ]
         },
         {
           "path": "offset",
           "kind": "number",
-          "marker": "7016"
+          "probes": [
+            "from 12"
+          ]
         },
         {
           "path": "limit",
           "kind": "number",
-          "marker": "7017"
+          "probes": [
+            "40 lines"
+          ]
         }
       ]
     },
     {
+      "id": "edit_old_new",
       "type": "edit",
+      "tool": "Edit",
+      "status": "completed",
+      "error": null,
       "detail": {
         "type": "edit",
-        "filePath": "MK7018",
-        "oldString": "MK7019",
-        "newString": "MK7020",
-        "unifiedDiff": "MK7021"
+        "filePath": "lib/ui/login_form.dart",
+        "oldString": "final label = \"Sign in\";",
+        "newString": "final label = \"Log in\";"
       },
       "fields": [
         {
           "path": "filePath",
           "kind": "string",
-          "marker": "MK7018"
+          "probes": [
+            "login_form.dart"
+          ]
         },
         {
           "path": "oldString",
           "kind": "string",
-          "marker": "MK7019"
+          "probes": [
+            "final label = \"Sign in\";"
+          ]
         },
         {
           "path": "newString",
           "kind": "string",
-          "marker": "MK7020"
-        },
-        {
-          "path": "unifiedDiff",
-          "kind": "string",
-          "marker": "MK7021"
+          "probes": [
+            "final label = \"Log in\";"
+          ]
         }
       ]
     },
     {
-      "type": "write",
+      "id": "edit_diff",
+      "type": "edit",
+      "tool": "Edit",
+      "status": "completed",
+      "error": null,
       "detail": {
-        "type": "write",
-        "filePath": "MK7022",
-        "content": "MK7023"
+        "type": "edit",
+        "filePath": "lib/ui/login_form.dart",
+        "unifiedDiff": "--- a/lib/ui/login_form.dart\n+++ b/lib/ui/login_form.dart\n@@ -1,2 +1,2 @@\n-final retries = 1;\n+final retries = 3;"
       },
       "fields": [
         {
           "path": "filePath",
           "kind": "string",
-          "marker": "MK7022"
+          "probes": [
+            "login_form.dart"
+          ]
         },
         {
-          "path": "content",
+          "path": "unifiedDiff",
           "kind": "string",
-          "marker": "MK7023"
+          "probes": [
+            "final retries = 3;"
+          ]
         }
       ]
     },
     {
+      "id": "write_ok",
+      "type": "write",
+      "tool": "Write",
+      "status": "completed",
+      "error": null,
+      "detail": {
+        "type": "write",
+        "filePath": "lib/ui/new_page.dart",
+        "content": "class NewPage {}"
+      },
+      "fields": [
+        {
+          "path": "filePath",
+          "kind": "string",
+          "probes": [
+            "new_page.dart"
+          ]
+        },
+        {
+          "path": "content",
+          "kind": "string",
+          "probes": [
+            "class NewPage {}"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grep_content",
       "type": "search",
+      "tool": "Grep",
+      "status": "completed",
+      "error": null,
       "detail": {
         "type": "search",
-        "query": "MK7024",
-        "toolName": "web_search",
-        "content": "MK7025",
-        "filePaths": [
-          "MK7026"
-        ],
-        "webResults": [
-          {
-            "title": "MK7027",
-            "url": "MK7028"
-          }
-        ],
-        "annotations": [
-          "MK7029"
-        ],
-        "numFiles": 7030,
-        "numMatches": 7031,
-        "durationMs": 7032,
-        "durationSeconds": 7033,
-        "truncated": true,
-        "mode": "count"
+        "query": "TODO",
+        "toolName": "grep",
+        "mode": "content",
+        "content": "lib/a.dart:12: // TODO tidy\nlib/b.dart:40: // TODO remove",
+        "numFiles": 2,
+        "numMatches": 5
       },
       "fields": [
         {
           "path": "query",
           "kind": "string",
-          "marker": "MK7024"
+          "probes": [
+            "TODO"
+          ]
         },
         {
           "path": "toolName",
           "kind": "enum",
-          "marker": "web_search"
-        },
-        {
-          "path": "content",
-          "kind": "string",
-          "marker": "MK7025"
-        },
-        {
-          "path": "filePaths[]",
-          "kind": "string",
-          "marker": "MK7026"
-        },
-        {
-          "path": "webResults[].title",
-          "kind": "string",
-          "marker": "MK7027"
-        },
-        {
-          "path": "webResults[].url",
-          "kind": "string",
-          "marker": "MK7028"
-        },
-        {
-          "path": "annotations[]",
-          "kind": "string",
-          "marker": "MK7029"
-        },
-        {
-          "path": "numFiles",
-          "kind": "number",
-          "marker": "7030"
-        },
-        {
-          "path": "numMatches",
-          "kind": "number",
-          "marker": "7031"
-        },
-        {
-          "path": "durationMs",
-          "kind": "number",
-          "marker": "7032"
-        },
-        {
-          "path": "durationSeconds",
-          "kind": "number",
-          "marker": "7033"
-        },
-        {
-          "path": "truncated",
-          "kind": "boolean",
-          "marker": null
+          "probes": [
+            "Search text"
+          ]
         },
         {
           "path": "mode",
           "kind": "enum",
-          "marker": "count"
+          "probes": []
+        },
+        {
+          "path": "content",
+          "kind": "string",
+          "probes": [
+            "lib/a.dart:12: // TODO tidy"
+          ]
+        },
+        {
+          "path": "numFiles",
+          "kind": "number",
+          "probes": [
+            "2 files"
+          ]
+        },
+        {
+          "path": "numMatches",
+          "kind": "number",
+          "probes": [
+            "5 matches"
+          ]
         }
       ]
     },
     {
+      "id": "grep_files",
+      "type": "search",
+      "tool": "Grep",
+      "status": "completed",
+      "error": null,
+      "detail": {
+        "type": "search",
+        "query": "LoginForm",
+        "toolName": "grep",
+        "mode": "files_with_matches",
+        "filePaths": [
+          "lib/ui/login_form.dart",
+          "test/login_form_test.dart"
+        ],
+        "numFiles": 2
+      },
+      "fields": [
+        {
+          "path": "query",
+          "kind": "string",
+          "probes": [
+            "LoginForm"
+          ]
+        },
+        {
+          "path": "toolName",
+          "kind": "enum",
+          "probes": [
+            "Search text"
+          ]
+        },
+        {
+          "path": "mode",
+          "kind": "enum",
+          "probes": []
+        },
+        {
+          "path": "filePaths[]",
+          "kind": "string",
+          "probes": [
+            "lib/ui/login_form.dart",
+            "test/login_form_test.dart"
+          ]
+        },
+        {
+          "path": "numFiles",
+          "kind": "number",
+          "probes": [
+            "2 files"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glob_files",
+      "type": "search",
+      "tool": "Glob",
+      "status": "completed",
+      "error": null,
+      "detail": {
+        "type": "search",
+        "query": "**/*_test.dart",
+        "toolName": "glob",
+        "filePaths": [
+          "test/a_test.dart",
+          "test/b_test.dart",
+          "test/c_test.dart"
+        ],
+        "numFiles": 3,
+        "durationMs": 174,
+        "truncated": true
+      },
+      "fields": [
+        {
+          "path": "query",
+          "kind": "string",
+          "probes": [
+            "**/*_test.dart"
+          ]
+        },
+        {
+          "path": "toolName",
+          "kind": "enum",
+          "probes": [
+            "Find files"
+          ]
+        },
+        {
+          "path": "filePaths[]",
+          "kind": "string",
+          "probes": [
+            "test/a_test.dart",
+            "test/b_test.dart",
+            "test/c_test.dart"
+          ]
+        },
+        {
+          "path": "numFiles",
+          "kind": "number",
+          "probes": [
+            "3 found"
+          ]
+        },
+        {
+          "path": "durationMs",
+          "kind": "number",
+          "probes": [
+            "174"
+          ]
+        },
+        {
+          "path": "truncated",
+          "kind": "boolean",
+          "probes": [
+            "Truncated"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "web_search",
+      "type": "search",
+      "tool": "WebSearch",
+      "status": "completed",
+      "error": null,
+      "detail": {
+        "type": "search",
+        "query": "shorebird patch size limits",
+        "toolName": "web_search",
+        "webResults": [
+          {
+            "title": "Shorebird patching guide",
+            "url": "https://docs.shorebird.dev/patch"
+          },
+          {
+            "title": "Release sizes explained",
+            "url": "https://docs.shorebird.dev/sizes"
+          }
+        ],
+        "annotations": [
+          "Sources: official documentation"
+        ],
+        "durationSeconds": 7.31
+      },
+      "fields": [
+        {
+          "path": "query",
+          "kind": "string",
+          "probes": [
+            "shorebird patch size limits"
+          ]
+        },
+        {
+          "path": "toolName",
+          "kind": "enum",
+          "probes": [
+            "Web search"
+          ]
+        },
+        {
+          "path": "webResults[].title",
+          "kind": "string",
+          "probes": [
+            "Shorebird patching guide",
+            "Release sizes explained"
+          ]
+        },
+        {
+          "path": "webResults[].url",
+          "kind": "string",
+          "probes": [
+            "https://docs.shorebird.dev/patch",
+            "https://docs.shorebird.dev/sizes"
+          ]
+        },
+        {
+          "path": "annotations[]",
+          "kind": "string",
+          "probes": [
+            "Sources: official documentation"
+          ]
+        },
+        {
+          "path": "durationSeconds",
+          "kind": "number",
+          "probes": [
+            "7.31"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fetch_ok",
       "type": "fetch",
+      "tool": "WebFetch",
+      "status": "completed",
+      "error": null,
       "detail": {
         "type": "fetch",
-        "url": "MK7034",
-        "prompt": "MK7035",
-        "result": "MK7036",
-        "code": 7037,
-        "codeText": "MK7038",
-        "bytes": 7039,
-        "durationMs": 7040
+        "url": "https://docs.shorebird.dev/patch",
+        "prompt": "List the patch size limits",
+        "result": "Patches may be up to 2 MB.",
+        "code": 200,
+        "codeText": "OK",
+        "bytes": 15432,
+        "durationMs": 830
       },
       "fields": [
         {
           "path": "url",
           "kind": "string",
-          "marker": "MK7034"
+          "probes": [
+            "https://docs.shorebird.dev/patch"
+          ]
         },
         {
           "path": "prompt",
           "kind": "string",
-          "marker": "MK7035"
+          "probes": [
+            "List the patch size limits"
+          ]
         },
         {
           "path": "result",
           "kind": "string",
-          "marker": "MK7036"
+          "probes": [
+            "Patches may be up to 2 MB."
+          ]
         },
         {
           "path": "code",
           "kind": "number",
-          "marker": "7037"
+          "probes": [
+            "200"
+          ]
         },
         {
           "path": "codeText",
           "kind": "string",
-          "marker": "MK7038"
+          "probes": [
+            "OK"
+          ]
         },
         {
           "path": "bytes",
           "kind": "number",
-          "marker": "7039"
+          "probes": [
+            "15432"
+          ]
         },
         {
           "path": "durationMs",
           "kind": "number",
-          "marker": "7040"
+          "probes": [
+            "830"
+          ]
         }
       ]
     },
     {
+      "id": "fetch_missing",
+      "type": "fetch",
+      "tool": "WebFetch",
+      "status": "completed",
+      "error": null,
+      "detail": {
+        "type": "fetch",
+        "url": "https://example.com/missing",
+        "code": 404,
+        "codeText": "Not Found"
+      },
+      "fields": [
+        {
+          "path": "url",
+          "kind": "string",
+          "probes": [
+            "https://example.com/missing"
+          ]
+        },
+        {
+          "path": "code",
+          "kind": "number",
+          "probes": [
+            "404"
+          ]
+        },
+        {
+          "path": "codeText",
+          "kind": "string",
+          "probes": [
+            "Not Found"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sub_agent_done",
       "type": "sub_agent",
+      "tool": "Task",
+      "status": "completed",
+      "error": null,
       "detail": {
         "type": "sub_agent",
-        "subAgentType": "MK7041",
-        "description": "MK7042",
-        "childSessionId": "MK7043",
-        "log": "MK7044",
+        "subAgentType": "Explore",
+        "description": "Find the login handler",
+        "childSessionId": "9f2c6e1a-5b7d-4c0e-8a31-2d4f6b8c0e11",
+        "log": "The sign-in check lives in the auth module.",
         "actions": [
           {
-            "index": 7045,
-            "toolName": "MK7046",
-            "summary": "MK7047"
+            "index": 1,
+            "toolName": "Grep",
+            "summary": "handleLogin"
+          },
+          {
+            "index": 2,
+            "toolName": "Read",
+            "summary": "lib/auth/login.dart"
           }
         ]
       },
@@ -359,97 +1026,273 @@
         {
           "path": "subAgentType",
           "kind": "string",
-          "marker": "MK7041"
+          "probes": [
+            "Explore"
+          ]
         },
         {
           "path": "description",
           "kind": "string",
-          "marker": "MK7042"
+          "probes": [
+            "Find the login handler"
+          ]
         },
         {
           "path": "childSessionId",
           "kind": "string",
-          "marker": "MK7043"
+          "probes": [
+            "9f2c6e1a-5b7d-4c0e-8a31-2d4f6b8c0e11"
+          ]
         },
         {
           "path": "log",
           "kind": "string",
-          "marker": "MK7044"
+          "probes": [
+            "The sign-in check lives in the auth module."
+          ]
         },
         {
           "path": "actions[].index",
           "kind": "number",
-          "marker": "7045"
+          "probes": [
+            "1",
+            "2"
+          ]
         },
         {
           "path": "actions[].toolName",
           "kind": "string",
-          "marker": "MK7046"
+          "probes": [
+            "Search text",
+            "Read"
+          ]
         },
         {
           "path": "actions[].summary",
           "kind": "string",
-          "marker": "MK7047"
+          "probes": [
+            "handleLogin",
+            "lib/auth/login.dart"
+          ]
         }
       ]
     },
     {
+      "id": "sub_agent_running",
+      "type": "sub_agent",
+      "tool": "Task",
+      "status": "running",
+      "error": null,
+      "detail": {
+        "type": "sub_agent",
+        "subAgentType": "Explore",
+        "description": "Map the routing",
+        "log": "",
+        "actions": []
+      },
+      "fields": [
+        {
+          "path": "subAgentType",
+          "kind": "string",
+          "probes": [
+            "Explore"
+          ]
+        },
+        {
+          "path": "description",
+          "kind": "string",
+          "probes": [
+            "Map the routing"
+          ]
+        },
+        {
+          "path": "log",
+          "kind": "string",
+          "probes": []
+        }
+      ]
+    },
+    {
+      "id": "skill",
       "type": "plain_text",
+      "tool": "Skill",
+      "status": "completed",
+      "error": null,
       "detail": {
         "type": "plain_text",
-        "label": "MK7048",
-        "text": "MK7049",
-        "icon": "mic_vocal"
+        "label": "frontend-design",
+        "text": "Use a clear visual hierarchy.",
+        "icon": "sparkles"
       },
       "fields": [
         {
           "path": "label",
           "kind": "string",
-          "marker": "MK7048"
+          "probes": [
+            "frontend-design"
+          ]
         },
         {
           "path": "text",
           "kind": "string",
-          "marker": "MK7049"
+          "probes": [
+            "Use a clear visual hierarchy."
+          ]
         },
         {
           "path": "icon",
           "kind": "enum",
-          "marker": "mic_vocal"
+          "probes": []
         }
       ]
     },
     {
+      "id": "plan",
       "type": "plan",
+      "tool": "ExitPlanMode",
+      "status": "completed",
+      "error": null,
       "detail": {
         "type": "plan",
-        "text": "MK7050"
+        "text": "# Add the login form\n\n- Build the form\n- Wire it to the API"
       },
       "fields": [
         {
           "path": "text",
           "kind": "string",
-          "marker": "MK7050"
+          "probes": [
+            "Add the login form",
+            "Build the form"
+          ]
         }
       ]
     },
     {
+      "id": "mcp_flat",
       "type": "unknown",
+      "tool": "mcp__drive__search",
+      "status": "completed",
+      "error": null,
       "detail": {
         "type": "unknown",
-        "input": "MK7051",
-        "output": "MK7052"
+        "input": {
+          "query": "quarterly report",
+          "maxResults": 5
+        },
+        "output": {
+          "output": "Found two files: Q3 report and Q4 report"
+        }
       },
       "fields": [
         {
           "path": "input",
-          "kind": "string",
-          "marker": "MK7051"
+          "kind": "any",
+          "probes": [
+            "Query",
+            "quarterly report",
+            "Max results"
+          ]
         },
         {
           "path": "output",
-          "kind": "string",
-          "marker": "MK7052"
+          "kind": "any",
+          "probes": [
+            "Found two files: Q3 report and Q4 report"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mcp_nested",
+      "type": "unknown",
+      "tool": "mcp__drive__search",
+      "status": "completed",
+      "error": null,
+      "detail": {
+        "type": "unknown",
+        "input": {
+          "query": "budget",
+          "filters": {
+            "owner": "me"
+          }
+        },
+        "output": {
+          "output": [
+            {
+              "name": "Budget 2027"
+            }
+          ]
+        }
+      },
+      "fields": [
+        {
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "budget",
+            "Technical details"
+          ]
+        },
+        {
+          "path": "output",
+          "kind": "any",
+          "probes": []
+        }
+      ]
+    },
+    {
+      "id": "speak_text",
+      "type": "unknown",
+      "tool": "speak",
+      "status": "completed",
+      "error": null,
+      "detail": {
+        "type": "unknown",
+        "input": "The build finished without errors.",
+        "output": null
+      },
+      "fields": [
+        {
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "The build finished without errors."
+          ]
+        },
+        {
+          "path": "output",
+          "kind": "any",
+          "probes": []
+        }
+      ]
+    },
+    {
+      "id": "mcp_failed",
+      "type": "unknown",
+      "tool": "mcp__drive__search",
+      "status": "failed",
+      "error": {
+        "message": "timeout"
+      },
+      "detail": {
+        "type": "unknown",
+        "input": {
+          "query": "lost file"
+        },
+        "output": null
+      },
+      "fields": [
+        {
+          "path": "input",
+          "kind": "any",
+          "probes": [
+            "lost file"
+          ]
+        },
+        {
+          "path": "output",
+          "kind": "any",
+          "probes": []
         }
       ]
     }

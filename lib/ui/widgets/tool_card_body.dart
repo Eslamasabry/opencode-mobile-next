@@ -146,6 +146,10 @@ class _ToolBody extends StatelessWidget {
     }
     if (state.status == 'error') {
       return [
+        // What was asked stays visible next to why it failed.
+        if (contract.kind == _ToolKind.generic &&
+            (state.input.isNotEmpty || state.inputJson?.isNotEmpty == true))
+          _genericInput(),
         _error(context, state.output ?? _chatL10n(context).chatUiToolFailed),
       ];
     }
@@ -158,7 +162,9 @@ class _ToolBody extends StatelessWidget {
       _ToolKind.patch => _patchBody(context),
       _ToolKind.todo => [_todoBody(context)],
       _ToolKind.question => _questionBody(context),
-      _ToolKind.webFetch || _ToolKind.webSearch => [_richOutputBody()],
+      _ToolKind.webFetch || _ToolKind.webSearch => _richOutputBody(context),
+      _ToolKind.plan => [_planBody(context)],
+      _ToolKind.worktreeSetup => _setupBody(context),
       _ToolKind.task => _taskBody(context),
       _ToolKind.list ||
       _ToolKind.glob ||
@@ -408,9 +414,34 @@ class _ToolBody extends StatelessWidget {
     );
   }
 
-  Widget _richOutputBody() {
+  List<Widget> _richOutputBody(BuildContext context) {
+    final l10n = _chatL10n(context);
     final output = state.output ?? '';
-    if (output.trim().isEmpty) return _genericInput();
+    final asked = _valueString(state.input['prompt']);
+    final address = _valueString(state.input['url']);
+    final lead = [
+      // The line cuts a long address in the middle; opened, it is whole.
+      if (contract.kind == _ToolKind.webFetch && address != null)
+        KitText(
+          address,
+          role: KitTextRole.secondary,
+          tone: KitTextTone.secondary,
+        ),
+      if (contract.kind == _ToolKind.webFetch && asked != null)
+        KitText(
+          l10n.toolCardAsked(asked),
+          role: KitTextRole.secondary,
+          tone: KitTextTone.secondary,
+        ),
+    ];
+    // A page that answered with only a status (a 404) has nothing more to
+    // show than the line the step already says.
+    if (output.trim().isEmpty) {
+      return contract.kind == _ToolKind.webFetch &&
+              state.metadata?['httpCode'] != null
+          ? lead
+          : [...lead, _genericInput()];
+    }
     final name = switch (contract.kind) {
       _ToolKind.webFetch =>
         _valueString(state.input['format']) == 'html'
@@ -419,9 +450,76 @@ class _ToolBody extends StatelessWidget {
       _ToolKind.webSearch => 'search-results.md',
       _ => 'agent-result.md',
     };
-    return name.endsWith('.html')
-        ? _Output(text: output, name: name)
-        : _Prose(text: output, name: name);
+    return [
+      ...lead,
+      name.endsWith('.html')
+          ? _Output(text: output, name: name)
+          : _Prose(text: output, name: name),
+    ];
+  }
+
+  /// The agent's plan, read as Markdown.
+  Widget _planBody(BuildContext context) =>
+      state.output?.trim().isNotEmpty == true
+      ? _Prose(
+          key: const Key('plan-text'),
+          text: state.output!,
+          name: 'plan.md',
+        )
+      : _plainOutput(context, 'plan.md');
+
+  /// Preparing a separate copy of the project: where it is, then each setup
+  /// command with how it went, then the setup's own log.
+  List<Widget> _setupBody(BuildContext context) {
+    final l10n = _chatL10n(context);
+    final folder = _valueString(_metadata['worktreePath']);
+    final branch = _valueString(_metadata['branchName']);
+    final commands = _metadata['commands'];
+    String? outcome(Map command) {
+      final exit = _valueNumber(command['exitCode'])?.toInt();
+      if (exit != null) {
+        return exit == 0
+            ? l10n.toolCardExitPassed
+            : l10n.toolCardExitFailed(exit);
+      }
+      return switch (command['status']) {
+        'running' => l10n.kitToolRunning,
+        'failed' => l10n.kitToolFailed,
+        _ => null,
+      };
+    }
+
+    return [
+      if (folder != null || branch != null)
+        KitKeyValue(
+          rows: [
+            if (folder != null)
+              KitKeyValueRow(label: l10n.workspaceContextFolder, value: folder),
+            if (branch != null)
+              KitKeyValueRow(
+                label: l10n.managedWorkspacesBranchLabel,
+                value: branch,
+              ),
+          ],
+        ),
+      if (commands is List)
+        for (final command in commands.whereType<Map>()) ...[
+          if (_valueString(command['command']) case final text?)
+            KitCodeBlock(
+              text: text,
+              kind: KitCodeKind.command,
+              copyLabel: l10n.toolCardCopyCommand,
+            ),
+          if (_valueString(command['log']) != null || outcome(command) != null)
+            _Output(
+              text: _valueString(command['log']) ?? l10n.chatUiNoOutput,
+              name: 'setup-output.txt',
+              caption: outcome(command),
+            ),
+        ],
+      if (state.output?.trim().isNotEmpty == true)
+        _Output(text: state.output!, name: 'setup-log.txt'),
+    ];
   }
 
   /// `task` as a step (no conversation to open): what the sub-agent was
@@ -505,6 +603,32 @@ class _ToolBody extends StatelessWidget {
           role: KitTextRole.secondary,
           tone: KitTextTone.tertiary,
         ),
+      ..._actionsTaken(context),
+    ];
+  }
+
+  /// What a sub-agent did on the way, one row per step ("Search text" and
+  /// what it looked for).
+  List<Widget> _actionsTaken(BuildContext context) {
+    final l10n = _chatL10n(context);
+    final actions = _metadata['actions'];
+    if (actions is! List) return const [];
+    final rows = [
+      for (final action in actions.whereType<Map>())
+        if (_valueString(action['tool']) case final tool?)
+          KitKeyValueRow(
+            label: toolLabel(tool, l10n: l10n),
+            value: _valueString(action['summary']) ?? '',
+          ),
+    ].take(KitKeyValue.maxRows).toList();
+    if (rows.isEmpty) return const [];
+    return [
+      KitText(
+        l10n.toolCardWhatItDid,
+        role: KitTextRole.caption,
+        tone: KitTextTone.secondary,
+      ),
+      KitKeyValue(rows: rows),
     ];
   }
 
@@ -623,24 +747,19 @@ class _ToolBody extends StatelessWidget {
   List<Widget> _genericBody() {
     final hasInput =
         state.input.isNotEmpty || state.inputJson?.isNotEmpty == true;
+    final value = state.outputValue;
     return [
       if (hasInput) _genericInput(),
-      if (state.output?.trim().isNotEmpty == true)
-        _Output(
-          text: state.output!,
-          name: state.outputValue is Map || state.outputValue is List
-              ? 'tool-output.json'
-              : 'tool-output.txt',
-        ),
+      if (value is Map || value is List)
+        _Readable(value: value, name: 'tool-output.json')
+      else if (state.output?.trim().isNotEmpty == true)
+        _Output(text: state.output!, name: 'tool-output.txt'),
     ];
   }
 
-  Widget _genericInput() {
-    final input = state.input.isNotEmpty
-        ? const JsonEncoder.withIndent('  ').convert(state.input)
-        : state.inputJson ?? '';
-    return _Output(text: input, name: 'tool-input.json');
-  }
+  Widget _genericInput() => state.input.isNotEmpty
+      ? _Readable(value: state.input, name: 'tool-input.json')
+      : _Output(text: state.inputJson ?? '', name: 'tool-input.json');
 
   Widget _plainOutput(BuildContext context, String name, {String? caption}) =>
       _Output(

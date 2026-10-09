@@ -33957,5 +33957,39 @@
   "kitMarkdownImage": "Image",
   "@kitMarkdownImage": {
     "description": "KitMarkdown: the name of a picture in an agent's reply whose Markdown gave no description (empty, or just the word Image)"
+  },
+  "toolCardPlan": "Plan",
+  "@toolCardPlan": {
+    "description": "Chat step: the agent's plan for the work, shown as the step's title."
+  },
+  "toolCardWorktreeSetup": "Setting up a separate copy",
+  "@toolCardWorktreeSetup": {
+    "description": "Chat step: the title of the setup that prepares a separate copy of the project for an agent."
+  },
+  "toolCardWhatItDid": "What it did",
+  "@toolCardWhatItDid": {
+    "description": "Chat sub-agent step: label of the fold listing the steps the sub-agent took."
+  },
+  "toolCardTechnicalDetails": "Technical details",
+  "@toolCardTechnicalDetails": {
+    "description": "Chat step: label of the fold that holds a tool's nested technical values, kept out of the plain list above."
+  },
+  "toolCardPageStatus": "Page answered {status}",
+  "@toolCardPageStatus": {
+    "description": "Chat web page step: how the page answered, such as 200 OK or 404 Not Found.",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "toolCardAsked": "Asked: {prompt}",
+  "@toolCardAsked": {
+    "description": "Chat web page step: what the agent asked of the page.",
+    "placeholders": {
+      "prompt": {
+        "type": "String"
+      }
+    }
   }
 }

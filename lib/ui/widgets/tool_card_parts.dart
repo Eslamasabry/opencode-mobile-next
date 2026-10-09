@@ -204,3 +204,61 @@ class _FileRowState extends State<_FileRow> {
     );
   }
 }
+
+/// A tool's structured input or answer in plain words: each simple value as a
+/// labelled row ("Max results  5"), a list of simple values as lines, and
+/// anything nested only behind "Technical details".
+class _Readable extends StatelessWidget {
+  const _Readable({required this.value, required this.name});
+
+  final Object value;
+  final String name;
+
+  static bool _simple(Object? v) => v is String || v is num;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = _chatL10n(context);
+    final value = this.value;
+    final rows = <KitKeyValueRow>[];
+    Object? nested;
+    if (value is Map) {
+      final rest = <Object?, Object?>{};
+      for (final entry in value.entries) {
+        final text = entry.value is String
+            ? (entry.value as String).trim()
+            : '${entry.value}';
+        if (_simple(entry.value) &&
+            text.isNotEmpty &&
+            rows.length < KitKeyValue.maxRows) {
+          final words = toolIdWords('${entry.key}');
+          rows.add(
+            KitKeyValueRow(
+              label: KitText.sentenceCase(
+                words.isEmpty ? '${entry.key}' : words,
+              ),
+              value: text.length > 1000 ? text.substring(0, 1000) : text,
+            ),
+          );
+        } else if (entry.value != null && entry.value != '') {
+          rest[entry.key] = entry.value;
+        }
+      }
+      nested = rest.isEmpty ? null : rest;
+    } else if (value is List && value.every(_simple)) {
+      return _Output(text: value.join('\n'), name: name);
+    } else {
+      nested = value;
+    }
+    return _Stack(
+      children: [
+        if (rows.isNotEmpty) KitKeyValue(rows: rows),
+        if (nested != null)
+          KitDetailsFold(
+            label: l10n.toolCardTechnicalDetails,
+            text: const JsonEncoder.withIndent('  ').convert(nested),
+          ),
+      ],
+    );
+  }
+}

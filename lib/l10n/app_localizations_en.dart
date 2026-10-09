@@ -28397,4 +28397,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kitMarkdownImage => 'Image';
+
+  @override
+  String get toolCardPlan => 'Plan';
+
+  @override
+  String get toolCardWorktreeSetup => 'Setting up a separate copy';
+
+  @override
+  String get toolCardWhatItDid => 'What it did';
+
+  @override
+  String get toolCardTechnicalDetails => 'Technical details';
+
+  @override
+  String toolCardPageStatus(String status) {
+    return 'Page answered $status';
+  }
+
+  @override
+  String toolCardAsked(String prompt) {
+    return 'Asked: $prompt';
+  }
 }
