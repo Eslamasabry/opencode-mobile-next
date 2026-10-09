@@ -361,7 +361,7 @@ class _ToolContract {
         // Claude Code looking up which of its tools to load.
         kind = _ToolKind.generic;
         title = strings.chatUiLoadTools;
-        subtitle = null;
+        subtitle = _valueString(input['query']);
       default:
         kind = _ToolKind.generic;
         if (isConnectorSearchTool(rawName)) {
@@ -369,7 +369,7 @@ class _ToolContract {
           // phone: read-only, in words, with what it found on the line.
           kind = _ToolKind.connectorSearch;
           title = strings.chatUiToolSearchedConnectors;
-          subtitle = null;
+          subtitle = _valueString(input['query']);
           if (state.status == 'completed') {
             final result = parseConnectorSearchResult(
               value: state.outputValue,
@@ -384,6 +384,8 @@ class _ToolContract {
                 ),
                 ConnectorSearchStatus.catalogueNotLoaded =>
                   strings.chatUiConnectorSearchNotLoaded,
+                ConnectorSearchStatus.catalogueOff =>
+                  strings.chatUiConnectorSearchOff,
                 ConnectorSearchStatus.unavailable =>
                   strings.chatUiConnectorSearchUnavailable,
               });

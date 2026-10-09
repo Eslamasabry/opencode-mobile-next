@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:clock/clock.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
@@ -151,6 +152,56 @@ McpCatalogItem _item([String name = 'com.example/design']) =>
       })!,
     );
 
+/// The public registry, offline by default tests: the default list answers
+/// with `com.example/design`, a search with `org.example/designer`.
+class _Registry implements HttpClientAdapter {
+  final requests = <RequestOptions>[];
+  bool fail = false;
+  bool searchHits = false;
+  Duration delay = Duration.zero;
+
+  static String _server(String name, String title) => jsonEncode({
+    'server': {
+      'name': name,
+      'version': '1',
+      'title': title,
+      'description': '$title reference',
+      'remotes': [
+        {'type': 'streamable-http', 'url': 'https://example.com/mcp'},
+      ],
+    },
+  });
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    requests.add(options);
+    if (delay > Duration.zero) await Future<void>.delayed(delay);
+    if (fail) throw StateError('private upstream diagnostics');
+    final search = options.queryParameters['search'];
+    final item = search == null
+        ? _server('com.example/design', 'Design')
+        : searchHits
+        ? _server('org.example/designer', 'Designer')
+        : null;
+    return ResponseBody.fromString(
+      '{"servers":[${item ?? ''}]}',
+      200,
+      headers: {
+        Headers.contentTypeHeader: ['application/json'],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+final _registry = _Registry();
+
 Future<({ConnectionController connection, _Api api, _Repository repository})>
 _harness({bool observe = true, GenUiSearchPublisher? searchPublisher}) async {
   SharedPreferences.setMockInitialValues({
@@ -177,6 +228,9 @@ _harness({bool observe = true, GenUiSearchPublisher? searchPublisher}) async {
         ..directory = '/work/project'
         ..status = StreamStatus.connected;
   connection.adoptConnectedProfileForTesting(store.profiles.first);
+  connection.connectorRegistryClientOverride = SetupRegistryClient(
+    adapter: _registry,
+  );
   addTearDown(connection.dispose);
   await connection.setGenUiEnabled(true);
   if (observe) await connection.loadSessionTail('session');
@@ -216,6 +270,7 @@ class _SearchPublisher implements GenUiSearchPublisher {
 
   Future<({int status, Map<String, dynamic> body})> search({
     String directory = '/work/project',
+    String query = 'design',
   }) async {
     await ready.future.timeout(const Duration(seconds: 5));
     final client = HttpClient();
@@ -224,7 +279,7 @@ class _SearchPublisher implements GenUiSearchPublisher {
       request.headers.set('Authorization', 'Bearer $bearer');
       request.write(
         jsonEncode({
-          'arguments': {'query': 'design'},
+          'arguments': {'query': query},
           'directory': directory,
         }),
       );
@@ -241,13 +296,17 @@ class _SearchPublisher implements GenUiSearchPublisher {
   }
 }
 
-Future<void> _cache(ConnectionController connection) => connection.store.prefs
+Future<void> _cache(
+  ConnectionController connection, {
+  Duration age = const Duration(hours: 1),
+  bool optedIn = true,
+}) => connection.store.prefs
     .setString(
       'oc.setupRegistry.phone',
       jsonEncode({
         'version': 1,
-        'optedIn': true,
-        'cachedAt': '2026-10-09T00:00:00Z',
+        'optedIn': optedIn,
+        'cachedAt': DateTime.now().toUtc().subtract(age).toIso8601String(),
         'entries': [
           {
             'name': 'com.example/design',
@@ -267,6 +326,11 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const secure = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
   setUp(() {
+    _registry
+      ..requests.clear()
+      ..fail = false
+      ..searchHits = false
+      ..delay = Duration.zero;
     HttpOverrides.global = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(secure, (_) async => null);
@@ -315,10 +379,129 @@ void main() {
       final publisher = _SearchPublisher();
       final h = await _harness(searchPublisher: publisher);
       final result = await publisher.search();
-      expect(result.body['status'], 'catalogue_not_loaded');
+      expect(result.body['status'], 'catalogue_off');
       expect(h.repository.lists, 0);
     },
   );
+
+  test('catalogue off: fixed message and no registry request', () async {
+    final publisher = _SearchPublisher();
+    final h = await _harness(searchPublisher: publisher);
+    // A saved list stays on the phone but consent is off.
+    await _cache(h.connection, optedIn: false);
+    final result = await publisher.search();
+    expect(result.status, 200);
+    expect(result.body, {
+      'status': 'catalogue_off',
+      'message':
+          'The connector catalogue is off. Ask the person to tap Turn on in '
+          'this step, then search again.',
+      'matches': <Object>[],
+    });
+    expect(_registry.requests, isEmpty);
+  });
+
+  test('opted in with a stale list refreshes it first and merges the '
+      "registry's own answer", () async {
+    final publisher = _SearchPublisher();
+    final h = await _harness(searchPublisher: publisher);
+    await _cache(h.connection, age: const Duration(hours: 30));
+    _registry.searchHits = true;
+    final result = await publisher.search();
+    expect(result.status, 200);
+    final ids = [
+      for (final m in result.body['matches'] as List) (m as Map)['catalogId'],
+    ];
+    expect(
+      ids,
+      unorderedEquals(['com.example/design', 'org.example/designer']),
+    );
+    expect(_registry.requests, hasLength(2));
+    expect(
+      _registry.requests.where((r) => r.queryParameters['search'] == null),
+      hasLength(1),
+    );
+    final saved =
+        jsonDecode(
+              h.connection.store.prefs.getString('oc.setupRegistry.phone')!,
+            )
+            as Map;
+    expect(
+      DateTime.parse(
+        saved['cachedAt'] as String,
+      ).isAfter(DateTime.now().toUtc().subtract(const Duration(minutes: 5))),
+      isTrue,
+    );
+    // The search results are never saved as the default list.
+    expect(
+      [for (final e in saved['entries'] as List) (e as Map)['name']],
+      ['com.example/design'],
+    );
+  });
+
+  test('a fresh list is not refreshed, only the query is asked', () async {
+    final publisher = _SearchPublisher();
+    final h = await _harness(searchPublisher: publisher);
+    await _cache(h.connection);
+    await publisher.search();
+    expect(_registry.requests, hasLength(1));
+    expect(_registry.requests.single.queryParameters['search'], 'design');
+  });
+
+  test('registry failure falls back to the saved list', () async {
+    final publisher = _SearchPublisher();
+    final h = await _harness(searchPublisher: publisher);
+    await _cache(h.connection, age: const Duration(hours: 30));
+    _registry.fail = true;
+    final result = await publisher.search();
+    expect(result.status, 200);
+    expect(result.body['status'], 'ok');
+    expect(
+      ((result.body['matches'] as List).single as Map)['catalogId'],
+      'com.example/design',
+    );
+    expect(jsonEncode(result.body), isNot(contains('private upstream')));
+  });
+
+  test('opted in with nothing saved and no network says not loaded', () async {
+    final publisher = _SearchPublisher();
+    final h = await _harness(searchPublisher: publisher);
+    await h.connection.store.prefs.setString(
+      'oc.setupRegistry.phone',
+      jsonEncode({'version': 1, 'optedIn': true, 'entries': []}),
+    );
+    _registry.fail = true;
+    final result = await publisher.search();
+    expect(result.body['status'], 'catalogue_not_loaded');
+    expect(result.body['message'], isNot(contains('Tools > MCP')));
+  });
+
+  test('a slow registry cannot hold the search past its budget', () async {
+    final publisher = _SearchPublisher();
+    final h = await _harness(searchPublisher: publisher);
+    await _cache(h.connection, age: const Duration(hours: 30));
+    _registry.delay = const Duration(seconds: 8);
+    final watch = Stopwatch()..start();
+    final result = await publisher.search();
+    expect(result.status, 200);
+    expect(watch.elapsed, lessThan(const Duration(seconds: 5)));
+    expect(
+      ((result.body['matches'] as List).single as Map)['catalogId'],
+      'com.example/design',
+    );
+  });
+
+  test('turning the catalogue on saves consent and loads the list', () async {
+    final h = await _harness();
+    expect(await h.connection.enableConnectorCatalogue(), isTrue);
+    final saved =
+        jsonDecode(
+              h.connection.store.prefs.getString('oc.setupRegistry.phone')!,
+            )
+            as Map;
+    expect(saved['optedIn'], isTrue);
+    expect((saved['entries'] as List), isNotEmpty);
+  });
 
   test('agent search rejects source changes during inventory read', () async {
     final publisher = _SearchPublisher();
@@ -345,11 +528,11 @@ void main() {
   test('search observes cache changes without a helper restart', () async {
     final publisher = _SearchPublisher();
     final h = await _harness(searchPublisher: publisher);
-    expect((await publisher.search()).body['status'], 'catalogue_not_loaded');
+    expect((await publisher.search()).body['status'], 'catalogue_off');
     await _cache(h.connection);
     expect((await publisher.search()).body['status'], 'ok');
     await h.connection.store.prefs.remove('oc.setupRegistry.phone');
-    expect((await publisher.search()).body['status'], 'catalogue_not_loaded');
+    expect((await publisher.search()).body['status'], 'catalogue_off');
   });
 
   test('failed descriptor publishing can retry after cooldown', () async {

@@ -125,6 +125,11 @@ extension _ChatCommands on _ChatScreenState {
       ? null
       : (command) => unawaited(_runShellDialog(initial: command));
 
+  /// A connector search step's "Turn on connector catalogue"; null in an
+  /// isolated conversation, which has no profile of its own to change.
+  Future<bool> Function()? get _enableConnectorCatalogue =>
+      _conn.isIsolated ? null : _conn.enableConnectorCatalogue;
+
   Future<void> _loadServerCommands() {
     if (_conn.isIsolated || !_conn.capabilities.slashCommands) {
       return Future.value();

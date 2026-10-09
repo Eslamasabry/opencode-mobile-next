@@ -639,6 +639,7 @@ class _MessageView extends StatelessWidget {
           onOpenSession: onOpenSession,
           waitingForYou: chat?._toolWaitsForYou(part) ?? false,
           onRerunCommand: chat?._rerunShellCommand,
+          onEnableConnectorCatalogue: chat?._enableConnectorCatalogue,
         ),
     ];
   }

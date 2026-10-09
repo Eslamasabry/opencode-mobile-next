@@ -52,7 +52,7 @@ void main() {
       );
       expect(unloaded, {
         'status': 'catalogue_not_loaded',
-        'message': 'Catalogue not loaded. Open Tools > MCP to load it.',
+        'message': 'The connector catalogue could not be loaded right now. Try again in a moment.',
         'matches': <Object>[],
       });
       expect(

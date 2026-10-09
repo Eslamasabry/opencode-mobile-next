@@ -28277,7 +28277,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get chatUiConnectorSearchNotLoaded =>
-      'Catalogue not loaded. Open Tools > MCP to load it.';
+      'The catalogue could not be loaded right now. Ask again in a moment.';
+
+  @override
+  String get chatUiConnectorSearchOff => 'Catalogue is off';
+
+  @override
+  String get chatUiConnectorSearchOffBody =>
+      'The connector catalogue is a public list of connectors. Turning it on lets this app download that list and send the words searched for to the public registry. Nothing is connected.';
+
+  @override
+  String get chatUiConnectorSearchTurnOn => 'Turn on connector catalogue';
+
+  @override
+  String get chatUiConnectorSearchTurnedOn =>
+      'Catalogue is on. Ask the agent to search again.';
+
+  @override
+  String get chatUiConnectorSearchTurnOnFailed =>
+      'The catalogue could not be turned on. Try again.';
 
   @override
   String get chatUiConnectorSearchUnavailable =>

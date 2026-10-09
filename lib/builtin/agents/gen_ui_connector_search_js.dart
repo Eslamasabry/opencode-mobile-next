@@ -55,7 +55,9 @@ async function findGenUiConnectors(args) {
   const unavailable = () => ({status: 'unavailable',
     message: 'Connector search is unavailable. Try again from Tools.', matches: []});
   const notLoaded = () => ({status: 'catalogue_not_loaded',
-    message: 'Catalogue not loaded. Open Tools > MCP to load it.', matches: []});
+    message: 'The connector catalogue could not be loaded right now. Try again in a moment.', matches: []});
+  const catalogueOff = () => ({status: 'catalogue_off',
+    message: 'The connector catalogue is off. Ask the person to tap Turn on in this step, then search again.', matches: []});
   const object = (value, keys) => value !== null && typeof value === 'object'
     && !Array.isArray(value) && Object.keys(value).length === keys.length
     && keys.every(key => Object.hasOwn(value, key));
@@ -92,8 +94,10 @@ async function findGenUiConnectors(args) {
   }
   const validate = value => {
     if (!value || typeof value !== 'object') throw new Error('invalid');
-    if (value.status === 'catalogue_not_loaded' || value.status === 'unavailable') {
-      const expected = value.status === 'catalogue_not_loaded' ? notLoaded() : unavailable();
+    if (value.status === 'catalogue_not_loaded' || value.status === 'catalogue_off'
+        || value.status === 'unavailable') {
+      const expected = value.status === 'catalogue_not_loaded' ? notLoaded()
+        : value.status === 'catalogue_off' ? catalogueOff() : unavailable();
       if (!object(value, ['status','message','matches']) || value.message !== expected.message
           || !Array.isArray(value.matches) || value.matches.length) throw new Error('invalid');
       return expected;

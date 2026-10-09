@@ -506,6 +506,7 @@ class _AssistantMessagePart extends StatelessWidget {
         onOpenSession: onOpenSession,
         waitingForYou: chat?._toolWaitsForYou(part) ?? false,
         onRerunCommand: chat?._rerunShellCommand,
+        onEnableConnectorCatalogue: chat?._enableConnectorCatalogue,
       );
     }
     if (part.type == 'file') {
