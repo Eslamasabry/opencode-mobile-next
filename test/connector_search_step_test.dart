@@ -88,7 +88,7 @@ void main() {
     );
     await tester.tap(find.text('Searched connectors'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Nothing is connected'), findsOneWidget);
+    expect(find.textContaining('nothing gets connected'), findsOneWidget);
     final button = find.text('Turn on connector catalogue');
     expect(button, findsOneWidget);
     await tester.tap(button);
