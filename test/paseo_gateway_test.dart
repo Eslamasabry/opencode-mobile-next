@@ -1240,7 +1240,13 @@ void main() {
       'description': 'Fetch a page',
     });
     expect(other.permission, 'webfetch');
-    expect(other.metadata, {'url': 'https://example.com'});
+    expect(other.metadata, {
+      'url': 'https://example.com',
+      // What the card draws as labelled rows.
+      'facts': [
+        {'key': 'url', 'value': 'https://example.com'},
+      ],
+    });
     expect(other.message, 'Fetch a page');
   });
 }

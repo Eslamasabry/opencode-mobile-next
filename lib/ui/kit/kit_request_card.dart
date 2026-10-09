@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
+import 'chat/kit_markdown.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
 import 'kit_choice_list.dart';
@@ -85,6 +86,7 @@ class KitRequestCard extends StatefulWidget {
     this.phase = KitRequestPhase.waiting,
     this.server,
     this.detail,
+    this.detailMarkdown = false,
     this.summary,
     this.answers,
     this.answer,
@@ -121,6 +123,7 @@ class KitRequestCard extends StatefulWidget {
     this.tertiary = const [],
     this.titleKey,
   }) : _icon = icon,
+       detailMarkdown = false,
        kind = null,
        who = null,
        reason = null,
@@ -182,6 +185,10 @@ class KitRequestCard extends StatefulWidget {
 
   /// Why it asks, one line: "To check the fix".
   final String? detail;
+
+  /// [detail] is Markdown (a plan): drawn as formatted text in a bounded
+  /// height, with Show more to read the rest in place.
+  final bool detailMarkdown;
 
   /// A command, path or pattern: mono, left to right, two lines.
   final String? summary;
@@ -568,11 +575,13 @@ class _KitRequestCardState extends State<KitRequestCard> {
             if (detail != null && detail.isNotEmpty)
               Padding(
                 padding: EdgeInsetsDirectional.only(top: tokens.space1),
-                child: KitText(
-                  detail,
-                  role: KitTextRole.secondary,
-                  tone: KitTextTone.secondary,
-                ),
+                child: widget.detailMarkdown
+                    ? _BoundedMarkdown(detail)
+                    : KitText(
+                        detail,
+                        role: KitTextRole.secondary,
+                        tone: KitTextTone.secondary,
+                      ),
               ),
             Padding(
               padding: EdgeInsetsDirectional.only(top: tokens.space1),
@@ -1318,4 +1327,60 @@ Widget kitAnsweredRow(
       ),
     ],
   );
+}
+
+/// A plan or other long Markdown in a request card: formatted, a bounded
+/// height first, and "Show more" to read the rest in place.
+class _BoundedMarkdown extends StatefulWidget {
+  const _BoundedMarkdown(this.data);
+
+  final String data;
+
+  @override
+  State<_BoundedMarkdown> createState() => _BoundedMarkdownState();
+}
+
+class _BoundedMarkdownState extends State<_BoundedMarkdown> {
+  static const _height = 168.0;
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    // A plan this short needs no fold.
+    final long =
+        widget.data.length > 320 || '\n'.allMatches(widget.data).length > 7;
+    final text = KitMarkdown(
+      widget.data,
+      role: KitTextRole.secondary,
+      selectable: false,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (!long || _open)
+          text
+        else
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: _height),
+            child: ClipRect(
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: text,
+              ),
+            ),
+          ),
+        if (long)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: KitButton.tertiary(
+              key: const Key('request-detail-toggle'),
+              label: _open ? l10n.kitRequestShowLess : l10n.kitRequestShowMore,
+              onPressed: () => setState(() => _open = !_open),
+            ),
+          ),
+      ],
+    );
+  }
 }

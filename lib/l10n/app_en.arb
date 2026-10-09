@@ -34086,5 +34086,13 @@
   "toolCardWhatCameBack": "What came back",
   "@toolCardWhatCameBack": {
     "description": "Chat journey: What came back"
+  },
+  "kitRequestShowMore": "Show more",
+  "@kitRequestShowMore": {
+    "description": "Request card: Show more"
+  },
+  "kitRequestShowLess": "Show less",
+  "@kitRequestShowLess": {
+    "description": "Request card: Show less"
   }
 }

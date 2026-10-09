@@ -44902,6 +44902,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What came back'**
   String get toolCardWhatCameBack;
+
+  /// Request card: Show more
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get kitRequestShowMore;
+
+  /// Request card: Show less
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get kitRequestShowLess;
 }
 
 class _AppLocalizationsDelegate

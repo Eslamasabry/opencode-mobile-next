@@ -1581,7 +1581,8 @@
           "path": "text",
           "kind": "string",
           "probes": [
-            "# Add the retry button"
+            "Add the retry button",
+            "Read the upload queue"
           ],
           "primary": true
         }
@@ -1776,7 +1777,7 @@
           "path": "name",
           "kind": "string",
           "probes": [
-            "Notebookedit"
+            "Use Notebook edit"
           ],
           "primary": false
         },

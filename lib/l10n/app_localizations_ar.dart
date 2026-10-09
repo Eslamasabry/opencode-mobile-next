@@ -28543,4 +28543,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get toolCardWhatCameBack => 'ما عاد';
+
+  @override
+  String get kitRequestShowMore => 'عرض المزيد';
+
+  @override
+  String get kitRequestShowLess => 'عرض أقل';
 }

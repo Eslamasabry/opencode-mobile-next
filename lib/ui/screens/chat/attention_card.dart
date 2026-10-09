@@ -362,6 +362,8 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
       ifIgnored: _requestIfIgnored(context, 0),
       announcement: l10n.chatUiQuestionLabel(title),
       since: _seen,
+      detailMarkdown:
+          !widget.inList && count == 1 && (first?.markdown ?? false),
       detail: first == null || first.question.trim().isEmpty
           ? null
           : count > 1

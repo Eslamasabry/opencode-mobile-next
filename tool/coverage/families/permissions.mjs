@@ -147,7 +147,7 @@ export const permissionCases = [
     metadata: ['toolu_01Plan'],
     'actions[].label': ['Implement without asking'],
     'actions[].id': [], 'actions[].behavior': [], 'actions[].variant': [], 'actions[].intent': [],
-  }, {}, ['text'], ['input']),
+  }, { text: ['Add the retry button', 'Read the upload queue'] }, ['text'], ['input']),
   req('question', {
     id: 'perm_req_f1d6a9', provider: 'claude', name: 'AskUserQuestion', kind: 'question',
     input: { questions: [
@@ -164,5 +164,5 @@ export const permissionCases = [
     id: 'perm_req_9e0b35', provider: 'claude', name: 'NotebookEdit', kind: 'other',
     description: 'Change a cell in analysis.ipynb',
     input: { notebook_path: `${CWD}/analysis.ipynb`, new_source: 'print(total)' },
-  }, null, { name: ['Notebookedit'], input: ['analysis.ipynb'] }, {}, [], ['description', 'input']),
+  }, null, { name: ['Use Notebook edit'], input: ['analysis.ipynb'] }, {}, [], ['description', 'input']),
 ];

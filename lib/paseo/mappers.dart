@@ -686,6 +686,8 @@ PermissionRequest paseoPermission(
   // What "Always allow" would cover; defaults to the patterns.
   List<String>? covers;
   final metadata = <String, dynamic>{};
+  // Labelled rows for what the agent asks, for the card to draw as facts.
+  final facts = <Map<String, String>>[];
   String text(String key, {int max = 4096}) => paseoText(detail[key], max: max);
   switch (detail['type']) {
     case 'write' || 'edit':
@@ -736,12 +738,16 @@ PermissionRequest paseoPermission(
       final query = text('query');
       if (query.isNotEmpty) patterns = [query];
       metadata['query'] = query;
+      facts.add({'key': 'query', 'value': query});
       covers = [permission];
     case 'sub_agent':
       permission = 'task';
       final description = text('description');
       if (description.isNotEmpty) patterns = [description];
       metadata['description'] = description;
+      if (description.isNotEmpty) {
+        facts.add({'key': 'task', 'value': description});
+      }
       if (text('subAgentType').isNotEmpty) {
         metadata['subagent_type'] = text('subAgentType', max: 256);
       }
@@ -751,13 +757,14 @@ PermissionRequest paseoPermission(
       final label = text('label', max: 512);
       if (label.isNotEmpty) patterns = [label];
       metadata['label'] = label;
+      if (label.isNotEmpty) facts.add({'key': 'skill', 'value': label});
       covers = [permission];
     default:
       permission = switch (request['kind']) {
         'plan' => 'plan',
         'question' => 'question',
         'mode' => 'mode',
-        _ => name.isEmpty ? 'tool' : name.toLowerCase(),
+        _ => name.isEmpty ? 'tool' : _toolId(name),
       };
       final shown = detail['type'] == 'unknown' && detail['input'] is Map
           ? Map<String, dynamic>.from(detail['input'] as Map)
@@ -777,6 +784,9 @@ PermissionRequest paseoPermission(
         for (final entry in metadata.entries.take(6))
           '${_askLabel(entry.key)}: ${entry.value}',
       ];
+      for (final entry in metadata.entries.take(6)) {
+        facts.add({'key': entry.key, 'value': '${entry.value}'});
+      }
       covers = [permission];
   }
   covers ??= List.of(patterns);
@@ -800,8 +810,10 @@ PermissionRequest paseoPermission(
         continue;
       }
       patterns.add('${_askLabel(entry.key)}: $value');
+      facts.add({'key': entry.key, 'value': value});
     }
   }
+  if (facts.isNotEmpty) metadata['facts'] = facts;
   final toolUse = request['metadata'] is Map
       ? (request['metadata'] as Map)['toolUseId']
       : null;
@@ -830,6 +842,25 @@ PermissionRequest paseoPermission(
         ? PermissionTool(messageID: toolUse, callID: toolUse)
         : null,
   );
+}
+
+/// A tool's name as the lowercase id the app words ("NotebookEdit" as
+/// "notebook_edit"; a connector's "mcp__drive__search" is kept).
+String _toolId(String name) {
+  final lower = name.toLowerCase();
+  // Names the app already words as one id keep it.
+  if (const {
+    'webfetch',
+    'websearch',
+    'todowrite',
+    'todoread',
+    'multiedit',
+  }.contains(lower)) {
+    return lower;
+  }
+  return name
+      .replaceAllMapped(RegExp('([a-z0-9])([A-Z])'), (m) => '${m[1]}_${m[2]}')
+      .toLowerCase();
 }
 
 /// Input values the card shows another way (the change as a diff, the plan).

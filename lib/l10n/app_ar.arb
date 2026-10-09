@@ -8484,5 +8484,7 @@
   "chatRequestReadFrom": "من السطر {line}",
   "chatRequestReadLines": "{count, plural, one{سطر واحد} other{{count} أسطر}}",
   "toolCardWhatWasSent": "ما أُرسل",
-  "toolCardWhatCameBack": "ما عاد"
+  "toolCardWhatCameBack": "ما عاد",
+  "kitRequestShowMore": "عرض المزيد",
+  "kitRequestShowLess": "عرض أقل"
 }

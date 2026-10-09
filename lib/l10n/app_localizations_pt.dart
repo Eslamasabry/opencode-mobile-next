@@ -28509,4 +28509,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get toolCardWhatCameBack => 'What came back';
+
+  @override
+  String get kitRequestShowMore => 'Show more';
+
+  @override
+  String get kitRequestShowLess => 'Show less';
 }

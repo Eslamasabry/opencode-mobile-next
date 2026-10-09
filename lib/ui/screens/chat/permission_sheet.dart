@@ -8,6 +8,7 @@ import '../../../api/models.dart';
 import '../../../domain/server_gateway.dart' show PendingQuestion;
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
+import '../../../domain/tool_label.dart' show toolIdWords;
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
 import '../../permission_presentation.dart';
@@ -303,6 +304,26 @@ KitRequestCard permissionRequestCard(
   );
 }
 
+/// The labelled values an agent's request carries ("Query", "Max results").
+List<KitKeyValueRow> _facts(PermissionRequest permission) {
+  final raw = permission.metadata['facts'];
+  if (raw is! List) return const [];
+  return [
+    for (final fact in raw.whereType<Map>().take(KitKeyValue.maxRows))
+      if (fact['key'] is String && fact['value'] != null)
+        KitKeyValueRow(
+          label: KitText.sentenceCase(
+            toolIdWords(fact['key'] as String).ifEmpty(fact['key'] as String),
+          ),
+          value: '${fact['value']}',
+        ),
+  ];
+}
+
+extension on String {
+  String ifEmpty(String other) => isEmpty ? other : this;
+}
+
 String? _metaText(PermissionRequest permission, String key) {
   final value = permission.metadata[key];
   return value is String && value.trim().isNotEmpty ? value : null;
@@ -359,12 +380,24 @@ Future<KitRequestSheetOutcome> showPermissionDetails(
   final others = permission.patterns
       .where((pattern) => !shown.contains(pattern))
       .toList();
+  final facts = _facts(permission);
+  // Only a real shell command is drawn as one (with its `$`); a path, an
+  // address or a pattern list is a copyable line, and what the agent asks
+  // in labelled values is a set of rows.
   final fullText =
       command ??
       path ??
-      (others.isNotEmpty
+      (others.isNotEmpty && facts.isEmpty
           ? others.join('\n')
+          : facts.isNotEmpty
+          ? null
           : permission.message ?? l10n.chatUiAllMatchingRequests);
+  final wordsOnly =
+      command == null &&
+      path == null &&
+      others.isEmpty &&
+      facts.isEmpty &&
+      permission.message != null;
   final broader = permission.always.isNotEmpty
       ? permission.always
       : permission.patterns;
@@ -373,6 +406,12 @@ Future<KitRequestSheetOutcome> showPermissionDetails(
     card: card,
     routes: routes,
     fullText: fullText,
+    fullTextStyle: command != null
+        ? KitRequestText.command
+        : wordsOnly
+        ? KitRequestText.words
+        : KitRequestText.block,
+    facts: facts,
     change: diff == null
         ? null
         : KitDiffView(
@@ -528,6 +567,9 @@ Future<KitRequestSheetOutcome> showQuestionDetails(
       card: card,
       routes: routes,
       fullText: question.prompts.firstOrNull?.question,
+      fullTextStyle: question.prompts.firstOrNull?.markdown == true
+          ? KitRequestText.markdown
+          : KitRequestText.words,
       sheetKey: const Key('question-sheet'),
     );
   } finally {

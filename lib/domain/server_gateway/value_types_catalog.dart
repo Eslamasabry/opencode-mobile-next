@@ -293,12 +293,16 @@ class QuestionPrompt {
   final bool optional;
   final List<QuestionChoice> choices;
 
+  /// The question is Markdown (an agent's plan): drawn as formatted text.
+  final bool markdown;
+
   const QuestionPrompt({
     required this.title,
     required this.question,
     required this.multiple,
     required this.custom,
     this.optional = false,
+    this.markdown = false,
     required this.choices,
   });
 }
@@ -329,6 +333,7 @@ class PendingQuestion {
                 multiple: value['multiple'] == true,
                 custom: value['custom'] != false,
                 optional: value['optional'] == true,
+                markdown: value['markdown'] == true,
                 choices: options is List
                     ? options.whereType<Map>().map((option) {
                         final choice = Map<String, dynamic>.from(option);
