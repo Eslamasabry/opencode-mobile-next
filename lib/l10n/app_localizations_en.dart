@@ -28580,4 +28580,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String connectionTokenRejectedFor(String server) {
     return '$server rejected the connection token. Update it to reconnect.';
   }
+
+  @override
+  String get usageBusiestDays => 'Busiest days';
+
+  @override
+  String usageDaySteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count steps',
+      one: '1 step',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String modelPickerAgentUses(String model) {
+    return 'Uses $model';
+  }
+
+  @override
+  String get sessionMenuArchive => 'Archive conversation';
+
+  @override
+  String get sessionMenuArchiveHint =>
+      'Moves it to Archived; the server keeps it';
+
+  @override
+  String get sessionMenuDelete => 'Delete conversation';
+
+  @override
+  String get sessionMenuDeleteHint => 'Removes it and its history for good';
+
+  @override
+  String sessionArchiveTitle(String title) {
+    return 'Archive “$title”?';
+  }
+
+  @override
+  String get sessionArchiveBody =>
+      'It moves to Archived, where you can still read it.';
+
+  @override
+  String sessionDeleteTitle(String title) {
+    return 'Delete “$title”?';
+  }
+
+  @override
+  String get sessionDeleteBody =>
+      'The conversation and its history are removed for good. This cannot be undone.';
 }

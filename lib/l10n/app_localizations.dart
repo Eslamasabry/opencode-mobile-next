@@ -45052,6 +45052,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{server} rejected the connection token. Update it to reconnect.'**
   String connectionTokenRejectedFor(String server);
+
+  /// No description provided for @usageBusiestDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Busiest days'**
+  String get usageBusiestDays;
+
+  /// Usage: how many agent steps ran on one day
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {1 step} other {{count} steps}}'**
+  String usageDaySteps(int count);
+
+  /// Model picker: under an agent that has no description of its own, the model it works with
+  ///
+  /// In en, this message translates to:
+  /// **'Uses {model}'**
+  String modelPickerAgentUses(String model);
+
+  /// No description provided for @sessionMenuArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive conversation'**
+  String get sessionMenuArchive;
+
+  /// No description provided for @sessionMenuArchiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Moves it to Archived; the server keeps it'**
+  String get sessionMenuArchiveHint;
+
+  /// No description provided for @sessionMenuDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete conversation'**
+  String get sessionMenuDelete;
+
+  /// No description provided for @sessionMenuDeleteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes it and its history for good'**
+  String get sessionMenuDeleteHint;
+
+  /// Question before archiving the open conversation, naming it
+  ///
+  /// In en, this message translates to:
+  /// **'Archive “{title}”?'**
+  String sessionArchiveTitle(String title);
+
+  /// No description provided for @sessionArchiveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It moves to Archived, where you can still read it.'**
+  String get sessionArchiveBody;
+
+  /// Question before deleting the open conversation, naming it
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{title}”?'**
+  String sessionDeleteTitle(String title);
+
+  /// No description provided for @sessionDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The conversation and its history are removed for good. This cannot be undone.'**
+  String get sessionDeleteBody;
 }
 
 class _AppLocalizationsDelegate

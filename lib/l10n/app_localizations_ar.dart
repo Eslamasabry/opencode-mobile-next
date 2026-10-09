@@ -28629,4 +28629,55 @@ class AppLocalizationsAr extends AppLocalizations {
   String connectionTokenRejectedFor(String server) {
     return 'رفض $server رمز الاتصال. حدّثه لإعادة الاتصال.';
   }
+
+  @override
+  String get usageBusiestDays => 'أكثر الأيام نشاطًا';
+
+  @override
+  String usageDaySteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count خطوة',
+      many: '$count خطوة',
+      few: '$count خطوات',
+      two: 'خطوتان',
+      one: 'خطوة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String modelPickerAgentUses(String model) {
+    return 'يستخدم $model';
+  }
+
+  @override
+  String get sessionMenuArchive => 'أرشفة المحادثة';
+
+  @override
+  String get sessionMenuArchiveHint => 'تنتقل إلى المؤرشفة ويحتفظ بها الخادم';
+
+  @override
+  String get sessionMenuDelete => 'حذف المحادثة';
+
+  @override
+  String get sessionMenuDeleteHint => 'تُزال هي وسجلها نهائيًا';
+
+  @override
+  String sessionArchiveTitle(String title) {
+    return 'أرشفة «$title»؟';
+  }
+
+  @override
+  String get sessionArchiveBody => 'تنتقل إلى المؤرشفة ويمكنك قراءتها هناك.';
+
+  @override
+  String sessionDeleteTitle(String title) {
+    return 'حذف «$title»؟';
+  }
+
+  @override
+  String get sessionDeleteBody =>
+      'تُزال المحادثة وسجلها نهائيًا. لا يمكن التراجع عن ذلك.';
 }
