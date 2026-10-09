@@ -14,7 +14,6 @@ import 'package:opencode_mobile/ui/widgets/agent_card_view.dart';
 
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart' show KitTokens;
-import 'package:opencode_mobile/ui/theme_roles.dart' show ThemeRoles;
 
 import '../../tool/capture/fixtures.dart' show captureTheme;
 import '../support/agent_card_fakes.dart';
