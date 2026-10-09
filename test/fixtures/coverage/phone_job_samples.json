@@ -1,0 +1,1531 @@
+{
+  "source": "lib/builtin/setup/setup_engine/job_record.dart (setup.json)",
+  "schema": {
+    "job": [
+      {
+        "path": "jobId",
+        "kind": "string"
+      },
+      {
+        "path": "host",
+        "kind": "enum"
+      },
+      {
+        "path": "state",
+        "kind": "enum"
+      },
+      {
+        "path": "current",
+        "kind": "string"
+      },
+      {
+        "path": "startedAt",
+        "kind": "number"
+      },
+      {
+        "path": "updatedAt",
+        "kind": "number"
+      },
+      {
+        "path": "error",
+        "kind": "string"
+      },
+      {
+        "path": "errorCode",
+        "kind": "string"
+      },
+      {
+        "path": "logTail",
+        "kind": "string"
+      },
+      {
+        "path": "order[]",
+        "kind": "string"
+      },
+      {
+        "path": "params._job.first",
+        "kind": "string"
+      },
+      {
+        "path": "params._job.adding",
+        "kind": "string"
+      },
+      {
+        "path": "params.opencode.runtime",
+        "kind": "string"
+      },
+      {
+        "path": "params.opencode.version",
+        "kind": "string"
+      }
+    ],
+    "component": [
+      {
+        "path": "state",
+        "kind": "enum"
+      },
+      {
+        "path": "weight",
+        "kind": "number"
+      },
+      {
+        "path": "stage",
+        "kind": "string"
+      },
+      {
+        "path": "done",
+        "kind": "number"
+      },
+      {
+        "path": "total",
+        "kind": "number"
+      },
+      {
+        "path": "percent",
+        "kind": "number"
+      },
+      {
+        "path": "version",
+        "kind": "string"
+      },
+      {
+        "path": "error",
+        "kind": "string"
+      },
+      {
+        "path": "startedAt",
+        "kind": "number"
+      },
+      {
+        "path": "endedAt",
+        "kind": "number"
+      },
+      {
+        "path": "data",
+        "kind": "any"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "job_running_download",
+      "kind": "job",
+      "payload": {
+        "jobId": "job_run",
+        "host": "builtin",
+        "startedAt": 1788950000000,
+        "updatedAt": 1788950061000,
+        "order": [
+          "linux",
+          "essentials",
+          "python",
+          "node",
+          "opencode",
+          "start"
+        ],
+        "state": "running",
+        "current": "node",
+        "logTail": "node: fetching the package index",
+        "params": {
+          "_job": {
+            "first": "1"
+          },
+          "opencode": {
+            "runtime": "opencode1",
+            "version": "1.18.32"
+          }
+        },
+        "components": {
+          "linux": {
+            "state": "done",
+            "weight": 20,
+            "stage": "Ready",
+            "version": "24.04.5",
+            "startedAt": 1788950000000,
+            "endedAt": 1788950009000
+          },
+          "essentials": {
+            "state": "done",
+            "weight": 20,
+            "startedAt": 1788950009000,
+            "endedAt": 1788950020000
+          },
+          "python": {
+            "state": "skipped",
+            "weight": 20
+          },
+          "node": {
+            "state": "running",
+            "weight": 20,
+            "stage": "Downloading",
+            "done": 18000000,
+            "total": 30000000,
+            "percent": 60,
+            "startedAt": 1788950020000,
+            "data": {
+              "mirror": "default"
+            }
+          },
+          "opencode": {
+            "state": "pending",
+            "weight": 20
+          },
+          "start": {
+            "state": "pending",
+            "weight": 20
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "job.jobId",
+          "path": "jobId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.host",
+          "path": "host",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.startedAt",
+          "path": "startedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.updatedAt",
+          "path": "updatedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.order[]",
+          "path": "order[]",
+          "kind": "string",
+          "probes": [
+            "Linux base",
+            "Node.js",
+            "Start OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "job.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Setting up OpenCode on this phone"
+          ],
+          "primary": false
+        },
+        {
+          "key": "job.current",
+          "path": "current",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.logTail",
+          "path": "logTail",
+          "kind": "string",
+          "probes": [
+            "node: fetching the package index"
+          ],
+          "primary": false
+        },
+        {
+          "key": "job.params._job.first",
+          "path": "params._job.first",
+          "kind": "string",
+          "probes": [
+            "Step 1 of 3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "job.params.opencode.runtime",
+          "path": "params.opencode.runtime",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.params.opencode.version",
+          "path": "params.opencode.version",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.stage",
+          "path": "stage",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "24.04.5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.startedAt",
+          "path": "startedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.endedAt",
+          "path": "endedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.startedAt",
+          "path": "startedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.endedAt",
+          "path": "endedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.stage",
+          "path": "stage",
+          "kind": "string",
+          "probes": [
+            "Downloading"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.done",
+          "path": "done",
+          "kind": "number",
+          "probes": [
+            "18 of 30 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.total",
+          "path": "total",
+          "kind": "number",
+          "probes": [
+            "18 of 30 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.percent",
+          "path": "percent",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.startedAt",
+          "path": "startedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.data",
+          "path": "data",
+          "kind": "any",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "job_failed_offline",
+      "kind": "job",
+      "payload": {
+        "jobId": "job_fail",
+        "host": "builtin",
+        "startedAt": 1788950000000,
+        "updatedAt": 1788950061000,
+        "order": [
+          "linux",
+          "essentials",
+          "python",
+          "node",
+          "opencode",
+          "start"
+        ],
+        "state": "failed",
+        "current": "node",
+        "error": "node exited with 1",
+        "errorCode": "setup_persistence",
+        "logTail": "curl: (6) Could not resolve host: nodejs.org",
+        "params": {},
+        "components": {
+          "linux": {
+            "state": "done",
+            "weight": 20,
+            "version": "24.04.5"
+          },
+          "essentials": {
+            "state": "done",
+            "weight": 20
+          },
+          "python": {
+            "state": "done",
+            "weight": 20,
+            "version": "3.12.3"
+          },
+          "node": {
+            "state": "failed",
+            "weight": 20,
+            "stage": "Downloading",
+            "error": "curl: (6) Could not resolve host"
+          },
+          "opencode": {
+            "state": "pending",
+            "weight": 20
+          },
+          "start": {
+            "state": "pending",
+            "weight": 20
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "job.jobId",
+          "path": "jobId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.host",
+          "path": "host",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.startedAt",
+          "path": "startedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.updatedAt",
+          "path": "updatedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.order[]",
+          "path": "order[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Setup didn't finish"
+          ],
+          "primary": false
+        },
+        {
+          "key": "job.current",
+          "path": "current",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.error",
+          "path": "error",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.errorCode",
+          "path": "errorCode",
+          "kind": "string",
+          "probes": [
+            "Could not install OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "job.logTail",
+          "path": "logTail",
+          "kind": "string",
+          "probes": [
+            "curl: (6) Could not resolve host"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "3.12.3"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "No internet connection"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.stage",
+          "path": "stage",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.error",
+          "path": "error",
+          "kind": "string",
+          "probes": [
+            "No internet connection"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "job_done",
+      "kind": "job",
+      "payload": {
+        "jobId": "job_done",
+        "host": "builtin",
+        "startedAt": 1788950000000,
+        "updatedAt": 1788950061000,
+        "order": [
+          "linux",
+          "essentials",
+          "python",
+          "node",
+          "opencode",
+          "start"
+        ],
+        "state": "done",
+        "current": "opencode",
+        "logTail": "",
+        "components": {
+          "linux": {
+            "state": "done",
+            "weight": 20
+          },
+          "essentials": {
+            "state": "done",
+            "weight": 20
+          },
+          "python": {
+            "state": "done",
+            "weight": 20
+          },
+          "node": {
+            "state": "done",
+            "weight": 20,
+            "version": "22.11.0"
+          },
+          "opencode": {
+            "state": "done",
+            "weight": 20,
+            "version": "1.18.32"
+          },
+          "start": {
+            "state": "done",
+            "weight": 20
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "job.jobId",
+          "path": "jobId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.host",
+          "path": "host",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.startedAt",
+          "path": "startedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.updatedAt",
+          "path": "updatedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.order[]",
+          "path": "order[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "All set"
+          ],
+          "primary": false
+        },
+        {
+          "key": "job.current",
+          "path": "current",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.logTail",
+          "path": "logTail",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "22.11.0"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [
+            "1.18.32"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "job_interrupted",
+      "kind": "job",
+      "payload": {
+        "jobId": "job_interrupted",
+        "host": "builtin",
+        "startedAt": 1788950000000,
+        "updatedAt": 1788950061000,
+        "order": [
+          "linux",
+          "essentials",
+          "python",
+          "node",
+          "opencode",
+          "start"
+        ],
+        "state": "interrupted",
+        "current": "opencode",
+        "logTail": "",
+        "components": {
+          "linux": {
+            "state": "done",
+            "weight": 20
+          },
+          "essentials": {
+            "state": "done",
+            "weight": 20
+          },
+          "python": {
+            "state": "done",
+            "weight": 20
+          },
+          "node": {
+            "state": "done",
+            "weight": 20,
+            "version": "22.11.0"
+          },
+          "opencode": {
+            "state": "pending",
+            "weight": 20
+          },
+          "start": {
+            "state": "pending",
+            "weight": 20
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "job.jobId",
+          "path": "jobId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.host",
+          "path": "host",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.startedAt",
+          "path": "startedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.updatedAt",
+          "path": "updatedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.order[]",
+          "path": "order[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Setup was interrupted"
+          ],
+          "primary": false
+        },
+        {
+          "key": "job.current",
+          "path": "current",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.logTail",
+          "path": "logTail",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "job_cancelled",
+      "kind": "job",
+      "payload": {
+        "jobId": "job_cancelled",
+        "host": "builtin",
+        "startedAt": 1788950000000,
+        "updatedAt": 1788950061000,
+        "order": [
+          "linux",
+          "essentials",
+          "python",
+          "node",
+          "opencode",
+          "start"
+        ],
+        "state": "cancelled",
+        "current": "opencode",
+        "logTail": "",
+        "components": {
+          "linux": {
+            "state": "done",
+            "weight": 20
+          },
+          "essentials": {
+            "state": "done",
+            "weight": 20
+          },
+          "python": {
+            "state": "done",
+            "weight": 20
+          },
+          "node": {
+            "state": "done",
+            "weight": 20,
+            "version": "22.11.0"
+          },
+          "opencode": {
+            "state": "pending",
+            "weight": 20
+          },
+          "start": {
+            "state": "pending",
+            "weight": 20
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "job.jobId",
+          "path": "jobId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.host",
+          "path": "host",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.startedAt",
+          "path": "startedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.updatedAt",
+          "path": "updatedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.order[]",
+          "path": "order[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Setup stopped"
+          ],
+          "primary": false
+        },
+        {
+          "key": "job.current",
+          "path": "current",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.logTail",
+          "path": "logTail",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.version",
+          "path": "version",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "job_on_termux",
+      "kind": "job",
+      "payload": {
+        "jobId": "job_termux",
+        "host": "termux",
+        "startedAt": 1788950000000,
+        "updatedAt": 1788950061000,
+        "order": [
+          "linux",
+          "essentials",
+          "python",
+          "node",
+          "opencode",
+          "start"
+        ],
+        "state": "running",
+        "current": "opencode",
+        "logTail": "",
+        "params": {
+          "_job": {
+            "adding": "aiteam"
+          }
+        },
+        "components": {
+          "linux": {
+            "state": "skipped",
+            "weight": 20
+          },
+          "essentials": {
+            "state": "done",
+            "weight": 20
+          },
+          "python": {
+            "state": "skipped",
+            "weight": 20
+          },
+          "node": {
+            "state": "done",
+            "weight": 20
+          },
+          "opencode": {
+            "state": "running",
+            "weight": 20,
+            "stage": "Installing",
+            "percent": 40
+          },
+          "start": {
+            "state": "pending",
+            "weight": 20
+          }
+        }
+      },
+      "fields": [
+        {
+          "key": "job.jobId",
+          "path": "jobId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.host",
+          "path": "host",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.startedAt",
+          "path": "startedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.updatedAt",
+          "path": "updatedAt",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.order[]",
+          "path": "order[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Adding AI Team"
+          ],
+          "primary": false
+        },
+        {
+          "key": "job.current",
+          "path": "current",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.logTail",
+          "path": "logTail",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "job.params._job.adding",
+          "path": "params._job.adding",
+          "kind": "string",
+          "probes": [
+            "Adding AI Team"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.stage",
+          "path": "stage",
+          "kind": "string",
+          "probes": [
+            "Installing"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.percent",
+          "path": "percent",
+          "kind": "number",
+          "probes": [
+            "40%"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.weight",
+          "path": "weight",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

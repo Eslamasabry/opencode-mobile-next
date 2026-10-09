@@ -1,0 +1,93 @@
+{
+  "source": "lib/domain/agent_sign_in_output.dart (what the agent printed)",
+  "schema": {
+    "output": [
+      {
+        "path": "page",
+        "kind": "string"
+      },
+      {
+        "path": "code",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "output_fx",
+      "kind": "output",
+      "payload": {
+        "agent": "codex",
+        "text": "Open https://vercel.com/oauth/device?user_code=ABCD-EFGH to sign in\r\n"
+      },
+      "fields": [
+        {
+          "key": "output.page",
+          "path": "page",
+          "kind": "string",
+          "probes": [
+            "Open sign-in page"
+          ],
+          "primary": false
+        },
+        {
+          "key": "output.code",
+          "path": "code",
+          "kind": "string",
+          "probes": [
+            "Copy code ABCD-EFGH"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "output_codex",
+      "kind": "output",
+      "payload": {
+        "agent": "codex",
+        "text": "Go to https://auth.openai.com/codex/device\r\nEnter this one-time code\r\nWXYZ-12345\r\n"
+      },
+      "fields": [
+        {
+          "key": "output.page",
+          "path": "page",
+          "kind": "string",
+          "probes": [
+            "Open sign-in page"
+          ],
+          "primary": false
+        },
+        {
+          "key": "output.code",
+          "path": "code",
+          "kind": "string",
+          "probes": [
+            "Copy code WXYZ-12345"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "output_claude",
+      "kind": "output",
+      "payload": {
+        "agent": "codex",
+        "text": "Visit https://claude.ai/oauth/authorize?client=x to sign in\r\n"
+      },
+      "fields": [
+        {
+          "key": "output.page",
+          "path": "page",
+          "kind": "string",
+          "probes": [
+            "Open sign-in page"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

@@ -682,7 +682,11 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
           if (failed)
             KitNotice(
               key: const ValueKey('agents-setup-words'),
-              message: l10n.agentsSetupFailed,
+              // The host's closed reason, in plain words with the way
+              // forward; the general sentence where it gave none.
+              message: progress.failure == null
+                  ? l10n.agentsSetupFailed
+                  : agentHostFailureText(l10n, progress.failure),
             ),
           _noticeLine(context),
         ],
@@ -782,7 +786,10 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     if (stopped) {
       body = l10n.agentsStateStopped;
     } else if (limit) {
-      body = l10n.agentsSignInLimit(name);
+      final resetAt = _row(id)?.resetAt;
+      body = resetAt == null
+          ? l10n.agentsSignInLimit(name)
+          : l10n.agentsLimitReset(name, KitTime.moment(context, resetAt));
     } else if (signedIn) {
       body = l10n.agentsSignedInBody(name);
     } else if (hostKey) {

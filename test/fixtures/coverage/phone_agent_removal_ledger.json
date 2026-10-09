@@ -1,0 +1,5 @@
+{
+  "removal.agentId": "ignored: an internal id the app uses to match records; nothing a person reads",
+  "removal.alreadyAbsent": "shown",
+  "removal.freedBytes": "shown"
+}

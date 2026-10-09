@@ -1,0 +1,1214 @@
+{
+  "source": "lib/domain/phone_agents.dart (PhoneAgentRuntime) and agent_auth_probe.dart (helper reply)",
+  "schema": {
+    "runtime": [
+      {
+        "path": "installed",
+        "kind": "boolean"
+      },
+      {
+        "path": "payloadPresent",
+        "kind": "boolean"
+      },
+      {
+        "path": "hostAvailable",
+        "kind": "boolean"
+      },
+      {
+        "path": "architectureQualified",
+        "kind": "boolean"
+      },
+      {
+        "path": "stoppedInBackground",
+        "kind": "boolean"
+      },
+      {
+        "path": "signInPhase",
+        "kind": "enum"
+      },
+      {
+        "path": "resetAt",
+        "kind": "string"
+      },
+      {
+        "path": "capabilities.resumeVerified",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.modelList",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.permissions",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.images",
+        "kind": "boolean"
+      },
+      {
+        "path": "capabilities.cancel",
+        "kind": "boolean"
+      }
+    ],
+    "account": [
+      {
+        "path": "state",
+        "kind": "enum"
+      },
+      {
+        "path": "accountDisplayName",
+        "kind": "string"
+      },
+      {
+        "path": "error",
+        "kind": "enum"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "row_not_installed",
+      "kind": "row",
+      "payload": {
+        "agent": "claude",
+        "runtime": {
+          "installed": false,
+          "payloadPresent": false,
+          "hostAvailable": false,
+          "architectureQualified": false,
+          "stoppedInBackground": false,
+          "capabilities": {
+            "resumeVerified": false,
+            "modelList": false,
+            "permissions": false,
+            "images": false,
+            "cancel": false
+          }
+        },
+        "account": {
+          "state": "signedOut"
+        }
+      },
+      "fields": [
+        {
+          "key": "runtime.installed",
+          "path": "installed",
+          "kind": "boolean",
+          "probes": [
+            "Not installed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "runtime.payloadPresent",
+          "path": "payloadPresent",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.hostAvailable",
+          "path": "hostAvailable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.architectureQualified",
+          "path": "architectureQualified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.stoppedInBackground",
+          "path": "stoppedInBackground",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.resumeVerified",
+          "path": "capabilities.resumeVerified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.modelList",
+          "path": "capabilities.modelList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.permissions",
+          "path": "capabilities.permissions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.images",
+          "path": "capabilities.images",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.cancel",
+          "path": "capabilities.cancel",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "row_partial_install",
+      "kind": "row",
+      "payload": {
+        "agent": "claude",
+        "runtime": {
+          "installed": false,
+          "payloadPresent": true,
+          "hostAvailable": false,
+          "architectureQualified": false,
+          "stoppedInBackground": false,
+          "capabilities": {
+            "resumeVerified": false,
+            "modelList": false,
+            "permissions": false,
+            "images": false,
+            "cancel": false
+          }
+        },
+        "account": {
+          "state": "signedOut"
+        }
+      },
+      "fields": [
+        {
+          "key": "runtime.installed",
+          "path": "installed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.payloadPresent",
+          "path": "payloadPresent",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.hostAvailable",
+          "path": "hostAvailable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.architectureQualified",
+          "path": "architectureQualified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.stoppedInBackground",
+          "path": "stoppedInBackground",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.resumeVerified",
+          "path": "capabilities.resumeVerified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.modelList",
+          "path": "capabilities.modelList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.permissions",
+          "path": "capabilities.permissions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.images",
+          "path": "capabilities.images",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.cancel",
+          "path": "capabilities.cancel",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "row_needs_check",
+      "kind": "row",
+      "payload": {
+        "agent": "claude",
+        "runtime": {
+          "installed": true,
+          "payloadPresent": true,
+          "hostAvailable": true,
+          "architectureQualified": false,
+          "stoppedInBackground": false,
+          "signInPhase": "signedIn",
+          "capabilities": {
+            "resumeVerified": false,
+            "modelList": false,
+            "permissions": false,
+            "images": false,
+            "cancel": false
+          }
+        },
+        "account": {
+          "state": "signedOut"
+        }
+      },
+      "fields": [
+        {
+          "key": "runtime.installed",
+          "path": "installed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.payloadPresent",
+          "path": "payloadPresent",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.hostAvailable",
+          "path": "hostAvailable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.architectureQualified",
+          "path": "architectureQualified",
+          "kind": "boolean",
+          "probes": [
+            "Phone check needed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "runtime.stoppedInBackground",
+          "path": "stoppedInBackground",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.signInPhase",
+          "path": "signInPhase",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.resumeVerified",
+          "path": "capabilities.resumeVerified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.modelList",
+          "path": "capabilities.modelList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.permissions",
+          "path": "capabilities.permissions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.images",
+          "path": "capabilities.images",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.cancel",
+          "path": "capabilities.cancel",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "row_stopped",
+      "kind": "row",
+      "payload": {
+        "agent": "claude",
+        "runtime": {
+          "installed": true,
+          "payloadPresent": true,
+          "hostAvailable": true,
+          "architectureQualified": true,
+          "stoppedInBackground": true,
+          "signInPhase": "signedIn",
+          "capabilities": {
+            "resumeVerified": false,
+            "modelList": false,
+            "permissions": false,
+            "images": false,
+            "cancel": false
+          }
+        },
+        "account": {
+          "state": "signedOut"
+        }
+      },
+      "fields": [
+        {
+          "key": "runtime.installed",
+          "path": "installed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.payloadPresent",
+          "path": "payloadPresent",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.hostAvailable",
+          "path": "hostAvailable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.architectureQualified",
+          "path": "architectureQualified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.stoppedInBackground",
+          "path": "stoppedInBackground",
+          "kind": "boolean",
+          "probes": [
+            "Stopped in the background"
+          ],
+          "primary": false
+        },
+        {
+          "key": "runtime.signInPhase",
+          "path": "signInPhase",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.resumeVerified",
+          "path": "capabilities.resumeVerified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.modelList",
+          "path": "capabilities.modelList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.permissions",
+          "path": "capabilities.permissions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.images",
+          "path": "capabilities.images",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.cancel",
+          "path": "capabilities.cancel",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "row_host_down",
+      "kind": "row",
+      "payload": {
+        "agent": "claude",
+        "runtime": {
+          "installed": true,
+          "payloadPresent": true,
+          "hostAvailable": false,
+          "architectureQualified": true,
+          "stoppedInBackground": false,
+          "signInPhase": "signedIn",
+          "capabilities": {
+            "resumeVerified": false,
+            "modelList": false,
+            "permissions": false,
+            "images": false,
+            "cancel": false
+          }
+        },
+        "account": {
+          "state": "signedOut"
+        }
+      },
+      "fields": [
+        {
+          "key": "runtime.installed",
+          "path": "installed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.payloadPresent",
+          "path": "payloadPresent",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.hostAvailable",
+          "path": "hostAvailable",
+          "kind": "boolean",
+          "probes": [
+            "Not available on this phone yet"
+          ],
+          "primary": false
+        },
+        {
+          "key": "runtime.architectureQualified",
+          "path": "architectureQualified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.stoppedInBackground",
+          "path": "stoppedInBackground",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.signInPhase",
+          "path": "signInPhase",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.resumeVerified",
+          "path": "capabilities.resumeVerified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.modelList",
+          "path": "capabilities.modelList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.permissions",
+          "path": "capabilities.permissions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.images",
+          "path": "capabilities.images",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.cancel",
+          "path": "capabilities.cancel",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "row_signed_out",
+      "kind": "row",
+      "payload": {
+        "agent": "claude",
+        "runtime": {
+          "installed": true,
+          "payloadPresent": true,
+          "hostAvailable": true,
+          "architectureQualified": true,
+          "stoppedInBackground": false,
+          "signInPhase": "signedOut",
+          "capabilities": {
+            "resumeVerified": false,
+            "modelList": false,
+            "permissions": false,
+            "images": false,
+            "cancel": false
+          }
+        },
+        "account": {
+          "state": "signedOut"
+        }
+      },
+      "fields": [
+        {
+          "key": "runtime.installed",
+          "path": "installed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.payloadPresent",
+          "path": "payloadPresent",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.hostAvailable",
+          "path": "hostAvailable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.architectureQualified",
+          "path": "architectureQualified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.stoppedInBackground",
+          "path": "stoppedInBackground",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.signInPhase",
+          "path": "signInPhase",
+          "kind": "enum",
+          "probes": [
+            "Sign in needed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.resumeVerified",
+          "path": "capabilities.resumeVerified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.modelList",
+          "path": "capabilities.modelList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.permissions",
+          "path": "capabilities.permissions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.images",
+          "path": "capabilities.images",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.cancel",
+          "path": "capabilities.cancel",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "row_limit",
+      "kind": "row",
+      "payload": {
+        "agent": "claude",
+        "runtime": {
+          "installed": true,
+          "payloadPresent": true,
+          "hostAvailable": true,
+          "architectureQualified": true,
+          "stoppedInBackground": false,
+          "signInPhase": "limitReached",
+          "capabilities": {
+            "resumeVerified": false,
+            "modelList": false,
+            "permissions": false,
+            "images": false,
+            "cancel": false
+          },
+          "resetAt": "2026-10-10T18:30:00.000Z"
+        },
+        "account": {
+          "state": "signedOut"
+        }
+      },
+      "fields": [
+        {
+          "key": "runtime.installed",
+          "path": "installed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.payloadPresent",
+          "path": "payloadPresent",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.hostAvailable",
+          "path": "hostAvailable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.architectureQualified",
+          "path": "architectureQualified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.stoppedInBackground",
+          "path": "stoppedInBackground",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.signInPhase",
+          "path": "signInPhase",
+          "kind": "enum",
+          "probes": [
+            "Plan limit reached"
+          ],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.resumeVerified",
+          "path": "capabilities.resumeVerified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.modelList",
+          "path": "capabilities.modelList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.permissions",
+          "path": "capabilities.permissions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.images",
+          "path": "capabilities.images",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.cancel",
+          "path": "capabilities.cancel",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.resetAt",
+          "path": "resetAt",
+          "kind": "string",
+          "probes": [
+            "resets"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "row_check_failed",
+      "kind": "row",
+      "payload": {
+        "agent": "claude",
+        "runtime": {
+          "installed": true,
+          "payloadPresent": true,
+          "hostAvailable": true,
+          "architectureQualified": true,
+          "stoppedInBackground": false,
+          "signInPhase": "failed",
+          "capabilities": {
+            "resumeVerified": false,
+            "modelList": false,
+            "permissions": false,
+            "images": false,
+            "cancel": false
+          }
+        },
+        "account": {
+          "state": "error",
+          "error": "timedOut"
+        }
+      },
+      "fields": [
+        {
+          "key": "runtime.installed",
+          "path": "installed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.payloadPresent",
+          "path": "payloadPresent",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.hostAvailable",
+          "path": "hostAvailable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.architectureQualified",
+          "path": "architectureQualified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.stoppedInBackground",
+          "path": "stoppedInBackground",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.signInPhase",
+          "path": "signInPhase",
+          "kind": "enum",
+          "probes": [
+            "Sign in needed"
+          ],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.resumeVerified",
+          "path": "capabilities.resumeVerified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.modelList",
+          "path": "capabilities.modelList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.permissions",
+          "path": "capabilities.permissions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.images",
+          "path": "capabilities.images",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.cancel",
+          "path": "capabilities.cancel",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account.error",
+          "path": "error",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "row_ready_named",
+      "kind": "row",
+      "payload": {
+        "agent": "claude",
+        "runtime": {
+          "installed": true,
+          "payloadPresent": true,
+          "hostAvailable": true,
+          "architectureQualified": true,
+          "stoppedInBackground": false,
+          "signInPhase": "signedIn",
+          "capabilities": {
+            "resumeVerified": false,
+            "modelList": false,
+            "permissions": false,
+            "images": false,
+            "cancel": false
+          }
+        },
+        "account": {
+          "state": "signedIn",
+          "accountDisplayName": "Example account"
+        }
+      },
+      "fields": [
+        {
+          "key": "runtime.installed",
+          "path": "installed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.payloadPresent",
+          "path": "payloadPresent",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.hostAvailable",
+          "path": "hostAvailable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.architectureQualified",
+          "path": "architectureQualified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.stoppedInBackground",
+          "path": "stoppedInBackground",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.signInPhase",
+          "path": "signInPhase",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.resumeVerified",
+          "path": "capabilities.resumeVerified",
+          "kind": "boolean",
+          "probes": [
+            "Can't reopen old conversations"
+          ],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.modelList",
+          "path": "capabilities.modelList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.permissions",
+          "path": "capabilities.permissions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.images",
+          "path": "capabilities.images",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.cancel",
+          "path": "capabilities.cancel",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Signed in as"
+          ],
+          "primary": false
+        },
+        {
+          "key": "account.accountDisplayName",
+          "path": "accountDisplayName",
+          "kind": "string",
+          "probes": [
+            "Example account"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "row_ready_verified",
+      "kind": "row",
+      "payload": {
+        "agent": "claude",
+        "runtime": {
+          "installed": true,
+          "payloadPresent": true,
+          "hostAvailable": true,
+          "architectureQualified": true,
+          "stoppedInBackground": false,
+          "signInPhase": "signedIn",
+          "capabilities": {
+            "resumeVerified": true,
+            "modelList": true,
+            "permissions": true,
+            "images": true,
+            "cancel": true
+          }
+        },
+        "account": {
+          "state": "signedIn"
+        }
+      },
+      "fields": [
+        {
+          "key": "runtime.installed",
+          "path": "installed",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.payloadPresent",
+          "path": "payloadPresent",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.hostAvailable",
+          "path": "hostAvailable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.architectureQualified",
+          "path": "architectureQualified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.stoppedInBackground",
+          "path": "stoppedInBackground",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.signInPhase",
+          "path": "signInPhase",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.resumeVerified",
+          "path": "capabilities.resumeVerified",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.modelList",
+          "path": "capabilities.modelList",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.permissions",
+          "path": "capabilities.permissions",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.images",
+          "path": "capabilities.images",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "runtime.capabilities.cancel",
+          "path": "capabilities.cancel",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "account.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Signed in"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

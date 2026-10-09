@@ -1,0 +1,672 @@
+{
+  "source": "lib/builtin/setup/components.dart (the registry the Start page and Customize sheet draw)",
+  "schema": {
+    "component": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "shortTitle",
+        "kind": "string"
+      },
+      {
+        "path": "why",
+        "kind": "string"
+      },
+      {
+        "path": "summary",
+        "kind": "string"
+      },
+      {
+        "path": "dependsOn[]",
+        "kind": "string"
+      },
+      {
+        "path": "required",
+        "kind": "boolean"
+      },
+      {
+        "path": "defaultOn",
+        "kind": "boolean"
+      },
+      {
+        "path": "estimatedSeconds",
+        "kind": "number"
+      },
+      {
+        "path": "downloadBytes",
+        "kind": "number"
+      },
+      {
+        "path": "installedBytes",
+        "kind": "number"
+      },
+      {
+        "path": "downloadSize",
+        "kind": "string"
+      },
+      {
+        "path": "native",
+        "kind": "boolean"
+      },
+      {
+        "path": "agentUser",
+        "kind": "boolean"
+      },
+      {
+        "path": "jobStep",
+        "kind": "boolean"
+      },
+      {
+        "path": "checkScript",
+        "kind": "string"
+      },
+      {
+        "path": "installScript",
+        "kind": "string"
+      },
+      {
+        "path": "removeScript",
+        "kind": "string"
+      },
+      {
+        "path": "presenceScript",
+        "kind": "string"
+      },
+      {
+        "path": "sizeScript",
+        "kind": "string"
+      },
+      {
+        "path": "app",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {
+    "component.installedBytes": "code and engine bookkeeping; never a value a person reads",
+    "component.downloadSize": "code and engine bookkeeping; never a value a person reads",
+    "component.native": "code and engine bookkeeping; never a value a person reads",
+    "component.agentUser": "code and engine bookkeeping; never a value a person reads",
+    "component.jobStep": "code and engine bookkeeping; never a value a person reads",
+    "component.checkScript": "code and engine bookkeeping; never a value a person reads",
+    "component.installScript": "code and engine bookkeeping; never a value a person reads",
+    "component.removeScript": "code and engine bookkeeping; never a value a person reads",
+    "component.presenceScript": "code and engine bookkeeping; never a value a person reads",
+    "component.sizeScript": "code and engine bookkeeping; never a value a person reads"
+  },
+  "cases": [
+    {
+      "id": "component_first_setup",
+      "kind": "component",
+      "payload": {
+        "components": [
+          {
+            "id": "linux",
+            "title": "Linux base",
+            "shortTitle": "Linux base",
+            "why": "Everything else runs inside it.",
+            "required": true,
+            "defaultOn": false,
+            "estimatedSeconds": 15,
+            "downloadBytes": 30000000
+          },
+          {
+            "id": "essentials",
+            "title": "Git, SSH and certificates",
+            "shortTitle": "Git and SSH",
+            "why": "Agents use Git and SSH to work on your projects.",
+            "dependsOn": [
+              "linux"
+            ],
+            "required": true,
+            "defaultOn": false,
+            "estimatedSeconds": 60,
+            "downloadBytes": 45000000
+          },
+          {
+            "id": "python",
+            "title": "Python",
+            "shortTitle": "Python",
+            "dependsOn": [
+              "essentials"
+            ],
+            "required": false,
+            "defaultOn": true,
+            "estimatedSeconds": 40,
+            "downloadBytes": 25000000
+          },
+          {
+            "id": "node",
+            "title": "Node.js",
+            "shortTitle": "Node.js",
+            "why": "OpenCode runs on Node.js.",
+            "dependsOn": [
+              "essentials"
+            ],
+            "required": true,
+            "defaultOn": false,
+            "estimatedSeconds": 20,
+            "downloadBytes": 58000000
+          },
+          {
+            "id": "opencode",
+            "title": "OpenCode",
+            "shortTitle": "OpenCode",
+            "why": "The coding agent itself.",
+            "dependsOn": [
+              "node"
+            ],
+            "required": true,
+            "defaultOn": false,
+            "estimatedSeconds": 100,
+            "downloadBytes": 50000000
+          },
+          {
+            "id": "aiteam",
+            "title": "AI Team",
+            "shortTitle": "AI Team",
+            "dependsOn": [
+              "opencode",
+              "python"
+            ],
+            "required": false,
+            "defaultOn": false,
+            "estimatedSeconds": 150,
+            "downloadBytes": 115000000
+          },
+          {
+            "id": "voice",
+            "title": "Voice typing",
+            "shortTitle": "Voice typing",
+            "summary": "Speak instead of typing, even offline",
+            "required": false,
+            "defaultOn": false,
+            "estimatedSeconds": 45,
+            "downloadBytes": 160000000,
+            "app": "voice typing"
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "component.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Linux base"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.shortTitle",
+          "path": "shortTitle",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.why",
+          "path": "why",
+          "kind": "string",
+          "probes": [
+            "Everything else runs inside it."
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [
+            "Required"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.defaultOn",
+          "path": "defaultOn",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.estimatedSeconds",
+          "path": "estimatedSeconds",
+          "kind": "number",
+          "probes": [
+            "minutes"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.downloadBytes",
+          "path": "downloadBytes",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Git, SSH and certificates"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.shortTitle",
+          "path": "shortTitle",
+          "kind": "string",
+          "probes": [
+            "Git and SSH"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.why",
+          "path": "why",
+          "kind": "string",
+          "probes": [
+            "Agents use Git and SSH to work on your projects."
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.dependsOn[]",
+          "path": "dependsOn[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [
+            "Required"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.defaultOn",
+          "path": "defaultOn",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.estimatedSeconds",
+          "path": "estimatedSeconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.downloadBytes",
+          "path": "downloadBytes",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Python"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.shortTitle",
+          "path": "shortTitle",
+          "kind": "string",
+          "probes": [
+            "Python"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.dependsOn[]",
+          "path": "dependsOn[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.defaultOn",
+          "path": "defaultOn",
+          "kind": "boolean",
+          "probes": [
+            "[python on]"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.estimatedSeconds",
+          "path": "estimatedSeconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.downloadBytes",
+          "path": "downloadBytes",
+          "kind": "number",
+          "probes": [
+            "~25 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Node.js"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.shortTitle",
+          "path": "shortTitle",
+          "kind": "string",
+          "probes": [
+            "Node.js"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.why",
+          "path": "why",
+          "kind": "string",
+          "probes": [
+            "OpenCode runs on Node.js."
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.dependsOn[]",
+          "path": "dependsOn[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [
+            "Required"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.defaultOn",
+          "path": "defaultOn",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.estimatedSeconds",
+          "path": "estimatedSeconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.downloadBytes",
+          "path": "downloadBytes",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "OpenCode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.shortTitle",
+          "path": "shortTitle",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.why",
+          "path": "why",
+          "kind": "string",
+          "probes": [
+            "The coding agent itself."
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.dependsOn[]",
+          "path": "dependsOn[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [
+            "Required"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.defaultOn",
+          "path": "defaultOn",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.estimatedSeconds",
+          "path": "estimatedSeconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.downloadBytes",
+          "path": "downloadBytes",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "AI Team"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.shortTitle",
+          "path": "shortTitle",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.dependsOn[]",
+          "path": "dependsOn[]",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.defaultOn",
+          "path": "defaultOn",
+          "kind": "boolean",
+          "probes": [
+            "[aiteam off]"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.estimatedSeconds",
+          "path": "estimatedSeconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.downloadBytes",
+          "path": "downloadBytes",
+          "kind": "number",
+          "probes": [
+            "~115 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.title",
+          "path": "title",
+          "kind": "string",
+          "probes": [
+            "Voice typing"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.shortTitle",
+          "path": "shortTitle",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.summary",
+          "path": "summary",
+          "kind": "string",
+          "probes": [
+            "Speak instead of typing, even offline"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.required",
+          "path": "required",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.defaultOn",
+          "path": "defaultOn",
+          "kind": "boolean",
+          "probes": [
+            "[voice off]"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.estimatedSeconds",
+          "path": "estimatedSeconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "component.downloadBytes",
+          "path": "downloadBytes",
+          "kind": "number",
+          "probes": [
+            "~160 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "component.app",
+          "path": "app",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

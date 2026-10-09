@@ -8532,5 +8532,6 @@
   "modelPickerAgentUses": "يستخدم {model}",
   "monitorUnreachableTitle": "تعذر الوصول إلى {server}",
   "monitorUnreachableDetail": "ستظهر أسئلته هنا عند عودته.",
-  "monitorUnreachableCheck": "تحقق من {server} مجددا"
+  "monitorUnreachableCheck": "تحقق من {server} مجددا",
+  "agentsStateLimitReset": "تم بلوغ حد الخطة · يُعاد ضبطه {time}"
 }

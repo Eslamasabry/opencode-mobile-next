@@ -1,0 +1,18 @@
+{
+  "log.output": "shown",
+  "status.failure_kind": "ignored: lets the app restart a crashed server by itself in the background; this page says \"Setup didn't finish\" either way",
+  "status.message": "shown",
+  "status.operation": "ignored: internal bookkeeping of the setup manager; nothing a person reads or acts on",
+  "status.operation_result": "ignored: internal bookkeeping of the setup manager; nothing a person reads or acts on",
+  "status.phase": "shown",
+  "status.pid": "ignored: internal bookkeeping of the setup manager; nothing a person reads or acts on",
+  "status.port": "ignored: internal bookkeeping of the setup manager; nothing a person reads or acts on",
+  "status.runner": "ignored: internal bookkeeping of the setup manager; nothing a person reads or acts on",
+  "status.runtime": "shown",
+  "status.started_at": "shown",
+  "status.switch_phase": "ignored: internal bookkeeping of the setup manager; nothing a person reads or acts on",
+  "status.switch_previous": "ignored: internal bookkeeping of the setup manager; nothing a person reads or acts on",
+  "status.switch_return": "ignored: internal bookkeeping of the setup manager; nothing a person reads or acts on",
+  "status.switch_target": "shown",
+  "status.version": "shown"
+}

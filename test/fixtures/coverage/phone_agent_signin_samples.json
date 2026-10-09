@@ -1,0 +1,327 @@
+{
+  "source": "lib/domain/agent_sign_in.dart (AgentSignInState)",
+  "schema": {
+    "state": [
+      {
+        "path": "phase",
+        "kind": "enum"
+      },
+      {
+        "path": "method",
+        "kind": "enum"
+      },
+      {
+        "path": "inspected",
+        "kind": "boolean"
+      },
+      {
+        "path": "failure",
+        "kind": "string"
+      },
+      {
+        "path": "resetAt",
+        "kind": "string"
+      },
+      {
+        "path": "authorizationUrl",
+        "kind": "string"
+      },
+      {
+        "path": "codeSubmitted",
+        "kind": "boolean"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "signin_checking",
+      "kind": "signin",
+      "payload": {
+        "agent": "codex",
+        "state": {
+          "phase": "signedOut",
+          "method": "browserOAuthHost",
+          "inspected": false
+        }
+      },
+      "fields": [
+        {
+          "key": "state.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.method",
+          "path": "method",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.inspected",
+          "path": "inspected",
+          "kind": "boolean",
+          "probes": [
+            "Checking sign-in"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "signin_signed_out",
+      "kind": "signin",
+      "payload": {
+        "agent": "codex",
+        "state": {
+          "phase": "signedOut",
+          "method": "browserOAuthHost",
+          "inspected": true
+        }
+      },
+      "fields": [
+        {
+          "key": "state.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "signs in with its own prompts"
+          ],
+          "primary": false
+        },
+        {
+          "key": "state.method",
+          "path": "method",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.inspected",
+          "path": "inspected",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "signin_signed_in",
+      "kind": "signin",
+      "payload": {
+        "agent": "codex",
+        "state": {
+          "phase": "signedIn",
+          "method": "browserOAuthHost",
+          "inspected": true
+        }
+      },
+      "fields": [
+        {
+          "key": "state.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "Codex is ready for new conversations"
+          ],
+          "primary": false
+        },
+        {
+          "key": "state.method",
+          "path": "method",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.inspected",
+          "path": "inspected",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "signin_limit",
+      "kind": "signin",
+      "payload": {
+        "agent": "codex",
+        "state": {
+          "phase": "limitReached",
+          "method": "browserOAuthHost",
+          "inspected": true,
+          "resetAt": "2026-10-10T18:30:00.000Z"
+        }
+      },
+      "fields": [
+        {
+          "key": "state.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "plan limit reached"
+          ],
+          "primary": false
+        },
+        {
+          "key": "state.method",
+          "path": "method",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.inspected",
+          "path": "inspected",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.resetAt",
+          "path": "resetAt",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "signin_failed",
+      "kind": "signin",
+      "payload": {
+        "agent": "codex",
+        "state": {
+          "phase": "failed",
+          "method": "browserOAuthHost",
+          "inspected": true,
+          "failure": "unavailable"
+        }
+      },
+      "fields": [
+        {
+          "key": "state.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [
+            "signs in with its own prompts"
+          ],
+          "primary": false
+        },
+        {
+          "key": "state.method",
+          "path": "method",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.inspected",
+          "path": "inspected",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.failure",
+          "path": "failure",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "signin_host_key",
+      "kind": "signin",
+      "payload": {
+        "agent": "codex",
+        "state": {
+          "phase": "signedOut",
+          "method": "apiKeyHost",
+          "inspected": true
+        }
+      },
+      "fields": [
+        {
+          "key": "state.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.method",
+          "path": "method",
+          "kind": "enum",
+          "probes": [
+            "Sign-in isn't ready on this phone yet"
+          ],
+          "primary": false
+        },
+        {
+          "key": "state.inspected",
+          "path": "inspected",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "signin_code_wait",
+      "kind": "signin",
+      "payload": {
+        "agent": "codex",
+        "state": {
+          "phase": "awaitingCode",
+          "method": "browserOAuthHost",
+          "inspected": true,
+          "authorizationUrl": "https://example.invalid/auth",
+          "codeSubmitted": true
+        }
+      },
+      "fields": [
+        {
+          "key": "state.phase",
+          "path": "phase",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.method",
+          "path": "method",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.inspected",
+          "path": "inspected",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.authorizationUrl",
+          "path": "authorizationUrl",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "state.codeSubmitted",
+          "path": "codeSubmitted",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

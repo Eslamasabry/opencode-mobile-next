@@ -58,11 +58,13 @@ String _sizeText(int bytes) => KitBidi.ltr(
 /// [account] is the agent's own sign-in status check. Only a check that
 /// confirmed a sign-in lets a ready row say "Signed in" (with the account's
 /// name when the check gave one); an install or a terminal's exit code never
-/// does. Without it the row keeps the plain "Ready".
+/// does. Without it the row keeps the plain "Ready". [context] lets a row at
+/// its plan limit say when it resets.
 String agentRowLine(
   AppLocalizations l10n,
   AgentRow row, {
   AgentAuthProbeResult? account,
+  BuildContext? context,
 }) {
   switch (row.status) {
     case PhoneAgentStatus.ready:
@@ -84,7 +86,11 @@ String agentRowLine(
     case PhoneAgentStatus.stoppedInBackground:
       return l10n.agentsStateStopped;
     case PhoneAgentStatus.limitReached:
-      return l10n.agentsStateLimit;
+      // The host's own reset time, when it gave one: never an estimate.
+      final resetAt = row.resetAt;
+      return resetAt == null || context == null
+          ? l10n.agentsStateLimit
+          : l10n.agentsStateLimitReset(KitTime.moment(context, resetAt));
     case PhoneAgentStatus.unavailable:
       return switch (row.hiddenReason) {
         PhoneAgentHiddenReason.unsupportedArchitecture =>

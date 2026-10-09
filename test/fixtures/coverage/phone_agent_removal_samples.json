@@ -1,0 +1,96 @@
+{
+  "source": "lib/domain/phone_agent_host.dart (AgentRemovalResult)",
+  "schema": {
+    "removal": [
+      {
+        "path": "agentId",
+        "kind": "string"
+      },
+      {
+        "path": "freedBytes",
+        "kind": "number"
+      },
+      {
+        "path": "alreadyAbsent",
+        "kind": "boolean"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "removal_freed",
+      "kind": "removal",
+      "payload": {
+        "agent": "codex",
+        "removal": {
+          "agentId": "codex",
+          "freedBytes": 98000000,
+          "alreadyAbsent": false
+        }
+      },
+      "fields": [
+        {
+          "key": "removal.agentId",
+          "path": "agentId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "removal.freedBytes",
+          "path": "freedBytes",
+          "kind": "number",
+          "probes": [
+            "Freed 98 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "removal.alreadyAbsent",
+          "path": "alreadyAbsent",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "removal_already",
+      "kind": "removal",
+      "payload": {
+        "agent": "codex",
+        "removal": {
+          "agentId": "codex",
+          "freedBytes": 0,
+          "alreadyAbsent": true
+        }
+      },
+      "fields": [
+        {
+          "key": "removal.agentId",
+          "path": "agentId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "removal.freedBytes",
+          "path": "freedBytes",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "removal.alreadyAbsent",
+          "path": "alreadyAbsent",
+          "kind": "boolean",
+          "probes": [
+            "is already removed"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

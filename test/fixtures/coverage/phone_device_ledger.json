@@ -1,0 +1,8 @@
+{
+  "device.availableStorageBytes": "shown",
+  "device.hasMicrophone": "ignored: only voice typing cares about the microphone; setting up OpenCode does not",
+  "device.lowRamDevice": "ignored: total memory already decides this; the phone is told its memory, not a label",
+  "device.memoryClassMb": "ignored: the app heap size, which says nothing about what the phone can run; setup uses total memory",
+  "device.supportedAbis[]": "shown",
+  "device.totalMemoryMb": "shown"
+}

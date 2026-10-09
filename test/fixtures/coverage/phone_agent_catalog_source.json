@@ -1,0 +1,404 @@
+{
+  "agents": [
+    {
+      "id": "opencode",
+      "name": "OpenCode",
+      "iconKey": "opencode",
+      "route": "opencode1",
+      "providerId": "opencode",
+      "signInMethod": "apiKeyHost",
+      "availability": "limited",
+      "limitation": "Needs a check on your phone before use.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "1.18.32",
+        "executable": "opencode",
+        "launchArgs": [
+          "serve",
+          "--hostname",
+          "127.0.0.1"
+        ],
+        "signInArgs": [
+          "auth",
+          "login"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://github.com/anomalyco/opencode/releases/download/v1.18.32/opencode-linux-arm64.tar.gz",
+            "sha256": "568461b7d4d8c19865c97e9a1102e613049c6039d01fe772154de873c1865840",
+            "format": "tarGz",
+            "archiveMember": "opencode"
+          },
+          "x64": {
+            "url": "https://github.com/anomalyco/opencode/releases/download/v1.18.32/opencode-linux-x64-baseline.tar.gz",
+            "sha256": "763af386ef88a8cab18df00fcf055690e5a55e31a7088beabe02307142a6adce",
+            "format": "tarGz",
+            "archiveMember": "opencode"
+          }
+        }
+      }
+    },
+    {
+      "id": "opencode2",
+      "name": "OpenCode 2",
+      "iconKey": "opencode2",
+      "route": "opencode2",
+      "providerId": "opencode",
+      "signInMethod": "apiKeyHost",
+      "availability": "limited",
+      "limitation": "Needs a check on your phone before use.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "2.0.10",
+        "executable": "opencode",
+        "launchArgs": [
+          "serve",
+          "--hostname",
+          "127.0.0.1"
+        ],
+        "signInArgs": [],
+        "artifacts": {
+          "arm64": {
+            "url": "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.0.10.tgz",
+            "sha256": "cf5416676240455dc5a98500237af296cb1a00efbd2cca302ad22c92ea080ebc",
+            "format": "tarGz",
+            "archiveMember": "package/bin/opencode"
+          },
+          "x64": {
+            "url": "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.0.10.tgz",
+            "sha256": "700c4d0fcc209e42f61c10f9773331d1d1f7eff35670971ee316b38641a1a76c",
+            "format": "tarGz",
+            "archiveMember": "package/bin/opencode"
+          }
+        }
+      }
+    },
+    {
+      "id": "claude",
+      "name": "Claude Code",
+      "iconKey": "claude",
+      "route": "paseoNative",
+      "providerId": "claude",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Needs a check on your phone before use.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "2.1.283",
+        "executable": "claude",
+        "launchArgs": [],
+        "signInArgs": [
+          "auth",
+          "login",
+          "--claudeai"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.283/linux-arm64/claude",
+            "sha256": "346d294f0103d6fc0de11ac953579b5c62dfa90698a4cfc486b6f927c615e697",
+            "format": "executable",
+            "downloadBytes": 240902136,
+            "installedBytes": 240902136
+          },
+          "x64": {
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.283/linux-x64/claude",
+            "sha256": "1859583ce32920595c61ef868bee52e1b1594f7486db209935e01f1e5e804ae2",
+            "format": "executable",
+            "downloadBytes": 241556664,
+            "installedBytes": 241556664
+          }
+        }
+      }
+    },
+    {
+      "id": "codex",
+      "name": "Codex",
+      "iconKey": "codex",
+      "route": "paseoNative",
+      "providerId": "codex",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Needs a check on your phone before use.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "0.160.0",
+        "executable": "codex",
+        "launchArgs": [
+          "app-server"
+        ],
+        "signInArgs": [
+          "login",
+          "--device-auth"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.160.0/codex-aarch64-unknown-linux-musl.tar.gz",
+            "sha256": "883620139925f677e5a12c95ba87a1d7f421388ebb797b1c10aba42a04ede9d7",
+            "format": "tarGz",
+            "archiveMember": "codex-aarch64-unknown-linux-musl",
+            "downloadBytes": 101627917,
+            "installedBytes": 248966648
+          },
+          "x64": {
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.160.0/codex-x86_64-unknown-linux-musl.tar.gz",
+            "sha256": "306865417d4ee7a927785852910a527f41e1e159add390ac5ae3accb67d44a13",
+            "format": "tarGz",
+            "archiveMember": "codex-x86_64-unknown-linux-musl",
+            "downloadBytes": 109304578,
+            "installedBytes": 289101384
+          }
+        }
+      }
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini CLI",
+      "iconKey": "gemini",
+      "route": "acpPaseo",
+      "providerId": "gemini",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Needs host sign-in and a phone check. Optional terminal extensions are not installed.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "0.62.0",
+        "executable": "gemini",
+        "launchArgs": [
+          "--acp"
+        ],
+        "signInArgs": [],
+        "artifacts": {
+          "arm64": {
+            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.62.0.tgz",
+            "sha256": "2276032b1c33d2b828b1cf197e52f48e74b0a395326763ff01a80d97d0fbc0c3",
+            "format": "npmTarGz",
+            "archiveMember": "package/bundle/gemini.js",
+            "downloadBytes": 20787241,
+            "installedBytes": 98359283
+          },
+          "x64": {
+            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.62.0.tgz",
+            "sha256": "2276032b1c33d2b828b1cf197e52f48e74b0a395326763ff01a80d97d0fbc0c3",
+            "format": "npmTarGz",
+            "archiveMember": "package/bundle/gemini.js",
+            "downloadBytes": 20787241,
+            "installedBytes": 98359283
+          }
+        }
+      }
+    },
+    {
+      "id": "qwen",
+      "name": "Qwen Code",
+      "iconKey": "qwen",
+      "route": "acpPaseo",
+      "providerId": "qwen",
+      "signInMethod": "apiKeyHost",
+      "availability": "limited",
+      "limitation": "Set up a provider key on the host. The old Qwen sign-in option is discontinued.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "0.24.7",
+        "executable": "qwen",
+        "launchArgs": [
+          "--acp"
+        ],
+        "signInArgs": [],
+        "artifacts": {
+          "arm64": {
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.24.7.tgz",
+            "sha256": "64430248ab6e996fc0c6b9a0789361f868c3b97f83d16210e0424e51dffc5fa9",
+            "format": "npmTarGz",
+            "archiveMember": "package/cli-entry.js",
+            "downloadBytes": 31240308,
+            "installedBytes": 109140236
+          },
+          "x64": {
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.24.7.tgz",
+            "sha256": "64430248ab6e996fc0c6b9a0789361f868c3b97f83d16210e0424e51dffc5fa9",
+            "format": "npmTarGz",
+            "archiveMember": "package/cli-entry.js",
+            "downloadBytes": 31240308,
+            "installedBytes": 109140236
+          }
+        }
+      }
+    },
+    {
+      "id": "goose",
+      "name": "Goose",
+      "iconKey": "goose",
+      "route": "acpPaseo",
+      "providerId": "goose",
+      "signInMethod": "apiKeyHost",
+      "availability": "limited",
+      "limitation": "Configure a provider on the host. Credential storage needs a phone check.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "1.53.0",
+        "executable": "goose",
+        "launchArgs": [
+          "acp"
+        ],
+        "signInArgs": [
+          "configure"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://github.com/aaif-goose/goose/releases/download/v1.53.0/goose-aarch64-unknown-linux-gnu.tar.gz",
+            "sha256": "01a0ea109e1984e7a511ff3f99d1a29d32e6f90f0852b5a3b416499c8eaae567",
+            "format": "tarGz",
+            "archiveMember": "./goose",
+            "downloadBytes": 94681336,
+            "installedBytes": 285182872
+          },
+          "x64": {
+            "url": "https://github.com/aaif-goose/goose/releases/download/v1.53.0/goose-x86_64-unknown-linux-gnu.tar.gz",
+            "sha256": "deb2191a6b75acc0a20232fc5c52655ea2f9cc8fa2f5dffc8622e8d378a915dc",
+            "format": "tarGz",
+            "archiveMember": "./goose",
+            "downloadBytes": 94629008,
+            "installedBytes": 298665904
+          }
+        }
+      }
+    },
+    {
+      "id": "omp-acp",
+      "name": "Oh My Pi",
+      "iconKey": "omp-acp",
+      "route": "acpPaseo",
+      "providerId": "omp-acp",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Run /login on the host and choose a provider. Needs a phone check.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "18.5.1",
+        "executable": "omp",
+        "launchArgs": [
+          "acp"
+        ],
+        "signInArgs": [],
+        "artifacts": {
+          "arm64": {
+            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.5.1/omp-linux-arm64",
+            "sha256": "e7b81b96b3f9f391ec8afc7ee64c052ce1783290f88bbb59ba36d15b3b4e927c",
+            "format": "executable",
+            "downloadBytes": 230476072,
+            "installedBytes": 230476072
+          },
+          "x64": {
+            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.5.1/omp-linux-x64",
+            "sha256": "fb7638e82f0c9d087e96e15d3eb83a662d92374cd907187d6d4d2605e39f1e3a",
+            "format": "executable",
+            "downloadBytes": 280536544,
+            "installedBytes": 280536544
+          }
+        }
+      }
+    },
+    {
+      "id": "fx",
+      "name": "fx",
+      "iconKey": "fx",
+      "route": "acpPaseo",
+      "providerId": "fx",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Choose and sign in to a provider on the host. Needs a phone check.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "0.0.12",
+        "executable": "fx",
+        "launchArgs": [
+          "acp"
+        ],
+        "signInArgs": [
+          "login"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://github.com/vercel-labs/fx/releases/download/v0.0.12/fx-linux-aarch64.tar.gz",
+            "sha256": "7265ecebf881ec4050d24fa4fac660ed86dfd11395fcde47b491dc084be1e61e",
+            "format": "tarGz",
+            "archiveMember": "fx",
+            "downloadBytes": 5406247,
+            "installedBytes": 10652080
+          },
+          "x64": {
+            "url": "https://github.com/vercel-labs/fx/releases/download/v0.0.12/fx-linux-x86_64.tar.gz",
+            "sha256": "c510956b92404a00f3054b4be0d378188f9f5217497555048de353b8f0e52d80",
+            "format": "tarGz",
+            "archiveMember": "fx",
+            "downloadBytes": 5482652,
+            "installedBytes": 12520232
+          }
+        }
+      }
+    }
+  ]
+}

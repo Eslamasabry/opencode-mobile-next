@@ -45190,6 +45190,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check {server} again'**
   String monitorUnreachableCheck(String server);
+
+  /// Agents list: the plan limit was reached and the agent said when it resets
+  ///
+  /// In en, this message translates to:
+  /// **'Plan limit reached · resets {time}'**
+  String agentsStateLimitReset(String time);
 }
 
 class _AppLocalizationsDelegate

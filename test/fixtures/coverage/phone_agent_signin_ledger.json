@@ -1,0 +1,9 @@
+{
+  "state.authorizationUrl": "ignored: the older in-app sign-in used this; sign-in now runs on its own terminal and the sheet does not read it",
+  "state.codeSubmitted": "ignored: the older in-app sign-in used this; sign-in now runs on its own terminal and the sheet does not read it",
+  "state.failure": "ignored: the older in-app sign-in used this; sign-in now runs on its own terminal and the sheet does not read it",
+  "state.inspected": "shown",
+  "state.method": "shown",
+  "state.phase": "shown",
+  "state.resetAt": "ignored: the row carries the reset time the host gave; the sheet reads it from the row"
+}

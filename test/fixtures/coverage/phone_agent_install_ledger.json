@@ -1,0 +1,6 @@
+{
+  "progress.componentId": "ignored: which internal piece is downloading; the bar covers the whole agent",
+  "progress.failure": "shown",
+  "progress.fraction": "shown",
+  "progress.phase": "shown"
+}

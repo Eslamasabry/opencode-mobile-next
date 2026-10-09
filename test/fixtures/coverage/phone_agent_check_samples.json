@@ -1,0 +1,193 @@
+{
+  "source": "lib/domain/phone_agent_host.dart (AgentPhoneCheckResult)",
+  "schema": {
+    "check": [
+      {
+        "path": "agentId",
+        "kind": "string"
+      },
+      {
+        "path": "architecture",
+        "kind": "enum"
+      },
+      {
+        "path": "passed",
+        "kind": "boolean"
+      },
+      {
+        "path": "completed[]",
+        "kind": "enum"
+      },
+      {
+        "path": "failure",
+        "kind": "enum"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "check_passed",
+      "kind": "check",
+      "payload": {
+        "agent": "codex",
+        "check": {
+          "agentId": "codex",
+          "architecture": "arm64",
+          "passed": true,
+          "completed": [
+            "install",
+            "version",
+            "daemon",
+            "hello"
+          ]
+        }
+      },
+      "fields": [
+        {
+          "key": "check.agentId",
+          "path": "agentId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "check.architecture",
+          "path": "architecture",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "check.passed",
+          "path": "passed",
+          "kind": "boolean",
+          "probes": [
+            "is ready on this phone"
+          ],
+          "primary": false
+        },
+        {
+          "key": "check.completed[]",
+          "path": "completed[]",
+          "kind": "enum",
+          "probes": [
+            "[Installed done]",
+            "[Version done]",
+            "[Connection done]",
+            "[Ready done]"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "check_failed_version",
+      "kind": "check",
+      "payload": {
+        "agent": "codex",
+        "check": {
+          "agentId": "codex",
+          "architecture": "arm64",
+          "passed": false,
+          "completed": [
+            "install"
+          ],
+          "failure": "version"
+        }
+      },
+      "fields": [
+        {
+          "key": "check.agentId",
+          "path": "agentId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "check.architecture",
+          "path": "architecture",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "check.passed",
+          "path": "passed",
+          "kind": "boolean",
+          "probes": [
+            "didn't pass the check"
+          ],
+          "primary": false
+        },
+        {
+          "key": "check.completed[]",
+          "path": "completed[]",
+          "kind": "enum",
+          "probes": [
+            "[Installed done]",
+            "[Version failed]",
+            "[Connection waiting]"
+          ],
+          "primary": false
+        },
+        {
+          "key": "check.failure",
+          "path": "failure",
+          "kind": "enum",
+          "probes": [
+            "didn't pass its version check"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "check_failed_arch",
+      "kind": "check",
+      "payload": {
+        "agent": "codex",
+        "check": {
+          "agentId": "codex",
+          "architecture": "x64",
+          "passed": false,
+          "failure": "wrongArchitecture"
+        }
+      },
+      "fields": [
+        {
+          "key": "check.agentId",
+          "path": "agentId",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "check.architecture",
+          "path": "architecture",
+          "kind": "enum",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "check.passed",
+          "path": "passed",
+          "kind": "boolean",
+          "probes": [
+            "didn't pass the check"
+          ],
+          "primary": false
+        },
+        {
+          "key": "check.failure",
+          "path": "failure",
+          "kind": "enum",
+          "probes": [
+            "doesn't match this phone's processor"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}
