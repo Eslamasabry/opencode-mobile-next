@@ -183,9 +183,9 @@ const agentCertificationBundledJson = r'''{
     "scope": "in-app Ubuntu protocol; no UI/restart/install qualification",
     "expectedVersion": "1.18.32",
     "observedVersion": "1.18.32",
-    "deviceBuild": 2196,
-    "runID": "fq3-20261008b-cert",
-    "evidence": "docs/qa/FQ3b-2026-10-08/fq3-20261008b-cert.json",
+    "deviceBuild": 2203,
+    "runID": "fq3-final-513c3a2da207",
+    "evidence": "docs/qa/FQ3e-2026-10-09/fq3-final-513c3a2da207.json",
     "capabilities": {
      "version": {
       "state": "pass",
@@ -212,9 +212,13 @@ const agentCertificationBundledJson = r'''{
       }
      },
      "stream": {
-      "state": "fail",
-      "code": "oc1_prompt_error",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "streamedDelta": true,
+       "completedReply": true,
+       "asserted": true
+      }
      },
      "reconnect": {
       "state": "pass",
@@ -290,8 +294,21 @@ const agentCertificationBundledJson = r'''{
      }
     },
     "modelSelection": {
-     "source": "explicit",
-     "requested": "zai-coding-plan/glm-5.3"
+     "source": "baseline",
+     "requested": "zai-coding-plan/glm-5.3",
+     "selected": "zai-coding-plan/glm-5.3",
+     "baselineAvailable": true,
+     "inferenceAvailable": true,
+     "selectedByPhase": {
+      "stream": "zai-coding-plan/glm-5.3",
+      "reconnect": "zai-coding-plan/glm-5.3",
+      "model": "zai-coding-plan/glm-5.3",
+      "abort": "zai-coding-plan/glm-5.3",
+      "allow": "zai-coding-plan/glm-5.3",
+      "deny": "zai-coding-plan/glm-5.3",
+      "image": "zai-coding-plan/glm-5.3",
+      "cards": "zai-coding-plan/glm-5.3"
+     }
     }
    }
   },
@@ -357,9 +374,9 @@ const agentCertificationBundledJson = r'''{
     "scope": "in-app Ubuntu protocol; no UI/restart/install qualification",
     "expectedVersion": "2.0.10",
     "observedVersion": "2.0.10",
-    "deviceBuild": 2196,
-    "runID": "fq3-20261008b-cert",
-    "evidence": "docs/qa/FQ3b-2026-10-08/fq3-20261008b-cert.json",
+    "deviceBuild": 2203,
+    "runID": "fq3-final-513c3a2da207",
+    "evidence": "docs/qa/FQ3e-2026-10-09/fq3-final-513c3a2da207.json",
     "capabilities": {
      "version": {
       "state": "pass",
@@ -406,38 +423,47 @@ const agentCertificationBundledJson = r'''{
      },
      "modelSwitch": {
       "state": "fail",
-      "code": "timeout",
+      "code": "inference_execution_failed",
       "facts": {}
      },
      "abort": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+     },
+     "permissionAllow": {
       "state": "pass",
       "code": "verified",
       "facts": {
-       "interrupted": true,
-       "usableAfterAbort": true,
-       "midStreamObserved": true,
+       "requestObserved": true,
+       "replyObserved": true,
+       "toolOutcomeVerified": true,
        "asserted": true
       }
      },
-     "permissionAllow": {
-      "state": "fail",
-      "code": "timeout",
-      "facts": {}
-     },
      "permissionDeny": {
-      "state": "fail",
-      "code": "timeout",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "requestObserved": true,
+       "replyObserved": true,
+       "toolOutcomeVerified": true,
+       "asserted": true
+      }
      },
      "image": {
       "state": "fail",
-      "code": "timeout",
+      "code": "inference_execution_failed",
       "facts": {}
      },
      "cards": {
-      "state": "fail",
-      "code": "cards_tool_call_missing",
-      "facts": {}
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "cardsToolCall": true,
+       "answerReceipt": true,
+       "asserted": true
+      }
      },
      "protocolSwitch": {
       "state": "pass",

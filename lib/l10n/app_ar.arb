@@ -8451,7 +8451,7 @@
   "chatUiConnectorSearchEmpty": "لا موصّلات في الفهرس المحمّل.",
   "chatUiConnectorSearchNotLoaded": "تعذّر تحميل الفهرس الآن. اسأل مجددًا بعد قليل.",
   "chatUiConnectorSearchOff": "الفهرس متوقف",
-  "chatUiConnectorSearchOffBody": "فهرس الموصّلات قائمة عامة بالموصّلات. تشغيله يسمح للتطبيق بتنزيل القائمة وإرسال كلمات البحث إلى السجل العام. لا يتم توصيل أي شيء.",
+  "chatUiConnectorSearchOffBody": "فهرس الموصّلات قائمة عامة بالموصّلات. تشغيله ينزّل القائمة ويرسل كلمات البحث إلى السجل العام، ولا يتم توصيل أي شيء.",
   "chatUiConnectorSearchTurnOn": "تشغيل فهرس الموصّلات",
   "chatUiConnectorSearchTurnedOn": "الفهرس يعمل. اطلب من الوكيل البحث مجددًا.",
   "chatUiConnectorSearchTurnOnFailed": "تعذّر تشغيل الفهرس. حاول مجددًا.",

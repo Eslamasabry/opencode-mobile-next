@@ -28423,7 +28423,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatUiConnectorSearchOffBody =>
-      'فهرس الموصّلات قائمة عامة بالموصّلات. تشغيله يسمح للتطبيق بتنزيل القائمة وإرسال كلمات البحث إلى السجل العام. لا يتم توصيل أي شيء.';
+      'فهرس الموصّلات قائمة عامة بالموصّلات. تشغيله ينزّل القائمة ويرسل كلمات البحث إلى السجل العام، ولا يتم توصيل أي شيء.';
 
   @override
   String get chatUiConnectorSearchTurnOn => 'تشغيل فهرس الموصّلات';

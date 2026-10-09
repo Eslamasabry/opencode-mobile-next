@@ -28411,7 +28411,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatUiConnectorSearchOffBody =>
-      'The connector catalogue is a public list of connectors. Turning it on lets this app download that list and send the words searched for to the public registry. Nothing is connected.';
+      'The connector catalogue is a public list of connectors. Turning it on downloads that list and sends your search words to the public registry; nothing gets connected.';
 
   @override
   String get chatUiConnectorSearchTurnOn => 'Turn on connector catalogue';

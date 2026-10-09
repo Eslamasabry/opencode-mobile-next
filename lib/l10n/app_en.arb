@@ -33926,7 +33926,7 @@
   "@chatUiConnectorSearchOff": {
     "description": "Tool step detail: the person has not turned the connector catalogue on."
   },
-  "chatUiConnectorSearchOffBody": "The connector catalogue is a public list of connectors. Turning it on lets this app download that list and send the words searched for to the public registry. Nothing is connected.",
+  "chatUiConnectorSearchOffBody": "The connector catalogue is a public list of connectors. Turning it on downloads that list and sends your search words to the public registry; nothing gets connected.",
   "@chatUiConnectorSearchOffBody": {
     "description": "Tool step: explains what turning the connector catalogue on does."
   },

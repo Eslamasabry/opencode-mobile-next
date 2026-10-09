@@ -44702,7 +44702,7 @@ abstract class AppLocalizations {
   /// Tool step: explains what turning the connector catalogue on does.
   ///
   /// In en, this message translates to:
-  /// **'The connector catalogue is a public list of connectors. Turning it on lets this app download that list and send the words searched for to the public registry. Nothing is connected.'**
+  /// **'The connector catalogue is a public list of connectors. Turning it on downloads that list and sends your search words to the public registry; nothing gets connected.'**
   String get chatUiConnectorSearchOffBody;
 
   /// Button in a connector search step: turn the catalogue on for this profile.
