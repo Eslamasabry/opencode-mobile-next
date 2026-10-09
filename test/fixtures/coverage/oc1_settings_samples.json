@@ -1,0 +1,212 @@
+{
+  "source": "contracts/opencode-openapi-f12e14cf.json",
+  "schema": {
+    "PermissionSavedInfo": [
+      {
+        "path": "id",
+        "kind": "string"
+      },
+      {
+        "path": "projectID",
+        "kind": "string"
+      },
+      {
+        "path": "action",
+        "kind": "string"
+      },
+      {
+        "path": "resource",
+        "kind": "string"
+      }
+    ],
+    "pty:shell": [
+      {
+        "path": "path",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "acceptable",
+        "kind": "boolean"
+      }
+    ],
+    "config:shell": [
+      {
+        "path": "shell",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "saved",
+      "payload": [
+        {
+          "id": "psv_settings1",
+          "projectID": "prj_shopfront",
+          "action": "bash",
+          "resource": "git push *"
+        },
+        {
+          "id": "psv_settings2",
+          "projectID": "prj_shopfront",
+          "action": "edit",
+          "resource": "lib/checkout/*"
+        }
+      ],
+      "kind": "saved",
+      "fields": [
+        {
+          "key": "PermissionSavedInfo.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionSavedInfo.projectID",
+          "path": "projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionSavedInfo.action",
+          "path": "action",
+          "kind": "string",
+          "probes": [
+            "Run a shell command"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionSavedInfo.resource",
+          "path": "resource",
+          "kind": "string",
+          "probes": [
+            "git push *"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionSavedInfo.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionSavedInfo.projectID",
+          "path": "projectID",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "PermissionSavedInfo.action",
+          "path": "action",
+          "kind": "string",
+          "probes": [
+            "Edit a file"
+          ],
+          "primary": false
+        },
+        {
+          "key": "PermissionSavedInfo.resource",
+          "path": "resource",
+          "kind": "string",
+          "probes": [
+            "lib/checkout/*"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "shells",
+      "payload": {
+        "shells": [
+          {
+            "path": "/bin/bash",
+            "name": "bash",
+            "acceptable": true
+          },
+          {
+            "path": "/usr/bin/fish",
+            "name": "fish",
+            "acceptable": false
+          }
+        ],
+        "config": {
+          "shell": "/bin/bash"
+        }
+      },
+      "kind": "shells",
+      "fields": [
+        {
+          "key": "pty:shell.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [
+            "/bin/bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty:shell.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty:shell.acceptable",
+          "path": "acceptable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "pty:shell.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "pty:shell.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "fish"
+          ],
+          "primary": false
+        },
+        {
+          "key": "pty:shell.acceptable",
+          "path": "acceptable",
+          "kind": "boolean",
+          "probes": [
+            "Terminal only"
+          ],
+          "primary": false
+        },
+        {
+          "key": "config:shell.shell",
+          "path": "shell",
+          "kind": "string",
+          "probes": [
+            "/bin/bash"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}
