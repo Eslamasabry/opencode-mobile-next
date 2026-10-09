@@ -269,6 +269,14 @@ class AppRuntimeUiTests(unittest.TestCase):
         self.assertEqual(len(taps), 3)
         self.assertEqual(taps[0][-2:], ("235", "140"))
 
+    def test_merged_server_pill_matches_only_fixed_action_suffix(self):
+        ui = AppRuntimeUi(Device())
+        node = ET.Element("node", text="private server, Running, Switch server", clickable="true")
+        self.assertIs(ui.server_switcher([node]), node)
+        self.assertIsNone(ui.server_switcher([node, node]))
+        node.set("text", "Switch server, private server")
+        self.assertIsNone(ui.server_switcher([node]))
+
     def test_foreign_app_copy_is_never_tapped(self):
         device = Device()
         device.launch = Mock()

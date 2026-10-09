@@ -83,6 +83,14 @@ class AppRuntimeUi:
         x, y = self.ui.centre(node)
         self.device.adb("shell", "input", "tap", str(x), str(y), timeout=5)
 
+    def server_switcher(self, nodes):
+        # KitShellControls appends the authored action to a private server name
+        # and status in one semantics label. Match only that fixed suffix.
+        matches = [node for node in nodes if node.get("clickable") == "true"
+                   and any(self.ui.text(node).endswith(", " + label)
+                           for label in self.labels("kitTopBarSwitchServer"))]
+        return matches[0] if len(matches) == 1 else None
+
     def scoped_more(self, nodes):
         """Choose only the menu in the unambiguously named in-app card."""
         choices = []
@@ -136,6 +144,7 @@ class AppRuntimeUi:
                     self.tap(more)
                 elif (
                     switcher := self.find(nodes, self.labels("serverSwitcherOpen"))
+                    or self.server_switcher(nodes)
                 ) is not None:
                     self.tap(switcher)
                 elif page is not None:
