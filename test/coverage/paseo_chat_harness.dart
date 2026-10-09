@@ -1,8 +1,6 @@
 // The real ChatScreen over a fake connection, for the Paseo coverage ratchets
 // that must read what a person reads in a conversation (timeline items,
 // permission and question cards).
-//
-// ignore_for_file: invalid_use_of_protected_member
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
