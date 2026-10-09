@@ -138,6 +138,8 @@ class AppRuntimeUi:
                     self.tap(switcher)
                 elif page is not None:
                     self.ui.scroll("down")
+                elif (chats := self.find(nodes, self.labels("shellTabChats"))) is not None:
+                    self.tap(chats)
                 elif (back := self.find(nodes, {"Back", "رجوع"})) is not None:
                     self.tap(back)
                 else:

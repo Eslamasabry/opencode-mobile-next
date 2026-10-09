@@ -240,6 +240,32 @@ class AppRuntimeUiTests(unittest.TestCase):
         self.assertEqual(len(taps), 2)
         self.assertTrue(all(args[:3] == ("shell", "input", "tap") for args in taps))
 
+    def test_settings_tab_returns_to_conversations_before_runtime_navigation(self):
+        device = Device()
+        ui = AppRuntimeUi(device)
+        pages = [
+            self.page(["Settings", "Conversations"]),
+            self.page(["In-app Ubuntu", "Switch to OpenCode 1"]),
+            self.page([
+                next(iter(ui.labels("setupSwitchConfirmTitle", "opencode"))),
+                next(iter(ui.labels("setupSwitchConfirmDetail"))),
+                next(iter(ui.labels("setupSwitchConfirm", "opencode"))),
+            ]),
+        ]
+        taps = []
+        device.launch = Mock()
+
+        def adb(*args, **kwargs):
+            if args[0] == "exec-out":
+                return pages[min(len(taps), 2)]
+            if args[:3] == ("shell", "input", "tap"):
+                taps.append(args)
+            return b""
+
+        device.adb = adb
+        ui.switch("opencode")
+        self.assertEqual(len(taps), 3)
+
     def test_foreign_app_copy_is_never_tapped(self):
         device = Device()
         device.launch = Mock()
