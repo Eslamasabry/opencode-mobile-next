@@ -298,12 +298,27 @@ def run_first_run(ports, candidate, output, *, setup_seconds=2700, reply_seconds
             ports.sleep(1)
     except Exception as error:
         report["failureCode"] = safe_failure(error, failure)
+        if failure == "fb1_install_failed" and isinstance(error, DriverFailure):
+            from tool.qa.fq9.ports import FAIL_CODES
+            if error.code in FAIL_CODES:
+                report["installVerificationError"] = error.code
+    diagnostic = getattr(ports, "install_diagnostic", None)
+    if diagnostic is not None:
+        report["installDiagnostic"] = diagnostic
     output.mkdir(parents=True, exist_ok=True)
     (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     return report
 
 
 class FirstRunPorts(AndroidPorts):
+    def install_apk(self, artifact):
+        from tool.qa.fb1_install_diagnostic import install
+        if not self.locked:
+            raise DriverFailure("fb1_lock_invalid")
+        self.install_diagnostic = install(self.serial, artifact.apk)
+        if not self.install_diagnostic['success']:
+            raise DriverFailure("fb1_install_failed")
+
     def __init__(self, serial, run_id, avd):
         scope(serial, avd, run_id)
         super().__init__(serial, run_id, dedicated_avd=avd)

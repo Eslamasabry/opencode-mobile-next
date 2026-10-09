@@ -432,13 +432,16 @@ class AndroidPorts(AndroidRuntimeMixin):
             raise DriverFailure("dedicated_avd_required")
         verify_artifact(artifact)
         self.mutated = True
-        self.adb("install", str(artifact.apk), timeout=180)
+        self.install_apk(artifact)
         actual = self.installed_identity()
         if any(
             actual[k] != getattr(artifact, k)
             for k in ("build", "version", "sha256", "signer")
         ):
             raise DriverFailure("artifact_identity_mismatch")
+
+    def install_apk(self, artifact):
+        self.adb("install", str(artifact.apk), timeout=180)
 
     def launch(self):
         self.adb("shell", "am", "start", "-n", PACKAGE + "/.MainActivity")
