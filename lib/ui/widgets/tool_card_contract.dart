@@ -16,6 +16,7 @@ enum _ToolKind {
   question,
   lsp,
   skill,
+  connectorSearch,
   generic,
 }
 
@@ -363,7 +364,32 @@ class _ToolContract {
         subtitle = null;
       default:
         kind = _ToolKind.generic;
-        if (isAgentCardTool(rawName)) {
+        if (isConnectorSearchTool(rawName)) {
+          // The agent searching the connector catalogue already on this
+          // phone: read-only, in words, with what it found on the line.
+          kind = _ToolKind.connectorSearch;
+          title = strings.chatUiToolSearchedConnectors;
+          subtitle = null;
+          if (state.status == 'completed') {
+            final result = parseConnectorSearchResult(
+              value: state.outputValue,
+              text: state.output,
+            );
+            if (result != null) {
+              details.add(switch (result.status) {
+                ConnectorSearchStatus.ok when result.matches.isEmpty =>
+                  strings.chatUiConnectorSearchEmpty,
+                ConnectorSearchStatus.ok => strings.chatUiFoundCount(
+                  result.matches.length,
+                ),
+                ConnectorSearchStatus.catalogueNotLoaded =>
+                  strings.chatUiConnectorSearchNotLoaded,
+                ConnectorSearchStatus.unavailable =>
+                  strings.chatUiConnectorSearchUnavailable,
+              });
+            }
+          }
+        } else if (isAgentCardTool(rawName)) {
           // The agent card tool, before its card is drawn (still running) or
           // where the connection draws none: in words, with the card's own
           // title. Its server sets the raw name as the call's title, so
@@ -434,6 +460,7 @@ class _ToolContract {
     _ToolKind.todo => KitToolKind.todo,
     _ToolKind.question => KitToolKind.question,
     _ToolKind.skill => KitToolKind.skill,
+    _ToolKind.connectorSearch => KitToolKind.search,
     _ToolKind.generic => KitToolKind.other,
   };
 }

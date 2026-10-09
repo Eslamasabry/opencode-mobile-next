@@ -4,11 +4,13 @@ import 'package:flutter/widgets.dart';
 
 import '../../domain/genui/gen_ui.dart';
 import '../../l10n/app_localizations.dart';
+import '../../state/connector_card_host.dart';
 import '../app_theme.dart' show AppStatusTone;
 import '../kit/kit.dart';
 import 'agent_card_asks.dart';
 import 'agent_card_nodes.dart';
 import 'agent_card_photos.dart';
+import 'connector_card.dart';
 import 'product_states.dart' show productErrorText;
 
 /// The card an agent described, drawn from the kit with its state: waiting
@@ -28,6 +30,8 @@ class AgentCardView extends StatefulWidget {
     this.busy = false,
     this.inList = false,
     this.photos,
+    this.connectors,
+    this.onOpenConnectors,
   });
 
   final GenUiController controller;
@@ -45,6 +49,14 @@ class AgentCardView extends StatefulWidget {
 
   /// Where a photo ask gets its pictures; null where none can be added.
   final AgentCardPhotos? photos;
+
+  /// Where a suggested connector (a card's `connector`) gets its listing and
+  /// its Connect state; null draws the suggestion with no Connect.
+  final ConnectorCardHost? connectors;
+
+  /// Opens the connector catalogue in Tools, the way forward the connector
+  /// card offers when it cannot connect; null hides that action.
+  final VoidCallback? onOpenConnectors;
 
   @override
   State<AgentCardView> createState() => _AgentCardViewState();
@@ -145,6 +157,19 @@ class _AgentCardViewState extends State<AgentCardView> {
     if (closed) {
       _drafts.remove(card.identity);
       _heldWords.remove(card.identity);
+    }
+
+    if (card.connector != null && card.ask == null) {
+      return ConnectorCardView(
+        card: card,
+        agentLabel: widget.agentLabel,
+        body: body,
+        host: widget.connectors,
+        reportable: state == GenUiCardState.report,
+        inList: widget.inList,
+        onOpenTools: widget.onOpenConnectors,
+        cardKey: cardKey,
+      );
     }
 
     if (delivery == GenUiDeliveryState.held) {

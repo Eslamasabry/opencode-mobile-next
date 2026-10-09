@@ -17496,10 +17496,6 @@
   "@kitMarkdownOpenFile": {
     "description": "KitMarkdown: the screen-reader hint on a file path in an agent's reply that the server confirmed it can open"
   },
-  "kitMarkdownImage": "Image",
-  "@kitMarkdownImage": {
-    "description": "KitMarkdown: the name of a picture in an agent's reply whose Markdown gave no description (empty, or just the word Image)"
-  },
   "kitMarkdownTable": "{rows, plural, =1{Table, 1 row} other{Table, {rows} rows}}",
   "@kitMarkdownTable": {
     "description": "KitMarkdown: what a screen reader says for a table in an agent's reply; rows counts the body rows (the header row is not counted)",
@@ -33727,5 +33723,219 @@
   "e7LocaleUiRussian": "Русский",
   "@e7LocaleUiRussian": {
     "description": "Language sheet: the language's own name (Russian), written in that language and never translated, like the Arabic and English rows."
+  },
+  "connectorCardSuggests": "{agent} suggests a connector",
+  "@connectorCardSuggests": {
+    "description": "Suggested-connector card eyebrow: who recommends adding a connector.",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "connectorCardAnnouncement": "{agent} suggests a connector: {name}",
+  "@connectorCardAnnouncement": {
+    "description": "Suggested-connector card: spoken once when the card appears.",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "connectorCardRuns": "Runs",
+  "@connectorCardRuns": {
+    "description": "Suggested-connector card: label for where the connector runs."
+  },
+  "connectorCardLasts": "Lasts",
+  "@connectorCardLasts": {
+    "description": "Suggested-connector card: label for how long the connection lasts."
+  },
+  "connectorCardLastsValue": "While this server runs",
+  "@connectorCardLastsValue": {
+    "description": "Suggested-connector card: the connection is runtime-only and is not saved to configuration."
+  },
+  "connectorCardRunsNode": "On this server, with Node",
+  "@connectorCardRunsNode": {
+    "description": "Suggested-connector card: an npm package runs on the server."
+  },
+  "connectorCardRunsPython": "On this server, with Python",
+  "@connectorCardRunsPython": {
+    "description": "Suggested-connector card: a PyPI package runs on the server."
+  },
+  "connectorCardRunsDocker": "In Docker, which the app cannot start",
+  "@connectorCardRunsDocker": {
+    "description": "Suggested-connector card: a container listing the app cannot start."
+  },
+  "connectorCardRunsNone": "Nothing the app can start",
+  "@connectorCardRunsNone": {
+    "description": "Suggested-connector card: a listing with no address or package the app can use."
+  },
+  "connectorCardRunsHosted": "Hosted",
+  "@connectorCardRunsHosted": {
+    "description": "Connector search step: the connector is hosted by someone else (one word)."
+  },
+  "connectorCardConnect": "Connect",
+  "@connectorCardConnect": {
+    "description": "Suggested-connector card: the one primary button."
+  },
+  "connectorCardConnecting": "Connecting…",
+  "@connectorCardConnecting": {
+    "description": "Suggested-connector card: progress on the Connect button."
+  },
+  "connectorCardChecking": "Checking the connection…",
+  "@connectorCardChecking": {
+    "description": "Suggested-connector card: progress while the server status is read again."
+  },
+  "connectorCardSignInNeeded": "This connector needs you to sign in.",
+  "@connectorCardSignInNeeded": {
+    "description": "Suggested-connector card: the server asks for sign-in."
+  },
+  "connectorCardSignIn": "Sign in",
+  "@connectorCardSignIn": {
+    "description": "Suggested-connector card: starts the sign-in in the browser."
+  },
+  "connectorCardOpenSignIn": "Open sign-in page",
+  "@connectorCardOpenSignIn": {
+    "description": "Suggested-connector card: opens the sign-in page again."
+  },
+  "connectorCardSignInWaiting": "Waiting for sign-in to finish in your browser.",
+  "@connectorCardSignInWaiting": {
+    "description": "Suggested-connector card: the browser sign-in is in progress."
+  },
+  "connectorCardManualCode": "Paste the browser return URL or authorization code to finish sign-in.",
+  "@connectorCardManualCode": {
+    "description": "Suggested-connector card: the phone could not listen for the browser return, so the person pastes it."
+  },
+  "connectorCardCodeLabel": "Return URL or code",
+  "@connectorCardCodeLabel": {
+    "description": "Suggested-connector card: label of the field for the pasted sign-in return."
+  },
+  "connectorCardCodeRequired": "Paste the return URL or code first.",
+  "@connectorCardCodeRequired": {
+    "description": "Suggested-connector card: why Finish sign-in is off."
+  },
+  "connectorCardFinishSignIn": "Finish sign-in",
+  "@connectorCardFinishSignIn": {
+    "description": "Suggested-connector card: sends the pasted return to finish sign-in."
+  },
+  "connectorCardCheckStatus": "Check status",
+  "@connectorCardCheckStatus": {
+    "description": "Suggested-connector card: reads the connector status again."
+  },
+  "connectorCardCancelSignIn": "Cancel sign-in",
+  "@connectorCardCancelSignIn": {
+    "description": "Suggested-connector card: stops waiting for the browser sign-in."
+  },
+  "connectorCardCancelTitle": "Cancel sign-in?",
+  "@connectorCardCancelTitle": {
+    "description": "Suggested-connector card: title of the question before cancelling sign-in."
+  },
+  "connectorCardCancelBody": "{name} stops waiting, and its saved sign-in is cleared. You would sign in again to use it.",
+  "@connectorCardCancelBody": {
+    "description": "Suggested-connector card: what cancelling sign-in does on OpenCode 1 (saved sign-in is cleared).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "connectorCardKeepWaiting": "Keep waiting",
+  "@connectorCardKeepWaiting": {
+    "description": "Suggested-connector card: the safe answer to the cancel-sign-in question."
+  },
+  "connectorCardConnected": "Connected",
+  "@connectorCardConnected": {
+    "description": "Suggested-connector card: the connector is connected (a check mark beside it)."
+  },
+  "connectorCardToolsReady": "Tools ready",
+  "@connectorCardToolsReady": {
+    "description": "Suggested-connector card: the server confirmed the tools can be used on the next step."
+  },
+  "connectorCardLoadedTools": "Loaded tools. Continue this conversation to use them.",
+  "@connectorCardLoadedTools": {
+    "description": "Suggested-connector card: readiness confirmed; nothing is sent automatically."
+  },
+  "connectorCardConnectedUnconfirmed": "Connected. Tool availability has not been confirmed.",
+  "@connectorCardConnectedUnconfirmed": {
+    "description": "Suggested-connector card: connected, but this server cannot confirm the tools are ready."
+  },
+  "connectorCardFailureUnavailable": "Connecting tools from chat is not available for this agent.",
+  "@connectorCardFailureUnavailable": {
+    "description": "Suggested-connector card: this agent cannot connect connectors from chat."
+  },
+  "connectorCardFailureInvalidSuggestion": "This connector suggestion is not available. Browse connectors in Tools.",
+  "@connectorCardFailureInvalidSuggestion": {
+    "description": "Suggested-connector card: the suggestion cannot be used."
+  },
+  "connectorCardFailureSetupRequired": "This connector needs setup in Tools before it can connect.",
+  "@connectorCardFailureSetupRequired": {
+    "description": "Suggested-connector card: the connector needs a key, settings or a local package."
+  },
+  "connectorCardFailureNameConflict": "A connector with this name already exists. Check it in Tools.",
+  "@connectorCardFailureNameConflict": {
+    "description": "Suggested-connector card: a server with this name is already set up."
+  },
+  "connectorCardFailureSourceChanged": "This conversation's connection changed. Reopen the connector card.",
+  "@connectorCardFailureSourceChanged": {
+    "description": "Suggested-connector card: the profile, project or server changed."
+  },
+  "connectorCardFailureConnectFailed": "Could not confirm the connection. Check its status before trying again.",
+  "@connectorCardFailureConnectFailed": {
+    "description": "Suggested-connector card: the connect request had no confirmed result."
+  },
+  "connectorCardFailureAuthenticationFailed": "Sign-in could not be confirmed. Check its status before trying again.",
+  "@connectorCardFailureAuthenticationFailed": {
+    "description": "Suggested-connector card: the sign-in had no confirmed result."
+  },
+  "connectorCardFailureOauthUnavailable": "Sign-in for this connector is not available in this chat.",
+  "@connectorCardFailureOauthUnavailable": {
+    "description": "Suggested-connector card: this server cannot finish sign-in from chat."
+  },
+  "connectorCardFailureNotConnected": "The connector is not connected yet. Check its setup in Tools.",
+  "@connectorCardFailureNotConnected": {
+    "description": "Suggested-connector card: the status read says it is not connected."
+  },
+  "connectorCardOpenTools": "Open connectors in Tools",
+  "@connectorCardOpenTools": {
+    "description": "Suggested-connector card: the way forward to the MCP catalogue."
+  },
+  "connectorCardTryAgain": "Try again",
+  "@connectorCardTryAgain": {
+    "description": "Suggested-connector card: connect again (an add that was already sent is only checked, never repeated)."
+  },
+  "connectorCardReopen": "Reopen card",
+  "@connectorCardReopen": {
+    "description": "Suggested-connector card: builds the card again after the connection changed."
+  },
+  "chatUiToolSearchedConnectors": "Searched connectors",
+  "@chatUiToolSearchedConnectors": {
+    "description": "Tool step: the agent searched the connector catalogue already loaded on this phone."
+  },
+  "chatUiConnectorSearchEmpty": "No connectors found in the loaded catalogue.",
+  "@chatUiConnectorSearchEmpty": {
+    "description": "Tool step: a connector search matched nothing."
+  },
+  "chatUiConnectorSearchNotLoaded": "Catalogue not loaded. Open Tools > MCP to load it.",
+  "@chatUiConnectorSearchNotLoaded": {
+    "description": "Tool step: the connector catalogue has not been loaded on this phone."
+  },
+  "chatUiConnectorSearchUnavailable": "Connector search is unavailable. Try again from Tools.",
+  "@chatUiConnectorSearchUnavailable": {
+    "description": "Tool step: the connector search could not run."
+  },
+  "chatUiConnectorSearchInvalid": "Invalid connector search request.",
+  "@chatUiConnectorSearchInvalid": {
+    "description": "Tool step: the connector search request was refused."
+  },
+  "chatUiConnectorSearchNotConnected": "Not connected",
+  "@chatUiConnectorSearchNotConnected": {
+    "description": "Tool step: a found connector is not connected on this server."
+  },
+  "kitMarkdownImage": "Image",
+  "@kitMarkdownImage": {
+    "description": "KitMarkdown: the name of a picture in an agent's reply whose Markdown gave no description (empty, or just the word Image)"
   }
 }

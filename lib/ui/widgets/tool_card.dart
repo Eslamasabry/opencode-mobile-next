@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 
 import '../../api/models.dart';
+import '../../domain/connector_search_result.dart';
 import '../../domain/mobile_tool_view.dart';
 import '../../domain/tool_label.dart';
 import '../../l10n/app_localizations.dart';
@@ -16,6 +17,7 @@ import '../kit/kit_code_block.dart';
 import '../kit/kit_details_fold.dart';
 import '../kit/kit_diff_view.dart';
 import '../kit/kit_image.dart';
+import '../kit/kit_key_value.dart';
 import '../kit/kit_notice.dart';
 import '../kit/kit_row.dart';
 import '../kit/kit_row_parts.dart';
