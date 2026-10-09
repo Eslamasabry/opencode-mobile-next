@@ -1,0 +1,496 @@
+{
+  "source": "@getpaseo/protocol messages.js",
+  "schema": {
+    "capture_terminal_request": [
+      {
+        "path": "terminalId",
+        "kind": "string"
+      },
+      {
+        "path": "start",
+        "kind": "number"
+      },
+      {
+        "path": "end",
+        "kind": "number"
+      },
+      {
+        "path": "stripAnsi",
+        "kind": "boolean"
+      },
+      {
+        "path": "requestId",
+        "kind": "string"
+      }
+    ],
+    "capture_terminal_response": [
+      {
+        "path": "payload.terminalId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.lines[]",
+        "kind": "string"
+      },
+      {
+        "path": "payload.totalLines",
+        "kind": "number"
+      },
+      {
+        "path": "payload.requestId",
+        "kind": "string"
+      }
+    ],
+    "create_terminal_request": [
+      {
+        "path": "cwd",
+        "kind": "string"
+      },
+      {
+        "path": "workspaceId",
+        "kind": "string"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "agentId",
+        "kind": "string"
+      },
+      {
+        "path": "command",
+        "kind": "string"
+      },
+      {
+        "path": "args[]",
+        "kind": "string"
+      },
+      {
+        "path": "size.rows",
+        "kind": "number"
+      },
+      {
+        "path": "size.cols",
+        "kind": "number"
+      },
+      {
+        "path": "requestId",
+        "kind": "string"
+      }
+    ],
+    "create_terminal_response": [
+      {
+        "path": "payload.terminal.id",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminal.name",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminal.cwd",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminal.workspaceId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminal.title",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminal.activity.state",
+        "kind": "enum"
+      },
+      {
+        "path": "payload.terminal.activity.attentionReason",
+        "kind": "enum"
+      },
+      {
+        "path": "payload.terminal.activity.changedAt",
+        "kind": "number"
+      },
+      {
+        "path": "payload.error",
+        "kind": "string"
+      },
+      {
+        "path": "payload.requestId",
+        "kind": "string"
+      }
+    ],
+    "kill_terminal_request": [
+      {
+        "path": "terminalId",
+        "kind": "string"
+      },
+      {
+        "path": "requestId",
+        "kind": "string"
+      }
+    ],
+    "kill_terminal_response": [
+      {
+        "path": "payload.terminalId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.success",
+        "kind": "boolean"
+      },
+      {
+        "path": "payload.requestId",
+        "kind": "string"
+      }
+    ],
+    "list_terminals_request": [
+      {
+        "path": "cwd",
+        "kind": "string"
+      },
+      {
+        "path": "workspaceId",
+        "kind": "string"
+      },
+      {
+        "path": "requestId",
+        "kind": "string"
+      }
+    ],
+    "list_terminals_response": [
+      {
+        "path": "payload.cwd",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminals[].id",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminals[].name",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminals[].cwd",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminals[].workspaceId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminals[].title",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminals[].activity.state",
+        "kind": "enum"
+      },
+      {
+        "path": "payload.terminals[].activity.attentionReason",
+        "kind": "enum"
+      },
+      {
+        "path": "payload.terminals[].activity.changedAt",
+        "kind": "number"
+      },
+      {
+        "path": "payload.requestId",
+        "kind": "string"
+      }
+    ],
+    "terminal.rename.request": [
+      {
+        "path": "terminalId",
+        "kind": "string"
+      },
+      {
+        "path": "title",
+        "kind": "string"
+      },
+      {
+        "path": "requestId",
+        "kind": "string"
+      }
+    ],
+    "terminal.rename.response": [
+      {
+        "path": "payload.requestId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.success",
+        "kind": "boolean"
+      },
+      {
+        "path": "payload.error",
+        "kind": "string"
+      }
+    ],
+    "subscribe_terminal_request": [
+      {
+        "path": "terminalId",
+        "kind": "string"
+      },
+      {
+        "path": "requestId",
+        "kind": "string"
+      },
+      {
+        "path": "restore.mode",
+        "kind": "enum"
+      },
+      {
+        "path": "restore.scrollbackLines",
+        "kind": "number"
+      },
+      {
+        "path": "restore.size.rows",
+        "kind": "number"
+      },
+      {
+        "path": "restore.size.cols",
+        "kind": "number"
+      }
+    ],
+    "subscribe_terminal_response": [
+      {
+        "path": "payload",
+        "kind": "any"
+      }
+    ],
+    "subscribe_terminals_request": [
+      {
+        "path": "requestId",
+        "kind": "string"
+      },
+      {
+        "path": "cwd",
+        "kind": "string"
+      },
+      {
+        "path": "workspaceId",
+        "kind": "string"
+      }
+    ],
+    "terminal_attention_required": [
+      {
+        "path": "payload.subscriptionId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.serverId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminalId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.cwd",
+        "kind": "string"
+      },
+      {
+        "path": "payload.workspaceId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.reason",
+        "kind": "enum"
+      },
+      {
+        "path": "payload.title",
+        "kind": "string"
+      },
+      {
+        "path": "payload.body",
+        "kind": "string"
+      },
+      {
+        "path": "payload.shouldNotify",
+        "kind": "boolean"
+      }
+    ],
+    "terminal_input": [
+      {
+        "path": "terminalId",
+        "kind": "string"
+      },
+      {
+        "path": "message",
+        "kind": "any"
+      }
+    ],
+    "terminal_stream_exit": [
+      {
+        "path": "payload.subscriptionId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminalId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.error",
+        "kind": "string"
+      }
+    ],
+    "terminals_changed": [
+      {
+        "path": "payload.subscriptionId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.requestId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.workspaceId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.cwd",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminals[].id",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminals[].name",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminals[].workspaceId",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminals[].title",
+        "kind": "string"
+      },
+      {
+        "path": "payload.terminals[].activity.state",
+        "kind": "enum"
+      },
+      {
+        "path": "payload.terminals[].activity.attentionReason",
+        "kind": "enum"
+      },
+      {
+        "path": "payload.terminals[].activity.changedAt",
+        "kind": "number"
+      }
+    ],
+    "unsubscribe_terminal_request": [
+      {
+        "path": "terminalId",
+        "kind": "string"
+      }
+    ],
+    "unsubscribe_terminals_request": [
+      {
+        "path": "cwd",
+        "kind": "string"
+      },
+      {
+        "path": "workspaceId",
+        "kind": "string"
+      }
+    ]
+  },
+  "excluded": {
+    "capture_terminal_request.terminalId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "capture_terminal_request.start": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "capture_terminal_request.end": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "capture_terminal_request.stripAnsi": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "capture_terminal_request.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "capture_terminal_response.payload.terminalId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "capture_terminal_response.payload.lines[]": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "capture_terminal_response.payload.totalLines": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "capture_terminal_response.payload.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_request.cwd": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_request.workspaceId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_request.name": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_request.agentId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_request.command": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_request.args[]": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_request.size.rows": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_request.size.cols": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_request.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_response.payload.terminal.id": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_response.payload.terminal.name": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_response.payload.terminal.cwd": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_response.payload.terminal.workspaceId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_response.payload.terminal.title": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_response.payload.terminal.activity.state": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_response.payload.terminal.activity.attentionReason": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_response.payload.terminal.activity.changedAt": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_response.payload.error": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "create_terminal_response.payload.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "kill_terminal_request.terminalId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "kill_terminal_request.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "kill_terminal_response.payload.terminalId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "kill_terminal_response.payload.success": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "kill_terminal_response.payload.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_request.cwd": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_request.workspaceId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_request.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_response.payload.cwd": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_response.payload.terminals[].id": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_response.payload.terminals[].name": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_response.payload.terminals[].cwd": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_response.payload.terminals[].workspaceId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_response.payload.terminals[].title": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_response.payload.terminals[].activity.state": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_response.payload.terminals[].activity.attentionReason": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_response.payload.terminals[].activity.changedAt": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "list_terminals_response.payload.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal.rename.request.terminalId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal.rename.request.title": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal.rename.request.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal.rename.response.payload.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal.rename.response.payload.success": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal.rename.response.payload.error": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "subscribe_terminal_request.terminalId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "subscribe_terminal_request.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "subscribe_terminal_request.restore.mode": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "subscribe_terminal_request.restore.scrollbackLines": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "subscribe_terminal_request.restore.size.rows": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "subscribe_terminal_request.restore.size.cols": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "subscribe_terminal_response.payload": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "subscribe_terminals_request.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "subscribe_terminals_request.cwd": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "subscribe_terminals_request.workspaceId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_attention_required.payload.subscriptionId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_attention_required.payload.serverId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_attention_required.payload.terminalId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_attention_required.payload.cwd": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_attention_required.payload.workspaceId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_attention_required.payload.reason": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_attention_required.payload.title": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_attention_required.payload.body": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_attention_required.payload.shouldNotify": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_input.terminalId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_input.message": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_stream_exit.payload.subscriptionId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_stream_exit.payload.terminalId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminal_stream_exit.payload.error": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminals_changed.payload.subscriptionId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminals_changed.payload.requestId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminals_changed.payload.workspaceId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminals_changed.payload.cwd": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminals_changed.payload.terminals[].id": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminals_changed.payload.terminals[].name": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminals_changed.payload.terminals[].workspaceId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminals_changed.payload.terminals[].title": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminals_changed.payload.terminals[].activity.state": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminals_changed.payload.terminals[].activity.attentionReason": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "terminals_changed.payload.terminals[].activity.changedAt": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "unsubscribe_terminal_request.terminalId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "unsubscribe_terminals_request.cwd": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this",
+    "unsubscribe_terminals_request.workspaceId": "ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this"
+  },
+  "cases": []
+}

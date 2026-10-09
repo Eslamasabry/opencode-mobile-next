@@ -1,0 +1,1195 @@
+{
+  "source": "lib/termux/processes.dart, lib/termux/storage.dart (the scripts' JSON)",
+  "schema": {
+    "process": [
+      {
+        "path": "pid",
+        "kind": "number"
+      },
+      {
+        "path": "ppid",
+        "kind": "number"
+      },
+      {
+        "path": "group",
+        "kind": "enum"
+      },
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "cmd",
+        "kind": "string"
+      },
+      {
+        "path": "cpu_pct",
+        "kind": "number"
+      },
+      {
+        "path": "cpu_seconds",
+        "kind": "number"
+      },
+      {
+        "path": "rss_kb",
+        "kind": "number"
+      },
+      {
+        "path": "elapsed_s",
+        "kind": "number"
+      },
+      {
+        "path": "cwd",
+        "kind": "string"
+      },
+      {
+        "path": "orphan_reason",
+        "kind": "enum"
+      },
+      {
+        "path": "protected",
+        "kind": "boolean"
+      }
+    ],
+    "stop": [
+      {
+        "path": "stopped[]",
+        "kind": "number"
+      },
+      {
+        "path": "killed[]",
+        "kind": "number"
+      },
+      {
+        "path": "remaining[].pid",
+        "kind": "number"
+      },
+      {
+        "path": "remaining[].name",
+        "kind": "string"
+      },
+      {
+        "path": "refused[].pid",
+        "kind": "number"
+      },
+      {
+        "path": "refused[].reason",
+        "kind": "string"
+      }
+    ],
+    "scan_state": [
+      {
+        "path": "state",
+        "kind": "enum"
+      }
+    ],
+    "storage": [
+      {
+        "path": "scanned_at",
+        "kind": "number"
+      },
+      {
+        "path": "total_bytes",
+        "kind": "number"
+      },
+      {
+        "path": "stale",
+        "kind": "boolean"
+      },
+      {
+        "path": "cleanup_policy",
+        "kind": "number"
+      }
+    ],
+    "category": [
+      {
+        "path": "key",
+        "kind": "enum"
+      },
+      {
+        "path": "label_key",
+        "kind": "string"
+      },
+      {
+        "path": "note_key",
+        "kind": "string"
+      },
+      {
+        "path": "bytes",
+        "kind": "number"
+      },
+      {
+        "path": "deletable",
+        "kind": "boolean"
+      },
+      {
+        "path": "paths[].path",
+        "kind": "string"
+      },
+      {
+        "path": "paths[].bytes",
+        "kind": "number"
+      }
+    ],
+    "project": [
+      {
+        "path": "name",
+        "kind": "string"
+      },
+      {
+        "path": "path",
+        "kind": "string"
+      },
+      {
+        "path": "bytes",
+        "kind": "number"
+      },
+      {
+        "path": "build_bytes",
+        "kind": "number"
+      }
+    ]
+  },
+  "excluded": {},
+  "cases": [
+    {
+      "id": "processes_all_groups",
+      "kind": "processes",
+      "payload": [
+        {
+          "pid": 5001,
+          "ppid": 1,
+          "group": "orphans",
+          "name": "stray.py",
+          "cmd": "python3 /root/stray.py",
+          "cpu_pct": 97.5,
+          "cpu_seconds": 3700,
+          "rss_kb": 91136,
+          "elapsed_s": 3725,
+          "cwd": "/root/scripts",
+          "orphan_reason": "parent_gone",
+          "protected": false
+        },
+        {
+          "pid": 5002,
+          "ppid": 1,
+          "group": "orphans",
+          "name": "spin.js",
+          "cmd": "node /root/spin.js",
+          "cpu_pct": 97.5,
+          "cpu_seconds": 3700,
+          "rss_kb": 91136,
+          "elapsed_s": 3725,
+          "cwd": "/root/js",
+          "orphan_reason": "cpu_no_owner",
+          "protected": false
+        },
+        {
+          "pid": 5100,
+          "ppid": 1,
+          "group": "opencode_server",
+          "name": "opencode",
+          "cmd": "opencode serve --port 4096",
+          "cpu_pct": 1.5,
+          "cpu_seconds": 120,
+          "rss_kb": 240640,
+          "elapsed_s": 7300,
+          "cwd": "",
+          "orphan_reason": null,
+          "protected": true
+        },
+        {
+          "pid": 5200,
+          "ppid": 5100,
+          "group": "ai_team",
+          "name": "gc",
+          "cmd": "gc start",
+          "cpu_pct": 0,
+          "cpu_seconds": 5,
+          "rss_kb": 20480,
+          "elapsed_s": 600,
+          "cwd": "",
+          "orphan_reason": null,
+          "protected": false
+        },
+        {
+          "pid": 5300,
+          "ppid": 1,
+          "group": "build_daemons",
+          "name": "java",
+          "cmd": "java GradleDaemon 8.5",
+          "cpu_pct": 0.5,
+          "cpu_seconds": 90,
+          "rss_kb": 300032,
+          "elapsed_s": 4000,
+          "cwd": "/work/shop",
+          "orphan_reason": null,
+          "protected": false
+        },
+        {
+          "pid": 5400,
+          "ppid": 1,
+          "group": "other",
+          "name": "bash",
+          "cmd": "bash",
+          "cpu_pct": 0,
+          "cpu_seconds": 1,
+          "rss_kb": 4096,
+          "elapsed_s": 900,
+          "cwd": "/root",
+          "orphan_reason": null,
+          "protected": false
+        }
+      ],
+      "fields": [
+        {
+          "key": "process.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [
+            "5001"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.ppid",
+          "path": "ppid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.group",
+          "path": "group",
+          "kind": "enum",
+          "probes": [
+            "Helper"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "stray.py"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cmd",
+          "path": "cmd",
+          "kind": "string",
+          "probes": [
+            "python3 /root/stray.py"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_pct",
+          "path": "cpu_pct",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_seconds",
+          "path": "cpu_seconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.rss_kb",
+          "path": "rss_kb",
+          "kind": "number",
+          "probes": [
+            "89 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.elapsed_s",
+          "path": "elapsed_s",
+          "kind": "number",
+          "probes": [
+            "1 h 2 min"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "/root/scripts"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.orphan_reason",
+          "path": "orphan_reason",
+          "kind": "enum",
+          "probes": [
+            "Parent gone"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.protected",
+          "path": "protected",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [
+            "5002"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.ppid",
+          "path": "ppid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.group",
+          "path": "group",
+          "kind": "enum",
+          "probes": [
+            "Helper"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "spin.js"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cmd",
+          "path": "cmd",
+          "kind": "string",
+          "probes": [
+            "node /root/spin.js"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_pct",
+          "path": "cpu_pct",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_seconds",
+          "path": "cpu_seconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.rss_kb",
+          "path": "rss_kb",
+          "kind": "number",
+          "probes": [
+            "89 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.elapsed_s",
+          "path": "elapsed_s",
+          "kind": "number",
+          "probes": [
+            "1 h 2 min"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "/root/js"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.orphan_reason",
+          "path": "orphan_reason",
+          "kind": "enum",
+          "probes": [
+            "No owner"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.protected",
+          "path": "protected",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [
+            "5100"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.ppid",
+          "path": "ppid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.group",
+          "path": "group",
+          "kind": "enum",
+          "probes": [
+            "OpenCode server"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "opencode"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cmd",
+          "path": "cmd",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_pct",
+          "path": "cpu_pct",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_seconds",
+          "path": "cpu_seconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.rss_kb",
+          "path": "rss_kb",
+          "kind": "number",
+          "probes": [
+            "235 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.elapsed_s",
+          "path": "elapsed_s",
+          "kind": "number",
+          "probes": [
+            "2 h 1 min"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.protected",
+          "path": "protected",
+          "kind": "boolean",
+          "probes": [
+            "Protected"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [
+            "5200"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.ppid",
+          "path": "ppid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.group",
+          "path": "group",
+          "kind": "enum",
+          "probes": [
+            "AI Team"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "gc"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cmd",
+          "path": "cmd",
+          "kind": "string",
+          "probes": [
+            "gc start"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_pct",
+          "path": "cpu_pct",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_seconds",
+          "path": "cpu_seconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.rss_kb",
+          "path": "rss_kb",
+          "kind": "number",
+          "probes": [
+            "20 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.elapsed_s",
+          "path": "elapsed_s",
+          "kind": "number",
+          "probes": [
+            "10 min"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.protected",
+          "path": "protected",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [
+            "5300"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.ppid",
+          "path": "ppid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.group",
+          "path": "group",
+          "kind": "enum",
+          "probes": [
+            "Dev service"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "java"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cmd",
+          "path": "cmd",
+          "kind": "string",
+          "probes": [
+            "java GradleDaemon 8.5"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_pct",
+          "path": "cpu_pct",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_seconds",
+          "path": "cpu_seconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.rss_kb",
+          "path": "rss_kb",
+          "kind": "number",
+          "probes": [
+            "293 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.elapsed_s",
+          "path": "elapsed_s",
+          "kind": "number",
+          "probes": [
+            "1 h 6 min"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "/work/shop"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.protected",
+          "path": "protected",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.pid",
+          "path": "pid",
+          "kind": "number",
+          "probes": [
+            "5400"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.ppid",
+          "path": "ppid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.group",
+          "path": "group",
+          "kind": "enum",
+          "probes": [
+            "Terminal"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cmd",
+          "path": "cmd",
+          "kind": "string",
+          "probes": [
+            "bash"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_pct",
+          "path": "cpu_pct",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.cpu_seconds",
+          "path": "cpu_seconds",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "process.rss_kb",
+          "path": "rss_kb",
+          "kind": "number",
+          "probes": [
+            "4 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.elapsed_s",
+          "path": "elapsed_s",
+          "kind": "number",
+          "probes": [
+            "15 min"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.cwd",
+          "path": "cwd",
+          "kind": "string",
+          "probes": [
+            "/root"
+          ],
+          "primary": false
+        },
+        {
+          "key": "process.protected",
+          "path": "protected",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "stop_result",
+      "kind": "stop",
+      "payload": {
+        "stopped": [
+          5002
+        ],
+        "killed": [
+          5001
+        ],
+        "remaining": [
+          {
+            "pid": 5300,
+            "name": "java"
+          }
+        ],
+        "refused": [
+          {
+            "pid": 5100,
+            "reason": "protected"
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "stop.stopped[]",
+          "path": "stopped[]",
+          "kind": "number",
+          "probes": [
+            "Stopped 2"
+          ],
+          "primary": false
+        },
+        {
+          "key": "stop.killed[]",
+          "path": "killed[]",
+          "kind": "number",
+          "probes": [
+            "1 needed a forced stop"
+          ],
+          "primary": false
+        },
+        {
+          "key": "stop.remaining[].pid",
+          "path": "remaining[].pid",
+          "kind": "number",
+          "probes": [
+            "1 would not stop"
+          ],
+          "primary": false
+        },
+        {
+          "key": "stop.remaining[].name",
+          "path": "remaining[].name",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "stop.refused[].pid",
+          "path": "refused[].pid",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "stop.refused[].reason",
+          "path": "refused[].reason",
+          "kind": "string",
+          "probes": [
+            "1 protected, not stopped"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_report",
+      "kind": "storage",
+      "payload": {
+        "state": "done",
+        "report": {
+          "scanned_at": 1788950000,
+          "total_bytes": 1073741824,
+          "stale": false,
+          "cleanup_policy": 2,
+          "categories": [
+            {
+              "key": "build_caches",
+              "label_key": "build_caches",
+              "note_key": "build_caches_note",
+              "bytes": 734003200,
+              "deletable": true,
+              "paths": [
+                {
+                  "path": "/root/.gradle/caches",
+                  "bytes": 500000000
+                },
+                {
+                  "path": "/root/.pub-cache/hosted",
+                  "bytes": 234003200
+                }
+              ]
+            },
+            {
+              "key": "projects",
+              "label_key": "projects",
+              "note_key": "projects_note",
+              "bytes": 52428800,
+              "deletable": false,
+              "paths": []
+            }
+          ],
+          "projects": [
+            {
+              "name": "shop",
+              "path": "/root/work/shop",
+              "bytes": 41943040,
+              "build_bytes": 10485760
+            }
+          ]
+        }
+      },
+      "fields": [
+        {
+          "key": "scan_state.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Scanned 2 min ago"
+          ],
+          "primary": false
+        },
+        {
+          "key": "storage.scanned_at",
+          "path": "scanned_at",
+          "kind": "number",
+          "probes": [
+            "Scanned 2 min ago"
+          ],
+          "primary": false
+        },
+        {
+          "key": "storage.total_bytes",
+          "path": "total_bytes",
+          "kind": "number",
+          "probes": [
+            "1 GB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "storage.stale",
+          "path": "stale",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "storage.cleanup_policy",
+          "path": "cleanup_policy",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "category.key",
+          "path": "key",
+          "kind": "enum",
+          "probes": [
+            "Build caches"
+          ],
+          "primary": false
+        },
+        {
+          "key": "category.label_key",
+          "path": "label_key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "category.note_key",
+          "path": "note_key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "category.bytes",
+          "path": "bytes",
+          "kind": "number",
+          "probes": [
+            "700 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "category.deletable",
+          "path": "deletable",
+          "kind": "boolean",
+          "probes": [
+            "Clean build caches"
+          ],
+          "primary": false
+        },
+        {
+          "key": "category.paths[].path",
+          "path": "paths[].path",
+          "kind": "string",
+          "probes": [
+            "/root/.gradle/caches"
+          ],
+          "primary": false
+        },
+        {
+          "key": "category.paths[].bytes",
+          "path": "paths[].bytes",
+          "kind": "number",
+          "probes": [
+            "476 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "category.key",
+          "path": "key",
+          "kind": "enum",
+          "probes": [
+            "Projects (your files)"
+          ],
+          "primary": false
+        },
+        {
+          "key": "category.label_key",
+          "path": "label_key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "category.note_key",
+          "path": "note_key",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "category.bytes",
+          "path": "bytes",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "category.deletable",
+          "path": "deletable",
+          "kind": "boolean",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.name",
+          "path": "name",
+          "kind": "string",
+          "probes": [
+            "shop"
+          ],
+          "primary": false
+        },
+        {
+          "key": "project.path",
+          "path": "path",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "project.bytes",
+          "path": "bytes",
+          "kind": "number",
+          "probes": [
+            "40 MB"
+          ],
+          "primary": false
+        },
+        {
+          "key": "project.build_bytes",
+          "path": "build_bytes",
+          "kind": "number",
+          "probes": [
+            "10 MB in build-related folders"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_idle",
+      "kind": "storage",
+      "payload": {
+        "state": "idle"
+      },
+      "fields": [
+        {
+          "key": "scan_state.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Not scanned yet"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_running",
+      "kind": "storage",
+      "payload": {
+        "state": "running"
+      },
+      "fields": [
+        {
+          "key": "scan_state.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Measuring storage"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_cancelled",
+      "kind": "storage",
+      "payload": {
+        "state": "cancelled"
+      },
+      "fields": [
+        {
+          "key": "scan_state.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Scan stopped"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_failed",
+      "kind": "storage",
+      "payload": {
+        "state": "failed"
+      },
+      "fields": [
+        {
+          "key": "scan_state.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "The scan did not finish"
+          ],
+          "primary": false
+        }
+      ]
+    },
+    {
+      "id": "storage_stale",
+      "kind": "storage",
+      "payload": {
+        "state": "stale"
+      },
+      "fields": [
+        {
+          "key": "scan_state.state",
+          "path": "state",
+          "kind": "enum",
+          "probes": [
+            "Not scanned yet"
+          ],
+          "primary": false
+        }
+      ]
+    }
+  ]
+}
