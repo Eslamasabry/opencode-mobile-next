@@ -1,0 +1,80 @@
+{
+  "runID": "fq3-bc-rerun-policy-a",
+  "sourceRevision": "b0433537b77d5ba07e1348ddd07d1c1d89a6a8c5",
+  "attemptID": "attempt-1791526778044046-3949373",
+  "cleanupCode": null,
+  "engine": "opencode",
+  "case": "stream",
+  "cliVersion": "1.18.32",
+  "observedVersion": "1.18.32",
+  "appUID": 10217,
+  "appBuild": 2203,
+  "serverKind": "app-managed",
+  "testedModel": "zai-coding-plan/glm-5.3",
+  "modelSelection": {
+    "source": "baseline",
+    "requested": "zai-coding-plan/glm-5.3",
+    "selected": "zai-coding-plan/glm-5.3",
+    "baselineAvailable": true,
+    "inferenceAvailable": true
+  },
+  "results": {
+    "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "healthy": true,
+        "asserted": true
+      }
+    },
+    "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "retained": true,
+        "asserted": true
+      }
+    },
+    "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "connectedModels": 18,
+        "asserted": true
+      }
+    },
+    "stream": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+        "streamedDelta": true,
+        "completedReply": true,
+        "asserted": true
+      }
+    }
+  },
+  "ownedSessions": [
+    "ses_ee0aec6deffe0lMNdSWgAh4sBL",
+    "ses_ee0aec106ffehL22lq3l1vOise"
+  ],
+  "observations": {
+    "version": {
+      "phase": "version",
+      "stage": "complete"
+    },
+    "create": {
+      "phase": "create",
+      "stage": "complete"
+    },
+    "models": {
+      "phase": "models",
+      "stage": "complete",
+      "model": "zai-coding-plan/glm-5.3"
+    },
+    "stream": {
+      "phase": "stream",
+      "stage": "complete",
+      "model": "zai-coding-plan/glm-5.3"
+    }
+  }
+}
