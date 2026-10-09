@@ -44920,6 +44920,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show less'**
   String get kitRequestShowLess;
+
+  /// Add server: the agents a checked Paseo daemon can run right now
+  ///
+  /// In en, this message translates to:
+  /// **'Ready on that computer: {agents}.'**
+  String paseoCheckReady(String agents);
+
+  /// Add server: a checked Paseo daemon reports no agent ready
+  ///
+  /// In en, this message translates to:
+  /// **'No agent is ready on that computer yet.'**
+  String get paseoCheckNoneReady;
+
+  /// Server details sheet: the version the server last reported
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get serverRowDetailsVersion;
+
+  /// Capabilities page: running a project's dev server
+  ///
+  /// In en, this message translates to:
+  /// **'Dev servers'**
+  String get capabilityDevServices;
+
+  /// Capabilities page: dev servers detail
+  ///
+  /// In en, this message translates to:
+  /// **'Start a project\'s server or preview, and stop it again'**
+  String get capabilityDevServicesDetail;
+
+  /// Capabilities page: web search
+  ///
+  /// In en, this message translates to:
+  /// **'Web search'**
+  String get capabilityWebSearch;
+
+  /// Capabilities page: web search detail
+  ///
+  /// In en, this message translates to:
+  /// **'Let the agent look things up on the web'**
+  String get capabilityWebSearchDetail;
+
+  /// Capabilities page: deleting a message
+  ///
+  /// In en, this message translates to:
+  /// **'Delete a message'**
+  String get capabilityDeleteMessage;
+
+  /// Capabilities page: delete message detail
+  ///
+  /// In en, this message translates to:
+  /// **'Remove a message from a conversation'**
+  String get capabilityDeleteMessageDetail;
+
+  /// Capabilities page: the list of always-allowed actions
+  ///
+  /// In en, this message translates to:
+  /// **'Saved approvals'**
+  String get capabilitySavedPermissions;
+
+  /// Capabilities page: saved approvals detail
+  ///
+  /// In en, this message translates to:
+  /// **'See and remove the actions you always allowed'**
+  String get capabilitySavedPermissionsDetail;
+
+  /// Capabilities page: adding MCP servers
+  ///
+  /// In en, this message translates to:
+  /// **'Add MCP servers'**
+  String get capabilityMcpAdd;
+
+  /// Capabilities page: add MCP detail
+  ///
+  /// In en, this message translates to:
+  /// **'Add an MCP server or change its settings from the app'**
+  String get capabilityMcpAddDetail;
+
+  /// Capabilities page: approval prompts
+  ///
+  /// In en, this message translates to:
+  /// **'Ask before acting'**
+  String get capabilityApprovals;
+
+  /// Capabilities page: approvals detail
+  ///
+  /// In en, this message translates to:
+  /// **'Choose whether the agent asks for approval or acts on its own'**
+  String get capabilityApprovalsDetail;
+
+  /// Capabilities page: sending a message while the agent is busy
+  ///
+  /// In en, this message translates to:
+  /// **'Send while it works'**
+  String get capabilitySteer;
+
+  /// Capabilities page: send while busy detail
+  ///
+  /// In en, this message translates to:
+  /// **'Add a message while the agent is busy: steer it or queue it'**
+  String get capabilitySteerDetail;
+
+  /// Server settings: the sign-in row of a Claude Code or Pi server with a password saved
+  ///
+  /// In en, this message translates to:
+  /// **'Password saved on this phone'**
+  String get serverSettingsAuthPasswordSaved;
+
+  /// Server settings: the sign-in row of a Codex server with its token saved
+  ///
+  /// In en, this message translates to:
+  /// **'Connection token saved on this phone'**
+  String get serverSettingsAuthTokenSaved;
+
+  /// Server settings: the sign-in row of a Codex server with no token saved
+  ///
+  /// In en, this message translates to:
+  /// **'No connection token saved'**
+  String get serverSettingsAuthTokenMissing;
+
+  /// Status line: the saved password was rejected; names the server
+  ///
+  /// In en, this message translates to:
+  /// **'The password for {server} changed. Update it to reconnect.'**
+  String connectionPasswordRejectedFor(String server);
+
+  /// Status line: the saved connection token was rejected; names the server
+  ///
+  /// In en, this message translates to:
+  /// **'{server} rejected the connection token. Update it to reconnect.'**
+  String connectionTokenRejectedFor(String server);
 }
 
 class _AppLocalizationsDelegate
