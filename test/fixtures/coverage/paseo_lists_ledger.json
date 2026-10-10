@@ -23,7 +23,7 @@
   "agent.currentModeId": "ignored: the conversation's own model and mode chips show this; the list does not",
   "agent.cwd": "shown",
   "agent.effectiveThinkingOptionId": "ignored: the conversation's own model and mode chips show this; the list does not",
-  "agent.features[]": "ignored: the conversation's own model and mode chips show this; the list does not",
+  "agent.features[]": "ignored: the list does not show it; the model sheet reads it for one conversation (test/agent_features_sheet_test.dart)",
   "agent.id": "ignored: an internal id the daemon uses to tell things apart; nothing a person reads",
   "agent.labels": "ignored: tags other tools attach to an agent; nothing a person reads",
   "agent.lastError": "ignored: the list says Failed; the conversation says what went wrong in its own words",

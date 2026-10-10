@@ -10,7 +10,7 @@
   "OC2 PATCH /api/shell/{id}/timeout": "reachable: Running work › running command › timeout choice (1 minute to No timeout) -> setManagedShellTimeout [test: test/running_work_sheet_test.dart ~ setManagedShellTimeout]",
   "Paseo agent.config.apply.request": "not offered: the app changes an agent's model, thinking and mode one at a time; it never applies a whole configuration (models_actions_ledger.json)",
   "Paseo daemon.config.reload.request": "not offered: no settings page reads or reloads the Paseo daemon's configuration; owner decision needed if a daemon settings page is wanted",
-  "Paseo daemon.update.request": "not offered: the app never updates the Paseo daemon; owner decision needed if self-update from the phone is wanted",
+  "Paseo daemon.update.request": "reachable: Server settings (Claude Code or Pi server) > Update agents on <computer> (confirm) -> updateHostDaemon [test: test/settings_host_update_test.dart ~ updateHostDaemon]",
   "Paseo hub.management.daemon.permissions.update.request": "not offered: hub management belongs to the Paseo hub, which the app does not drive; owner decision needed",
   "Paseo set_daemon_config_request": "not offered: no settings page reads or writes the Paseo daemon's configuration; owner decision needed if a daemon settings page is wanted",
   "Paseo write_project_config_request": "not offered: the app does not edit a project's Paseo configuration file; owner decision needed"
