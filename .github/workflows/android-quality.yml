@@ -178,6 +178,13 @@ jobs:
           tool/qa/kotlin_static_analysis.sh
           OC_DETEKT_INTEGRATION=1 python3 -m unittest tool.qa.test_kotlin_static_analysis
 
+      # `flutter pub get` writes the plugin registrant for debug builds, which
+      # includes the integration_test dev plugin. Flutter drops dev plugins from
+      # release builds, so the release Java compile cannot see that class until
+      # the registrant is regenerated in release mode (no artifacts are built).
+      - name: Generate the release plugin registrant
+        run: flutter build apk --release --config-only
+
       - name: Run Android release lint
         run: ./android/gradlew -p android :app:lintRelease --no-daemon
 
