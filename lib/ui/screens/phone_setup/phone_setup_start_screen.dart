@@ -20,7 +20,8 @@ import '../../kit/kit.dart';
 import '../../kit/scenes/setup_phone_scene.dart';
 import '../../kit/scenes/setup_unplugged_scene.dart';
 import '../../widgets/phone_server_consents.dart';
-import '../../widgets/product_states.dart' show productErrorText;
+import '../../widgets/product_states.dart'
+    show connectionErrorText, productErrorText;
 import '../../widgets/setup_progress_view.dart';
 import '../servers_screen.dart' show ServersRouteRequest;
 import 'phone_setup_hero.dart';
@@ -350,10 +351,9 @@ class _PhoneSetupStartScreenState extends ConsumerState<PhoneSetupStartScreen> {
           if (!mounted) return;
           await connection.connect(profile);
           if (!connection.hasConnectedServer) {
-            final error = connection.lastError;
-            failure = error == null
-                ? l10n.builtinServerStopped
-                : productErrorText(error, l10n: l10n);
+            failure =
+                connectionErrorText(connection, l10n: l10n) ??
+                l10n.builtinServerStopped;
           }
         }
       }

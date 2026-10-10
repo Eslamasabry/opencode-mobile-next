@@ -11,6 +11,10 @@ mixin _ConnectionControllerSessions on ChangeNotifier {
   bool sessionsLoading = false;
   String? sessionsError;
 
+  /// What made [sessionsError] / [sessionsMoreError], for Details.
+  Object? sessionsFailure;
+  Object? sessionsMoreFailure;
+
   Map<String, Session> sessionsById = {};
   String? _sessionsCursor;
   bool get hasMoreSessions => _sessionsCursor != null;
@@ -264,6 +268,7 @@ extension _ConnectionControllerSessionsImpl on ConnectionController {
       }
       sessionsLoading = false;
       sessionsError = statusError?.toString();
+      sessionsFailure = statusError;
       if (statusError != null) _recordLocationError(statusError);
       _notifyListeners();
       _saveSessionInventoryPreview();
@@ -280,6 +285,7 @@ extension _ConnectionControllerSessionsImpl on ConnectionController {
       _invalidatePhoneChatStatus();
       sessionsLoading = false;
       sessionsError = error.toString();
+      sessionsFailure = error;
       _recordLocationError(error);
       _notifyListeners();
     }
@@ -430,6 +436,7 @@ extension _ConnectionControllerSessionsImpl on ConnectionController {
         return;
       }
       sessionsMoreError = error.toString();
+      sessionsMoreFailure = error;
       if (error is ApiException &&
           (error.statusCode == 400 || error.statusCode == 410)) {
         sessionsNeedReload = true;

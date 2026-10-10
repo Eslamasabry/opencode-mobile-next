@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/product_failure.dart';
 import '../../l10n/app_localizations.dart';
+import '../../state/connection.dart' show ConnectionController;
 import '../app_theme.dart';
 import '../kit/kit_dialog.dart';
 import '../kit/kit_notice.dart';
@@ -23,6 +24,15 @@ import '../kit/kit_technical_value.dart';
 AppLocalizations _copy(BuildContext context) =>
     Localizations.of<AppLocalizations>(context, AppLocalizations) ??
     lookupAppLocalizations(Localizations.localeOf(context));
+
+/// The connection's last failure in words: mapped from the failure itself
+/// when it kept one (never its raw text), else its app-authored line.
+String? connectionErrorText(ConnectionController c, {AppLocalizations? l10n}) {
+  final failure = c.lastFailure;
+  if (failure != null) return productErrorText(failure, l10n: l10n);
+  final line = c.lastError;
+  return line == null ? null : productErrorText(line, l10n: l10n);
+}
 
 /// Localized words for a domain-owned failure category. Server messages never
 /// enter the body; their redacted technical reason is available only in Details.

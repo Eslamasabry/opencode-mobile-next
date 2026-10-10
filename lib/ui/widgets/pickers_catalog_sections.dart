@@ -144,7 +144,8 @@ extension _ModelCatalogSections on _ModelCatalogViewState {
     if (controller.catalogError case final error?) {
       return KitStateView.error(
         title: _strings.e7ModelUiLoadFailed,
-        details: error,
+        error: controller.catalogFailure,
+        details: productErrorDetails(controller.catalogFailure ?? error),
         size: KitStateSize.inline,
         retry: KitAction(
           label: _strings.e7ModelUiRetry,

@@ -421,7 +421,8 @@ void main() {
 
       expect(controller.status, StreamStatus.disconnected);
       expect(controller.api, isNull);
-      expect(controller.connectionError, contains('server unavailable'));
+      expect(controller.connectionError, isNot(contains('server unavailable')));
+      expect(controller.lastFailure.toString(), contains('server unavailable'));
       expect(controller.directory, '/work/acme');
       expect(controller.workspace, 'workspace-1');
       expect(controller.sessionsById, contains('session-1'));

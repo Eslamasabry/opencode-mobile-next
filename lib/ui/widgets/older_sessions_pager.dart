@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
+import 'product_states.dart' show productErrorDetails;
 import '../kit/kit.dart';
 
 class OlderSessionsPager extends StatelessWidget {
@@ -84,7 +85,12 @@ class OlderSessionsPager extends StatelessWidget {
             : listError != null
             ? l10n.sessionsLoadFailed
             : l10n.sessionPinsLoadFailed,
-        details: pageError ?? listError,
+        details: _technical(
+          controller.sessionsMoreFailure ??
+              pageError ??
+              controller.sessionsFailure ??
+              listError,
+        ),
         retry: KitAction(
           key: const ValueKey('sessions-older-retry'),
           label: changed ? l10n.sessionsReload : l10n.refreshRetry,
@@ -192,3 +198,7 @@ class _LoadWhenShownState extends State<_LoadWhenShown> {
   @override
   Widget build(BuildContext context) => const KitSkeletonRows(count: 2);
 }
+
+/// What failed, redacted, for a Details fold; null when nothing did.
+String? _technical(Object? failure) =>
+    failure == null ? null : productErrorDetails(failure);

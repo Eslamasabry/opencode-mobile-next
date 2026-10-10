@@ -53,6 +53,10 @@ mixin _ConnectionControllerStatus on ChangeNotifier {
   String? installedServerVersion;
   String? lastError;
 
+  /// What made [lastError] when it came from a failure, for Details; the
+  /// words shown to people come from mapping this, never from its text.
+  Object? lastFailure;
+
   /// True after the connected v2 server answered 401 mid-session — the serve
   /// password rotated (it changes on every restart unless OPENCODE_PASSWORD
   /// is set). Basic auth cannot self-heal, so retry loops stay off and the
@@ -81,7 +85,18 @@ mixin _ConnectionControllerStatus on ChangeNotifier {
   bool get connectionLoading =>
       _self.status == StreamStatus.connecting ||
       _self.status == StreamStatus.reconnecting;
-  String? get connectionError => lastError;
+  /// The connection's last problem in words for people: the failure that
+  /// made it is never quoted (its text stays in [lastFailure] for Details).
+  String? get connectionError {
+    final line = lastError;
+    final failure = lastFailure;
+    if (line == null || failure == null) return line;
+    final known = ProductFailure.from(failure);
+    return known.category == ProductFailureCategory.words &&
+            known.authoredMessage != null
+        ? known.authoredMessage
+        : 'The server is not answering. Try again shortly.';
+  }
   bool get pollingFallbackEnabled => _self._poll?.isActive ?? false;
   bool get shouldPoll =>
       _self.api != null && _self.status != StreamStatus.connected;

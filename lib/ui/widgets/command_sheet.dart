@@ -321,7 +321,8 @@ class _CommandSheetState extends State<CommandSheet> {
         agents: agents,
         query: query,
         loading: widget.controller.catalogLoading,
-        error: widget.controller.catalogError,
+        error:
+            widget.controller.catalogFailure ?? widget.controller.catalogError,
         onRefresh: _refresh,
         onClearSearch: _search.clear,
         onSelected: (agent) => widget.onAgentSelected?.call(agent),

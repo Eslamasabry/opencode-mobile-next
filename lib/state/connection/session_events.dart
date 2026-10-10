@@ -300,6 +300,7 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
                   ?.trim();
           // A blank server message must not blank the banner: fall back to
           // copy chosen by the error name (v1 `name`, v2 `type`).
+          lastFailure = null;
           lastError = message == null || message.isEmpty
               ? sessionErrorFallbackText(err['name']?.toString())
               : message;
