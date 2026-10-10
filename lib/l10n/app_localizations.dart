@@ -45610,6 +45610,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starts on its own'**
   String get teamJobOther;
+
+  /// Model sheet: section of the agent's own switches
+  ///
+  /// In en, this message translates to:
+  /// **'Agent settings'**
+  String get agentFeaturesLabel;
+
+  /// Agent settings sheet title, e.g. Claude Code settings
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} settings'**
+  String agentFeaturesSheetTitle(String agent);
+
+  /// Composer chip when an agent switch is off, e.g. Fast mode off
+  ///
+  /// In en, this message translates to:
+  /// **'{name} off'**
+  String agentFeatureChipOff(String name);
+
+  /// Model sheet: reading the agent's switches failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this agent\'s settings.'**
+  String get agentFeaturesLoadFailed;
+
+  /// Agent switch: fast mode
+  ///
+  /// In en, this message translates to:
+  /// **'Fast mode'**
+  String get agentFeatureFastTitle;
+
+  /// Agent switch: what fast mode does
+  ///
+  /// In en, this message translates to:
+  /// **'Quicker replies from supported models. It costs more.'**
+  String get agentFeatureFastDetail;
+
+  /// Agent switch: change in flight
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get agentFeatureSaving;
+
+  /// Agent switch: the server refused the change
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change {name}. It keeps its old setting.'**
+  String agentFeatureChangeFailed(String name);
+
+  /// Import a conversation started in Claude Code: the entry and the page title
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Claude Code'**
+  String get claudeImportTitle;
+
+  /// Import page: what the list is
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a conversation you started in Claude Code in {project}. It opens here so you can carry on.'**
+  String claudeImportIntro(String project);
+
+  /// Import page: a conversation's project folder and when it was last used
+  ///
+  /// In en, this message translates to:
+  /// **'{project} · {when}'**
+  String claudeImportRowDetail(String project, String when);
+
+  /// Import page: a conversation with no title and no first message
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled conversation'**
+  String get claudeImportUntitled;
+
+  /// Import page: no conversations found
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to import'**
+  String get claudeImportEmptyTitle;
+
+  /// Import page: empty state body
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations you start in Claude Code in this project show up here.'**
+  String get claudeImportEmptyBody;
+
+  /// Import page: reading the list failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not look'**
+  String get claudeImportLoadFailedTitle;
+
+  /// Import page: reading the list failed, body
+  ///
+  /// In en, this message translates to:
+  /// **'The list did not load. Check the connection, then try again.'**
+  String get claudeImportLoadFailedBody;
+
+  /// Import page: conversations left out because they were imported before
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {1 more conversation is already here.} other {{count} more conversations are already here.}}'**
+  String claudeImportAlready(int count);
+
+  /// Import page: a row while its conversation is being imported
+  ///
+  /// In en, this message translates to:
+  /// **'Importing…'**
+  String get claudeImportWorking;
+
+  /// Import page: importing one conversation failed
+  ///
+  /// In en, this message translates to:
+  /// **'That conversation could not be imported. Try again.'**
+  String get claudeImportFailed;
+
+  /// Server settings, Paseo: row that updates the agent helper on the computer
+  ///
+  /// In en, this message translates to:
+  /// **'Update agents on {computer}'**
+  String hostUpdateRow(String computer);
+
+  /// Technical: Server settings, Paseo: update row detail naming the running version
+  ///
+  /// In en, this message translates to:
+  /// **'Running {version}. Installs the newest agent software.'**
+  String hostUpdateRowRunning(String version);
+
+  /// Server settings, Paseo: update row detail without a version
+  ///
+  /// In en, this message translates to:
+  /// **'Installs the newest agent software on that computer.'**
+  String get hostUpdateRowUnknown;
+
+  /// Confirmation title for updating the agent helper
+  ///
+  /// In en, this message translates to:
+  /// **'Update agents?'**
+  String get hostUpdateConfirmTitle;
+
+  /// Confirmation body for updating the agent helper
+  ///
+  /// In en, this message translates to:
+  /// **'This installs the newest agent software on {computer} and restarts it.'**
+  String hostUpdateConfirmBody(String computer);
+
+  /// Consequence: running chats pause during the restart
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations on {computer} pause while it restarts.'**
+  String hostUpdateConfirmPauses(String computer);
+
+  /// Consequence: nothing is lost
+  ///
+  /// In en, this message translates to:
+  /// **'Your conversations and settings stay as they are.'**
+  String get hostUpdateConfirmKept;
+
+  /// Confirmation button that starts the helper update
+  ///
+  /// In en, this message translates to:
+  /// **'Update agents'**
+  String get hostUpdateConfirmAction;
+
+  /// Update progress: starting
+  ///
+  /// In en, this message translates to:
+  /// **'Starting the update…'**
+  String get hostUpdateStarting;
+
+  /// Update progress: downloading
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading the newest version…'**
+  String get hostUpdateDownloading;
+
+  /// Update progress: installing
+  ///
+  /// In en, this message translates to:
+  /// **'Installing…'**
+  String get hostUpdateInstalling;
+
+  /// Update progress: complete, restarting
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing up…'**
+  String get hostUpdateFinishing;
+
+  /// Technical: Update succeeded, naming the new version
+  ///
+  /// In en, this message translates to:
+  /// **'Updated to {version}. The app reconnects by itself.'**
+  String hostUpdateDone(String version);
+
+  /// Update succeeded, version not reported
+  ///
+  /// In en, this message translates to:
+  /// **'Updated. The app reconnects by itself.'**
+  String get hostUpdateDoneNoVersion;
+
+  /// Update finished and nothing newer existed
+  ///
+  /// In en, this message translates to:
+  /// **'{computer} is already up to date.'**
+  String hostUpdateCurrent(String computer);
+
+  /// Update failed, plain words
+  ///
+  /// In en, this message translates to:
+  /// **'The update did not finish. Try again, or update it on that computer.'**
+  String get hostUpdateFailed;
+
+  /// Update: the connection dropped before an answer
+  ///
+  /// In en, this message translates to:
+  /// **'The connection dropped during the update. The app is reconnecting.'**
+  String get hostUpdateDropped;
+
+  /// Update failed: row that opens the computer's own message
+  ///
+  /// In en, this message translates to:
+  /// **'Why it failed'**
+  String get hostUpdateDetailsRow;
+
+  /// Update failed: details sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Update details'**
+  String get hostUpdateDetailsTitle;
+
+  /// Update failed: label of the computer's own message
+  ///
+  /// In en, this message translates to:
+  /// **'Message from the computer'**
+  String get hostUpdateDetailsMessage;
+
+  /// Files: the search filter that looks for words inside the files, beside Files and Symbols
+  ///
+  /// In en, this message translates to:
+  /// **'Text in files'**
+  String get filesTextSurface;
+
+  /// Files: the search field's label while searching inside the files
+  ///
+  /// In en, this message translates to:
+  /// **'Search text in files'**
+  String get filesSearchText;
+
+  /// Files: first row above the file-name results while typing; searches the typed words inside the files
+  ///
+  /// In en, this message translates to:
+  /// **'Search inside files for \"{query}\"'**
+  String filesSearchInside(String query);
+
+  /// Files › Text: title of the hint shown before anything is typed
+  ///
+  /// In en, this message translates to:
+  /// **'Search inside files'**
+  String get filesTextHintTitle;
+
+  /// Files › Text: the hint under the title before anything is typed
+  ///
+  /// In en, this message translates to:
+  /// **'Type a word or a phrase to see every line that has it.'**
+  String get filesTextHintBody;
+
+  /// Files › Text: title when no file has the typed text
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get filesNoTextTitle;
+
+  /// Files › Text: the line under the no-matches title
+  ///
+  /// In en, this message translates to:
+  /// **'No file has that text. Check the spelling or try fewer words.'**
+  String get filesNoTextBody;
+
+  /// Files › Text: title of the state when the text search failed; the reason is under it
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t search the files'**
+  String get filesTextFailedTitle;
+
+  /// Files › Text: said under the results when there were more matches than are listed
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the first {count} matches. Type more to narrow them.'**
+  String filesTextLimited(int count);
+
+  /// Files › Text: the line number a match is on, under the file name in a result row
+  ///
+  /// In en, this message translates to:
+  /// **'Line {line}'**
+  String filesTextMatchLine(int line);
+
+  /// Failure words when the computer running Claude Code (Paseo) did not answer or could not do what was asked; the daemon's reason goes under Details
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach your computer. Check it\'s on and connected, then try again.'**
+  String get productErrorComputer;
 }
 
 class _AppLocalizationsDelegate

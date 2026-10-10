@@ -68,18 +68,14 @@ void main() {
         repository.shells = data['shells'] as dynamic;
         await screens.defaultShell();
       }
-      File('build/coverage/oc1settings_$id.txt').writeAsStringSync(
-        flat(screens.text),
-      );
+      File(
+        'build/coverage/oc1settings_$id.txt',
+      ).writeAsStringSync(flat(screens.text));
       final problems = checkCase(family, variant, screens.text);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(seconds: 2));
       controller.dispose();
-      expect(
-        problems,
-        isEmpty,
-        reason: 'screen text:\n${flat(screens.text)}',
-      );
+      expect(problems, isEmpty, reason: 'screen text:\n${flat(screens.text)}');
     });
   }
 }

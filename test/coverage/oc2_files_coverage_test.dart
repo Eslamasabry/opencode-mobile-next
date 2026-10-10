@@ -134,9 +134,7 @@ void main() {
           // A dangerous way out never asks without naming the conversation.
           expect(
             flat(screens.text),
-            contains(
-              'Delete messages in “Fix the cart total rounding”?',
-            ),
+            contains('Delete messages in “Fix the cart total rounding”?'),
           );
           expect(
             flat(screens.text),

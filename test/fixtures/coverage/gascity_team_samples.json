@@ -1884,7 +1884,7 @@
           "path": "state",
           "kind": "string",
           "probes": [
-            "Can't start"
+            "Stopped"
           ],
           "primary": false
         },

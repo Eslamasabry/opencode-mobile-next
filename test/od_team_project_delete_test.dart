@@ -67,6 +67,7 @@ Future<_Gateway> _open(WidgetTester tester, {bool refuse = false}) async {
     RepaintBoundary(
       key: odBoundary,
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         theme: captureTheme(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

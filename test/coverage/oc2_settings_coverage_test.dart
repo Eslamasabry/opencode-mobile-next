@@ -82,9 +82,9 @@ void main() {
           'oc2-settings-$id',
         );
         await screens.savedPermissions();
-        File('build/coverage/oc2settings_$id.txt').writeAsStringSync(
-          flat(screens.text),
-        );
+        File(
+          'build/coverage/oc2settings_$id.txt',
+        ).writeAsStringSync(flat(screens.text));
         final problems = checkCase(family, variant, screens.text);
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pump(const Duration(seconds: 2));

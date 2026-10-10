@@ -146,7 +146,7 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
     if (all == null) {
       if (_controller.scheduledJobsError == null) return const [];
       return [
-        KitSectionLabel(l10n.teamJobsTitle),
+        KitSectionLabel.inline(l10n.teamJobsTitle),
         KitNotice(
           key: const ValueKey('team-jobs-failed'),
           tone: AppStatusTone.failure,
@@ -205,7 +205,7 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
     }
 
     return [
-      KitSectionLabel(l10n.teamJobsTitle),
+      KitSectionLabel.inline(l10n.teamJobsTitle),
       if (mine.isEmpty)
         KitStateView(
           key: const ValueKey('team-jobs-empty'),
@@ -217,12 +217,14 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
         )
       else
         KitRowGroup(
+          margin: EdgeInsets.zero,
           key: const ValueKey('team-jobs'),
           children: [for (final job in mine) row(job)],
         ),
       if (team.isNotEmpty) ...[
-        KitSectionLabel(l10n.teamJobsWholeTeamTitle),
+        KitSectionLabel.inline(l10n.teamJobsWholeTeamTitle),
         KitRowGroup(
+          margin: EdgeInsets.zero,
           key: const ValueKey('team-jobs-team'),
           children: [for (final job in team) row(job)],
         ),
@@ -294,6 +296,7 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
             ),
           if (canControl || canRemove)
             KitRowGroup(
+              margin: EdgeInsets.zero,
               children: [
                 if (canControl)
                   KitRow(

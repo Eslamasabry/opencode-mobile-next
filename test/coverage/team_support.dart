@@ -206,6 +206,7 @@ Future<(OrchestrationController, GasCityGateway)> bootTeam(
 }
 
 Widget teamApp(Widget home) => MaterialApp(
+  debugShowCheckedModeBanner: false,
   key: UniqueKey(),
   theme: captureTheme(),
   localizationsDelegates: AppLocalizations.localizationsDelegates,

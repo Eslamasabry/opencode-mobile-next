@@ -122,52 +122,72 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('chat · approval ask · $mode', (tester) async {
-      await _golden(tester, 'chat_approval_ask', light: light);
-    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    testWidgets(
+      'chat · approval ask · $mode',
+      (tester) async {
+        await _golden(tester, 'chat_approval_ask', light: light);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
 
-    testWidgets('chat · approval auto · $mode', (tester) async {
-      await _golden(
-        tester,
-        'chat_approval_auto',
-        light: light,
-        prepare: (controller) => controller.setSessionAutoApproval(
-          checkoutSessionID,
-          const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
-        ),
-      );
-    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    testWidgets(
+      'chat · approval auto · $mode',
+      (tester) async {
+        await _golden(
+          tester,
+          'chat_approval_auto',
+          light: light,
+          prepare: (controller) => controller.setSessionAutoApproval(
+            checkoutSessionID,
+            const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
+          ),
+        );
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
 
-    testWidgets('chat · approval everything · $mode', (tester) async {
-      await _golden(
-        tester,
-        'chat_approval_everything',
-        light: light,
-        prepare: (controller) => controller.setApprovesEverything(true),
-      );
-    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    testWidgets(
+      'chat · approval everything · $mode',
+      (tester) async {
+        await _golden(
+          tester,
+          'chat_approval_everything',
+          light: light,
+          prepare: (controller) => controller.setApprovesEverything(true),
+        );
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
 
-    testWidgets('chat · approval menu · $mode', (tester) async {
-      await _golden(
-        tester,
-        'chat_approval_menu',
-        light: light,
-        open: () => openMenu(tester),
-      );
-    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    testWidgets(
+      'chat · approval menu · $mode',
+      (tester) async {
+        await _golden(
+          tester,
+          'chat_approval_menu',
+          light: light,
+          open: () => openMenu(tester),
+        );
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
 
-    testWidgets('chat · approval confirm · $mode', (tester) async {
-      await _golden(
-        tester,
-        'chat_approval_confirm',
-        light: light,
-        open: () async {
-          await openMenu(tester);
-          await tester.tap(find.byKey(const Key('approval-mode-everything')));
-          await tester.pumpAndSettle();
-        },
-      );
-    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    testWidgets(
+      'chat · approval confirm · $mode',
+      (tester) async {
+        await _golden(
+          tester,
+          'chat_approval_confirm',
+          light: light,
+          open: () async {
+            await openMenu(tester);
+            await tester.tap(find.byKey(const Key('approval-mode-everything')));
+            await tester.pumpAndSettle();
+          },
+        );
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
 
     Future<void> openSheet(WidgetTester tester) async {
       await openMenu(tester);
@@ -175,36 +195,48 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('chat · approval sheet ask · $mode', (tester) async {
-      await _golden(
-        tester,
-        'chat_approval_sheet_ask',
-        light: light,
-        open: () => openSheet(tester),
-      );
-    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    testWidgets(
+      'chat · approval sheet ask · $mode',
+      (tester) async {
+        await _golden(
+          tester,
+          'chat_approval_sheet_ask',
+          light: light,
+          open: () => openSheet(tester),
+        );
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
 
-    testWidgets('chat · approval sheet auto · $mode', (tester) async {
-      await _golden(
-        tester,
-        'chat_approval_sheet_auto',
-        light: light,
-        prepare: (controller) => controller.setSessionAutoApproval(
-          checkoutSessionID,
-          const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
-        ),
-        open: () => openSheet(tester),
-      );
-    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    testWidgets(
+      'chat · approval sheet auto · $mode',
+      (tester) async {
+        await _golden(
+          tester,
+          'chat_approval_sheet_auto',
+          light: light,
+          prepare: (controller) => controller.setSessionAutoApproval(
+            checkoutSessionID,
+            const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
+          ),
+          open: () => openSheet(tester),
+        );
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
 
-    testWidgets('chat · approval sheet everything · $mode', (tester) async {
-      await _golden(
-        tester,
-        'chat_approval_sheet_everything',
-        light: light,
-        prepare: (controller) => controller.setApprovesEverything(true),
-        open: () => openSheet(tester),
-      );
-    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    testWidgets(
+      'chat · approval sheet everything · $mode',
+      (tester) async {
+        await _golden(
+          tester,
+          'chat_approval_sheet_everything',
+          light: light,
+          prepare: (controller) => controller.setApprovesEverything(true),
+          open: () => openSheet(tester),
+        );
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
   }
 }

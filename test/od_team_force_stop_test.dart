@@ -94,7 +94,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tester.pump();
     expect(key('team-agent-stop-stuck'), findsOneWidget);
-    expect(find.text("fox didn't stop"), findsOneWidget);
+    expect(find.text("Worker · fox didn't stop"), findsOneWidget);
     await odCapture(tester, 'force-stop-notice');
     await tester.tap(key('team-agent-stop-stuck-force'));
     await tester.pumpAndSettle();

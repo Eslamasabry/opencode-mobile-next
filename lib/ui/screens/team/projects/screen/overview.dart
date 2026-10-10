@@ -419,6 +419,7 @@ class TeamProjectOverview extends StatelessWidget {
             if (TeamExecutionGate.allows(c, TeamExecutionNeed.removal) &&
                 !p.simulated)
               KitRowGroup(
+                margin: EdgeInsets.zero,
                 children: [
                   KitRow(
                     key: const ValueKey('team-project-delete'),

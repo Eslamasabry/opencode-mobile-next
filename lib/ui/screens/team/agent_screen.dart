@@ -663,7 +663,9 @@ class _AgentScreenState extends State<AgentScreen> {
                 key: const ValueKey('team-agent-stop-stuck'),
                 tone: AppStatusTone.failure,
                 icon: AppIconography.warning,
-                title: l10n.teamAgentStopStuckTitle(agent.name),
+                title: l10n.teamAgentStopStuckTitle(
+                  teamAgentTitle(l10n, agent),
+                ),
                 message: l10n.teamAgentStopStuckBody,
                 actions: [
                   KitAction(
@@ -682,7 +684,9 @@ class _AgentScreenState extends State<AgentScreen> {
                 key: const ValueKey('team-agent-unavailable'),
                 tone: AppStatusTone.failure,
                 icon: AppIconography.error,
-                title: l10n.teamAgentUnavailableTitle(agent.name),
+                title: l10n.teamAgentUnavailableTitle(
+                  teamAgentTitle(l10n, agent),
+                ),
                 message: l10n.teamAgentUnavailableBody(
                   teamAgentUnavailableWords(l10n, agent)!,
                 ),
@@ -833,7 +837,7 @@ class _AgentScreenState extends State<AgentScreen> {
             paused: state == AgentState.stopped,
           ),
           title: teamAgentUnavailableWords(l10n, agent) != null
-              ? l10n.teamAgentUnavailableState
+              ? l10n.teamUiHomeAgentStateStopped
               : teamAgentStateWord(l10n, state),
           titleKey: const ValueKey('team-agent-state'),
           supporting: facts.isEmpty ? null : TextSpan(text: facts),

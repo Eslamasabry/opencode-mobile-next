@@ -84,7 +84,13 @@ void main() {
       find.byKey(const ValueKey('team-agent-unavailable')),
       findsOneWidget,
     );
-    expect(find.textContaining("can't start"), findsWidgets);
+    // Said once, in the notice, with the agent's page name, not its id.
+    expect(
+      find.textContaining("can't start", findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.text("Supervisor · witness can't start"), findsOneWidget);
+    expect(find.textContaining('gastown.witness'), findsNothing);
     expect(find.textContaining('No model is signed in'), findsNothing);
     final fold = find.byType(KitDetailsFold);
     await tester.ensureVisible(fold);
