@@ -10,6 +10,16 @@ import 'transport.dart';
 bool isExistingPaseoProvider(Object? id) =>
     const {'claude', 'codex', 'pi', 'opencode', 'copilot'}.contains(id);
 
+/// What the app calls an agent the computer runs: its own product names, not
+/// the daemon's labels ("Claude" is "Claude Code" everywhere in the app).
+/// Null for an agent the app has no name for; the daemon's label then does.
+String? paseoAgentProductName(String provider) => switch (provider) {
+  'claude' => 'Claude Code',
+  'pi' => 'Pi',
+  'codex' => 'Codex',
+  _ => null,
+};
+
 bool isPaseoProviderId(Object? id) =>
     id is String && RegExp(r'^[a-z][a-z0-9_-]{0,63}$').hasMatch(id);
 

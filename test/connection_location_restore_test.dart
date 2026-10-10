@@ -350,7 +350,14 @@ void main() {
       expect(store.locationFor('server')?.directory, '/work/b');
       script.sessionsGate!.complete();
       await selecting;
-      expect(controller.locationError, contains('Session refresh unavailable'));
+      expect(
+        controller.locationError,
+        'This folder could not be opened. Try again.',
+      );
+      expect(
+        controller.locationFailure.toString(),
+        contains('Session refresh unavailable'),
+      );
       expect(store.locationFor('server')?.directory, '/work/b');
       controller.dispose();
     },

@@ -21,7 +21,8 @@ import '../app_iconography.dart';
 import '../kit/kit.dart';
 import '../widgets/folder_browser.dart';
 import '../widgets/remote_folder_picker.dart';
-import '../widgets/product_states.dart' show productErrorText;
+import '../widgets/product_states.dart'
+    show productErrorDetails, productErrorText;
 import '../widgets/termux_running_server_entry.dart' show isManagedPhoneProfile;
 import 'shared_storage_access_flow.dart';
 
@@ -620,7 +621,21 @@ class ProjectFolderActions {
     final problem = controller.locationError;
     if (problem != null) {
       if (context.mounted) {
-        await _alert(context, l10n.projectFolderOpenFailedTitle, problem);
+        // Plain words in the body; what the server said, only under Details.
+        final failure = controller.locationFailure;
+        final details = failure == null ? null : productErrorDetails(failure);
+        await showKitAlert(
+          context,
+          title: l10n.projectFolderOpenFailedTitle,
+          body: failure == null
+              ? problem
+              : productErrorText(failure, l10n: l10n),
+          details: [
+            if (details != null)
+              KitTechnicalValue(l10n.productErrorDetailsLabel, details),
+          ],
+          icon: AppIconography.error,
+        );
       }
       return null;
     }

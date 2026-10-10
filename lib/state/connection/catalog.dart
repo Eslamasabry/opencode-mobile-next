@@ -783,7 +783,7 @@ extension _ConnectionControllerCatalogImpl on ConnectionController {
       }
       catalogLoading = false;
       catalogError = error.toString();
-      _recordLocationError(catalogError!);
+      _recordLocationError(error);
       _notifyListeners();
     }
   }

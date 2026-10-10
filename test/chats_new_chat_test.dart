@@ -277,4 +277,14 @@ void main() {
       );
     });
   });
+
+  testWidgets('the hint names the agent the server starts with', (
+    tester,
+  ) async {
+    final host = FakeChatsHost(_source(lastUsed: '/root/projects/alpha'))
+      ..startAgentName = 'Claude Code';
+    await _open(tester, host);
+    expect(find.textContaining('Claude Code…'), findsWidgets);
+    expect(find.textContaining('OpenCode…'), findsNothing);
+  });
 }

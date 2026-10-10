@@ -305,6 +305,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     lastError = null;
     passwordRejected = false;
     locationError = null;
+    locationFailure = null;
     locationNotice = null;
     _notifyListeners();
     enablePollingFallback();
@@ -596,6 +597,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     locationRevision += 1;
     locationLoading = false;
     locationError = null;
+    locationFailure = null;
     locationNotice = null;
     passwordRejected = false;
     status = StreamStatus.disconnected;

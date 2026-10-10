@@ -12,6 +12,7 @@ import 'package:opencode_mobile/paseo/transport.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
+import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'paseo_gateway_test.dart' show FakeDaemon, agentJson;
@@ -69,7 +70,7 @@ Future<(PaseoGateway, ConnectionController)> _open(
               {
                 'provider': 'claude',
                 'status': 'ready',
-                'label': 'Claude Code',
+                'label': 'Claude',
                 'models': [
                   {
                     'id': 'opus',
@@ -187,4 +188,19 @@ void main() {
     expect(_hint(tester), isNot(contains('Claude Code')));
     await close(tester, c);
   });
+
+  testWidgets(
+    'before the first send the server names the agent, as the app does',
+    (tester) async {
+      final (gateway, c) = await _open(
+        tester,
+        provider: 'claude',
+        model: 'claude-opus-4-8',
+      );
+      // The daemon's own label is "Claude"; the app says Claude Code.
+      expect(ConnectionChatsHost(c).startAgentName, 'Claude Code');
+      expect(gateway.agentFeaturesOwner('a1'), 'Claude Code');
+      await close(tester, c);
+    },
+  );
 }

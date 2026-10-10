@@ -1,5 +1,6 @@
 import 'dart:async';
 import '../builtin/agents/gen_ui_search_publish.dart';
+import '../domain/product_failure.dart';
 import '../domain/mcp_connector_search.dart';
 import 'mcp_connector_search_bridge.dart';
 import 'setup_registry_store.dart';

@@ -562,7 +562,6 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
         )) {
           permissionsLoading = false;
           permissionsError = error.toString();
-          _recordLocationError(permissionsError!);
           _notifyListeners();
         }
         return;

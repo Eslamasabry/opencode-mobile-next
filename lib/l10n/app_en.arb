@@ -5795,7 +5795,7 @@
   "@e7LibraryEnvironmentVariable": {
     "description": "Library and project tools UI: environment variable"
   },
-  "e7LibraryOpenCodeIsReconnectingTryAgainShortly": "OpenCode is reconnecting. Try again shortly.",
+  "e7LibraryOpenCodeIsReconnectingTryAgainShortly": "The server is reconnecting. Try again shortly.",
   "@e7LibraryOpenCodeIsReconnectingTryAgainShortly": {
     "description": "Library and project tools UI: OpenCode is reconnecting. Try again shortly."
   },
@@ -5947,7 +5947,7 @@
       }
     }
   },
-  "e7LibraryOpenCodeIsReconnectingTryAgain": "OpenCode is reconnecting. Try again.",
+  "e7LibraryOpenCodeIsReconnectingTryAgain": "The server is reconnecting. Try again.",
   "@e7LibraryOpenCodeIsReconnectingTryAgain": {
     "description": "Library and project tools UI: OpenCode is reconnecting. Try again."
   },
@@ -6151,7 +6151,7 @@
       }
     }
   },
-  "e7LibraryOpenCodeCouldNotPrepareThisWorktree": "OpenCode could not prepare this worktree.",
+  "e7LibraryOpenCodeCouldNotPrepareThisWorktree": "This worktree could not be prepared.",
   "@e7LibraryOpenCodeCouldNotPrepareThisWorktree": {
     "description": "Library and project tools UI: OpenCode could not prepare this worktree."
   },
@@ -6165,11 +6165,11 @@
       }
     }
   },
-  "e7LibraryWaitForOpenCodeToFinishPreparingThis": "Wait for OpenCode to finish preparing this worktree.",
+  "e7LibraryWaitForOpenCodeToFinishPreparingThis": "Wait for this worktree to finish preparing.",
   "@e7LibraryWaitForOpenCodeToFinishPreparingThis": {
     "description": "Library and project tools UI: Wait for OpenCode to finish preparing this worktree."
   },
-  "e7LibraryOpenCodeDidNotSwitchLocations": "OpenCode did not switch projects.",
+  "e7LibraryOpenCodeDidNotSwitchLocations": "The server did not switch projects.",
   "@e7LibraryOpenCodeDidNotSwitchLocations": {
     "description": "Library and project tools UI: OpenCode did not switch locations."
   },
@@ -19412,7 +19412,7 @@
   "@worktreesStartConversation": {
     "description": "Worktrees: row menu item and ready notice action that starts a conversation in that worktree."
   },
-  "worktreesCreateHelper": "OpenCode makes a separate branch and folder and runs the project’s startup tasks. Spaces become dashes.",
+  "worktreesCreateHelper": "A separate branch and folder are made and the project’s startup tasks run. Spaces become dashes.",
   "@worktreesCreateHelper": {
     "description": "Worktrees: helper under the name field of New worktree."
   },

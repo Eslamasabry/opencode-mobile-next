@@ -264,7 +264,7 @@ extension _ConnectionControllerSessionsImpl on ConnectionController {
       }
       sessionsLoading = false;
       sessionsError = statusError?.toString();
-      if (statusError != null) _recordLocationError(sessionsError!);
+      if (statusError != null) _recordLocationError(statusError);
       _notifyListeners();
       _saveSessionInventoryPreview();
       _genUiRefreshFeed();
@@ -280,7 +280,7 @@ extension _ConnectionControllerSessionsImpl on ConnectionController {
       _invalidatePhoneChatStatus();
       sessionsLoading = false;
       sessionsError = error.toString();
-      _recordLocationError(sessionsError!);
+      _recordLocationError(error);
       _notifyListeners();
     }
   }

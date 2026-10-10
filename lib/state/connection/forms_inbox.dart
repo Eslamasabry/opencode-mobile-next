@@ -156,7 +156,6 @@ extension _ConnectionControllerFormsInboxImpl on ConnectionController {
       }
       formsLoading = false;
       formsError = error.toString();
-      _recordLocationError(formsError!);
       _notifyListeners();
     }
   }
