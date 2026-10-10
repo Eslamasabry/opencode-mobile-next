@@ -10,7 +10,12 @@ import unittest
 from unittest.mock import patch
 import xml.etree.ElementTree as ET
 
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:  # CI runners lack Pillow; screenshot-crop tests skip cleanly
+    Image = None
+
+needs_pillow = unittest.skipIf(Image is None, 'Pillow is not installed')
 
 from tool.qa.fb1_first_run import (
     COPY,
@@ -342,6 +347,8 @@ class TestUiPrivacy(unittest.TestCase):
             with self.subTest(key=key):
                 self.assertEqual(self.ports.model_state({COPY[key]}), state)
 
+    @needs_pillow
+
     def test_shipped_project_default_is_safe_only_on_first_project_screen(self):
         png = BytesIO()
         Image.new("RGB", (200, 200), "white").save(png, format="PNG")
@@ -362,6 +369,8 @@ class TestUiPrivacy(unittest.TestCase):
             with self.assertRaisesRegex(DriverFailure, "fb1_screen_failed"):
                 self.ports.screen(self.destination)
             adb.assert_not_called()
+
+    @needs_pillow
 
     def test_unknown_text_blacked_out_while_public_screen_is_recorded(self):
         png = BytesIO()
@@ -409,6 +418,8 @@ class TestUiPrivacy(unittest.TestCase):
             with self.assertRaisesRegex(DriverFailure, "fb1_screen_failed"):
                 self.ports.screen(self.destination)
         self.assertFalse(self.destination.exists())
+
+    @needs_pillow
 
     def test_screenshot_masks_raw_reply_except_owned_exact_marker(self):
         png = BytesIO()

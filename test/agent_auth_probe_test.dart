@@ -69,7 +69,11 @@ void main() {
           : AgentPhoneScripts.authProbe(agent);
       final result = await Process.run(
         'bash',
-        ['-c', script.replaceAll('/home/oc', base)],
+        [
+          '-c',
+          // The guest runs as uid 1000; the CI runner user is not 1000.
+          script.replaceAll('/home/oc', base).replaceAll('os.getuid()', '1000'),
+        ],
         environment: {
           'HOME': home,
           'CLAUDE_CONFIG_DIR': '$home/claude',

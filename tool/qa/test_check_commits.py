@@ -1,6 +1,7 @@
 """Exercise the gate against actual git ranges, never this checkout's history."""
 from pathlib import Path
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -44,9 +45,13 @@ class CommitGateTest(unittest.TestCase):
         source.write_text('void main(){print("bad");}\n')
         self.git('add', 'bad.dart')
         self.git('commit', '-q', '-m', VALID)
-        # Real pinned formatter, only a tiny synthetic file.
-        dart = Path.home() / '.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart'
-        result = subprocess.run(['bash', str(SCRIPT), self.base, 'HEAD'], cwd=self.root, text=True, capture_output=True, env={**os.environ, 'DART': str(dart)})
+        # Real formatter, only a tiny synthetic file: DART, else the pinned
+        # Shorebird Flutter if present, else whatever dart is on PATH (CI).
+        pinned = Path.home() / '.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart'
+        dart = os.environ.get('DART') or (str(pinned) if pinned.exists() else shutil.which('dart'))
+        if not dart:
+            self.skipTest('no dart available')
+        result = subprocess.run(['bash', str(SCRIPT), self.base, 'HEAD'], cwd=self.root, text=True, capture_output=True, env={**os.environ, 'DART': dart})
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('format: not formatted', result.stdout)
 

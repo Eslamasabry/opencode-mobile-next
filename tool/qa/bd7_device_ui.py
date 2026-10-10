@@ -8,8 +8,6 @@ from pathlib import Path
 import re
 import xml.etree.ElementTree as ET
 
-from PIL import Image
-
 
 class Bd7UiFailure(ValueError):
     """Fixed, authored failure categories only."""
@@ -318,6 +316,8 @@ class Bd7Ui:
                 raw = None
                 if layout_retries == 1:
                     raise ValueError()
+            from PIL import Image  # lazy: only screenshot crops need Pillow
+
             with Image.open(BytesIO(raw)) as original:
                 if original.format != 'PNG' or original.width * original.height > 16_000_000:
                     raise ValueError()

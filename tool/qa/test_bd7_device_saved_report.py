@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 import xml.etree.ElementTree as ET
-from tool.qa.test_bd7_device_ui import UiFixture, node, xml
+from tool.qa.test_bd7_device_ui import UiFixture, needs_pillow, node, xml
 from tool.qa.bd7_device_ui import Bd7Ui
 
 from tool.qa import bd7_device_saved_report as proof
@@ -285,6 +285,8 @@ class SavedReportTest(unittest.TestCase):
         ):
             self.assertTrue(session.navigate_current_page())
         session.ui.tap.assert_not_called()
+
+    @needs_pillow
 
     def test_authored_sheet_actions_are_safe_without_allowing_private_suffixes(self):
         for word in ("Dismiss", "Hide details"):

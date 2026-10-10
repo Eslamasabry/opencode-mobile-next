@@ -354,7 +354,9 @@ void main() {
       final reader = MonitorAttentionReader(
         probe: found,
         teamGatewayFactory: (_, _) => late.future,
-        timeout: const Duration(milliseconds: 10),
+        // Long enough that a loaded runner reaches the factory before the
+        // deadline; the test needs the factory pending when it expires.
+        timeout: const Duration(milliseconds: 250),
       );
       addTearDown(reader.dispose);
       final details = await reader.read(
