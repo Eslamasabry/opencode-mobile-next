@@ -4,89 +4,12 @@ This project is in public alpha. Only the newest preview is supported.
 
 ## 1.3.0+53 — 2026-10-10
 
-Claude Code chats get Files, Changes, Terminal and Worktrees, Fast mode and
-Import from Claude Code; Delete and Archive conversation are back; AI Team
-can pause, delete and force-stop from the phone. Full notes:
+Claude Code chats get Files, Changes, Terminal, Worktrees, Fast mode and
+Import from Claude Code; waiting questions are answered from the Conversations
+list; Delete and Archive conversation are back; AI Team can pause, delete and
+force-stop from the phone; more languages and plain-word errors. Full notes:
 [docs/releases/v1.3.0+53.md](docs/releases/v1.3.0+53.md); pictures:
 [docs/releases/v1.3.0+53/README.md](docs/releases/v1.3.0+53/README.md).
-
-### Claude Code and Pi chats (Paseo)
-- **Files, Changes, Worktrees and Terminal** now work for Claude Code and Pi
-  chats: browse and read files, see the agent's uncommitted changes, create and
-  delete worktrees, open terminals on the computer, type into them, rename and
-  stop them.
-- **Fast mode** and an agent's other switches: a chip beside the model chip
-  opens "Claude Code settings"; each switch saves at once.
-- **Import from Claude Code**: pick a conversation started in Claude Code on
-  the computer (title, folder, when) and carry on from the phone.
-- **Update agents on <computer>**: updates the agent software on the computer
-  after a confirmation, shows progress, and reconnects when it restarts.
-- **Check for agents again** on the server page, so signing in to Claude Code
-  on the computer is noticed without reconnecting.
-- Tool steps show what each tool answered (MCP results, searches, fetches,
-  sub-agents, skills), and permission requests show exactly what they ask.
-- Claude chats list only Claude models with Claude's thinking levels; a
-  reconnect while Claude is working restores the live turn and Stop; short
-  link drops stay quiet; the composer says "Ask Claude Code…" / "Ask Pi…".
-- Failures say "Couldn't reach your computer…" instead of "It changed on the
-  server in the meantime".
-
-### Conversations and chat
-- **Delete and Archive conversation** are back in the conversation's ⋯ menu
-  (lost on 2026-10-03), each confirming by name.
-- Failed conversations carry a **Failed** tag.
-- An inline step timeline summarises the work; images in replies show as
-  tiles; a suggested-connector card connects MCP servers in place, and
-  connector search answers at once.
-- **Search inside files** (OpenCode servers): typing in Files search offers
-  "Search inside files for …" with file and line for each match.
-
-### AI Team
-- An agent that can't start says why (for example its model isn't set up on
-  the computer); the host's own text is under Technical details.
-- **Pause / Resume project** and **Delete project** on the project page
-  (folder and files on the computer stay).
-- **Force stop** an agent, also offered when a normal Stop didn't work.
-- **Scheduled jobs** listed with plain schedules ("Every day at 09:00") and
-  switched on or off.
-- Workers' questions show their text and choices, and tool approvals can be
-  answered from the phone.
-
-### Agents on the phone
-- Sign-in shows Open/Copy buttons and "Signed in" only after a real check,
-  with the account line and Sign out; Remove agent frees its space; a
-  half-finished install offers Remove; installs reserve download plus
-  unpacked space first.
-- The phone runtime pauses when idle to save battery (Resume from the
-  notification), restarts after a crash with back-off, and comes back after a
-  reboot or app update.
-
-### Servers, settings and languages
-- Server page: Edit and Remove named for the server, version and ready
-  agents after a check, seven more rows under "Available on this server".
-- Usage shows the busiest days; plan limits say when they reset; failed
-  installs say why.
-- Arabic covers about 2,500 more strings; Japanese, Chinese, Spanish,
-  Portuguese and Russian cover first run and chat; other device languages
-  fall back to English. Android notification text follows the app language.
-- Tools is one page with tabs; voice licences moved to About.
-
-### Privacy and errors
-- Long access tokens are masked in shared problem reports, crash reports and
-  performance traces; the Markdown export warns that it is not redacted.
-- Saved crash reports are opt-in.
-- Raw technical errors no longer appear as copy when opening a folder, loading
-  models or commands, loading older conversations or connecting; the
-  technical text is under Details.
-
-### Not possible on current servers
-Undo a merge, create or delete scheduled jobs, a per-agent permission switch
-(AI Team), and searching inside files on Claude Code or OpenCode 2.
-
-### How it was checked
-Every field each server sends is shown or ignored with a written reason, and
-every server action is reachable or recorded as not offered
-(`docs/qa/coverage-gates-2026-10-10/`, `docs/qa/od1-2026-10-10/`).
 
 ## 1.2.0+52 — 2026-10-07
 
