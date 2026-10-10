@@ -295,6 +295,10 @@
         "kind": "boolean"
       },
       {
+        "path": "worktreeBrowsing",
+        "kind": "boolean"
+      },
+      {
         "path": "legacyQuestionRequests",
         "kind": "boolean"
       },

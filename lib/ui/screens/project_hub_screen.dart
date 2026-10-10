@@ -190,7 +190,7 @@ class ProjectHub extends StatefulWidget {
     if (capabilities.fileBrowsing) ProjectTool.changes,
     if (capabilities.terminal) ProjectTool.terminal,
     if (capabilities.projectManagement) ProjectTool.health,
-    if (capabilities.projectManagement || capabilities.worktreeCreate)
+    if (capabilities.projectManagement || capabilities.worktreeBrowsing)
       ProjectTool.worktrees,
     if (capabilities.developmentServices) ProjectTool.services,
     if (capabilities.projectManagement && capabilities.managedWorkspaces)

@@ -3256,6 +3256,10 @@
     {
       "file": "lib/ui/widgets/request_routes.dart",
       "reason": "non-visual RequestRoutes route-ownership helper (removes routes opened for a pending request once it is resolved); used by permission_sheet.dart, activity_screen.dart, form_flow.dart, return_brief_panel.dart; no interactive element"
+    },
+    {
+      "file": "lib/ui/screens/settings/server_host_update.dart",
+      "reason": "No page of its own: the \"Update agents on <computer>\" row and its confirmation on the server settings page."
     }
   ],
   "notes": [

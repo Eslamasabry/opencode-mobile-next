@@ -267,6 +267,38 @@
           "destructive": false
         }
       ]
+    },
+    {
+      "id": "claude-import",
+      "title": "Import from Claude Code",
+      "kind": "page",
+      "file": "lib/ui/screens/chats/claude_import_screen.dart",
+      "widget": "ClaudeImportScreen",
+      "presentedBy": [
+        "showClaudeImport"
+      ],
+      "line": 25,
+      "purpose": "Lists the Claude Code conversations started on the computer in this project, newest first (title or first prompt, folder, when); a tap imports one and opens it.",
+      "reachedFrom": [],
+      "gates": [
+        "paseo import_agent_request"
+      ],
+      "elements": [
+        {
+          "type": "row",
+          "key": null,
+          "targetWidget": null,
+          "target": null,
+          "gates": [],
+          "destructive": false,
+          "id": "claude-import-row",
+          "label": "<title> · <folder> · <when>",
+          "file": "lib/ui/screens/chats/claude_import_screen.dart",
+          "line": 68,
+          "action": "other",
+          "effect": "Imports the conversation, then closes and opens it."
+        }
+      ]
     }
   ],
   "notPages": [

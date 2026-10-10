@@ -1,5 +1,5 @@
 {
- "generatedFrom": "d014542786fb39423f38b83218daee8727361a51",
+ "generatedFrom": "b48f59842ea069ec7fd41a84fdc04529ea00250d",
  "pages": [
   {
    "id": "system",
@@ -11582,6 +11582,39 @@
      "target": null,
      "targetWidget": null,
      "effect": "Shows or hides that connection's conversations in the list; a hidden server's connection closes.",
+     "gates": [],
+     "destructive": false
+    }
+   ]
+  },
+  {
+   "id": "claude-import",
+   "title": "Import from Claude Code",
+   "kind": "overlay",
+   "area": "workspace",
+   "file": "lib/ui/screens/chats/claude_import_screen.dart",
+   "widget": "ClaudeImportScreen",
+   "presentedBy": [
+    "showClaudeImport"
+   ],
+   "line": 25,
+   "purpose": "Lists the Claude Code conversations started on the computer in this project, newest first (title or first prompt, folder, when); a tap imports one and opens it.",
+   "reachedFrom": [],
+   "gates": [
+    "paseo import_agent_request"
+   ],
+   "elements": [
+    {
+     "id": "claude-import-row",
+     "type": "button",
+     "label": "<title> · <folder> · <when>",
+     "key": null,
+     "file": "lib/ui/screens/chats/claude_import_screen.dart",
+     "line": 68,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Imports the conversation, then closes and opens it.",
      "gates": [],
      "destructive": false
     }
@@ -24473,40 +24506,6 @@
    ],
    "elements": [
     {
-     "id": "team-agent-receipt-retry",
-     "type": "button",
-     "label": "Retry",
-     "key": "team-receipt-retry (inside team-agent-receipt)",
-     "file": "lib/ui/screens/team/agent_screen.dart",
-     "line": 129,
-     "action": "mutate",
-     "target": null,
-     "effect": "TeamReceiptChip.onRetry -> _retry(record): controller.retryMutation(record.key) for the newest controlAgent/message record.",
-     "gates": [
-      "Controls section shown when `controller.capabilities.controlMessage || controller.capabilities.controlAgent || controller.capabilities.controlAssign`",
-      "_receipt != null && record.canRetry"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/team_controls.dart"
-    },
-    {
-     "id": "team-agent-assign-receipt-retry",
-     "type": "button",
-     "label": "Retry",
-     "key": "team-receipt-retry (inside team-agent-assign-receipt)",
-     "file": "lib/ui/screens/team/agent_screen.dart",
-     "line": 129,
-     "action": "mutate",
-     "target": null,
-     "effect": "TeamReceiptChip.onRetry -> _retry(assign): controller.retryMutation(record.key) for the newest assign record onto this agent.",
-     "gates": [
-      "Controls section shown when `controller.capabilities.controlMessage || controller.capabilities.controlAgent || controller.capabilities.controlAssign`",
-      "_assignReceipt != null && record.canRetry"
-     ],
-     "destructive": false,
-     "widgetFile": "lib/ui/widgets/team_controls.dart"
-    },
-    {
      "id": "team-agent-missing-back",
      "type": "button",
      "label": "Back",
@@ -24693,6 +24692,38 @@
       "controller.capabilities.controlAgent"
      ],
      "destructive": true
+    },
+    {
+     "id": "team-agent-receipt-retry",
+     "type": "button",
+     "label": "Retry",
+     "key": "team-receipt-retry (inside team-agent-receipt)",
+     "file": "lib/ui/widgets/team_controls.dart",
+     "line": 129,
+     "action": "mutate",
+     "target": null,
+     "effect": "TeamReceiptChip.onRetry -> _retry(record): controller.retryMutation(record.key) for the newest controlAgent/message record.",
+     "gates": [
+      "Controls section shown when `controller.capabilities.controlMessage || controller.capabilities.controlAgent || controller.capabilities.controlAssign`",
+      "_receipt != null && record.canRetry"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "team-agent-assign-receipt-retry",
+     "type": "button",
+     "label": "Retry",
+     "key": "team-receipt-retry (inside team-agent-assign-receipt)",
+     "file": "lib/ui/widgets/team_controls.dart",
+     "line": 129,
+     "action": "mutate",
+     "target": null,
+     "effect": "TeamReceiptChip.onRetry -> _retry(assign): controller.retryMutation(record.key) for the newest assign record onto this agent.",
+     "gates": [
+      "Controls section shown when `controller.capabilities.controlMessage || controller.capabilities.controlAgent || controller.capabilities.controlAssign`",
+      "_assignReceipt != null && record.canRetry"
+     ],
+     "destructive": false
     },
     {
      "id": "team-agent-technical-copy-value",
@@ -27662,6 +27693,56 @@
     "Available server model catalogue"
    ],
    "elements": []
+  },
+  {
+   "id": "team-rig",
+   "title": "<project>",
+   "kind": "overlay",
+   "area": "team",
+   "file": "lib/ui/screens/team/team_rig_screen.dart",
+   "widget": "TeamRigScreen",
+   "presentedBy": [
+    "openTeamRig"
+   ],
+   "line": 37,
+   "purpose": "One project on the computer's team: pause or resume it, delete it from the team (folder and files stay), and switch its scheduled jobs on or off.",
+   "reachedFrom": [],
+   "gates": [
+    "controlProject",
+    "controlProjectRemove",
+    "scheduledJobs",
+    "controlScheduledJobs"
+   ],
+   "elements": [
+    {
+     "id": "team-rig-pause",
+     "type": "button",
+     "label": "Pause project <name> | Resume project <name>",
+     "key": null,
+     "file": "lib/ui/screens/team/team_rig_screen.dart",
+     "line": 96,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Pause asks first and stops the team working on it; Resume is one tap.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "team-rig-delete",
+     "type": "button",
+     "label": "Delete project <name>",
+     "key": null,
+     "file": "lib/ui/screens/team/team_rig_screen.dart",
+     "line": 111,
+     "action": "other",
+     "target": null,
+     "targetWidget": null,
+     "effect": "Asks first, then removes the project from the team; its folder and files stay.",
+     "gates": [],
+     "destructive": true
+    }
+   ]
   },
   {
    "id": "team-settings",
@@ -39071,6 +39152,11 @@
    "file": "lib/ui/screens/settings/plugins_screen.dart",
    "reason": "Helpers and sections of merged pages; the standalone page was retired (Notifications and background; Settings > This server).",
    "part": "j1-settings-more"
+  },
+  {
+   "file": "lib/ui/screens/settings/server_host_update.dart",
+   "reason": "No page of its own: the \"Update agents on <computer>\" row and its confirmation on the server settings page.",
+   "part": "g-servers"
   },
   {
    "file": "lib/ui/screens/settings/server_plugins_section.dart",

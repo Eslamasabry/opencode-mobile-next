@@ -1401,6 +1401,7 @@ graph LR
 | `chats-home` | tab | 0 / 2 | `home-shell` / home-shell-tab-chats | chats-home-filter-project -> `chats-project-sheet`<br>chats-home-row -> `chat`<br>chats-home-new -> `chats-new-chat`<br>chats-home-start-in-project -> `chats-new-chat`<br>chats-home-start -> `chats-new-chat`<br>agents-notice-sign-in -> `agents-sheet` |
 | `chats-project-sheet` | sheet | 1 / 3 | `chats-home` / chats-home-filter-project | _none_ |
 | `chats-sources-sheet` | sheet | unreachable | _none_ | _none_ |
+| `claude-import` | overlay | unreachable | _none_ | _none_ |
 | `chats-new-chat` | screen | 1 / 3 | `chats-home` / chats-home-new<br>`chats-home` / chats-home-start-in-project<br>`chats-home` / chats-home-start | chats-new-send -> `chat` |
 | `global-sessions` | screen | 2 / 3 | `chat`<br>`command-launcher-sheet` / chat-command-sessions | global-sessions-row -> `chat`<br>global-sessions-row-menu-open -> `chat`<br>global-sessions-row-menu-related -> `session-relations`<br>global-sessions-row-menu-handoff -> `continue-on-computer-sheet`<br>global-sessions-row-menu-steal -> `global-sessions-continue-here-sheet`<br>global-sessions-row-context-open -> `chat`<br>global-sessions-row-context-steal -> `global-sessions-continue-here-sheet`<br>(embedded) -> `embedded-context-menu-region`<br>(embedded) -> `embedded-product-states` |
 | `global-sessions-continue-here-sheet` | sheet | 3 / 4 | `global-sessions` / global-sessions-row-menu-steal<br>`global-sessions` / global-sessions-row-context-steal | _none_ |
@@ -1562,6 +1563,7 @@ graph LR
 | `team-intro` | screen | 1 / 3 | `settings` / settings-ai-team<br>`team-intro` / team-intro-set-up | team-intro-set-up -> `team-intro`<br>team-intro-address -> `team-host-sheet`<br>team-intro-on-computer -> `team-host-guide-sheet`<br>team-intro-set-up-termux -> `termux-setup-installed`<br>team-intro-project-demo -> `team-projects` |
 | `team-migration` | screen | 2 / 4 | `team-home` / team-home-refresh | team-migration-demo -> `team-projects` |
 | `team-model-sheet` | sheet | unreachable | _none_ | _none_ |
+| `team-rig` | overlay | unreachable | _none_ | _none_ |
 | `team-settings` | screen | 1 / 3 | `team-home` / team-home-settings<br>`settings` / settings-ai-team | team-home-change-address -> `team-host-sheet`<br>team-home-phone-controls -> `embedded-team-phone-section`<br>team-home-turn-off -> `team-turn-off-sheet`<br>team-home-host-row -> `team-host-details-sheet`<br>team-home-runs-agents-row -> `team-agents` |
 | `embedded-work-graph` | overlay | unreachable | _none_ | embedded-work-graph-node -> `work-sheet` |
 | `work-sheet` | sheet | 3 / 5 | `gate-sheet` / gate-sheet-work-chip<br>`team-merge-changes-sheet` / team-merge-changes-sheet-work-row<br>`work-sheet` / work-sheet-dependency-chip<br>`embedded-work-graph` / embedded-work-graph-node<br>`team-task-details` / team-task-details-step<br>`team-conversation` / team-conversation-step<br>`work-sheet` / work-sheet-blocking-chip | work-sheet-dependency-chip -> `work-sheet`<br>work-sheet-blocking-chip -> `work-sheet`<br>(embedded) -> `embedded-markdown-text`<br>(embedded) -> `embedded-team-now-line` |

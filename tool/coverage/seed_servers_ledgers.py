@@ -128,6 +128,7 @@ IGN = {
     'configuredProviderFallback': PLUMB,
     'globalEventStream': PLUMB,
     'worktreeReset': 'ignored: adds Reset to a worktree row where the server can; the Worktrees row covers the page',
+    'worktreeBrowsing': 'shown',
     'worktreeCreate': 'ignored: adds New worktree to the Worktrees page where the server can create one',
     'legacyQuestionRequests': PLUMB,
     'forms': 'ignored: which kind of question card the server sends; the person answers it in the conversation either way',

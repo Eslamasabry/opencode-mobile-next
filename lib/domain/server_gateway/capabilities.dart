@@ -168,6 +168,10 @@ class ServerCapabilities {
   /// create action is not presented as usable there. Listing, opening and
   /// inspecting worktrees do not depend on this switch.
   final bool worktreeCreate;
+
+  /// The server lists the project's worktrees although it has no project
+  /// management of its own (Paseo), so the Worktrees page is offered anyway.
+  final bool worktreeBrowsing;
   final bool legacyQuestionRequests;
 
   /// OpenCode 2 structured forms (`/api/session/{id}/form`); replaces the
@@ -265,6 +269,7 @@ class ServerCapabilities {
     this.globalEventStream = true,
     this.worktreeReset = true,
     this.worktreeCreate = true,
+    this.worktreeBrowsing = false,
     this.legacyQuestionRequests = true,
     this.forms = false,
     this.inbox = false,
@@ -348,6 +353,7 @@ class ServerCapabilities {
     globalEventStream: globalEventStream,
     worktreeReset: worktreeReset,
     worktreeCreate: worktreeCreate,
+    worktreeBrowsing: worktreeBrowsing,
     legacyQuestionRequests: legacyQuestionRequests,
     forms: forms,
     inbox: inbox,

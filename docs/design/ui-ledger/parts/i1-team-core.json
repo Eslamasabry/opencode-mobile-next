@@ -2641,6 +2641,55 @@
           "destructive": false
         }
       ]
+    },
+    {
+      "id": "team-rig",
+      "title": "<project>",
+      "kind": "page",
+      "file": "lib/ui/screens/team/team_rig_screen.dart",
+      "widget": "TeamRigScreen",
+      "presentedBy": [
+        "openTeamRig"
+      ],
+      "line": 37,
+      "purpose": "One project on the computer's team: pause or resume it, delete it from the team (folder and files stay), and switch its scheduled jobs on or off.",
+      "reachedFrom": [],
+      "gates": [
+        "controlProject",
+        "controlProjectRemove",
+        "scheduledJobs",
+        "controlScheduledJobs"
+      ],
+      "elements": [
+        {
+          "type": "row",
+          "key": null,
+          "targetWidget": null,
+          "target": null,
+          "gates": [],
+          "destructive": false,
+          "id": "team-rig-pause",
+          "label": "Pause project <name> | Resume project <name>",
+          "file": "lib/ui/screens/team/team_rig_screen.dart",
+          "line": 96,
+          "action": "confirm",
+          "effect": "Pause asks first and stops the team working on it; Resume is one tap."
+        },
+        {
+          "type": "row",
+          "key": null,
+          "targetWidget": null,
+          "target": null,
+          "gates": [],
+          "destructive": true,
+          "id": "team-rig-delete",
+          "label": "Delete project <name>",
+          "file": "lib/ui/screens/team/team_rig_screen.dart",
+          "line": 111,
+          "action": "confirm",
+          "effect": "Asks first, then removes the project from the team; its folder and files stay."
+        }
+      ]
     }
   ],
   "notPages": [

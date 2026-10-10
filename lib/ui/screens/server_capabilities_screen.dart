@@ -97,7 +97,7 @@ final List<ServerFeature> serverFeatures = [
     title: (l10n) => l10n.capabilityWorktrees,
     detail: (l10n) => l10n.capabilityWorktreesDetail,
     available: (facts) =>
-        facts.server.projectManagement || facts.server.worktreeCreate,
+        facts.server.projectManagement || facts.server.worktreeBrowsing,
   ),
   ServerFeature(
     id: 'cloud-environments',
