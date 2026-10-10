@@ -5,6 +5,26 @@ part of '../gateway.dart';
 final _featureIdPattern = RegExp(r'^[A-Za-z0-9_.:-]{1,64}$');
 
 extension _PaseoAgentFeatures on PaseoGateway {
+  /// The agent's name in the person's words: the daemon's own label for the
+  /// runtime, else the app's.
+  String? _agentOwnerName(String id) {
+    final raw = _agents[id]?['provider'] ?? _draftProviders[id];
+    final provider = raw is String ? raw : paseoDefaultProvider;
+    for (final entry in _providerEntries ?? const <Map<String, dynamic>>[]) {
+      final label = entry['label'];
+      if (entry['provider'] == provider && label is String) {
+        final clean = _featureText(label, 40);
+        if (clean != null) return clean;
+      }
+    }
+    return switch (provider) {
+      'claude' => 'Claude Code',
+      'pi' => 'Pi',
+      'codex' => 'Codex',
+      _ => null,
+    };
+  }
+
   String? _featureText(Object? value, int max) {
     if (value is! String) return null;
     final clean = value

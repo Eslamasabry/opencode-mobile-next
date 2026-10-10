@@ -218,4 +218,37 @@ void main() {
       });
     });
   });
+
+  test(
+    'a running agent\'s long model id is shown as the list\'s own id',
+    () async {
+      daemon.handlers['get_providers_snapshot_request'] = (_) => (
+        'get_providers_snapshot_response',
+        {
+          'entries': [
+            {
+              'provider': 'claude',
+              'status': 'ready',
+              'models': [
+                {
+                  'id': 'opus',
+                  'label': 'Opus',
+                  'aliases': ['claude-opus-4-8'],
+                },
+              ],
+            },
+          ],
+        },
+      );
+      daemon.handlers['fetch_agent_request'] = (_) => (
+        'fetch_agent_response',
+        {
+          'agent': {...agentJson('a1'), 'model': 'claude-opus-4-8'},
+        },
+      );
+      await gateway.providers();
+      final session = await gateway.session('a1');
+      expect(session.selection!.model!.modelID, 'opus');
+    },
+  );
 }

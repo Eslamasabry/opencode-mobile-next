@@ -106,9 +106,23 @@
   "@agentFeaturesLabel": {
     "description": "Model sheet: section of the agent's own switches"
   },
-  "agentFeaturesLoading": "Loading agent settings…",
-  "@agentFeaturesLoading": {
-    "description": "Model sheet: the agent's switches are being read"
+  "agentFeaturesSheetTitle": "{agent} settings",
+  "@agentFeaturesSheetTitle": {
+    "description": "Agent settings sheet title, e.g. Claude Code settings",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentFeatureChipOff": "{name} off",
+  "@agentFeatureChipOff": {
+    "description": "Composer chip when an agent switch is off, e.g. Fast mode off",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "agentFeaturesLoadFailed": "Could not load this agent's settings.",
   "@agentFeaturesLoadFailed": {

@@ -72,6 +72,7 @@ import '../app_theme.dart';
 import '../desktop/desktop_interaction.dart';
 import '../desktop/file_drop.dart';
 import '../desktop/shortcuts.dart';
+import '../widgets/agent_features_chip.dart';
 import '../widgets/always_allow_invitation.dart';
 import '../widgets/command_sheet.dart';
 import '../widgets/session_menu.dart';

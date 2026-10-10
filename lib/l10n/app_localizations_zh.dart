@@ -189,7 +189,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentFeaturesLabel => 'Agent settings';
 
   @override
-  String get agentFeaturesLoading => 'Loading agent settings…';
+  String agentFeaturesSheetTitle(String agent) {
+    return '$agent settings';
+  }
+
+  @override
+  String agentFeatureChipOff(String name) {
+    return '$name off';
+  }
 
   @override
   String get agentFeaturesLoadFailed =>
