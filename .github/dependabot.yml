@@ -24,6 +24,9 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
+    # Pushing master must not re-run CI on every open bot PR (each refresh
+    # costs CI minutes and emails); refresh one on demand: "@dependabot rebase".
+    rebase-strategy: "disabled"
     labels:
       - "dependencies"
     commit-message:
@@ -47,6 +50,9 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
+    # Pushing master must not re-run CI on every open bot PR (each refresh
+    # costs CI minutes and emails); refresh one on demand: "@dependabot rebase".
+    rebase-strategy: "disabled"
     labels:
       - "dependencies"
       - "ci"
