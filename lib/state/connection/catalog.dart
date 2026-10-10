@@ -86,6 +86,9 @@ mixin _ConnectionControllerCatalog on ChangeNotifier {
   bool catalogLoading = false;
   String? catalogError;
 
+  /// What made [catalogError], for Details.
+  Object? catalogFailure;
+
   ProvidersResponse? providers;
   List<AgentInfo> agents = [];
   CatalogSnapshot? catalog;
@@ -783,6 +786,7 @@ extension _ConnectionControllerCatalogImpl on ConnectionController {
       }
       catalogLoading = false;
       catalogError = error.toString();
+      catalogFailure = error;
       _recordLocationError(error);
       _notifyListeners();
     }

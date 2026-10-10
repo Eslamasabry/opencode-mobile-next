@@ -242,13 +242,14 @@ extension _ServersActions on _ServersScreenState {
     if (conn.api != null && failure == null) {
       Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
     } else {
-      final detail = productErrorText(
-        conn.lastError ??
+      final detail =
+          connectionErrorText(conn) ??
+          productErrorText(
             failure ??
-            lookupAppLocalizations(
-              Localizations.localeOf(context),
-            ).e7SetupConnectionFailed,
-      );
+                lookupAppLocalizations(
+                  Localizations.localeOf(context),
+                ).e7SetupConnectionFailed,
+          );
       _set(() {
         _listFailure = lookupAppLocalizations(
           Localizations.localeOf(context),
@@ -357,8 +358,9 @@ extension _ServersActions on _ServersScreenState {
           // The connection's raw failure is the cause (for details); the
           // words say what it means.
           throw ProductException(
-            productErrorText(conn.lastError ?? copy.e7SetupDidNotConnect),
-            cause: conn.lastError,
+            connectionErrorText(conn) ??
+                productErrorText(copy.e7SetupDidNotConnect),
+            cause: conn.lastFailure ?? conn.lastError,
           );
         }
       }

@@ -194,10 +194,8 @@ class _PhoneSetupReadyScreenState extends ConsumerState<PhoneSetupReadyScreen> {
   /// Why connecting failed, in words: the connection's last error mapped
   /// to plain words (never its raw text), else that the server stopped.
   String _connectionProblem(ConnectionController connection) {
-    final error = connection.lastError;
-    return error == null
-        ? _l10n.builtinServerStopped
-        : productErrorText(error, l10n: _l10n);
+    return connectionErrorText(connection, l10n: _l10n) ??
+        _l10n.builtinServerStopped;
   }
 
   Future<void> _openExisting() async {

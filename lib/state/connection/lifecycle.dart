@@ -162,6 +162,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     final retainedProfile = _connectedProfile ?? profile;
     if (retainedProfile == null) {
       lastError = 'Choose an OpenCode server before retrying.';
+      lastFailure = null;
       status = StreamStatus.disconnected;
       _notifyListeners();
       return Future.value();
@@ -318,6 +319,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     repository = currentRepository;
     status = StreamStatus.connecting;
     lastError = null;
+    lastFailure = null;
     passwordRejected = false;
     _notifyListeners();
     enablePollingFallback();
@@ -336,6 +338,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
         error is ApiException
             ? error.message
             : 'Cannot reach ${profile.baseUrl}: $error',
+        failure: error,
       );
       return false;
     }
@@ -428,11 +431,12 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     _questionRevisions[id] = _questionRevision;
   }
 
-  void _failCurrentConnection(String error) {
+  void _failCurrentConnection(String error, {Object? failure}) {
     _retireTransport();
     version = null;
     status = StreamStatus.disconnected;
     lastError = error;
+    lastFailure = failure;
     _notifyListeners();
   }
 

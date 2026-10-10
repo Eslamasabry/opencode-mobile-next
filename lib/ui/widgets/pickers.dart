@@ -28,6 +28,7 @@ import '../../state/connection.dart';
 import '../../domain/free_model.dart' show openCodeFreeProviderID;
 import '../../domain/model_display_name.dart' show modelNameFromId;
 import '../widgets/connect_methods.dart';
+import 'product_states.dart' show productErrorDetails;
 import '../../state/model_library.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';

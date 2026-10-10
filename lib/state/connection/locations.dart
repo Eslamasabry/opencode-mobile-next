@@ -585,6 +585,7 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
     locationError = null;
     locationFailure = null;
     lastError = null;
+    lastFailure = null;
     final savedLibrary = _modelLibrary;
     final savedSessionModels = sessionModels;
     // Same server, another folder: the models and agents are the server's,

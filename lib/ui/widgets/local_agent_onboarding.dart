@@ -25,7 +25,7 @@ import '../../termux/bridge.dart';
 import '../../termux/local_agent_runtime.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
-import 'product_states.dart' show productErrorText;
+import 'product_states.dart' show connectionErrorText, productErrorText;
 import 'safety_confirms.dart';
 import 'setup_terminal.dart';
 
@@ -612,7 +612,7 @@ class _LocalAgentOnboardingBlockState extends State<LocalAgentOnboardingBlock>
       setState(() {
         _connecting = false;
         _notice = l10n.localAgentConnectFailed(
-          productErrorText(connection.lastError ?? '', l10n: l10n),
+          connectionErrorText(connection, l10n: l10n) ?? '',
         );
       });
     } on LocalAgentFailure catch (failure) {

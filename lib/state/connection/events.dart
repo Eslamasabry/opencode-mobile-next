@@ -90,6 +90,7 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
         PerfTrace.mark('events.connected');
         PerfTrace.markOnce('app.first_connected');
         lastError = null;
+        lastFailure = null;
         passwordRejected = false;
         unawaited(refreshPendingPermissions());
         unawaited(refreshPendingQuestions());
@@ -136,6 +137,7 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
       _invalidatePhoneChatStatus();
       _noteAuthFailure(e);
       lastError = e.toString();
+      lastFailure = e;
       _notifyListeners();
     }
 

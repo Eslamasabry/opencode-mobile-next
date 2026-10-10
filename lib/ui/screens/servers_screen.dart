@@ -28,7 +28,7 @@ import '../kit/scenes/servers_link_scene.dart';
 import '../kit/scenes/servers_welcome_scene.dart';
 import '../setup_commands.dart';
 import '../widgets/product_states.dart'
-    show productErrorDetails, productErrorText;
+    show connectionErrorText, productErrorDetails, productErrorText;
 import '../widgets/team_host_form.dart';
 import '../widgets/local_agent_server_entry.dart';
 import '../widgets/phone_server_card.dart';

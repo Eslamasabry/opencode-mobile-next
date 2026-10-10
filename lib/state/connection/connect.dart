@@ -272,6 +272,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       _retireTransport();
       status = StreamStatus.disconnected;
       lastError = validationError;
+      lastFailure = null;
       _notifyListeners();
       return;
     }
@@ -303,6 +304,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     _clearLocationData();
     status = StreamStatus.connecting;
     lastError = null;
+    lastFailure = null;
     passwordRejected = false;
     locationError = null;
     locationFailure = null;
@@ -316,6 +318,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       if (!_isCurrent(generation, currentApi)) return;
       _failCurrentConnection(
         'Could not save the active server profile: $error',
+        failure: error,
       );
       return;
     }
@@ -345,6 +348,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
           } else {
             _failCurrentConnection(
               corrected.message ?? 'Cannot reach ${profile.baseUrl}: $e',
+              failure: corrected,
             );
           }
           return;
@@ -352,6 +356,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       }
       _failCurrentConnection(
         e is ApiException ? e.message : 'Cannot reach ${profile.baseUrl}: $e',
+        failure: e,
       );
       return;
     }
@@ -616,6 +621,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       } catch (error) {
         if (_disposed || generation != _generation) return;
         lastError = 'Could not clear the active server profile: $error';
+        lastFailure = error;
         _notifyListeners();
       }
     }

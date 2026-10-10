@@ -844,6 +844,7 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
         return;
       }
       lastError = error.toString();
+      lastFailure = error;
       _notifyListeners();
       rethrow;
     }
