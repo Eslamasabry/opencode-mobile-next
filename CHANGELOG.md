@@ -2,10 +2,13 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
-## Unreleased — test builds after 1.2.0+52 (up to 2208, 2026-10-10)
+## 1.3.0+53 — 2026-10-10
 
-Local test builds handed to the maintainer; not published. Build 2208 is the
-current candidate (full suite green at `27488c0ee`).
+Claude Code chats get Files, Changes, Terminal and Worktrees, Fast mode and
+Import from Claude Code; Delete and Archive conversation are back; AI Team
+can pause, delete and force-stop from the phone. Full notes:
+[docs/releases/v1.3.0+53.md](docs/releases/v1.3.0+53.md); pictures:
+[docs/releases/v1.3.0+53/README.md](docs/releases/v1.3.0+53/README.md).
 
 ### Claude Code and Pi chats (Paseo)
 - **Files, Changes, Worktrees and Terminal** now work for Claude Code and Pi
