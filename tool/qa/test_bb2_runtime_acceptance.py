@@ -47,7 +47,8 @@ class RestorationEvidenceTest(unittest.TestCase):
             argv = ["acceptance", "--apk", "target.apk", "--runner-apk", "runner.apk",
                     "--apksigner", "/fake/apksigner", "--out", str(out)]
             with mock.patch.object(sys, "argv", argv), mock.patch.object(acceptance.subprocess, "run", fake_run), \
-                    mock.patch.object(acceptance.fcntl, "flock"), mock.patch.object(acceptance.time, "sleep"):
+                    mock.patch.object(acceptance.fcntl, "flock"), mock.patch.object(acceptance.time, "sleep"), \
+                    mock.patch.object(acceptance, "open", mock.mock_open(), create=True):  # the shared emulator lock lives under /home/eslam
                 self.assertEqual(1, acceptance.main())
             evidence = out.read_text()
             self.assertIn("FAIL primary_QA_install_version_downgrade_refused", evidence)

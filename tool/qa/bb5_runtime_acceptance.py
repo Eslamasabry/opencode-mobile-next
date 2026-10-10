@@ -18,6 +18,7 @@ import os
 from pathlib import Path
 import re
 import selectors
+import shutil
 import shlex
 import subprocess
 import tempfile
@@ -200,7 +201,9 @@ QA_TARGET_SHA = '813042b33278a6fb7c18d15b15e0d8249f431d15b947113dabacb9115249db5
 QA_RUNNER_SHA = '16fee14e4e87da6fb8c1ef529d46382051b111c314862c326b1a2fffc0180b0e'
 GENUI_SCRIPT = '/root/.oc-genui/openCode2/server.cjs'
 GENUI_NODES = {'/opt/node/bin/node', '/usr/bin/node'}
-PINNED_DART = Path.home() / '.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart'
+_PINNED = Path.home() / '.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart'
+# DART, else the pinned Shorebird Flutter, else any dart on PATH (CI runners).
+PINNED_DART = Path(os.environ.get('DART') or (_PINNED if _PINNED.exists() else shutil.which('dart') or _PINNED))
 
 
 def genui_source_proofs():
