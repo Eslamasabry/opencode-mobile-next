@@ -55,7 +55,8 @@ class _Guest {
         AgentRemovalScripts.remove(descriptor ?? agent, receiptId: receiptId)
             .replaceAll('/home/oc', home)
             .replaceAll("pathlib.Path('/proc')", "pathlib.Path('$proc')");
-    if (uid != null) script = script.replaceAll('os.getuid()', uid);
+    // The guest runs as uid 1000; the CI runner user is not 1000.
+    script = script.replaceAll('os.getuid()', uid ?? '1000');
     final result = await Process.run(
       'sh',
       ['-c', script],
