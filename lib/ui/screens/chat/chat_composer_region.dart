@@ -25,6 +25,7 @@ extension _ChatComposerRegion on _ChatScreenState {
     busy: _conn.busySessions.contains(widget.sessionID) || _live != null,
     selectedAgent: _conn.agentForSession(widget.sessionID),
     defaultAgent: _defaultAgentName,
+    agentIsMode: _conn.api is AgentFeatureGateway,
     selectedModel: _conn.displayModelForSession(widget.sessionID),
     modelLabel: _presentedModelLabel,
     selectionFallback: !_conn.serverOwnsSessionSelection

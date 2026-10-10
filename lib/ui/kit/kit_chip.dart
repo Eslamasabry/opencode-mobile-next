@@ -54,6 +54,7 @@ class KitChip extends StatelessWidget {
     this.icon,
     this.tone = KitChipTone.neutral,
   }) : kind = KitChipKind.plain,
+       spoken = null,
        onPressed = null,
        onRemove = null,
        count = null,
@@ -74,6 +75,7 @@ class KitChip extends StatelessWidget {
     required VoidCallback this.onPressed,
     this.icon,
     this.selected,
+    this.spoken,
   }) : kind = KitChipKind.action,
        onRemove = null,
        count = null,
@@ -90,6 +92,7 @@ class KitChip extends StatelessWidget {
     this.icon,
     this.onPressed,
   }) : kind = KitChipKind.removable,
+       spoken = null,
        count = null,
        selected = null,
        expanded = null;
@@ -104,6 +107,7 @@ class KitChip extends StatelessWidget {
     this.onPressed,
     this.icon,
   }) : kind = KitChipKind.count,
+       spoken = null,
        onRemove = null,
        selected = null,
        expanded = null;
@@ -119,6 +123,7 @@ class KitChip extends StatelessWidget {
     this.icon,
     this.expanded,
   }) : kind = KitChipKind.summary,
+       spoken = null,
        onRemove = null,
        count = null,
        selected = null;
@@ -135,6 +140,10 @@ class KitChip extends StatelessWidget {
   final int? count;
   final bool? selected;
   final bool? expanded;
+
+  /// What a screen reader says when it differs from the visible [label]
+  /// (an action chip only): "Fast mode, on" for a chip that shows "Fast".
+  final String? spoken;
 
   static const _removeKey = ValueKey('kit-chip-remove');
   static const _checkKey = ValueKey('kit-chip-check');
@@ -238,7 +247,7 @@ class KitChip extends StatelessWidget {
           tokens: tokens,
           tint: tint,
           span: TextSpan(text: label, style: emphasized),
-          textSemantics: label,
+          textSemantics: spoken ?? label,
           leading: AnimatedSwitcher(
             duration: reduceMotion ? Duration.zero : KitMotion.quick,
             transitionBuilder: (child, animation) =>
@@ -247,7 +256,7 @@ class KitChip extends StatelessWidget {
           ),
           leadingExtent: selected == true || icon != null ? glyphExtent : 0,
           onPressed: onPressed,
-          semanticsLabel: label,
+          semanticsLabel: spoken ?? label,
           toggled: selected,
         );
 

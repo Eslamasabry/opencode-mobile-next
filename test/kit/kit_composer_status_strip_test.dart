@@ -86,18 +86,20 @@ void main() {
         expect(tester.takeException(), isNull);
         final chip = tester.getRect(find.byType(KitChip).first);
         final model = tester.getRect(find.byType(KitComposerChips));
+        // One row: the chip and the model chip share a vertical centre and
+        // never lie on one another; what does not fit scrolls sideways.
         expect(
-          chip.overlaps(model),
-          isFalse,
+          (chip.center.dy - model.center.dy).abs(),
+          lessThan(1),
+          reason: 'chip $chip and model chip $model are on two rows',
+        );
+        final start = direction == TextDirection.ltr;
+        expect(
+          start ? chip.right <= model.left : chip.left >= model.right,
+          isTrue,
           reason: 'chip $chip lies under the model chip $model',
         );
-        // The left chip is whole: its box is not wider than the line, and
-        // its words are all there to read.
         expect(find.text(_paused), findsOneWidget);
-        expect(chip.left, greaterThanOrEqualTo(0));
-        expect(chip.right, lessThanOrEqualTo(width));
-        expect(model.right, lessThanOrEqualTo(width));
-        expect(model.left, greaterThanOrEqualTo(0));
       });
     }
   }

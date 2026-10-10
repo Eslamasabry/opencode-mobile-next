@@ -107,7 +107,9 @@ Future<_FeatureApi> _chat(
 }
 
 Future<void> _shot(WidgetTester tester, String name) async => writePng(
-  'build/coverage/od-agent-features-$name.png',
+  name.startsWith('one-row')
+      ? 'build/coverage/$name-claude.png'
+      : 'build/coverage/od-agent-features-$name.png',
   await capturePng(tester, _boundary, pixelRatio: 1),
 );
 
@@ -216,11 +218,13 @@ void main() {
   final chip = find.byKey(const Key('agent-features-chip'));
   final fast = find.byKey(const Key('agent-feature-fast_mode'));
 
-  testWidgets('the chip says Fast mode off; its sheet turns it on', (
+  testWidgets('the chip says Fast, plain when off; its sheet turns it on', (
     tester,
   ) async {
     final api = await _chat(tester);
-    expect(find.text('Fast mode off'), findsOneWidget);
+    expect(find.text('Fast'), findsOneWidget);
+    expect(find.text('Fast mode off'), findsNothing);
+    expect(find.bySemanticsLabel('Fast mode, off'), findsOneWidget);
     await _shot(tester, '1-chat-chip-off');
     await tester.tap(chip);
     await tester.pumpAndSettle();
@@ -239,9 +243,91 @@ void main() {
     // Closing the sheet leaves the chip lit and in words.
     await tester.tapAt(const Offset(206, 40));
     await tester.pumpAndSettle();
-    expect(find.text('Fast mode off'), findsNothing);
-    expect(find.text('Fast mode'), findsOneWidget);
+    expect(find.text('Fast'), findsOneWidget);
+    expect(find.bySemanticsLabel('Fast mode, on'), findsOneWidget);
     await _shot(tester, '3-chat-chip-on');
+  });
+
+  for (final scale in [1.0, 1.3]) {
+    testWidgets('Fast, Asks first and the model are one row · ${scale}x text', (
+      tester,
+    ) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await _chat(tester);
+      final fastChip = tester.getRect(chip);
+      final asks = tester.getRect(find.text('Asks first'));
+      final model = tester.getRect(
+        find.byKey(const Key('composer-model-context')),
+      );
+      expect(find.text('Fast'), findsOneWidget);
+      expect((fastChip.center.dy - model.center.dy).abs(), lessThan(2));
+      expect((asks.center.dy - model.center.dy).abs(), lessThan(2));
+      expect(fastChip.right, lessThanOrEqualTo(asks.left));
+      expect(asks.right, lessThanOrEqualTo(model.left));
+      expect(find.textContaining('default ·'), findsNothing);
+      expect(tester.takeException(), isNull);
+      if (scale == 1.0) await _shot(tester, 'one-row-off');
+    });
+  }
+
+  testWidgets('with Fast on the chip is lit and the row stays one row', (
+    tester,
+  ) async {
+    await _chat(
+      tester,
+      setUpApi: (api) => api.features = [
+        const AgentFeature(
+          id: 'fast_mode',
+          label: 'Fast',
+          kind: AgentFeatureKind.toggle,
+          on: true,
+        ),
+      ],
+    );
+    final fastChip = tester.getRect(chip);
+    final model = tester.getRect(
+      find.byKey(const Key('composer-model-context')),
+    );
+    expect((fastChip.center.dy - model.center.dy).abs(), lessThan(2));
+    await _shot(tester, 'one-row-on');
+  });
+
+  testWidgets('an OpenCode chat has no switch chip and one row', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final api = CoverageApi()..messagesHandler = (_) async => const [];
+    final controller = await captureController(
+      prefs: await SharedPreferences.getInstance(),
+      api: api,
+    );
+    await tester.pumpWidget(
+      captureApp(
+        home: const ChatScreen(sessionID: checkoutSessionID),
+        boundaryKey: _boundary,
+        controller: controller,
+      ),
+    );
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+      controller.dispose();
+    });
+    await frames(tester);
+    expect(chip, findsNothing);
+    final model = tester.getRect(
+      find.byKey(const Key('composer-model-context')),
+    );
+    expect(model.right, greaterThan(412 - 24));
+    expect(tester.takeException(), isNull);
+    await writePng(
+      'build/coverage/one-row-opencode.png',
+      await capturePng(tester, _boundary, pixelRatio: 1),
+    );
   });
 
   testWidgets('the model sheet no longer carries the agent settings', (
@@ -308,7 +394,8 @@ void main() {
         ),
       ],
     );
-    expect(find.text('Plan first off'), findsOneWidget);
+    expect(find.text('Plan first'), findsOneWidget);
+    expect(find.bySemanticsLabel('Plan first, off'), findsOneWidget);
     await tester.tap(chip);
     await tester.pumpAndSettle();
     expect(find.text('Draft a plan before editing.'), findsOneWidget);
@@ -337,7 +424,11 @@ void main() {
         ),
       ],
     );
-    expect(find.text('Claude Code settings'), findsOneWidget);
+    expect(
+      find.descendant(of: chip, matching: find.textContaining('Claude Code')),
+      findsOneWidget,
+    );
+    expect(find.text('Fast'), findsNothing);
     await tester.tap(chip);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('agent-feature-effort')));

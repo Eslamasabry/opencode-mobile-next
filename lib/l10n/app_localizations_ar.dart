@@ -29035,8 +29035,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String agentFeatureChipOff(String name) {
-    return '$name متوقف';
+    return '$name، متوقف';
   }
+
+  @override
+  String agentFeatureChipOn(String name) {
+    return '$name، يعمل';
+  }
+
+  @override
+  String get agentFeatureFastChip => 'سريع';
 
   @override
   String get agentFeaturesLoadFailed => 'تعذر تحميل إعدادات هذا الوكيل.';

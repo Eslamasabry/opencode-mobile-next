@@ -28900,8 +28900,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String agentFeatureChipOff(String name) {
-    return '$name off';
+    return '$name, off';
   }
+
+  @override
+  String agentFeatureChipOn(String name) {
+    return '$name, on';
+  }
+
+  @override
+  String get agentFeatureFastChip => 'Fast';
 
   @override
   String get agentFeaturesLoadFailed =>
