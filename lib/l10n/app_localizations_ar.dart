@@ -27102,6 +27102,53 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsNewChooseProject => 'اختر مشروعًا';
 
   @override
+  String get claudeImportTitle => 'استيراد من Claude Code';
+
+  @override
+  String claudeImportIntro(String project) {
+    return 'اختر محادثة بدأتها في Claude Code داخل $project. تُفتح هنا لتتابعها.';
+  }
+
+  @override
+  String claudeImportRowDetail(String project, String when) {
+    return '$project · $when';
+  }
+
+  @override
+  String get claudeImportUntitled => 'محادثة بلا عنوان';
+
+  @override
+  String get claudeImportEmptyTitle => 'لا شيء للاستيراد';
+
+  @override
+  String get claudeImportEmptyBody =>
+      'تظهر هنا المحادثات التي تبدأها في Claude Code داخل هذا المشروع.';
+
+  @override
+  String get claudeImportLoadFailedTitle => 'تعذر البحث';
+
+  @override
+  String get claudeImportLoadFailedBody =>
+      'لم تُحمَّل القائمة. تحقق من الاتصال ثم حاول مرة أخرى.';
+
+  @override
+  String claudeImportAlready(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count محادثات أخرى موجودة هنا بالفعل.',
+      one: 'محادثة واحدة أخرى موجودة هنا بالفعل.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get claudeImportWorking => 'جارٍ الاستيراد…';
+
+  @override
+  String get claudeImportFailed => 'تعذر استيراد تلك المحادثة. حاول مرة أخرى.';
+
+  @override
   String get chatsNewNeedProject => 'اختر مشروعًا لبدء محادثة.';
 
   @override

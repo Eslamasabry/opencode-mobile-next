@@ -8,7 +8,8 @@ import '../../../builtin/builtin_linux.dart' show BuiltinLinux;
 import '../../../domain/chat_feed.dart';
 import '../../../domain/genui/gen_ui.dart';
 import '../../../domain/phone_agents_source.dart';
-import '../../../domain/server_gateway.dart' show WorkspaceProject;
+import '../../../domain/server_gateway.dart'
+    show ProviderConversationImportGateway, WorkspaceProject;
 import '../../../platform/platform_capabilities.dart';
 import '../../../termux/bridge.dart' show TermuxBridge;
 import '../../widgets/termux_phone_tools.dart' show TermuxRunawayWatcher;
@@ -87,6 +88,10 @@ abstract interface class ChatsHost {
   /// The agents on this phone, or null when this connection has none (the
   /// agent chip and every agent surface stay hidden).
   PhoneAgentsSource? get agents;
+
+  /// The agent's own conversations this server can bring in (Claude Code's);
+  /// null where it cannot, which hides the "Import from Claude Code" entry.
+  ProviderConversationImportGateway? get conversationImport;
 
   /// Starts a conversation with [agentId] in [directory] and returns its id.
   Future<String> startChat(
@@ -315,6 +320,15 @@ class ConnectionChatsHost implements ChatsHost {
 
   @override
   PhoneAgentsSource? get agents => _conn;
+
+  @override
+  ProviderConversationImportGateway? get conversationImport {
+    final api = _conn.api;
+    return api is ProviderConversationImportGateway &&
+            (api as ProviderConversationImportGateway).providerImportSupported
+        ? api as ProviderConversationImportGateway
+        : null;
+  }
 
   @override
   Future<String> startChat(

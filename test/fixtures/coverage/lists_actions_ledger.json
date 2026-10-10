@@ -85,7 +85,7 @@
   "Paseo create_agent_request": "covered elsewhere: the first message of a new conversation creates its agent (chat area)",
   "Paseo create_paseo_worktree_request": "not offered: the app drives Paseo agents inside one project folder; it does not manage Paseo's own workspaces and worktrees",
   "Paseo delete_agent_request": "not offered: Paseo conversations are archived, never deleted, so the provider's own session stays recoverable from the computer",
-  "Paseo import_agent_request": "not offered: owner decision needed - Paseo can import a conversation started in the provider's own app, but the app has no screen for it",
+  "Paseo import_agent_request": "reachable: New conversation > Import from Claude Code > tap a conversation -> importConversation [test: test/claude_import_screen_test.dart ~ importConversation]",
   "Paseo open_project_request": "not offered: the app drives Paseo agents inside one project folder; it does not manage Paseo's own project records; a project here is the folder the helper is scoped to",
   "Paseo paseo_worktree_archive_request": "not offered: the app drives Paseo agents inside one project folder; it does not manage Paseo's own workspaces and worktrees",
   "Paseo project.add.request": "not offered: the app drives Paseo agents inside one project folder; it does not manage Paseo's own project records; a project here is the folder the helper is scoped to",

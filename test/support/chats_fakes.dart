@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart'
-    show WorkspaceProject;
+    show ProviderConversationImportGateway, WorkspaceProject;
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
@@ -109,6 +109,10 @@ class FakeChatsHost implements ChatsHost {
 
   /// What the separate-copy step resolves with (null: closed).
   String? copyResult;
+
+  /// What can be imported from the agent's own app; null hides the entry.
+  @override
+  ProviderConversationImportGateway? conversationImport;
 
   /// The agents on this phone; null hides every agent surface.
   FakePhoneAgentsSource? phoneAgents;

@@ -42713,6 +42713,72 @@ abstract class AppLocalizations {
   /// **'Choose a project'**
   String get chatsNewChooseProject;
 
+  /// Import a conversation started in Claude Code: the entry and the page title
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Claude Code'**
+  String get claudeImportTitle;
+
+  /// Import page: what the list is
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a conversation you started in Claude Code in {project}. It opens here so you can carry on.'**
+  String claudeImportIntro(String project);
+
+  /// Import page: a conversation's project folder and when it was last used
+  ///
+  /// In en, this message translates to:
+  /// **'{project} · {when}'**
+  String claudeImportRowDetail(String project, String when);
+
+  /// Import page: a conversation with no title and no first message
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled conversation'**
+  String get claudeImportUntitled;
+
+  /// Import page: no conversations found
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to import'**
+  String get claudeImportEmptyTitle;
+
+  /// Import page: empty state body
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations you start in Claude Code in this project show up here.'**
+  String get claudeImportEmptyBody;
+
+  /// Import page: reading the list failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not look'**
+  String get claudeImportLoadFailedTitle;
+
+  /// Import page: reading the list failed, body
+  ///
+  /// In en, this message translates to:
+  /// **'The list did not load. Check the connection, then try again.'**
+  String get claudeImportLoadFailedBody;
+
+  /// Import page: conversations left out because they were imported before
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {1 more conversation is already here.} other {{count} more conversations are already here.}}'**
+  String claudeImportAlready(int count);
+
+  /// Import page: a row while its conversation is being imported
+  ///
+  /// In en, this message translates to:
+  /// **'Importing…'**
+  String get claudeImportWorking;
+
+  /// Import page: importing one conversation failed
+  ///
+  /// In en, this message translates to:
+  /// **'That conversation could not be imported. Try again.'**
+  String get claudeImportFailed;
+
   /// New chat: why sending is off
   ///
   /// In en, this message translates to:

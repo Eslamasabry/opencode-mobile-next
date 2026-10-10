@@ -27062,6 +27062,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsNewChooseProject => 'Choose a project';
 
   @override
+  String get claudeImportTitle => 'Import from Claude Code';
+
+  @override
+  String claudeImportIntro(String project) {
+    return 'Pick a conversation you started in Claude Code in $project. It opens here so you can carry on.';
+  }
+
+  @override
+  String claudeImportRowDetail(String project, String when) {
+    return '$project · $when';
+  }
+
+  @override
+  String get claudeImportUntitled => 'Untitled conversation';
+
+  @override
+  String get claudeImportEmptyTitle => 'Nothing to import';
+
+  @override
+  String get claudeImportEmptyBody =>
+      'Conversations you start in Claude Code in this project show up here.';
+
+  @override
+  String get claudeImportLoadFailedTitle => 'Could not look';
+
+  @override
+  String get claudeImportLoadFailedBody =>
+      'The list did not load. Check the connection, then try again.';
+
+  @override
+  String claudeImportAlready(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more conversations are already here.',
+      one: '1 more conversation is already here.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get claudeImportWorking => 'Importing…';
+
+  @override
+  String get claudeImportFailed =>
+      'That conversation could not be imported. Try again.';
+
+  @override
   String get chatsNewNeedProject => 'Choose a project to start a conversation.';
 
   @override

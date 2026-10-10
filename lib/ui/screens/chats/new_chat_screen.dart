@@ -15,6 +15,7 @@ import '../agents/agent_model_sheet.dart';
 import '../agents/agent_sheet.dart';
 import '../agents/agents_text.dart';
 import 'chats_host.dart';
+import 'claude_import_screen.dart';
 import 'chats_project_sheet.dart' show chatsProjectIcon;
 
 /// Opens the start screen for a new chat. [directory] is the project to
@@ -106,6 +107,18 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
     final project = _copyProject;
     if (_sending || project == null) return;
     final id = await host.startSeparateCopy(context, project);
+    if (!mounted || id == null) return;
+    final problem = await host.showStartedChat(context, sessionID: id);
+    if (!mounted || problem == null) return;
+    setState(() => _failure = problem);
+  }
+
+  /// "Import from Claude Code": the person picks a conversation they began
+  /// in Claude Code; it is brought in and opened here.
+  Future<void> _importFromClaude(ChatsHost host) async {
+    final gateway = host.conversationImport;
+    if (gateway == null) return;
+    final id = await showClaudeImport(context, gateway);
     if (!mounted || id == null) return;
     final problem = await host.showStartedChat(context, sessionID: id);
     if (!mounted || problem == null) return;
@@ -261,6 +274,19 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
                   label: l10n.chatsNewSeparateCopy,
                   icon: AppIconography.branch,
                   onPressed: () => unawaited(_startCopy(host)),
+                ),
+              ),
+            ],
+            // Where the agent has its own app, a conversation begun there
+            // can be carried on from here.
+            if (host.conversationImport != null) ...[
+              SizedBox(height: tokens.space1),
+              Center(
+                child: KitChip.action(
+                  key: const ValueKey('chats-new-import-claude'),
+                  label: l10n.claudeImportTitle,
+                  icon: AppIconography.history,
+                  onPressed: () => unawaited(_importFromClaude(host)),
                 ),
               ),
             ],

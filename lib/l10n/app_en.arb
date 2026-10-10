@@ -32136,6 +32136,68 @@
   "@chatsNewChooseProject": {
     "description": "New chat: project chip with no project"
   },
+  "claudeImportTitle": "Import from Claude Code",
+  "@claudeImportTitle": {
+    "description": "Import a conversation started in Claude Code: the entry and the page title"
+  },
+  "claudeImportIntro": "Pick a conversation you started in Claude Code in {project}. It opens here so you can carry on.",
+  "@claudeImportIntro": {
+    "description": "Import page: what the list is",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "claudeImportRowDetail": "{project} · {when}",
+  "@claudeImportRowDetail": {
+    "description": "Import page: a conversation's project folder and when it was last used",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "claudeImportUntitled": "Untitled conversation",
+  "@claudeImportUntitled": {
+    "description": "Import page: a conversation with no title and no first message"
+  },
+  "claudeImportEmptyTitle": "Nothing to import",
+  "@claudeImportEmptyTitle": {
+    "description": "Import page: no conversations found"
+  },
+  "claudeImportEmptyBody": "Conversations you start in Claude Code in this project show up here.",
+  "@claudeImportEmptyBody": {
+    "description": "Import page: empty state body"
+  },
+  "claudeImportLoadFailedTitle": "Could not look",
+  "@claudeImportLoadFailedTitle": {
+    "description": "Import page: reading the list failed"
+  },
+  "claudeImportLoadFailedBody": "The list did not load. Check the connection, then try again.",
+  "@claudeImportLoadFailedBody": {
+    "description": "Import page: reading the list failed, body"
+  },
+  "claudeImportAlready": "{count, plural, one {1 more conversation is already here.} other {{count} more conversations are already here.}}",
+  "@claudeImportAlready": {
+    "description": "Import page: conversations left out because they were imported before",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "claudeImportWorking": "Importing…",
+  "@claudeImportWorking": {
+    "description": "Import page: a row while its conversation is being imported"
+  },
+  "claudeImportFailed": "That conversation could not be imported. Try again.",
+  "@claudeImportFailed": {
+    "description": "Import page: importing one conversation failed"
+  },
   "chatsNewNeedProject": "Choose a project to start a conversation.",
   "@chatsNewNeedProject": {
     "description": "New chat: why sending is off"

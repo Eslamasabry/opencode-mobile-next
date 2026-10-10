@@ -40,6 +40,7 @@ part 'gateway/payload_use.dart';
 part 'gateway/idle_work.dart';
 part 'gateway/host_update.dart';
 part 'gateway/agent_features.dart';
+part 'gateway/provider_import.dart';
 
 class PaseoGateway
     implements
@@ -51,7 +52,8 @@ class PaseoGateway
         GenUiHistoryGateway,
         CorrelatedPromptGateway,
         HostDaemonUpdateGateway,
-        AgentFeatureGateway {
+        AgentFeatureGateway,
+        ProviderConversationImportGateway {
   final PaseoTransport transport;
   final Future<void> Function()? _beforePayloadUse;
   final void Function()? _afterPayloadUse;
@@ -1313,6 +1315,22 @@ class PaseoGateway
     String featureId,
     Object value,
   ) => _setAgentFeature(sessionID, featureId, value);
+
+  // ---- OD1 agent lane: import a conversation from Claude Code -----------
+
+  @override
+  bool get providerImportSupported => true;
+
+  @override
+  String get providerImportDirectory => _scope;
+
+  @override
+  Future<ImportableConversations> importableConversations() =>
+      _importableConversations();
+
+  @override
+  Future<Session> importConversation(ImportableConversation conversation) =>
+      _importConversation(conversation);
 
   // ---- connection lifecycle ---------------------------------------------
 
