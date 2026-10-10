@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
+import androidx.annotation.RequiresApi
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 
@@ -136,22 +137,28 @@ object AppLifecycle {
     /** Read-only history: never consumes or advances startup recovery state. */
     fun exitHistory(context: Context, limit: Int): Map<String, Any?> =
         AppExitHistoryPolicy.history(Build.VERSION.SDK_INT, context.packageName, limit) { maxNum ->
-            val manager = context.getSystemService(ActivityManager::class.java)
-                ?: error("Activity manager unavailable")
-            manager.getHistoricalProcessExitReasons(context.packageName, 0, maxNum)
-                .asSequence()
-                .filter { it.processName == context.packageName }
-                .map { record ->
-                    AppExitMetadata(
-                        processName = record.processName,
-                        reason = record.reason,
-                        importance = record.importance,
-                        timestamp = record.timestamp,
-                        subReason = AppExitHistoryPolicy.subReason(record),
-                        status = record.status,
-                    )
-                }.asIterable()
+            // The policy reads only on API 30 and newer; the check also tells lint so.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) retainedExits(context, maxNum) else emptyList()
         }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    private fun retainedExits(context: Context, maxNum: Int): Iterable<AppExitMetadata> {
+        val manager = context.getSystemService(ActivityManager::class.java)
+            ?: error("Activity manager unavailable")
+        return manager.getHistoricalProcessExitReasons(context.packageName, 0, maxNum)
+            .asSequence()
+            .filter { it.processName == context.packageName }
+            .map { record ->
+                AppExitMetadata(
+                    processName = record.processName,
+                    reason = record.reason,
+                    importance = record.importance,
+                    timestamp = record.timestamp,
+                    subReason = AppExitHistoryPolicy.subReason(record),
+                    status = record.status,
+                )
+            }.asIterable()
+    }
 
     private fun keepAliveInfo(context: Context): Map<String, Any?> {
         val power = context.getSystemService(PowerManager::class.java)

@@ -21,7 +21,8 @@ class NativeAgentHostAdmissionTest {
     @Test fun owedHelperStartsOnlyAfterItsServerResumed() {
         assertTrue(NativeAgentHostAdmission.admitted(ticket(), current()))
         assertFalse(NativeAgentHostAdmission.admitted(ticket(), current().copy(serverLive = false)))
-        assertFalse(NativeAgentHostAdmission.admitted(ticket(), current().copy(idle = current().idle.copy(stopped = true))))
+        assertFalse(NativeAgentHostAdmission.admitted(ticket(),
+            current().copy(idle = current().idle.copy(stopped = true))))
     }
 
     @Test fun unavailableReceiptRefusesBothLaunchPaths() {
@@ -77,7 +78,8 @@ class NativeAgentHostAdmissionTest {
     @Test fun idleTokenMustRemainExactlyCurrent() {
         assertFalse(NativeAgentHostAdmission.admitted(ticket(6), current()))
         assertFalse(NativeAgentHostAdmission.admitted(ticket(8), current()))
-        assertFalse(NativeAgentHostAdmission.admitted(ticket(), current().copy(idle = current().idle.copy(generation = 8, counter = 8))))
+        assertFalse(NativeAgentHostAdmission.admitted(ticket(),
+            current().copy(idle = current().idle.copy(generation = 8, counter = 8))))
     }
 
     @Test fun idleTokenMustBePositiveEvenIfSnapshotRepeatsIt() {
@@ -88,18 +90,21 @@ class NativeAgentHostAdmissionTest {
     }
 
     @Test fun idleReceiptCannotBelongToAnotherServer() {
-        assertFalse(NativeAgentHostAdmission.admitted(ticket(), current().copy(idle = current().idle.copy(owner = "other"))))
+        assertFalse(NativeAgentHostAdmission.admitted(ticket(),
+            current().copy(idle = current().idle.copy(owner = "other"))))
     }
 
     @Test fun onlyPreviouslyLiveExactHelperCanResume() {
-        assertFalse(NativeAgentHostAdmission.admitted(ticket(), current().copy(idle = current().idle.copy(helper = "other"))))
+        assertFalse(NativeAgentHostAdmission.admitted(ticket(),
+            current().copy(idle = current().idle.copy(helper = "other"))))
         assertFalse(NativeAgentHostAdmission.admitted(ticket().copy(profile = "other"), current()))
         assertFalse(NativeAgentHostAdmission.admitted(ticket(), completed()))
     }
 
     @Test fun ordinaryHelperCannotConsumeOwedIdleMarkers() {
         assertFalse(NativeAgentHostAdmission.admitted(ticket(null), current()))
-        assertFalse(NativeAgentHostAdmission.admitted(ticket(null), ordinary().copy(idle = ordinary().idle.copy(stopped = true))))
+        assertFalse(NativeAgentHostAdmission.admitted(ticket(null),
+            ordinary().copy(idle = ordinary().idle.copy(stopped = true))))
     }
 
     @Test fun ordinaryForegroundHelperIsIndependentOfServerIntentAndRecoveryAuthority() {
@@ -120,7 +125,8 @@ class NativeAgentHostAdmissionTest {
     }
 
     @Test fun completedIdleTokenCannotAuthorizeAnotherOwner() {
-        assertFalse(NativeAgentHostAdmission.admitted(ticket(null), completed().copy(idle = completed().idle.copy(owner = "other"))))
+        assertFalse(NativeAgentHostAdmission.admitted(ticket(null),
+            completed().copy(idle = completed().idle.copy(owner = "other"))))
         assertFalse(NativeAgentHostAdmission.admitted(ticket(null).copy(owner = null), completed().copy(owner = null)))
     }
 

@@ -669,51 +669,47 @@ void main() {
 
   final captureDirectory = Platform.environment['OC_VOICE_REPLY_CAPTURE_DIR'];
   for (final variant in ['dark', 'light', 'large']) {
-    testWidgets(
-      'capture production voice states $variant',
-      (tester) async {
-        await loadCaptureFonts();
-        tester.view.physicalSize = const Size(390, 844);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
-        final boundary = GlobalKey();
-        final voice = _Voice(models: await readyVoiceModelManager());
-        addTearDown(voice.dispose);
-        final api = _Api();
-        final connection = await _pumpChat(
-          tester,
-          api,
-          voice,
-          captureBoundary: boundary,
-          light: variant == 'light',
-          textScale: variant == 'large' ? 2 : 1,
-        );
-        Future<void> capture(String state) async {
-          await _settle(tester);
-          expect(tester.takeException(), isNull);
-          final png = await capturePng(tester, boundary, pixelRatio: 1);
-          File('$captureDirectory/$variant-$state.png').writeAsBytesSync(png);
-        }
+    testWidgets('capture production voice states $variant', (tester) async {
+      await loadCaptureFonts();
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final boundary = GlobalKey();
+      final voice = _Voice(models: await readyVoiceModelManager());
+      addTearDown(voice.dispose);
+      final api = _Api();
+      final connection = await _pumpChat(
+        tester,
+        api,
+        voice,
+        captureBoundary: boundary,
+        light: variant == 'light',
+        textScale: variant == 'large' ? 2 : 1,
+      );
+      Future<void> capture(String state) async {
+        await _settle(tester);
+        expect(tester.takeException(), isNull);
+        final png = await capturePng(tester, boundary, pixelRatio: 1);
+        File('$captureDirectory/$variant-$state.png').writeAsBytesSync(png);
+      }
 
-        await _enterAndListen(tester, api);
-        await capture('off');
-        if (variant == 'large') {
-          await tester.ensureVisible(find.byTooltip('Leave voice mode'));
-          await _settle(tester);
-          final png = await capturePng(tester, boundary, pixelRatio: 1);
-          File('$captureDirectory/large-off-actions.png').writeAsBytesSync(png);
-        }
-        await _optIn(tester, calls);
-        await _send(tester, api);
-        await capture('waiting');
-        await _completeTurn(tester, connection);
-        await capture('speaking');
-        await _nativeStatus(tester, calls, 'engineUnavailable');
-        await capture('error');
-        expect(voice.listens, 1);
-      },
-      skip: captureDirectory == null || captureDirectory.trim().isEmpty,
-    );
+      await _enterAndListen(tester, api);
+      await capture('off');
+      if (variant == 'large') {
+        await tester.ensureVisible(find.byTooltip('Leave voice mode'));
+        await _settle(tester);
+        final png = await capturePng(tester, boundary, pixelRatio: 1);
+        File('$captureDirectory/large-off-actions.png').writeAsBytesSync(png);
+      }
+      await _optIn(tester, calls);
+      await _send(tester, api);
+      await capture('waiting');
+      await _completeTurn(tester, connection);
+      await capture('speaking');
+      await _nativeStatus(tester, calls, 'engineUnavailable');
+      await capture('error');
+      expect(voice.listens, 1);
+    }, skip: captureDirectory == null || captureDirectory.trim().isEmpty);
   }
 
   testWidgets('the reply to the sent turn is spoken once after it completes; '

@@ -12,42 +12,53 @@ internal object PhoneAgentInventory {
         "goose" to "goose", "omp" to "omp-acp", "fx" to "fx",
     )
 
+    private const val MAX_TEMPORARY_LAUNCHERS = 256
+
     /** Null means an unsafe/unreadable path, not evidence of an absent payload. */
     fun present(rootfs: File, executable: String): Boolean? {
         val agent = agents[executable] ?: return false
-        return try {
-            // Resolve only the Android-owned parent alias, never guest links.
-            val root = File(rootfs.parentFile.canonicalFile, rootfs.name).toPath()
-            val home = root.resolve("home/oc")
-            val parent = home.resolve(".local/share/oc-agents")
-            val bin = home.resolve(".local/bin")
-            val ancestors = listOf(root, root.resolve("home"), home,
-                home.resolve(".local"), home.resolve(".local/share"), parent, bin)
-            if (ancestors.any { Files.exists(it, NOFOLLOW_LINKS) &&
-                    !Files.isDirectory(it, NOFOLLOW_LINKS) }) return null
-            val base = parent.resolve(agent)
-            if (Files.exists(base, NOFOLLOW_LINKS)) {
-                return if (Files.isDirectory(base, NOFOLLOW_LINKS)) true else null
-            }
-            val lock = parent.resolve(".lock-$executable")
-            if (Files.exists(lock, NOFOLLOW_LINKS)) {
-                return if (Files.isDirectory(lock, NOFOLLOW_LINKS)) true else null
-            }
-            fun authoredLink(path: Path): Boolean = Files.isSymbolicLink(path) &&
-                Regex("^/home/oc/\\.local/share/oc-agents/$agent/[0-9A-Za-z][0-9A-Za-z._+-]{0,79}/launch$")
-                    .matches(Files.readSymbolicLink(path).toString())
-            if (authoredLink(bin.resolve(executable))) return true
-            if (!Files.isDirectory(bin, NOFOLLOW_LINKS)) return false
-            // Only installer-authored decimal-PID temporary launcher names.
-            Files.newDirectoryStream(bin, "$executable.new.*").use { entries ->
-                var scanned = 0
-                for (path in entries) {
-                    if (++scanned > 256) return null
-                    if (path.fileName.toString().removePrefix("$executable.new.")
-                            .matches(Regex("[0-9]+")) && authoredLink(path)) return true
-                }
-            }
-            false
-        } catch (_: Exception) { null }
+        return try { probe(rootfs, executable, agent) } catch (_: Exception) { null }
     }
+
+    private fun probe(rootfs: File, executable: String, agent: String): Boolean? {
+        // Resolve only the Android-owned parent alias, never guest links.
+        val root = File(rootfs.parentFile.canonicalFile, rootfs.name).toPath()
+        val home = root.resolve("home/oc")
+        val parent = home.resolve(".local/share/oc-agents")
+        val bin = home.resolve(".local/bin")
+        val ancestors = listOf(root, root.resolve("home"), home,
+            home.resolve(".local"), home.resolve(".local/share"), parent, bin)
+        val unsafe = ancestors.any {
+            Files.exists(it, NOFOLLOW_LINKS) && !Files.isDirectory(it, NOFOLLOW_LINKS)
+        }
+        val existing = if (unsafe) null else
+            listOf(parent.resolve(agent), parent.resolve(".lock-$executable"))
+                .firstOrNull { Files.exists(it, NOFOLLOW_LINKS) }
+        return when {
+            unsafe -> null
+            existing != null -> if (Files.isDirectory(existing, NOFOLLOW_LINKS)) true else null
+            else -> launcherPresent(bin, agent, executable)
+        }
+    }
+
+    private fun launcherPresent(bin: Path, agent: String, executable: String): Boolean? = when {
+        authoredLink(bin.resolve(executable), agent) -> true
+        !Files.isDirectory(bin, NOFOLLOW_LINKS) -> false
+        else -> temporaryLauncherPresent(bin, agent, executable)
+    }
+
+    // Only installer-authored decimal-PID temporary launcher names.
+    private fun temporaryLauncherPresent(bin: Path, agent: String, executable: String): Boolean? =
+        Files.newDirectoryStream(bin, "$executable.new.*").use { entries ->
+            val seen = entries.asSequence().take(MAX_TEMPORARY_LAUNCHERS + 1).toList()
+            val found = seen.take(MAX_TEMPORARY_LAUNCHERS).any { path ->
+                path.fileName.toString().removePrefix("$executable.new.").matches(Regex("[0-9]+")) &&
+                    authoredLink(path, agent)
+            }
+            if (found) true else if (seen.size > MAX_TEMPORARY_LAUNCHERS) null else false
+        }
+
+    private fun authoredLink(path: Path, agent: String): Boolean = Files.isSymbolicLink(path) &&
+        Regex("^/home/oc/\\.local/share/oc-agents/$agent/[0-9A-Za-z][0-9A-Za-z._+-]{0,79}/launch$")
+            .matches(Files.readSymbolicLink(path).toString())
 }

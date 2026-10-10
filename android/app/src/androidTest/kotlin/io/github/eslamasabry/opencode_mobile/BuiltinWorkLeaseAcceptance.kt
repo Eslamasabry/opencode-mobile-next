@@ -19,6 +19,8 @@ internal class BuiltinWorkLeaseAcceptance(private val instrumentation: Instrumen
         while (!predicate() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(50)
         requireSafe(predicate())
     }
+    // A scripted device scenario: its steps must stay in one readable, ordered sequence.
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     fun execute() {
         requireSafe(BuildConfig.BUILTIN_RUNTIME_QA)
         val linux = BuiltinLinux.get(context)
@@ -63,7 +65,8 @@ internal class BuiltinWorkLeaseAcceptance(private val instrumentation: Instrumen
                 waitFor { count(linux, "terminal") == 1 }
                 requireSafe(signIn.isAlive && shell.running && linux.workHeld)
                 linux.stopServer()
-                requireSafe(linux.workHeld && count(linux, "setup") == 1 && count(linux, "sign_in") == 1 && count(linux, "terminal") == 1)
+                requireSafe(linux.workHeld && count(linux, "setup") == 1 &&
+                    count(linux, "sign_in") == 1 && count(linux, "terminal") == 1)
                 requireSafe(!linux.serverRunning && BuiltinServerService.isForegroundRunning)
                 // The exact helper continues after OpenCode loss; its same-named lease is independent.
                 requireSafe(host.isAlive && count(linux, "chat") == 1)
@@ -98,7 +101,8 @@ internal class BuiltinWorkLeaseAcceptance(private val instrumentation: Instrumen
             linux.setPhoneAgentChatWorkLease(profile, "$name.late", false, 15000)
             linux.stopService("agent-host.$profile"); helper = null
             waitFor { !linux.workHeld }
-            requireSafe(count(linux, "chat") == 0 && count(linux, "setup") == 0 && count(linux, "sign_in") == 0 && count(linux, "terminal") == 0)
+            requireSafe(count(linux, "chat") == 0 && count(linux, "setup") == 0 &&
+                count(linux, "sign_in") == 0 && count(linux, "terminal") == 0)
             instrumentation.sendStatus(0, Bundle().apply {
                 putBoolean("bb4WorkLeasesPassed", true)
                 putBoolean("bb4NativeExpiryPassed", true)

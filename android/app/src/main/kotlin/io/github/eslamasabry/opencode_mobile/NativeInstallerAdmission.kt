@@ -2,20 +2,23 @@ package io.github.eslamasabry.opencode_mobile
 
 /** Warm admission only: the caller holds the installer lock and supplies exact ownership proof. */
 internal object NativeInstallerAdmission {
+    /** The installer ticket read first, and whether the cached owner is still alive. */
+    data class Claim(val ticket: InstallerTicket?, val ownerLive: Boolean)
+
     fun reclaim(
-        ticket: InstallerTicket?,
-        ownerLive: Boolean,
+        claim: Claim,
         ownerCurrent: () -> Boolean,
         readTicket: () -> InstallerTicket?,
         quiescent: (InstallerTicket) -> Boolean,
         clearTicket: (InstallerTicket) -> Boolean,
     ): Boolean {
-        if (ticket == null || ownerLive || !ownerCurrent()) return false
-        if (readTicket() != ticket || !quiescent(ticket)) return false
-        if (!ownerCurrent() || readTicket() != ticket) return false
+        val ticket = claim.ticket
         // Exit or missing /proc entries alone cannot authorize clearing a writer.
         // Re-evaluate the complete UID inventory immediately before the durable change.
-        if (!quiescent(ticket) || !ownerCurrent() || readTicket() != ticket) return false
-        return clearTicket(ticket)
+        return ticket != null && !claim.ownerLive && ownerCurrent() &&
+            readTicket() == ticket && quiescent(ticket) &&
+            ownerCurrent() && readTicket() == ticket &&
+            quiescent(ticket) && ownerCurrent() && readTicket() == ticket &&
+            clearTicket(ticket)
     }
 }

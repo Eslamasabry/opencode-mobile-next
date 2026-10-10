@@ -1,6 +1,9 @@
 package io.github.eslamasabry.opencode_mobile
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 
 class SetupWorkScopesTest {
@@ -46,7 +49,7 @@ class SetupWorkScopesTest {
     }
     @Test fun failedAdmissionClosesCapturedLivenessAndReleasesIt() {
         var alive: (() -> Boolean)? = null; var releases = 0
-        val scopes = SetupWorkScopes({ _, captured -> alive = captured; throw IllegalStateException() }, { releases++ })
+        val scopes = SetupWorkScopes({ _, captured -> alive = captured; error("admission refused") }, { releases++ })
         try { scopes.prepare(); fail("failed admission passed") } catch (_: IllegalStateException) { }
         assertFalse(alive!!()); assertEquals(1, releases); assertTrue(scopes.childNeedsLease())
     }

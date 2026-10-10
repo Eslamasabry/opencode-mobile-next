@@ -13,30 +13,44 @@ internal enum class NativeServerRestoreEvent {
     }
 }
 
+/** The durable counters and boot identity a restore reservation was granted under. */
+internal data class NativeServerRestoreAuthority(
+    val wantedRevision: Long,
+    val generation: Long,
+    val scheduleId: Long,
+    val boot: String,
+    val idleCounter: Long,
+)
+
 /** Native in-memory capability: never serialized or reconstructed from Intent extras. */
 internal class NativeServerRestoreTicket internal constructor(
     internal val event: NativeServerRestoreEvent,
     internal val originalRecipe: NativeServerRecipe,
     internal val recipe: NativeServerRecipe,
     internal val previousReceipt: NativeRuntimeReceipt,
-    internal val wantedRevision: Long,
-    internal val generation: Long,
-    internal val scheduleId: Long,
-    internal val boot: String,
-    internal val idleCounter: Long,
+    internal val authority: NativeServerRestoreAuthority,
     internal val budget: NativeRecoveryBudget,
 ) {
     internal val profile: String get() = recipe.profileId
+    internal val wantedRevision: Long get() = authority.wantedRevision
+    internal val generation: Long get() = authority.generation
+    internal val scheduleId: Long get() = authority.scheduleId
+    internal val boot: String get() = authority.boot
+    internal val idleCounter: Long get() = authority.idleCounter
 }
 
 /** Pure event-only admission; existing reclaim recipe and ownership checks remain strict. */
 internal object NativeServerEventPolicy {
+    /** The profile that holds supervision and the one saved as the restore owner. */
+    data class Owners(val supervision: String?, val restore: String?)
+
+    /** [nativeAdmitted] also requires the idle state to be available. */
     fun admitted(
-        nativeAdmitted: Boolean, idleAvailable: Boolean, idle: NativeIdleState.Snapshot,
-        owner: String?, restoreOwner: String?, recipeOwner: String, attempts: Int,
-    ): Boolean = nativeAdmitted && idleAvailable && !idle.enabled && !idle.stopped &&
+        nativeAdmitted: Boolean, idle: NativeIdleState.Snapshot,
+        owners: Owners, recipeOwner: String, attempts: Int,
+    ): Boolean = nativeAdmitted && !idle.enabled && !idle.stopped &&
         !idle.helperStopped && (idle.owner == null || idle.owner == recipeOwner) &&
-        owner == recipeOwner && restoreOwner == recipeOwner && attempts in 0..2
+        owners.supervision == recipeOwner && owners.restore == recipeOwner && attempts in 0..2
 
     fun recipeForEvent(
         event: NativeServerRestoreEvent, recipe: NativeServerRecipe,
@@ -69,10 +83,7 @@ internal object NativeServerEventPolicy {
     /** Reference identity cannot be copied into a forged or stale dispatch. */
     fun ticketCurrent(
         ticket: NativeServerRestoreTicket, active: NativeServerRestoreTicket?,
-        wantedRevision: Long, generation: Long, scheduleId: Long, idleCounter: Long,
-        boot: String, packageVersion: Long, rootfsGeneration: String,
-    ): Boolean = ticket === active && ticket.wantedRevision == wantedRevision &&
-        ticket.generation == generation && ticket.scheduleId == scheduleId &&
-        ticket.idleCounter == idleCounter && ticket.boot == boot &&
+        current: NativeServerRestoreAuthority, packageVersion: Long, rootfsGeneration: String,
+    ): Boolean = ticket === active && ticket.authority == current &&
         ticket.recipe.compatible(packageVersion, rootfsGeneration)
 }

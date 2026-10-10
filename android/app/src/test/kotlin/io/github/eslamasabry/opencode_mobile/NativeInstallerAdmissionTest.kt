@@ -27,7 +27,7 @@ class NativeInstallerAdmissionTest {
         var saveSucceeds = true
         val seen = mutableListOf<InstallerTicket>()
         fun reclaim(proof: (InstallerTicket) -> Boolean = { true }) = NativeInstallerAdmission.reclaim(
-            ticket, ownerLive, { current }, { ticket },
+            NativeInstallerAdmission.Claim(ticket, ownerLive), { current }, { ticket },
             { proofs++; seen.add(it); proof(it) },
             { candidate ->
                 clears++
@@ -85,7 +85,7 @@ class NativeInstallerAdmissionTest {
         val next = old.copy(id = "d".repeat(64))
         var cleared = false
         var proofs = 0
-        assertFalse(NativeInstallerAdmission.reclaim(old, false, { true }, { next },
+        assertFalse(NativeInstallerAdmission.reclaim(NativeInstallerAdmission.Claim(old, false), { true }, { next },
             { proofs++; true }, { cleared = true; true }))
         assertEquals(0, proofs)
         assertFalse(cleared)
@@ -98,7 +98,10 @@ class NativeInstallerAdmissionTest {
     }
     @Test fun ownerChangedDuringSecondProofPreservesTicket() {
         val slot = Slot(committed())
-        assertFalse(slot.reclaim { if (slot.proofs == 2) slot.current = false; true })
+        assertFalse(slot.reclaim {
+            if (slot.proofs == 2) { slot.current = false }
+            true
+        })
         assertEquals(0, slot.clears)
         assertEquals(2, slot.proofs)
     }
@@ -106,7 +109,10 @@ class NativeInstallerAdmissionTest {
         for (changedAt in 1..2) {
             val slot = Slot(committed())
             val replacement = slot.ticket!!.copy(id = "d".repeat(64))
-            assertFalse(slot.reclaim { if (slot.proofs == changedAt) slot.ticket = replacement; true })
+            assertFalse(slot.reclaim {
+                if (slot.proofs == changedAt) { slot.ticket = replacement }
+                true
+            })
             assertSame(replacement, slot.ticket)
             assertEquals(0, slot.clears)
         }

@@ -13,6 +13,10 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
+private const val RECEIVER_TIMEOUT_MS = 8_000L
+private const val WORKER_KEEP_ALIVE_SECONDS = 30L
+private const val SCHEDULER_KEEP_ALIVE_SECONDS = 10L
+
 /** One elapsed-time check; every dispatch rechecks native authority rather than authorizing a stop. */
 internal class NativeIdleTimer(
     private val now: () -> Long,
@@ -53,10 +57,9 @@ internal class NativeIdleTimer(
     }
 
     private fun clock(): Long? {
-        val current = try { now() } catch (_: Throwable) { return null }
-        if (current < 0 || highWater?.let { current < it } == true) return null
-        highWater = current
-        return current
+        val current = try { now() } catch (_: Throwable) { null }
+        return current?.takeIf { it >= 0 && highWater?.let { high -> it < high } != true }
+            ?.also { highWater = it }
     }
 
     private fun armLocal(expectedDeadline: Long, current: Long, revision: Long) {
@@ -83,7 +86,7 @@ internal class NativeIdleTimer(
 
     private class AndroidAlarms(context: Context) : Alarms {
         private val manager by lazy { context.getSystemService(AlarmManager::class.java) }
-        private val intent by lazy { PendingIntent.getBroadcast(context, 4095,
+        private val intent by lazy { PendingIntent.getBroadcast(context, ALARM_REQUEST_CODE,
             Intent(context, BuiltinIdleReceiver::class.java).setAction(BuiltinIdleReceiver.ACTION),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT) }
         override fun schedule(deadlineElapsedMs: Long) {
@@ -93,6 +96,8 @@ internal class NativeIdleTimer(
     }
 
     private companion object {
+        const val ALARM_REQUEST_CODE = 4095
+
         fun queue(): (Long, () -> Unit) -> (() -> Unit) {
             val executor = idleScheduler("phone-idle-timer")
             return { delay, work ->
@@ -121,7 +126,7 @@ internal class NativeIdleReceiverDispatch(
             quietly(finish)
         }
         try {
-            val watch = later(8_000) { complete(true) }
+            val watch = later(RECEIVER_TIMEOUT_MS) { complete(true) }
             cancelWatch.set(watch)
             if (finished.get()) { quietly(watch); return }
             val work = run(task@{
@@ -152,7 +157,8 @@ internal class BuiltinIdleReceiver : BroadcastReceiver() {
         const val ACTION = "io.github.eslamasabry.opencode_mobile.IDLE_CHECK"
         private val dispatch by lazy {
             // No queue of broadcasts waiting behind an unresponsive native check.
-            val worker = ThreadPoolExecutor(0, 1, 30, TimeUnit.SECONDS, SynchronousQueue<Runnable>(),
+            val worker = ThreadPoolExecutor(0, 1, WORKER_KEEP_ALIVE_SECONDS, TimeUnit.SECONDS,
+                SynchronousQueue<Runnable>(),
                 { task -> Thread(task, "phone-idle-receiver").apply { isDaemon = true } })
             val watch = idleScheduler("phone-idle-receiver-watch")
             NativeIdleReceiverDispatch({ task ->
@@ -171,6 +177,6 @@ internal class BuiltinIdleReceiver : BroadcastReceiver() {
 private fun idleScheduler(name: String) = ScheduledThreadPoolExecutor(1,
     { task -> Thread(task, name).apply { isDaemon = true } }).apply {
     removeOnCancelPolicy = true
-    setKeepAliveTime(10, TimeUnit.SECONDS)
+    setKeepAliveTime(SCHEDULER_KEEP_ALIVE_SECONDS, TimeUnit.SECONDS)
     allowCoreThreadTimeOut(true)
 }

@@ -86,7 +86,7 @@ android {
             signingConfig = signingConfigs.getByName("release")
             // Release instrumentation shares the target's Kotlin/native ABI.
             // R8 prototype rewrites otherwise break test-APK calls into it.
-            if (ocPreview || ocStableEngineQa || ocBd9Smoke || ocBuiltinRuntimeQa)
+            if (listOf(ocPreview, ocStableEngineQa, ocBd9Smoke, ocBuiltinRuntimeQa).any { it })
                 proguardFiles("phone-engine-instrumentation.pro")
         }
     }

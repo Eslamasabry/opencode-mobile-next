@@ -451,7 +451,8 @@ class MainActivity : FlutterActivity() {
                             result.error("agent_unavailable", "The agent is unavailable. Try again.", null)
                         } else if (call.method in setOf("setPhoneServerIdlePolicy", "observePhoneAgentWork",
                             "resumeIdleStoppedPhoneServer", "completePhoneServerIdleResume")) {
-                            result.error("idle_resume_unavailable", "The phone server could not start. Open setup or try Start again.", null)
+                            result.error("idle_resume_unavailable",
+                                "The phone server could not start. Open setup or try Start again.", null)
                         } else if (call.method in setOf("restartServer", "stageServerRecovery", "bindServerRecovery",
                             "serverRecoveryBudget", "serverRecoveryReceipts", "ackServerRecoveryReceipt",
                             "updateServerRecoveryReceipt", "confirmManualServerStart", "unbindServerRecovery",
@@ -480,7 +481,8 @@ class MainActivity : FlutterActivity() {
                 }
                 val ticket = try { linux.captureAgentHostStart(profile, args["idleResume"] == true, generation) }
                     catch (_: Exception) { null }
-                if (ticket == null) result.error("idle_resume_stale", "The agents could not reconnect. Open agent setup and try again.", null)
+                if (ticket == null) result.error("idle_resume_stale",
+                    "The agents could not reconnect. Open agent setup and try again.", null)
                 else inBackground {
                     linux.withAgentHostStart(ticket) {
                         linux.agentHost.start(profile,
@@ -490,7 +492,8 @@ class MainActivity : FlutterActivity() {
                     }
                 }
             }
-            "agentHostStatus", "stopAgentHost", "deleteAgentHost", "agentHostVersion", "agentHostWorkspace" -> inBackground {
+            "agentHostStatus", "stopAgentHost", "deleteAgentHost", "agentHostVersion",
+            "agentHostWorkspace" -> inBackground {
                 val profile = call.argument<String>("profileId") ?: error("Agent unavailable")
                 when (call.method) {
                     "agentHostWorkspace" -> linux.agentHost.workspace(profile)
@@ -570,7 +573,8 @@ class MainActivity : FlutterActivity() {
                 val args = call.arguments as? Map<*, *> ?: error("idle_policy_invalid")
                 val busy = args["busy"]
                 check(busy == null || busy is Boolean)
-                linux.observePhoneAgentWork(args["profileId"] as? String ?: error("idle_policy_invalid"), busy as? Boolean)
+                linux.observePhoneAgentWork(
+                    args["profileId"] as? String ?: error("idle_policy_invalid"), busy as? Boolean)
                 null
             }
             "resumeIdleStoppedPhoneServer", "completePhoneServerIdleResume" -> inBackground {
@@ -581,8 +585,11 @@ class MainActivity : FlutterActivity() {
                     is Long -> value
                     else -> error("idle_resume_stale")
                 }
-                if (call.method == "resumeIdleStoppedPhoneServer") linux.resumeIdleStoppedPhoneServer(profile, generation)
-                else linux.completePhoneServerIdleResume(profile, generation)
+                if (call.method == "resumeIdleStoppedPhoneServer") {
+                    linux.resumeIdleStoppedPhoneServer(profile, generation)
+                } else {
+                    linux.completePhoneServerIdleResume(profile, generation)
+                }
             }
             "installUbuntu" -> inBackground {
                 linux.installInBackground()

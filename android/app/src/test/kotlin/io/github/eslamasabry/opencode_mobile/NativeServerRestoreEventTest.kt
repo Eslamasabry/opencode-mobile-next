@@ -26,15 +26,15 @@ class NativeServerRestoreEventTest {
     }
 
     private fun admitted(
-        native: Boolean = true, available: Boolean = true,
+        native: Boolean = true,
         idle: NativeIdleState.Snapshot = NativeIdleState.Snapshot(),
         owner: String? = "owner", restoreOwner: String? = "owner", attempts: Int = 0,
-    ) = NativeServerEventPolicy.admitted(native, available, idle, owner, restoreOwner, "owner", attempts)
+    ) = NativeServerEventPolicy.admitted(
+        native, idle, NativeServerEventPolicy.Owners(owner, restoreOwner), "owner", attempts)
 
     @Test fun eventAdmissionRequiresNativeAuthorityDisabledIdleAndUnspentBudget() {
         assertTrue(admitted())
         assertFalse(admitted(native = false))
-        assertFalse(admitted(available = false))
         assertFalse(admitted(idle = NativeIdleState.Snapshot(enabled = true)))
         for (owner in listOf(null, "other")) {
             assertFalse(admitted(owner = owner))
@@ -90,14 +90,16 @@ class NativeServerRestoreEventTest {
 
     @Test fun dispatchTicketCannotBeCopiedOrAdoptANewerOwnerIdlePolicyOrRuntime() {
         fun newTicket() = NativeServerRestoreTicket(NativeServerRestoreEvent.PACKAGE_REPLACED,
-            recipe, recipe, receipt(), 4, 5, 6, boot, 7, NativeRecoveryBudget(attempts = 1))
+            recipe, recipe, receipt(), NativeServerRestoreAuthority(4, 5, 6, boot, 7),
+            NativeRecoveryBudget(attempts = 1))
         val ticket = newTicket()
         fun current(
             active: NativeServerRestoreTicket? = ticket, revision: Long = 4,
             generation: Long = 5, schedule: Long = 6, idleCounter: Long = 7,
             currentBoot: String = boot, version: Long = 2202, rootfs: String = recipe.rootfsGeneration,
-        ) = NativeServerEventPolicy.ticketCurrent(ticket, active, revision, generation, schedule,
-            idleCounter, currentBoot, version, rootfs)
+        ) = NativeServerEventPolicy.ticketCurrent(ticket, active,
+            NativeServerRestoreAuthority(revision, generation, schedule, currentBoot, idleCounter),
+            version, rootfs)
         assertTrue(current())
         assertFalse(current(active = null))
         assertFalse(current(active = newTicket()))

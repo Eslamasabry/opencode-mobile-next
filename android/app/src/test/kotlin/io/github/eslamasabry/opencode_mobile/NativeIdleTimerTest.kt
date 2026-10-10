@@ -1,6 +1,8 @@
 package io.github.eslamasabry.opencode_mobile
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NativeIdleTimerTest {
@@ -188,8 +190,8 @@ class NativeIdleTimerTest {
         var blocked = false
         timer = NativeIdleTimer({ now }, { _, work -> tasks.add(work); {} },
             object : NativeIdleTimer.Alarms {
-                override fun schedule(deadlineElapsedMs: Long) {}
-                override fun cancel() {}
+                override fun schedule(deadlineElapsedMs: Long) { /* the fixture never arms an alarm */ }
+                override fun cancel() { /* nothing armed to cancel */ }
             }, {
                 Thread({ timer.schedule(200); updated.countDown() }, "fixture-idle-update")
                     .apply { isDaemon = true; start() }

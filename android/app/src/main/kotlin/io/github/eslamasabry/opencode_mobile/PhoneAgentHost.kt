@@ -21,7 +21,8 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
     fun status(profile: String): Map<String, Any?> = synchronized(this) {
         identity(profile)
         linux.privateAgentDiagnostics("agent-host.$profile") +
-            mapOf("running" to (children[profile]?.isAlive == true), "abi" to (Build.SUPPORTED_ABIS.firstOrNull() ?: ""))
+            mapOf("running" to (children[profile]?.isAlive == true),
+                "abi" to (Build.SUPPORTED_ABIS.firstOrNull() ?: ""))
     }
 
     fun start(profile: String, password: String, port: Int, config: String): Map<String, Any?> {
@@ -84,7 +85,7 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
             return status(profile)
         } catch (_: Throwable) {
             synchronized(this) { if (children[profile] === child) children.remove(profile) }
-            child?.let { cleanup(it, outputReader) }
+            child?.let { cleanup(linux, it, outputReader) }
             error(failureMessage)
         } finally {
             synchronized(this) { starting.remove(profile) }
@@ -137,7 +138,7 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
             reader = drain(child)
             val complete = child.waitFor(15, TimeUnit.SECONDS)
             return mapOf("shared" to (complete && child.exitValue() == 0))
-        } finally { cleanup(child, reader) }
+        } finally { cleanup(linux, child, reader) }
     }
 
     private fun drain(child: Process): Thread = Thread({
@@ -149,64 +150,73 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         } catch (_: Throwable) { }
     }, "phone-agent-output-discard").apply { isDaemon = true; start() }
 
-    /** Cleanup cannot replace a safe channel error with an uncaught IO error. */
-    private fun cleanup(child: Process, reader: Thread?) {
-        try { linux.stopAgentProcess(child) } catch (_: Throwable) { }
-        try { reader?.join(2000) }
-        catch (_: InterruptedException) { Thread.currentThread().interrupt() }
-        catch (_: Throwable) { }
-        try { child.outputStream.close() } catch (_: Throwable) { }
-        try { child.inputStream.close() } catch (_: Throwable) { }
-    }
-
     /** Bounded version projection. No raw stdout survives this call. */
     fun version(profile: String, executable: String, expected: String): Map<String, Any?> {
         identity(profile)
         check(Regex("^[a-z][a-z0-9-]{0,63}$").matches(executable) &&
             Regex("^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$").matches(expected)) { "The agent is unavailable." }
-        fun projection(installed: Boolean) = mapOf(
+        val installed = linux.installed && reportsVersion(profile, executable, expected)
+        return mapOf(
             "installed" to installed, "version" to if (installed) expected else null,
             "payloadPresent" to PhoneAgentInventory.present(linux.rootfs, executable),
         )
-        if (!linux.installed) return projection(false)
+    }
+
+    private fun reportsVersion(profile: String, executable: String, expected: String): Boolean {
         val child = try {
             linux.startAgentProcess(profile, listOf("/home/oc/.local/bin/$executable", "--version"))
-        } catch (_: Exception) { return projection(false) }
+        } catch (_: Exception) { null } ?: return false
         val output = StringBuilder()
         var reader: Thread? = null
-        try {
+        return try {
             child.outputStream.close()
-            reader = Thread {
-                try {
-                    child.inputStream.reader().use { input ->
-                        val buffer = CharArray(512)
-                        while (true) {
-                            val count = input.read(buffer)
-                            if (count < 0) break
-                            synchronized(output) {
-                                if (output.length < 8192) {
-                                    output.append(buffer, 0, minOf(count, 8192 - output.length))
-                                }
-                            }
-                            buffer.fill('\u0000')
-                        }
-                    }
-                } catch (_: Throwable) { }
-            }.apply { isDaemon = true; start() }
+            val thread = collectBounded(child, output)
+            reader = thread
             val complete = child.waitFor(30, TimeUnit.SECONDS)
-            reader.join(2000)
-            val installed = synchronized(output) {
+            thread.join(2000)
+            synchronized(output) {
                 val value = output.toString()
                 output.setLength(0)
                 complete && child.exitValue() == 0 &&
                     Regex("(?<![0-9.])v?${Regex.escape(expected)}(?![0-9.])").containsMatchIn(value)
             }
-            return projection(installed)
         } catch (_: Exception) {
-            return projection(false)
+            false
         } finally {
-            cleanup(child, reader)
+            cleanup(linux, child, reader)
             synchronized(output) { output.setLength(0) }
         }
     }
 }
+
+private const val CLEANUP_JOIN_MS = 2000L
+private const val READ_CHUNK = 512
+private const val OUTPUT_CAP = 8192
+
+/** Cleanup cannot replace a safe channel error with an uncaught IO error. */
+private fun cleanup(linux: BuiltinLinux, child: Process, reader: Thread?) {
+    try { linux.stopAgentProcess(child) } catch (_: Throwable) { }
+    try { reader?.join(CLEANUP_JOIN_MS) }
+    catch (_: InterruptedException) { Thread.currentThread().interrupt() }
+    catch (_: Throwable) { }
+    try { child.outputStream.close() } catch (_: Throwable) { }
+    try { child.inputStream.close() } catch (_: Throwable) { }
+}
+
+private fun collectBounded(child: Process, output: StringBuilder): Thread = Thread {
+    try {
+        child.inputStream.reader().use { input ->
+            val buffer = CharArray(READ_CHUNK)
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                synchronized(output) {
+                    if (output.length < OUTPUT_CAP) {
+                        output.append(buffer, 0, minOf(count, OUTPUT_CAP - output.length))
+                    }
+                }
+                buffer.fill('\u0000')
+            }
+        }
+    } catch (_: Throwable) { }
+}.apply { isDaemon = true; start() }

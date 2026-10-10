@@ -31,16 +31,20 @@ class BuiltinServerService : Service() {
         return try {
             startOrStopRuntime(intent, startId)
         } catch (_: Throwable) {
-            // Event dispatch denial must not turn saved wanted intent into user Stop.
-            if (intent?.action == ACTION_RESTORE) {
-                cancelPendingRestore(applicationContext)
-                try { BuiltinLinux.get(applicationContext).settleServerEventService() } catch (_: Throwable) { }
-                if (!foregroundShown) try { stopSelf(startId) } catch (_: Throwable) { }
-            } else {
-                // Policy rejection cannot throw through the caller's channel guard.
-                stopRuntime(startId)
-            }
+            refuseStart(intent, startId)
             START_NOT_STICKY
+        }
+    }
+
+    private fun refuseStart(intent: Intent?, startId: Int) {
+        // Event dispatch denial must not turn saved wanted intent into user Stop.
+        if (intent?.action == ACTION_RESTORE) {
+            cancelPendingRestore(applicationContext)
+            try { BuiltinLinux.get(applicationContext).settleServerEventService() } catch (_: Throwable) { }
+            if (!foregroundShown) try { stopSelf(startId) } catch (_: Throwable) { }
+        } else {
+            // Policy rejection cannot throw through the caller's channel guard.
+            stopRuntime(startId)
         }
     }
 

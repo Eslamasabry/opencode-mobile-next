@@ -6,17 +6,27 @@ import android.os.SystemClock
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-/** CPU ownership only. A lease never overrides Android foreground-service policy. */
+/**
+ * CPU ownership only. A lease never overrides Android foreground-service policy.
+ *
+ * One lock-guarded state machine: chat scopes, adopted owners and terminal sessions share the
+ * guard, the lease table and the wake lock, so splitting it would only move the lock discipline.
+ */
+@Suppress("TooManyFunctions")
 internal class NativeWorkLeaseHost(
     private val leases: WorkLeases, private val now: () -> Long, private val wake: Wake?,
-    private val terminalWork: () -> Map<Int, Boolean>, private val protectTerminal: () -> Boolean,
-    private val changed: () -> Unit, private val enqueue: (Long, () -> Unit) -> (() -> Unit),
+    private val terminal: Terminals, private val changed: () -> Unit,
+    private val enqueue: (Long, () -> Unit) -> (() -> Unit),
 ) {
     interface Wake { val isHeld: Boolean; fun acquire(timeoutMs: Long); fun release() }
+
+    /** The terminal sessions the host observes, and the call that protects new ones. */
+    class Terminals(val work: () -> Map<Int, Boolean>, val protect: () -> Boolean)
+
     constructor(context: Context, terminalWork: () -> Map<Int, Boolean>,
         protectTerminal: () -> Boolean, changed: () -> Unit) : this(
         WorkLeases(SystemClock::elapsedRealtime), SystemClock::elapsedRealtime, androidWake(context),
-        terminalWork, protectTerminal, changed, queue())
+        Terminals(terminalWork, protectTerminal), changed, queue())
     private val guard = Any()
     private val namedChats = mutableMapOf<String, Long?>()
     private data class AgentChat(val profile: String, val name: String)
@@ -41,52 +51,63 @@ internal class NativeWorkLeaseHost(
     }
 
     /** Same opaque name renews the same token; expiry never silently creates a new run. */
-    fun chat(name: String, on: Boolean, holdMs: Long, serverRunning: Boolean): Map<String, Boolean> = synchronized(guard) {
+    fun chat(
+        name: String, on: Boolean, holdMs: Long, serverRunning: Boolean,
+    ): Map<String, Boolean> = synchronized(guard) {
         if (!validChatName(name)) return@synchronized mapOf("held" to false, "capped" to false)
         setChat(namedChats, name, on, holdMs, serverRunning)
     }
 
     fun agentChat(profile: String, name: String, on: Boolean, holdMs: Long,
         helperRunning: Boolean): Map<String, Boolean> = synchronized(guard) {
-        if (!validProfile(profile) || !validChatName(name)) return@synchronized mapOf("held" to false, "capped" to false)
+        if (!validProfile(profile) || !validChatName(name)) {
+            return@synchronized mapOf("held" to false, "capped" to false)
+        }
         setChat(agentChats, AgentChat(profile, name), on, holdMs, helperRunning)
     }
 
     /** Caller holds guard. Chat scopes share one logical owner bound with native work. */
     private fun <K> setChat(chats: MutableMap<K, Long?>, key: K, on: Boolean,
-        holdMs: Long, running: Boolean): Map<String, Boolean> {
-        if (!on) {
+        holdMs: Long, running: Boolean): Map<String, Boolean> = when {
+        !on -> {
             chats.remove(key)?.let { leases.release(it) }
             updateWake()
-            return mapOf("held" to false, "capped" to false)
+            chatResult(held = false, capped = false)
         }
-        if (!running || holdMs <= 0) {
-            chats[key]?.let { leases.release(it) }
-            if (chats.containsKey(key)) chats[key] = null
-            updateWake()
-            return mapOf("held" to false, "capped" to false)
+        !running || holdMs <= 0 -> {
+            retainChat(chats, key)
+            chatResult(held = false, capped = false)
         }
-        if (!chatAdmissionOpen) {
-            chats[key]?.let { leases.release(it) }
-            val retained = chats.containsKey(key)
-            if (retained) chats[key] = null
-            updateWake()
-            return mapOf("held" to false, "capped" to retained)
-        }
+        !chatAdmissionOpen -> chatResult(held = false, capped = retainChat(chats, key))
+        else -> holdChat(chats, key, holdMs)
+    }
+
+    private fun chatResult(held: Boolean, capped: Boolean) = mapOf("held" to held, "capped" to capped)
+
+    /** Drops the key's lease but keeps its slot; returns whether a slot was retained. */
+    private fun <K> retainChat(chats: MutableMap<K, Long?>, key: K): Boolean {
+        chats[key]?.let { leases.release(it) }
+        val retained = chats.containsKey(key)
+        if (retained) chats[key] = null
+        updateWake()
+        return retained
+    }
+
+    private fun <K> holdChat(chats: MutableMap<K, Long?>, key: K, holdMs: Long): Map<String, Boolean> {
         if (!chats.containsKey(key)) {
-            if (logicalOwnerCount() >= 128) return mapOf("held" to false, "capped" to false)
+            if (logicalOwnerCount() >= MAX_LOGICAL_OWNERS) return chatResult(held = false, capped = false)
             chats[key] = leases.acquire(WorkLeases.Kind.CHAT, holdMs)
         } else chats[key]?.let { leases.renew(it, holdMs) }
         val token = chats[key]
         val admitted = token != null && leases.contains(token)
-        updateWake(); schedule(100)
-        return mapOf("held" to (admitted && wake?.isHeld == true), "capped" to !admitted)
+        updateWake(); schedule(SOON_MS)
+        return chatResult(held = admitted && wake?.isHeld == true, capped = !admitted)
     }
 
     fun adopt(owner: Any, kind: WorkLeases.Kind, alive: () -> Boolean) = synchronized(guard) {
-        if (owners.containsKey(owner) || logicalOwnerCount() >= 128) return@synchronized
+        if (owners.containsKey(owner) || logicalOwnerCount() >= MAX_LOGICAL_OWNERS) return@synchronized
         owners[owner] = Owner(leases.acquire(kind, HOLD_MS), alive, now() + RENEW_MS)
-        updateWake(); schedule(100)
+        updateWake(); schedule(SOON_MS)
     }
     fun release(owner: Any) = synchronized(guard) {
         owners.remove(owner)?.token?.let { leases.release(it) }
@@ -114,10 +135,11 @@ internal class NativeWorkLeaseHost(
             owners.toMap()
         }
         // These providers may hold Linux/terminal monitors; never invoke them under guard.
-        val running = try { terminalWork() } catch (_: Throwable) { null }
+        val running = try { terminal.work() } catch (_: Throwable) { null }
         val liveness = captured.mapValues { (_, owner) -> try { owner.alive() } catch (_: Throwable) { null } }
         return synchronized(guard) {
-            if (namedChats.isNotEmpty() || agentChats.isNotEmpty() || running?.isNotEmpty() == true) return@synchronized true
+            val chatting = namedChats.isNotEmpty() || agentChats.isNotEmpty()
+            if (chatting || running?.isNotEmpty() == true) return@synchronized true
             if (liveness.any { (key, live) -> live == true && owners[key] === captured[key] }) return@synchronized true
             val unchanged = owners.size == captured.size && captured.all { (key, owner) -> owners[key] === owner }
             if (!unchanged || running == null || liveness.values.any { it == null }) null else false
@@ -131,7 +153,8 @@ internal class NativeWorkLeaseHost(
     fun revokeForegroundWork() = synchronized(guard) {
         chatAdmissionOpen = false
         foregroundRevision++
-        listOf(WorkLeases.Kind.CHAT, WorkLeases.Kind.SIGN_IN, WorkLeases.Kind.TERMINAL).forEach { leases.releaseKind(it) }
+        listOf(WorkLeases.Kind.CHAT, WorkLeases.Kind.SIGN_IN, WorkLeases.Kind.TERMINAL)
+            .forEach { leases.releaseKind(it) }
         updateWake()
     }
     fun foregroundGeneration(): Long = synchronized(guard) { foregroundRevision }
@@ -142,7 +165,7 @@ internal class NativeWorkLeaseHost(
         true
     }
     fun revokeSetupWork() = synchronized(guard) { leases.releaseKind(WorkLeases.Kind.SETUP); updateWake() }
-    fun observeTerminalsSoon() = synchronized(guard) { schedule(100) }
+    fun observeTerminalsSoon() = synchronized(guard) { schedule(SOON_MS) }
 
     private fun schedule(delayMs: Long) {
         val due = now() + delayMs
@@ -158,40 +181,69 @@ internal class NativeWorkLeaseHost(
             pulse()
         }) } catch (_: Throwable) { scheduled = false; leases.clear(); updateWake() }
     }
+    private class Observation(
+        val running: Map<Int, Boolean>?, val captured: Map<Any, Owner>,
+        val liveness: Map<Any, Boolean?>, val added: List<Int>,
+        val protected: Boolean, val revision: Long,
+    )
+
     internal fun pulse() {
         // Read external lifecycle owners outside our guard: terminal creation holds its own monitor.
-        val running = try { terminalWork() } catch (_: Throwable) { null }
+        val running = try { terminal.work() } catch (_: Throwable) { null }
         val captured = synchronized(guard) { owners.toMap() }
         val liveness = captured.mapValues { (_, owner) -> try { owner.alive() } catch (_: Throwable) { null } }
-        val ended = liveness.filterValues { it == false }.keys
-        val unknown = liveness.filterValues { it == null }.keys
         val revision = synchronized(guard) { foregroundRevision }
         val added = synchronized(guard) { running?.keys?.filter { it !in terminals }
-            .orEmpty().take((128 - logicalOwnerCount()).coerceAtLeast(0)) }
-        val protected = added.isEmpty() || try { protectTerminal() } catch (_: Throwable) { false }
+            .orEmpty().take(ownerRoom()) }
+        val protected = added.isEmpty() || try { terminal.protect() } catch (_: Throwable) { false }
         synchronized(guard) {
-            cancelScheduled?.invoke(); cancelScheduled = null; scheduled = false; scheduleRevision++
-            unknown.forEach { owner -> if (owners[owner] === captured[owner]) owners[owner]?.token?.let { leases.release(it) } }
-            if (running == null) terminals.forEach { owners["terminal.$it"]?.token?.let { token -> leases.release(token) } }
-            ended.forEach { owner -> if (owners[owner] === captured[owner]) release(owner) }
-            terminals.filter { running != null && it !in running }.toList().forEach { id -> release("terminal.$id"); terminals.remove(id) }
-            added.take((128 - logicalOwnerCount()).coerceAtLeast(0)).forEach { id ->
-                terminals.add(id)
-                val kind = if (running?.get(id) == true) WorkLeases.Kind.SIGN_IN else WorkLeases.Kind.TERMINAL
-                // Retain a refused/capped owner until that exact session ends, never reacquire it.
-                owners["terminal.$id"] = Owner(if (protected && foregroundRevision == revision) leases.acquire(kind, HOLD_MS) else null,
-                    { id in terminalWork() }, now() + RENEW_MS)
-            }
-            val now = now()
-            owners.values.forEach { owner ->
-                if (now >= owner.renewAt) { owner.token?.let { leases.renew(it, HOLD_MS) }; owner.renewAt = now + RENEW_MS }
-            }
-            updateWake()
-            val next = leases.snapshot().nextExpiryInMs
-            if (owners.isNotEmpty()) schedule(1000)
-            else if (next != null) schedule(next.coerceIn(1, HOLD_MS))
+            settle(Observation(running, captured, liveness, added, protected, revision))
         }
         try { changed() } catch (_: Throwable) { }
+    }
+
+    private fun ownerRoom() = (MAX_LOGICAL_OWNERS - logicalOwnerCount()).coerceAtLeast(0)
+
+    /** Caller holds guard; applies one external observation. */
+    private fun settle(seen: Observation) {
+        cancelScheduled?.invoke(); cancelScheduled = null; scheduled = false; scheduleRevision++
+        releaseLostOwners(seen)
+        acquireTerminals(seen)
+        val now = now()
+        owners.values.forEach { owner ->
+            if (now >= owner.renewAt) { owner.token?.let { leases.renew(it, HOLD_MS) }; owner.renewAt = now + RENEW_MS }
+        }
+        updateWake()
+        val next = leases.snapshot().nextExpiryInMs
+        if (owners.isNotEmpty()) schedule(PULSE_MS)
+        else if (next != null) schedule(next.coerceIn(1, HOLD_MS))
+    }
+
+    private fun releaseLostOwners(seen: Observation) {
+        val running = seen.running
+        val captured = seen.captured
+        val unknown = seen.liveness.filterValues { it == null }.keys
+        val ended = seen.liveness.filterValues { it == false }.keys
+        unknown.forEach { owner ->
+            if (owners[owner] === captured[owner]) owners[owner]?.token?.let { leases.release(it) }
+        }
+        if (running == null) terminals.forEach { owners["terminal.$it"]?.token?.let { token -> leases.release(token) } }
+        ended.forEach { owner -> if (owners[owner] === captured[owner]) release(owner) }
+        terminals.filter { running != null && it !in running }.toList().forEach { id ->
+            release("terminal.$id")
+            terminals.remove(id)
+        }
+    }
+
+    private fun acquireTerminals(seen: Observation) {
+        seen.added.take(ownerRoom()).forEach { id ->
+            terminals.add(id)
+            val kind = if (seen.running?.get(id) == true) WorkLeases.Kind.SIGN_IN else WorkLeases.Kind.TERMINAL
+            // Retain a refused/capped owner until that exact session ends, never reacquire it.
+            val admitted = seen.protected && foregroundRevision == seen.revision
+            owners["terminal.$id"] = Owner(if (admitted) leases.acquire(kind, HOLD_MS) else null,
+                { id in terminal.work() }, now() + RENEW_MS)
+        }
     }
     private fun updateWake() {
         val lock = wake ?: run { leases.clear(); return }
@@ -208,6 +260,9 @@ internal class NativeWorkLeaseHost(
     companion object {
         private const val HOLD_MS = 15 * 60 * 1000L
         private const val RENEW_MS = 5 * 60 * 1000L
+        private const val MAX_LOGICAL_OWNERS = 128
+        private const val SOON_MS = 100L
+        private const val PULSE_MS = 1000L
         private fun queue(): (Long, () -> Unit) -> (() -> Unit) {
             val executor = Executors.newSingleThreadScheduledExecutor { task ->
                 Thread(task, "phone-work-leases").apply { isDaemon = true }

@@ -13,8 +13,9 @@ internal class SetupWorkScopes(
     }
     private val current = ThreadLocal<Scope>()
     fun prepare(): Scope = Scope().also { scope ->
-        try { acquire(scope) { scope.active.get() } }
-        catch (error: Throwable) { close(scope); throw error }
+        var admitted = false
+        try { acquire(scope) { scope.active.get() }; admitted = true }
+        finally { if (!admitted) close(scope) }
     }
     fun close(scope: Scope) { scope.active.set(false); release(scope) }
     fun <T> run(scope: Scope, work: () -> T): T {

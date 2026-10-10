@@ -85,6 +85,7 @@ mixin _ConnectionControllerStatus on ChangeNotifier {
   bool get connectionLoading =>
       _self.status == StreamStatus.connecting ||
       _self.status == StreamStatus.reconnecting;
+
   /// The connection's last problem in words for people: the failure that
   /// made it is never quoted (its text stays in [lastFailure] for Details).
   String? get connectionError {
@@ -97,6 +98,7 @@ mixin _ConnectionControllerStatus on ChangeNotifier {
         ? known.authoredMessage
         : 'The server is not answering. Try again shortly.';
   }
+
   bool get pollingFallbackEnabled => _self._poll?.isActive ?? false;
   bool get shouldPoll =>
       _self.api != null && _self.status != StreamStatus.connected;
