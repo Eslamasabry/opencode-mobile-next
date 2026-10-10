@@ -45623,11 +45623,23 @@ abstract class AppLocalizations {
   /// **'{agent} settings'**
   String agentFeaturesSheetTitle(String agent);
 
-  /// Composer chip when an agent switch is off, e.g. Fast mode off
+  /// Spoken label of the composer chip when an agent switch is off, e.g. Fast mode, off
   ///
   /// In en, this message translates to:
-  /// **'{name} off'**
+  /// **'{name}, off'**
   String agentFeatureChipOff(String name);
+
+  /// Spoken label of the composer chip when an agent switch is on, e.g. Fast mode, on
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, on'**
+  String agentFeatureChipOn(String name);
+
+  /// Short composer chip for the agent's fast mode switch; lit when on
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get agentFeatureFastChip;
 
   /// Model sheet: reading the agent's switches failed
   ///

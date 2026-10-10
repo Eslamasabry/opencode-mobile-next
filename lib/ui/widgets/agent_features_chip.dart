@@ -72,8 +72,9 @@ class AgentFeaturesModel extends ChangeNotifier {
     ? (copy.agentFeatureFastTitle, copy.agentFeatureFastDetail)
     : (f.label, f.description);
 
-/// The chip in the composer's chip row: "Fast mode" lit when on, "Fast mode
-/// off" plain when off; with several switches it says "Agent settings" (named for the agent).
+/// The chip in the composer's chip row: "Fast" lit when on and plain when
+/// off (a screen reader says "Fast mode, on"); with several switches it is
+/// the agent's name with a settings icon.
 /// It opens the agent's settings sheet. Nothing is drawn when the agent
 /// offers no switches (or they could not be read).
 class AgentFeaturesChip extends StatefulWidget {
@@ -143,15 +144,26 @@ class _AgentFeaturesChipState extends State<AgentFeaturesChip> {
           ? toggles.single
           : null;
       final on = toggles.any((f) => f.on);
-      final label = single == null
-          ? _sheetTitle(copy)
-          : single.on
-          ? agentFeatureWords(copy, single).$1
-          : copy.agentFeatureChipOff(agentFeatureWords(copy, single).$1);
+      // Short on the line above the field, so it shares it with the
+      // approval and model chips; the screen reader says the whole thing.
+      final name = _model.agentName;
+      final String label;
+      final String? spoken;
+      if (single != null) {
+        final title = agentFeatureWords(copy, single).$1;
+        label = single.id == 'fast_mode' ? copy.agentFeatureFastChip : title;
+        spoken = single.on
+            ? copy.agentFeatureChipOn(title)
+            : copy.agentFeatureChipOff(title);
+      } else {
+        label = name == null ? copy.agentFeaturesLabel : KitBidi.auto(name);
+        spoken = _sheetTitle(copy);
+      }
       return KitChip.action(
         key: const Key('agent-features-chip'),
         label: label,
-        icon: AppIconography.speed,
+        spoken: spoken,
+        icon: single == null ? AppIconography.settings : AppIconography.speed,
         tone: on ? KitChipTone.active : KitChipTone.neutral,
         onPressed: () => unawaited(
           showAgentFeaturesSheet(context, _model, title: _sheetTitle(copy)),

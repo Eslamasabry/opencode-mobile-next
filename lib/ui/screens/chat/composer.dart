@@ -551,6 +551,7 @@ class _ChatModelChip extends StatelessWidget {
     required this.busy,
     required this.selectedAgent,
     this.defaultAgent = '',
+    this.agentIsMode = false,
     required this.selectedModel,
     this.modelLabel,
     this.selectionFallback,
@@ -567,6 +568,10 @@ class _ChatModelChip extends StatelessWidget {
   /// The agent the server would pick unprompted. The chip names the agent
   /// only when the selection differs from it.
   final String defaultAgent;
+
+  /// The "agent" is a permission mode (an agent on a daemon): the approval
+  /// chip already says it in words, so the model chip never repeats its id.
+  final bool agentIsMode;
   final ModelRef? selectedModel;
 
   /// Presented model name (catalog name or provider · model).
@@ -626,7 +631,10 @@ class _ChatModelChip extends StatelessWidget {
   /// default, the effort only when it is a real choice.
   String _contextLabel(BuildContext context) {
     final parts = <String>[];
-    if (selectedAgent.isNotEmpty && selectedAgent != defaultAgent) {
+    if (!agentIsMode &&
+        selectedAgent.isNotEmpty &&
+        selectedAgent != defaultAgent &&
+        selectedAgent.toLowerCase() != 'default') {
       parts.add(selectedAgent);
     }
     final model = selectedModel;

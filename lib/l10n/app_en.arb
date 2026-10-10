@@ -34752,14 +34752,27 @@
       }
     }
   },
-  "agentFeatureChipOff": "{name} off",
+  "agentFeatureChipOff": "{name}, off",
   "@agentFeatureChipOff": {
-    "description": "Composer chip when an agent switch is off, e.g. Fast mode off",
+    "description": "Spoken label of the composer chip when an agent switch is off, e.g. Fast mode, off",
     "placeholders": {
       "name": {
         "type": "String"
       }
     }
+  },
+  "agentFeatureChipOn": "{name}, on",
+  "@agentFeatureChipOn": {
+    "description": "Spoken label of the composer chip when an agent switch is on, e.g. Fast mode, on",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "agentFeatureFastChip": "Fast",
+  "@agentFeatureFastChip": {
+    "description": "Short composer chip for the agent's fast mode switch; lit when on"
   },
   "agentFeaturesLoadFailed": "Could not load this agent's settings.",
   "@agentFeaturesLoadFailed": {
