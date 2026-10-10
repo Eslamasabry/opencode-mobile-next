@@ -54,6 +54,40 @@ extension OrchestrationControllerMutations on OrchestrationController {
     AgentControlAction action,
   ) => mutate(MutationRequest.controlAgent(agentId, action));
 
+  /// Suspends, resumes or removes the project [projectId]; the project
+  /// list is read again once the host answered.
+  Future<MutationRecord> controlProject(
+    String projectId,
+    ProjectControlAction action,
+  ) async {
+    final record = await mutate(
+      MutationRequest.controlProject(projectId, action),
+    );
+    if (!_disposed &&
+        !_stoppedMeanwhile &&
+        record.receipt?.isAccepted == true) {
+      _dirty.add(OrchestrationScope.projects);
+      unawaited(_refetchDirty());
+    }
+    return record;
+  }
+
+  /// Switches the scheduled job [jobId] on or off.
+  Future<MutationRecord> controlScheduledJob(
+    String jobId, {
+    required bool enabled,
+  }) async {
+    final record = await mutate(
+      MutationRequest.controlScheduledJob(jobId, enabled: enabled),
+    );
+    if (!_disposed &&
+        !_stoppedMeanwhile &&
+        record.receipt?.isAccepted == true) {
+      unawaited(scheduledJobs(force: true));
+    }
+    return record;
+  }
+
   /// Cancels the run [runId].
   Future<MutationRecord> cancelRun(String runId) =>
       mutate(MutationRequest.cancelRun(runId));
@@ -134,6 +168,52 @@ extension OrchestrationControllerMutations on OrchestrationController {
     final record = await mutate(MutationRequest.merge(runId));
     unawaited(mergeReadiness(runId, force: true));
     return record;
+  }
+
+  // -------------------------------------------------------------------------
+  // Scheduled jobs (OD1)
+  // -------------------------------------------------------------------------
+
+  /// The cached scheduled jobs, null until [scheduledJobs] answered.
+  List<ScheduledJob>? get scheduledJobList => _scheduledJobs;
+
+  /// Why the last read of the scheduled jobs failed, null when it did not.
+  Object? get scheduledJobsError => _scheduledJobsError;
+
+  /// A read of the scheduled jobs is in flight.
+  bool get scheduledJobsLoading => _scheduledJobsLoad != null;
+
+  /// Reads the host's scheduled jobs and caches them until [refresh] or a
+  /// job's own switch; a read in flight is shared. Null when the host has
+  /// none to offer or the read failed ([scheduledJobsError]). Never throws.
+  Future<List<ScheduledJob>?> scheduledJobs({bool force = false}) {
+    final running = _scheduledJobsLoad;
+    if (running != null) return running;
+    if (!force && _scheduledJobs != null) return Future.value(_scheduledJobs);
+    final load = _loadScheduledJobs().whenComplete(() {
+      _scheduledJobsLoad = null;
+      _notify();
+    });
+    _scheduledJobsLoad = load;
+    _notify();
+    return load;
+  }
+
+  Future<List<ScheduledJob>?> _loadScheduledJobs() async {
+    final jobs = _projectsGateway;
+    if (jobs == null || _stoppedMeanwhile || !_capabilities.scheduledJobs) {
+      return null;
+    }
+    try {
+      final list = await jobs.scheduledJobs();
+      if (_stoppedMeanwhile) return null;
+      _scheduledJobsError = null;
+      return _scheduledJobs = list;
+    } catch (error) {
+      if (_stoppedMeanwhile) return null;
+      _scheduledJobsError = error;
+      return null;
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -219,7 +299,7 @@ extension OrchestrationControllerMutations on OrchestrationController {
     await _store.mutations.save(profile.id, record);
     _notify();
 
-    if (gateway == null || _stoppedMeanwhile || !_allowed(request.kind)) {
+    if (gateway == null || _stoppedMeanwhile || !_allowed(request)) {
       return _update(
         key,
         status: MutationStatus.rejected,
@@ -260,16 +340,32 @@ extension OrchestrationControllerMutations on OrchestrationController {
     return next;
   }
 
-  bool _allowed(MutationKind kind) => switch (kind) {
+  bool _allowed(MutationRequest request) => switch (request.kind) {
     MutationKind.respond => _capabilities.controlRespond,
     MutationKind.message => _capabilities.controlMessage,
     MutationKind.controlAgent => _capabilities.controlAgent,
     MutationKind.cancelRun => _capabilities.controlCancelRun,
     MutationKind.assign => _capabilities.controlAssign,
     MutationKind.createWork => _capabilities.controlCreateWork,
+    MutationKind.controlProject =>
+      _projectsGateway != null &&
+          (request.projectAction == ProjectControlAction.remove
+              ? _capabilities.controlProjectRemove
+              : _capabilities.controlProject),
+    MutationKind.controlScheduledJob =>
+      _projectsGateway != null && _capabilities.controlScheduledJobs,
     MutationKind.approveMerge ||
     MutationKind.merge => _capabilities.mergeReadiness && _merges != null,
   };
+
+  /// The project and scheduled-job side of the gateway, when the adapter
+  /// has one.
+  OrchestrationRigGateway? get _projectsGateway {
+    final gateway = _gateway;
+    return gateway is OrchestrationRigGateway
+        ? gateway as OrchestrationRigGateway
+        : null;
+  }
 
   /// The policy side of the gateway, when the adapter has one.
   OrchestrationPolicyGateway? get _policies {
@@ -294,6 +390,16 @@ extension OrchestrationControllerMutations on OrchestrationController {
     MutationRequest request,
     String key,
   ) => switch (request.kind) {
+    MutationKind.controlProject => _projectsGateway!.controlProject(
+      request.targetId,
+      request.projectAction ?? ProjectControlAction.suspend,
+      requestId: key,
+    ),
+    MutationKind.controlScheduledJob => _projectsGateway!.controlScheduledJob(
+      request.targetId,
+      enabled: request.confirmed ?? false,
+      requestId: key,
+    ),
     MutationKind.approveMerge => _merges!.approveMerge(
       request.targetId,
       requestId: key,
@@ -473,6 +579,7 @@ extension OrchestrationControllerMutations on OrchestrationController {
         }
         return switch (record.request.action) {
           AgentControlAction.stop ||
+          AgentControlAction.kill ||
           AgentControlAction.pause => event.change == SessionChange.stopped,
           AgentControlAction.resume ||
           AgentControlAction.start ||
@@ -490,6 +597,7 @@ extension OrchestrationControllerMutations on OrchestrationController {
           }
           if (record.kind == MutationKind.controlAgent &&
               (record.request.action == AgentControlAction.stop ||
+                  record.request.action == AgentControlAction.kill ||
                   record.request.action == AgentControlAction.pause)) {
             return event.beadId == target ||
                 event.beadId == _agentById(target)?.sessionId;

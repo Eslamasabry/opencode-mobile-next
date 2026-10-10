@@ -28779,4 +28779,71 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get teamAgentUnavailableHostSays => 'ما يقوله الكمبيوتر';
+
+  @override
+  String get teamControlForceStop => 'إيقاف بالقوة';
+
+  @override
+  String get teamProjectControlSuspendWord => 'إيقاف المشروع مؤقتًا';
+
+  @override
+  String get teamProjectControlResumeWord => 'استئناف المشروع';
+
+  @override
+  String get teamProjectControlRemoveWord => 'حذف المشروع';
+
+  @override
+  String get teamJobTurnOnWord => 'تشغيل';
+
+  @override
+  String get teamJobTurnOffWord => 'إيقاف';
+
+  @override
+  String get teamHomeProjectsTitle => 'المشاريع';
+
+  @override
+  String get teamRigStateActive => 'نشط';
+
+  @override
+  String get teamRigStatePaused => 'متوقف مؤقتًا';
+
+  @override
+  String teamRigPausedTitle(String project) {
+    return '$project متوقف مؤقتًا';
+  }
+
+  @override
+  String get teamRigPausedBody => 'لا يبدأ أي عمل جديد فيه حتى تستأنفه.';
+
+  @override
+  String teamRigPause(String project) {
+    return 'إيقاف المشروع $project مؤقتًا';
+  }
+
+  @override
+  String teamRigResume(String project) {
+    return 'استئناف المشروع $project';
+  }
+
+  @override
+  String teamRigPauseTitle(String project) {
+    return 'إيقاف $project مؤقتًا؟';
+  }
+
+  @override
+  String teamRigPauseBody(String project) {
+    return 'لا يبدأ أي عمل جديد في «$project» حتى تستأنفه. لا يُحذف شيء.';
+  }
+
+  @override
+  String get teamRigPauseConfirm => 'إيقاف المشروع مؤقتًا';
+
+  @override
+  String get teamRigFolderLabel => 'المجلد على الكمبيوتر';
+
+  @override
+  String get teamRigNotFoundTitle => 'هذا المشروع لم يعد موجودًا';
+
+  @override
+  String get teamRigNotFoundBody => 'لم يعد الكمبيوتر يعرضه. ارجع إلى الفريق.';
 }

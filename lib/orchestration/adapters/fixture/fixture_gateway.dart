@@ -34,7 +34,10 @@ class FixtureControlCall {
 /// `n` frames of the recorded run into every open [events] subscription
 /// and advances what [activity] returns.
 class FixtureOrchestrationGateway
-    implements OrchestrationGateway, OrchestrationAgentOutputGateway {
+    implements
+        OrchestrationGateway,
+        OrchestrationAgentOutputGateway,
+        OrchestrationRigGateway {
   /// Loads `recordings/*.json` and `events/*.ndjson` from [fixturePath]
   /// (the `tool/qa/gascity_fixture` directory).
   FixtureOrchestrationGateway({
@@ -81,8 +84,18 @@ class FixtureOrchestrationGateway
   final _cache = <String, Map<String, Object?>>{};
   final _outputs = <String, StreamController<AgentOutputEvent>>{};
   final _outputHeads = <String, int>{};
+  final _suspendedProjects = <String>{};
+  final _resumedProjects = <String>{};
+  final _removedProjects = <String>{};
   int _head = 0;
   bool _closed = false;
+
+  /// When set, every control is refused with this message, as a host that
+  /// answers 409 would.
+  String? refuseControlsWith;
+
+  /// The scheduled jobs [scheduledJobs] answers; tests replace them.
+  List<ScheduledJob> jobs = const [];
 
   /// Sessions with a recorded transcript, as the Python fixture maps them.
   static const _transcripts = {
@@ -262,7 +275,22 @@ class FixtureOrchestrationGateway
   // -------------------------------------------------------------------------
 
   @override
-  Future<List<OrchestrationProject>> projects() async => mapRigs(_status);
+  Future<List<OrchestrationProject>> projects() async => [
+    for (final project in mapRigs(_status))
+      if (!_removedProjects.contains(project.id))
+        OrchestrationProject(
+          id: project.id,
+          name: project.name,
+          directory: project.directory,
+          rig: project.rig,
+          suspended: _suspendedProjects.contains(project.id)
+              ? true
+              : _resumedProjects.contains(project.id)
+              ? false
+              : project.suspended,
+          raw: project.raw,
+        ),
+  ];
 
   @override
   Future<List<OrchestrationRun>> runs({String? projectId}) async {
@@ -387,12 +415,18 @@ class FixtureOrchestrationGateway
   MutationReceipt _accept(
     FixtureControlCall call, {
     Map<String, Object?> raw = const {},
+    int? upstreamStatus,
   }) {
     _controls.add(call);
+    final refusal = refuseControlsWith;
+    if (refusal != null) {
+      return MutationReceipt.rejected(call.requestId, refusal);
+    }
     return MutationReceipt(
       id: call.requestId,
       status: MutationReceiptStatus.accepted,
       raw: raw,
+      upstreamStatus: upstreamStatus,
     );
   }
 
@@ -447,6 +481,62 @@ class FixtureOrchestrationGateway
     FixtureControlCall('createWork', title, requestId, arg: projectId),
     raw: {'id': 'fx-new-1', 'status': 'open', 'title': title},
   );
+
+  @override
+  Future<MutationReceipt> controlProject(
+    String projectId,
+    ProjectControlAction action, {
+    required String requestId,
+  }) async {
+    switch (action) {
+      case ProjectControlAction.suspend:
+        _suspendedProjects.add(projectId);
+        _resumedProjects.remove(projectId);
+      case ProjectControlAction.resume:
+        _resumedProjects.add(projectId);
+        _suspendedProjects.remove(projectId);
+      case ProjectControlAction.remove:
+        _removedProjects.add(projectId);
+    }
+    return _accept(
+      FixtureControlCall('controlProject', projectId, requestId, arg: action),
+      upstreamStatus: 200,
+    );
+  }
+
+  @override
+  Future<List<ScheduledJob>> scheduledJobs() async => jobs;
+
+  @override
+  Future<MutationReceipt> controlScheduledJob(
+    String jobId, {
+    required bool enabled,
+    required String requestId,
+  }) async {
+    jobs = [
+      for (final job in jobs)
+        if (job.id == jobId)
+          ScheduledJob(
+            id: job.id,
+            name: job.name,
+            enabled: enabled,
+            trigger: job.trigger,
+            projectId: job.projectId,
+            schedule: job.schedule,
+            interval: job.interval,
+            onEvent: job.onEvent,
+            description: job.description,
+            rawTrigger: job.rawTrigger,
+            raw: job.raw,
+          )
+        else
+          job,
+    ];
+    return _accept(
+      FixtureControlCall('controlScheduledJob', jobId, requestId, arg: enabled),
+      upstreamStatus: 200,
+    );
+  }
 
   // -------------------------------------------------------------------------
   // Helpers

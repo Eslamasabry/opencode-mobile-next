@@ -182,6 +182,9 @@ class OrchestrationController extends ChangeNotifier {
   final _mergeReadiness = <String, MergeReadiness>{};
   final _mergeReadinessErrors = <String, Object>{};
   final _mergeReadinessLoads = <String, Future<MergeReadiness?>>{};
+  List<ScheduledJob>? _scheduledJobs;
+  Object? _scheduledJobsError;
+  Future<List<ScheduledJob>?>? _scheduledJobsLoad;
   OrchestrationPolicy? _policy;
   final _cycles = <String, DispatchCycle>{};
   final _cycleProbes = <String, StreamSubscription<AgentOutputEvent>>{};
@@ -427,6 +430,7 @@ class OrchestrationController extends ChangeNotifier {
     }
     _mergeReadiness.clear();
     _mergeReadinessErrors.clear();
+    _scheduledJobs = null;
     _policy = null;
     _cycleTimer?.cancel();
     _cycleTimer = null;
@@ -521,6 +525,7 @@ class OrchestrationController extends ChangeNotifier {
     for (final runId in _mergeReadiness.keys.toList()) {
       unawaited(mergeReadiness(runId, force: true));
     }
+    if (_scheduledJobs != null) unawaited(scheduledJobs(force: true));
     return _refetchDirty();
   }
 

@@ -45256,6 +45256,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What the computer says'**
   String get teamAgentUnavailableHostSays;
+
+  /// Receipt word for the hard kill of an agent session
+  ///
+  /// In en, this message translates to:
+  /// **'Force stop'**
+  String get teamControlForceStop;
+
+  /// Receipt word for pausing a project
+  ///
+  /// In en, this message translates to:
+  /// **'Pause project'**
+  String get teamProjectControlSuspendWord;
+
+  /// Receipt word for resuming a project
+  ///
+  /// In en, this message translates to:
+  /// **'Resume project'**
+  String get teamProjectControlResumeWord;
+
+  /// Receipt word for deleting a project
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project'**
+  String get teamProjectControlRemoveWord;
+
+  /// Receipt word for switching a scheduled job on
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get teamJobTurnOnWord;
+
+  /// Receipt word for switching a scheduled job off
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get teamJobTurnOffWord;
+
+  /// Section label on the team home for the host's projects
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get teamHomeProjectsTitle;
+
+  /// State word of a project that takes work
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get teamRigStateActive;
+
+  /// State word of a project that was paused
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get teamRigStatePaused;
+
+  /// Project page notice title when it is paused
+  ///
+  /// In en, this message translates to:
+  /// **'{project} is paused'**
+  String teamRigPausedTitle(String project);
+
+  /// Project page notice body when it is paused
+  ///
+  /// In en, this message translates to:
+  /// **'No new work starts in it until you resume it.'**
+  String get teamRigPausedBody;
+
+  /// Button that pauses a project, naming it
+  ///
+  /// In en, this message translates to:
+  /// **'Pause project {project}'**
+  String teamRigPause(String project);
+
+  /// Button that resumes a project, naming it
+  ///
+  /// In en, this message translates to:
+  /// **'Resume project {project}'**
+  String teamRigResume(String project);
+
+  /// Pause confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Pause {project}?'**
+  String teamRigPauseTitle(String project);
+
+  /// Pause confirmation body; says what stops
+  ///
+  /// In en, this message translates to:
+  /// **'No new work starts in “{project}” until you resume it. Nothing is deleted.'**
+  String teamRigPauseBody(String project);
+
+  /// Pause confirmation button
+  ///
+  /// In en, this message translates to:
+  /// **'Pause project'**
+  String get teamRigPauseConfirm;
+
+  /// Technical details label for a project's folder
+  ///
+  /// In en, this message translates to:
+  /// **'Folder on the computer'**
+  String get teamRigFolderLabel;
+
+  /// Project page state when the project no longer exists
+  ///
+  /// In en, this message translates to:
+  /// **'This project is gone'**
+  String get teamRigNotFoundTitle;
+
+  /// Project page state body
+  ///
+  /// In en, this message translates to:
+  /// **'The computer no longer lists it. Go back to the team.'**
+  String get teamRigNotFoundBody;
 }
 
 class _AppLocalizationsDelegate

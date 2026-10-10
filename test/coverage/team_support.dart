@@ -19,6 +19,14 @@ import 'lists_support.dart' show WireRequest;
 
 const teamCity = 'phone';
 
+/// A supervisor answer with its own status (a refusal), for tests that
+/// need one; any other answer is a 200.
+class TeamHostReply {
+  const TeamHostReply(this.status, this.body);
+  final int status;
+  final Object? body;
+}
+
 /// A loopback supervisor: JSON routes answered from [handler], and the event
 /// stream held open with heartbeats, so the team reads as connected.
 class TeamHost {
@@ -54,6 +62,9 @@ class TeamHost {
             'detail': 'no route',
           }),
         );
+      } else if (answer is TeamHostReply) {
+        response.statusCode = answer.status;
+        response.write(jsonEncode(answer.body));
       } else {
         response.write(jsonEncode(answer));
       }
@@ -161,15 +172,16 @@ Object? supervisorAnswer(Map<String, Object?> city, WireRequest request) {
 /// A controller running on the real gateway against [wire], serving [city].
 Future<(OrchestrationController, GasCityGateway)> bootTeam(
   TeamHost wire,
-  Map<String, Object?> city,
-) async {
+  Map<String, Object?> city, {
+  bool front = true,
+}) async {
   wire.handler = (r) => supervisorAnswer(city, r);
   SharedPreferences.setMockInitialValues({});
   final store = OrchestrationStore(await SharedPreferences.getInstance());
   final gateway = GasCityGateway(
     url: wire.baseUrl,
     city: teamCity,
-    front: true,
+    front: front,
   );
   final config = OrchestrationConfig(
     provider: OrchestrationProvider.gascity,

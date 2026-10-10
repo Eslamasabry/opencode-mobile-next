@@ -34394,5 +34394,106 @@
   "teamAgentUnavailableHostSays": "What the computer says",
   "@teamAgentUnavailableHostSays": {
     "description": "Technical details label for the host's own unavailable text"
+  },
+  "teamControlForceStop": "Force stop",
+  "@teamControlForceStop": {
+    "description": "Receipt word for the hard kill of an agent session"
+  },
+  "teamProjectControlSuspendWord": "Pause project",
+  "@teamProjectControlSuspendWord": {
+    "description": "Receipt word for pausing a project"
+  },
+  "teamProjectControlResumeWord": "Resume project",
+  "@teamProjectControlResumeWord": {
+    "description": "Receipt word for resuming a project"
+  },
+  "teamProjectControlRemoveWord": "Delete project",
+  "@teamProjectControlRemoveWord": {
+    "description": "Receipt word for deleting a project"
+  },
+  "teamJobTurnOnWord": "Turn on",
+  "@teamJobTurnOnWord": {
+    "description": "Receipt word for switching a scheduled job on"
+  },
+  "teamJobTurnOffWord": "Turn off",
+  "@teamJobTurnOffWord": {
+    "description": "Receipt word for switching a scheduled job off"
+  },
+  "teamHomeProjectsTitle": "Projects",
+  "@teamHomeProjectsTitle": {
+    "description": "Section label on the team home for the host's projects"
+  },
+  "teamRigStateActive": "Active",
+  "@teamRigStateActive": {
+    "description": "State word of a project that takes work"
+  },
+  "teamRigStatePaused": "Paused",
+  "@teamRigStatePaused": {
+    "description": "State word of a project that was paused"
+  },
+  "teamRigPausedTitle": "{project} is paused",
+  "@teamRigPausedTitle": {
+    "description": "Project page notice title when it is paused",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigPausedBody": "No new work starts in it until you resume it.",
+  "@teamRigPausedBody": {
+    "description": "Project page notice body when it is paused"
+  },
+  "teamRigPause": "Pause project {project}",
+  "@teamRigPause": {
+    "description": "Button that pauses a project, naming it",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigResume": "Resume project {project}",
+  "@teamRigResume": {
+    "description": "Button that resumes a project, naming it",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigPauseTitle": "Pause {project}?",
+  "@teamRigPauseTitle": {
+    "description": "Pause confirmation title",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigPauseBody": "No new work starts in “{project}” until you resume it. Nothing is deleted.",
+  "@teamRigPauseBody": {
+    "description": "Pause confirmation body; says what stops",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigPauseConfirm": "Pause project",
+  "@teamRigPauseConfirm": {
+    "description": "Pause confirmation button"
+  },
+  "teamRigFolderLabel": "Folder on the computer",
+  "@teamRigFolderLabel": {
+    "description": "Technical details label for a project's folder"
+  },
+  "teamRigNotFoundTitle": "This project is gone",
+  "@teamRigNotFoundTitle": {
+    "description": "Project page state when the project no longer exists"
+  },
+  "teamRigNotFoundBody": "The computer no longer lists it. Go back to the team.",
+  "@teamRigNotFoundBody": {
+    "description": "Project page state body"
   }
 }

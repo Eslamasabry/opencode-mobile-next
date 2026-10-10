@@ -62,7 +62,8 @@ class GasCityGateway
         OrchestrationGateway,
         OrchestrationAgentOutputGateway,
         OrchestrationMergeGateway,
-        OrchestrationPolicyGateway {
+        OrchestrationPolicyGateway,
+        OrchestrationRigGateway {
   GasCityGateway({
     required String url,
     required this.city,
@@ -809,6 +810,50 @@ class GasCityGateway
       title: title,
       description: description,
       projectId: projectId,
+      requestId: requestId,
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Projects (rigs) and scheduled jobs (orders)
+  // -------------------------------------------------------------------------
+
+  @override
+  Future<MutationReceipt> controlProject(
+    String projectId,
+    ProjectControlAction action, {
+    required String requestId,
+  }) async {
+    final control = _control;
+    if (control == null || _closed) {
+      return MutationReceipt.rejected(requestId, _frontRequired);
+    }
+    return control.controlProject(projectId, action, requestId: requestId);
+  }
+
+  /// `/orders`: readable without a front.
+  @override
+  Future<List<ScheduledJob>> scheduledJobs() async {
+    final control = _control;
+    if (control != null) return control.scheduledJobs();
+    return mapOrders(
+      readList(await _http.getCity('/orders'), 'orders', GcOrder.fromJson),
+    );
+  }
+
+  @override
+  Future<MutationReceipt> controlScheduledJob(
+    String jobId, {
+    required bool enabled,
+    required String requestId,
+  }) async {
+    final control = _control;
+    if (control == null || _closed) {
+      return MutationReceipt.rejected(requestId, _frontRequired);
+    }
+    return control.controlScheduledJob(
+      jobId,
+      enabled: enabled,
       requestId: requestId,
     );
   }

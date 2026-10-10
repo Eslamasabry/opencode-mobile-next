@@ -442,6 +442,9 @@ void main() {
           // The direct task path exists only where the planner can be
           // off and the supervisor is reachable: the phone's loopback.
           'phoneHost' || 'controlCreateWork' => true,
+          // The phone's own city is set up and removed by the app; a
+          // project is not deleted from it by hand (OD1).
+          'controlProjectRemove' => false,
           final key when key.startsWith('control') => front[key],
           final key => read[key],
         };

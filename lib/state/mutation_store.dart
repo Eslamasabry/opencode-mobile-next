@@ -44,6 +44,14 @@ enum MutationKind {
   /// no id yet. The created id lands in the receipt
   /// ([MutationReceipt.createdId]).
   createWork,
+
+  /// Suspend, resume or remove a project (Gas City rig); the target is the
+  /// project, the action's name is the request's `choice`.
+  controlProject,
+
+  /// Switch a scheduled job (Gas City order) on or off; the target is the
+  /// job's scoped name, [MutationRequest.confirmed] says on or off.
+  controlScheduledJob,
 }
 
 /// Where a mutation stands (table in the library doc).
@@ -127,6 +135,35 @@ class MutationRequest {
     text: description,
     projectId: projectId,
   );
+
+  /// Suspend, resume or remove the project [projectId].
+  factory MutationRequest.controlProject(
+    String projectId,
+    ProjectControlAction action,
+  ) => MutationRequest._(
+    kind: MutationKind.controlProject,
+    targetId: projectId,
+    choice: action.name,
+  );
+
+  /// Switch the scheduled job [jobId] on ([enabled]) or off.
+  factory MutationRequest.controlScheduledJob(
+    String jobId, {
+    required bool enabled,
+  }) => MutationRequest._(
+    kind: MutationKind.controlScheduledJob,
+    targetId: jobId,
+    confirmed: enabled,
+  );
+
+  /// The project action, for [MutationKind.controlProject].
+  ProjectControlAction? get projectAction {
+    if (kind != MutationKind.controlProject) return null;
+    for (final a in ProjectControlAction.values) {
+      if (a.name == choice) return a;
+    }
+    return null;
+  }
 
   /// Decodes a request persisted with [toJson]; null for anything else.
   static MutationRequest? fromJson(Object? json) {

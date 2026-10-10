@@ -7,6 +7,7 @@ class OrchestrationProject {
     required this.name,
     this.directory,
     this.rig,
+    this.suspended = false,
     this.raw = const {},
   });
 
@@ -21,6 +22,10 @@ class OrchestrationProject {
 
   /// Gas City rig name this project maps to, when distinct from [id].
   final String? rig;
+
+  /// The host reports the project switched off (Gas City rig `suspended`:
+  /// explicitly, or because every agent in it is suspended).
+  final bool suspended;
 
   /// Untouched provider payload.
   final Map<String, Object?> raw;

@@ -28627,4 +28627,73 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get teamAgentUnavailableHostSays => 'What the computer says';
+
+  @override
+  String get teamControlForceStop => 'Force stop';
+
+  @override
+  String get teamProjectControlSuspendWord => 'Pause project';
+
+  @override
+  String get teamProjectControlResumeWord => 'Resume project';
+
+  @override
+  String get teamProjectControlRemoveWord => 'Delete project';
+
+  @override
+  String get teamJobTurnOnWord => 'Turn on';
+
+  @override
+  String get teamJobTurnOffWord => 'Turn off';
+
+  @override
+  String get teamHomeProjectsTitle => 'Projects';
+
+  @override
+  String get teamRigStateActive => 'Active';
+
+  @override
+  String get teamRigStatePaused => 'Paused';
+
+  @override
+  String teamRigPausedTitle(String project) {
+    return '$project is paused';
+  }
+
+  @override
+  String get teamRigPausedBody =>
+      'No new work starts in it until you resume it.';
+
+  @override
+  String teamRigPause(String project) {
+    return 'Pause project $project';
+  }
+
+  @override
+  String teamRigResume(String project) {
+    return 'Resume project $project';
+  }
+
+  @override
+  String teamRigPauseTitle(String project) {
+    return 'Pause $project?';
+  }
+
+  @override
+  String teamRigPauseBody(String project) {
+    return 'No new work starts in “$project” until you resume it. Nothing is deleted.';
+  }
+
+  @override
+  String get teamRigPauseConfirm => 'Pause project';
+
+  @override
+  String get teamRigFolderLabel => 'Folder on the computer';
+
+  @override
+  String get teamRigNotFoundTitle => 'This project is gone';
+
+  @override
+  String get teamRigNotFoundBody =>
+      'The computer no longer lists it. Go back to the team.';
 }

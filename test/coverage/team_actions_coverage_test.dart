@@ -189,6 +189,22 @@ void main() {
         ),
       );
       await one(
+        'GC POST /v0/city/{cityName}/rig/{name}/{action}',
+        () => gateway.controlProject(
+          'shopfront',
+          ProjectControlAction.suspend,
+          requestId: 'r17',
+        ),
+      );
+      await one(
+        'GC DELETE /v0/city/{cityName}/rig/{name}',
+        () => gateway.controlProject(
+          'shopfront',
+          ProjectControlAction.remove,
+          requestId: 'r18',
+        ),
+      );
+      await one(
         'GC POST /v0/city/{cityName}/sling',
         () => gateway.assign('sf-12', agentId: dir, requestId: 'r8'),
       );
