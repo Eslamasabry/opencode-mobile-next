@@ -6540,7 +6540,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get e7LibraryOpenCodeIsReconnectingTryAgainShortly =>
-      'يعيد OpenCode الاتصال. حاول مجددًا بعد قليل.';
+      'يعيد الخادم الاتصال. حاول مجددًا بعد قليل.';
 
   @override
   String get e7LibraryWhatIsMCP => 'ما هو MCP؟';
@@ -6642,7 +6642,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get e7LibraryOpenCodeIsReconnectingTryAgain =>
-      'يعيد OpenCode الاتصال. حاول مجددًا.';
+      'يعيد الخادم الاتصال. حاول مجددًا.';
 
   @override
   String get e7LibraryRevokeAlwaysAllowedAction => 'إلغاء الإذن؟';
@@ -6792,7 +6792,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get e7LibraryOpenCodeCouldNotPrepareThisWorktree =>
-      'تعذّر على OpenCode تجهيز شجرة العمل هذه.';
+      'تعذّر تجهيز شجرة العمل هذه.';
 
   @override
   String e7LibraryWasCreatedItsSetupStatusIsNot(String detail1) {
@@ -6801,11 +6801,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get e7LibraryWaitForOpenCodeToFinishPreparingThis =>
-      'انتظر حتى ينتهي OpenCode من تجهيز شجرة العمل هذه.';
+      'انتظر حتى تنتهي شجرة العمل هذه من التجهيز.';
 
   @override
   String get e7LibraryOpenCodeDidNotSwitchLocations =>
-      'لم يغيّر OpenCode المشروع.';
+      'لم يغيّر الخادم المشروع.';
 
   @override
   String e7LibraryCouldNotVerifyBeforeThisDestructiveAction(
@@ -17031,7 +17031,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get worktreesCreateHelper =>
-      'ينشئ OpenCode فرعًا ومجلدًا منفصلين ويشغّل مهام بدء المشروع. تُستبدل المسافات بشرطات.';
+      'يُنشأ فرع ومجلد منفصلان وتُشغَّل مهام بدء المشروع. تُستبدل المسافات بشرطات.';
 
   @override
   String get worktreesFolder => 'المجلد';

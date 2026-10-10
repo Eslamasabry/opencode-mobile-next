@@ -10635,7 +10635,7 @@ abstract class AppLocalizations {
   /// Library and project tools UI: OpenCode is reconnecting. Try again shortly.
   ///
   /// In en, this message translates to:
-  /// **'OpenCode is reconnecting. Try again shortly.'**
+  /// **'The server is reconnecting. Try again shortly.'**
   String get e7LibraryOpenCodeIsReconnectingTryAgainShortly;
 
   /// Library and project tools UI: What is MCP?
@@ -10809,7 +10809,7 @@ abstract class AppLocalizations {
   /// Library and project tools UI: OpenCode is reconnecting. Try again.
   ///
   /// In en, this message translates to:
-  /// **'OpenCode is reconnecting. Try again.'**
+  /// **'The server is reconnecting. Try again.'**
   String get e7LibraryOpenCodeIsReconnectingTryAgain;
 
   /// Short title for a saved permission revocation confirmation.
@@ -11079,7 +11079,7 @@ abstract class AppLocalizations {
   /// Library and project tools UI: OpenCode could not prepare this worktree.
   ///
   /// In en, this message translates to:
-  /// **'OpenCode could not prepare this worktree.'**
+  /// **'This worktree could not be prepared.'**
   String get e7LibraryOpenCodeCouldNotPrepareThisWorktree;
 
   /// Library and project tools UI: {detail1} was created. Its setup status is not yet confirmed.
@@ -11091,13 +11091,13 @@ abstract class AppLocalizations {
   /// Library and project tools UI: Wait for OpenCode to finish preparing this worktree.
   ///
   /// In en, this message translates to:
-  /// **'Wait for OpenCode to finish preparing this worktree.'**
+  /// **'Wait for this worktree to finish preparing.'**
   String get e7LibraryWaitForOpenCodeToFinishPreparingThis;
 
   /// Library and project tools UI: OpenCode did not switch locations.
   ///
   /// In en, this message translates to:
-  /// **'OpenCode did not switch projects.'**
+  /// **'The server did not switch projects.'**
   String get e7LibraryOpenCodeDidNotSwitchLocations;
 
   /// Library and project tools UI: Could not verify {detail1} before this destructive action: {detail2}
@@ -27071,7 +27071,7 @@ abstract class AppLocalizations {
   /// Worktrees: helper under the name field of New worktree.
   ///
   /// In en, this message translates to:
-  /// **'OpenCode makes a separate branch and folder and runs the project’s startup tasks. Spaces become dashes.'**
+  /// **'A separate branch and folder are made and the project’s startup tasks run. Spaces become dashes.'**
   String get worktreesCreateHelper;
 
   /// Worktrees: label of the worktree folder path under Details.

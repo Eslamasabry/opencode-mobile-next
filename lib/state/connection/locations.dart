@@ -16,6 +16,9 @@ mixin _ConnectionControllerLocations on ChangeNotifier {
   String? workspace;
   bool locationLoading = false;
   String? locationError;
+
+  /// What made [locationError], for its Details; null when it is app-authored.
+  Object? locationFailure;
   String? locationNotice;
 
   /// True while an OpenCode connection has no usable project folder: nothing
@@ -580,6 +583,7 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
     locationRevision += 1;
     locationLoading = true;
     locationError = null;
+    locationFailure = null;
     lastError = null;
     final savedLibrary = _modelLibrary;
     final savedSessionModels = sessionModels;

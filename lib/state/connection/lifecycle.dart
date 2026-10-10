@@ -563,8 +563,19 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     lastPtyEvent = null;
   }
 
-  void _recordLocationError(String error) {
-    if (locationLoading) locationError ??= error;
+  /// A failure that stops a folder from opening, kept as plain words (the
+  /// server's own message is never copy) with the failure itself for a
+  /// Details fold. Optional reads (waiting questions, approvals, forms) do not
+  /// come here: they retry on their own and never block opening a folder.
+  void _recordLocationError(Object error) {
+    if (!locationLoading || locationError != null) return;
+    locationFailure = error;
+    final failure = ProductFailure.from(error);
+    locationError =
+        failure.category == ProductFailureCategory.words &&
+            failure.authoredMessage != null
+        ? failure.authoredMessage
+        : 'This folder could not be opened. Try again.';
   }
 
   Future<void> _writeActiveProfile(int generation, String? id) {

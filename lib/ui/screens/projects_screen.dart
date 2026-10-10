@@ -200,7 +200,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     });
     await widget.controller.selectLocation(directory: project.directory);
     if (!mounted) return;
-    final error = widget.controller.locationError;
+    final failure = widget.controller.locationFailure;
+    final error = failure == null
+        ? widget.controller.locationError
+        : productErrorText(failure, l10n: _l10n);
     setState(() {
       _busyProjectID = null;
       _switchError = error;

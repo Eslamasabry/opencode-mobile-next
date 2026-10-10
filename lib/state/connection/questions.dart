@@ -130,7 +130,6 @@ extension _ConnectionControllerQuestionsImpl on ConnectionController {
       }
       questionsLoading = false;
       questionsError = error.toString();
-      _recordLocationError(questionsError!);
       _notifyListeners();
     }
   }

@@ -110,6 +110,10 @@ class FakeChatsHost implements ChatsHost {
   /// What the separate-copy step resolves with (null: closed).
   String? copyResult;
 
+  /// The agent a new conversation starts with, if the server says.
+  @override
+  String? startAgentName;
+
   /// What can be imported from the agent's own app; null hides the entry.
   @override
   ProviderConversationImportGateway? conversationImport;

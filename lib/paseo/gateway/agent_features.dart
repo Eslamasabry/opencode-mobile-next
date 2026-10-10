@@ -10,19 +10,15 @@ extension _PaseoAgentFeatures on PaseoGateway {
   String? _agentOwnerName(String id) {
     final raw = _agents[id]?['provider'] ?? _draftProviders[id];
     final provider = raw is String ? raw : paseoDefaultProvider;
+    final own = paseoAgentProductName(provider);
+    if (own != null) return own;
     for (final entry in _providerEntries ?? const <Map<String, dynamic>>[]) {
       final label = entry['label'];
       if (entry['provider'] == provider && label is String) {
-        final clean = _featureText(label, 40);
-        if (clean != null) return clean;
+        return _featureText(label, 40);
       }
     }
-    return switch (provider) {
-      'claude' => 'Claude Code',
-      'pi' => 'Pi',
-      'codex' => 'Codex',
-      _ => null,
-    };
+    return null;
   }
 
   String? _featureText(Object? value, int max) {

@@ -6444,7 +6444,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get e7LibraryOpenCodeIsReconnectingTryAgainShortly =>
-      'OpenCode is reconnecting. Try again shortly.';
+      'The server is reconnecting. Try again shortly.';
 
   @override
   String get e7LibraryWhatIsMCP => 'What is MCP?';
@@ -6547,7 +6547,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get e7LibraryOpenCodeIsReconnectingTryAgain =>
-      'OpenCode is reconnecting. Try again.';
+      'The server is reconnecting. Try again.';
 
   @override
   String get e7LibraryRevokeAlwaysAllowedAction => 'Revoke access?';
@@ -6698,7 +6698,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get e7LibraryOpenCodeCouldNotPrepareThisWorktree =>
-      'OpenCode could not prepare this worktree.';
+      'This worktree could not be prepared.';
 
   @override
   String e7LibraryWasCreatedItsSetupStatusIsNot(String detail1) {
@@ -6707,11 +6707,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get e7LibraryWaitForOpenCodeToFinishPreparingThis =>
-      'Wait for OpenCode to finish preparing this worktree.';
+      'Wait for this worktree to finish preparing.';
 
   @override
   String get e7LibraryOpenCodeDidNotSwitchLocations =>
-      'OpenCode did not switch projects.';
+      'The server did not switch projects.';
 
   @override
   String e7LibraryCouldNotVerifyBeforeThisDestructiveAction(
@@ -16925,7 +16925,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get worktreesCreateHelper =>
-      'OpenCode makes a separate branch and folder and runs the project’s startup tasks. Spaces become dashes.';
+      'A separate branch and folder are made and the project’s startup tasks run. Spaces become dashes.';
 
   @override
   String get worktreesFolder => 'Folder';

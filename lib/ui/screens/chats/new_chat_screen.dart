@@ -208,7 +208,7 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
         : agents.chatAgentChoices
               .where((choice) => choice.agentId == agents.selectedChatAgentId)
               .firstOrNull;
-    final agentName = agentChoice?.name ?? 'OpenCode';
+    final agentName = agentChoice?.name ?? host.startAgentName ?? 'OpenCode';
     // A phone agent's helper lists its runtimes slowly the first time (about
     // 10 s): ask while the person types, so Send doesn't wait for it.
     final chosenAgent = agentChoice?.agentId;
