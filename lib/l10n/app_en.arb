@@ -34484,6 +34484,49 @@
   "@teamRigPauseConfirm": {
     "description": "Pause confirmation button"
   },
+  "teamRigDelete": "Delete project {project}",
+  "@teamRigDelete": {
+    "description": "Button that deletes a project, naming it",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigDeleteTitle": "Delete {project}?",
+  "@teamRigDeleteTitle": {
+    "description": "Delete confirmation title",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigDeleteBody": "“{project}” is removed from this team. Its folder and files on the computer are not touched.",
+  "@teamRigDeleteBody": {
+    "description": "Delete confirmation body for a project on a computer's team",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigDeleteConfirm": "Delete project",
+  "@teamRigDeleteConfirm": {
+    "description": "Delete confirmation button"
+  },
+  "teamRigDeleteLost": "The team stops working on it",
+  "@teamRigDeleteLost": {
+    "description": "Consequence line: what a project delete takes away"
+  },
+  "teamRigDeleteKeptFiles": "Its folder and files on the computer",
+  "@teamRigDeleteKeptFiles": {
+    "description": "Consequence line: what a project delete keeps"
+  },
+  "teamRigDeleteKeptHistory": "Its past tasks and history",
+  "@teamRigDeleteKeptHistory": {
+    "description": "Consequence line: what a project delete keeps"
+  },
   "teamRigFolderLabel": "Folder on the computer",
   "@teamRigFolderLabel": {
     "description": "Technical details label for a project's folder"
@@ -34495,5 +34538,48 @@
   "teamRigNotFoundBody": "The computer no longer lists it. Go back to the team.",
   "@teamRigNotFoundBody": {
     "description": "Project page state body"
+  },
+  "teamProjectDelete": "Delete project {project}",
+  "@teamProjectDelete": {
+    "description": "Visible row on a project's page that deletes it, naming it",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamProjectDeleteTitle": "Delete {project}?",
+  "@teamProjectDeleteTitle": {
+    "description": "Delete project confirmation title",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamProjectDeleteBody": "“{project}” is deleted from this phone's AI Team, with the team's copy of its code. This can't be undone.",
+  "@teamProjectDeleteBody": {
+    "description": "Delete project confirmation body for the in-app engine",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamProjectDeleteConfirm": "Delete project",
+  "@teamProjectDeleteConfirm": {
+    "description": "Delete project confirmation button"
+  },
+  "teamProjectDeleteLostPlan": "Its plan, tasks and history are deleted",
+  "@teamProjectDeleteLostPlan": {
+    "description": "Consequence line: deleted with the project"
+  },
+  "teamProjectDeleteLostRunning": "Running work stops",
+  "@teamProjectDeleteLostRunning": {
+    "description": "Consequence line: stops with the project"
+  },
+  "teamProjectDeleteKept": "The folder you added it from stays as it is",
+  "@teamProjectDeleteKept": {
+    "description": "Consequence line: kept when the project is deleted"
   }
 }

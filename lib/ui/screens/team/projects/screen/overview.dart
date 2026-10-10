@@ -416,6 +416,20 @@ class TeamProjectOverview extends StatelessWidget {
               trailing: const KitRowValue('', chevron: true),
               onTap: () => openTeamProjectSettings(context, c, p.id),
             ),
+            if (TeamExecutionGate.allows(c, TeamExecutionNeed.removal) &&
+                !p.simulated)
+              KitRowGroup(
+                children: [
+                  KitRow(
+                    key: const ValueKey('team-project-delete'),
+                    leading: const KitIcon(AppIconography.delete),
+                    title: l.teamProjectDelete(p.name),
+                    titleMaxLines: 2,
+                    destructive: true,
+                    onTap: () => _confirmDelete(context, c, p),
+                  ),
+                ],
+              ),
           ],
         ),
       );

@@ -28839,6 +28839,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get teamRigPauseConfirm => 'إيقاف المشروع مؤقتًا';
 
   @override
+  String teamRigDelete(String project) {
+    return 'حذف المشروع $project';
+  }
+
+  @override
+  String teamRigDeleteTitle(String project) {
+    return 'حذف $project؟';
+  }
+
+  @override
+  String teamRigDeleteBody(String project) {
+    return 'تتم إزالة «$project» من هذا الفريق. لا يُمَسّ مجلده ولا ملفاته على الكمبيوتر.';
+  }
+
+  @override
+  String get teamRigDeleteConfirm => 'حذف المشروع';
+
+  @override
+  String get teamRigDeleteLost => 'يتوقف الفريق عن العمل عليه';
+
+  @override
+  String get teamRigDeleteKeptFiles => 'مجلده وملفاته على الكمبيوتر';
+
+  @override
+  String get teamRigDeleteKeptHistory => 'مهامه وسجله السابق';
+
+  @override
   String get teamRigFolderLabel => 'المجلد على الكمبيوتر';
 
   @override
@@ -28846,4 +28873,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get teamRigNotFoundBody => 'لم يعد الكمبيوتر يعرضه. ارجع إلى الفريق.';
+
+  @override
+  String teamProjectDelete(String project) {
+    return 'حذف المشروع $project';
+  }
+
+  @override
+  String teamProjectDeleteTitle(String project) {
+    return 'حذف $project؟';
+  }
+
+  @override
+  String teamProjectDeleteBody(String project) {
+    return 'يُحذف «$project» من فريق الذكاء الاصطناعي على هذا الهاتف مع نسخة الفريق من شيفرته. لا يمكن التراجع عن ذلك.';
+  }
+
+  @override
+  String get teamProjectDeleteConfirm => 'حذف المشروع';
+
+  @override
+  String get teamProjectDeleteLostPlan => 'تُحذف خطته ومهامه وسجله';
+
+  @override
+  String get teamProjectDeleteLostRunning => 'يتوقف العمل الجاري';
+
+  @override
+  String get teamProjectDeleteKept => 'يبقى المجلد الذي أضفته منه كما هو';
 }

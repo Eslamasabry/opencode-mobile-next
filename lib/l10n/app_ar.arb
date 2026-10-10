@@ -8560,7 +8560,21 @@
   "teamRigPauseTitle": "إيقاف {project} مؤقتًا؟",
   "teamRigPauseBody": "لا يبدأ أي عمل جديد في «{project}» حتى تستأنفه. لا يُحذف شيء.",
   "teamRigPauseConfirm": "إيقاف المشروع مؤقتًا",
+  "teamRigDelete": "حذف المشروع {project}",
+  "teamRigDeleteTitle": "حذف {project}؟",
+  "teamRigDeleteBody": "تتم إزالة «{project}» من هذا الفريق. لا يُمَسّ مجلده ولا ملفاته على الكمبيوتر.",
+  "teamRigDeleteConfirm": "حذف المشروع",
+  "teamRigDeleteLost": "يتوقف الفريق عن العمل عليه",
+  "teamRigDeleteKeptFiles": "مجلده وملفاته على الكمبيوتر",
+  "teamRigDeleteKeptHistory": "مهامه وسجله السابق",
   "teamRigFolderLabel": "المجلد على الكمبيوتر",
   "teamRigNotFoundTitle": "هذا المشروع لم يعد موجودًا",
-  "teamRigNotFoundBody": "لم يعد الكمبيوتر يعرضه. ارجع إلى الفريق."
+  "teamRigNotFoundBody": "لم يعد الكمبيوتر يعرضه. ارجع إلى الفريق.",
+  "teamProjectDelete": "حذف المشروع {project}",
+  "teamProjectDeleteTitle": "حذف {project}؟",
+  "teamProjectDeleteBody": "يُحذف «{project}» من فريق الذكاء الاصطناعي على هذا الهاتف مع نسخة الفريق من شيفرته. لا يمكن التراجع عن ذلك.",
+  "teamProjectDeleteConfirm": "حذف المشروع",
+  "teamProjectDeleteLostPlan": "تُحذف خطته ومهامه وسجله",
+  "teamProjectDeleteLostRunning": "يتوقف العمل الجاري",
+  "teamProjectDeleteKept": "يبقى المجلد الذي أضفته منه كما هو"
 }

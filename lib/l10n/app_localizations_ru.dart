@@ -28833,6 +28833,33 @@ class AppLocalizationsRu extends AppLocalizations {
   String get teamRigPauseConfirm => 'Pause project';
 
   @override
+  String teamRigDelete(String project) {
+    return 'Delete project $project';
+  }
+
+  @override
+  String teamRigDeleteTitle(String project) {
+    return 'Delete $project?';
+  }
+
+  @override
+  String teamRigDeleteBody(String project) {
+    return '“$project” is removed from this team. Its folder and files on the computer are not touched.';
+  }
+
+  @override
+  String get teamRigDeleteConfirm => 'Delete project';
+
+  @override
+  String get teamRigDeleteLost => 'The team stops working on it';
+
+  @override
+  String get teamRigDeleteKeptFiles => 'Its folder and files on the computer';
+
+  @override
+  String get teamRigDeleteKeptHistory => 'Its past tasks and history';
+
+  @override
   String get teamRigFolderLabel => 'Folder on the computer';
 
   @override
@@ -28841,4 +28868,33 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get teamRigNotFoundBody =>
       'The computer no longer lists it. Go back to the team.';
+
+  @override
+  String teamProjectDelete(String project) {
+    return 'Delete project $project';
+  }
+
+  @override
+  String teamProjectDeleteTitle(String project) {
+    return 'Delete $project?';
+  }
+
+  @override
+  String teamProjectDeleteBody(String project) {
+    return '“$project” is deleted from this phone\'s AI Team, with the team\'s copy of its code. This can\'t be undone.';
+  }
+
+  @override
+  String get teamProjectDeleteConfirm => 'Delete project';
+
+  @override
+  String get teamProjectDeleteLostPlan =>
+      'Its plan, tasks and history are deleted';
+
+  @override
+  String get teamProjectDeleteLostRunning => 'Running work stops';
+
+  @override
+  String get teamProjectDeleteKept =>
+      'The folder you added it from stays as it is';
 }

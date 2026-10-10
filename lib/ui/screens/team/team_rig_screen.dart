@@ -1,10 +1,11 @@
 /// A project of the host's team (Gas City "rig") on its own page: where it
-/// stands, and what a person can do with it — pause it, resume it. Every act
-/// names the project, and the one that stops work asks first.
+/// stands, and what a person can do with it — pause it, resume it, take it
+/// out of the team. Every act names the project, and the ones that stop work
+/// or delete ask first, saying what goes and what stays.
 ///
 /// Reached from the team home's Projects list. Controls show only when the
 /// host offers them ([OrchestrationCapabilities.controlProject],
-/// ).
+/// [controlProjectRemove]).
 library;
 
 import 'dart:async';
@@ -65,7 +66,13 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      await _controller.controlProject(project.id, action);
+      final record = await _controller.controlProject(project.id, action);
+      if (!mounted) return;
+      // A removed project has no page left to show.
+      if (action == ProjectControlAction.remove &&
+          record.status == MutationStatus.confirmed) {
+        Navigator.of(context).maybePop();
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -84,6 +91,32 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
     );
     if (!ok || !mounted) return;
     await _send(project, ProjectControlAction.suspend);
+  }
+
+  Future<void> _delete(OrchestrationProject project) async {
+    final l10n = _copy(context);
+    final ok = await showKitConfirm(
+      context,
+      title: l10n.teamRigDeleteTitle(project.name),
+      body: l10n.teamRigDeleteBody(project.name),
+      confirmLabel: l10n.teamRigDeleteConfirm,
+      kind: KitConfirmKind.destructive,
+      consequenceItems: [
+        KitConsequence(l10n.teamRigDeleteLost, mark: KitConsequenceMark.lost),
+        KitConsequence(
+          l10n.teamRigDeleteKeptFiles,
+          mark: KitConsequenceMark.kept,
+        ),
+        KitConsequence(
+          l10n.teamRigDeleteKeptHistory,
+          mark: KitConsequenceMark.kept,
+        ),
+      ],
+      sheetKey: const ValueKey('team-rig-delete-confirm'),
+      confirmKey: const ValueKey('team-rig-delete-confirm-action'),
+    );
+    if (!ok || !mounted) return;
+    await _send(project, ProjectControlAction.remove);
   }
 
   @override
@@ -114,6 +147,7 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
       targetId: project.id,
     );
     final canControl = caps.controlProject;
+    final canRemove = caps.controlProjectRemove;
     return KitScreen(
       key: const ValueKey('team-rig'),
       topBar: KitTopBar(
@@ -142,7 +176,7 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
               title: l10n.teamRigPausedTitle(project.name),
               message: l10n.teamRigPausedBody,
             ),
-          if (canControl)
+          if (canControl || canRemove)
             KitRowGroup(
               children: [
                 if (canControl)
@@ -165,6 +199,15 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
                             _send(project, ProjectControlAction.resume),
                           )
                         : () => unawaited(_pause(project)),
+                  ),
+                if (canRemove)
+                  KitRow(
+                    key: const ValueKey('team-rig-delete'),
+                    leading: KitRow.icon(context, AppIconography.delete),
+                    title: l10n.teamRigDelete(project.name),
+                    titleMaxLines: 2,
+                    destructive: true,
+                    onTap: _busy ? null : () => unawaited(_delete(project)),
                   ),
               ],
             ),

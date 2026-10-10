@@ -215,6 +215,47 @@ Future<TeamCommandResult> _command(
     confirmed: confirmed,
   ),
 );
+
+/// Delete project: asks first, naming it and saying what goes and what
+/// stays; the engine refuses without the confirmation flag.
+Future<void> _confirmDelete(
+  BuildContext context,
+  TeamProjectController c,
+  TeamProject p,
+) async {
+  final l = lookupAppLocalizations(Localizations.localeOf(context));
+  final navigator = Navigator.of(context);
+  final ok = await showKitConfirm(
+    context,
+    title: l.teamProjectDeleteTitle(p.name),
+    body: l.teamProjectDeleteBody(p.name),
+    confirmLabel: l.teamProjectDeleteConfirm,
+    kind: KitConfirmKind.destructive,
+    consequenceItems: [
+      KitConsequence(
+        l.teamProjectDeleteLostPlan,
+        mark: KitConsequenceMark.lost,
+      ),
+      KitConsequence(
+        l.teamProjectDeleteLostRunning,
+        mark: KitConsequenceMark.lost,
+      ),
+      KitConsequence(l.teamProjectDeleteKept, mark: KitConsequenceMark.kept),
+    ],
+    sheetKey: const ValueKey('team-project-delete-confirm'),
+    confirmKey: const ValueKey('team-project-delete-confirm-action'),
+  );
+  if (!ok) return;
+  final result = await _command(
+    c,
+    p,
+    TeamProjectAction.deleteProject,
+    confirmed: true,
+  );
+  // A page that held the project has nothing left to show.
+  if (result.accepted && navigator.canPop()) navigator.pop();
+}
+
 Future<void> _answer(
   BuildContext context,
   TeamProjectController c,

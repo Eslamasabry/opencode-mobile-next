@@ -28,6 +28,9 @@ enum TeamExecutionNeed {
   verification,
   placement,
   resume,
+
+  /// Delete a project (the engine's `deleteProject`).
+  removal,
 }
 
 class TeamExecutionGate {
@@ -59,6 +62,7 @@ class TeamExecutionGate {
     TeamExecutionNeed.verification => capabilities.projectVerification,
     TeamExecutionNeed.placement => capabilities.projectPlacement,
     TeamExecutionNeed.resume => capabilities.projectResume,
+    TeamExecutionNeed.removal => capabilities.projectLifecycle,
   };
 
   /// Opens "Turn on AI Team on this phone".

@@ -1,6 +1,6 @@
-// OD1 team lane, feature 2: a project (Gas City rig) has its own page
+// OD1 team lane, features 2 and 3: a project (Gas City rig) has its own page
 // on the team home. Pause names the project and says what stops; resume is
-// one tap. Each
+// one tap; delete names the project and says what goes and what stays. Each
 // tap reaches the gateway with the right arguments (the wire routes are
 // proven in od_team_gateway_test.dart).
 import 'package:flutter/material.dart';
@@ -75,6 +75,36 @@ void main() {
     expect(host.gateway.controlCalls.last.arg, ProjectControlAction.resume);
     expect(find.byKey(const ValueKey('team-rig-paused')), findsNothing);
     expect(find.text('Pause project ocproof'), findsOneWidget);
+  });
+
+  testWidgets('delete names the project, says what goes and what stays', (
+    tester,
+  ) async {
+    await _openRig(tester, host);
+    await tester.ensureVisible(find.byKey(const ValueKey('team-rig-delete')));
+    expect(find.text('Delete project ocproof'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('team-rig-delete')));
+    await teamSettle(tester);
+    expect(find.text('Delete ocproof?'), findsOneWidget);
+    expect(find.textContaining('removed from this team'), findsOneWidget);
+    expect(find.text('Its folder and files on the computer'), findsOneWidget);
+    expect(find.text('Its past tasks and history'), findsOneWidget);
+    await odCapture(tester, 'rig-delete-confirm');
+    // Backing out sends nothing.
+    await tester.tap(find.text('Cancel'));
+    await teamSettle(tester);
+    expect(host.gateway.controlCalls, isEmpty);
+    await tester.tap(find.byKey(const ValueKey('team-rig-delete')));
+    await teamSettle(tester);
+    await tester.tap(
+      find.byKey(const ValueKey('team-rig-delete-confirm-action')),
+    );
+    await teamSettle(tester);
+    final call = host.gateway.controlCalls.single;
+    expect(call.verb, 'controlProject');
+    expect(call.arg, ProjectControlAction.remove);
+    // The page leaves with the project.
+    expect(find.byKey(const ValueKey('team-rig')), findsNothing);
   });
 
   testWidgets('a refusal stays on the page, with the way to try again', (

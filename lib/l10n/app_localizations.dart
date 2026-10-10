@@ -45353,6 +45353,48 @@ abstract class AppLocalizations {
   /// **'Pause project'**
   String get teamRigPauseConfirm;
 
+  /// Button that deletes a project, naming it
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project {project}'**
+  String teamRigDelete(String project);
+
+  /// Delete confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {project}?'**
+  String teamRigDeleteTitle(String project);
+
+  /// Delete confirmation body for a project on a computer's team
+  ///
+  /// In en, this message translates to:
+  /// **'“{project}” is removed from this team. Its folder and files on the computer are not touched.'**
+  String teamRigDeleteBody(String project);
+
+  /// Delete confirmation button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project'**
+  String get teamRigDeleteConfirm;
+
+  /// Consequence line: what a project delete takes away
+  ///
+  /// In en, this message translates to:
+  /// **'The team stops working on it'**
+  String get teamRigDeleteLost;
+
+  /// Consequence line: what a project delete keeps
+  ///
+  /// In en, this message translates to:
+  /// **'Its folder and files on the computer'**
+  String get teamRigDeleteKeptFiles;
+
+  /// Consequence line: what a project delete keeps
+  ///
+  /// In en, this message translates to:
+  /// **'Its past tasks and history'**
+  String get teamRigDeleteKeptHistory;
+
   /// Technical details label for a project's folder
   ///
   /// In en, this message translates to:
@@ -45370,6 +45412,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The computer no longer lists it. Go back to the team.'**
   String get teamRigNotFoundBody;
+
+  /// Visible row on a project's page that deletes it, naming it
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project {project}'**
+  String teamProjectDelete(String project);
+
+  /// Delete project confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {project}?'**
+  String teamProjectDeleteTitle(String project);
+
+  /// Delete project confirmation body for the in-app engine
+  ///
+  /// In en, this message translates to:
+  /// **'“{project}” is deleted from this phone\'s AI Team, with the team\'s copy of its code. This can\'t be undone.'**
+  String teamProjectDeleteBody(String project);
+
+  /// Delete project confirmation button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project'**
+  String get teamProjectDeleteConfirm;
+
+  /// Consequence line: deleted with the project
+  ///
+  /// In en, this message translates to:
+  /// **'Its plan, tasks and history are deleted'**
+  String get teamProjectDeleteLostPlan;
+
+  /// Consequence line: stops with the project
+  ///
+  /// In en, this message translates to:
+  /// **'Running work stops'**
+  String get teamProjectDeleteLostRunning;
+
+  /// Consequence line: kept when the project is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'The folder you added it from stays as it is'**
+  String get teamProjectDeleteKept;
 }
 
 class _AppLocalizationsDelegate
