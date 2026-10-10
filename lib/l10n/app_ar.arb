@@ -7140,6 +7140,8 @@
   "kitComposerAddToTurnShort": "إضافة إلى هذه الجولة",
   "kitComposerDeliveryLabel": "موعد الإرسال",
   "kitComposerSendsAfter": "يُرسل بعد هذا الرد",
+  "kitComposerStopAndSend": "إيقاف وإرسال",
+  "kitComposerStopAndSendNote": "وكلاء مثل Claude Code يضيفون الرسالة إلى الجولة. أما هذا الوكيل فيوقف رده ويبدأ من جديد برسالتك.",
   "kitComposerCannotSendYet": "يمكنك الإرسال عند انتهاء هذا الرد",
   "kitComposerOffline": "غير متصل · يُرسل عند عودة الاتصال",
   "kitComposerTools": "الإرفاق والمزيد",

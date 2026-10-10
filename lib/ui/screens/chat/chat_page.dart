@@ -31,8 +31,11 @@ extension _ChatPage on _ChatScreenState {
     final keyboardUp = MediaQuery.viewInsetsOf(context).bottom > 0;
     final busy = _conn.busySessions.contains(widget.sessionID);
     // OpenCode 1 runs a prompt sent mid-turn after that turn: every user
-    // message past the assistant's current one is waiting, and says so.
-    final queuedAfterIndex = busy && !_conn.supportsInbox
+    // message past the assistant's current one is waiting, and says so. A
+    // Paseo agent reads it in the running turn or starts over from it:
+    // nothing waits.
+    final queuedAfterIndex =
+        busy && !_conn.supportsInbox && _midTurnPrompt == null
         ? _queuedAfterIndex(_messages)
         : -1;
     final displayParts = _timelineDisplayParts(_messages, liveTail: busy);

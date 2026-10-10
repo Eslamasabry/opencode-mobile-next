@@ -22,8 +22,14 @@ enum KitComposerDelivery {
   /// The default (P6.6 "Queue over Steer"): sent when the reply finishes.
   afterThisReply,
 
-  /// Steer: reaches the agent at its next step (OpenCode 2 only).
+  /// Steer: reaches the agent at its next step (OpenCode 2, and the Paseo
+  /// agents that steer).
   addToThisTurn,
+
+  /// The agent cannot take a message mid-reply: Send stops the reply and
+  /// the agent starts again from the message (a Paseo agent that cannot
+  /// steer). Never offered as a choice.
+  stopAndSend,
 }
 
 /// Where voice mode stands (P10.3).

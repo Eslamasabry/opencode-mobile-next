@@ -385,9 +385,11 @@ class _KitComposerState extends State<KitComposer> {
     if (widget.sending) return l10n.kitComposerSending;
     if (widget.offline) return l10n.kitComposerSendOffline;
     if (widget.busy) {
-      return widget.delivery == KitComposerDelivery.addToThisTurn
-          ? l10n.kitComposerAddToTurn
-          : l10n.kitComposerSendAfter;
+      return switch (widget.delivery) {
+        KitComposerDelivery.addToThisTurn => l10n.kitComposerAddToTurn,
+        KitComposerDelivery.stopAndSend => l10n.kitComposerStopAndSend,
+        KitComposerDelivery.afterThisReply => l10n.kitComposerSendAfter,
+      };
     }
     return l10n.kitComposerSend;
   }
@@ -412,9 +414,11 @@ class _KitComposerState extends State<KitComposer> {
           _hasContent &&
           widget.canSendWhileBusy &&
           widget.onDeliveryChanged == null)
-        widget.delivery == KitComposerDelivery.addToThisTurn
-            ? l10n.kitComposerAddToTurn
-            : l10n.kitComposerSendsAfter,
+        switch (widget.delivery) {
+          KitComposerDelivery.addToThisTurn => l10n.kitComposerAddToTurn,
+          KitComposerDelivery.stopAndSend => l10n.kitComposerStopAndSendNote,
+          KitComposerDelivery.afterThisReply => l10n.kitComposerSendsAfter,
+        },
     ];
     return parts.isEmpty ? null : parts.join(' · ');
   }

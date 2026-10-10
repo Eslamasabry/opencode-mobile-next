@@ -14951,6 +14951,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kitComposerSendsAfter => 'يُرسل بعد هذا الرد';
 
   @override
+  String get kitComposerStopAndSend => 'إيقاف وإرسال';
+
+  @override
+  String get kitComposerStopAndSendNote =>
+      'وكلاء مثل Claude Code يضيفون الرسالة إلى الجولة. أما هذا الوكيل فيوقف رده ويبدأ من جديد برسالتك.';
+
+  @override
   String get kitComposerCannotSendYet => 'يمكنك الإرسال عند انتهاء هذا الرد';
 
   @override

@@ -100,6 +100,26 @@ abstract interface class CorrelatedPromptGateway {
   });
 }
 
+/// What a message sent while the agent works does to the running turn, on
+/// a gateway that does not run it after that turn.
+enum MidTurnPrompt {
+  /// Read at the agent's next step: "Add to this turn".
+  joinsTurn,
+
+  /// The agent stops its reply and starts again from the message: "Stop
+  /// and send".
+  restartsTurn,
+}
+
+/// A gateway whose agents never hold a message sent while they work until
+/// the turn ends: they take it into the turn or start over from it. The
+/// composer says which, and the message is never shown as queued.
+abstract interface class MidTurnPromptGateway {
+  /// What [sessionID]'s agent does with a mid-turn message; null when the
+  /// gateway does not know the agent yet.
+  MidTurnPrompt? midTurnPrompt(String sessionID);
+}
+
 /// Pending permission requests and replies.
 ///
 /// [message] rides only on OpenCode 2 rejections (shown to the model —

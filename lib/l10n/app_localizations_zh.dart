@@ -14763,6 +14763,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get kitComposerSendsAfter => '将在回复结束后发送';
 
   @override
+  String get kitComposerStopAndSend => 'Stop and send';
+
+  @override
+  String get kitComposerStopAndSendNote =>
+      'Agents like Claude Code add a message to the turn. This one stops its reply and starts again with yours.';
+
+  @override
   String get kitComposerCannotSendYet => '回复结束后即可发送';
 
   @override

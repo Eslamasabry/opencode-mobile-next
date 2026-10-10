@@ -407,7 +407,7 @@ class ToolResultSegment {
 
 /// Tool state extracted from a tool part's `state` object.
 class ToolState {
-  final String status; // pending | running | completed | error
+  final String status; // pending | running | completed | error | cancelled
   final String? title;
   final Map<String, dynamic> input;
   final String? inputJson;
@@ -479,7 +479,13 @@ class ToolState {
     }
     final rawStatus = (v['status'] ?? v['type'] ?? 'pending').toString();
     final status = switch (rawStatus) {
-      'running' || 'pending' || 'completed' || 'error' => rawStatus,
+      // `cancelled`: stopped before it finished (a Paseo step a mid-turn
+      // message interrupted); the tool card reads it as Stopped.
+      'running' ||
+      'pending' ||
+      'completed' ||
+      'error' ||
+      'cancelled' => rawStatus,
       _ => 'running',
     };
     final rawInput = v['input'];

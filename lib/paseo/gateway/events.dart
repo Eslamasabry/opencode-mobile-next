@@ -16,6 +16,10 @@ class _PaseoLive {
   /// The replies of the turn in progress, announced without a finish time:
   /// marked finished when the daemon says the turn ended.
   final open = <String, MessageInfo>{};
+
+  /// Each tool call as reported so far, by call id, so a later report of
+  /// the same call is merged into it ([paseoMergeToolCall]).
+  final tools = <String, Map<String, dynamic>>{};
 }
 
 extension _PaseoEvents on PaseoGateway {
@@ -233,6 +237,13 @@ extension _PaseoEvents on PaseoGateway {
       live.runID = null;
       live.runType = null;
       messageID = paseoItemID(item, fallbackSeq: seq);
+    }
+    if (type == 'tool_call') {
+      item = paseoMergeToolCall(live.tools.remove(messageID), item);
+      live.tools[messageID] = item;
+      while (live.tools.length > 2048) {
+        live.tools.remove(live.tools.keys.first);
+      }
     }
     final text = live.announced[messageID];
     if (streamed && text != null) {
