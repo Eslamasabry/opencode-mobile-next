@@ -6,6 +6,18 @@ import 'package:opencode_mobile/domain/agent_catalog.dart';
 
 const _ids = ['codex', 'gemini', 'qwen', 'goose', 'omp-acp', 'fx'];
 
+/// The guest's files are owned by uid 1000; the files this test creates are
+/// owned by whoever runs it (1001 on a GitHub runner). Point the script's
+/// ownership checks at the real owner and leave every other check as authored.
+final _hostUid = Process.runSync('id', ['-u']).stdout.toString().trim();
+
+String _asHostOwner(String script) => script
+    .replaceAll('entry.st_uid != 1000', 'entry.st_uid != $_hostUid')
+    .replaceAll(
+      'entry.st_uid not in (0, 1000)',
+      'entry.st_uid not in (0, $_hostUid)',
+    );
+
 /// Isolated authored-script fixture: rewrite only fixed guest paths and proc
 /// in test input. Production exposes no prefix, UID or proc override.
 class _Guest {
@@ -55,8 +67,7 @@ class _Guest {
         AgentRemovalScripts.remove(descriptor ?? agent, receiptId: receiptId)
             .replaceAll('/home/oc', home)
             .replaceAll("pathlib.Path('/proc')", "pathlib.Path('$proc')");
-    // The guest runs as uid 1000; the CI runner user is not 1000.
-    script = script.replaceAll('os.getuid()', uid ?? '1000');
+    script = _asHostOwner(script).replaceAll('os.getuid()', uid ?? '1000');
     final result = await Process.run(
       'sh',
       ['-c', script],
@@ -80,8 +91,8 @@ class _Guest {
     'sh',
     [
       '-c',
-      AgentRemovalScripts.readReceipt(
-        receiptId,
+      _asHostOwner(
+        AgentRemovalScripts.readReceipt(receiptId),
       ).replaceAll('/home/oc', home).replaceAll('os.getuid()', uid),
     ],
     environment: {'HOME': '/root', 'PATH': '/usr/bin:/bin'},
