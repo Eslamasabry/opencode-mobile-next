@@ -285,4 +285,142 @@ extension _PaseoPermissions on PaseoGateway {
       throw PaseoFailure(PaseoFailureKind.staleRequest);
     }
   }
+
+  Future<void> _respondPermission(
+    String requestID,
+    String reply, {
+    String? legacySessionID,
+    String? message,
+  }) async {
+    final pending = _permissions[requestID];
+    if (pending == null ||
+        (legacySessionID != null &&
+            legacySessionID != pending.permission.sessionID)) {
+      throw PaseoFailure(PaseoFailureKind.staleRequest);
+    }
+    if (pending.hostRequest != null) {
+      if (reply == 'always') throw PaseoFailure(PaseoFailureKind.unavailable);
+      if (!{'once', 'reject', 'cancel'}.contains(reply)) {
+        throw PaseoFailure(PaseoFailureKind.unavailable);
+      }
+      String? action;
+      if (reply == 'once') {
+        final allow = pending.hostRequest!.choices
+            .where(
+              (choice) =>
+                  choice.behavior == HostAgentPermissionBehavior.allowOnce,
+            )
+            .toList();
+        // Multiple choices require the exact-action card, not a guessed choice.
+        if (allow.length != 1) throw PaseoFailure(PaseoFailureKind.unavailable);
+        action = allow.single.actionId;
+      }
+      return _respondHostAgentPermission(requestID, selectedActionId: action);
+    }
+    if (reply == 'always' && pending.suggestions.isEmpty) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
+    final response = switch (reply) {
+      'once' => <String, dynamic>{'behavior': 'allow'},
+      // The provider's own suggested rule ("accept edits for this session").
+      'always' => <String, dynamic>{
+        'behavior': 'allow',
+        if (pending.suggestions.isNotEmpty)
+          'updatedPermissions': pending.suggestions,
+      },
+      'reject' => <String, dynamic>{
+        'behavior': 'deny',
+        if (message != null && message.trim().isNotEmpty)
+          'message': paseoText(message.trim(), max: 4096),
+      },
+      'cancel' => <String, dynamic>{'behavior': 'deny', 'interrupt': true},
+      _ => throw PaseoFailure(PaseoFailureKind.unavailable),
+    };
+    _checkPermissionEpoch(pending);
+    transport.send('agent_permission_response', {
+      'agentId': _real(pending.permission.sessionID),
+      'requestId': requestID,
+      'response': response,
+    }, expectedEpoch: pending.epoch);
+    _answered.add(requestID);
+    while (_answered.length > 256) {
+      _answered.remove(_answered.first);
+    }
+    _resolvePermission(requestID);
+  }
+
+  Future<void> _respondHostAgentPermission(
+    String requestId, {
+    String? selectedActionId,
+  }) async {
+    final pending = _permissions[requestId];
+    final request = pending?.hostRequest;
+    if (pending == null || request == null) {
+      throw PaseoFailure(PaseoFailureKind.staleRequest);
+    }
+    _checkPermissionEpoch(pending);
+    final scope = _scope;
+    final locationEpoch = _locationEpoch;
+    final realAgentId = _real(request.sessionId);
+    HostAgentPermissionChoice? choice;
+    if (selectedActionId != null) {
+      for (final offered in request.choices) {
+        if (offered.actionId == selectedActionId) choice = offered;
+      }
+      if (choice == null) throw PaseoFailure(PaseoFailureKind.staleRequest);
+    } else {
+      for (final offered in request.choices) {
+        if (offered.behavior == HostAgentPermissionBehavior.rejectOnce) {
+          choice = offered;
+          break;
+        }
+      }
+    }
+    if (choice == null) {
+      // Paseo's implicit deny falls back to reject_always. Cancel the turn
+      // instead, which resolves ACP pending requests with outcome=cancelled.
+      final result = await transport.request(
+        'cancel_agent_request',
+        {'agentId': realAgentId},
+        mutation: true,
+        expectedEpoch: pending.epoch,
+      );
+      _checkLocation(scope, locationEpoch);
+      _checkPermissionEpoch(pending);
+      final current = _permissions[requestId];
+      if (current != null && !identical(current, pending)) {
+        throw PaseoFailure(PaseoFailureKind.staleRequest);
+      }
+      final agent = result['agent'];
+      final stillPending = agent is Map ? agent['pendingPermissions'] : null;
+      // An idle agent may acknowledge cancel without interrupting anything.
+      // Acknowledgement alone must not retire an unanswered approval card.
+      if (identical(_permissions[requestId], pending) &&
+          (agent is! Map ||
+              agent['id'] != realAgentId ||
+              agent['cwd'] != _scope ||
+              stillPending is! List ||
+              stillPending.any(
+                (raw) => raw is Map && raw['id'] == requestId,
+              ))) {
+        throw PaseoFailure(PaseoFailureKind.unavailable);
+      }
+    } else {
+      transport.send('agent_permission_response', {
+        'agentId': _real(request.sessionId),
+        'requestId': requestId,
+        'response': {
+          'behavior': choice.behavior == HostAgentPermissionBehavior.allowOnce
+              ? 'allow'
+              : 'deny',
+          'selectedActionId': choice.actionId,
+        },
+      }, expectedEpoch: pending.epoch);
+    }
+    _answered.add(requestId);
+    while (_answered.length > 256) {
+      _answered.remove(_answered.first);
+    }
+    _resolvePermission(requestId);
+  }
 }

@@ -29,7 +29,7 @@
   "OC2 POST /api/session/{sessionID}/model": "reachable: Model picker › Use model (for this conversation) -> setSessionModel [test: test/session_model_scope_test.dart ~ setSessionModel]",
   "Paseo agent.config.apply.request": "not offered: the app changes an agent's model, thinking and mode one at a time; it never applies a whole configuration",
   "Paseo refresh_providers_snapshot_request": "covered elsewhere: reloading the provider list after a sign-in or from Reload (the Agents page) [test: test/phone_agents_controller_test.dart ~ refresh_providers_snapshot_request]",
-  "Paseo set_agent_feature_request": "not offered: owner decision needed - an agent's own switches (such as fast mode) have no control in the app",
+  "Paseo set_agent_feature_request": "reachable: Model sheet (Claude Code or Pi conversation) > Agent settings > Fast mode and the agent's other switches -> setAgentFeature [test: test/agent_features_sheet_test.dart ~ setAgentFeature]",
   "Paseo set_agent_mode_request": "reachable: Model picker and the conversation's mode control -> setSessionAgent [test: test/paseo_browser_launch_test.dart ~ set_agent_mode_request]",
   "Paseo set_agent_model_request": "reachable: Model picker › Use model (for this conversation) -> setSessionModel [test: test/paseo_model_catalog_test.dart ~ set_agent_model_request]",
   "Paseo set_agent_thinking_request": "reachable: Model picker › Thinking, applied with the model -> setSessionModel [test: test/paseo_model_catalog_test.dart ~ set_agent_thinking_request]"

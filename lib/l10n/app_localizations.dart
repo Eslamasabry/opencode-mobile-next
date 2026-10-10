@@ -432,6 +432,48 @@ abstract class AppLocalizations {
   /// **'Applies to this conversation\'s next turns.'**
   String get modelSessionScopeNote;
 
+  /// Model sheet: section of the agent's own switches
+  ///
+  /// In en, this message translates to:
+  /// **'Agent settings'**
+  String get agentFeaturesLabel;
+
+  /// Model sheet: the agent's switches are being read
+  ///
+  /// In en, this message translates to:
+  /// **'Loading agent settings…'**
+  String get agentFeaturesLoading;
+
+  /// Model sheet: reading the agent's switches failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this agent\'s settings.'**
+  String get agentFeaturesLoadFailed;
+
+  /// Agent switch: fast mode
+  ///
+  /// In en, this message translates to:
+  /// **'Fast mode'**
+  String get agentFeatureFastTitle;
+
+  /// Agent switch: what fast mode does
+  ///
+  /// In en, this message translates to:
+  /// **'Quicker replies from supported models. It costs more.'**
+  String get agentFeatureFastDetail;
+
+  /// Agent switch: change in flight
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get agentFeatureSaving;
+
+  /// Agent switch: the server refused the change
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change {name}. It keeps its old setting.'**
+  String agentFeatureChangeFailed(String name);
+
   /// No description provided for @modelSelectionLoading.
   ///
   /// In en, this message translates to:

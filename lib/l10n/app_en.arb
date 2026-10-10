@@ -102,6 +102,39 @@
   "modelOptions": "Options",
   "modelThinkingMode": "Thinking mode",
   "modelSessionScopeNote": "Applies to this conversation's next turns.",
+  "agentFeaturesLabel": "Agent settings",
+  "@agentFeaturesLabel": {
+    "description": "Model sheet: section of the agent's own switches"
+  },
+  "agentFeaturesLoading": "Loading agent settings…",
+  "@agentFeaturesLoading": {
+    "description": "Model sheet: the agent's switches are being read"
+  },
+  "agentFeaturesLoadFailed": "Could not load this agent's settings.",
+  "@agentFeaturesLoadFailed": {
+    "description": "Model sheet: reading the agent's switches failed"
+  },
+  "agentFeatureFastTitle": "Fast mode",
+  "@agentFeatureFastTitle": {
+    "description": "Agent switch: fast mode"
+  },
+  "agentFeatureFastDetail": "Quicker replies from supported models. It costs more.",
+  "@agentFeatureFastDetail": {
+    "description": "Agent switch: what fast mode does"
+  },
+  "agentFeatureSaving": "Saving…",
+  "@agentFeatureSaving": {
+    "description": "Agent switch: change in flight"
+  },
+  "agentFeatureChangeFailed": "Could not change {name}. It keeps its old setting.",
+  "@agentFeatureChangeFailed": {
+    "description": "Agent switch: the server refused the change",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "modelSelectionLoading": "Loading conversation selection…",
   "modelServerDefault": "Server default",
   "modelSelectionSaving": "Saving conversation selection…",

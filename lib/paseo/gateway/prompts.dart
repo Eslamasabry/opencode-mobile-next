@@ -53,6 +53,8 @@ extension _PaseoPrompts on PaseoGateway {
             if (sendMode) 'modeId': mode,
             if (variant != null && variant.isNotEmpty)
               'thinkingOptionId': variant,
+            if (_draftFeatureValues[id]?.isNotEmpty == true)
+              'featureValues': _draftFeatureValues[id],
             if (title != null && title != 'New conversation') 'title': title,
           },
           if (!browserRequested) 'initialPrompt': prompt,

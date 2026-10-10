@@ -187,6 +187,30 @@ class AppLocalizationsAr extends AppLocalizations {
       'يسري على الرسائل التالية في هذه المحادثة.';
 
   @override
+  String get agentFeaturesLabel => 'إعدادات الوكيل';
+
+  @override
+  String get agentFeaturesLoading => 'جارٍ تحميل إعدادات الوكيل…';
+
+  @override
+  String get agentFeaturesLoadFailed => 'تعذر تحميل إعدادات هذا الوكيل.';
+
+  @override
+  String get agentFeatureFastTitle => 'الوضع السريع';
+
+  @override
+  String get agentFeatureFastDetail =>
+      'ردود أسرع من النماذج المدعومة. تكلفته أعلى.';
+
+  @override
+  String get agentFeatureSaving => 'جارٍ الحفظ…';
+
+  @override
+  String agentFeatureChangeFailed(String name) {
+    return 'تعذر تغيير $name. يبقى إعداده القديم.';
+  }
+
+  @override
   String get modelSelectionLoading => 'جارٍ تحميل اختيار المحادثة…';
 
   @override

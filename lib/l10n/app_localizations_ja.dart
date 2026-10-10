@@ -186,6 +186,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get modelSessionScopeNote => 'この会話の以降のやり取りに適用されます。';
 
   @override
+  String get agentFeaturesLabel => 'Agent settings';
+
+  @override
+  String get agentFeaturesLoading => 'Loading agent settings…';
+
+  @override
+  String get agentFeaturesLoadFailed =>
+      'Could not load this agent\'s settings.';
+
+  @override
+  String get agentFeatureFastTitle => 'Fast mode';
+
+  @override
+  String get agentFeatureFastDetail =>
+      'Quicker replies from supported models. It costs more.';
+
+  @override
+  String get agentFeatureSaving => 'Saving…';
+
+  @override
+  String agentFeatureChangeFailed(String name) {
+    return 'Could not change $name. It keeps its old setting.';
+  }
+
+  @override
   String get modelSelectionLoading => 'Loading conversation selection…';
 
   @override
