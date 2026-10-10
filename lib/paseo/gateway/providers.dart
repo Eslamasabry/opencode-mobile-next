@@ -90,6 +90,19 @@ extension _PaseoProviders on PaseoGateway {
     _remember(agent);
   }
 
+  /// Agents read before the model list arrived carry the daemon's long model
+  /// id; once the list is known they are shown under the list's own id.
+  void _refreshCanonicalModels() {
+    for (final agent in _agents.values.toList()) {
+      final canonical = _canonicalModelId(agent['provider'], agent['model']);
+      if (canonical == null || canonical == agent['model']) continue;
+      final session = _remember(agent, reconcileStatus: false);
+      if (session != null) {
+        _emit('session.updated', {'info': paseoSessionJson(session)});
+      }
+    }
+  }
+
   // ---- runtimes, models and modes ---------------------------------------
 
   Future<List<Map<String, dynamic>>> _providers() async {
@@ -115,7 +128,10 @@ extension _PaseoProviders on PaseoGateway {
         max: 256,
       ).whereType<Map<String, dynamic>>().toList();
       if (entries.every((entry) => entry['status'] != 'loading')) {
-        if (revision == _providerRevision) _providerEntries = entries;
+        if (revision == _providerRevision) {
+          _providerEntries = entries;
+          _refreshCanonicalModels();
+        }
         break;
       }
     }

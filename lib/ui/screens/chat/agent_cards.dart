@@ -11,13 +11,25 @@ extension _ChatAgentCards on _ChatScreenState {
   GenUiController? get _genUi => _conn;
 
   /// Who the conversation is with, as the composer and the cards say it.
-  String? get _agentName => _conn.isAgentBackend
-      ? _conn.profile?.name
-      : switch (_conn.profile?.backend) {
-          ServerBackend.paseo => 'Claude Code',
-          ServerBackend.codex => 'Codex',
-          _ => null,
-        };
+  String? get _agentName {
+    // The conversation's own agent (Claude Code or Pi) where the server
+    // says which it is; a server's name for itself is not the agent's.
+    final api = _conn.api;
+    if (api is AgentFeatureGateway &&
+        (api as AgentFeatureGateway).agentFeaturesSupported) {
+      final owner = (api as AgentFeatureGateway).agentFeaturesOwner(
+        widget.sessionID,
+      );
+      if (owner != null) return owner;
+    }
+    return _conn.isAgentBackend
+        ? _conn.profile?.name
+        : switch (_conn.profile?.backend) {
+            ServerBackend.paseo => 'Claude Code',
+            ServerBackend.codex => 'Codex',
+            _ => null,
+          };
+  }
 
   /// A card of this conversation waits for the person: the composer says the
   /// answer can also be typed.
