@@ -440,9 +440,13 @@ class _MessageView extends StatelessWidget {
     final latest = _inLatestTurn(messages, index);
     // Busy by the server's word, or by this phone's until the server's
     // arrives: a reply that runs before its busy status came is not cut off.
+    // A message added to the running turn (a Paseo agent that steers)
+    // starts a prompt row of its own, but the steps above it are still that
+    // turn's work: unfinished, they run, they are not cut off.
+    final joined = streaming && chat != null && chat._sendJoinsRunningTurn;
     final busy =
         chat != null &&
-        latest &&
+        (latest || joined) &&
         (chat._conn.busySessions.contains(chat.widget.sessionID) ||
             chat._localTurnSince != null);
     // A brief link handoff keeps the current turn running. Only the shared

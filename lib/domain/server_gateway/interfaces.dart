@@ -100,6 +100,16 @@ abstract interface class CorrelatedPromptGateway {
   });
 }
 
+/// A gateway whose agents take a message sent while they work into the
+/// turn in progress (read at their next step) instead of running it after
+/// that turn. The composer then says "Add to this turn", and the message is
+/// never shown as queued.
+abstract interface class MidTurnPromptGateway {
+  /// Whether [sessionID]'s agent adds a mid-turn message to its running
+  /// turn.
+  bool midTurnPromptJoinsTurn(String sessionID);
+}
+
 /// Pending permission requests and replies.
 ///
 /// [message] rides only on OpenCode 2 rejections (shown to the model —

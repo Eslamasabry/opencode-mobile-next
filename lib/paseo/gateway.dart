@@ -58,6 +58,7 @@ class PaseoGateway extends _PaseoWorkspace
         CorrelatedPromptGateway,
         HostDaemonUpdateGateway,
         AgentFeatureGateway,
+        MidTurnPromptGateway,
         ProviderConversationImportGateway {
   @override
   final PaseoTransport transport;
@@ -732,11 +733,20 @@ class PaseoGateway extends _PaseoWorkspace
     }, timeout: const Duration(seconds: 45));
     _checkLocation(scope, epoch);
     final busy = paseoSessionStatus(agent) == 'busy';
-    final messages = paseoTimelineMessages(id, result, busy: busy);
+    final tools = <String, Map<String, dynamic>>{};
+    final messages = paseoTimelineMessages(
+      id,
+      result,
+      busy: busy,
+      toolCalls: tools,
+    );
     if (busy) unawaited(_watchUntilIdle(id));
     // Hydrated items are known to the chat from here on, so later stream
     // events for them are deltas and snapshots, never first announcements.
     final live = _live.putIfAbsent(id, _PaseoLive.new);
+    live.tools
+      ..clear()
+      ..addAll(tools);
     live.announced.clear();
     live.runID = null;
     live.runType = null;
@@ -903,6 +913,12 @@ class PaseoGateway extends _PaseoWorkspace
             'agentId': realID,
             'text': prompt,
             'messageId': messageID,
+            // A message sent while the agent works joins that turn. The
+            // daemon's default ("interrupt") cancels the turn, stops the
+            // step in hand and starts over from the new message. An idle
+            // agent starts a turn as usual; one that cannot steer is still
+            // interrupted (agent-prompt.js steerOrReplaceActiveRun).
+            'activeTurnBehavior': 'steer',
             if (images.isNotEmpty) 'images': images,
           },
           mutation: true,
@@ -928,6 +944,16 @@ class PaseoGateway extends _PaseoWorkspace
       rethrow;
     }
   });
+
+  /// Paseo 0.9.1 steers Claude Code, Codex, OpenCode and Pi
+  /// (`steerActiveTurn`); its ACP agents (Copilot) are interrupted instead.
+  @override
+  bool midTurnPromptJoinsTurn(String sessionID) => const {
+    'claude',
+    'codex',
+    'opencode',
+    'pi',
+  }.contains(_agents[_app(sessionID)]?['provider']);
 
   @override
   Future<void> abort(String sessionID) async {

@@ -185,11 +185,82 @@ String paseoToolName(String name, Map<String, dynamic> detail) =>
       _ => name.isEmpty ? 'tool' : name.toLowerCase(),
     };
 
+/// A stopped step reads Stopped, never Failed: the tool card draws
+/// `cancelled` as stopped and keeps the step's own body (its command, its
+/// file) in view.
 String paseoToolStatus(Object? status) => switch (status) {
   'completed' => 'completed',
-  'failed' || 'error' || 'canceled' || 'cancelled' => 'error',
+  'canceled' || 'cancelled' => 'cancelled',
+  'failed' || 'error' => 'error',
   _ => 'running',
 };
+
+/// Claude's words for a tool call it was told to stop ("[Request interrupted
+/// by user for tool use]"), as Paseo forwards them in a failed call's error.
+final _interruptReport = RegExp(r'^\[Request interrupted by user[^\]]*\]$');
+
+/// A failed tool call whose only error is Claude saying it was stopped. When
+/// a message sent mid-turn interrupts the turn, Paseo 0.9.1 reports the
+/// stopped step as `canceled`, then once more, inside the next turn, as a
+/// failed call named "tool" with no input (claude/agent.js handleToolResult
+/// after flushPendingToolCalls dropped the call). It is a stop, not a failure.
+bool paseoInterruptedToolCall(Map<String, dynamic> item) {
+  if (item['status'] != 'failed') return false;
+  final error = item['error'];
+  final content = error is Map ? (error['content'] ?? error['message']) : error;
+  final text = switch (content) {
+    String text => text,
+    List blocks =>
+      blocks
+          .whereType<Map>()
+          .map((block) => block['text'])
+          .whereType<String>()
+          .join(),
+    _ => '',
+  };
+  return _interruptReport.hasMatch(text.trim());
+}
+
+/// [later], a tool call reported again under the call id of [earlier],
+/// merged the way the daemon's own projection merges one
+/// (timeline-projection.js mergeToolCallItems): a detail it could not parse
+/// keeps the parsed one, and metadata accumulates. A report that names no
+/// tool ("tool") keeps the step's name, and Claude's stop report reads as
+/// the stop it is.
+Map<String, dynamic> paseoMergeToolCall(
+  Map<String, dynamic>? earlier,
+  Map<String, dynamic> later,
+) {
+  if (earlier == null ||
+      earlier['type'] != 'tool_call' ||
+      later['type'] != 'tool_call') {
+    return later;
+  }
+  String name(Map<String, dynamic> item) =>
+      item['name'] is String ? (item['name'] as String).trim() : '';
+  bool parsed(Object? detail) =>
+      detail is Map && detail['type'] is String && detail['type'] != 'unknown';
+  final laterName = name(later);
+  final earlierName = name(earlier);
+  final earlierMeta = earlier['metadata'];
+  final laterMeta = later['metadata'];
+  final interrupted = paseoInterruptedToolCall(later);
+  return {
+    ...earlier,
+    ...later,
+    if ((laterName.isEmpty || laterName.toLowerCase() == 'tool') &&
+        earlierName.isNotEmpty)
+      'name': earlier['name'],
+    if (!parsed(later['detail']) && parsed(earlier['detail']))
+      'detail': earlier['detail'],
+    if (earlierMeta is Map || laterMeta is Map)
+      'metadata': {
+        if (earlierMeta is Map) ...earlierMeta,
+        if (laterMeta is Map) ...laterMeta,
+      },
+    if (interrupted) ...{'status': 'canceled', 'error': null},
+  };
+}
 
 /// Paseo's detail fields under the names the tool card already reads for the
 /// same tool in OpenCode (`pattern`, `subagent_type`, `name`), so one card
@@ -457,6 +528,9 @@ MessageWithParts? paseoItemMessage(
         ),
       );
     case 'tool_call':
+      final status = paseoInterruptedToolCall(item)
+          ? 'cancelled'
+          : paseoToolStatus(item['status']);
       final detail = item['detail'] is Map<String, dynamic>
           ? item['detail'] as Map<String, dynamic>
           : const <String, dynamic>{};
@@ -468,12 +542,11 @@ MessageWithParts? paseoItemMessage(
           type: 'tool',
           toolName: paseoToolName(paseoText(item['name'], max: 256), detail),
           toolState: ToolState.fromJson({
-            'status': paseoToolStatus(item['status']),
+            'status': status,
             'input': _toolInput(detail),
-            'output': _toolOutput(item, detail),
+            'output': status == 'cancelled' ? '' : _toolOutput(item, detail),
             // A failed step reads its words from `error`.
-            if (paseoToolStatus(item['status']) == 'error')
-              'error': _toolOutput(item, detail),
+            if (status == 'error') 'error': _toolOutput(item, detail),
             'metadata': _toolMetadata(detail),
           }),
         ),
@@ -602,35 +675,46 @@ MessageWithParts? paseoItemMessage(
 /// Maps a `fetch_agent_timeline_response` payload, oldest first.
 ///
 /// Entries are already merged by the daemon's projection, so consecutive
-/// assistant deltas arrive as one item. Entries that share an id (a tool call
-/// reported while running and again when done) collapse to the latest.
+/// assistant deltas arrive as one item. Entries that share an id collapse to
+/// the latest. A tool call the projection kept twice (reported again in a
+/// later turn, as Claude does for a step a mid-turn message stopped) is
+/// merged into its first report and stays where the step ran.
+/// [toolCalls], when given, receives each tool call's merged item by id.
 List<MessageWithParts> paseoTimelineMessages(
   String agentID,
   Map<String, dynamic> payload, {
   required bool busy,
+  Map<String, Map<String, dynamic>>? toolCalls,
 }) {
   final result = <String, MessageWithParts>{};
+  final tools = toolCalls ?? <String, Map<String, dynamic>>{};
+  final toolCreated = <String, int?>{};
   final entries = paseoList(payload['entries'], max: 20000);
   for (var i = 0; i < entries.length; i++) {
     final entry = entries[i];
     if (entry is! Map<String, dynamic>) continue;
-    final item = entry['item'];
+    var item = entry['item'];
     if (item is! Map<String, dynamic>) continue;
     final seq = entry['seqStart'];
     final id = paseoItemID(item, fallbackSeq: seq is int ? seq : i);
     final at = paseoMillis(entry['timestamp']);
     final last = i == entries.length - 1;
+    final earlier = item['type'] == 'tool_call' ? tools[id] : null;
+    if (item['type'] == 'tool_call') {
+      item = tools[id] = paseoMergeToolCall(earlier, item);
+      toolCreated.putIfAbsent(id, () => at);
+    }
     final message = paseoItemMessage(
       agentID,
       item,
       id: id,
       provider: paseoText(entry['provider'], max: 128),
-      created: at,
+      created: earlier != null ? toolCreated[id] : at,
       // Only the newest item of a running agent can still be streaming.
       completed: busy && last ? null : at,
     );
     if (message == null) continue;
-    result.remove(id);
+    if (earlier == null || !result.containsKey(id)) result.remove(id);
     result[id] = message;
   }
   return result.values.toList();
