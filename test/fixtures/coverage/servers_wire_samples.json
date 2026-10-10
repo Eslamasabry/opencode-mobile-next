@@ -860,10 +860,10 @@
     "paseo.available_providers.providers[].error": "ignored: the app never asks the server for this message, so no page shows it",
     "paseo.available_providers.error": "ignored: the app never asks the server for this message, so no page shows it",
     "paseo.available_providers.fetchedAt": "ignored: the app never asks the server for this message, so no page shows it",
-    "paseo.daemon_update.success": "ignored: the app never asks the server for this message, so no page shows it",
-    "paseo.daemon_update.error": "ignored: the app never asks the server for this message, so no page shows it",
-    "paseo.daemon_update.previousVersion": "ignored: the app never asks the server for this message, so no page shows it",
-    "paseo.daemon_update.newVersion": "ignored: the app never asks the server for this message, so no page shows it"
+    "paseo.daemon_update.success": "ignored: arrives only while the Update agents row runs and is read there (test/settings_host_update_test.dart); the server check never asks for it",
+    "paseo.daemon_update.error": "ignored: arrives only while the Update agents row runs and is read there (test/settings_host_update_test.dart); the server check never asks for it",
+    "paseo.daemon_update.previousVersion": "ignored: arrives only while the Update agents row runs and is read there (test/settings_host_update_test.dart); the server check never asks for it",
+    "paseo.daemon_update.newVersion": "ignored: arrives only while the Update agents row runs and is read there (test/settings_host_update_test.dart); the server check never asks for it"
   },
   "cases": [
     {

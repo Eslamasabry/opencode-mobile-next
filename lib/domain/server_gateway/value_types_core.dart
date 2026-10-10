@@ -103,10 +103,16 @@ class WorktreeInfo {
   final String directory;
   final String? branch;
 
+  /// The server answered the create call only once the folder was usable, so
+  /// no "worktree.ready" event will follow (Paseo). False where a later event
+  /// reports it (OpenCode).
+  final bool ready;
+
   const WorktreeInfo({
     required this.name,
     required this.directory,
     this.branch,
+    this.ready = false,
   });
 }
 

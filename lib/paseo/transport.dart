@@ -66,7 +66,18 @@ class PaseoFailure extends ApiException {
           PaseoFailureKind.scopeMismatch =>
             'This conversation belongs to another project.',
         },
-        statusCode: kind == PaseoFailureKind.authentication ? 401 : 409,
+        // Only a real clash reads as a conflict ("changed meanwhile"); a
+        // daemon that cannot be reached or did not do it has no status, and
+        // the app's failure words say so (ProductFailureCategory.computer).
+        statusCode: switch (kind) {
+          PaseoFailureKind.authentication => 401,
+          PaseoFailureKind.overloaded => 429,
+          PaseoFailureKind.staleRequest ||
+          PaseoFailureKind.scopeMismatch ||
+          PaseoFailureKind.deliveryUnknown ||
+          PaseoFailureKind.newChatRequired => 409,
+          _ => null,
+        },
         errorTag: 'Paseo${kind.name}',
       );
 }
@@ -216,11 +227,27 @@ class PaseoEvent {
   const PaseoEvent(this.epoch, this.type, this.payload);
 }
 
+/// One binary frame of a terminal stream: `[opcode, slot, ...payload]`. Only
+/// terminal output is ever subscribed to, so nothing else arrives this way.
+class PaseoBinaryFrame {
+  final int epoch;
+  final int opcode;
+  final int slot;
+  final List<int> payload;
+  const PaseoBinaryFrame(this.epoch, this.opcode, this.slot, this.payload);
+}
+
 class _PendingRequest {
   final bool mutation;
+
+  /// Progress messages the daemon sends for this request before its answer.
+  final void Function(String type, Map<String, dynamic> payload)? onProgress;
+
+  /// The answer is a report to read even when it carries an `error`.
+  final bool answerErrors;
   final Completer<Map<String, dynamic>> result = Completer();
   Timer? timer;
-  _PendingRequest(this.mutation);
+  _PendingRequest(this.mutation, {this.onProgress, this.answerErrors = false});
 }
 
 class PaseoTransport {
@@ -241,6 +268,7 @@ class PaseoTransport {
   final String clientId;
   final _events = StreamController<PaseoEvent>.broadcast(sync: true);
   final _disconnects = StreamController<int>.broadcast(sync: true);
+  final _binary = StreamController<PaseoBinaryFrame>.broadcast(sync: true);
   final Map<String, _PendingRequest> _pending = {};
   PaseoSocket? _socket;
   StreamSubscription<Object?>? _subscription;
@@ -282,6 +310,9 @@ class PaseoTransport {
 
   Stream<PaseoEvent> get events => _events.stream;
   Stream<int> get disconnects => _disconnects.stream;
+
+  /// Terminal stream frames, tagged with the connection they came on.
+  Stream<PaseoBinaryFrame> get binaryFrames => _binary.stream;
   int get epoch => _epoch;
   bool get isClosed => _closed;
   bool get connected => _socket != null && _initialized;
@@ -391,6 +422,8 @@ class PaseoTransport {
     Duration? timeout,
     int? expectedEpoch,
     void Function()? beforeSend,
+    void Function(String type, Map<String, dynamic> payload)? onProgress,
+    bool answerErrors = false,
   }) async {
     if (expectedEpoch != null && (!connected || expectedEpoch != _epoch)) {
       throw PaseoFailure(PaseoFailureKind.staleRequest);
@@ -414,7 +447,11 @@ class PaseoTransport {
     }
     beforeSend?.call();
     final id = 'm${epoch}_${++_nextID}';
-    final pending = _PendingRequest(mutation);
+    final pending = _PendingRequest(
+      mutation,
+      onProgress: onProgress,
+      answerErrors: answerErrors,
+    );
     _pending[id] = pending;
     pending.timer = Timer(timeout ?? requestTimeout, () {
       if (_pending.remove(id) == null) return;
@@ -477,8 +514,18 @@ class PaseoTransport {
 
   void _receive(int epoch, Object? frame) {
     if (epoch != _epoch || _closed) return;
-    // Binary frames carry terminal data, which this client never requests.
-    if (frame is! String) return;
+    if (frame is! String) {
+      // Binary frames carry terminal data, and only a terminal subscription
+      // asks for any.
+      if (frame is List<int> &&
+          frame.length >= 2 &&
+          frame.length <= maxFrameBytes) {
+        _binary.add(
+          PaseoBinaryFrame(epoch, frame[0], frame[1], frame.sublist(2)),
+        );
+      }
+      return;
+    }
     try {
       if (frame.length > maxFrameBytes) throw const FormatException();
       final cap = _boundedFrameBytes;
@@ -532,11 +579,19 @@ class PaseoTransport {
       // with the push they cause (`agent_archived`, `agent_deleted`). Request
       // ids are minted here and unique, so any payload repeating one settles
       // it; a push is still delivered as an event afterwards.
+      // Progress is not the answer: it repeats the request id but leaves the
+      // request waiting.
+      if (type.endsWith('.progress') &&
+          requestId is String &&
+          _pending.containsKey(requestId)) {
+        _pending[requestId]?.onProgress?.call(type, payload);
+        return;
+      }
       final pending = requestId is String ? _pending.remove(requestId) : null;
       if (pending != null) {
         pending.timer?.cancel();
         final error = payload['error'];
-        if (error is String && error.isNotEmpty) {
+        if (!pending.answerErrors && error is String && error.isNotEmpty) {
           lastDaemonError = 'The agent request could not be completed.';
           pending.result.completeError(
             PaseoFailure(PaseoFailureKind.unavailable),
@@ -601,5 +656,6 @@ class PaseoTransport {
     _lost(_epoch);
     await _events.close();
     await _disconnects.close();
+    await _binary.close();
   }
 }

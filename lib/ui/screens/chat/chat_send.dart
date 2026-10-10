@@ -554,7 +554,7 @@ extension _ChatSend on _ChatScreenState {
   /// server with no shell for the conversation says so and sends nothing.
   Future<void> _submitShellLine(String command) async {
     final strings = _chatL10n(context);
-    if (!_conn.capabilities.terminal) {
+    if (!_conn.capabilities.conversationShellOn) {
       _showComposerNote(
         strings.commandSheetShellNotSent('!$command', _agentWord(strings)),
       );

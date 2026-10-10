@@ -30,7 +30,7 @@ extension _ChatRunningWork on _ChatScreenState {
   };
 
   Future<void> _loadRunningShells() async {
-    if (_conn.isIsolated || !_conn.capabilities.terminal) return;
+    if (_conn.isIsolated || !_conn.capabilities.conversationShellOn) return;
     if (_conn.status != StreamStatus.connected) return;
     final repo = _conn.repository;
     if (repo == null) return;

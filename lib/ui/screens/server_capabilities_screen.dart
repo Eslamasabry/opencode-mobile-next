@@ -96,7 +96,8 @@ final List<ServerFeature> serverFeatures = [
     capability: 'flag:worktreeCreate+sessionShare+managedWorkspaces',
     title: (l10n) => l10n.capabilityWorktrees,
     detail: (l10n) => l10n.capabilityWorktreesDetail,
-    available: (facts) => facts.server.projectManagement,
+    available: (facts) =>
+        facts.server.projectManagement || facts.server.worktreeCreate,
   ),
   ServerFeature(
     id: 'cloud-environments',

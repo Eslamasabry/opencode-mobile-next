@@ -20,6 +20,10 @@ extension _PaseoSessions on PaseoGateway {
         known.trim().isNotEmpty) {
       agent = {...agent, 'title': known};
     }
+    final canonical = _canonicalModelId(agent['provider'], agent['model']);
+    if (canonical != null && canonical != agent['model']) {
+      agent = {...agent, 'model': canonical};
+    }
     final session = paseoSession(agent);
     if (session.directory != _directory || agent['archivedAt'] is String) {
       return null;
@@ -56,6 +60,30 @@ extension _PaseoSessions on PaseoGateway {
     return session;
   }
 
+  /// The id the model list knows a running agent's model by: the daemon
+  /// reports the resolved model, the list names it by its short id and
+  /// keeps the long one as an alias. Null when the list is not loaded or
+  /// does not know it (then the agent's own value stays).
+  String? _canonicalModelId(Object? provider, Object? model) {
+    if (provider is! String || model is! String) return null;
+    for (final entry in _providerEntries ?? const <Map<String, dynamic>>[]) {
+      if (entry['provider'] != provider) continue;
+      final models = entry['models'];
+      if (models is! List) return null;
+      for (final item in models) {
+        if (item is Map && item['id'] == model) return model;
+      }
+      for (final item in models) {
+        if (item is! Map || item['id'] is! String) continue;
+        final aliases = item['aliases'];
+        if (aliases is List && aliases.contains(model)) {
+          return item['id'] as String;
+        }
+      }
+    }
+    return null;
+  }
+
   void _forget(String id) {
     unawaited(setBrowserRequestedForSession(id, requested: false));
     _browserRequested.remove(id);
@@ -66,6 +94,7 @@ extension _PaseoSessions on PaseoGateway {
     _drafts.remove(id);
     _draftProviders.remove(id);
     _draftModels.remove(id);
+    _draftFeatureValues.remove(id);
     _liveAgentSessions.remove(id);
     _uncertain.remove(id);
     _awaitingTurn.remove(id);

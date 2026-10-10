@@ -27,7 +27,7 @@
   "oc1 POST /pty/{ptyID}/connect-token": "reachable: Terminal > open a terminal; proof: test/terminal_accessibility_test.dart :: terminal reconnect resumes from its cursor without replaying transcript",
   "oc1 PUT /api/pty/{ptyID}": "reachable: Terminal > a terminal > Rename",
   "oc1 PUT /pty/{ptyID}": "reachable: Terminal > a terminal > Rename",
-  "paseo create_terminal_request": "not offered: a Claude Code or Pi server has no terminal tab; the app has no Paseo terminal screen",
-  "paseo kill_terminal_request": "not offered: a Claude Code or Pi server has no terminal tab; the app has no Paseo terminal screen",
-  "paseo terminal.rename.request": "not offered: a Claude Code or Pi server has no terminal tab; the app has no Paseo terminal screen"
+  "paseo create_terminal_request": "reachable: Project > Terminal > New terminal; proof: test/paseo_project_tools_test.dart :: New terminal asks the daemon for one in the folder",
+  "paseo kill_terminal_request": "reachable: Project > Terminal > a terminal > Stop (asks first, naming it); proof: test/paseo_project_tools_test.dart :: Stop names the terminal and then closes that one",
+  "paseo terminal.rename.request": "reachable: Project > Terminal > a terminal > Rename; proof: test/paseo_project_tools_test.dart :: Rename asks for the new name and sends it"
 }

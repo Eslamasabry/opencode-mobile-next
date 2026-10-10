@@ -52,7 +52,7 @@ part 'files/files_entries.dart';
 /// Project file browser backed by `/file`, with name search (`/find/file`)
 /// and the kit's one viewer (map pages files, files-row-actions-sheet,
 /// files-file-viewer-sheet, files-changes-sheet).
-enum _FileSurface { files, symbols }
+enum _FileSurface { files, symbols, text }
 
 typedef ProjectFileAttachment =
     Future<void> Function(String path, FilePreviewData data);
@@ -180,6 +180,9 @@ class _ViewerSession {
 class _FilesScreenState extends State<FilesScreen> {
   List<FileNode>? _entries;
   List<WorkspaceSymbol>? _symbols;
+
+  /// Lines found by the text search (null before one has run).
+  List<FindMatch>? _textMatches;
   Map<String, VersionControlFile> _fileStatuses = const {};
   _FileSurface _surface = _FileSurface.files;
   String _path = '';
@@ -321,16 +324,20 @@ class _FilesScreenState extends State<FilesScreen> {
     }
     if (dataRefreshChanged && !controllerLocationChanged) {
       if (_search.text.trim().isNotEmpty) {
-        if (_surface == _FileSurface.symbols) {
-          _searchSymbols(_search.text);
-        } else {
-          _searchFiles(_search.text);
+        switch (_surface) {
+          case _FileSurface.symbols:
+            _searchSymbols(_search.text);
+          case _FileSurface.text:
+            _searchText(_search.text);
+          case _FileSurface.files:
+            _searchFiles(_search.text);
         }
       } else if (_surface == _FileSurface.files) {
         _load(_path);
       } else {
         setState(() {
           _symbols = null;
+          _textMatches = null;
           _error = null;
         });
       }
@@ -344,6 +351,7 @@ class _FilesScreenState extends State<FilesScreen> {
       _viewer = null;
       _notice = null;
       _symbols = null;
+      _textMatches = null;
       _error = null;
       _fileStatuses = const {};
       _fileStatusesError = null;
@@ -407,6 +415,7 @@ class _FilesScreenState extends State<FilesScreen> {
       _loading = false;
       _error = null;
       if (surface == _FileSurface.symbols) _symbols = null;
+      if (surface == _FileSurface.text) _textMatches = null;
     });
     if (surface == _FileSurface.files) unawaited(_load(origin));
   }
@@ -415,19 +424,23 @@ class _FilesScreenState extends State<FilesScreen> {
   /// and reports a clear at once).
   void _onSearchChanged(String query) {
     if (_suppressSearch) return;
-    if (_surface == _FileSurface.symbols) {
-      unawaited(_searchSymbols(query));
-    } else {
-      unawaited(_searchFiles(query));
+    switch (_surface) {
+      case _FileSurface.symbols:
+        unawaited(_searchSymbols(query));
+      case _FileSurface.text:
+        unawaited(_searchText(query));
+      case _FileSurface.files:
+        unawaited(_searchFiles(query));
     }
   }
 
   void _clearSearch() {
     _clearSearchText();
-    if (_surface == _FileSurface.symbols) {
+    if (_surface != _FileSurface.files) {
       _requestGeneration++;
       setState(() {
         _symbols = null;
+        _textMatches = null;
         _loading = false;
         _error = null;
       });

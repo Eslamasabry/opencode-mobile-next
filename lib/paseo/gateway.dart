@@ -38,8 +38,16 @@ part 'gateway/subagents.dart';
 part 'gateway/gen_ui_history.dart';
 part 'gateway/payload_use.dart';
 part 'gateway/idle_work.dart';
+part 'gateway/workspace_base.dart';
+part 'gateway/files.dart';
+part 'gateway/changes.dart';
+part 'gateway/worktrees.dart';
+part 'gateway/terminals.dart';
+part 'gateway/host_update.dart';
+part 'gateway/agent_features.dart';
+part 'gateway/provider_import.dart';
 
-class PaseoGateway
+class PaseoGateway extends _PaseoWorkspace
     implements
         ServerGateway,
         ServerOperationsGateway,
@@ -47,7 +55,11 @@ class PaseoGateway
         HostAgentPermissionGateway,
         SessionSelectionGateway,
         GenUiHistoryGateway,
-        CorrelatedPromptGateway {
+        CorrelatedPromptGateway,
+        HostDaemonUpdateGateway,
+        AgentFeatureGateway,
+        ProviderConversationImportGateway {
+  @override
   final PaseoTransport transport;
   final Future<void> Function()? _beforePayloadUse;
   final void Function()? _afterPayloadUse;
@@ -112,6 +124,7 @@ class PaseoGateway
 
   String? _directory;
   bool _closed = false;
+  @override
   final _agents = <String, Map<String, dynamic>>{};
   final _sessions = <String, Session>{};
   final _statuses = <String, String>{};
@@ -129,6 +142,7 @@ class PaseoGateway
 
   /// The model a draft starts on (its first prompt creates the agent).
   final _draftModels = <String, ModelRef>{};
+  final _draftFeatureValues = <String, Map<String, Object>>{};
   final _liveAgentSessions = <String>{};
   final _uncertain = <String>{};
 
@@ -256,6 +270,7 @@ class PaseoGateway
   late final StreamSubscription<int> _daemonDisconnects;
   Timer? _retry;
   int _retryAttempt = 0;
+  @override
   int _locationEpoch = 0;
   bool _listening = false;
   bool _recoveryDegraded = false;
@@ -325,6 +340,7 @@ class PaseoGateway
   @override
   bool get isClosed => _closed;
 
+  @override
   String get _scope {
     final value = _directory;
     if (value == null ||
@@ -357,6 +373,7 @@ class PaseoGateway
     _drafts.clear();
     _draftProviders.clear();
     _draftModels.clear();
+    _draftFeatureValues.clear();
     _liveAgentSessions.clear();
     _uncertain.clear();
     _awaitingTurn.clear();
@@ -423,6 +440,7 @@ class PaseoGateway
   String daemonSessionId(String appID) => _real(appID);
   String _app(String realID) => _appIDs[realID] ?? realID;
 
+  @override
   void _checkLocation(String scope, int epoch) {
     if (_closed || scope != _directory || epoch != _locationEpoch) {
       throw PaseoFailure(PaseoFailureKind.scopeMismatch);
@@ -938,63 +956,12 @@ class PaseoGateway
     String? legacySessionID,
     String? legacyPermissionID,
     String? message,
-  }) async {
-    final pending = _permissions[requestID];
-    if (pending == null ||
-        (legacySessionID != null &&
-            legacySessionID != pending.permission.sessionID)) {
-      throw PaseoFailure(PaseoFailureKind.staleRequest);
-    }
-    if (pending.hostRequest != null) {
-      if (reply == 'always') throw PaseoFailure(PaseoFailureKind.unavailable);
-      if (!{'once', 'reject', 'cancel'}.contains(reply)) {
-        throw PaseoFailure(PaseoFailureKind.unavailable);
-      }
-      String? action;
-      if (reply == 'once') {
-        final allow = pending.hostRequest!.choices
-            .where(
-              (choice) =>
-                  choice.behavior == HostAgentPermissionBehavior.allowOnce,
-            )
-            .toList();
-        // Multiple choices require the exact-action card, not a guessed choice.
-        if (allow.length != 1) throw PaseoFailure(PaseoFailureKind.unavailable);
-        action = allow.single.actionId;
-      }
-      return respondHostAgentPermission(requestID, selectedActionId: action);
-    }
-    if (reply == 'always' && pending.suggestions.isEmpty) {
-      throw PaseoFailure(PaseoFailureKind.unavailable);
-    }
-    final response = switch (reply) {
-      'once' => <String, dynamic>{'behavior': 'allow'},
-      // The provider's own suggested rule ("accept edits for this session").
-      'always' => <String, dynamic>{
-        'behavior': 'allow',
-        if (pending.suggestions.isNotEmpty)
-          'updatedPermissions': pending.suggestions,
-      },
-      'reject' => <String, dynamic>{
-        'behavior': 'deny',
-        if (message != null && message.trim().isNotEmpty)
-          'message': paseoText(message.trim(), max: 4096),
-      },
-      'cancel' => <String, dynamic>{'behavior': 'deny', 'interrupt': true},
-      _ => throw PaseoFailure(PaseoFailureKind.unavailable),
-    };
-    _checkPermissionEpoch(pending);
-    transport.send('agent_permission_response', {
-      'agentId': _real(pending.permission.sessionID),
-      'requestId': requestID,
-      'response': response,
-    }, expectedEpoch: pending.epoch);
-    _answered.add(requestID);
-    while (_answered.length > 256) {
-      _answered.remove(_answered.first);
-    }
-    _resolvePermission(requestID);
-  }
+  }) => _respondPermission(
+    requestID,
+    reply,
+    legacySessionID: legacySessionID,
+    message: message,
+  );
 
   @override
   Future<List<HostAgentPermissionRequest>>
@@ -1008,77 +975,10 @@ class PaseoGateway
   Future<void> respondHostAgentPermission(
     String requestId, {
     String? selectedActionId,
-  }) async {
-    final pending = _permissions[requestId];
-    final request = pending?.hostRequest;
-    if (pending == null || request == null) {
-      throw PaseoFailure(PaseoFailureKind.staleRequest);
-    }
-    _checkPermissionEpoch(pending);
-    final scope = _scope;
-    final locationEpoch = _locationEpoch;
-    final realAgentId = _real(request.sessionId);
-    HostAgentPermissionChoice? choice;
-    if (selectedActionId != null) {
-      for (final offered in request.choices) {
-        if (offered.actionId == selectedActionId) choice = offered;
-      }
-      if (choice == null) throw PaseoFailure(PaseoFailureKind.staleRequest);
-    } else {
-      for (final offered in request.choices) {
-        if (offered.behavior == HostAgentPermissionBehavior.rejectOnce) {
-          choice = offered;
-          break;
-        }
-      }
-    }
-    if (choice == null) {
-      // Paseo's implicit deny falls back to reject_always. Cancel the turn
-      // instead, which resolves ACP pending requests with outcome=cancelled.
-      final result = await transport.request(
-        'cancel_agent_request',
-        {'agentId': realAgentId},
-        mutation: true,
-        expectedEpoch: pending.epoch,
-      );
-      _checkLocation(scope, locationEpoch);
-      _checkPermissionEpoch(pending);
-      final current = _permissions[requestId];
-      if (current != null && !identical(current, pending)) {
-        throw PaseoFailure(PaseoFailureKind.staleRequest);
-      }
-      final agent = result['agent'];
-      final stillPending = agent is Map ? agent['pendingPermissions'] : null;
-      // An idle agent may acknowledge cancel without interrupting anything.
-      // Acknowledgement alone must not retire an unanswered approval card.
-      if (identical(_permissions[requestId], pending) &&
-          (agent is! Map ||
-              agent['id'] != realAgentId ||
-              agent['cwd'] != _scope ||
-              stillPending is! List ||
-              stillPending.any(
-                (raw) => raw is Map && raw['id'] == requestId,
-              ))) {
-        throw PaseoFailure(PaseoFailureKind.unavailable);
-      }
-    } else {
-      transport.send('agent_permission_response', {
-        'agentId': _real(request.sessionId),
-        'requestId': requestId,
-        'response': {
-          'behavior': choice.behavior == HostAgentPermissionBehavior.allowOnce
-              ? 'allow'
-              : 'deny',
-          'selectedActionId': choice.actionId,
-        },
-      }, expectedEpoch: pending.epoch);
-    }
-    _answered.add(requestId);
-    while (_answered.length > 256) {
-      _answered.remove(_answered.first);
-    }
-    _resolvePermission(requestId);
-  }
+  }) => _respondHostAgentPermission(
+    requestId,
+    selectedActionId: selectedActionId,
+  );
 
   @override
   Future<HostAgentProviderCatalog> loadHostAgentProviders({
@@ -1337,8 +1237,6 @@ class PaseoGateway
   @override
   Future<List<Todo>> todos(String id) async => const [];
   @override
-  Future<List<FileDiff>> diff(String id) async => const [];
-  @override
   Future<List<IntegrationInfo>> listIntegrations() async => const [];
   @override
   Future<List<Session>> listSessionChildren(String id) async => const [];
@@ -1396,6 +1294,54 @@ class PaseoGateway
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw PaseoFailure(PaseoFailureKind.unavailable);
+
+  // ---- OD1 agent lane: host helper update --------------------------------
+
+  @override
+  bool get hostUpdateSupported => true;
+
+  @override
+  String? get hostVersion => transport.serverVersion;
+
+  @override
+  Future<HostUpdateResult> updateHostDaemon({
+    void Function(HostUpdatePhase phase)? onProgress,
+  }) => _updateHostDaemon(onProgress);
+
+  // ---- OD1 agent lane: an agent's own switches -----------------------------
+
+  @override
+  bool get agentFeaturesSupported => true;
+
+  @override
+  String? agentFeaturesOwner(String sessionID) => _agentOwnerName(sessionID);
+
+  @override
+  Future<List<AgentFeature>> agentFeatures(String sessionID) =>
+      _agentFeatures(sessionID);
+
+  @override
+  Future<List<AgentFeature>> setAgentFeature(
+    String sessionID,
+    String featureId,
+    Object value,
+  ) => _setAgentFeature(sessionID, featureId, value);
+
+  // ---- OD1 agent lane: import a conversation from Claude Code -----------
+
+  @override
+  bool get providerImportSupported => true;
+
+  @override
+  String get providerImportDirectory => _scope;
+
+  @override
+  Future<ImportableConversations> importableConversations() =>
+      _importableConversations();
+
+  @override
+  Future<Session> importConversation(ImportableConversation conversation) =>
+      _importConversation(conversation);
 
   // ---- connection lifecycle ---------------------------------------------
 

@@ -19,9 +19,9 @@ extension _FilesBody on _FilesScreenState {
               message: _fileStatusesError!,
             ),
       loading: _loading,
-      loadingLabel: _surface == _FileSurface.symbols
-          ? l10n.filesSearching
-          : l10n.filesLoadingFolder,
+      loadingLabel: _surface == _FileSurface.files
+          ? l10n.filesLoadingFolder
+          : l10n.filesSearching,
       list: _listPane(context, l10n, crumbs),
       detail: viewer == null ? null : _embeddedViewer(viewer),
       emptyDetail: KitStateView(
@@ -62,10 +62,12 @@ extension _FilesBody on _FilesScreenState {
     final preferences = ReaderPreferencesScope.maybeOf(context);
     final sourceFirst = preferences?.value.sourceFirst ?? false;
     final symbols = _surface == _FileSurface.symbols;
+    final text = _surface == _FileSurface.text;
+    final capabilities = widget.controller.capabilities;
     final String? activeFilter;
     final VoidCallback? clearFilter;
-    if (symbols) {
-      activeFilter = l10n.readerUiSymbols;
+    if (symbols || text) {
+      activeFilter = symbols ? l10n.readerUiSymbols : l10n.filesTextSurface;
       clearFilter = () => _selectSurface(_FileSurface.files);
     } else if (sourceFirst) {
       activeFilter = l10n.readerUiSourceFirst;
@@ -83,30 +85,43 @@ extension _FilesBody on _FilesScreenState {
       filterKey: const ValueKey('file-surface-selector'),
       controller: _search,
       focusNode: _searchFocus,
-      label: symbols ? l10n.readerUiSearchSymbols : l10n.readerUiSearchFiles,
+      label: symbols
+          ? l10n.readerUiSearchSymbols
+          : text
+          ? l10n.filesSearchText
+          : l10n.readerUiSearchFiles,
       // Enter searches at once through onChanged (the field settles the
       // query on submit); a second handler would query twice.
       onChanged: _onSearchChanged,
       activeFilter: activeFilter,
       onClearFilter: clearFilter,
       filters: [
-        if (widget.controller.capabilities.workspaceSymbols) ...[
+        if (capabilities.workspaceSymbols || capabilities.textSearch) ...[
           KitMenuItem(
             key: const ValueKey('file-surface-files'),
             label: l10n.readerUiFiles,
             group: 'surface',
-            checked: !symbols,
+            checked: !symbols && !text,
             onSelected: () => _selectSurface(_FileSurface.files),
           ),
-          KitMenuItem(
-            key: const ValueKey('file-surface-symbols'),
-            label: l10n.readerUiSymbols,
-            group: 'surface',
-            checked: symbols,
-            onSelected: () => _selectSurface(_FileSurface.symbols),
-          ),
+          if (capabilities.workspaceSymbols)
+            KitMenuItem(
+              key: const ValueKey('file-surface-symbols'),
+              label: l10n.readerUiSymbols,
+              group: 'surface',
+              checked: symbols,
+              onSelected: () => _selectSurface(_FileSurface.symbols),
+            ),
+          if (capabilities.textSearch)
+            KitMenuItem(
+              key: const ValueKey('file-surface-text'),
+              label: l10n.filesTextSurface,
+              group: 'surface',
+              checked: text,
+              onSelected: () => _selectSurface(_FileSurface.text),
+            ),
         ],
-        if (!symbols && preferences != null) ...[
+        if (!symbols && !text && preferences != null) ...[
           KitMenuItem(
             key: const ValueKey('files-order-server'),
             label: l10n.readerUiServerOrder,
@@ -124,7 +139,7 @@ extension _FilesBody on _FilesScreenState {
                 unawaited(saveReaderPreferences(context, sourceFirst: true)),
           ),
         ],
-        if (!symbols)
+        if (!symbols && !text)
           KitMenuItem(
             key: const ValueKey('files-show-hidden'),
             label: l10n.filesShowHidden,
@@ -182,7 +197,13 @@ extension _FilesBody on _FilesScreenState {
                     onDismiss: () => _set(() => _notice = null),
                   ),
           ),
-        Expanded(child: files ? _fileList(l10n) : _symbolList(l10n)),
+        Expanded(
+          child: switch (_surface) {
+            _FileSurface.files => _fileList(l10n),
+            _FileSurface.symbols => _symbolList(l10n),
+            _FileSurface.text => _textList(l10n),
+          },
+        ),
       ],
     );
   }
@@ -225,6 +246,24 @@ extension _FilesBody on _FilesScreenState {
     );
   }
 
+  /// While a file name is typed on a server that can search text, the first
+  /// row offers the same words as a search inside the files.
+  Widget? _searchInsideRow(AppLocalizations l10n) {
+    final query = _search.text.trim();
+    if (_surface != _FileSurface.files ||
+        query.isEmpty ||
+        !widget.controller.capabilities.textSearch) {
+      return null;
+    }
+    return KitRow(
+      key: const ValueKey('files-search-inside'),
+      leading: KitRow.icon(context, AppIconography.search),
+      title: l10n.filesSearchInside(query),
+      trailing: const KitChevron(),
+      onTap: () => unawaited(_searchInsideFiles(query)),
+    );
+  }
+
   Widget _fileList(AppLocalizations l10n) {
     if (_loading && _entries == null) {
       return _waiting(l10n.filesLoadingFolder, _refreshFiles);
@@ -243,6 +282,7 @@ extension _FilesBody on _FilesScreenState {
     final hidden = <FileNode>[];
     final entries = _displayEntries(hidden);
     final changes = _changesRow(l10n);
+    final inside = _searchInsideRow(l10n);
     if (_entries != null && entries.isEmpty) {
       final searching = _search.text.isNotEmpty;
       final onlyHidden = !searching && hidden.isNotEmpty;
@@ -277,7 +317,8 @@ extension _FilesBody on _FilesScreenState {
                 ),
         ),
       );
-      if (changes == null) return state;
+      final leads = [?inside, ?changes];
+      if (leads.isEmpty) return state;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -285,14 +326,24 @@ extension _FilesBody on _FilesScreenState {
             padding: EdgeInsetsDirectional.only(
               top: KitTokens.of(context).space2,
             ),
-            child: changes,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (i, row) in leads.indexed) ...[
+                  if (i > 0) const KitDivider(inset: KitDividerInset.text),
+                  row,
+                ],
+              ],
+            ),
           ),
           const KitDivider(inset: KitDividerInset.text),
           Expanded(child: state),
         ],
       );
     }
-    final lead = changes == null ? 0 : 1;
+    final leads = [?inside, ?changes];
+    final lead = leads.length;
     return KitRefresh(
       onRefresh: _refreshFiles,
       child: KitScrollArea(
@@ -307,7 +358,7 @@ extension _FilesBody on _FilesScreenState {
           separatorBuilder: (_, _) =>
               const KitDivider(inset: KitDividerInset.text),
           itemBuilder: (context, i) =>
-              i < lead ? changes! : _fileRow(context, l10n, entries[i - lead]),
+              i < lead ? leads[i] : _fileRow(context, l10n, entries[i - lead]),
         ),
       ),
     );

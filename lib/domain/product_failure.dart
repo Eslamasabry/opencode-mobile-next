@@ -74,6 +74,10 @@ enum ProductFailureCategory {
   signIn,
   notFound,
   conflict,
+
+  /// The computer running the agent did not answer or did not do it
+  /// (Paseo daemon): not a clash, not an OpenCode server fault.
+  computer,
   busy,
   server,
   rejected,
@@ -256,6 +260,15 @@ ProductFailureCategory _classify(Object error) {
     }
     final code = error.statusCode;
     if (code != null && code >= 400) return _forStatus(code);
+    if (const {
+      'Paseounavailable',
+      'Paseodisconnected',
+      'PaseoinvalidResponse',
+      'PaseohostRefused',
+      'PaseoinvalidEndpoint',
+    }.contains(error.errorTag)) {
+      return ProductFailureCategory.computer;
+    }
     return _forText(error.message) ?? ProductFailureCategory.unexpected;
   }
   if (error is Api2NetworkError) {

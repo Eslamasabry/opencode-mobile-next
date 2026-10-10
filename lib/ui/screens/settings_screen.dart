@@ -47,6 +47,7 @@ import '../search/search_index.dart';
 import 'usage_hub_screen.dart';
 
 part 'settings/server_settings_screen.dart';
+part 'settings/server_host_update.dart';
 part 'settings/default_shell_row.dart';
 part 'settings/notifications_settings_screen.dart';
 part 'settings/personal_settings_screens.dart';

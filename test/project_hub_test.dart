@@ -166,13 +166,30 @@ void main() {
         ],
       ),
       'Codex': (codexServerCapabilities, const []),
-      'Paseo': (paseoServerCapabilities, const []),
+      'Paseo': (
+        paseoServerCapabilities,
+        const [
+          ProjectTool.files,
+          ProjectTool.changes,
+          ProjectTool.terminal,
+          ProjectTool.worktrees,
+          ProjectTool.search,
+        ],
+      ),
       'files only': (
-        const ServerCapabilities(terminal: false, projectManagement: false),
+        const ServerCapabilities(
+          terminal: false,
+          projectManagement: false,
+          worktreeCreate: false,
+        ),
         const [ProjectTool.files, ProjectTool.changes, ProjectTool.search],
       ),
       'terminal only': (
-        const ServerCapabilities(fileBrowsing: false, projectManagement: false),
+        const ServerCapabilities(
+          fileBrowsing: false,
+          projectManagement: false,
+          worktreeCreate: false,
+        ),
         const [ProjectTool.terminal],
       ),
       'project management only': (

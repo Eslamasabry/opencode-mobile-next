@@ -86,6 +86,7 @@ void main() {
         case 'find':
           api.nodes = [FileNode(name: 'lib', path: 'lib', isDir: true)];
           api.found = data['files'] as List<String>;
+          api.foundText = data['text'] as List<FindMatch>;
           repository.symbols = data['symbols'] as List<WorkspaceSymbol>;
           await screens.filesPage(
             then: () async {
@@ -102,6 +103,16 @@ void main() {
           await tester.enterText(
             find.byKey(const ValueKey('files-search-field')),
             'Cart',
+          );
+          await tester.pump(const Duration(seconds: 1));
+          await settle(tester);
+          screens.seen.add(readText(tester));
+          await tester.tap(find.byKey(const ValueKey('file-surface-selector')));
+          await settle(tester);
+          await tapText(tester, 'Text in files');
+          await tester.enterText(
+            find.byKey(const ValueKey('files-search-field')),
+            'round',
           );
           await tester.pump(const Duration(seconds: 1));
           await settle(tester);

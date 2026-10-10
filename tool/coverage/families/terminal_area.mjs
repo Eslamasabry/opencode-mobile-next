@@ -1,20 +1,30 @@
 // Area "terminal": the server's terminals (OpenCode pty endpoints), this
 // phone's Termux process list and storage report, and the Paseo terminal
-// messages the app never asks for. Families:
+// messages the Terminal page sends. Families:
 //
 //   terminal_wire     OpenCode 1/2 GET /pty, GET /pty/shells and the default
 //                     shell, plus what the app never shows (connect ticket,
 //                     pty events: the list simply reloads).
 //   terminal_termux   the Termux scanner's process JSON, the stop result and
 //                     the storage report the screens read off oc/termux.
-//   terminal_paseo    Paseo's terminal messages (excluded: the app does not
-//                     use them; Paseo servers have no terminal tab).
+//   terminal_paseo    Paseo's terminal messages (excluded: plumbing, the page
+//                     shows the result).
 import fs from 'node:fs';
 import { loadContract, walker } from '../openapi_walk.mjs';
 import { def, unwrap, objectFields } from '../paseo_cases_lib.mjs';
 
 const LOC = { directory: '/work/shop', workspaceID: 'wrk_main', project: { id: 'prj_shop', directory: '/work/shop' } };
 const none = (obj) => Object.fromEntries(Object.keys(obj).map((k) => [k, []]));
+
+// Paseo terminals are on the Terminal page: the fields below are plumbing.
+const paseoTerminalReason = (k) =>
+  k.startsWith('capture_terminal')
+    ? "ignored: the app reads a terminal's output live while it is open, not as a saved capture, so no page shows this"
+    : k.includes('activity') || k.startsWith('terminal_attention')
+      ? "ignored: the daemon's activity and attention hints are not shown; the list only says a terminal is running"
+      : /^(un)?subscribe_terminals|^terminals_changed/.test(k)
+        ? "ignored: the list is read again when the Terminal page opens or is pulled down; the daemon's live list updates are not used"
+        : "ignored: this only carries the Terminal page's own list, open, type, rename and close to the daemon; the page shows the result, not the field";
 
 export function terminalFamilies({ oc1File, protocolMessages }) {
   const S = loadContract(oc1File);
@@ -153,7 +163,7 @@ export function terminalFamilies({ oc1File, protocolMessages }) {
       if (typeof type !== 'string' || !/terminal/i.test(type)) continue;
       const fields = objectFields(unwrap(v), ['type']);
       pSchema[type] = fields;
-      for (const f of Object.keys(fields)) pExcluded[`${type}.${f}`] = 'ignored: the app does not use Paseo terminals (a Claude Code or Pi server has no terminal tab), so no page shows this';
+      for (const f of Object.keys(fields)) pExcluded[`${type}.${f}`] = paseoTerminalReason(`${type}.${f}`);
     } catch { /* not a message */ }
   }
   out.terminal_paseo = { schema: pSchema, excluded: pExcluded, source: '@getpaseo/protocol messages.js', cases: [] };

@@ -44,7 +44,7 @@ extension _ChatCommands on _ChatScreenState {
   bool get _supportsSessionCompact => _conn.capabilities.sessionCompact;
 
   bool _chatCommandSupported(_ChatCommand command) => switch (command.action) {
-    _ChatCommandAction.shell => _conn.capabilities.terminal,
+    _ChatCommandAction.shell => _conn.capabilities.conversationShellOn,
     _ChatCommandAction.note => _conn.supportsSessionNotes,
     _ChatCommandAction.sessions => _conn.capabilities.globalSessionSearch,
     _ChatCommandAction.workspaces ||
@@ -72,7 +72,7 @@ extension _ChatCommands on _ChatScreenState {
   /// [initial] prefills it: a shell step's "Run this command again" opens
   /// the dialog with that command, to read or change before it runs.
   Future<void> _runShellDialog({String? initial}) async {
-    if (_conn.isIsolated || !_conn.capabilities.terminal) return;
+    if (_conn.isIsolated || !_conn.capabilities.conversationShellOn) return;
     final strings = _chatL10n(context);
     await showKitInputDialog(
       context,
@@ -121,7 +121,7 @@ extension _ChatCommands on _ChatScreenState {
   /// A shell step's "Run this command again"; null where this server has
   /// no shell for the conversation.
   ValueChanged<String>? get _rerunShellCommand =>
-      _conn.isIsolated || !_conn.capabilities.terminal
+      _conn.isIsolated || !_conn.capabilities.conversationShellOn
       ? null
       : (command) => unawaited(_runShellDialog(initial: command));
 
