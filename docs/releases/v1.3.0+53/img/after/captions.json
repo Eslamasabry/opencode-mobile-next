@@ -1,0 +1,14 @@
+{
+  "08-claude-new-conversation": "After: the new-conversation page offers Import from Claude Code.",
+  "11-claude-box-hint": "After: the box names the agent: Ask Claude Code.",
+  "06-claude-conversation-menu": "After: the menu adds Changes and Archive conversation.",
+  "05-claude-fast-chip": "New: Fast mode is one chip in the row above the message box.",
+  "05b-claude-fast-sheet": "New: tapping the chip opens Claude Code settings, where Fast mode is one switch.",
+  "03-claude-changes": "New: a Claude Code conversation shows what changed in the project.",
+  "04-claude-terminal": "New: a terminal in the project, from a Claude Code conversation.",
+  "02-claude-files": "New: a Claude Code server has a Files tab for the project's files, changes and terminal.",
+  "07-claude-server": "After: the page can edit or remove the computer, check for agents again and update them.",
+  "06b-opencode-conversation-menu": "After: the menu adds Archive conversation and Delete conversation.",
+  "09-files-search": "After: searching Files for a word offers to search inside the files.",
+  "09b-files-search-inside": "New: the lines that contain the word, in each file."
+}

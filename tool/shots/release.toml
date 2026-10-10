@@ -1,0 +1,209 @@
+env_file = "private.env"  # git-ignored; copy private.env.example
+# Before/after shots for the OpenCode Mobile release notes.
+#   export SHOTS_SCRATCH=<work dir>  SHOTS_CACHE=<apk cache>  SHOTS_AFTER_APK=<apk>
+#   tool/shots/download_before.sh
+#   python3 <shotlist>/shotlist.py run tool/shots/release.toml --out <dir>
+
+# Every step is one inline table. `text` matches text or content-desc; `contains` = substring.
+steps = [
+  # --- first run: add the Claude Code (Paseo) server. The app only accepts a loopback,
+  # tailnet or SSH-tunnel address for Paseo, hence 127.0.0.1 + adb reverse.
+  { kind = "force_stop" },
+  { kind = "launch" },
+  { kind = "wait_for", text = "On my computer", timeout = 40 },
+  { kind = "tap", text = "On my computer" },
+  { kind = "tap", text = "Claude Code or Pi" },
+  { kind = "type", into = { class = "EditText", index = 0 }, text = "ws://127.0.0.1:6767", after = 3 },
+  { kind = "type", into = { class = "EditText", index = 1 }, text = "/srv/shop-app", after = 3 },
+  { kind = "type", into = { class = "EditText", index = 2 }, text_from_file = "${SHOTS_PASEO_DIR}/daemon-password.txt" },
+  { kind = "tap", text = "Save & connect" },
+  # the first tap may only verify the address; tap again when it says so
+  { kind = "wait_for", text = "Connection verified", contains = true, timeout = 20, optional = true },
+  { kind = "tap", text = "Save & connect", timeout = 3, optional = true },
+  { kind = "wait_for", text = "Open This phone", contains = true, timeout = 60 },
+  { kind = "tap", text = "Open This phone", contains = true },
+  { kind = "wait_for", text = "Start a conversation", timeout = 30 },
+
+  # name the Claude Code server: Settings > the server > Edit
+  { kind = "tap", text = "Settings" },
+  { kind = "tap", text = "This server", contains = true },
+  # 1.2.0 has "Change sign-in for <name>" (a card whose button has no node of its own)
+  { kind = "tap", text = "Edit ", contains = true, builds = ["after"] },
+  { kind = "tap", at = [0.3, 0.23], builds = ["before"] },
+  { kind = "wait_for", text = "Edit server", timeout = 15 },
+  { kind = "type", into = { class = "EditText", index = 3 }, clear = true, text = "My computer" },
+  { kind = "type", into = { class = "EditText", index = 2 }, text_from_file = "${SHOTS_PASEO_DIR}/daemon-password.txt" },
+  { kind = "tap", text = "Save & connect" },
+  { kind = "wait_for", text = "Connection verified", contains = true, timeout = 15, optional = true },
+  { kind = "tap", text = "Save & connect", timeout = 3, optional = true },
+  { kind = "wait_for", text = "Add server", timeout = 30 },
+  { kind = "tap", text = "Back", until = { text = "Settings" } },
+  { kind = "tap", at = [0.19, 0.955] },
+  { kind = "wait_for", text = "Start a conversation", timeout = 30 },
+
+  # --- 08 / 11: the new-conversation page
+  { kind = "tap", text = "Start a conversation" },
+  { kind = "wait_for", text = "What should we work on?", timeout = 15 },
+  { kind = "wait_for", text = "Import from Claude Code", timeout = 15, builds = ["after"] },
+  { kind = "capture", name = "08-claude-new-conversation", builds = ["before"], caption = "Before: the new-conversation page of a Claude Code server." },
+  { kind = "capture", name = "08-claude-new-conversation", builds = ["after"], caption = "After: the new-conversation page offers Import from Claude Code." },
+  { kind = "sleep", seconds = 1.5 },
+  { kind = "tap", text = "Choose a project" },
+  { kind = "wait_for", text = "Open a project folder", timeout = 15 },
+  { kind = "tap", text = "shop-app", contains = true },
+  { kind = "wait_for", text = "Send, Ask", contains = true, timeout = 15 },
+  { kind = "capture", name = "11-claude-box-hint", builds = ["before"], caption = "Before: a new Claude Code conversation said Ask OpenCode." },
+  { kind = "capture", name = "11-claude-box-hint", builds = ["after"], caption = "After: the box names the agent: Ask Claude Code." },
+
+  # --- the one Claude Code conversation (one prompt per build)
+  { kind = "type", into = { class = "EditText", index = 0 }, text = "Add a discount code to the cart" },
+  { kind = "tap", text = "Send", contains = true },
+  { kind = "wait_for", text = "Conversation menu", timeout = 40 },
+  { kind = "wait_for", text = "Add a discount code to the cart", contains = true, timeout = 30 },
+  { kind = "tap", text = "Not now", timeout = 6, optional = true },
+  # answer every permission card, then wait for the reply to finish (no Stop button)
+  { kind = "drain", tap = { text = "Allow once" }, until_gone = { text = "Stop the reply" }, quiet = 8, timeout = 420 },
+  { kind = "tap", text = "Not now", timeout = 3, optional = true },
+
+  # --- 06: conversation menu
+  { kind = "tap", text = "Conversation menu" },
+  { kind = "wait_for", text = "Rename conversation", timeout = 10 },
+  { kind = "capture", name = "06-claude-conversation-menu", builds = ["before"], caption = "Before: a Claude Code conversation's menu had no Changes or Archive." },
+  { kind = "capture", name = "06-claude-conversation-menu", builds = ["after"], caption = "After: the menu adds Changes and Archive conversation." },
+  { kind = "key", key = "back" },
+
+  # --- 05 / 05b: fast mode chip and its sheet
+  { kind = "wait_for", text = "Fast", contains = true, timeout = 10, builds = ["after"] },
+  { kind = "capture", name = "05-claude-fast-chip", builds = ["after"], caption = "New: Fast mode is one chip in the row above the message box." },
+  { kind = "tap", text = "Fast", contains = true, builds = ["after"] },
+  { kind = "wait_for", text = "Quicker replies", contains = true, timeout = 10, builds = ["after"] },
+  { kind = "capture", name = "05b-claude-fast-sheet", builds = ["after"], caption = "New: tapping the chip opens Claude Code settings, where Fast mode is one switch." },
+  { kind = "key", key = "back", builds = ["after"] },
+
+  # --- 03: Changes (after)
+  { kind = "tap", text = "Project shop-app", contains = true, builds = ["after"] },
+  { kind = "tap", text = "Changes", builds = ["after"] },
+  { kind = "wait_for", text = "cart.py", contains = true, timeout = 20, builds = ["after"] },
+  { kind = "capture", name = "03-claude-changes", builds = ["after"], caption = "New: a Claude Code conversation shows what changed in the project." },
+  { kind = "tap", text = "Back", until = { text = "Conversation menu" }, builds = ["after"] },
+
+  # --- 04: terminal (after)
+  { kind = "tap", text = "Project shop-app", contains = true, builds = ["after"] },
+  { kind = "tap", text = "Terminal", builds = ["after"] },
+  { kind = "wait_for", text = "New terminal", timeout = 20, builds = ["after"] },
+  { kind = "tap", text = "New terminal", builds = ["after"] },
+  { kind = "wait_for", text = "Terminal keys", timeout = 20, builds = ["after"] },
+  { kind = "sleep", seconds = 3, builds = ["after"] },
+  { kind = "tap", at = [0.5, 0.3], builds = ["after"] },
+  { kind = "type", text = "export PS1='$ '", builds = ["after"] },
+  { kind = "key", key = "enter", builds = ["after"] },
+  { kind = "type", text = "clear", builds = ["after"] },
+  { kind = "key", key = "enter", builds = ["after"] },
+  { kind = "type", text = "ls", builds = ["after"] },
+  { kind = "key", key = "enter", builds = ["after"] },
+  { kind = "sleep", seconds = 1.5, builds = ["after"] },
+  { kind = "capture", name = "04-claude-terminal", builds = ["after"], caption = "New: a terminal in the project, from a Claude Code conversation." },
+  { kind = "tap", text = "Back", until = { text = "Conversation menu" }, builds = ["after"] },
+
+  # --- 02 / 07: home screen and settings of the Claude Code server
+  { kind = "tap", text = "Back", until = { text = "Settings" } },
+  { kind = "tap", at = [0.19, 0.955] },
+  { kind = "wait_for", text = "Add a discount code", contains = true, timeout = 20 },
+  { kind = "capture", name = "02-claude-files", builds = ["before"], caption = "Before: a Claude Code server has no Files tab." },
+  { kind = "capture", name = "02-claude-files", builds = ["after"], caption = "New: a Claude Code server has a Files tab for the project's files, changes and terminal." },
+  { kind = "tap", text = "Settings" },
+  { kind = "tap", text = "This server", contains = true },
+  { kind = "wait_for", text = "Change sign-in for My computer", contains = true, timeout = 20, builds = ["before"] },
+  { kind = "wait_for", text = "Edit My computer", contains = true, timeout = 20, builds = ["after"] },
+  { kind = "capture", name = "07-claude-server", builds = ["before"], caption = "Before: the page of a Claude Code server." },
+  { kind = "capture", name = "07-claude-server", builds = ["after"], caption = "After: the page can edit or remove the computer, check for agents again and update them." },
+  { kind = "tap", text = "Back", until = { text = "Conversations", contains = true } },
+
+  # --- the OpenCode server and its "Shop notes" conversation
+  { kind = "tap", text = "Switch server", contains = true },
+  { kind = "wait_for", text = "Add server", timeout = 10 },
+  { kind = "tap", text = "Add server" },
+  # older builds ask what runs there first; newer ones remember and go straight to pairing
+  { kind = "tap", text = "OpenCode on a computer", contains = true, timeout = 4, optional = true },
+  { kind = "wait_for", text = "Enter the address instead", timeout = 20 },
+  { kind = "tap", text = "Enter the address instead" },
+  { kind = "type", into = { class = "EditText", index = 0 }, text = "http://10.0.2.2:4123" },
+  { kind = "tap", text = "Save & connect" },
+  # plain HTTP asks once; the emulator reaches the host over 10.0.2.2
+  { kind = "tap", text = "Use it anyway", contains = true, timeout = 6, optional = true },
+  { kind = "tap", text = "Save & connect", timeout = 4, optional = true },
+  { kind = "wait_for", text = "Connection verified", contains = true, timeout = 15, optional = true },
+  { kind = "tap", text = "Save & connect", timeout = 3, optional = true },
+  { kind = "wait_for", text = "is connected", contains = true, timeout = 60 },
+  { kind = "tap", text = "Open Computer", contains = true },
+  { kind = "wait_for", text = "Shop notes", contains = true, timeout = 30 },
+  { kind = "tap", text = "Settings" },
+  { kind = "tap", text = "This server", contains = true },
+  { kind = "tap", text = "Edit ", contains = true, builds = ["after"] },
+  { kind = "tap", at = [0.3, 0.23], builds = ["before"] },
+  { kind = "wait_for", text = "Edit server", timeout = 15 },
+  { kind = "tap", text = "More options", timeout = 5, optional = true },
+  { kind = "type", into = { class = "EditText", index = 2 }, clear = true, text = "Work server" },
+  { kind = "tap", text = "Save & connect" },
+  { kind = "wait_for", text = "Work server", contains = true, timeout = 30 },
+  { kind = "tap", text = "Back", until = { text = "Settings" } },
+  { kind = "tap", at = [0.19, 0.955] },
+  { kind = "wait_for", text = "Shop notes", contains = true, timeout = 30 },
+  { kind = "tap", text = "Shop notes", contains = true },
+  { kind = "wait_for", text = "Conversation menu", timeout = 20 },
+  { kind = "tap", text = "Conversation menu" },
+  { kind = "wait_for", text = "Rename conversation", timeout = 10 },
+  { kind = "capture", name = "06b-opencode-conversation-menu", builds = ["before"], caption = "Before: an OpenCode conversation's menu had no Archive or Delete." },
+  { kind = "capture", name = "06b-opencode-conversation-menu", builds = ["after"], caption = "After: the menu adds Archive conversation and Delete conversation." },
+  { kind = "key", key = "back" },
+
+  # --- 09 / 09b: search in Files, on the OpenCode server (its Files tab exists in both builds)
+  { kind = "tap", text = "Back", until = { text = "Settings" } },
+  { kind = "tap", text = "Files", index = 0 },
+  { kind = "tap", text = "Files", index = 2 },
+  { kind = "wait_for", text = "README.md", timeout = 20 },
+  { kind = "type", into = { class = "EditText", index = 0 }, text = "discount" },
+  { kind = "sleep", seconds = 1.5 },
+  { kind = "capture", name = "09-files-search", builds = ["before"], caption = "Before: searching Files for a word finds only file names, so nothing comes up." },
+  { kind = "capture", name = "09-files-search", builds = ["after"], caption = "After: searching Files for a word offers to search inside the files." },
+  { kind = "tap", text = "Search inside files", contains = true, builds = ["after"], skip_env = "SHOTS_SKIP_SEARCH_INSIDE" },
+  { kind = "wait_for", text = "notes.txt", contains = true, timeout = 20, builds = ["after"], skip_env = "SHOTS_SKIP_SEARCH_INSIDE" },
+  { kind = "capture", name = "09b-files-search-inside", builds = ["after"], caption = "New: the lines that contain the word, in each file.", skip_env = "SHOTS_SKIP_SEARCH_INSIDE" },
+]
+
+[app]
+package = "io.github.eslamasabry.opencode_mobile"
+
+[device]
+system_image = "system-images;android-34;google_apis;x86_64"
+profile = "pixel_6"
+width = 720
+jpeg_quality = 85
+clock = "0941"
+
+[[builds]]
+name = "before"
+apk = "${SHOTS_CACHE}/opencode-mobile-1.2.0+52.apk"
+avd = "shots_before"
+
+[[builds]]
+name = "after"
+apk = "${SHOTS_AFTER_APK}"
+avd = "shots_after"
+
+[env]
+setup = [
+  { name = "demo repo", run = "${CONFIG_DIR}/env.sh repo", wait = true },
+  { name = "forwarder", run = "${CONFIG_DIR}/env.sh forward", ready = "127.0.0.1:16767", timeout = 15 },
+  { name = "opencode 1.18.23", run = "${CONFIG_DIR}/env.sh opencode", ready = "127.0.0.1:4123", timeout = 90 },
+  { name = "seed Shop notes", run = "${CONFIG_DIR}/env.sh seed", wait = true },
+]
+# the Paseo daemon is restarted per build, so each build sees an empty Claude Code history
+build_setup = [
+  { name = "paseo daemon", run = "${CONFIG_DIR}/env.sh paseo", ready = "${SHOTS_PASEO_HOST}:6767", timeout = 90 },
+]
+build_teardown = ["${CONFIG_DIR}/env.sh paseo-stop"]
+teardown = ["${CONFIG_DIR}/env.sh paseo-stop"]
+adb_reverse = ["tcp:6767 tcp:16767"]
+forbidden_exact = ["This phone"]
+forbidden = []  # the private words come from SHOTS_FORBIDDEN in private.env

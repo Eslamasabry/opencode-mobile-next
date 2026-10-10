@@ -1,0 +1,9 @@
+{
+  "08-claude-new-conversation": "Before: the new-conversation page of a Claude Code server.",
+  "11-claude-box-hint": "Before: a new Claude Code conversation said Ask OpenCode.",
+  "06-claude-conversation-menu": "Before: a Claude Code conversation's menu had no Changes or Archive.",
+  "02-claude-files": "Before: a Claude Code server has no Files tab.",
+  "07-claude-server": "Before: the page of a Claude Code server.",
+  "06b-opencode-conversation-menu": "Before: an OpenCode conversation's menu had no Archive or Delete.",
+  "09-files-search": "Before: searching Files for a word finds only file names, so nothing comes up."
+}

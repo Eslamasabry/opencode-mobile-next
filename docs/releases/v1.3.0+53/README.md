@@ -1,102 +1,25 @@
 # OpenCode Mobile 1.3.0+53 — before and after
 
-Each picture is one full phone screen. **Before** is the public 1.2.0+52; **after** is 1.3.0+53. Both were taken on an Android emulator against a real Claude Code helper and a real OpenCode server, with a demo project. The full notes are in [v1.3.0+53.md](../v1.3.0+53.md).
+**Before** is the public 1.2.0+52; **after** is 1.3.0+53. Each picture is one real phone screen from an Android emulator, connected to a real Claude Code helper and a real OpenCode server, with a demo project. Full notes: [v1.3.0+53.md](../v1.3.0+53.md).
 
-## Claude Code chats: files, changes and terminals
-
-![Before: talking to Claude Code gave you only Conversations and Settings, with no Files tab.](img/02-claude-files-before.jpg)
-
-*Before: talking to Claude Code gave you only Conversations and Settings, with no Files tab.*
-
-![After: a Files tab appears with Changes, Files, Terminal and Worktrees for the project.](img/02-claude-files-after.jpg)
-
-*After: a Files tab appears with Changes, Files, Terminal and Worktrees for the project.*
-
-![New: you can review the edit Claude Code left uncommitted, line by line.](img/03-claude-changes-after.jpg)
-
-*New: you can review the edit Claude Code left uncommitted, line by line.*
-
-![New: you can open a terminal on your computer from the phone and run commands like ls.](img/04-claude-terminal-after.jpg)
-
-*New: you can open a terminal on your computer from the phone and run commands like ls.*
-
-## Fast mode
-
-![Before: the message box for Claude Code had no Fast mode switch.](img/05-fast-mode-before.jpg)
-
-*Before: the message box for Claude Code had no Fast mode switch.*
-
-![After: a Fast mode chip sits above the message box and shows when it is on.](img/05-fast-mode-after.jpg)
-
-*After: a Fast mode chip sits above the message box and shows when it is on.*
-
-![After: tapping the chip opens Claude Code settings, where Fast mode is a simple switch.](img/05b-fast-mode-sheet-after.jpg)
-
-*After: tapping the chip opens Claude Code settings, where Fast mode is a simple switch.*
-
-## Archive and delete conversations
-
-![Before: a Claude Code conversation's menu could not archive the conversation.](img/06-conversation-menu-before.jpg)
-
-*Before: a Claude Code conversation's menu could not archive the conversation.*
-
-![After: the menu offers Archive conversation to tidy it away.](img/06-conversation-menu-after.jpg)
-
-*After: the menu offers Archive conversation to tidy it away.*
-
-![Before: an OpenCode conversation's menu had no Archive or Delete.](img/06b-opencode-conversation-menu-before.jpg)
-
-*Before: an OpenCode conversation's menu had no Archive or Delete.*
-
-![After: the menu has Archive conversation and Delete conversation.](img/06b-opencode-conversation-menu-after.jpg)
-
-*After: the menu has Archive conversation and Delete conversation.*
-
-## The computer's page
-
-![Before: a Claude Code computer's page could only check health, change sign-in or disconnect.](img/07-server-page-before.jpg)
-
-*Before: a Claude Code computer's page could only check health, change sign-in or disconnect.*
-
-![After: the page can update its agents, edit or remove the computer, and check for agents again.](img/07-server-page-after.jpg)
-
-*After: the page can update its agents, edit or remove the computer, and check for agents again.*
-
-## Import from Claude Code
-
-![Before: the new conversation screen had no way to bring in a chat from Claude Code.](img/08-import-before.jpg)
-
-*Before: the new conversation screen had no way to bring in a chat from Claude Code.*
-
-![After: an Import from Claude Code chip lets you pick up a conversation started on your computer.](img/08-import-after.jpg)
-
-*After: an Import from Claude Code chip lets you pick up a conversation started on your computer.*
-
-## Search inside files (OpenCode servers)
-
-![Before: searching a word from inside a file found nothing, because only file names were searched.](img/09-search-inside-files-before.jpg)
-
-*Before: searching a word from inside a file found nothing, because only file names were searched.*
-
-![After: a Search inside files row appears for the word you typed.](img/09-search-inside-files-after.jpg)
-
-*After: a Search inside files row appears for the word you typed.*
-
-![After: tapping it lists the matching line, its file and its line number.](img/09b-search-inside-files-results-after.jpg)
-
-*After: tapping it lists the matching line, its file and its line number.*
-
-## The message box names the agent
-
-![Before: the new conversation box for a Claude Code computer said Ask OpenCode.](img/11-composer-agent-name-before.jpg)
-
-*Before: the new conversation box for a Claude Code computer said Ask OpenCode.*
-
-![After: the same box now says Ask Claude Code.](img/11-composer-agent-name-after.jpg)
-
-*After: the same box now says Ask Claude Code.*
+| | Before (1.2.0) | After (1.3.0) |
+|---|---|---|
+| **Claude Code chats get a Files tab** | <img src="img/before/02-claude-files.jpg" width="300" alt="Before: a Claude Code server has no Files tab."><br>Before: a Claude Code server has no Files tab. | <img src="img/after/02-claude-files.jpg" width="300" alt="New: a Claude Code server has a Files tab for the project's files, changes and terminal."><br>New: a Claude Code server has a Files tab for the project's files, changes and terminal. |
+| **Changes made by Claude Code** | — | <img src="img/after/03-claude-changes.jpg" width="300" alt="New: a Claude Code conversation shows what changed in the project."><br>New: a Claude Code conversation shows what changed in the project. |
+| **A terminal on your computer** | — | <img src="img/after/04-claude-terminal.jpg" width="300" alt="New: a terminal in the project, from a Claude Code conversation."><br>New: a terminal in the project, from a Claude Code conversation. |
+| **Fast mode chip** | — | <img src="img/after/05-claude-fast-chip.jpg" width="300" alt="New: Fast mode is one chip in the row above the message box."><br>New: Fast mode is one chip in the row above the message box. |
+| **Claude Code settings** | — | <img src="img/after/05b-claude-fast-sheet.jpg" width="300" alt="New: tapping the chip opens Claude Code settings, where Fast mode is one switch."><br>New: tapping the chip opens Claude Code settings, where Fast mode is one switch. |
+| **Claude Code conversation menu** | <img src="img/before/06-claude-conversation-menu.jpg" width="300" alt="Before: a Claude Code conversation's menu had no Changes or Archive."><br>Before: a Claude Code conversation's menu had no Changes or Archive. | <img src="img/after/06-claude-conversation-menu.jpg" width="300" alt="After: the menu adds Changes and Archive conversation."><br>After: the menu adds Changes and Archive conversation. |
+| **OpenCode conversation menu** | <img src="img/before/06b-opencode-conversation-menu.jpg" width="300" alt="Before: an OpenCode conversation's menu had no Archive or Delete."><br>Before: an OpenCode conversation's menu had no Archive or Delete. | <img src="img/after/06b-opencode-conversation-menu.jpg" width="300" alt="After: the menu adds Archive conversation and Delete conversation."><br>After: the menu adds Archive conversation and Delete conversation. |
+| **The computer's page** | <img src="img/before/07-claude-server.jpg" width="300" alt="Before: the page of a Claude Code server."><br>Before: the page of a Claude Code server. | <img src="img/after/07-claude-server.jpg" width="300" alt="After: the page can edit or remove the computer, check for agents again and update them."><br>After: the page can edit or remove the computer, check for agents again and update them. |
+| **Import from Claude Code** | <img src="img/before/08-claude-new-conversation.jpg" width="300" alt="Before: the new-conversation page of a Claude Code server."><br>Before: the new-conversation page of a Claude Code server. | <img src="img/after/08-claude-new-conversation.jpg" width="300" alt="After: the new-conversation page offers Import from Claude Code."><br>After: the new-conversation page offers Import from Claude Code. |
+| **Search inside files (OpenCode servers)** | <img src="img/before/09-files-search.jpg" width="300" alt="Before: searching Files for a word finds only file names, so nothing comes up."><br>Before: searching Files for a word finds only file names, so nothing comes up. | <img src="img/after/09-files-search.jpg" width="300" alt="After: searching Files for a word offers to search inside the files."><br>After: searching Files for a word offers to search inside the files. |
+| **Search results** | — | <img src="img/after/09b-files-search-inside.jpg" width="300" alt="New: the lines that contain the word, in each file."><br>New: the lines that contain the word, in each file. |
+| **The message box names the agent** | <img src="img/before/11-claude-box-hint.jpg" width="300" alt="Before: a new Claude Code conversation said Ask OpenCode."><br>Before: a new Claude Code conversation said Ask OpenCode. | <img src="img/after/11-claude-box-hint.jpg" width="300" alt="After: the box names the agent: Ask Claude Code."><br>After: the box names the agent: Ask Claude Code. |
 
 ## Not pictured
 
-- **AI Team** pause, delete, force stop and scheduled jobs: no AI Team host was available for screenshots; they are checked by tests.
-- **Tool answers in Claude Code steps** and the plain-words error messages: the demo didn't produce a clear example.
+- **AI Team** pause, delete, force stop and scheduled jobs: no AI Team host was available for screenshots; tests cover them.
+- **Tool answers in Claude Code steps** and the plain-words error messages.
+
+Pictures were taken automatically from `tool/shots/release.toml`; every capture passed a check that no private names or addresses are on screen.
