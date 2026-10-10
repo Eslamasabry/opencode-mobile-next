@@ -653,7 +653,9 @@
           "key": "find:match.path.text",
           "path": "path.text",
           "kind": "string",
-          "probes": [],
+          "probes": [
+            "lib/cart_total.dart"
+          ],
           "primary": false
         },
         {
@@ -669,7 +671,9 @@
           "key": "find:match.line_number",
           "path": "line_number",
           "kind": "number",
-          "probes": [],
+          "probes": [
+            "Line 42"
+          ],
           "primary": false
         },
         {

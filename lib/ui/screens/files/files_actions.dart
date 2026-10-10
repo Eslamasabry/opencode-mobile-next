@@ -34,6 +34,14 @@ extension _FilesActions on _FilesScreenState {
     );
   }
 
+  void _openMatch(FindMatch match) {
+    final path = _relativePath(match.path);
+    _openFile(
+      FileNode(name: path.split('/').last, path: path, isDir: false),
+      initialLine: match.lineNumber > 0 ? match.lineNumber : null,
+    );
+  }
+
   /// Shared by every Files add-to-prompt affordance: a staged reference is
   /// done with Undo; a duplicate or a full tray is said in place.
   void _stageReference(ReviewReference reference) {

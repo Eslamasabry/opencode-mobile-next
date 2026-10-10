@@ -44,6 +44,7 @@ String productErrorText(Object error, {AppLocalizations? l10n}) {
     ProductFailureCategory.signIn => copy.productErrorSignIn,
     ProductFailureCategory.notFound => copy.productErrorNotFound,
     ProductFailureCategory.conflict => copy.productErrorConflict,
+    ProductFailureCategory.computer => copy.productErrorComputer,
     ProductFailureCategory.busy => copy.productErrorBusy,
     ProductFailureCategory.server => copy.productErrorServer(
       failure.statusCode ?? 500,

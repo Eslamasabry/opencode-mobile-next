@@ -144,6 +144,9 @@ Future<void> _chooseCodeAction(WidgetTester tester, String label) async {
 Future<void> _chooseFileFilter(WidgetTester tester, String key) async {
   await tester.tap(find.byKey(const ValueKey('file-surface-selector')));
   await tester.pumpAndSettle();
+  // At the largest text size the longer menu scrolls: bring the item in.
+  await tester.ensureVisible(find.byKey(ValueKey(key)));
+  await tester.pumpAndSettle();
   await tester.tap(find.byKey(ValueKey(key)));
   await tester.pumpAndSettle();
 }

@@ -34579,5 +34579,64 @@
         "type": "String"
       }
     }
+  },
+  "filesTextSurface": "Text in files",
+  "@filesTextSurface": {
+    "description": "Files: the search filter that looks for words inside the files, beside Files and Symbols"
+  },
+  "filesSearchText": "Search text in files",
+  "@filesSearchText": {
+    "description": "Files: the search field's label while searching inside the files"
+  },
+  "filesSearchInside": "Search inside files for \"{query}\"",
+  "@filesSearchInside": {
+    "description": "Files: first row above the file-name results while typing; searches the typed words inside the files",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "filesTextHintTitle": "Search inside files",
+  "@filesTextHintTitle": {
+    "description": "Files › Text: title of the hint shown before anything is typed"
+  },
+  "filesTextHintBody": "Type a word or a phrase to see every line that has it.",
+  "@filesTextHintBody": {
+    "description": "Files › Text: the hint under the title before anything is typed"
+  },
+  "filesNoTextTitle": "No matches",
+  "@filesNoTextTitle": {
+    "description": "Files › Text: title when no file has the typed text"
+  },
+  "filesNoTextBody": "No file has that text. Check the spelling or try fewer words.",
+  "@filesNoTextBody": {
+    "description": "Files › Text: the line under the no-matches title"
+  },
+  "filesTextFailedTitle": "Couldn't search the files",
+  "@filesTextFailedTitle": {
+    "description": "Files › Text: title of the state when the text search failed; the reason is under it"
+  },
+  "filesTextLimited": "Showing the first {count} matches. Type more to narrow them.",
+  "@filesTextLimited": {
+    "description": "Files › Text: said under the results when there were more matches than are listed",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesTextMatchLine": "Line {line}",
+  "@filesTextMatchLine": {
+    "description": "Files › Text: the line number a match is on, under the file name in a result row",
+    "placeholders": {
+      "line": {
+        "type": "int"
+      }
+    }
+  },
+  "productErrorComputer": "Couldn't reach your computer. Check it's on and connected, then try again.",
+  "@productErrorComputer": {
+    "description": "Failure words when the computer running Claude Code (Paseo) did not answer or could not do what was asked; the daemon's reason goes under Details"
   }
 }

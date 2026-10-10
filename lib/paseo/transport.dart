@@ -66,7 +66,18 @@ class PaseoFailure extends ApiException {
           PaseoFailureKind.scopeMismatch =>
             'This conversation belongs to another project.',
         },
-        statusCode: kind == PaseoFailureKind.authentication ? 401 : 409,
+        // Only a real clash reads as a conflict ("changed meanwhile"); a
+        // daemon that cannot be reached or did not do it has no status, and
+        // the app's failure words say so (ProductFailureCategory.computer).
+        statusCode: switch (kind) {
+          PaseoFailureKind.authentication => 401,
+          PaseoFailureKind.overloaded => 429,
+          PaseoFailureKind.staleRequest ||
+          PaseoFailureKind.scopeMismatch ||
+          PaseoFailureKind.deliveryUnknown ||
+          PaseoFailureKind.newChatRequired => 409,
+          _ => null,
+        },
         errorTag: 'Paseo${kind.name}',
       );
 }
@@ -216,6 +227,16 @@ class PaseoEvent {
   const PaseoEvent(this.epoch, this.type, this.payload);
 }
 
+/// One binary frame of a terminal stream: `[opcode, slot, ...payload]`. Only
+/// terminal output is ever subscribed to, so nothing else arrives this way.
+class PaseoBinaryFrame {
+  final int epoch;
+  final int opcode;
+  final int slot;
+  final List<int> payload;
+  const PaseoBinaryFrame(this.epoch, this.opcode, this.slot, this.payload);
+}
+
 class _PendingRequest {
   final bool mutation;
 
@@ -247,6 +268,7 @@ class PaseoTransport {
   final String clientId;
   final _events = StreamController<PaseoEvent>.broadcast(sync: true);
   final _disconnects = StreamController<int>.broadcast(sync: true);
+  final _binary = StreamController<PaseoBinaryFrame>.broadcast(sync: true);
   final Map<String, _PendingRequest> _pending = {};
   PaseoSocket? _socket;
   StreamSubscription<Object?>? _subscription;
@@ -288,6 +310,9 @@ class PaseoTransport {
 
   Stream<PaseoEvent> get events => _events.stream;
   Stream<int> get disconnects => _disconnects.stream;
+
+  /// Terminal stream frames, tagged with the connection they came on.
+  Stream<PaseoBinaryFrame> get binaryFrames => _binary.stream;
   int get epoch => _epoch;
   bool get isClosed => _closed;
   bool get connected => _socket != null && _initialized;
@@ -489,8 +514,18 @@ class PaseoTransport {
 
   void _receive(int epoch, Object? frame) {
     if (epoch != _epoch || _closed) return;
-    // Binary frames carry terminal data, which this client never requests.
-    if (frame is! String) return;
+    if (frame is! String) {
+      // Binary frames carry terminal data, and only a terminal subscription
+      // asks for any.
+      if (frame is List<int> &&
+          frame.length >= 2 &&
+          frame.length <= maxFrameBytes) {
+        _binary.add(
+          PaseoBinaryFrame(epoch, frame[0], frame[1], frame.sublist(2)),
+        );
+      }
+      return;
+    }
     try {
       if (frame.length > maxFrameBytes) throw const FormatException();
       final cap = _boundedFrameBytes;
@@ -621,5 +656,6 @@ class PaseoTransport {
     _lost(_epoch);
     await _events.close();
     await _disconnects.close();
+    await _binary.close();
   }
 }

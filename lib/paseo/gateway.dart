@@ -38,11 +38,16 @@ part 'gateway/subagents.dart';
 part 'gateway/gen_ui_history.dart';
 part 'gateway/payload_use.dart';
 part 'gateway/idle_work.dart';
+part 'gateway/workspace_base.dart';
+part 'gateway/files.dart';
+part 'gateway/changes.dart';
+part 'gateway/worktrees.dart';
+part 'gateway/terminals.dart';
 part 'gateway/host_update.dart';
 part 'gateway/agent_features.dart';
 part 'gateway/provider_import.dart';
 
-class PaseoGateway
+class PaseoGateway extends _PaseoWorkspace
     implements
         ServerGateway,
         ServerOperationsGateway,
@@ -54,6 +59,7 @@ class PaseoGateway
         HostDaemonUpdateGateway,
         AgentFeatureGateway,
         ProviderConversationImportGateway {
+  @override
   final PaseoTransport transport;
   final Future<void> Function()? _beforePayloadUse;
   final void Function()? _afterPayloadUse;
@@ -118,6 +124,7 @@ class PaseoGateway
 
   String? _directory;
   bool _closed = false;
+  @override
   final _agents = <String, Map<String, dynamic>>{};
   final _sessions = <String, Session>{};
   final _statuses = <String, String>{};
@@ -263,6 +270,7 @@ class PaseoGateway
   late final StreamSubscription<int> _daemonDisconnects;
   Timer? _retry;
   int _retryAttempt = 0;
+  @override
   int _locationEpoch = 0;
   bool _listening = false;
   bool _recoveryDegraded = false;
@@ -332,6 +340,7 @@ class PaseoGateway
   @override
   bool get isClosed => _closed;
 
+  @override
   String get _scope {
     final value = _directory;
     if (value == null ||
@@ -431,6 +440,7 @@ class PaseoGateway
   String daemonSessionId(String appID) => _real(appID);
   String _app(String realID) => _appIDs[realID] ?? realID;
 
+  @override
   void _checkLocation(String scope, int epoch) {
     if (_closed || scope != _directory || epoch != _locationEpoch) {
       throw PaseoFailure(PaseoFailureKind.scopeMismatch);
@@ -1226,8 +1236,6 @@ class PaseoGateway
       _rejectQuestion(sessionID, requestID);
   @override
   Future<List<Todo>> todos(String id) async => const [];
-  @override
-  Future<List<FileDiff>> diff(String id) async => const [];
   @override
   Future<List<IntegrationInfo>> listIntegrations() async => const [];
   @override

@@ -255,6 +255,16 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
         }
         _worktrees = current;
       });
+      if (worktree.ready) {
+        _handleEvent(
+          EventEnvelope(
+            type: 'worktree.ready',
+            properties: {'name': worktree.name, 'branch': worktree.branch},
+            directory: worktree.directory,
+          ),
+        );
+        return;
+      }
       _preparationTimers[worktree.directory]?.cancel();
       _preparationTimers[worktree.directory] = Timer(
         const Duration(seconds: 45),
