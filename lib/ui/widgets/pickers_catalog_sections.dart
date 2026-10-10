@@ -58,22 +58,9 @@ extension _ModelCatalogSections on _ModelCatalogViewState {
       if (catalog != null && _canConnect && _freeOnly(catalog)) _freeOnlyNote(),
       if (catalog != null) ..._catalogNotices(context, catalog),
     ];
-    // The agent's own switches (fast mode and the like) for this one
-    // conversation, where the agent lists any.
-    final api = controller.api;
-    final sessionID = widget.sessionID;
     return [
       if (widget.showHeader) ...[_header(context), gap],
       for (final notice in notices) ...[notice, gap],
-      if (sessionID != null &&
-          api is AgentFeatureGateway &&
-          (api as AgentFeatureGateway).agentFeaturesSupported) ...[
-        AgentFeaturesSection(
-          gateway: api as AgentFeatureGateway,
-          sessionID: sessionID,
-        ),
-        gap,
-      ],
       if (catalog == null)
         _catalogState()
       else if (catalog.models.isEmpty)

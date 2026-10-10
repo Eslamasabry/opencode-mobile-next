@@ -190,7 +190,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get agentFeaturesLabel => 'إعدادات الوكيل';
 
   @override
-  String get agentFeaturesLoading => 'جارٍ تحميل إعدادات الوكيل…';
+  String agentFeaturesSheetTitle(String agent) {
+    return 'إعدادات $agent';
+  }
+
+  @override
+  String agentFeatureChipOff(String name) {
+    return '$name متوقف';
+  }
 
   @override
   String get agentFeaturesLoadFailed => 'تعذر تحميل إعدادات هذا الوكيل.';

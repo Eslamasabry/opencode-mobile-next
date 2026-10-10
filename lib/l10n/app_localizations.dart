@@ -438,11 +438,17 @@ abstract class AppLocalizations {
   /// **'Agent settings'**
   String get agentFeaturesLabel;
 
-  /// Model sheet: the agent's switches are being read
+  /// Agent settings sheet title, e.g. Claude Code settings
   ///
   /// In en, this message translates to:
-  /// **'Loading agent settings…'**
-  String get agentFeaturesLoading;
+  /// **'{agent} settings'**
+  String agentFeaturesSheetTitle(String agent);
+
+  /// Composer chip when an agent switch is off, e.g. Fast mode off
+  ///
+  /// In en, this message translates to:
+  /// **'{name} off'**
+  String agentFeatureChipOff(String name);
 
   /// Model sheet: reading the agent's switches failed
   ///

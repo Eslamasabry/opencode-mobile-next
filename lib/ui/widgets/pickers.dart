@@ -25,7 +25,6 @@ import '../../api/models.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
-import 'agent_features_section.dart';
 import '../../domain/free_model.dart' show openCodeFreeProviderID;
 import '../../domain/model_display_name.dart' show modelNameFromId;
 import '../widgets/connect_methods.dart';

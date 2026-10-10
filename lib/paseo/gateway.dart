@@ -1306,6 +1306,9 @@ class PaseoGateway
   bool get agentFeaturesSupported => true;
 
   @override
+  String? agentFeaturesOwner(String sessionID) => _agentOwnerName(sessionID);
+
+  @override
   Future<List<AgentFeature>> agentFeatures(String sessionID) =>
       _agentFeatures(sessionID);
 

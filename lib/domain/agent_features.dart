@@ -46,6 +46,9 @@ final class AgentFeature {
 abstract interface class AgentFeatureGateway {
   bool get agentFeaturesSupported;
 
+  /// The agent's name for the person ("Claude Code"); null when unknown.
+  String? agentFeaturesOwner(String sessionID);
+
   /// The switches this conversation's agent offers now, read from the
   /// server. Empty when its model offers none.
   Future<List<AgentFeature>> agentFeatures(String sessionID);

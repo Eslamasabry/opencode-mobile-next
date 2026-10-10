@@ -74,7 +74,21 @@ extension _ChatComposerRegion on _ChatScreenState {
               .where((item) => item.type != 'user')
               .length;
     final strings = _chatL10n(context);
+    // The agent's own switches (fast mode and the like), where it has any:
+    // a chip that opens "<Agent> settings".
+    final features = _conn.api;
+    final showFeatures =
+        !_conn.isIsolated &&
+        features is AgentFeatureGateway &&
+        (features as AgentFeatureGateway).agentFeaturesSupported;
     return [
+      if (showFeatures)
+        AgentFeaturesChip(
+          key: const ValueKey('agent-features-slot'),
+          gateway: features as AgentFeatureGateway,
+          sessionID: widget.sessionID,
+          refreshKey: _conn.displayModelForSession(widget.sessionID)?.wireName,
+        ),
       if (pendingContext > 0)
         KitChip(
           key: const Key('pending-context-chip'),
