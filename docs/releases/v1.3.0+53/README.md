@@ -4,7 +4,7 @@
 
 | | Before (1.2.0) | After (1.3.0) |
 |---|---|---|
-| **Claude Code chats get a Files tab** | <img src="img/before/02-claude-files.jpg" width="300" alt="Before: a Claude Code server has no Files tab."><br>Before: a Claude Code server has no Files tab. | <img src="img/after/02-claude-files.jpg" width="300" alt="New: a Claude Code server has a Files tab for the project's files, changes and terminal."><br>New: a Claude Code server has a Files tab for the project's files, changes and terminal. |
+| **Claude Code chats get a Files tab** | <img src="img/before/02-claude-files.jpg" width="300" alt="Before: a Claude Code server has no Files tab."><br>Before: a Claude Code server has no Files tab. | <img src="img/after/02-claude-files.jpg" width="300" alt="New: a Claude Code server has a Files tab for the project's files, changes and terminal; finished conversations show Done."><br>New: a Claude Code server has a Files tab for the project's files, changes and terminal; finished conversations show Done. |
 | **Changes made by Claude Code** | — | <img src="img/after/03-claude-changes.jpg" width="300" alt="New: a Claude Code conversation shows what changed in the project."><br>New: a Claude Code conversation shows what changed in the project. |
 | **A terminal on your computer** | — | <img src="img/after/04-claude-terminal.jpg" width="300" alt="New: a terminal in the project, from a Claude Code conversation."><br>New: a terminal in the project, from a Claude Code conversation. |
 | **Fast mode chip** | — | <img src="img/after/05-claude-fast-chip.jpg" width="300" alt="New: Fast mode is one chip in the row above the message box."><br>New: Fast mode is one chip in the row above the message box. |
@@ -16,6 +16,8 @@
 | **Search inside files (OpenCode servers)** | <img src="img/before/09-files-search.jpg" width="300" alt="Before: searching Files for a word finds only file names, so nothing comes up."><br>Before: searching Files for a word finds only file names, so nothing comes up. | <img src="img/after/09-files-search.jpg" width="300" alt="After: searching Files for a word offers to search inside the files."><br>After: searching Files for a word offers to search inside the files. |
 | **Search results** | — | <img src="img/after/09b-files-search-inside.jpg" width="300" alt="New: the lines that contain the word, in each file."><br>New: the lines that contain the word, in each file. |
 | **The message box names the agent** | <img src="img/before/11-claude-box-hint.jpg" width="300" alt="Before: a new Claude Code conversation said Ask OpenCode."><br>Before: a new Claude Code conversation said Ask OpenCode. | <img src="img/after/11-claude-box-hint.jpg" width="300" alt="After: the box names the agent: Ask Claude Code."><br>After: the box names the agent: Ask Claude Code. |
+| **Delete a conversation** | — | <img src="img/after/12-delete-conversation.jpg" width="300" alt="New: deleting a conversation asks first and names it."><br>New: deleting a conversation asks first and names it. |
+| **Tools as one page with tabs** | <img src="img/before/13-tools-tabs.jpg" width="300" alt="Before: Tools showed two sections, MCP and External agents."><br>Before: Tools showed two sections, MCP and External agents. | <img src="img/after/13-tools-tabs.jpg" width="300" alt="After: Tools is one page with tabs for MCP, Commands, Tools, Skills and References."><br>After: Tools is one page with tabs for MCP, Commands, Tools, Skills and References. |
 
 ## Not pictured
 

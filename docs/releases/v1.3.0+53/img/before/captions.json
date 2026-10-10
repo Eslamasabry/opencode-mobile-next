@@ -5,5 +5,6 @@
   "02-claude-files": "Before: a Claude Code server has no Files tab.",
   "07-claude-server": "Before: the page of a Claude Code server.",
   "06b-opencode-conversation-menu": "Before: an OpenCode conversation's menu had no Archive or Delete.",
+  "13-tools-tabs": "Before: Tools showed two sections, MCP and External agents.",
   "09-files-search": "Before: searching Files for a word finds only file names, so nothing comes up."
 }

@@ -65,6 +65,15 @@ steps = [
   { kind = "drain", tap = { text = "Allow once" }, until_gone = { text = "Stop the reply" }, quiet = 8, timeout = 420 },
   { kind = "tap", text = "Not now", timeout = 3, optional = true },
 
+  # --- 14: the step list (tap the line that sums up the work)
+  { kind = "adb_shell", cmd = "input swipe 540 600 540 1700 300; sleep 1; input swipe 540 600 540 1700 300; sleep 1; input swipe 540 600 540 1700 300" },
+  { kind = "sleep", seconds = 1 },
+  { kind = "tap", at = [0.2, 0.21] },
+  { kind = "sleep", seconds = 1.5 },
+  { kind = "capture", name = "14-step-timeline", builds = ["before"], caption = "Before: the steps of a Claude Code reply are one plain row each, such as Edit cart.py." },
+  { kind = "capture", name = "14-step-timeline", builds = ["after"], caption = "After: tapping the work summary opens the list of steps, and each step opens its details." },
+  { kind = "tap", text = "Collapse all steps", timeout = 3, optional = true },
+
   # --- 06: conversation menu
   { kind = "tap", text = "Conversation menu" },
   { kind = "wait_for", text = "Rename conversation", timeout = 10 },
@@ -110,7 +119,7 @@ steps = [
   { kind = "tap", at = [0.19, 0.955] },
   { kind = "wait_for", text = "Add a discount code", contains = true, timeout = 20 },
   { kind = "capture", name = "02-claude-files", builds = ["before"], caption = "Before: a Claude Code server has no Files tab." },
-  { kind = "capture", name = "02-claude-files", builds = ["after"], caption = "New: a Claude Code server has a Files tab for the project's files, changes and terminal." },
+  { kind = "capture", name = "02-claude-files", builds = ["after"], caption = "New: a Claude Code server has a Files tab for the project's files, changes and terminal; finished conversations show Done." },
   { kind = "tap", text = "Settings" },
   { kind = "tap", text = "This server", contains = true },
   { kind = "wait_for", text = "Change sign-in for My computer", contains = true, timeout = 20, builds = ["before"] },
@@ -157,8 +166,33 @@ steps = [
   { kind = "capture", name = "06b-opencode-conversation-menu", builds = ["after"], caption = "After: the menu adds Archive conversation and Delete conversation." },
   { kind = "key", key = "back" },
 
-  # --- 09 / 09b: search in Files, on the OpenCode server (its Files tab exists in both builds)
+  # --- 12: delete asks first and names the conversation (never confirmed)
+  { kind = "tap", text = "Conversation menu", builds = ["after"] },
+  { kind = "tap", text = "Delete conversation", builds = ["after"] },
+  { kind = "wait_for", text = "removed for good", contains = true, timeout = 10, builds = ["after"] },
+  { kind = "capture", name = "12-delete-conversation", builds = ["after"], caption = "New: deleting a conversation asks first and names it." },
+  { kind = "tap", text = "Cancel", builds = ["after"] },
+
+  # --- 13 / 15: Tools and Usage under Settings
   { kind = "tap", text = "Back", until = { text = "Settings" } },
+  { kind = "tap", text = "Settings" },
+  { kind = "tap", text = "Tools" },
+  { kind = "wait_for", text = "Tools, Work server", timeout = 15 },
+  { kind = "sleep", seconds = 1.5 },
+  { kind = "capture", name = "13-tools-tabs", builds = ["before"], caption = "Before: Tools showed two sections, MCP and External agents." },
+  { kind = "capture", name = "13-tools-tabs", builds = ["after"], caption = "After: Tools is one page with tabs for MCP, Commands, Tools, Skills and References." },
+  { kind = "key", key = "back" },
+  { kind = "scroll_to", text = "Remaining", direction = "down", max_swipes = 6 },
+  { kind = "tap", text = "Remaining" },
+  { kind = "wait_for", text = "Provider", timeout = 15 },
+  { kind = "sleep", seconds = 1.5 },
+  { kind = "capture", name = "15-usage", builds = ["before"], caption = "Before: the Usage screen, with a tab for each provider." },
+  { kind = "capture", name = "15-usage", builds = ["after"], caption = "After: the Usage screen is unchanged." },
+  { kind = "key", key = "back" },
+  { kind = "tap", at = [0.19, 0.955] },
+
+  # --- 09 / 09b: search in Files, on the OpenCode server (its Files tab exists in both builds)
+  { kind = "tap", text = "Back", until = { text = "Settings" }, timeout = 3, optional = true },
   { kind = "tap", text = "Files", index = 0 },
   { kind = "tap", text = "Files", index = 2 },
   { kind = "wait_for", text = "README.md", timeout = 20 },
