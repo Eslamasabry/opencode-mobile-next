@@ -138,13 +138,13 @@ void main() {
       if (header.evaluate().isNotEmpty) {
         await tester.tap(header.first);
         await tester.pump(const Duration(milliseconds: 600));
-      await tester.pump(const Duration(milliseconds: 600));
+        await tester.pump(const Duration(milliseconds: 600));
       }
       final showAll = find.byKey(const ValueKey('kit-code-show-all'));
       if (showAll.evaluate().isNotEmpty) {
         await tester.tap(showAll);
         await tester.pump(const Duration(milliseconds: 600));
-      await tester.pump(const Duration(milliseconds: 600));
+        await tester.pump(const Duration(milliseconds: 600));
       }
       await writePng(
         'docs/qa/command-block-2026-10-07/$_prefix-tool-card-$status.png',
