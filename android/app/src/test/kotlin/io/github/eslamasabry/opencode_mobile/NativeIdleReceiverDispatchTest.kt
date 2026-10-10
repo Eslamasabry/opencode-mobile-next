@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class NativeIdleReceiverDispatchTest {

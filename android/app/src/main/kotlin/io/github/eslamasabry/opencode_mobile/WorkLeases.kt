@@ -18,7 +18,7 @@ internal class WorkLeases(
     private val nowMs: () -> Long,
     private val maxHoldMs: Long = 900_000L,
     private val maxLifetimeMs: Long = 21_600_000L,
-    private val maxLeases: Int = 128,
+    private val maxLeases: Int = MAX_LEASES,
 ) {
     enum class Kind { CHAT, SETUP, SIGN_IN, TERMINAL }
 
@@ -36,7 +36,7 @@ internal class WorkLeases(
     )
 
     init {
-        require(maxHoldMs > 0L && maxLifetimeMs > 0L && maxLeases in 1..128)
+        require(maxHoldMs > 0L && maxLifetimeMs > 0L && maxLeases in 1..MAX_LEASES)
     }
 
     private val leases = linkedMapOf<Long, Lease>()
@@ -46,30 +46,33 @@ internal class WorkLeases(
 
     @Synchronized
     fun acquire(kind: Kind, holdMs: Long): Long? {
-        val now = sweep() ?: return null
-        if (holdMs <= 0L || leases.size >= maxLeases || lastToken == Long.MAX_VALUE) return null
-        val aggregate = aggregateDeadlineMs ?: checkedAdd(now, maxLifetimeMs) ?: return null
+        val now = sweep()
+        val aggregate = if (now != null) aggregateDeadlineMs ?: checkedAdd(now, maxLifetimeMs) else null
+        val open = holdMs > 0L && leases.size < maxLeases && lastToken != Long.MAX_VALUE
+        if (now == null || aggregate == null || !open) return null
         val lifetime = minOf(maxLifetimeMs, aggregate - now)
-        if (lifetime <= 0L) return null
-        val hardDeadline = checkedAdd(now, lifetime) ?: return null
-        val duration = minOf(holdMs, maxHoldMs, lifetime)
-        val expiresAt = checkedAdd(now, duration) ?: return null
-        val token = ++lastToken
-        leases[token] = Lease(kind, hardDeadline, expiresAt)
-        aggregateDeadlineMs = aggregate
-        return token
+        val hardDeadline = checkedAdd(now, lifetime)
+        val expiresAt = checkedAdd(now, minOf(holdMs, maxHoldMs, lifetime))
+        return if (hardDeadline == null || expiresAt == null) {
+            null
+        } else {
+            (++lastToken).also {
+                leases[it] = Lease(kind, hardDeadline, expiresAt)
+                aggregateDeadlineMs = aggregate
+            }
+        }
     }
 
     @Synchronized
     fun renew(token: Long, holdMs: Long): Boolean {
-        val now = sweep() ?: return false
-        val lease = leases[token] ?: return false
-        if (holdMs <= 0L) return false
-        val aggregate = aggregateDeadlineMs ?: return false
+        val now = sweep()
+        val lease = leases[token]
+        val aggregate = aggregateDeadlineMs
+        if (now == null || lease == null || aggregate == null) return false
         val duration = minOf(holdMs, maxHoldMs, lease.hardDeadlineMs - now, aggregate - now)
-        if (duration <= 0L) return false
-        lease.expiresAtMs = checkedAdd(now, duration) ?: return false
-        return true
+        val expiresAt = if (holdMs > 0L) checkedAdd(now, duration) else null
+        if (expiresAt != null) lease.expiresAtMs = expiresAt
+        return expiresAt != null
     }
 
     @Synchronized
@@ -89,7 +92,8 @@ internal class WorkLeases(
 
     @Synchronized
     fun clear() {
-        closeAll()
+        leases.clear()
+        aggregateDeadlineMs = null
     }
 
     @Synchronized
@@ -111,18 +115,16 @@ internal class WorkLeases(
 
     /** Invalid time never produces a longer hold or exposes callback errors. */
     private fun sweep(): Long? {
-        val now = try { nowMs() } catch (_: Throwable) {
-            closeAll()
-            return null
-        }
+        val now = try { nowMs() } catch (_: Throwable) { null }
         val previous = lastNowMs
-        if (now < 0L || previous != null && now < previous) {
-            closeAll()
+        val reversed = previous != null && now != null && now < previous
+        if (now == null || now < 0L || reversed) {
+            clear()
             return null
         }
         lastNowMs = now
         if (aggregateDeadlineMs?.let { now >= it } == true) {
-            closeAll()
+            clear()
         } else {
             leases.entries.removeAll { now >= it.value.expiresAtMs || now >= it.value.hardDeadlineMs }
             resetAggregateWhenIdle()
@@ -133,12 +135,11 @@ internal class WorkLeases(
     private fun checkedAdd(start: Long, duration: Long): Long? =
         if (start < 0L || duration <= 0L || start > Long.MAX_VALUE - duration) null else start + duration
 
-    private fun closeAll() {
-        leases.clear()
-        aggregateDeadlineMs = null
-    }
-
     private fun resetAggregateWhenIdle() {
         if (leases.isEmpty()) aggregateDeadlineMs = null
+    }
+
+    private companion object {
+        const val MAX_LEASES = 128
     }
 }

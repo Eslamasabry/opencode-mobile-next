@@ -1,6 +1,10 @@
 package io.github.eslamasabry.opencode_mobile
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -29,10 +33,10 @@ class NativeWorkLeaseHostTest {
             override fun release() { expires = now }
         }
         val host = NativeWorkLeaseHost(WorkLeases({ now }, maxLifetimeMs = cap), { now }, if (hasWake) wake else null,
-            {
-                if (snapshotUnavailable) throw IllegalStateException()
+            NativeWorkLeaseHost.Terminals({
+                if (snapshotUnavailable) error("terminal snapshot unavailable")
                 terminalProvider?.invoke() ?: terminals
-            }, { protectionCalls++; protect?.invoke() ?: protection }, { changes++ }, { delay, task ->
+            }, { protectionCalls++; protect?.invoke() ?: protection }), { changes++ }, { delay, task ->
                 val pending = Queued(now + delay, task)
                 queued.add(pending)
                 val cancel: () -> Unit = { pending.cancelled = true }

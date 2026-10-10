@@ -1,7 +1,7 @@
 package io.github.eslamasabry.opencode_mobile
 
 /** Volatile Dart work evidence. An expired/missing sample never establishes idle. */
-internal class NativeIdleHeartbeat(private val freshForMs: Long = 45_000) {
+internal class NativeIdleHeartbeat(private val freshForMs: Long = DEFAULT_FRESH_MS) {
     private data class Evidence(val owner: String, val busy: Boolean?, val observedAt: Long)
     private var evidence: Evidence? = null
     private var highWater: Long? = null
@@ -19,12 +19,10 @@ internal class NativeIdleHeartbeat(private val freshForMs: Long = 45_000) {
     }
 
     @Synchronized fun busy(owner: String, nowMillis: Long): Boolean? {
-        if (!acceptTime(nowMillis) || !validOwner(owner)) return null
-        val sample = evidence ?: return null
-        if (owner != sample.owner) return null
+        val accepted = acceptTime(nowMillis) && validOwner(owner)
+        val sample = if (accepted) evidence?.takeIf { it.owner == owner } else null
         // Accepted nonnegative monotonic values make this subtraction safe even at Long.MAX_VALUE.
-        val elapsed = nowMillis - sample.observedAt
-        return if (elapsed < freshForMs) sample.busy else null
+        return sample?.takeIf { nowMillis - it.observedAt < freshForMs }?.busy
     }
 
     @Synchronized fun clear() { evidence = null }
@@ -40,4 +38,8 @@ internal class NativeIdleHeartbeat(private val freshForMs: Long = 45_000) {
     }
 
     private fun validOwner(owner: String) = Regex("[A-Za-z0-9_-]{1,80}").matches(owner)
+
+    private companion object {
+        const val DEFAULT_FRESH_MS = 45_000L
+    }
 }

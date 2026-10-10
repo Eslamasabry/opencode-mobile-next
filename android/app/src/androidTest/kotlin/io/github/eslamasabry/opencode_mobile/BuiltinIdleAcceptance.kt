@@ -46,6 +46,8 @@ internal class BuiltinIdleAcceptance(
         }
     }
 
+    // A scripted device scenario: its steps must stay in one readable, ordered sequence.
+    @Suppress("CyclomaticComplexMethod", "LongMethod", "ThrowsCount")
     private fun idle(linux: BuiltinLinux) {
         requireSafe(linux.installed && linux.serverRunning && linux.serverRestorationArmed,
             "bb5_canonical_baseline_required")
@@ -67,7 +69,8 @@ internal class BuiltinIdleAcceptance(
         val initial = linux.serverIdleStatus()
         val enabled = initial["serverIdleEnabled"] as? Boolean
         val minutes = initial["serverIdleMinutes"] as? Int
-        requireSafe(enabled != null && minutes != null && !idleMarked(initial) && initial["serverIdleHelperStopped"] == false, "bb5_idle_baseline_unavailable")
+        requireSafe(enabled != null && minutes != null && !idleMarked(initial) &&
+            initial["serverIdleHelperStopped"] == false, "bb5_idle_baseline_unavailable")
         val firstActivity = existingActivity() ?: throw Refused("bb5_real_activity_required")
         await(5_000L, "bb5_real_foreground_unavailable") { resumed(linux) }
         // Read-only app startup probes may still be draining. Wait for exactly the
@@ -367,7 +370,9 @@ internal class BuiltinIdleAcceptance(
     private fun trackedHelper(linux: BuiltinLinux): Process? = synchronized(linux) { liveServices(linux)[helperName] }
 
     @Suppress("UNCHECKED_CAST")
-    private fun requireRuntimeShape(linux: BuiltinLinux, allowHelper: Boolean, requireServer: Boolean) = synchronized(linux) {
+    private fun requireRuntimeShape(
+        linux: BuiltinLinux, allowHelper: Boolean, requireServer: Boolean,
+    ) = synchronized(linux) {
         val services = liveServices(linux)
         val allowed = if (allowHelper) setOf(BuiltinLinux.SERVER, helperName) else setOf(BuiltinLinux.SERVER)
         requireSafe(services.keys.all { it in allowed } && (!requireServer || BuiltinLinux.SERVER in services),
@@ -402,7 +407,8 @@ internal class BuiltinIdleAcceptance(
                 .apply { isAccessible = true }
             val plan = NativeRuntimeOwnership.plan(receipt,
                 File("/proc/sys/kernel/random/boot_id").readText().trim(), current, registered,
-                requireCompleteInventory = true, nonceMatches = { pid, value -> nonce.invoke(linux, pid, value) as Boolean })
+                requireCompleteInventory = true,
+                nonceMatches = { pid, value -> nonce.invoke(linux, pid, value) as Boolean })
             requireSafe(plan.other.isEmpty() || (allowHelper && trackedHelper(linux) != null),
                 "bb5_inflight_or_unknown_helper")
         } catch (failure: Refused) { throw failure }

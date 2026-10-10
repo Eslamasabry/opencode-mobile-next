@@ -24,12 +24,12 @@ internal class NativeIdleReturnNotification(
         val eligible = state.available && owner != null && OWNER.matches(owner) &&
             state.generation > 0 && state.idleStopped && state.wanted &&
             !state.userStopped && !state.foreground && !state.serverRunning
-        if (!eligible) {
-            clear()
-            return false
-        }
-        val key = Key(owner!!, state.generation)
-        if (shown == key) return true
+        val key = if (eligible && owner != null) Key(owner, state.generation) else null
+        if (key == null) clear()
+        return key != null && (shown == key || present(key))
+    }
+
+    private fun present(key: Key): Boolean {
         // A refused replacement must not let a later check skip its retry.
         shown = null
         val visible = try { show() } catch (_: Throwable) { false }

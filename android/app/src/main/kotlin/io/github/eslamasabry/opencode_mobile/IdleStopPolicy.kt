@@ -9,11 +9,11 @@ internal class IdleStopPolicy(enabled: Boolean = false, idleMinutes: Int = 5) {
     private var deadlineMillis: Long? = null
     private var lastObservedMillis: Long? = null
 
-    init { require(idleMinutes in 1..60) { "Idle minutes must be between 1 and 60." } }
+    init { require(idleMinutes in 1..MAX_IDLE_MINUTES) { "Idle minutes must be between 1 and 60." } }
 
     @Synchronized
     fun configure(enabled: Boolean, idleMinutes: Int) {
-        require(idleMinutes in 1..60) { "Idle minutes must be between 1 and 60." }
+        require(idleMinutes in 1..MAX_IDLE_MINUTES) { "Idle minutes must be between 1 and 60." }
         this.enabled = enabled
         this.idleMinutes = idleMinutes
         deadlineMillis = null
@@ -22,24 +22,22 @@ internal class IdleStopPolicy(enabled: Boolean = false, idleMinutes: Int = 5) {
     @Synchronized
     fun observe(nowMillis: Long, foreground: Boolean, workBusy: Boolean?): Observation {
         val previous = lastObservedMillis
-        if (nowMillis < 0 || (previous != null && nowMillis < previous)) {
-            deadlineMillis = null
-            // Retain the high-water mark: a reversed clock cannot start a new idle interval.
-            return Observation(null, false)
-        }
-        lastObservedMillis = nowMillis
-        if (!enabled || foreground || workBusy != false) {
-            deadlineMillis = null
-            return Observation(null, false)
-        }
-        val deadline = deadlineMillis ?: run {
-            val delayMillis = idleMinutes * 60_000L
-            if (nowMillis > Long.MAX_VALUE - delayMillis) {
-                deadlineMillis = null
-                return Observation(null, false)
-            }
-            (nowMillis + delayMillis).also { deadlineMillis = it }
-        }
-        return Observation(deadline, nowMillis >= deadline)
+        val clockReversed = nowMillis < 0 || (previous != null && nowMillis < previous)
+        // Retain the high-water mark: a reversed clock cannot start a new idle interval.
+        if (!clockReversed) lastObservedMillis = nowMillis
+        val idle = !clockReversed && enabled && !foreground && workBusy == false
+        val deadline = if (idle) deadlineMillis ?: newDeadline(nowMillis) else null
+        deadlineMillis = deadline
+        return Observation(deadline, deadline != null && nowMillis >= deadline)
+    }
+
+    private fun newDeadline(nowMillis: Long): Long? {
+        val delayMillis = idleMinutes * MILLIS_PER_MINUTE
+        return if (nowMillis > Long.MAX_VALUE - delayMillis) null else nowMillis + delayMillis
+    }
+
+    private companion object {
+        const val MAX_IDLE_MINUTES = 60
+        const val MILLIS_PER_MINUTE = 60_000L
     }
 }

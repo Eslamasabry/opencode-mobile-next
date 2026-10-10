@@ -291,27 +291,16 @@ class BuiltinRuntimeAcceptance : Instrumentation() {
         const val FIXTURE = "qa-bb1"
     }
     private fun executeStep() {
-        if (arguments.getString("step") in setOf("bb7RebootPrepare", "bb7RebootVerify", "bb7UpdatePrepare", "bb7UpdateVerify", "bb7Cleanup")) {
-            BuiltinRestoreAcceptance(this, arguments).execute()
-            return
+        val step = arguments.getString("step")
+        when {
+            step in setOf("bb7RebootPrepare", "bb7RebootVerify", "bb7UpdatePrepare", "bb7UpdateVerify",
+                "bb7Cleanup") -> BuiltinRestoreAcceptance(this, arguments).execute()
+            step in setOf("bb5Idle", "bb5Cleanup") -> BuiltinIdleAcceptance(this, arguments).execute()
+            step == "bb4WorkLeases" -> BuiltinWorkLeaseAcceptance(this).execute()
+            step?.startsWith("bb9") == true -> BuiltinComponentUpdateAcceptance(this, arguments).execute()
+            step?.startsWith("bb3") == true -> BuiltinRuntimeReclaimAcceptance(this, arguments).execute()
+            else -> dispatchStep()
         }
-        if (arguments.getString("step") in setOf("bb5Idle", "bb5Cleanup")) {
-            BuiltinIdleAcceptance(this, arguments).execute()
-            return
-        }
-        if (arguments.getString("step") == "bb4WorkLeases") {
-            BuiltinWorkLeaseAcceptance(this).execute()
-            return
-        }
-        if (arguments.getString("step")?.startsWith("bb9") == true) {
-            BuiltinComponentUpdateAcceptance(this, arguments).execute()
-            return
-        }
-        if (arguments.getString("step")?.startsWith("bb3") == true) {
-            BuiltinRuntimeReclaimAcceptance(this, arguments).execute()
-            return
-        }
-        dispatchStep()
     }
 
     private fun dispatchStep() {
