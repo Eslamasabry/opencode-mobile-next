@@ -450,11 +450,11 @@ extension _ChatComposerRegion on _ChatScreenState {
       stopping: _aborting,
       sending: _sending,
       // OpenCode 1 runs a send made mid-turn after that turn; OpenCode 2
-      // steers or queues it; a Paseo agent adds it to the running turn.
-      // Either way Send stays live.
+      // steers or queues it; a Paseo agent adds it to the running turn or
+      // starts over from it. Either way Send stays live.
       canSendWhileBusy: !_voiceConversation,
       canChooseDelivery: _conn.supportsInbox,
-      joinsRunningTurn: _sendJoinsRunningTurn,
+      midTurnPrompt: _midTurnPrompt,
       delivery: _delivery,
       onDeliveryChanged: (delivery) =>
           _setChatState(() => _delivery = delivery),

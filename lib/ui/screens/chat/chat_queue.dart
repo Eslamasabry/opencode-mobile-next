@@ -316,13 +316,18 @@ extension _ChatQueue on _ChatScreenState {
   /// sent, so the server default applies. While a turn runs the composer's
   /// visible delivery control decides; "Send after this reply" is the
   /// default and adding to the running turn is the choice (P6.6).
-  /// This conversation's agent adds a message sent while it works to the
-  /// running turn (Paseo steering), so the message is never "queued".
-  bool get _sendJoinsRunningTurn {
+  /// What this conversation's agent does with a message sent while it
+  /// works, when it never holds it for after the turn (Paseo): the message
+  /// is then never "queued".
+  MidTurnPrompt? get _midTurnPrompt {
     final api = _conn.api;
-    return api is MidTurnPromptGateway &&
-        (api as MidTurnPromptGateway).midTurnPromptJoinsTurn(widget.sessionID);
+    return api is MidTurnPromptGateway
+        ? (api as MidTurnPromptGateway).midTurnPrompt(widget.sessionID)
+        : null;
   }
+
+  /// The agent adds a message sent while it works to the running turn.
+  bool get _sendJoinsRunningTurn => _midTurnPrompt == MidTurnPrompt.joinsTurn;
 
   PromptDelivery? get _activeDelivery =>
       _conn.supportsInbox && _conn.busySessions.contains(widget.sessionID)

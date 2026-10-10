@@ -58,7 +58,7 @@ class _ChatComposer extends StatelessWidget {
     required this.sending,
     this.canSendWhileBusy = false,
     this.canChooseDelivery = false,
-    this.joinsRunningTurn = false,
+    this.midTurnPrompt,
     // P6.6: "Send after this reply" is the default; steering is the choice.
     this.delivery = PromptDelivery.queue,
     this.onDeliveryChanged,
@@ -140,9 +140,10 @@ class _ChatComposer extends StatelessWidget {
   /// to this turn. Without it the pill says "Sends after this reply".
   final bool canChooseDelivery;
 
-  /// The agent takes a send made during a reply into that turn (a Paseo
-  /// agent that steers): the pill says "Add to this turn", with no choice.
-  final bool joinsRunningTurn;
+  /// What the agent does with a send made during a reply when it never
+  /// holds it for after the reply (Paseo): "Add to this turn" or "Stop and
+  /// send", with no choice.
+  final MidTurnPrompt? midTurnPrompt;
 
   /// What Send does while a reply is being written.
   final PromptDelivery delivery;
@@ -249,11 +250,14 @@ class _ChatComposer extends StatelessWidget {
             canSendWhileBusy: canSendWhileBusy,
             // Without an inbox (OpenCode 1) a send made during a reply
             // always runs after it, whatever the host remembers.
-            delivery:
-                joinsRunningTurn ||
-                    (canChooseDelivery && delivery == PromptDelivery.steer)
-                ? KitComposerDelivery.addToThisTurn
-                : KitComposerDelivery.afterThisReply,
+            delivery: switch (midTurnPrompt) {
+              MidTurnPrompt.joinsTurn => KitComposerDelivery.addToThisTurn,
+              MidTurnPrompt.restartsTurn => KitComposerDelivery.stopAndSend,
+              null =>
+                canChooseDelivery && delivery == PromptDelivery.steer
+                    ? KitComposerDelivery.addToThisTurn
+                    : KitComposerDelivery.afterThisReply,
+            },
             onDeliveryChanged: canChooseDelivery && onDeliveryChanged != null
                 ? (value) => onDeliveryChanged!(
                     value == KitComposerDelivery.addToThisTurn

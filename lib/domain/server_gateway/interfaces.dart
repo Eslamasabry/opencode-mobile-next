@@ -100,14 +100,24 @@ abstract interface class CorrelatedPromptGateway {
   });
 }
 
-/// A gateway whose agents take a message sent while they work into the
-/// turn in progress (read at their next step) instead of running it after
-/// that turn. The composer then says "Add to this turn", and the message is
-/// never shown as queued.
+/// What a message sent while the agent works does to the running turn, on
+/// a gateway that does not run it after that turn.
+enum MidTurnPrompt {
+  /// Read at the agent's next step: "Add to this turn".
+  joinsTurn,
+
+  /// The agent stops its reply and starts again from the message: "Stop
+  /// and send".
+  restartsTurn,
+}
+
+/// A gateway whose agents never hold a message sent while they work until
+/// the turn ends: they take it into the turn or start over from it. The
+/// composer says which, and the message is never shown as queued.
 abstract interface class MidTurnPromptGateway {
-  /// Whether [sessionID]'s agent adds a mid-turn message to its running
-  /// turn.
-  bool midTurnPromptJoinsTurn(String sessionID);
+  /// What [sessionID]'s agent does with a mid-turn message; null when the
+  /// gateway does not know the agent yet.
+  MidTurnPrompt? midTurnPrompt(String sessionID);
 }
 
 /// Pending permission requests and replies.

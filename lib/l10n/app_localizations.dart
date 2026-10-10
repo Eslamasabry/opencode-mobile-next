@@ -23914,6 +23914,18 @@ abstract class AppLocalizations {
   /// **'Sends after this reply'**
   String get kitComposerSendsAfter;
 
+  /// KitComposer: Send while a reply runs, for an agent that cannot take a message mid-reply (sending stops the reply and the agent starts again from the message).
+  ///
+  /// In en, this message translates to:
+  /// **'Stop and send'**
+  String get kitComposerStopAndSend;
+
+  /// KitComposer note line beside Stop and send: why sending stops the running reply for this agent.
+  ///
+  /// In en, this message translates to:
+  /// **'Agents like Claude Code add a message to the turn. This one stops its reply and starts again with yours.'**
+  String get kitComposerStopAndSendNote;
+
   /// KitComposer (docs/ux-system/kit-api/KitComposer.md).
   ///
   /// In en, this message translates to:

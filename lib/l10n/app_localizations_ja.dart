@@ -14774,6 +14774,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get kitComposerSendsAfter => '返信の後に送信されます';
 
   @override
+  String get kitComposerStopAndSend => 'Stop and send';
+
+  @override
+  String get kitComposerStopAndSendNote =>
+      'Agents like Claude Code add a message to the turn. This one stops its reply and starts again with yours.';
+
+  @override
   String get kitComposerCannotSendYet => '返信が終わると送信できます';
 
   @override

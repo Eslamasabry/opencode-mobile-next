@@ -948,12 +948,13 @@ class PaseoGateway extends _PaseoWorkspace
   /// Paseo 0.9.1 steers Claude Code, Codex, OpenCode and Pi
   /// (`steerActiveTurn`); its ACP agents (Copilot) are interrupted instead.
   @override
-  bool midTurnPromptJoinsTurn(String sessionID) => const {
-    'claude',
-    'codex',
-    'opencode',
-    'pi',
-  }.contains(_agents[_app(sessionID)]?['provider']);
+  MidTurnPrompt? midTurnPrompt(String sessionID) {
+    final provider = _agents[_app(sessionID)]?['provider'];
+    if (provider is! String) return null;
+    return const {'claude', 'codex', 'opencode', 'pi'}.contains(provider)
+        ? MidTurnPrompt.joinsTurn
+        : MidTurnPrompt.restartsTurn;
+  }
 
   @override
   Future<void> abort(String sessionID) async {

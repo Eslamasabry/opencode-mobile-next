@@ -79,12 +79,17 @@ Map<String, dynamic> _timeline(Map<String, dynamic> item, String turn) => {
 Future<(FakeDaemon, ConnectionController)> _open(
   WidgetTester tester, {
   required bool daemonSteers,
+  String provider = 'claude',
 }) async {
   SharedPreferences.setMockInitialValues({});
   final store = ProfileStore(prefs: await SharedPreferences.getInstance());
   await store.load();
   final daemon = FakeDaemon();
-  final agent = {...agentJson('a1', status: 'running'), 'model': 'opus'};
+  final agent = {
+    ...agentJson('a1', status: 'running'),
+    'provider': provider,
+    'model': 'opus',
+  };
   daemon.handlers['fetch_agents_request'] = (_) => (
     'fetch_agents_response',
     {
@@ -126,9 +131,9 @@ Future<(FakeDaemon, ConnectionController)> _open(
     {
       'entries': [
         {
-          'provider': 'claude',
+          'provider': provider,
           'status': 'ready',
-          'label': 'Claude',
+          'label': provider == 'claude' ? 'Claude' : 'GitHub Copilot',
           'models': [
             {'id': 'opus', 'label': 'Opus'},
           ],
@@ -316,6 +321,31 @@ void main() {
     expect(text, contains('Stopped'));
     expect(text, isNot(contains('connection dropped')));
     expect(text, isNot(contains('Queued')));
+    await close(tester, c);
+  });
+
+  testWidgets('an agent the daemon restarts (Copilot): Send says Stop and '
+      'send and why, never Send after this reply', (tester) async {
+    final (_, c) = await _open(
+      tester,
+      daemonSteers: false,
+      provider: 'copilot',
+    );
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'And leave the box now as it is being used.',
+    );
+    await tester.pump();
+    expect(find.byTooltip('Stop and send'), findsOneWidget);
+    expect(
+      find.text(
+        'Agents like Claude Code add a message to the turn. This one stops '
+        'its reply and starts again with yours.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Sends after this reply'), findsNothing);
+    expect(find.byTooltip('Send after this reply'), findsNothing);
     await close(tester, c);
   });
 

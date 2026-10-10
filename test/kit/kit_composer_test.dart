@@ -343,6 +343,33 @@ void main() {
       expect(_label(tester, _send), 'Add to this turn');
       semantics.dispose();
     });
+
+    testWidgets('an agent that restarts: Stop and send, said why, no choice', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      final h = _host('more');
+      await _pump(
+        tester,
+        _composer(
+          h,
+          busy: true,
+          canSendWhileBusy: true,
+          delivery: KitComposerDelivery.stopAndSend,
+        ),
+      );
+      expect(_label(tester, _send), 'Stop and send');
+      expect(
+        find.text(
+          'Agents like Claude Code add a message to the turn. This one '
+          'stops its reply and starts again with yours.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Sends after this reply'), findsNothing);
+      expect(find.byType(KitSegmented<KitComposerDelivery>), findsNothing);
+      semantics.dispose();
+    });
   });
 
   testWidgets('a failed send is neutral words with Try again, never red', (

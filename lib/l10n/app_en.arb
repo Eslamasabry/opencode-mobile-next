@@ -16659,6 +16659,14 @@
   "@kitComposerSendsAfter": {
     "description": "KitComposer (docs/ux-system/kit-api/KitComposer.md)."
   },
+  "kitComposerStopAndSend": "Stop and send",
+  "@kitComposerStopAndSend": {
+    "description": "KitComposer: Send while a reply runs, for an agent that cannot take a message mid-reply (sending stops the reply and the agent starts again from the message)."
+  },
+  "kitComposerStopAndSendNote": "Agents like Claude Code add a message to the turn. This one stops its reply and starts again with yours.",
+  "@kitComposerStopAndSendNote": {
+    "description": "KitComposer note line beside Stop and send: why sending stops the running reply for this agent."
+  },
   "kitComposerCannotSendYet": "You can send when this reply finishes",
   "@kitComposerCannotSendYet": {
     "description": "KitComposer (docs/ux-system/kit-api/KitComposer.md)."
