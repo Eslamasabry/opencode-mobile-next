@@ -33,7 +33,7 @@
   "Engine simulatePlanFailure": "not offered: only the built-in demo project shows this control; a real engine never gets it",
   "Engine stopProject": "reachable: Project menu › Stop project (asks first, naming the project) -> executeProject [test: test/team_project_fixture_test.dart ~ stopProject]",
   "Engine stopTask": "reachable: Task conversation › Stop task (asks first, naming the task) -> executeProject [test: test/team_project_conversation_test.dart ~ stopTask]",
-  "Engine undoMerge": "not offered: undoing a merge stays off until the engine supports it; owner decision needed",
+  "Engine undoMerge": "not offered: not feasible (checked 2026-10-10) — the phone engine's command list has no undoMerge (only the demo project simulates it), and the Gas City supervisor and host front contracts have no revert or undo route, so a merge cannot be taken back from the phone; the earlier 2026-09-28 decision stands",
   "Engine updateDefaults": "reachable: Team defaults › Save changes -> executeProject [test: test/team_project_fixture_test.dart ~ updateDefaults]",
   "Engine updateServer": "not offered: a task can be moved to another computer, but a computer's lane limit is not edited from the phone",
   "Engine updateSettings": "reachable: Project › Settings › Save changes -> executeProject [test: test/team_project_controls_test.dart ~ updateSettings]",
