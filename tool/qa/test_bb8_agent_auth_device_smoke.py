@@ -32,9 +32,9 @@ class AuthSmokeTest(unittest.TestCase):
                          r'\(project.findProperty\("ocBb8Smoke"\)\s+as\s+String\?\)\s*==\s*"true"')
         self.assertRegex(gradle, r'testInstrumentationRunner\s*=\s*'
                          r'"io\.github\.eslamasabry\.opencode_mobile\."\s*\+')
-        self.assertRegex(gradle, r'if\s*\(ocBb8Smoke\)\s*"Bb8DeviceSmoke"\s*else\s*'
-                         r'if\s*\(ocBd9Smoke\)\s*"Bd9DeviceSmoke"\s*else\s*"PhoneEngineAcceptance"')
-        self.assertRegex(gradle, r'if\s*\(ocBd9Smoke\)\s*'
+        self.assertRegex(gradle, r'when\s*\{[^}]*ocBb8Smoke\s*->\s*"Bb8DeviceSmoke"\s*'
+                         r'ocBd9Smoke\s*->\s*"Bd9DeviceSmoke"\s*else\s*->\s*"PhoneEngineAcceptance"')
+        self.assertRegex(gradle, r'if\s*\([^)\n]*ocBd9Smoke[^)\n]*\)\s*'
                          r'add\("releaseImplementation",\s*project\(":integration_test"\)\)')
         guard = re.search(r'if\s*\(([^\n]*ocBd9Smoke[^\n]*)\)\s*'
                           r'proguardFiles\("phone-engine-instrumentation\.pro"\)', gradle)
