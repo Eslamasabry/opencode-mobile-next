@@ -2,6 +2,7 @@
 // Paseo server: the real screens over a real PaseoGateway and a scripted
 // daemon. Each test taps what a person taps and reads what the daemon was
 // asked. Pictures for the look gate: build/coverage/od-paseo-*.png.
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -46,6 +47,9 @@ class _Rig {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final daemon = FakeDaemon();
+    // The Project tab counts running terminals beside the changed files.
+    daemon.handlers['list_terminals_request'] = (_) =>
+        ('list_terminals_response', {'cwd': _dir, 'terminals': <Object>[]});
     final gateway = PaseoGateway(
       transport: PaseoTransport(
         endpoint: 'ws://127.0.0.1:6767',
@@ -485,6 +489,174 @@ void main() {
       expect(find.text('Try again'), findsOneWidget);
       expect(find.textContaining('fatal'), findsNothing);
       await _shoot(tester, 'worktrees-failed');
+      await _finish(tester, rig);
+    });
+  });
+
+  group('Terminal', () {
+    late _Rig rig;
+    var terminals = <Map<String, dynamic>>[];
+
+    Map<String, dynamic> info(String id, String title) => {
+      'id': id,
+      'name': title,
+      'title': title,
+      'cwd': _dir,
+    };
+
+    setUp(() async {
+      rig = await _Rig.start();
+      terminals = [info('t1', 'npm run dev')];
+      rig.daemon.handlers['list_terminals_request'] = (_) =>
+          ('list_terminals_response', {'cwd': _dir, 'terminals': terminals});
+      rig.daemon.handlers['subscribe_terminal_request'] = (m) => (
+        'subscribe_terminal_response',
+        {'terminalId': m['terminalId'], 'slot': 4, 'error': null},
+      );
+      rig.daemon.handlers['kill_terminal_request'] = (m) {
+        terminals = [];
+        return (
+          'kill_terminal_response',
+          {'terminalId': m['terminalId'], 'success': true},
+        );
+      };
+    });
+
+    Future<void> openTerminals(WidgetTester tester) async {
+      await tester.pumpWidget(
+        _app(Scaffold(body: ProjectHub(controller: rig.controller))),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('project-hub-terminal')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Terminal lists the daemon\'s terminals', (tester) async {
+      _phone(tester);
+      await openTerminals(tester);
+      expect(find.text('npm run dev'), findsOneWidget);
+      expect(find.text('Running · app'), findsOneWidget);
+      expect(rig.daemon.of('list_terminals_request').first['cwd'], _dir);
+      await _shoot(tester, 'terminal-list');
+      await _finish(tester, rig);
+    });
+
+    testWidgets('opening one shows what the daemon streams and sends typing', (
+      tester,
+    ) async {
+      _phone(tester);
+      await openTerminals(tester);
+      await tester.tap(find.text('npm run dev'));
+      await tester.pumpAndSettle();
+      expect(
+        rig.daemon.of('subscribe_terminal_request').single['terminalId'],
+        't1',
+      );
+      await tester.tap(find.byKey(const ValueKey('terminal-surface-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('terminal-accessible-mode')));
+      await tester.pumpAndSettle();
+
+      rig.daemon.pushBinary(0x05, 4, utf8.encode('app\$ npm run dev\r\n'));
+      rig.daemon.pushBinary(0x01, 4, utf8.encode('ready on port 3000\r\n'));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+      expect(find.textContaining('ready on port 3000'), findsOneWidget);
+      await _shoot(tester, 'terminal-output');
+
+      final input = find.descendant(
+        of: find.byKey(const Key('terminal-accessible-input')),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(input, 'ls');
+      await tester.testTextInput.receiveAction(TextInputAction.send);
+      await tester.pump();
+      final typed = rig.daemon
+          .of('terminal_input')
+          .where((m) => (m['message'] as Map)['type'] == 'input');
+      expect(typed.single['terminalId'], 't1');
+      expect((typed.single['message'] as Map)['data'], 'ls\r');
+      await _finish(tester, rig);
+    });
+
+    testWidgets('New terminal asks the daemon for one in the folder', (
+      tester,
+    ) async {
+      _phone(tester);
+      rig.daemon.handlers['create_terminal_request'] = (_) {
+        terminals = [...terminals, info('t2', 'Terminal 2')];
+        return (
+          'create_terminal_response',
+          {'terminal': info('t2', 'Terminal 2'), 'error': null},
+        );
+      };
+      await openTerminals(tester);
+      await tester.tap(find.byKey(const ValueKey('terminal-new')).first);
+      await tester.pumpAndSettle();
+      final sent = rig.daemon.of('create_terminal_request').single;
+      expect(sent['cwd'], _dir);
+      expect(
+        rig.daemon.of('subscribe_terminal_request').single['terminalId'],
+        't2',
+      );
+      await _finish(tester, rig);
+    });
+
+    testWidgets('Rename asks for the new name and sends it', (tester) async {
+      _phone(tester);
+      rig.daemon.handlers['terminal.rename.request'] = (m) {
+        terminals = [info('t1', m['title'] as String)];
+        return ('terminal.rename.response', {'success': true, 'error': null});
+      };
+      await openTerminals(tester);
+      await tester.longPress(find.text('npm run dev'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('terminal-menu-rename')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('terminal-rename-field')),
+        'dev server',
+      );
+      await tester.tap(find.byKey(const ValueKey('terminal-rename-confirm')));
+      await tester.pumpAndSettle();
+      final sent = rig.daemon.of('terminal.rename.request').single;
+      expect(sent['terminalId'], 't1');
+      expect(sent['title'], 'dev server');
+      expect(find.text('dev server'), findsOneWidget);
+      await _finish(tester, rig);
+    });
+
+    testWidgets('Stop names the terminal and then closes that one', (
+      tester,
+    ) async {
+      _phone(tester);
+      await openTerminals(tester);
+      await tester.longPress(find.text('npm run dev'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('terminal-menu-remove')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('npm run dev'), findsWidgets);
+      await _shoot(tester, 'terminal-stop-ask');
+      await tester.tap(find.byKey(const ValueKey('terminal-remove-confirm')));
+      await tester.pumpAndSettle();
+      expect(rig.daemon.of('kill_terminal_request').single['terminalId'], 't1');
+      expect(find.text('npm run dev'), findsNothing);
+      await _finish(tester, rig);
+    });
+
+    testWidgets('a daemon with no list says so and offers a retry', (
+      tester,
+    ) async {
+      _phone(tester);
+      rig.daemon.handlers['list_terminals_request'] = (_) => (
+        'list_terminals_response',
+        {'cwd': _dir, 'error': 'boom /secret', 'terminals': <Object>[]},
+      );
+      await openTerminals(tester);
+      expect(find.textContaining('boom'), findsNothing);
+      expect(find.textContaining('/secret'), findsNothing);
+      await _shoot(tester, 'terminal-failed');
       await _finish(tester, rig);
     });
   });

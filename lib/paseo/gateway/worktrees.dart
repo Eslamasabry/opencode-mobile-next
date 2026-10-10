@@ -29,11 +29,6 @@ mixin _PaseoWorktreesApi on _PaseoWorkspaceBase {
     );
   }
 
-  String _folderName(String directory) {
-    final parts = directory.split('/').where((part) => part.isNotEmpty);
-    return parts.isEmpty ? directory : parts.last;
-  }
-
   Future<WorktreeInfo> createWorktree({
     required String projectDirectory,
     String? name,

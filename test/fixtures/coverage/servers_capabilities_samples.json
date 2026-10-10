@@ -83,6 +83,10 @@
         "kind": "boolean"
       },
       {
+        "path": "conversationShell",
+        "kind": "boolean"
+      },
+      {
         "path": "projectManagement",
         "kind": "boolean"
       },

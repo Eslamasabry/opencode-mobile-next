@@ -1,5 +1,8 @@
 // Files of a Claude Code / Paseo project: browse, read and find by name,
 // against a scripted daemon (shapes from @getpaseo/protocol messages.js).
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart'
     show VcsDiffMode, VersionControlSetupState;
@@ -524,6 +527,180 @@ void main() {
       );
       await expectLater(
         gateway.removeWorktree(projectDirectory: _dir, directory: '/x/y'),
+        throwsA(isA<PaseoFailure>()),
+      );
+    });
+  });
+
+  group('Terminal', () {
+    Map<String, dynamic> info(String id, {String? title}) => {
+      'id': id,
+      'name': 'Shell $id',
+      'cwd': _dir,
+      'title': ?title,
+    };
+
+    test(
+      'Paseo turns the Terminal page on, but not shell commands in chat',
+      () {
+        expect(gateway.capabilities.terminal, isTrue);
+        expect(gateway.capabilities.conversationShellOn, isFalse);
+      },
+    );
+
+    test('the list shows this folder\'s terminals by title or name', () async {
+      daemon.handlers['list_terminals_request'] = (_) => (
+        'list_terminals_response',
+        {
+          'cwd': _dir,
+          'terminals': [info('t1', title: 'npm run dev'), info('t2')],
+        },
+      );
+      final list = await gateway.listTerminals();
+      expect(list.map((t) => t.title), ['npm run dev', 'Shell t2']);
+      expect(list.every((t) => t.running && t.directory == _dir), isTrue);
+      expect(daemon.of('list_terminals_request').single['cwd'], _dir);
+    });
+
+    test('a new terminal opens in the folder under the given name', () async {
+      daemon.handlers['create_terminal_request'] = (_) => (
+        'create_terminal_response',
+        {'terminal': info('t9', title: 'Terminal 1'), 'error': null},
+      );
+      final made = await gateway.createTerminal(title: 'Terminal 1');
+      expect(made.id, 't9');
+      final sent = daemon.of('create_terminal_request').single;
+      expect(sent['cwd'], _dir);
+      expect(sent['name'], 'Terminal 1');
+    });
+
+    test('renaming and closing send the terminal id', () async {
+      daemon.handlers['terminal.rename.request'] = (_) =>
+          ('terminal.rename.response', {'success': true, 'error': null});
+      daemon.handlers['kill_terminal_request'] = (m) => (
+        'kill_terminal_response',
+        {'terminalId': m['terminalId'], 'success': true},
+      );
+      await gateway.renameTerminal('t1', ' logs ');
+      await gateway.removeTerminal('t1');
+      expect(daemon.of('terminal.rename.request').single['title'], 'logs');
+      expect(daemon.of('kill_terminal_request').single['terminalId'], 't1');
+    });
+
+    test('closing a terminal that already ended is not a failure', () async {
+      daemon.handlers['kill_terminal_request'] = (m) => (
+        'kill_terminal_response',
+        {'terminalId': m['terminalId'], 'success': false},
+      );
+      daemon.handlers['list_terminals_request'] = (_) =>
+          ('list_terminals_response', {'cwd': _dir, 'terminals': <Object>[]});
+      await gateway.removeTerminal('gone');
+    });
+
+    test(
+      'closing a terminal that is still there but would not close fails',
+      () async {
+        daemon.handlers['kill_terminal_request'] = (m) => (
+          'kill_terminal_response',
+          {'terminalId': m['terminalId'], 'success': false},
+        );
+        daemon.handlers['list_terminals_request'] = (_) => (
+          'list_terminals_response',
+          {
+            'cwd': _dir,
+            'terminals': [info('stuck')],
+          },
+        );
+        await expectLater(
+          gateway.removeTerminal('stuck'),
+          throwsA(isA<PaseoFailure>()),
+        );
+      },
+    );
+
+    test(
+      'opening one subscribes, replays the screen, then streams output',
+      () async {
+        daemon.handlers['subscribe_terminal_request'] = (m) => (
+          'subscribe_terminal_response',
+          {'terminalId': m['terminalId'], 'slot': 3, 'error': null},
+        );
+        final channel = await gateway.connectTerminal('t1');
+        final text = StringBuffer();
+        channel.output.listen(text.write);
+        final sent = daemon.of('subscribe_terminal_request').single;
+        expect(sent['terminalId'], 't1');
+        expect(sent['restore'], containsPair('mode', 'visible-snapshot'));
+
+        daemon.pushBinary(0x05, 3, utf8.encode('\$ ls\r\n'));
+        daemon.pushBinary(0x01, 9, utf8.encode('OTHER SLOT'));
+        daemon.pushBinary(0x01, 3, utf8.encode('file.txt\r\n'));
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+        expect(text.toString(), '\x1bc\$ ls\r\nfile.txt\r\n');
+        await channel.close();
+      },
+    );
+
+    test('a character split across two frames arrives whole', () async {
+      daemon.handlers['subscribe_terminal_request'] = (m) => (
+        'subscribe_terminal_response',
+        {'terminalId': m['terminalId'], 'slot': 1, 'error': null},
+      );
+      final channel = await gateway.connectTerminal('t1');
+      final text = StringBuffer();
+      channel.output.listen(text.write);
+      final bytes = utf8.encode('é');
+      daemon.pushBinary(0x01, 1, [bytes[0]]);
+      daemon.pushBinary(0x01, 1, [bytes[1]]);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(text.toString(), 'é');
+      await channel.close();
+    });
+
+    test('typing and resizing go to the terminal', () async {
+      daemon.handlers['subscribe_terminal_request'] = (m) => (
+        'subscribe_terminal_response',
+        {'terminalId': m['terminalId'], 'slot': 2, 'error': null},
+      );
+      final channel = await gateway.connectTerminal('t1');
+      channel.write('ls\r');
+      await gateway.resizeTerminal('t1', rows: 30, cols: 90);
+      final inputs = daemon.of('terminal_input');
+      expect(inputs.first['terminalId'], 't1');
+      expect(inputs.first['message'], {'type': 'input', 'data': 'ls\r'});
+      expect(inputs.last['message'], {
+        'type': 'resize',
+        'rows': 30,
+        'cols': 90,
+      });
+      await channel.close();
+      expect(
+        daemon.of('unsubscribe_terminal_request').single['terminalId'],
+        't1',
+      );
+    });
+
+    test('a shell that exits ends the stream', () async {
+      daemon.handlers['subscribe_terminal_request'] = (m) => (
+        'subscribe_terminal_response',
+        {'terminalId': m['terminalId'], 'slot': 2, 'error': null},
+      );
+      final channel = await gateway.connectTerminal('t1');
+      final done = Completer<void>();
+      channel.output.listen((_) {}, onDone: done.complete);
+      daemon.push('terminal_stream_exit', {'terminalId': 't1'});
+      await done.future.timeout(const Duration(seconds: 2));
+    });
+
+    test('a terminal the daemon cannot open is a plain failure', () async {
+      daemon.handlers['subscribe_terminal_request'] = (m) => (
+        'subscribe_terminal_response',
+        {'terminalId': m['terminalId'], 'error': 'Terminal not found'},
+      );
+      await expectLater(
+        gateway.connectTerminal('nope'),
         throwsA(isA<PaseoFailure>()),
       );
     });

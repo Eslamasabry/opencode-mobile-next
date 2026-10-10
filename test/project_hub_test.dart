@@ -171,6 +171,7 @@ void main() {
         const [
           ProjectTool.files,
           ProjectTool.changes,
+          ProjectTool.terminal,
           ProjectTool.worktrees,
           ProjectTool.search,
         ],

@@ -54,6 +54,15 @@ class ServerCapabilities {
   final bool offlinePromptQueue;
   final bool fileBrowsing;
   final bool terminal;
+
+  /// The conversation can run a shell command itself (`!command`, Run shell
+  /// command, the running-shell list). A server can have a terminal page
+  /// without this: its terminals are not part of the conversation (Paseo).
+  /// Counts only together with [terminal].
+  final bool conversationShell;
+
+  /// Whether a conversation runs shell commands here.
+  bool get conversationShellOn => terminal && conversationShell;
   final bool projectManagement;
   final bool globalSessionSearch;
   final bool sessionDiff;
@@ -201,6 +210,7 @@ class ServerCapabilities {
     this.offlinePromptQueue = true,
     this.fileBrowsing = true,
     this.terminal = true,
+    this.conversationShell = true,
     this.projectManagement = true,
     this.globalSessionSearch = true,
     this.sessionDiff = true,
@@ -284,6 +294,7 @@ class ServerCapabilities {
     offlinePromptQueue: offlinePromptQueue,
     fileBrowsing: fileBrowsing,
     terminal: terminal,
+    conversationShell: conversationShell,
     projectManagement: projectManagement,
     globalSessionSearch: globalSessionSearch,
     sessionDiff: sessionDiff,

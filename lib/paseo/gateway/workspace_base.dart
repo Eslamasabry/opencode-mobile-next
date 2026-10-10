@@ -41,6 +41,11 @@ mixin _PaseoWorkspaceBase {
     }
   }
 
+  String _folderName(String directory) {
+    final parts = directory.split('/').where((part) => part.isNotEmpty);
+    return parts.isEmpty ? directory : parts.last;
+  }
+
   /// A path inside the open folder, the way the daemon wants it: relative,
   /// with `.` for the folder itself. An absolute path inside the folder is
   /// cut back to its relative form; anything else is passed on and the daemon
@@ -63,4 +68,5 @@ abstract class _PaseoWorkspace = Object
         _PaseoWorkspaceBase,
         _PaseoFilesApi,
         _PaseoChangesApi,
-        _PaseoWorktreesApi;
+        _PaseoWorktreesApi,
+        _PaseoTerminalsApi;

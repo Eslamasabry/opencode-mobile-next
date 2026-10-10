@@ -74,6 +74,14 @@ class FakeDaemon implements PaseoSocket {
     });
   }
 
+  /// A binary frame (terminal output): `[opcode, slot, ...payload]`.
+  void pushBinary(int opcode, int slot, List<int> payload) {
+    scheduleMicrotask(() {
+      if (closed) return;
+      _incoming.add(<int>[opcode, slot, ...payload]);
+    });
+  }
+
   List<Map<String, dynamic>> of(String type) =>
       sent.where((m) => m['type'] == type).toList();
 

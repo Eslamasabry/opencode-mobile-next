@@ -12,7 +12,10 @@ const paseoServerCapabilities = ServerCapabilities(
   promptAgentMentions: false,
   offlinePromptQueue: false,
   fileBrowsing: true,
-  terminal: false,
+  terminal: true,
+  // A terminal opens beside the conversation; the conversation itself runs
+  // no shell commands of its own.
+  conversationShell: false,
   projectManagement: false,
   globalSessionSearch: false,
   sessionDiff: true,

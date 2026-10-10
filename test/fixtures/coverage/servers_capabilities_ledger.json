@@ -69,6 +69,7 @@
   "capability.subagentReplies": "ignored: a helper's conversation that cannot take replies says so in place of the message box",
   "capability.subagentSessions": "ignored: lets a helper's conversation open from the chat menu",
   "capability.terminal": "shown",
+  "capability.conversationShell": "ignored: stops a conversation's shell command (!command) on a server whose terminals are separate, and has no row of its own",
   "capability.textSearch": "ignored: plumbing the app handles itself; it changes how the app talks to the server, not what a person can do",
   "capability.toolInventory": "ignored: the Tools tab says in words when the server does not list its tools",
   "capability.webSearch": "shown",
