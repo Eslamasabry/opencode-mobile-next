@@ -17,6 +17,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
+import 'package:opencode_mobile/ui/screens/project_hub_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
@@ -227,6 +228,121 @@ void main() {
       expect(find.textContaining('ENOENT'), findsNothing);
       expect(find.textContaining('/home/secret'), findsNothing);
       await _shoot(tester, 'files-failed');
+      await _finish(tester, rig);
+    });
+  });
+
+  group('Changes', () {
+    late _Rig rig;
+    setUp(() async {
+      rig = await _Rig.start();
+      rig.daemon.handlers['checkout.diff.get.request'] = (_) => (
+        'checkout.diff.get.response',
+        {
+          'cwd': _dir,
+          'files': [
+            {
+              'path': 'lib/greet.dart',
+              'isNew': false,
+              'isDeleted': false,
+              'additions': 2,
+              'deletions': 1,
+              'hunks': [
+                {
+                  'oldStart': 1,
+                  'oldCount': 2,
+                  'newStart': 1,
+                  'newCount': 3,
+                  'lines': [
+                    {'type': 'header', 'content': '@@ -1,2 +1,3 @@'},
+                    {'type': 'context', 'content': 'void greet() {'},
+                    {'type': 'remove', 'content': '  print("hi");'},
+                    {'type': 'add', 'content': '  print("hello");'},
+                    {'type': 'add', 'content': '  print("bye");'},
+                    {'type': 'context', 'content': '}'},
+                  ],
+                },
+              ],
+            },
+          ],
+          'error': null,
+        },
+      );
+    });
+
+    testWidgets('the Project tab counts the changes and Changes opens them', (
+      tester,
+    ) async {
+      _phone(tester);
+      await tester.pumpWidget(
+        _app(Scaffold(body: ProjectHub(controller: rig.controller))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('1 file changed'), findsOneWidget);
+      await _shoot(tester, 'project-tab');
+
+      await tester.tap(find.byKey(const ValueKey('project-hub-changes')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('greet.dart'), findsWidgets);
+      expect(find.textContaining('print("hello")'), findsOneWidget);
+      expect(find.textContaining('print("hi")'), findsOneWidget);
+      final asked = rig.daemon.of('checkout.diff.get.request');
+      expect(asked, isNotEmpty);
+      expect(asked.every((m) => m['cwd'] == _dir), isTrue);
+      await _shoot(tester, 'changes-review');
+      await _finish(tester, rig);
+    });
+
+    testWidgets('the Files list marks the changed file', (tester) async {
+      _phone(tester);
+      rig.daemon.handlers['file_explorer_request'] = (m) => (
+        'file_explorer_response',
+        {
+          'cwd': _dir,
+          'path': '.',
+          'mode': 'list',
+          'directory': {
+            'path': '.',
+            'entries': [_entry('lib', 'directory', 'lib')],
+          },
+          'file': null,
+          'error': null,
+        },
+      );
+      await tester.pumpWidget(
+        _app(Scaffold(body: FilesScreen(controller: rig.controller))),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text('File change indicators are unavailable on this server.'),
+        findsNothing,
+      );
+      expect(find.byKey(const ValueKey('files-statuses-error')), findsNothing);
+      await _shoot(tester, 'files-with-changes');
+      await _finish(tester, rig);
+    });
+
+    testWidgets('a checkout the daemon cannot diff says so in plain words', (
+      tester,
+    ) async {
+      _phone(tester);
+      rig.daemon.handlers['checkout.diff.get.request'] = (_) => (
+        'checkout.diff.get.response',
+        {
+          'cwd': _dir,
+          'files': <Object>[],
+          'error': {'code': 'NOT_GIT_REPO', 'message': 'fatal: /home/x'},
+        },
+      );
+      await tester.pumpWidget(
+        _app(Scaffold(body: ProjectHub(controller: rig.controller))),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('project-hub-changes')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('fatal'), findsNothing);
+      expect(find.textContaining('/home/x'), findsNothing);
+      await _shoot(tester, 'changes-failed');
       await _finish(tester, rig);
     });
   });

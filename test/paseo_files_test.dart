@@ -1,10 +1,12 @@
 // Files of a Claude Code / Paseo project: browse, read and find by name,
 // against a scripted daemon (shapes from @getpaseo/protocol messages.js).
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show VcsDiffMode, VersionControlSetupState;
 import 'package:opencode_mobile/paseo/gateway.dart';
 import 'package:opencode_mobile/paseo/transport.dart';
 
-import 'paseo_gateway_test.dart' show FakeDaemon;
+import 'paseo_gateway_test.dart' show FakeDaemon, agentJson;
 
 const _dir = '/work/app';
 
@@ -228,5 +230,182 @@ void main() {
         ),
       ),
     );
+  });
+
+  group('Changes', () {
+    Map<String, dynamic> diffFile(
+      String path, {
+      bool isNew = false,
+      bool isDeleted = false,
+      String? status,
+    }) => {
+      'path': path,
+      'isNew': isNew,
+      'isDeleted': isDeleted,
+      'additions': 2,
+      'deletions': 1,
+      'status': ?status,
+      'hunks': [
+        {
+          'oldStart': 1,
+          'oldCount': 2,
+          'newStart': 1,
+          'newCount': 3,
+          'lines': [
+            {'type': 'header', 'content': '@@ -1,2 +1,3 @@'},
+            {'type': 'context', 'content': 'keep'},
+            {'type': 'remove', 'content': 'old'},
+            {'type': 'add', 'content': 'new'},
+            {'type': 'add', 'content': 'newer'},
+          ],
+        },
+      ],
+    };
+
+    void answerDiff(List<Map<String, dynamic>> files) {
+      daemon.handlers['checkout.diff.get.request'] = (_) => (
+        'checkout.diff.get.response',
+        {'cwd': _dir, 'files': files, 'error': null},
+      );
+    }
+
+    test('Paseo turns Changes on', () {
+      expect(gateway.capabilities.sessionDiff, isTrue);
+    });
+
+    test('the working tree diff becomes a unified patch per file', () async {
+      answerDiff([diffFile('lib/a.dart')]);
+      final diffs = await gateway.listVcsDiffs(VcsDiffMode.workingTree);
+      expect(diffs.single.file, 'lib/a.dart');
+      expect(diffs.single.additions, 2);
+      expect(diffs.single.deletions, 1);
+      expect(
+        diffs.single.patch,
+        '--- a/lib/a.dart\n+++ b/lib/a.dart\n@@ -1,2 +1,3 @@\n keep\n-old\n+new\n+newer\n',
+      );
+      final sent = daemon.of('checkout.diff.get.request').single;
+      expect(sent['cwd'], _dir);
+      expect(sent['compare'], containsPair('mode', 'uncommitted'));
+    });
+
+    test('the branch view compares with the base branch', () async {
+      answerDiff([diffFile('b.txt', isNew: true)]);
+      final diffs = await gateway.listVcsDiffs(VcsDiffMode.branch);
+      expect(diffs.single.status, 'added');
+      expect(diffs.single.patch, startsWith('--- /dev/null\n+++ b/b.txt\n'));
+      expect(
+        daemon.of('checkout.diff.get.request').single['compare'],
+        containsPair('mode', 'base'),
+      );
+    });
+
+    test('file marks come from the same diff', () async {
+      answerDiff([
+        diffFile('a.dart'),
+        diffFile('new.dart', isNew: true),
+        diffFile('gone.dart', isDeleted: true),
+      ]);
+      final marks = await gateway.listFileStatuses();
+      expect(marks.map((f) => f.status), ['modified', 'added', 'deleted']);
+      expect(marks.first.additions, 2);
+    });
+
+    test('a binary file says it differs, without hunks', () async {
+      answerDiff([
+        {
+          'path': 'logo.png',
+          'isNew': false,
+          'isDeleted': false,
+          'additions': 0,
+          'deletions': 0,
+          'hunks': <Object>[],
+          'status': 'binary',
+        },
+      ]);
+      final diffs = await gateway.listVcsDiffs(VcsDiffMode.workingTree);
+      expect(diffs.single.patch, contains('Binary files'));
+    });
+
+    test('an agent shows what changed in the folder it runs in', () async {
+      daemon.handlers['fetch_agents_request'] = (_) => (
+        'fetch_agents_response',
+        {
+          'entries': [
+            {'agent': agentJson('a1', cwd: _dir)},
+          ],
+          'pageInfo': {'hasMore': false},
+        },
+      );
+      answerDiff([diffFile('x.dart')]);
+      await gateway.sessions();
+      final diffs = await gateway.diff('a1');
+      expect(diffs.single.file, 'x.dart');
+      expect(daemon.of('checkout.diff.get.request').single['cwd'], _dir);
+    });
+
+    test('a worktree is read in its own folder', () async {
+      answerDiff([diffFile('w.dart')]);
+      final marks = await gateway.listWorktreeFileStatuses('/work/app-wt');
+      expect(marks.single.path, 'w.dart');
+      expect(
+        daemon.of('checkout.diff.get.request').single['cwd'],
+        '/work/app-wt',
+      );
+    });
+
+    test('a diff the daemon refuses is an error, not an empty list', () async {
+      daemon.handlers['checkout.diff.get.request'] = (_) => (
+        'checkout.diff.get.response',
+        {
+          'cwd': _dir,
+          'files': <Object>[],
+          'error': {'code': 'NOT_GIT_REPO', 'message': 'not a git repo /x'},
+        },
+      );
+      await expectLater(
+        gateway.listVcsDiffs(VcsDiffMode.workingTree),
+        throwsA(isA<PaseoFailure>()),
+      );
+    });
+
+    test('branch and checkout health come from the checkout status', () async {
+      daemon.handlers['checkout_status_request'] = (_) => (
+        'checkout_status_response',
+        {
+          'cwd': _dir,
+          'isGit': true,
+          'isPaseoOwnedWorktree': false,
+          'repoRoot': _dir,
+          'currentBranch': 'feat/x',
+          'isDirty': true,
+          'baseRef': 'main',
+          'error': null,
+        },
+      );
+      answerDiff([diffFile('a.dart')]);
+      final health = await gateway.loadVersionControlHealth();
+      expect(health.branch, 'feat/x');
+      expect(health.defaultBranch, 'main');
+      expect(health.setupState, VersionControlSetupState.git);
+      expect(health.changes, hasLength(1));
+    });
+
+    test('a folder that is not a repository reads as no git', () async {
+      daemon.handlers['checkout_status_request'] = (_) => (
+        'checkout_status_response',
+        {
+          'cwd': _dir,
+          'isGit': false,
+          'isPaseoOwnedWorktree': false,
+          'repoRoot': null,
+          'currentBranch': null,
+          'isDirty': null,
+          'baseRef': null,
+          'error': null,
+        },
+      );
+      final health = await gateway.loadVersionControlHealth();
+      expect(health.setupState, VersionControlSetupState.absent);
+    });
   });
 }

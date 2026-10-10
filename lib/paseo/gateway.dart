@@ -40,9 +40,10 @@ part 'gateway/payload_use.dart';
 part 'gateway/idle_work.dart';
 part 'gateway/workspace_base.dart';
 part 'gateway/files.dart';
+part 'gateway/changes.dart';
 
 class PaseoGateway
-    with _PaseoWorkspaceBase, _PaseoFilesApi
+    with _PaseoWorkspaceBase, _PaseoFilesApi, _PaseoChangesApi
     implements
         ServerGateway,
         ServerOperationsGateway,
@@ -116,6 +117,7 @@ class PaseoGateway
 
   String? _directory;
   bool _closed = false;
+  @override
   final _agents = <String, Map<String, dynamic>>{};
   final _sessions = <String, Session>{};
   final _statuses = <String, String>{};
@@ -1343,8 +1345,6 @@ class PaseoGateway
       _rejectQuestion(sessionID, requestID);
   @override
   Future<List<Todo>> todos(String id) async => const [];
-  @override
-  Future<List<FileDiff>> diff(String id) async => const [];
   @override
   Future<List<IntegrationInfo>> listIntegrations() async => const [];
   @override

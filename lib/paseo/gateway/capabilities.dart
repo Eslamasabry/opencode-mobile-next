@@ -15,7 +15,7 @@ const paseoServerCapabilities = ServerCapabilities(
   terminal: false,
   projectManagement: false,
   globalSessionSearch: false,
-  sessionDiff: false,
+  sessionDiff: true,
   sessionFork: false,
   sessionCompact: false,
   persistentPermissionGrants: true,
