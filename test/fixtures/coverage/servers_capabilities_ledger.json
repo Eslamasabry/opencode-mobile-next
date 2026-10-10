@@ -70,7 +70,7 @@
   "capability.subagentSessions": "ignored: lets a helper's conversation open from the chat menu",
   "capability.terminal": "shown",
   "capability.conversationShell": "ignored: stops a conversation's shell command (!command) on a server whose terminals are separate, and has no row of its own",
-  "capability.textSearch": "ignored: plumbing the app handles itself; it changes how the app talks to the server, not what a person can do",
+  "capability.textSearch": "ignored: adds Text in files to the Files search filter where the server can find text; the Files row covers the page",
   "capability.toolInventory": "ignored: the Tools tab says in words when the server does not list its tools",
   "capability.webSearch": "shown",
   "capability.workspaceSymbols": "ignored: adds symbol search to file search where the server has it",

@@ -21,6 +21,7 @@ class FilesApi extends ListsApi {
   List<FileNode> nodes = const [];
   Map<String, FileContent> contents = {};
   List<String> found = const [];
+  List<FindMatch> foundText = const [];
   List<FileDiff> sessionDiffs = const [];
 
   @override
@@ -32,6 +33,9 @@ class FilesApi extends ListsApi {
 
   @override
   Future<List<String>> findFile(String query) async => found;
+
+  @override
+  Future<List<FindMatch>> findText(String pattern) async => foundText;
 
   @override
   Future<List<FileDiff>> diff(String id) async => sessionDiffs;

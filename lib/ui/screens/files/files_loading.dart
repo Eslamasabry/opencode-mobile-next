@@ -227,6 +227,46 @@ extension _FilesLoading on _FilesScreenState {
     }
   }
 
+  /// The most matching lines the list shows; more are summarised in a line.
+  static const _maxTextMatches = 200;
+
+  /// Text inside the files (`/find`, capability textSearch): one result per
+  /// matching line.
+  Future<void> _searchText(String query) async {
+    final value = query.trim();
+    if (value.isEmpty) {
+      _requestGeneration++;
+      _set(() {
+        _textMatches = null;
+        _loading = false;
+        _error = null;
+      });
+      return;
+    }
+    final generation = ++_requestGeneration;
+    _set(_startLoading);
+    try {
+      final api = await widget.controller.prepareActionTransport();
+      if (!mounted || generation != _requestGeneration) return;
+      if (api == null) {
+        throw ProductException(readerL10n(context).readerUiDisconnected);
+      }
+      final results = await api.findText(value);
+      if (!mounted || generation != _requestGeneration) return;
+      _set(() {
+        _textMatches = results;
+        _error = null;
+      });
+    } catch (error) {
+      if (!mounted || generation != _requestGeneration) return;
+      _set(() => _error = productErrorText(error));
+    } finally {
+      if (mounted && generation == _requestGeneration) {
+        _set(() => _loading = false);
+      }
+    }
+  }
+
   // --- The viewer -------------------------------------------------------------
 
   /// Opens a file in the kit's one viewer: beside the list where the window

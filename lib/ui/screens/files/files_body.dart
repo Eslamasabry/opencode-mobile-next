@@ -19,9 +19,9 @@ extension _FilesBody on _FilesScreenState {
               message: _fileStatusesError!,
             ),
       loading: _loading,
-      loadingLabel: _surface == _FileSurface.symbols
-          ? l10n.filesSearching
-          : l10n.filesLoadingFolder,
+      loadingLabel: _surface == _FileSurface.files
+          ? l10n.filesLoadingFolder
+          : l10n.filesSearching,
       list: _listPane(context, l10n, crumbs),
       detail: viewer == null ? null : _embeddedViewer(viewer),
       emptyDetail: KitStateView(
@@ -62,10 +62,12 @@ extension _FilesBody on _FilesScreenState {
     final preferences = ReaderPreferencesScope.maybeOf(context);
     final sourceFirst = preferences?.value.sourceFirst ?? false;
     final symbols = _surface == _FileSurface.symbols;
+    final text = _surface == _FileSurface.text;
+    final capabilities = widget.controller.capabilities;
     final String? activeFilter;
     final VoidCallback? clearFilter;
-    if (symbols) {
-      activeFilter = l10n.readerUiSymbols;
+    if (symbols || text) {
+      activeFilter = symbols ? l10n.readerUiSymbols : l10n.filesTextSurface;
       clearFilter = () => _selectSurface(_FileSurface.files);
     } else if (sourceFirst) {
       activeFilter = l10n.readerUiSourceFirst;
@@ -83,30 +85,43 @@ extension _FilesBody on _FilesScreenState {
       filterKey: const ValueKey('file-surface-selector'),
       controller: _search,
       focusNode: _searchFocus,
-      label: symbols ? l10n.readerUiSearchSymbols : l10n.readerUiSearchFiles,
+      label: symbols
+          ? l10n.readerUiSearchSymbols
+          : text
+          ? l10n.filesSearchText
+          : l10n.readerUiSearchFiles,
       // Enter searches at once through onChanged (the field settles the
       // query on submit); a second handler would query twice.
       onChanged: _onSearchChanged,
       activeFilter: activeFilter,
       onClearFilter: clearFilter,
       filters: [
-        if (widget.controller.capabilities.workspaceSymbols) ...[
+        if (capabilities.workspaceSymbols || capabilities.textSearch) ...[
           KitMenuItem(
             key: const ValueKey('file-surface-files'),
             label: l10n.readerUiFiles,
             group: 'surface',
-            checked: !symbols,
+            checked: !symbols && !text,
             onSelected: () => _selectSurface(_FileSurface.files),
           ),
-          KitMenuItem(
-            key: const ValueKey('file-surface-symbols'),
-            label: l10n.readerUiSymbols,
-            group: 'surface',
-            checked: symbols,
-            onSelected: () => _selectSurface(_FileSurface.symbols),
-          ),
+          if (capabilities.workspaceSymbols)
+            KitMenuItem(
+              key: const ValueKey('file-surface-symbols'),
+              label: l10n.readerUiSymbols,
+              group: 'surface',
+              checked: symbols,
+              onSelected: () => _selectSurface(_FileSurface.symbols),
+            ),
+          if (capabilities.textSearch)
+            KitMenuItem(
+              key: const ValueKey('file-surface-text'),
+              label: l10n.filesTextSurface,
+              group: 'surface',
+              checked: text,
+              onSelected: () => _selectSurface(_FileSurface.text),
+            ),
         ],
-        if (!symbols && preferences != null) ...[
+        if (!symbols && !text && preferences != null) ...[
           KitMenuItem(
             key: const ValueKey('files-order-server'),
             label: l10n.readerUiServerOrder,
@@ -124,7 +139,7 @@ extension _FilesBody on _FilesScreenState {
                 unawaited(saveReaderPreferences(context, sourceFirst: true)),
           ),
         ],
-        if (!symbols)
+        if (!symbols && !text)
           KitMenuItem(
             key: const ValueKey('files-show-hidden'),
             label: l10n.filesShowHidden,
@@ -182,7 +197,13 @@ extension _FilesBody on _FilesScreenState {
                     onDismiss: () => _set(() => _notice = null),
                   ),
           ),
-        Expanded(child: files ? _fileList(l10n) : _symbolList(l10n)),
+        Expanded(
+          child: switch (_surface) {
+            _FileSurface.files => _fileList(l10n),
+            _FileSurface.symbols => _symbolList(l10n),
+            _FileSurface.text => _textList(l10n),
+          },
+        ),
       ],
     );
   }

@@ -21598,6 +21598,60 @@ abstract class AppLocalizations {
   /// **'Couldn\'t search symbols'**
   String get filesSymbolsFailedTitle;
 
+  /// Files: the search filter that looks for words inside the files, beside Files and Symbols
+  ///
+  /// In en, this message translates to:
+  /// **'Text in files'**
+  String get filesTextSurface;
+
+  /// Files: the search field's label while searching inside the files
+  ///
+  /// In en, this message translates to:
+  /// **'Search text in files'**
+  String get filesSearchText;
+
+  /// Files › Text: title of the hint shown before anything is typed
+  ///
+  /// In en, this message translates to:
+  /// **'Search inside files'**
+  String get filesTextHintTitle;
+
+  /// Files › Text: the hint under the title before anything is typed
+  ///
+  /// In en, this message translates to:
+  /// **'Type a word or a phrase to see every line that has it.'**
+  String get filesTextHintBody;
+
+  /// Files › Text: title when no file has the typed text
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get filesNoTextTitle;
+
+  /// Files › Text: the line under the no-matches title
+  ///
+  /// In en, this message translates to:
+  /// **'No file has that text. Check the spelling or try fewer words.'**
+  String get filesNoTextBody;
+
+  /// Files › Text: title of the state when the text search failed; the reason is under it
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t search the files'**
+  String get filesTextFailedTitle;
+
+  /// Files › Text: said under the results when there were more matches than are listed
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the first {count} matches. Type more to narrow them.'**
+  String filesTextLimited(int count);
+
+  /// Files › Text: the line number a match is on, under the file name in a result row
+  ///
+  /// In en, this message translates to:
+  /// **'Line {line}'**
+  String filesTextMatchLine(int line);
+
   /// Terminal (server): title of the state when the server's terminals could not be listed; the reason is under it
   ///
   /// In en, this message translates to:

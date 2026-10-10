@@ -13271,6 +13271,38 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filesSymbolsFailedTitle => 'تعذّر البحث في الرموز';
 
   @override
+  String get filesTextSurface => 'نص داخل الملفات';
+
+  @override
+  String get filesSearchText => 'البحث عن نص داخل الملفات';
+
+  @override
+  String get filesTextHintTitle => 'ابحث داخل الملفات';
+
+  @override
+  String get filesTextHintBody => 'اكتب كلمة أو عبارة لترى كل سطر يحتوي عليها.';
+
+  @override
+  String get filesNoTextTitle => 'لا توجد نتائج';
+
+  @override
+  String get filesNoTextBody =>
+      'لا يحتوي أي ملف على هذا النص. تحقق من الإملاء أو جرّب كلمات أقل.';
+
+  @override
+  String get filesTextFailedTitle => 'تعذّر البحث في الملفات';
+
+  @override
+  String filesTextLimited(int count) {
+    return 'تظهر أول $count نتيجة. اكتب أكثر لتضييقها.';
+  }
+
+  @override
+  String filesTextMatchLine(int line) {
+    return 'السطر $line';
+  }
+
+  @override
   String get terminalListFailedTitle => 'تعذّر عرض الطرفيات';
 
   @override

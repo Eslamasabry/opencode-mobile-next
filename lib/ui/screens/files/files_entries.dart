@@ -195,6 +195,91 @@ extension _FilesEntries on _FilesScreenState {
     );
   }
 
+  /// Lines that contain the typed text: file and line number on top, the
+  /// matching line under them; a tap opens the file at that line.
+  Widget _textList(AppLocalizations l10n) {
+    Future<void> retry() => _searchText(_search.text);
+    if (_loading && _textMatches == null) {
+      return _waiting(l10n.filesSearching, retry);
+    }
+    if (_error != null) {
+      return KitRefresh(
+        onRefresh: retry,
+        child: _loadFailed(l10n.filesTextFailedTitle, _error!, retry),
+      );
+    }
+    if (_search.text.trim().isEmpty) {
+      return KitStateView(
+        key: const ValueKey('files-text-hint'),
+        icon: AppIconography.search,
+        title: l10n.filesTextHintTitle,
+        body: l10n.filesTextHintBody,
+      );
+    }
+    final all = _textMatches ?? const <FindMatch>[];
+    if (_textMatches != null && all.isEmpty) {
+      return KitRefresh(
+        onRefresh: retry,
+        child: KitStateView(
+          key: const ValueKey('files-no-text'),
+          icon: AppIconography.search,
+          illustration: const StatesSearchScene(),
+          title: l10n.filesNoTextTitle,
+          body: l10n.filesNoTextBody,
+        ),
+      );
+    }
+    final shown = all.take(_FilesLoading._maxTextMatches).toList();
+    final more = all.length > shown.length;
+    return KitRefresh(
+      onRefresh: retry,
+      child: KitScrollArea(
+        builder: (scrollController) => ListView.separated(
+          controller: scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsetsDirectional.only(
+            top: KitTokens.of(context).space2,
+            bottom: KitScreen.endPadding(context),
+          ),
+          itemCount: shown.length + (more ? 1 : 0),
+          separatorBuilder: (_, _) =>
+              const KitDivider(inset: KitDividerInset.text),
+          itemBuilder: (context, index) {
+            if (index == shown.length) {
+              return Padding(
+                padding: EdgeInsetsDirectional.all(
+                  KitTokens.of(context).gutter,
+                ),
+                child: KitNotice(
+                  key: const ValueKey('files-text-limited'),
+                  message: l10n.filesTextLimited(shown.length),
+                ),
+              );
+            }
+            final match = shown[index];
+            final path = _relativePath(match.path);
+            return KitRow(
+              key: ValueKey('text-match-$path:${match.lineNumber}'),
+              leading: KitRow.icon(context, AppIconography.fileText),
+              title: match.snippet.trim().isEmpty
+                  ? path.split('/').last
+                  : match.snippet.trim(),
+              titleMaxLines: 2,
+              supporting: TextSpan(
+                text:
+                    '${KitBidi.ltr(path)} · '
+                    '${l10n.filesTextMatchLine(match.lineNumber)}',
+              ),
+              supportingMaxLines: 2,
+              trailing: const KitChevron(),
+              onTap: () => _openMatch(match),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   String _symbolKind(int kind) => switch (kind) {
     1 => readerL10n(context).readerUiSymbolFile,
     2 => readerL10n(context).readerUiSymbolModule,

@@ -13127,6 +13127,39 @@ class AppLocalizationsJa extends AppLocalizations {
   String get filesSymbolsFailedTitle => 'Couldn\'t search symbols';
 
   @override
+  String get filesTextSurface => 'Text in files';
+
+  @override
+  String get filesSearchText => 'Search text in files';
+
+  @override
+  String get filesTextHintTitle => 'Search inside files';
+
+  @override
+  String get filesTextHintBody =>
+      'Type a word or a phrase to see every line that has it.';
+
+  @override
+  String get filesNoTextTitle => 'No matches';
+
+  @override
+  String get filesNoTextBody =>
+      'No file has that text. Check the spelling or try fewer words.';
+
+  @override
+  String get filesTextFailedTitle => 'Couldn\'t search the files';
+
+  @override
+  String filesTextLimited(int count) {
+    return 'Showing the first $count matches. Type more to narrow them.';
+  }
+
+  @override
+  String filesTextMatchLine(int line) {
+    return 'Line $line';
+  }
+
+  @override
   String get terminalListFailedTitle => 'Couldn\'t list the terminals';
 
   @override
