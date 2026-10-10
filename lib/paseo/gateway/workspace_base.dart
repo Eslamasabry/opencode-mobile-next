@@ -33,6 +33,14 @@ mixin _PaseoWorkspaceBase {
     return result;
   }
 
+  /// Checkout answers carry their failure as `{code, message}`; the words
+  /// never reach the person (the daemon's text stays out of the app).
+  void _requireCheckoutOk(Map<String, dynamic> payload) {
+    if (payload['error'] != null) {
+      throw PaseoFailure(PaseoFailureKind.unavailable);
+    }
+  }
+
   /// A path inside the open folder, the way the daemon wants it: relative,
   /// with `.` for the folder itself. An absolute path inside the folder is
   /// cut back to its relative form; anything else is passed on and the daemon
@@ -48,3 +56,11 @@ mixin _PaseoWorkspaceBase {
     return value.isEmpty ? '.' : value;
   }
 }
+
+/// Every workspace block on one base class, so [PaseoGateway] names them once.
+abstract class _PaseoWorkspace = Object
+    with
+        _PaseoWorkspaceBase,
+        _PaseoFilesApi,
+        _PaseoChangesApi,
+        _PaseoWorktreesApi;

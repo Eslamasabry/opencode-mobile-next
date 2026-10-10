@@ -2,7 +2,6 @@
 // Paseo server: the real screens over a real PaseoGateway and a scripted
 // daemon. Each test taps what a person taps and reads what the daemon was
 // asked. Pictures for the look gate: build/coverage/od-paseo-*.png.
-import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -343,6 +342,149 @@ void main() {
       expect(find.textContaining('fatal'), findsNothing);
       expect(find.textContaining('/home/x'), findsNothing);
       await _shoot(tester, 'changes-failed');
+      await _finish(tester, rig);
+    });
+  });
+
+  group('Worktrees', () {
+    const wt = '/home/u/.paseo/worktrees/app/fix-login';
+    late _Rig rig;
+    var listed = <Map<String, dynamic>>[];
+
+    setUp(() async {
+      rig = await _Rig.start();
+      listed = [
+        {
+          'worktreePath': wt,
+          'createdAt': '2026-10-01T10:00:00.000Z',
+          'branchName': 'fix-login',
+        },
+      ];
+      rig.daemon.handlers['paseo_worktree_list_request'] = (_) => (
+        'paseo_worktree_list_response',
+        {'worktrees': listed, 'error': null},
+      );
+      rig.daemon.handlers['checkout.diff.get.request'] = (m) => (
+        'checkout.diff.get.response',
+        {'cwd': m['cwd'], 'files': <Object>[], 'error': null},
+      );
+    });
+
+    Future<void> openWorktrees(WidgetTester tester) async {
+      await tester.pumpWidget(
+        _app(Scaffold(body: ProjectHub(controller: rig.controller))),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('project-hub-worktrees')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Worktrees lists what the daemon made', (tester) async {
+      _phone(tester);
+      await openWorktrees(tester);
+      expect(find.byKey(const ValueKey('worktree-$wt')), findsOneWidget);
+      expect(find.text('fix-login'), findsWidgets);
+      expect(rig.daemon.of('paseo_worktree_list_request').single['cwd'], _dir);
+      expect(find.text('Reset'), findsNothing);
+      await _shoot(tester, 'worktrees-list');
+      await _finish(tester, rig);
+    });
+
+    testWidgets('New worktree names it and the row is ready at once', (
+      tester,
+    ) async {
+      _phone(tester);
+      const made = '/home/u/.paseo/worktrees/app/mobile-review';
+      rig.daemon.handlers['create_paseo_worktree_request'] = (_) {
+        listed = [
+          ...listed,
+          {
+            'worktreePath': made,
+            'createdAt': '2026-10-02T10:00:00.000Z',
+            'branchName': 'mobile-review',
+          },
+        ];
+        return (
+          'create_paseo_worktree_response',
+          {
+            'workspace': {
+              'id': 'ws2',
+              'projectId': 'p1',
+              'projectDisplayName': 'app',
+              'projectRootPath': _dir,
+              'workspaceDirectory': made,
+              'gitRuntime': {'currentBranch': 'mobile-review'},
+            },
+            'error': null,
+            'setupTerminalId': null,
+          },
+        );
+      };
+      await openWorktrees(tester);
+      await tester.tap(find.byKey(const ValueKey('create-worktree')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('worktree-name-field')),
+        'mobile-review',
+      );
+      await tester.tap(find.byKey(const ValueKey('confirm-create-worktree')));
+      await tester.pumpAndSettle();
+      final sent = rig.daemon.of('create_paseo_worktree_request').single;
+      expect(sent['cwd'], _dir);
+      expect(sent['worktreeSlug'], 'mobile-review');
+      expect(find.byKey(const ValueKey('worktree-$made')), findsOneWidget);
+      expect(find.textContaining('is ready'), findsOneWidget);
+      await _shoot(tester, 'worktrees-created');
+      await _finish(tester, rig);
+    });
+
+    testWidgets('Delete asks by name, then removes that worktree', (
+      tester,
+    ) async {
+      _phone(tester);
+      rig.daemon.handlers['paseo_worktree_archive_request'] = (_) {
+        listed = [];
+        return (
+          'paseo_worktree_archive_response',
+          {'success': true, 'removedAgents': <String>[], 'error': null},
+        );
+      };
+      await openWorktrees(tester);
+      await tester.longPress(find.byKey(const ValueKey('worktree-$wt')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('fix-login'), findsWidgets);
+      await _shoot(tester, 'worktrees-remove-ask');
+      await tester.enterText(
+        find.byKey(const ValueKey('kit-confirm-typed-name')),
+        'fix-login',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('confirm-remove-worktree')));
+      await tester.pumpAndSettle();
+      final sent = rig.daemon.of('paseo_worktree_archive_request').single;
+      expect(sent['worktreePath'], wt);
+      expect(sent['repoRoot'], _dir);
+      expect(find.byKey(const ValueKey('worktree-$wt')), findsNothing);
+      await _finish(tester, rig);
+    });
+
+    testWidgets('a worktree list that fails says so and can retry', (
+      tester,
+    ) async {
+      _phone(tester);
+      rig.daemon.handlers['paseo_worktree_list_request'] = (_) => (
+        'paseo_worktree_list_response',
+        {
+          'worktrees': <Object>[],
+          'error': {'code': 'NOT_GIT_REPO', 'message': 'fatal: /home/x'},
+        },
+      );
+      await openWorktrees(tester);
+      expect(find.text('Try again'), findsOneWidget);
+      expect(find.textContaining('fatal'), findsNothing);
+      await _shoot(tester, 'worktrees-failed');
       await _finish(tester, rig);
     });
   });

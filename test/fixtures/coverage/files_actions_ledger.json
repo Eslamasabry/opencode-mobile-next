@@ -35,14 +35,14 @@
   "Paseo checkout_pull_request": "not offered: the OpenCode pages offer no commit, push, pull, branch or stash action, so the app offers none for Paseo; it only shows the changes",
   "Paseo checkout_push_request": "not offered: the OpenCode pages offer no commit, push, pull, branch or stash action, so the app offers none for Paseo; it only shows the changes",
   "Paseo checkout_switch_branch_request": "not offered: the OpenCode pages offer no commit, push, pull, branch or stash action, so the app offers none for Paseo; it only shows the changes",
-  "Paseo create_paseo_worktree_request": "not offered: owner decision needed - Paseo can run this on the host's checkout, but the app does not read or change a Paseo agent's files, changes or worktrees, so Files, Changes and Worktrees are unavailable for Paseo",
+  "Paseo create_paseo_worktree_request": "reachable: Project › Worktrees › New worktree (names it, then the row says it is ready) -> createWorktree [test: test/paseo_project_tools_test.dart ~ create_paseo_worktree_request]",
   "Paseo file.upload.request": "not offered: Files is a viewer for every server; it creates, renames, deletes and edits nothing, so no Paseo file call is used for that",
   "Paseo fs.entry.create.request": "not offered: Files is a viewer for every server; it creates, renames, deletes and edits nothing, so no Paseo file call is used for that",
   "Paseo fs.entry.delete.request": "not offered: Files is a viewer for every server; it creates, renames, deletes and edits nothing, so no Paseo file call is used for that",
   "Paseo fs.entry.duplicate.request": "not offered: Files is a viewer for every server; it creates, renames, deletes and edits nothing, so no Paseo file call is used for that",
   "Paseo fs.entry.rename.request": "not offered: Files is a viewer for every server; it creates, renames, deletes and edits nothing, so no Paseo file call is used for that",
   "Paseo fs.file.write.request": "not offered: Files is a viewer for every server; it creates, renames, deletes and edits nothing, so no Paseo file call is used for that",
-  "Paseo paseo_worktree_archive_request": "not offered: owner decision needed - Paseo can run this on the host's checkout, but the app does not read or change a Paseo agent's files, changes or worktrees, so Files, Changes and Worktrees are unavailable for Paseo",
+  "Paseo paseo_worktree_archive_request": "reachable: Project › Worktrees › row menu › Delete (asks first, naming the worktree and needing its name typed) -> removeWorktree [test: test/paseo_project_tools_test.dart ~ paseo_worktree_archive_request]",
   "Paseo stash_pop_request": "not offered: the OpenCode pages offer no commit, push, pull, branch or stash action, so the app offers none for Paseo; it only shows the changes",
   "Paseo stash_save_request": "not offered: the OpenCode pages offer no commit, push, pull, branch or stash action, so the app offers none for Paseo; it only shows the changes"
 }

@@ -41,9 +41,14 @@ part 'gateway/idle_work.dart';
 part 'gateway/workspace_base.dart';
 part 'gateway/files.dart';
 part 'gateway/changes.dart';
+part 'gateway/worktrees.dart';
 
 class PaseoGateway
-    with _PaseoWorkspaceBase, _PaseoFilesApi, _PaseoChangesApi
+    with
+        _PaseoWorkspaceBase,
+        _PaseoFilesApi,
+        _PaseoChangesApi,
+        _PaseoWorktreesApi
     implements
         ServerGateway,
         ServerOperationsGateway,

@@ -408,4 +408,124 @@ void main() {
       expect(health.setupState, VersionControlSetupState.absent);
     });
   });
+
+  group('Worktrees', () {
+    test('Paseo turns New worktree on and keeps Reset off', () {
+      expect(gateway.capabilities.worktreeCreate, isTrue);
+      expect(gateway.capabilities.worktreeReset, isFalse);
+    });
+
+    test('the list reads the project\'s worktrees', () async {
+      daemon.handlers['paseo_worktree_list_request'] = (_) => (
+        'paseo_worktree_list_response',
+        {
+          'worktrees': [
+            {
+              'worktreePath': '/home/u/.paseo/worktrees/app/fix-login',
+              'createdAt': '2026-10-01T10:00:00.000Z',
+              'branchName': 'fix-login',
+              'head': 'abc123',
+            },
+            {
+              'worktreePath': '/home/u/.paseo/worktrees/app/detached',
+              'createdAt': '2026-10-01T10:00:00.000Z',
+              'branchName': null,
+            },
+          ],
+          'error': null,
+        },
+      );
+      final list = await gateway.listWorktrees(projectDirectory: _dir);
+      expect(list.map((w) => w.name), ['fix-login', 'detached']);
+      expect(list.first.branch, 'fix-login');
+      expect(list.last.branch, isNull);
+      expect(list.first.directory, '/home/u/.paseo/worktrees/app/fix-login');
+      expect(daemon.of('paseo_worktree_list_request').single['cwd'], _dir);
+    });
+
+    Map<String, dynamic> created(String dir, String branch) => {
+      'workspace': {
+        'id': 'ws1',
+        'projectId': 'p1',
+        'projectDisplayName': 'app',
+        'projectRootPath': _dir,
+        'workspaceDirectory': dir,
+        'gitRuntime': {'currentBranch': branch},
+      },
+      'error': null,
+      'setupTerminalId': null,
+    };
+
+    test('creating one sends the name and comes back ready', () async {
+      daemon.handlers['create_paseo_worktree_request'] = (_) => (
+        'create_paseo_worktree_response',
+        created('/home/u/.paseo/worktrees/app/mobile-review', 'mobile-review'),
+      );
+      final made = await gateway.createWorktree(
+        projectDirectory: _dir,
+        name: ' mobile-review ',
+      );
+      expect(made.name, 'mobile-review');
+      expect(made.branch, 'mobile-review');
+      final sent = daemon.of('create_paseo_worktree_request').single;
+      expect(sent['cwd'], _dir);
+      expect(sent['worktreeSlug'], 'mobile-review');
+      expect(made.ready, isTrue);
+    });
+
+    test('a nameless worktree sends no slug', () async {
+      daemon.handlers['create_paseo_worktree_request'] = (_) => (
+        'create_paseo_worktree_response',
+        created('/home/u/.paseo/worktrees/app/calm-otter', 'calm-otter'),
+      );
+      await gateway.createWorktree(projectDirectory: _dir, name: '');
+      expect(
+        daemon
+            .of('create_paseo_worktree_request')
+            .single
+            .containsKey('worktreeSlug'),
+        isFalse,
+      );
+    });
+
+    test('a refused creation is a plain failure', () async {
+      daemon.handlers['create_paseo_worktree_request'] = (_) => (
+        'create_paseo_worktree_response',
+        {'workspace': null, 'error': 'git said no /x', 'setupTerminalId': null},
+      );
+      await expectLater(
+        gateway.createWorktree(projectDirectory: _dir, name: 'x'),
+        throwsA(isA<PaseoFailure>()),
+      );
+    });
+
+    test('removing one archives the worktree and its folder', () async {
+      daemon.handlers['paseo_worktree_archive_request'] = (_) => (
+        'paseo_worktree_archive_response',
+        {'success': true, 'removedAgents': <String>[], 'error': null},
+      );
+      await gateway.removeWorktree(
+        projectDirectory: _dir,
+        directory: '/home/u/.paseo/worktrees/app/fix-login',
+      );
+      final sent = daemon.of('paseo_worktree_archive_request').single;
+      expect(sent['worktreePath'], '/home/u/.paseo/worktrees/app/fix-login');
+      expect(sent['repoRoot'], _dir);
+      expect(sent['scope'], 'worktree');
+    });
+
+    test('a removal the daemon did not do is a failure', () async {
+      daemon.handlers['paseo_worktree_archive_request'] = (_) => (
+        'paseo_worktree_archive_response',
+        {
+          'success': false,
+          'error': {'code': 'UNKNOWN', 'message': 'busy'},
+        },
+      );
+      await expectLater(
+        gateway.removeWorktree(projectDirectory: _dir, directory: '/x/y'),
+        throwsA(isA<PaseoFailure>()),
+      );
+    });
+  });
 }

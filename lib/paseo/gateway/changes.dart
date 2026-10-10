@@ -6,13 +6,6 @@ part of '../gateway.dart';
 mixin _PaseoChangesApi on _PaseoWorkspaceBase {
   Map<String, Map<String, dynamic>> get _agents;
 
-  /// Checkout answers carry their failure as `{code, message}`; the words
-  /// never reach the person (the daemon's text stays out of the app).
-  void _requireCheckoutOk(Map<String, dynamic> payload) {
-    final error = payload['error'];
-    if (error != null) throw PaseoFailure(PaseoFailureKind.unavailable);
-  }
-
   /// The parsed diff of [cwd]; `base` compares with the branch it grew from.
   Future<List<Map<String, dynamic>>> _checkoutDiff(
     String cwd,

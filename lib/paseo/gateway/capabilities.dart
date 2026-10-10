@@ -61,7 +61,7 @@ const paseoServerCapabilities = ServerCapabilities(
   configuredProviderFallback: false,
   globalEventStream: false,
   worktreeReset: false,
-  worktreeCreate: false,
+  worktreeCreate: true,
   legacyQuestionRequests: true,
   cliSessionResume: false,
   forms: false,

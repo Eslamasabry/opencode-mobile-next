@@ -296,7 +296,10 @@ void main() {
         ('files', capabilities.fileBrowsing),
         ('terminal', capabilities.terminal),
         ('shell', capabilities.shellSettings),
-        ('worktrees', capabilities.projectManagement),
+        (
+          'worktrees',
+          capabilities.projectManagement || capabilities.worktreeCreate,
+        ),
         ('attachments', capabilities.promptAttachments),
         ('compact', capabilities.sessionCompact),
         ('share', capabilities.sessionShare),
