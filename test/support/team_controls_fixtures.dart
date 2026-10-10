@@ -298,6 +298,7 @@ Widget app(
   TextDirection? direction,
   double scale = 1,
 }) => MaterialApp(
+  debugShowCheckedModeBanner: false,
   theme: AppTheme.dark(),
   locale: locale,
   localizationsDelegates: AppLocalizations.localizationsDelegates,

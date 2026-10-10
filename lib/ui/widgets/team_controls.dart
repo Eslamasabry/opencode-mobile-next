@@ -40,6 +40,7 @@ String teamControlWord(AppLocalizations l10n, MutationRequest request) =>
         AgentControlAction.start => l10n.teamUiControlResume,
         AgentControlAction.stop => l10n.teamUiControlStop,
         AgentControlAction.restart => l10n.teamUiControlRestart,
+        AgentControlAction.kill => l10n.teamControlForceStop,
       },
       MutationKind.cancelRun => l10n.teamUiControlCancelRun,
       MutationKind.assign => l10n.teamUiControlReassign,
@@ -47,6 +48,16 @@ String teamControlWord(AppLocalizations l10n, MutationRequest request) =>
       MutationKind.approveMerge => l10n.teamUiMergeApprove,
       MutationKind.merge => l10n.teamUiMergeMerge,
       MutationKind.createWork => l10n.teamUiControlCreateWork,
+      MutationKind.controlProject => switch (request.projectAction) {
+        ProjectControlAction.resume => l10n.teamProjectControlResumeWord,
+        ProjectControlAction.remove => l10n.teamProjectControlRemoveWord,
+        ProjectControlAction.suspend ||
+        null => l10n.teamProjectControlSuspendWord,
+      },
+      MutationKind.controlScheduledJob =>
+        request.confirmed == true
+            ? l10n.teamJobTurnOnWord
+            : l10n.teamJobTurnOffWord,
     };
 
 /// The receipt a team control shows after a tap, as the one [KitReceipt]

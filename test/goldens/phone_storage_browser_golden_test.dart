@@ -268,22 +268,26 @@ void main() {
     final mode = light ? 'light' : 'dark';
     for (final scene in PhoneStorageScene.values) {
       final name = 'phone_storage_${scene.name}';
-      testWidgets('$name · $mode', (tester) async {
-        final boundary = GlobalKey();
-        await mountPhoneStorage(
-          tester,
-          scene,
-          light: light,
-          boundary: boundary,
-        );
-        expect(tester.takeException(), isNull);
-        await expectLater(
-          find.byKey(boundary),
-          matchesGoldenFile('${name}_$mode.png'),
-        );
-        // Leave the sheet so a running search's timer is cancelled.
-        await tester.pumpWidget(const SizedBox());
-      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+      testWidgets(
+        '$name · $mode',
+        (tester) async {
+          final boundary = GlobalKey();
+          await mountPhoneStorage(
+            tester,
+            scene,
+            light: light,
+            boundary: boundary,
+          );
+          expect(tester.takeException(), isNull);
+          await expectLater(
+            find.byKey(boundary),
+            matchesGoldenFile('${name}_$mode.png'),
+          );
+          // Leave the sheet so a running search's timer is cancelled.
+          await tester.pumpWidget(const SizedBox());
+        },
+        variant: TargetPlatformVariant.only(TargetPlatform.android),
+      );
     }
   }
 }

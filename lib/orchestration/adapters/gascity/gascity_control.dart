@@ -48,6 +48,7 @@ library;
 import '../../../domain/orchestration_gateway.dart';
 import '../../client/http.dart';
 import 'dto/dto.dart';
+import 'gascity_mappers.dart' show mapOrders;
 
 /// The pending interaction's session for a gate id, null when unknown.
 typedef GateSessionResolver = Future<String?> Function(String gateId);
@@ -69,7 +70,8 @@ class GasCityControl
     implements
         OrchestrationControlGateway,
         OrchestrationMergeGateway,
-        OrchestrationPolicyGateway {
+        OrchestrationPolicyGateway,
+        OrchestrationRigGateway {
   GasCityControl({
     required OrchestrationHttpClient http,
     required this.sessionForGate,
@@ -156,6 +158,9 @@ class GasCityControl
       case AgentControlAction.stop:
         final session = await _sessionOf(agentId);
         return _post('${_session(session)}/stop', requestId);
+      case AgentControlAction.kill:
+        final session = await _sessionOf(agentId);
+        return _post('${_session(session)}/kill', requestId);
       case AgentControlAction.restart:
         final session = await _sessionOf(agentId);
         final stopped = await _post('${_session(session)}/stop', requestId);
@@ -232,6 +237,44 @@ class GasCityControl
       },
     );
   }
+
+  // -------------------------------------------------------------------------
+  // Projects (rigs) and scheduled jobs (orders)
+  // -------------------------------------------------------------------------
+
+  /// `POST /rig/{name}/suspend` or `resume`; `DELETE /rig/{name}` removes
+  /// the rig from the city.
+  @override
+  Future<MutationReceipt> controlProject(
+    String projectId,
+    ProjectControlAction action, {
+    required String requestId,
+  }) {
+    final rig = '${_http.cityPath}/rig/${Uri.encodeComponent(projectId)}';
+    return switch (action) {
+      ProjectControlAction.suspend => _post('$rig/suspend', requestId),
+      ProjectControlAction.resume => _post('$rig/resume', requestId),
+      ProjectControlAction.remove => _delete(rig, requestId),
+    };
+  }
+
+  /// `GET /orders`.
+  @override
+  Future<List<ScheduledJob>> scheduledJobs() async {
+    final json = await _http.getCity('/orders');
+    return mapOrders(readList(json, 'orders', GcOrder.fromJson));
+  }
+
+  /// `POST /order/{name}/enable` or `disable`.
+  @override
+  Future<MutationReceipt> controlScheduledJob(
+    String jobId, {
+    required bool enabled,
+    required String requestId,
+  }) => _post(
+    '${_http.cityPath}/order/${Uri.encodeComponent(jobId)}/${enabled ? 'enable' : 'disable'}',
+    requestId,
+  );
 
   // -------------------------------------------------------------------------
   // Merge roles (TEAM-205): the front's own routes
@@ -336,16 +379,21 @@ class GasCityControl
     }
   }
 
+  Future<MutationReceipt> _delete(String path, String requestId) =>
+      _post(path, requestId, method: 'DELETE');
+
   Future<MutationReceipt> _post(
     String path,
     String requestId, {
     Map<String, Object?>? body,
     String? idempotencyKey,
+    String method = 'POST',
   }) async {
     final OrchestrationHttpResponse response;
     try {
       response = await _http.postForReceipt(
         path,
+        method: method,
         requestId: requestId,
         idempotencyKey: idempotency ? (idempotencyKey ?? requestId) : null,
         body: body ?? const {},

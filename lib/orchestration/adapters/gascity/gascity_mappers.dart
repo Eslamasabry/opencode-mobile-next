@@ -649,6 +649,7 @@ OrchestrationAgent mapAgent(
     branch: _branchOf(session?.metadata),
     sessionStartedAt: session?.createdAt,
     suspended: isSuspendedAgent(agent),
+    unavailableReason: agent.available ? null : agent.unavailableReason,
     raw: agent.raw,
     sessionState: session?.state,
     sessionRunning: session?.running,
@@ -1045,7 +1046,38 @@ List<OrchestrationProject> mapRigs(GcStatus status) => [
         name: rig.name,
         directory: rig.path,
         rig: rig.name,
+        suspended: rig.suspended,
         raw: rig.raw,
+      ),
+];
+
+/// `/orders` entries → [ScheduledJob]s. The trigger word picks the kind:
+/// `cron` (schedule), `cooldown` (interval), `event`, `manual`, `webhook`,
+/// `condition`; any other word is [ScheduledJobTrigger.other] with the word
+/// kept in `rawTrigger`.
+List<ScheduledJob> mapOrders(Iterable<GcOrder> orders) => [
+  for (final order in orders)
+    if (order.name.isNotEmpty)
+      ScheduledJob(
+        id: order.scopedName ?? order.name,
+        name: order.name,
+        enabled: order.enabled,
+        trigger: switch (order.trigger?.trim().toLowerCase()) {
+          'cron' => ScheduledJobTrigger.cron,
+          'cooldown' || 'interval' => ScheduledJobTrigger.interval,
+          'event' => ScheduledJobTrigger.event,
+          'manual' => ScheduledJobTrigger.manual,
+          'webhook' => ScheduledJobTrigger.webhook,
+          'condition' => ScheduledJobTrigger.condition,
+          _ => ScheduledJobTrigger.other,
+        },
+        projectId: order.rig,
+        schedule: order.schedule,
+        interval: order.interval,
+        onEvent: order.on,
+        description: order.description,
+        rawTrigger: order.trigger,
+        raw: order.raw,
       ),
 ];
 

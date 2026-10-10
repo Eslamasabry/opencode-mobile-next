@@ -432,54 +432,6 @@ abstract class AppLocalizations {
   /// **'Applies to this conversation\'s next turns.'**
   String get modelSessionScopeNote;
 
-  /// Model sheet: section of the agent's own switches
-  ///
-  /// In en, this message translates to:
-  /// **'Agent settings'**
-  String get agentFeaturesLabel;
-
-  /// Agent settings sheet title, e.g. Claude Code settings
-  ///
-  /// In en, this message translates to:
-  /// **'{agent} settings'**
-  String agentFeaturesSheetTitle(String agent);
-
-  /// Composer chip when an agent switch is off, e.g. Fast mode off
-  ///
-  /// In en, this message translates to:
-  /// **'{name} off'**
-  String agentFeatureChipOff(String name);
-
-  /// Model sheet: reading the agent's switches failed
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load this agent\'s settings.'**
-  String get agentFeaturesLoadFailed;
-
-  /// Agent switch: fast mode
-  ///
-  /// In en, this message translates to:
-  /// **'Fast mode'**
-  String get agentFeatureFastTitle;
-
-  /// Agent switch: what fast mode does
-  ///
-  /// In en, this message translates to:
-  /// **'Quicker replies from supported models. It costs more.'**
-  String get agentFeatureFastDetail;
-
-  /// Agent switch: change in flight
-  ///
-  /// In en, this message translates to:
-  /// **'Saving…'**
-  String get agentFeatureSaving;
-
-  /// Agent switch: the server refused the change
-  ///
-  /// In en, this message translates to:
-  /// **'Could not change {name}. It keeps its old setting.'**
-  String agentFeatureChangeFailed(String name);
-
   /// No description provided for @modelSelectionLoading.
   ///
   /// In en, this message translates to:
@@ -42719,72 +42671,6 @@ abstract class AppLocalizations {
   /// **'Choose a project'**
   String get chatsNewChooseProject;
 
-  /// Import a conversation started in Claude Code: the entry and the page title
-  ///
-  /// In en, this message translates to:
-  /// **'Import from Claude Code'**
-  String get claudeImportTitle;
-
-  /// Import page: what the list is
-  ///
-  /// In en, this message translates to:
-  /// **'Pick a conversation you started in Claude Code in {project}. It opens here so you can carry on.'**
-  String claudeImportIntro(String project);
-
-  /// Import page: a conversation's project folder and when it was last used
-  ///
-  /// In en, this message translates to:
-  /// **'{project} · {when}'**
-  String claudeImportRowDetail(String project, String when);
-
-  /// Import page: a conversation with no title and no first message
-  ///
-  /// In en, this message translates to:
-  /// **'Untitled conversation'**
-  String get claudeImportUntitled;
-
-  /// Import page: no conversations found
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing to import'**
-  String get claudeImportEmptyTitle;
-
-  /// Import page: empty state body
-  ///
-  /// In en, this message translates to:
-  /// **'Conversations you start in Claude Code in this project show up here.'**
-  String get claudeImportEmptyBody;
-
-  /// Import page: reading the list failed
-  ///
-  /// In en, this message translates to:
-  /// **'Could not look'**
-  String get claudeImportLoadFailedTitle;
-
-  /// Import page: reading the list failed, body
-  ///
-  /// In en, this message translates to:
-  /// **'The list did not load. Check the connection, then try again.'**
-  String get claudeImportLoadFailedBody;
-
-  /// Import page: conversations left out because they were imported before
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one {1 more conversation is already here.} other {{count} more conversations are already here.}}'**
-  String claudeImportAlready(int count);
-
-  /// Import page: a row while its conversation is being imported
-  ///
-  /// In en, this message translates to:
-  /// **'Importing…'**
-  String get claudeImportWorking;
-
-  /// Import page: importing one conversation failed
-  ///
-  /// In en, this message translates to:
-  /// **'That conversation could not be imported. Try again.'**
-  String get claudeImportFailed;
-
   /// New chat: why sending is off
   ///
   /// In en, this message translates to:
@@ -45215,126 +45101,6 @@ abstract class AppLocalizations {
   /// **'Could not check for agents. Try again in a moment.'**
   String get serverSettingsRecheckFailed;
 
-  /// Server settings, Paseo: row that updates the agent helper on the computer
-  ///
-  /// In en, this message translates to:
-  /// **'Update agents on {computer}'**
-  String hostUpdateRow(String computer);
-
-  /// Technical: Server settings, Paseo: update row detail naming the running version
-  ///
-  /// In en, this message translates to:
-  /// **'Running {version}. Installs the newest agent software.'**
-  String hostUpdateRowRunning(String version);
-
-  /// Server settings, Paseo: update row detail without a version
-  ///
-  /// In en, this message translates to:
-  /// **'Installs the newest agent software on that computer.'**
-  String get hostUpdateRowUnknown;
-
-  /// Confirmation title for updating the agent helper
-  ///
-  /// In en, this message translates to:
-  /// **'Update agents?'**
-  String get hostUpdateConfirmTitle;
-
-  /// Confirmation body for updating the agent helper
-  ///
-  /// In en, this message translates to:
-  /// **'This installs the newest agent software on {computer} and restarts it.'**
-  String hostUpdateConfirmBody(String computer);
-
-  /// Consequence: running chats pause during the restart
-  ///
-  /// In en, this message translates to:
-  /// **'Conversations on {computer} pause while it restarts.'**
-  String hostUpdateConfirmPauses(String computer);
-
-  /// Consequence: nothing is lost
-  ///
-  /// In en, this message translates to:
-  /// **'Your conversations and settings stay as they are.'**
-  String get hostUpdateConfirmKept;
-
-  /// Confirmation button that starts the helper update
-  ///
-  /// In en, this message translates to:
-  /// **'Update agents'**
-  String get hostUpdateConfirmAction;
-
-  /// Update progress: starting
-  ///
-  /// In en, this message translates to:
-  /// **'Starting the update…'**
-  String get hostUpdateStarting;
-
-  /// Update progress: downloading
-  ///
-  /// In en, this message translates to:
-  /// **'Downloading the newest version…'**
-  String get hostUpdateDownloading;
-
-  /// Update progress: installing
-  ///
-  /// In en, this message translates to:
-  /// **'Installing…'**
-  String get hostUpdateInstalling;
-
-  /// Update progress: complete, restarting
-  ///
-  /// In en, this message translates to:
-  /// **'Finishing up…'**
-  String get hostUpdateFinishing;
-
-  /// Technical: Update succeeded, naming the new version
-  ///
-  /// In en, this message translates to:
-  /// **'Updated to {version}. The app reconnects by itself.'**
-  String hostUpdateDone(String version);
-
-  /// Update succeeded, version not reported
-  ///
-  /// In en, this message translates to:
-  /// **'Updated. The app reconnects by itself.'**
-  String get hostUpdateDoneNoVersion;
-
-  /// Update finished and nothing newer existed
-  ///
-  /// In en, this message translates to:
-  /// **'{computer} is already up to date.'**
-  String hostUpdateCurrent(String computer);
-
-  /// Update failed, plain words
-  ///
-  /// In en, this message translates to:
-  /// **'The update did not finish. Try again, or update it on that computer.'**
-  String get hostUpdateFailed;
-
-  /// Update: the connection dropped before an answer
-  ///
-  /// In en, this message translates to:
-  /// **'The connection dropped during the update. The app is reconnecting.'**
-  String get hostUpdateDropped;
-
-  /// Update failed: row that opens the computer's own message
-  ///
-  /// In en, this message translates to:
-  /// **'Why it failed'**
-  String get hostUpdateDetailsRow;
-
-  /// Update failed: details sheet title
-  ///
-  /// In en, this message translates to:
-  /// **'Update details'**
-  String get hostUpdateDetailsTitle;
-
-  /// Update failed: label of the computer's own message
-  ///
-  /// In en, this message translates to:
-  /// **'Message from the computer'**
-  String get hostUpdateDetailsMessage;
-
   /// MCP server row: opens what the server said when it failed
   ///
   /// In en, this message translates to:
@@ -45454,6 +45220,630 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'“{task}” stops. Its conversation and changes stay for review.'**
   String teamProjectTaskStopNamedBody(String task);
+
+  /// Row state word for an agent the host says it cannot run
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t start'**
+  String get teamAgentUnavailableState;
+
+  /// Plain reason when the host's unavailable text mentions a model, provider or sign-in
+  ///
+  /// In en, this message translates to:
+  /// **'Its model isn\'t set up on the computer'**
+  String get teamAgentUnavailableModelWords;
+
+  /// Plain reason for any other host unavailable text
+  ///
+  /// In en, this message translates to:
+  /// **'The computer can\'t run it right now'**
+  String get teamAgentUnavailableOtherWords;
+
+  /// Agent page notice title when the host says the agent is unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} can\'t start'**
+  String teamAgentUnavailableTitle(String agent);
+
+  /// Agent page notice body for an unavailable agent; reason is a plain sentence without a full stop
+  ///
+  /// In en, this message translates to:
+  /// **'{reason}. Fix it on the computer, then check again.'**
+  String teamAgentUnavailableBody(String reason);
+
+  /// Technical details label for the host's own unavailable text
+  ///
+  /// In en, this message translates to:
+  /// **'What the computer says'**
+  String get teamAgentUnavailableHostSays;
+
+  /// Receipt word for the hard kill of an agent session
+  ///
+  /// In en, this message translates to:
+  /// **'Force stop'**
+  String get teamControlForceStop;
+
+  /// Receipt word for pausing a project
+  ///
+  /// In en, this message translates to:
+  /// **'Pause project'**
+  String get teamProjectControlSuspendWord;
+
+  /// Receipt word for resuming a project
+  ///
+  /// In en, this message translates to:
+  /// **'Resume project'**
+  String get teamProjectControlResumeWord;
+
+  /// Receipt word for deleting a project
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project'**
+  String get teamProjectControlRemoveWord;
+
+  /// Receipt word for switching a scheduled job on
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get teamJobTurnOnWord;
+
+  /// Receipt word for switching a scheduled job off
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get teamJobTurnOffWord;
+
+  /// Section label on the team home for the host's projects
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get teamHomeProjectsTitle;
+
+  /// State word of a project that takes work
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get teamRigStateActive;
+
+  /// State word of a project that was paused
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get teamRigStatePaused;
+
+  /// Project page notice title when it is paused
+  ///
+  /// In en, this message translates to:
+  /// **'{project} is paused'**
+  String teamRigPausedTitle(String project);
+
+  /// Project page notice body when it is paused
+  ///
+  /// In en, this message translates to:
+  /// **'No new work starts in it until you resume it.'**
+  String get teamRigPausedBody;
+
+  /// Button that pauses a project, naming it
+  ///
+  /// In en, this message translates to:
+  /// **'Pause project {project}'**
+  String teamRigPause(String project);
+
+  /// Button that resumes a project, naming it
+  ///
+  /// In en, this message translates to:
+  /// **'Resume project {project}'**
+  String teamRigResume(String project);
+
+  /// Pause confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Pause {project}?'**
+  String teamRigPauseTitle(String project);
+
+  /// Pause confirmation body; says what stops
+  ///
+  /// In en, this message translates to:
+  /// **'No new work starts in “{project}” until you resume it. Nothing is deleted.'**
+  String teamRigPauseBody(String project);
+
+  /// Pause confirmation button
+  ///
+  /// In en, this message translates to:
+  /// **'Pause project'**
+  String get teamRigPauseConfirm;
+
+  /// Button that deletes a project, naming it
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project {project}'**
+  String teamRigDelete(String project);
+
+  /// Delete confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {project}?'**
+  String teamRigDeleteTitle(String project);
+
+  /// Delete confirmation body for a project on a computer's team
+  ///
+  /// In en, this message translates to:
+  /// **'“{project}” is removed from this team. Its folder and files on the computer are not touched.'**
+  String teamRigDeleteBody(String project);
+
+  /// Delete confirmation button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project'**
+  String get teamRigDeleteConfirm;
+
+  /// Consequence line: what a project delete takes away
+  ///
+  /// In en, this message translates to:
+  /// **'The team stops working on it'**
+  String get teamRigDeleteLost;
+
+  /// Consequence line: what a project delete keeps
+  ///
+  /// In en, this message translates to:
+  /// **'Its folder and files on the computer'**
+  String get teamRigDeleteKeptFiles;
+
+  /// Consequence line: what a project delete keeps
+  ///
+  /// In en, this message translates to:
+  /// **'Its past tasks and history'**
+  String get teamRigDeleteKeptHistory;
+
+  /// Technical details label for a project's folder
+  ///
+  /// In en, this message translates to:
+  /// **'Folder on the computer'**
+  String get teamRigFolderLabel;
+
+  /// Project page state when the project no longer exists
+  ///
+  /// In en, this message translates to:
+  /// **'This project is gone'**
+  String get teamRigNotFoundTitle;
+
+  /// Project page state body
+  ///
+  /// In en, this message translates to:
+  /// **'The computer no longer lists it. Go back to the team.'**
+  String get teamRigNotFoundBody;
+
+  /// Visible row on a project's page that deletes it, naming it
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project {project}'**
+  String teamProjectDelete(String project);
+
+  /// Delete project confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {project}?'**
+  String teamProjectDeleteTitle(String project);
+
+  /// Delete project confirmation body for the in-app engine
+  ///
+  /// In en, this message translates to:
+  /// **'“{project}” is deleted from this phone\'s AI Team, with the team\'s copy of its code. This can\'t be undone.'**
+  String teamProjectDeleteBody(String project);
+
+  /// Delete project confirmation button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project'**
+  String get teamProjectDeleteConfirm;
+
+  /// Consequence line: deleted with the project
+  ///
+  /// In en, this message translates to:
+  /// **'Its plan, tasks and history are deleted'**
+  String get teamProjectDeleteLostPlan;
+
+  /// Consequence line: stops with the project
+  ///
+  /// In en, this message translates to:
+  /// **'Running work stops'**
+  String get teamProjectDeleteLostRunning;
+
+  /// Consequence line: kept when the project is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'The folder you added it from stays as it is'**
+  String get teamProjectDeleteKept;
+
+  /// Agent page action and its confirmation button; ends the session at once
+  ///
+  /// In en, this message translates to:
+  /// **'Force stop {agent}'**
+  String teamAgentForceStop(String agent);
+
+  /// Force stop confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Force stop {agent}?'**
+  String teamAgentForceStopTitle(String agent);
+
+  /// Force stop confirmation body; says what is lost
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} ends at once, without finishing what it is doing. Work it hasn\'t saved may be lost.'**
+  String teamAgentForceStopBody(String agent);
+
+  /// Agent page notice title when a normal stop did not end the session
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} didn\'t stop'**
+  String teamAgentStopStuckTitle(String agent);
+
+  /// Agent page notice body when a normal stop did not work
+  ///
+  /// In en, this message translates to:
+  /// **'The normal stop didn\'t end it. You can force it to end now.'**
+  String get teamAgentStopStuckBody;
+
+  /// Section label on a project's page for the host's scheduled jobs
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled jobs'**
+  String get teamJobsTitle;
+
+  /// Section label for scheduled jobs that belong to no one project
+  ///
+  /// In en, this message translates to:
+  /// **'For the whole team'**
+  String get teamJobsWholeTeamTitle;
+
+  /// Empty state on a project page: the host has no scheduled jobs for it
+  ///
+  /// In en, this message translates to:
+  /// **'No scheduled jobs'**
+  String get teamJobsEmptyTitle;
+
+  /// Empty state body
+  ///
+  /// In en, this message translates to:
+  /// **'The computer starts nothing on its own for this project.'**
+  String get teamJobsEmptyBody;
+
+  /// Failed state on a project page
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read scheduled jobs'**
+  String get teamJobsFailedTitle;
+
+  /// Failed state body
+  ///
+  /// In en, this message translates to:
+  /// **'Check the connection to the computer, then try again.'**
+  String get teamJobsFailedBody;
+
+  /// Loading label of the scheduled jobs on a project page
+  ///
+  /// In en, this message translates to:
+  /// **'Reading scheduled jobs'**
+  String get teamJobsLoading;
+
+  /// Plain schedule wording
+  ///
+  /// In en, this message translates to:
+  /// **'Every day at {time}'**
+  String teamJobEveryDayAt(String time);
+
+  /// Plain schedule wording for Monday to Friday
+  ///
+  /// In en, this message translates to:
+  /// **'Every weekday at {time}'**
+  String teamJobEveryWeekdayAt(String time);
+
+  /// Plain schedule wording for one weekday
+  ///
+  /// In en, this message translates to:
+  /// **'Every {day} at {time}'**
+  String teamJobEveryDowAt(String day, String time);
+
+  /// Plain schedule wording
+  ///
+  /// In en, this message translates to:
+  /// **'Every hour'**
+  String get teamJobEveryHour;
+
+  /// Plain schedule wording for a repeat every few minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every minute} other{Every {count} minutes}}'**
+  String teamJobEveryMinutes(int count);
+
+  /// Plain schedule wording for a repeat every few hours
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every hour} other{Every {count} hours}}'**
+  String teamJobEveryHours(int count);
+
+  /// Plain schedule wording for a repeat every few seconds
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every second} other{Every {count} seconds}}'**
+  String teamJobEverySeconds(int count);
+
+  /// Plain wording when the schedule is too unusual to say simply
+  ///
+  /// In en, this message translates to:
+  /// **'On a schedule'**
+  String get teamJobOnSchedule;
+
+  /// Plain wording when the repeat time is not understood
+  ///
+  /// In en, this message translates to:
+  /// **'Repeats on its own'**
+  String get teamJobRepeats;
+
+  /// Plain wording for a job started by an event
+  ///
+  /// In en, this message translates to:
+  /// **'When something happens'**
+  String get teamJobWhenEvent;
+
+  /// Plain wording for a job that never starts by itself
+  ///
+  /// In en, this message translates to:
+  /// **'Only when started by hand'**
+  String get teamJobManual;
+
+  /// Plain wording for a job started by a web request
+  ///
+  /// In en, this message translates to:
+  /// **'When a web request arrives'**
+  String get teamJobWebhook;
+
+  /// Plain wording for a job started when a check passes
+  ///
+  /// In en, this message translates to:
+  /// **'When its check passes'**
+  String get teamJobCondition;
+
+  /// Plain wording for an unknown trigger
+  ///
+  /// In en, this message translates to:
+  /// **'Starts on its own'**
+  String get teamJobOther;
+
+  /// Model sheet: section of the agent's own switches
+  ///
+  /// In en, this message translates to:
+  /// **'Agent settings'**
+  String get agentFeaturesLabel;
+
+  /// Agent settings sheet title, e.g. Claude Code settings
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} settings'**
+  String agentFeaturesSheetTitle(String agent);
+
+  /// Composer chip when an agent switch is off, e.g. Fast mode off
+  ///
+  /// In en, this message translates to:
+  /// **'{name} off'**
+  String agentFeatureChipOff(String name);
+
+  /// Model sheet: reading the agent's switches failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this agent\'s settings.'**
+  String get agentFeaturesLoadFailed;
+
+  /// Agent switch: fast mode
+  ///
+  /// In en, this message translates to:
+  /// **'Fast mode'**
+  String get agentFeatureFastTitle;
+
+  /// Agent switch: what fast mode does
+  ///
+  /// In en, this message translates to:
+  /// **'Quicker replies from supported models. It costs more.'**
+  String get agentFeatureFastDetail;
+
+  /// Agent switch: change in flight
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get agentFeatureSaving;
+
+  /// Agent switch: the server refused the change
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change {name}. It keeps its old setting.'**
+  String agentFeatureChangeFailed(String name);
+
+  /// Import a conversation started in Claude Code: the entry and the page title
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Claude Code'**
+  String get claudeImportTitle;
+
+  /// Import page: what the list is
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a conversation you started in Claude Code in {project}. It opens here so you can carry on.'**
+  String claudeImportIntro(String project);
+
+  /// Import page: a conversation's project folder and when it was last used
+  ///
+  /// In en, this message translates to:
+  /// **'{project} · {when}'**
+  String claudeImportRowDetail(String project, String when);
+
+  /// Import page: a conversation with no title and no first message
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled conversation'**
+  String get claudeImportUntitled;
+
+  /// Import page: no conversations found
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to import'**
+  String get claudeImportEmptyTitle;
+
+  /// Import page: empty state body
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations you start in Claude Code in this project show up here.'**
+  String get claudeImportEmptyBody;
+
+  /// Import page: reading the list failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not look'**
+  String get claudeImportLoadFailedTitle;
+
+  /// Import page: reading the list failed, body
+  ///
+  /// In en, this message translates to:
+  /// **'The list did not load. Check the connection, then try again.'**
+  String get claudeImportLoadFailedBody;
+
+  /// Import page: conversations left out because they were imported before
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {1 more conversation is already here.} other {{count} more conversations are already here.}}'**
+  String claudeImportAlready(int count);
+
+  /// Import page: a row while its conversation is being imported
+  ///
+  /// In en, this message translates to:
+  /// **'Importing…'**
+  String get claudeImportWorking;
+
+  /// Import page: importing one conversation failed
+  ///
+  /// In en, this message translates to:
+  /// **'That conversation could not be imported. Try again.'**
+  String get claudeImportFailed;
+
+  /// Server settings, Paseo: row that updates the agent helper on the computer
+  ///
+  /// In en, this message translates to:
+  /// **'Update agents on {computer}'**
+  String hostUpdateRow(String computer);
+
+  /// Technical: Server settings, Paseo: update row detail naming the running version
+  ///
+  /// In en, this message translates to:
+  /// **'Running {version}. Installs the newest agent software.'**
+  String hostUpdateRowRunning(String version);
+
+  /// Server settings, Paseo: update row detail without a version
+  ///
+  /// In en, this message translates to:
+  /// **'Installs the newest agent software on that computer.'**
+  String get hostUpdateRowUnknown;
+
+  /// Confirmation title for updating the agent helper
+  ///
+  /// In en, this message translates to:
+  /// **'Update agents?'**
+  String get hostUpdateConfirmTitle;
+
+  /// Confirmation body for updating the agent helper
+  ///
+  /// In en, this message translates to:
+  /// **'This installs the newest agent software on {computer} and restarts it.'**
+  String hostUpdateConfirmBody(String computer);
+
+  /// Consequence: running chats pause during the restart
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations on {computer} pause while it restarts.'**
+  String hostUpdateConfirmPauses(String computer);
+
+  /// Consequence: nothing is lost
+  ///
+  /// In en, this message translates to:
+  /// **'Your conversations and settings stay as they are.'**
+  String get hostUpdateConfirmKept;
+
+  /// Confirmation button that starts the helper update
+  ///
+  /// In en, this message translates to:
+  /// **'Update agents'**
+  String get hostUpdateConfirmAction;
+
+  /// Update progress: starting
+  ///
+  /// In en, this message translates to:
+  /// **'Starting the update…'**
+  String get hostUpdateStarting;
+
+  /// Update progress: downloading
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading the newest version…'**
+  String get hostUpdateDownloading;
+
+  /// Update progress: installing
+  ///
+  /// In en, this message translates to:
+  /// **'Installing…'**
+  String get hostUpdateInstalling;
+
+  /// Update progress: complete, restarting
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing up…'**
+  String get hostUpdateFinishing;
+
+  /// Technical: Update succeeded, naming the new version
+  ///
+  /// In en, this message translates to:
+  /// **'Updated to {version}. The app reconnects by itself.'**
+  String hostUpdateDone(String version);
+
+  /// Update succeeded, version not reported
+  ///
+  /// In en, this message translates to:
+  /// **'Updated. The app reconnects by itself.'**
+  String get hostUpdateDoneNoVersion;
+
+  /// Update finished and nothing newer existed
+  ///
+  /// In en, this message translates to:
+  /// **'{computer} is already up to date.'**
+  String hostUpdateCurrent(String computer);
+
+  /// Update failed, plain words
+  ///
+  /// In en, this message translates to:
+  /// **'The update did not finish. Try again, or update it on that computer.'**
+  String get hostUpdateFailed;
+
+  /// Update: the connection dropped before an answer
+  ///
+  /// In en, this message translates to:
+  /// **'The connection dropped during the update. The app is reconnecting.'**
+  String get hostUpdateDropped;
+
+  /// Update failed: row that opens the computer's own message
+  ///
+  /// In en, this message translates to:
+  /// **'Why it failed'**
+  String get hostUpdateDetailsRow;
+
+  /// Update failed: details sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Update details'**
+  String get hostUpdateDetailsTitle;
+
+  /// Update failed: label of the computer's own message
+  ///
+  /// In en, this message translates to:
+  /// **'Message from the computer'**
+  String get hostUpdateDetailsMessage;
 
   /// Files: the search filter that looks for words inside the files, beside Files and Symbols
   ///

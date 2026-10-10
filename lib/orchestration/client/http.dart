@@ -248,6 +248,7 @@ class OrchestrationHttpClient {
   /// rejected write; only transport failures throw.
   Future<OrchestrationHttpResponse> postForReceipt(
     String path, {
+    String method = 'POST',
     required String requestId,
     String? idempotencyKey,
     Map<String, Object?>? body,
@@ -255,7 +256,7 @@ class OrchestrationHttpClient {
     CancelToken? cancelToken,
   }) async {
     final response = await _send<Object?>(
-      'POST',
+      method,
       path,
       query: query,
       body: body,

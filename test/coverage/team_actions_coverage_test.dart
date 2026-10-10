@@ -177,6 +177,14 @@ void main() {
             gateway.controlAgent(dir, AgentControlAction.stop, requestId: 'r5'),
       );
       await one(
+        'GC POST /v0/city/{cityName}/session/{id}/kill',
+        () => gateway.controlAgent(
+          dir,
+          AgentControlAction.kill,
+          requestId: 'r19',
+        ),
+      );
+      await one(
         'GC POST /v0/city/{cityName}/session/{id}/messages',
         () => gateway.message(dir, 'Please rebase first', requestId: 'r6'),
       );
@@ -186,6 +194,38 @@ void main() {
           'req-1',
           GateResponse.confirmation(confirmed: true),
           requestId: 'r7',
+        ),
+      );
+      await one(
+        'GC POST /v0/city/{cityName}/rig/{name}/{action}',
+        () => gateway.controlProject(
+          'shopfront',
+          ProjectControlAction.suspend,
+          requestId: 'r17',
+        ),
+      );
+      await one(
+        'GC DELETE /v0/city/{cityName}/rig/{name}',
+        () => gateway.controlProject(
+          'shopfront',
+          ProjectControlAction.remove,
+          requestId: 'r18',
+        ),
+      );
+      await one(
+        'GC POST /v0/city/{cityName}/order/{name}/enable',
+        () => gateway.controlScheduledJob(
+          'shopfront/nightly',
+          enabled: true,
+          requestId: 'r20',
+        ),
+      );
+      await one(
+        'GC POST /v0/city/{cityName}/order/{name}/disable',
+        () => gateway.controlScheduledJob(
+          'shopfront/nightly',
+          enabled: false,
+          requestId: 'r21',
         ),
       );
       await one(

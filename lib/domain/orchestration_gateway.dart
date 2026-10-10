@@ -9,6 +9,7 @@ import '../orchestration/models/merge.dart';
 import '../orchestration/models/policy.dart';
 import '../orchestration/models/project.dart';
 import '../orchestration/models/run.dart';
+import '../orchestration/models/scheduled_job.dart';
 import '../orchestration/models/usage.dart';
 import '../orchestration/models/work.dart';
 
@@ -23,6 +24,7 @@ export '../orchestration/models/merge.dart';
 export '../orchestration/models/policy.dart';
 export '../orchestration/models/project.dart';
 export '../orchestration/models/run.dart';
+export '../orchestration/models/scheduled_job.dart';
 export '../orchestration/models/usage.dart';
 export '../orchestration/models/work.dart';
 
@@ -106,6 +108,11 @@ class OrchestrationCapabilities {
     this.controlCancelRun = false,
     this.controlAssign = false,
     this.controlCreateWork = false,
+    this.controlProject = false,
+    this.controlProjectRemove = false,
+    this.controlAgentKill = false,
+    this.scheduledJobs = false,
+    this.controlScheduledJobs = false,
     this.changes = false,
     this.verification = false,
     this.mergeReadiness = false,
@@ -186,6 +193,23 @@ class OrchestrationCapabilities {
   /// city keeps its planner and needs no direct path.
   final bool controlCreateWork;
 
+  /// Suspend and resume a project (Gas City rig) from the phone, through
+  /// [OrchestrationRigGateway].
+  final bool controlProject;
+
+  /// Remove a project (Gas City rig) from the team from the phone.
+  final bool controlProjectRemove;
+
+  /// Hard-kill an agent's session (Gas City `session/{id}/kill`), beside
+  /// the normal stop.
+  final bool controlAgentKill;
+
+  /// The host's scheduled jobs (Gas City orders) can be listed.
+  final bool scheduledJobs;
+
+  /// A scheduled job can be switched on or off.
+  final bool controlScheduledJobs;
+
   /// Change sets produced by work items.
   final bool changes;
 
@@ -218,6 +242,7 @@ class OrchestrationCapabilities {
     usage: true,
     eventStream: true,
     eventReplay: true,
+    scheduledJobs: true,
   );
 
   /// Gas City behind the host front: [gascityRead] plus every `control*`
@@ -244,6 +269,11 @@ class OrchestrationCapabilities {
     changes: true,
     verification: true,
     mergeReadiness: true,
+    controlProject: true,
+    controlProjectRemove: true,
+    controlAgentKill: true,
+    scheduledJobs: true,
+    controlScheduledJobs: true,
   );
 
   /// Gas City on this phone (TEAM-301): [gascityRead] plus every
@@ -270,6 +300,10 @@ class OrchestrationCapabilities {
     controlAssign: true,
     controlCreateWork: true,
     phoneHost: true,
+    controlProject: true,
+    controlAgentKill: true,
+    scheduledJobs: true,
+    controlScheduledJobs: true,
   );
 
   /// Recorded fixture server: everything on, so every widget is testable.
@@ -297,6 +331,11 @@ class OrchestrationCapabilities {
     verification: true,
     mergeReadiness: true,
     phoneHost: true,
+    controlProject: true,
+    controlProjectRemove: true,
+    controlAgentKill: true,
+    scheduledJobs: true,
+    controlScheduledJobs: true,
   );
 
   /// Any write is possible.
@@ -306,7 +345,11 @@ class OrchestrationCapabilities {
       controlAgent ||
       controlCancelRun ||
       controlAssign ||
-      controlCreateWork;
+      controlCreateWork ||
+      controlProject ||
+      controlProjectRemove ||
+      controlAgentKill ||
+      controlScheduledJobs;
 
   /// Every switch by name, for diagnostics and consistency tests.
   Map<String, bool> asMap() => {
@@ -340,6 +383,11 @@ class OrchestrationCapabilities {
     'controlCancelRun': controlCancelRun,
     'controlAssign': controlAssign,
     'controlCreateWork': controlCreateWork,
+    'controlProject': controlProject,
+    'controlProjectRemove': controlProjectRemove,
+    'controlAgentKill': controlAgentKill,
+    'scheduledJobs': scheduledJobs,
+    'controlScheduledJobs': controlScheduledJobs,
     'changes': changes,
     'verification': verification,
     'mergeReadiness': mergeReadiness,
@@ -525,6 +573,22 @@ enum AgentControlAction {
 
   /// [stop], then wake the session again.
   restart,
+
+  /// End the session by force (Gas City: session `kill`), for an agent a
+  /// normal [stop] did not end. Work in its session may be lost.
+  kill,
+}
+
+/// What a person asks of a project (Gas City rig).
+enum ProjectControlAction {
+  /// Switch the project off: its agents stop picking up work.
+  suspend,
+
+  /// Switch it on again.
+  resume,
+
+  /// Take the project out of the team (Gas City: `DELETE /rig/{name}`).
+  remove,
 }
 
 /// Read side: inventories for the selected host. Adapters return empty
@@ -631,6 +695,30 @@ abstract interface class OrchestrationMergeGateway {
   /// Merges the run's branches into the rig's default branch. The host
   /// refuses unless readiness passes and its boundaries allow.
   Future<MutationReceipt> merge(String runId, {required String requestId});
+}
+
+/// Project and scheduled-job controls (OD1), behind
+/// [OrchestrationCapabilities.controlProject], [scheduledJobs] and the
+/// matching switches. Sits beside the gateway like [OrchestrationMergeGateway]:
+/// adapters that can answer implement it and the controller checks for it at
+/// runtime, so a read-only double need not.
+abstract interface class OrchestrationRigGateway {
+  /// Suspends, resumes or removes the project [projectId] (a rig name).
+  Future<MutationReceipt> controlProject(
+    String projectId,
+    ProjectControlAction action, {
+    required String requestId,
+  });
+
+  /// The host's scheduled jobs, every project's and the team's own.
+  Future<List<ScheduledJob>> scheduledJobs();
+
+  /// Switches the scheduled job [jobId] (its scoped name) on or off.
+  Future<MutationReceipt> controlScheduledJob(
+    String jobId, {
+    required bool enabled,
+    required String requestId,
+  });
 }
 
 /// The host's supervision policy (TEAM-207, 02-ux §7), read-only. Sits

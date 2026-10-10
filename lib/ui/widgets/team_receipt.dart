@@ -36,6 +36,8 @@ MutationRecord? teamGateMutation(
       MutationKind.respond ||
       MutationKind.message ||
       MutationKind.controlAgent ||
+      MutationKind.controlProject ||
+      MutationKind.controlScheduledJob ||
       MutationKind.createWork => false,
     };
     if (!matches) continue;

@@ -124,73 +124,81 @@ void main() {
         'promote',
         'before',
       ]) {
-        testWidgets('project $scene ${kitGallerySize(size)} $light', (
-          tester,
-        ) async {
-          final c = TeamProjectController(
-            ProjectFixtureGateway(persistence: MemoryPersistence()),
-          );
-          await c.load();
-          c.snapshot = _scene(c.snapshot!, scene);
-          final legacy = scene == 'before' ? (await teamController()).$1 : null;
-          await kitGalleryShot(
-            tester,
-            name: kitGalleryName('kit_teamprojects_$scene', size, light: light),
-            size: size,
-            light: light,
-            open: (context) {
-              if (scene == 'new') {
-                openTeamNewProject(context, c);
-              } else {
-                pushKitPage<void>(
-                  context,
-                  (_) => switch (scene) {
-                    'before' => TeamHomeScreen(
-                      controller: legacy!,
-                      now: teamNow,
-                    ),
-                    'overview' =>
-                      size == const Size(412, 915)
-                          ? TeamProjectOverview(
-                              controller: c,
-                              projectId: 'demo-project',
-                            )
-                          : TeamProjectsScreen(controller: c),
-                    _ => TeamProjectConversation(
-                      controller: c,
-                      projectId: 'demo-project',
-                      taskId: _sceneTask[scene]!,
-                    ),
-                  },
-                );
-              }
-            },
-            then: scene == 'new'
-                ? (tester) async {
-                    await tester.enterText(
-                      find.descendant(
-                        of: find.byKey(const ValueKey('goal')),
-                        matching: find.byType(EditableText),
+        testWidgets(
+          'project $scene ${kitGallerySize(size)} $light',
+          (tester) async {
+            final c = TeamProjectController(
+              ProjectFixtureGateway(persistence: MemoryPersistence()),
+            );
+            await c.load();
+            c.snapshot = _scene(c.snapshot!, scene);
+            final legacy = scene == 'before'
+                ? (await teamController()).$1
+                : null;
+            await kitGalleryShot(
+              tester,
+              name: kitGalleryName(
+                'kit_teamprojects_$scene',
+                size,
+                light: light,
+              ),
+              size: size,
+              light: light,
+              open: (context) {
+                if (scene == 'new') {
+                  openTeamNewProject(context, c);
+                } else {
+                  pushKitPage<void>(
+                    context,
+                    (_) => switch (scene) {
+                      'before' => TeamHomeScreen(
+                        controller: legacy!,
+                        now: teamNow,
                       ),
-                      'Launch the marketing site and its docs in Arabic and English.',
-                    );
-                    for (final label in ['Parallel agents', 'Set limits']) {
-                      await tester.ensureVisible(find.text(label));
-                      await tester.pumpAndSettle();
-                      await tester.tap(find.text(label).first);
+                      'overview' =>
+                        size == const Size(412, 915)
+                            ? TeamProjectOverview(
+                                controller: c,
+                                projectId: 'demo-project',
+                              )
+                            : TeamProjectsScreen(controller: c),
+                      _ => TeamProjectConversation(
+                        controller: c,
+                        projectId: 'demo-project',
+                        taskId: _sceneTask[scene]!,
+                      ),
+                    },
+                  );
+                }
+              },
+              then: scene == 'new'
+                  ? (tester) async {
+                      await tester.enterText(
+                        find.descendant(
+                          of: find.byKey(const ValueKey('goal')),
+                          matching: find.byType(EditableText),
+                        ),
+                        'Launch the marketing site and its docs in Arabic and English.',
+                      );
+                      for (final label in ['Parallel agents', 'Set limits']) {
+                        await tester.ensureVisible(find.text(label));
+                        await tester.pumpAndSettle();
+                        await tester.tap(find.text(label).first);
+                        await tester.pumpAndSettle();
+                      }
+                      await tester.drag(
+                        find.byType(Scrollable).first,
+                        const Offset(0, 4000),
+                      );
                       await tester.pumpAndSettle();
                     }
-                    await tester.drag(
-                      find.byType(Scrollable).first,
-                      const Offset(0, 4000),
-                    );
-                    await tester.pumpAndSettle();
-                  }
-                : null,
-          );
-          legacy?.dispose();
-          c.dispose();
-        }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+                  : null,
+            );
+            legacy?.dispose();
+            c.dispose();
+          },
+          variant: TargetPlatformVariant.only(TargetPlatform.android),
+        );
       }
     }
   }
@@ -199,28 +207,32 @@ void main() {
     const Size(412, 915),
     const Size(1280, 800),
   ]) {
-    testWidgets('project large text ${kitGallerySize(size)}', (tester) async {
-      final c = TeamProjectController(
-        ProjectFixtureGateway(persistence: MemoryPersistence()),
-      );
-      await c.load();
-      await kitGalleryShot(
-        tester,
-        name: kitGalleryName(
-          'kit_teamprojects_scaled',
-          size,
+    testWidgets(
+      'project large text ${kitGallerySize(size)}',
+      (tester) async {
+        final c = TeamProjectController(
+          ProjectFixtureGateway(persistence: MemoryPersistence()),
+        );
+        await c.load();
+        await kitGalleryShot(
+          tester,
+          name: kitGalleryName(
+            'kit_teamprojects_scaled',
+            size,
+            light: false,
+            text2: true,
+          ),
+          size: size,
           light: false,
-          text2: true,
-        ),
-        size: size,
-        light: false,
-        textScale: 2,
-        open: (context) => pushKitPage<void>(
-          context,
-          (_) => TeamProjectsScreen(controller: c),
-        ),
-      );
-      c.dispose();
-    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+          textScale: 2,
+          open: (context) => pushKitPage<void>(
+            context,
+            (_) => TeamProjectsScreen(controller: c),
+          ),
+        );
+        c.dispose();
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
   }
 }

@@ -186,38 +186,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get modelSessionScopeNote => 'この会話の以降のやり取りに適用されます。';
 
   @override
-  String get agentFeaturesLabel => 'Agent settings';
-
-  @override
-  String agentFeaturesSheetTitle(String agent) {
-    return '$agent settings';
-  }
-
-  @override
-  String agentFeatureChipOff(String name) {
-    return '$name off';
-  }
-
-  @override
-  String get agentFeaturesLoadFailed =>
-      'Could not load this agent\'s settings.';
-
-  @override
-  String get agentFeatureFastTitle => 'Fast mode';
-
-  @override
-  String get agentFeatureFastDetail =>
-      'Quicker replies from supported models. It costs more.';
-
-  @override
-  String get agentFeatureSaving => 'Saving…';
-
-  @override
-  String agentFeatureChangeFailed(String name) {
-    return 'Could not change $name. It keeps its old setting.';
-  }
-
-  @override
   String get modelSelectionLoading => 'Loading conversation selection…';
 
   @override
@@ -26983,54 +26951,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chatsNewChooseProject => 'プロジェクトを選ぶ';
 
   @override
-  String get claudeImportTitle => 'Import from Claude Code';
-
-  @override
-  String claudeImportIntro(String project) {
-    return 'Pick a conversation you started in Claude Code in $project. It opens here so you can carry on.';
-  }
-
-  @override
-  String claudeImportRowDetail(String project, String when) {
-    return '$project · $when';
-  }
-
-  @override
-  String get claudeImportUntitled => 'Untitled conversation';
-
-  @override
-  String get claudeImportEmptyTitle => 'Nothing to import';
-
-  @override
-  String get claudeImportEmptyBody =>
-      'Conversations you start in Claude Code in this project show up here.';
-
-  @override
-  String get claudeImportLoadFailedTitle => 'Could not look';
-
-  @override
-  String get claudeImportLoadFailedBody =>
-      'The list did not load. Check the connection, then try again.';
-
-  @override
-  String claudeImportAlready(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count more conversations are already here.',
-      one: '1 more conversation is already here.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get claudeImportWorking => 'Importing…';
-
-  @override
-  String get claudeImportFailed =>
-      'That conversation could not be imported. Try again.';
-
-  @override
   String get chatsNewNeedProject => '会話を始めるにはプロジェクトを選んでください。';
 
   @override
@@ -28610,83 +28530,6 @@ class AppLocalizationsJa extends AppLocalizations {
       'Could not check for agents. Try again in a moment.';
 
   @override
-  String hostUpdateRow(String computer) {
-    return 'Update agents on $computer';
-  }
-
-  @override
-  String hostUpdateRowRunning(String version) {
-    return 'Running $version. Installs the newest agent software.';
-  }
-
-  @override
-  String get hostUpdateRowUnknown =>
-      'Installs the newest agent software on that computer.';
-
-  @override
-  String get hostUpdateConfirmTitle => 'Update agents?';
-
-  @override
-  String hostUpdateConfirmBody(String computer) {
-    return 'This installs the newest agent software on $computer and restarts it.';
-  }
-
-  @override
-  String hostUpdateConfirmPauses(String computer) {
-    return 'Conversations on $computer pause while it restarts.';
-  }
-
-  @override
-  String get hostUpdateConfirmKept =>
-      'Your conversations and settings stay as they are.';
-
-  @override
-  String get hostUpdateConfirmAction => 'Update agents';
-
-  @override
-  String get hostUpdateStarting => 'Starting the update…';
-
-  @override
-  String get hostUpdateDownloading => 'Downloading the newest version…';
-
-  @override
-  String get hostUpdateInstalling => 'Installing…';
-
-  @override
-  String get hostUpdateFinishing => 'Finishing up…';
-
-  @override
-  String hostUpdateDone(String version) {
-    return 'Updated to $version. The app reconnects by itself.';
-  }
-
-  @override
-  String get hostUpdateDoneNoVersion =>
-      'Updated. The app reconnects by itself.';
-
-  @override
-  String hostUpdateCurrent(String computer) {
-    return '$computer is already up to date.';
-  }
-
-  @override
-  String get hostUpdateFailed =>
-      'The update did not finish. Try again, or update it on that computer.';
-
-  @override
-  String get hostUpdateDropped =>
-      'The connection dropped during the update. The app is reconnecting.';
-
-  @override
-  String get hostUpdateDetailsRow => 'Why it failed';
-
-  @override
-  String get hostUpdateDetailsTitle => 'Update details';
-
-  @override
-  String get hostUpdateDetailsMessage => 'Message from the computer';
-
-  @override
   String integrationsMcpDetails(String name) {
     return 'Details for $name';
   }
@@ -28778,6 +28621,431 @@ class AppLocalizationsJa extends AppLocalizations {
   String teamProjectTaskStopNamedBody(String task) {
     return '“$task” stops. Its conversation and changes stay for review.';
   }
+
+  @override
+  String get teamAgentUnavailableState => 'Can\'t start';
+
+  @override
+  String get teamAgentUnavailableModelWords =>
+      'Its model isn\'t set up on the computer';
+
+  @override
+  String get teamAgentUnavailableOtherWords =>
+      'The computer can\'t run it right now';
+
+  @override
+  String teamAgentUnavailableTitle(String agent) {
+    return '$agent can\'t start';
+  }
+
+  @override
+  String teamAgentUnavailableBody(String reason) {
+    return '$reason. Fix it on the computer, then check again.';
+  }
+
+  @override
+  String get teamAgentUnavailableHostSays => 'What the computer says';
+
+  @override
+  String get teamControlForceStop => 'Force stop';
+
+  @override
+  String get teamProjectControlSuspendWord => 'Pause project';
+
+  @override
+  String get teamProjectControlResumeWord => 'Resume project';
+
+  @override
+  String get teamProjectControlRemoveWord => 'Delete project';
+
+  @override
+  String get teamJobTurnOnWord => 'Turn on';
+
+  @override
+  String get teamJobTurnOffWord => 'Turn off';
+
+  @override
+  String get teamHomeProjectsTitle => 'Projects';
+
+  @override
+  String get teamRigStateActive => 'Active';
+
+  @override
+  String get teamRigStatePaused => 'Paused';
+
+  @override
+  String teamRigPausedTitle(String project) {
+    return '$project is paused';
+  }
+
+  @override
+  String get teamRigPausedBody =>
+      'No new work starts in it until you resume it.';
+
+  @override
+  String teamRigPause(String project) {
+    return 'Pause project $project';
+  }
+
+  @override
+  String teamRigResume(String project) {
+    return 'Resume project $project';
+  }
+
+  @override
+  String teamRigPauseTitle(String project) {
+    return 'Pause $project?';
+  }
+
+  @override
+  String teamRigPauseBody(String project) {
+    return 'No new work starts in “$project” until you resume it. Nothing is deleted.';
+  }
+
+  @override
+  String get teamRigPauseConfirm => 'Pause project';
+
+  @override
+  String teamRigDelete(String project) {
+    return 'Delete project $project';
+  }
+
+  @override
+  String teamRigDeleteTitle(String project) {
+    return 'Delete $project?';
+  }
+
+  @override
+  String teamRigDeleteBody(String project) {
+    return '“$project” is removed from this team. Its folder and files on the computer are not touched.';
+  }
+
+  @override
+  String get teamRigDeleteConfirm => 'Delete project';
+
+  @override
+  String get teamRigDeleteLost => 'The team stops working on it';
+
+  @override
+  String get teamRigDeleteKeptFiles => 'Its folder and files on the computer';
+
+  @override
+  String get teamRigDeleteKeptHistory => 'Its past tasks and history';
+
+  @override
+  String get teamRigFolderLabel => 'Folder on the computer';
+
+  @override
+  String get teamRigNotFoundTitle => 'This project is gone';
+
+  @override
+  String get teamRigNotFoundBody =>
+      'The computer no longer lists it. Go back to the team.';
+
+  @override
+  String teamProjectDelete(String project) {
+    return 'Delete project $project';
+  }
+
+  @override
+  String teamProjectDeleteTitle(String project) {
+    return 'Delete $project?';
+  }
+
+  @override
+  String teamProjectDeleteBody(String project) {
+    return '“$project” is deleted from this phone\'s AI Team, with the team\'s copy of its code. This can\'t be undone.';
+  }
+
+  @override
+  String get teamProjectDeleteConfirm => 'Delete project';
+
+  @override
+  String get teamProjectDeleteLostPlan =>
+      'Its plan, tasks and history are deleted';
+
+  @override
+  String get teamProjectDeleteLostRunning => 'Running work stops';
+
+  @override
+  String get teamProjectDeleteKept =>
+      'The folder you added it from stays as it is';
+
+  @override
+  String teamAgentForceStop(String agent) {
+    return 'Force stop $agent';
+  }
+
+  @override
+  String teamAgentForceStopTitle(String agent) {
+    return 'Force stop $agent?';
+  }
+
+  @override
+  String teamAgentForceStopBody(String agent) {
+    return '$agent ends at once, without finishing what it is doing. Work it hasn\'t saved may be lost.';
+  }
+
+  @override
+  String teamAgentStopStuckTitle(String agent) {
+    return '$agent didn\'t stop';
+  }
+
+  @override
+  String get teamAgentStopStuckBody =>
+      'The normal stop didn\'t end it. You can force it to end now.';
+
+  @override
+  String get teamJobsTitle => 'Scheduled jobs';
+
+  @override
+  String get teamJobsWholeTeamTitle => 'For the whole team';
+
+  @override
+  String get teamJobsEmptyTitle => 'No scheduled jobs';
+
+  @override
+  String get teamJobsEmptyBody =>
+      'The computer starts nothing on its own for this project.';
+
+  @override
+  String get teamJobsFailedTitle => 'Couldn\'t read scheduled jobs';
+
+  @override
+  String get teamJobsFailedBody =>
+      'Check the connection to the computer, then try again.';
+
+  @override
+  String get teamJobsLoading => 'Reading scheduled jobs';
+
+  @override
+  String teamJobEveryDayAt(String time) {
+    return 'Every day at $time';
+  }
+
+  @override
+  String teamJobEveryWeekdayAt(String time) {
+    return 'Every weekday at $time';
+  }
+
+  @override
+  String teamJobEveryDowAt(String day, String time) {
+    return 'Every $day at $time';
+  }
+
+  @override
+  String get teamJobEveryHour => 'Every hour';
+
+  @override
+  String teamJobEveryMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count minutes',
+      one: 'Every minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String teamJobEveryHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count hours',
+      one: 'Every hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String teamJobEverySeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count seconds',
+      one: 'Every second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get teamJobOnSchedule => 'On a schedule';
+
+  @override
+  String get teamJobRepeats => 'Repeats on its own';
+
+  @override
+  String get teamJobWhenEvent => 'When something happens';
+
+  @override
+  String get teamJobManual => 'Only when started by hand';
+
+  @override
+  String get teamJobWebhook => 'When a web request arrives';
+
+  @override
+  String get teamJobCondition => 'When its check passes';
+
+  @override
+  String get teamJobOther => 'Starts on its own';
+
+  @override
+  String get agentFeaturesLabel => 'Agent settings';
+
+  @override
+  String agentFeaturesSheetTitle(String agent) {
+    return '$agent settings';
+  }
+
+  @override
+  String agentFeatureChipOff(String name) {
+    return '$name off';
+  }
+
+  @override
+  String get agentFeaturesLoadFailed =>
+      'Could not load this agent\'s settings.';
+
+  @override
+  String get agentFeatureFastTitle => 'Fast mode';
+
+  @override
+  String get agentFeatureFastDetail =>
+      'Quicker replies from supported models. It costs more.';
+
+  @override
+  String get agentFeatureSaving => 'Saving…';
+
+  @override
+  String agentFeatureChangeFailed(String name) {
+    return 'Could not change $name. It keeps its old setting.';
+  }
+
+  @override
+  String get claudeImportTitle => 'Import from Claude Code';
+
+  @override
+  String claudeImportIntro(String project) {
+    return 'Pick a conversation you started in Claude Code in $project. It opens here so you can carry on.';
+  }
+
+  @override
+  String claudeImportRowDetail(String project, String when) {
+    return '$project · $when';
+  }
+
+  @override
+  String get claudeImportUntitled => 'Untitled conversation';
+
+  @override
+  String get claudeImportEmptyTitle => 'Nothing to import';
+
+  @override
+  String get claudeImportEmptyBody =>
+      'Conversations you start in Claude Code in this project show up here.';
+
+  @override
+  String get claudeImportLoadFailedTitle => 'Could not look';
+
+  @override
+  String get claudeImportLoadFailedBody =>
+      'The list did not load. Check the connection, then try again.';
+
+  @override
+  String claudeImportAlready(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more conversations are already here.',
+      one: '1 more conversation is already here.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get claudeImportWorking => 'Importing…';
+
+  @override
+  String get claudeImportFailed =>
+      'That conversation could not be imported. Try again.';
+
+  @override
+  String hostUpdateRow(String computer) {
+    return 'Update agents on $computer';
+  }
+
+  @override
+  String hostUpdateRowRunning(String version) {
+    return 'Running $version. Installs the newest agent software.';
+  }
+
+  @override
+  String get hostUpdateRowUnknown =>
+      'Installs the newest agent software on that computer.';
+
+  @override
+  String get hostUpdateConfirmTitle => 'Update agents?';
+
+  @override
+  String hostUpdateConfirmBody(String computer) {
+    return 'This installs the newest agent software on $computer and restarts it.';
+  }
+
+  @override
+  String hostUpdateConfirmPauses(String computer) {
+    return 'Conversations on $computer pause while it restarts.';
+  }
+
+  @override
+  String get hostUpdateConfirmKept =>
+      'Your conversations and settings stay as they are.';
+
+  @override
+  String get hostUpdateConfirmAction => 'Update agents';
+
+  @override
+  String get hostUpdateStarting => 'Starting the update…';
+
+  @override
+  String get hostUpdateDownloading => 'Downloading the newest version…';
+
+  @override
+  String get hostUpdateInstalling => 'Installing…';
+
+  @override
+  String get hostUpdateFinishing => 'Finishing up…';
+
+  @override
+  String hostUpdateDone(String version) {
+    return 'Updated to $version. The app reconnects by itself.';
+  }
+
+  @override
+  String get hostUpdateDoneNoVersion =>
+      'Updated. The app reconnects by itself.';
+
+  @override
+  String hostUpdateCurrent(String computer) {
+    return '$computer is already up to date.';
+  }
+
+  @override
+  String get hostUpdateFailed =>
+      'The update did not finish. Try again, or update it on that computer.';
+
+  @override
+  String get hostUpdateDropped =>
+      'The connection dropped during the update. The app is reconnecting.';
+
+  @override
+  String get hostUpdateDetailsRow => 'Why it failed';
+
+  @override
+  String get hostUpdateDetailsTitle => 'Update details';
+
+  @override
+  String get hostUpdateDetailsMessage => 'Message from the computer';
 
   @override
   String get filesTextSurface => 'Text in files';

@@ -287,7 +287,15 @@ void main() {
           findsOneWidget,
         );
         expect(key('team-start-run-direct-project'), findsOneWidget);
-        expect(find.text('ocproof'), findsOneWidget);
+        // The project is named in the form, and (OD1) once on the home's
+        // Projects list under it.
+        expect(
+          find.descendant(
+            of: key('team-start-run-direct-project'),
+            matching: find.text('ocproof'),
+          ),
+          findsOneWidget,
+        );
         expect(find.text('Send to an agent'), findsOneWidget);
         expect(key('team-start-run-host-guide'), findsOneWidget);
 

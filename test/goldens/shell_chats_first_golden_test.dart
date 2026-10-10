@@ -80,71 +80,79 @@ void main() {
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';
 
-    testWidgets('shell · Files tab · $mode', (tester) async {
-      _mockSecureStorage(tester);
-      tester.view.physicalSize = const Size(412, 915);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      final controller = await workController();
-      final boundary = GlobalKey();
-      try {
-        await tester.pumpWidget(
-          captureApp(
-            home: const HomeScreen(initialTab: 1),
-            boundaryKey: boundary,
-            controller: controller,
-            light: light,
-          ),
-        );
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 600));
-        expect(tester.takeException(), isNull);
-        await expectLater(
-          find.byKey(boundary),
-          matchesGoldenFile('shell_files_tab_$mode.png'),
-        );
-      } finally {
-        await tester.pumpWidget(const SizedBox.shrink());
-        controller.dispose();
-        await tester.pump();
-      }
-    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
-
-    testWidgets('chat · project chip menu · $mode', (tester) async {
-      tester.view.physicalSize = const Size(412, 915);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final api = _Api()
-        ..busy = {}
-        ..messagesHandler = (_) async => _turn();
-      final controller = await captureController(prefs: prefs, api: api);
-      final boundary = GlobalKey();
-      try {
-        await tester.pumpWidget(
-          captureApp(
-            home: ChatScreen(sessionID: checkoutSessionID),
-            boundaryKey: boundary,
-            controller: controller,
-            light: light,
-          ),
-        );
-        for (var i = 0; i < 8; i++) {
-          await tester.pump(const Duration(milliseconds: 120));
+    testWidgets(
+      'shell · Files tab · $mode',
+      (tester) async {
+        _mockSecureStorage(tester);
+        tester.view.physicalSize = const Size(412, 915);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final controller = await workController();
+        final boundary = GlobalKey();
+        try {
+          await tester.pumpWidget(
+            captureApp(
+              home: const HomeScreen(initialTab: 1),
+              boundaryKey: boundary,
+              controller: controller,
+              light: light,
+            ),
+          );
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 600));
+          expect(tester.takeException(), isNull);
+          await expectLater(
+            find.byKey(boundary),
+            matchesGoldenFile('shell_files_tab_$mode.png'),
+          );
+        } finally {
+          await tester.pumpWidget(const SizedBox.shrink());
+          controller.dispose();
+          await tester.pump();
         }
-        await tester.tap(find.byKey(const ValueKey('chat-project-chip')));
-        await tester.pumpAndSettle();
-        expect(tester.takeException(), isNull);
-        await expectLater(
-          find.byKey(boundary),
-          matchesGoldenFile('chat_project_menu_$mode.png'),
-        );
-      } finally {
-        await tester.pumpWidget(const SizedBox.shrink());
-        await tester.pump(const Duration(seconds: 10));
-        controller.dispose();
-      }
-    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
+
+    testWidgets(
+      'chat · project chip menu · $mode',
+      (tester) async {
+        tester.view.physicalSize = const Size(412, 915);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final api = _Api()
+          ..busy = {}
+          ..messagesHandler = (_) async => _turn();
+        final controller = await captureController(prefs: prefs, api: api);
+        final boundary = GlobalKey();
+        try {
+          await tester.pumpWidget(
+            captureApp(
+              home: ChatScreen(sessionID: checkoutSessionID),
+              boundaryKey: boundary,
+              controller: controller,
+              light: light,
+            ),
+          );
+          for (var i = 0; i < 8; i++) {
+            await tester.pump(const Duration(milliseconds: 120));
+          }
+          await tester.tap(find.byKey(const ValueKey('chat-project-chip')));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          await expectLater(
+            find.byKey(boundary),
+            matchesGoldenFile('chat_project_menu_$mode.png'),
+          );
+        } finally {
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump(const Duration(seconds: 10));
+          controller.dispose();
+        }
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
   }
 }

@@ -187,37 +187,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'يسري على الرسائل التالية في هذه المحادثة.';
 
   @override
-  String get agentFeaturesLabel => 'إعدادات الوكيل';
-
-  @override
-  String agentFeaturesSheetTitle(String agent) {
-    return 'إعدادات $agent';
-  }
-
-  @override
-  String agentFeatureChipOff(String name) {
-    return '$name متوقف';
-  }
-
-  @override
-  String get agentFeaturesLoadFailed => 'تعذر تحميل إعدادات هذا الوكيل.';
-
-  @override
-  String get agentFeatureFastTitle => 'الوضع السريع';
-
-  @override
-  String get agentFeatureFastDetail =>
-      'ردود أسرع من النماذج المدعومة. تكلفته أعلى.';
-
-  @override
-  String get agentFeatureSaving => 'جارٍ الحفظ…';
-
-  @override
-  String agentFeatureChangeFailed(String name) {
-    return 'تعذر تغيير $name. يبقى إعداده القديم.';
-  }
-
-  @override
   String get modelSelectionLoading => 'جارٍ تحميل اختيار المحادثة…';
 
   @override
@@ -27109,53 +27078,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsNewChooseProject => 'اختر مشروعًا';
 
   @override
-  String get claudeImportTitle => 'استيراد من Claude Code';
-
-  @override
-  String claudeImportIntro(String project) {
-    return 'اختر محادثة بدأتها في Claude Code داخل $project. تُفتح هنا لتتابعها.';
-  }
-
-  @override
-  String claudeImportRowDetail(String project, String when) {
-    return '$project · $when';
-  }
-
-  @override
-  String get claudeImportUntitled => 'محادثة بلا عنوان';
-
-  @override
-  String get claudeImportEmptyTitle => 'لا شيء للاستيراد';
-
-  @override
-  String get claudeImportEmptyBody =>
-      'تظهر هنا المحادثات التي تبدأها في Claude Code داخل هذا المشروع.';
-
-  @override
-  String get claudeImportLoadFailedTitle => 'تعذر البحث';
-
-  @override
-  String get claudeImportLoadFailedBody =>
-      'لم تُحمَّل القائمة. تحقق من الاتصال ثم حاول مرة أخرى.';
-
-  @override
-  String claudeImportAlready(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count محادثات أخرى موجودة هنا بالفعل.',
-      one: 'محادثة واحدة أخرى موجودة هنا بالفعل.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get claudeImportWorking => 'جارٍ الاستيراد…';
-
-  @override
-  String get claudeImportFailed => 'تعذر استيراد تلك المحادثة. حاول مرة أخرى.';
-
-  @override
   String get chatsNewNeedProject => 'اختر مشروعًا لبدء محادثة.';
 
   @override
@@ -28743,82 +28665,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذر التحقق من الوكلاء. حاول بعد قليل.';
 
   @override
-  String hostUpdateRow(String computer) {
-    return 'تحديث الوكلاء على $computer';
-  }
-
-  @override
-  String hostUpdateRowRunning(String version) {
-    return 'يعمل $version. يثبّت أحدث برنامج للوكلاء.';
-  }
-
-  @override
-  String get hostUpdateRowUnknown =>
-      'يثبّت أحدث برنامج للوكلاء على ذلك الحاسوب.';
-
-  @override
-  String get hostUpdateConfirmTitle => 'تحديث الوكلاء؟';
-
-  @override
-  String hostUpdateConfirmBody(String computer) {
-    return 'سيثبّت هذا أحدث برنامج للوكلاء على $computer ويعيد تشغيله.';
-  }
-
-  @override
-  String hostUpdateConfirmPauses(String computer) {
-    return 'تتوقف المحادثات على $computer مؤقتا أثناء إعادة التشغيل.';
-  }
-
-  @override
-  String get hostUpdateConfirmKept => 'تبقى محادثاتك وإعداداتك كما هي.';
-
-  @override
-  String get hostUpdateConfirmAction => 'تحديث الوكلاء';
-
-  @override
-  String get hostUpdateStarting => 'جارٍ بدء التحديث…';
-
-  @override
-  String get hostUpdateDownloading => 'جارٍ تنزيل أحدث إصدار…';
-
-  @override
-  String get hostUpdateInstalling => 'جارٍ التثبيت…';
-
-  @override
-  String get hostUpdateFinishing => 'جارٍ الإنهاء…';
-
-  @override
-  String hostUpdateDone(String version) {
-    return 'تم التحديث إلى $version. يعيد التطبيق الاتصال تلقائيا.';
-  }
-
-  @override
-  String get hostUpdateDoneNoVersion =>
-      'تم تحديث Paseo. يعيد التطبيق الاتصال تلقائيا.';
-
-  @override
-  String hostUpdateCurrent(String computer) {
-    return '$computer محدّث بالفعل.';
-  }
-
-  @override
-  String get hostUpdateFailed =>
-      'لم يكتمل التحديث. حاول مرة أخرى، أو حدّثه على ذلك الحاسوب.';
-
-  @override
-  String get hostUpdateDropped =>
-      'انقطع الاتصال أثناء التحديث. يعيد التطبيق الاتصال.';
-
-  @override
-  String get hostUpdateDetailsRow => 'سبب الفشل';
-
-  @override
-  String get hostUpdateDetailsTitle => 'تفاصيل التحديث';
-
-  @override
-  String get hostUpdateDetailsMessage => 'رسالة من الحاسوب';
-
-  @override
   String integrationsMcpDetails(String name) {
     return 'تفاصيل $name';
   }
@@ -28910,6 +28756,428 @@ class AppLocalizationsAr extends AppLocalizations {
   String teamProjectTaskStopNamedBody(String task) {
     return 'تتوقف «$task». وتبقى محادثتها وتغييراتها للمراجعة.';
   }
+
+  @override
+  String get teamAgentUnavailableState => 'لا يمكن تشغيله';
+
+  @override
+  String get teamAgentUnavailableModelWords => 'نموذجه غير مُعدّ على الكمبيوتر';
+
+  @override
+  String get teamAgentUnavailableOtherWords =>
+      'لا يستطيع الكمبيوتر تشغيله الآن';
+
+  @override
+  String teamAgentUnavailableTitle(String agent) {
+    return 'لا يمكن تشغيل $agent';
+  }
+
+  @override
+  String teamAgentUnavailableBody(String reason) {
+    return '$reason. أصلح ذلك على الكمبيوتر ثم تحقق مجددًا.';
+  }
+
+  @override
+  String get teamAgentUnavailableHostSays => 'ما يقوله الكمبيوتر';
+
+  @override
+  String get teamControlForceStop => 'إيقاف بالقوة';
+
+  @override
+  String get teamProjectControlSuspendWord => 'إيقاف المشروع مؤقتًا';
+
+  @override
+  String get teamProjectControlResumeWord => 'استئناف المشروع';
+
+  @override
+  String get teamProjectControlRemoveWord => 'حذف المشروع';
+
+  @override
+  String get teamJobTurnOnWord => 'تشغيل';
+
+  @override
+  String get teamJobTurnOffWord => 'إيقاف';
+
+  @override
+  String get teamHomeProjectsTitle => 'المشاريع';
+
+  @override
+  String get teamRigStateActive => 'نشط';
+
+  @override
+  String get teamRigStatePaused => 'متوقف مؤقتًا';
+
+  @override
+  String teamRigPausedTitle(String project) {
+    return '$project متوقف مؤقتًا';
+  }
+
+  @override
+  String get teamRigPausedBody => 'لا يبدأ أي عمل جديد فيه حتى تستأنفه.';
+
+  @override
+  String teamRigPause(String project) {
+    return 'إيقاف المشروع $project مؤقتًا';
+  }
+
+  @override
+  String teamRigResume(String project) {
+    return 'استئناف المشروع $project';
+  }
+
+  @override
+  String teamRigPauseTitle(String project) {
+    return 'إيقاف $project مؤقتًا؟';
+  }
+
+  @override
+  String teamRigPauseBody(String project) {
+    return 'لا يبدأ أي عمل جديد في «$project» حتى تستأنفه. لا يُحذف شيء.';
+  }
+
+  @override
+  String get teamRigPauseConfirm => 'إيقاف المشروع مؤقتًا';
+
+  @override
+  String teamRigDelete(String project) {
+    return 'حذف المشروع $project';
+  }
+
+  @override
+  String teamRigDeleteTitle(String project) {
+    return 'حذف $project؟';
+  }
+
+  @override
+  String teamRigDeleteBody(String project) {
+    return 'تتم إزالة «$project» من هذا الفريق. لا يُمَسّ مجلده ولا ملفاته على الكمبيوتر.';
+  }
+
+  @override
+  String get teamRigDeleteConfirm => 'حذف المشروع';
+
+  @override
+  String get teamRigDeleteLost => 'يتوقف الفريق عن العمل عليه';
+
+  @override
+  String get teamRigDeleteKeptFiles => 'مجلده وملفاته على الكمبيوتر';
+
+  @override
+  String get teamRigDeleteKeptHistory => 'مهامه وسجله السابق';
+
+  @override
+  String get teamRigFolderLabel => 'المجلد على الكمبيوتر';
+
+  @override
+  String get teamRigNotFoundTitle => 'هذا المشروع لم يعد موجودًا';
+
+  @override
+  String get teamRigNotFoundBody => 'لم يعد الكمبيوتر يعرضه. ارجع إلى الفريق.';
+
+  @override
+  String teamProjectDelete(String project) {
+    return 'حذف المشروع $project';
+  }
+
+  @override
+  String teamProjectDeleteTitle(String project) {
+    return 'حذف $project؟';
+  }
+
+  @override
+  String teamProjectDeleteBody(String project) {
+    return 'يُحذف «$project» من فريق الذكاء الاصطناعي على هذا الهاتف مع نسخة الفريق من شيفرته. لا يمكن التراجع عن ذلك.';
+  }
+
+  @override
+  String get teamProjectDeleteConfirm => 'حذف المشروع';
+
+  @override
+  String get teamProjectDeleteLostPlan => 'تُحذف خطته ومهامه وسجله';
+
+  @override
+  String get teamProjectDeleteLostRunning => 'يتوقف العمل الجاري';
+
+  @override
+  String get teamProjectDeleteKept => 'يبقى المجلد الذي أضفته منه كما هو';
+
+  @override
+  String teamAgentForceStop(String agent) {
+    return 'إيقاف $agent بالقوة';
+  }
+
+  @override
+  String teamAgentForceStopTitle(String agent) {
+    return 'إيقاف $agent بالقوة؟';
+  }
+
+  @override
+  String teamAgentForceStopBody(String agent) {
+    return 'ينتهي $agent فورًا دون إكمال ما يعمله. قد يضيع ما لم يحفظه.';
+  }
+
+  @override
+  String teamAgentStopStuckTitle(String agent) {
+    return '$agent لم يتوقف';
+  }
+
+  @override
+  String get teamAgentStopStuckBody =>
+      'لم ينهِ الإيقاف العادي عمله. يمكنك إنهاؤه بالقوة الآن.';
+
+  @override
+  String get teamJobsTitle => 'المهام المجدولة';
+
+  @override
+  String get teamJobsWholeTeamTitle => 'للفريق كله';
+
+  @override
+  String get teamJobsEmptyTitle => 'لا توجد مهام مجدولة';
+
+  @override
+  String get teamJobsEmptyBody =>
+      'لا يبدأ الكمبيوتر أي شيء من تلقاء نفسه لهذا المشروع.';
+
+  @override
+  String get teamJobsFailedTitle => 'تعذّرت قراءة المهام المجدولة';
+
+  @override
+  String get teamJobsFailedBody => 'تحقق من الاتصال بالكمبيوتر ثم حاول مجددًا.';
+
+  @override
+  String get teamJobsLoading => 'جارٍ قراءة المهام المجدولة';
+
+  @override
+  String teamJobEveryDayAt(String time) {
+    return 'كل يوم في $time';
+  }
+
+  @override
+  String teamJobEveryWeekdayAt(String time) {
+    return 'كل يوم عمل في $time';
+  }
+
+  @override
+  String teamJobEveryDowAt(String day, String time) {
+    return 'كل $day في $time';
+  }
+
+  @override
+  String get teamJobEveryHour => 'كل ساعة';
+
+  @override
+  String teamJobEveryMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'كل $count دقيقة',
+      few: 'كل $count دقائق',
+      two: 'كل دقيقتين',
+      one: 'كل دقيقة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String teamJobEveryHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'كل $count ساعة',
+      few: 'كل $count ساعات',
+      two: 'كل ساعتين',
+      one: 'كل ساعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String teamJobEverySeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'كل $count ثانية',
+      few: 'كل $count ثوانٍ',
+      two: 'كل ثانيتين',
+      one: 'كل ثانية',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get teamJobOnSchedule => 'وفق جدول';
+
+  @override
+  String get teamJobRepeats => 'يتكرر من تلقاء نفسه';
+
+  @override
+  String get teamJobWhenEvent => 'عند حدوث شيء';
+
+  @override
+  String get teamJobManual => 'فقط عند بدئه يدويًا';
+
+  @override
+  String get teamJobWebhook => 'عند وصول طلب ويب';
+
+  @override
+  String get teamJobCondition => 'عندما ينجح فحصه';
+
+  @override
+  String get teamJobOther => 'يبدأ من تلقاء نفسه';
+
+  @override
+  String get agentFeaturesLabel => 'إعدادات الوكيل';
+
+  @override
+  String agentFeaturesSheetTitle(String agent) {
+    return 'إعدادات $agent';
+  }
+
+  @override
+  String agentFeatureChipOff(String name) {
+    return '$name متوقف';
+  }
+
+  @override
+  String get agentFeaturesLoadFailed => 'تعذر تحميل إعدادات هذا الوكيل.';
+
+  @override
+  String get agentFeatureFastTitle => 'الوضع السريع';
+
+  @override
+  String get agentFeatureFastDetail =>
+      'ردود أسرع من النماذج المدعومة. تكلفته أعلى.';
+
+  @override
+  String get agentFeatureSaving => 'جارٍ الحفظ…';
+
+  @override
+  String agentFeatureChangeFailed(String name) {
+    return 'تعذر تغيير $name. يبقى إعداده القديم.';
+  }
+
+  @override
+  String get claudeImportTitle => 'استيراد من Claude Code';
+
+  @override
+  String claudeImportIntro(String project) {
+    return 'اختر محادثة بدأتها في Claude Code داخل $project. تُفتح هنا لتتابعها.';
+  }
+
+  @override
+  String claudeImportRowDetail(String project, String when) {
+    return '$project · $when';
+  }
+
+  @override
+  String get claudeImportUntitled => 'محادثة بلا عنوان';
+
+  @override
+  String get claudeImportEmptyTitle => 'لا شيء للاستيراد';
+
+  @override
+  String get claudeImportEmptyBody =>
+      'تظهر هنا المحادثات التي تبدأها في Claude Code داخل هذا المشروع.';
+
+  @override
+  String get claudeImportLoadFailedTitle => 'تعذر البحث';
+
+  @override
+  String get claudeImportLoadFailedBody =>
+      'لم تُحمَّل القائمة. تحقق من الاتصال ثم حاول مرة أخرى.';
+
+  @override
+  String claudeImportAlready(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count محادثات أخرى موجودة هنا بالفعل.',
+      one: 'محادثة واحدة أخرى موجودة هنا بالفعل.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get claudeImportWorking => 'جارٍ الاستيراد…';
+
+  @override
+  String get claudeImportFailed => 'تعذر استيراد تلك المحادثة. حاول مرة أخرى.';
+
+  @override
+  String hostUpdateRow(String computer) {
+    return 'تحديث الوكلاء على $computer';
+  }
+
+  @override
+  String hostUpdateRowRunning(String version) {
+    return 'يعمل $version. يثبّت أحدث برنامج للوكلاء.';
+  }
+
+  @override
+  String get hostUpdateRowUnknown =>
+      'يثبّت أحدث برنامج للوكلاء على ذلك الحاسوب.';
+
+  @override
+  String get hostUpdateConfirmTitle => 'تحديث الوكلاء؟';
+
+  @override
+  String hostUpdateConfirmBody(String computer) {
+    return 'سيثبّت هذا أحدث برنامج للوكلاء على $computer ويعيد تشغيله.';
+  }
+
+  @override
+  String hostUpdateConfirmPauses(String computer) {
+    return 'تتوقف المحادثات على $computer مؤقتا أثناء إعادة التشغيل.';
+  }
+
+  @override
+  String get hostUpdateConfirmKept => 'تبقى محادثاتك وإعداداتك كما هي.';
+
+  @override
+  String get hostUpdateConfirmAction => 'تحديث الوكلاء';
+
+  @override
+  String get hostUpdateStarting => 'جارٍ بدء التحديث…';
+
+  @override
+  String get hostUpdateDownloading => 'جارٍ تنزيل أحدث إصدار…';
+
+  @override
+  String get hostUpdateInstalling => 'جارٍ التثبيت…';
+
+  @override
+  String get hostUpdateFinishing => 'جارٍ الإنهاء…';
+
+  @override
+  String hostUpdateDone(String version) {
+    return 'تم التحديث إلى $version. يعيد التطبيق الاتصال تلقائيا.';
+  }
+
+  @override
+  String get hostUpdateDoneNoVersion =>
+      'تم تحديث Paseo. يعيد التطبيق الاتصال تلقائيا.';
+
+  @override
+  String hostUpdateCurrent(String computer) {
+    return '$computer محدّث بالفعل.';
+  }
+
+  @override
+  String get hostUpdateFailed =>
+      'لم يكتمل التحديث. حاول مرة أخرى، أو حدّثه على ذلك الحاسوب.';
+
+  @override
+  String get hostUpdateDropped =>
+      'انقطع الاتصال أثناء التحديث. يعيد التطبيق الاتصال.';
+
+  @override
+  String get hostUpdateDetailsRow => 'سبب الفشل';
+
+  @override
+  String get hostUpdateDetailsTitle => 'تفاصيل التحديث';
+
+  @override
+  String get hostUpdateDetailsMessage => 'رسالة من الحاسوب';
 
   @override
   String get filesTextSurface => 'نص داخل الملفات';

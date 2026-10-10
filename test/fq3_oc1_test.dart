@@ -462,20 +462,25 @@ class _AbortWire extends _StreamWire {
               completed: 3,
               finish: 'tool-calls',
             ),
-          assistant('msg_follow', followPrompt, [
-            textPart(
-              'msg_follow',
-              const [
-                    'noncompliant',
-                    'foreign_part',
-                    'pre_final',
-                    'old_parent_only',
-                  ].contains(response)
-                  ? 'The task is stopped.'
-                  : answer,
-            ),
-            if (response == 'foreign_part') textPart('msg_aborted', answer),
-          ], modelID: response == 'wrong_model' ? 'other-model' : 'model'),
+          assistant(
+            'msg_follow',
+            followPrompt,
+            [
+              textPart(
+                'msg_follow',
+                const [
+                      'noncompliant',
+                      'foreign_part',
+                      'pre_final',
+                      'old_parent_only',
+                    ].contains(response)
+                    ? 'The task is stopped.'
+                    : answer,
+              ),
+              if (response == 'foreign_part') textPart('msg_aborted', answer),
+            ],
+            modelID: response == 'wrong_model' ? 'other-model' : 'model',
+          ),
         ],
       ];
     }

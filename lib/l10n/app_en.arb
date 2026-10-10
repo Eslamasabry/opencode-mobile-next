@@ -102,53 +102,6 @@
   "modelOptions": "Options",
   "modelThinkingMode": "Thinking mode",
   "modelSessionScopeNote": "Applies to this conversation's next turns.",
-  "agentFeaturesLabel": "Agent settings",
-  "@agentFeaturesLabel": {
-    "description": "Model sheet: section of the agent's own switches"
-  },
-  "agentFeaturesSheetTitle": "{agent} settings",
-  "@agentFeaturesSheetTitle": {
-    "description": "Agent settings sheet title, e.g. Claude Code settings",
-    "placeholders": {
-      "agent": {
-        "type": "String"
-      }
-    }
-  },
-  "agentFeatureChipOff": "{name} off",
-  "@agentFeatureChipOff": {
-    "description": "Composer chip when an agent switch is off, e.g. Fast mode off",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "agentFeaturesLoadFailed": "Could not load this agent's settings.",
-  "@agentFeaturesLoadFailed": {
-    "description": "Model sheet: reading the agent's switches failed"
-  },
-  "agentFeatureFastTitle": "Fast mode",
-  "@agentFeatureFastTitle": {
-    "description": "Agent switch: fast mode"
-  },
-  "agentFeatureFastDetail": "Quicker replies from supported models. It costs more.",
-  "@agentFeatureFastDetail": {
-    "description": "Agent switch: what fast mode does"
-  },
-  "agentFeatureSaving": "Saving…",
-  "@agentFeatureSaving": {
-    "description": "Agent switch: change in flight"
-  },
-  "agentFeatureChangeFailed": "Could not change {name}. It keeps its old setting.",
-  "@agentFeatureChangeFailed": {
-    "description": "Agent switch: the server refused the change",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "modelSelectionLoading": "Loading conversation selection…",
   "modelServerDefault": "Server default",
   "modelSelectionSaving": "Saving conversation selection…",
@@ -32150,68 +32103,6 @@
   "@chatsNewChooseProject": {
     "description": "New chat: project chip with no project"
   },
-  "claudeImportTitle": "Import from Claude Code",
-  "@claudeImportTitle": {
-    "description": "Import a conversation started in Claude Code: the entry and the page title"
-  },
-  "claudeImportIntro": "Pick a conversation you started in Claude Code in {project}. It opens here so you can carry on.",
-  "@claudeImportIntro": {
-    "description": "Import page: what the list is",
-    "placeholders": {
-      "project": {
-        "type": "String"
-      }
-    }
-  },
-  "claudeImportRowDetail": "{project} · {when}",
-  "@claudeImportRowDetail": {
-    "description": "Import page: a conversation's project folder and when it was last used",
-    "placeholders": {
-      "project": {
-        "type": "String"
-      },
-      "when": {
-        "type": "String"
-      }
-    }
-  },
-  "claudeImportUntitled": "Untitled conversation",
-  "@claudeImportUntitled": {
-    "description": "Import page: a conversation with no title and no first message"
-  },
-  "claudeImportEmptyTitle": "Nothing to import",
-  "@claudeImportEmptyTitle": {
-    "description": "Import page: no conversations found"
-  },
-  "claudeImportEmptyBody": "Conversations you start in Claude Code in this project show up here.",
-  "@claudeImportEmptyBody": {
-    "description": "Import page: empty state body"
-  },
-  "claudeImportLoadFailedTitle": "Could not look",
-  "@claudeImportLoadFailedTitle": {
-    "description": "Import page: reading the list failed"
-  },
-  "claudeImportLoadFailedBody": "The list did not load. Check the connection, then try again.",
-  "@claudeImportLoadFailedBody": {
-    "description": "Import page: reading the list failed, body"
-  },
-  "claudeImportAlready": "{count, plural, one {1 more conversation is already here.} other {{count} more conversations are already here.}}",
-  "@claudeImportAlready": {
-    "description": "Import page: conversations left out because they were imported before",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "claudeImportWorking": "Importing…",
-  "@claudeImportWorking": {
-    "description": "Import page: a row while its conversation is being imported"
-  },
-  "claudeImportFailed": "That conversation could not be imported. Try again.",
-  "@claudeImportFailed": {
-    "description": "Import page: importing one conversation failed"
-  },
   "chatsNewNeedProject": "Choose a project to start a conversation.",
   "@chatsNewNeedProject": {
     "description": "New chat: why sending is off"
@@ -34356,116 +34247,6 @@
   "@serverSettingsRecheckFailed": {
     "description": "Server settings: recheck failed"
   },
-  "hostUpdateRow": "Update agents on {computer}",
-  "@hostUpdateRow": {
-    "description": "Server settings, Paseo: row that updates the agent helper on the computer",
-    "placeholders": {
-      "computer": {
-        "type": "String"
-      }
-    }
-  },
-  "hostUpdateRowRunning": "Running {version}. Installs the newest agent software.",
-  "@hostUpdateRowRunning": {
-    "description": "Technical: Server settings, Paseo: update row detail naming the running version",
-    "placeholders": {
-      "version": {
-        "type": "String"
-      }
-    }
-  },
-  "hostUpdateRowUnknown": "Installs the newest agent software on that computer.",
-  "@hostUpdateRowUnknown": {
-    "description": "Server settings, Paseo: update row detail without a version"
-  },
-  "hostUpdateConfirmTitle": "Update agents?",
-  "@hostUpdateConfirmTitle": {
-    "description": "Confirmation title for updating the agent helper"
-  },
-  "hostUpdateConfirmBody": "This installs the newest agent software on {computer} and restarts it.",
-  "@hostUpdateConfirmBody": {
-    "description": "Confirmation body for updating the agent helper",
-    "placeholders": {
-      "computer": {
-        "type": "String"
-      }
-    }
-  },
-  "hostUpdateConfirmPauses": "Conversations on {computer} pause while it restarts.",
-  "@hostUpdateConfirmPauses": {
-    "description": "Consequence: running chats pause during the restart",
-    "placeholders": {
-      "computer": {
-        "type": "String"
-      }
-    }
-  },
-  "hostUpdateConfirmKept": "Your conversations and settings stay as they are.",
-  "@hostUpdateConfirmKept": {
-    "description": "Consequence: nothing is lost"
-  },
-  "hostUpdateConfirmAction": "Update agents",
-  "@hostUpdateConfirmAction": {
-    "description": "Confirmation button that starts the helper update"
-  },
-  "hostUpdateStarting": "Starting the update…",
-  "@hostUpdateStarting": {
-    "description": "Update progress: starting"
-  },
-  "hostUpdateDownloading": "Downloading the newest version…",
-  "@hostUpdateDownloading": {
-    "description": "Update progress: downloading"
-  },
-  "hostUpdateInstalling": "Installing…",
-  "@hostUpdateInstalling": {
-    "description": "Update progress: installing"
-  },
-  "hostUpdateFinishing": "Finishing up…",
-  "@hostUpdateFinishing": {
-    "description": "Update progress: complete, restarting"
-  },
-  "hostUpdateDone": "Updated to {version}. The app reconnects by itself.",
-  "@hostUpdateDone": {
-    "description": "Technical: Update succeeded, naming the new version",
-    "placeholders": {
-      "version": {
-        "type": "String"
-      }
-    }
-  },
-  "hostUpdateDoneNoVersion": "Updated. The app reconnects by itself.",
-  "@hostUpdateDoneNoVersion": {
-    "description": "Update succeeded, version not reported"
-  },
-  "hostUpdateCurrent": "{computer} is already up to date.",
-  "@hostUpdateCurrent": {
-    "description": "Update finished and nothing newer existed",
-    "placeholders": {
-      "computer": {
-        "type": "String"
-      }
-    }
-  },
-  "hostUpdateFailed": "The update did not finish. Try again, or update it on that computer.",
-  "@hostUpdateFailed": {
-    "description": "Update failed, plain words"
-  },
-  "hostUpdateDropped": "The connection dropped during the update. The app is reconnecting.",
-  "@hostUpdateDropped": {
-    "description": "Update: the connection dropped before an answer"
-  },
-  "hostUpdateDetailsRow": "Why it failed",
-  "@hostUpdateDetailsRow": {
-    "description": "Update failed: row that opens the computer's own message"
-  },
-  "hostUpdateDetailsTitle": "Update details",
-  "@hostUpdateDetailsTitle": {
-    "description": "Update failed: details sheet title"
-  },
-  "hostUpdateDetailsMessage": "Message from the computer",
-  "@hostUpdateDetailsMessage": {
-    "description": "Update failed: label of the computer's own message"
-  },
   "integrationsMcpDetails": "Details for {name}",
   "@integrationsMcpDetails": {
     "description": "MCP server row: opens what the server said when it failed",
@@ -34579,6 +34360,603 @@
         "type": "String"
       }
     }
+  },
+  "teamAgentUnavailableState": "Can't start",
+  "@teamAgentUnavailableState": {
+    "description": "Row state word for an agent the host says it cannot run"
+  },
+  "teamAgentUnavailableModelWords": "Its model isn't set up on the computer",
+  "@teamAgentUnavailableModelWords": {
+    "description": "Plain reason when the host's unavailable text mentions a model, provider or sign-in"
+  },
+  "teamAgentUnavailableOtherWords": "The computer can't run it right now",
+  "@teamAgentUnavailableOtherWords": {
+    "description": "Plain reason for any other host unavailable text"
+  },
+  "teamAgentUnavailableTitle": "{agent} can't start",
+  "@teamAgentUnavailableTitle": {
+    "description": "Agent page notice title when the host says the agent is unavailable",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentUnavailableBody": "{reason}. Fix it on the computer, then check again.",
+  "@teamAgentUnavailableBody": {
+    "description": "Agent page notice body for an unavailable agent; reason is a plain sentence without a full stop",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentUnavailableHostSays": "What the computer says",
+  "@teamAgentUnavailableHostSays": {
+    "description": "Technical details label for the host's own unavailable text"
+  },
+  "teamControlForceStop": "Force stop",
+  "@teamControlForceStop": {
+    "description": "Receipt word for the hard kill of an agent session"
+  },
+  "teamProjectControlSuspendWord": "Pause project",
+  "@teamProjectControlSuspendWord": {
+    "description": "Receipt word for pausing a project"
+  },
+  "teamProjectControlResumeWord": "Resume project",
+  "@teamProjectControlResumeWord": {
+    "description": "Receipt word for resuming a project"
+  },
+  "teamProjectControlRemoveWord": "Delete project",
+  "@teamProjectControlRemoveWord": {
+    "description": "Receipt word for deleting a project"
+  },
+  "teamJobTurnOnWord": "Turn on",
+  "@teamJobTurnOnWord": {
+    "description": "Receipt word for switching a scheduled job on"
+  },
+  "teamJobTurnOffWord": "Turn off",
+  "@teamJobTurnOffWord": {
+    "description": "Receipt word for switching a scheduled job off"
+  },
+  "teamHomeProjectsTitle": "Projects",
+  "@teamHomeProjectsTitle": {
+    "description": "Section label on the team home for the host's projects"
+  },
+  "teamRigStateActive": "Active",
+  "@teamRigStateActive": {
+    "description": "State word of a project that takes work"
+  },
+  "teamRigStatePaused": "Paused",
+  "@teamRigStatePaused": {
+    "description": "State word of a project that was paused"
+  },
+  "teamRigPausedTitle": "{project} is paused",
+  "@teamRigPausedTitle": {
+    "description": "Project page notice title when it is paused",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigPausedBody": "No new work starts in it until you resume it.",
+  "@teamRigPausedBody": {
+    "description": "Project page notice body when it is paused"
+  },
+  "teamRigPause": "Pause project {project}",
+  "@teamRigPause": {
+    "description": "Button that pauses a project, naming it",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigResume": "Resume project {project}",
+  "@teamRigResume": {
+    "description": "Button that resumes a project, naming it",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigPauseTitle": "Pause {project}?",
+  "@teamRigPauseTitle": {
+    "description": "Pause confirmation title",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigPauseBody": "No new work starts in “{project}” until you resume it. Nothing is deleted.",
+  "@teamRigPauseBody": {
+    "description": "Pause confirmation body; says what stops",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigPauseConfirm": "Pause project",
+  "@teamRigPauseConfirm": {
+    "description": "Pause confirmation button"
+  },
+  "teamRigDelete": "Delete project {project}",
+  "@teamRigDelete": {
+    "description": "Button that deletes a project, naming it",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigDeleteTitle": "Delete {project}?",
+  "@teamRigDeleteTitle": {
+    "description": "Delete confirmation title",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigDeleteBody": "“{project}” is removed from this team. Its folder and files on the computer are not touched.",
+  "@teamRigDeleteBody": {
+    "description": "Delete confirmation body for a project on a computer's team",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamRigDeleteConfirm": "Delete project",
+  "@teamRigDeleteConfirm": {
+    "description": "Delete confirmation button"
+  },
+  "teamRigDeleteLost": "The team stops working on it",
+  "@teamRigDeleteLost": {
+    "description": "Consequence line: what a project delete takes away"
+  },
+  "teamRigDeleteKeptFiles": "Its folder and files on the computer",
+  "@teamRigDeleteKeptFiles": {
+    "description": "Consequence line: what a project delete keeps"
+  },
+  "teamRigDeleteKeptHistory": "Its past tasks and history",
+  "@teamRigDeleteKeptHistory": {
+    "description": "Consequence line: what a project delete keeps"
+  },
+  "teamRigFolderLabel": "Folder on the computer",
+  "@teamRigFolderLabel": {
+    "description": "Technical details label for a project's folder"
+  },
+  "teamRigNotFoundTitle": "This project is gone",
+  "@teamRigNotFoundTitle": {
+    "description": "Project page state when the project no longer exists"
+  },
+  "teamRigNotFoundBody": "The computer no longer lists it. Go back to the team.",
+  "@teamRigNotFoundBody": {
+    "description": "Project page state body"
+  },
+  "teamProjectDelete": "Delete project {project}",
+  "@teamProjectDelete": {
+    "description": "Visible row on a project's page that deletes it, naming it",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamProjectDeleteTitle": "Delete {project}?",
+  "@teamProjectDeleteTitle": {
+    "description": "Delete project confirmation title",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamProjectDeleteBody": "“{project}” is deleted from this phone's AI Team, with the team's copy of its code. This can't be undone.",
+  "@teamProjectDeleteBody": {
+    "description": "Delete project confirmation body for the in-app engine",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "teamProjectDeleteConfirm": "Delete project",
+  "@teamProjectDeleteConfirm": {
+    "description": "Delete project confirmation button"
+  },
+  "teamProjectDeleteLostPlan": "Its plan, tasks and history are deleted",
+  "@teamProjectDeleteLostPlan": {
+    "description": "Consequence line: deleted with the project"
+  },
+  "teamProjectDeleteLostRunning": "Running work stops",
+  "@teamProjectDeleteLostRunning": {
+    "description": "Consequence line: stops with the project"
+  },
+  "teamProjectDeleteKept": "The folder you added it from stays as it is",
+  "@teamProjectDeleteKept": {
+    "description": "Consequence line: kept when the project is deleted"
+  },
+  "teamAgentForceStop": "Force stop {agent}",
+  "@teamAgentForceStop": {
+    "description": "Agent page action and its confirmation button; ends the session at once",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentForceStopTitle": "Force stop {agent}?",
+  "@teamAgentForceStopTitle": {
+    "description": "Force stop confirmation title",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentForceStopBody": "{agent} ends at once, without finishing what it is doing. Work it hasn't saved may be lost.",
+  "@teamAgentForceStopBody": {
+    "description": "Force stop confirmation body; says what is lost",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentStopStuckTitle": "{agent} didn't stop",
+  "@teamAgentStopStuckTitle": {
+    "description": "Agent page notice title when a normal stop did not end the session",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentStopStuckBody": "The normal stop didn't end it. You can force it to end now.",
+  "@teamAgentStopStuckBody": {
+    "description": "Agent page notice body when a normal stop did not work"
+  },
+  "teamJobsTitle": "Scheduled jobs",
+  "@teamJobsTitle": {
+    "description": "Section label on a project's page for the host's scheduled jobs"
+  },
+  "teamJobsWholeTeamTitle": "For the whole team",
+  "@teamJobsWholeTeamTitle": {
+    "description": "Section label for scheduled jobs that belong to no one project"
+  },
+  "teamJobsEmptyTitle": "No scheduled jobs",
+  "@teamJobsEmptyTitle": {
+    "description": "Empty state on a project page: the host has no scheduled jobs for it"
+  },
+  "teamJobsEmptyBody": "The computer starts nothing on its own for this project.",
+  "@teamJobsEmptyBody": {
+    "description": "Empty state body"
+  },
+  "teamJobsFailedTitle": "Couldn't read scheduled jobs",
+  "@teamJobsFailedTitle": {
+    "description": "Failed state on a project page"
+  },
+  "teamJobsFailedBody": "Check the connection to the computer, then try again.",
+  "@teamJobsFailedBody": {
+    "description": "Failed state body"
+  },
+  "teamJobsLoading": "Reading scheduled jobs",
+  "@teamJobsLoading": {
+    "description": "Loading label of the scheduled jobs on a project page"
+  },
+  "teamJobEveryDayAt": "Every day at {time}",
+  "@teamJobEveryDayAt": {
+    "description": "Plain schedule wording",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "teamJobEveryWeekdayAt": "Every weekday at {time}",
+  "@teamJobEveryWeekdayAt": {
+    "description": "Plain schedule wording for Monday to Friday",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "teamJobEveryDowAt": "Every {day} at {time}",
+  "@teamJobEveryDowAt": {
+    "description": "Plain schedule wording for one weekday",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "teamJobEveryHour": "Every hour",
+  "@teamJobEveryHour": {
+    "description": "Plain schedule wording"
+  },
+  "teamJobEveryMinutes": "{count, plural, =1{Every minute} other{Every {count} minutes}}",
+  "@teamJobEveryMinutes": {
+    "description": "Plain schedule wording for a repeat every few minutes",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teamJobEveryHours": "{count, plural, =1{Every hour} other{Every {count} hours}}",
+  "@teamJobEveryHours": {
+    "description": "Plain schedule wording for a repeat every few hours",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teamJobEverySeconds": "{count, plural, =1{Every second} other{Every {count} seconds}}",
+  "@teamJobEverySeconds": {
+    "description": "Plain schedule wording for a repeat every few seconds",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teamJobOnSchedule": "On a schedule",
+  "@teamJobOnSchedule": {
+    "description": "Plain wording when the schedule is too unusual to say simply"
+  },
+  "teamJobRepeats": "Repeats on its own",
+  "@teamJobRepeats": {
+    "description": "Plain wording when the repeat time is not understood"
+  },
+  "teamJobWhenEvent": "When something happens",
+  "@teamJobWhenEvent": {
+    "description": "Plain wording for a job started by an event"
+  },
+  "teamJobManual": "Only when started by hand",
+  "@teamJobManual": {
+    "description": "Plain wording for a job that never starts by itself"
+  },
+  "teamJobWebhook": "When a web request arrives",
+  "@teamJobWebhook": {
+    "description": "Plain wording for a job started by a web request"
+  },
+  "teamJobCondition": "When its check passes",
+  "@teamJobCondition": {
+    "description": "Plain wording for a job started when a check passes"
+  },
+  "teamJobOther": "Starts on its own",
+  "@teamJobOther": {
+    "description": "Plain wording for an unknown trigger"
+  },
+  "agentFeaturesLabel": "Agent settings",
+  "@agentFeaturesLabel": {
+    "description": "Model sheet: section of the agent's own switches"
+  },
+  "agentFeaturesSheetTitle": "{agent} settings",
+  "@agentFeaturesSheetTitle": {
+    "description": "Agent settings sheet title, e.g. Claude Code settings",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "agentFeatureChipOff": "{name} off",
+  "@agentFeatureChipOff": {
+    "description": "Composer chip when an agent switch is off, e.g. Fast mode off",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "agentFeaturesLoadFailed": "Could not load this agent's settings.",
+  "@agentFeaturesLoadFailed": {
+    "description": "Model sheet: reading the agent's switches failed"
+  },
+  "agentFeatureFastTitle": "Fast mode",
+  "@agentFeatureFastTitle": {
+    "description": "Agent switch: fast mode"
+  },
+  "agentFeatureFastDetail": "Quicker replies from supported models. It costs more.",
+  "@agentFeatureFastDetail": {
+    "description": "Agent switch: what fast mode does"
+  },
+  "agentFeatureSaving": "Saving…",
+  "@agentFeatureSaving": {
+    "description": "Agent switch: change in flight"
+  },
+  "agentFeatureChangeFailed": "Could not change {name}. It keeps its old setting.",
+  "@agentFeatureChangeFailed": {
+    "description": "Agent switch: the server refused the change",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "claudeImportTitle": "Import from Claude Code",
+  "@claudeImportTitle": {
+    "description": "Import a conversation started in Claude Code: the entry and the page title"
+  },
+  "claudeImportIntro": "Pick a conversation you started in Claude Code in {project}. It opens here so you can carry on.",
+  "@claudeImportIntro": {
+    "description": "Import page: what the list is",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "claudeImportRowDetail": "{project} · {when}",
+  "@claudeImportRowDetail": {
+    "description": "Import page: a conversation's project folder and when it was last used",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "claudeImportUntitled": "Untitled conversation",
+  "@claudeImportUntitled": {
+    "description": "Import page: a conversation with no title and no first message"
+  },
+  "claudeImportEmptyTitle": "Nothing to import",
+  "@claudeImportEmptyTitle": {
+    "description": "Import page: no conversations found"
+  },
+  "claudeImportEmptyBody": "Conversations you start in Claude Code in this project show up here.",
+  "@claudeImportEmptyBody": {
+    "description": "Import page: empty state body"
+  },
+  "claudeImportLoadFailedTitle": "Could not look",
+  "@claudeImportLoadFailedTitle": {
+    "description": "Import page: reading the list failed"
+  },
+  "claudeImportLoadFailedBody": "The list did not load. Check the connection, then try again.",
+  "@claudeImportLoadFailedBody": {
+    "description": "Import page: reading the list failed, body"
+  },
+  "claudeImportAlready": "{count, plural, one {1 more conversation is already here.} other {{count} more conversations are already here.}}",
+  "@claudeImportAlready": {
+    "description": "Import page: conversations left out because they were imported before",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "claudeImportWorking": "Importing…",
+  "@claudeImportWorking": {
+    "description": "Import page: a row while its conversation is being imported"
+  },
+  "claudeImportFailed": "That conversation could not be imported. Try again.",
+  "@claudeImportFailed": {
+    "description": "Import page: importing one conversation failed"
+  },
+  "hostUpdateRow": "Update agents on {computer}",
+  "@hostUpdateRow": {
+    "description": "Server settings, Paseo: row that updates the agent helper on the computer",
+    "placeholders": {
+      "computer": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateRowRunning": "Running {version}. Installs the newest agent software.",
+  "@hostUpdateRowRunning": {
+    "description": "Technical: Server settings, Paseo: update row detail naming the running version",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateRowUnknown": "Installs the newest agent software on that computer.",
+  "@hostUpdateRowUnknown": {
+    "description": "Server settings, Paseo: update row detail without a version"
+  },
+  "hostUpdateConfirmTitle": "Update agents?",
+  "@hostUpdateConfirmTitle": {
+    "description": "Confirmation title for updating the agent helper"
+  },
+  "hostUpdateConfirmBody": "This installs the newest agent software on {computer} and restarts it.",
+  "@hostUpdateConfirmBody": {
+    "description": "Confirmation body for updating the agent helper",
+    "placeholders": {
+      "computer": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateConfirmPauses": "Conversations on {computer} pause while it restarts.",
+  "@hostUpdateConfirmPauses": {
+    "description": "Consequence: running chats pause during the restart",
+    "placeholders": {
+      "computer": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateConfirmKept": "Your conversations and settings stay as they are.",
+  "@hostUpdateConfirmKept": {
+    "description": "Consequence: nothing is lost"
+  },
+  "hostUpdateConfirmAction": "Update agents",
+  "@hostUpdateConfirmAction": {
+    "description": "Confirmation button that starts the helper update"
+  },
+  "hostUpdateStarting": "Starting the update…",
+  "@hostUpdateStarting": {
+    "description": "Update progress: starting"
+  },
+  "hostUpdateDownloading": "Downloading the newest version…",
+  "@hostUpdateDownloading": {
+    "description": "Update progress: downloading"
+  },
+  "hostUpdateInstalling": "Installing…",
+  "@hostUpdateInstalling": {
+    "description": "Update progress: installing"
+  },
+  "hostUpdateFinishing": "Finishing up…",
+  "@hostUpdateFinishing": {
+    "description": "Update progress: complete, restarting"
+  },
+  "hostUpdateDone": "Updated to {version}. The app reconnects by itself.",
+  "@hostUpdateDone": {
+    "description": "Technical: Update succeeded, naming the new version",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateDoneNoVersion": "Updated. The app reconnects by itself.",
+  "@hostUpdateDoneNoVersion": {
+    "description": "Update succeeded, version not reported"
+  },
+  "hostUpdateCurrent": "{computer} is already up to date.",
+  "@hostUpdateCurrent": {
+    "description": "Update finished and nothing newer existed",
+    "placeholders": {
+      "computer": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateFailed": "The update did not finish. Try again, or update it on that computer.",
+  "@hostUpdateFailed": {
+    "description": "Update failed, plain words"
+  },
+  "hostUpdateDropped": "The connection dropped during the update. The app is reconnecting.",
+  "@hostUpdateDropped": {
+    "description": "Update: the connection dropped before an answer"
+  },
+  "hostUpdateDetailsRow": "Why it failed",
+  "@hostUpdateDetailsRow": {
+    "description": "Update failed: row that opens the computer's own message"
+  },
+  "hostUpdateDetailsTitle": "Update details",
+  "@hostUpdateDetailsTitle": {
+    "description": "Update failed: details sheet title"
+  },
+  "hostUpdateDetailsMessage": "Message from the computer",
+  "@hostUpdateDetailsMessage": {
+    "description": "Update failed: label of the computer's own message"
   },
   "filesTextSurface": "Text in files",
   "@filesTextSurface": {

@@ -100,6 +100,7 @@ import 'team_board_screen.dart';
 import 'team_agents_screen.dart';
 import 'team_migration.dart';
 import 'team_needs_you.dart';
+import 'team_rig_screen.dart';
 import 'team_settings_screen.dart';
 import 'team_states.dart';
 
@@ -857,6 +858,34 @@ class _TeamHomeScreenState extends State<TeamHomeScreen> {
                 leading: KitRow.icon(context, AppIconography.chevronDown),
                 title: l10n.teamUiHomeDoneMore(hiddenDone),
                 onTap: () => setState(() => _doneExpanded = true),
+              ),
+          ],
+        ),
+        gap,
+      ],
+      // The host's projects: each one's own page holds what can be done
+      // with it (pause, resume, delete, its scheduled jobs).
+      if (snapshot.projects.isNotEmpty &&
+          (controller.capabilities.controlProject ||
+              controller.capabilities.controlProjectRemove ||
+              controller.capabilities.scheduledJobs)) ...[
+        KitSectionLabel(l10n.teamHomeProjectsTitle),
+        KitRowGroup(
+          key: const ValueKey('team-home-projects'),
+          children: [
+            for (final project in snapshot.projects)
+              KitRow(
+                key: ValueKey('team-home-project-${project.id}'),
+                leading: KitRow.icon(context, AppIconography.projects),
+                title: project.name,
+                supporting: TextSpan(
+                  text: project.suspended
+                      ? l10n.teamRigStatePaused
+                      : l10n.teamRigStateActive,
+                ),
+                trailing: const KitChevron(),
+                onTap: () =>
+                    unawaited(openTeamRig(context, controller, project.id)),
               ),
           ],
         ),

@@ -83,6 +83,13 @@ String teamAgentLine(
           now: now,
           l10n: l10n,
         );
+  final unavailable = teamAgentUnavailableWords(l10n, agent);
+  if (unavailable != null) {
+    return [
+      l10n.teamAgentUnavailableState,
+      unavailable,
+    ].join(teamUsageSeparator);
+  }
   return [
     teamAgentStateWord(l10n, teamSessionState(agent)),
     ?work?.title,
