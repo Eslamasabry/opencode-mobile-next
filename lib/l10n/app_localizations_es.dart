@@ -28887,4 +28887,28 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get teamProjectDeleteKept =>
       'The folder you added it from stays as it is';
+
+  @override
+  String teamAgentForceStop(String agent) {
+    return 'Force stop $agent';
+  }
+
+  @override
+  String teamAgentForceStopTitle(String agent) {
+    return 'Force stop $agent?';
+  }
+
+  @override
+  String teamAgentForceStopBody(String agent) {
+    return '$agent\'s session ends at once, without letting it finish. Work it hasn\'t saved may be lost.';
+  }
+
+  @override
+  String teamAgentStopStuckTitle(String agent) {
+    return '$agent didn\'t stop';
+  }
+
+  @override
+  String get teamAgentStopStuckBody =>
+      'The normal stop didn\'t end its session. You can force it to end now.';
 }

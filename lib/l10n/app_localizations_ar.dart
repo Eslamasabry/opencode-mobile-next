@@ -28900,4 +28900,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get teamProjectDeleteKept => 'يبقى المجلد الذي أضفته منه كما هو';
+
+  @override
+  String teamAgentForceStop(String agent) {
+    return 'إيقاف $agent بالقوة';
+  }
+
+  @override
+  String teamAgentForceStopTitle(String agent) {
+    return 'إيقاف $agent بالقوة؟';
+  }
+
+  @override
+  String teamAgentForceStopBody(String agent) {
+    return 'تنتهي جلسة $agent فورًا دون أن تُكمل عملها. قد يضيع ما لم تحفظه.';
+  }
+
+  @override
+  String teamAgentStopStuckTitle(String agent) {
+    return '$agent لم يتوقف';
+  }
+
+  @override
+  String get teamAgentStopStuckBody =>
+      'لم ينهِ الإيقاف العادي جلسته. يمكنك إنهاءها بالقوة الآن.';
 }

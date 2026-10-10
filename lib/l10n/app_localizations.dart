@@ -45454,6 +45454,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The folder you added it from stays as it is'**
   String get teamProjectDeleteKept;
+
+  /// Agent page action and its confirmation button; ends the session at once
+  ///
+  /// In en, this message translates to:
+  /// **'Force stop {agent}'**
+  String teamAgentForceStop(String agent);
+
+  /// Force stop confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Force stop {agent}?'**
+  String teamAgentForceStopTitle(String agent);
+
+  /// Force stop confirmation body; says what is lost
+  ///
+  /// In en, this message translates to:
+  /// **'{agent}\'s session ends at once, without letting it finish. Work it hasn\'t saved may be lost.'**
+  String teamAgentForceStopBody(String agent);
+
+  /// Agent page notice title when a normal stop did not end the session
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} didn\'t stop'**
+  String teamAgentStopStuckTitle(String agent);
+
+  /// Agent page notice body when a normal stop did not work
+  ///
+  /// In en, this message translates to:
+  /// **'The normal stop didn\'t end its session. You can force it to end now.'**
+  String get teamAgentStopStuckBody;
 }
 
 class _AppLocalizationsDelegate

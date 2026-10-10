@@ -34581,5 +34581,45 @@
   "teamProjectDeleteKept": "The folder you added it from stays as it is",
   "@teamProjectDeleteKept": {
     "description": "Consequence line: kept when the project is deleted"
+  },
+  "teamAgentForceStop": "Force stop {agent}",
+  "@teamAgentForceStop": {
+    "description": "Agent page action and its confirmation button; ends the session at once",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentForceStopTitle": "Force stop {agent}?",
+  "@teamAgentForceStopTitle": {
+    "description": "Force stop confirmation title",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentForceStopBody": "{agent}'s session ends at once, without letting it finish. Work it hasn't saved may be lost.",
+  "@teamAgentForceStopBody": {
+    "description": "Force stop confirmation body; says what is lost",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentStopStuckTitle": "{agent} didn't stop",
+  "@teamAgentStopStuckTitle": {
+    "description": "Agent page notice title when a normal stop did not end the session",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentStopStuckBody": "The normal stop didn't end its session. You can force it to end now.",
+  "@teamAgentStopStuckBody": {
+    "description": "Agent page notice body when a normal stop did not work"
   }
 }

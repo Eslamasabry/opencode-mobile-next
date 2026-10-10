@@ -42,6 +42,22 @@ void main() {
     );
   });
 
+  test('force stop sends the session kill, not the stop', () async {
+    final host = await OdTeam.boot();
+    addTearDown(host.close);
+    await withRealHttp(() async {
+      final receipt = await host.gateway.controlAgent(
+        'shopfront/gastown.furiosa',
+        AgentControlAction.kill,
+        requestId: 'r1',
+      );
+      expect(receipt.isAccepted, isTrue);
+    });
+    expect(host.writes.single.method, 'POST');
+    expect(host.writes.single.path, endsWith('/kill'));
+    expect(host.writes.single.path, contains('/v0/city/phone/session/'));
+  });
+
   test('a bare supervisor refuses project controls', () async {
     final host = await OdTeam.boot(front: false);
     addTearDown(host.close);

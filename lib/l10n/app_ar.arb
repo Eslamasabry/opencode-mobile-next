@@ -8576,5 +8576,10 @@
   "teamProjectDeleteConfirm": "حذف المشروع",
   "teamProjectDeleteLostPlan": "تُحذف خطته ومهامه وسجله",
   "teamProjectDeleteLostRunning": "يتوقف العمل الجاري",
-  "teamProjectDeleteKept": "يبقى المجلد الذي أضفته منه كما هو"
+  "teamProjectDeleteKept": "يبقى المجلد الذي أضفته منه كما هو",
+  "teamAgentForceStop": "إيقاف {agent} بالقوة",
+  "teamAgentForceStopTitle": "إيقاف {agent} بالقوة؟",
+  "teamAgentForceStopBody": "تنتهي جلسة {agent} فورًا دون أن تُكمل عملها. قد يضيع ما لم تحفظه.",
+  "teamAgentStopStuckTitle": "{agent} لم يتوقف",
+  "teamAgentStopStuckBody": "لم ينهِ الإيقاف العادي جلسته. يمكنك إنهاءها بالقوة الآن."
 }

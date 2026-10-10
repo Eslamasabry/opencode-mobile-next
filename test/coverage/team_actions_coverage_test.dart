@@ -177,6 +177,14 @@ void main() {
             gateway.controlAgent(dir, AgentControlAction.stop, requestId: 'r5'),
       );
       await one(
+        'GC POST /v0/city/{cityName}/session/{id}/kill',
+        () => gateway.controlAgent(
+          dir,
+          AgentControlAction.kill,
+          requestId: 'r19',
+        ),
+      );
+      await one(
         'GC POST /v0/city/{cityName}/session/{id}/messages',
         () => gateway.message(dir, 'Please rebase first', requestId: 'r6'),
       );
