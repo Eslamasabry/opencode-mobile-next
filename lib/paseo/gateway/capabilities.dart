@@ -11,7 +11,7 @@ const paseoServerCapabilities = ServerCapabilities(
   subagentSessions: true,
   promptAgentMentions: false,
   offlinePromptQueue: false,
-  fileBrowsing: false,
+  fileBrowsing: true,
   terminal: false,
   projectManagement: false,
   globalSessionSearch: false,

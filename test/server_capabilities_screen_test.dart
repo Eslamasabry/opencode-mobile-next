@@ -313,8 +313,16 @@ void main() {
       }
       // These backends hide most of the Project tab; the explanation must
       // actually be there.
-      expect(capabilities.fileBrowsing, isFalse);
-      expect(unavailable, containsAll(['files', 'terminal', 'mcp', 'usage']));
+      expect(capabilities.fileBrowsing, backend.key == 'Paseo-like');
+      expect(
+        unavailable,
+        containsAll([
+          if (!capabilities.fileBrowsing) 'files',
+          if (!capabilities.terminal) 'terminal',
+          'mcp',
+          'usage',
+        ]),
+      );
       // The phone still does what the phone does.
       expect(available, contains('background-notifications'));
       expect(_listed(tester, 'device'), isEmpty);
