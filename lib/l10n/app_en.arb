@@ -34360,5 +34360,39 @@
         "type": "String"
       }
     }
+  },
+  "teamAgentUnavailableState": "Can't start",
+  "@teamAgentUnavailableState": {
+    "description": "Row state word for an agent the host says it cannot run"
+  },
+  "teamAgentUnavailableModelWords": "Its model isn't set up on the computer",
+  "@teamAgentUnavailableModelWords": {
+    "description": "Plain reason when the host's unavailable text mentions a model, provider or sign-in"
+  },
+  "teamAgentUnavailableOtherWords": "The computer can't run it right now",
+  "@teamAgentUnavailableOtherWords": {
+    "description": "Plain reason for any other host unavailable text"
+  },
+  "teamAgentUnavailableTitle": "{agent} can't start",
+  "@teamAgentUnavailableTitle": {
+    "description": "Agent page notice title when the host says the agent is unavailable",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentUnavailableBody": "{reason}. Fix it on the computer, then check again.",
+  "@teamAgentUnavailableBody": {
+    "description": "Agent page notice body for an unavailable agent; reason is a plain sentence without a full stop",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "teamAgentUnavailableHostSays": "What the computer says",
+  "@teamAgentUnavailableHostSays": {
+    "description": "Technical details label for the host's own unavailable text"
   }
 }

@@ -1122,6 +1122,24 @@ String teamAgentStateWord(AppLocalizations l10n, AgentState state) =>
       AgentState.unknown => l10n.teamUiHomeAgentStateUnknown,
     };
 
+/// The plain reason the host cannot run [agent] (its `unavailable_reason`),
+/// or null when it can. The host's own text is for Details, never copy:
+/// a model, provider or sign-in problem is named as such, anything else
+/// stays general.
+String? teamAgentUnavailableWords(
+  AppLocalizations l10n,
+  OrchestrationAgent agent,
+) {
+  final reason = agent.unavailableReason?.trim().toLowerCase();
+  if (reason == null || reason.isEmpty) return null;
+  final model = RegExp(
+    r'provider|model|sign(ed)?[ -]?in|log(ged)?[ -]?in|api[ -]?key|credential|auth|token',
+  );
+  return model.hasMatch(reason)
+      ? l10n.teamAgentUnavailableModelWords
+      : l10n.teamAgentUnavailableOtherWords;
+}
+
 /// The mark per agent state: status is never colour-only (§11). An agent
 /// that waits on the person takes the needs-you mark; a blocked one is
 /// held up elsewhere and stays neutral.

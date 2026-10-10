@@ -28756,4 +28756,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String teamProjectTaskStopNamedBody(String task) {
     return 'تتوقف «$task». وتبقى محادثتها وتغييراتها للمراجعة.';
   }
+
+  @override
+  String get teamAgentUnavailableState => 'لا يمكن تشغيله';
+
+  @override
+  String get teamAgentUnavailableModelWords => 'نموذجه غير مُعدّ على الكمبيوتر';
+
+  @override
+  String get teamAgentUnavailableOtherWords =>
+      'لا يستطيع الكمبيوتر تشغيله الآن';
+
+  @override
+  String teamAgentUnavailableTitle(String agent) {
+    return 'لا يمكن تشغيل $agent';
+  }
+
+  @override
+  String teamAgentUnavailableBody(String reason) {
+    return '$reason. أصلح ذلك على الكمبيوتر ثم تحقق مجددًا.';
+  }
+
+  @override
+  String get teamAgentUnavailableHostSays => 'ما يقوله الكمبيوتر';
 }

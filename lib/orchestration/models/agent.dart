@@ -64,6 +64,7 @@ class OrchestrationAgent {
     this.branch,
     this.sessionStartedAt,
     this.suspended = false,
+    this.unavailableReason,
     this.raw = const {},
     this.sessionState,
     this.sessionRunning,
@@ -77,6 +78,11 @@ class OrchestrationAgent {
   /// `suspended=true` or `state=suspended`): a named agent that exists on
   /// the host but is switched off. [state] is [AgentState.stopped].
   final bool suspended;
+
+  /// The host's own words for why it cannot run the agent (Gas City
+  /// `unavailable_reason`, set with `available=false`), exactly as received;
+  /// null when the agent is available.
+  final String? unavailableReason;
 
   /// Provider state string exactly as received; null when absent.
   final String? rawState;

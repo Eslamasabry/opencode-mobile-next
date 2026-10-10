@@ -28725,4 +28725,28 @@ class AppLocalizationsPt extends AppLocalizations {
   String teamProjectTaskStopNamedBody(String task) {
     return '“$task” stops. Its conversation and changes stay for review.';
   }
+
+  @override
+  String get teamAgentUnavailableState => 'Can\'t start';
+
+  @override
+  String get teamAgentUnavailableModelWords =>
+      'Its model isn\'t set up on the computer';
+
+  @override
+  String get teamAgentUnavailableOtherWords =>
+      'The computer can\'t run it right now';
+
+  @override
+  String teamAgentUnavailableTitle(String agent) {
+    return '$agent can\'t start';
+  }
+
+  @override
+  String teamAgentUnavailableBody(String reason) {
+    return '$reason. Fix it on the computer, then check again.';
+  }
+
+  @override
+  String get teamAgentUnavailableHostSays => 'What the computer says';
 }

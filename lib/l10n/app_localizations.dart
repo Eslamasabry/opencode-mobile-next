@@ -45220,6 +45220,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'“{task}” stops. Its conversation and changes stay for review.'**
   String teamProjectTaskStopNamedBody(String task);
+
+  /// Row state word for an agent the host says it cannot run
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t start'**
+  String get teamAgentUnavailableState;
+
+  /// Plain reason when the host's unavailable text mentions a model, provider or sign-in
+  ///
+  /// In en, this message translates to:
+  /// **'Its model isn\'t set up on the computer'**
+  String get teamAgentUnavailableModelWords;
+
+  /// Plain reason for any other host unavailable text
+  ///
+  /// In en, this message translates to:
+  /// **'The computer can\'t run it right now'**
+  String get teamAgentUnavailableOtherWords;
+
+  /// Agent page notice title when the host says the agent is unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} can\'t start'**
+  String teamAgentUnavailableTitle(String agent);
+
+  /// Agent page notice body for an unavailable agent; reason is a plain sentence without a full stop
+  ///
+  /// In en, this message translates to:
+  /// **'{reason}. Fix it on the computer, then check again.'**
+  String teamAgentUnavailableBody(String reason);
+
+  /// Technical details label for the host's own unavailable text
+  ///
+  /// In en, this message translates to:
+  /// **'What the computer says'**
+  String get teamAgentUnavailableHostSays;
 }
 
 class _AppLocalizationsDelegate

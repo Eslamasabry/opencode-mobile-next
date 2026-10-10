@@ -613,6 +613,18 @@ class _AgentScreenState extends State<AgentScreen> {
                 ],
               ),
             )
+          else if (teamAgentUnavailableWords(l10n, agent) != null)
+            pad(
+              KitNotice(
+                key: const ValueKey('team-agent-unavailable'),
+                tone: AppStatusTone.failure,
+                icon: AppIconography.error,
+                title: l10n.teamAgentUnavailableTitle(agent.name),
+                message: l10n.teamAgentUnavailableBody(
+                  teamAgentUnavailableWords(l10n, agent)!,
+                ),
+              ),
+            )
           else if (state == AgentState.stopped || state == AgentState.crashed)
             pad(
               _stoppedNotice(
@@ -757,7 +769,9 @@ class _AgentScreenState extends State<AgentScreen> {
             state: _mark(state),
             paused: state == AgentState.stopped,
           ),
-          title: teamAgentStateWord(l10n, state),
+          title: teamAgentUnavailableWords(l10n, agent) != null
+              ? l10n.teamAgentUnavailableState
+              : teamAgentStateWord(l10n, state),
           titleKey: const ValueKey('team-agent-state'),
           supporting: facts.isEmpty ? null : TextSpan(text: facts),
           supportingKey: const ValueKey('team-agent-age'),
@@ -864,6 +878,12 @@ class _AgentScreenState extends State<AgentScreen> {
           lastCommand,
           key: const ValueKey('team-agent-last-command'),
         ),
+      if (has(agent.unavailableReason))
+        KitTechnicalValue(
+          l10n.teamAgentUnavailableHostSays,
+          agent.unavailableReason!,
+          key: const ValueKey('team-agent-unavailable-reason'),
+        ),
       if (has(agent.rawState))
         KitTechnicalValue(l10n.teamUiRunLabelRawState, agent.rawState!),
       if (has(agent.pool))
@@ -875,6 +895,7 @@ class _AgentScreenState extends State<AgentScreen> {
     void collect(Map<String, Object?> map, String prefix) {
       for (final entry in map.entries) {
         final value = entry.value;
+        if (prefix.isEmpty && entry.key == 'unavailable_reason') continue;
         if (value is String || value is num || value is bool) {
           final text = '$value';
           if (text.trim().isEmpty || KitRedact.containsSecret(text)) continue;

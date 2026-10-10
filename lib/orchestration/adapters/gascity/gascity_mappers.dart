@@ -649,6 +649,7 @@ OrchestrationAgent mapAgent(
     branch: _branchOf(session?.metadata),
     sessionStartedAt: session?.createdAt,
     suspended: isSuspendedAgent(agent),
+    unavailableReason: agent.available ? null : agent.unavailableReason,
     raw: agent.raw,
     sessionState: session?.state,
     sessionRunning: session?.running,

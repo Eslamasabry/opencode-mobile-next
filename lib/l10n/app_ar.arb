@@ -8537,5 +8537,11 @@
   "exportMarkdownUnredacted": "النص المحفوظ غير منقّح. يحتوي بالضبط على ما تراه، بما في ذلك أي أسرار أو مسارات خاصة في المحادثة.",
   "teamUiGateAnswerConfirmCancelNamedBody": "تتوقف «{task}». ويبقى عملها المفتوح كما هو.",
   "teamProjectStopNamedBody": "يتوقف «{project}». تتوقف مهامه الجارية ويبقى عملها وسجله.",
-  "teamProjectTaskStopNamedBody": "تتوقف «{task}». وتبقى محادثتها وتغييراتها للمراجعة."
+  "teamProjectTaskStopNamedBody": "تتوقف «{task}». وتبقى محادثتها وتغييراتها للمراجعة.",
+  "teamAgentUnavailableState": "لا يمكن تشغيله",
+  "teamAgentUnavailableModelWords": "نموذجه غير مُعدّ على الكمبيوتر",
+  "teamAgentUnavailableOtherWords": "لا يستطيع الكمبيوتر تشغيله الآن",
+  "teamAgentUnavailableTitle": "لا يمكن تشغيل {agent}",
+  "teamAgentUnavailableBody": "{reason}. أصلح ذلك على الكمبيوتر ثم تحقق مجددًا.",
+  "teamAgentUnavailableHostSays": "ما يقوله الكمبيوتر"
 }
