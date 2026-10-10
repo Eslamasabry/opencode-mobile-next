@@ -130,7 +130,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          git fetch --quiet origin master --depth=1
+          git fetch --quiet origin master
           [ "$(git rev-parse origin/master)" = "$GITHUB_SHA" ] || {
             echo '::error::Release tag must identify the current master candidate'
             exit 1
