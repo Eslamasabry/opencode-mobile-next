@@ -1,0 +1,82 @@
+[
+ {
+  "file": "02-claude-files-before.jpg",
+  "caption": "Before: talking to Claude Code gave you only Conversations and Settings, with no Files tab."
+ },
+ {
+  "file": "02-claude-files-after.jpg",
+  "caption": "After: a Files tab appears with Changes, Files, Terminal and Worktrees for the project."
+ },
+ {
+  "file": "03-claude-changes-after.jpg",
+  "caption": "New: you can review the edit Claude Code left uncommitted, line by line."
+ },
+ {
+  "file": "04-claude-terminal-after.jpg",
+  "caption": "New: you can open a terminal on your computer from the phone and run commands like ls."
+ },
+ {
+  "file": "05-fast-mode-before.jpg",
+  "caption": "Before: the message box for Claude Code had no Fast mode switch."
+ },
+ {
+  "file": "05-fast-mode-after.jpg",
+  "caption": "After: a Fast mode chip sits above the message box and shows when it is on."
+ },
+ {
+  "file": "05b-fast-mode-sheet-after.jpg",
+  "caption": "After: tapping the chip opens Claude Code settings, where Fast mode is a simple switch."
+ },
+ {
+  "file": "06-conversation-menu-before.jpg",
+  "caption": "Before: a Claude Code conversation's menu could not archive the conversation."
+ },
+ {
+  "file": "06-conversation-menu-after.jpg",
+  "caption": "After: the menu offers Archive conversation to tidy it away."
+ },
+ {
+  "file": "06b-opencode-conversation-menu-before.jpg",
+  "caption": "Before: an OpenCode conversation's menu had no Archive or Delete."
+ },
+ {
+  "file": "06b-opencode-conversation-menu-after.jpg",
+  "caption": "After: the menu has Archive conversation and Delete conversation."
+ },
+ {
+  "file": "07-server-page-before.jpg",
+  "caption": "Before: a Claude Code computer's page could only check health, change sign-in or disconnect."
+ },
+ {
+  "file": "07-server-page-after.jpg",
+  "caption": "After: the page can update its agents, edit or remove the computer, and check for agents again."
+ },
+ {
+  "file": "08-import-before.jpg",
+  "caption": "Before: the new conversation screen had no way to bring in a chat from Claude Code."
+ },
+ {
+  "file": "08-import-after.jpg",
+  "caption": "After: an Import from Claude Code chip lets you pick up a conversation started on your computer."
+ },
+ {
+  "file": "09-search-inside-files-before.jpg",
+  "caption": "Before: searching a word from inside a file found nothing, because only file names were searched."
+ },
+ {
+  "file": "09-search-inside-files-after.jpg",
+  "caption": "After: a Search inside files row appears for the word you typed."
+ },
+ {
+  "file": "09b-search-inside-files-results-after.jpg",
+  "caption": "After: tapping it lists the matching line, its file and its line number."
+ },
+ {
+  "file": "11-composer-agent-name-before.jpg",
+  "caption": "Before: the new conversation box for a Claude Code computer said Ask OpenCode."
+ },
+ {
+  "file": "11-composer-agent-name-after.jpg",
+  "caption": "After: the same box now says Ask Claude Code."
+ }
+]
