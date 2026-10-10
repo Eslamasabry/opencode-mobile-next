@@ -28910,4 +28910,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String teamProjectTaskStopNamedBody(String task) {
     return 'تتوقف «$task». وتبقى محادثتها وتغييراتها للمراجعة.';
   }
+
+  @override
+  String get filesTextSurface => 'نص داخل الملفات';
+
+  @override
+  String get filesSearchText => 'البحث عن نص داخل الملفات';
+
+  @override
+  String filesSearchInside(String query) {
+    return 'ابحث داخل الملفات عن \"$query\"';
+  }
+
+  @override
+  String get filesTextHintTitle => 'ابحث داخل الملفات';
+
+  @override
+  String get filesTextHintBody => 'اكتب كلمة أو عبارة لترى كل سطر يحتوي عليها.';
+
+  @override
+  String get filesNoTextTitle => 'لا توجد نتائج';
+
+  @override
+  String get filesNoTextBody =>
+      'لا يحتوي أي ملف على هذا النص. تحقق من الإملاء أو جرّب كلمات أقل.';
+
+  @override
+  String get filesTextFailedTitle => 'تعذّر البحث في الملفات';
+
+  @override
+  String filesTextLimited(int count) {
+    return 'تظهر أول $count نتيجة. اكتب أكثر لتضييقها.';
+  }
+
+  @override
+  String filesTextMatchLine(int line) {
+    return 'السطر $line';
+  }
+
+  @override
+  String get productErrorComputer =>
+      'تعذّر الوصول إلى حاسوبك. تأكد من أنه يعمل ومتصل، ثم حاول مرة أخرى.';
 }

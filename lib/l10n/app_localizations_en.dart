@@ -28865,4 +28865,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String teamProjectTaskStopNamedBody(String task) {
     return '“$task” stops. Its conversation and changes stay for review.';
   }
+
+  @override
+  String get filesTextSurface => 'Text in files';
+
+  @override
+  String get filesSearchText => 'Search text in files';
+
+  @override
+  String filesSearchInside(String query) {
+    return 'Search inside files for \"$query\"';
+  }
+
+  @override
+  String get filesTextHintTitle => 'Search inside files';
+
+  @override
+  String get filesTextHintBody =>
+      'Type a word or a phrase to see every line that has it.';
+
+  @override
+  String get filesNoTextTitle => 'No matches';
+
+  @override
+  String get filesNoTextBody =>
+      'No file has that text. Check the spelling or try fewer words.';
+
+  @override
+  String get filesTextFailedTitle => 'Couldn\'t search the files';
+
+  @override
+  String filesTextLimited(int count) {
+    return 'Showing the first $count matches. Type more to narrow them.';
+  }
+
+  @override
+  String filesTextMatchLine(int line) {
+    return 'Line $line';
+  }
+
+  @override
+  String get productErrorComputer =>
+      'Couldn\'t reach your computer. Check it\'s on and connected, then try again.';
 }
