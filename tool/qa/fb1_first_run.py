@@ -23,8 +23,6 @@ import time
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from PIL import Image
-
 from tool.qa.bd7_device_ui import Bd7Ui, _normalize, _rect
 from tool.qa.fq9.common import (
     Artifact,
@@ -524,6 +522,8 @@ class FirstRunPorts(AndroidPorts):
         if first != rectangles(self.ui.nodes()):
             raise DriverFailure("fb1_screen_failed")
         try:
+            from PIL import Image  # lazy: only screenshot projection needs Pillow
+
             with Image.open(BytesIO(raw)) as image:
                 if image.format != "PNG" or image.width * image.height > 16_000_000:
                     raise ValueError()

@@ -6,7 +6,12 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:  # CI runners lack Pillow; screenshot-crop tests skip cleanly
+    Image = None
+
+needs_pillow = unittest.skipIf(Image is None, 'Pillow is not installed')
 
 from tool.qa.bd7_device_ui import Bd7Ui, Bd7UiFailure
 
@@ -126,6 +131,8 @@ class Bd7UiTest(unittest.TestCase):
         self.assertEqual(len(fixture.commands), 3)
         self.assertNotIn('synthetic-private-account', str(failure.exception))
 
+    @needs_pillow
+
     def test_safe_diagnostics_crop_excludes_private_draft_above_section(self):
         fixture = UiFixture(xml(
             node('synthetic-private-draft', '[10,20][790,180]'),
@@ -163,6 +170,8 @@ class Bd7UiTest(unittest.TestCase):
                 self.assertFalse(path.exists())
                 self.assertNotIn('synthetic-private', str(failure.exception))
 
+    @needs_pillow
+
     def test_authored_consent_count_copy_is_safe_but_appended_private_values_are_not(self):
         copy = (
             'Turning this on clears the saved error above.',
@@ -190,6 +199,8 @@ class Bd7UiTest(unittest.TestCase):
                         self.assertEqual(ui.screenshot(path)['section'], 'Crash reports')
                         self.assertTrue(path.exists())
 
+    @needs_pillow
+
     def test_anr_crop_uses_dialog_card_and_excludes_account_background(self):
         card = node('', '[200,400][600,800]')
         card.extend([
@@ -201,6 +212,8 @@ class Bd7UiTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             result = Bd7Ui(fixture.execute).screenshot(Path(directory) / 'anr.jpg', section='anr')
             self.assertEqual((result['width'], result['height']), (400, 400))
+
+    @needs_pillow
 
     def test_exact_degraded_hints_are_safe_but_appended_private_text_is_refused(self):
         messages = (
@@ -247,6 +260,8 @@ class Bd7UiTest(unittest.TestCase):
             raise AssertionError('unexpected command')
         return Bd7Ui(execute), calls
 
+    @needs_pillow
+
     def test_one_moving_crop_retries_with_a_fresh_independently_guarded_frame(self):
         old = xml(node('Crash reports', '[10,200][790,250]'))
         settled = xml(node('Crash reports', '[10,300][790,350]'))
@@ -259,6 +274,8 @@ class Bd7UiTest(unittest.TestCase):
                 red, green, blue = image.getpixel((1, 1))
                 self.assertGreater(blue, red + 100)
         self.assertEqual(sum(c[:2] == ['exec-out', 'screencap'] for c in calls), 2)
+
+    @needs_pillow
 
     def test_persistent_crop_movement_stops_after_two_fresh_frames_without_file(self):
         docs = [xml(node('Crash reports', f'[10,{top}][790,{top + 50}]'))
@@ -285,6 +302,8 @@ class Bd7UiTest(unittest.TestCase):
                     ui.screenshot(path)
                 self.assertFalse(path.exists())
             self.assertEqual(sum(c[:2] == ['exec-out', 'screencap'] for c in calls), 1)
+
+    @needs_pillow
 
     def test_share_preview_crop_accepts_only_category_time_report_and_excludes_background(
         self,
