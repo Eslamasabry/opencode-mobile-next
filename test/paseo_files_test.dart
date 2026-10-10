@@ -4,6 +4,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/ui/widgets/product_states.dart'
+    show productErrorDetails, productErrorText;
 import 'package:opencode_mobile/domain/server_gateway.dart'
     show VcsDiffMode, VersionControlSetupState;
 import 'package:opencode_mobile/paseo/gateway.dart';
@@ -703,6 +705,35 @@ void main() {
         gateway.connectTerminal('nope'),
         throwsA(isA<PaseoFailure>()),
       );
+    });
+  });
+
+  group('failure words', () {
+    test('a daemon that did not answer is about the computer, not a clash', () {
+      for (final kind in [
+        PaseoFailureKind.unavailable,
+        PaseoFailureKind.disconnected,
+        PaseoFailureKind.invalidResponse,
+      ]) {
+        expect(
+          productErrorText(PaseoFailure(kind)),
+          "Couldn't reach your computer. Check it's on and connected, then try again.",
+          reason: kind.name,
+        );
+      }
+    });
+
+    test('a real clash still says it changed meanwhile', () {
+      expect(
+        productErrorText(PaseoFailure(PaseoFailureKind.staleRequest)),
+        contains('changed on the server'),
+      );
+    });
+
+    test('the daemon\'s own sentence stays under Details', () {
+      final failure = PaseoFailure(PaseoFailureKind.unavailable);
+      expect(productErrorText(failure), isNot(contains('daemon')));
+      expect(productErrorDetails(failure), contains('Paseo daemon'));
     });
   });
 }

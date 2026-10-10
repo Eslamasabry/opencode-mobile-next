@@ -85,6 +85,7 @@ const _rootKey = ValueKey('od-paseo-root');
 Widget _app(Widget home) => RepaintBoundary(
   key: _rootKey,
   child: MaterialApp(
+    debugShowCheckedModeBanner: false,
     theme: AppTheme.dark(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,

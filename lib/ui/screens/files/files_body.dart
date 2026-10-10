@@ -246,6 +246,24 @@ extension _FilesBody on _FilesScreenState {
     );
   }
 
+  /// While a file name is typed on a server that can search text, the first
+  /// row offers the same words as a search inside the files.
+  Widget? _searchInsideRow(AppLocalizations l10n) {
+    final query = _search.text.trim();
+    if (_surface != _FileSurface.files ||
+        query.isEmpty ||
+        !widget.controller.capabilities.textSearch) {
+      return null;
+    }
+    return KitRow(
+      key: const ValueKey('files-search-inside'),
+      leading: KitRow.icon(context, AppIconography.search),
+      title: l10n.filesSearchInside(query),
+      trailing: const KitChevron(),
+      onTap: () => unawaited(_searchInsideFiles(query)),
+    );
+  }
+
   Widget _fileList(AppLocalizations l10n) {
     if (_loading && _entries == null) {
       return _waiting(l10n.filesLoadingFolder, _refreshFiles);
@@ -264,6 +282,7 @@ extension _FilesBody on _FilesScreenState {
     final hidden = <FileNode>[];
     final entries = _displayEntries(hidden);
     final changes = _changesRow(l10n);
+    final inside = _searchInsideRow(l10n);
     if (_entries != null && entries.isEmpty) {
       final searching = _search.text.isNotEmpty;
       final onlyHidden = !searching && hidden.isNotEmpty;
@@ -298,7 +317,8 @@ extension _FilesBody on _FilesScreenState {
                 ),
         ),
       );
-      if (changes == null) return state;
+      final leads = [?inside, ?changes];
+      if (leads.isEmpty) return state;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -306,14 +326,24 @@ extension _FilesBody on _FilesScreenState {
             padding: EdgeInsetsDirectional.only(
               top: KitTokens.of(context).space2,
             ),
-            child: changes,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (i, row) in leads.indexed) ...[
+                  if (i > 0) const KitDivider(inset: KitDividerInset.text),
+                  row,
+                ],
+              ],
+            ),
           ),
           const KitDivider(inset: KitDividerInset.text),
           Expanded(child: state),
         ],
       );
     }
-    final lead = changes == null ? 0 : 1;
+    final leads = [?inside, ?changes];
+    final lead = leads.length;
     return KitRefresh(
       onRefresh: _refreshFiles,
       child: KitScrollArea(
@@ -328,7 +358,7 @@ extension _FilesBody on _FilesScreenState {
           separatorBuilder: (_, _) =>
               const KitDivider(inset: KitDividerInset.text),
           itemBuilder: (context, i) =>
-              i < lead ? changes! : _fileRow(context, l10n, entries[i - lead]),
+              i < lead ? leads[i] : _fileRow(context, l10n, entries[i - lead]),
         ),
       ),
     );

@@ -13277,6 +13277,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filesSearchText => 'البحث عن نص داخل الملفات';
 
   @override
+  String filesSearchInside(String query) {
+    return 'ابحث داخل الملفات عن \"$query\"';
+  }
+
+  @override
   String get filesTextHintTitle => 'ابحث داخل الملفات';
 
   @override
@@ -21206,6 +21211,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get productErrorNotFound =>
       'تعذّر على الخادم العثور عليه. ربما نُقل أو حُذف.';
+
+  @override
+  String get productErrorComputer =>
+      'تعذّر الوصول إلى حاسوبك. تأكد من أنه يعمل ومتصل، ثم حاول مرة أخرى.';
 
   @override
   String get productErrorConflict =>

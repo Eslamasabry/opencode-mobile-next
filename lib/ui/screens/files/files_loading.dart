@@ -227,6 +227,18 @@ extension _FilesLoading on _FilesScreenState {
     }
   }
 
+  /// The row above the file-name results: the typed words, searched inside
+  /// the files (the filter's Text in files, with the query kept).
+  Future<void> _searchInsideFiles(String query) {
+    _requestGeneration++;
+    _set(() {
+      _surface = _FileSurface.text;
+      _textMatches = null;
+      _error = null;
+    });
+    return _searchText(query);
+  }
+
   /// The most matching lines the list shows; more are summarised in a line.
   static const _maxTextMatches = 200;
 

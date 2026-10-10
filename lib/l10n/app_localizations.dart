@@ -21610,6 +21610,12 @@ abstract class AppLocalizations {
   /// **'Search text in files'**
   String get filesSearchText;
 
+  /// Files: first row above the file-name results while typing; searches the typed words inside the files
+  ///
+  /// In en, this message translates to:
+  /// **'Search inside files for \"{query}\"'**
+  String filesSearchInside(String query);
+
   /// Files › Text: title of the hint shown before anything is typed
   ///
   /// In en, this message translates to:
@@ -33349,6 +33355,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The server couldn\'t find it. It may have been moved or deleted.'**
   String get productErrorNotFound;
+
+  /// Failure words when the computer running Claude Code (Paseo) did not answer or could not do what was asked; the daemon's reason goes under Details
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach your computer. Check it\'s on and connected, then try again.'**
+  String get productErrorComputer;
 
   /// Error words: the server answered 409 (conflict).
   ///

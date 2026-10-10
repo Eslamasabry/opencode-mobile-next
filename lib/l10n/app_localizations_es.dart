@@ -13199,6 +13199,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get filesSearchText => 'Search text in files';
 
   @override
+  String filesSearchInside(String query) {
+    return 'Search inside files for \"$query\"';
+  }
+
+  @override
   String get filesTextHintTitle => 'Search inside files';
 
   @override
@@ -21150,6 +21155,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get productErrorNotFound =>
       'The server couldn\'t find it. It may have been moved or deleted.';
+
+  @override
+  String get productErrorComputer =>
+      'Couldn\'t reach your computer. Check it\'s on and connected, then try again.';
 
   @override
   String get productErrorConflict =>

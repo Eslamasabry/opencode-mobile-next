@@ -66,7 +66,18 @@ class PaseoFailure extends ApiException {
           PaseoFailureKind.scopeMismatch =>
             'This conversation belongs to another project.',
         },
-        statusCode: kind == PaseoFailureKind.authentication ? 401 : 409,
+        // Only a real clash reads as a conflict ("changed meanwhile"); a
+        // daemon that cannot be reached or did not do it has no status, and
+        // the app's failure words say so (ProductFailureCategory.computer).
+        statusCode: switch (kind) {
+          PaseoFailureKind.authentication => 401,
+          PaseoFailureKind.overloaded => 429,
+          PaseoFailureKind.staleRequest ||
+          PaseoFailureKind.scopeMismatch ||
+          PaseoFailureKind.deliveryUnknown ||
+          PaseoFailureKind.newChatRequired => 409,
+          _ => null,
+        },
         errorTag: 'Paseo${kind.name}',
       );
 }

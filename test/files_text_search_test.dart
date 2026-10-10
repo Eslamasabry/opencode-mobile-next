@@ -38,6 +38,9 @@ class _Api extends OpenCodeApi {
   ];
 
   @override
+  Future<List<String>> findFile(String query) async => const [];
+
+  @override
   Future<List<FindMatch>> findText(String pattern) async {
     searches.add(pattern);
     if (failure != null) throw failure!;
@@ -58,6 +61,7 @@ const _root = ValueKey('text-search-root');
 Widget _app(Widget home) => RepaintBoundary(
   key: _root,
   child: MaterialApp(
+    debugShowCheckedModeBanner: false,
     theme: AppTheme.dark(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
@@ -246,5 +250,54 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('file-surface-text')), findsNothing);
     expect(find.byKey(const ValueKey('file-surface-symbols')), findsOneWidget);
+  });
+
+  testWidgets('typing a name offers a visible row that searches inside files', (
+    tester,
+  ) async {
+    _phone(tester);
+    final api = _Api(ServerCapabilities.allV1)
+      ..matches = [
+        FindMatch(
+          path: 'lib/cart_total.dart',
+          lineNumber: 42,
+          snippet: '  final total = sum.roundToDouble();',
+        ),
+      ];
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(FilesScreen(controller: controller)));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('files-search-inside')), findsNothing);
+    await _type(tester, 'round');
+    await _shoot(tester, 'inside-row');
+    expect(
+      find.textContaining('Search inside files for', findRichText: true),
+      findsOneWidget,
+    );
+    expect(api.searches, isEmpty, reason: 'only a tap runs the text search');
+    await _shoot(tester, 'inside-row');
+    await tester.tap(find.byKey(const ValueKey('files-search-inside')));
+    await tester.pumpAndSettle();
+    expect(api.searches, ['round']);
+    expect(find.text('final total = sum.roundToDouble();'), findsOneWidget);
+    expect(
+      find.text('Search text in files'),
+      findsNothing,
+      reason: 'the typed words stay in the field',
+    );
+  });
+
+  testWidgets('a server that cannot search text shows no such row', (
+    tester,
+  ) async {
+    _phone(tester);
+    final api = _Api(const ServerCapabilities(textSearch: false));
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(FilesScreen(controller: controller)));
+    await tester.pumpAndSettle();
+    await _type(tester, 'round');
+    expect(find.byKey(const ValueKey('files-search-inside')), findsNothing);
   });
 }
