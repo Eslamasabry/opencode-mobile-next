@@ -504,8 +504,15 @@ class FixtureOrchestrationGateway
     );
   }
 
+  /// When set, reading the scheduled jobs fails with this error.
+  Object? jobsError;
+
   @override
-  Future<List<ScheduledJob>> scheduledJobs() async => jobs;
+  Future<List<ScheduledJob>> scheduledJobs() async {
+    final error = jobsError;
+    if (error != null) throw error;
+    return jobs;
+  }
 
   @override
   Future<MutationReceipt> controlScheduledJob(

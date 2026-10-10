@@ -28913,7 +28913,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String teamAgentForceStopBody(String agent) {
-    return 'تنتهي جلسة $agent فورًا دون أن تُكمل عملها. قد يضيع ما لم تحفظه.';
+    return 'ينتهي $agent فورًا دون إكمال ما يعمله. قد يضيع ما لم يحفظه.';
   }
 
   @override
@@ -28923,5 +28923,105 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get teamAgentStopStuckBody =>
-      'لم ينهِ الإيقاف العادي جلسته. يمكنك إنهاءها بالقوة الآن.';
+      'لم ينهِ الإيقاف العادي عمله. يمكنك إنهاؤه بالقوة الآن.';
+
+  @override
+  String get teamJobsTitle => 'المهام المجدولة';
+
+  @override
+  String get teamJobsWholeTeamTitle => 'للفريق كله';
+
+  @override
+  String get teamJobsEmptyTitle => 'لا توجد مهام مجدولة';
+
+  @override
+  String get teamJobsEmptyBody =>
+      'لا يبدأ الكمبيوتر أي شيء من تلقاء نفسه لهذا المشروع.';
+
+  @override
+  String get teamJobsFailedTitle => 'تعذّرت قراءة المهام المجدولة';
+
+  @override
+  String get teamJobsFailedBody => 'تحقق من الاتصال بالكمبيوتر ثم حاول مجددًا.';
+
+  @override
+  String get teamJobsLoading => 'جارٍ قراءة المهام المجدولة';
+
+  @override
+  String teamJobEveryDayAt(String time) {
+    return 'كل يوم في $time';
+  }
+
+  @override
+  String teamJobEveryWeekdayAt(String time) {
+    return 'كل يوم عمل في $time';
+  }
+
+  @override
+  String teamJobEveryDowAt(String day, String time) {
+    return 'كل $day في $time';
+  }
+
+  @override
+  String get teamJobEveryHour => 'كل ساعة';
+
+  @override
+  String teamJobEveryMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'كل $count دقيقة',
+      few: 'كل $count دقائق',
+      two: 'كل دقيقتين',
+      one: 'كل دقيقة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String teamJobEveryHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'كل $count ساعة',
+      few: 'كل $count ساعات',
+      two: 'كل ساعتين',
+      one: 'كل ساعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String teamJobEverySeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'كل $count ثانية',
+      few: 'كل $count ثوانٍ',
+      two: 'كل ثانيتين',
+      one: 'كل ثانية',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get teamJobOnSchedule => 'وفق جدول';
+
+  @override
+  String get teamJobRepeats => 'يتكرر من تلقاء نفسه';
+
+  @override
+  String get teamJobWhenEvent => 'عند حدوث شيء';
+
+  @override
+  String get teamJobManual => 'فقط عند بدئه يدويًا';
+
+  @override
+  String get teamJobWebhook => 'عند وصول طلب ويب';
+
+  @override
+  String get teamJobCondition => 'عندما ينجح فحصه';
+
+  @override
+  String get teamJobOther => 'يبدأ من تلقاء نفسه';
 }

@@ -34600,7 +34600,7 @@
       }
     }
   },
-  "teamAgentForceStopBody": "{agent}'s session ends at once, without letting it finish. Work it hasn't saved may be lost.",
+  "teamAgentForceStopBody": "{agent} ends at once, without finishing what it is doing. Work it hasn't saved may be lost.",
   "@teamAgentForceStopBody": {
     "description": "Force stop confirmation body; says what is lost",
     "placeholders": {
@@ -34618,8 +34618,125 @@
       }
     }
   },
-  "teamAgentStopStuckBody": "The normal stop didn't end its session. You can force it to end now.",
+  "teamAgentStopStuckBody": "The normal stop didn't end it. You can force it to end now.",
   "@teamAgentStopStuckBody": {
     "description": "Agent page notice body when a normal stop did not work"
+  },
+  "teamJobsTitle": "Scheduled jobs",
+  "@teamJobsTitle": {
+    "description": "Section label on a project's page for the host's scheduled jobs"
+  },
+  "teamJobsWholeTeamTitle": "For the whole team",
+  "@teamJobsWholeTeamTitle": {
+    "description": "Section label for scheduled jobs that belong to no one project"
+  },
+  "teamJobsEmptyTitle": "No scheduled jobs",
+  "@teamJobsEmptyTitle": {
+    "description": "Empty state on a project page: the host has no scheduled jobs for it"
+  },
+  "teamJobsEmptyBody": "The computer starts nothing on its own for this project.",
+  "@teamJobsEmptyBody": {
+    "description": "Empty state body"
+  },
+  "teamJobsFailedTitle": "Couldn't read scheduled jobs",
+  "@teamJobsFailedTitle": {
+    "description": "Failed state on a project page"
+  },
+  "teamJobsFailedBody": "Check the connection to the computer, then try again.",
+  "@teamJobsFailedBody": {
+    "description": "Failed state body"
+  },
+  "teamJobsLoading": "Reading scheduled jobs",
+  "@teamJobsLoading": {
+    "description": "Loading label of the scheduled jobs on a project page"
+  },
+  "teamJobEveryDayAt": "Every day at {time}",
+  "@teamJobEveryDayAt": {
+    "description": "Plain schedule wording",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "teamJobEveryWeekdayAt": "Every weekday at {time}",
+  "@teamJobEveryWeekdayAt": {
+    "description": "Plain schedule wording for Monday to Friday",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "teamJobEveryDowAt": "Every {day} at {time}",
+  "@teamJobEveryDowAt": {
+    "description": "Plain schedule wording for one weekday",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "teamJobEveryHour": "Every hour",
+  "@teamJobEveryHour": {
+    "description": "Plain schedule wording"
+  },
+  "teamJobEveryMinutes": "{count, plural, =1{Every minute} other{Every {count} minutes}}",
+  "@teamJobEveryMinutes": {
+    "description": "Plain schedule wording for a repeat every few minutes",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teamJobEveryHours": "{count, plural, =1{Every hour} other{Every {count} hours}}",
+  "@teamJobEveryHours": {
+    "description": "Plain schedule wording for a repeat every few hours",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teamJobEverySeconds": "{count, plural, =1{Every second} other{Every {count} seconds}}",
+  "@teamJobEverySeconds": {
+    "description": "Plain schedule wording for a repeat every few seconds",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teamJobOnSchedule": "On a schedule",
+  "@teamJobOnSchedule": {
+    "description": "Plain wording when the schedule is too unusual to say simply"
+  },
+  "teamJobRepeats": "Repeats on its own",
+  "@teamJobRepeats": {
+    "description": "Plain wording when the repeat time is not understood"
+  },
+  "teamJobWhenEvent": "When something happens",
+  "@teamJobWhenEvent": {
+    "description": "Plain wording for a job started by an event"
+  },
+  "teamJobManual": "Only when started by hand",
+  "@teamJobManual": {
+    "description": "Plain wording for a job that never starts by itself"
+  },
+  "teamJobWebhook": "When a web request arrives",
+  "@teamJobWebhook": {
+    "description": "Plain wording for a job started by a web request"
+  },
+  "teamJobCondition": "When its check passes",
+  "@teamJobCondition": {
+    "description": "Plain wording for a job started when a check passes"
+  },
+  "teamJobOther": "Starts on its own",
+  "@teamJobOther": {
+    "description": "Plain wording for an unknown trigger"
   }
 }

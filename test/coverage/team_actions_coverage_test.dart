@@ -213,6 +213,22 @@ void main() {
         ),
       );
       await one(
+        'GC POST /v0/city/{cityName}/order/{name}/enable',
+        () => gateway.controlScheduledJob(
+          'shopfront/nightly',
+          enabled: true,
+          requestId: 'r20',
+        ),
+      );
+      await one(
+        'GC POST /v0/city/{cityName}/order/{name}/disable',
+        () => gateway.controlScheduledJob(
+          'shopfront/nightly',
+          enabled: false,
+          requestId: 'r21',
+        ),
+      );
+      await one(
         'GC POST /v0/city/{cityName}/sling',
         () => gateway.assign('sf-12', agentId: dir, requestId: 'r8'),
       );

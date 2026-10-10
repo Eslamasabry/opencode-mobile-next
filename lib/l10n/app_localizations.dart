@@ -45470,7 +45470,7 @@ abstract class AppLocalizations {
   /// Force stop confirmation body; says what is lost
   ///
   /// In en, this message translates to:
-  /// **'{agent}\'s session ends at once, without letting it finish. Work it hasn\'t saved may be lost.'**
+  /// **'{agent} ends at once, without finishing what it is doing. Work it hasn\'t saved may be lost.'**
   String teamAgentForceStopBody(String agent);
 
   /// Agent page notice title when a normal stop did not end the session
@@ -45482,8 +45482,134 @@ abstract class AppLocalizations {
   /// Agent page notice body when a normal stop did not work
   ///
   /// In en, this message translates to:
-  /// **'The normal stop didn\'t end its session. You can force it to end now.'**
+  /// **'The normal stop didn\'t end it. You can force it to end now.'**
   String get teamAgentStopStuckBody;
+
+  /// Section label on a project's page for the host's scheduled jobs
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled jobs'**
+  String get teamJobsTitle;
+
+  /// Section label for scheduled jobs that belong to no one project
+  ///
+  /// In en, this message translates to:
+  /// **'For the whole team'**
+  String get teamJobsWholeTeamTitle;
+
+  /// Empty state on a project page: the host has no scheduled jobs for it
+  ///
+  /// In en, this message translates to:
+  /// **'No scheduled jobs'**
+  String get teamJobsEmptyTitle;
+
+  /// Empty state body
+  ///
+  /// In en, this message translates to:
+  /// **'The computer starts nothing on its own for this project.'**
+  String get teamJobsEmptyBody;
+
+  /// Failed state on a project page
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read scheduled jobs'**
+  String get teamJobsFailedTitle;
+
+  /// Failed state body
+  ///
+  /// In en, this message translates to:
+  /// **'Check the connection to the computer, then try again.'**
+  String get teamJobsFailedBody;
+
+  /// Loading label of the scheduled jobs on a project page
+  ///
+  /// In en, this message translates to:
+  /// **'Reading scheduled jobs'**
+  String get teamJobsLoading;
+
+  /// Plain schedule wording
+  ///
+  /// In en, this message translates to:
+  /// **'Every day at {time}'**
+  String teamJobEveryDayAt(String time);
+
+  /// Plain schedule wording for Monday to Friday
+  ///
+  /// In en, this message translates to:
+  /// **'Every weekday at {time}'**
+  String teamJobEveryWeekdayAt(String time);
+
+  /// Plain schedule wording for one weekday
+  ///
+  /// In en, this message translates to:
+  /// **'Every {day} at {time}'**
+  String teamJobEveryDowAt(String day, String time);
+
+  /// Plain schedule wording
+  ///
+  /// In en, this message translates to:
+  /// **'Every hour'**
+  String get teamJobEveryHour;
+
+  /// Plain schedule wording for a repeat every few minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every minute} other{Every {count} minutes}}'**
+  String teamJobEveryMinutes(int count);
+
+  /// Plain schedule wording for a repeat every few hours
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every hour} other{Every {count} hours}}'**
+  String teamJobEveryHours(int count);
+
+  /// Plain schedule wording for a repeat every few seconds
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every second} other{Every {count} seconds}}'**
+  String teamJobEverySeconds(int count);
+
+  /// Plain wording when the schedule is too unusual to say simply
+  ///
+  /// In en, this message translates to:
+  /// **'On a schedule'**
+  String get teamJobOnSchedule;
+
+  /// Plain wording when the repeat time is not understood
+  ///
+  /// In en, this message translates to:
+  /// **'Repeats on its own'**
+  String get teamJobRepeats;
+
+  /// Plain wording for a job started by an event
+  ///
+  /// In en, this message translates to:
+  /// **'When something happens'**
+  String get teamJobWhenEvent;
+
+  /// Plain wording for a job that never starts by itself
+  ///
+  /// In en, this message translates to:
+  /// **'Only when started by hand'**
+  String get teamJobManual;
+
+  /// Plain wording for a job started by a web request
+  ///
+  /// In en, this message translates to:
+  /// **'When a web request arrives'**
+  String get teamJobWebhook;
+
+  /// Plain wording for a job started when a check passes
+  ///
+  /// In en, this message translates to:
+  /// **'When its check passes'**
+  String get teamJobCondition;
+
+  /// Plain wording for an unknown trigger
+  ///
+  /// In en, this message translates to:
+  /// **'Starts on its own'**
+  String get teamJobOther;
 }
 
 class _AppLocalizationsDelegate

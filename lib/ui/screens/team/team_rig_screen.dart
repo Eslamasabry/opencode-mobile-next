@@ -18,6 +18,7 @@ import '../../../state/orchestration.dart';
 import '../../app_theme.dart';
 import '../../kit/kit.dart';
 import '../../widgets/team_controls.dart' show teamControlReceipt;
+import '../../widgets/team_job_words.dart';
 
 AppLocalizations _copy(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -51,6 +52,18 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
   bool _busy = false;
 
   OrchestrationController get _controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // After the first frame: reading tells the controller's listeners
+    // (the page under this one), which must not happen while building.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _controller.capabilities.scheduledJobs) {
+        unawaited(_controller.scheduledJobs());
+      }
+    });
+  }
 
   OrchestrationProject? get _project {
     for (final project in _controller.snapshot.projects) {
@@ -119,6 +132,104 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
     await _send(project, ProjectControlAction.remove);
   }
 
+  /// The project's scheduled jobs, each a switch with its plain "when"; the
+  /// team's own (no project) follow under their own label. Loading, failed
+  /// and empty are each said in words.
+  List<Widget> _jobs(
+    BuildContext context,
+    AppLocalizations l10n,
+    OrchestrationProject project,
+  ) {
+    final caps = _controller.capabilities;
+    if (!caps.scheduledJobs) return const [];
+    final all = _controller.scheduledJobList;
+    if (all == null) {
+      if (_controller.scheduledJobsError == null) return const [];
+      return [
+        KitSectionLabel(l10n.teamJobsTitle),
+        KitNotice(
+          key: const ValueKey('team-jobs-failed'),
+          tone: AppStatusTone.failure,
+          icon: AppIconography.warning,
+          title: l10n.teamJobsFailedTitle,
+          message: l10n.teamJobsFailedBody,
+          actions: [
+            KitAction(
+              key: const ValueKey('team-jobs-retry'),
+              label: l10n.commonRetry,
+              onPressed: () =>
+                  unawaited(_controller.scheduledJobs(force: true)),
+            ),
+          ],
+        ),
+      ];
+    }
+    final mine = [
+      for (final job in all)
+        if (job.projectId == project.id) job,
+    ];
+    final team = [
+      for (final job in all)
+        if (job.projectId == null || job.projectId!.isEmpty) job,
+    ];
+    Widget row(ScheduledJob job) {
+      final record = _controller.latestMutation(
+        kind: MutationKind.controlScheduledJob,
+        targetId: job.id,
+      );
+      return KitSwitchRow(
+        key: ValueKey('team-job-${job.id}'),
+        switchKey: ValueKey('team-job-switch-${job.id}'),
+        title: job.name,
+        supporting: teamJobWhen(l10n, job),
+        value: job.enabled,
+        onChanged: caps.controlScheduledJobs
+            ? (on) => unawaited(
+                _controller.controlScheduledJob(job.id, enabled: on),
+              )
+            : null,
+        below: record == null || record.status == MutationStatus.confirmed
+            ? null
+            : teamControlReceipt(
+                context,
+                record,
+                key: ValueKey('team-job-receipt-${job.id}'),
+                onRetry: record.canRetry
+                    ? () async {
+                        await _controller.retryMutation(record.key);
+                      }
+                    : null,
+                retryKey: ValueKey('team-job-receipt-retry-${job.id}'),
+              ),
+      );
+    }
+
+    return [
+      KitSectionLabel(l10n.teamJobsTitle),
+      if (mine.isEmpty)
+        KitStateView(
+          key: const ValueKey('team-jobs-empty'),
+          size: KitStateSize.inline,
+          liveRegion: false,
+          icon: AppIconography.clock,
+          title: l10n.teamJobsEmptyTitle,
+          body: l10n.teamJobsEmptyBody,
+        )
+      else
+        KitRowGroup(
+          key: const ValueKey('team-jobs'),
+          children: [for (final job in mine) row(job)],
+        ),
+      if (team.isNotEmpty) ...[
+        KitSectionLabel(l10n.teamJobsWholeTeamTitle),
+        KitRowGroup(
+          key: const ValueKey('team-jobs-team'),
+          children: [for (final job in team) row(job)],
+        ),
+      ],
+    ];
+  }
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: _controller,
@@ -154,6 +265,11 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
         title: project.name,
         subtitle: paused ? l10n.teamRigStatePaused : l10n.teamRigStateActive,
       ),
+      loading:
+          caps.scheduledJobs &&
+          _controller.scheduledJobsLoading &&
+          _controller.scheduledJobList == null,
+      loadingLabel: l10n.teamJobsLoading,
       body: ListView(
         padding: KitScreen.padding(context),
         children: [
@@ -211,6 +327,7 @@ class _TeamRigScreenState extends State<TeamRigScreen> {
                   ),
               ],
             ),
+          ..._jobs(context, l10n, project),
           KitDetailsFold(
             foldKey: const ValueKey('team-rig-technical'),
             label: l10n.teamUiTechnicalDetails,

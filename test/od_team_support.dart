@@ -64,6 +64,9 @@ class OdTeam {
         self.writes.add(request);
         return await self.onWrite?.call(request) ?? {'status': 'ok'};
       }
+      if (request.path.endsWith('/orders')) {
+        return {'orders': city['orders'] ?? const []};
+      }
       return supervisorAnswer(city, request);
     };
     return self;
