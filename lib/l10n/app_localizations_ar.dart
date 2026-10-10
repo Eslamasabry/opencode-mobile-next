@@ -28788,4 +28788,151 @@ class AppLocalizationsAr extends AppLocalizations {
   String teamProjectTaskStopNamedBody(String task) {
     return 'تتوقف «$task». وتبقى محادثتها وتغييراتها للمراجعة.';
   }
+
+  @override
+  String get agentFeaturesLabel => 'إعدادات الوكيل';
+
+  @override
+  String get agentFeaturesLoading => 'جارٍ تحميل إعدادات الوكيل…';
+
+  @override
+  String get agentFeaturesLoadFailed => 'تعذر تحميل إعدادات هذا الوكيل.';
+
+  @override
+  String get agentFeatureFastTitle => 'الوضع السريع';
+
+  @override
+  String get agentFeatureFastDetail =>
+      'ردود أسرع من النماذج المدعومة. تكلفته أعلى.';
+
+  @override
+  String get agentFeatureSaving => 'جارٍ الحفظ…';
+
+  @override
+  String agentFeatureChangeFailed(String name) {
+    return 'تعذر تغيير $name. يبقى إعداده القديم.';
+  }
+
+  @override
+  String get claudeImportTitle => 'استيراد من Claude Code';
+
+  @override
+  String claudeImportIntro(String project) {
+    return 'اختر محادثة بدأتها في Claude Code داخل $project. تُفتح هنا لتتابعها.';
+  }
+
+  @override
+  String claudeImportRowDetail(String project, String when) {
+    return '$project · $when';
+  }
+
+  @override
+  String get claudeImportUntitled => 'محادثة بلا عنوان';
+
+  @override
+  String get claudeImportEmptyTitle => 'لا شيء للاستيراد';
+
+  @override
+  String get claudeImportEmptyBody =>
+      'تظهر هنا المحادثات التي تبدأها في Claude Code داخل هذا المشروع.';
+
+  @override
+  String get claudeImportLoadFailedTitle => 'تعذر البحث';
+
+  @override
+  String get claudeImportLoadFailedBody =>
+      'لم تُحمَّل القائمة. تحقق من الاتصال ثم حاول مرة أخرى.';
+
+  @override
+  String claudeImportAlready(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count محادثات أخرى موجودة هنا بالفعل.',
+      one: 'محادثة واحدة أخرى موجودة هنا بالفعل.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get claudeImportWorking => 'جارٍ الاستيراد…';
+
+  @override
+  String get claudeImportFailed => 'تعذر استيراد تلك المحادثة. حاول مرة أخرى.';
+
+  @override
+  String hostUpdateRow(String computer) {
+    return 'تحديث الوكلاء على $computer';
+  }
+
+  @override
+  String hostUpdateRowRunning(String version) {
+    return 'يعمل $version. يثبّت أحدث برنامج للوكلاء.';
+  }
+
+  @override
+  String get hostUpdateRowUnknown =>
+      'يثبّت أحدث برنامج للوكلاء على ذلك الحاسوب.';
+
+  @override
+  String get hostUpdateConfirmTitle => 'تحديث الوكلاء؟';
+
+  @override
+  String hostUpdateConfirmBody(String computer) {
+    return 'سيثبّت هذا أحدث برنامج للوكلاء على $computer ويعيد تشغيله.';
+  }
+
+  @override
+  String hostUpdateConfirmPauses(String computer) {
+    return 'تتوقف المحادثات على $computer مؤقتا أثناء إعادة التشغيل.';
+  }
+
+  @override
+  String get hostUpdateConfirmKept => 'تبقى محادثاتك وإعداداتك كما هي.';
+
+  @override
+  String get hostUpdateConfirmAction => 'تحديث الوكلاء';
+
+  @override
+  String get hostUpdateStarting => 'جارٍ بدء التحديث…';
+
+  @override
+  String get hostUpdateDownloading => 'جارٍ تنزيل أحدث إصدار…';
+
+  @override
+  String get hostUpdateInstalling => 'جارٍ التثبيت…';
+
+  @override
+  String get hostUpdateFinishing => 'جارٍ الإنهاء…';
+
+  @override
+  String hostUpdateDone(String version) {
+    return 'تم التحديث إلى $version. يعيد التطبيق الاتصال تلقائيا.';
+  }
+
+  @override
+  String get hostUpdateDoneNoVersion =>
+      'تم تحديث Paseo. يعيد التطبيق الاتصال تلقائيا.';
+
+  @override
+  String hostUpdateCurrent(String computer) {
+    return '$computer محدّث بالفعل.';
+  }
+
+  @override
+  String get hostUpdateFailed =>
+      'لم يكتمل التحديث. حاول مرة أخرى، أو حدّثه على ذلك الحاسوب.';
+
+  @override
+  String get hostUpdateDropped =>
+      'انقطع الاتصال أثناء التحديث. يعيد التطبيق الاتصال.';
+
+  @override
+  String get hostUpdateDetailsRow => 'سبب الفشل';
+
+  @override
+  String get hostUpdateDetailsTitle => 'تفاصيل التحديث';
+
+  @override
+  String get hostUpdateDetailsMessage => 'رسالة من الحاسوب';
 }

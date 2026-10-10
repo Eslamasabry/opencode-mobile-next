@@ -228,9 +228,15 @@ class PaseoBinaryFrame {
 
 class _PendingRequest {
   final bool mutation;
+
+  /// Progress messages the daemon sends for this request before its answer.
+  final void Function(String type, Map<String, dynamic> payload)? onProgress;
+
+  /// The answer is a report to read even when it carries an `error`.
+  final bool answerErrors;
   final Completer<Map<String, dynamic>> result = Completer();
   Timer? timer;
-  _PendingRequest(this.mutation);
+  _PendingRequest(this.mutation, {this.onProgress, this.answerErrors = false});
 }
 
 class PaseoTransport {
@@ -405,6 +411,8 @@ class PaseoTransport {
     Duration? timeout,
     int? expectedEpoch,
     void Function()? beforeSend,
+    void Function(String type, Map<String, dynamic> payload)? onProgress,
+    bool answerErrors = false,
   }) async {
     if (expectedEpoch != null && (!connected || expectedEpoch != _epoch)) {
       throw PaseoFailure(PaseoFailureKind.staleRequest);
@@ -428,7 +436,11 @@ class PaseoTransport {
     }
     beforeSend?.call();
     final id = 'm${epoch}_${++_nextID}';
-    final pending = _PendingRequest(mutation);
+    final pending = _PendingRequest(
+      mutation,
+      onProgress: onProgress,
+      answerErrors: answerErrors,
+    );
     _pending[id] = pending;
     pending.timer = Timer(timeout ?? requestTimeout, () {
       if (_pending.remove(id) == null) return;
@@ -556,11 +568,19 @@ class PaseoTransport {
       // with the push they cause (`agent_archived`, `agent_deleted`). Request
       // ids are minted here and unique, so any payload repeating one settles
       // it; a push is still delivered as an event afterwards.
+      // Progress is not the answer: it repeats the request id but leaves the
+      // request waiting.
+      if (type.endsWith('.progress') &&
+          requestId is String &&
+          _pending.containsKey(requestId)) {
+        _pending[requestId]?.onProgress?.call(type, payload);
+        return;
+      }
       final pending = requestId is String ? _pending.remove(requestId) : null;
       if (pending != null) {
         pending.timer?.cancel();
         final error = payload['error'];
-        if (error is String && error.isNotEmpty) {
+        if (!pending.answerErrors && error is String && error.isNotEmpty) {
           lastDaemonError = 'The agent request could not be completed.';
           pending.result.completeError(
             PaseoFailure(PaseoFailureKind.unavailable),

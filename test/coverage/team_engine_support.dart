@@ -2,6 +2,13 @@
 // the coverage gate can look for each one on the screens.
 import 'package:opencode_mobile/domain/team_project_gateway.dart';
 
+// The pages say how long ago these happened, measured from the real clock, so
+// the sample dates them from now: the ledger reads "10h ago" on any day.
+String _tenHoursAgo({int minutes = 0}) => DateTime.now()
+    .toUtc()
+    .subtract(Duration(hours: 10, minutes: minutes))
+    .toIso8601String();
+
 const _spec = TeamSpec(
   contextFiles: ['docs/brand-guide.md'],
   version: 3,
@@ -38,7 +45,7 @@ const _settings = TeamProjectSettings(
   ),
 );
 
-TeamWorkspace populatedEngineWorkspace() => const TeamWorkspace(
+TeamWorkspace populatedEngineWorkspace() => TeamWorkspace(
   defaultSettings: _settings,
   schemaVersion: 1,
   revision: 41,
@@ -170,7 +177,7 @@ TeamWorkspace populatedEngineWorkspace() => const TeamWorkspace(
           repoId: 'repo-web',
           before: 'before99',
           after: 'after88',
-          at: '2026-10-09T08:40:00Z',
+          at: _tenHoursAgo(minutes: 5),
           actor: 'person',
         ),
       ],
@@ -180,7 +187,7 @@ TeamWorkspace populatedEngineWorkspace() => const TeamWorkspace(
           kind: 'decision',
           text: 'Cart stays on the phone',
           actor: 'person',
-          at: '2026-10-09T08:25:00Z',
+          at: _tenHoursAgo(minutes: 20),
           taskId: 'task-pay',
         ),
       ],
@@ -195,7 +202,7 @@ TeamWorkspace populatedEngineWorkspace() => const TeamWorkspace(
       spentToday: 4.25,
       spendDay: '2026-10-09',
       digestReadAt: '2026-10-09T06:00:00Z',
-      updatedAt: '2026-10-09T08:45:00Z',
+      updatedAt: _tenHoursAgo(),
       planApproved: true,
       quickTask: true,
       usageReported: true,

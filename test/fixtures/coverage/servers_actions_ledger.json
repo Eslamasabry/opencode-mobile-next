@@ -38,7 +38,7 @@
   "oc1 POST /log": "not offered: covered elsewhere - sent by Settings > Report a problem, not from a server page",
   "oc1 PUT /auth/{providerID}": "not offered: covered elsewhere - provider sign-in belongs to Models and providers",
   "paseo daemon.config.reload.request": "not offered: admin-only - applies edited daemon settings; that is done on the computer that runs it",
-  "paseo daemon.update.request": "not offered: owner decision needed - updates software on the owner's computer",
+  "paseo daemon.update.request": "reachable: Server settings (Claude Code or Pi server) > Update agents on <computer> (confirm); proof: test/settings_host_update_test.dart :: update asks first, names the computer, then installs",
   "paseo hub.management.daemon.connect.request": "not offered: admin-only - links the daemon to a relay hub, which this app never uses",
   "paseo hub.management.daemon.disconnect.request": "not offered: admin-only - links the daemon to a relay hub, which this app never uses",
   "paseo hub.management.daemon.permissions.update.request": "not offered: admin-only - hub permissions of the daemon, which this app never uses",

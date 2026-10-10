@@ -28654,4 +28654,154 @@ class AppLocalizationsJa extends AppLocalizations {
   String teamProjectTaskStopNamedBody(String task) {
     return '“$task” stops. Its conversation and changes stay for review.';
   }
+
+  @override
+  String get agentFeaturesLabel => 'Agent settings';
+
+  @override
+  String get agentFeaturesLoading => 'Loading agent settings…';
+
+  @override
+  String get agentFeaturesLoadFailed =>
+      'Could not load this agent\'s settings.';
+
+  @override
+  String get agentFeatureFastTitle => 'Fast mode';
+
+  @override
+  String get agentFeatureFastDetail =>
+      'Quicker replies from supported models. It costs more.';
+
+  @override
+  String get agentFeatureSaving => 'Saving…';
+
+  @override
+  String agentFeatureChangeFailed(String name) {
+    return 'Could not change $name. It keeps its old setting.';
+  }
+
+  @override
+  String get claudeImportTitle => 'Import from Claude Code';
+
+  @override
+  String claudeImportIntro(String project) {
+    return 'Pick a conversation you started in Claude Code in $project. It opens here so you can carry on.';
+  }
+
+  @override
+  String claudeImportRowDetail(String project, String when) {
+    return '$project · $when';
+  }
+
+  @override
+  String get claudeImportUntitled => 'Untitled conversation';
+
+  @override
+  String get claudeImportEmptyTitle => 'Nothing to import';
+
+  @override
+  String get claudeImportEmptyBody =>
+      'Conversations you start in Claude Code in this project show up here.';
+
+  @override
+  String get claudeImportLoadFailedTitle => 'Could not look';
+
+  @override
+  String get claudeImportLoadFailedBody =>
+      'The list did not load. Check the connection, then try again.';
+
+  @override
+  String claudeImportAlready(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more conversations are already here.',
+      one: '1 more conversation is already here.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get claudeImportWorking => 'Importing…';
+
+  @override
+  String get claudeImportFailed =>
+      'That conversation could not be imported. Try again.';
+
+  @override
+  String hostUpdateRow(String computer) {
+    return 'Update agents on $computer';
+  }
+
+  @override
+  String hostUpdateRowRunning(String version) {
+    return 'Running $version. Installs the newest agent software.';
+  }
+
+  @override
+  String get hostUpdateRowUnknown =>
+      'Installs the newest agent software on that computer.';
+
+  @override
+  String get hostUpdateConfirmTitle => 'Update agents?';
+
+  @override
+  String hostUpdateConfirmBody(String computer) {
+    return 'This installs the newest agent software on $computer and restarts it.';
+  }
+
+  @override
+  String hostUpdateConfirmPauses(String computer) {
+    return 'Conversations on $computer pause while it restarts.';
+  }
+
+  @override
+  String get hostUpdateConfirmKept =>
+      'Your conversations and settings stay as they are.';
+
+  @override
+  String get hostUpdateConfirmAction => 'Update agents';
+
+  @override
+  String get hostUpdateStarting => 'Starting the update…';
+
+  @override
+  String get hostUpdateDownloading => 'Downloading the newest version…';
+
+  @override
+  String get hostUpdateInstalling => 'Installing…';
+
+  @override
+  String get hostUpdateFinishing => 'Finishing up…';
+
+  @override
+  String hostUpdateDone(String version) {
+    return 'Updated to $version. The app reconnects by itself.';
+  }
+
+  @override
+  String get hostUpdateDoneNoVersion =>
+      'Updated. The app reconnects by itself.';
+
+  @override
+  String hostUpdateCurrent(String computer) {
+    return '$computer is already up to date.';
+  }
+
+  @override
+  String get hostUpdateFailed =>
+      'The update did not finish. Try again, or update it on that computer.';
+
+  @override
+  String get hostUpdateDropped =>
+      'The connection dropped during the update. The app is reconnecting.';
+
+  @override
+  String get hostUpdateDetailsRow => 'Why it failed';
+
+  @override
+  String get hostUpdateDetailsTitle => 'Update details';
+
+  @override
+  String get hostUpdateDetailsMessage => 'Message from the computer';
 }

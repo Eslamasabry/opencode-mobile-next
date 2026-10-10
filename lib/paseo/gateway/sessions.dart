@@ -66,6 +66,7 @@ extension _PaseoSessions on PaseoGateway {
     _drafts.remove(id);
     _draftProviders.remove(id);
     _draftModels.remove(id);
+    _draftFeatureValues.remove(id);
     _liveAgentSessions.remove(id);
     _uncertain.remove(id);
     _awaitingTurn.remove(id);

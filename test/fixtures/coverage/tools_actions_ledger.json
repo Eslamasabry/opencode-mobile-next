@@ -31,7 +31,7 @@
   "oc1 POST /mcp/{name}/connect": "reachable: Tools > MCP > Connect <server>",
   "oc1 POST /mcp/{name}/disconnect": "reachable: Tools > MCP > press and hold a connected server > Disconnect (confirm); proof: test/library_integrations_mcp_test.dart :: MCP Disconnect waits for the confirm sheet",
   "oc1 POST /session/{sessionID}/command": "reachable: Tools > Commands > a command > Run; proof: test/library_commands_test.dart :: new workspace creates a chat and runs without duplicate submission",
-  "paseo agent.config.apply.request": "not offered: owner decision needed - changes how an agent on the computer is set up (profiles, models, modes); no screen offers agent settings for Claude Code or Pi yet",
+  "paseo agent.config.apply.request": "not offered: not needed - the model sheet changes one agent switch at a time (set_agent_feature_request, models_actions_ledger.json); applying a whole bundle at once would add nothing",
   "paseo plugin.directory.install.request": "not offered: admin-only - installing, enabling or removing plugins changes software on the owner's computer; the app lists OpenCode plugins read-only",
   "paseo plugin.disable.request": "not offered: admin-only - installing, enabling or removing plugins changes software on the owner's computer; the app lists OpenCode plugins read-only",
   "paseo plugin.enable.request": "not offered: admin-only - installing, enabling or removing plugins changes software on the owner's computer; the app lists OpenCode plugins read-only",
