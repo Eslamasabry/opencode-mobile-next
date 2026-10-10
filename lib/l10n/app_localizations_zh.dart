@@ -28512,6 +28512,83 @@ class AppLocalizationsZh extends AppLocalizations {
       'Could not check for agents. Try again in a moment.';
 
   @override
+  String hostUpdateRow(String computer) {
+    return 'Update agents on $computer';
+  }
+
+  @override
+  String hostUpdateRowRunning(String version) {
+    return 'Running $version. Installs the newest agent software.';
+  }
+
+  @override
+  String get hostUpdateRowUnknown =>
+      'Installs the newest agent software on that computer.';
+
+  @override
+  String get hostUpdateConfirmTitle => 'Update agents?';
+
+  @override
+  String hostUpdateConfirmBody(String computer) {
+    return 'This installs the newest agent software on $computer and restarts it.';
+  }
+
+  @override
+  String hostUpdateConfirmPauses(String computer) {
+    return 'Conversations on $computer pause while it restarts.';
+  }
+
+  @override
+  String get hostUpdateConfirmKept =>
+      'Your conversations and settings stay as they are.';
+
+  @override
+  String get hostUpdateConfirmAction => 'Update agents';
+
+  @override
+  String get hostUpdateStarting => 'Starting the update…';
+
+  @override
+  String get hostUpdateDownloading => 'Downloading the newest version…';
+
+  @override
+  String get hostUpdateInstalling => 'Installing…';
+
+  @override
+  String get hostUpdateFinishing => 'Finishing up…';
+
+  @override
+  String hostUpdateDone(String version) {
+    return 'Updated to $version. The app reconnects by itself.';
+  }
+
+  @override
+  String get hostUpdateDoneNoVersion =>
+      'Updated. The app reconnects by itself.';
+
+  @override
+  String hostUpdateCurrent(String computer) {
+    return '$computer is already up to date.';
+  }
+
+  @override
+  String get hostUpdateFailed =>
+      'The update did not finish. Try again, or update it on that computer.';
+
+  @override
+  String get hostUpdateDropped =>
+      'The connection dropped during the update. The app is reconnecting.';
+
+  @override
+  String get hostUpdateDetailsRow => 'Why it failed';
+
+  @override
+  String get hostUpdateDetailsTitle => 'Update details';
+
+  @override
+  String get hostUpdateDetailsMessage => 'Message from the computer';
+
+  @override
   String integrationsMcpDetails(String name) {
     return 'Details for $name';
   }

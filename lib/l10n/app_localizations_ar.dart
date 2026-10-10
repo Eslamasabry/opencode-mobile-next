@@ -28665,6 +28665,82 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذر التحقق من الوكلاء. حاول بعد قليل.';
 
   @override
+  String hostUpdateRow(String computer) {
+    return 'تحديث الوكلاء على $computer';
+  }
+
+  @override
+  String hostUpdateRowRunning(String version) {
+    return 'يعمل $version. يثبّت أحدث برنامج للوكلاء.';
+  }
+
+  @override
+  String get hostUpdateRowUnknown =>
+      'يثبّت أحدث برنامج للوكلاء على ذلك الحاسوب.';
+
+  @override
+  String get hostUpdateConfirmTitle => 'تحديث الوكلاء؟';
+
+  @override
+  String hostUpdateConfirmBody(String computer) {
+    return 'سيثبّت هذا أحدث برنامج للوكلاء على $computer ويعيد تشغيله.';
+  }
+
+  @override
+  String hostUpdateConfirmPauses(String computer) {
+    return 'تتوقف المحادثات على $computer مؤقتا أثناء إعادة التشغيل.';
+  }
+
+  @override
+  String get hostUpdateConfirmKept => 'تبقى محادثاتك وإعداداتك كما هي.';
+
+  @override
+  String get hostUpdateConfirmAction => 'تحديث الوكلاء';
+
+  @override
+  String get hostUpdateStarting => 'جارٍ بدء التحديث…';
+
+  @override
+  String get hostUpdateDownloading => 'جارٍ تنزيل أحدث إصدار…';
+
+  @override
+  String get hostUpdateInstalling => 'جارٍ التثبيت…';
+
+  @override
+  String get hostUpdateFinishing => 'جارٍ الإنهاء…';
+
+  @override
+  String hostUpdateDone(String version) {
+    return 'تم التحديث إلى $version. يعيد التطبيق الاتصال تلقائيا.';
+  }
+
+  @override
+  String get hostUpdateDoneNoVersion =>
+      'تم تحديث Paseo. يعيد التطبيق الاتصال تلقائيا.';
+
+  @override
+  String hostUpdateCurrent(String computer) {
+    return '$computer محدّث بالفعل.';
+  }
+
+  @override
+  String get hostUpdateFailed =>
+      'لم يكتمل التحديث. حاول مرة أخرى، أو حدّثه على ذلك الحاسوب.';
+
+  @override
+  String get hostUpdateDropped =>
+      'انقطع الاتصال أثناء التحديث. يعيد التطبيق الاتصال.';
+
+  @override
+  String get hostUpdateDetailsRow => 'سبب الفشل';
+
+  @override
+  String get hostUpdateDetailsTitle => 'تفاصيل التحديث';
+
+  @override
+  String get hostUpdateDetailsMessage => 'رسالة من الحاسوب';
+
+  @override
   String integrationsMcpDetails(String name) {
     return 'تفاصيل $name';
   }

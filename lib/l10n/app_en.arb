@@ -34247,6 +34247,116 @@
   "@serverSettingsRecheckFailed": {
     "description": "Server settings: recheck failed"
   },
+  "hostUpdateRow": "Update agents on {computer}",
+  "@hostUpdateRow": {
+    "description": "Server settings, Paseo: row that updates the agent helper on the computer",
+    "placeholders": {
+      "computer": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateRowRunning": "Running {version}. Installs the newest agent software.",
+  "@hostUpdateRowRunning": {
+    "description": "Technical: Server settings, Paseo: update row detail naming the running version",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateRowUnknown": "Installs the newest agent software on that computer.",
+  "@hostUpdateRowUnknown": {
+    "description": "Server settings, Paseo: update row detail without a version"
+  },
+  "hostUpdateConfirmTitle": "Update agents?",
+  "@hostUpdateConfirmTitle": {
+    "description": "Confirmation title for updating the agent helper"
+  },
+  "hostUpdateConfirmBody": "This installs the newest agent software on {computer} and restarts it.",
+  "@hostUpdateConfirmBody": {
+    "description": "Confirmation body for updating the agent helper",
+    "placeholders": {
+      "computer": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateConfirmPauses": "Conversations on {computer} pause while it restarts.",
+  "@hostUpdateConfirmPauses": {
+    "description": "Consequence: running chats pause during the restart",
+    "placeholders": {
+      "computer": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateConfirmKept": "Your conversations and settings stay as they are.",
+  "@hostUpdateConfirmKept": {
+    "description": "Consequence: nothing is lost"
+  },
+  "hostUpdateConfirmAction": "Update agents",
+  "@hostUpdateConfirmAction": {
+    "description": "Confirmation button that starts the helper update"
+  },
+  "hostUpdateStarting": "Starting the update…",
+  "@hostUpdateStarting": {
+    "description": "Update progress: starting"
+  },
+  "hostUpdateDownloading": "Downloading the newest version…",
+  "@hostUpdateDownloading": {
+    "description": "Update progress: downloading"
+  },
+  "hostUpdateInstalling": "Installing…",
+  "@hostUpdateInstalling": {
+    "description": "Update progress: installing"
+  },
+  "hostUpdateFinishing": "Finishing up…",
+  "@hostUpdateFinishing": {
+    "description": "Update progress: complete, restarting"
+  },
+  "hostUpdateDone": "Updated to {version}. The app reconnects by itself.",
+  "@hostUpdateDone": {
+    "description": "Technical: Update succeeded, naming the new version",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateDoneNoVersion": "Updated. The app reconnects by itself.",
+  "@hostUpdateDoneNoVersion": {
+    "description": "Update succeeded, version not reported"
+  },
+  "hostUpdateCurrent": "{computer} is already up to date.",
+  "@hostUpdateCurrent": {
+    "description": "Update finished and nothing newer existed",
+    "placeholders": {
+      "computer": {
+        "type": "String"
+      }
+    }
+  },
+  "hostUpdateFailed": "The update did not finish. Try again, or update it on that computer.",
+  "@hostUpdateFailed": {
+    "description": "Update failed, plain words"
+  },
+  "hostUpdateDropped": "The connection dropped during the update. The app is reconnecting.",
+  "@hostUpdateDropped": {
+    "description": "Update: the connection dropped before an answer"
+  },
+  "hostUpdateDetailsRow": "Why it failed",
+  "@hostUpdateDetailsRow": {
+    "description": "Update failed: row that opens the computer's own message"
+  },
+  "hostUpdateDetailsTitle": "Update details",
+  "@hostUpdateDetailsTitle": {
+    "description": "Update failed: details sheet title"
+  },
+  "hostUpdateDetailsMessage": "Message from the computer",
+  "@hostUpdateDetailsMessage": {
+    "description": "Update failed: label of the computer's own message"
+  },
   "integrationsMcpDetails": "Details for {name}",
   "@integrationsMcpDetails": {
     "description": "MCP server row: opens what the server said when it failed",

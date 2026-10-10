@@ -45101,6 +45101,126 @@ abstract class AppLocalizations {
   /// **'Could not check for agents. Try again in a moment.'**
   String get serverSettingsRecheckFailed;
 
+  /// Server settings, Paseo: row that updates the agent helper on the computer
+  ///
+  /// In en, this message translates to:
+  /// **'Update agents on {computer}'**
+  String hostUpdateRow(String computer);
+
+  /// Technical: Server settings, Paseo: update row detail naming the running version
+  ///
+  /// In en, this message translates to:
+  /// **'Running {version}. Installs the newest agent software.'**
+  String hostUpdateRowRunning(String version);
+
+  /// Server settings, Paseo: update row detail without a version
+  ///
+  /// In en, this message translates to:
+  /// **'Installs the newest agent software on that computer.'**
+  String get hostUpdateRowUnknown;
+
+  /// Confirmation title for updating the agent helper
+  ///
+  /// In en, this message translates to:
+  /// **'Update agents?'**
+  String get hostUpdateConfirmTitle;
+
+  /// Confirmation body for updating the agent helper
+  ///
+  /// In en, this message translates to:
+  /// **'This installs the newest agent software on {computer} and restarts it.'**
+  String hostUpdateConfirmBody(String computer);
+
+  /// Consequence: running chats pause during the restart
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations on {computer} pause while it restarts.'**
+  String hostUpdateConfirmPauses(String computer);
+
+  /// Consequence: nothing is lost
+  ///
+  /// In en, this message translates to:
+  /// **'Your conversations and settings stay as they are.'**
+  String get hostUpdateConfirmKept;
+
+  /// Confirmation button that starts the helper update
+  ///
+  /// In en, this message translates to:
+  /// **'Update agents'**
+  String get hostUpdateConfirmAction;
+
+  /// Update progress: starting
+  ///
+  /// In en, this message translates to:
+  /// **'Starting the update…'**
+  String get hostUpdateStarting;
+
+  /// Update progress: downloading
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading the newest version…'**
+  String get hostUpdateDownloading;
+
+  /// Update progress: installing
+  ///
+  /// In en, this message translates to:
+  /// **'Installing…'**
+  String get hostUpdateInstalling;
+
+  /// Update progress: complete, restarting
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing up…'**
+  String get hostUpdateFinishing;
+
+  /// Technical: Update succeeded, naming the new version
+  ///
+  /// In en, this message translates to:
+  /// **'Updated to {version}. The app reconnects by itself.'**
+  String hostUpdateDone(String version);
+
+  /// Update succeeded, version not reported
+  ///
+  /// In en, this message translates to:
+  /// **'Updated. The app reconnects by itself.'**
+  String get hostUpdateDoneNoVersion;
+
+  /// Update finished and nothing newer existed
+  ///
+  /// In en, this message translates to:
+  /// **'{computer} is already up to date.'**
+  String hostUpdateCurrent(String computer);
+
+  /// Update failed, plain words
+  ///
+  /// In en, this message translates to:
+  /// **'The update did not finish. Try again, or update it on that computer.'**
+  String get hostUpdateFailed;
+
+  /// Update: the connection dropped before an answer
+  ///
+  /// In en, this message translates to:
+  /// **'The connection dropped during the update. The app is reconnecting.'**
+  String get hostUpdateDropped;
+
+  /// Update failed: row that opens the computer's own message
+  ///
+  /// In en, this message translates to:
+  /// **'Why it failed'**
+  String get hostUpdateDetailsRow;
+
+  /// Update failed: details sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Update details'**
+  String get hostUpdateDetailsTitle;
+
+  /// Update failed: label of the computer's own message
+  ///
+  /// In en, this message translates to:
+  /// **'Message from the computer'**
+  String get hostUpdateDetailsMessage;
+
   /// MCP server row: opens what the server said when it failed
   ///
   /// In en, this message translates to:

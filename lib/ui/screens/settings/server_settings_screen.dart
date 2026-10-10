@@ -53,6 +53,16 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   bool _agentsFailed = false;
   String? _serverUpgradeError;
 
+  /// Paseo: updating the helper on the computer (server_host_update.dart).
+  bool _hostUpdating = false;
+  HostUpdatePhase? _hostPhase;
+  String? _hostUpdateLine;
+  String? _hostUpdateReason;
+  bool _hostUpdateFailed = false;
+
+  /// Extensions in the part files cannot call [setState] directly.
+  void _setState(VoidCallback fn) => setState(fn);
+
   /// The update commands were copied from their row: its line says so.
   bool _updateCommandsCopied = false;
   final _disconnectKey = GlobalKey();
@@ -335,8 +345,12 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       width: KitScreenWidth.reading,
       // The health check and an update in flight are the screen's one
       // loading bar (design standard §4); the rows say what is happening.
-      loading: _blocking || _upgradingServer,
-      loadingLabel: _upgradingServer ? serverUpdateTitle : copy.e7SettingsUi11,
+      loading: _blocking || _upgradingServer || _hostUpdating,
+      loadingLabel: _hostUpdating
+          ? _phaseWords(copy, _hostPhase)
+          : _upgradingServer
+          ? serverUpdateTitle
+          : copy.e7SettingsUi11,
       body: ListView(
         padding: EdgeInsets.only(
           top: tokens.space3,
@@ -444,6 +458,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   enabled: !_recheckingAgents,
                   onTap: _recheckAgents,
                 ),
+              ..._hostUpdateRows(context, copy, serverName),
             ],
           ),
           SizedBox(height: tokens.sectionGap),
@@ -491,27 +506,36 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               // §7 row 23. A Termux-managed server is upgraded by this
               // device, so that path is never gated — only the remote-host
               // one is. whenMissing: explains (STATE-12).
-              if (!managedLocally && !controller.capabilities.remoteUpgrade)
-                KitRow.unavailable(
-                  key: const ValueKey('gated-remote-upgrade'),
-                  title: copy.e7SettingsUi67,
-                  reason: copy.e7SettingsUi68,
-                  capability: 'remote-upgrade',
-                  leading: KitRow.icon(context, AppIconography.systemDownload),
-                )
-              else
-                KitRow(
-                  key: const Key('server-updates-tile'),
-                  leading: KitRow.icon(context, AppIconography.systemDownload),
-                  title: serverUpdateTitle,
-                  titleMaxLines: 2,
-                  supporting: TextSpan(text: serverUpdateSubtitle),
-                  supportingMaxLines: 3,
-                  trailing: serverUpdateTrailing,
-                  // Rests while its own update runs; the bar says so.
-                  enabled: !_upgradingServer,
-                  onTap: serverUpdateAction,
-                ),
+              // Paseo updates its own helper from the row above.
+              if (_hostUpdater == null) ...[
+                if (!managedLocally && !controller.capabilities.remoteUpgrade)
+                  KitRow.unavailable(
+                    key: const ValueKey('gated-remote-upgrade'),
+                    title: copy.e7SettingsUi67,
+                    reason: copy.e7SettingsUi68,
+                    capability: 'remote-upgrade',
+                    leading: KitRow.icon(
+                      context,
+                      AppIconography.systemDownload,
+                    ),
+                  )
+                else
+                  KitRow(
+                    key: const Key('server-updates-tile'),
+                    leading: KitRow.icon(
+                      context,
+                      AppIconography.systemDownload,
+                    ),
+                    title: serverUpdateTitle,
+                    titleMaxLines: 2,
+                    supporting: TextSpan(text: serverUpdateSubtitle),
+                    supportingMaxLines: 3,
+                    trailing: serverUpdateTrailing,
+                    // Rests while its own update runs; the bar says so.
+                    enabled: !_upgradingServer,
+                    onTap: serverUpdateAction,
+                  ),
+              ],
             ],
           ),
           if (baseUrl != null) ...[

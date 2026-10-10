@@ -38,6 +38,7 @@ part 'gateway/subagents.dart';
 part 'gateway/gen_ui_history.dart';
 part 'gateway/payload_use.dart';
 part 'gateway/idle_work.dart';
+part 'gateway/host_update.dart';
 
 class PaseoGateway
     implements
@@ -47,7 +48,8 @@ class PaseoGateway
         HostAgentPermissionGateway,
         SessionSelectionGateway,
         GenUiHistoryGateway,
-        CorrelatedPromptGateway {
+        CorrelatedPromptGateway,
+        HostDaemonUpdateGateway {
   final PaseoTransport transport;
   final Future<void> Function()? _beforePayloadUse;
   final void Function()? _afterPayloadUse;
@@ -1396,6 +1398,19 @@ class PaseoGateway
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw PaseoFailure(PaseoFailureKind.unavailable);
+
+  // ---- OD1 agent lane: host helper update --------------------------------
+
+  @override
+  bool get hostUpdateSupported => true;
+
+  @override
+  String? get hostVersion => transport.serverVersion;
+
+  @override
+  Future<HostUpdateResult> updateHostDaemon({
+    void Function(HostUpdatePhase phase)? onProgress,
+  }) => _updateHostDaemon(onProgress);
 
   // ---- connection lifecycle ---------------------------------------------
 
