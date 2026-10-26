@@ -154,7 +154,7 @@ jobs:
       # upstream Flutter is installed in this job, so nothing else can build
       # the APK.
       - name: Set up Shorebird
-        uses: shorebirdtech/setup-shorebird@4dd9d7dc2d7930bfeadb053b6e94b5110779d1e5 # v1.0.1
+        uses: shorebirdtech/setup-shorebird@8b1059ddb56a926f0146edf4133cc647775c162f # v1.4.1
 
       - name: Show the Shorebird toolchain
         run: shorebird --version
