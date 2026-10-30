@@ -19,10 +19,16 @@ Chinese carry a second tier, 2,083 more messages (2,750 each of 8,916): what a
 new user meets in the first hour (`docs/l10n/tier2-key-set.md`). Japanese,
 Portuguese and Russian stay at the core. `tool/l10n/check_partial_locales.py`
 keeps the core keys complete in all five and the tier-2 keys
-(`tool/l10n/partial_locales_tier2_keys.txt`) complete in es and zh. Not yet
-read by a native speaker; not left to do for these two: AI Team, FactsBook,
-usage, MCP catalogs, migration, diagnostics, session export/import, review
-screens (about 6,100 messages still fall back to English).
+(`tool/l10n/partial_locales_tier2_keys.txt`) complete in es and zh.
+
+Since 2026-10-29 Simplified Chinese carries every message: all 9,262 of 9,262
+keys in `app_zh.arb`, nothing left falling back to English, and the picker no
+longer marks it "Partly translated". The gate above still runs on it as one of
+the partial locales; its counts are only useful for es now. Spanish is still
+at the core plus tier 2, and Japanese, Portuguese and Russian at the core.
+The Chinese text has not been read by a native speaker yet, and terminology
+was kept consistent by hand rather than by a translation memory; a review pass
+is the next step, not more keys.
 
 ## Done
 
