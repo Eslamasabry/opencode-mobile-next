@@ -37,7 +37,7 @@ class WidgetProvidersTest {
 
     @Test fun everyPickerEntryIsItsOwnReceiverWithItsOwnSizeFile() {
         val declared = receivers()
-        val expected = WidgetProviders.sessionNames + WidgetProviders.usageNames
+        val expected = WidgetProviders.sessionNames + WidgetProviders.usageNames + WidgetProviders.statusNames
         assertEquals(expected.map { it.substringAfterLast('.') }.toSet(), declared.keys)
         // One size file per entry: a launcher reads a single size from each provider.
         assertEquals(declared.size, declared.values.toSet().size)
@@ -45,7 +45,7 @@ class WidgetProvidersTest {
 
     @Test fun eachEntryDeclaresTheSizeItsNameSays() {
         val declared = receivers()
-        val cells = WidgetProviders.sessionCells + WidgetProviders.usageCells
+        val cells = WidgetProviders.sessionCells + WidgetProviders.usageCells + WidgetProviders.statusCells
         for ((name, cell) in cells) {
             val info = xml("res/xml/${declared.getValue(name.substringAfterLast('.'))}.xml")
             assertEquals(name, cell.first.toString(), info.getAttributeNS(ns, "targetCellWidth"))
@@ -53,8 +53,22 @@ class WidgetProvidersTest {
             // Launchers before Android 12 read minWidth/minHeight instead.
             assertTrue(name, info.getAttributeNS(ns, "minWidth").endsWith("dp"))
             assertTrue(name, info.getAttributeNS(ns, "minHeight").endsWith("dp"))
+            // Each entry keeps its size: another size is another entry (owner,
+            // 2026-10-29). The resize frame stays, because launchers put the
+            // widget's Edit button on it, but it cannot grow or shrink.
             assertEquals(name, "horizontal|vertical", info.getAttributeNS(ns, "resizeMode"))
-            assertTrue(name, info.getAttributeNS(ns, "previewLayout").startsWith("@layout/"))
+            for (axis in listOf("Width", "Height")) {
+                val size = info.getAttributeNS(ns, "min$axis")
+                assertEquals(name, size, info.getAttributeNS(ns, "minResize$axis"))
+                assertEquals(name, size, info.getAttributeNS(ns, "maxResize$axis"))
+            }
+            // Launcher3 keeps targetCellWidth only inside the span the locked
+            // size gives. 250dp came to 3 cells on a Pixel grid (about 97dp a
+            // cell with its gap), so the four-wide entries lock at 340dp.
+            if (cell.first == 4) {
+                assertTrue(name, info.getAttributeNS(ns, "minWidth").removeSuffix("dp").toInt() >= 300)
+            }
+            assertTrue(name, info.getAttributeNS(ns, "previewImage").startsWith("@drawable/"))
             assertTrue(name, info.getAttributeNS(ns, "description").startsWith("@string/"))
         }
     }
@@ -64,6 +78,7 @@ class WidgetProvidersTest {
         assertEquals(2 to 2, WidgetProviders.usageCells.getValue(UsageWidgetProvider::class.java.name))
         assertEquals(setOf(2 to 2, 4 to 2, 4 to 4, 4 to 1), WidgetProviders.sessionCells.values.toSet())
         assertEquals(setOf(2 to 2, 4 to 2), WidgetProviders.usageCells.values.toSet())
+        assertEquals(2 to 2, WidgetProviders.statusCells.getValue(StatusWidgetProvider::class.java.name))
         // The 4x2 entry's declared minimum reaches the wide layout's breakpoint (250dp wide).
         val wide = xml("res/xml/widget_sessions_wide_info.xml")
         assertTrue(wide.getAttributeNS(ns, "minWidth").removeSuffix("dp").toInt() >= 250)
@@ -94,6 +109,7 @@ class WidgetProvidersTest {
             assertTrue(cls.name, SessionsWidgetProvider::class.java.isAssignableFrom(cls))
         }
         for (cls in WidgetProviders.usage) assertTrue(cls.name, UsageWidgetProvider::class.java.isAssignableFrom(cls))
+        for (cls in WidgetProviders.status) assertTrue(cls.name, StatusWidgetProvider::class.java.isAssignableFrom(cls))
         // Existing placed widgets keep the original receivers.
         assertEquals(SessionsWidgetProvider::class.java, WidgetProviders.sessions.first())
         assertEquals(UsageWidgetProvider::class.java, WidgetProviders.usage.first())
@@ -132,7 +148,7 @@ class WidgetProvidersTest {
             labels.containsAll(
                 listOf(
                     "widget_label", "widget_label_wide", "widget_label_list", "widget_label_strip",
-                    "usage_widget_title", "usage_widget_title_wide",
+                    "usage_widget_title", "usage_widget_title_wide", "widget_label_status",
                 ),
             ),
         )
@@ -140,51 +156,57 @@ class WidgetProvidersTest {
             val text = file("res/$dir/strings.xml").readText()
             val descriptions = listOf(
                 "widget_description_wide", "widget_description_list", "widget_description_strip",
-                "usage_widget_description_wide",
+                "usage_widget_description_wide", "widget_description_status",
             )
             for (key in labels + descriptions) assertTrue("$dir $key", text.contains("name=\"$key\""))
         }
     }
 
-    @Test fun everyPickerEntryHasItsOwnFullSamplePreviewInTheLiveLook() {
+    @Test fun thePickerOffersExactlyConversationsAndStatus() {
         val declared = receivers()
-        val previews = declared.values.map {
-            xml("res/xml/$it.xml").getAttributeNS(ns, "previewLayout").removePrefix("@layout/")
+        val shown = declared.filter { (_, res) ->
+            !xml("res/xml/$res.xml").getAttributeNS(ns, "widgetFeatures").split('|').contains("hide_from_picker")
+        }.keys
+        // Owner, 2026-10-29: at most two widgets, each with one job.
+        assertEquals(WidgetProviders.picker.map { it.substringAfterLast('.') }.toSet(), shown)
+        assertEquals(setOf("SessionsWideWidgetProvider", "StatusWidgetProvider"), shown)
+        assertEquals(4 to 2, WidgetProviders.sessionCells.getValue(SessionsWideWidgetProvider::class.java.name))
+        assertEquals(2 to 2, WidgetProviders.statusCells.getValue(StatusWidgetProvider::class.java.name))
+        // Their picker names say what they are.
+        val strings = file("res/values/strings.xml").readText()
+        assertTrue(strings.contains("<string name=\"widget_label_wide\">Conversations</string>"))
+        assertTrue(strings.contains("<string name=\"widget_label_status\">Status</string>"))
+        // Retired entries stay registered, so widgets already placed keep drawing.
+        assertTrue(declared.keys.containsAll(listOf("SessionsWidgetProvider", "SessionsListWidgetProvider",
+            "SessionsStripWidgetProvider", "UsageWidgetProvider", "UsageWideWidgetProvider")))
+    }
+
+    @Test fun eachEntryStartsFromItsOwnLayout() {
+        val declared = receivers()
+        val expected = mapOf(
+            "SessionsWidgetProvider" to "@layout/widget_card",
+            "SessionsWideWidgetProvider" to "@layout/widget_conversations",
+            "SessionsListWidgetProvider" to "@layout/widget_card",
+            "SessionsStripWidgetProvider" to "@layout/widget_sessions_strip",
+            "StatusWidgetProvider" to "@layout/widget_status",
+        )
+        for ((receiver, layout) in expected) {
+            val info = xml("res/xml/${declared.getValue(receiver)}.xml")
+            assertEquals(receiver, layout, info.getAttributeNS(ns, "initialLayout"))
+            // The picker image is rendered from the real layout (the render tests), so no
+            // hand-written preview layout can drift from it.
+            assertEquals(receiver, "", info.getAttributeNS(ns, "previewLayout"))
         }
-        // One preview per entry, none shared, each a real file.
-        assertEquals(6, previews.toSet().size)
-        for (name in previews) {
+    }
+
+    @Test fun usageEntriesKeepTheirSamplePreviewLayouts() {
+        for (name in listOf("widget_usage_preview", "widget_usage_preview_wide")) {
             val root = xml("res/layout/$name.xml")
             assertEquals(name, "match_parent", root.getAttributeNS(ns, "layout_width"))
-            assertEquals(name, "match_parent", root.getAttributeNS(ns, "layout_height"))
             val text = file("res/layout/$name.xml").readText()
-            // Static: sample strings only, no live ids and no raw model id.
-            assertTrue(name, text.contains("@string/"))
-            assertTrue(name, !text.contains("@+id/"))
-            // The card previews sit on the card, the usage ones on the usage background.
-            assertTrue(name, text.contains("widget_card_bg") || text.contains("widget_background"))
+            assertTrue(name, text.contains("@string/") && !text.contains("@+id/"))
+            assertTrue(name, text.contains("widget_background"))
         }
-        val strip = file("res/layout/widget_sessions_preview_strip.xml").readText()
-        val list = file("res/layout/widget_sessions_preview_list.xml").readText()
-        val wide = file("res/layout/widget_sessions_preview_wide.xml").readText()
-        val ready = file("res/layout/widget_sessions_preview.xml").readText()
-        assertTrue(strip.contains("widget_preview_strip_status"))
-        assertTrue(ready.contains("widget_v2_ask_followup"))
-        for (word in listOf("widget_v2_reject", "widget_v2_open", "widget_v2_allow")) {
-            assertTrue(word, wide.contains(word))
-        }
-        // The list shows one needs-you row, one working row and one ready row, and the new-conversation pill.
-        val dots = listOf(
-            "widget_preview_dot_amber", "widget_preview_dot_green", "widget_preview_dot_idle", "widget_v2_new",
-        )
-        for (word in dots) assertTrue(word, list.contains(word))
-        // The 4x4 cell holds about six rows: one needs-you, one working and four ready, so no block is left empty.
-        assertEquals(1, Regex("widget_preview_dot_amber").findAll(list).count())
-        assertEquals(1, Regex("widget_preview_dot_green").findAll(list).count())
-        assertEquals(4, Regex("widget_preview_dot_idle").findAll(list).count())
-        // As on the live card, only "needs you" is amber in the header; "working" is the plain header colour.
-        assertTrue(Regex("widget_preview_header_needs\"[^>]*widgetAmber").containsMatchIn(list))
-        assertTrue(Regex("widget_preview_header_working\"[^>]*widgetHint").containsMatchIn(list))
     }
 
     @Test fun usagePreviewsShowTwoProvidersWithTwoWindowsAndInkBarsAtDifferentFills() {
@@ -208,13 +230,14 @@ class WidgetProvidersTest {
         assertEquals(0x38, WidgetUsageStyle.usageBar(0xFFF3F3F1.toInt(), 0, 50, false).second ushr 24)
     }
 
-    @Test fun everyEntryDeclaresPreviewLayoutAndPreviewImageWithBothThemesOnDisk() {
-        // Launchers that cannot inflate previewLayout (ZTE/Nubia) fall back to previewImage.
+    @Test fun everyEntryDeclaresAPreviewImageWithBothThemesOnDisk() {
+        // Launchers that cannot inflate previewLayout (ZTE/Nubia) use previewImage only.
         for ((receiver, res) in receivers()) {
             val info = xml("res/xml/$res.xml")
-            val layout = info.getAttributeNS(ns, "previewLayout")
             val image = info.getAttributeNS(ns, "previewImage")
-            assertTrue("$receiver previewLayout", layout.startsWith("@layout/"))
+            if (receiver.startsWith("Usage")) {
+                assertTrue("$receiver previewLayout", info.getAttributeNS(ns, "previewLayout").startsWith("@layout/"))
+            }
             assertTrue("$receiver previewImage", image.startsWith("@drawable/"))
             val name = image.removePrefix("@drawable/")
             for (dir in listOf("drawable-nodpi", "drawable-night-nodpi")) {

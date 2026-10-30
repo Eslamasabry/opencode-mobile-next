@@ -9,6 +9,7 @@
 // and look at every changed image before committing it.
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -370,20 +371,24 @@ void main() {
 
     testWidgets('team · merge section · $mode', (tester) async {
       final controller = await _controller(store);
-      await _golden(
-        tester,
-        'team_merge',
-        light: light,
-        controller: controller,
-        body: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          children: [
-            TeamMergeSection(
-              controller: controller,
-              run: _run,
-              now: () => _clock,
-            ),
-          ],
+      // The gate card counts its wait on the phone's clock: the scene's.
+      await withClock(
+        Clock.fixed(_clock),
+        () => _golden(
+          tester,
+          'team_merge',
+          light: light,
+          controller: controller,
+          body: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              TeamMergeSection(
+                controller: controller,
+                run: _run,
+                now: () => _clock,
+              ),
+            ],
+          ),
         ),
       );
     });

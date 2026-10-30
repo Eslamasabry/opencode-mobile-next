@@ -34,6 +34,7 @@ import 'package:opencode_mobile/voice/recognizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/complete_message_history.dart';
+import '../support/composer_tools.dart';
 import '../voice_controller_test.dart'
     show FakeRecognitionHandle, FakeVoiceRecorder, readyVoiceModelManager;
 
@@ -401,7 +402,9 @@ void main() {
       );
       await tester.pump();
       // With text, voice is in the "+" sheet; it adds at the caret.
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('composer-tool-voice')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('composer-tool-voice')));
       await tester.pump();
@@ -552,7 +555,7 @@ void main() {
       );
       addTearDown(voice.dispose);
       await _pumpChat(tester, connection, voice);
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
       await tester.pumpAndSettle();
       await tester.ensureVisible(
         find.byKey(const Key('composer-tools-advanced')),

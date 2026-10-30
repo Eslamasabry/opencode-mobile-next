@@ -187,9 +187,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('files-viewer')), findsOneWidget);
     expect(find.textContaining('readme body'), findsWidgets);
-    // "Attach to prompt" is the viewer's one labelled action, in the same
-    // words as the row menu (never a bare "Attach").
-    expect(find.byKey(const Key('project-file-attach')), findsOneWidget);
+    // "Ask about this file" is the reader's one main action (vision
+    // 2026-10-20); "Attach to prompt" waits in its ⋯, in the same words as
+    // the row menu (never a bare "Attach").
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('project-file-ask')),
+        matching: find.text('Ask about this file'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Attach'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('kit-viewer-more')));
+    await tester.pumpAndSettle();
     expect(
       find.descendant(
         of: find.byKey(const Key('project-file-attach')),
@@ -197,19 +207,17 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Attach'), findsNothing);
   });
 
-  testWidgets('Add to prompt stages a reference with Undo, not a snackbar', (
-    tester,
-  ) async {
+  testWidgets('Ask about this file stages a reference with Undo, not a '
+      'snackbar', (tester) async {
     final store = ReviewHandoffStore();
     final handoff = ReviewHandoffSession(store: store, sessionID: 's1');
     await pump(tester, handoff: handoff);
 
     await tester.longPress(find.text('README.md'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('file-menu-reference')));
+    await tester.tap(find.byKey(const ValueKey('file-menu-ask')));
     await tester.pumpAndSettle();
     expect(handoff.references, hasLength(1));
     expect(find.byType(SnackBar), findsNothing);

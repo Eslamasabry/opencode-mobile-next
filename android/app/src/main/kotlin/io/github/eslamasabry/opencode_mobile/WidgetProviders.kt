@@ -1,9 +1,10 @@
 package io.github.eslamasabry.opencode_mobile
 
-/** Every widget entry the launcher picker offers. Each entry is its own receiver (a launcher
- * reads one size per provider, so sizes are published as separate entries) and every one of
- * them renders through the same renderer. Anything that redraws or checks widgets walks this
- * list, never a single class. */
+/** Every widget receiver. The picker offers two entries (owner, 2026-10-29): Conversations
+ * (4x2, [SessionsWideWidgetProvider]) and Status (2x2, [StatusWidgetProvider]). The older
+ * entries are hidden from the picker but stay registered, so widgets already on a home screen
+ * keep drawing. Each entry is its own receiver (a launcher reads one size per provider).
+ * Anything that redraws or checks widgets walks these lists, never a single class. */
 object WidgetProviders {
     private const val WIDE_CELLS = 4
 
@@ -17,11 +18,21 @@ object WidgetProviders {
         UsageWidgetProvider::class.java,
         UsageWideWidgetProvider::class.java,
     )
+    val status: List<Class<out StatusWidgetProvider>> = listOf(
+        StatusWidgetProvider::class.java,
+    )
+
+    /** The only entries the picker shows. */
+    val picker: List<String> get() = listOf(
+        SessionsWideWidgetProvider::class.java.name,
+        StatusWidgetProvider::class.java.name,
+    )
 
     /** Class names, for the manifest and for ownership checks. */
     val sessionNames: List<String> get() = sessions.map { it.name }
     val usageNames: List<String> get() = usage.map { it.name }
-    val allNames: Set<String> get() = (sessionNames + usageNames).toSet()
+    val statusNames: List<String> get() = status.map { it.name }
+    val allNames: Set<String> get() = (sessionNames + usageNames + statusNames).toSet()
 
     /** The picker size each entry is declared at, in launcher cells (width, height). */
     val sessionCells: Map<String, Pair<Int, Int>> = mapOf(
@@ -34,16 +45,19 @@ object WidgetProviders {
         UsageWidgetProvider::class.java.name to (2 to 2),
         UsageWideWidgetProvider::class.java.name to (WIDE_CELLS to 2),
     )
+    val statusCells: Map<String, Pair<Int, Int>> = mapOf(
+        StatusWidgetProvider::class.java.name to (2 to 2),
+    )
 }
 
-/** "Conversation, wide": the 4x2 entry. Same widget, a different size in the picker. */
+/** "Conversations": the 4x2 entry, drawn by [ConversationsWidgetBinder]. */
 class SessionsWideWidgetProvider : SessionsWidgetProvider()
 
-/** "Conversations list": the 4x4 entry. */
+/** The retired 4x4 list: hidden from the picker; placed ones keep drawing the card. */
 class SessionsListWidgetProvider : SessionsWidgetProvider()
 
-/** "Conversation strip": the 4x1 entry. */
+/** The retired 4x1 strip: hidden from the picker; placed ones keep drawing the strip. */
 class SessionsStripWidgetProvider : SessionsWidgetProvider()
 
-/** "Usage, wide": the 4x2 entry. */
+/** The retired wide Usage entry: hidden from the picker; Usage now folds into Status. */
 class UsageWideWidgetProvider : UsageWidgetProvider()

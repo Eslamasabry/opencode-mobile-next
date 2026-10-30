@@ -9,6 +9,7 @@ import '../../domain/server_gateway.dart'
     show ProductException, ServerCapabilities, WorkspaceProject;
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
+import '../../state/review_handoff.dart' show ReviewHandoffSession;
 import '../app_iconography.dart';
 import '../navigation/last_project.dart';
 import '../kit/kit_bidi.dart';
@@ -16,6 +17,7 @@ import '../kit/kit_chip.dart';
 import '../kit/kit_buttons.dart' show KitAction;
 import '../kit/kit_capability_explainer.dart';
 import '../kit/kit_menu.dart';
+import '../kit/kit_page_heading.dart';
 import '../kit/kit_page_route.dart';
 import '../kit/kit_row.dart';
 import '../kit/kit_row_parts.dart' show KitChevron, KitRowMenu;
@@ -154,6 +156,40 @@ WorkspaceProject? projectForDirectory(
   return null;
 }
 
+/// Opens a project's Files as a page of its own: the phone's door to the
+/// project tools now that there is no navigation bar (owner, 2026-10-20).
+/// The conversation's project chip, Search ("Files", a project's name) and
+/// Ctrl/Cmd+2 on a phone land here; Back returns to where it was opened.
+///
+/// [directory] is the project to show (the conversation's); null keeps the
+/// one Files would show anyway (the last used for a chat, else the open
+/// one). [openFiles] opens the browser at once, [focusSearch] its search.
+/// The file extras come from a conversation: attach and review prompts go
+/// to its composer.
+Future<void> openProjectFiles(
+  BuildContext context,
+  ConnectionController controller, {
+  String? directory,
+  bool openFiles = false,
+  bool focusSearch = false,
+  ProjectFileAttachment? onAttachFile,
+  ProjectReviewPrompt? onReviewPrompt,
+  ReviewHandoffSession? handoff,
+}) => pushKitPage<void>(
+  context,
+  (_) => ProjectHub(
+    key: const ValueKey('project-files-page'),
+    controller: controller,
+    page: true,
+    directory: directory,
+    openFilesOnStart: openFiles || focusSearch,
+    focusSearchOnStart: focusSearch,
+    onAttachFile: onAttachFile,
+    onReviewPrompt: onReviewPrompt,
+    handoff: handoff,
+  ),
+);
+
 /// Lets the shell offer system Back to the Project tab before leaving it.
 class ProjectHubBackController {
   bool Function()? _handler;
@@ -166,16 +202,16 @@ class ProjectHubBackController {
   void showHub() => _hub?.call();
 }
 
-/// The Files tab: the title, a chip naming the project it shows (tap to
-/// switch), then every tool that acts on that project, one row each, Changes
-/// first. The project is the one last used for a chat, else the open one. A
-/// row the connected server cannot serve is absent, and the shell drops the
-/// whole tab when no row is left (UX plan 5.1, rule 7). With no project the
-/// tab says so and offers the chooser (map project-hub, proposal "fix").
-///
-/// Files opens inside the tab rather than over it, so the file browser keeps
-/// its folder, search and scroll position across tab switches the way it did
-/// when it was the tab. The other tools are full screens of their own.
+/// The project's Files page (vision 2026-10-20, "just the files"): the
+/// large title, the project in quiet text under it (tap to switch), then
+/// the project's files and folders, one plain row each, an uncommitted
+/// change marked on its name. Search and Terminal are quiet icons in the
+/// bar; Changes and every other tool that acts on the project are in its ⋯,
+/// each gated as before. The project is the one last used for a chat, else
+/// the open one. With no project the page says so and offers the chooser
+/// (map project-hub, proposal "fix"). A server that cannot browse files
+/// keeps the tools as rows, and the shell drops the whole destination when
+/// no tool is left (UX plan 5.1, rule 7).
 class ProjectHub extends StatefulWidget {
   const ProjectHub({
     super.key,
@@ -183,14 +219,41 @@ class ProjectHub extends StatefulWidget {
     this.focusSearchSignal,
     this.openFilesSignal,
     this.backController,
+    this.page = false,
+    this.directory,
+    this.openFilesOnStart = false,
+    this.focusSearchOnStart = false,
+    this.onAttachFile,
+    this.onReviewPrompt,
+    this.handoff,
   });
 
   final ConnectionController controller;
 
+  /// A page of its own ([openProjectFiles]) rather than the rail's Files
+  /// destination: a top bar with Back, and Browse files opens the browser as
+  /// its own page, so system Back (and predictive back) walks out of it.
+  final bool page;
+
+  /// The project to show on open; null follows the last used one.
+  final String? directory;
+
+  /// Kept for the doors that asked for the browser: the page is the files.
+  final bool openFilesOnStart;
+
+  /// Opens the page with its search field open and focused.
+  final bool focusSearchOnStart;
+
+  /// From a conversation: what the browser's Attach and review prompts do.
+  final ProjectFileAttachment? onAttachFile;
+  final ProjectReviewPrompt? onReviewPrompt;
+  final ReviewHandoffSession? handoff;
+
   /// Bumped by the shell's Ctrl/Cmd+F while this tab is showing.
   final ValueListenable<int>? focusSearchSignal;
 
-  /// Bumped by the shell when a search result means Files.
+  /// Bumped by the shell when a search result means Files. The page is the
+  /// files, so there is nothing more to open.
   final ValueListenable<int>? openFilesSignal;
   final ProjectHubBackController? backController;
 
@@ -222,24 +285,24 @@ class _ProjectHubState extends State<ProjectHub> {
   final _filesBack = FilesBackController();
   final _focusFilesSearch = ValueNotifier<int>(0);
 
-  /// Files is built on first use and then kept, so leaving it for the hub or
-  /// another tab does not reload the tree.
-  bool _filesBuilt = false;
-  bool _filesOpen = false;
+  /// Find (Ctrl/Cmd+F) was asked for with no project open: the page shows
+  /// the server's folder with its search field instead of the chooser.
+  bool _findAsked = false;
   bool _opening = false;
 
-  /// The live lines under Changes and Terminal ("3 files changed", "1
-  /// running"): null until read, and left out when a read fails (the tool's
-  /// own page says why). No timer polls them: they are read when the tab
-  /// opens, when the project changes, when a tool closes and when the last
-  /// running conversation finishes, since that is when files change.
+  /// The live counts for the ⋯ menu ("Changes · 3 files") and the Terminal
+  /// row of a server without file browsing ("1 running"): null until read,
+  /// and left out when a read fails (the tool's own page says why). No
+  /// timer polls them: they are read when the page opens, when the project
+  /// changes, when a tool closes and when the last running conversation
+  /// finishes, since that is when files change.
   int? _changedFiles;
   int? _runningTerminals;
   int _statusGeneration = 0;
   (String?, int, String?)? _statusScope;
   bool _wasBusy = false;
 
-  /// The hub's order: Changes first; Search is Files' own field.
+  /// The order of the tools rows on a server without file browsing.
   static const _hubOrder = [
     ProjectTool.changes,
     ProjectTool.files,
@@ -254,22 +317,26 @@ class _ProjectHubState extends State<ProjectHub> {
   void initState() {
     super.initState();
     widget.focusSearchSignal?.addListener(_searchFiles);
-    widget.openFilesSignal?.addListener(_openFiles);
     widget.backController
       ?.._handler = _handleBack
       .._hub = _showHub;
     widget.controller.addListener(_followConnection);
     _wasBusy = widget.controller.busySessions.isNotEmpty;
     _followConnection();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _followLastProject());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _followLastProject();
+      if (!mounted) return;
+      if (widget.focusSearchOnStart) _searchFiles();
+    });
   }
 
-  /// Files shows the project the person last used for a chat: when that is
-  /// not the open location, the location moves to it once, on first show.
+  /// Files shows the project it was opened for, else the one the person last
+  /// used for a chat: when that is not the open location, the location moves
+  /// to it once, on first show.
   void _followLastProject() {
     if (!mounted) return;
     final controller = widget.controller;
-    final last = lastUsedProjectOf(controller);
+    final last = widget.directory ?? lastUsedProjectOf(controller);
     if (last == null || last == controller.directory) return;
     if (!controller.isConnected || !controller.capabilities.projectManagement) {
       return;
@@ -351,10 +418,6 @@ class _ProjectHubState extends State<ProjectHub> {
       oldWidget.focusSearchSignal?.removeListener(_searchFiles);
       widget.focusSearchSignal?.addListener(_searchFiles);
     }
-    if (oldWidget.openFilesSignal != widget.openFilesSignal) {
-      oldWidget.openFilesSignal?.removeListener(_openFiles);
-      widget.openFilesSignal?.addListener(_openFiles);
-    }
     if (oldWidget.backController != widget.backController) {
       oldWidget.backController
         ?.._handler = null
@@ -374,7 +437,6 @@ class _ProjectHubState extends State<ProjectHub> {
   @override
   void dispose() {
     widget.focusSearchSignal?.removeListener(_searchFiles);
-    widget.openFilesSignal?.removeListener(_openFiles);
     widget.backController
       ?.._handler = null
       .._hub = null;
@@ -385,32 +447,38 @@ class _ProjectHubState extends State<ProjectHub> {
 
   bool get _canBrowse => widget.controller.capabilities.fileBrowsing;
 
-  bool _handleBack() {
-    if (!_filesOpen || !_canBrowse) return false;
-    if (_filesBack.handleBack()) return true;
-    setState(() => _filesOpen = false);
-    return true;
-  }
+  /// The shell's Back while Files shows: up a folder, out of the search.
+  bool _handleBack() => _canBrowse && _filesBack.handleBack();
 
-  void _showHub() {
-    if (_filesOpen) setState(() => _filesOpen = false);
-  }
-
-  void _openFiles() {
-    if (!mounted || !_canBrowse) return;
-    setState(() {
-      _filesBuilt = true;
-      _filesOpen = true;
-    });
-  }
+  /// The rail's Files tapped again: nothing to go back to, the files are
+  /// the page.
+  void _showHub() {}
 
   void _searchFiles() {
     if (!mounted || !_canBrowse) return;
-    _openFiles();
-    // Files may only be mounting in this frame; its listener exists after it.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _focusFilesSearch.value++;
-    });
+    final open = widget.controller.directory;
+    final none =
+        open == null || open.isEmpty || isTemporaryProjectDirectory(open);
+    if (none && !widget.openFilesOnStart && !_findAsked) {
+      // Find asks for the files themselves: with no project chosen they are
+      // the server's own folder, as from /files; the field exists from the
+      // next frame.
+      setState(() => _findAsked = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _searchFiles());
+      return;
+    }
+    _focusFilesSearch.value++;
+  }
+
+  /// Back to the conversation the page was opened from, after "Ask about
+  /// this file" put the file in its composer: everything above that
+  /// conversation's route (the reader, this page) closes.
+  void _backToConversation() {
+    final page = ModalRoute.of(context);
+    if (page == null) return;
+    final navigator = Navigator.of(context);
+    navigator.popUntil((route) => route == page);
+    if (page.isCurrent && navigator.canPop()) navigator.pop();
   }
 
   /// One tool at a time: the rows that first ask the server something would
@@ -447,50 +515,223 @@ class _ProjectHubState extends State<ProjectHub> {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final showFiles = _filesOpen && _canBrowse;
-    // Visibility keeps the hidden side's state and stops its tickers (and
-    // with them its status-line contribution) while it is hidden.
-    return Stack(
-      children: [
-        Visibility(
-          visible: !showFiles,
-          maintainState: true,
-          child: _hub(context),
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: widget.controller,
+    builder: (context, _) {
+      final open = widget.controller.directory;
+      // A temporary folder is never a project: the page reads as having none.
+      final directory = isTemporaryProjectDirectory(open) ? null : open;
+      final none = directory == null || directory.isEmpty;
+      // Asked for the files themselves (/files, All files, Search's file
+      // browser): with no project chosen they are the server's own folder,
+      // as the browser always showed them; otherwise the chooser.
+      if (none && !(_canBrowse && (widget.openFilesOnStart || _findAsked))) {
+        return _noProject(context);
+      }
+      if (!_canBrowse) return _hubBody(context);
+      return _files(context, directory ?? '');
+    },
+  );
+
+  /// The page is the project's files (vision 2026-10-20, "just the
+  /// files"): the large title and the project under it, then one row per
+  /// entry. Search and Terminal are quiet icons in the bar; every other
+  /// tool is in its ⋯.
+  Widget _files(BuildContext context, String directory) {
+    final l10n = _l10n(context);
+    final capabilities = widget.controller.capabilities;
+    final files = FilesScreen(
+      key: const ValueKey('project-files-browser'),
+      controller: widget.controller,
+      onAttachFile: widget.onAttachFile,
+      onReviewPrompt: widget.onReviewPrompt,
+      handoff: widget.handoff,
+      focusSearchSignal: _focusFilesSearch,
+      // As the rail's destination the shell asks for Back; as a page the
+      // browser's own PopScope walks up the folders first.
+      backController: widget.page ? null : _filesBack,
+      onAsked: widget.page && widget.handoff != null
+          ? _backToConversation
+          : null,
+      topBar: (path, search, view) => KitTopBar(
+        key: const ValueKey('project-files-page-bar'),
+        // The large title under the bar names the page.
+        title: '',
+        exit: widget.page ? KitTopBarExit.auto : KitTopBarExit.none,
+        actions: [
+          search,
+          if (capabilities.terminal)
+            KitAction(
+              key: const ValueKey('project-files-terminal'),
+              label: l10n.libraryTerminalTitle,
+              icon: AppIconography.terminal,
+              onPressed: () => unawaited(_openTool(ProjectTool.terminal)),
+            ),
+        ],
+        menuKey: const ValueKey('project-hub-menu'),
+        menu: [..._toolsMenu(l10n, directory), ...view],
+      ),
+      header: (path) => _heading(context, directory, path),
+    );
+    // As a page it is its own screen (ground, live background); as the
+    // rail's destination the shell's screen holds it.
+    return widget.page ? KitScreen(page: true, body: files) : files;
+  }
+
+  /// The page's ⋯: Changes first, named with its count, then the project's
+  /// other tools, then the project itself. Each is gated as its row was.
+  List<KitMenuItem> _toolsMenu(AppLocalizations l10n, String directory) {
+    final capabilities = widget.controller.capabilities;
+    final available = ProjectHub.toolsFor(capabilities);
+    final canSwitch = capabilities.projectManagement;
+    KitMenuItem tool(ProjectTool tool, String label, IconData icon) =>
+        KitMenuItem(
+          key: ValueKey('project-hub-${tool.name}'),
+          label: label,
+          icon: icon,
+          group: 'tools',
+          onSelected: () => unawaited(_openTool(tool)),
+        );
+    return [
+      if (available.contains(ProjectTool.changes))
+        KitMenuItem(
+          key: const ValueKey('project-hub-changes'),
+          label: l10n.filesMenuChanges(_changedFiles ?? 0),
+          icon: AppIconography.review,
+          group: 'tools',
+          onSelected: () => unawaited(_reviewChanges()),
         ),
-        if (_filesBuilt && _canBrowse)
-          Visibility(
-            visible: showFiles,
-            maintainState: true,
-            child: _files(context),
-          ),
-      ],
+      if (available.contains(ProjectTool.health))
+        tool(
+          ProjectTool.health,
+          l10n.e7LibraryProjectHealth,
+          AppIconography.diagnostics,
+        ),
+      if (available.contains(ProjectTool.worktrees))
+        tool(
+          ProjectTool.worktrees,
+          l10n.e7LibraryWorktrees,
+          AppIconography.branch,
+        ),
+      if (available.contains(ProjectTool.services))
+        tool(
+          ProjectTool.services,
+          l10n.servicesTitle,
+          AppIconography.processor,
+        ),
+      if (available.contains(ProjectTool.workspaces))
+        tool(
+          ProjectTool.workspaces,
+          l10n.e7LibraryManagedWorkspaces,
+          AppIconography.cloud,
+        ),
+      if (canSchedulePrompts(widget.controller))
+        KitMenuItem(
+          label: l10n.scheduleTitle,
+          icon: Icons.schedule,
+          group: 'project',
+          onSelected: () =>
+              unawaited(openScheduledPrompts(context, widget.controller)),
+        ),
+      if (canSwitch)
+        KitMenuItem(
+          key: const ValueKey('project-hub-switch'),
+          label: l10n.e7LibrarySwitchProject,
+          icon: AppIconography.swap,
+          group: 'project',
+          onSelected: () => unawaited(_chooseProject()),
+        ),
+      if (directory.isNotEmpty)
+        KitMenuItem.copy(
+          key: const ValueKey('project-hub-copy-path'),
+          label: l10n.projectHubCopyFolderPath,
+          text: () => directory,
+        ),
+    ];
+  }
+
+  /// Changes from the page: the working tree's review, and what the
+  /// person writes there goes to the conversation the page came from.
+  Future<void> _reviewChanges() => _guard(() async {
+    final prompt = await pushWorkingTreeReview(
+      context,
+      widget.controller,
+      handoff: widget.handoff,
+    );
+    if (!mounted) return;
+    await deliverReviewPrompt(context, prompt, widget.onReviewPrompt);
+    if (mounted) unawaited(_readStatus());
+  });
+
+  /// The large title (the page at the project's root, else the open
+  /// folder's name) and one quiet line under it: the project, which opens
+  /// the project chooser where the server can switch; inside a folder,
+  /// where that folder is.
+  Widget _heading(BuildContext context, String directory, String path) {
+    final l10n = _l10n(context);
+    final project = _basename(directory);
+    final parts = path.split('/').where((part) => part.isNotEmpty).toList();
+    final title = parts.isEmpty ? l10n.shellTabFiles : parts.last;
+    final where = parts.length < 2
+        ? project
+        : [project, ...parts.take(parts.length - 1)].join(' / ');
+    final canSwitch =
+        parts.isEmpty && widget.controller.capabilities.projectManagement;
+    return KitPageHeading(
+      title: title,
+      titleKey: const ValueKey('project-hub-title'),
+      namesRoute: widget.page,
+      // No project chosen (the server's own folder): no project line.
+      line: directory.isEmpty
+          ? null
+          : parts.isEmpty
+          ? KitBidi.auto(project)
+          : KitBidi.ltr(where),
+      lineKey: const ValueKey('project-files-project'),
+      lineTapKey: const ValueKey('project-hub-context'),
+      onLineTap: canSwitch ? () => unawaited(_chooseProject()) : null,
+      lineTapLabel: canSwitch ? l10n.filesProjectSwitchLabel(project) : null,
     );
   }
 
-  Widget _files(BuildContext context) {
+  /// No project open: the page's title, then one calm state that says so
+  /// and offers the chooser as the one main action.
+  Widget _noProject(BuildContext context) {
     final l10n = _l10n(context);
-    return FilesScreen(
-      controller: widget.controller,
-      focusSearchSignal: _focusFilesSearch,
-      backController: _filesBack,
-      // One top bar: the folder is the title and Back returns to the hub.
-      // System Back does the same, but nothing here is reachable by a
-      // gesture alone.
-      topBar: (folder) => KitTopBar(
-        key: const ValueKey('project-hub-files-header'),
-        title: folder ?? l10n.readerUiFiles,
-        exit: KitTopBarExit.back,
-        exitKey: const ValueKey('project-hub-files-back'),
-        onExit: () => setState(() => _filesOpen = false),
+    final tokens = KitTokens.of(context);
+    return KitScreen(
+      width: KitScreenWidth.list,
+      topBar: widget.page
+          ? const KitTopBar(key: ValueKey('project-files-page-bar'), title: '')
+          : null,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // As the rail's destination the title keeps the gap a bar
+          // would give it.
+          if (!widget.page) SizedBox(height: tokens.space3),
+          KitPageHeading(
+            title: l10n.shellTabFiles,
+            titleKey: const ValueKey('project-hub-title'),
+            namesRoute: widget.page,
+          ),
+          Expanded(
+            child: KitStateView.calm(
+              key: const ValueKey('project-hub-context'),
+              icon: AppIconography.folderOpen,
+              title: l10n.e7LibraryNoProjectSelected,
+              body: l10n.kitCapProjectOpenWhy,
+              primary: KitAction(
+                key: const ValueKey('project-hub-choose-project'),
+                label: l10n.kitCapProjectOpenEnable,
+                onPressed: () => unawaited(_chooseProject()),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
-
-  Widget _hub(BuildContext context) => ListenableBuilder(
-    listenable: widget.controller,
-    builder: (context, _) => _hubBody(context),
-  );
 
   Widget _hubBody(BuildContext context) {
     final l10n = _l10n(context);
@@ -509,6 +750,14 @@ class _ProjectHubState extends State<ProjectHub> {
     ];
     return KitScreen(
       width: KitScreenWidth.list,
+      // As a page the bar names it and has Back; as the rail's destination
+      // the large title below does.
+      topBar: widget.page
+          ? KitTopBar(
+              key: const ValueKey('project-files-page-bar'),
+              title: l10n.shellTabFiles,
+            )
+          : null,
       body: KitScrollArea(
         builder: (scrollController) => ListView(
           controller: scrollController,
@@ -518,7 +767,7 @@ class _ProjectHubState extends State<ProjectHub> {
             bottom: KitScreen.endPadding(context),
           ),
           children: [
-            _filesTitle(context),
+            if (!widget.page) _filesTitle(context),
             if (directory != null && directory.isNotEmpty)
               _projectHeader(context, directory)
             else
@@ -652,13 +901,9 @@ class _ProjectHubState extends State<ProjectHub> {
     AppLocalizations l10n,
     ProjectTool tool,
   ) => switch (tool) {
-    ProjectTool.files => _row(
-      tool,
-      icon: AppIconography.files,
-      // Not "Files" again inside the Files tab.
-      title: l10n.projectHubBrowseFiles,
-      onTap: _openFiles,
-    ),
+    // Only listed where the server cannot browse files (the page is the
+    // files otherwise), so these two never show; kept for the switch.
+    ProjectTool.files || ProjectTool.search => const SizedBox.shrink(),
     ProjectTool.changes => _row(
       tool,
       icon: AppIconography.review,
@@ -712,12 +957,6 @@ class _ProjectHubState extends State<ProjectHub> {
       icon: AppIconography.cloud,
       title: l10n.e7LibraryManagedWorkspaces,
       onTap: () => _openTool(tool),
-    ),
-    ProjectTool.search => _row(
-      tool,
-      icon: AppIconography.search,
-      title: l10n.readerUiSearchFiles,
-      onTap: _searchFiles,
     ),
   };
 

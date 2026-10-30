@@ -6,6 +6,7 @@ import '../app_iconography.dart';
 import 'kit_buttons.dart';
 import 'kit_icon_button.dart';
 import 'kit_image.dart';
+import 'kit_max_width.dart';
 import 'kit_surface.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -127,7 +128,10 @@ class KitSenseAsk extends StatelessWidget {
   };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final full = items.length >= max;
     final canSend = items.isNotEmpty && onSend != null && !sending;

@@ -9,10 +9,12 @@ import '../../l10n/app_localizations.dart';
 import '../desktop/desktop_interaction.dart';
 import '../theme_roles.dart';
 import 'kit_buttons.dart';
+import 'kit_code_surface.dart';
 import 'kit_copy.dart';
 import 'kit_layout.dart';
 import 'kit_motion.dart';
 import 'kit_redact.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 import 'kit_terminal_links.dart';
@@ -61,6 +63,7 @@ class KitTerminalView extends StatelessWidget {
     this.readOnly = false,
     this.keys,
     this.interruptKeys = false,
+    this.calm = false,
     this.onKeyEvent,
     this.viewKey,
     this.keysKey,
@@ -97,6 +100,7 @@ class KitTerminalView extends StatelessWidget {
        readOnly = true,
        keys = null,
        interruptKeys = false,
+       calm = false,
        onKeyEvent = null,
        keysKey = null;
 
@@ -122,6 +126,18 @@ class KitTerminalView extends StatelessWidget {
 
   /// Leads the key bar with Ctrl-C and Ctrl-D (server terminals).
   final bool interruptKeys;
+
+  /// The Terminal screen's own look: a roomier face ([calmFontSize] on
+  /// [calmLineHeight]) on the gutter, the screen's ground showing through
+  /// behind the text, and the one-row key bar
+  /// (`TerminalKeyBar.singleRow`) on that same ground. Other hosts (agent
+  /// sign-in) keep the classic dense view.
+  final bool calm;
+
+  /// The calm view's face size and line height: a comfortable read on a
+  /// phone, about 45 columns at 412 dp.
+  static const calmFontSize = 14.0;
+  static const calmLineHeight = 1.5;
 
   /// Hardware keys on a PC (copy and paste chords), asked before the
   /// terminal. Ctrl+Tab and Ctrl+Shift+Tab never reach it: they move focus
@@ -202,6 +218,38 @@ class KitTerminalView extends StatelessWidget {
     );
   }
 
+  /// [themeOf] with a clear background: the calm view lets the screen's
+  /// ground (and its quiet backdrop) show behind the text, so the terminal
+  /// has no box edge of its own. Cells a program colours keep their colour.
+  static xterm.TerminalTheme calmThemeOf(ThemeRoles roles) {
+    final theme = themeOf(roles);
+    return xterm.TerminalTheme(
+      cursor: theme.cursor,
+      selection: theme.selection,
+      foreground: theme.foreground,
+      background: roles.ground.withValues(alpha: 0),
+      black: theme.black,
+      red: theme.red,
+      green: theme.green,
+      yellow: theme.yellow,
+      blue: theme.blue,
+      magenta: theme.magenta,
+      cyan: theme.cyan,
+      white: theme.white,
+      brightBlack: theme.brightBlack,
+      brightRed: theme.brightRed,
+      brightGreen: theme.brightGreen,
+      brightYellow: theme.brightYellow,
+      brightBlue: theme.brightBlue,
+      brightMagenta: theme.brightMagenta,
+      brightCyan: theme.brightCyan,
+      brightWhite: theme.brightWhite,
+      searchHitBackground: theme.searchHitBackground,
+      searchHitBackgroundCurrent: theme.searchHitBackgroundCurrent,
+      searchHitForeground: theme.searchHitForeground,
+    );
+  }
+
   /// The live view's selected text ("" when nothing is selected), for a
   /// host's copy control (KIT-23). The kit never writes the clipboard here.
   static String selectedText(
@@ -258,16 +306,29 @@ class KitTerminalView extends StatelessWidget {
               focusNode: focusNode,
               autofocus: autofocus,
               autoResize: true,
-              theme: themeOf(roles),
+              theme: calm ? calmThemeOf(roles) : themeOf(roles),
+              // xterm sets the box's alpha from this, whatever the theme's.
+              backgroundOpacity: calm ? 0 : 1,
               textStyle: xterm.TerminalStyle.fromTextStyle(
-                KitText.styleFor(KitTextRole.mono),
+                calm
+                    ? KitText.styleFor(
+                        KitTextRole.mono,
+                      ).copyWith(fontSize: calmFontSize, height: calmLineHeight)
+                    : KitText.styleFor(KitTextRole.mono),
               ),
               // The face grows with the person's text size up to 2x: beyond
               // it, 40 columns no longer fit a phone (A11Y-8).
               textScaler: MediaQuery.textScalerOf(
                 context,
               ).clamp(maxScaleFactor: KitTokens.terminalMaxTextScale),
-              padding: EdgeInsets.all(tokens.space2),
+              padding: calm
+                  ? EdgeInsetsDirectional.fromSTEB(
+                      tokens.gutter,
+                      tokens.space2,
+                      tokens.gutter,
+                      tokens.space2,
+                    ).resolve(TextDirection.ltr)
+                  : EdgeInsets.all(tokens.space2),
               keyboardType: TextInputType.text,
               keyboardAppearance: roles.brightness,
               deleteDetection: true,
@@ -295,23 +356,41 @@ class KitTerminalView extends StatelessWidget {
     );
     final compact =
         MediaQuery.sizeOf(context).height - keyboard < KitLayout.shortHeight;
-    return Column(
-      children: [
-        Expanded(child: view),
-        DecoratedBox(
-          decoration: BoxDecoration(color: roles.surface2),
-          child: SafeArea(
+    if (calm) {
+      return Column(
+        children: [
+          // xterm paints a line scrolled half out of view past its box; with
+          // no box of its own the clip keeps it off the header.
+          Expanded(child: ClipRect(child: view)),
+          SafeArea(
             top: false,
             child: TerminalKeyBar(
               key: keysKey,
               controller: keys,
               compact: compact,
+              singleRow: true,
               enabled: !readOnly,
-              interruptKeys: interruptKeys,
               onKey: (key, {required ctrl, required alt}) =>
                   sendTerminalBarKey(terminal, key, ctrl: ctrl, alt: alt),
             ),
           ),
+        ],
+      );
+    }
+    return Column(
+      children: [
+        Expanded(child: view),
+        // The bar's band reaches the screen's edge: one surface, the safe
+        // area inside it.
+        TerminalKeyBar(
+          key: keysKey,
+          controller: keys,
+          compact: compact,
+          enabled: !readOnly,
+          interruptKeys: interruptKeys,
+          safeArea: true,
+          onKey: (key, {required ctrl, required alt}) =>
+              sendTerminalBarKey(terminal, key, ctrl: ctrl, alt: alt),
         ),
       ],
     );
@@ -470,12 +549,11 @@ class _KitTerminalOutputState extends State<_KitTerminalOutput> {
       ],
     );
     if (!widget.framed) return KeyedSubtree(key: widget.viewKey, child: body);
-    return DecoratedBox(
+    return kitCodeSurface(
+      context,
       key: widget.viewKey,
-      decoration: ShapeDecoration(
-        color: tokens.detailsSurface,
-        shape: tokens.shapeOf(KitShape.code),
-      ),
+      fill: tokens.detailsSurface,
+      shape: tokens.shapeOf(KitShape.code),
       child: Padding(padding: EdgeInsets.all(tokens.space2), child: body),
     );
   }
@@ -771,6 +849,7 @@ class _KitTerminalOscHostState extends State<_KitTerminalOscHost> {
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final style = KitSurfaceLook.styleOf(context);
     return Stack(
       fit: StackFit.passthrough,
       children: [
@@ -788,11 +867,19 @@ class _KitTerminalOscHostState extends State<_KitTerminalOscHost> {
                   liveRegion: true,
                   label: _shown ? l10n.terminalCopiedToClipboard : '',
                   child: ExcludeSemantics(
-                    child: DecoratedBox(
+                    // A floating pill over the terminal, in the style's
+                    // look (Solid: `surface3`).
+                    child: kitSurfaceBox(
                       key: const ValueKey('terminal-copied-toast'),
-                      decoration: ShapeDecoration(
-                        color: tokens.roles.surface3,
-                        shape: const StadiumBorder(),
+                      style: style,
+                      decoration: KitSurfaceLook.decorate(
+                        context,
+                        solid: ShapeDecoration(
+                          color: tokens.roles.surface3,
+                          shape: const StadiumBorder(),
+                        ),
+                        role: KitSurfaceRole.floating,
+                        level: KitSurfaceLevel.surface3,
                       ),
                       child: Padding(
                         padding: EdgeInsets.symmetric(

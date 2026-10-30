@@ -20,6 +20,9 @@ enum LaunchAction {
   usage('usage'),
   usageSettings('usage_settings'),
 
+  /// The Status widget's built-in Linux line: This phone's page.
+  linux('linux'),
+
   /// Widget recovery opens the background connection setting without enabling it.
   backgroundSettings('background_settings'),
 

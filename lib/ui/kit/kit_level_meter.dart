@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
+import 'kit_max_width.dart';
 import 'kit_tokens.dart';
 
 /// The microphone's input level as bars. Decorative: excluded from
@@ -62,7 +63,10 @@ class KitLevelMeter extends StatelessWidget {
   static const _litSteps = 12;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final size = _levelMeterSize(tokens);
     final dpr = MediaQuery.devicePixelRatioOf(context);

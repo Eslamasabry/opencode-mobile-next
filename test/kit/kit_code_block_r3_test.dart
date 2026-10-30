@@ -112,7 +112,9 @@ void main() {
     // Copy is trailing on the same line and vertically centred on it.
     expect(copy.left, greaterThan(line.left));
     expect((copy.center.dy - line.center.dy).abs(), lessThanOrEqualTo(1));
-    expect(copy.right, lessThanOrEqualTo(block.right - tokens.space1 + .5));
+    // Its glyph's ink ends space4 inside the block (kit_rails_test); the
+    // target stays inside the block.
+    expect(copy.right, lessThanOrEqualTo(block.right + .5));
     expect(find.byKey(_wrapKey), findsNothing);
   });
 

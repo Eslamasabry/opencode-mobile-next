@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/kit/kit_arrival.dart';
 import 'package:opencode_mobile/ui/kit/kit_field.dart';
 import 'package:opencode_mobile/ui/kit/kit_row.dart';
 import 'package:opencode_mobile/ui/kit/kit_row_parts.dart';
@@ -36,24 +37,28 @@ void main() {
       'Details title', (tester) async {
     await tester.pumpWidget(
       _app(
-        SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const KitField(label: 'Supervision'),
-              const SizedBox(height: 16),
-              KitRowGroup(
-                label: 'Planner',
-                margin: EdgeInsets.zero,
-                children: [_row('Mayor')],
-              ),
-              const SizedBox(height: 16),
-              const KitDetailsFold(
-                label: 'Details',
-                values: [KitTechnicalValue('Agent', 'mayor-1')],
-              ),
-            ],
+        // A sheet's body: narrower than the reading cap, as a sheet is.
+        SizedBox(
+          width: 600,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const KitField(label: 'Supervision'),
+                const SizedBox(height: 16),
+                KitRowGroup(
+                  label: 'Planner',
+                  margin: EdgeInsets.zero,
+                  children: [_row('Mayor')],
+                ),
+                const SizedBox(height: 16),
+                const KitDetailsFold(
+                  label: 'Details',
+                  values: [KitTechnicalValue('Agent', 'mayor-1')],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -201,5 +206,50 @@ void main() {
     );
     final texts = tester.widgetList<Text>(find.text(long)).toList();
     expect(texts.map((t) => t.maxLines), [1, 2]);
+  });
+
+  // Flat polish (sweep 3730, 41-agents / 24-sync): rows with no icon drew
+  // their separators from the icon column (x 110 of 838) while their words
+  // start at the gutter (x 31).
+  group('separators start where the words do', () {
+    final line = find.byKey(const ValueKey('kit-divider-line'));
+
+    Future<void> pump(WidgetTester tester, List<Widget> rows) =>
+        tester.pumpWidget(
+          _app(SingleChildScrollView(child: KitRowGroup(children: rows))),
+        );
+
+    testWidgets('rows without icons: at the words, not an icon column', (
+      tester,
+    ) async {
+      await pump(tester, [
+        KitRow(title: 'AI Team', onTap: () {}),
+        // A row wrapped as a search result's arrival still counts.
+        KitArrival(
+          id: 'phone',
+          child: KitRow(title: 'Agents on this phone', onTap: () {}),
+        ),
+        KitSwitchRow(title: 'Watch', value: false, onChanged: (_) {}),
+      ]);
+      expect(tester.getTopLeft(line.first).dx, _x(tester, 'AI Team'));
+      expect(tester.getTopLeft(line.last).dx, _x(tester, 'AI Team'));
+    });
+
+    testWidgets('rows with icons: past the icons, at the words', (
+      tester,
+    ) async {
+      await pump(tester, [_row('Mayor'), _row('Deacon')]);
+      expect(tester.getTopLeft(line).dx, _x(tester, 'Mayor'));
+    });
+
+    testWidgets('rowsLead: any leading row leads; other widgets do not '
+        'count', (tester) async {
+      expect(KitRowGroup.rowsLead([const SizedBox()]), isTrue);
+      expect(
+        KitRowGroup.rowsLead([const SizedBox(), KitRow(title: 'A')]),
+        isFalse,
+      );
+      expect(KitRowGroup.rowsLead([KitRow(title: 'A'), _row('B')]), isTrue);
+    });
   });
 }

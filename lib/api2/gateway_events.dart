@@ -11,6 +11,8 @@
 /// synthetic messages or a retained job history. Unused control events are ignored.
 library;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
+
 import '../domain/models.dart';
 import '../domain/server_gateway.dart';
 import 'events.dart';
@@ -239,6 +241,7 @@ class Api2EventAdapter {
             final type = event.error?.type;
             final message = event.error?.message?.trim();
             return [
+              ..._settleOpenCalls(event.sessionID, failure: 'Tool failed'),
               _env('session.error', {
                 'sessionID': event.sessionID,
                 'error': {
@@ -250,9 +253,24 @@ class Api2EventAdapter {
               }),
             ];
           default:
-            // succeeded / interrupted → the v1 idle transition.
+            // succeeded / interrupted → the v1 idle transition. An
+            // interrupt keeps the server's reason (`user` for any client's
+            // Stop, `inactivity` for the hour-long idle sweep, `shutdown`,
+            // `superseded`), so the chat can say who or what stopped it.
+            final interrupted = event.phase == Api2Phase.interrupted;
+            final reason = event.reason?.trim();
             return [
-              _env('session.idle', {'sessionID': event.sessionID}),
+              ..._settleOpenCalls(
+                event.sessionID,
+                failure: interrupted ? 'Tool execution interrupted' : null,
+              ),
+              _env('session.idle', {
+                'sessionID': event.sessionID,
+                if (interrupted)
+                  'interruptReason': reason == null || reason.isEmpty
+                      ? 'unknown'
+                      : reason,
+              }),
             ];
         }
 
@@ -311,12 +329,21 @@ class Api2EventAdapter {
               // restores a busy state the app lost (a missed event, or a
               // status read that fell between two steps).
               _status(event.sessionID, 'busy'),
+              // Steps run one after another: the ones before have ended.
+              ..._settleOpenCalls(
+                event.sessionID,
+                exceptMessageID: event.assistantMessageID,
+              ),
               _env('message.updated', {
                 'info': _assistantInfo(event, created: created),
               }),
             ];
           case Api2Phase.ended:
             return [
+              ..._settleOpenCalls(
+                event.sessionID,
+                onlyMessageID: event.assistantMessageID,
+              ),
               _env('message.updated', {
                 'info': _assistantInfo(
                   event,
@@ -327,15 +354,27 @@ class Api2EventAdapter {
             ];
           case Api2Phase.failed:
             return [
+              ..._settleOpenCalls(
+                event.sessionID,
+                onlyMessageID: event.assistantMessageID,
+                failure: event.error?.message ?? 'Tool failed',
+              ),
               _env('message.updated', {
                 'info': _assistantInfo(
                   event,
                   created: created,
                   completed: created,
+                  // Details always has words: a step that failed with no
+                  // message says so, with whatever the server did send.
                   errorMessage:
                       event.error?.message ??
-                      event.error?.type ??
-                      'The model step failed',
+                      [
+                        'The model step failed without a message from the '
+                            'server',
+                        ?event.error?.type,
+                        if (event.error?.status case final status?)
+                          'HTTP $status',
+                      ].join(' · '),
                   errorName: event.error?.type,
                 ),
               }),
@@ -371,7 +410,11 @@ class Api2EventAdapter {
         final key = _callKey(event.assistantMessageID, event.callID);
         switch (event.phase) {
           case Api2Phase.started:
-            _remember(_toolCalls, key, _ToolCall(name: event.name ?? ''));
+            _remember(
+              _toolCalls,
+              key,
+              _ToolCall(sessionID: event.sessionID, name: event.name ?? ''),
+            );
             return [
               _toolPart(
                 event.sessionID,
@@ -405,11 +448,16 @@ class Api2EventAdapter {
 
       case Api2SessionToolCalledEvent():
         final key = _callKey(event.assistantMessageID, event.callID);
-        final call = _toolCalls[key] ?? const _ToolCall(name: '');
+        final call =
+            _toolCalls[key] ?? _ToolCall(sessionID: event.sessionID, name: '');
         _remember(
           _toolCalls,
           key,
-          _ToolCall(name: call.name, input: event.input),
+          _ToolCall(
+            sessionID: event.sessionID,
+            name: call.name,
+            input: event.input,
+          ),
         );
         return [
           _toolPart(event.sessionID, event.assistantMessageID, event.callID, {
@@ -459,6 +507,10 @@ class Api2EventAdapter {
             if (event.metadata != null) 'metadata': event.metadata,
             if (event.executed != null) 'executed': event.executed,
           }, toolName: call?.name),
+          // The call started before this stream (a reconnect): its name and
+          // input are not here, so read the transcript again for them.
+          if (call == null)
+            _env('session.transcript.stale', {'sessionID': event.sessionID}),
         ];
 
       case Api2SessionMessageContentUpdatedEvent():
@@ -714,6 +766,8 @@ class Api2EventAdapter {
               'type': type,
               'text': text ?? '',
               'messageID': messageID,
+              // v1's shape for a finished part: the reply's caret goes.
+              'time': {'end': DateTime.now().millisecondsSinceEpoch},
             },
           }),
         ];
@@ -769,6 +823,47 @@ class Api2EventAdapter {
 
   String _callKey(String messageID, String callID) => '$messageID/$callID';
 
+  /// Tool calls of [sessionID] whose result never arrived, settled once the
+  /// server has moved past them: a step ends only after its tools settle,
+  /// the next step starts only after the one before ended, and nothing runs
+  /// after the execution ends. Without this a lost `tool.success` (the
+  /// stream is volatile) left the row running, its timer ticking, for good.
+  /// [failure] (a failed step or execution) settles them as failed. The
+  /// outcome is not known here, so the chat is told to read the transcript
+  /// again (`session.transcript.stale`) for the real result.
+  List<EventEnvelope> _settleOpenCalls(
+    String sessionID, {
+    String? onlyMessageID,
+    String? exceptMessageID,
+    String? failure,
+  }) {
+    final open = [
+      for (final entry in _toolCalls.entries)
+        if (entry.value.sessionID == sessionID)
+          (key: entry.key, call: entry.value),
+    ];
+    final out = <EventEnvelope>[];
+    for (final (:key, :call) in open) {
+      final slash = key.indexOf('/');
+      final messageID = key.substring(0, slash);
+      if (onlyMessageID != null && messageID != onlyMessageID) continue;
+      if (exceptMessageID != null && messageID == exceptMessageID) continue;
+      _toolCalls.remove(key);
+      out.add(
+        _toolPart(sessionID, messageID, key.substring(slash + 1), {
+          'status': failure != null ? 'error' : 'completed',
+          'input': call.input ?? const <String, dynamic>{},
+          'error': ?failure,
+        }, toolName: call.name),
+      );
+    }
+    if (out.isEmpty) return out;
+    return [
+      ...out,
+      _env('session.transcript.stale', {'sessionID': sessionID}),
+    ];
+  }
+
   void _remember<T>(Map<String, T> store, String key, T value) {
     store.remove(key);
     store[key] = value;
@@ -779,9 +874,10 @@ class Api2EventAdapter {
 }
 
 class _ToolCall {
+  final String sessionID;
   final String name;
   final Map<String, dynamic>? input;
-  const _ToolCall({required this.name, this.input});
+  const _ToolCall({required this.sessionID, required this.name, this.input});
 }
 
 /// One live subscription to `GET /api/event`, surfaced through the domain
@@ -791,7 +887,7 @@ class _ToolCall {
 /// directory (v2 has a single stream; events carry `location`). The global
 /// channel passes everything through and stamps the v1 envelope's
 /// `directory`/`workspace` from the v2 event location.
-class Api2LiveEventChannel implements LiveEventChannel {
+class Api2LiveEventChannel implements LiveEventChannel, RetryingEventChannel {
   final Api2EventStream _stream;
 
   Api2LiveEventChannel({
@@ -857,6 +953,9 @@ class Api2LiveEventChannel implements LiveEventChannel {
 
   @override
   void start() => _stream.start();
+
+  @override
+  ValueListenable<DateTime?> get nextAttempt => _stream.nextAttempt;
 
   @override
   Future<void> dispose() => _stream.dispose();

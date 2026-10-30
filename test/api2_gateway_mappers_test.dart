@@ -410,6 +410,29 @@ void main() {
       expect(compaction.text, contains('## Objective'));
     });
 
+    test('a live 2.1.1 page maps with native data and no compaction recent', () {
+      // 2.1 renamed provider replay data to `native` and dropped the
+      // compaction `recent` text; neither is read, so the page maps as before.
+      final page = Api2Page.fromJson(
+        fixture('messages_2_1_1.json'),
+        Api2Message.fromJson,
+      );
+      final mapped = mapApi2Messages(sessionID, page.data);
+      final assistants = mapped.where((m) => m.info.role == 'assistant');
+      final parts = [for (final m in assistants) ...m.parts];
+      expect(parts.map((p) => p.type), containsAll(['reasoning', 'tool']));
+      final tool = parts.firstWhere((p) => p.type == 'tool');
+      expect(tool.toolName, 'read');
+      expect(tool.toolState.status, 'completed');
+      expect(tool.toolState.output, contains('# scratch'));
+      expect(parts.lastWhere((p) => p.type == 'text').text, '# scratch');
+      final compaction = mapped
+          .expand((m) => m.parts)
+          .singleWhere((p) => p.type == 'v2:compaction');
+      expect(compaction.toolName, 'completed');
+      expect(compaction.text, contains('## Objective'));
+    });
+
     test('tool error state carries the structured message', () {
       final state = Api2ToolState.fromJson({
         'status': 'error',

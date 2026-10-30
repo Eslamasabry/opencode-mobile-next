@@ -10,7 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_markdown.dart';
+import 'package:opencode_mobile/ui/kit/chat/kit_stream_caret.dart';
 import 'package:opencode_mobile/ui/kit/kit_code_block.dart';
+import 'package:opencode_mobile/ui/kit/kit_motion.dart';
 import 'package:opencode_mobile/ui/kit/kit_text.dart';
 import 'package:opencode_mobile/ui/widgets/agent_blocks.dart';
 import 'package:opencode_mobile/ui/widgets/markdown.dart';
@@ -88,6 +90,11 @@ void main() {
       ),
       'streaming fence': () =>
           const KitMarkdown('```dart\nfinal ready = true;', selectable: false),
+      'streaming reply': () => const KitMarkdown(
+        'Checking the **checkout** test',
+        selectable: false,
+        streaming: true,
+      ),
     },
     changes: {
       'reply grows': KitMotionChange(
@@ -101,6 +108,118 @@ void main() {
   );
 
   setUp(() => KitMarkdown.debugParseCount = 0);
+
+  group('streaming caret', () {
+    Finder caretIn(String text) => find.descendant(
+      of: find.byWidgetPredicate(
+        (w) => w is KitText && (w.span?.toPlainText() ?? '').contains(text),
+      ),
+      matching: find.byType(KitStreamCaret),
+    );
+
+    testWidgets('follows the last words, on their own line', (tester) async {
+      await _pump(
+        tester,
+        const KitMarkdown(
+          'First paragraph.\n\nStill writing the second',
+          streaming: true,
+        ),
+      );
+      expect(find.byType(KitStreamCaret), findsOneWidget);
+      expect(caretIn('Still writing the second'), findsOneWidget);
+      expect(caretIn('First paragraph.'), findsNothing);
+    });
+
+    testWidgets('rides on the last list item', (tester) async {
+      await _pump(
+        tester,
+        const KitMarkdown('Steps:\n\n- one\n- two', streaming: true),
+      );
+      expect(caretIn('two'), findsOneWidget);
+      expect(find.byType(KitStreamCaret), findsOneWidget);
+    });
+
+    testWidgets('no caret after code, or on finished words', (tester) async {
+      await _pump(
+        tester,
+        const KitMarkdown('Here:\n\n```dart\nfinal a = 1;', streaming: true),
+      );
+      expect(find.byType(KitStreamCaret), findsNothing);
+      await _pump(tester, const KitMarkdown('All done.'));
+      expect(find.byType(KitStreamCaret), findsNothing);
+    });
+
+    testWidgets('comes and goes without moving a word or growing a line', (
+      tester,
+    ) async {
+      // Long enough to wrap: the caret on a full last line must not push a
+      // line of its own.
+      const text =
+          'The checkout test waited on a timer that the fake clock never '
+          'advanced, so it hung until the suite timed out';
+      Future<(Size, Offset)> measure({required bool streaming}) async {
+        await _pump(
+          tester,
+          SizedBox(width: 300, child: KitMarkdown(text, streaming: streaming)),
+        );
+        final block = tester.getSize(find.byType(KitMarkdown));
+        final last = tester.getTopLeft(
+          find.textContaining('timed out', findRichText: true),
+        );
+        return (block, last);
+      }
+
+      final still = await measure(streaming: false);
+      final writing = await measure(streaming: true);
+      expect(find.byType(KitStreamCaret), findsOneWidget);
+      expect(writing.$1, still.$1);
+      expect(writing.$2, still.$2);
+    });
+
+    testWidgets('holds still under reduced motion', (tester) async {
+      KitMotion.loops = true;
+      addTearDown(() => KitMotion.loops = false);
+      double opacity() => tester
+          .widget<FadeTransition>(
+            find.descendant(
+              of: find.byType(KitStreamCaret),
+              matching: find.byType(FadeTransition),
+            ),
+          )
+          .opacity
+          .value;
+
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      Widget app({required bool reduced}) => MaterialApp(
+        theme: AppTheme.dark(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, inner) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: reduced),
+          child: inner!,
+        ),
+        home: const Scaffold(
+          body: KitMarkdown('Still writing', streaming: true),
+        ),
+      );
+
+      await tester.pumpWidget(app(reduced: true));
+      final first = opacity();
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 200));
+        expect(opacity(), first);
+      }
+      expect(first, 1);
+
+      // Where loops may run it breathes: the contrast that proves the test.
+      await tester.pumpWidget(app(reduced: false));
+      await tester.pump(const Duration(milliseconds: 550));
+      expect(opacity(), lessThan(1));
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
 
   testWidgets('1. blocks render in the role table', (tester) async {
     await _pump(
@@ -511,5 +630,57 @@ void main() {
       ),
       isNot(contains('secret')),
     );
+  });
+
+  testWidgets('an HTML comment block is not shown; one in a code fence or '
+      'inside a line is', (tester) async {
+    await _pump(
+      tester,
+      const KitMarkdown(
+        '<!-- Built-in skill. Registered in code. -->\n# Report\n\n'
+        'Add `<!-- TODO -->` to the page, then <!-- open\n\n'
+        '<!--\nmulti line\n-->\n\nAfter the block.\n\n'
+        '```html\n<!-- keep me -->\n```\n',
+      ),
+    );
+    final shown = tester
+        .widgetList<RichText>(find.byType(RichText))
+        .map((r) => r.text.toPlainText())
+        .join('\n');
+    expect(shown, isNot(contains('Built-in skill')));
+    expect(shown, isNot(contains('multi line')));
+    expect(shown, contains('Report'));
+    expect(shown, contains('<!-- TODO -->'));
+    expect(shown, contains('After the block.'));
+    expect(shown, contains('keep me'));
+  });
+
+  // Emulator, build 4010: a skill's "2. Ask only for missing details ...
+  //    impact." showed "impact." as a paragraph of its own under the list.
+  testWidgets('a line indented under a list item stays in that item', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      const KitMarkdown(
+        '1. Collect the diagnostics.\n'
+        '2. Ask only for details needed to reproduce or understand\n'
+        '   impact.\n'
+        '3. Draft the issue.\n'
+        '   ```sh\n'
+        '   gh issue create\n'
+        '   ```\n',
+      ),
+    );
+    final texts = tester
+        .widgetList<RichText>(find.byType(RichText))
+        .map((r) => r.text.toPlainText())
+        .toList();
+    expect(
+      texts.where((t) => t.contains('understand') && t.contains('impact.')),
+      isNotEmpty,
+    );
+    expect(texts.where((t) => t.trim() == 'impact.'), isEmpty);
+    expect(texts.join('\n'), contains('gh issue create'));
   });
 }

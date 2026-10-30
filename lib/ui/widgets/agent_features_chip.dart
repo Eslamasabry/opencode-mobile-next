@@ -15,10 +15,16 @@ AppLocalizations _copyOf(BuildContext context) =>
 /// read from and saved to the server. The composer's chip and the settings
 /// sheet share one, so the chip shows what the sheet just saved.
 class AgentFeaturesModel extends ChangeNotifier {
-  AgentFeaturesModel(this.gateway, this.sessionID);
+  AgentFeaturesModel(this.gateway, this.sessionID)
+    : features = _lastRead[sessionID];
 
   final AgentFeatureGateway gateway;
   final String sessionID;
+
+  /// What each conversation's switches were when last read this run: a chat
+  /// opened again shows its chip from the first frame instead of the chip
+  /// row reshuffling when the read lands (jitter J9, 2026-10-28).
+  static final _lastRead = <String, List<AgentFeature>>{};
 
   /// Null until the first read; empty when the agent offers none.
   List<AgentFeature>? features;
@@ -33,11 +39,14 @@ class AgentFeaturesModel extends ChangeNotifier {
     try {
       final read = await gateway.agentFeatures(sessionID);
       if (_disposed) return;
-      features = read;
+      features = _lastRead[sessionID] = read;
       loadFailed = false;
     } catch (_) {
       if (_disposed) return;
       loadFailed = true;
+      // What was remembered is not what the agent says now.
+      _lastRead.remove(sessionID);
+      features = null;
     }
     notifyListeners();
   }
@@ -50,7 +59,7 @@ class AgentFeaturesModel extends ChangeNotifier {
     try {
       final read = await gateway.setAgentFeature(sessionID, feature.id, value);
       if (_disposed) return;
-      features = read;
+      features = _lastRead[sessionID] = read;
     } catch (_) {
       if (_disposed) return;
       failed.add(feature.id);

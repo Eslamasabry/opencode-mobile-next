@@ -93,6 +93,7 @@ class CodingAlertOpen {
     required this.sessionID,
     this.profileID = '',
     this.monitorToken = '',
+    this.reply = false,
   });
 
   final CodingAlertKind kind;
@@ -102,6 +103,9 @@ class CodingAlertOpen {
   /// Monitor tokens additionally bind a persisted location and exact request.
   final String profileID;
   final String monitorToken;
+
+  /// A home-screen widget's Reply: the chat opens with its composer focused.
+  final bool reply;
 
   static CodingAlertOpen? fromPlatform(Map<String, dynamic> value) {
     final kind = CodingAlertKind.fromWireValue(value['kind']);
@@ -120,6 +124,7 @@ class CodingAlertOpen {
       sessionID: sessionID,
       profileID: value['profileID']?.toString().trim() ?? '',
       monitorToken: value['monitorToken']?.toString().trim() ?? '',
+      reply: value['reply']?.toString() == 'true',
     );
   }
 }
@@ -501,20 +506,18 @@ class BackgroundLiveController extends ChangeNotifier
   ///
   /// The native side owns all user-visible copy so no prompt, tool input,
   /// filename, session title, or server error can leak onto the lock screen.
-  /// [quickReply] is a capability bit only: it lets a question alert carry a
-  /// RemoteInput action; it never carries request content. [subtext] is
-  /// a user-chosen line an alert may carry — the saved server's name, so an
-  /// AI Team alert says which host wants the person. [chatTitle] and
-  /// [detail] (a masked command, or the first line of a reply) show in the
-  /// shade only: Android's lock screen gets a count-only public version.
-  /// [reason] is a plain token ('auth', 'context', ...), never raw error
-  /// text. [options] are a question's few short choices, shown as buttons.
+  /// [subtext] is the alert's one subtitle, user-chosen names only: the
+  /// saved server and the project ("MacBook · api-server"). [chatTitle],
+  /// [detail] (a masked command, a question's words, or the first line of a
+  /// reply) and [askAction]/[askTarget] ("run" + "npm install") show in the
+  /// shade only: Android's lock screen gets fixed public words. [reason] is
+  /// a plain token ('auth', 'context', ...), never raw error text.
+  /// [options] are a question's few short choices, listed under it.
   /// [silent] posts without sound (quiet hours).
   Future<bool> showCodingAlert({
     required CodingAlertKind kind,
     required String sessionID,
     required String key,
-    bool quickReply = false,
     String requestID = '',
     String profileID = '',
     String monitorToken = '',
@@ -528,7 +531,8 @@ class BackgroundLiveController extends ChangeNotifier
     String reason = '',
     List<String> options = const [],
     bool silent = false,
-    bool shellCommand = false,
+    String askAction = '',
+    String askTarget = '',
   }) async {
     if (!platformCapabilities.supportsNotifications) return false;
     if (!enabled || !notificationGranted) return false;
@@ -538,7 +542,6 @@ class BackgroundLiveController extends ChangeNotifier
         if (agentName.isNotEmpty) 'agentName': agentName,
         'sessionID': sessionID,
         'key': key,
-        'quickReply': quickReply,
         'requestID': requestID,
         if (profileID.isNotEmpty) 'profileID': profileID,
         if (monitorToken.isNotEmpty) 'monitorToken': monitorToken,
@@ -551,7 +554,8 @@ class BackgroundLiveController extends ChangeNotifier
         if (reason.isNotEmpty) 'reason': reason,
         if (options.isNotEmpty) 'options': options,
         if (silent) 'silent': true,
-        if (shellCommand) 'shellCommand': true,
+        if (askAction.isNotEmpty) 'askAction': askAction,
+        if (askTarget.isNotEmpty) 'askTarget': askTarget,
       });
       return result['shown'] == true;
     } on PlatformException {
@@ -573,10 +577,12 @@ class BackgroundLiveController extends ChangeNotifier
     if (!platformCapabilities.supportsNotifications) return false;
     try {
       final result = await _invoke('showCodingAlert', {
-        'kind': CodingAlertKind.question.wireValue,
+        // Posted on the requests channel, in words that say what it is
+        // ("Notifications are on"), not as a question nobody asked. Must
+        // match the `"test"` branch in BackgroundConnectionService.kt.
+        'kind': 'test',
         'sessionID': testNotificationID,
         'key': testNotificationID,
-        'quickReply': false,
         'allowActions': false,
       });
       return result['shown'] == true;

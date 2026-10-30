@@ -126,9 +126,8 @@ void main() {
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: AppDiagnosticsScreen(
+        home: AppDiagnosticsKeptScreen(
           diagnostics: diagnostics,
-          version: () async => '9.9.9+1',
           crash: crash,
           diagnosticsGateway: withGateway ?? gateway,
           clock: () => DateTime(2026, 10, 8, 9),

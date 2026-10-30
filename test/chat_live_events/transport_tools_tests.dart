@@ -27,7 +27,7 @@ void _transportAndToolTests() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('session-menu-changes')));
     await tester.pumpAndSettle();
-    expect(find.text('+1 −1'), findsOneWidget);
+    expect(find.text('1 file changed · +1 −1'), findsOneWidget);
 
     expect(find.text('old line', findRichText: true), findsOneWidget);
     expect(find.text('new line', findRichText: true), findsOneWidget);
@@ -191,12 +191,14 @@ void _transportAndToolTests() {
 
     expect(retainedApi.promptCalls, 0);
     expect(replacementApi.promptCalls, 0);
-    expect(
-      tester
-          .widget<GestureDetector>(find.byKey(const Key('chat-send-button')))
-          .onTap,
-      isNull,
-    );
+    // The words went and the box is empty: Send shows its spinner and takes
+    // no second tap (no second send); Stop is in the chips row, to call the
+    // send off.
+    await tester.tap(find.byKey(const Key('chat-send-button')));
+    await tester.pump();
+    expect(retainedApi.promptCalls, 0);
+    expect(replacementApi.promptCalls, 0);
+    expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
 
     readyApi.complete(replacementApi);
     await tester.pumpAndSettle();
@@ -659,6 +661,46 @@ void _transportAndToolTests() {
     );
   });
 
+  testWidgets('an interrupted step reads Stopped, no raw note, no code box', (
+    tester,
+  ) async {
+    // "Tool execution interrupted" is the app's and the server's note that a
+    // step was cut off, not the tool's own error (no raw errors as copy).
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-cut', 'assistant', [
+          // Newer servers name the tool after the note (sweep 3730).
+          for (final (file, note) in [
+            ('theme.js', 'Tool execution interrupted'),
+            ('README.md', 'Tool execution interrupted: read'),
+          ])
+            Part(
+              id: 'cut-$file',
+              messageID: 'assistant-cut',
+              type: 'tool',
+              toolName: 'read',
+              toolState: ToolState.fromJson({
+                'status': 'error',
+                'input': {'filePath': '/workspace/$file'},
+                'error': note,
+              }, toolName: 'read'),
+            ),
+        ]),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tool execution interrupted'), findsNothing);
+    expect(find.textContaining('interrupted'), findsNothing);
+    expect(find.text('Tool failed.'), findsNothing);
+    expect(find.text('Failed'), findsNothing);
+    expect(find.textContaining('Stopped'), findsWidgets);
+    // Nor does the steps line above it call the same cut "Didn't finish".
+    expect(find.textContaining("Didn't finish"), findsNothing);
+    expect(find.byType(KitCodeBlock), findsNothing);
+  });
+
   testWidgets('renders grouped tool failures as flat inline results', (
     tester,
   ) async {
@@ -694,21 +736,24 @@ void _transportAndToolTests() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('work-group')), findsOneWidget);
-    // The edit's failure is its capped output block; the command's is the
-    // caption of its own command box.
-    expect(find.byKey(const Key('embedded-tool-error-output')), findsOneWidget);
+    // The edit's failure: the row says Failed, and the tool's own text sits
+    // under Details, never a box of raw text (flat polish, no raw errors);
+    // the command's is the caption of its own command box.
+    final outputs = find.byKey(const Key('embedded-tool-error-output'));
+    expect(outputs, findsOneWidget);
     expect(find.byKey(const ValueKey('kit-step-command')), findsOneWidget);
-    expect(find.text('Tool execution aborted'), findsOneWidget);
     expect(find.text('Process exited before completion'), findsOneWidget);
     expect(find.byKey(const Key('standalone-tool-error-output')), findsNothing);
-
-    // Each failure is the step's own capped output block (KitCodeBlock)
-    // under its row, carrying the error text; the row already says Failed.
-    final outputs = find.byKey(const Key('embedded-tool-error-output'));
     expect(
       find.descendant(of: outputs, matching: find.byType(KitCodeBlock)),
-      findsOneWidget,
+      findsNothing,
     );
+    expect(find.textContaining('Tool execution aborted'), findsNothing);
+    await tester.tap(
+      find.descendant(of: outputs, matching: find.text('Details')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Tool execution aborted'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('kit-step-command')),
@@ -830,10 +875,10 @@ void _transportAndToolTests() {
     // A model switch is named once, in the footer of the turn it happened
     // in; usage rides on the timestamps preference. Only the newest turn's
     // footer carries these words (older turns keep Copy and More).
-    expect(
-      find.textContaining('provider/model-a → provider/model-b'),
-      findsOneWidget,
-    );
+    // Named as a person reads it (the catalog's name, else one made from
+    // the id), never the raw "provider/model".
+    expect(find.textContaining('Model A → Model B'), findsOneWidget);
+    expect(find.textContaining('provider/'), findsNothing);
     expect(find.textContaining('350 tok'), findsNothing);
     await controller.setTranscriptTimestampsVisible(true);
     await tester.pumpAndSettle();

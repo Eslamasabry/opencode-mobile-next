@@ -154,6 +154,13 @@ void main() {
     expect(box.dx, closeTo(line, .01));
   });
 
+  // A band of the diff paints its fill as a ColoredBox or a decorated box.
+  bool paintsFill(Widget w) =>
+      w is ColoredBox || (w is DecoratedBox && w.decoration is BoxDecoration);
+  Color? fillOf(Widget w) => w is ColoredBox
+      ? w.color
+      : ((w as DecoratedBox).decoration as BoxDecoration).color;
+
   group('an inline diff', () {
     KitDiffFile file([String path = 'test/checkout_test.dart']) {
       final before = [for (var i = 1; i <= 60; i++) 'line $i'];
@@ -180,21 +187,28 @@ void main() {
       expect(find.text('c_test.dart'), findsNothing);
       final fold = find.byKey(const ValueKey('kit-diff-gap-0'));
       expect(fold, findsOneWidget);
-      final bar = tester.widget<ColoredBox>(
-        find.descendant(of: fold, matching: find.byType(ColoredBox)).first,
+      final bar = fillOf(
+        tester.widget(
+          find
+              .descendant(
+                of: fold,
+                matching: find.byWidgetPredicate(paintsFill),
+              )
+              .first,
+        ),
       );
-      expect(bar.color, Colors.transparent);
-      expect(bar.color, isNot(roles.surface1));
-      expect(bar.color, isNot(roles.surface2));
-      // No ColoredBox in the view paints the card fill.
+      expect(bar, Colors.transparent);
+      expect(bar, isNot(roles.surface1));
+      expect(bar, isNot(roles.surface2));
+      // Nothing in the view paints the card fill.
       final fills = tester
-          .widgetList<ColoredBox>(
+          .widgetList(
             find.descendant(
               of: find.byType(KitDiffView),
-              matching: find.byType(ColoredBox),
+              matching: find.byWidgetPredicate(paintsFill),
             ),
           )
-          .map((box) => box.color);
+          .map(fillOf);
       expect(fills, isNot(contains(roles.surface1)));
       expect(fills, isNot(contains(roles.surface2)));
     });
@@ -223,15 +237,15 @@ void main() {
       final roles = AppTheme.rolesOf(
         Theme.of(tester.element(find.byType(KitDiffView))),
       );
-      final bar = tester.widget<ColoredBox>(
+      final bar = tester.widget(
         find
             .descendant(
               of: find.byKey(const ValueKey('kit-diff-gap-0')),
-              matching: find.byType(ColoredBox),
+              matching: find.byWidgetPredicate(paintsFill),
             )
             .first,
       );
-      expect(bar.color, roles.surface2);
+      expect(fillOf(bar), roles.surface2);
     });
   });
 

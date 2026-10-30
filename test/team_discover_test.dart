@@ -737,7 +737,8 @@ void main() {
   });
 
   group('the team screens', () {
-    testWidgets('the empty home gives its drawing room', (tester) async {
+    testWidgets('the empty home is the calm line, no drawing (vision '
+        '2026-10-20)', (tester) async {
       _tallScreen(tester);
       final team = await teamSceneController(TeamScene.empty);
       addTearDown(team.dispose);
@@ -747,13 +748,16 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pump(KitMotion.entrance);
-      final drawing = find.descendant(
-        of: _key('team-home-runs-empty'),
-        matching: find.byType(KitIllustration),
+      final empty = _key('team-home-runs-empty');
+      expect(empty, findsOneWidget);
+      expect(
+        find.descendant(of: empty, matching: find.byType(KitIllustration)),
+        findsNothing,
       );
-      // The board and its three agents read at this size; 88 dp cramped
-      // them.
-      expect(tester.getSize(drawing).width, greaterThanOrEqualTo(160));
+      expect(
+        find.descendant(of: empty, matching: find.text('No recent tasks')),
+        findsOneWidget,
+      );
       await tester.pumpWidget(const SizedBox.shrink());
     });
 

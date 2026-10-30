@@ -154,6 +154,7 @@ class KitChoiceList<T> extends StatelessWidget {
     this.loading = false,
     this.empty,
     this.semanticsLabel,
+    this.showCount = true,        // false: the host's primary names the count
   });
 
   // choices / selected / onSelected (single) and selected / onChanged
@@ -166,6 +167,7 @@ class KitChoiceList<T> extends StatelessWidget {
   final bool loading;
   final KitStateView? empty;
   final String? semanticsLabel;
+  final bool showCount;           // multi only; single is always false
 }
 
 enum KitChoiceMark { radio, check }

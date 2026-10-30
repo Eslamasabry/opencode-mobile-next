@@ -21,12 +21,14 @@ enum _PromptTool {
   stash,
   saved,
   projectFile,
+  setting,
 }
 
 class _ChatComposer extends StatelessWidget {
   const _ChatComposer({
     this.agentName,
     this.cardWaiting = false,
+    this.waitsForYou,
     this.blockedReason,
     required this.compact,
     this.isolated = false,
@@ -56,13 +58,16 @@ class _ChatComposer extends StatelessWidget {
     this.promptImagesOnly = false,
     required this.webSourcesSupported,
     required this.busy,
-    this.model,
-    this.onStop,
-    this.stopping = false,
+    this.settings = const [],
+    this.sendMenu = const [],
+    this.sendTip,
     required this.sending,
     this.canSendWhileBusy = false,
     this.promptSteering = false,
     this.midTurnPrompt,
+    this.stopFirst = false,
+    this.stuck = false,
+    this.stuckCommand,
     required this.voiceOpening,
     this.showAttachmentNote = true,
     required this.onAttach,
@@ -86,6 +91,13 @@ class _ChatComposer extends StatelessWidget {
   /// An agent card of this conversation waits: the hint says the answer can
   /// also be typed.
   final bool cardWaiting;
+
+  /// Whether the agent waits on a request of this conversation (a
+  /// permission, a question, a form), read on every change of the
+  /// connection and its held answers: the field then reads "Waiting for
+  /// you", with no glow and no Stop while it is blocked (Reject is the way
+  /// to say no). A message typed now still goes to the running turn.
+  final bool Function()? waitsForYou;
 
   /// Why this conversation takes no message (a Claude sub-agent answers
   /// only its main conversation); the field says it instead.
@@ -129,14 +141,14 @@ class _ChatComposer extends StatelessWidget {
   final bool webSourcesSupported;
   final bool busy;
 
-  /// The model chip, only in a window too tight for the line above the
-  /// field (see [KitComposer.model]).
-  final Widget? model;
+  /// The conversation's own settings, the first rows of the "+" sheet.
+  final List<_ComposerSetting> settings;
 
-  /// Stop: the composer's Send becomes Stop while a reply runs. Null while
-  /// the prompt is still on its way (nothing to stop yet).
-  final VoidCallback? onStop;
-  final bool stopping;
+  /// Send's long-press menu ("Send later or repeat").
+  final List<KitMenuItem> sendMenu;
+
+  /// The teaching tip over Send ([KitComposer.sendTip]).
+  final KitComposerTip? sendTip;
   final bool sending;
 
   /// Send stays live while a reply is written (OpenCode 1 runs it after the
@@ -151,6 +163,14 @@ class _ChatComposer extends StatelessWidget {
   /// holds it for after the reply (Paseo): "Add to this turn" or "Stop and
   /// send", with no choice.
   final MidTurnPrompt? midTurnPrompt;
+
+  /// An agent that runs a message after its reply, whose reply looks hung:
+  /// Send is "Stop and send".
+  final bool stopFirst;
+
+  /// The running step looks stuck, and the command it runs (cut short).
+  final bool stuck;
+  final String? stuckCommand;
 
   /// Kept for the host (KIT-43): the voice sheet shows its own progress.
   final bool voiceOpening;
@@ -201,7 +221,7 @@ class _ChatComposer extends StatelessWidget {
       listen: false,
     ).read(connProvider);
     return ListenableBuilder(
-      listenable: Listenable.merge([conn, controller]),
+      listenable: Listenable.merge([conn, controller, conn.delayedAnswers]),
       builder: (context, _) => _layout(context, conn),
     );
   }
@@ -215,6 +235,7 @@ class _ChatComposer extends StatelessWidget {
         conn.status != StreamStatus.connected &&
         conn.capabilities.offlinePromptQueue;
     final restore = onRestoreHistoryDraft;
+    final waitingForYou = waitsForYou?.call() ?? false;
     // The floating layer draws the gutters, the bottom edge and the safe
     // area ([KitComposer.layer]).
     return Padding(
@@ -236,32 +257,51 @@ class _ChatComposer extends StatelessWidget {
           KitComposer(
             controller: controller,
             focusNode: focusNode,
-            hint: cardWaiting
+            hint: waitingForYou
+                ? l10n.kitTurnLiveWaitingForYou
+                : cardWaiting
                 ? l10n.agentCardComposerHint
+                : busy &&
+                      (promptSteering ||
+                          midTurnPrompt == MidTurnPrompt.joinsTurn) &&
+                      !conversationMode
+                ? l10n.chatSteerHint
                 : agentName == null
                 ? l10n.chatUiAskOpenCode
                 : l10n.chatUiAskAgent(KitBidi.auto(agentName!)),
             onSend: _send,
-            model: model,
-            // Send becomes Stop while a reply runs (the only Stop); the mic
-            // stays beside it, so speaking or typing waits to send after
-            // the reply. What the reply is doing is written in the turn.
-            busy: busy,
-            onStop: onStop,
-            stopping: stopping,
+            // Stop is the chips row's (above the field). The mic stays while
+            // a reply runs, so speaking or typing waits to send after the
+            // reply. What the reply is doing is written in the turn.
+            busy: busy && !waitingForYou,
+            // The waiting question's answer is the one solid mint.
+            quiet: waitingForYou,
             sending: sending || (shelfBusy && shelfLoading),
             canSendWhileBusy: canSendWhileBusy,
             // One send, no choice: where steering is possible it adds to
             // the running turn; an agent that restarts says so; only
             // OpenCode 1 runs it after the reply.
-            delivery: switch (midTurnPrompt) {
-              MidTurnPrompt.joinsTurn => KitComposerDelivery.addToThisTurn,
-              MidTurnPrompt.restartsTurn => KitComposerDelivery.stopAndSend,
-              null =>
-                promptSteering
-                    ? KitComposerDelivery.addToThisTurn
-                    : KitComposerDelivery.afterThisReply,
-            },
+            delivery: stopFirst
+                ? KitComposerDelivery.stopAndSend
+                : switch (midTurnPrompt) {
+                    MidTurnPrompt.joinsTurn =>
+                      KitComposerDelivery.addToThisTurn,
+                    MidTurnPrompt.restartsTurn =>
+                      KitComposerDelivery.stopAndSend,
+                    null =>
+                      promptSteering
+                          ? KitComposerDelivery.addToThisTurn
+                          : KitComposerDelivery.afterThisReply,
+                  },
+            stuckNote: !stuck
+                ? null
+                : stopFirst
+                ? l10n.chatStuckNeverEnds
+                : midTurnPrompt == MidTurnPrompt.joinsTurn || promptSteering
+                ? l10n.chatStuckWaitsNote(
+                    stuckCommand ?? l10n.chatStuckThisStep,
+                  )
+                : null,
             offline: offline,
             offlineAgentName: agentName == null
                 ? 'OpenCode'
@@ -280,6 +320,9 @@ class _ChatComposer extends StatelessWidget {
             onTools: isolated || conversationMode
                 ? null
                 : () => unawaited(_openTools(context)),
+            tray: _trayActions(context),
+            sendMenu: sendMenu,
+            sendTip: sendTip,
             onVoice:
                 isolated ||
                     conversationMode ||
@@ -295,7 +338,6 @@ class _ChatComposer extends StatelessWidget {
             composerKey: const Key('chat-composer-surface'),
             fieldKey: const Key('chat-composer-field'),
             sendKey: const Key('chat-send-button'),
-            stopKey: const Key('chat-stop-button'),
             toolsKey: const Key('composer-tools-button'),
             voiceButtonKey: const Key('composer-voice-button'),
             editorKey: const Key('prompt-editor-button'),
@@ -515,7 +557,7 @@ class _ChatComposer extends StatelessWidget {
     return match?.group(1);
   }
 
-  // --- the "+" sheet ---------------------------------------------------
+  // --- the "+" sheet (the tray's More) -----------------------------------
 
   /// Opens the tools sheet and runs the chosen tool once it has closed.
   Future<void> _openTools(BuildContext context) async {
@@ -528,6 +570,7 @@ class _ChatComposer extends StatelessWidget {
     final conversationBlocked = busy || sending;
     final canClearText = controller.text.isNotEmpty && onClearText != null;
     final canStash = _hasPrompt && onStashPrompt != null;
+    _ComposerSetting? chosen;
     final tool = await showKitSheet<_PromptTool>(
       context,
       title: l10n.chatUiPromptTools,
@@ -546,12 +589,24 @@ class _ChatComposer extends StatelessWidget {
         canStash: canStash,
         canOpenStash: onOpenStash != null,
         agentName: agentName,
+        // What the tray already offers is not listed twice.
+        inTray: {
+          if (_trayOffersPhotos) ...{_PromptTool.gallery, _PromptTool.camera},
+          if (_trayOffersFile) _PromptTool.attach,
+        },
+        settings: settings,
+        onSetting: (setting) {
+          chosen = setting;
+          KitSheet.close(sheetContext, _PromptTool.setting);
+        },
         onPick: (tool) => KitSheet.close(sheetContext, tool),
       ),
     );
     switch (tool) {
       case null:
         return;
+      case _PromptTool.setting:
+        chosen?.onTap?.call();
       case _PromptTool.commands:
         onOpenCommands();
       case _PromptTool.attach:
@@ -628,6 +683,24 @@ class _ChatModelChip extends StatelessWidget {
     listenable: conn,
     builder: (context, _) => _chip(context),
   );
+
+  /// The model's words for the "+" sheet's Model row. Before the first send
+  /// with nothing signed in it says so (P7.7), as the chip used to; while a
+  /// reply is written a model is answering, so it never asks to sign in.
+  /// Nothing is signed in and no reply is being written (P7.7).
+  bool get signInNeeded {
+    final model = selectedModel;
+    final picked = model != null && model.modelID.isNotEmpty;
+    final catalog = conn.catalog;
+    return !picked && !busy && catalog != null && catalog.models.isEmpty;
+  }
+
+  String contextLabel(BuildContext context) {
+    if (signInNeeded) {
+      return _chatL10n(context).kitModelSignIn;
+    }
+    return _contextLabel(context);
+  }
 
   KitComposerChips _chip(BuildContext context) {
     final model = selectedModel;

@@ -228,7 +228,7 @@ class GitBranches {
 /// A merge, rebase, cherry-pick or revert left half-done in the repository.
 enum GitOperation { none, merge, rebase, cherryPick, revert }
 
-/// Where a remote points, without its address (which can hold credentials).
+/// Where a remote points: GitHub over HTTPS or SSH, or somewhere else.
 enum GitRemoteKind {
   /// `https://github.com/...`
   gitHubHttps,
@@ -241,12 +241,39 @@ enum GitRemoteKind {
 }
 
 class GitRemote {
-  const GitRemote({required this.name, required this.kind});
+  const GitRemote({required this.name, required this.kind, this.address});
 
   final String name;
   final GitRemoteKind kind;
 
+  /// Where the remote points, as `git remote -v` would print it, with any
+  /// user info removed (`https://user:token@host/...` becomes
+  /// `https://host/...`) so a credential never reaches the screen. Null when
+  /// unknown.
+  final String? address;
+
   bool get isGitHub => kind != GitRemoteKind.other;
+}
+
+/// The name and email Git would put on a commit made here (the repository's
+/// own setting, else the device's).
+class GitIdentity {
+  const GitIdentity({this.name = '', this.email = ''});
+
+  final String name;
+  final String email;
+
+  /// Missing, or a placeholder an agent or installer left on the device
+  /// (`aiteam@localhost`): the person should say who they are before the
+  /// first save, so a push does not show a stranger as the author.
+  bool get needsSetup {
+    final mail = email.trim().toLowerCase();
+    return name.trim().isEmpty ||
+        mail.isEmpty ||
+        !mail.contains('@') ||
+        mail.endsWith('@localhost') ||
+        mail.endsWith('@localhost.localdomain');
+  }
 }
 
 /// Everything the page shows, read in one round trip.
@@ -257,8 +284,11 @@ class GitSnapshot {
     this.branches = const GitBranches(),
     this.operation = GitOperation.none,
     this.remotes = const [],
+    this.identity,
   });
 
+  /// Null when it could not be read: nothing is asked then.
+  final GitIdentity? identity;
   final GitStatus status;
   final List<GitCommit> commits;
   final GitBranches branches;

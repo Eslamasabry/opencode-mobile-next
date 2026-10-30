@@ -20,6 +20,7 @@ import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/ui/app_iconography.dart';
 import 'package:opencode_mobile/ui/kit/kit_action_stack.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
+import 'package:opencode_mobile/ui/kit/kit_icon_button.dart';
 
 import 'kit_gallery.dart';
 
@@ -178,9 +179,9 @@ Element? _find(Element root, bool Function(Element) test) {
 void _openMore(Element root) {
   final more = _find(
     root,
-    (e) => e is StatefulElement && e.state is PopupMenuButtonState,
+    (e) => e.widget.key == const ValueKey('kit-actions-more'),
   );
-  ((more! as StatefulElement).state as PopupMenuButtonState).showButtonMenu();
+  (more!.widget as KitIconButton).onPressed!();
 }
 
 void _pressCopy(Element root) {

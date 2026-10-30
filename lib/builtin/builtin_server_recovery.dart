@@ -103,6 +103,10 @@ class BuiltinServerRecovery extends ChangeNotifier {
   BuiltinRecoveryState _value = const BuiltinRecoveryState();
   BuiltinRecoveryState get value => _value;
   bool _foreground = false;
+
+  /// [_resetForPresence] happened in this visit (since the app came to the
+  /// front).
+  bool _presenceResetThisVisit = false;
   bool _disposed = false;
   bool _checking = false;
   bool _storageFailed = false;
@@ -242,6 +246,7 @@ class BuiltinServerRecovery extends ChangeNotifier {
     if (_foreground == value) return;
     _foreground = value;
     _generation++;
+    if (value) _presenceResetThisVisit = false;
     if (!value) {
       unawaited(_cancelNative());
       _publish(BuiltinRecoveryPhase.paused);
@@ -498,7 +503,9 @@ class BuiltinServerRecovery extends ChangeNotifier {
             if (!_eligible(phone, generation)) return;
           }
         }
-        await _confirm(phone, budget, generation);
+        if (await _confirm(phone, budget, generation)) {
+          await _resetForPresence(phone, budget, generation);
+        }
         return;
       }
       if (_nativeAuthority && status.serverRecoveryScheduled) {
@@ -588,7 +595,8 @@ class BuiltinServerRecovery extends ChangeNotifier {
     return saved;
   }
 
-  Future<void> _confirm(
+  /// False when the receipt could not be kept (storage unavailable).
+  Future<bool> _confirm(
     ServerProfile phone,
     _Budget budget,
     int generation,
@@ -600,15 +608,42 @@ class BuiltinServerRecovery extends ChangeNotifier {
       final receipt = budget.confirmed(_now());
       if (!await _save(phone, receipt)) {
         _publish(BuiltinRecoveryPhase.storageUnavailable, budget);
-        return;
+        return false;
       }
       if (!await _recordConfirmation(phone, receipt)) {
         _publish(BuiltinRecoveryPhase.storageUnavailable, receipt);
-        return;
+        return false;
       }
     }
     if (_eligible(phone, generation)) {
       _publish(BuiltinRecoveryPhase.ready, budget);
+    }
+    return true;
+  }
+
+  /// The person is here and the server answers: the restores that brought it
+  /// back worked, so their count starts again, right after the restore that
+  /// used the last one is confirmed (a short visit is enough). Once per
+  /// visit, so a server that keeps crashing while the app is open still runs
+  /// out of tries. Native refuses while a restore is reserved or unconfirmed.
+  Future<void> _resetForPresence(
+    ServerProfile phone,
+    _Budget budget,
+    int generation,
+  ) async {
+    if (!_nativeAuthority || _presenceResetThisVisit || budget.attempts == 0) {
+      return;
+    }
+    _Budget? reset;
+    try {
+      reset = _Budget.readMap(await linux.confirmServerPresence(phone.id));
+    } catch (_) {
+      return;
+    }
+    if (reset == null || reset.attempts != 0) return;
+    _presenceResetThisVisit = true;
+    if (_eligible(phone, generation)) {
+      _publish(BuiltinRecoveryPhase.ready, reset);
     }
   }
 

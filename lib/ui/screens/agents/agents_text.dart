@@ -144,8 +144,11 @@ class AgentFailure {
 /// Words and Details for [error]: typed failures say what they mean; anything
 /// else gets the one plain sentence, with its text under Details.
 AgentFailure agentFailure(AppLocalizations l10n, Object error) {
-  final technical =
-      ProductFailure.from(error).technicalDetails ?? error.toString();
+  // A host failure prints its own short form (`AgentHostException(reason)`);
+  // the generic path would put the type name in front of it a second time.
+  final technical = error is AgentHostException
+      ? error.toString()
+      : ProductFailure.from(error).technicalDetails ?? error.toString();
   return switch (error) {
     AgentHostException(:final reason) => AgentFailure(
       agentHostFailureText(l10n, reason),

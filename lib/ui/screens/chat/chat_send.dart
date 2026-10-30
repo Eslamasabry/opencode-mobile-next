@@ -107,6 +107,12 @@ mixin _ChatSendFields {
   /// The last send failed before the server took it; its text is back in
   /// the composer. Shown on the status line until dismissed or sent again.
   Object? _sendError;
+
+  /// Why the last send hit a wall sending again won't pass ([AgentRunFailure]
+  /// or [conversationNeedsNewChat]), until a send goes through. The prompt
+  /// that got no reply says it too, so Send again is not the only way offered
+  /// (the banner can be dismissed; this stays).
+  Object? _sendWall;
 }
 
 extension _ChatSend on _ChatScreenState {
@@ -116,6 +122,8 @@ extension _ChatSend on _ChatScreenState {
     _PendingSend pending, {
     bool clearComposer = true,
   }) {
+    // Read before the field clears: the bubble lifts from there.
+    _markLift(pending.localID);
     if (clearComposer) _composer.clear();
     // On a phone the keyboard would keep three quarters of the screen from
     // the reply the person just asked for; tapping the field brings it back.
@@ -128,6 +136,7 @@ extension _ChatSend on _ChatScreenState {
     _setChatState(() {
       _localTurnSince = DateTime.fromMillisecondsSinceEpoch(pending.createdAt);
       _stoppedPromptID = null;
+      _conn.clearStoppedByPerson(widget.sessionID);
       _promptError = null;
       _sendError = null;
       _pendingSends.add(pending);
@@ -157,10 +166,13 @@ extension _ChatSend on _ChatScreenState {
         _attachments.removeWhere(pending.attachments.contains);
       }
     });
+    // The view follows the person's words and the reply they bring until
+    // they scroll themselves.
+    _followAfterSend = true;
     // Sent from further up the conversation: the bubble lands at the bottom,
     // out of sight, and the send would look like it did nothing. The view
-    // follows the person's own words there.
-    if (_awayFromLatest) {
+    // follows the person's own words there, from any distance up.
+    if (_awayFromLatest || _offsetFromLatest > 1) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _jumpToLatest();
       });
@@ -194,6 +206,7 @@ extension _ChatSend on _ChatScreenState {
     // Claim before voice cancellation, command discovery or storage can yield.
     if (_sendInFlight) return;
     _sendInFlight = true;
+    if (!_sendingInstead) _retrySend = null;
     try {
       await _performSend();
     } catch (error) {
@@ -215,6 +228,10 @@ extension _ChatSend on _ChatScreenState {
         _onlineSendDispatched = false;
         _onlineSendAccepted = false;
         _onlineSendError = null;
+        _sendCancel = null;
+        _sendingBubble = null;
+        _promptOnWire = false;
+        _stopAfterDispatch = false;
         _sendInFlight = false;
         if (mounted && _sending) _setChatState(() => _sending = false);
       }
@@ -313,13 +330,22 @@ extension _ChatSend on _ChatScreenState {
       _showComposerNote(strings.revertResolveBeforeSending);
       return;
     }
+    if (!await _stopBeforeSend()) return;
     _applyStagedReferences(); // UX-103 review handoff
     if (_composer.text.trim().isEmpty && _attachments.isEmpty) return;
     if (!_supportsPromptAttachments && _attachments.isNotEmpty) {
       _showComposerNote(strings.codexTextOnlyPrompt);
       return;
     }
-    if (_conn.status != StreamStatus.connected) {
+    _setChatState(() => _sending = true);
+    _sendCancel = Completer<void>();
+    // Sent in the first seconds after the phone wakes, the connection is on
+    // its way back and the transport wait covers that: only a connection
+    // still away after it makes this an offline send.
+    if (_conn.status != StreamStatus.connected &&
+        !await _connectionBackForSend()) {
+      if (!mounted || _sendStopped) return;
+      _setChatState(() => _sending = false);
       // Offline compose: the draft queues instead of failing, and flushes
       // through the same send path when the connection returns.
       if (!_supportsOfflinePromptQueue) {
@@ -350,7 +376,7 @@ extension _ChatSend on _ChatScreenState {
       }
       return;
     }
-    _setChatState(() => _sending = true);
+    if (!mounted || _sendStopped) return;
     // Save before clearing the composer: a killed process must retain the
     // prompt even if the server has not acknowledged it yet. Steering is
     // never queued; only ordinary sends on queue-capable servers use this.
@@ -400,13 +426,13 @@ extension _ChatSend on _ChatScreenState {
       draftAttachments,
       _conn.selectionForSession(widget.sessionID),
     )) {
-      if (mounted) {
+      if (mounted && !_sendStopped) {
         _setChatState(() => _sending = false);
         _showActionError(strings.queueSaveFailed);
       }
       return;
     }
-    if (!mounted) return;
+    if (!mounted || _sendStopped) return;
     // The bubble is on screen before the transport is awaited: after a phone
     // wake `prepareActionTransport` can wait out the whole connect timeout,
     // and the person must not stare at a composer that looks unsent. Steering
@@ -421,20 +447,21 @@ extension _ChatSend on _ChatScreenState {
             'local-${now.millisecondsSinceEpoch}-${now.microsecondsSinceEpoch}',
         text: draftText,
         attachments: draftAttachments,
-        createdAt: now.millisecondsSinceEpoch,
+        createdAt: clock.now().millisecondsSinceEpoch,
       );
       _showOptimisticBubble(
         early,
         clearComposer: _composer.text.trim() == draftText,
       );
+      _sendingBubble = early;
       PerfTrace.recordSince(
         'chat.send_to_bubble',
         tapMicros,
         attrs: const {'order': 'bubble_first'},
       );
     }
-    final actionApi = await _conn.prepareActionTransport();
-    if (!mounted) return;
+    final actionApi = await _untilSendStopped(_conn.prepareActionTransport());
+    if (!mounted || _sendStopped) return;
     if (!voiceSendCurrent() || (conversationSend && !_conversationCanSend)) {
       _setChatState(() => _sending = false);
       return;
@@ -458,7 +485,7 @@ extension _ChatSend on _ChatScreenState {
     final earlier = delivery == PromptDelivery.steer
         ? await _takeBackWaitingSteers()
         : const <String>[];
-    if (!mounted) return;
+    if (!mounted || _sendStopped) return;
     final text =
         early?.text ??
         [
@@ -494,10 +521,11 @@ extension _ChatSend on _ChatScreenState {
               'local-${DateTime.now().millisecondsSinceEpoch}-${DateTime.now().microsecondsSinceEpoch}',
           text: text,
           attachments: attachments,
-          createdAt: DateTime.now().millisecondsSinceEpoch,
+          createdAt: clock.now().millisecondsSinceEpoch,
         );
     if (early == null) {
       _showOptimisticBubble(pending);
+      _sendingBubble = pending;
       PerfTrace.recordSince(
         'chat.send_to_bubble',
         tapMicros,
@@ -506,10 +534,10 @@ extension _ChatSend on _ChatScreenState {
     }
     _persistDraft();
     try {
-      await _conn.waitForSessionSelection(
-        widget.sessionID,
-        expectedApi: actionApi,
+      await _untilSendStopped(
+        _conn.waitForSessionSelection(widget.sessionID, expectedApi: actionApi),
       );
+      if (_sendStopped) return;
       if (!voiceSendCurrent() || (conversationSend && !_conversationCanSend)) {
         throw StateError(strings.chatUiVoiceConversationWasInterrupted);
       }
@@ -517,12 +545,14 @@ extension _ChatSend on _ChatScreenState {
       if (!await holdOnlineSend(text, attachments, selection)) {
         throw const OfflineQueueWriteException();
       }
+      if (_sendStopped) return;
       if (!identical(_conn.api, actionApi) ||
           (_onlineSendID != null &&
               !_conn.canDispatchOnlinePrompt(_onlineSendID!))) {
         throw StateError(strings.chatUiOpenCodeIsReconnectingTryAgainWhenThe);
       }
       promptStarted = true;
+      _promptOnWire = true;
       _onlineSendDispatched = true;
       if (conversationSend && voiceSendCurrent()) {
         _setChatState(() => _watchVoiceReply(pending));
@@ -562,13 +592,20 @@ extension _ChatSend on _ChatScreenState {
       if (!mounted) return;
       _setChatState(() {
         _sending = false;
+        _sendWall = null;
         pending.requestComplete = true;
         if (pending.canonicalID != null) _pendingSends.remove(pending);
       });
+      // Stopped while the request was on its way: the server may have
+      // started the turn after that stop reached it.
+      if (_stopAfterDispatch) {
+        _stopAfterDispatch = false;
+        unawaited(_abort());
+      }
       _checkVoiceReply();
       if (!conversationSend && _composer.text.isEmpty) _restoreHistoryDraft();
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || _sendStopped) return;
       _setChatState(() {
         _sending = false;
         _localTurnSince = null;
@@ -583,6 +620,7 @@ extension _ChatSend on _ChatScreenState {
               message.info.id == pending.canonicalID,
         );
       });
+      _readTurnAfterFailedSend();
       // A response error cannot establish whether the server already
       // admitted work. Keep the durable marker for explicit review instead
       // of returning a draft that appears safe to send a second time.
@@ -606,44 +644,13 @@ extension _ChatSend on _ChatScreenState {
       }
       // Said on the status line, where it stays until dismissed or sent
       // again, not in a snackbar that leaves while the person reads it.
-      _setChatState(() => _sendError = e);
+      _setChatState(() {
+        _sendError = e;
+        if (agentRunFailureOf(e) != null || conversationNeedsNewChat(e)) {
+          _sendWall = e;
+        }
+      });
     }
-  }
-
-  void _insertAgentMention(CatalogAgent agent) {
-    if (!_supportsPromptAgentMentions) return;
-    _insertMentionText(agent.id);
-  }
-
-  /// Writes `@name ` over the `@word` being typed, or at the caret.
-  void _insertMentionText(String name) {
-    final current = _composer.value;
-    final query = _activeAgentQuery(current);
-    final selection = current.selection;
-    final fallback = selection.isValid
-        ? selection.start.clamp(0, current.text.length)
-        : current.text.length;
-    final start = query?.start ?? fallback;
-    final end =
-        query?.end ??
-        (selection.isValid
-            ? selection.end.clamp(start, current.text.length)
-            : start);
-    final needsLeadingSpace =
-        query == null &&
-        start > 0 &&
-        !RegExp(r'\s').hasMatch(current.text.substring(start - 1, start));
-    final needsTrailingSpace =
-        end == current.text.length ||
-        !RegExp(r'\s').hasMatch(current.text.substring(end, end + 1));
-    final replacement =
-        '${needsLeadingSpace ? ' ' : ''}@$name${needsTrailingSpace ? ' ' : ''}';
-    final nextText = current.text.replaceRange(start, end, replacement);
-    _composer.value = TextEditingValue(
-      text: nextText,
-      selection: TextSelection.collapsed(offset: start + replacement.length),
-    );
-    _focus.requestFocus();
   }
 
   ({_ChatCommand command, String arguments})? _typedChatCommand(String text) {

@@ -197,7 +197,7 @@ def safe_bundle(archive_path, expected, destination):
         if (
             manifest.get("schemaVersion") != 1
             or manifest.get("bundleVersion") != "2.0.0"
-            or manifest.get("openCodeVersion") != "2.0.29"
+            or manifest.get("openCodeVersion") != "2.1.1"
             or manifest.get("port") != 4096
             or machine is None
             or manifest.get("architecture") != machine

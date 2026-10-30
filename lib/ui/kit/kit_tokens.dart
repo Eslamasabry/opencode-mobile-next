@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 import '../app_iconography.dart';
 import '../app_theme.dart' show AppStatusTone;
 import '../theme_roles.dart';
+import 'kit_effects.dart';
 import 'kit_shape.dart';
 import 'kit_text.dart';
+import 'style/kit_style.dart';
 
 export 'kit_shape.dart';
 
@@ -84,6 +86,13 @@ class KitTokens extends ThemeExtension<KitTokens> {
     required this.sectionLabel,
     required this.cardCaption,
     required this.cardTitle,
+    this.fieldCorner = fieldRadius,
+    this.popoverCorner = popoverRadius,
+    this.bubbleCorner = bubbleRadius,
+    this.bubbleTailCorner = bubbleTailRadius,
+    this.pillHeight = chipHeight,
+    this.panelInner = panelPadding,
+    this.pillRadius = double.infinity,
   });
 
   /// The theme's colour roles (ground, surfaces, text, accent, attention, …). Parts read colours from here.
@@ -167,13 +176,31 @@ class KitTokens extends ThemeExtension<KitTokens> {
   /// A needs-you or request card's corners (22).
   final double cardRadius;
 
-  /// A button's corners (14) and a full-width button's height (50).
+  /// A button's corners (14) and a full-width button's height (52, on the
+  /// 4 dp scale; 48 under Compact, never below the touch target).
   final double buttonRadius;
   final double buttonHeight;
 
-  /// A row's leading icon tile: 30 dp of `surface3`, 9 dp corners.
+  /// A row's leading icon tile: 28 dp of `surface3`, 9 dp corners. Its
+  /// width is the leading column's slot ([leadColumn]).
   final double iconTileSize;
   final double iconTileRadius;
+
+  /// The leading column (impeccable layout pass, 2026-10-28: one text rail):
+  /// a row's icon slot ([iconTileSize]) and the gap after it ([space3]).
+  /// A row's words start this far past the row's own content edge: on a
+  /// page, at [textRail] (56 dp); in a sheet, the same 40 dp past its 20 dp
+  /// rail. List rows, list notices, the top bar's title and sheet rows all
+  /// start their words here, whatever their leading glyph's size.
+  double get leadColumn => iconTileSize + space3;
+
+  /// The page's text rail: the gutter and the [leadColumn] (16 + 40 = 56).
+  double get textRail => gutter + leadColumn;
+
+  /// The conversation's compact leading column: a 20 dp glyph and [space3]
+  /// (32), so a step, a notice and their buttons in the transcript start
+  /// their words on one 48 dp rail.
+  double get leadColumnCompact => smallIconSize + space3;
 
   /// A code block's corners.
   final double codeRadius;
@@ -182,11 +209,12 @@ class KitTokens extends ThemeExtension<KitTokens> {
   final double composerRadius;
   final double composerRadiusWide;
 
-  /// A row with one line (54) and with two (60).
+  /// A row with one line (56) and with two (64), on the 4 dp scale; a
+  /// trailing 48 dp target fits inside either without growing it.
   final double rowHeight;
   final double rowHeightTwoLine;
 
-  /// The screen gutter (16), the space between sections (22), and between a
+  /// The screen gutter (16), the space between sections (24), and between a
   /// section's label and its panel (8).
   final double gutter;
   final double sectionGap;
@@ -209,6 +237,40 @@ class KitTokens extends ThemeExtension<KitTokens> {
   final TextStyle cardCaption;
   final TextStyle cardTitle;
 
+  // ── Hook H5: the static shape tokens below, as instance tokens that
+  // follow Corners and Density ([styled]). Parts with a token object read
+  // these; the statics stay for `const` contexts and equal the defaults.
+
+  /// [fieldRadius] under the knobs.
+  final double fieldCorner;
+
+  /// [popoverRadius] under the knobs.
+  final double popoverCorner;
+
+  /// [bubbleRadius] and [bubbleTailRadius] under the knobs.
+  final double bubbleCorner;
+  final double bubbleTailCorner;
+
+  /// [chipHeight] under Density.
+  final double pillHeight;
+
+  /// [panelPadding] under Density.
+  final double panelInner;
+
+  /// Hook H4: a pill's corner radius; infinite is a stadium (Round and
+  /// Soft). Corners › Sharp makes chips and pills the style's sharp box.
+  final double pillRadius;
+
+  /// A chip's or pill's border with [side]: a stadium, or the sharp box
+  /// under Corners › Sharp.
+  OutlinedBorder pillBorder({BorderSide side = BorderSide.none}) =>
+      pillRadius.isFinite
+      ? RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(pillRadius),
+          side: side,
+        )
+      : StadiumBorder(side: side);
+
   /// The one shadow in the app (visual language §4, §7): under a floating
   /// surface only (the dock, the rail, the top controls, the composer), one
   /// tight drop (y 6, blur 16, spread -6) in the theme's `elevationShadow`
@@ -221,6 +283,25 @@ class KitTokens extends ThemeExtension<KitTokens> {
       offset: const Offset(0, 6),
     ),
   ];
+
+  /// The floating layer's shadow here ([surfaceShadows]'s place): Solid's
+  /// is quieter, the `elevationShadow` colour at .10 in one tight drop
+  /// (y 4, blur 12, spread -4) in light and none in dark, where surface2
+  /// and the hairline already lift it. Every other style keeps
+  /// [surfaceShadows].
+  List<BoxShadow> floatingShadows(BuildContext context) =>
+      KitStyles.styleOf(context) != KitSurfaceStyle.solid
+      ? surfaceShadows
+      : roles.isDark
+      ? const []
+      : [
+          BoxShadow(
+            color: roles.elevationShadow.withValues(alpha: .10),
+            blurRadius: 12,
+            spreadRadius: -4,
+            offset: const Offset(0, 4),
+          ),
+        ];
 
   /// A panel set into a sheet or a dialog (a confirmation's consequences):
   /// one step below the sheet's `surface2`, which in light is the ground.
@@ -261,6 +342,10 @@ class KitTokens extends ThemeExtension<KitTokens> {
 
   /// KitComposer.md: Stop's ground square (corners a quarter of it).
   static const double composerStopSquare = 14;
+
+  /// The live line's dot in a running turn (concept C): the small mint
+  /// mark before "Writing index.html · 12 s".
+  static const double liveDot = 8;
 
   /// KitBreadcrumb.md: the widest an ancestor crumb grows before it truncates.
   static const double crumbMaxWidth = 160;
@@ -375,6 +460,16 @@ class KitTokens extends ThemeExtension<KitTokens> {
 
   /// KitRequestCard.md: the needs-you ring's attention alpha.
   static const double needsYouRingAlpha = .06;
+
+  /// KitRequestCard.md: the question look's "Needs you" dot.
+  static const double needsYouDotSize = 8;
+
+  /// KitRequestCard.md: the question look's attention line, the attention
+  /// colour at this alpha (stronger than `attentionLine` on its calm card).
+  static const double needsYouLineAlpha = .5;
+
+  /// KitRequestCard.md: the question look's attention edge at the start.
+  static const double needsYouEdgeWidth = 4;
 
   /// KitRequestCard.md: the request card's tile.
   static const double requestTileSize = 36;
@@ -503,7 +598,7 @@ class KitTokens extends ThemeExtension<KitTokens> {
       KitShape.sheet => RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
       ),
-      KitShape.pill => const StadiumBorder(),
+      KitShape.pill => pillBorder(),
       KitShape.circle => const CircleBorder(),
     };
   }
@@ -524,10 +619,135 @@ class KitTokens extends ThemeExtension<KitTokens> {
     roles.surface3,
   ];
 
-  /// The tokens in force: the theme's extension, or ones derived from it.
+  /// The tokens in force: the theme's extension (or ones derived from it)
+  /// under the Style's Fine-tune knobs ([styled]). At Round and Comfortable
+  /// this is the theme's own object, so nothing changes.
   static KitTokens of(BuildContext context) {
     final theme = Theme.of(context);
-    return theme.extension<KitTokens>() ?? KitTokens.fallback(theme);
+    final base = theme.extension<KitTokens>() ?? KitTokens.fallback(theme);
+    final knobs = KitStyles.knobsOf(context);
+    final spec = kitStyleSpec(KitStyles.styleOf(context)).tokens;
+    if (knobs.corners == KitCorners.round &&
+        knobs.density == KitDensity.comfortable &&
+        spec.type.isNone) {
+      return base;
+    }
+    return base.styled(knobs, sharpRadius: spec.sharpRadius, type: spec.type);
+  }
+
+  static final Expando<
+    Map<(KitCorners, KitDensity, double, KitStyleType), KitTokens>
+  >
+  _styledCache = Expando('KitTokens.styled');
+
+  /// These tokens under Corners and Density (contract §3.1, §3.7): radii
+  /// through [KitStyles.corner], and the compact row, gap and button sizes.
+  /// Touch targets never shrink. Memoised per base and knobs.
+  KitTokens styled(
+    KitKnobs knobs, {
+    double sharpRadius = 2,
+    KitStyleType type = const KitStyleType(),
+  }) {
+    if (knobs.corners == KitCorners.round &&
+        knobs.density == KitDensity.comfortable &&
+        type.isNone) {
+      return this;
+    }
+    final cache = _styledCache[this] ??= {};
+    return cache[(knobs.corners, knobs.density, sharpRadius, type)] ??= _styled(
+      knobs,
+      sharpRadius,
+      type,
+    );
+  }
+
+  KitTokens _styled(KitKnobs knobs, double sharpRadius, KitStyleType type) {
+    // Hook H1: the token text styles take the Style's type tweaks too.
+    final arabic = rowTitle.fontFamily == 'sans-serif';
+    TextStyle t(KitTextRole role, TextStyle style) =>
+        KitText.applyType(role, style, type, arabic: arabic);
+    double r(double radius, {double? sharp}) => KitStyles.corner(
+      radius,
+      knobs.corners,
+      sharp: sharp == null ? sharpRadius : math.min(sharp, sharpRadius * 2),
+    );
+    final compact = knobs.density == KitDensity.compact;
+    return KitTokens(
+      roles: roles,
+      space1: space1,
+      space2: space2,
+      space3: space3,
+      space4: space4,
+      space5: space5,
+      space6: space6,
+      rail: rail,
+      sheetSurface: sheetSurface,
+      panelSurface: panelSurface,
+      sideSheetSurface: sideSheetSurface,
+      scrim: scrim,
+      sheetRadius: r(sheetRadius, sharp: 4),
+      panelRadius: r(panelRadius),
+      sheetElevation: sheetElevation,
+      panelElevation: panelElevation,
+      sideSheetElevation: sideSheetElevation,
+      panelInset: panelInset,
+      handleColor: handleColor,
+      handleSize: handleSize,
+      handleHeight: handleHeight,
+      muted: muted,
+      detailsSurface: detailsSurface,
+      detailsRadius: r(detailsRadius),
+      markSize: markSize,
+      markIconSize: markIconSize,
+      markTintAlpha: markTintAlpha,
+      markRadius: r(markRadius),
+      maxIconScale: maxIconScale,
+      sheetTitle: t(KitTextRole.title, sheetTitle),
+      sheetSubtitle: t(KitTextRole.secondary, sheetSubtitle),
+      confirmTitle: t(KitTextRole.title, confirmTitle),
+      confirmBody: t(KitTextRole.body, confirmBody),
+      note: t(KitTextRole.secondary, note),
+      technicalValue: technicalValue,
+      typedName: typedName,
+      accent: accent,
+      minTarget: minTarget,
+      smallIconSize: smallIconSize,
+      panelCornerRadius: r(panelCornerRadius),
+      cardRadius: r(cardRadius),
+      buttonRadius: r(buttonRadius),
+      // Compact steps stay on the 4 dp scale (52 → 48, 56 → 48, 64 → 56,
+      // 24 → 16, 8 → 4); touch targets never shrink.
+      buttonHeight: compact
+          ? math.max(minTarget, buttonHeight - space1)
+          : buttonHeight,
+      iconTileSize: iconTileSize,
+      iconTileRadius: r(iconTileRadius),
+      codeRadius: r(codeRadius),
+      composerRadius: r(composerRadius, sharp: 4),
+      composerRadiusWide: r(composerRadiusWide),
+      rowHeight: compact ? math.max(minTarget, rowHeight - space2) : rowHeight,
+      rowHeightTwoLine: compact
+          ? math.max(minTarget, rowHeightTwoLine - space2)
+          : rowHeightTwoLine,
+      gutter: gutter,
+      sectionGap: compact ? sectionGap - space2 : sectionGap,
+      labelGap: compact ? labelGap - space1 : labelGap,
+      navHeight: navHeight,
+      navRadius: r(navRadius, sharp: 4),
+      rowTitle: t(KitTextRole.rowTitle, rowTitle),
+      rowSupporting: t(KitTextRole.secondary, rowSupporting),
+      rowValue: t(KitTextRole.secondary, rowValue),
+      sectionLabel: t(KitTextRole.label, sectionLabel),
+      cardCaption: t(KitTextRole.caption, cardCaption),
+      cardTitle: t(KitTextRole.headline, cardTitle),
+      fieldCorner: r(fieldCorner),
+      popoverCorner: r(popoverCorner),
+      bubbleCorner: r(bubbleCorner),
+      bubbleTailCorner: r(bubbleTailCorner),
+      pillHeight: compact ? pillHeight - 4 : pillHeight,
+      panelInner: compact ? panelInner - 4 : panelInner,
+      pillRadius: knobs.corners == KitCorners.sharp ? sharpRadius : pillRadius,
+    );
   }
 
   /// [size] grown with the person's text size, up to [maxIconScale], so a
@@ -602,16 +822,16 @@ class KitTokens extends ThemeExtension<KitTokens> {
       panelCornerRadius: 18,
       cardRadius: 22,
       buttonRadius: 14,
-      buttonHeight: 50,
-      iconTileSize: 30,
+      buttonHeight: 52,
+      iconTileSize: 28,
       iconTileRadius: 9,
       codeRadius: 14,
       composerRadius: 26,
       composerRadiusWide: 18,
-      rowHeight: 54,
-      rowHeightTwoLine: 60,
+      rowHeight: 56,
+      rowHeightTwoLine: 64,
       gutter: 16,
-      sectionGap: 22,
+      sectionGap: 24,
       labelGap: 8,
       navHeight: 60,
       navRadius: 22,
@@ -698,6 +918,13 @@ class KitTokens extends ThemeExtension<KitTokens> {
     sectionLabel: sectionLabel,
     cardCaption: cardCaption,
     cardTitle: cardTitle,
+    fieldCorner: fieldCorner,
+    popoverCorner: popoverCorner,
+    bubbleCorner: bubbleCorner,
+    bubbleTailCorner: bubbleTailCorner,
+    pillHeight: pillHeight,
+    panelInner: panelInner,
+    pillRadius: pillRadius,
   );
 
   @override
@@ -768,6 +995,13 @@ class KitTokens extends ThemeExtension<KitTokens> {
       sectionLabel: s(sectionLabel, other.sectionLabel),
       cardCaption: s(cardCaption, other.cardCaption),
       cardTitle: s(cardTitle, other.cardTitle),
+      fieldCorner: d(fieldCorner, other.fieldCorner),
+      popoverCorner: d(popoverCorner, other.popoverCorner),
+      bubbleCorner: d(bubbleCorner, other.bubbleCorner),
+      bubbleTailCorner: d(bubbleTailCorner, other.bubbleTailCorner),
+      pillHeight: d(pillHeight, other.pillHeight),
+      panelInner: d(panelInner, other.panelInner),
+      pillRadius: t < .5 ? pillRadius : other.pillRadius,
     );
   }
 }

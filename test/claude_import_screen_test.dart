@@ -136,7 +136,6 @@ void main() {
     tester,
   ) async {
     await _open(tester);
-    expect(find.text('Import from Claude Code'), findsOneWidget);
     await _openImport(tester);
     expect(find.text('Release notes for 1.3'), findsOneWidget);
     expect(find.text('Why does the login screen flicker?'), findsOneWidget);

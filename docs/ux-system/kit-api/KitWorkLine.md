@@ -140,7 +140,7 @@ The line follows the turn's width (the conversation pane, at most `KitLayout.pan
 
 ## Motion and haptics
 
-- Opening and closing: the chevron turns (KitChip, `KitMotion.standard`, `emphasized`); the steps appear at once and fade in over `KitMotion.quick` (paint only). No size or layout animation: the line lives in a scrolling list (MOT-5, K2 §4.11).
+- Opening and closing: the chevron turns (KitChip, `KitMotion.standard`, `emphasized`); the steps unfold and fade in, and fold away when it shuts (KitStepTimeline's fold, in on `KitMotion.standard`, out on `KitMotion.quick`; owner request 2026-10-27). New steps arriving while it is open slide and fade in.
 - The working mark is KitStatusMark's; it is still under reduced motion.
 - Reduced motion (`KitMotion.reduced`): no fade; one `pump()` settles (G8x).
 - Haptics: none (MOT-11).

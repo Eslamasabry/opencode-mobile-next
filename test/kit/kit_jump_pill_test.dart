@@ -292,7 +292,7 @@ void main() {
         await tester.pumpWidget(host(true));
         await tester.pump(const Duration(seconds: 1));
         await tester.pumpWidget(host(false));
-        // Settle the exit animation (KitMotion.standard, 250ms).
+        // Settle the exit animation (KitMotion.quick, 150ms).
         await tester.pump(const Duration(milliseconds: 300));
 
         expect(underOffstage(tester, onstageOrNot('Jump to latest')), isTrue);

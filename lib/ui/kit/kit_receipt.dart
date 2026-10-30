@@ -5,6 +5,8 @@ import '../app_iconography.dart';
 import '../theme_roles.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
+import 'kit_ink_layer.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
 import 'kit_since.dart';
 import 'kit_tappable.dart';
@@ -180,7 +182,10 @@ class KitReceipt extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final waits =
         state == KitReceiptState.sending || state == KitReceiptState.sent;
     return KitSince(
@@ -550,14 +555,22 @@ class _TapTargetState extends State<_TapTarget> {
           focusColor: Colors.transparent,
           highlightColor: Colors.transparent,
           splashFactory: NoSplash.splashFactory,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: _press.shown ? roles.surface3 : null,
-              borderRadius: radius,
-            ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: tokens.minTarget),
-              child: widget.child,
+          // On Android a press draws the native ripple (KitInk); the flat
+          // pressed fill is for the other platforms and reduced motion.
+          child: KitInkLayer(
+            key: _press.inkKey,
+            shape: RoundedRectangleBorder(borderRadius: radius),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: _press.shown && !KitInk.on(context)
+                    ? roles.surface3
+                    : null,
+                borderRadius: radius,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: tokens.minTarget),
+                child: widget.child,
+              ),
             ),
           ),
         ),

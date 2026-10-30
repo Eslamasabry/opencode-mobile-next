@@ -3,6 +3,7 @@ import 'scheduling/platform.dart';
 import 'scheduling/store.dart';
 import 'scheduling/agent_connection.dart';
 import 'scheduling/open_route.dart';
+import 'ui/kit/style/kit_style_theme.dart';
 import 'ui/screens/scheduling/schedule_routes.dart';
 export 'background/widget_action_entrypoint.dart' show widgetActionMain;
 import 'ui/search/search_index.dart';
@@ -43,6 +44,7 @@ import 'diagnostics/app_diagnostics.dart';
 import 'diagnostics/crash_diagnostics.dart';
 import 'diagnostics/perf_trace.dart';
 import 'diagnostics/report_problem_startup.dart';
+import 'domain/chat_feed.dart' show isTemporaryProjectDirectory;
 import 'domain/connection_status.dart';
 import 'domain/server_gateway.dart' show ProductException;
 import 'l10n/app_localizations.dart';
@@ -57,16 +59,18 @@ import 'domain/while_away.dart' show AutomaticActKind;
 import 'domain/team_link.dart';
 import 'state/app_locale.dart' show resolveAppLocales;
 import 'state/connection.dart';
+import 'state/in_app_auto_update.dart';
 import 'state/managed_move.dart';
 import 'state/automation_policy.dart';
 import 'state/local_server_controls.dart';
 import 'termux/bridge.dart';
 import 'state/profiles.dart';
-import 'state/session_inventory_cache.dart' show SessionInventoryPreview;
 import 'update/desktop_release_check.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
 import 'ui/screens/chats/chats_host.dart' show ConnectionChatsHost;
+import 'ui/screens/project_hub_screen.dart' show ProjectHub, openProjectFiles;
+import 'ui/search/go_to_commands.dart';
 import 'ui/capability_flows.dart';
 import 'ui/desktop/desktop_interaction.dart';
 import 'ui/desktop/shortcuts.dart';
@@ -77,16 +81,16 @@ import 'ui/navigation/attention_landing.dart'
 import 'ui/navigation/chat_route.dart';
 import 'ui/screens/settings_screen.dart';
 import 'ui/widgets/product_states.dart'
-    show productErrorText, productErrorDetails;
+    show productErrorText, productErrorDetails, ProductErrorLocale;
 import 'ui/widgets/saved_server_connection_card.dart';
 import 'ui/widgets/session_address_sheets.dart';
-import 'ui/widgets/last_known_sessions.dart';
 import 'ui/widgets/app_connection_status.dart';
 import 'ui/widgets/managed_move_view.dart';
 import 'ui/widgets/phone_server_card.dart'
     show serverDisplayName, runPhoneServerAction, PhoneServerAction;
 import 'ui/screens/guide_screen.dart';
 import 'ui/screens/about_screen.dart';
+import 'ui/screens/home_opening.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/servers_screen.dart';
 import 'ui/screens/chat_screen.dart';
@@ -255,6 +259,8 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     // missing capability offers "Turn it on" wherever that can happen here.
     registerCapabilityFlows(_controller);
     ref.read(phoneServerHealingProvider);
+    // Keeps the in-app server on the pinned OpenCode when nothing is working.
+    ref.read(inAppAutoUpdateProvider);
     _controller.addListener(_controllerChanged);
     _share = widget.shareIntent ?? ShareIntent();
     _share.pending.addListener(_scheduleShareRoute);
@@ -317,8 +323,12 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     if (_controller.managedOpenCode2MigrationRequired) return;
     final profile = _controller.profile;
     final healing = ref.read(phoneServerHealingProvider);
-    if (looksLikeInAppServer(profile)) await healing.check(profile!);
-    await _controller.resumeFromLifecycle();
+    // Healing restarts a dead server while the resume reconnects a live one;
+    // connectIfNeeded below picks up whichever the resume could not reach.
+    await Future.wait<void>([
+      if (looksLikeInAppServer(profile)) healing.check(profile!),
+      _controller.resumeFromLifecycle(),
+    ]);
     if (looksLikeInAppServer(profile)) await healing.connectIfNeeded(profile!);
   }
 
@@ -392,81 +402,96 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
       builder: (context, appearance, _) => ListenableBuilder(
         listenable: Listenable.merge([
           _controller.themePack,
+          _controller.appearanceAccent,
           _controller.appLocale,
           harvestedDynamicPack,
         ]),
         builder: (context, _) {
           final pack = effectiveThemePack(_controller.themePack.value);
+          // Settings › Appearance › Accent, and Saver: applied here and in
+          // the effects scope below, so every page reads them as plain
+          // roles and effects while the stored choices stay as they are.
+          final accent = appearanceAccentById(
+            _controller.appearanceAccent.value,
+          );
+          final saver = appearance == AppAppearance.saver;
           return MaterialApp(
             navigatorKey: _navigatorKey,
             navigatorObservers: [_routeTracker, _routeTiming],
             builder: (context, child) {
               // Global text-scale safety net: only the extreme top end is
               // capped (KitText.appScaler).
-              return Theme(
-                data: AppTheme.forLocale(
-                  Theme.of(context),
-                  Localizations.localeOf(context),
-                ),
-                child: KitText.appScale(
-                  size: _controller.textSize,
-                  max: AppTheme.maxTextScale,
-                  // The app's own line joins the conditions every screen's
-                  // status slot reads; the update notices below add theirs.
-                  child: AppConnectionStatusScope(
-                    controller: _controller,
-                    navigatorKey: _navigatorKey,
-                    child: ValueListenableBuilder<KitStatus?>(
-                      valueListenable: _notice,
-                      builder: (context, notice, notices) =>
-                          UpdateStatusScope(status: notice, child: notices!),
-                      child: ShorebirdUpdateNotice(
-                        service: _updateService,
-                        currentProfileId: () => _controller.profile?.id,
-                        allowsAutomaticUpdate: (id) =>
-                            AutomationPolicyController.forProfile(
-                              _controller.store.prefs,
-                              id,
-                            ).value.allows(AutomationBehavior.applyCodePush),
-                        onDownloaded:
-                            ({
-                              required profileId,
-                              required eventId,
-                              required at,
-                            }) async {
-                              await _controller.recordServerAct(
-                                profileId: profileId,
-                                kind: AutomaticActKind.update,
-                                eventId: eventId,
-                                at: at,
-                              );
-                            },
-                        child: DesktopReleaseNotice(
-                          navigatorKey: _navigatorKey,
-                          // Desktop only. On Android this returns its child
-                          // untouched, so the touch product gains no key handling.
-                          child: AppShortcuts(
-                            navigatorKey: _navigatorKey,
-                            signals: _shortcutSignals,
-                            handlers: AppShortcutHandlers(
-                              onNewSession: () => unawaited(_startNewSession()),
-                              onOpenSettings: _openSettings,
-                              paletteCommands: _shellCommands,
-                            ),
-                            // Settings › Appearance › Effects, above the
-                            // navigator so every route and its transitions read
-                            // the same choices. Calls without a context (a send
-                            // from a controller) obey Vibration via the flag.
-                            child: ValueListenableBuilder<KitEffects>(
-                              valueListenable: _controller.effects,
-                              builder: (context, effects, navigator) {
-                                KitHaptics.enabled = effects.haptics;
-                                return KitEffectsScope(
-                                  effects: effects,
-                                  child: navigator!,
+              return ProductErrorLocale(
+                child: Theme(
+                  data: AppTheme.forLocale(
+                    Theme.of(context),
+                    Localizations.localeOf(context),
+                  ),
+                  child: KitText.appScale(
+                    size: _controller.textSize,
+                    max: AppTheme.maxTextScale,
+                    // The app's own line joins the conditions every screen's
+                    // status slot reads; the update notices below add theirs.
+                    child: AppConnectionStatusScope(
+                      controller: _controller,
+                      navigatorKey: _navigatorKey,
+                      child: ValueListenableBuilder<KitStatus?>(
+                        valueListenable: _notice,
+                        builder: (context, notice, notices) =>
+                            UpdateStatusScope(status: notice, child: notices!),
+                        child: ShorebirdUpdateNotice(
+                          service: _updateService,
+                          currentProfileId: () => _controller.profile?.id,
+                          allowsAutomaticUpdate: (id) =>
+                              AutomationPolicyController.forProfile(
+                                _controller.store.prefs,
+                                id,
+                              ).value.allows(AutomationBehavior.applyCodePush),
+                          onDownloaded:
+                              ({
+                                required profileId,
+                                required eventId,
+                                required at,
+                              }) async {
+                                await _controller.recordServerAct(
+                                  profileId: profileId,
+                                  kind: AutomaticActKind.update,
+                                  eventId: eventId,
+                                  at: at,
                                 );
                               },
-                              child: child ?? const SizedBox.shrink(),
+                          child: DesktopReleaseNotice(
+                            navigatorKey: _navigatorKey,
+                            // Desktop only. On Android this returns its child
+                            // untouched, so the touch product gains no key handling.
+                            child: AppShortcuts(
+                              navigatorKey: _navigatorKey,
+                              signals: _shortcutSignals,
+                              handlers: AppShortcutHandlers(
+                                onNewSession: () =>
+                                    unawaited(_startNewSession()),
+                                onOpenSettings: _openSettings,
+                                paletteCommands: _shellCommands,
+                              ),
+                              // Settings › Appearance › Effects, above the
+                              // navigator so every route and its transitions read
+                              // the same choices. Calls without a context (a send
+                              // from a controller) obey Vibration via the flag.
+                              child: ValueListenableBuilder<KitEffects>(
+                                valueListenable: _controller.effects,
+                                builder: (context, effects, navigator) {
+                                  KitHaptics.enabled = effects.haptics;
+                                  return KitEffectsScope(
+                                    effects: saver
+                                        ? effects.underSaver
+                                        : effects,
+                                    // The Style's own ground (design schools,
+                                    // hook H6); Solid keeps the theme as is.
+                                    child: kitStyleTheme(child: navigator!),
+                                  );
+                                },
+                                child: child ?? const SizedBox.shrink(),
+                              ),
                             ),
                           ),
                         ),
@@ -487,10 +512,12 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
             themeMode: switch (appearance) {
               AppAppearance.system => ThemeMode.system,
               AppAppearance.light => ThemeMode.light,
-              AppAppearance.dark => ThemeMode.dark,
+              AppAppearance.dark || AppAppearance.saver => ThemeMode.dark,
             },
-            theme: AppTheme.light(pack),
-            darkTheme: AppTheme.dark(pack),
+            theme: AppTheme.light(pack, accent?.light),
+            darkTheme: saver
+                ? AppTheme.saver(pack, accent?.dark)
+                : AppTheme.dark(pack, accent?.dark),
             initialRoute: '/',
             routes: {
               '/': (_) => _Root(say: _say),

@@ -424,7 +424,6 @@ void main() {
           'kind': 'team_decision',
           'sessionID': 'req-1',
           'key': 'team:srv-1:gate:req-1',
-          'quickReply': false,
           'requestID': '',
           'profileID': 'srv-1',
           'allowActions': false,

@@ -25,7 +25,6 @@ String _inline(String text) {
 /// "Open full output" into the reader.
 class _Output extends StatelessWidget {
   const _Output({
-    super.key,
     required this.text,
     required this.name,
     this.kind = KitCodeKind.output,
@@ -152,14 +151,21 @@ class _ToolBody extends StatelessWidget {
     if (contract.kind == _ToolKind.shell) return _shellRerun(context);
     // A declined call has nothing to explain: the row already says so.
     if (state.declined) return const [];
+    // A step cut off with its turn: the row says Stopped, nothing more.
+    if (state.status == 'error' && toolStepCutOff(state)) return const [];
     if (state.status == 'error') {
       return [
         // What was asked stays visible next to why it failed.
         if (contract.kind == _ToolKind.generic &&
             (state.input.isNotEmpty || state.inputJson?.isNotEmpty == true))
           _genericInput(),
-        _error(context, state.output ?? _chatL10n(context).chatUiToolFailed),
+        if (contract.kind == _ToolKind.agentMessage)
+          ..._agentMessageBody(context),
+        _error(context, state.output ?? ''),
       ];
+    }
+    if (suppressOutput && contract.kind == _ToolKind.agentMessage) {
+      return _agentMessageBody(context);
     }
     if (suppressOutput) return [_genericInput()];
     return switch (contract.kind) {
@@ -181,28 +187,24 @@ class _ToolBody extends StatelessWidget {
       _ToolKind.skill => [_skillBody()],
       _ToolKind.connectorSearch => _connectorSearchBody(context),
       _ToolKind.backgroundNotice => _backgroundNoticeBody(),
+      _ToolKind.agentMessage => _agentMessageBody(context),
       _ToolKind.card => const [],
       _ToolKind.generic => _genericBody(context),
     };
   }
 
-  /// An error in the tool's own words, as capped output (LOOK-5: no danger
-  /// colour; the row already says Failed).
+  /// An error in the tool's own words (LOOK-5: no danger colour). The row
+  /// already says Failed in plain words, so the tool's technical text sits
+  /// under Details, one quiet line, never a box of raw text (no raw errors
+  /// as copy).
   Widget _error(BuildContext context, String message) {
     final words = message.replaceFirst(RegExp(r'^Error:\s*'), '').trim();
-    final failed = _chatL10n(context).chatUiToolFailed;
-    // With no words of its own the failure is said once, not as a caption
-    // over a second sentence that says the same.
-    return _Output(
-      key: Key(
-        embedded
-            ? 'embedded-tool-error-output'
-            : 'standalone-tool-error-output',
-      ),
-      text: words.isEmpty ? failed : words,
-      name: 'tool-error.txt',
-      caption: words.isEmpty ? null : failed,
+    final key = Key(
+      embedded ? 'embedded-tool-error-output' : 'standalone-tool-error-output',
     );
+    // With no words of its own the failure is said once, by the row.
+    if (words.isEmpty) return SizedBox.shrink(key: key);
+    return KitDetailsFold(key: key, text: words);
   }
 
   Widget _readBody(BuildContext context) {
@@ -684,7 +686,12 @@ class _ToolBody extends StatelessWidget {
   /// A background task's notice as plain sentences, each said once: the
   /// host often repeats the same sentence as the task's name and its output.
   List<Widget> _backgroundNoticeBody() {
-    final seen = <String>{};
+    final notice = _TaskNotice.of(state.input);
+    final summary = notice.summary;
+    // The row's line already said the summary, or all of it.
+    final seen = <String>{
+      if (summary != null && !notice.summaryInBody) summary,
+    };
     final texts = [
       for (final value in [
         state.input['summary'],
@@ -697,6 +704,31 @@ class _ToolBody extends StatelessWidget {
     return [
       for (final text in texts)
         KitText(text, role: KitTextRole.body, tone: KitTextTone.secondary),
+    ];
+  }
+
+  /// An agent-to-agent message: its text once, as readable prose. The line
+  /// already says who it goes to and its summary; a recipient that is only
+  /// an id, and a message that is a request rather than words, stay under
+  /// the details. Claude's answer ("Message sent") is written for itself.
+  List<Widget> _agentMessageBody(BuildContext context) {
+    final l10n = _chatL10n(context);
+    final message = _AgentMessage.of(state);
+    final text = message.text;
+    final id = message.recipientId;
+    final structured = message.structured;
+    return [
+      if (text != null) _Prose(text: text, name: 'message.md'),
+      if (id != null || structured != null)
+        KitDetailsFold(
+          values: [
+            if (id != null)
+              KitTechnicalValue(l10n.toolCardMessageRecipientId, id),
+          ],
+          text: structured == null
+              ? null
+              : const JsonEncoder.withIndent('  ').convert(structured),
+        ),
     ];
   }
 
@@ -779,6 +811,8 @@ class _ToolBody extends StatelessWidget {
           value: value,
           name: 'tool-output.json',
           foldLabel: both ? l10n.toolCardWhatCameBack : null,
+          // An answer that repeats what was sent says only what is new.
+          shown: hasInput ? _Readable.simpleValues(state.input) : const {},
         )
       else if (state.output?.trim().isNotEmpty == true)
         _Output(text: state.output!, name: 'tool-output.txt'),

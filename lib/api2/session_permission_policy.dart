@@ -101,7 +101,17 @@ class Api2SessionPermissionPolicy {
   /// OC2 evaluates agent rules first, then session rules, with last match
   /// winning. Preserve that order (including deny/allow exceptions) while
   /// turning implicit allowances into requests. Saved user grants still apply.
-  Map<String, dynamic> updateForAgent(Object? response) {
+  ///
+  /// With [serverRuns] (the person approves this conversation automatically)
+  /// the session gets its original rules back, so the server runs what its
+  /// own rules allow without waiting for this phone. A request this phone
+  /// never sees (sent while it was away, or hidden by a server whose pending
+  /// list fails to load) would otherwise hold the tool until the server's
+  /// hour-long idle sweep stops the reply. Asks and denials still apply.
+  Map<String, dynamic> updateForAgent(
+    Object? response, {
+    bool serverRuns = false,
+  }) {
     final data = response is Map ? response['data'] : null;
     if (data is! Map ||
         data['id'] is! String ||
@@ -110,11 +120,13 @@ class Api2SessionPermissionPolicy {
       throw const Api2RequestError('Could not verify agent permissions.');
     }
     final original = _original;
-    final required = <Map<String, String>>[
-      {'action': '*', 'resource': '*', 'effect': 'ask'},
-      for (final rule in [..._rules(data['permissions']), ...original])
-        {...rule, if (rule['effect'] == 'allow') 'effect': 'ask'},
-    ];
+    final required = serverRuns
+        ? original
+        : <Map<String, String>>[
+            {'action': '*', 'resource': '*', 'effect': 'ask'},
+            for (final rule in [..._rules(data['permissions']), ...original])
+              {...rule, if (rule['effect'] == 'allow') 'effect': 'ask'},
+          ];
     if (required.length > 1000) {
       throw const Api2RequestError(
         'Conversation permissions are too large to update safely.',

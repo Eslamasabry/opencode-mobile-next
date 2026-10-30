@@ -204,6 +204,13 @@ alone cannot discover native writes. Removed widget instances drop their style.
 
 ## Responsive rendering, motion and colour
 
+> Presentation superseded on 2026-10-20 by the owner's "A, adaptive" pick: one card
+> in every size (no list layout, no ViewFlipper, no reply preview), the list entry
+> hidden from the picker, and picker images rendered from the card itself. See
+> [docs/qa/vision-widget-2026-10-20/README.md](../qa/vision-widget-2026-10-20/README.md).
+> Snapshot, action and fencing contracts above are unchanged; rows gained `server`
+> and `needsYou`.
+
 Launcher cells vary, so dp dimensions select layouts rather than a hardcoded
 cell count. Android 12+ gets a responsive `RemoteViews` size map; older Android
 uses widget size options and redraws when resized.

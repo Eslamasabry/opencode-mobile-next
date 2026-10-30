@@ -31,15 +31,22 @@ internal class WidgetOverlaySession(
 
     fun handle(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "getLaunchArguments" -> result.success(launch + launchArguments + mapOf("style" to style.read()))
+            "getLaunchArguments" -> result.success(launch + launchArguments + mapOf("style" to style.read()) +
+                projectArguments())
             "saveStyle" -> if (mode != "configure") result.error("wrongRoute", null, null)
                 else style.save(call.arguments, result)
+            "saveProject" -> if (mode != "project") result.error("wrongRoute", null, null)
+                else style.saveProject(call.arguments, result)
             "dictate" -> dictate(call.arguments, result)
             "submitAction" -> submit(call.arguments, result)
             "close" -> { result.success(null); activity.finish() }
             else -> result.notImplemented()
         }
     }
+
+    /** The Conversations widget's Edit: what it can list, and what it lists now. */
+    private fun projectArguments(): Map<String, Any?> =
+        if (mode == "project") mapOf("projects" to style.projects(), "project" to style.project()) else emptyMap()
 
     private fun currentScope(): Boolean {
         val snapshot = WidgetV2Bridge.snapshot(activity) ?: return false

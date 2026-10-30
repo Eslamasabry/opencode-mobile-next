@@ -13,6 +13,7 @@ import 'package:opencode_mobile/builtin/builtin_server.dart';
 import 'package:opencode_mobile/builtin/local_terminal.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
+import 'package:opencode_mobile/ui/kit/kit_session_tabs.dart';
 import 'package:opencode_mobile/ui/kit/kit_state_view.dart';
 import 'package:opencode_mobile/ui/screens/local_terminal_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
@@ -62,41 +63,77 @@ Future<(TerminalServer, ConnectionController)> _list(
   return (repository, controller);
 }
 
-Future<void> _openRowMenu(WidgetTester tester, String title) async {
-  await tester.longPress(find.text(title));
+Future<void> _openTabMenu(WidgetTester tester, String title) async {
+  await tester.longPress(
+    find.descendant(
+      of: find.byType(KitSessionTabs),
+      matching: find.textContaining(title),
+    ),
+  );
   await tester.pumpAndSettle();
 }
 
+/// A server whose new terminals fail to start.
+class _NoStartServer extends TerminalServer {
+  _NoStartServer() : super(processes: []);
+
+  @override
+  Future<TerminalProcess> createTerminal({String? title}) async =>
+      throw const ProductException('The server is busy.');
+}
+
 void main() {
-  group('terminal list', () {
-    testWidgets('one list, running first, each state in words', (tester) async {
-      await _list(tester);
-      final running = tester.getTopLeft(find.text('build-server')).dy;
-      final tests = tester.getTopLeft(find.text('tests')).dy;
-      final lint = tester.getTopLeft(find.text('lint')).dy;
-      expect(running, lessThan(tests), reason: 'running before ended');
-      expect(tests, lessThan(lint), reason: "the server's order after that");
-      expect(find.text('Running · /bin/bash'), findsOneWidget);
-      expect(find.text('Ended · code 1 · flutter'), findsOneWidget);
-      // One new-terminal action on a list: the pinned primary.
-      expect(find.byKey(const ValueKey('terminal-new')), findsOneWidget);
-    });
-
-    testWidgets('an empty list offers New terminal once, in its state', (
-      tester,
-    ) async {
-      await _list(tester, server: TerminalServer(processes: []));
-      expect(find.byKey(const ValueKey('terminal-none')), findsOneWidget);
-      expect(find.byKey(const ValueKey('terminal-new')), findsOneWidget);
-      expect(find.byKey(const ValueKey('kit-screen-bottom')), findsNothing);
-    });
-
-    testWidgets('R18: an empty list says No terminals yet and names the '
-        'project a new one opens in', (tester) async {
-      await _phone(tester);
-      final controller = await terminalController(
-        TerminalServer(processes: []),
+  group('terminal page on a server', () {
+    testWidgets('the running terminal opens at once; the others are tabs, '
+        'running first', (tester) async {
+      final (server, _) = await _list(tester);
+      expect(
+        find.byKey(const ValueKey('terminal-surface-pty-1')),
+        findsOneWidget,
       );
+      expect(server.channels, hasLength(1), reason: 'connected to it');
+      final tabs = find.byKey(const ValueKey('terminal-tabs'));
+      expect(tabs, findsOneWidget);
+      double x(String title) => tester
+          .getTopLeft(
+            find.descendant(of: tabs, matching: find.textContaining(title)),
+          )
+          .dx;
+      expect(x('build-server'), lessThan(x('tests')));
+      expect(x('tests'), lessThan(x('lint')));
+      // No list and no pinned New terminal: it waits in the bar's menu.
+      expect(find.byKey(const ValueKey('terminal-session-rows')), findsNothing);
+      expect(find.byKey(const ValueKey('kit-screen-bottom')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('terminal-surface-menu')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('terminal-new')), findsOneWidget);
+    });
+
+    testWidgets('one terminal shows no tabs', (tester) async {
+      await _list(tester, server: TerminalServer(processes: [runningShell]));
+      expect(find.byKey(const ValueKey('terminal-tabs')), findsNothing);
+      expect(find.text('Terminal'), findsOneWidget);
+    });
+
+    testWidgets('with none running it starts one, once', (tester) async {
+      final (server, _) = await _list(
+        tester,
+        server: TerminalServer(processes: [endedTests]),
+      );
+      expect(server.processes, hasLength(2));
+      final started = server.processes.last;
+      expect(started.running, isTrue);
+      expect(
+        find.byKey(ValueKey('terminal-surface-${started.id}')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('terminal-none')), findsNothing);
+    });
+
+    testWidgets('R18: a start that fails says No terminals yet, names the '
+        'project, and keeps New terminal', (tester) async {
+      await _phone(tester);
+      final controller = await terminalController(_NoStartServer());
       addTearDown(() => disposeTerminalController(controller));
       controller.directory = '/srv/shopfront';
       await tester.pumpWidget(
@@ -105,15 +142,17 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('No terminals yet'), findsOneWidget);
       expect(find.textContaining('Start one in'), findsOneWidget);
-      expect(find.textContaining('shopfront'), findsOneWidget);
-      // Nothing has ended: the bar has no clear-up menu.
-      expect(find.byKey(const ValueKey('terminal-list-menu')), findsNothing);
+      expect(find.textContaining('shopfront'), findsWidgets);
+      expect(
+        find.byKey(const ValueKey('terminal-list-notice')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('terminal-new')), findsOneWidget);
     });
 
-    testWidgets('the row menu names the terminal it acts on', (tester) async {
+    testWidgets("a tab's menu names the terminal it acts on", (tester) async {
       await _list(tester);
-      await _openRowMenu(tester, 'build-server');
-      expect(find.text('Open build-server'), findsOneWidget);
+      await _openTabMenu(tester, 'build-server');
       expect(find.text('Rename build-server'), findsOneWidget);
       expect(find.text('Stop build-server'), findsOneWidget);
     });
@@ -122,9 +161,7 @@ void main() {
       tester,
     ) async {
       final (server, _) = await _list(tester);
-      // Occasional clear-up: in the bar's menu, not under the list.
-      expect(find.text('Remove 2 ended terminals'), findsNothing);
-      await tester.tap(find.byKey(const ValueKey('terminal-list-menu')));
+      await tester.tap(find.byKey(const ValueKey('terminal-surface-menu')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Remove 2 ended terminals'));
       await tester.pumpAndSettle();
@@ -135,10 +172,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(server.removed, ['pty-2', 'pty-3']);
-      expect(find.text('build-server'), findsOneWidget);
-      expect(find.text('tests'), findsNothing);
-      // Nothing ended is left: the menu no longer offers it.
-      expect(find.byKey(const ValueKey('terminal-list-menu')), findsNothing);
+      // One terminal left: no tabs, and nothing ended to clear up.
+      expect(find.byKey(const ValueKey('terminal-tabs')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('terminal-surface-menu')));
+      await tester.pumpAndSettle();
       expect(find.text('Remove 2 ended terminals'), findsNothing);
     });
 
@@ -147,7 +184,7 @@ void main() {
     ) async {
       final (server, _) = await _list(tester);
       server.failure = const ProductException('The terminal is busy.');
-      await _openRowMenu(tester, 'build-server');
+      await _openTabMenu(tester, 'build-server');
       await tester.tap(find.text('Stop build-server'));
       await tester.pumpAndSettle();
       expect(find.text('Stop build-server?'), findsOneWidget);
@@ -165,7 +202,7 @@ void main() {
     ) async {
       final (server, _) = await _list(tester);
       server.failure = const ProductException('Names must be unique.');
-      await _openRowMenu(tester, 'tests');
+      await _openTabMenu(tester, 'tests');
       await tester.tap(find.text('Rename tests'));
       await tester.pumpAndSettle();
       await tester.enterText(
@@ -235,8 +272,10 @@ void main() {
       );
       expect(find.text('Files and terminal'), findsNothing);
       expect(find.byKey(const ValueKey('terminal-session-rows')), findsNothing);
-      // One control for the switch: the source choice, no second button.
+      // One control for the switch: the place line, no second button.
       expect(find.byKey(const ValueKey('terminal-use-phone')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('terminal-source')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('terminal-source-phone')));
       await tester.pumpAndSettle();
       // This phone without Linux: the gate explains and offers setup.

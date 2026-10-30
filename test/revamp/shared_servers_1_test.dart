@@ -13,7 +13,6 @@ import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/termux/local_agent_runtime.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/kit/kit_task_mark.dart';
 import 'package:opencode_mobile/ui/widgets/local_agent_server_entry.dart';
 import 'package:opencode_mobile/ui/widgets/server_switcher_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,10 +72,16 @@ void main() {
         find.descendant(of: current, matching: _rich('Connected')),
         findsOneWidget,
       );
+      // The one in use gets the accent check, never a filled tile (vision
+      // 2026-10-20: a selected row is a check, not a solid fill).
       expect(
-        find.byKey(const ValueKey('kit-row-current-mark')),
+        find.descendant(
+          of: current,
+          matching: find.byKey(const ValueKey('server-switcher-check')),
+        ),
         findsOneWidget,
       );
+      expect(find.byKey(const ValueKey('kit-row-current-mark')), findsNothing);
       // One unlabelled panel (R1): no "Saved servers" header splits it.
       expect(find.text(_l10n.activitySavedServers), findsNothing);
       expect(
@@ -119,18 +124,25 @@ void main() {
                       )
                       .text
                   as TextSpan)
-              .toPlainText();
+              .toPlainText()
+              // Each part keeps its words together with no-break spaces.
+              .replaceAll('\u00a0', ' ');
 
       expect(text('laptop'), 'Needs you · 1 working');
       expect(
         find.descendant(
           of: find.byKey(const ValueKey('server-switcher-profile-laptop')),
-          matching: find.byWidgetPredicate(
-            (w) => w is KitTaskMark && w.state == KitTaskState.needsYou,
-          ),
+          matching: find.byKey(const ValueKey('kit-row-icon-needs-you')),
         ),
         findsOneWidget,
       );
+      // The monitor keeps no command and no way to reply: the row opens
+      // the server instead of offering Allow once.
+      expect(
+        find.byKey(const ValueKey('server-switcher-open-laptop')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('permission-card-allow')), findsNothing);
       expect(text('lab'), '2 working');
       expect(text('locked'), startsWith(_l10n.e7SetupPasswordRequired));
       expect(text('locked'), isNot(contains('working')));

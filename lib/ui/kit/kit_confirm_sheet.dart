@@ -425,7 +425,10 @@ class _KitConfirmSheetState extends State<KitConfirmSheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.confirm(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final l10n = _l10n(context);
     final heavy = widget.kind.isDanger;

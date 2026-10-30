@@ -20,6 +20,7 @@ import 'package:opencode_mobile/voice/controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/complete_message_history.dart';
+import 'support/composer_tools.dart';
 import '../tool/capture/fixtures.dart'
     show capturePng, captureTheme, loadCaptureFonts;
 import 'voice_controller_test.dart'
@@ -289,7 +290,7 @@ Future<void> _nativeStatus(
 /// Enters voice conversation from the "+" sheet: the composer turns into
 /// voice mode and listens at once (P10.3). Nothing is sent yet.
 Future<void> _enterAndListen(WidgetTester tester, _Api api) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await _settle(tester);
   await tester.ensureVisible(find.byKey(const Key('composer-tools-advanced')));
   await _settle(tester);

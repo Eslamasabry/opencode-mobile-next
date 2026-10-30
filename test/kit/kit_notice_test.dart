@@ -591,4 +591,36 @@ void main() {
       ),
     },
   );
+
+  // Flat polish (sweep 3730: "Add an API key", "Sign in to Claude Code",
+  // "Choose a look first"): bare words under a notice read as a caption.
+  testWidgets('its actions are small tonal buttons, starting where the words '
+      'do', (tester) async {
+    await _pump(
+      tester,
+      KitNotice(
+        message: 'Using the free model. Add a key to use your own.',
+        actions: [KitAction(label: 'Add an API key', onPressed: () {})],
+      ),
+    );
+    final button = tester.widget<KitButton>(
+      find.ancestor(
+        of: find.text('Add an API key'),
+        matching: find.byType(KitButton),
+      ),
+    );
+    expect(button.role, KitButtonRole.secondary);
+    expect(button.expand, isFalse);
+    expect(
+      tester
+          .getTopLeft(
+            find.ancestor(
+              of: find.text('Add an API key'),
+              matching: find.byType(KitButton),
+            ),
+          )
+          .dx,
+      tester.getTopLeft(find.textContaining('Using the free model')).dx,
+    );
+  });
 }

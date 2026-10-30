@@ -103,6 +103,9 @@ class MarkdownText extends StatefulWidget {
   /// handler the option is copied to the clipboard instead.
   final ValueChanged<String>? onChoice;
 
+  /// The reply is still being written: [KitMarkdown.streaming].
+  final bool streaming;
+
   const MarkdownText(
     this.data, {
     super.key,
@@ -110,6 +113,7 @@ class MarkdownText extends StatefulWidget {
     this.codeBlockLanguage,
     this.selectable = true,
     this.onChoice,
+    this.streaming = false,
   });
 
   /// Counts full block re-parses; reads [KitMarkdown.debugParseCount].
@@ -244,6 +248,7 @@ class _MarkdownTextState extends State<MarkdownText> {
         onCodeWrapChanged: preferences == null ? null : _saveWrap,
         onOpenCode: _openCode,
         codeLanguage: widget.codeBlockLanguage,
+        streaming: widget.streaming,
       ),
     );
   }

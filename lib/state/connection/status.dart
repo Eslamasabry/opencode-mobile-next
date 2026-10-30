@@ -27,6 +27,34 @@ mixin _ConnectionControllerStatus on ChangeNotifier {
           !((_self._connectedProfile ?? profile)?.requiresCodexTokenReentry ??
               false);
 
+  /// The quiet start of a return from the background
+  /// ([resumeQuietGrace]): the link is being rebuilt, and saying so for the
+  /// second or two it usually takes was a row on every return (owner,
+  /// 2026-10-27). Null outside it.
+  DateTime? _resumeQuietUntil;
+  Timer? _resumeQuietTimer;
+
+  /// How long a return from the background reconnects without a line.
+  @visibleForTesting
+  Duration resumeQuietGrace = const Duration(seconds: 4);
+
+  /// An agent's command (a 15-minute test run, an APK build) was running
+  /// when its link went down, from this moment: a helper too busy to
+  /// answer its health check in time is loaded, not gone, for
+  /// [agentCommandHoldOff].
+  DateTime? _agentCommandSince;
+  Timer? _agentCommandTimer;
+
+  /// As long as a command may run: Claude Code's longest command timeout.
+  @visibleForTesting
+  Duration agentCommandHoldOff = const Duration(minutes: 10);
+
+  /// Set when [agentCommandHoldOff] ran out for the current hold.
+  bool _agentCommandHoldSpent = false;
+
+  bool get _agentCommandHolds =>
+      _agentCommandSince != null && !_agentCommandHoldSpent;
+
   /// Read-only BD13 evidence, retained across recovery within this profile.
   Future<AgentHelperStatus?> readConnectionHelperExit() =>
       _self._readConnectionHelperExit();
@@ -213,11 +241,13 @@ extension _ConnectionControllerStatusImpl on ConnectionController {
     final owner = _connectedProfile ?? profile;
     _syncLocalLiveness(owner);
     _syncAgentDaemonWatch(owner);
+    _syncAgentCommandHold(owner);
     if (_disposed ||
         isIsolated ||
         owner == null ||
         status == StreamStatus.connected) {
       _resetConnectionStatusClock();
+      _endResumeQuiet();
       return;
     }
     if (_connectionStatusOwner != owner.id ||
@@ -233,6 +263,53 @@ extension _ConnectionControllerStatusImpl on ConnectionController {
       if (_disposed) return;
       _connectionStatusExpired = true;
       _notifyListeners();
+    });
+  }
+
+  /// Starts [resumeQuietGrace] for a return from the background.
+  void _beginResumeQuiet() {
+    _endResumeQuiet();
+    if (_disposed || isIsolated || status == StreamStatus.connected) return;
+    _resumeQuietUntil = DateTime.now().add(resumeQuietGrace);
+    _resumeQuietTimer = Timer(resumeQuietGrace, () {
+      _resumeQuietTimer = null;
+      _resumeQuietUntil = null;
+      if (!_disposed) _notifyListeners();
+    });
+  }
+
+  void _endResumeQuiet() {
+    _resumeQuietTimer?.cancel();
+    _resumeQuietTimer = null;
+    _resumeQuietUntil = null;
+  }
+
+  /// Cleared by its own timer when the grace runs out.
+  bool get _resumeQuiet => _resumeQuietUntil != null;
+
+  /// Keeps [_agentCommandSince] while an agent's link is down with one of
+  /// its commands running, and wakes the line once the hold runs out.
+  void _syncAgentCommandHold(ServerProfile? owner) {
+    final holds =
+        !_disposed &&
+        !isIsolated &&
+        isAgentBackend &&
+        owner != null &&
+        status != StreamStatus.connected &&
+        _hasRunningTool;
+    if (!holds) {
+      _agentCommandTimer?.cancel();
+      _agentCommandTimer = null;
+      _agentCommandSince = null;
+      _agentCommandHoldSpent = false;
+      return;
+    }
+    if (_agentCommandSince != null) return;
+    _agentCommandSince = DateTime.now();
+    _agentCommandTimer = Timer(agentCommandHoldOff, () {
+      _agentCommandTimer = null;
+      _agentCommandHoldSpent = true;
+      if (!_disposed) _notifyListeners();
     });
   }
 
@@ -323,7 +400,7 @@ extension _ConnectionControllerStatusImpl on ConnectionController {
         status == StreamStatus.disconnected ||
         _connectionStatusExpired;
     if (!stalled) return;
-    unawaited(retryConnection().catchError((Object _) {}));
+    unawaited(_retryConnection(byPerson: false).catchError((Object _) {}));
   }
 
   Future<void> _probeLocalAlive() async {
@@ -359,6 +436,11 @@ extension _ConnectionControllerStatusImpl on ConnectionController {
     final owner = _connectedProfile ?? profile;
     final phase = isIsolated || owner == null
         ? ConnectionStatusPhase.hidden
+        // In the background the app retired its link on purpose: nothing is
+        // down, and a line (or a note built from it) would greet the person
+        // on their return (owner, 2026-10-27).
+        : _appBackgrounded && status != StreamStatus.connected
+        ? ConnectionStatusPhase.hidden
         // Nothing was tried: the saved secret could not be read back from
         // the phone's secure storage, so only entering it again helps.
         : (owner.usesAgentSocket
@@ -372,8 +454,11 @@ extension _ConnectionControllerStatusImpl on ConnectionController {
         : localServerBusyLong
         ? ConnectionStatusPhase.serverBusy
         // An agent's helper that answers its health check (or is still being
-        // asked) is not "not answering": this link is being rebuilt.
-        : _agentDaemonTimer != null && _agentDaemonAnswers != false
+        // asked) is not "not answering": this link is being rebuilt. Nor is
+        // one too loaded to answer in time while its command runs (a build
+        // on this phone), for as long as a command may run.
+        : _agentDaemonTimer != null &&
+              (_agentDaemonAnswers != false || _agentCommandHolds)
         ? (status == StreamStatus.connecting
               ? ConnectionStatusPhase.connecting
               : ConnectionStatusPhase.reconnecting)
@@ -382,9 +467,28 @@ extension _ConnectionControllerStatusImpl on ConnectionController {
         : status == StreamStatus.connecting
         ? ConnectionStatusPhase.connecting
         : ConnectionStatusPhase.reconnecting;
+    // The channel's own retry timer, while it is not connected and the
+    // person lets the app reconnect by itself: never a guess.
+    final events = _events;
+    final nextAttemptAt =
+        status != StreamStatus.connected &&
+            events is RetryingEventChannel &&
+            automationPolicy.allows(AutomationBehavior.reconnect)
+        ? (events as RetryingEventChannel).nextAttempt.value
+        : null;
+    // The first seconds of a return from the background rebuild the link
+    // without a line; a password or token problem still speaks at once.
+    final resumeQuiet =
+        _resumeQuiet &&
+        const {
+          ConnectionStatusPhase.connecting,
+          ConnectionStatusPhase.reconnecting,
+          ConnectionStatusPhase.notAnswering,
+        }.contains(phase);
     return ConnectionStatusSnapshot(
       phase: phase,
-      quiet: defersTurnInterruption,
+      nextAttemptAt: nextAttemptAt,
+      quiet: defersTurnInterruption || resumeQuiet,
       profileId: owner?.id,
       serverName: owner?.name ?? '',
       since: _connectionStatusSince,

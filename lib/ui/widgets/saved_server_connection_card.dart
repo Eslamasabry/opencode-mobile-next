@@ -133,7 +133,7 @@ class SavedServerConnectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
-    if (_starting) return _startingState(l10n);
+    if (_starting) return _opening(_startingState(l10n));
     if (requiresTokenReentry ||
         error != null ||
         onRecoverInAppOwnership != null) {
@@ -145,16 +145,48 @@ class SavedServerConnectionCard extends StatelessWidget {
     if (notAnswering && onRecoverInAppOwnership == null) {
       return _notAnsweringState(context, l10n);
     }
-    return _connectingState(l10n);
+    return _opening(_connectingState(l10n));
   }
 
-  Widget _connectingState(AppLocalizations l10n) => KitStateView(
+  /// The one card above the last-known list while the server starts and
+  /// then connects: its state's key stays on the outside, and the card
+  /// itself is kept (not built anew) from one to the other, so only its
+  /// words change and its picture runs on (jitter J1, 2026-10-28).
+  Widget _opening(KitStateView state) {
+    if (size != KitStateSize.inline) return state;
+    return KeyedSubtree(
+      key: state.key,
+      child: KitStateView(
+        key: _openingCard,
+        size: state.size,
+        icon: state.icon,
+        tone: state.tone,
+        illustration: state.illustration,
+        illustrationAmbient: state.illustrationAmbient,
+        title: state.title,
+        titleKey: state.titleKey,
+        body: state.body,
+        bodyKey: state.bodyKey,
+        progress: state.progress,
+        tertiary: state.tertiary,
+        details: state.details,
+      ),
+    );
+  }
+
+  static final _openingCard = GlobalKey(debugLabel: 'saved-server-opening');
+
+  KitStateView _connectingState(AppLocalizations l10n) => KitStateView(
     size: size,
     key: const ValueKey('saved-server-connecting'),
     icon: AppIconography.terminal,
     tone: AppStatusTone.progress,
     // The portal breathing while the app reaches it (design standard §10).
-    illustration: const KitPortalScene(),
+    // Above the last-known list, the phone's own server keeps the starting
+    // phone it showed a moment before: the same picture at the same height.
+    illustration: size == KitStateSize.inline && _onThisPhone
+        ? const SetupPhoneScene(mood: SetupPhoneMood.starting)
+        : const KitPortalScene(),
     illustrationAmbient: true,
     title: attempts > 1
         ? l10n.e7SetupConnectingAttempt(attempts)
@@ -165,10 +197,21 @@ class SavedServerConnectionCard extends StatelessWidget {
     progress: const KitProgress.waiting(
       key: ValueKey('saved-server-connect-progress'),
     ),
+    // Above the last-known list the card keeps one height while it says
+    // "Starting…" and then "Connecting…": the same way out in both, so the
+    // list under it does not move (jitter J1, 2026-10-28).
+    tertiary: [
+      if (size == KitStateSize.inline)
+        KitAction(
+          key: const ValueKey('saved-server-change'),
+          label: l10n.productStatesSwitchServer,
+          onPressed: onChangeServer,
+        ),
+    ],
     details: _details(null),
   );
 
-  Widget _startingState(AppLocalizations l10n) => KitStateView(
+  KitStateView _startingState(AppLocalizations l10n) => KitStateView(
     size: size,
     key: const ValueKey('saved-server-starting'),
     icon: AppIconography.play,

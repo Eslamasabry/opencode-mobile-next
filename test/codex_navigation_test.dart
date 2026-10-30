@@ -12,6 +12,7 @@ import 'package:opencode_mobile/ui/kit/kit_nav.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/settings_doors.dart';
 
 class _CodexApi extends FakeServerGateway {
   _CodexApi(this._capabilities) : super(baseUrl: 'http://localhost');
@@ -149,14 +150,14 @@ void main() {
       );
       // The tab is the hub itself; what is about the app survives a Codex
       // connection, what needs the server catalog is absent.
-      expect(
-        find.byKey(const ValueKey('settings-group-connections')),
-        findsOneWidget,
-      );
+      expect(settingsDoor(SettingsGroup.connections), findsOneWidget);
+      await openSettingsGroup(tester, SettingsGroup.thisApp);
       expect(
         find.byKey(const ValueKey('settings-category-appearance')),
         findsOneWidget,
       );
+      await closeSettingsGroup(tester);
+      await openSettingsGroup(tester, SettingsGroup.ai);
       expect(find.text('Models & agents'), findsNothing);
       // Codex keeps the one Providers row: it is the account's door.
       expect(find.text('MCP'), findsNothing);
@@ -191,6 +192,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await openSettingsGroup(tester, SettingsGroup.ai);
 
     // One Model row (R3); the catalog screen is found by search.
     expect(

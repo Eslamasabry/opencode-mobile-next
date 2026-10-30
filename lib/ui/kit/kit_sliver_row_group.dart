@@ -1,9 +1,15 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'kit_divider.dart';
+import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_row.dart';
 import 'kit_section_label.dart';
+import 'kit_surface_look.dart';
 import 'kit_tokens.dart';
+import 'style/kit_signal.dart';
 
 /// Rows on one panel in a lazy list (visual language §4, §5; slice-R4):
 /// the sliver twin of [KitRowGroup], for a list too long to build at once.
@@ -37,7 +43,7 @@ class KitSliverRowGroup extends StatelessWidget {
     this.label,
     this.labelTrailing,
     this.labelTerm,
-    this.leadingIcons = true,
+    this.leadingIcons,
     this.margin,
     this.gapBefore,
   }) : assert(itemCount >= 0),
@@ -70,8 +76,11 @@ class KitSliverRowGroup extends StatelessWidget {
   final String? labelTerm;
 
   /// Whether the rows lead with an icon tile: the hairlines then start
-  /// where the words do.
-  final bool leadingIcons;
+  /// where the words do. Null (the default) reads it off [children] when
+  /// they are the whole list ([KitRowGroup.rowsLead]); rows built later
+  /// cannot be read ahead, so a list with [itemCount] rows assumes icons
+  /// unless told.
+  final bool? leadingIcons;
 
   /// Around the group; the screen gutter at the sides by default.
   final EdgeInsetsGeometry? margin;
@@ -81,15 +90,52 @@ class KitSliverRowGroup extends StatelessWidget {
   final double? gapBefore;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => KitMaxWidth.sliver(
+    maxWidth: KitLayout.listWidth,
+    sliver: _buildContent(context),
+  );
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final total = children.length + itemCount;
     if (total == 0) return const SliverToBoxAdapter(child: SizedBox.shrink());
     final label = this.label;
-    final inset = leadingIcons ? KitDividerInset.text : KitDividerInset.gutter;
+    // Signal: the rows run on the track, their words on the list's text
+    // line, so the rules start there and the label stands over the words.
+    final track = KitTrack.on(context);
+    final leads =
+        track ||
+        (leadingIcons ?? (itemCount > 0 || KitRowGroup.rowsLead(children)));
+    final inset = leads ? KitDividerInset.text : KitDividerInset.gutter;
     final radius = Radius.circular(tokens.panelCornerRadius);
     final head = children.length;
     final find = findChildIndexCallback;
+    final margin =
+        this.margin ?? EdgeInsets.symmetric(horizontal: tokens.gutter);
+    final sides = margin.resolve(Directionality.of(context));
+    // Flat lists (Solid): the rows sit on the page itself, with square
+    // ends.
+    final flat = KitSurfaceLook.flatLists(context);
+    final panel = flat
+        ? KitSurfaceLook.bare
+        : KitSurfaceLook.decorate(
+            context,
+            solid: BoxDecoration(
+              color: tokens.roles.surface1,
+              borderRadius: BorderRadius.all(radius),
+            ),
+          );
+    // As a KitRowGroup: a panel the style sets straight on the page (no
+    // fill, edge or shadow: Paper) lets its rows reach out into the margin
+    // by their own inset, so their words start flush with the label above
+    // and the row inset stays inside the press highlight.
+    final reach = KitSurfaceDecoration.isBare(panel)
+        ? math.min(tokens.space4, math.min(sides.left, sides.right))
+        : 0.0;
+    final back = EdgeInsets.symmetric(horizontal: reach);
+    // The rules between the rows stop at the margin at the end too, as the
+    // section rule above them does.
+    final rule = KitDivider(inset: inset, endInset: reach);
 
     Widget? item(BuildContext context, int index) {
       final Widget? row = index < head
@@ -103,15 +149,12 @@ class KitSliverRowGroup extends StatelessWidget {
           : Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                KitDivider(inset: inset),
-                row,
-              ],
+              children: [rule, row],
             );
       // A surface for anything inside that paints ink; the panel itself is
       // painted once, under the whole list, by the DecoratedSliver.
       cell = Material(type: MaterialType.transparency, child: cell);
-      if (first || last) {
+      if ((first || last) && !flat) {
         // Only the ends touch the panel's corners: their hover and pressed
         // fills are cut to them.
         cell = ClipRRect(
@@ -125,42 +168,59 @@ class KitSliverRowGroup extends StatelessWidget {
       return cell;
     }
 
-    return SliverPadding(
-      padding: margin ?? EdgeInsets.symmetric(horizontal: tokens.gutter),
-      sliver: SliverMainAxisGroup(
-        slivers: [
-          if (label != null)
-            SliverToBoxAdapter(
-              child: KitSectionLabel(
-                label,
-                trailing: labelTrailing,
-                explanation: labelTerm,
-                margin: EdgeInsets.zero,
-                gapBefore: gapBefore,
-              ),
-            )
-          else if (gapBefore case final gap? when gap > 0)
-            SliverToBoxAdapter(child: SizedBox(height: gap)),
-          DecoratedSliver(
-            decoration: BoxDecoration(
-              color: tokens.roles.surface1,
-              borderRadius: BorderRadius.all(radius),
+    final labelMargin = track
+        ? EdgeInsetsDirectional.only(
+            start: reach + tokens.leadColumn,
+            end: reach,
+          )
+        : back;
+    Widget group = SliverMainAxisGroup(
+      slivers: [
+        if (label != null)
+          SliverToBoxAdapter(
+            child: KitSectionLabel(
+              label,
+              trailing: labelTrailing,
+              explanation: labelTerm,
+              margin: labelMargin,
+              gapBefore: gapBefore,
             ),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                item,
-                childCount: total,
-                findChildIndexCallback: find == null
-                    ? null
-                    : (key) {
-                        final index = find(key);
-                        return index == null ? null : index + head;
-                      },
-              ),
+          )
+        else if (gapBefore case final gap? when gap > 0)
+          SliverToBoxAdapter(child: SizedBox(height: gap)),
+        kitSurfaceSliver(
+          style: KitSurfaceLook.styleOf(context),
+          decoration: panel,
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              item,
+              childCount: total,
+              findChildIndexCallback: find == null
+                  ? null
+                  : (key) {
+                      final index = find(key);
+                      return index == null ? null : index + head;
+                    },
             ),
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+    if (track) {
+      // The dashed siding down the whole group, label and gaps included;
+      // a live row lays the solid track over it (KitFeedItem).
+      group = DecoratedSliver(
+        decoration: KitTrackDecoration(
+          colors: kitSignalColors(context),
+          centre: KitTrack.rowCentre(tokens),
+        ),
+        sliver: group,
+      );
+    }
+    return SliverPadding(
+      // Resolved: a sliver's padding is checked side by side.
+      padding: reach > 0 ? sides - back : margin,
+      sliver: group,
     );
   }
 }

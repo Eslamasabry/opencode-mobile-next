@@ -1,6 +1,10 @@
 part of '../profiles.dart';
 
-enum AppAppearance { system, light, dark }
+/// Light or dark, chosen in Settings > Appearance. [saver] is dark on a true
+/// black ground with motion and the live background off (OLED battery
+/// saver): an override applied where the theme and the effects scope are
+/// built, so the person's own effect choices stay stored untouched.
+enum AppAppearance { system, light, dark, saver }
 
 /// Selectable color identity; palettes live in lib/ui/theme_packs.dart.
 /// Stored by name, so new packs can be added anywhere; `dynamic` stays last

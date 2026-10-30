@@ -331,7 +331,7 @@ void main() {
     );
     expect(
       tester.getTopLeft(find.text('Open projects')).dy - actions.bottom,
-      moreOrLessEquals(22, epsilon: 0.01),
+      moreOrLessEquals(24, epsilon: 0.01),
     );
     expect(loads, 1);
   });

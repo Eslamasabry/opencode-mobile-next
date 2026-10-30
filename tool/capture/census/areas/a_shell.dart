@@ -314,7 +314,7 @@ final aShellArea = CensusArea(
     CensusShot('server-switcher-sheet', (kit) async {
       final controller = await _home(kit);
       await kit.present((context) => showServerSwitcher(context, controller));
-      kit.expectText('Manage servers');
+      kit.expectText('Add a server');
     }),
 
     // -- question sheet (opened from the conversation) ----------------------

@@ -583,63 +583,64 @@ void main() {
     });
   });
 
-  testWidgets('while busy on v2 Send is Stop and the mic stays; every send '
-      'steers and nothing offers to queue', (tester) async {
-    final api = _V2ChatApi();
-    final controller = await _controller(api);
-    addTearDown(controller.dispose);
-    await _pumpChat(tester, controller);
-    controller.busySessions.add('session-1');
-    controller.notifyListeners();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+  testWidgets(
+    'while busy on v2 Stop is in the chips row and the mic stays; every send '
+    'steers and nothing offers to queue',
+    (tester) async {
+      final api = _V2ChatApi();
+      final controller = await _controller(api);
+      addTearDown(controller.dispose);
+      await _pumpChat(tester, controller);
+      controller.busySessions.add('session-1');
+      controller.notifyListeners();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
 
-    // The composer's Send is Stop (the only one); the mic, where the
-    // platform has one, stays beside it.
-    expect(find.byKey(const ValueKey('kit-composer-stop')), findsOneWidget);
-    expect(find.byKey(const Key('chat-send-button')), findsNothing);
-    expect(find.byKey(const Key('composer-delivery-control')), findsNothing);
+      // The one Stop is in the chips row above the field; the field keeps the
+      // mic, where the platform has one, and no Stop of its own.
+      expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
+      expect(find.byKey(const ValueKey('kit-composer-stop')), findsNothing);
+      expect(find.byKey(const Key('chat-send-button')), findsNothing);
+      expect(find.byKey(const Key('composer-delivery-control')), findsNothing);
 
-    await tester.enterText(
-      find.byKey(const Key('chat-composer-field')),
-      'interject now',
-    );
-    await tester.pump();
-    // One send, said in words, with no choice beside it.
-    expect(find.byKey(const Key('composer-delivery-control')), findsNothing);
-    expect(find.text('Send after'), findsNothing);
-    expect(find.byTooltip('Add to this turn'), findsOneWidget);
-    expect(
-      find.text('The agent will read this while it works.'),
-      findsOneWidget,
-    );
-    expect(find.byTooltip('Send after this reply'), findsNothing);
-    await tester.tap(find.byKey(const Key('chat-send-button')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
-    expect(api.prompts.single.text, 'interject now');
-    expect(api.prompts.single.delivery, PromptDelivery.steer);
+      await tester.enterText(
+        find.byKey(const Key('chat-composer-field')),
+        'interject now',
+      );
+      await tester.pump();
+      // One send, said in words, with no choice beside it.
+      expect(find.byKey(const Key('composer-delivery-control')), findsNothing);
+      expect(find.text('Send after'), findsNothing);
+      expect(find.byTooltip('Add to this turn'), findsOneWidget);
+      expect(find.text('Adds to this reply'), findsOneWidget);
+      expect(find.byTooltip('Send after this reply'), findsNothing);
+      await tester.tap(find.byKey(const Key('chat-send-button')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(api.prompts.single.text, 'interject now');
+      expect(api.prompts.single.delivery, PromptDelivery.steer);
 
-    // A long press on Send opens no delivery menu.
-    await tester.enterText(
-      find.byKey(const Key('chat-composer-field')),
-      'one more',
-    );
-    await tester.pump();
-    await tester.longPress(find.byKey(const Key('chat-send-button')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.byKey(const Key('send-delivery-menu')), findsNothing);
-    // Whatever the press did, nothing reached the server as a queued send.
-    expect(
-      api.prompts.every((p) => p.delivery == PromptDelivery.steer),
-      isTrue,
-    );
-    expect(
-      api.prompts.where((p) => p.delivery == PromptDelivery.queue),
-      isEmpty,
-    );
-  });
+      // A long press on Send opens no delivery menu.
+      await tester.enterText(
+        find.byKey(const Key('chat-composer-field')),
+        'one more',
+      );
+      await tester.pump();
+      await tester.longPress(find.byKey(const Key('chat-send-button')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byKey(const Key('send-delivery-menu')), findsNothing);
+      // Whatever the press did, nothing reached the server as a queued send.
+      expect(
+        api.prompts.every((p) => p.delivery == PromptDelivery.steer),
+        isTrue,
+      );
+      expect(
+        api.prompts.where((p) => p.delivery == PromptDelivery.queue),
+        isEmpty,
+      );
+    },
+  );
 
   testWidgets('v1 keeps Send live while busy and queues after the run', (
     tester,
@@ -673,11 +674,11 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    // OpenCode 1 accepts a prompt mid-turn and runs it afterwards: Send is
-    // Stop while nothing is typed, and the composer says what Send will do
-    // once something is typed.
+    // OpenCode 1 accepts a prompt mid-turn and runs it afterwards: Stop is in
+    // the chips row, and the composer says what Send will do once something
+    // is typed.
     expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
-    expect(find.byKey(const ValueKey('kit-composer-stop')), findsOneWidget);
+    expect(find.byKey(const ValueKey('kit-composer-stop')), findsNothing);
     // Nothing typed yet: no hint competes with the running reply.
     expect(find.text('Sends after this reply'), findsNothing);
 

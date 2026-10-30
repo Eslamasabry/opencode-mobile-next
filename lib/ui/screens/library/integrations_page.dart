@@ -234,20 +234,18 @@ extension _IntegrationsPage on _IntegrationsScreenState {
       ] else if (integrations == null)
         const KitSkeletonRows(key: ValueKey('providers-loading'), count: 3)
       else if (integrations.isEmpty)
-        _railed(
-          KitStateView(
-            key: const ValueKey('providers-empty'),
-            size: KitStateSize.inline,
-            icon: AppIconography.unlink,
-            title: l10n.e7LibraryNoProviderConnectionsAvailable,
-            body: l10n.e7LibraryThisServerDidNotReturnAnyProvider,
-            tertiary: [
-              KitAction(
-                label: l10n.globalSessionsRefresh,
-                onPressed: _retryIntegrations,
-              ),
-            ],
-          ),
+        KitStateView(
+          key: const ValueKey('providers-empty'),
+          size: KitStateSize.inline,
+          icon: AppIconography.unlink,
+          title: l10n.e7LibraryNoProviderConnectionsAvailable,
+          body: l10n.e7LibraryThisServerDidNotReturnAnyProvider,
+          tertiary: [
+            KitAction(
+              label: l10n.globalSessionsRefresh,
+              onPressed: _retryIntegrations,
+            ),
+          ],
         )
       else ...[
         _railed(
@@ -373,21 +371,19 @@ extension _IntegrationsPage on _IntegrationsScreenState {
       if (servers == null && _serverError == null)
         const KitSkeletonRows(key: ValueKey('mcp-loading'), count: 2)
       else if (servers != null && servers.isEmpty)
-        _railed(
-          KitStateView(
-            key: const ValueKey('mcp-empty'),
-            size: KitStateSize.inline,
-            icon: AppIconography.network,
-            title: l10n.e7LibraryNoMCPServersConfigured,
-            body: widget.controller.capabilities.mcpConfigWrites
-                ? l10n.e7LibrarySaveOneForThisProjectOrEvery
-                : l10n.mcpRuntimeEmpty,
-            secondary: KitAction(
-              key: const ValueKey('mcp-empty-add'),
-              label: l10n.e7LibraryAddAnMCPServer,
-              icon: AppIconography.add,
-              onPressed: _openMcpAdd,
-            ),
+        KitStateView(
+          key: const ValueKey('mcp-empty'),
+          size: KitStateSize.inline,
+          icon: AppIconography.network,
+          title: l10n.e7LibraryNoMCPServersConfigured,
+          body: widget.controller.capabilities.mcpConfigWrites
+              ? l10n.e7LibrarySaveOneForThisProjectOrEvery
+              : l10n.mcpRuntimeEmpty,
+          secondary: KitAction(
+            key: const ValueKey('mcp-empty-add'),
+            label: l10n.e7LibraryAddAnMCPServer,
+            icon: AppIconography.add,
+            onPressed: _openMcpAdd,
           ),
         )
       else if (servers != null)
@@ -436,14 +432,12 @@ extension _IntegrationsPage on _IntegrationsScreenState {
       if (resources == null && _resourceError == null)
         const KitSkeletonRows(key: ValueKey('resources-loading'), count: 2)
       else if (resources != null && resources.isEmpty)
-        _railed(
-          KitStateView(
-            key: const ValueKey('resources-empty'),
-            size: KitStateSize.inline,
-            icon: AppIconography.fileText,
-            title: l10n.e7LibraryNoResourcesAvailable,
-            body: l10n.e7LibraryConnectedMCPServersHaveNotExposedAny,
-          ),
+        KitStateView(
+          key: const ValueKey('resources-empty'),
+          size: KitStateSize.inline,
+          icon: AppIconography.fileText,
+          title: l10n.e7LibraryNoResourcesAvailable,
+          body: l10n.e7LibraryConnectedMCPServersHaveNotExposedAny,
         )
       else if (resources != null)
         KitRowGroup(

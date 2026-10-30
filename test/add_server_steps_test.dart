@@ -19,6 +19,7 @@ import 'package:opencode_mobile/ui/screens/tailscale_setup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/server_editor.dart';
+import 'support/first_run_path.dart';
 
 class _Store extends ProfileStore {
   _Store({required super.prefs, List<ServerProfile> seeded = const []})
@@ -166,7 +167,7 @@ void main() {
     // not on a separate agent question.
     await tester.pumpWidget(const SizedBox.shrink());
     await _pumpServers(tester);
-    await _tapKey(tester, 'welcome-choice-computer');
+    await chooseComputerOnWelcome(tester);
     expect(_kindStep, findsOneWidget);
     expect(find.text('Step 1 of 4 · What runs there'), findsOneWidget);
     expect(find.text('Which agent first?'), findsNothing);

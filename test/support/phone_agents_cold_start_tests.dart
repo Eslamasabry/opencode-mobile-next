@@ -16,6 +16,50 @@ void _phoneColdStartTests() {
     signInPhase: AgentSignInPhase.signedIn,
   );
 
+  // Jitter J4 (2026-10-28): "Claude Code signed out" + its Sign in button
+  // arrived 14 s after the list painted and pushed every row down 96 dp.
+  // The sign-in a read found last start is there from the first paint,
+  // until this start's read says otherwise.
+  testWidgets('a signed-out line saved last start stands until the helper '
+      'answers', (tester) async {
+    final w = await _world(
+      tester,
+      prefsExtra: {
+        'oc.agentSignedOut.local': jsonEncode({'claude': 'Claude Code'}),
+      },
+    );
+    final c = w.controller;
+    try {
+      final before = c.agentStatusLines.single;
+      expect(before.agentId, 'claude');
+      expect(before.kind, PhoneAgentStatusLineKind.signedOut);
+      // Still signed out: the same line, nothing moves.
+      w.state.runtimes = {
+        'claude': const PhoneAgentRuntime(
+          agentId: 'claude',
+          installed: true,
+          hostAvailable: true,
+          architectureQualified: true,
+          signInPhase: AgentSignInPhase.signedOut,
+        ),
+      };
+      await c.refreshAgentRows();
+      expect(
+        c.agentStatusLines.single.kind,
+        PhoneAgentStatusLineKind.signedOut,
+      );
+      // Signed in since: the line goes, and is not saved for next time.
+      w.state.runtimes = {'claude': _ready('claude')};
+      await c.refreshAgentRows();
+      await tester.pump();
+      expect(c.agentStatusLines, isEmpty);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey('oc.agentSignedOut.local'), isFalse);
+    } finally {
+      c.dispose();
+    }
+  });
+
   testWidgets('cold start stays quiet until the helper answers at 14 seconds', (
     tester,
   ) async {

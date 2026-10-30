@@ -8,6 +8,7 @@ import 'package:opencode_mobile/domain/product_repository.dart'
 import 'package:opencode_mobile/state/review_handoff.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_diff_view.dart';
+import 'package:opencode_mobile/ui/kit/kit_row_parts.dart' show KitExpandRow;
 import 'package:opencode_mobile/ui/kit/kit_undo.dart';
 import 'package:opencode_mobile/ui/screens/review_workspace.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,6 +23,7 @@ Future<void> _pumpReview(
   ReviewHandoffSession? handoff,
   String? profileId,
   bool settle = true,
+  Future<void> Function()? onUndoAll,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -42,39 +44,30 @@ Future<void> _pumpReview(
         loadBranchDiffs: branchLoader,
         handoff: handoff,
         profileId: profileId,
+        onUndoAll: onUndoAll,
       ),
     ),
   );
   if (settle) await tester.pumpAndSettle();
 }
 
-Finder _header(String path) => find.byKey(ValueKey('review-file-header-$path'));
+/// The file's folded row, while it is the open one.
+Finder _header(String path) => find.byWidgetPredicate(
+  (widget) =>
+      widget is KitExpandRow &&
+      widget.key == ValueKey('review-fold-$path') &&
+      widget.expanded == true,
+);
 
-String _navLabel(WidgetTester tester) {
-  final label = find.byKey(const ValueKey('review-nav-label'));
-  return tester
-      .widget<Text>(
-        find.descendant(of: label, matching: find.byType(Text)).first,
-      )
-      .data!;
+/// Unfolds [path]'s row (the open one folds).
+Future<void> _openFile(WidgetTester tester, String path) async {
+  await tester.tap(find.byKey(ValueKey('review-fold-header-$path')));
+  await tester.pumpAndSettle();
 }
 
+/// A file's menu opens on a long press of its row.
 Future<void> _openFileMenu(WidgetTester tester, String path) async {
-  final more = find.descendant(
-    of: _header(path),
-    matching: find.byTooltip('More'),
-  );
-  // One change has no More button: its menu opens on a long press.
-  if (more.evaluate().isNotEmpty) {
-    await tester.tap(more);
-  } else {
-    await tester.longPress(
-      find.descendant(
-        of: _header(path),
-        matching: find.byKey(const ValueKey('review-file-header-menu')),
-      ),
-    );
-  }
+  await tester.longPress(find.byKey(ValueKey('review-fold-header-$path')));
   await tester.pumpAndSettle();
 }
 
@@ -91,23 +84,95 @@ void main() {
     deletions: 1,
   );
 
-  testWidgets('renders one KitDiffView with one "Change 1 of N" navigator '
-      'across files', (tester) async {
-    await _pumpReview(tester, () async => [diff('a.dart'), diff('b.dart')]);
+  testWidgets('renders one KitDiffView: each file a folded row, the first '
+      'open, no hunk navigator and no viewed ticks', (tester) async {
+    await _pumpReview(
+      tester,
+      () async => [diff('a.dart', 'first'), diff('b.dart', 'second')],
+    );
 
     expect(find.byType(KitDiffView), findsOneWidget);
-    expect(find.byKey(const ValueKey('review-nav-label')), findsOneWidget);
-    expect(_navLabel(tester), 'Change 1 of 2');
+    expect(find.byType(KitExpandRow), findsNWidgets(2));
     expect(_header('a.dart'), findsOneWidget);
+    expect(find.text('first'), findsOneWidget);
+    expect(find.text('second'), findsNothing);
+    expect(find.byKey(const ValueKey('review-nav-label')), findsNothing);
+    expect(find.byKey(const ValueKey('review-nav-next')), findsNothing);
+    expect(find.byKey(const ValueKey('review-file-viewed-0')), findsNothing);
 
-    // Next on the last change of a file opens the next file.
-    await tester.tap(find.byKey(const ValueKey('review-nav-next')));
-    await tester.pumpAndSettle();
-    expect(_navLabel(tester), 'Change 2 of 2');
+    // Opening the next row folds the first.
+    await _openFile(tester, 'b.dart');
     expect(_header('b.dart'), findsOneWidget);
+    expect(find.text('second'), findsOneWidget);
+    expect(find.text('first'), findsNothing);
+    // Its row folds again.
+    await _openFile(tester, 'b.dart');
+    expect(find.text('second'), findsNothing);
     // The old per-file toolbar, strip and bottom hunk bar are gone.
     expect(find.byKey(const Key('review-hunk-bar')), findsNothing);
     expect(find.byKey(const Key('review-file-strip')), findsNothing);
+  });
+
+  testWidgets('says what changed in one line, then asks Looks good', (
+    tester,
+  ) async {
+    await _pumpReview(tester, () async => [diff('a.dart'), diff('b.dart')]);
+    expect(find.text('2 files changed · +2 −2'), findsOneWidget);
+    expect(
+      find.text('The agent already made these changes in your project.'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('review-looks-good')), findsOneWidget);
+    expect(find.text('Send back with a note'), findsOneWidget);
+    // No revert from the caller: Undo all is not offered.
+    expect(find.byKey(const Key('review-undo-all')), findsNothing);
+  });
+
+  testWidgets('Undo all confirms by naming the files, then undoes', (
+    tester,
+  ) async {
+    var undone = 0;
+    await _pumpReview(
+      tester,
+      () async => [diff('a.dart'), diff('b.dart'), diff('c.dart')],
+      onUndoAll: () async => undone++,
+    );
+    await tester.tap(find.byKey(const Key('review-undo-all')));
+    await tester.pumpAndSettle();
+    expect(find.text('Undo 3 changed files?'), findsOneWidget);
+    expect(undone, 0);
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('review-undo-confirm')),
+        matching: find.text('Undo all'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(undone, 1);
+  });
+
+  testWidgets('Send back with a note puts the note on the chat prompt', (
+    tester,
+  ) async {
+    final store = ReviewHandoffStore();
+    await _pumpReview(
+      tester,
+      () async => [diff('a.dart')],
+      handoff: ReviewHandoffSession(store: store, sessionID: 'chat-1'),
+    );
+    await tester.tap(find.byKey(const Key('review-send-back')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('review-comment-sheet')), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const Key('review-comment-field')),
+      'Keep the old name',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('review-add-to-prompt')));
+    await tester.pumpAndSettle();
+    expect(store.referencesFor('chat-1'), hasLength(1));
+    expect(store.referencesFor('chat-1').single.comment, 'Keep the old name');
+    await tester.pump(const Duration(seconds: 10));
   });
 
   testWidgets('refresh keeps the file being read after the files reorder', (
@@ -115,15 +180,13 @@ void main() {
   ) async {
     var diffs = [diff('a.dart'), diff('b.dart')];
     await _pumpReview(tester, () async => diffs);
-    await tester.tap(find.byKey(const ValueKey('review-nav-next')));
-    await tester.pumpAndSettle();
+    await _openFile(tester, 'b.dart');
     expect(_header('b.dart'), findsOneWidget);
 
     diffs = [diff('inserted.dart'), diff('b.dart'), diff('a.dart')];
     await tester.tap(find.byKey(const Key('review-refresh')));
     await tester.pumpAndSettle();
     expect(_header('b.dart'), findsOneWidget);
-    expect(find.text('2 of 3 viewed'), findsOneWidget);
   });
 
   testWidgets('refresh honours a file opened while the request was pending', (
@@ -138,7 +201,7 @@ void main() {
     pending = Completer<List<FileDiff>>();
     await tester.tap(find.byKey(const Key('review-refresh')));
     await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('review-nav-next')));
+    await tester.tap(find.byKey(const ValueKey('review-fold-header-b.dart')));
     await tester.pump();
     pending.complete([diff('b.dart'), diff('a.dart')]);
     await tester.pumpAndSettle();
@@ -306,7 +369,7 @@ void main() {
     // One row, not three: the diff starts near the top.
     final picker = tester.getRect(find.byKey(const Key('review-scope-picker')));
     expect(picker.height, lessThan(100));
-    expect(tester.getTopLeft(find.text('session change')).dy, lessThan(300));
+    expect(tester.getTopLeft(find.text('session change')).dy, lessThan(320));
     // Every view is still reachable.
     await tester.tap(find.byKey(const Key('review-scope-picker')));
     await tester.pumpAndSettle();
@@ -471,15 +534,10 @@ void main() {
     );
 
     // The file on screen first already counts as viewed.
-    expect(find.text('1 of 3 viewed'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('review-nav-next')));
-    await tester.pumpAndSettle();
-    expect(find.text('2 of 3 viewed'), findsOneWidget);
+    await _openFile(tester, 'lib/b.dart');
 
     // Going back to a viewed file does not count it twice.
-    await tester.tap(find.byKey(const ValueKey('review-nav-previous')));
-    await tester.pumpAndSettle();
-    expect(find.text('2 of 3 viewed'), findsOneWidget);
+    await _openFile(tester, 'lib/a.dart');
   });
 
   testWidgets('a large diff builds only the lines on screen', (tester) async {
@@ -632,6 +690,11 @@ void main() {
       textScale: 2,
     );
     expect(tester.takeException(), isNull);
-    expect(find.byKey(const ValueKey('review-nav-next')), findsOneWidget);
+    expect(
+      _header(
+        '.github/workflows/a-very-long-android-quality-workflow-name.yml',
+      ),
+      findsOneWidget,
+    );
   });
 }

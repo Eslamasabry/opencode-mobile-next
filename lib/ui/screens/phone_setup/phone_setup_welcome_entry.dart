@@ -3,39 +3,86 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../builtin/setup/phone_setup.dart';
+import '../../../builtin/setup/preflight.dart';
 import '../../../builtin/setup/setup_contract.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../app_theme.dart';
-import '../../kit/kit.dart';
+import '../../../voice/device.dart';
 import '../../widgets/product_states.dart' show productErrorText;
 import 'phone_setup_routes.dart';
+import 'phone_setup_selection.dart';
 
-/// The first-run welcome's line about a phone setup that already exists.
+/// What the first-run welcome's "On this phone" card says under its title,
+/// and what the page's main button does while that card is chosen.
+@immutable
+class PhoneWelcomeOffer {
+  const PhoneWelcomeOffer({
+    required this.line,
+    required this.action,
+    required this.onPressed,
+    this.state = SetupState.idle,
+    this.working = false,
+    this.failed = false,
+  });
+
+  /// One calm line: the setup's cost, how far a started setup got, or why
+  /// starting did not work.
+  final String line;
+
+  /// The main button's words, naming what it does ("Set up on this phone").
+  final String action;
+  final VoidCallback onPressed;
+
+  /// The job on the phone, [SetupState.idle] when there is none.
+  final SetupState state;
+
+  /// Starting or resuming is under way.
+  final bool working;
+
+  /// [line] says why the last start did not work.
+  final bool failed;
+}
+
+/// The phone half of the first-run welcome: what setting up on this phone
+/// costs, whether a setup already exists, and the one action for it.
 ///
-/// Someone who started setting up OpenCode on this phone and then left (the
-/// app killed, a reboot, a cancel) comes back to the welcome, because no
-/// server is saved until setup ends. Without this line the welcome would ask
-/// "where does your coding agent run?" as if nothing had happened, and the
-/// way back to their 70%-done setup would be two screens deep. So:
+/// Every number in the cost line is the setup engine's own (the component
+/// registry's time and download estimates, the same arithmetic as phone
+/// setup's own page), so a component added to the registry changes the
+/// promise without touching the welcome.
 ///
-/// - running: "Setting up OpenCode on this phone · 42%", opening its
-///   progress;
-/// - stopped part way: "Setup on this phone is 42% done" with Continue,
-///   which resumes the same job (the checks skip what finished);
-/// - done but nothing saved or connected: "OpenCode is ready on this phone"
-///   with Open, which runs the job again so only its last step (start and
+/// Someone who started setting up and then left (the app killed, a reboot,
+/// a cancel) comes back to the welcome, because no server is saved until
+/// setup ends. So the card says where it stands instead of the cost:
+///
+/// - running: "Setting up · 42%", and the button shows its progress;
+/// - stopped part way: "Setup is 42% done" with Continue setup, which
+///   resumes the same job (the checks skip what finished);
+/// - done but nothing saved or connected: "Installed and ready" with Start on
+///   this phone, which runs the job again so only its last step (start and
 ///   connect) happens.
 ///
-/// With no job it shows nothing and the welcome keeps its three choices.
-/// The job is read after the first frame, so the welcome never waits on it.
+/// With no job, Set up on this phone reads the phone first (CPU, memory,
+/// free space) and, when nothing stands in the way, starts the default
+/// setup at once and opens its progress. A phone that cannot run it, or
+/// may be slow, goes to phone setup's own page, which says why before
+/// anything downloads.
+///
+/// The job is read after the first frame, so the welcome never waits on it;
+/// the engine is watched only once a job is known to exist.
 class PhoneSetupWelcomeEntry extends StatefulWidget {
   const PhoneSetupWelcomeEntry({
     super.key,
+    required this.builder,
     this.engine,
     this.openProgress = _openFirstSetupProgress,
+    this.openStart = openPhoneSetupStart,
+    this.deviceProbe,
     this.restoreTimeout = const Duration(seconds: 3),
     this.revision = 0,
   });
+
+  /// Builds the welcome around the phone card's [PhoneWelcomeOffer].
+  final Widget Function(BuildContext context, PhoneWelcomeOffer offer) builder;
 
   /// Bumped by the host when the person comes back from phone setup, where
   /// a job may have started: the job is read again.
@@ -45,10 +92,18 @@ class PhoneSetupWelcomeEntry extends StatefulWidget {
   final SetupEngine? engine;
 
   /// Screen B as a first setup: the welcome only shows while nothing is
-  /// saved, so whatever it continues is this phone's first setup.
+  /// saved, so whatever it starts is this phone's first setup.
   final Future<void> Function(BuildContext context) openProgress;
 
-  /// How long the job read may take before the line gives up; a hung
+  /// Phone setup's own page (screen A), for a phone the pre-flight check
+  /// stops and for "More ways to set up".
+  final Future<void> Function(BuildContext context) openStart;
+
+  /// The CPU, free space and memory reading; defaults to the one voice
+  /// already collects.
+  final Future<VoiceDeviceInfo> Function()? deviceProbe;
+
+  /// How long the job read may take before the card gives up; a hung
   /// channel must never leave a spinner on the welcome.
   final Duration restoreTimeout;
 
@@ -60,7 +115,7 @@ class _PhoneSetupWelcomeEntryState extends State<PhoneSetupWelcomeEntry> {
   late final SetupEngine _engine = widget.engine ?? PhoneSetup.engine;
 
   /// Until the persisted job is read, an in-memory "done" may be stale, so
-  /// nothing is offered.
+  /// the card offers a fresh setup (which resumes a job if one exists).
   bool _restored = false;
   bool _busy = false;
   String? _failure;
@@ -108,25 +163,62 @@ class _PhoneSetupWelcomeEntryState extends State<PhoneSetupWelcomeEntry> {
     if (mounted) setState(() => _restored = true);
   }
 
+  /// What a fresh setup installs: the registry's required components and
+  /// the ones on by default, exactly what phone setup's own page starts.
+  List<SetupComponent> get _defaultInstall {
+    final registry = installableComponents(_engine.registry);
+    return expandSetupSelection(registry, defaultSetupSelection(registry));
+  }
+
   /// The job's own components, so Continue resumes that job rather than a
   /// guess; the registry defaults only when the job listed none.
   Set<String> _selection(SetupProgress progress) {
     if (progress.components.isNotEmpty) {
       return {for (final component in progress.components) component.id};
     }
-    return {
-      for (final component in _engine.registry)
-        if (component.required || component.defaultOn) component.id,
-    };
+    return {for (final component in _defaultInstall) component.id};
   }
 
-  Future<void> _resume(SetupProgress progress) async {
+  /// Set up on this phone: the phone is read before anything downloads.
+  Future<void> _start() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _failure = null;
+    });
+    VoiceDeviceInfo device;
+    try {
+      device =
+          await (widget.deviceProbe ?? voiceDevicePlatform.getDeviceInfo)();
+    } catch (_) {
+      device = const VoiceDeviceInfo.unknown();
+    }
+    if (!mounted) return;
+    final check = checkSetupPreflight(
+      device,
+      downloadBytes: setupTotals(_defaultInstall).bytes,
+    );
+    if (!check.supported || check.mayBeSlow) {
+      // Phone setup's own page says why (or that it may be slow), with
+      // its way out, before anything downloads.
+      setState(() => _busy = false);
+      await widget.openStart(context);
+      if (mounted) unawaited(_restore());
+      return;
+    }
+    setState(() => _busy = false);
+    await _run(_engine.progress.value);
+  }
+
+  Future<void> _run(SetupProgress progress) async {
     if (_busy) return;
     setState(() {
       _busy = true;
       _failure = null;
     });
     try {
+      // The job keeps "first setup", so a notification tap after the app
+      // was killed still ends on "name your first project".
       await _engine.run(
         _selection(progress),
         params: SetupJobParams.firstSetup,
@@ -143,6 +235,7 @@ class _PhoneSetupWelcomeEntryState extends State<PhoneSetupWelcomeEntry> {
     if (!mounted) return;
     setState(() => _busy = false);
     await widget.openProgress(context);
+    if (mounted) unawaited(_restore());
   }
 
   @override
@@ -151,130 +244,58 @@ class _PhoneSetupWelcomeEntryState extends State<PhoneSetupWelcomeEntry> {
     // welcome watches only once a job is known to exist: an untouched first
     // run costs one read, not a poll every half second.
     if (!_restored || _engine.progress.value.state == SetupState.idle) {
-      return const SizedBox.shrink();
+      return widget.builder(context, _offer(context, SetupProgress.idle));
     }
     return ValueListenableBuilder<SetupProgress>(
       valueListenable: _engine.progress,
-      builder: _line,
+      builder: (context, progress, _) =>
+          widget.builder(context, _offer(context, progress)),
     );
   }
 
-  Widget _line(BuildContext context, SetupProgress progress, Widget? _) {
+  PhoneWelcomeOffer _offer(BuildContext context, SetupProgress progress) {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     // Never "100%" while it is still going: the last step (starting
-    // OpenCode) has no bar of its own. Same rule as screen A.
+    // OpenCode) has no bar of its own. Same rule as phone setup's page.
     final percent = (progress.overall * 100).floor().clamp(0, 99);
-    final String title;
-    final String? detail;
+    final String line;
     final String action;
     final VoidCallback onPressed;
-    final double? meter;
     switch (progress.state) {
       case SetupState.idle:
-        return const SizedBox.shrink();
+        final totals = setupTotals(_defaultInstall);
+        final time = setupDurationText(l10n, totals.seconds);
+        line = totals.bytes > 0
+            ? l10n.welcomePhoneCost(time, setupSizeText(l10n, totals.bytes))
+            : time;
+        action = l10n.welcomePhoneSetUp;
+        onPressed = () => unawaited(_start());
       case SetupState.running:
-        title = l10n.phoneSetupOpenWelcomeRunning(percent);
-        detail = l10n.phoneSetupStartRunningBody;
+        line = l10n.welcomePhoneSettingUp(percent);
         action = l10n.phoneSetupOpenWelcomeShowProgress;
         onPressed = () => unawaited(widget.openProgress(context));
-        meter = progress.overall;
       case SetupState.interrupted:
       case SetupState.failed:
       case SetupState.cancelled:
-        title = l10n.phoneSetupOpenWelcomeStopped(percent);
-        detail = l10n.phoneSetupOpenWelcomeStoppedDetail;
-        action = l10n.phoneSetupOpenWelcomeContinue;
-        onPressed = () => unawaited(_resume(progress));
-        meter = progress.overall;
+        line = l10n.welcomePhoneStopped(percent);
+        action = l10n.welcomePhoneContinue;
+        onPressed = () => unawaited(_run(progress));
       case SetupState.done:
         // Done, yet the welcome shows, so no server is saved: the job's
         // last step (save, start and connect) is what is missing, and
         // running the job again redoes only that.
-        title = l10n.phoneSetupStartReadyHeadline;
-        detail = null;
-        action = l10n.phoneSetupStartOpen;
-        onPressed = () => unawaited(_resume(progress));
-        meter = null;
+        line = l10n.welcomePhoneReady;
+        action = l10n.welcomePhoneOpen;
+        onPressed = () => unawaited(_run(progress));
     }
-    return _EntryLine(
-      key: ValueKey('welcome-phone-setup-${progress.state.name}'),
-      title: title,
-      detail: detail,
+    final failure = _failure;
+    return PhoneWelcomeOffer(
+      line: failure ?? line,
       action: action,
-      meter: meter,
-      state: progress.state,
-      busy: _busy,
-      failure: _failure,
       onPressed: onPressed,
-    );
-  }
-}
-
-/// The line as an inline [KitStateView] (design standard §3): the phone icon
-/// in its tonal circle, the one sentence of where setup stands, its bar, and
-/// the one button, on the welcome's own rails.
-class _EntryLine extends StatelessWidget {
-  const _EntryLine({
-    super.key,
-    required this.title,
-    required this.detail,
-    required this.action,
-    required this.meter,
-    required this.state,
-    required this.busy,
-    required this.failure,
-    required this.onPressed,
-  });
-
-  final String title;
-  final String? detail;
-  final String action;
-  final double? meter;
-  final SetupState state;
-  final bool busy;
-  final String? failure;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final running = state == SetupState.running;
-    final failure = this.failure;
-    // A setup that stopped part way is a state, not a request: amber means
-    // only "needs you" (LOOK-4), so it reads in the neutral tone with its
-    // words ("Setup on this phone is 42% done") and Continue.
-    final tone = failure != null
-        ? AppStatusTone.failure
-        : switch (state) {
-            SetupState.running => AppStatusTone.progress,
-            SetupState.done => AppStatusTone.ok,
-            _ => AppStatusTone.neutral,
-          };
-    final meter = this.meter;
-    return KitStateView(
-      size: KitStateSize.inline,
-      padding: EdgeInsetsDirectional.only(bottom: KitTokens.of(context).space6),
-      icon: AppIconography.phone,
-      tone: tone,
-      title: title,
-      titleKey: const ValueKey('welcome-phone-setup-title'),
-      body: failure ?? detail,
-      bodyKey: failure != null
-          ? const ValueKey('welcome-phone-setup-failure')
-          : null,
-      // Announced while it moves; a stopped line waits to be read.
-      liveRegion: running,
-      progress: meter == null
-          ? null
-          : KitProgress.known(
-              meter.clamp(0, 1).toDouble(),
-              tone: running ? null : AppStatusTone.neutral,
-            ),
-      primary: KitAction(
-        key: const ValueKey('welcome-phone-setup-action'),
-        label: action,
-        onPressed: busy ? null : onPressed,
-        working: busy,
-      ),
+      state: progress.state,
+      working: _busy,
+      failed: failure != null,
     );
   }
 }

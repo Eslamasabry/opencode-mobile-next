@@ -12,11 +12,12 @@ import 'kit_icon.dart';
 import 'kit_layout.dart';
 import 'kit_motion.dart';
 import 'kit_needs_you.dart';
+import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
-/// One destination. The same list builds the dock, the rail and the sidebar
+/// One destination. The same list builds the rail and the sidebar
 /// (docs/ux-system/kit-api/KitNav.md).
 @immutable
 class KitNavDestination {
@@ -35,7 +36,7 @@ class KitNavDestination {
   /// An [AppIconography] glyph.
   final IconData icon;
 
-  /// The fill glyph, dock only (LOOK-33).
+  /// The fill glyph, rail only (LOOK-33).
   final IconData? selectedIcon;
 
   /// The [KitNeedsYou.badge] count (Inbox). KitNav never counts (AUTO-11).
@@ -49,8 +50,10 @@ class KitNavDestination {
 }
 
 enum KitNavLayout {
-  /// compact: the floating dock at the bottom.
-  dock,
+  /// compact: no navigation bar (owner, 2026-10-20). Conversations is the
+  /// home; the shell's top bar carries Search and the Settings gear, and a
+  /// project's Files open from its conversations.
+  none,
 
   /// medium: a floating rail at the start, icons with labels.
   rail,
@@ -63,11 +66,11 @@ enum KitNavLayout {
 /// The shell's navigation frame (kit-v2.md §8.1, §8.2, §9.2; VL §4–§6).
 /// [child] is the content (the shell's KitScreen with KitTopBar.shell on
 /// compact/medium; the selected destination's detail pane on expanded+).
+/// On compact there is no bar at all ([KitNavLayout.none]): [child] is the
+/// whole window and [destinations] are not drawn.
 ///
-/// States: default (one selected), needs-you (a badge on a destination),
-/// dock hidden (keyboard open), glass solid (Effects › Glass off, high
-/// contrast, accessible navigation, remove animations: [KitGlass] falls
-/// back). No disabled destination: an unavailable one is absent (LAY-15).
+/// States: default (one selected), needs-you (a badge on a destination).
+/// No disabled destination: an unavailable one is absent (LAY-15).
 class KitNav extends StatelessWidget {
   const KitNav({
     super.key,
@@ -98,14 +101,14 @@ class KitNav extends StatelessWidget {
   /// The sidebar's pinned primary ("New conversation"); sidebar only.
   final KitAction? sidebarPrimary;
 
-  /// A handle on the dock, rail or sidebar widget.
+  /// A handle on the rail or sidebar widget.
   final Key? navKey;
 
   /// The layout KitNav uses in this window (from [KitLayout.windowOf], with
-  /// the short-window rule: < 480 dp tall keeps dock/rail).
+  /// the short-window rule: < 480 dp tall keeps the rail).
   static KitNavLayout layoutOf(BuildContext context) {
     final window = KitLayout.windowOf(context);
-    if (window == KitWindow.compact) return KitNavLayout.dock;
+    if (window == KitWindow.compact) return KitNavLayout.none;
     if (window == KitWindow.medium || KitLayout.isShort(context)) {
       return KitNavLayout.rail;
     }
@@ -137,37 +140,11 @@ class KitNav extends StatelessWidget {
     final layout = layoutOf(context);
     final Widget frame;
     switch (layout) {
-      case KitNavLayout.dock:
-        // Hidden while the keyboard is open, at once (the keyboard moves).
-        final keyboardOpen = media.viewInsets.bottom > 0;
-        final dockWidth = media.size.width - 2 * tokens.gutter;
-        final dockHeight = keyboardOpen
-            ? 0.0
-            : _dockHeight(context, destinations, dockWidth);
-        frame = Stack(
-          fit: StackFit.expand,
-          children: [
-            KitBottomInset.add(
-              extraBottom: keyboardOpen ? 0 : tokens.space2 + dockHeight,
-              // The top controls join while the page is scrolled.
-              child: KitGlass.trackScroll(
-                resetOn: selected,
-                child: _KitNavScope(hostsPane: false, child: child),
-              ),
-            ),
-            if (!keyboardOpen)
-              PositionedDirectional(
-                start: tokens.gutter,
-                end: tokens.gutter,
-                bottom: media.padding.bottom + tokens.space2,
-                child: KitNavBar(
-                  key: navKey,
-                  destinations: destinations,
-                  selected: selected,
-                  onSelected: onSelected,
-                ),
-              ),
-          ],
+      case KitNavLayout.none:
+        // The top controls join while the page is scrolled.
+        frame = KitGlass.trackScroll(
+          resetOn: selected,
+          child: _KitNavScope(hostsPane: false, child: child),
         );
       case KitNavLayout.rail:
         final railBand = KitLayout.railWidth + tokens.space2;
@@ -248,55 +225,6 @@ class _KitNavScope extends InheritedWidget {
       hostsPane != oldWidget.hostsPane || inset != oldWidget.inset;
 }
 
-/// The floating dock (compact). Public for galleries and tests; the app
-/// uses [KitNav].
-///
-/// States: none — its destinations always open (see [KitNav]).
-class KitNavBar extends StatelessWidget {
-  const KitNavBar({
-    super.key,
-    required this.destinations,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final List<KitNavDestination> destinations;
-  final int selected;
-  final ValueChanged<int> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = KitTokens.of(context);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth.isFinite
-            ? constraints.maxWidth
-            : MediaQuery.sizeOf(context).width - 2 * tokens.gutter;
-        final metrics = _labelMetrics(
-          context,
-          destinations,
-          width / destinations.length,
-        );
-        return KitGlass(
-          borderRadius: BorderRadius.circular(tokens.navRadius),
-          child: SizedBox(
-            height: _dockHeightFor(tokens, metrics),
-            width: width,
-            child: _KitNavItems(
-              axis: Axis.horizontal,
-              destinations: destinations,
-              selected: selected,
-              onSelected: onSelected,
-              metrics: metrics,
-              slotExtent: width / destinations.length,
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
 /// The rail (medium) or, with [extended], the sidebar column (expanded+).
 /// Public for galleries and tests; the app uses [KitNav].
 ///
@@ -341,7 +269,6 @@ class KitNavRail extends StatelessWidget {
           child: Align(
             alignment: AlignmentDirectional.topCenter,
             child: _KitNavItems(
-              axis: Axis.vertical,
               destinations: destinations,
               selected: selected,
               onSelected: onSelected,
@@ -360,6 +287,13 @@ class KitNavRail extends StatelessWidget {
     final media = MediaQuery.of(context);
     final pane = destinations[selected].pane;
     final action = primary;
+    // The pane is the page's ground, parted from the canvas by a hairline
+    // in the style's divider colour (Brutal's ink, none under Soft).
+    final rule = KitSurfaceLook.divider(
+      context,
+      color: roles.hairline,
+      width: KitTokens.hairlineWidth(context),
+    );
     return Container(
       // 296 dp, wider with larger text (KitLayout.sidebarWidth).
       width: KitLayout.sidebarWidth(context),
@@ -367,7 +301,7 @@ class KitNavRail extends StatelessWidget {
         color: roles.ground,
         border: BorderDirectional(
           end: BorderSide(
-            color: roles.hairline,
+            color: rule.color,
             width: KitTokens.hairlineWidth(context),
           ),
         ),
@@ -384,7 +318,6 @@ class KitNavRail extends StatelessWidget {
           ?header,
           if (header != null) SizedBox(height: tokens.space3),
           _KitNavItems(
-            axis: Axis.vertical,
             sidebar: true,
             destinations: destinations,
             selected: selected,
@@ -455,35 +388,13 @@ _LabelMetrics _labelMetrics(
     textScaler: scaler,
     maxLines: 1,
   )..layout();
-  // Large text: the dock grows a step so a label never touches its border
-  // (60 dp at 1.0 is unchanged).
+  // Large text: a rail item grows a step so a label never touches its
+  // neighbour.
   final height =
       line.height.ceilToDouble() + (scaler.scale(1) > 1.2 ? tokens.space2 : 0);
   line.dispose();
   return _LabelMetrics(maxScale: maxScale, labelHeight: height);
 }
-
-/// Lens + label with [KitTokens.space1] above and below: 60 dp at 1.0, taller
-/// when the labels grow.
-double _dockHeightFor(KitTokens tokens, _LabelMetrics metrics) => math.max(
-  tokens.navHeight,
-  _lensHeight() + metrics.labelHeight + 2 * tokens.space1,
-);
-
-double _dockHeight(
-  BuildContext context,
-  List<KitNavDestination> destinations,
-  double width,
-) => _dockHeightFor(
-  KitTokens.of(context),
-  _labelMetrics(context, destinations, width / destinations.length),
-);
-
-/// Above the dock's lens: the lens and label centred in the bar.
-double _dockTopPad(KitTokens tokens, _LabelMetrics metrics) =>
-    ((_dockHeightFor(tokens, metrics) - _lensHeight() - metrics.labelHeight) /
-            2)
-        .floorToDouble();
 
 /// One rail destination: lens, label and [KitTokens.space1] around both.
 double _itemExtent(KitTokens tokens, _LabelMetrics metrics) => math.max(
@@ -494,11 +405,10 @@ double _itemExtent(KitTokens tokens, _LabelMetrics metrics) => math.max(
 // ── Destinations ────────────────────────────────────────────────────────
 
 /// The destinations as one focus group: Tab enters at the selected one,
-/// arrows move (Left/Right in the dock, Up/Down in the rail and sidebar),
+/// Up/Down move,
 /// Enter/Space selects (KitTappable).
 class _KitNavItems extends StatefulWidget {
   const _KitNavItems({
-    required this.axis,
     required this.destinations,
     required this.selected,
     required this.onSelected,
@@ -507,13 +417,12 @@ class _KitNavItems extends StatefulWidget {
     this.sidebar = false,
   });
 
-  final Axis axis;
   final List<KitNavDestination> destinations;
   final int selected;
   final ValueChanged<int> onSelected;
   final _LabelMetrics metrics;
 
-  /// A dock slot's width, a rail item's height, a sidebar row's minimum.
+  /// A rail item's height, a sidebar row's minimum.
   final double slotExtent;
   final bool sidebar;
 
@@ -569,16 +478,10 @@ class _KitNavItemsState extends State<_KitNavItems>
     }
     final current = _nodes.indexWhere((node) => node.hasFocus);
     if (current < 0) return KeyEventResult.ignored;
-    final rtl = Directionality.of(context) == TextDirection.rtl;
     final key = event.logicalKey;
     int? step;
-    if (widget.axis == Axis.horizontal) {
-      if (key == LogicalKeyboardKey.arrowRight) step = rtl ? -1 : 1;
-      if (key == LogicalKeyboardKey.arrowLeft) step = rtl ? 1 : -1;
-    } else {
-      if (key == LogicalKeyboardKey.arrowDown) step = 1;
-      if (key == LogicalKeyboardKey.arrowUp) step = -1;
-    }
+    if (key == LogicalKeyboardKey.arrowDown) step = 1;
+    if (key == LogicalKeyboardKey.arrowUp) step = -1;
     if (step == null) return KeyEventResult.ignored;
     final next = (current + step).clamp(0, _nodes.length - 1);
     _nodes[next].requestFocus();
@@ -648,17 +551,14 @@ class _KitNavItemsState extends State<_KitNavItems>
     );
   }
 
-  double _along(Offset local) =>
-      widget.axis == Axis.horizontal ? local.dx : local.dy;
-
   void _dragStart(DragStartDetails details) {
     _dragging = true;
     if (!_reduced) _lift(1);
-    _dragTo(_along(details.localPosition));
+    _dragTo(details.localPosition.dy);
   }
 
   void _dragUpdate(DragUpdateDetails details) =>
-      _dragTo(_along(details.localPosition));
+      _dragTo(details.localPosition.dy);
 
   /// The lens follows the finger, a little wider while it floats, and
   /// resists past the first and last destinations.
@@ -726,13 +626,10 @@ class _KitNavItemsState extends State<_KitNavItems>
             selected: i == widget.selected,
             onTap: () => widget.onSelected(i),
             focusNode: _nodes[i],
-            axis: widget.axis,
             sidebar: widget.sidebar,
             metrics: metrics,
             extent: widget.slotExtent,
-            topPad: widget.axis == Axis.horizontal
-                ? _dockTopPad(tokens, metrics)
-                : tokens.space1,
+            topPad: tokens.space1,
           ),
         ),
     ];
@@ -743,28 +640,14 @@ class _KitNavItemsState extends State<_KitNavItems>
     } else {
       final lensWidth = _lensWidth(tokens);
       final lensHeight = _lensHeight();
-      final horizontal = widget.axis == Axis.horizontal;
-      final track = horizontal
-          ? _LensTrack(
-              axis: Axis.horizontal,
-              count: widget.destinations.length,
-              slot: widget.slotExtent,
-              length: lensWidth,
-              lead: (widget.slotExtent - lensWidth) / 2,
-              crossStart: _dockTopPad(tokens, metrics),
-              crossLength: lensHeight,
-              rtl: Directionality.of(context) == TextDirection.rtl,
-            )
-          : _LensTrack(
-              axis: Axis.vertical,
-              count: widget.destinations.length,
-              slot: widget.slotExtent,
-              length: lensHeight,
-              lead: tokens.space1,
-              crossStart: (KitLayout.railWidth - lensWidth) / 2,
-              crossLength: lensWidth,
-              rtl: false,
-            );
+      final track = _LensTrack(
+        count: widget.destinations.length,
+        slot: widget.slotExtent,
+        length: lensHeight,
+        lead: tokens.space1,
+        crossStart: (KitLayout.railWidth - lensWidth) / 2,
+        crossLength: lensWidth,
+      );
       _place(track);
       final stack = Stack(
         children: [
@@ -779,24 +662,17 @@ class _KitNavItemsState extends State<_KitNavItems>
               child: _KitNavLens(motion: _motion),
             ),
           ),
-          if (horizontal)
-            Row(children: items)
-          else
-            Column(mainAxisSize: MainAxisSize.min, children: items),
+          Column(mainAxisSize: MainAxisSize.min, children: items),
         ],
       );
       // Drag along the bar to move the lens; a tap still opens at once.
       // Screen readers keep the destinations' own actions.
       body = GestureDetector(
         excludeFromSemantics: true,
-        onHorizontalDragStart: horizontal ? _dragStart : null,
-        onHorizontalDragUpdate: horizontal ? _dragUpdate : null,
-        onHorizontalDragEnd: horizontal ? (_) => _dragEnd() : null,
-        onHorizontalDragCancel: horizontal ? _dragEnd : null,
-        onVerticalDragStart: horizontal ? null : _dragStart,
-        onVerticalDragUpdate: horizontal ? null : _dragUpdate,
-        onVerticalDragEnd: horizontal ? null : (_) => _dragEnd(),
-        onVerticalDragCancel: horizontal ? null : _dragEnd,
+        onVerticalDragStart: _dragStart,
+        onVerticalDragUpdate: _dragUpdate,
+        onVerticalDragEnd: (_) => _dragEnd(),
+        onVerticalDragCancel: _dragEnd,
         child: stack,
       );
     }
@@ -811,19 +687,17 @@ class _KitNavItemsState extends State<_KitNavItems>
   }
 }
 
-/// Where the lens can rest along the dock or rail: one slot per
-/// destination, in visual order.
+/// Where the lens can rest along the rail: one slot per destination, top
+/// to bottom.
 @immutable
 class _LensTrack {
   const _LensTrack({
-    required this.axis,
     required this.count,
     required this.slot,
     required this.length,
     required this.lead,
     required this.crossStart,
     required this.crossLength,
-    required this.rtl,
   });
 
   /// How far a drag past the first or last destination moves the lens.
@@ -832,7 +706,6 @@ class _LensTrack {
   /// The lens's length while it floats under a finger, as a share of rest.
   static const double floating = 1.08;
 
-  final Axis axis;
   final int count;
 
   /// Along the main axis: a destination's extent, the lens's length and
@@ -845,48 +718,32 @@ class _LensTrack {
   final double crossStart;
   final double crossLength;
 
-  /// A right-to-left dock: the first destination is the rightmost slot.
-  final bool rtl;
-
-  int _visual(int index) => rtl ? count - 1 - index : index;
-
   /// The lens's edges on destination [index].
   (double, double) rest(int index) {
-    final start = _visual(index) * slot + lead;
+    final start = index * slot + lead;
     return (start, start + length);
   }
 
-  /// The middle of visual slot [slotIndex].
+  /// The middle of slot [slotIndex].
   double centre(int slotIndex) => slotIndex * slot + lead + length / 2;
 
   /// The destination whose slot holds [position].
-  int indexAt(double position) => _visual(
-    ((position - lead - length / 2) / slot).round().clamp(0, count - 1),
-  );
+  int indexAt(double position) =>
+      ((position - lead - length / 2) / slot).round().clamp(0, count - 1);
 
   @override
   bool operator ==(Object other) =>
       other is _LensTrack &&
-      other.axis == axis &&
       other.count == count &&
       other.slot == slot &&
       other.length == length &&
       other.lead == lead &&
       other.crossStart == crossStart &&
-      other.crossLength == crossLength &&
-      other.rtl == rtl;
+      other.crossLength == crossLength;
 
   @override
-  int get hashCode => Object.hash(
-    axis,
-    count,
-    slot,
-    length,
-    lead,
-    crossStart,
-    crossLength,
-    rtl,
-  );
+  int get hashCode =>
+      Object.hash(count, slot, length, lead, crossStart, crossLength);
 }
 
 /// One value on a spring whose target may move every frame without
@@ -997,9 +854,7 @@ class _LensLayout extends SingleChildLayoutDelegate {
     final b = math.max(a, snap(end + lifted / 2));
     final c = snap(middle - cross / 2);
     final d = math.max(c, snap(middle + cross / 2));
-    return track.axis == Axis.horizontal
-        ? Rect.fromLTRB(a, c, b, d)
-        : Rect.fromLTRB(c, a, d, b);
+    return Rect.fromLTRB(c, a, d, b);
   }
 
   @override
@@ -1017,6 +872,20 @@ class _LensLayout extends SingleChildLayoutDelegate {
       old.devicePixelRatio != devicePixelRatio;
 }
 
+/// The lens's own look, which [_LensPainter] paints itself (a solid pill
+/// with a one physical pixel rim).
+const _plainLens = KitSurfaceDecoration(fill: Colors.transparent);
+
+/// The words on the chosen destination's surface (the lens, the sidebar's
+/// chosen row): the colour the style gives a chosen control (hook H3), or
+/// [own].
+Color _chosenInk(BuildContext context, Color own) => KitSurfaceLook.wordsOn(
+  context,
+  fallback: own,
+  level: KitSurfaceLevel.surface3,
+  selected: true,
+);
+
 /// The selected tab's lens: a solid pill with a one physical pixel rim.
 class _KitNavLens extends StatelessWidget {
   const _KitNavLens({required this.motion});
@@ -1026,12 +895,24 @@ class _KitNavLens extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final roles = KitTokens.of(context).roles;
+    // The lens is a chosen control: pressed into the dock under Soft, inverted under Paper. Where the style keeps
+    // the part's own look, the painter draws the plain lens.
+    final look = KitSurfaceLook.decorate(
+      context,
+      solid: _plainLens,
+      level: KitSurfaceLevel.surface3,
+      role: KitSurfaceRole.control,
+      borderRadius: KitSurfaceLook.stadium,
+      selected: true,
+    );
     return CustomPaint(
       painter: _LensPainter(
         motion: motion,
         fill: roles.surface3,
         rim: roles.hairline,
         width: KitTokens.hairlineWidth(context),
+        surface: identical(look, _plainLens) ? null : look,
+        textDirection: Directionality.of(context),
       ),
     );
   }
@@ -1043,12 +924,16 @@ class _LensPainter extends CustomPainter {
     required this.fill,
     required this.rim,
     required this.width,
+    this.surface,
+    this.textDirection = TextDirection.ltr,
   }) : super(repaint: motion);
 
   final _LensMotion motion;
   final Color fill;
   final Color rim;
   final double width;
+  final Decoration? surface;
+  final TextDirection textDirection;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1057,6 +942,14 @@ class _LensPainter extends CustomPainter {
       Offset.zero & size,
       Radius.circular(size.shortestSide / 2),
     );
+    if (surface case final surface?) {
+      surface.createBoxPainter().paint(
+        canvas,
+        Offset.zero,
+        ImageConfiguration(size: size, textDirection: textDirection),
+      );
+      return;
+    }
     canvas
       ..drawRRect(pill, Paint()..color = fill)
       ..drawDRRect(pill, pill.deflate(width), Paint()..color = rim);
@@ -1067,7 +960,9 @@ class _LensPainter extends CustomPainter {
       old.motion != motion ||
       old.fill != fill ||
       old.rim != rim ||
-      old.width != width;
+      old.width != width ||
+      old.surface != surface ||
+      old.textDirection != textDirection;
 }
 
 class _KitNavItem extends StatefulWidget {
@@ -1076,7 +971,6 @@ class _KitNavItem extends StatefulWidget {
     required this.selected,
     required this.onTap,
     required this.focusNode,
-    required this.axis,
     required this.sidebar,
     required this.metrics,
     required this.extent,
@@ -1087,7 +981,6 @@ class _KitNavItem extends StatefulWidget {
   final bool selected;
   final VoidCallback onTap;
   final FocusNode focusNode;
-  final Axis axis;
   final bool sidebar;
   final _LabelMetrics metrics;
   final double extent;
@@ -1116,6 +1009,18 @@ class _KitNavItemState extends State<_KitNavItem> {
         : destination.label;
     final strong = selected || (_hovered && KitLayout.finePointer(context));
     final tone = strong ? KitTextTone.primary : KitTextTone.secondary;
+    // On the chosen destination's surface the glyph (and, in the sidebar,
+    // the words) take the style's chosen-control colour (Paper inverts).
+    final own = KitText.toneColor(tokens.roles, tone);
+    final ink = selected ? _chosenInk(context, own) : own;
+    final inked = ink != own;
+    Widget glyphOf(IconData icon, {KitIconSize size = KitIconSize.large}) =>
+        inked
+        ? IconTheme.merge(
+            data: IconThemeData(color: ink),
+            child: KitIcon(icon, size: size),
+          )
+        : KitIcon(icon, size: size, tone: tone);
 
     final Widget content;
     if (widget.sidebar) {
@@ -1128,19 +1033,24 @@ class _KitNavItemState extends State<_KitNavItem> {
           children: [
             KitNeedsYou.badge(
               count: count,
-              child: KitIcon(
-                destination.icon,
-                size: KitIconSize.medium,
-                tone: tone,
-              ),
+              child: glyphOf(destination.icon, size: KitIconSize.medium),
             ),
             SizedBox(width: tokens.space3),
             Expanded(
-              child: KitText(
-                destination.label,
-                role: KitTextRole.rowTitle,
-                tone: tone,
-              ),
+              child: inked
+                  ? Text(
+                      destination.label,
+                      style: KitText.styleOf(
+                        context,
+                        KitTextRole.rowTitle,
+                        tone: tone,
+                      ).copyWith(color: ink),
+                    )
+                  : KitText(
+                      destination.label,
+                      role: KitTextRole.rowTitle,
+                      tone: tone,
+                    ),
             ),
           ],
         ),
@@ -1170,10 +1080,7 @@ class _KitNavItemState extends State<_KitNavItem> {
           SizedBox(
             height: _lensHeight(),
             child: Center(
-              child: KitNeedsYou.badge(
-                count: count,
-                child: KitIcon(glyph, tone: tone),
-              ),
+              child: KitNeedsYou.badge(count: count, child: glyphOf(glyph)),
             ),
           ),
           Padding(
@@ -1182,17 +1089,11 @@ class _KitNavItemState extends State<_KitNavItem> {
           ),
         ],
       );
-      content = widget.axis == Axis.horizontal
-          ? SizedBox(
-              width: widget.extent,
-              height: double.infinity,
-              child: stack,
-            )
-          : SizedBox(
-              width: KitLayout.railWidth,
-              height: widget.extent,
-              child: stack,
-            );
+      content = SizedBox(
+        width: KitLayout.railWidth,
+        height: widget.extent,
+        child: stack,
+      );
     }
 
     Widget tappable = KitTappable(
@@ -1208,12 +1109,23 @@ class _KitNavItemState extends State<_KitNavItem> {
       child: content,
     );
     if (widget.sidebar) {
-      // The Desktop canvas: the selected row is a solid surface3 step.
-      tappable = DecoratedBox(
-        decoration: ShapeDecoration(
-          color: selected ? tokens.roles.surface3 : Colors.transparent,
-          shape: tokens.shapeOf(KitShape.button),
-        ),
+      // The Desktop canvas: the selected row is a chosen control on the
+      // surface3 step (Solid's plain step).
+      final own = ShapeDecoration(
+        color: selected ? tokens.roles.surface3 : Colors.transparent,
+        shape: tokens.shapeOf(KitShape.button),
+      );
+      tappable = kitSurfaceBox(
+        style: KitSurfaceLook.styleOf(context),
+        decoration: selected
+            ? KitSurfaceLook.decorate(
+                context,
+                solid: own,
+                level: KitSurfaceLevel.surface3,
+                role: KitSurfaceRole.control,
+                selected: true,
+              )
+            : own,
         child: tappable,
       );
     }

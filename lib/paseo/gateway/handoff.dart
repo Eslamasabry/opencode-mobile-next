@@ -12,9 +12,20 @@ extension _PaseoHandoff on PaseoGateway {
         directory != _scope ||
         !RegExp(r'^[a-zA-Z0-9_-]{1,128}$').hasMatch(recordId) ||
         markdown.isEmpty ||
-        KitRedact.opaqueTokens(KitRedact.text(markdown)) != markdown ||
         utf8.encode(markdown).length > 98304) {
-      throw PaseoFailure(PaseoFailureKind.unavailable);
+      throw PaseoFailure(
+        PaseoFailureKind.unavailable,
+        reason: 'record refused',
+      );
+    }
+    // The record builder masks credentials per piece and token-like runs on
+    // the whole record (agent_handoff_record.dart); only the second holds
+    // for the whole text, so only it is checked here.
+    if (KitRedact.opaqueTokens(markdown) != markdown) {
+      throw PaseoFailure(
+        PaseoFailureKind.unavailable,
+        reason: 'record not fully masked',
+      );
     }
     final scope = _scope;
     final locationEpoch = _locationEpoch;
@@ -82,12 +93,18 @@ extension _PaseoHandoff on PaseoGateway {
 
     Future<void> writeNew(String parent, String name, String content) async {
       if (!await create(parent, name, 'file')) {
-        throw PaseoFailure(PaseoFailureKind.unavailable);
+        throw PaseoFailure(
+          PaseoFailureKind.unavailable,
+          reason: 'could not create $name',
+        );
       }
       final path = '$parent/$name';
       final empty = await read(path);
       if (empty['content'] != '') {
-        throw PaseoFailure(PaseoFailureKind.unavailable);
+        throw PaseoFailure(
+          PaseoFailureKind.unavailable,
+          reason: 'new $name not empty',
+        );
       }
       final result = await request('fs.file.write.request', {
         'path': path,
@@ -97,10 +114,16 @@ extension _PaseoHandoff on PaseoGateway {
       }, mutation: true);
       final outcome = result['result'];
       if (outcome is! Map || outcome['status'] != 'written') {
-        throw PaseoFailure(PaseoFailureKind.unavailable);
+        throw PaseoFailure(
+          PaseoFailureKind.unavailable,
+          reason: 'write of $name not confirmed',
+        );
       }
       if ((await read(path))['content'] != content) {
-        throw PaseoFailure(PaseoFailureKind.invalidResponse);
+        throw PaseoFailure(
+          PaseoFailureKind.invalidResponse,
+          reason: '$name read back differently',
+        );
       }
     }
 
@@ -123,12 +146,18 @@ extension _PaseoHandoff on PaseoGateway {
                 entry['name'] == '.handoff' &&
                 entry['kind'] == 'directory',
           )) {
-        throw PaseoFailure(PaseoFailureKind.unavailable);
+        throw PaseoFailure(
+          PaseoFailureKind.unavailable,
+          reason: 'no .handoff folder',
+        );
       }
     }
     final folder = '.handoff/$recordId';
     if (!await create('.handoff', recordId, 'directory')) {
-      throw PaseoFailure(PaseoFailureKind.unavailable);
+      throw PaseoFailure(
+        PaseoFailureKind.unavailable,
+        reason: 'could not create the record folder',
+      );
     }
     await writeNew(folder, '.gitignore', _handoffIgnore);
     await writeNew(folder, 'record.md', markdown);

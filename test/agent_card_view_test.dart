@@ -783,6 +783,12 @@ void main() {
           reason: GenUiSetupProblem.registrationFailed,
           affected: [GenUiAgent.claude],
         ): "Couldn't turn this on. Claude Code couldn't be told about cards.",
+        // Cards work through Claude Code; on a phone without it the line
+        // says to install it, not that unnamed "tools" are missing.
+        const GenUiSetupFailed(
+          reason: GenUiSetupProblem.runtimeMissing,
+          affected: [GenUiAgent.claude],
+        ): "Couldn't turn this on. Install Claude Code on this phone first.",
         // Nothing names an agent (the app has not asked any yet): the line
         // says so without "This agent".
         const GenUiSetupUnavailable(reason: GenUiSetupProblem.notQualified):

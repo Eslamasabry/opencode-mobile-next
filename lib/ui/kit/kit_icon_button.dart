@@ -6,11 +6,26 @@ import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import 'kit_bidi.dart';
 import 'kit_copy.dart';
+import 'kit_ink_layer.dart';
 import 'kit_layout.dart';
 import 'kit_motion.dart';
+import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
+
+/// How a [KitIconButton]'s glyph answers a press, beyond the pressed fill.
+enum KitIconMotion {
+  /// The pressed fill only.
+  none,
+
+  /// The glyph turns a quarter (90°, [KitIconButton.turnDuration],
+  /// ease-out) as the press opens a page, and turns back when that page
+  /// is left and the button's screen is on top again. If nothing covered
+  /// the screen, it turns back at once. No idle or looping movement; under
+  /// reduced motion it does not turn. For the Settings gear.
+  turn,
+}
 
 /// The one icon-only control (kit-v2.md §1.10).
 ///
@@ -35,6 +50,9 @@ class KitIconButton extends StatefulWidget {
     this.selected,
     this.shortcut,
     this.disabledReason,
+    this.motion = KitIconMotion.none,
+    this.round = false,
+    this.quiet = false,
   }) : assert(
          (tooltip ?? label ?? '').length > 0,
          'KitIconButton needs a non-empty tooltip (KIT-22)',
@@ -60,7 +78,10 @@ class KitIconButton extends StatefulWidget {
     this.shortcut,
     this.redact = true,
     this.onCopyFailed,
+    this.quiet = false,
   }) : copyText = text,
+       motion = KitIconMotion.none,
+       round = false,
        icon = AppIconography.copy,
        onPressed = null,
        destructive = false,
@@ -79,8 +100,28 @@ class KitIconButton extends StatefulWidget {
   /// On [KitIconButton.copy] it is null, and the button is still enabled.
   final VoidCallback? onPressed;
 
-  /// The glyph size: 20, 22 or 24 (LOOK-33). It keeps today's default of 24.
+  /// The glyph size: 20, 22 or 24 (LOOK-33); 24 by default. The touch
+  /// target is 48 at every size.
   final double size;
+
+  /// How the glyph answers a press ([KitIconMotion]); none by default.
+  final KitIconMotion motion;
+
+  /// The glyph sits on a circle of its own, the target's full 48: a resting
+  /// surface the style draws (`control`, `circle: true`, surface2). Solid
+  /// draws it like the shell's server pill beside it: surface2, the
+  /// hairline and the one tight shadow. For the shell bar's search and
+  /// Settings gear, which sit beside that pill (owner concepts,
+  /// 2026-10-22).
+  final bool round;
+
+  /// The glyph in `text2` instead of `text1`: an act set among secondary
+  /// words (a reply's Copy beside its model name), so it reads at their
+  /// volume.
+  final bool quiet;
+
+  /// [KitIconMotion.turn]'s quarter turn.
+  static const turnDuration = Duration(milliseconds: 200);
 
   /// Marks the act (the glyph stays neutral, never red). Use it only for an act that loses data or
   /// ends running work (LOOK-5); the act itself confirms or offers Undo
@@ -123,8 +164,16 @@ class KitIconButton extends StatefulWidget {
   State<KitIconButton> createState() => _KitIconButtonState();
 }
 
-class _KitIconButtonState extends State<KitIconButton> {
+class _KitIconButtonState extends State<KitIconButton>
+    with SingleTickerProviderStateMixin {
   Timer? _copiedTimer;
+
+  /// [KitIconMotion.turn]: 0 at rest, 1 a quarter turn.
+  AnimationController? _turnController;
+  AnimationController get _turn => _turnController ??= AnimationController(
+    vsync: this,
+    duration: KitIconButton.turnDuration,
+  );
   bool _copied = false;
   bool _focused = false;
   bool _hovered = false;
@@ -139,6 +188,7 @@ class _KitIconButtonState extends State<KitIconButton> {
   @override
   void dispose() {
     _copiedTimer?.cancel();
+    _turnController?.dispose();
     _press.dispose();
     super.dispose();
   }
@@ -148,11 +198,33 @@ class _KitIconButtonState extends State<KitIconButton> {
     _handleTap();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.motion != KitIconMotion.turn) return;
+    // Back on top (the page it opened was left): the glyph turns back.
+    final current = ModalRoute.isCurrentOf(context) ?? true;
+    final turn = _turnController;
+    if (current && turn != null && turn.value > 0 && !turn.isAnimating) {
+      unawaited(turn.reverse());
+    }
+  }
+
   void _handleTap() {
     if (_isCopy) {
       final value = widget.copyText!();
       unawaited(_copy(value));
       return;
+    }
+    if (widget.motion == KitIconMotion.turn && !KitMotion.reduced(context)) {
+      unawaited(
+        _turn.forward().then((_) {
+          // Nothing covered this screen: no page to come back from.
+          if (mounted && (ModalRoute.isCurrentOf(context) ?? true)) {
+            unawaited(_turn.reverse());
+          }
+        }),
+      );
     }
     widget.onPressed?.call();
   }
@@ -177,6 +249,34 @@ class _KitIconButtonState extends State<KitIconButton> {
     });
   }
 
+  /// The button's own circle in Solid: the pressed fill, or [round]'s
+  /// resting surface. Both reach the screen through the style resolver.
+  static BoxDecoration _circle(
+    Color? color, {
+    BoxBorder? border,
+    List<BoxShadow>? shadows,
+  }) => BoxDecoration(
+    color: color,
+    shape: BoxShape.circle,
+    border: border,
+    boxShadow: shadows,
+  );
+
+  /// [solid] while it rests; held, the style's `stateLayer` for it.
+  static Decoration _pressedLook(
+    BuildContext context,
+    Decoration solid, {
+    required bool pressed,
+  }) => pressed
+      ? KitSurfaceLook.decorate(
+          context,
+          solid: solid,
+          role: KitSurfaceRole.stateLayer,
+          circle: true,
+          pressed: true,
+        )
+      : solid;
+
   @override
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
@@ -192,7 +292,7 @@ class _KitIconButtonState extends State<KitIconButton> {
     } else if (widget.selected == true) {
       glyphColor = roles.accent;
     } else {
-      glyphColor = roles.text1;
+      glyphColor = widget.quiet ? roles.text2 : roles.text1;
     }
 
     final Widget glyph;
@@ -220,26 +320,116 @@ class _KitIconButtonState extends State<KitIconButton> {
         color: glyphColor,
       );
     } else {
-      glyph = Icon(
-        key: const ValueKey('kit-icon-button-icon'),
-        widget.icon,
-        size: widget.size,
-        color: glyphColor,
+      // Keyed by the glyph, so a toggle that changes the icon (show and
+      // hide, play and pause) cross-fades instead of jumping; a change of
+      // its colour (selected, enabled) eases in place.
+      glyph = KeyedSubtree(
+        key: ValueKey(('kit-icon-button-icon', widget.icon)),
+        child: TweenAnimationBuilder<Color?>(
+          tween: ColorTween(end: glyphColor),
+          duration: still ? Duration.zero : KitMotion.quick,
+          curve: KitMotion.enter,
+          builder: (context, color, _) => Icon(
+            key: const ValueKey('kit-icon-button-icon'),
+            widget.icon,
+            size: widget.size,
+            color: color,
+          ),
+        ),
       );
     }
 
-    final swapped = AnimatedSwitcher(
+    Widget swapped = AnimatedSwitcher(
       duration: still ? Duration.zero : KitMotion.quick,
       switchInCurve: KitMotion.enter,
       switchOutCurve: KitMotion.exit,
       child: glyph,
     );
+    if (widget.motion == KitIconMotion.turn) {
+      // Clockwise, or the other way in a right-to-left layout.
+      final rtl = Directionality.of(context) == TextDirection.rtl;
+      swapped = RotationTransition(
+        key: const ValueKey('kit-icon-button-turn'),
+        turns: Tween<double>(begin: 0, end: rtl ? -.25 : .25).animate(
+          CurvedAnimation(
+            parent: _turn,
+            curve: KitMotion.enter,
+            reverseCurve: KitMotion.enter.flipped,
+          ),
+        ),
+        child: swapped,
+      );
+    }
 
     // The focus ring is always built and only its border switches: the
     // tree keeps the same shape whether or not the button is focused, so the
     // focused InkWell (and its FocusNode) is never rebuilt out from under the
     // keyboard (LAY-10, G14). It paints in the foreground, so a hover
     // fill on the Material below never covers it (§8.3).
+    // On Android a press draws the native ripple over the circle (KitInk);
+    // the flat pressed fill is for the other platforms and reduced motion.
+    final filledPress = active && _press.shown && !KitInk.on(context);
+    final target = SizedBox.square(
+      dimension: tokens.minTarget,
+      child: DecoratedBox(
+        // Pressed is surface3; a hovered one under a mouse already
+        // shows surface3 and steps back down to surface2, the
+        // KitTappable rule for surface3. Selected is the accent glyph
+        // alone: a filled circle read as a menu button. The pressed
+        // fill is the style's state layer (a press sinks in Soft).
+        decoration: _pressedLook(
+          context,
+          _circle(
+            filledPress ? (_hovered ? roles.surface2 : roles.surface3) : null,
+          ),
+          pressed: filledPress,
+        ),
+        child: InkWell(
+          onTap: active ? _handlePointerTap : null,
+          onTapCancel: active ? _press.cancel : null,
+          onHover: (value) {
+            if (value != _hovered) setState(() => _hovered = value);
+          },
+          customBorder: const CircleBorder(),
+          hoverColor: roles.surface3,
+          focusColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          splashFactory: NoSplash.splashFactory,
+          // InkWell reports every focus notification, also an unchanged
+          // one (it re-reports when the button turns disabled); only a
+          // real change rebuilds.
+          onFocusChange: (value) {
+            if (value != _focused) setState(() => _focused = value);
+          },
+          child: Center(child: swapped),
+        ),
+      ),
+    );
+    // The resting circle, under the press layer, from the style; outside
+    // the press layer's clip, so its shadow is whole.
+    Widget surface(Widget child) => !widget.round
+        ? child
+        : kitSurfaceBox(
+            key: const ValueKey('kit-icon-button-round'),
+            style: KitSurfaceLook.styleOf(context),
+            decoration: KitSurfaceLook.decorate(
+              context,
+              solid: _circle(
+                roles.surface2,
+                border: Border.all(
+                  color: roles.hairline,
+                  width: KitTokens.hairlineWidth(context),
+                ),
+                shadows: tokens.floatingShadows(context),
+              ),
+              level: KitSurfaceLevel.surface2,
+              role: KitSurfaceRole.control,
+              circle: true,
+              disabled: !active && !_isCopy,
+            ),
+            child: child,
+          );
+
     final control = DecoratedBox(
       position: DecorationPosition.foreground,
       decoration: BoxDecoration(
@@ -254,42 +444,16 @@ class _KitIconButtonState extends State<KitIconButton> {
       child: _press.listen(
         context: context,
         enabled: active,
-        child: Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: SizedBox.square(
-            dimension: tokens.minTarget,
-            child: DecoratedBox(
-              // Pressed is surface3; a hovered one under a mouse already
-              // shows surface3 and steps back down to surface2, the
-              // KitTappable rule for surface3. Selected is the accent glyph
-              // alone: a filled circle read as a menu button.
-              decoration: BoxDecoration(
-                color: active && _press.shown
-                    ? (_hovered ? roles.surface2 : roles.surface3)
-                    : null,
-                shape: BoxShape.circle,
-              ),
-              child: InkWell(
-                onTap: active ? _handlePointerTap : null,
-                onTapCancel: active ? _press.cancel : null,
-                onHover: (value) {
-                  if (value != _hovered) setState(() => _hovered = value);
-                },
-                customBorder: const CircleBorder(),
-                hoverColor: roles.surface3,
-                focusColor: Colors.transparent,
-                highlightColor: Colors.transparent,
-                splashFactory: NoSplash.splashFactory,
-                // InkWell reports every focus notification, also an unchanged
-                // one (it re-reports when the button turns disabled); only a
-                // real change rebuilds.
-                onFocusChange: (value) {
-                  if (value != _focused) setState(() => _focused = value);
-                },
-                child: Center(child: swapped),
-              ),
+        child: surface(
+          Material(
+            type: MaterialType.transparency,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: KitInkLayer(
+              key: _press.inkKey,
+              shape: const CircleBorder(),
+              color: glyphColor,
+              child: target,
             ),
           ),
         ),
@@ -367,9 +531,16 @@ class _KitIconButtonState extends State<KitIconButton> {
         // A long label at 2.0 text wraps inside the screen gutter instead
         // of running edge to edge (the framework's default margin is 0).
         margin: EdgeInsets.symmetric(horizontal: tokens.gutter),
-        decoration: BoxDecoration(
+        // A small floating piece in its own opaque fill, from the style
+        // resolver (an ink box, a raise); Solid keeps its plain bubble.
+        decoration: KitSurfaceLook.decorate(
+          context,
+          solid: BoxDecoration(
+            color: tokens.panelSurface,
+            borderRadius: BorderRadius.circular(tokens.popoverCorner),
+          ),
+          role: KitSurfaceRole.floating,
           color: tokens.panelSurface,
-          borderRadius: BorderRadius.circular(KitTokens.popoverRadius),
         ),
         child: control,
       ),

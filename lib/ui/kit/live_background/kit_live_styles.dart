@@ -22,8 +22,8 @@ import 'styles/kit_live_topo.dart';
 
 export 'kit_live_style.dart';
 
-/// Every look, in the order the picker shows them: the ten ambient looks,
-/// then the industrial ones, then the premium ones. Add a style by writing
+/// Every look, in the order the picker shows them: the ambient looks, then
+/// the industrial ones, then the premium ones. Add a style by writing
 /// one [KitLiveStyle] and listing it here (its label goes in the ARB files).
 const List<KitLiveStyle> kitLiveStyles = <KitLiveStyle>[
   KitLiveAurora(),

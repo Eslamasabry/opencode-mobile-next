@@ -4,11 +4,13 @@
 // adds only what it alone has (the in-app terminal and Remove, Termux's
 // Running now). Add tools opens phone setup's Customize sheet in add mode,
 // priced with the kit's cost line, and installs only the new tools.
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/builtin/builtin_server_recovery.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/phone_host.dart';
@@ -110,6 +112,25 @@ void main() {
       .text
       .toPlainText();
 
+  // Sweep 3680: the server's card in the first view sat ~9px above the
+  // gesture bar. It clears the gesture inset like every list's last row.
+  testWidgets('the server card in the first view clears the gesture bar', (
+    tester,
+  ) async {
+    tester.view.padding = const FakeViewPadding(bottom: 102);
+    tester.view.viewPadding = const FakeViewPadding(bottom: 102);
+    addTearDown(tester.view.resetPadding);
+    addTearDown(tester.view.resetViewPadding);
+    await inApp(tester);
+    final screenBottom =
+        tester.view.physicalSize.height / tester.view.devicePixelRatio;
+    final inset = 102 / tester.view.devicePixelRatio;
+    final card = tester.getRect(
+      find.byKey(const ValueKey('this-phone-server')),
+    );
+    expect(card.bottom, lessThanOrEqualTo(screenBottom - inset));
+  });
+
   testWidgets('nothing on the page is red: Stop and Remove are plain, and '
       'Stop still asks first', (tester) async {
     await inApp(tester);
@@ -121,6 +142,8 @@ void main() {
       find.byWidgetPredicate((w) => w is KitRow && w.destructive),
       findsNothing,
     );
+    await tester.ensureVisible(find.byKey(const ValueKey('this-phone-stop')));
+    await tester.pump();
     await tester.tap(find.byKey(const ValueKey('this-phone-stop')));
     await tester.pumpAndSettle();
     expect(
@@ -134,7 +157,7 @@ void main() {
   ) async {
     await inApp(tester);
     expect(find.text(_l10n.setupRuntimeTwo), findsOneWidget);
-    expect(text(tester, 'this-phone-state'), _l10n.phoneServerCardRunning);
+    expect(text(tester, 'this-phone-state'), _l10n.thisPhoneAnswerRunning);
     expect(
       text(tester, 'this-phone-detail'),
       contains(_l10n.thisPhoneHostInApp),
@@ -142,7 +165,7 @@ void main() {
     expect(_present(tester), _shared.toSet());
     // Every act names what it acts on.
     expect(find.text(_l10n.thisPhoneStop), findsOneWidget);
-    expect(find.text(_l10n.thisPhoneConnect), findsOneWidget);
+    expect(find.text(_l10n.thisPhoneAnswerConnect), findsOneWidget);
     // Only the in-app Linux has a terminal and Remove.
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('this-phone-remove')),
@@ -161,16 +184,58 @@ void main() {
     await unmountPhone(tester);
   });
 
-  // Emulator QA F13 and F12.
-  testWidgets('the state word keeps the row\'s end inset', (tester) async {
+  testWidgets('the agents row does not say "on this phone" twice', (
+    tester,
+  ) async {
     await inApp(tester);
-    final word = tester.getRect(find.byKey(const ValueKey('this-phone-state')));
-    final panel = tester.getRect(
-      find.byKey(const ValueKey('this-phone-status')),
+    final row = find.byKey(const ValueKey('local-agent-row'));
+    await tester.scrollUntilVisible(
+      row,
+      200,
+      scrollable: find.byType(Scrollable).first,
     );
-    // The group sits on the 16 dp gutter; inside its surface the word ends
-    // where the other rows' values do (16 dp in), not 4 dp from the edge.
-    expect(panel.right - 16 - word.right, greaterThanOrEqualTo(12));
+    expect(
+      find.descendant(
+        of: row,
+        matching: find.text(_l10n.settingsV3AgentsOnPhone),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: row, matching: find.text(_l10n.localAgentTitle)),
+      findsNothing,
+    );
+    await unmountPhone(tester);
+  });
+
+  // Vision 2026-10-20: one answer in the first view, nothing else up front.
+  testWidgets('the answer is short: Restart and Stop are in the first view, '
+      'and no mint button while it runs', (tester) async {
+    await inApp(tester);
+    final view = tester.view.physicalSize / tester.view.devicePixelRatio;
+    final answer = tester.getRect(
+      find.byKey(const ValueKey('this-phone-state')),
+    );
+    expect(answer.center.dx, closeTo(view.width / 2, 1));
+    expect(
+      tester.getRect(find.byKey(const ValueKey('this-phone-title'))).top,
+      lessThan(view.height),
+    );
+    expect(
+      tester.getRect(find.byKey(const ValueKey('this-phone-restart'))).top,
+      lessThan(view.height),
+      reason: 'Restart is in the first view, not below a tall hero',
+    );
+    expect(
+      tester.getRect(find.byKey(const ValueKey('this-phone-stop'))).top,
+      lessThan(view.height),
+    );
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is KitButton && w.role == KitButtonRole.primary,
+      ),
+      findsNothing,
+    );
     await unmountPhone(tester);
   });
 
@@ -188,7 +253,7 @@ void main() {
   ) async {
     await termux(tester, scan: () async => const TermuxProcessReport([]));
     expect(find.text(_l10n.setupRuntimeTwo), findsOneWidget);
-    expect(text(tester, 'this-phone-state'), _l10n.phoneServerCardRunning);
+    expect(text(tester, 'this-phone-state'), _l10n.thisPhoneAnswerRunning);
     expect(
       text(tester, 'this-phone-detail'),
       contains(_l10n.thisPhoneHostTermux),
@@ -285,13 +350,15 @@ void main() {
   ) async {
     final linux = PhoneLinux(running: true);
     await inApp(tester, linux: linux);
+    await tester.ensureVisible(find.byKey(const ValueKey('this-phone-stop')));
+    await tester.pump();
     await tester.tap(find.byKey(const ValueKey('this-phone-stop')));
     await _settle(tester);
     expect(linux.running, isTrue, reason: 'the question changes nothing');
     await tester.tap(find.byKey(const ValueKey('confirm-stop-local-server')));
     await _settle(tester);
     expect(linux.running, isFalse);
-    expect(text(tester, 'this-phone-state'), _l10n.phoneServerCardStopped);
+    expect(text(tester, 'this-phone-state'), _l10n.thisPhoneAnswerOff);
     expect(find.text(_l10n.thisPhoneStart), findsOneWidget);
     await unmountPhone(tester);
   });
@@ -322,6 +389,8 @@ void main() {
     await _settle(tester);
 
     // A later start asks nothing.
+    await tester.ensureVisible(find.byKey(const ValueKey('this-phone-stop')));
+    await tester.pump();
     await tester.tap(find.byKey(const ValueKey('this-phone-stop')));
     await _settle(tester);
     await tester.tap(find.byKey(const ValueKey('confirm-stop-local-server')));
@@ -352,6 +421,10 @@ void main() {
       profiles: [inAppProfile],
     );
     await _settle(tester);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('this-phone-add-tools')),
+    );
+    await tester.pump();
     await tester.tap(find.byKey(const ValueKey('this-phone-add-tools')));
     await _settle(tester);
     expect(
@@ -389,6 +462,8 @@ void main() {
     final channel = await termux(tester, version: '2.0.28');
     // From here the manager reports the update running.
     channel.statusOutput = null;
+    await tester.ensureVisible(find.byKey(const ValueKey('this-phone-update')));
+    await tester.pump();
     await tester.tap(find.byKey(const ValueKey('this-phone-update')));
     await _settle(tester);
     await tester.tap(find.byKey(const ValueKey('this-phone-update-confirm')));
@@ -435,9 +510,110 @@ void main() {
       linux: PhoneLinux(installed: false, openCode: false),
     );
     await _settle(tester);
-    expect(text(tester, 'this-phone-state'), _l10n.phoneServerCardNotSetUp);
+    expect(text(tester, 'this-phone-state'), _l10n.thisPhoneAnswerNotSetUp);
     expect(find.text(_l10n.thisPhoneSetUp), findsOneWidget);
     expect(find.byKey(const ValueKey('this-phone-list')), findsNothing);
+    await unmountPhone(tester);
+  });
+
+  // Vision 2026-10-20, honesty: a restart is promised only when recovery
+  // really scheduled one.
+  group('a server that stopped by itself', () {
+    Future<void> stopped(
+      WidgetTester tester,
+      BuiltinRecoveryState state,
+    ) async {
+      final recovery = ValueNotifier(state);
+      addTearDown(recovery.dispose);
+      await pumpPhone(
+        tester,
+        home: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+        linux: PhoneLinux(),
+        profiles: [inAppProfile],
+        overrides: [thisPhoneRecoveryProvider.overrideWithValue(recovery)],
+      );
+      await _settle(tester);
+    }
+
+    testWidgets('with nothing scheduled: why, no promise, Restart now', (
+      tester,
+    ) async {
+      await stopped(
+        tester,
+        BuiltinRecoveryState(
+          phase: BuiltinRecoveryPhase.paused,
+          profileId: inAppProfile.id,
+        ),
+      );
+      expect(
+        text(tester, 'this-phone-state'),
+        _l10n.thisPhoneAnswerStoppedItself,
+      );
+      expect(find.textContaining('by itself in'), findsNothing);
+      expect(find.text(_l10n.thisPhoneAnswerRestartsSoon), findsNothing);
+      expect(find.text(_l10n.thisPhoneAnswerRestartNow), findsOneWidget);
+      await unmountPhone(tester);
+    });
+
+    testWidgets('with a retry scheduled: the countdown, and Restart now', (
+      tester,
+    ) async {
+      await stopped(
+        tester,
+        BuiltinRecoveryState(
+          phase: BuiltinRecoveryPhase.waiting,
+          profileId: inAppProfile.id,
+          attempts: 1,
+          nextAttemptAt: DateTime.now().add(const Duration(seconds: 42)),
+        ),
+      );
+      expect(
+        text(tester, 'this-phone-answer-line'),
+        _l10n.thisPhoneAnswerRestartsIn(_l10n.thisPhoneAboutSeconds(45)),
+      );
+      expect(find.text(_l10n.thisPhoneAnswerRestartNow), findsOneWidget);
+      await unmountPhone(tester);
+    });
+
+    testWidgets('after the retries are used up: it says so', (tester) async {
+      await stopped(
+        tester,
+        BuiltinRecoveryState(
+          phase: BuiltinRecoveryPhase.exhausted,
+          profileId: inAppProfile.id,
+          attempts: 3,
+        ),
+      );
+      expect(text(tester, 'this-phone-failure'), _l10n.thisPhoneAnswerGaveUp);
+      await unmountPhone(tester);
+    });
+  });
+
+  testWidgets('opened as a page it has Back, and the server row names only '
+      'where it runs (the version is under Details)', (tester) async {
+    await pumpPhone(
+      tester,
+      home: const SizedBox.expand(key: ValueKey('opener')),
+      routes: {
+        thisPhoneRoute: (_) => const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      },
+      linux: PhoneLinux(running: true),
+      profiles: [inAppProfile],
+      readyTimeout: const Duration(milliseconds: 300),
+    );
+    unawaited(
+      openThisPhone(
+        tester.element(find.byKey(const ValueKey('opener'))),
+        kind: PhoneHostKind.inApp,
+      ),
+    );
+    await _settle(tester);
+    expect(find.byKey(const ValueKey('this-phone-back')), findsOneWidget);
+    expect(text(tester, 'this-phone-detail'), _l10n.thisPhoneHostInApp);
+    expect(find.textContaining('1.18.29'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('this-phone-back')));
+    await _settle(tester);
+    expect(find.byType(ThisPhoneScreen), findsNothing);
     await unmountPhone(tester);
   });
 }

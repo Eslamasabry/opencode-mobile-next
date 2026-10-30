@@ -42,6 +42,7 @@ String appearanceLabel(AppAppearance appearance, [BuildContext? context]) {
           : copy.e7AppearanceFollowSystem,
     AppAppearance.light => copy.e7AppearanceLight,
     AppAppearance.dark => copy.e7AppearanceDark,
+    AppAppearance.saver => copy.appearanceModeSaver,
   };
 }
 
@@ -49,6 +50,7 @@ IconData _appearanceIcon(AppAppearance appearance) => switch (appearance) {
   AppAppearance.system => AppIconography.systemTheme,
   AppAppearance.light => AppIconography.lightMode,
   AppAppearance.dark => AppIconography.darkMode,
+  AppAppearance.saver => AppIconography.leaf,
 };
 
 /// Opens the preview of [pack]; Apply makes it the app's theme and offers
@@ -136,7 +138,7 @@ class _AppearancePreviewSheetState extends State<_AppearancePreviewSheet> {
     final brightness = switch (_appearance) {
       AppAppearance.system => MediaQuery.platformBrightnessOf(context),
       AppAppearance.light => Brightness.light,
-      AppAppearance.dark => Brightness.dark,
+      AppAppearance.dark || AppAppearance.saver => Brightness.dark,
     };
     final changed = packId != widget.controller.themePack.value;
     final previewed = themePackLabels[packId]!;

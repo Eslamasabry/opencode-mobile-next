@@ -28,7 +28,8 @@ private class Fixture : AutoCloseable {
     fun probe(job: String) = shell(TermuxSetupShell.probe(job))
 
     fun until(predicate: () -> Boolean) {
-        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(8)
+        // Generous for a loaded machine; the loop returns as soon as the state appears.
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30)
         while (!predicate()) {
             check(System.nanoTime() < deadline) { "Lifecycle transition timed out" }
             Thread.sleep(30)

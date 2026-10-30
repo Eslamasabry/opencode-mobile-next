@@ -245,13 +245,14 @@ class _KitPdfPageViewState extends State<_KitPdfPageView> {
         shape: shape,
       );
     } else {
+      // A page not drawn yet: the document's opaque ground, edged as the
+      // style edges code.
       child = Semantics(
         label: label,
-        child: DecoratedBox(
-          decoration: ShapeDecoration(
-            color: tokens.detailsSurface,
-            shape: tokens.shapeOf(shape),
-          ),
+        child: kitCodeSurface(
+          context,
+          fill: tokens.detailsSurface,
+          shape: tokens.shapeOf(shape),
           child: SizedBox(width: width, height: height),
         ),
       );
@@ -342,13 +343,16 @@ class _KitTableState extends State<_KitTable> {
     List<double> widths, {
     required bool header,
   }) {
+    // The rule under a row is the style's divider (none: the space stays).
+    final rule = KitSurfaceLook.divider(
+      context,
+      color: tokens.roles.hairline,
+      width: KitTokens.hairlineWidth(context),
+    );
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(
-            color: tokens.roles.hairline,
-            width: KitTokens.hairlineWidth(context),
-          ),
+          bottom: BorderSide(color: rule.color, width: rule.width),
         ),
       ),
       child: ConstrainedBox(

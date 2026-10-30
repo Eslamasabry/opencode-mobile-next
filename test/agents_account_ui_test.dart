@@ -14,6 +14,7 @@ import 'package:opencode_mobile/domain/agent_auth_probe.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/agent_sign_in.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
+import 'package:opencode_mobile/ui/screens/agents/agent_sheet.dart';
 import 'package:opencode_mobile/ui/screens/agents/agents_section.dart';
 import 'package:opencode_mobile/ui/screens/agents/agents_text.dart'
     show agentPayloadSize;
@@ -94,8 +95,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('agents-sign-in-done')));
     await tester.pumpAndSettle();
     expect(agents.selectedChatAgentId, 'claude');
-    expect(find.text('What should we work on?'), findsOneWidget);
-    expect(find.byKey(const ValueKey('chats-new-agent')), findsOneWidget);
+    expect(find.text('What would you like to build?'), findsOneWidget);
+    expect(find.text('Start with Claude Code'), findsOneWidget);
   });
 
   group('the Settings row says Signed in only after the status check', () {
@@ -568,6 +569,55 @@ void main() {
       // Signed out: no account to name.
       expect(accountLine, findsNothing);
     });
+  });
+
+  testWidgets('a chat whose model needs the account opens the agent\'s own '
+      'sign-in directly, past the "Signed in" summary', (tester) async {
+    // Emulator 2026-10-27: Kilo read signed in (it runs its free models
+    // without an account) and a paid model asked for the account.
+    final terminal = FakeLocalTerminalBackend();
+    final agents = _claude();
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final host = FakeChatsHost(
+      FakeChatFeedSource(
+        items: const [],
+        projects: [project('alpha')],
+        lastUsed: '/root/projects/alpha',
+      ),
+    )..phoneAgents = agents;
+    await tester.pumpWidget(
+      chatsApp(
+        host,
+        Builder(
+          builder: (context) => Center(
+            child: KitButton(
+              key: const ValueKey('open-sign-in-again'),
+              role: KitButtonRole.primary,
+              label: 'Sign in to Claude Code',
+              onPressed: () => showAgentSheet(
+                context,
+                agentId: 'claude',
+                step: AgentSheetStep.signIn,
+                signInAgain: true,
+              ),
+            ),
+          ),
+        ),
+        terminal: LocalTerminalSessions(
+          backend: terminal,
+          signInForeground: FakeSignInForeground(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('open-sign-in-again')));
+    await tester.pumpAndSettle();
+    expect(
+      terminal.calls.where((call) => call.startsWith('sign-in ')),
+      hasLength(1),
+    );
   });
 
   group('a finished sign-in terminal', () {

@@ -7,14 +7,18 @@ import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
-import 'kit_field.dart';
 import 'kit_divider.dart';
+import 'kit_field.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
+import 'kit_optical.dart';
 import 'kit_progress.dart';
 import 'kit_receipt.dart';
 import 'kit_row_parts.dart';
 import 'kit_sheet.dart';
 import 'kit_state_view.dart';
+import 'kit_surface.dart' show kitSurfaceMaterial;
+import 'kit_surface_look.dart' show KitSurfaceLook;
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -141,7 +145,8 @@ class KitChoiceList<T> extends StatelessWidget {
        _selectedSet = const <Never>{},
        _onSelected = onSelected,
        _onChanged = null,
-       _multi = false;
+       _multi = false,
+       showCount = false;
 
   /// Several answers. The host's primary applies them ("Use 3 sources").
   const KitChoiceList.multi({
@@ -152,6 +157,7 @@ class KitChoiceList<T> extends StatelessWidget {
     this.loading = false,
     this.empty,
     this.semanticsLabel,
+    this.showCount = true,
   }) : _choices = choices,
        _selected = null,
        _current = null,
@@ -196,8 +202,15 @@ class KitChoiceList<T> extends StatelessWidget {
   /// The group's name.
   final String? semanticsLabel;
 
+  /// Multi: the "2 selected" line above the panel. False where the host's
+  /// primary already names the count ("Save 2 files and send").
+  final bool showCount;
+
   @override
-  Widget build(BuildContext context) => _KitChoiceGroup<T>(list: this);
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) => _KitChoiceGroup<T>(list: this);
 }
 
 class _KitChoiceGroup<T> extends StatefulWidget {
@@ -406,12 +419,19 @@ class _KitChoiceGroupState<T> extends State<_KitChoiceGroup<T>> {
         ),
     ];
 
-    final panel = Material(
-      color: tokens.roles.surface1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
-      ),
-      clipBehavior: Clip.antiAlias,
+    // Flat lists (Solid): the rows sit on the page or sheet itself.
+    Widget surface({required Widget child}) => KitSurfaceLook.flatLists(context)
+        ? Material(type: MaterialType.transparency, child: child)
+        : kitSurfaceMaterial(
+            context,
+            level: KitSurfaceLevel.surface1,
+            fill: tokens.roles.surface1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
+            ),
+            child: child,
+          );
+    final panel = surface(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -469,7 +489,7 @@ class _KitChoiceGroupState<T> extends State<_KitChoiceGroup<T>> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (list._multi)
+            if (list._multi && list.showCount)
               Padding(
                 padding: EdgeInsetsDirectional.only(
                   start: tokens.space1,
@@ -553,7 +573,10 @@ class KitChoiceRow<T> extends StatelessWidget {
   final String? menuLabel;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
@@ -787,7 +810,10 @@ class KitPickerRow<T> extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
     String? chosenTitle;
@@ -829,10 +855,19 @@ class KitPickerRow<T> extends StatelessWidget {
     final body = ConstrainedBox(
       constraints: BoxConstraints(minHeight: tokens.rowHeightTwoLine),
       child: Padding(
+        // The caret's ink ends on the gutter, as a KitRow's chevron does,
+        // so a picker row and the rows beside it share one end edge.
         padding: EdgeInsetsDirectional.fromSTEB(
           tokens.gutter,
           tokens.space2,
-          picks ? tokens.space1 : tokens.gutter,
+          picks
+              ? KitOptical.endPad(
+                  context,
+                  AppIconography.chevronRight,
+                  tokens.smallIconSize,
+                  tokens.gutter,
+                )
+              : tokens.gutter,
           tokens.space2,
         ),
         child: LayoutBuilder(

@@ -17,6 +17,7 @@ import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_effects.dart';
 import 'package:opencode_mobile/ui/kit/kit_menu.dart';
+import 'package:opencode_mobile/ui/kit/kit_motion.dart';
 import 'package:opencode_mobile/ui/kit/kit_redact.dart';
 import 'package:opencode_mobile/ui/kit/kit_sheet.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
@@ -913,6 +914,75 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
       invoker.focus.dispose();
+    });
+  });
+
+  group('opening motion', () {
+    Future<BuildContext> host(
+      WidgetTester tester, {
+      KitMotionLevel motion = KitMotionLevel.full,
+    }) async {
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      late BuildContext context;
+      await tester.pumpWidget(
+        KitEffectsScope(
+          effects: KitEffects(motion: motion),
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.dark(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: Builder(
+                builder: (inner) {
+                  context = inner;
+                  return const SizedBox.expand();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      return context;
+    }
+
+    final panel = find.byKey(const ValueKey('kit-menu'));
+
+    testWidgets('drops a few dp from its anchor as it fades in', (
+      tester,
+    ) async {
+      final context = await host(tester);
+      unawaited(
+        showKitMenu(
+          context,
+          items: [KitMenuItem(label: 'Only', onSelected: () {})],
+          position: const Offset(40, 200),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(KitMotion.quick ~/ 3);
+      final early = tester.getTopLeft(panel).dy;
+      expect(early, lessThan(200));
+      expect(early, greaterThanOrEqualTo(200 - 8));
+      await tester.pumpAndSettle();
+      expect(tester.getTopLeft(panel).dy, 200);
+    });
+
+    testWidgets('under Animations: Calm it only fades', (tester) async {
+      final context = await host(tester, motion: KitMotionLevel.calm);
+      unawaited(
+        showKitMenu(
+          context,
+          items: [KitMenuItem(label: 'Only', onSelected: () {})],
+          position: const Offset(40, 200),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(KitMotion.quick ~/ 3);
+      expect(tester.getTopLeft(panel).dy, 200);
+      await tester.pumpAndSettle();
     });
   });
 

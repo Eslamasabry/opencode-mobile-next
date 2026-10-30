@@ -114,7 +114,7 @@ private class BuiltinLinux(private val scenario: String) {
     private fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
         agentUser: Boolean) = startQualifiedInstaller(script, targets, operation, agentUser)
     fun attempt(): Process = if (scenario.startsWith("check") || scenario == "normal-check")
-        admitCheckProcess("fixed-check", 50, SystemClock.elapsedRealtime(), true)
+        admitCheckProcess("fixed-check", 1_000, SystemClock.elapsedRealtime(), true)
         else startQualifiedInstaller("fixed-install", setOf(InstallerTarget.CLAUDE), InstallerOperation.INSTALL, true)
     fun coldReclaim() = reclaimDeadInstaller()
     fun hasTicket() = ticket != null

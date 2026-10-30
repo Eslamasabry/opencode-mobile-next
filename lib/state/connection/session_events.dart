@@ -228,7 +228,9 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
           }
         }
         if (part is Map && part['type'] == 'tool') {
-          final sid = part['sessionID']?.toString() ?? '';
+          // OpenCode 2's rebuilt parts carry the session beside the part.
+          final sid =
+              (part['sessionID'] ?? props['sessionID'])?.toString() ?? '';
           final state = part['state'];
           final toolStatus = state is Map ? state['status']?.toString() : null;
           _noteToolCall(part);
@@ -245,21 +247,43 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
                     (input is Map ? input['todos'] : null),
               );
             }
+            final commandBefore = _runningCommand[sid];
             if (toolStatus == 'running') {
               _runningToolDetail[sid] = ConnectionController.toolSentence(
                 part['tool']?.toString() ?? '',
                 _shellStrings(),
               );
+              final command = _shellCommandLine(tool, state);
+              if (command == null) {
+                _runningCommand.remove(sid);
+              } else {
+                _runningCommand[sid] = command;
+              }
             } else if (toolStatus == 'completed' || toolStatus == 'error') {
               _runningToolDetail.remove(sid);
+              _runningCommand.remove(sid);
             }
-            if (planChanged || _runningToolDetail[sid] != before) {
+            if (planChanged ||
+                _runningToolDetail[sid] != before ||
+                _runningCommand[sid] != commandBefore) {
               _notifyListeners();
             }
           }
         }
         break;
     }
+  }
+
+  /// A running shell call's command, its first line cut to 80 characters;
+  /// null for any other tool.
+  static String? _shellCommandLine(String tool, Object? state) {
+    if (tool != 'bash' && tool != 'shell') return null;
+    final input = state is Map ? state['input'] : null;
+    final raw = input is Map ? input['command'] : null;
+    if (raw is! String) return null;
+    final line = raw.trim().split('\n').first.trim();
+    if (line.isEmpty) return null;
+    return line.length > 80 ? '${line.substring(0, 79)}…' : line;
   }
 
   void _noteToolCall(Map part) {
@@ -312,6 +336,9 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
             case 'busy':
               _phoneChatDispatch.observeBusy(sid);
               busySessions.add(sid);
+              _turnInterrupts.remove(sid);
+              _stopsFromThisApp.remove(sid);
+              _turnRunChecks.remove(sid);
               retryStates.remove(sid);
               _noteRunStarted(sid);
               _markSessionAttentionActive(sid);
@@ -320,6 +347,9 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
             case 'retry':
               _phoneChatDispatch.observeBusy(sid);
               busySessions.add(sid);
+              _turnInterrupts.remove(sid);
+              _stopsFromThisApp.remove(sid);
+              _turnRunChecks.remove(sid);
               final retry = SessionRetryState.fromStatusJson(rawStatus);
               if (retry != null) retryStates[sid] = retry;
               _noteRunStarted(sid);
@@ -351,6 +381,7 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
           }
           _markSessionChanged(sid);
           busySessions.remove(sid);
+          _turnInterrupts.remove(sid);
           _openTurns.remove(sid);
           retryStates.remove(sid);
           _noteRunEnded(sid, replied: false);
@@ -394,6 +425,15 @@ extension _ConnectionControllerSessionEventsImpl on ConnectionController {
           }
           _markSessionChanged(sid, affectsMetadata: false);
           busySessions.remove(sid);
+          // An interrupted run says why (OpenCode 2); a finished one clears
+          // an older reason.
+          _turnRunChecks.remove(sid);
+          final interrupt = TurnInterruptReason.fromIdleEvent(props);
+          if (interrupt == null) {
+            _turnInterrupts.remove(sid);
+          } else {
+            _turnInterrupts[sid] = interrupt;
+          }
           _openTurns.remove(sid);
           retryStates.remove(sid);
           _noteRunEnded(sid, replied: true);

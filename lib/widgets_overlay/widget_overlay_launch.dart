@@ -7,6 +7,8 @@ class WidgetOverlayLaunch {
     this.steerMode = 'unknown',
     this.styleBackground = 'solid',
     this.styleAccent = 'wallpaper',
+    this.projects = const [],
+    this.project = '',
   });
 
   final String route;
@@ -15,6 +17,11 @@ class WidgetOverlayLaunch {
   final String steerMode;
   final String styleBackground;
   final String styleAccent;
+
+  /// The Conversations widget's Edit: the projects it can list, and the one
+  /// it lists now ('' for all projects).
+  final List<String> projects;
+  final String project;
 
   static const backgrounds = ['solid', 'tinted', 'transparent'];
   static const accents = ['wallpaper', 'app', 'green', 'teal', 'blue', 'amber'];
@@ -33,6 +40,12 @@ class WidgetOverlayLaunch {
           : 'unknown',
       styleBackground: backgrounds.contains(background) ? background : 'solid',
       styleAccent: accents.contains(accent) ? accent : 'wallpaper',
+      projects: [
+        for (final p
+            in args['projects'] is List ? args['projects'] as List : [])
+          if (p is String && p.trim().isNotEmpty) p,
+      ],
+      project: text(args['project'], ''),
     );
   }
 }

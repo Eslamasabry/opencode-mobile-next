@@ -53,21 +53,30 @@ extension _ChatHandoffLinks on _ChatScreenState {
     }
   }
 
-  /// The first link as the kit's one quiet line, in the header the screen
-  /// already has; nothing when there is none.
-  List<Widget> _handoffLinkHeader() {
-    if (_handoffLinkLines.isEmpty) return const [];
+  /// The first link, folded into the bar's line under the title ("IPTV_King
+  /// · Claude Code · from Design review"): it opens the other conversation
+  /// and takes no row of its own (owner, 2026-10-27). Null when there is
+  /// none.
+  KitTopBarOrigin? _handoffOrigin() {
+    if (_handoffLinkLines.isEmpty) return null;
     final line = _handoffLinkLines.first;
     final strings = _chatL10n(context);
-    return [
-      KitContinuedLine(
-        text: line.outgoing
-            ? strings.continuedIn(KitBidi.auto(line.agent))
-            : strings.continuedFrom(KitBidi.auto(line.title)),
-        gone: _goneHandoffLinks.contains(line.link.id),
-        onOpen: () => unawaited(_openHandoffLink(line)),
-      ),
-    ];
+    final gone = _goneHandoffLinks.contains(line.link.id);
+    return KitTopBarOrigin(
+      originKey: const ValueKey('continued-line'),
+      label: gone
+          ? strings.continuedGoneShort
+          : line.outgoing
+          ? strings.continuedInShort(KitBidi.auto(line.agent))
+          : strings.continuedFromShort(KitBidi.auto(line.title)),
+      semanticsLabel: gone
+          ? strings.continuedGone
+          : line.outgoing
+          ? strings.continuedIn(KitBidi.auto(line.agent))
+          : strings.continuedFrom(KitBidi.auto(line.title)),
+      gone: gone,
+      onTap: () => unawaited(_openHandoffLink(line)),
+    );
   }
 
   /// Opens the other conversation of a link, on the saved server and runtime
@@ -100,13 +109,13 @@ extension _ChatHandoffLinks on _ChatScreenState {
                   .firstOrNull
                   ?.id
             : null;
-        if (agentId != null) {
-          await _conn.agentHandoffAdopt(
-            directory: link.projectDirectory,
-            agentId: agentId,
-            sessionId: id,
-          );
-        }
+        // The way the Conversations list opens it (its row), so the line
+        // and the row land on the same chat.
+        id = await _conn.agentHandoffAdopt(
+          directory: link.projectDirectory,
+          agentId: agentId,
+          sessionId: id,
+        );
       }
       if (!mounted) return;
       await Navigator.of(context).pushNamed('/chat/$id');

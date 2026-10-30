@@ -91,6 +91,11 @@ class _Repository implements ProductRepository {
   @override
   Future<String> upgradeServer(String target) async => target;
 
+  /// The shell row reads this; unanswered it would show its failure line.
+  @override
+  Future<TerminalShellSettings> loadTerminalShellSettings() async =>
+      const TerminalShellSettings(selected: '', options: []);
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -199,6 +204,15 @@ Future<void> _shot(
     await tester.pumpWidget(const SizedBox.shrink());
     debugDefaultTargetPlatformOverride = null;
   }
+}
+
+/// Scrolls the page so [target] is on screen (the page is longer than the
+/// window, and a state's subject can sit below the fold).
+Future<void> _reveal(WidgetTester tester, Finder target) async {
+  await tester.ensureVisible(target);
+  await tester.pump();
+  await tester.ensureVisible(target);
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -376,10 +390,34 @@ void main() {
             'servers_server_settings_loaded',
             light: light,
             size: size,
-            home: ServerSettingsScreen(controller: controller),
+            home: ServerPageScreen(
+              controller: controller,
+              profileId: controller.profile!.id,
+            ),
           );
         });
       }
+
+      testWidgets('loaded lower half', (tester) async {
+        final controller = await _server();
+        addTearDown(controller.dispose);
+        await _shot(
+          tester,
+          'servers_server_settings_lower',
+          light: light,
+          home: ServerPageScreen(
+            controller: controller,
+            profileId: controller.profile!.id,
+          ),
+          act: () async {
+            await tester.drag(
+              find.byKey(const ValueKey('server-page-list')),
+              const Offset(0, -2000),
+            );
+            await tester.pumpAndSettle();
+          },
+        );
+      });
 
       testWidgets('update available', (tester) async {
         final controller = await _server();
@@ -394,7 +432,12 @@ void main() {
           tester,
           'servers_server_settings_update_available',
           light: light,
-          home: ServerSettingsScreen(controller: controller),
+          home: ServerPageScreen(
+            controller: controller,
+            profileId: controller.profile!.id,
+          ),
+          act: () =>
+              _reveal(tester, find.byKey(const Key('server-updates-tile'))),
         );
       });
 
@@ -405,7 +448,10 @@ void main() {
           tester,
           'servers_server_settings_health_failed',
           light: light,
-          home: ServerSettingsScreen(controller: controller),
+          home: ServerPageScreen(
+            controller: controller,
+            profileId: controller.profile!.id,
+          ),
         );
       });
 
@@ -416,7 +462,14 @@ void main() {
           tester,
           'servers_server_settings_updates_gated',
           light: light,
-          home: ServerSettingsScreen(controller: controller),
+          home: ServerPageScreen(
+            controller: controller,
+            profileId: controller.profile!.id,
+          ),
+          act: () => _reveal(
+            tester,
+            find.byKey(const ValueKey('gated-remote-upgrade')),
+          ),
         );
       });
 
@@ -433,8 +486,15 @@ void main() {
           tester,
           'servers_server_settings_upgrade_sheet_confirm',
           light: light,
-          home: ServerSettingsScreen(controller: controller),
-          act: () => tester.tap(find.byKey(const Key('server-updates-tile'))),
+          home: ServerPageScreen(
+            controller: controller,
+            profileId: controller.profile!.id,
+          ),
+          act: () async {
+            final tile = find.byKey(const Key('server-updates-tile'));
+            await _reveal(tester, tile);
+            await tester.tap(tile);
+          },
         );
       });
 
@@ -446,8 +506,15 @@ void main() {
           tester,
           'servers_server_settings_restart_dialog_notice',
           light: light,
-          home: ServerSettingsScreen(controller: controller),
-          act: () => tester.tap(find.byKey(const Key('server-updates-tile'))),
+          home: ServerPageScreen(
+            controller: controller,
+            profileId: controller.profile!.id,
+          ),
+          act: () async {
+            final tile = find.byKey(const Key('server-updates-tile'));
+            await _reveal(tester, tile);
+            await tester.tap(tile);
+          },
         );
       });
     });

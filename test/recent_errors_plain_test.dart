@@ -62,7 +62,12 @@ void main() {
 
   tearDown(() => diagnostics.dispose());
 
-  Future<void> pump(WidgetTester tester, {Locale? locale}) async {
+  /// The kept errors' page; [report] pumps Report a problem instead.
+  Future<void> pump(
+    WidgetTester tester, {
+    Locale? locale,
+    bool report = false,
+  }) async {
     tester.view.physicalSize = const Size(412, 915);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -71,11 +76,12 @@ void main() {
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: AppDiagnosticsScreen(
-          diagnostics: diagnostics,
-          version: () async => '9.9.9+1',
-          share: (_, _) async => true,
-        ),
+        home: report
+            ? AppDiagnosticsScreen(
+                diagnostics: diagnostics,
+                version: () async => '9.9.9+1',
+              )
+            : AppDiagnosticsKeptScreen(diagnostics: diagnostics),
       ),
     );
     await tester.pumpAndSettle();
@@ -138,7 +144,7 @@ void main() {
   testWidgets('the report still carries the raw message and source', (
     tester,
   ) async {
-    await pump(tester);
+    await pump(tester, report: true);
     await tester.enterText(
       find.descendant(
         of: _key('report-problem-description'),
@@ -147,7 +153,7 @@ void main() {
       'Replies stop halfway',
     );
     await tester.pumpAndSettle();
-    await _tap(tester, _key('report-problem-review'));
+    await _tap(tester, _key('report-problem-details'));
     for (var i = 0; i < 3; i++) {
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 60)),

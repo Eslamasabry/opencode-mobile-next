@@ -33,8 +33,11 @@ extension _ChatStream on _ChatScreenState {
     if (!mounted) return;
     // Inbox delivery creates a canonical server message without a message event.
     // Refresh every delivery; the pending inbox item may already be removed.
+    // A tool whose result the stream lost was settled without it: read the
+    // transcript again for what really happened (reconcile by refetch).
     if ((env.type == 'session.skill.changed' ||
-            env.type == 'session.inbox.delivered') &&
+            env.type == 'session.inbox.delivered' ||
+            env.type == 'session.transcript.stale') &&
         env.properties['sessionID'] == widget.sessionID) {
       _scheduleRecentHistoryRefresh();
     }
@@ -162,6 +165,7 @@ extension _ChatStream on _ChatScreenState {
         if (info is Map<String, dynamic>) {
           final msg = MessageInfo.fromJson(info);
           if (msg.sessionID != widget.sessionID) break;
+          if (_withdrawnPrompts.contains(msg.id)) break;
           final watch = _voiceReplyWatch;
           if (watch != null &&
               msg.role == 'user' &&
@@ -171,6 +175,10 @@ extension _ChatStream on _ChatScreenState {
           _setChatState(() {
             if (msg.role == 'assistant' && msg.errorText != null) {
               _promptError = msg.errorText;
+              _noteTurnError(
+                msg.errorText!,
+                stopped: msg.errorKind == MessageErrorKind.aborted,
+              );
               _recoverFromPromptError(msg.errorText);
             } else if (msg.role == 'assistant' &&
                 _promptError != null &&
@@ -242,9 +250,14 @@ extension _ChatStream on _ChatScreenState {
         if (env.properties['sessionID']?.toString() != widget.sessionID) {
           break;
         }
+        final error = env.properties['error'];
+        _noteTurnError(
+          _eventErrorMessage(error),
+          stopped: sessionErrorIsStop(error),
+        );
         _setChatState(() {
           if (!_sending) _localTurnSince = null;
-          _promptError = _eventErrorMessage(env.properties['error']);
+          _promptError = _eventErrorMessage(error);
         });
         _recoverFromPromptError(_promptError);
         break;
@@ -542,5 +555,7 @@ extension _ChatStream on _ChatScreenState {
     filename: part.filename,
     url: part.url,
     synthetic: part.synthetic,
+    ended: part.ended,
+    noticeMetadata: part.noticeMetadata,
   );
 }

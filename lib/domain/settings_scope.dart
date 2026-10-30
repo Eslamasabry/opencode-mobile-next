@@ -342,6 +342,11 @@ abstract final class SettingsScopeCatalog {
       labelCode: 'device',
     ),
     SettingsRowScope(
+      rowId: 'settings-tips',
+      owners: _device,
+      labelCode: 'device',
+    ),
+    SettingsRowScope(
       rowId: 'library-report-bug',
       owners: _device,
       labelCode: 'device',
@@ -408,6 +413,16 @@ abstract final class SettingsScopeCatalog {
     ),
     SettingsRowScope(
       rowId: 'inside-appearance-theme',
+      owners: _device,
+      labelCode: 'device',
+    ),
+    SettingsRowScope(
+      rowId: 'inside-appearance-text',
+      owners: _device,
+      labelCode: 'device',
+    ),
+    SettingsRowScope(
+      rowId: 'inside-appearance-live-background',
       owners: _device,
       labelCode: 'device',
     ),

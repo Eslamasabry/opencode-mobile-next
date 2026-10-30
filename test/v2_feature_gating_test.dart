@@ -167,13 +167,30 @@ class _GatingController extends ConnectionController {
       selectLocation(directory: directory, workspace: workspace);
 }
 
+/// One saved server, so the server's own page has a profile to be about.
+class _OneServerStore extends ProfileStore {
+  _OneServerStore({required super.prefs});
+
+  final _profile = ServerProfile(
+    id: 'srv',
+    name: 'Lab',
+    baseUrl: 'http://203.0.113.10:4747',
+  );
+
+  @override
+  List<ServerProfile> get profiles => [_profile];
+
+  @override
+  String? get activeId => _profile.id;
+}
+
 Future<_GatingController> _controller({
   required bool v2,
   ProductRepository? repository,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final preferences = await SharedPreferences.getInstance();
-  return _GatingController(ProfileStore(prefs: preferences))
+  return _GatingController(_OneServerStore(prefs: preferences))
     ..api = v2 ? _V2Api() : _V1Api()
     ..repository = repository ?? _Repository()
     ..directory = '/work/app'
@@ -302,10 +319,15 @@ void main() {
       await tester.pump();
 
       expect(
-        find.byKey(const ValueKey('capabilities-tab-Tools')),
+        find.byKey(const ValueKey('capabilities-tab-Built-in')),
         findsOneWidget,
       );
-      for (final label in const ['Commands', 'Tools', 'Skills', 'References']) {
+      for (final label in const [
+        'Commands',
+        'Built-in',
+        'Skills',
+        'References',
+      ]) {
         expect(find.byKey(ValueKey('capabilities-tab-$label')), findsOneWidget);
       }
     });
@@ -321,7 +343,7 @@ void main() {
         );
         await tester.pump();
 
-        final tools = find.byKey(const ValueKey('capabilities-tab-Tools'));
+        final tools = find.byKey(const ValueKey('capabilities-tab-Built-in'));
         expect(tools, findsOneWidget);
         await tester.tap(tools);
         await tester.pumpAndSettle();
@@ -345,12 +367,15 @@ void main() {
 
     // Every project management destination is a Project tab tool (Manage
     // project merged into the tab, slice-P3.11a); the gating rule applies
-    // to the tab's rows.
+    // to the Files page's ⋯ items.
     Future<void> openProjectTab(
       WidgetTester tester,
       ConnectionController controller,
     ) async {
       await tester.pumpWidget(_app(ProjectHub(controller: controller)));
+      await tester.pumpAndSettle();
+      // The Files page keeps the project's tools in its bar's ⋯.
+      await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
       await tester.pumpAndSettle();
     }
 
@@ -389,8 +414,8 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('project-hub-health')), findsOneWidget);
-      // Switching project stays beside the project's name.
-      expect(find.byKey(const ValueKey('project-hub-menu')), findsOneWidget);
+      // Switching project stays in the same menu.
+      expect(find.byKey(const ValueKey('project-hub-switch')), findsOneWidget);
     });
   });
 
@@ -450,7 +475,14 @@ void main() {
       final controller = await _controller(v2: false);
       addTearDown(controller.dispose);
 
-      await tester.pumpWidget(_app(SettingsScreen(controller: controller)));
+      await tester.pumpWidget(
+        _app(
+          SettingsScreen(
+            controller: controller,
+            initialGroup: SettingsGroup.chat,
+          ),
+        ),
+      );
       await tester.pump();
 
       expect(
@@ -466,7 +498,14 @@ void main() {
       final controller = await _controller(v2: true);
       addTearDown(controller.dispose);
 
-      await tester.pumpWidget(_app(SettingsScreen(controller: controller)));
+      await tester.pumpWidget(
+        _app(
+          SettingsScreen(
+            controller: controller,
+            initialGroup: SettingsGroup.chat,
+          ),
+        ),
+      );
       await tester.pump();
 
       expect(
@@ -481,14 +520,18 @@ void main() {
     ) async {
       final v1 = await _controller(v2: false);
       addTearDown(v1.dispose);
-      await tester.pumpWidget(_app(ServerSettingsScreen(controller: v1)));
+      await tester.pumpWidget(
+        _app(ServerPageScreen(controller: v1, profileId: v1.profile!.id)),
+      );
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('server-updates-tile')), findsOneWidget);
       expect(find.byKey(const ValueKey('gated-remote-upgrade')), findsNothing);
 
       final v2 = await _controller(v2: true);
       addTearDown(v2.dispose);
-      await tester.pumpWidget(_app(ServerSettingsScreen(controller: v2)));
+      await tester.pumpWidget(
+        _app(ServerPageScreen(controller: v2, profileId: v2.profile!.id)),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('server-updates-tile')), findsNothing);
@@ -518,7 +561,7 @@ void main() {
           findsNothing,
         );
         expect(
-          find.byKey(const ValueKey('report-problem-review')),
+          find.byKey(const ValueKey('report-problem-send')),
           findsOneWidget,
         );
       }

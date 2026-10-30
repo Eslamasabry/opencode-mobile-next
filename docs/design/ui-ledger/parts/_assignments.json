@@ -87,7 +87,6 @@
     "lib/ui/screens/pairing_scanner_screen.dart",
     "lib/ui/screens/tailscale_setup_screen.dart",
     "lib/ui/screens/host_management_screen.dart",
-    "lib/ui/screens/settings/server_settings_screen.dart",
     "lib/ui/screens/agent_account_screen.dart",
     "lib/ui/screens/external_agents_screen.dart",
     "lib/ui/screens/profile_monitor_screen.dart",
@@ -146,7 +145,6 @@
     "lib/ui/screens/settings/notifications_settings_screen.dart",
     "lib/ui/screens/settings/default_shell_row.dart",
     "lib/ui/screens/settings/personal_settings_screens.dart",
-    "lib/ui/screens/settings/live_background_screens.dart",
     "lib/ui/screens/settings/plugins_screen.dart",
     "lib/ui/screens/settings/server_plugins_section.dart",
     "lib/ui/screens/about_screen.dart",
@@ -154,12 +152,14 @@
     "lib/ui/screens/app_diagnostics_screen.dart",
     "lib/ui/screens/saved_permissions_screen.dart",
     "lib/ui/screens/web_sources_screen.dart",
+    "lib/ui/screens/settings/appearance_screen.dart",
     "lib/ui/widgets/appearance_picker.dart",
     "lib/ui/widgets/language_picker.dart",
     "lib/ui/widgets/pickers.dart",
     "lib/feedback/bug_report.dart",
     "lib/ui/screens/usage_hub_screen.dart",
-    "lib/ui/screens/usage_refresh_slot.dart"
+    "lib/ui/screens/usage_refresh_slot.dart",
+    "lib/ui/screens/settings/tips_screen.dart"
   ],
   "j2-library": [
     "lib/ui/screens/library/command_auth_sheet.dart",
@@ -213,5 +213,8 @@
     "lib/ui/screens/linux_manager/linux_packages_page.dart",
     "lib/ui/screens/linux_manager/linux_manager_common.dart",
     "lib/ui/screens/linux_manager/linux_reset.dart"
+  ],
+  "o-usage-and-settings": [
+    "lib/ui/screens/settings/server_page.dart"
   ]
 }

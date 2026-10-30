@@ -91,6 +91,27 @@ enum GitProblem {
   branchExists,
   branchNotFound,
 
+  // ----- Remotes and clone -----
+  /// The remote's name has characters Git's remote names do not allow.
+  invalidRemoteName,
+
+  /// The address is not one the app accepts (an https, ssh, git or file
+  /// address, an `user@host:path` address or a folder path).
+  invalidRemoteUrl,
+
+  /// The address carries a password or token. The app refuses it so the
+  /// secret is not saved in the repository's settings.
+  remoteAddressHasPassword,
+
+  /// A remote with that name is already set up.
+  remoteExists,
+
+  /// The folder name for a clone has characters or dots it cannot have.
+  invalidFolderName,
+
+  /// The folder to clone into is already there and not empty.
+  folderExists,
+
   // ----- Conflicts and half-done operations -----
   /// Unmerged files block the action.
   conflicts,
@@ -232,6 +253,10 @@ GitProblem? classifyGitError(String stderr, {bool usedGitHubToken = false}) {
   }
   if (has('hook') && (has('exited') || has('declined') || has('failed'))) {
     return GitProblem.hookRejected;
+  }
+  if (has('remote') && has('already exists')) return GitProblem.remoteExists;
+  if (has('destination path') && has('already exists')) {
+    return GitProblem.folderExists;
   }
   if (has('already exists') && has('branch')) return GitProblem.branchExists;
   if (has('is not a valid branch name') || has('not a valid branch name')) {

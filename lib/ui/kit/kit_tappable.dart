@@ -1,7 +1,8 @@
 // The one interactive primitive outside the named controls
 // (docs/ux-system/kit-api/KitTappable.md): a region that acts on a tap, with
-// a 48 dp target, a keyboard focus ring, a hover/pressed fill from the
-// surface steps (never an ink ripple, VL §7) and, when it carries a [menu],
+// a 48 dp target, a keyboard focus ring, a hover fill from the surface
+// steps, the native ripple on a press on Android (KitInk; the flat pressed
+// fill elsewhere and under reduced motion) and, when it carries a [menu],
 // the same right-click / long-press / Shift+F10 popup everywhere
 // (`showKitMenu`, kit-KitMenu). `KitRow`, `KitSurface`-based cards,
 // `KitBreadcrumb` and the chat parts build on it.
@@ -14,10 +15,13 @@ import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
 import 'kit_copy.dart';
+import 'kit_ink_layer.dart';
 import 'kit_layout.dart';
 import 'kit_menu.dart';
 import 'kit_motion.dart';
+import 'kit_surface_look.dart';
 import 'kit_tokens.dart';
+import 'motion/kit_haptics.dart';
 
 /// The pressed state every kit control shows on a touch (the shared press
 /// layer behind [KitTappable], `KitIconButton`, `KitButton`, `KitChip`,
@@ -42,13 +46,25 @@ import 'kit_tokens.dart';
 ///   cancel or [cancel] (the host's tap lost the gesture arena) clears it at
 ///   once, with no hold.
 ///
+/// It also drives the native ripple: where the host puts a [KitInkLayer]
+/// keyed [inkKey] around its face, a press starts a ripple from the
+/// pointer, a tap finishes it and a scroll or a lost tap fades it (on
+/// Android with motion on, [KitInk.on]; the host then paints no flat
+/// pressed fill).
+///
 /// It changes no semantics, focus, keyboard or haptic behaviour: it only
 /// decides when the host's pressed fill shows. The host calls [dispose].
 class KitPressTracker {
-  KitPressTracker(this._onChanged);
+  /// [ink] shares one ripple layer between several trackers (a chip's body
+  /// and its ×); by default each tracker has its own.
+  KitPressTracker(this._onChanged, {GlobalKey<KitInkLayerState>? ink})
+    : inkKey = ink ?? GlobalKey<KitInkLayerState>(debugLabel: 'KitInkLayer');
 
   /// Called when [shown] flips; the host calls `setState` in it.
   final VoidCallback _onChanged;
+
+  /// The key of the [KitInkLayer] this press draws its ripple on.
+  final GlobalKey<KitInkLayerState> inkKey;
 
   bool _shown = false;
   int? _pointer;
@@ -125,6 +141,7 @@ class KitPressTracker {
     if (!_awaitingTap) return;
     _awaitingTap = false;
     if (!_shown) _show();
+    inkKey.currentState?.confirm();
     if (_hold == null) {
       _set(false);
     } else {
@@ -146,7 +163,22 @@ class KitPressTracker {
     _hold?.cancel();
     _hold = null;
     _releasing = false;
+    inkKey.currentState?.cancel();
     _set(false);
+  }
+
+  /// A long-press took the gesture (it opens a menu or a selection): the
+  /// ripple finishes, as a native long-click's does, and the press clears
+  /// when the finger lifts.
+  void settle() => inkKey.currentState?.confirm();
+
+  /// A long-press took the gesture and does [then] (opens a menu, starts a
+  /// selection): the ripple finishes and the phone plays its long-press
+  /// tick ([KitHaptics.longPress]), as a native long-click does.
+  void longPressed(BuildContext context, VoidCallback then) {
+    settle();
+    KitHaptics.longPress(context);
+    then();
   }
 
   void _show() {
@@ -160,6 +192,7 @@ class KitPressTracker {
         _set(false);
       }
     });
+    inkKey.currentState?.start(_origin);
     _set(true);
   }
 
@@ -263,7 +296,9 @@ class _KitTappableFocusRingPainter extends CustomPainter {
 ///
 /// A 20×20 child sits centred in a 48×48 hit area; a larger child keeps its
 /// own size. It always has a keyboard focus ring and, on a fine pointer, a
-/// hover fill and the click cursor; a pressed fill replaces the ripple. With
+/// hover fill and the click cursor. A touch draws the native ripple on
+/// Android ([KitInk]); elsewhere, and under reduced motion, a flat pressed
+/// fill answers it, and a long-press ticks the phone. With
 /// a non-empty [menu], right-click, long-press, Shift+F10 and the Menu key
 /// all open the same `showKitMenu` popup; to a screen reader the semantic
 /// long-press is "Show actions" (it opens the same popup) and each item is
@@ -354,8 +389,28 @@ class KitTappable extends StatefulWidget {
 
   bool get _disabled => onTap == null;
 
+  /// Whether the nearest [KitTappable] above [context] is held now (the
+  /// same moment its pressed fill shows): a child that draws its own face
+  /// (the floating "+") asks the style resolver with `pressed:` from it, so
+  /// the face sinks into its shadow under Brutal (hook H2). False outside a
+  /// tappable.
+  static bool pressedOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_KitTappablePressed>()?.held ??
+      false;
+
   @override
   State<KitTappable> createState() => _KitTappableState();
+}
+
+/// What [KitTappable.pressedOf] reads. Always in the tree, so a press never
+/// rebuilds what the tappable holds beyond those who ask.
+class _KitTappablePressed extends InheritedWidget {
+  const _KitTappablePressed({required this.held, required super.child});
+
+  final bool held;
+
+  @override
+  bool updateShouldNotify(_KitTappablePressed old) => old.held != held;
 }
 
 class _KitTappableState extends State<KitTappable> {
@@ -465,11 +520,11 @@ class _KitTappableState extends State<KitTappable> {
   void _handleLongPressStart(LongPressStartDetails details) {
     final onLongPress = widget.onLongPress;
     if (onLongPress != null) {
-      onLongPress();
+      _press.longPressed(context, onLongPress);
       return;
     }
     if (widget.menu.isNotEmpty) {
-      _openMenu(details.globalPosition);
+      _press.longPressed(context, () => _openMenu(details.globalPosition));
       return;
     }
     // An empty menu with no onLongPress: show the tooltip if there is one
@@ -523,14 +578,30 @@ class _KitTappableState extends State<KitTappable> {
     _focusNode.skipTraversal = disabled;
 
     final levels = _kitTappableFillLevels(tokens, widget.surface);
-    Color fill = Colors.transparent;
-    if (!disabled) {
-      if (_press.shown || _menuOpen) {
-        fill = tokens.fillOf(levels.pressed);
-      } else if (_hovered && finePointer) {
-        fill = tokens.fillOf(levels.hover);
-      }
-    }
+    final pressedNow = !disabled && (_press.shown || _menuOpen);
+    // On Android the ripple answers a touch (KitInk); the pressed fill is
+    // then only the held state while the menu is open.
+    final ripple = KitInk.on(context);
+    final filledPress = !disabled && ((_press.shown && !ripple) || _menuOpen);
+    final hoveredNow = !disabled && !filledPress && _hovered && finePointer;
+    final fill = filledPress
+        ? tokens.fillOf(levels.pressed)
+        : hoveredNow
+        ? tokens.fillOf(levels.hover)
+        : Colors.transparent;
+    // The hover and pressed highlight is the style's state layer; at rest
+    // there is none in any style.
+    final own = ShapeDecoration(color: fill, shape: shapeBorder);
+    final Decoration layer = filledPress || hoveredNow
+        ? KitSurfaceLook.decorate(
+            context,
+            solid: own,
+            role: KitSurfaceRole.stateLayer,
+            level: filledPress ? levels.pressed : levels.hover,
+            circle: shapeBorder is CircleBorder,
+            pressed: filledPress,
+          )
+        : own;
 
     final sized = ConstrainedBox(
       constraints: BoxConstraints(
@@ -543,7 +614,11 @@ class _KitTappableState extends State<KitTappable> {
       // The ConstrainedBox then clamps that size up to 48 when the child is
       // smaller, and leaves a larger child at its own size (KitTappable.md
       // "Target").
-      child: Center(widthFactor: 1, heightFactor: 1, child: widget.child),
+      child: Center(
+        widthFactor: 1,
+        heightFactor: 1,
+        child: _KitTappablePressed(held: pressedNow, child: widget.child),
+      ),
     );
 
     // One widget in every mode (the child subtree never remounts when
@@ -551,13 +626,16 @@ class _KitTappableState extends State<KitTappable> {
     // the fill changes at once and no ticker starts. The pressed fill is
     // always instant, so a touch answers on the very next frame
     // (KitPressTracker); a hover fill eases in on `enter`, and a fill that
-    // clears eases out on `exit`.
-    final pressedNow = !disabled && (_press.shown || _menuOpen);
-    final Widget filled = AnimatedContainer(
-      duration: reduced || pressedNow ? Duration.zero : KitMotion.quick,
-      curve: fill.a == 0 ? KitMotion.exit : KitMotion.enter,
-      decoration: ShapeDecoration(color: fill, shape: shapeBorder),
-      child: sized,
+    // clears eases out on `enter` too: it starts fading at once.
+    final Widget filled = KitInkLayer(
+      key: _press.inkKey,
+      shape: shapeBorder,
+      child: AnimatedContainer(
+        duration: reduced || filledPress ? Duration.zero : KitMotion.quick,
+        curve: KitMotion.enter,
+        decoration: layer,
+        child: sized,
+      ),
     );
 
     final ringed = Stack(

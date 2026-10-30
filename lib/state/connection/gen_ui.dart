@@ -664,6 +664,21 @@ extension _ConnectionGenUiImpl on ConnectionController {
     String name,
   ) {
     final owner = _paProfile?.id;
+    if (owner != null) {
+      gateway.savedTitle = (key) =>
+          ConversationTitleMemory.read(_self.store.prefs, owner, key);
+    }
+    // The time each row showed last run: a chat the daemon only loaded
+    // while the app was closed keeps its place (jitter J10).
+    final sourceId = _paseoSourceId(folder);
+    gateway.savedListTime = (id) {
+      for (final row in _paSavedRows) {
+        if (row.item.sourceId == sourceId && row.item.sessionID == id) {
+          return row.item.lastActivity.millisecondsSinceEpoch;
+        }
+      }
+      return null;
+    };
     final scope = owner == null
         ? null
         : GenUiScope(
@@ -678,12 +693,23 @@ extension _ConnectionGenUiImpl on ConnectionController {
       projectName: name,
       persistLastUsedProject: _ocRemember,
       initialLastUsedProjectDirectory: _ocLastUsed,
+      savedTitle: owner == null
+          ? null
+          : (key) =>
+                ConversationTitleMemory.read(_self.store.prefs, owner, key),
+      saveTitle: owner == null
+          ? null
+          : (key, title) => ConversationTitleMemory.remember(
+              _self.store.prefs,
+              owner,
+              key,
+              title,
+            ),
       hasWaitingCard: (id) =>
           scope != null &&
           controller()._genUiState
               .waiting(scope, controller()._genUiSessionID(scope, id))
               .isNotEmpty,
-      cardsIncomplete: () => controller()._genUiState.recoveryIncomplete,
       refreshCards: (items) async {
         if (scope == null) return;
         controller()._genUiAttachPhone(scope, gateway);

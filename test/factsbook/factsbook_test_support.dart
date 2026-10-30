@@ -111,7 +111,9 @@ Future<void> pumpFacts(
 /// Lets the fake node's answers land and the page draw. Never
 /// `pumpAndSettle`: skeleton rows and the loading bar keep animating.
 Future<void> settle(WidgetTester tester) async {
-  for (var i = 0; i < 4; i++) {
+  // Past a page transition after its first (hero) frame: Android's own is
+  // 450 ms (2026-10-26).
+  for (var i = 0; i < 5; i++) {
     await tester.pump(const Duration(milliseconds: 120));
   }
 }

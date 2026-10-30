@@ -119,8 +119,15 @@ class _World {
         ('cancel_agent_response', {});
     daemon.handlers['archive_agent_request'] = (_) =>
         ('archive_agent_response', {});
-    daemon.handlers['resume_agent_request'] = (_) =>
-        ('resume_agent_response', {'agent': agentJson('a2')});
+    daemon.handlers['fetch_agent_timeline_request'] = (request) => (
+      'fetch_agent_timeline_response',
+      {
+        'agentId': request['agentId'],
+        // Reading the timeline loads the agent in place (Paseo 0.11.2).
+        'agent': agentJson(request['agentId'] as String),
+        'entries': <Object>[],
+      },
+    );
     gateway =
         PaseoGateway(
           transport: PaseoTransport(
@@ -300,28 +307,27 @@ void main() {
     }
   });
 
-  test(
-    'resume retires old generation, maps new ID and reserves before send',
-    () async {
-      final w = _World();
-      addTearDown(w.close);
-      final id = await w.draft();
-      await w.gateway.promptAsync(id, text: 'hello');
-      expect(await w.gateway.resumeHostAgentChat(id), 'a2');
-      expect(w.port.revoked.single.target.daemonAgentId, 'a1');
-      expect(w.port.targets.last.daemonAgentId, 'a2');
-      expect(
-        w.trace.indexOf('revoke'),
-        lessThan(w.trace.indexOf('rpc:resume_agent_request')),
-      );
-      expect(
-        w.trace.indexOf('rpc:resume_agent_request'),
-        lessThan(w.trace.lastIndexOf('reserve')),
-      );
-      await w.gateway.promptAsync(id, text: 'resumed');
-      expect(w.daemon.of('send_agent_message_request').last['agentId'], 'a2');
-    },
-  );
+  test('reopening retires the old generation, keeps the agent id (loaded in '
+      'place, never forked) and reserves before send', () async {
+    final w = _World();
+    addTearDown(w.close);
+    final id = await w.draft();
+    await w.gateway.promptAsync(id, text: 'hello');
+    expect(await w.gateway.resumeHostAgentChat(id), 'a1');
+    expect(w.port.revoked.single.target.daemonAgentId, 'a1');
+    expect(w.port.targets.last.daemonAgentId, 'a1');
+    expect(
+      w.trace.indexOf('revoke'),
+      lessThan(w.trace.indexOf('rpc:fetch_agent_timeline_request')),
+    );
+    expect(
+      w.trace.lastIndexOf('rpc:fetch_agent_timeline_request'),
+      lessThan(w.trace.lastIndexOf('reserve')),
+    );
+    expect(w.daemon.of('resume_agent_request'), isEmpty);
+    await w.gateway.promptAsync(id, text: 'resumed');
+    expect(w.daemon.of('send_agent_message_request').last['agentId'], 'a1');
+  });
 
   test('explicit new chat replacement revokes old authority', () async {
     final w = _World();

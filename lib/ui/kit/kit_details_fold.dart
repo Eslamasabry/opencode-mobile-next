@@ -6,9 +6,12 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import 'kit_buttons.dart';
+import 'kit_code_surface.dart';
 import 'kit_divider.dart';
 import 'kit_icon_button.dart';
+import 'kit_ink_layer.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_redact.dart';
 import 'kit_sheet.dart';
 import 'kit_technical_value.dart';
@@ -114,7 +117,10 @@ class _KitDetailsFoldState extends State<KitDetailsFold> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     if (widget.isEmpty) return const SizedBox.shrink();
     _assertNoSecret(widget.values);
     final open = _shownOpen;
@@ -255,7 +261,9 @@ class _KitFoldToggleState extends State<_KitFoldToggle> {
             hoverColor: roles.surface3,
             focusColor: Colors.transparent,
             highlightColor: Colors.transparent,
-            splashFactory: NoSplash.splashFactory,
+            // The native ripple on Android (KitInk); none elsewhere.
+            splashFactory: KitInk.splashFactory(context),
+            splashColor: KitInk.color(context),
             onFocusChange: (value) {
               if (value != _focused) setState(() => _focused = value);
             },
@@ -375,11 +383,10 @@ class _KitDetailsContentState extends State<_KitDetailsContent> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (sections.isNotEmpty)
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: tokens.detailsSurface,
-              borderRadius: BorderRadius.circular(tokens.detailsRadius),
-            ),
+          kitCodeSurface(
+            context,
+            fill: tokens.detailsSurface,
+            borderRadius: BorderRadius.circular(tokens.detailsRadius),
             child: Padding(
               padding: EdgeInsets.all(tokens.space3),
               child: Column(

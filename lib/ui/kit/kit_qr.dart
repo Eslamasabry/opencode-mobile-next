@@ -5,6 +5,7 @@ import 'package:qr/qr.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
+import 'kit_max_width.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
@@ -84,7 +85,10 @@ class KitQr extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.control(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final image = _encode(data);
     if (image == null) {

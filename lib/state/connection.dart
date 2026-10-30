@@ -44,6 +44,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/models.dart';
 import '../domain/session_history.dart';
 import '../domain/tool_label.dart';
+import '../domain/background_tasks.dart';
 import '../domain/session_stop.dart';
 import '../codex/gateway.dart';
 import '../codex/transport.dart' show CodexFailure, CodexFailureKind;
@@ -59,6 +60,7 @@ import 'server_trust_probe.dart';
 import '../termux/managed_server_recovery.dart';
 import 'notification_preferences.dart';
 import 'nudges.dart';
+import 'tips.dart';
 import 'profile_monitor.dart';
 import 'attention_feed.dart';
 import 'monitor_attention_reader.dart';
@@ -154,6 +156,7 @@ import '../paseo/chat_feed_source.dart';
 import '../builtin/agents/phone_agents_host.dart' show BuiltinPhoneAgents;
 import '../builtin/agents/agent_sign_in.dart' show ChannelAgentSignInHost;
 import 'phone_agent_host_port.dart';
+import 'conversation_title_memory.dart';
 
 part 'connection/gen_ui.dart';
 part 'connection/connector_search.dart';
@@ -329,6 +332,130 @@ class ConnectionController extends ChangeNotifier
   /// Whether [sessionID]'s run ended since it was last opened here.
   bool finishedUnseen(String sessionID) => _finishedUnseen.contains(sessionID);
 
+  /// Conversations whose latest turn this app stopped (the person pressed
+  /// Stop). OpenCode 2 reports a stop as a normal finish, so the list would
+  /// say "Done"; this memory lets it say "Stopped". Cleared when a new
+  /// prompt is sent, and when the conversation is opened.
+  final _stoppedByPerson = <String>{};
+
+  /// Whether this app stopped [sessionID]'s latest turn.
+  bool stoppedByPerson(String sessionID) =>
+      _stoppedByPerson.contains(sessionID);
+
+  void markStoppedByPerson(String sessionID) {
+    if (_stoppedByPerson.add(sessionID)) notifyListeners();
+  }
+
+  void clearStoppedByPerson(String sessionID) {
+    if (_stoppedByPerson.remove(sessionID)) notifyListeners();
+  }
+
+  /// Why the server interrupted each conversation's latest turn, when it
+  /// said so (OpenCode 2). Set by the idle event that ends an interrupted
+  /// run; cleared when the conversation runs again or ends any other way.
+  final _turnInterrupts = <String, TurnInterruptReason>{};
+
+  /// Why the server interrupted [sessionID]'s latest turn; null when it was
+  /// not interrupted, or the server does not say.
+  TurnInterruptReason? turnInterruptReason(String sessionID) =>
+      _turnInterrupts[sessionID];
+
+  /// Conversations whose latest turn this app asked the server to stop (the
+  /// chat's Stop, the notification's "Stop the reply"). Unlike
+  /// [stoppedByPerson] it stays when the conversation is opened, and goes
+  /// when the conversation runs again.
+  final _stopsFromThisApp = <String>{};
+
+  /// Whether this app asked the server to stop [sessionID]'s latest turn.
+  bool turnStoppedFromThisApp(String sessionID) =>
+      _stopsFromThisApp.contains(sessionID);
+
+  /// Notes (or, with [asked] false, takes back) a stop this app asked for,
+  /// before the server's interrupt can arrive.
+  void noteStopFromThisApp(String sessionID, {bool asked = true}) {
+    final changed = asked
+        ? _stopsFromThisApp.add(sessionID)
+        : _stopsFromThisApp.remove(sessionID);
+    if (changed) notifyListeners();
+  }
+
+  /// The server's last word on whether a turn that looked cut off still
+  /// runs ([checkTurnStillRuns]), with when it was asked.
+  final _turnRunChecks = <String, ({TurnRunCheck word, DateTime at})>{};
+  final _turnRunChecking = <String>{};
+
+  /// How long the server's answer stands before the next look asks again.
+  static const turnRunCheckFresh = Duration(seconds: 20);
+
+  /// What the server last said about [sessionID]'s run, while a check is
+  /// asked or its answer still fresh: the chat reads it before it calls a
+  /// reply dropped. A check under way keeps the previous answer, so the
+  /// turn's line does not flicker while it is asked again.
+  TurnRunCheck? turnRunCheck(String sessionID) {
+    final last = _turnRunChecks[sessionID];
+    if (last == null) {
+      return _turnRunChecking.contains(sessionID)
+          ? TurnRunCheck.checking
+          : null;
+    }
+    if (_turnRunChecking.contains(sessionID) ||
+        DateTime.now().difference(last.at) < turnRunCheckFresh) {
+      return last.word;
+    }
+    return null;
+  }
+
+  /// Asks the server whether [sessionID] still runs, unless a check is under
+  /// way or its answer is fresh. A run the server says is going is busy
+  /// again here: a turn whose server still works never reads as dropped.
+  Future<void> checkTurnStillRuns(String sessionID) async {
+    final fresh = _turnRunChecks[sessionID];
+    if (_turnRunChecking.contains(sessionID) ||
+        (fresh != null &&
+            DateTime.now().difference(fresh.at) < turnRunCheckFresh)) {
+      return;
+    }
+    final currentApi = api;
+    final generation = _generation;
+    _turnRunChecking.add(sessionID);
+    if (fresh == null) notifyListeners();
+    TurnRunCheck word;
+    // While the link is down only an OpenCode server's status read reaches
+    // the server; Codex and Paseo answer from what the lost link last said.
+    final backend = (_connectedProfile ?? profile)?.backend;
+    final remembered =
+        !isConnected &&
+        (isAgentBackend ||
+            (backend != null && backend != ServerBackend.openCode));
+    try {
+      if (currentApi == null || remembered) throw StateError('no live read');
+      final statuses = await currentApi.sessionStatuses().timeout(
+        const Duration(seconds: 8),
+      );
+      final status = statuses[sessionID];
+      word = status != null && status != 'idle'
+          ? TurnRunCheck.running
+          : TurnRunCheck.ended;
+    } catch (_) {
+      word = TurnRunCheck.unreachable;
+    }
+    _turnRunChecking.remove(sessionID);
+    if (_disposed) return;
+    // An answer from a transport no longer in use says nothing of this one.
+    if (word == TurnRunCheck.running && !_isCurrent(generation, currentApi)) {
+      word = TurnRunCheck.unreachable;
+    }
+    // Every answer is kept, even "unreachable": the chat asks again only
+    // once it is stale, never on each rebuild.
+    _turnRunChecks[sessionID] = (word: word, at: DateTime.now());
+    if (word == TurnRunCheck.running && busySessions.add(sessionID)) {
+      _turnInterrupts.remove(sessionID);
+      _markSessionAttentionActive(sessionID);
+      _publishLiveStatus();
+    }
+    notifyListeners();
+  }
+
   /// The one home of quiet hours, Wi-Fi only, check-ins and the "what
   /// notifies me" choices. Both monitors and this controller's own alerts
   /// read it; only the Notifications screen writes it.
@@ -337,6 +464,11 @@ class ConnectionController extends ChangeNotifier
   /// The one-time tips registry (UX plan 5.8). One instance app-wide, because
   /// it also arbitrates the single nudge slot.
   late final nudges = NudgeRegistry(store.prefs);
+
+  /// The teaching system's tips and mini tutorials (docs/ux-system/
+  /// teaching.md): one instance app-wide, because it keeps one tip on
+  /// screen at a time.
+  late final tips = TipController(store.prefs);
 
   final MonitorGatewayFactory? _monitorGatewayFactory;
 
@@ -626,6 +758,7 @@ class ConnectionController extends ChangeNotifier
     appLocale = ValueNotifier(store.appPreferences.value.locale);
     appearance = ValueNotifier(store.appearance);
     themePack = ValueNotifier(store.themePack);
+    appearanceAccent = ValueNotifier(store.appearanceAccent);
     effects = ValueNotifier(store.effects);
     textSize = ValueNotifier(store.textSize);
     transcriptReasoningExpanded = store.transcriptReasoningExpanded;
@@ -803,6 +936,7 @@ class ConnectionController extends ChangeNotifier
       // Retained so a caller that must observe the settled snapshot — profile
       // deletion — can wait for this write instead of racing it.
       final sessions = sortedSessions();
+      final others = _widgetOtherConversations();
       final write = _widgetSnapshot.update(
         sessions: sessions,
         busySessions: busySessions,
@@ -816,12 +950,15 @@ class ConnectionController extends ChangeNotifier
         lastProjectID: _widgetProjectID,
         pendingCount: awaitingPermissionCount + questions.length + forms.length,
         details: _widgetSessionDetails(),
-        others: _widgetOtherConversations(),
+        others: others,
         teamRows: _widgetTeamRows(),
         actionResult: _widgetActionResult,
         appTheme: _widgetAppTheme,
         onDemand: _widgetOnDemand,
         preserveForOnDemand: _lifecycleSuspended,
+        server: _widgetServerName,
+        servers: _widgetServers(),
+        projects: _widgetProjects(sessions, others),
       );
       _pendingWidgetSnapshotWrite = write;
       unawaited(write);
@@ -904,13 +1041,15 @@ class ConnectionController extends ChangeNotifier
   void dispose() {
     if (_disposed) return;
     _disposed = true;
-    _resetTurnStalls();
+    _forgetTurnStalls();
     _mcpChatDispose();
     _connectorSearchDispose();
     _genUiDispose();
     _resetConnectionStatusClock();
     _syncLocalLiveness(null);
     _syncAgentDaemonWatch(null);
+    _syncAgentCommandHold(null);
+    _endResumeQuiet();
     _resetQuietReconnect();
     _feedDispose();
     _paShutdown();
@@ -955,6 +1094,7 @@ class ConnectionController extends ChangeNotifier
     appLocale.dispose();
     appearance.dispose();
     themePack.dispose();
+    appearanceAccent.dispose();
     effects.dispose();
     textSize.dispose();
     unawaited(_eventBus.close());
@@ -967,7 +1107,7 @@ class ConnectionController extends ChangeNotifier
   /// [notifyListeners] for this library's extension parts, which cannot call
   /// a protected member themselves.
   void _notifyListeners() {
-    _syncTurnStalls();
+    _syncTurnStallsOnNotify();
     notifyListeners();
   }
 

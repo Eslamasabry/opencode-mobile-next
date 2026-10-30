@@ -12,8 +12,10 @@ import '../../l10n/app_localizations.dart';
 import '../../l10n/app_localizations_en.dart';
 import '../app_theme.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
 import 'kit_row_parts.dart' show KitChevron;
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_time.dart';
 import 'kit_tokens.dart';
@@ -148,7 +150,10 @@ class KitProgressRow extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final theme = Theme.of(context);
     final roles = AppTheme.rolesOf(theme);
     final tokens = KitTokens.of(context);
@@ -306,19 +311,24 @@ class KitProgressRow extends StatelessWidget {
       ),
     );
 
+    // Flat lists (Solid): a row on the page like KitRow, no box of its own.
+    final flat = KitSurfaceLook.flatLists(context);
+    final corners = BorderRadius.circular(flat ? 0 : tokens.panelCornerRadius);
     final panel = ConstrainedBox(
       constraints: BoxConstraints(minHeight: tokens.rowHeightTwoLine),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: roles.surface1,
-          borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
-        ),
+      child: kitSurfaceBox(
+        style: KitSurfaceLook.styleOf(context),
+        decoration: flat
+            ? KitSurfaceLook.bare
+            : KitSurfaceLook.decorate(
+                context,
+                solid: BoxDecoration(
+                  color: roles.surface1,
+                  borderRadius: corners,
+                ),
+              ),
         child: _tappable
-            ? InkWell(
-                onTap: onTap,
-                borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
-                child: content,
-              )
+            ? InkWell(onTap: onTap, borderRadius: corners, child: content)
             : content,
       ),
     );
@@ -680,8 +690,9 @@ class _BarPainter extends CustomPainter {
 
 /// The legend under a segments bar: one row per segment (mark swatch,
 /// label, value label), flowing in two columns at width and count
-/// (KitProgressRow.md "Adaptive": >= 3 segments, >= `readingWidth / 2` per
-/// column).
+/// (KitProgressRow.md "Adaptive": >= 3 segments, and a column of at least half the
+/// reading cap less the panel's two gutters, which a part held to the reading
+/// cap still reaches).
 class _Legend extends StatelessWidget {
   const _Legend({
     required this.slices,
@@ -709,7 +720,7 @@ class _Legend extends StatelessWidget {
         final twoColumns =
             !_largeText(context) &&
             rows.length >= 3 &&
-            columnWidth >= KitLayout.readingWidth / 2;
+            columnWidth >= KitLayout.readingWidth / 2 - 2 * tokens.gutter;
         if (!twoColumns) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -786,7 +797,19 @@ class _Legend extends StatelessWidget {
               ),
             )
           else
-            KitText(value, role: KitTextRole.secondary, tabular: true),
+            // A value never takes more than half the line: a long one is
+            // cut with an ellipsis, not run past the legend's edge.
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: lineWidth / 2),
+              child: KitText(
+                value,
+                role: KitTextRole.secondary,
+                tabular: true,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+              ),
+            ),
         ],
       ],
     );

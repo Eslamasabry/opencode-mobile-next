@@ -44,10 +44,29 @@ extension _ChatHistory on _ChatScreenState {
     });
   }
 
+  /// Keeps next cold open's excerpt as new as what this chat shows: live
+  /// events make [_messages] newer than the last read, which is what the
+  /// excerpt was saved from. Messages still on their way out (an optimistic
+  /// bubble) are left out; they live in the pending-sends and draft stores.
+  void _saveOpeningExcerpt() {
+    if (_conn.isIsolated ||
+        _watching ||
+        _loading ||
+        _loadedHistoryScope == null ||
+        _loadedHistoryScope != _historyScope) {
+      return;
+    }
+    final pendingIDs = {for (final p in _pendingSends) p.localID};
+    _conn.saveSessionTailSnapshot(widget.sessionID, [
+      for (final message in _messages)
+        if (!pendingIDs.contains(message.info.id)) message,
+    ]);
+  }
+
   bool _currentHistory(int generation, _HistoryScope scope) =>
       mounted && generation == _loadGeneration && scope == _historyScope;
 
-  ({String id, int index, double alignment})? _historyAnchor() {
+  ({String id, int index, double alignment, int jumps})? _historyAnchor() {
     final count = _renderedMessageCount;
     final positions =
         _messagePositions.itemPositions.value
@@ -68,15 +87,19 @@ extension _ChatHistory on _ChatScreenState {
       id: _messages[count - 1 - position.index].info.id,
       index: position.index,
       alignment: position.itemLeadingEdge.clamp(0.0, 1.0),
+      jumps: _latestJumps,
     );
   }
 
   void _restoreHistoryAnchor(
-    ({String id, int index, double alignment})? anchor,
+    ({String id, int index, double alignment, int jumps})? anchor,
     int generation,
   ) {
-    if (anchor == null) return;
+    // At the newest message the view follows what the reload brings; and a
+    // jump to the newest after the anchor was taken (a send) wins over it.
+    if (anchor == null || anchor.index == 0) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (anchor.jumps != _latestJumps) return;
       if (!mounted ||
           generation != _loadGeneration ||
           !_messageScroll.isAttached) {
@@ -124,6 +147,13 @@ extension _ChatHistory on _ChatScreenState {
     try {
       final api = scope.api;
       if (api == null) {
+        // The link is down (the app went to the background, it is being
+        // rebuilt): with the conversation already on screen there is
+        // nothing to say here; the connection line speaks for the link,
+        // and the history is read again once it is back. A note built from
+        // the link's state outlived a trip to the background and greeted
+        // the person with "isn't answering" (owner, 2026-10-27).
+        if (_messages.isNotEmpty) return;
         // Reached synchronously from initState on an offline open.
         throw ProductException(_reconnectingWords(context));
       }
@@ -176,8 +206,9 @@ extension _ChatHistory on _ChatScreenState {
         if (anchor != null &&
             !_messages.any((message) => message.info.id == anchor.id)) {
           _awayFromLatest = false;
+          // Back at the latest, quietly: a note that the history was
+          // reloaded told the person nothing they could act on.
           _pinnedMessageCount = null;
-          _composerNote = _chatL10n(context).historyRefreshed;
         }
       });
       if (!_freshMergeRecorded) {
@@ -330,8 +361,10 @@ extension _ChatHistory on _ChatScreenState {
     };
     final merged = <MessageWithParts>[];
     final hydratedIDs = <String>{};
+    final withdrawn = _withdrawnPrompts;
     for (final snapshot in hydrated) {
       final messageID = snapshot.info.id;
+      if (withdrawn.contains(messageID)) continue;
       if (!hydratedIDs.add(messageID)) continue;
       final current = currentByID[messageID];
       _deferredMessages.remove(messageID);

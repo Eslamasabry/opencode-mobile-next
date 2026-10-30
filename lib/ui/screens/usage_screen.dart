@@ -22,6 +22,7 @@ import '../kit/kit_field.dart';
 import '../kit/kit_menu.dart';
 import '../kit/kit_notice.dart';
 import '../kit/kit_progress_row.dart';
+import '../kit/kit_reach.dart';
 import '../kit/kit_row.dart';
 import '../kit/kit_screen.dart';
 import '../kit/kit_search_field.dart';
@@ -151,88 +152,96 @@ class _UsageScreenState extends State<UsageScreen> {
       Widget gap([double? height]) => SizedBox(height: height ?? tokens.space4);
       final body = KitRefresh(
         onRefresh: _overview.refresh,
-        child: ListView(
-          key: const ValueKey('usage-content'),
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: KitScreen.padding(context),
-          children: [
-            SizedBox(height: tokens.space3),
-            KitText(l10n.usageDescription, role: KitTextRole.secondary),
-            if (_overview.detached) ...[
-              gap(),
-              KitNotice(
-                icon: AppIconography.swap,
-                message: l10n.usageLocationChanged,
-              ),
-            ],
-            if (!unsupported)
-              if (_overview.error case final error?) ...[
+        // The row groups sit on the list's own gutter (margin zero) and
+        // reach back out over it, so rows, labels and panels share one
+        // start edge.
+        child: KitReach(
+          reach: KitScreen.padding(context).start,
+          child: ListView(
+            key: const ValueKey('usage-content'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: KitScreen.padding(context),
+            children: [
+              SizedBox(height: tokens.space3),
+              KitText(l10n.usageDescription, role: KitTextRole.secondary),
+              if (_overview.detached) ...[
                 gap(),
-                KitNotice.error(
-                  message: _error(error, l10n),
-                  error: error,
-                  details: productErrorDetails(error),
-                  reportSource: 'usage',
-                  retry: available
-                      ? KitAction(
-                          label: l10n.usageRefresh,
-                          icon: AppIconography.retry,
-                          onPressed: _overview.loading
-                              ? null
-                              : _overview.refresh,
-                        )
-                      : null,
+                KitNotice(
+                  icon: AppIconography.swap,
+                  message: l10n.usageLocationChanged,
                 ),
               ],
-            if (snapshot != null &&
-                (_overview.loading || _overview.error != null)) ...[
-              SizedBox(height: tokens.space2),
-              KitText(l10n.usagePreviousResult, role: KitTextRole.secondary),
-            ],
-            if (snapshot != null) ...[gap(), _UsageTotal(snapshot: snapshot)],
-            if (available) ...[
-              SizedBox(height: tokens.sectionGap),
-              _UsageFilters(overview: _overview),
-            ],
-            if (snapshot != null && _budgets.available) ...[
-              SizedBox(height: tokens.sectionGap),
-              _UsageBudgetControls(
-                budgets: _budgets,
-                snapshot: snapshot,
-                enabled:
-                    available && !_overview.loading && _overview.error == null,
-              ),
-            ],
-            if (snapshot != null && !snapshot.statistics.isEmpty)
-              _UsageReport(
-                snapshot: snapshot,
-                overview: _overview,
-                search: _search,
-              ),
-            if (snapshot != null) ...[
-              SizedBox(height: tokens.sectionGap),
-              KitText(
-                l10n.usageUpdated(
-                  DateFormat.Hm(
-                    Localizations.localeOf(context).toLanguageTag(),
-                  ).format(snapshot.fetchedAt.toLocal()),
-                ),
-                role: KitTextRole.caption,
-              ),
-              SizedBox(height: tokens.space2),
-              KitText(l10n.usageCostDisclosure, role: KitTextRole.secondary),
-              gap(),
-              KitDetailsFold(
-                label: l10n.usageAboutNumbers,
-                notes: [
-                  l10n.usageProviderScope,
-                  l10n.usageScopedProviderTotals,
-                  l10n.usageInspectionDisclosure,
-                  l10n.usageBudgetDescription,
+              if (!unsupported)
+                if (_overview.error case final error?) ...[
+                  gap(),
+                  KitNotice.error(
+                    message: _error(error, l10n),
+                    error: error,
+                    details: productErrorDetails(error),
+                    reportSource: 'usage',
+                    retry: available
+                        ? KitAction(
+                            label: l10n.usageRefresh,
+                            icon: AppIconography.retry,
+                            onPressed: _overview.loading
+                                ? null
+                                : _overview.refresh,
+                          )
+                        : null,
+                  ),
                 ],
-              ),
+              if (snapshot != null &&
+                  (_overview.loading || _overview.error != null)) ...[
+                SizedBox(height: tokens.space2),
+                KitText(l10n.usagePreviousResult, role: KitTextRole.secondary),
+              ],
+              if (snapshot != null) ...[gap(), _UsageTotal(snapshot: snapshot)],
+              if (available) ...[
+                SizedBox(height: tokens.sectionGap),
+                _UsageFilters(overview: _overview),
+              ],
+              if (snapshot != null && _budgets.available) ...[
+                SizedBox(height: tokens.sectionGap),
+                _UsageBudgetControls(
+                  budgets: _budgets,
+                  snapshot: snapshot,
+                  enabled:
+                      available &&
+                      !_overview.loading &&
+                      _overview.error == null,
+                ),
+              ],
+              if (snapshot != null && !snapshot.statistics.isEmpty)
+                _UsageReport(
+                  snapshot: snapshot,
+                  overview: _overview,
+                  search: _search,
+                ),
+              if (snapshot != null) ...[
+                SizedBox(height: tokens.sectionGap),
+                KitText(
+                  l10n.usageUpdated(
+                    DateFormat.Hm(
+                      Localizations.localeOf(context).toLanguageTag(),
+                    ).format(snapshot.fetchedAt.toLocal()),
+                  ),
+                  role: KitTextRole.caption,
+                ),
+                SizedBox(height: tokens.space2),
+                KitText(l10n.usageCostDisclosure, role: KitTextRole.secondary),
+                gap(),
+                KitDetailsFold(
+                  label: l10n.usageAboutNumbers,
+                  notes: [
+                    l10n.usageProviderScope,
+                    l10n.usageScopedProviderTotals,
+                    l10n.usageInspectionDisclosure,
+                    l10n.usageBudgetDescription,
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       );
       return KitScreen(
@@ -281,11 +290,8 @@ class _Label extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
     return Padding(
-      padding: EdgeInsetsDirectional.only(
-        start: tokens.space1,
-        end: tokens.space1,
-        bottom: tokens.labelGap,
-      ),
+      // On the rows' and panels' start edge (no inset of its own).
+      padding: EdgeInsetsDirectional.only(bottom: tokens.labelGap),
       child: Semantics(
         header: true,
         child: KitText(text, role: KitTextRole.label),
@@ -414,14 +420,14 @@ class _UsageFilters extends StatelessWidget {
       children: [
         KitRowGroup(
           margin: EdgeInsetsDirectional.zero,
-          leadingIcons: true,
+          // Picker rows whose words name them: no icons.
+          leadingIcons: false,
           children: [
             // A picker, not a segmented control: four ranges do not fit
             // one line at phone width until KitSegmented stacks (contract
             // problem in the QA record).
             KitPickerRow<UsageRange>(
               rowKey: ValueKey('usage-range-${overview.range.name}'),
-              leading: KitRow.icon(context, AppIconography.calendar),
               title: l10n.usageRangeLabel,
               selected: overview.range,
               onSelected: (range) => unawaited(overview.setRange(range)),
@@ -436,7 +442,6 @@ class _UsageFilters extends StatelessWidget {
             ),
             KitPickerRow<UsageScope>(
               rowKey: ValueKey('usage-scope-${overview.scope.name}'),
-              leading: KitRow.icon(context, AppIconography.projects),
               title: l10n.usageScope,
               selected: overview.scope,
               onSelected: (scope) => unawaited(overview.setScope(scope)),
@@ -555,10 +560,6 @@ class _UsageBudgetControls extends StatelessWidget {
         rows.add(
           KitRow(
             key: key,
-            leading: KitRow.icon(
-              context,
-              usd ? AppIconography.usage : AppIconography.dataObject,
-            ),
             title: usd ? l10n.usageBudgetUsd : l10n.usageBudgetTokens,
             trailing: KitRowValue(l10n.usageBudgetNotSet),
             enabled: canEdit,
@@ -573,10 +574,6 @@ class _UsageBudgetControls extends StatelessWidget {
       rows.add(
         KitProgressRow(
           key: key,
-          leading: KitRow.icon(
-            context,
-            usd ? AppIconography.usage : AppIconography.dataObject,
-          ),
           title: usd ? l10n.usageBudgetUsdTitle : l10n.usageBudgetTokensTitle,
           value: limit > 0 ? used / limit : 1,
           valueLabel: l10n.usageBudgetProgress(
@@ -599,7 +596,6 @@ class _UsageBudgetControls extends StatelessWidget {
       rows.add(
         KitRow(
           key: const ValueKey('usage-budget-clear'),
-          leading: KitRow.icon(context, AppIconography.delete),
           title: l10n.usageBudgetClearAll,
           destructive: true,
           enabled: !budgets.saving,
@@ -619,6 +615,7 @@ class _UsageBudgetControls extends StatelessWidget {
         KitRowGroup(
           margin: EdgeInsetsDirectional.zero,
           label: l10n.usageBudgetTitle,
+          leadingIcons: false,
           children: rows,
         ),
         if (reached) ...[
@@ -841,22 +838,28 @@ class _UsageReport extends StatelessWidget {
             leadingIcons: false,
             children: [
               for (final model in models)
-                KitProgressRow(
-                  title: model.modelID,
-                  // Only a share of the total is a bar; a record the server
-                  // priced above the total has no honest share.
-                  value: stats.cost > 0 && model.cost <= stats.cost
-                      ? (model.cost / stats.cost).clamp(0, 1).toDouble()
-                      : 0,
-                  tone: AppStatusTone.progress,
-                  valueLabel: [
-                    model.providerID,
-                    if (model.variant?.isNotEmpty == true) model.variant!,
-                    _money(context, model.cost),
-                    l10n.usageModelSteps(number.format(model.steps)),
-                    l10n.usageModelTokens(number.format(model.tokens.total)),
-                  ].join(' · '),
-                ),
+                if (stats.cost > 0)
+                  KitProgressRow(
+                    title: model.modelID,
+                    // Only a share of the total is a bar; a record the
+                    // server priced above the total has no honest share.
+                    value: model.cost <= stats.cost
+                        ? (model.cost / stats.cost).clamp(0, 1).toDouble()
+                        : 0,
+                    tone: AppStatusTone.progress,
+                    valueLabel: _modelLine(context, l10n, number, model),
+                  )
+                else
+                  // Everything was free: a cost share would be an empty
+                  // bar on every row, so the row is the words alone.
+                  KitRow(
+                    key: ValueKey('usage-model-${model.modelID}'),
+                    title: model.modelID,
+                    supporting: TextSpan(
+                      text: _modelLine(context, l10n, number, model),
+                    ),
+                    supportingMaxLines: 3,
+                  ),
             ],
           ),
         ],
@@ -896,6 +899,20 @@ class _UsageReport extends StatelessWidget {
     );
   }
 }
+
+/// One model record's line: provider, variant, cost, steps and tokens.
+String _modelLine(
+  BuildContext context,
+  AppLocalizations l10n,
+  NumberFormat number,
+  UsageModel model,
+) => [
+  model.providerID,
+  if (model.variant?.isNotEmpty == true) model.variant!,
+  _money(context, model.cost),
+  l10n.usageModelSteps(number.format(model.steps)),
+  l10n.usageModelTokens(number.format(model.tokens.total)),
+].join(' · ');
 
 /// Labelled figures in two columns (one at large text), inside a panel.
 class _Metrics extends StatelessWidget {

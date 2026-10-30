@@ -20,6 +20,7 @@ import 'package:opencode_mobile/ui/kit/kit_undo.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+import 'support/composer_tools.dart';
 
 class _DraftStorage extends InMemorySharedPreferencesStore {
   _DraftStorage(super.data) : super.withData();
@@ -580,6 +581,8 @@ void main() {
       find.byKey(const Key('chat-composer-field')),
       'Keep this draft',
     );
+    // A frame after typing, as on a phone: Back now waits for the save.
+    await tester.pump();
     disk.refuse = true;
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
@@ -611,6 +614,54 @@ void main() {
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
     expect(find.text('Open chat'), findsOneWidget);
+  });
+
+  testWidgets('a typed draft holds Back only until it is saved, then Back '
+      'previews and leaves at once', (tester) async {
+    final c = await _controller(_FakeApi());
+    addTearDown(c.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(c)],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ChatScreen(sessionID: 'session-1'),
+                  ),
+                ),
+                child: const Text('Open chat'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open chat'));
+    await tester.pumpAndSettle();
+    RoutePopDisposition back() =>
+        ModalRoute.of(tester.element(find.byType(ChatScreen)))!.popDisposition;
+    expect(back(), RoutePopDisposition.pop);
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'Keep this draft',
+    );
+    await tester.pump();
+    // Words not written down yet: Back waits for the save, so a refused
+    // save can still ask.
+    expect(back(), RoutePopDisposition.doNotPop);
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump();
+    expect(c.sessionDraft('session-1'), 'Keep this draft');
+    expect(back(), RoutePopDisposition.pop);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Open chat'), findsOneWidget);
+    expect(c.sessionDraft('session-1'), 'Keep this draft');
   });
 
   group('leaving with a draft that could not be saved', () {
@@ -655,6 +706,8 @@ void main() {
         find.byKey(const Key('chat-composer-field')),
         text,
       );
+      // A frame after typing, as on a phone: Back now waits for the save.
+      await tester.pump();
       disk.refuse = true;
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
@@ -827,7 +880,7 @@ void main() {
       );
       await _pumpChat(tester, c);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
       await tester.pumpAndSettle();
       await Scrollable.ensureVisible(
         tester.element(find.byKey(const Key('composer-tools-prompts'))),

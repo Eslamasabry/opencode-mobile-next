@@ -38,18 +38,25 @@ abstract final class _Classic {
 
 /// The two hues of the glowing border, both styles: the theme's main colour
 /// and, for One colour, a lighter shade of it (deeper on a light surface so
-/// the highlight still shows), for Two colours the pack's partner hue (never
-/// amber: amber means "needs you").
+/// the highlight still shows), for Two colours the Accent
+/// ([ThemeRoles.partner]: the pack's partner hue or the person's swatch,
+/// never amber: amber means "needs you").
 (Color, Color) _glowHues(BuildContext context, KitGlowColours colours) {
   final roles = KitTokens.of(context).roles;
   final primary = roles.accent;
-  if (colours == KitGlowColours.two) return (primary, roles.codeKeyword);
+  if (colours == KitGlowColours.two) return (primary, roles.partner);
   final dark = Theme.of(context).brightness == Brightness.dark;
   return (primary, Color.lerp(primary, roles.text1, dark ? .55 : .3)!);
 }
 
-/// The halo under the box (a [DecoratedBox] shadow: the box's own solid
+/// The halo under the box (a [BoxDecoration] shadow: the box's own solid
 /// surface covers its middle, so only the halo outside shows).
+///
+/// Paint only, on a layer of its own: its breath repaints the halo and
+/// nothing else. Rebuilt on every frame, as it was, it relaid out the
+/// nearest LayoutBuilder's subtree and recorded the page around the composer
+/// again each frame (scroll-perf, 2026-10-23: the Appearance preview's whole
+/// chat, words, plates and panes, on every frame of a scroll).
 class _ClassicHalo extends StatelessWidget {
   const _ClassicHalo({
     required this.lap,
@@ -66,26 +73,53 @@ class _ClassicHalo extends StatelessWidget {
   @override
   Widget build(BuildContext context) => IgnorePointer(
     child: ExcludeSemantics(
-      child: AnimatedBuilder(
-        animation: lap,
-        builder: (context, _) => DecoratedBox(
+      child: RepaintBoundary(
+        child: CustomPaint(
           key: const ValueKey('kit-activity-glow-halo'),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(radius),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(
-                  alpha: _Classic.halo(breathing ? lap.value : null),
-                ),
-                blurRadius: 18,
-                spreadRadius: 1,
-              ),
-            ],
+          painter: _HaloPainter(
+            lap: breathing ? lap : null,
+            radius: radius,
+            color: color,
           ),
         ),
       ),
     ),
   );
+}
+
+/// Paints [_ClassicHalo]'s shadow as a [DecoratedBox] would: the same
+/// [BoxDecoration], its strength read from [lap] at paint time (the
+/// midpoint when it does not breathe).
+class _HaloPainter extends CustomPainter {
+  _HaloPainter({required this.lap, required this.radius, required this.color})
+    : super(repaint: lap);
+
+  final Animation<double>? lap;
+  final double radius;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final decoration = BoxDecoration(
+      borderRadius: BorderRadius.circular(radius),
+      boxShadow: [
+        BoxShadow(
+          color: color.withValues(alpha: _Classic.halo(lap?.value)),
+          blurRadius: 18,
+          spreadRadius: 1,
+        ),
+      ],
+    );
+    decoration.createBoxPainter().paint(
+      canvas,
+      Offset.zero,
+      ImageConfiguration(size: size),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_HaloPainter old) =>
+      old.lap != lap || old.radius != radius || old.color != color;
 }
 
 /// The ring over the box. [sweep] is the highlight's place in the lap, or
@@ -98,7 +132,11 @@ class _ClassicRing extends StatelessWidget {
     required this.primary,
     required this.partner,
     required this.mode,
+    this.lineWidth,
   });
+
+  /// The ring's width; null keeps its own (hook H8).
+  final double? lineWidth;
 
   final Animation<double> lap;
   final bool travels;
@@ -125,6 +163,7 @@ class _ClassicRing extends StatelessWidget {
             repaint: travels ? lap : null,
             lap: lap,
             travels: travels,
+            strokeWidth: lineWidth ?? _ActivityRingPainter.defaultStrokeWidth,
           ),
         ),
       ),
@@ -144,6 +183,7 @@ class _ActivityRingPainter extends CustomPainter {
     required double? sweep,
     required this.lap,
     required this.travels,
+    this.strokeWidth = defaultStrokeWidth,
     super.repaint,
   }) : _still = sweep;
 
@@ -156,15 +196,17 @@ class _ActivityRingPainter extends CustomPainter {
 
   double? get sweep => travels ? lap.value : _still;
 
-  static const _strokeWidth = 1.6;
+  static const defaultStrokeWidth = 1.6;
+
+  final double strokeWidth;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    final ring = radius.toRRect(rect).deflate(_strokeWidth / 2);
+    final ring = radius.toRRect(rect).deflate(strokeWidth / 2);
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = _strokeWidth;
+      ..strokeWidth = strokeWidth;
     final sweep = this.sweep;
     if (sweep == null) {
       paint.color = primary;
@@ -186,5 +228,6 @@ class _ActivityRingPainter extends CustomPainter {
       old.sweep != sweep ||
       old.primary != primary ||
       old.tertiary != tertiary ||
-      old.radius != radius;
+      old.radius != radius ||
+      old.strokeWidth != strokeWidth;
 }

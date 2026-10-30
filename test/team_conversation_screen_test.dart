@@ -19,6 +19,10 @@ import 'support/team_chat_fixture.dart';
 
 Finder _key(String value) => find.byKey(ValueKey(value));
 
+/// The page's header (vision 2026-10-20: the Now line is its second line).
+KitTopBar _bar(WidgetTester tester) =>
+    tester.widget<KitTopBar>(find.byType(KitTopBar));
+
 /// Every word drawn under [finder] (the finder itself included), as the
 /// person reads it.
 String _words(WidgetTester tester, Finder finder) => tester
@@ -159,18 +163,12 @@ void main() {
     // furiosa: the session runs, whatever /agents said.
     final agentLine = _key('team-conversation-agent-my-app/gastown.furiosa');
     expect(_words(tester, agentLine), contains('Worker · Running'));
-    // The one Now line (slice-P5.1): what happens, for how long, what
-    // comes next and how long that usually takes; the worker's name is its
-    // own line's, not said again.
-    expect(
-      _words(tester, _key('team-conversation-now-text')),
-      'Starting a worker · 3 min',
-    );
-    expect(
-      _words(tester, _key('team-conversation-now-next')),
-      // No start measured on this phone yet: no time is promised.
-      'Next: the worker begins the task',
-    );
+    // The one Now line (slice-P5.1), folded into the header's second line
+    // (vision 2026-10-20): what happens, for how long, what comes next. A
+    // calm stage draws no line of its own under the header.
+    expect(_bar(tester).subtitle, 'Now: Worker is starting · 3 min');
+    expect(_bar(tester).subtitleTail, 'Next: the worker begins');
+    expect(_key('team-conversation-now-calm'), findsOneWidget);
     // One live status: the Now line. No chip row, no second spinner, and
     // no generated agent name in the page's copy.
     expect(find.byType(KitAgentStrip), findsNothing);
@@ -262,23 +260,29 @@ void main() {
         ),
       ],
     );
-    expect(
-      _words(tester, _key('team-conversation-now-text')),
-      'Waiting for your answer',
-    );
-    // The question itself is its card's, not the Now line's.
-    expect(
-      find.descendant(
-        of: _key('team-conversation-now'),
-        matching: find.textContaining('Which default?', findRichText: true),
-      ),
-      findsNothing,
-    );
+    // The question is its card's: the header keeps its host words under
+    // the one needs-you marker, and no Now line repeats the wait.
+    expect(_key('team-conversation-now'), findsNothing);
+    expect(_bar(tester).needsYou, 1);
     // The header counts it with the one needs-you marker.
     expect(
       find.textContaining('Needs you · AI Team', findRichText: true),
       findsOneWidget,
     );
+    // Concept B (20 Oct 2026): the page opens on the waiting question, and
+    // the composer dims to "Waiting for you" (its answer is on the card).
+    final card = tester.getRect(_key('team-conversation-gate-ma-gate-1'));
+    final list = tester.getRect(_key('team-conversation-list'));
+    expect(card.top, greaterThanOrEqualTo(list.top));
+    expect(card.top, lessThan(list.bottom));
+    expect(
+      find.descendant(
+        of: _key('team-conversation-composer'),
+        matching: find.text('Waiting for you'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Message the team…'), findsNothing);
     await tester.ensureVisible(find.text('Always dark'));
     await tester.pumpAndSettle();
     // One tap sends the option (slice-P4.1c: the one request card); no
@@ -398,6 +402,20 @@ void main() {
         fills,
         findsNothing,
         reason: 'the lead is a finished reply, drawn with no fill',
+      );
+      // Quiet, small update lines (concept B): the secondary caption in its
+      // muted tone, the time to the minute, never the seconds.
+      final lines = tester.widgetList<KitText>(
+        find.descendant(of: blocks, matching: find.byType(KitText)),
+      );
+      expect(lines, isNotEmpty);
+      for (final line in lines) {
+        expect(line.role, KitTextRole.secondary);
+        expect(line.tone, KitTextTone.secondary);
+      }
+      expect(
+        _words(tester, blocks),
+        isNot(matches(RegExp(r'\d{1,2}:\d{2}:\d{2}'))),
       );
       // Three lines: none folded.
       expect(_key('team-conversation-lead-earlier'), findsNothing);
@@ -534,7 +552,8 @@ void main() {
           ),
         ],
       );
-      expect(find.text('AI Team · On this phone'), findsOneWidget);
+      // The header says what the worker does now, never "Paused".
+      expect(_bar(tester).subtitle, startsWith('Now: '));
       expect(find.textContaining('Paused'), findsNothing);
     });
   });

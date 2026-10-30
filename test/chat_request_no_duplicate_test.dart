@@ -124,8 +124,13 @@ void main() {
           ),
         );
         await _settle(tester);
-        // Before the ask the step runs, as one tool row.
-        expect(find.byType(ToolCard), findsOneWidget);
+        // Before the ask the step runs, and the turn's one live line says
+        // so: no tool row beside it.
+        expect(find.byType(ToolCard), findsNothing);
+        expect(
+          find.byKey(const ValueKey('kit-turn-live-line')),
+          findsOneWidget,
+        );
 
         controller.handleEventForTesting(_asked(linked: linked));
         await _settle(tester);
@@ -140,7 +145,7 @@ void main() {
           findsOneWidget,
         );
 
-        // Answered elsewhere: the card goes, the step is back.
+        // Answered elsewhere: the card goes, the live line names the step.
         controller.handleEventForTesting(
           EventEnvelope(
             type: 'permission.replied',
@@ -149,7 +154,11 @@ void main() {
         );
         await _settle(tester);
         expect(find.byKey(const Key('permission-card-allow')), findsNothing);
-        expect(find.byType(ToolCard), findsOneWidget);
+        expect(find.byType(ToolCard), findsNothing);
+        expect(
+          find.byKey(const ValueKey('kit-turn-live-line')),
+          findsOneWidget,
+        );
       },
     );
   }
@@ -166,7 +175,8 @@ void main() {
     await _settle(tester);
     controller.handleEventForTesting(_asked(linked: true));
     await _settle(tester);
-    expect(find.text('Needs you'), findsOneWidget);
+    // How long it has waited on this phone (vision 2026-10-20).
+    expect(find.textContaining(RegExp(r'^Needs you · \d+ s$')), findsOneWidget);
     expect(find.text('Run this command?'), findsOneWidget);
     expect(find.text('Reject'), findsOneWidget);
     expect(find.text('Allow once'), findsOneWidget);

@@ -577,7 +577,7 @@ final gServersArea = CensusArea(
     // -- host-management -------------------------------------------------
     CensusShot('host-management', (kit) async {
       final controller = await kit.connected(api: _HealthyApi());
-      controller.version = '2.0.29';
+      controller.version = '2.1.1';
       await kit.pumpApp(
         HostManagementScreen(controller: controller),
         controller: controller,
@@ -589,10 +589,13 @@ final gServersArea = CensusArea(
     CensusShot('server-settings', state: 'update-available', (kit) async {
       final controller = await _serverSettingsController(
         kit,
-        available: '2.0.29',
+        available: '2.1.1',
       );
       await kit.pumpApp(
-        ServerSettingsScreen(controller: controller),
+        ServerPageScreen(
+          controller: controller,
+          profileId: controller.profile!.id,
+        ),
         controller: controller,
       );
       await kit.settle();
@@ -601,10 +604,13 @@ final gServersArea = CensusArea(
     CensusShot('server-settings', state: 'pending-restart', (kit) async {
       final controller = await _serverSettingsController(
         kit,
-        installed: '2.0.29',
+        installed: '2.1.1',
       );
       await kit.pumpApp(
-        ServerSettingsScreen(controller: controller),
+        ServerPageScreen(
+          controller: controller,
+          profileId: controller.profile!.id,
+        ),
         controller: controller,
       );
       await kit.settle();
@@ -615,10 +621,13 @@ final gServersArea = CensusArea(
     CensusShot('server-settings-upgrade-sheet', (kit) async {
       final controller = await _serverSettingsController(
         kit,
-        available: '2.0.29',
+        available: '2.1.1',
       );
       await kit.pumpApp(
-        ServerSettingsScreen(controller: controller),
+        ServerPageScreen(
+          controller: controller,
+          profileId: controller.profile!.id,
+        ),
         controller: controller,
       );
       await kit.settle();
@@ -628,10 +637,13 @@ final gServersArea = CensusArea(
     CensusShot('server-settings-restart-dialog', (kit) async {
       final controller = await _serverSettingsController(
         kit,
-        installed: '2.0.29',
+        installed: '2.1.1',
       );
       await kit.pumpApp(
-        ServerSettingsScreen(controller: controller),
+        ServerPageScreen(
+          controller: controller,
+          profileId: controller.profile!.id,
+        ),
         controller: controller,
       );
       await kit.settle();

@@ -30,6 +30,8 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
           _paKeepHostUp();
           final gateway = host.newGatewaySync(target.codexDirectory);
           _paWireBrowserGateway(gateway, target.codexDirectory);
+          gateway.savedTitle = (key) =>
+              ConversationTitleMemory.read(_self.store.prefs, profile.id, key);
           for (final hint in _paTitleHints.entries) {
             gateway.keepTitle(hint.key, hint.value);
           }

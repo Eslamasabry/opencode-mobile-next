@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'kit_surface_look.dart';
 import 'kit_tokens.dart';
 
 /// Where a horizontal [KitDivider] starts (visual language §4: "separators
@@ -11,7 +12,7 @@ enum KitDividerInset {
   /// From [KitTokens.space4]: rows with no leading icon.
   gutter,
 
-  /// From `space4 + iconTileSize + space3`: rows with an icon tile.
+  /// From `space4 + leadColumn` (56 on a page): rows with an icon tile.
   text,
 }
 
@@ -29,27 +30,65 @@ enum KitDividerInset {
 class KitDivider extends StatelessWidget {
   /// A horizontal hairline. Its layout extent is exactly one physical
   /// pixel; the spacing around it is the host's, from tokens.
-  const KitDivider({super.key, this.inset = KitDividerInset.none})
-    : _axis = Axis.horizontal;
+  const KitDivider({
+    super.key,
+    this.inset = KitDividerInset.none,
+    this.endInset = 0,
+  }) : assert(endInset >= 0),
+       _axis = Axis.horizontal,
+       _section = false;
 
   /// A vertical hairline between items in a row, such as a toolbar's
   /// groups. It is as tall as its parent allows.
   const KitDivider.vertical({super.key})
     : inset = KitDividerInset.none,
-      _axis = Axis.vertical;
+      endInset = 0,
+      _axis = Axis.vertical,
+      _section = false;
+
+  /// The rule above a section's label, edge to edge: the `divider` role
+  /// asked with `selected: true`. A style draws it only when it answers
+  /// that apart from a row's divider (Paper's section rule); otherwise it
+  /// takes no space at all, so every other style lays out as before.
+  const KitDivider.section({super.key})
+    : inset = KitDividerInset.none,
+      endInset = 0,
+      _axis = Axis.horizontal,
+      _section = true;
 
   /// Where the line starts. Ignored on [KitDivider.vertical], which has no
   /// direction.
   final KitDividerInset inset;
 
+  /// How far the line stops short of its end edge. A row group whose rows
+  /// reach out into the page margin (Paper) passes that reach, so its lines
+  /// still end at the margin, where the section rule ends.
+  final double endInset;
+
   final Axis _axis;
+  final bool _section;
 
   @override
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
     // The thickness is the kit's one hairline token (LOOK-21); the device
     // pixel ratio is kept only to snap the line's position to the grid.
-    final thickness = KitTokens.hairlineWidth(context);
+    // The line follows the style (the `divider` role): Brutal's ink is
+    // thicker, Soft draws none and keeps the space.
+    final hairline = KitTokens.hairlineWidth(context);
+    // An inset line parts the rows of one group; an edge-to-edge one parts
+    // groups and sections (a style may rule only those: Brutal).
+    final rule = _section
+        ? KitSurfaceLook.sectionRule(context, hairline: hairline)
+        : KitSurfaceLook.divider(
+            context,
+            color: tokens.roles.hairline,
+            width: hairline,
+            withinGroup:
+                _axis == Axis.horizontal && inset != KitDividerInset.none,
+          );
+    if (rule == null) return const SizedBox.shrink();
+    final thickness = rule.width;
     final dpr = MediaQuery.devicePixelRatioOf(context);
     // TEST-5: an internal key so the part's own tests can find the painted
     // line itself, unambiguously, regardless of the inset padding around
@@ -61,7 +100,7 @@ class KitDivider extends StatelessWidget {
         axis: _axis,
         thickness: thickness,
         devicePixelRatio: dpr,
-        color: tokens.roles.hairline,
+        color: rule.color,
       ),
     );
     if (_axis == Axis.vertical) return line;
@@ -69,12 +108,11 @@ class KitDivider extends StatelessWidget {
     final double start = switch (inset) {
       KitDividerInset.none => 0.0,
       KitDividerInset.gutter => tokens.space4,
-      KitDividerInset.text =>
-        tokens.space4 + tokens.iconTileSize + tokens.space3,
+      KitDividerInset.text => tokens.space4 + tokens.leadColumn,
     };
-    if (start == 0.0) return line;
+    if (start == 0.0 && endInset == 0.0) return line;
     return Padding(
-      padding: EdgeInsetsDirectional.only(start: start),
+      padding: EdgeInsetsDirectional.only(start: start, end: endInset),
       child: line,
     );
   }

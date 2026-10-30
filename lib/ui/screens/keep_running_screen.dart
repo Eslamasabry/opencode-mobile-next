@@ -157,7 +157,11 @@ class _KeepRunningSectionState extends ConsumerState<KeepRunningSection>
       child: child,
     );
     final intro = rails(
-      KitText(l10n.keepRunningIntro, key: const ValueKey('keep-running-intro')),
+      KitText(
+        l10n.keepRunningIntro,
+        key: const ValueKey('keep-running-intro'),
+        role: KitTextRole.secondary,
+      ),
     );
     // Not a lazy list: a search result that means one row (the battery step,
     // the heat pause) must find it laid out.
@@ -188,6 +192,8 @@ class _KeepRunningSectionState extends ConsumerState<KeepRunningSection>
             ),
           ),
         ],
+        SizedBox(height: tokens.space3),
+        intro,
         KitRowGroup(
           label: l10n.keepRunningTitle,
           children: [
@@ -195,8 +201,6 @@ class _KeepRunningSectionState extends ConsumerState<KeepRunningSection>
               _stepRow(context, l10n, step, maker, done(step)),
           ],
         ),
-        SizedBox(height: tokens.space3),
-        intro,
         if (_openFailed) ...[
           SizedBox(height: tokens.space3),
           rails(

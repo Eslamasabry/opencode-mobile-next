@@ -192,7 +192,9 @@ void main() {
           find.byKey(const ValueKey('team-start-run-direct-send')),
         );
         if (shot == _Shot.sheetSending) {
-          for (var i = 0; i < 6; i++) {
+          // Past the button's ease into its disabled look (KitMotion.standard),
+          // while the send is still held so the spinner shows.
+          for (var i = 0; i < 20; i++) {
             await tester.pump(const Duration(milliseconds: 16));
           }
         } else {

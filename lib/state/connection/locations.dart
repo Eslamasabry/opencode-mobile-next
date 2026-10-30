@@ -604,7 +604,7 @@ extension _ConnectionControllerLocationsImpl on ConnectionController {
         _deletingReadProfiles.contains(profile.id)) {
       return;
     }
-    _markDataRefreshReady(generation, currentApi);
+    _markDataRefreshReadyAfterStart(generation, currentApi);
 
     // The folder is open once its conversations and waiting requests are in.
     // The catalog follows rather than alongside: OpenCode 1 answers on one

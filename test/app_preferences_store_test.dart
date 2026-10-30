@@ -162,6 +162,24 @@ void main() {
     expect((await disk.getAll())['flutter.oc.appearance'], 'system');
   });
 
+  test('the live background held off by a style persists', () async {
+    final (prefs, _, owner) = await _owner();
+    final paper = KitEffects.defaults.copyWith(
+      surfaceStyle: KitSurfaceStyle.paper,
+      liveBackground: false,
+      liveHeldByStyle: true,
+    );
+    await owner.setEffects(paper);
+    expect(prefs.getBool('oc.effectsLiveHeldByStyle'), isTrue);
+    await owner.setEffects(paper.copyWith(liveBackground: true));
+    expect(prefs.containsKey('oc.effectsLiveHeldByStyle'), isFalse);
+    final (_, _, reread) = await _owner({
+      'oc.effectsBackgroundOn': false,
+      'oc.effectsLiveHeldByStyle': true,
+    });
+    expect(reread.value.effects.liveHeldByStyle, isTrue);
+  });
+
   test('all device choices persist under existing keys', () async {
     final (prefs, disk, owner) = await _owner();
     await owner.setThemePack(ThemePackId.gruvbox);
@@ -274,17 +292,35 @@ void main() {
       final (prefs, _, owner) = await _owner({
         'oc.effectsMotion': 'full',
         'oc.effectsCelebrations': false,
-        'oc.effectsGlowColours': 'two',
-        'oc.effectsGlowSpeed': 'slow',
+        'oc.effectsGlowStyle': 'softRing',
+        'oc.effectsCorners': 'sharp',
       });
       await owner.setEffects(
         owner.value.effects.copyWith(motion: KitMotionLevel.full),
       );
       expect(prefs.containsKey('oc.effectsCelebrations'), isFalse);
       expect(owner.value.effects.celebrations, isTrue);
-      expect(owner.value.effects.glowColours, KitGlowColours.two);
-      expect(owner.value.effects.glowSpeed, KitGlowSpeed.slow);
+      expect(owner.value.effects.glowStyle, KitGlowStyle.softRing);
+      expect(owner.value.effects.fineTune.corners, KitCorners.sharp);
       expect(owner.value.effects.haptics, isTrue);
     },
   );
+
+  test('the reply glow is one choice and each style keeps its depth and '
+      'edges, whatever an earlier version stored', () async {
+    final (_, _, owner) = await _owner({
+      'oc.effectsGlowColours': 'two',
+      'oc.effectsGlowSpeed': 'slow',
+      'oc.effectsDepth': 'raised',
+      'oc.effectsEdges': 'none',
+      'oc.effectsDensity': 'compact',
+    });
+    final effects = owner.value.effects;
+    expect(effects.glowColours, KitGlowColours.one);
+    expect(effects.glowSpeed, KitGlowSpeed.normal);
+    expect(effects.fineTune.depth, isNull);
+    expect(effects.fineTune.edges, isNull);
+    // Spacing (density) is still the person's.
+    expect(effects.fineTune.density, KitDensity.compact);
+  });
 }

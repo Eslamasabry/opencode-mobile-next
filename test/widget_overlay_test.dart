@@ -34,6 +34,9 @@ class _Api implements WidgetOverlayApi {
     saved.add((background, accent));
   }
 
+  final projects = <String>[];
+  @override
+  Future<void> saveProject(String project) async => projects.add(project);
   @override
   Future<String> dictate({String? languageTag}) async {
     dictations++;
@@ -90,6 +93,45 @@ void main() {
       expect(launch.styleBackground, 'solid');
       expect(launch.styleAccent, 'blue');
       expect(launch.route, '/widgets/steer');
+    });
+  });
+
+  group('project window (the Conversations widget\'s Edit)', () {
+    test('reads the projects and the current one', () {
+      final launch = WidgetOverlayLaunch.fromPlatform({
+        'route': '/widgets/project',
+        'projects': ['IPTV_King', '', 3, 'oc_app'],
+        'project': 'oc_app',
+      });
+      expect(launch.projects, ['IPTV_King', 'oc_app']);
+      expect(launch.project, 'oc_app');
+    });
+
+    testWidgets('offers All projects and each project; a tap saves it', (
+      tester,
+    ) async {
+      final api = _Api();
+      tester.view.physicalSize = const Size(412, 915) * 3;
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        WidgetOverlayApp(
+          api: api,
+          launch: const WidgetOverlayLaunch(
+            route: '/widgets/project',
+            projects: ['IPTV_King', 'oc_app'],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Show conversations from'), findsOneWidget);
+      expect(find.text('All projects'), findsOneWidget);
+      expect(find.text('IPTV_King'), findsOneWidget);
+      // No style form here.
+      expect(find.text('Widget style'), findsNothing);
+      await tester.tap(find.text('oc_app'));
+      await tester.pumpAndSettle();
+      expect(api.projects, ['oc_app']);
     });
   });
 

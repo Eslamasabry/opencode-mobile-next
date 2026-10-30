@@ -36,6 +36,9 @@ Future<void> _pump(
   Size size = const Size(412, 915),
   bool reduced = false,
   TextDirection direction = TextDirection.ltr,
+  // A platform without the Android ripple, so a press shows the flat
+  // pressed fill (owner rule 2026-10-26: Android draws the ripple).
+  bool flat = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -43,7 +46,7 @@ Future<void> _pump(
   await tester.pumpWidget(
     MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: _theme,
+      theme: flat ? _theme.copyWith(platform: TargetPlatform.fuchsia) : _theme,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, widget) => MediaQuery(
@@ -202,7 +205,7 @@ void main() {
     testWidgets('pointer-down fills the model chip on the first frame', (
       tester,
     ) async {
-      await _pump(tester, _model());
+      await _pump(tester, _model(), flat: true);
       final roles = _roles(tester);
       expect(pillFill(tester), roles.surface3);
       final gesture = await tester.startGesture(
@@ -217,7 +220,7 @@ void main() {
 
     testWidgets('a quick tap on the model chip is still seen', (tester) async {
       var taps = 0;
-      await _pump(tester, _model(onPressed: () => taps++));
+      await _pump(tester, _model(onPressed: () => taps++), flat: true);
       final roles = _roles(tester);
       final gesture = await tester.startGesture(
         tester.getCenter(find.byKey(_chipKey)),
@@ -241,6 +244,7 @@ void main() {
           items: [_file(onOpen: () => opened++)],
           onRemove: (_) {},
         ),
+        flat: true,
       );
       final roles = _roles(tester);
       final gesture = await tester.startGesture(
@@ -367,7 +371,9 @@ void main() {
     for (final scale in [1.0, 2.0]) {
       testWidgets('a name and its detail both show whole while the chip has '
           'room · text x$scale', (tester) async {
-        const name = 'screenshot-2026-09-27.png';
+        // At x2.0 the 700 dp conversation column (kit-v2 §8.6) holds a
+        // shorter name whole: its thumbnail and remove button grow too.
+        final name = scale == 1 ? 'screenshot-2026-09-27.png' : 'sh-27.png';
         await _pump(
           tester,
           KitComposerChips.attachments(
@@ -791,10 +797,12 @@ void main() {
       await _pump(tester, strip([_image()]));
       await tester.pump(const Duration(milliseconds: 50));
       final fading = tester.widget<FadeTransition>(
-        find.ancestor(
-          of: find.text('notes.txt'),
-          matching: find.byType(FadeTransition),
-        ),
+        find
+            .ancestor(
+              of: find.text('notes.txt'),
+              matching: find.byType(FadeTransition),
+            )
+            .first,
       );
       expect(fading.opacity.value, inExclusiveRange(0, 1));
       await tester.pumpAndSettle();

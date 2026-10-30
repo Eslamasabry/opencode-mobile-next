@@ -8,6 +8,7 @@ import 'package:flutter/material.dart'
         MaterialApp,
         Scaffold,
         Builder,
+        ListenableBuilder,
         SingleChildScrollView,
         Key,
         ValueKey,
@@ -23,6 +24,7 @@ import 'support/fake_event_channel.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/agent_handoff.dart' show HandoffOrigin;
 import 'package:opencode_mobile/state/agent_handoff_links.dart';
+import 'package:opencode_mobile/state/continue_with_connection.dart';
 import 'package:opencode_mobile/domain/agent_tools/browser_claude_launch.dart';
 import 'package:opencode_mobile/domain/agent_auth_probe.dart';
 import 'package:opencode_mobile/domain/connection_status.dart';
@@ -55,6 +57,7 @@ import '../tool/capture/fixtures.dart' show captureTheme;
 import 'paseo_acp_pilot_test.dart' show FakePaseoSocket;
 
 part 'support/phone_agents_genui_tests.dart';
+part 'support/phone_agents_genui_recovery_tests.dart';
 part 'support/phone_agents_native_question_tests.dart';
 part 'support/phone_agents_list_question_tests.dart';
 part 'support/phone_agents_list_permission_tests.dart';
@@ -68,6 +71,7 @@ part 'support/phone_agents_idle_tests.dart';
 part 'support/phone_agents_identity_tests.dart';
 part 'support/phone_agents_cold_start_tests.dart';
 part 'support/phone_agents_link_tests.dart';
+part 'support/phone_agents_handoff_open_tests.dart';
 
 const _project = '/root/projects/app';
 const _stamp = '2026-10-03T08:00:00Z';
@@ -302,9 +306,16 @@ class _HostState {
   /// What the helper's runtime snapshot lists.
   List<Map<String, dynamic>> providers = [_provider('claude')];
 
-  /// When set, the helper refuses to resume old conversations.
+  /// When set, the helper cannot load (or resume) old conversations.
   bool resumeFails = false;
   final resumed = <String>[];
+
+  /// The helper answers timeline reads, loading saved agents in place.
+  bool answersTimeline = false;
+
+  /// Agents the helper loaded in place, by reading their timeline.
+  final loadedInPlace = <String>[];
+  var resumedSeq = 0;
 
   /// How many next connects fail like a helper Android stopped.
   int failOpens = 0;
@@ -462,6 +473,8 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
       final agent = agents.firstWhere((a) => a['id'] == id);
       return ('fetch_agent_response', {'agent': agent});
     };
+    // As Paseo 0.11.2: a resume takes no agent id and makes a new agent on
+    // the same native session (handleResumeAgentRequest).
     socket.handlers['resume_agent_request'] = (request) {
       final handle = request['handle'] as Map;
       state.resumed.add(handle['sessionId'] as String);
@@ -474,9 +487,45 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
       final old = agents.firstWhere(
         (a) => (a['persistence'] as Map?)?['sessionId'] == handle['sessionId'],
       );
-      final agent = {...old, 'status': 'idle'};
-      agents = [for (final a in agents) a['id'] == old['id'] ? agent : a];
+      final agent = {
+        ...old,
+        'id': 'resumed-${++state.resumedSeq}',
+        'status': 'idle',
+        'activeTurn': null,
+      };
+      agents = [...agents, agent];
       return ('status', {'status': 'agent_resumed', 'agent': agent});
+    };
+    // Reading a timeline loads a saved agent under its own id, whatever its
+    // last status (handleFetchAgentTimelineRequest → ensureAgentLoaded).
+    socket.handlers['fetch_agent_timeline_request'] = (request) {
+      if (!state.answersTimeline) return null;
+      final id = request['agentId'];
+      if (state.resumeFails) {
+        return (
+          'fetch_agent_timeline_response',
+          {
+            'agentId': id,
+            'agent': null,
+            'entries': <Object>[],
+            'error': 'Agent $id could not be loaded',
+          },
+        );
+      }
+      final old = agents.where((a) => a['id'] == id).firstOrNull;
+      if (old == null) {
+        return (
+          'fetch_agent_timeline_response',
+          {'agentId': id, 'entries': <Object>[]},
+        );
+      }
+      state.loadedInPlace.add(id as String);
+      final agent = {...old, 'status': 'idle', 'activeTurn': null};
+      agents = [for (final a in agents) a['id'] == id ? agent : a];
+      return (
+        'fetch_agent_timeline_response',
+        {'agentId': id, 'agent': agent, 'entries': <Object>[]},
+      );
     };
     socket.handlers['create_agent_request'] = (request) {
       final agent = _agent('claude-new-${++state.newAgentSeq}', directory);
@@ -550,6 +599,10 @@ Map<String, dynamic> _agent(
   'createdAt': _stamp,
   'updatedAt': '2026-10-03T09:$minute:00Z',
   'lastUserMessageAt': _stamp,
+  // A loaded agent (the daemon holds it) names its turn, or null.
+  'activeTurn': status == 'running'
+      ? {'turnId': 'turn-$id', 'startedAt': _stamp}
+      : null,
   'capabilities': {
     'supportsStreaming': true,
     'supportsSessionPersistence': true,
@@ -846,6 +899,7 @@ void main() {
   );
 
   _genUiFeedRefreshTests();
+  _genUiRecoveryCoverageTests();
   _nativeQuestionControllerTests();
   _listQuestionTests();
   _listPermissionTests();
@@ -859,6 +913,7 @@ void main() {
   _phoneColdStartTests();
   _phoneIdentityTests();
   _phoneAgentLinkTests();
+  _phoneAgentHandoffOpenTests();
 
   const dir = _project;
 
@@ -1142,6 +1197,71 @@ void main() {
     c.dispose();
   });
 
+  testWidgets('Continue with keeps the agent folder it writes to open', (
+    tester,
+  ) async {
+    // Claude conversations in three other projects fill the folder sync's
+    // four connections beside the last used one.
+    final w = await ready(
+      tester,
+      prefs: {
+        'oc.agentFeed.local': jsonEncode([
+          for (final name in ['a', 'b', 'c'])
+            {
+              'sourceId': 'paseo:/root/projects/$name',
+              'sessionID': 'chat-$name',
+              'title': name,
+              'directory': '/root/projects/$name',
+              'projectName': name,
+              'isGit': false,
+              'at': DateTime(2026, 10, 25).millisecondsSinceEpoch,
+              'agentId': 'claude',
+              'canReopen': true,
+            },
+        ]),
+      },
+    );
+    final c = w.controller;
+    const target = '/root/projects/iptv';
+    c.holdAgentHandoffTarget(target);
+    final gateway = await c.agentHandoffTargetGateway(target);
+    // The next row read syncs the folders; the sheet's folder stays until
+    // the sheet lets go.
+    await c.refreshAgentRows();
+    expect(gateway.isClosed, isFalse);
+    c.releaseAgentHandoffTarget(target);
+    await c.refreshAgentRows();
+    expect(gateway.isClosed, isTrue);
+    await tester.pump(const Duration(seconds: 3));
+    c.dispose();
+  });
+
+  testWidgets('Continue with offers only agents a new chat offers', (
+    tester,
+  ) async {
+    // Kilo installs and signs in, but no version of it is certified for
+    // chat: New conversation leaves it out, so Continue with does too
+    // (it listed it as "This model isn't available" with nothing to do).
+    final w = await ready(tester);
+    final c = w.controller;
+    w.state.runtimes = {'claude': _ready('claude'), 'kilo': _ready('kilo')};
+    await c.refreshAgentRows();
+    expect(
+      c.agentRows.singleWhere((row) => row.id == 'kilo').status,
+      PhoneAgentStatus.ready,
+    );
+    final oc = c.chatFeed().items.firstWhere((i) => i.sourceId == 'opencode');
+    final route = await c.openChatFeedItem(oc);
+    final host = ConnectionContinueWithHost(c, sessionId: route.sessionID);
+    final plan = await host.load();
+    host.release();
+    final agents = {for (final choice in plan.agents) choice.agentId};
+    expect(agents, contains('claude'));
+    expect(agents, isNot(contains('kilo')));
+    await tester.pump(const Duration(seconds: 3));
+    c.dispose();
+  });
+
   testWidgets('old phone-agent chats need an explicit new chat', (
     tester,
   ) async {
@@ -1272,6 +1392,58 @@ void main() {
       c.store.prefs.getString('oc.agentFeed.local'),
       allOf(contains('"c1"'), isNot(contains('saved1'))),
     );
+    await tester.pump(const Duration(seconds: 5));
+    c.dispose();
+  });
+
+  testWidgets('after a restart, a conversation whose helper stopped mid-turn '
+      'two days ago is not Working', (tester) async {
+    // Saved rows paint first; one written by a build that kept a status.
+    final w = await _world(
+      tester,
+      prefsExtra: {
+        'oc.phoneAgentsUsed.local': true,
+        'oc.agentFeed.local': jsonEncode([
+          {
+            'sourceId': 'paseo:$dir',
+            'sessionID': 'stale',
+            'title': 'Tip calculator',
+            'directory': dir,
+            'projectName': 'app',
+            'isGit': false,
+            'at': DateTime(2026, 10, 3).millisecondsSinceEpoch,
+            'agentId': 'claude',
+            'agentLabel': 'Claude Code',
+            'canReopen': true,
+            'status': 'running',
+          },
+        ]),
+      },
+    );
+    final twoDaysAgo = DateTime.now()
+        .toUtc()
+        .subtract(const Duration(days: 2))
+        .toIso8601String();
+    w.state.runtimes = {'claude': _ready('claude')};
+    // The daemon answers from the agent's saved record: its last saved status
+    // is running, and nothing holds the agent (no activeTurn).
+    w.state.agents = [
+      {..._agent('stale', dir, status: 'running'), 'updatedAt': twoDaysAgo}
+        ..remove('activeTurn'),
+      {..._agent('live', dir, status: 'running'), 'updatedAt': twoDaysAgo},
+    ];
+    final c = w.controller;
+    await c.rememberLastUsedProject(dir);
+    await c.refreshChatFeed();
+    ChatStatus? statusOf(String id) =>
+        c.chatFeed().items.where((i) => i.sessionID == id).firstOrNull?.status;
+    expect(statusOf('stale'), ChatStatus.idle);
+
+    await c.refreshAgentRows();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(statusOf('stale'), ChatStatus.idle);
+    // A loaded agent's long turn is live and still says so.
+    expect(statusOf('live'), ChatStatus.running);
     await tester.pump(const Duration(seconds: 5));
     c.dispose();
   });
@@ -1451,11 +1623,14 @@ void main() {
     },
   );
 
-  testWidgets('an old conversation with its session handle reopens by '
-      'resuming it on the helper', (tester) async {
+  testWidgets('an old conversation the helper no longer holds reopens in '
+      'place: loaded under its own id, no resume (it would make a new agent)', (
+    tester,
+  ) async {
     final w = await _world(tester);
     w.state.runtimes = {'claude': _ready('claude')};
     w.state.agents = [_agent('old', dir, status: 'closed')];
+    w.state.answersTimeline = true;
     final c = w.controller;
     await c.rememberLastUsedProject(dir);
     await c.refreshAgentRows();
@@ -1463,18 +1638,59 @@ void main() {
     final row = c.chatFeed().items.firstWhere((i) => i.sessionID == 'old');
     expect(c.agentResumeNotice(row).canReopen, isTrue);
     final route = await c.openChatFeedItem(row);
-    expect(w.state.resumed, ['native-old']);
+    expect(w.state.resumed, isEmpty);
+    expect(w.state.loadedInPlace, contains('old'));
+    expect(route.sessionID, 'old');
+    expect(w.state.agents, hasLength(1));
     expect(c.backendForConversation(route.sessionID)?.isAgentBackend, isTrue);
     await tester.pump(const Duration(seconds: 3));
     c.dispose();
   });
 
-  testWidgets('a refused resume says so, and the next tap offers a new '
-      'conversation', (tester) async {
+  for (final status in ['error', 'closed', 'idle']) {
+    testWidgets('a saved Kilo conversation whose last status was $status '
+        'opens in place: no resume or create, the same agent, one row', (
+      tester,
+    ) async {
+      final w = await _world(tester);
+      w.state.runtimes = {'kilo': _ready('kilo')};
+      w.state.answersTimeline = true;
+      w.state.agents = [
+        {..._agent('old', dir, provider: 'kilo', status: status)}
+          ..remove('activeTurn'),
+      ];
+      final c = w.controller;
+      await c.rememberLastUsedProject(dir);
+      await c.refreshAgentRows();
+      await c.refreshChatFeed();
+      final row = c.chatFeed().items.firstWhere((i) => i.sessionID == 'old');
+      int creates() => [
+        for (final socket in w.host.sockets)
+          ...socket.of('create_agent_request'),
+      ].length;
+      final before = creates();
+      final route = await c.openChatFeedItem(row);
+      expect(route.sessionID, 'old');
+      expect(w.state.resumed, isEmpty);
+      expect(creates(), before);
+      expect(w.state.agents, hasLength(1));
+      await c.refreshChatFeed();
+      expect(
+        c.chatFeed().items.where((i) => i.sourceId == 'paseo:$dir'),
+        hasLength(1),
+      );
+      await tester.pump(const Duration(seconds: 3));
+      c.dispose();
+    });
+  }
+
+  testWidgets('a conversation the helper cannot load says so, and the next '
+      'tap offers a new conversation', (tester) async {
     final w = await _world(tester);
     w.state.runtimes = {'claude': _ready('claude')};
     w.state.agents = [_agent('old', dir, status: 'closed')];
     w.state.resumeFails = true;
+    w.state.answersTimeline = true;
     final c = w.controller;
     await c.rememberLastUsedProject(dir);
     await c.refreshAgentRows();

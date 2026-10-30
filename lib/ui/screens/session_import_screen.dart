@@ -10,6 +10,7 @@ import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
+import '../widgets/phone_server_names.dart';
 
 class SessionImportFile {
   final String name;
@@ -598,7 +599,18 @@ class _SessionImportScreenState extends State<SessionImportScreen> {
                   titleMaxLines: 2,
                   supporting: _serverName.isEmpty
                       ? null
-                      : TextSpan(text: l10n.importOnServer(_serverName)),
+                      // Named as everywhere else ("On this phone", never
+                      // "On On this phone" or the name setup saved).
+                      : TextSpan(
+                          text: sectionOnTitle(
+                            l10n,
+                            serverDisplayName(
+                              _controller.profile,
+                              l10n,
+                              among: _controller.store.profiles,
+                            ),
+                          ),
+                        ),
                   trailing: canChange
                       ? KitRowValue(l10n.importChangeDestinationShort)
                       : null,

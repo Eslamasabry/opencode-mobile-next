@@ -21,8 +21,9 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     String? initialLastUsedProjectDirectory,
     this.persistLastUsedProject,
     this.hasWaitingCard,
-    this.cardsIncomplete,
     this.refreshCards,
+    this.savedTitle,
+    this.saveTitle,
   }) : catalog = catalog ?? AgentCatalog.builtIn,
        _directory = gateway.directory,
        _projectName = projectName {
@@ -35,6 +36,9 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     _questionChanges = gateway.nativeQuestionChanges.listen((_) {
       if (_valid) _notify();
     });
+    _backgroundChanges = gateway.backgroundTaskChanges.listen((_) {
+      if (_valid) _notify();
+    });
     if (initialLastUsedProjectDirectory == _directory &&
         !isTemporaryProjectDirectory(_directory)) {
       _lastUsed = initialLastUsedProjectDirectory;
@@ -42,8 +46,12 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
   }
 
   final bool Function(String sessionID)? hasWaitingCard;
-  final bool Function()? cardsIncomplete;
   final Future<void> Function(List<ChatFeedItem> items)? refreshCards;
+
+  /// The title kept for a conversation (`provider:sessionId`) after its
+  /// older records were archived; and how to keep one.
+  final String? Function(String sessionKey)? savedTitle;
+  final Future<bool> Function(String sessionKey, String title)? saveTitle;
   final PaseoGateway gateway;
   final AgentCatalog catalog;
   final bool isGit;
@@ -54,6 +62,7 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
   final _changes = StreamController<void>.broadcast();
   late final StreamSubscription<void> _questionChanges;
   late final StreamSubscription<void> _permissionChanges;
+  late final StreamSubscription<void> _backgroundChanges;
   List<ChatFeedItem> _items = const [];
   final _draftProviders = <String, String>{};
   bool _complete = false, _disposed = false;
@@ -82,6 +91,7 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     final rows = _valid
         ? _items
               .map(_withCards)
+              .map(_withBackgroundWork)
               .where((item) => chatFeedMatches(item, filter))
               .toList()
         : <ChatFeedItem>[];
@@ -90,7 +100,7 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
       items: List.unmodifiable(rows),
       acrossProjects: false,
       loading: _valid && _refreshing != null && _items.isEmpty,
-      complete: _valid && _complete && !(cardsIncomplete?.call() ?? false),
+      complete: _valid && _complete,
     );
   }
 
@@ -99,6 +109,7 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     if (!_valid || isTemporaryProjectDirectory(_directory)) return const [];
     final rows = _items
         .map(_withCards)
+        .map(_withBackgroundWork)
         .where((item) => !item.isSubagent)
         .toList();
     DateTime? latest;
@@ -190,6 +201,7 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
       // A resume leaves the old record of the same Claude session behind:
       // one row per session, the latest record, with the title it had.
       final bySession = <String, Session>{};
+      final olderCopies = <String, String>{}; // older id -> session key
       for (final session in sessions.values.toList()) {
         final key = gateway.sessionKey(session.id);
         if (key == null) continue;
@@ -203,6 +215,8 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
             : other;
         final older = identical(newer, session) ? other : session;
         sessions.remove(older.id);
+        olderCopies[older.id] = key;
+        olderCopies.removeWhere((id, _) => id == newer.id);
         final titled = gateway.hasOwnTitle(newer.id)
             ? newer
             : newer.copyWith(title: older.title);
@@ -213,6 +227,16 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
         }
         sessions[newer.id] = titled;
         bySession[key] = titled;
+      }
+      // A kept record without a title of its own takes the one saved for
+      // its conversation (the older record that had it may be archived).
+      for (final entry in bySession.entries) {
+        final kept = entry.value;
+        if (gateway.hasOwnTitle(kept.id)) continue;
+        final saved = savedTitle?.call(entry.key);
+        if (saved == null || saved.trim().isEmpty) continue;
+        gateway.keepTitle(kept.id, saved);
+        sessions[kept.id] = kept.copyWith(title: saved);
       }
       final statuses = await gateway.sessionStatuses();
       if (!_current(revision)) return;
@@ -248,9 +272,46 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
         }),
       );
       _complete = complete;
+      // Housekeeping, never waited on: a helper slow to answer must not hold
+      // the list (or what refreshes after it).
+      unawaited(
+        _archiveOlderCopies(olderCopies, bySession, statuses, revision),
+      );
       await refreshCards?.call(_items);
     } catch (_) {
       if (_current(revision)) _complete = false;
+    }
+  }
+
+  /// Archives the older records the list collapsed, so the helper stops
+  /// carrying them. Their title is saved first; a failure leaves them for
+  /// the next refresh.
+  Future<void> _archiveOlderCopies(
+    Map<String, String> olderCopies,
+    Map<String, Session> kept,
+    Map<String, String> statuses,
+    int revision,
+  ) async {
+    try {
+      for (final entry in olderCopies.entries) {
+        if (!_current(revision)) return;
+        final status = statuses[entry.key];
+        if (status == 'busy' || status == 'retry') continue;
+        final keeper = kept[entry.value];
+        if (keeper == null || keeper.id == entry.key) continue;
+        if (gateway.hasOwnTitle(keeper.id)) {
+          final title = keeper.title ?? '';
+          if (savedTitle?.call(entry.value) != title) {
+            // Persisted before the record that carried it goes away.
+            if (saveTitle == null || !await saveTitle!(entry.value, title)) {
+              continue;
+            }
+          }
+        }
+        await gateway.archiveOlderCopy(entry.key);
+      }
+    } catch (_) {
+      // Archiving is housekeeping; the list is already right.
     }
   }
 
@@ -276,6 +337,39 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
       sourceId: item.sourceId,
       sourceLabel: item.sourceLabel,
       finishedUnseen: item.finishedUnseen,
+    );
+  }
+
+  /// A conversation whose turn ended with work still running in the
+  /// background reads as running: the Running filter keeps it and the row
+  /// says it is working (lib/domain/background_tasks.dart has the rule).
+  /// One whose last turn ended on the agent's own failure reads as failed,
+  /// whatever it left running: the agent stopped.
+  ChatFeedItem _withBackgroundWork(ChatFeedItem item) {
+    if (item.status != ChatStatus.idle) return item;
+    final ChatStatus status;
+    if (gateway.lastTurnFailed(item.sessionID)) {
+      status = ChatStatus.failed;
+    } else if (gateway.backgroundTasksRunning(item.sessionID)) {
+      status = ChatStatus.running;
+    } else {
+      return item;
+    }
+    return ChatFeedItem(
+      sessionID: item.sessionID,
+      title: item.title,
+      directory: item.directory,
+      projectName: item.projectName,
+      isGit: item.isGit,
+      status: status,
+      lastActivity: item.lastActivity,
+      preview: item.preview,
+      parentID: item.parentID,
+      agentId: item.agentId,
+      agentLabel: item.agentLabel,
+      sourceId: item.sourceId,
+      sourceLabel: item.sourceLabel,
+      contextUsage: item.contextUsage,
     );
   }
 
@@ -438,6 +532,7 @@ class PaseoChatFeedSource implements AgentChatFeedSource, ChatFeedChangeSource {
     // synchronously, with no transport cleanup to await.
     unawaited(_questionChanges.cancel());
     unawaited(_permissionChanges.cancel());
+    unawaited(_backgroundChanges.cancel());
     await _changes.close();
   }
 }

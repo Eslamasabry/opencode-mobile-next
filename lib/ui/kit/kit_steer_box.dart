@@ -7,11 +7,12 @@ import '../app_theme.dart' show AppStatusTone;
 import 'kit_buttons.dart';
 import 'kit_field.dart';
 import 'kit_icon_button.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
-import 'motion/kit_reveal.dart';
 import 'kit_notice.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
+import 'motion/kit_reveal.dart';
 
 /// What the box is doing right now.
 enum KitSteerBoxPhase {
@@ -91,7 +92,10 @@ class KitSteerBox extends StatelessWidget {
   static const int maxLength = 8000;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tokens = KitTokens.of(context);
     final blocked = blockedReason != null;

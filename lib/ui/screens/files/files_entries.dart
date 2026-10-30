@@ -78,25 +78,6 @@ extension _FilesEntries on _FilesScreenState {
         name.endsWith('.map');
   }
 
-  /// The row's second line: where a search result lives, and its change
-  /// mark in words (or how many files changed inside a folder).
-  String? _fileDetail(
-    FileNode node,
-    VersionControlFile? change,
-    int descendantChanges,
-  ) {
-    final details = <String>[];
-    if (_search.text.isNotEmpty && node.path != node.name) {
-      details.add(KitBidi.ltr(node.path));
-    }
-    if (change != null) {
-      details.add(_fileStatusLabel(context, change.status));
-    } else if (descendantChanges > 0) {
-      details.add(readerL10n(context).readerUiChangedCount(descendantChanges));
-    }
-    return details.isEmpty ? null : details.join(' · ');
-  }
-
   /// A listing that could not load: the unplugged drawing every load
   /// failure uses, the reason, Try again, and Report a bug.
   Widget _loadFailed(
@@ -105,11 +86,11 @@ extension _FilesEntries on _FilesScreenState {
     Future<void> Function() onRetry,
   ) {
     final l10n = readerL10n(context);
-    return KitStateView(
+    // Calm (vision 2026-10-20): no red and no drawing; the words, Try
+    // again at the bottom and Report as the quiet way on.
+    return KitStateView.calm(
       key: const ValueKey('files-load-failed'),
       icon: AppIconography.error,
-      tone: AppStatusTone.failure,
-      illustration: const StatesUnpluggedScene(),
       title: title,
       body: message,
       primary: KitAction(
@@ -138,7 +119,7 @@ extension _FilesEntries on _FilesScreenState {
       );
     }
     if (_search.text.trim().isEmpty) {
-      return KitStateView(
+      return KitStateView.calm(
         key: const ValueKey('files-symbols-hint'),
         icon: AppIconography.dataObject,
         title: l10n.readerUiWorkspaceSymbols,
@@ -148,10 +129,9 @@ extension _FilesEntries on _FilesScreenState {
     if (_symbols?.isEmpty == true) {
       return KitRefresh(
         onRefresh: retry,
-        child: KitStateView(
+        child: KitStateView.calm(
           key: const ValueKey('files-no-symbols'),
           icon: AppIconography.search,
-          illustration: const StatesSearchScene(),
           title: l10n.readerUiNoSymbols,
           body: l10n.readerUiSymbolsUnavailable,
         ),
@@ -209,7 +189,7 @@ extension _FilesEntries on _FilesScreenState {
       );
     }
     if (_search.text.trim().isEmpty) {
-      return KitStateView(
+      return KitStateView.calm(
         key: const ValueKey('files-text-hint'),
         icon: AppIconography.search,
         title: l10n.filesTextHintTitle,
@@ -220,10 +200,9 @@ extension _FilesEntries on _FilesScreenState {
     if (_textMatches != null && all.isEmpty) {
       return KitRefresh(
         onRefresh: retry,
-        child: KitStateView(
+        child: KitStateView.calm(
           key: const ValueKey('files-no-text'),
           icon: AppIconography.search,
-          illustration: const StatesSearchScene(),
           title: l10n.filesNoTextTitle,
           body: l10n.filesNoTextBody,
         ),

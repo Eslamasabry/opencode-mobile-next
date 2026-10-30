@@ -27,6 +27,7 @@ class ConnectionStatusSnapshot {
     this.retrying = false,
     this.quiet = false,
     this.attemptRevision = 0,
+    this.nextAttemptAt,
   });
 
   final ConnectionStatusPhase phase;
@@ -39,6 +40,11 @@ class ConnectionStatusSnapshot {
   /// An established link is recovering within its bounded presentation grace.
   final bool quiet;
   final int attemptRevision;
+
+  /// When the link's own retry timer tries again, while one is set and the
+  /// app may reconnect by itself (`RetryingEventChannel`); null while a try
+  /// is in flight, when nothing will retry, or when the link is up.
+  final DateTime? nextAttemptAt;
 
   bool get visible =>
       !quiet &&

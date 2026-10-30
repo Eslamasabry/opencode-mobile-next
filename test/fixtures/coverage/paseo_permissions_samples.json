@@ -412,7 +412,7 @@
           "path": "name",
           "kind": "string",
           "probes": [
-            "Run this command?"
+            "Run a command in app?"
           ],
           "primary": false
         },
@@ -543,7 +543,7 @@
           "path": "name",
           "kind": "string",
           "probes": [
-            "Edit this file?"
+            "Edit retry_button.dart?"
           ],
           "primary": false
         },
@@ -651,7 +651,7 @@
           "path": "name",
           "kind": "string",
           "probes": [
-            "Edit this file?"
+            "Edit limits.dart?"
           ],
           "primary": false
         },
@@ -740,7 +740,7 @@
           "path": "name",
           "kind": "string",
           "probes": [
-            "Edit this file?"
+            "Edit upload_status.dart?"
           ],
           "primary": false
         },
@@ -832,7 +832,7 @@
           "path": "name",
           "kind": "string",
           "probes": [
-            "Read this file?"
+            "Read settings.json?"
           ],
           "primary": false
         },

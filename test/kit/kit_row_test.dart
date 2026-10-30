@@ -17,10 +17,13 @@ import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart' show KitConfirmSheet;
 import 'package:opencode_mobile/ui/kit/kit_menu.dart';
 import 'package:opencode_mobile/ui/kit/kit_row.dart';
+import 'package:opencode_mobile/ui/kit/kit_row_parts.dart' show KitChevron;
+import 'package:opencode_mobile/ui/kit/kit_surface_look.dart';
 import 'package:opencode_mobile/ui/kit/kit_swipe_action.dart';
 import 'package:opencode_mobile/ui/kit/kit_tappable.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 import 'package:opencode_mobile/ui/kit/kit_undo.dart';
+import '../support/part_semantics.dart';
 
 Future<void> _pump(
   WidgetTester tester,
@@ -70,7 +73,7 @@ Color? _titleColor(WidgetTester tester, String title) =>
 
 /// The labels of the custom semantic actions on the row's node.
 List<String> _customActionLabels(WidgetTester tester, Finder row) {
-  final data = tester.getSemantics(row).getSemanticsData();
+  final data = partSemantics(tester, row).getSemanticsData();
   return [
     for (final id in data.customSemanticsActionIds ?? const <int>[])
       ?CustomSemanticsAction.getAction(id)!.label,
@@ -78,7 +81,7 @@ List<String> _customActionLabels(WidgetTester tester, Finder row) {
 }
 
 void _performCustomAction(WidgetTester tester, Finder row, String label) {
-  final node = tester.getSemantics(row);
+  final node = partSemantics(tester, row);
   final id = node.getSemanticsData().customSemanticsActionIds!.firstWhere(
     (id) => CustomSemanticsAction.getAction(id)!.label == label,
   );
@@ -122,7 +125,7 @@ void main() {
       expect(disabledTaps, 0);
     });
 
-    testWidgets('2: disabled reason replaces supporting, is the hint, text3, '
+    testWidgets('2: disabled reason replaces supporting, is said once, text3, '
         'no Opacity', (tester) async {
       final handle = tester.ensureSemantics();
       await _pump(
@@ -146,10 +149,10 @@ void main() {
       );
       expect(_titleColor(tester, 'Run tests'), _tokens(tester).roles.text3);
       expect(
-        tester.getSemantics(find.byType(KitRow)),
+        partSemantics(tester, find.byType(KitRow)),
         matchesSemantics(
+          // Said once: in the label, not again as a hint.
           label: 'Run tests\nNeeds a connection',
-          hint: 'Needs a connection',
           isButton: true,
           hasEnabledState: true,
         ),
@@ -295,7 +298,10 @@ void main() {
       );
       expect(find.byType(KitButton), findsNothing);
       expect(find.byType(KitTappable), findsNothing);
-      final data = tester.getSemantics(find.byType(KitRow)).getSemanticsData();
+      final data = partSemantics(
+        tester,
+        find.byType(KitRow),
+      ).getSemanticsData();
       expect(data.hasAction(SemanticsAction.tap), isFalse);
       expect(data.hint, 'Available on OpenCode 2 servers.');
       handle.dispose();
@@ -396,7 +402,7 @@ void main() {
         KitRow(title: 'Chosen', selected: true, onTap: () {}),
       );
       expect(
-        tester.getSemantics(find.byType(KitTappable)),
+        partSemantics(tester, find.byType(KitTappable)),
         matchesSemantics(
           label: 'Chosen',
           isButton: true,
@@ -409,15 +415,23 @@ void main() {
           isFocusable: true,
         ),
       );
-      final fill = tester.widget<ColoredBox>(
+      // On Solid's flat list the fill is the rounded chosen plate.
+      Color? colourOf(Decoration d) => switch (d) {
+        BoxDecoration(:final color) => color,
+        KitSurfaceDecoration(:final fill) => fill,
+        _ => null,
+      };
+      final fill = tester.widget<DecoratedBox>(
         find
             .descendant(
               of: find.byType(KitRow),
-              matching: find.byType(ColoredBox),
+              matching: find.byWidgetPredicate(
+                (w) => w is DecoratedBox && colourOf(w.decoration) != null,
+              ),
             )
             .first,
       );
-      expect(fill.color, _tokens(tester).roles.surface3);
+      expect(colourOf(fill.decoration), _tokens(tester).roles.surface3);
       handle.dispose();
     });
 
@@ -444,9 +458,12 @@ void main() {
         const ValueKey('kit-row-group-destructive-divider'),
       );
       expect(divider, findsOneWidget);
+      // Full: margin to margin, as the section above it (Solid's rows sit
+      // on the page and reach past the margin; the rule does not).
       expect(
         tester.getSize(divider).width,
-        tester.getSize(find.byType(Material).last).width,
+        tester.getSize(find.byType(KitRowGroup)).width -
+            2 * _tokens(tester).gutter,
       );
       expect(_titleColor(tester, 'Delete'), isNotRed);
     });
@@ -850,9 +867,20 @@ void main() {
       await gesture.moveBy(const Offset(-40, 0));
       await gesture.moveBy(const Offset(-120, 0));
       await tester.pump();
-      final panel = tester.widget<ColoredBox>(
-        find.byKey(const ValueKey('kit-swipe-background')),
-      );
+      final panel =
+          tester
+                  .widget<DecoratedBox>(
+                    find
+                        .descendant(
+                          of: find.byKey(
+                            const ValueKey('kit-swipe-background'),
+                          ),
+                          matching: find.byType(DecoratedBox),
+                        )
+                        .first,
+                  )
+                  .decoration
+              as BoxDecoration;
       final roles = _tokens(tester).roles;
       expect(panel.color, roles.surface3);
       expect(panel.color, isNotRed);
@@ -927,5 +955,102 @@ void main() {
       expect(chip.top, greaterThanOrEqualTo(words.bottom));
       expect(tester.takeException(), isNull);
     });
+  });
+
+  group('roomy index rows (Settings hub, vision 2026-10-20)', () {
+    testWidgets('a roomy row is 64 dp with one line or two, its glyph bare', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        KitRowGroup(
+          children: [
+            Builder(
+              builder: (context) => KitRow(
+                key: const ValueKey('one'),
+                roomy: true,
+                leading: KitRow.glyph(context, AppIconography.server),
+                title: 'Agent',
+                trailing: const KitChevron(),
+                onTap: () {},
+              ),
+            ),
+            Builder(
+              builder: (context) => KitRow(
+                key: const ValueKey('two'),
+                roomy: true,
+                leading: KitRow.glyph(context, AppIconography.server),
+                title: 'Server',
+                supporting: const TextSpan(text: 'On this phone · Connected'),
+                trailing: const KitChevron(),
+                onTap: () {},
+              ),
+            ),
+            KitRow(key: const ValueKey('plain'), title: 'Plain', onTap: () {}),
+          ],
+        ),
+      );
+      expect(tester.getSize(find.byKey(const ValueKey('one'))).height, 64);
+      expect(tester.getSize(find.byKey(const ValueKey('two'))).height, 64);
+      // Ordinary rows keep the 56 dp of the list standard.
+      expect(tester.getSize(find.byKey(const ValueKey('plain'))).height, 56);
+      // No tile behind the glyph: nothing but the icon in its slot.
+      final glyph = find.descendant(
+        of: find.byKey(const ValueKey('one')),
+        matching: find.byIcon(AppIconography.server),
+      );
+      expect(tester.getSize(glyph).width, KitRow.glyphSize);
+      final tile = KitTokens.of(tester.element(glyph)).iconTileSize;
+      final tiles = find.ancestor(
+        of: glyph,
+        matching: find.byType(DecoratedBox),
+      );
+      for (final box in tiles.evaluate()) {
+        expect(box.size, isNot(Size.square(tile)));
+      }
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a disabled roomy row dims its glyph to text3', (tester) async {
+      await _pump(
+        tester,
+        Builder(
+          builder: (context) => KitRow(
+            roomy: true,
+            leading: KitRow.glyph(context, AppIconography.server),
+            title: 'Server',
+            enabled: false,
+            disabledReason: 'Not on this phone',
+          ),
+        ),
+      );
+      final icon = tester.widget<Icon>(find.byIcon(AppIconography.server));
+      final roles = KitTokens.of(tester.element(find.byType(KitRow))).roles;
+      expect(icon.color, roles.text3);
+    });
+  });
+
+  // Flat polish (sweep 3730, 37-allmodels): in Solid's flat list the chosen
+  // row was a square grey band edge to edge, unlike the rounded controls
+  // around it.
+  testWidgets('a chosen row on a flat list is a rounded plate inset from '
+      'its ends', (tester) async {
+    await _pump(
+      tester,
+      KitRowGroup(
+        children: [
+          KitRow(title: 'GLM', selected: true, onTap: () {}),
+          KitRow(title: 'Beam', onTap: () {}),
+        ],
+      ),
+    );
+    final plate = find.byKey(const ValueKey('kit-row-chosen-plate'));
+    expect(plate, findsOneWidget);
+    final row = tester.getRect(
+      find.ancestor(of: find.text('GLM'), matching: find.byType(KitRow)),
+    );
+    final tokens = KitTokens.of(tester.element(find.text('GLM')));
+    expect(tester.getRect(plate).left, row.left + tokens.space2);
+    expect(tester.getRect(plate).right, row.right - tokens.space2);
   });
 }

@@ -21,6 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../tool/capture/fixtures.dart';
 import '../support/setup_capture_preferences.dart';
+import '../support/composer_tools.dart';
 
 CatalogSnapshot _catalog() => const CatalogSnapshot(
   providers: [
@@ -134,7 +135,7 @@ void _expectOneSheet({
   );
   expect(find.text(apply).hitTestable(), findsOneWidget);
   expect(
-    find.text("Applies to this conversation's next turns."),
+    find.text('For this conversation'),
     subtitle == null ? findsNothing : findsOneWidget,
   );
   expect(find.byType(Dialog), findsNothing);
@@ -213,7 +214,10 @@ void main() {
       final controller = await _captured();
       await tester.pumpWidget(
         captureApp(
-          home: SettingsScreen(controller: controller),
+          home: SettingsScreen(
+            controller: controller,
+            initialGroup: SettingsGroup.ai,
+          ),
           boundaryKey: GlobalKey(),
           controller: controller,
         ),
@@ -230,7 +234,7 @@ void main() {
       expect(find.textContaining('New conversations on '), findsOneWidget);
     });
 
-    testWidgets('the composer chip opens it for this conversation', (
+    testWidgets('the composer plus opens it for this conversation', (
       tester,
     ) async {
       _phone(tester);
@@ -245,11 +249,13 @@ void main() {
       for (var frame = 0; frame < 8; frame++) {
         await tester.pump(const Duration(milliseconds: 120));
       }
-      await tester.tap(find.byKey(const Key('composer-model-context')));
+      await openComposerTools(tester);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('composer-setting-model')));
       await tester.pumpAndSettle();
       _expectOneSheet(
         apply: 'Use for this conversation',
-        subtitle: "Applies to this conversation's next turns.",
+        subtitle: 'For this conversation',
       );
     });
   });

@@ -11,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import 'kit_bidi.dart';
 import 'kit_icon.dart';
+import 'kit_max_width.dart';
 import 'kit_menu.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
@@ -68,7 +69,10 @@ class KitBreadcrumb extends StatelessWidget {
   String _nameOf(int index) => index < 0 ? rootLabel : segments[index];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return Semantics(
       key: breadcrumbKey,
@@ -256,14 +260,19 @@ class KitBreadcrumb extends StatelessWidget {
       tooltip: cut ? name : null,
       shape: KitShape.button,
       surface: KitSurfaceLevel.ground,
-      child: Padding(
-        padding: EdgeInsetsDirectional.symmetric(horizontal: tokens.space2),
-        child: KitText(
-          KitBidi.auto(display),
-          role: KitTextRole.secondary,
-          tone: KitTextTone.secondary,
-          maxLines: 1,
-          softWrap: false,
+      // No wider than the width the trail was fitted with: words that grew
+      // after the cut (a larger scale) end in an ellipsis, never past the row.
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: textWidth + 2 * tokens.space2),
+        child: Padding(
+          padding: EdgeInsetsDirectional.symmetric(horizontal: tokens.space2),
+          child: KitText(
+            KitBidi.auto(display),
+            role: KitTextRole.secondary,
+            tone: KitTextTone.secondary,
+            maxLines: 1,
+            softWrap: false,
+          ),
         ),
       ),
     );

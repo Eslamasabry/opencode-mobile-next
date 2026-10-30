@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../theme_roles.dart' show readableOn;
-import 'motion/kit_motion_parts.dart' show KitSwap;
+import 'kit_max_width.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
+import 'motion/kit_motion_parts.dart' show KitSwap;
 
 /// Which state a [KitStatusTag] names.
 enum KitStatusTagTone {
@@ -35,7 +37,10 @@ class KitStatusTag extends StatelessWidget {
   final KitStatusTagTone tone;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.chip(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
     final base = switch (tone) {
@@ -52,16 +57,29 @@ class KitStatusTag extends StatelessWidget {
     final ink = plain
         ? roles.text2
         : readableOn(base, [fill], 4.7, toward: roles.text1);
+    // A small control surface in its own tint, from the style resolver
+    // (an ink edge, a square box); the plain tag is words alone in every
+    // style.
+    final solid = BoxDecoration(
+      color: fill,
+      borderRadius: BorderRadius.circular(tokens.space3),
+    );
+    final Decoration look = plain
+        ? solid
+        : KitSurfaceLook.decorate(
+            context,
+            solid: solid,
+            role: KitSurfaceRole.control,
+            color: fill,
+          );
     // A change of tone or word cross-fades (KitMotion.quick), so a tag that
     // turns from Running to Done does not pop.
     return KitSwap(
       alignment: AlignmentDirectional.centerStart,
-      child: DecoratedBox(
+      child: kitSurfaceBox(
         key: ValueKey<(KitStatusTagTone, String)>((tone, label)),
-        decoration: BoxDecoration(
-          color: fill,
-          borderRadius: BorderRadius.circular(tokens.space3),
-        ),
+        style: KitSurfaceLook.styleOf(context),
+        decoration: look,
         child: Padding(
           padding: EdgeInsets.symmetric(
             horizontal: tokens.space2,

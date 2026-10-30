@@ -102,6 +102,11 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
             previousStatus == StreamStatus.disconnected) {
           _markDataRefreshReady(generation, currentApi);
           unawaited(_refreshAfterReconnect(generation, currentApi));
+        } else if (!wasConnected && previousStatus == StreamStatus.connecting) {
+          // The first attach. The open chat reloaded when the transport
+          // came up, before this stream was live: events in between were
+          // never heard, so it reloads again now that they will be.
+          _markDataRefreshReady(generation, currentApi);
         }
         // The stream lost the server and found it again by itself: an
         // automatic act, filed for While you were away (P6.2). A first
@@ -148,6 +153,20 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
       onError: handleError,
     );
     _events = stream;
+    // A channel with a retry schedule says when its next try is; the
+    // connection line counts down to it, so a change of that time is news.
+    if (stream is RetryingEventChannel) {
+      final retrying = stream as RetryingEventChannel;
+      void retryChanged() {
+        if (!_isCurrentStream(generation, currentApi, stream)) {
+          retrying.nextAttempt.removeListener(retryChanged);
+          return;
+        }
+        _notifyListeners();
+      }
+
+      retrying.nextAttempt.addListener(retryChanged);
+    }
     final owner = _connectedProfile ?? profile;
     if (owner != null) {
       _streamPolicy = AutomationPolicyController.forProfile(
@@ -177,7 +196,9 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
     }
     void handleEvent(EventEnvelope event) {
       if (!_isCurrentGlobalStream(generation, currentApi, stream)) return;
+      final settled = _feedObserveRunEvent(event);
       elsewhereAttention.handle(event);
+      if (settled) _notifyListeners();
       _invalidateFeedDirectoryQuestions(event);
       _genUiGlobalEvent(event);
       if (event.type == 'session.created' ||
@@ -230,6 +251,8 @@ extension _ConnectionControllerEventsImpl on ConnectionController {
   void _onEvent(EventEnvelope env) {
     if (_disposed) return;
     final props = env.properties;
+    // The run handlers below notify; the feed only needs to know.
+    _feedObserveRunEvent(env);
     _genUiOnEvent(env);
     final attentionKind = env.type.startsWith('permission.')
         ? AttentionKind.permission

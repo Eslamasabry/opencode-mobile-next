@@ -1,0 +1,94 @@
+{
+ "create": 200,
+ "prompt": 200,
+ "prompt_idle": true,
+ "compact": 200,
+ "compaction_event_types": [
+  "session.compaction.delta",
+  "session.compaction.ended",
+  "session.compaction.started",
+  "session.execution.started",
+  "session.execution.succeeded",
+  "session.inbox.delivered",
+  "session.inbox.enqueued",
+  "session.usage.updated"
+ ],
+ "compaction_ended_keys": [
+  "cost",
+  "model",
+  "reason",
+  "recent",
+  "sessionID",
+  "text",
+  "tokens"
+ ],
+ "compaction_started_keys": [
+  "inputID",
+  "reason",
+  "recent",
+  "sessionID"
+ ],
+ "message_types": [
+  "idle",
+  "compaction",
+  "idle",
+  "assistant",
+  "user"
+ ],
+ "compaction_message_keys": [
+  "cost",
+  "id",
+  "model",
+  "reason",
+  "recent",
+  "status",
+  "summary",
+  "time",
+  "tokens",
+  "type"
+ ],
+ "assistant_content_keys": [
+  "state",
+  "text",
+  "time",
+  "type"
+ ],
+ "idle_filter": 400,
+ "archive_patch": 204,
+ "archived_time_after_patch": false,
+ "list_archived_true": [
+  200,
+  true
+ ],
+ "list_default_contains_archived": [
+  200,
+  true
+ ],
+ "unarchive_patch": 204,
+ "archived_time_after_unarchive": false,
+ "saved_permission_patch_unknown": 404,
+ "delete": 204,
+ "all_event_types": [
+  "server.connected",
+  "session.compaction.delta",
+  "session.compaction.ended",
+  "session.compaction.started",
+  "session.created",
+  "session.execution.started",
+  "session.execution.succeeded",
+  "session.inbox.delivered",
+  "session.inbox.enqueued",
+  "session.instructions.updated",
+  "session.reasoning.delta",
+  "session.reasoning.ended",
+  "session.reasoning.started",
+  "session.retry.scheduled",
+  "session.step.ended",
+  "session.step.started",
+  "session.step.streamed",
+  "session.text.delta",
+  "session.text.ended",
+  "session.text.started",
+  "session.usage.updated"
+ ]
+}

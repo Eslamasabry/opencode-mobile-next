@@ -201,7 +201,7 @@ There is no loading, empty or error state: a chip shows a value its host already
 - **selected:** the check cross-fades in on `KitMotion.quick`.
 - **expanded:** the chevron turns on `KitMotion.standard` with `emphasized`: the same turn as `KitSpin.chevron` (KitMotionParts.md). KitMotionParts builds in the same tier, so the chip draws that turn itself and kit-hygiene (2d) swaps it to `KitSpin.chevron`.
 - **Reduced motion:** both are instant.
-- **No other motion:** no size animation (removing a chip is the host list's change, never `AnimatedSize` in a list, MOT-5) and no ripple spread beyond the pill.
+- **No other motion:** no size animation (removing a chip is the host list's change, never `AnimatedSize` in a list, MOT-5) and no ripple spread beyond the pill (on Android the native ripple, since 2026-10-26, is clipped to the pill).
 - **Haptics:** none (MOT-11).
 
 ## Data safety and honest state

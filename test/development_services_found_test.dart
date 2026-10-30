@@ -139,7 +139,11 @@ void main() {
     await tester.tap(find.byTooltip('Preview vite'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
-    expect(find.text('Preview'), findsWidgets);
+    // The title says "Preview"; the address and Logs sit in its Details
+    // sheet (vision gaps, 2026-10-21).
+    await tester.tap(find.byKey(const ValueKey('dev-preview-title')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
     expect(find.byKey(const ValueKey('dev-preview-logs')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('dev-preview-logs')));
     await tester.pump();

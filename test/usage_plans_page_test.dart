@@ -63,7 +63,7 @@ void main() {
     for (final id in usagePlanProviders) {
       expect(usageKey('usage-add-$id'), findsOneWidget);
     }
-    expect(find.textContaining('In-app Ubuntu'), findsNothing);
+    expect(find.textContaining('On this phone'), findsNothing);
     // One section and no tab strip.
     expect(find.text(_en.usageTabPlans), findsNothing);
   });
@@ -378,7 +378,7 @@ void main() {
       result: _result(readings: [usageReading('codex', 'inapp', account: 'a')]),
     );
     await _open(tester, one);
-    expect(find.textContaining('In-app Ubuntu'), findsNothing);
+    expect(find.textContaining('On this phone'), findsNothing);
 
     final several = await usageHarness(
       connections: const [usageInApp, usagePc],
@@ -542,7 +542,7 @@ void main() {
       ),
     );
     await _open(tester, h);
-    expect(find.textContaining('In-app Ubuntu'), findsNothing);
+    expect(find.textContaining('On this phone'), findsNothing);
     expect(find.text(_en.usageNotSignedInOne), findsOneWidget);
     expect(find.text(_en.usageSignIn), findsOneWidget);
   });
@@ -674,7 +674,7 @@ void main() {
     expect(find.text(_en.usageAddKey), findsNWidgets(2));
     expect(usageKey('usage-no-numbers'), findsNothing);
     // A plan card: the plan and connection under the name, no chevron.
-    expect(find.text('Codex Plus · In-app Ubuntu'), findsOneWidget);
+    expect(find.text('Codex Plus · On this phone'), findsOneWidget);
   });
 
   usageTestWidgets('nothing readable yet: one quiet line above Needs setup', (

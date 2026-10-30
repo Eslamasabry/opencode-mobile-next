@@ -58,6 +58,8 @@ internal class LaunchActivityBridge(private val activity: Activity) {
                 "sessionID" to sessionID,
                 // Widget taps identify the profile; Dart validates the destination.
                 "profileID" to profileID,
+                // A widget's Reply: the chat opens with its composer focused.
+                "reply" to intent.getBooleanExtra(SessionWidgetIntents.EXTRA_REPLY, false).toString(),
                 "monitorToken" to intent.getStringExtra(
                     BackgroundConnectionService.EXTRA_MONITOR_TOKEN
                 ).orEmpty()
@@ -67,5 +69,6 @@ internal class LaunchActivityBridge(private val activity: Activity) {
         intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_SESSION_ID)
         intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_PROFILE_ID)
         intent.removeExtra(BackgroundConnectionService.EXTRA_MONITOR_TOKEN)
+        intent.removeExtra(SessionWidgetIntents.EXTRA_REPLY)
     }
 }

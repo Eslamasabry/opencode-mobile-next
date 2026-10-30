@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
+import 'package:opencode_mobile/state/phrase_chips.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/session_inventory_cache.dart';
 import 'package:opencode_mobile/state/session_tail_cache.dart';
@@ -143,6 +144,31 @@ Future<CaptureController> _open(
 void main() {
   setUpAll(loadCaptureFonts);
 
+  // Jitter J9 (2026-10-28): the saved excerpt had no phrase row, so the
+  // live history brought one and the whole conversation rose by a row.
+  testWidgets('the phrase row the history brings is there from the excerpt', (
+    tester,
+  ) async {
+    final api = _Api();
+    final controller = await _open(tester, api);
+    final phrases = PhraseChipStore.forProfile(
+      controller.store.prefs,
+      'laptop',
+    );
+    await phrases.record('Run the tests', PhraseMoment.idle);
+    await phrases.record('Run the tests', PhraseMoment.idle);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byKey(const ValueKey('chat-opening-excerpt')), findsOneWidget);
+    final chip = find.byKey(const ValueKey('phrase-chip-Run the tests'));
+    expect(chip, findsOneWidget);
+    final before = tester.getTopLeft(chip).dy;
+    api.hold.complete(_turn());
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byKey(const ValueKey('chat-opening-excerpt')), findsNothing);
+    expect(tester.getTopLeft(chip).dy, before);
+  });
+
   testWidgets('a refreshing saved excerpt reads at full contrast', (
     tester,
   ) async {
@@ -184,5 +210,55 @@ void main() {
       matchesGoldenFile('goldens/chat_cold_open_refreshing_dark.png'),
     );
     debugDefaultTargetPlatformOverride = null;
+  });
+
+  // Owner phone, 2026-10-29: the excerpt was saved only when the opening read
+  // finished, so a cold open showed a chat as it was hours before, without
+  // what arrived live afterwards.
+  testWidgets('leaving the chat saves what live events added since the read', (
+    tester,
+  ) async {
+    final api = _Api();
+    final controller = await _open(tester, api, saved: false);
+    api.hold.complete(_turn());
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    final now = DateTime.now().millisecondsSinceEpoch;
+    controller
+      ..handleEventForTesting(
+        captureEvent('message.updated', {
+          'info': {
+            'id': 'msg_live',
+            'sessionID': checkoutSessionID,
+            'role': 'assistant',
+            'time': {'created': now, 'completed': now},
+          },
+        }),
+      )
+      ..handleEventForTesting(
+        captureEvent('message.part.updated', {
+          'sessionID': checkoutSessionID,
+          'part': partJson(
+            id: 'part_live',
+            messageID: 'msg_live',
+            type: 'text',
+            text: 'Arrived after the read.',
+          ),
+        }),
+      );
+    await tester.pump(const Duration(seconds: 1));
+    final owner = controller.profile!;
+    final scope = SessionInventoryCache.scopeFor(owner, projectDirectory, null);
+    final cache = SessionTailCache(controller.store.prefs);
+    // Nothing yet: the read saved the history before the live message.
+    final before = cache.read(owner.id, scope, checkoutSessionID);
+    expect(before?.messages.map((m) => m.id), isNot(contains('msg_live')));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    final after = cache.read(owner.id, scope, checkoutSessionID)!;
+    expect(after.messages.last.id, 'msg_live');
+    expect(after.messages.last.text, 'Arrived after the read.');
   });
 }

@@ -1,4 +1,4 @@
-// Golden renders of "chats first": Chats home (mixed list, Needs you only,
+// Golden renders of "chats first": Chats home (mixed list, Running only,
 // the project filter sheet, the two empty states) and the new chat start
 // screen (with a project, and asking for one), at 412x915 and 1280x800,
 // dark and light, with the app's real fonts.
@@ -27,7 +27,7 @@ final _now = DateTime(2026, 10, 3, 12);
 
 enum _Scene {
   homeMixed('chats_home_mixed'),
-  homeNeedsYou('chats_home_needs'),
+  homeRunning('chats_home_running'),
   homeFilterSheet('chats_home_sheet'),
   homeEmpty('chats_home_empty'),
   homeNoMatch('chats_home_nomatch'),
@@ -162,8 +162,8 @@ Future<void> _mount(
     );
   }
   final Widget home = switch (scene) {
-    _Scene.homeNeedsYou => const ChatsHomeScreen(
-      initialFilter: ChatFeedFilter(needsYou: true),
+    _Scene.homeRunning => const ChatsHomeScreen(
+      initialFilter: ChatFeedFilter(running: true),
     ),
     _Scene.homeNoMatch => const ChatsHomeScreen(
       initialFilter: ChatFeedFilter(

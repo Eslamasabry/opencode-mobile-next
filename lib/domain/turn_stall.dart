@@ -8,6 +8,10 @@ const turnStallSilence = Duration(seconds: 45);
 const turnStallTick = Duration(seconds: 5);
 const turnStallProbeBudget = Duration(seconds: 10);
 
+/// How often an open turn re-reads the waiting permissions and questions,
+/// in case the stream lost an ask.
+const turnStallRereadEvery = Duration(seconds: 15);
+
 enum TurnStallKind { modelSlow, helperDown, network }
 
 /// Safe observations only; errors, URLs, prompts and credentials stay outside
@@ -159,6 +163,8 @@ final class TurnStallTracker {
   /// A tool call (a long command, a sub-agent) that is pending or running is
   /// the agent working, not silence. While one runs the turn is never due;
   /// when the last one finishes the silence clock restarts from that moment.
+  /// The owner reports no tool running when it cannot rule out that the
+  /// tool waits on a lost ask (the waiting requests cannot be read).
   void setToolRunning(String sessionId, bool running) {
     final turn = _turns[sessionId];
     if (turn == null || turn.toolRunning == running) return;

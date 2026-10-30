@@ -177,6 +177,8 @@ void main() {
       expect(find.byKey(const Key('message-stopped')), findsOneWidget);
       // Stopped on purpose is not "No reply came back".
       expect(find.byKey(const Key('no-reply-send-again')), findsNothing);
+      // The Conversations list remembers the stop: "Stopped", not "Done".
+      expect(controller.stoppedByPerson('session-1'), isTrue);
     });
 
     testWidgets('says so on the prompt when nothing came back yet', (
@@ -381,6 +383,92 @@ void main() {
         },
       );
     }
+
+    // Owner, 2026-10-27: "The model is taking longer than usual" showed
+    // while `timeout 900 flutter test …` ran for 12 minutes. A step the
+    // transcript shows running is the agent at work, never a slow model.
+    MessageWithParts runningCommand() => MessageWithParts(
+      info: MessageInfo(
+        id: 'a1',
+        sessionID: 'session-1',
+        role: 'assistant',
+        finish: 'tool-calls',
+        time: MsgTime(created: 10),
+      ),
+      parts: [
+        Part(
+          id: 'a1-bash',
+          callID: 'a1-bash',
+          messageID: 'a1',
+          type: 'tool',
+          toolName: 'bash',
+          toolState: ToolState(
+            status: 'running',
+            input: {
+              'command':
+                  'cd /root/projects/IPTV_King; timeout 900 flutter test '
+                  '--no-pub test/library_screen_test.dart',
+            },
+          ),
+        ),
+      ],
+    );
+
+    testWidgets('a running command is not a slow model: no stall line', (
+      tester,
+    ) async {
+      final api = _Api()..messagesResult = [_user('u1'), runningCommand()];
+      final controller = await _pumpChat(tester, api)
+        ..stall = const TurnStallDiagnosis(
+          kind: TurnStallKind.modelSlow,
+          evidence: TurnStallEvidence(
+            transportConnected: true,
+            endpointReachable: true,
+          ),
+          silentFor: Duration(minutes: 11),
+        );
+      _status(controller, {'type': 'busy'});
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const ValueKey('turn-stall')), findsNothing);
+      expect(find.textContaining('taking longer than usual'), findsNothing);
+
+      // A measured fact still speaks: the link to the agent is down.
+      controller.stall = const TurnStallDiagnosis(
+        kind: TurnStallKind.network,
+        evidence: TurnStallEvidence(transportConnected: false),
+        silentFor: Duration(minutes: 11),
+      );
+      _status(controller, {'type': 'busy'});
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const ValueKey('turn-stall')), findsOneWidget);
+    });
+
+    testWidgets('the command is said once: shown steps leave the live line '
+        'its verb and time', (tester) async {
+      final api = _Api()..messagesResult = [_user('u1'), runningCommand()];
+      final controller = await _pumpChat(tester, api);
+      _status(controller, {'type': 'busy'});
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      final live = find.byKey(const ValueKey('kit-turn-live-line'));
+      bool liveSays(String words) => find
+          .descendant(
+            of: live,
+            matching: find.textContaining(words, findRichText: true),
+          )
+          .evaluate()
+          .isNotEmpty;
+      // Folded, the live line is where the step lives: it names it.
+      expect(liveSays('timeout 900 flutter test'), isTrue);
+      await tester.tap(live);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      // Shown, the step's row says the command; the line does not.
+      expect(liveSays('Running a command'), isTrue);
+      expect(liveSays('timeout 900 flutter test'), isFalse);
+    });
 
     testWidgets('goes when the turn is no longer running', (tester) async {
       final api = _Api()..messagesResult = [_user('u1')];

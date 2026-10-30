@@ -436,9 +436,14 @@ extension _ChatSessionMenu on _ChatScreenState {
       );
       return;
     }
+    final undoAll = _undoAllAction();
     final prompt = await Navigator.of(context).push<String>(
       KitPageRoute<String>(
         builder: (_) => ReviewWorkspace(
+          onUndoAll: undoAll,
+          // One plain sentence first: the agent's own words for its last
+          // turn, or else the conversation's title.
+          summary: _turnSummary() ?? _reviewTitleSummary(),
           // P6.6a: the view picked for the person is said once per server.
           profileId: _conn.profile?.id,
           handoff: _handoff, // UX-103 review handoff
@@ -467,6 +472,32 @@ extension _ChatSessionMenu on _ChatScreenState {
     );
     if (!mounted || prompt == null || prompt.trim().isEmpty) return;
     _addReviewPrompt(prompt);
+  }
+
+  /// The conversation's title as the changes screen's sentence, when it has
+  /// a real one (not the server's "New session - <time>" placeholder).
+  String? _reviewTitleSummary() {
+    final title = displaySessionTitleText(
+      _conn.sessionsById[widget.sessionID]?.title,
+    );
+    if (title.isEmpty || isPlaceholderSessionTitle(title)) return null;
+    final plain = stripIsoStamp(title);
+    return plain.isEmpty ? null : plain;
+  }
+
+  /// "Undo all" on the changes screen: stage an undo from this conversation's
+  /// first prompt, files included. The chat then shows its staged-undo line
+  /// (review, put back, or keep). Null where the server cannot revert, or
+  /// the conversation has no saved prompt to start from.
+  Future<void> Function()? _undoAllAction() {
+    if (!_conn.capabilities.sessionRevert || !_conn.supportsStagedRevert) {
+      return null;
+    }
+    final first = _messages.where(_isUndoTarget).firstOrNull;
+    if (first == null) return null;
+    final review = _conn.reviewSessionRevert(widget.sessionID);
+    return () =>
+        _conn.stageSessionRevert(review, first.info.id, applyFiles: true);
   }
 }
 

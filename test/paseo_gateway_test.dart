@@ -118,6 +118,10 @@ Map<String, dynamic> agentJson(
   String status = 'idle',
   String? archivedAt,
   List<Map<String, dynamic>> pendingPermissions = const [],
+  // A loaded agent's snapshot (the daemon holds it in memory) names its
+  // `activeTurn`; a saved record the daemon has not loaded has none.
+  bool loaded = true,
+  String updatedAt = '2026-09-19T03:35:31.806Z',
 }) => {
   'id': id,
   'provider': 'claude',
@@ -127,7 +131,11 @@ Map<String, dynamic> agentJson(
   'title': 'Agent $id',
   'status': status,
   'createdAt': '2026-09-19T03:35:27.840Z',
-  'updatedAt': '2026-09-19T03:35:31.806Z',
+  'updatedAt': updatedAt,
+  if (loaded)
+    'activeTurn': status == 'running'
+        ? {'turnId': 'turn-$id', 'startedAt': updatedAt}
+        : null,
   'currentModeId': 'default',
   'availableModes': [
     {'id': 'default', 'label': 'Always Ask'},
@@ -737,10 +745,54 @@ void main() {
       final error = events.firstWhere((e) => e.type == 'session.error');
       expect(
         ((error.properties['error'] as Map)['data'] as Map)['message'],
-        'The agent could not finish this reply. Check it on your computer.',
+        'The agent could not finish this reply.',
       );
       expect(types().last, 'session.idle');
     });
+
+    test(
+      'a failed turn whose reply already said why adds no second error',
+      () async {
+        // Kilo signed out: the reply is the agent's error (a row in the
+        // transcript); the turn then fails. A banner on top said the same.
+        daemon.push(
+          'agent_stream',
+          stream('a1', {'type': 'turn_started', 'provider': 'kilo'}),
+        );
+        daemon.push(
+          'agent_stream',
+          stream('a1', {
+            'type': 'timeline',
+            'provider': 'kilo',
+            'item': {
+              'type': 'assistant_message',
+              'text':
+                  '[System Error] Internal error: You need to sign in to use '
+                  'this model.',
+            },
+          }),
+        );
+        daemon.push(
+          'agent_stream',
+          stream('a1', {'type': 'turn_failed', 'provider': 'kilo'}),
+        );
+        await pumpEventQueue();
+        expect(types(), isNot(contains('session.error')));
+        expect(types().last, 'session.idle');
+        // The next turn that fails without a word still says so.
+        events.clear();
+        daemon.push(
+          'agent_stream',
+          stream('a1', {'type': 'turn_started', 'provider': 'kilo'}),
+        );
+        daemon.push(
+          'agent_stream',
+          stream('a1', {'type': 'turn_failed', 'provider': 'kilo'}),
+        );
+        await pumpEventQueue();
+        expect(types(), contains('session.error'));
+      },
+    );
 
     test('events for another folder\'s agent are dropped', () async {
       daemon.push(

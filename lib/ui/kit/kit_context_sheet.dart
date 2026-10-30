@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import 'kit_context_chart.dart';
 import 'kit_context_ring.dart';
 import 'kit_key_value.dart';
+import 'kit_max_width.dart';
 import 'kit_section_label.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -45,7 +46,10 @@ class KitContextSheet extends StatelessWidget {
   final Key? chartKey;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.sheet(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final kit = KitTokens.of(context);
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final format = NumberFormat.decimalPattern(

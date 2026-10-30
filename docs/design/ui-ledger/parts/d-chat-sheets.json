@@ -133,7 +133,7 @@
           "target": null,
           "effect": "Optional rejection reason held in _rejectMessage; autofocus; sent by Send rejection.",
           "gates": [
-            "_rejecting (after Reject… on a server that supports reject messages)"
+            "_rejecting (after Reject\u2026 on a server that supports reject messages)"
           ],
           "destructive": false,
           "file": "lib/ui/screens/chat/permission_sheet.dart"
@@ -348,7 +348,7 @@
         {
           "id": "approval-mode-menu-settings",
           "type": "menu-item",
-          "label": "Approval settings…",
+          "label": "Approval settings\u2026",
           "key": "approval-mode-settings",
           "line": 77,
           "action": "open-sheet",
@@ -441,7 +441,7 @@
         {
           "id": "timeline-sheet-row",
           "type": "list-tile",
-          "label": "<message preview> · You/OpenCode · <time>",
+          "label": "<message preview> \u00b7 You/OpenCode \u00b7 <time>",
           "key": "timeline-row-<messageID>",
           "line": 260,
           "action": "dismiss",
@@ -607,12 +607,12 @@
       "id": "session-menu-sheet",
       "title": "<session title> (sections: Conversation, Display and context, Session actions)",
       "kind": "sheet",
-      "file": "lib/ui/screens/chat/attention_card.dart",
-      "widget": "SessionMenuSheet",
+      "file": "lib/ui/widgets/session_menu.dart",
+      "widget": "sessionMenuItems",
       "presentedBy": [
         "_openSessionMenu"
       ],
-      "line": 499,
+      "line": 136,
       "purpose": "Single app-bar overflow sheet for a chat session: view destinations as chips, display toggles, then mutation and utility actions. Every row pops with a string value that ChatScreen._openSessionMenu switches on.",
       "reachedFrom": [
         {
@@ -640,7 +640,8 @@
           "gates": [
             "resultsAvailable: _conn.capabilities.projectManagement"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-find",
@@ -652,7 +653,8 @@
           "target": null,
           "effect": "Navigator.pop(context, 'find'); ChatScreen._openSessionMenu then calls _openFind(): opens the in-transcript find bar (_findOpen = true).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-timeline",
@@ -665,7 +667,8 @@
           "targetWidget": "_openTimeline",
           "effect": "Navigator.pop(context, 'timeline'); ChatScreen._openSessionMenu then calls _openTimeline().",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-changes",
@@ -680,7 +683,8 @@
           "gates": [
             "changesAvailable: _conn.capabilities.sessionDiff"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-todos",
@@ -711,7 +715,8 @@
           "gates": [
             "subagentsAvailable: _conn.capabilities.projectManagement"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-display-expander",
@@ -723,7 +728,8 @@
           "target": null,
           "effect": "ExpansionTile: expands the display toggles and Context usage row.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-display-toggles",
@@ -749,7 +755,8 @@
           "targetWidget": "SessionContextScreen",
           "effect": "_SessionSheetRow (timeline_sheet.dart:15) pops 'context'; ChatScreen._openSessionMenu then calls _showContext(): pushes SessionContextScreen.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-actions-expander",
@@ -761,7 +768,8 @@
           "target": null,
           "effect": "ExpansionTile: expands the session action rows.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-skills",
@@ -776,7 +784,8 @@
           "gates": [
             "skillsAvailable: _conn.supportsSessionSkills"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-note",
@@ -791,7 +800,8 @@
           "gates": [
             "notesAvailable: _conn.supportsSessionNotes"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-approvals",
@@ -806,7 +816,8 @@
           "gates": [
             "approvalsAvailable (ChatScreen passes true)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-retry",
@@ -818,7 +829,8 @@
           "target": null,
           "effect": "_SessionSheetRow (timeline_sheet.dart:15) pops 'retry'; ChatScreen._openSessionMenu then calls _retryLast(): re-sends the last non-local user prompt.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-revert",
@@ -834,7 +846,8 @@
             "revertAvailable: _conn.capabilities.sessionRevert",
             "!reverted"
           ],
-          "destructive": true
+          "destructive": true,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-restore",
@@ -850,7 +863,8 @@
             "revertAvailable: _conn.capabilities.sessionRevert",
             "reverted (session.reverted == true)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-fork",
@@ -865,7 +879,8 @@
           "gates": [
             "forkAvailable: _conn.capabilities.sessionFork"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-compact",
@@ -879,7 +894,8 @@
           "gates": [
             "compactAvailable: _supportsSessionCompact"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-share",
@@ -895,7 +911,8 @@
             "sharingAvailable: _conn.capabilities.sessionShare",
             "!shared"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-unshare",
@@ -910,7 +927,8 @@
             "sharingAvailable: _conn.capabilities.sessionShare",
             "shared (shareUrl != null)"
           ],
-          "destructive": true
+          "destructive": true,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-shell",
@@ -925,7 +943,8 @@
           "gates": [
             "terminalAvailable: _conn.capabilities.terminal"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-slash",
@@ -938,7 +957,8 @@
           "targetWidget": "_openCommandLauncher",
           "effect": "_SessionSheetRow (timeline_sheet.dart:15) pops 'slash'; ChatScreen._openSessionMenu then calls _openCommandLauncher(): the composer tools / commands sheet.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-continue-computer",
@@ -953,7 +973,8 @@
           "gates": [
             "continueOnComputerAvailable: _conn.capabilities.cliSessionResume"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-continue-phone",
@@ -968,7 +989,8 @@
           "gates": [
             "continueOnPhoneAvailable: _conn.profile != null"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         },
         {
           "id": "session-menu-sheet-reload",
@@ -980,7 +1002,8 @@
           "target": null,
           "effect": "_SessionSheetRow (timeline_sheet.dart:15) pops 'reload'; ChatScreen._openSessionMenu then calls _load(): re-fetches the transcript.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/attention_card.dart"
         }
       ]
     },
@@ -989,11 +1012,11 @@
       "title": "Voice conversation",
       "kind": "overlay",
       "file": "lib/ui/screens/chat/voice_conversation.dart",
-      "widget": "_voiceConversationControls",
+      "widget": "_composerVoice",
       "presentedBy": [
         "_startVoiceConversation"
       ],
-      "line": 377,
+      "line": 497,
       "purpose": "Strip above the chat composer while voice conversation mode is on: Speak replies switch, reply status, Listen / Stop / Read reply / Exit.",
       "reachedFrom": [
         {
@@ -1096,11 +1119,11 @@
       "title": "Local voice input",
       "kind": "sheet",
       "file": "lib/voice/voice_ui.dart",
-      "widget": "_VoiceModelSetupSheet",
+      "widget": "showVoiceModelSetupSheet",
       "presentedBy": [
         "showVoiceModelSetupSheet"
       ],
-      "line": 33,
+      "line": 38,
       "purpose": "Choose, download, re-download or delete the on-device speech model pack and pick the transcription language.",
       "reachedFrom": [
         {
@@ -1127,7 +1150,8 @@
           "gates": [
             "enabled when !busy && manager.supportFor(pack).supported"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/voice/voice_ui.dart"
         },
         {
           "id": "voice-model-setup-sheet-pack-redownload",
@@ -1141,7 +1165,8 @@
           "gates": [
             "manager.isInstalled(pack) && !busy"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/voice/voice_ui.dart"
         },
         {
           "id": "voice-model-setup-sheet-pack-delete",
@@ -1156,7 +1181,8 @@
           "gates": [
             "manager.isInstalled(pack) && !busy"
           ],
-          "destructive": true
+          "destructive": true,
+          "file": "lib/voice/voice_ui.dart"
         },
         {
           "id": "voice-model-setup-sheet-language",
@@ -1170,21 +1196,23 @@
           "gates": [
             "disabled while busy (downloading/verifying)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/voice/voice_ui.dart"
         },
         {
           "id": "voice-model-setup-sheet-technical-details",
           "type": "list-tile",
           "label": "Technical details",
           "key": null,
-          "line": 1046,
+          "line": 204,
           "action": "other",
           "target": null,
           "effect": "ExpansionTile (_VoiceTechnicalDetails): expands the raw selectable error text.",
           "gates": [
             "manager.error != null"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/voice/voice_ui.dart"
         },
         {
           "id": "voice-model-setup-sheet-secondary",
@@ -1196,7 +1224,8 @@
           "target": null,
           "effect": "When busy: manager.cancelDownload(); otherwise Navigator.pop(context, false).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/voice/voice_ui.dart"
         },
         {
           "id": "voice-model-setup-sheet-primary",
@@ -1208,7 +1237,8 @@
           "target": null,
           "effect": "Installed pack: Navigator.pop(context, true) (caller proceeds to the voice sheet). Not installed and supported: manager.downloadSelected(). Disabled when busy or the pack is unsupported on this device.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/voice/voice_ui.dart"
         }
       ]
     },
@@ -1288,7 +1318,7 @@
           "label": "Open subagent session",
           "key": "task-open-session",
           "file": "lib/ui/widgets/tool_card.dart",
-          "line": 1207,
+          "line": 434,
           "action": "navigate",
           "target": "chat",
           "targetWidget": "/chat/<id>",
@@ -1304,8 +1334,8 @@
           "type": "button",
           "label": "Show full prompt / Show less",
           "key": "task-prompt-toggle",
-          "file": "lib/ui/widgets/tool_card.dart",
-          "line": 1548,
+          "file": "lib/ui/widgets/tool_card_body.dart",
+          "line": 572,
           "action": "other",
           "target": null,
           "effect": "setState(_showFull = !_showFull): expands the truncated delegated task prompt (_TaskPrompt).",
@@ -1317,10 +1347,10 @@
         {
           "id": "embedded-tool-card-diff-see-all",
           "type": "button",
-          "label": "See all · {count} lines",
+          "label": "See all \u00b7 {count} lines",
           "key": "tool-body-see-all",
-          "file": "lib/ui/widgets/tool_card.dart",
-          "line": 1487,
+          "file": "lib/ui/widgets/tool_card_body.dart",
+          "line": 78,
           "action": "open-sheet",
           "target": "file-preview-sheet",
           "targetWidget": "showFilePreviewSheet",
@@ -1333,10 +1363,10 @@
         {
           "id": "embedded-tool-card-output-see-all",
           "type": "button",
-          "label": "See all · {count} lines",
+          "label": "See all \u00b7 {count} lines",
           "key": "tool-body-see-all",
-          "file": "lib/ui/widgets/tool_card.dart",
-          "line": 953,
+          "file": "lib/ui/widgets/tool_card_body.dart",
+          "line": 78,
           "action": "open-sheet",
           "target": "file-preview-sheet",
           "targetWidget": "showFilePreviewSheet",
@@ -1352,7 +1382,7 @@
           "label": "Retry image preview",
           "key": null,
           "file": "lib/ui/widgets/tool_card.dart",
-          "line": 1583,
+          "line": 401,
           "action": "other",
           "target": null,
           "effect": "onRetry -> _retryPreview(file): re-runs _loadPreview (data URL or widget.filePreviewLoader).",
@@ -1366,8 +1396,8 @@
           "type": "card",
           "label": "Preview generated image {filename}",
           "key": null,
-          "file": "lib/ui/widgets/tool_card.dart",
-          "line": 1590,
+          "file": "lib/ui/widgets/tool_card_parts.dart",
+          "line": 125,
           "action": "open-sheet",
           "target": "file-preview-sheet",
           "targetWidget": "showFilePreviewSheet",
@@ -1382,8 +1412,8 @@
           "type": "list-tile",
           "label": "Open generated file {filename}",
           "key": "tool-output-file",
-          "file": "lib/ui/widgets/tool_card.dart",
-          "line": 1665,
+          "file": "lib/ui/widgets/tool_card_parts.dart",
+          "line": 202,
           "action": "open-sheet",
           "target": "file-preview-sheet",
           "targetWidget": "showFilePreviewSheet",
@@ -1535,11 +1565,11 @@
       "title": "Code reader",
       "kind": "screen",
       "file": "lib/ui/widgets/markdown.dart",
-      "widget": "_openReader",
+      "widget": "_CodeReaderPage",
       "presentedBy": [
         "_openReader"
       ],
-      "line": 195,
+      "line": 259,
       "purpose": "Full-screen snapshot of one code block with wrap and copy controls.",
       "reachedFrom": [
         {
@@ -1590,53 +1620,6 @@
           "destructive": false,
           "file": "lib/ui/widgets/markdown.dart"
         }
-      ]
-    },
-    {
-      "id": "embedded-question-options",
-      "title": "[Question option rows]",
-      "kind": "overlay",
-      "file": "lib/ui/widgets/question_options.dart",
-      "widget": "QuestionOptionRow",
-      "presentedBy": [],
-      "line": 23,
-      "purpose": "Shared option row and free-text field for agent questions.",
-      "reachedFrom": [],
-      "gates": [],
-      "elements": [
-        {
-          "id": "embedded-question-options-option",
-          "type": "list-tile",
-          "label": "<choice label> (+ Recommended badge)",
-          "key": "question-option-<choice.label>",
-          "file": "lib/ui/widgets/question_options.dart",
-          "line": 57,
-          "action": "other",
-          "target": null,
-          "effect": "InkWell.onTap -> host onTap (select / toggle the choice; the chat card may submit immediately, see embedded-question-attention-card-option).",
-          "gates": [
-            "enabled"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "embedded-question-options-custom-answer",
-          "type": "text-field",
-          "label": "Your answer",
-          "key": null,
-          "file": "lib/ui/widgets/question_options.dart",
-          "line": 86,
-          "action": "other",
-          "target": null,
-          "effect": "TextField with host-provided onChanged / onSubmitted.",
-          "gates": [
-            "host shows it only when prompt.custom"
-          ],
-          "destructive": false
-        }
-      ],
-      "embeddedIn": [
-        "_QuestionAttentionCard (ChatScreen, attention_card.dart:377,387)"
       ]
     },
     {
@@ -1702,38 +1685,38 @@
         {
           "id": "form-sheet-radio-select",
           "type": "toggle",
-          "label": "<field options> (+ Other…)",
+          "label": "<field options> (+ Other\u2026)",
           "key": null,
           "line": 756,
           "action": "other",
           "target": null,
-          "effect": "RadioGroup.onChanged sets _choice[key] or reveals the Other… free-text field.",
+          "effect": "RadioGroup.onChanged sets _choice[key] or reveals the Other\u2026 free-text field.",
           "gates": [],
           "destructive": false
         },
         {
           "id": "form-sheet-dropdown-select",
           "type": "dropdown",
-          "label": "<field options> (+ Other…)",
+          "label": "<field options> (+ Other\u2026)",
           "key": null,
           "line": 805,
           "action": "other",
           "target": null,
-          "effect": "DropdownMenu.onSelected sets the choice or reveals Other….",
+          "effect": "DropdownMenu.onSelected sets the choice or reveals Other\u2026.",
           "gates": [],
           "destructive": false
         },
         {
           "id": "form-sheet-other-text",
           "type": "text-field",
-          "label": "Other…",
+          "label": "Other\u2026",
           "key": "form-field-<key>-other",
           "line": 873,
           "action": "other",
           "target": null,
-          "effect": "Free-text value for the Other… choice.",
+          "effect": "Free-text value for the Other\u2026 choice.",
           "gates": [
-            "Other… selected"
+            "Other\u2026 selected"
           ],
           "destructive": false
         },
@@ -1944,7 +1927,12 @@
       ]
     }
   ],
-  "notPages": [],
+  "notPages": [
+    {
+      "file": "lib/ui/screens/chat/permission_ask.dart",
+      "reason": "Words only: permissionAsk() builds a permission card's question, targets and grant name from the request; drawn by the request cards (permission_sheet.dart)."
+    }
+  ],
   "notes": [
     "lib/ui/screens/chat/session_sheets.dart:111 _DiffSheet is dead code: no constructor call anywhere in lib/ (ChatScreen._showDiff at chat_screen.dart:5795 pushes ReviewWorkspace/DiffView instead).",
     "lib/ui/screens/chat/attention_card.dart:441 _RetryAttentionCard and :466 _ComposerNote have no interactive elements (display-only banners in ChatScreen attention slot).",

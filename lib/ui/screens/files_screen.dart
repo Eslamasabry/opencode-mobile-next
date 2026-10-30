@@ -17,7 +17,6 @@ import '../../state/review_handoff.dart';
 import '../../state/shared_storage_gate.dart';
 import '../app_theme.dart';
 import '../kit/kit_bidi.dart';
-import '../kit/kit_breadcrumb.dart';
 import '../kit/kit_buttons.dart' show KitAction;
 import '../kit/kit_copy.dart';
 import '../kit/kit_divider.dart';
@@ -26,6 +25,7 @@ import '../kit/kit_notice.dart';
 import '../kit/kit_page_route.dart';
 import '../kit/kit_row.dart';
 import '../kit/kit_row_parts.dart' show KitChevron;
+import '../kit/motion/kit_reveal.dart';
 import '../kit/kit_screen.dart';
 import '../kit/kit_scrollbar.dart' show KitScrollArea;
 import '../kit/kit_search_field.dart';
@@ -36,10 +36,10 @@ import '../kit/kit_top_bar.dart';
 import '../kit/kit_undo.dart';
 import '../kit/kit_viewer.dart';
 import '../kit/motion/kit_refresh.dart';
-import '../kit/scenes/states_scenes.dart';
 import '../widgets/file_preview.dart' show FilePreviewData;
 import '../widgets/product_states.dart' show productErrorText;
 import '../widgets/reader_preferences.dart';
+import 'chats/new_chat_screen.dart' show showNewChat;
 import 'review_workspace.dart';
 import 'shared_storage_access_flow.dart';
 
@@ -134,10 +134,27 @@ class FilesScreen extends StatefulWidget {
   final ValueListenable<int>? focusSearchSignal;
   final FilesBackController? backController;
 
-  /// The host's top bar, given the open folder's name (null at the project
-  /// root), so the folder is the title (map files: "current folder as the
-  /// title"). Null: the host draws its own bar, or none.
-  final KitTopBar Function(String? folder)? topBar;
+  /// The host's top bar for the open folder ([path] relative to the
+  /// project, '' at its root), given the browser's [search] action to carry
+  /// as an icon and its [view] choices (Show hidden files, the order) for
+  /// the bar's ⋯. With a host bar the search field stays out of the way
+  /// until that action opens it (vision 2026-10-20: just the files). Null:
+  /// the host draws its own bar, or none, and the field is always shown
+  /// with those choices in its filter.
+  final KitTopBar Function(
+    String path,
+    KitAction search,
+    List<KitMenuItem> view,
+  )?
+  topBar;
+
+  /// The host's heading above the list for the open folder (the page's
+  /// large title and the project line).
+  final Widget Function(String path)? header;
+
+  /// Called after "Ask about this file" put the file in the conversation's
+  /// composer ([handoff]): the host goes back to that conversation.
+  final VoidCallback? onAsked;
 
   const FilesScreen({
     super.key,
@@ -148,6 +165,8 @@ class FilesScreen extends StatefulWidget {
     this.focusSearchSignal,
     this.backController,
     this.topBar,
+    this.header,
+    this.onAsked,
   });
 
   @override
@@ -193,6 +212,18 @@ class _FilesScreenState extends State<FilesScreen> {
   String? _searchOriginPath;
   bool _showHidden = false;
   _FilesNotice? _notice;
+
+  /// The search field is open under a host bar's Search action.
+  bool _searchOpen = false;
+
+  /// Whether the field waits behind the host bar's Search action.
+  bool get _quietSearch => widget.topBar != null;
+
+  bool get _showsSearch =>
+      !_quietSearch ||
+      _searchOpen ||
+      _search.text.isNotEmpty ||
+      _surface != _FileSurface.files;
 
   /// Set when this shared-storage folder lists only hidden entries because
   /// the host that reads it lacks storage access: the list says so instead
@@ -264,11 +295,24 @@ class _FilesScreenState extends State<FilesScreen> {
   /// so a second search replaces the first, the way every desktop find does.
   void _focusSearch() {
     if (!mounted) return;
+    if (!_showsSearch) {
+      // The field is built this frame; focus it once it exists.
+      setState(() => _searchOpen = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _focusSearch());
+      return;
+    }
     _searchFocus.requestFocus();
     _search.selection = TextSelection(
       baseOffset: 0,
       extentOffset: _search.text.length,
     );
+  }
+
+  /// Back from an open, empty search field: the list as it was.
+  void _closeSearch() {
+    if (_surface != _FileSurface.files) _selectSurface(_FileSurface.files);
+    _searchFocus.unfocus();
+    setState(() => _searchOpen = false);
   }
 
   void _searchChanged() {
@@ -381,6 +425,7 @@ class _FilesScreenState extends State<FilesScreen> {
 
   bool get _canNavigateBack =>
       _search.text.isNotEmpty ||
+      (_quietSearch && _showsSearch) ||
       (_surface == _FileSurface.files && _path.isNotEmpty);
 
   bool _handleBack() {
@@ -393,6 +438,8 @@ class _FilesScreenState extends State<FilesScreen> {
     if (!_canNavigateBack) return false;
     if (_search.text.isNotEmpty) {
       _clearSearch();
+    } else if (_quietSearch && _showsSearch) {
+      _closeSearch();
     } else {
       final parts = _path.split('/');
       _navigateTo(parts.take(parts.length - 1).join('/'));
@@ -463,9 +510,6 @@ class _FilesScreenState extends State<FilesScreen> {
       child: content,
     );
   }
-
-  List<String> get _crumbs =>
-      _path.split('/').where((c) => c.isNotEmpty).toList();
 
   @override
   void dispose() {

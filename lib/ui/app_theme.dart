@@ -112,9 +112,29 @@ abstract final class AppTheme {
       labelSmall: arabic(text.labelSmall),
     );
     final text = adapt(theme.textTheme);
+    // The buttons carry their own label style (the kit's button role); it
+    // follows the Arabic face too, or its words fall back to nothing wherever
+    // the bundled face has no Arabic.
+    ButtonStyle? button(ButtonStyle? style) => style?.copyWith(
+      textStyle: WidgetStateProperty.resolveWith(
+        (states) => arabic(style.textStyle?.resolve(states)),
+      ),
+    );
     return theme.copyWith(
       textTheme: text,
       primaryTextTheme: adapt(theme.primaryTextTheme),
+      filledButtonTheme: FilledButtonThemeData(
+        style: button(theme.filledButtonTheme.style),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: button(theme.outlinedButtonTheme.style),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: button(theme.textButtonTheme.style),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: button(theme.elevatedButtonTheme.style),
+      ),
       // The kit's styles follow the face.
       extensions: [
         ...theme.extensions.values,
@@ -134,11 +154,6 @@ abstract final class AppTheme {
   static const codeLineHeight = 19 / codeFontSize;
   static const captionFontSize = 12.0;
   static const bodyFontSize = 16.0;
-
-  /// The canonical corner-radius grid (§4). Controls and buttons take
-  /// [radiusControl]; panels and cards take [radiusCard].
-  static const radiusControl = 14.0;
-  static const radiusCard = 18.0;
 
   /// The colour roles in force.
   static ThemeRoles rolesOf(ThemeData theme) => ThemeRoles.resolve(theme);
@@ -197,14 +212,36 @@ abstract final class AppTheme {
   static const lightSurface = Color(0xFFFFFFFF);
   static const lightAccent = Color(0xFF087F43);
 
-  static ThemeData dark([ThemePack? pack]) =>
-      fromPalette((pack ?? themePack(ThemePackId.opencode)).dark);
+  /// [partner] is the Accent swatch the person picked (null: the pack's
+  /// own partner colour).
+  static ThemeData dark([ThemePack? pack, Color? partner]) => fromPalette(
+    (pack ?? themePack(ThemePackId.opencode)).dark,
+    partner: partner,
+  );
 
-  static ThemeData light([ThemePack? pack]) =>
-      fromPalette((pack ?? themePack(ThemePackId.opencode)).light);
+  static ThemeData light([ThemePack? pack, Color? partner]) => fromPalette(
+    (pack ?? themePack(ThemePackId.opencode)).light,
+    partner: partner,
+  );
 
-  static ThemeData fromPalette(ThemePalette palette) =>
-      fromRoles(palette.themeRoles, base: palette.scheme);
+  /// Saver: the pack's dark theme on a true black ground
+  /// ([ThemeRoles.saver]).
+  static ThemeData saver([ThemePack? pack, Color? partner]) => fromPalette(
+    (pack ?? themePack(ThemePackId.opencode)).dark,
+    partner: partner,
+    saver: true,
+  );
+
+  static ThemeData fromPalette(
+    ThemePalette palette, {
+    Color? partner,
+    bool saver = false,
+  }) {
+    var roles = palette.themeRoles;
+    if (partner != null) roles = roles.withPartner(partner);
+    if (saver) roles = roles.saver;
+    return fromRoles(roles, base: palette.scheme);
+  }
 
   /// The whole theme from a role set: the seam a custom theme uses
   /// (`AppTheme.fromRoles(deriveRoles(accent: …, ground: …, …))`).
@@ -230,9 +267,6 @@ abstract final class AppTheme {
     required ColorScheme scheme,
     required SystemUiOverlayStyle overlayStyle,
   }) {
-    const control = RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(radiusControl)),
-    );
     final r = roles;
     final base = ThemeData(
       useMaterial3: true,
@@ -244,12 +278,13 @@ abstract final class AppTheme {
       dividerColor: r.hairline,
       materialTapTargetSize: MaterialTapTargetSize.padded,
       visualDensity: VisualDensity.standard,
-      // One page transition everywhere (design standard §10): the M3 shared
-      // axis, timed by KitMotion, instant under reduced motion. iOS keeps
-      // its native back-swipe.
+      // Android moves the Android way, with the predictive back gesture
+      // (owner rule 2026-10-26, kit-v2 §7.1); the other platforms keep the
+      // kit's M3 shared axis, timed by KitMotion, instant under reduced
+      // motion. iOS keeps its native back-swipe.
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: KitPageTransitionsBuilder(),
+          TargetPlatform.android: KitAndroidPageTransitionsBuilder(),
           TargetPlatform.fuchsia: KitPageTransitionsBuilder(),
           TargetPlatform.linux: KitPageTransitionsBuilder(),
           TargetPlatform.windows: KitPageTransitionsBuilder(),
@@ -263,7 +298,7 @@ abstract final class AppTheme {
     final button = text.labelLarge!.merge(KitText.styleFor(KitTextRole.button));
     final kit = KitTokens.fromRoles(r, text);
 
-    return base.copyWith(
+    final theme = base.copyWith(
       extensions: [
         AppSemanticColors(success: r.success),
         r,
@@ -291,9 +326,6 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(kit.panelCornerRadius),
-        ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: r.surface2,
@@ -302,9 +334,6 @@ abstract final class AppTheme {
         barrierColor: r.scrim,
         titleTextStyle: text.titleLarge,
         contentTextStyle: text.bodyMedium?.copyWith(color: r.text2),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(kit.panelRadius),
-        ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: r.surface2,
@@ -316,49 +345,6 @@ abstract final class AppTheme {
         showDragHandle: true,
         dragHandleColor: kit.handleColor,
         dragHandleSize: kit.handleSize,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(kit.sheetRadius),
-          ),
-        ),
-      ),
-      navigationBarTheme: NavigationBarThemeData(
-        height: kit.navHeight,
-        elevation: 0,
-        backgroundColor: r.surface2,
-        surfaceTintColor: Colors.transparent,
-        // The active tab's lens: a clear pill of the glass itself.
-        indicatorColor: r.text1.withValues(alpha: r.isDark ? .12 : .08),
-        indicatorShape: const StadiumBorder(),
-        iconTheme: WidgetStateProperty.resolveWith((states) {
-          return IconThemeData(
-            size: 22,
-            color: states.contains(WidgetState.selected) ? r.accent : r.text2,
-          );
-        }),
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          return text.labelSmall?.copyWith(
-            color: states.contains(WidgetState.selected) ? r.text1 : r.text2,
-            fontWeight: states.contains(WidgetState.selected)
-                ? FontWeight.w600
-                : FontWeight.w500,
-            letterSpacing: 0,
-          );
-        }),
-      ),
-      navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: r.ground,
-        indicatorColor: r.surface3,
-        indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusControl),
-        ),
-        selectedIconTheme: IconThemeData(color: r.accent, size: 22),
-        unselectedIconTheme: IconThemeData(color: r.text2, size: 22),
-        selectedLabelTextStyle: text.labelLarge?.copyWith(color: r.text1),
-        unselectedLabelTextStyle: text.labelLarge?.copyWith(
-          color: r.text2,
-          fontWeight: FontWeight.w500,
-        ),
       ),
       inputDecorationTheme: InputDecorationThemeData(
         filled: true,
@@ -382,7 +368,6 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: Size(48, kit.buttonHeight),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          shape: control,
           elevation: 0,
           textStyle: button,
         ),
@@ -393,7 +378,6 @@ abstract final class AppTheme {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           foregroundColor: r.text1,
           side: BorderSide(color: r.hairline, width: 0),
-          shape: control,
           textStyle: button,
         ),
       ),
@@ -401,7 +385,6 @@ abstract final class AppTheme {
         style: TextButton.styleFrom(
           minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          shape: control,
           textStyle: button,
         ),
       ),
@@ -411,7 +394,6 @@ abstract final class AppTheme {
           backgroundColor: r.surface3,
           foregroundColor: r.text1,
           elevation: 0,
-          shape: control,
           textStyle: button,
         ),
       ),
@@ -419,9 +401,6 @@ abstract final class AppTheme {
         style: IconButton.styleFrom(
           minimumSize: const Size.square(48),
           iconSize: 22,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(radiusControl)),
-          ),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -431,7 +410,6 @@ abstract final class AppTheme {
         focusElevation: 0,
         hoverElevation: 0,
         highlightElevation: 0,
-        shape: const StadiumBorder(),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
@@ -440,9 +418,6 @@ abstract final class AppTheme {
         actionTextColor: r.accent,
         elevation: 0,
         insetPadding: const EdgeInsets.all(12),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(radiusControl)),
-        ),
       ),
       chipTheme: ChipThemeData(
         // Comfortable density: chips act as primary filters in this product
@@ -455,7 +430,6 @@ abstract final class AppTheme {
           r.surface3,
         ),
         side: BorderSide.none,
-        shape: const StadiumBorder(),
         labelStyle: text.labelLarge?.copyWith(color: r.text1),
         secondaryLabelStyle: text.labelLarge?.copyWith(color: r.text1),
       ),
@@ -464,29 +438,15 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         textStyle: text.bodyLarge,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusControl),
-          side: BorderSide(color: r.hairline),
-        ),
       ),
       menuTheme: MenuThemeData(
         style: MenuStyle(
           backgroundColor: WidgetStatePropertyAll(r.surface2),
           surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
           elevation: const WidgetStatePropertyAll(0),
-          shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(radiusControl),
-              side: BorderSide(color: r.hairline),
-            ),
-          ),
         ),
       ),
       tooltipTheme: TooltipThemeData(
-        decoration: BoxDecoration(
-          color: r.surface3,
-          borderRadius: BorderRadius.circular(8),
-        ),
         textStyle: text.bodySmall?.copyWith(color: r.text1),
       ),
       badgeTheme: BadgeThemeData(
@@ -538,11 +498,103 @@ abstract final class AppTheme {
         selectionHandleColor: r.accent,
       ),
     );
+    return shaped(theme, kit);
+  }
+
+  static final Expando<Map<KitTokens, ThemeData>> _shapedCache = Expando(
+    'AppTheme.shaped',
+  );
+
+  /// [theme] with every corner of its Material parts taken from [kit]: the
+  /// buttons, chips and the floating action button, fields, cards, dialogs,
+  /// sheets, snack bars, menus and tooltips. [kit] is the theme's own
+  /// tokens when the theme is built; pass the tokens under the person's
+  /// Fine-tune knobs (`KitTokens.of(context)`) and the Material parts follow
+  /// Corners as the kit does. Memoised per theme and tokens.
+  static ThemeData shaped(ThemeData theme, KitTokens kit) {
+    final cache = _shapedCache[theme] ??= {};
+    return cache[kit] ??= _shaped(theme, kit);
+  }
+
+  static ThemeData _shaped(ThemeData theme, KitTokens kit) {
+    RoundedRectangleBorder box(double radius, {BorderSide? side}) =>
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+          side: side ?? BorderSide.none,
+        );
+    final control = box(kit.buttonRadius);
+    final popover = box(
+      kit.popoverCorner,
+      side: BorderSide(color: kit.roles.hairline),
+    );
+    ButtonStyle? button(ButtonStyle? style) =>
+        style?.copyWith(shape: WidgetStatePropertyAll(control));
+    final fields = theme.inputDecorationTheme;
+    InputBorder? field(InputBorder? border) => border is OutlineInputBorder
+        ? border.copyWith(
+            borderRadius: BorderRadius.all(Radius.circular(kit.fieldCorner)),
+          )
+        : border;
+    return theme.copyWith(
+      cardTheme: theme.cardTheme.copyWith(shape: box(kit.panelCornerRadius)),
+      dialogTheme: theme.dialogTheme.copyWith(shape: box(kit.panelRadius)),
+      bottomSheetTheme: theme.bottomSheetTheme.copyWith(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(kit.sheetRadius),
+          ),
+        ),
+      ),
+      inputDecorationTheme: fields.copyWith(
+        border: field(fields.border),
+        enabledBorder: field(fields.enabledBorder),
+        disabledBorder: field(fields.disabledBorder),
+        focusedBorder: field(fields.focusedBorder),
+        errorBorder: field(fields.errorBorder),
+        focusedErrorBorder: field(fields.focusedErrorBorder),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: button(theme.filledButtonTheme.style),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: button(theme.outlinedButtonTheme.style),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: button(theme.textButtonTheme.style),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: button(theme.elevatedButtonTheme.style),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: button(theme.iconButtonTheme.style),
+      ),
+      floatingActionButtonTheme: theme.floatingActionButtonTheme.copyWith(
+        shape: kit.pillBorder(),
+      ),
+      snackBarTheme: theme.snackBarTheme.copyWith(
+        shape: box(kit.popoverCorner),
+      ),
+      chipTheme: theme.chipTheme.copyWith(shape: kit.pillBorder()),
+      popupMenuTheme: theme.popupMenuTheme.copyWith(shape: popover),
+      menuTheme: MenuThemeData(
+        style: theme.menuTheme.style?.copyWith(
+          shape: WidgetStatePropertyAll(popover),
+        ),
+      ),
+      tooltipTheme: theme.tooltipTheme.copyWith(
+        decoration: BoxDecoration(
+          color: kit.roles.surface3,
+          borderRadius: BorderRadius.circular(kit.popoverCorner),
+        ),
+      ),
+    );
   }
 
   static OutlineInputBorder _field(Color color, {double width = 1}) =>
       OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(radiusControl)),
+        borderRadius: const BorderRadius.all(
+          Radius.circular(KitTokens.fieldRadius),
+        ),
         borderSide: BorderSide(color: color, width: width),
       );
 }

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Status widget (2x2): each server online or offline, this phone's Linux, running tasks,
+     and the plan limit closest to running out. Problems come first in the warning or bad tone.
+     StatusWidgetRenderer sets every view on every update. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:layoutDirection="locale" android:background="@drawable/widget_card_dark"
+    android:paddingStart="14dp" android:paddingEnd="14dp" android:paddingTop="12dp" android:paddingBottom="12dp">
+
+    <LinearLayout android:id="@+id/st_header" android:layout_width="match_parent" android:layout_height="24dp"
+        android:gravity="center_vertical">
+        <FrameLayout android:id="@+id/st_tile" android:layout_width="22dp" android:layout_height="22dp"
+            android:background="@drawable/widget_tile_dark">
+            <ImageView android:id="@+id/st_mark" android:layout_width="12dp" android:layout_height="12dp"
+                android:layout_gravity="center" android:src="@drawable/ic_widget_mark"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
+        <TextView android:id="@+id/st_label" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:layout_marginStart="9dp" android:text="@string/widget_status_title"
+            android:fontFamily="sans-serif-medium" android:textSize="13sp" android:maxLines="1" android:ellipsize="end"
+            android:textDirection="locale" android:gravity="start" android:textColor="#FFA3A5AB" />
+        <TextView android:id="@+id/st_age" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="6dp" android:textSize="12sp" android:maxLines="1"
+            android:textColor="#FF8C8F96" android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Shown when the lines do not fill the cell, so they sit in the middle of it. -->
+    <FrameLayout android:id="@+id/st_gap_top" android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:visibility="gone" />
+    <LinearLayout android:id="@+id/st_lines" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:orientation="vertical" />
+
+    <TextView android:id="@+id/st_empty" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="13sp" android:maxLines="3" android:ellipsize="end" android:textDirection="firstStrong"
+        android:gravity="start" android:textColor="#FFA3A5AB" android:visibility="gone" />
+
+    <!-- The plan limit closest to running out. -->
+    <LinearLayout android:id="@+id/st_plan" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" android:orientation="vertical" android:visibility="gone">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+            <TextView android:id="@+id/st_plan_name" android:layout_width="0dp" android:layout_weight="1"
+                android:layout_height="wrap_content" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"
+                android:textDirection="firstStrong" android:gravity="start" android:textColor="#FFF3F3F1" />
+            <TextView android:id="@+id/st_plan_left" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginStart="6dp" android:textSize="12.5sp"
+                android:maxLines="1" android:textColor="#FF8C8F96" />
+        </LinearLayout>
+        <ProgressBar android:id="@+id/st_plan_bar" style="@style/WidgetUsageBar" />
+    </LinearLayout>
+    <!-- Spare height: under the content when it fills the cell, else shared with st_gap_top. -->
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+</LinearLayout>

@@ -4,6 +4,7 @@ import '../domain/models.dart';
 import '../builtin/builtin_linux.dart';
 import '../domain/agent_catalog.dart';
 import '../domain/agent_handoff.dart';
+import '../domain/agent_tools/agent_certification.dart';
 import '../domain/phone_agents.dart';
 import '../domain/phone_agents_source.dart' show AgentModelChoice;
 import '../domain/server_gateway.dart' show ServerGateway;
@@ -37,6 +38,9 @@ class ConnectionContinueWithHost implements ContinueWithHost {
   final int _revision;
   final String? _directory;
   final String? _workspace;
+
+  /// The agent folder this sheet holds open (see [release]).
+  String? _held;
 
   /// The app's side of "still the same source": same saved server, same
   /// location generation, same project.
@@ -157,6 +161,9 @@ class ConnectionContinueWithHost implements ContinueWithHost {
     for (final row in hub.agentRows) {
       final descriptor = AgentCatalog.builtIn.byId(row.id);
       if (descriptor == null) continue;
+      // The same agents New conversation offers: one no version of which is
+      // certified for chat has nothing to continue in.
+      if (!AgentCertificationMatrix.bundled.certifiedForChat(row.id)) continue;
       ContinueWithChoice blocked(ContinueWithBlock why) => ContinueWithChoice(
         key: 'agent:${row.id}',
         agentName: row.name,
@@ -175,10 +182,12 @@ class ConnectionContinueWithHost implements ContinueWithHost {
         case PhoneAgentStatus.limitReached:
           choices.add(blocked(ContinueWithBlock.limitReached));
           continue;
-        case PhoneAgentStatus.stoppedInBackground:
         case PhoneAgentStatus.needsQualification:
           choices.add(blocked(ContinueWithBlock.notReady));
           continue;
+        // Android or an app update stopped the helper: reaching the folder
+        // below starts it again (up to 30 s), so it is not a dead end.
+        case PhoneAgentStatus.stoppedInBackground:
         case PhoneAgentStatus.ready:
           break;
       }
@@ -190,6 +199,10 @@ class ConnectionContinueWithHost implements ContinueWithHost {
       }
       final ServerGateway gateway;
       final List<AgentModelChoice> available;
+      if (_held == null) {
+        hub.holdAgentHandoffTarget(directory);
+        _held = directory;
+      }
       try {
         gateway = await hub.agentHandoffTargetGateway(directory);
         available = await hub.agentModels(row.id);
@@ -202,8 +215,10 @@ class ConnectionContinueWithHost implements ContinueWithHost {
         choices.add(blocked(ContinueWithBlock.noRecordWriter));
         continue;
       }
+      // The helper lists an agent's runtime only once it has asked the CLI
+      // for its models (slow the first time): not ready yet, try again.
       if (available.isEmpty) {
-        choices.add(blocked(ContinueWithBlock.modelUnavailable));
+        choices.add(blocked(ContinueWithBlock.notReady));
         continue;
       }
       final scope = HandoffScope(
@@ -241,6 +256,15 @@ class ConnectionContinueWithHost implements ContinueWithHost {
     return choices;
   }
 
+  /// Lets the folder sync close the agent folder again. Called once the
+  /// sheet has closed; a started conversation has its own backend by then.
+  void release() {
+    final held = _held;
+    if (held == null) return;
+    _held = null;
+    _hub.releaseAgentHandoffTarget(held);
+  }
+
   @override
   AgentHandoffController controllerFor(
     ContinueWithChoice choice, {
@@ -263,6 +287,19 @@ class ConnectionContinueWithHost implements ContinueWithHost {
           _sourceUnchanged &&
           identical(connection.api, source) &&
           connection.sessionsById.containsKey(sessionId),
+      staleReason: () => !isCurrent()
+          ? 'sheet closed or choice changed'
+          : connection.profile?.id != _profileId
+          ? 'another server was opened'
+          : connection.locationRevision != _revision ||
+                connection.directory != _directory ||
+                connection.workspace != _workspace
+          ? 'the conversation\'s project was reopened'
+          : !identical(connection.api, source)
+          ? 'the server connection was replaced'
+          : !connection.sessionsById.containsKey(sessionId)
+          ? 'the conversation left the list'
+          : null,
       onChanged: onChanged,
     );
   }
@@ -283,9 +320,11 @@ class ConnectionContinueWithHost implements ContinueWithHost {
   }
 
   @override
-  Future<void> adopt(ContinueWithChoice choice, String navigationSessionId) {
+  Future<String> adopt(ContinueWithChoice choice, String navigationSessionId) {
     final target = choice.target;
-    if (target == null || choice.agentId == null) return Future.value();
+    if (target == null || choice.agentId == null) {
+      return Future.value(navigationSessionId);
+    }
     return connection.agentHandoffAdopt(
       directory: target.scope.directory,
       agentId: choice.agentId!,

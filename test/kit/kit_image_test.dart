@@ -259,9 +259,9 @@ void main() {
         KitAvatar(name: 'Open AI', image: KitImageSource.memory(png)),
         dpr: 3,
       );
-      // tile = 30 dp = 90 device px: the decode is 90 px tall.
+      // tile = 28 dp = 84 device px: the decode is 84 px tall.
       final decoded = await _decodedSize(tester, find.byType(KitAvatar));
-      expect(decoded, const Size(360, 90));
+      expect(decoded, const Size(336, 84));
     });
 
     testWidgets('filterQuality is high for memory, asset and provider', (

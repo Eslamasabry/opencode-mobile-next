@@ -17,9 +17,9 @@ open class WidgetRouteActivity : Activity() {
         if (savedInstanceState != null) return
         val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
         val ours = ownsWidget(id)
-        val mode = if (configureOnly) "configure" else intent.getStringExtra(WidgetV2Bridge.EXTRA_MODE).orEmpty()
+        val mode = modeFor(id)
         val ready = WidgetV2Bridge.overlayReady(this)
-        if (!ready || !ours || mode !in setOf("configure", "steer", "voice")) {
+        if (!ready || !ours || mode !in setOf("configure", "project", "steer", "voice")) {
             // Pre-31 launchers do not understand configuration_optional. Accept
             // default-style placement while the UI builder gate is disabled;
             // this does not report a style save or execute any widget action.
@@ -56,6 +56,14 @@ open class WidgetRouteActivity : Activity() {
     private fun ownsWidget(id: Int): Boolean {
         val provider = AppWidgetManager.getInstance(this).getAppWidgetInfo(id)?.provider
         return provider != null && provider.packageName == packageName && provider.className in WidgetProviders.allNames
+    }
+
+    /** Edit on the Conversations widget picks its project; the retired entries keep their style window. */
+    private fun modeFor(id: Int): String = when {
+        !configureOnly -> intent.getStringExtra(WidgetV2Bridge.EXTRA_MODE).orEmpty()
+        AppWidgetManager.getInstance(this).getAppWidgetInfo(id)?.provider?.className ==
+            SessionsWideWidgetProvider::class.java.name -> "project"
+        else -> "configure"
     }
 
     @Deprecated("Android activity result compatibility API")

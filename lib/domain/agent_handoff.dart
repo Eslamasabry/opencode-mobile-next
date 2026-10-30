@@ -22,7 +22,8 @@ abstract interface class AgentHandoffTargetGateway
     implements AgentHandoffFileGateway {
   String handoffSessionId(String sessionID);
 
-  /// Maps durable links back to a live gateway alias; identity after restart.
+  /// The id the app opens [sessionID]'s conversation by, on the connection
+  /// it opens it on (which may not be this gateway); identity after restart.
   String handoffNavigationSessionId(String sessionID);
   Future<void> promptAgentHandoff(
     String sessionID, {

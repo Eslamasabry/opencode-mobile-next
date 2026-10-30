@@ -540,21 +540,26 @@ void main() {
   });
 
   group('motion (7, G8x)', () {
-    testWidgets('no size or layout animation in the subtree', (tester) async {
+    // Owner request, 2026-10-27: opening and shutting fold the steps in and
+    // out (size and fade); nothing moves once they have settled.
+    testWidgets('settled: nothing in the subtree animates', (tester) async {
       await _pump(
         tester,
         _line(expanded: true, state: KitWorkState.running),
         reduceMotion: false,
       );
+      await tester.pumpAndSettle();
       final line = find.byType(KitWorkLine);
-      // (A tappable's hover fill is an AnimatedContainer: colour only.)
-      for (final type in [AnimatedSize, SizeTransition]) {
-        expect(
-          find.descendant(of: line, matching: find.byType(type)),
-          findsNothing,
-          reason: '$type',
-        );
+      expect(tester.hasRunningAnimations, isFalse);
+      for (final size in tester.widgetList<SizeTransition>(
+        find.descendant(of: line, matching: find.byType(SizeTransition)),
+      )) {
+        expect(size.sizeFactor.value, 1);
       }
+      expect(
+        find.descendant(of: line, matching: find.byType(AnimatedSize)),
+        findsNothing,
+      );
     });
 
     testWidgets('reduced motion: one pump settles the opening', (tester) async {
@@ -564,31 +569,53 @@ void main() {
       expect(tester.hasRunningAnimations, isFalse);
       expect(find.byKey(_stepsKey), findsOneWidget);
       expect(
-        find.descendant(
-          of: find.byType(KitWorkLine),
-          matching: find.byType(FadeTransition),
-        ),
-        findsNothing,
+        tester
+            .widgetList<Opacity>(
+              find.descendant(
+                of: find.byType(KitWorkLine),
+                matching: find.byType(Opacity),
+              ),
+            )
+            .where((fade) => fade.opacity < 1),
+        isEmpty,
       );
     });
 
-    testWidgets('full motion: steps fade in over quick (paint only)', (
+    testWidgets('full motion: steps unfold and fade in, and fold away', (
       tester,
     ) async {
       await _pump(tester, _line(), reduceMotion: false);
+      final shut = tester.getSize(find.byType(KitWorkLine)).height;
       await tester.tap(find.byKey(_lineKey));
       await tester.pump();
-      final fade = tester.widget<FadeTransition>(
-        find
-            .ancestor(
+      await tester.pump(const Duration(milliseconds: 60));
+      double faded() => tester
+          .widgetList<Opacity>(
+            find.ancestor(
               of: find.byKey(const ValueKey('step-0')),
-              matching: find.byType(FadeTransition),
-            )
-            .first,
-      );
-      expect(fade.opacity.value, lessThan(1));
+              matching: find.byType(Opacity),
+            ),
+          )
+          .map((fade) => fade.opacity)
+          .reduce((a, b) => a < b ? a : b);
+      expect(faded(), lessThan(1));
+      final opening = tester.getSize(find.byType(KitWorkLine)).height;
       await tester.pumpAndSettle();
-      expect(fade.opacity.value, 1);
+      expect(faded(), 1);
+      final open = tester.getSize(find.byType(KitWorkLine)).height;
+      expect(opening, inExclusiveRange(shut, open));
+
+      await tester.tap(find.byKey(_lineKey));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 60));
+      expect(find.byKey(_stepsKey), findsOneWidget, reason: 'folding away');
+      expect(
+        tester.getSize(find.byType(KitWorkLine)).height,
+        inExclusiveRange(shut, open),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(_stepsKey), findsNothing);
+      expect(tester.getSize(find.byType(KitWorkLine)).height, shut);
     });
   });
 

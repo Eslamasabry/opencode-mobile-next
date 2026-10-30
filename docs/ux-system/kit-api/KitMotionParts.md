@@ -58,6 +58,19 @@ class KitSwap extends StatelessWidget {
   });
 }
 
+/// ADDED 2026-10-27 (micro-motion audit, docs/qa/micro-motion-2026-10-27).
+/// A count that changes in place: the new number rolls in from below as the
+/// old one rolls out above (the other way when it falls), both fading, on
+/// KitMotion.quick. Calm: cross-fade only (KitMotion.travels). Off and
+/// reduced motion: at once. Clipped to the number's box only while it rolls.
+/// Used by KitNeedsYou.badge, KitTabSwitcher and KitSegmented counts.
+const KitSwap.count({
+  Key? key,
+  required int count,
+  required Widget child,
+  AlignmentDirectional alignment = AlignmentDirectional.center,
+});
+
 /// Rotates its child. The rotation is paint only and does not change layout.
 class KitSpin extends StatelessWidget {
   /// Animated to [turns] (0.5 = half a turn) on [pace].
@@ -115,6 +128,7 @@ class KitDim extends StatelessWidget {
 
 // Arrivals are the EXISTING KitEntrance (lib/ui/kit/motion/kit_reveal.dart;
 // child, trigger, rise, onMount). It is not redefined or changed here.
+// Calm: fade only (it rises only under Animations: Full, KitMotion.travels).
 
 /// ADDED BY THIS FREEZE. Eases a number toward [value]
 /// (TweenAnimationBuilder's job). The first build shows [value] at once, and
@@ -178,7 +192,8 @@ Every part follows these rules:
 ## Motion and haptics
 
 - **Motion:** `KitMotion` durations and curves only (MOT-1). Paint and transforms only (MOT-5). No blur, scale or fade-scale (MOT-2). Instant under reduced motion and Effects › Animations: Off (MOT-7).
-- **Calm:** these parts behave as under Full: they are finite and nothing loops.
+- **Leaving:** `KitReveal` and `KitAnimatedRows` unfold in over `KitMotion.standard` and fold out on `KitMotion.quick` (leaving is quicker than arriving), on `KitMotion.exit` in the reverse slot. `KitSwap` is `quick` both ways.
+- **Calm:** these parts behave as under Full: they are finite and nothing loops. The exceptions are `KitSwap.count`, whose roll becomes a plain cross-fade, and `KitEntrance`, which fades in place without its rise (Calm: fade only; `KitMotion.travels`).
 - **Haptics:** none (MOT-11).
 
 ## Data safety and honest state

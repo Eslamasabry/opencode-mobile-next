@@ -55,7 +55,9 @@ mixin _ConnectionControllerSessions on ChangeNotifier {
   /// Direct routes and active sessions are independent of inventory pages.
   Future<void> ensureSession(String id) {
     // An opened conversation is seen: its Done tag goes.
-    if (_self._finishedUnseen.remove(id)) _self._notifyListeners();
+    final seen = _self._finishedUnseen.remove(id);
+    final restarted = _self._stoppedByPerson.remove(id);
+    if (seen || restarted) _self._notifyListeners();
     // Its "finished" notification has done its job.
     _self._dismissFinishedAlert(id);
     return _self._refreshOneSession(id);
@@ -67,6 +69,10 @@ mixin _ConnectionControllerSessions on ChangeNotifier {
   /// Busy conversations the status check has seen idle once; see
   /// [_reconcileBusySessionStatuses].
   final _idleOnce = <String>{};
+
+  /// Asks the server which conversations still run and drops the ones it
+  /// says have ended (a missed idle event, a send that failed mid-turn).
+  Future<void> reconcileBusySessions() => _self._refreshBusySessionStatuses();
 
   @visibleForTesting
   Future<void> reconcileBusySessionsForTesting() =>
@@ -239,6 +245,7 @@ extension _ConnectionControllerSessionsImpl on ConnectionController {
           if ((_sessionStatusRevisions[id] ?? 0) > revision) continue;
           if (statuses[id] != null && statuses[id] != 'idle') {
             busySessions.add(id);
+            _turnInterrupts.remove(id);
             _markSessionAttentionActive(id);
             if (!sessionsById.containsKey(id)) {
               unawaited(_refreshOneSession(id));

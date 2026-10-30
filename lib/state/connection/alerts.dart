@@ -22,6 +22,11 @@ mixin _ConnectionControllerAlerts on ChangeNotifier {
   /// Android notification only; pruned lazily against [busySessions].
   final Map<String, String> _runningToolDetail = {};
 
+  /// The first line of the shell command each busy session runs right now
+  /// (`flutter test`), for its row on the Conversations list. Never in a
+  /// notification; cleared with [_runningToolDetail].
+  final Map<String, String> _runningCommand = {};
+
   /// The tool and the file or command of recent tool calls, by call id, so a
   /// request that names only its call ("outside this project") can say what
   /// the call does even where its conversation is not open. At most 64.
@@ -172,10 +177,14 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
     if (action != 'stop_reply' || sessionID.isEmpty) return false;
     final currentApi = api;
     if (currentApi == null || !busySessions.contains(sessionID)) return false;
+    // Stopped from this app: the chat says "You stopped this reply.", not
+    // that another device stopped it.
+    noteStopFromThisApp(sessionID);
     try {
       await currentApi.abort(sessionID);
       return true;
     } catch (_) {
+      noteStopFromThisApp(sessionID, asked: false);
       return false;
     }
   }
@@ -296,6 +305,7 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
         agentName: isAgentBackend ? profile?.name ?? '' : '',
         sessionID: sessionID,
         key: _statusAlertKey(sessionID),
+        subtext: _alertSubtitle(sessionID),
         chatTitle: chatTitle,
         detail: detail,
         reason: kind == CodingAlertKind.error
@@ -324,6 +334,13 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
     }
   }
 
+  /// "MacBook · api-server": the saved server's name and the conversation's
+  /// project, one subtitle for every alert about [sessionID].
+  String _alertSubtitle(String sessionID) => notificationSubtitle(
+    profile?.name,
+    _projectNameOf(sessionsById[sessionID]),
+  );
+
   void _showInputAlert(String sessionID, CodingAlertKind kind) {
     if (sessionID.isEmpty ||
         !_canShowCodingAlert ||
@@ -342,17 +359,12 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
         : (quickReplyQuestion ?? questionForSession(sessionID))?.id ??
               formForSession(sessionID)?.id;
     if (requestID == null || requestID.isEmpty) return;
-    // v2 permission alerts carry the RemoteInput Reply action: its text
-    // maps to reject-with-message (see _handleCodingAlertAction).
-    final permissionReply =
-        kind == CodingAlertKind.permission &&
-        _v2PermissionSessions.containsKey(requestID);
     final alerted = (kind: kind, requestID: requestID);
     if (_alertedInputKinds[sessionID] == alerted) return;
     _alertedInputKinds[sessionID] = alerted;
-    // What the shade shows beside the question: the command or file (masked)
-    // for a permission, the question's own words for a question. The lock
-    // screen keeps only the count.
+    // What the shade shows: a permission asks "Run npm install?" over the
+    // exact command or file (masked); a question is its own words over its
+    // few choices. The lock screen keeps fixed words only.
     final permission = kind == CodingAlertKind.permission
         ? permissionForSession(sessionID)
         : null;
@@ -366,6 +378,7 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
         : question != null && question.prompts.isNotEmpty
         ? redactForNotification(question.prompts.first.question)
         : '';
+    final ask = permission == null ? null : permissionAskOf(permission);
     unawaited(
       backgroundLive
           .showCodingAlert(
@@ -374,15 +387,16 @@ extension _ConnectionControllerAlertsImpl on ConnectionController {
             agentName: isAgentBackend ? profile?.name ?? '' : '',
             sessionID: sessionID,
             key: _inputAlertKey(sessionID),
-            quickReply: quickReplyQuestion != null || permissionReply,
             requestID: requestID,
+            subtext: _alertSubtitle(sessionID),
             chatTitle: displaySessionTitleText(sessionsById[sessionID]?.title),
             detail: detail,
             options: question == null
                 ? const []
                 : notificationOptionsOf(question),
             silent: _quietNow,
-            shellCommand: permission?.commandPreview != null,
+            askAction: ask?.action ?? '',
+            askTarget: ask?.target ?? '',
           )
           .then((shown) {
             if (!shown &&

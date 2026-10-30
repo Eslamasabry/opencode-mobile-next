@@ -8,7 +8,7 @@ KitTappable makes a region act on a tap, the same way everywhere:
 - the target is at least 48 dp;
 - it has a keyboard focus ring;
 - a fine pointer gets a hover fill and a click cursor;
-- a pressed fill replaces the ripple;
+- a press draws the native Material ripple on Android (2026-10-26, kit-v2 top note); elsewhere, and under reduced motion, a flat pressed fill answers it;
 - it has an optional tooltip;
 - right-click and long-press open the same `KitRowMenu` items through `showKitMenu`, and those items are also semantic custom actions.
 
@@ -74,7 +74,7 @@ class KitTappable extends StatefulWidget {
   - Pressed is the step after that, at most surface3.
   - From surface3, both go one step down, to surface2 (the chip rule).
   - Hover shows only while `KitLayout.finePointer` is true, with `SystemMouseCursors.click`. Disabled has no hover and a basic cursor.
-  - Both fills are flat and fill `shape`. There is no ink ripple or splash: VL §7 allows only slides and cross-fades and asks for crisp edges (MOT-2).
+  - Both fills are flat and fill `shape`. **Since 2026-10-26 (owner: "Yes, max Android native animation and support.")** a touch on Android draws the native ripple (`InkSparkle`, `text1` at 12 %) over the part through `KitInkLayer`, clipped to `shape`, and the flat pressed fill is not painted; the flat pressed fill stays on other platforms and under `KitMotion.reduced`. The menu-open hold keeps its flat fill everywhere.
 - **Focus ring.**
   - It is shown only when focus came from the keyboard (`FocusHighlightMode.traditional`).
   - It is drawn inside the bounds, so a parent's clip cannot cut it: exactly `focusRingWidth(context)` (2 physical px, LOOK-21) in `accent` (LOOK-6), following `shape`.
@@ -130,10 +130,10 @@ class KitTappable extends StatefulWidget {
 
 ## Motion and haptics
 
-- The hover fill cross-fades in on `KitMotion.quick` with `KitMotion.enter`; the pressed fill appears at once (the next frame), and a fill that clears fades on `KitMotion.exit`. Under `KitMotion.reduced` every change is instant.
+- The hover fill cross-fades in on `KitMotion.quick` with `KitMotion.enter`; the pressed fill appears at once (the next frame), and a fill that clears fades on `KitMotion.enter` too (it starts fading at once). Under `KitMotion.reduced` every change is instant.
 - The focus ring appears at once.
 - No `AnimationController` runs at rest.
-- **Haptics:** none. Long-press feedback is turned off (`enableFeedback: false`), because MOT-11 allows vibration only through `KitHaptics` and nothing on rows.
+- **Haptics:** a long-press that opens the menu (or runs the `onLongPress` hook) plays `KitHaptics.longPress`, the platform's long-press tick (2026-10-26, MOT-11). A tap is silent.
 
 ## Data safety and honest state
 

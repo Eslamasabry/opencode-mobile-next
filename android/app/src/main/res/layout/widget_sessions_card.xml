@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- 2x2 and 4x2: one conversation card per page; several working turns flip. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@android:id/background" android:layout_width="match_parent" android:layout_height="match_parent"
-    android:layoutDirection="locale" android:background="@drawable/widget_card_bg">
-    <ViewFlipper android:id="@+id/wc_flipper" android:layout_width="match_parent" android:layout_height="match_parent"
-        android:autoStart="true" android:flipInterval="6000"
-        android:inAnimation="@anim/widget_slide_in" android:outAnimation="@anim/widget_slide_out" />
-</FrameLayout>

@@ -1,8 +1,9 @@
 // TEAM-205: the run Overview's Merge section (02-ux §8a) over a scripted
 // merge gateway. The section is absent while work is open; readiness
 // lines render with ✓/✗ and the failing line's detail; Merge is disabled
-// with the missing line named; Approve needs one confirmation and sends
-// approveMerge; Merge is two-step and sends merge; a host refusal shows
+// with the missing line named; ready, it is the conversation's one question
+// card (vision 2026-10-20): Approve sends approveMerge at once, then one tap
+// on Merge into main sends merge (the card is the question); a host refusal shows
 // the boundary that blocked it; force / reset / delete have no verb, key
 // or copy anywhere on the phone; receipt states; 320dp/2.5x LTR + RTL.
 
@@ -465,37 +466,62 @@ void main() {
     });
   });
 
-  group('readiness lines', () {
-    testWidgets('every line renders with ✓ and the files line', (tester) async {
+  /// The merge gate's card ([KitRequestCard], question look).
+  KitRequestCard card(WidgetTester tester) => tester.widget<KitRequestCard>(
+    find.descendant(
+      of: key('team-merge-section'),
+      matching: find.byType(KitRequestCard),
+      matchRoot: true,
+    ),
+  );
+
+  group('the merge gate', () {
+    testWidgets('ready: one question card naming the count and the branch, '
+        'the files and the checks in one line', (tester) async {
       final (controller, _) = await boot();
       await pumpRun(tester, controller);
-      expect(textOf(tester, 'team-merge-title'), 'Ready to merge');
-      expect(textOf(tester, 'team-merge-request'), 'merge request $_requestId');
-      for (final line in teamMergeKnownLines) {
-        expect(key('team-merge-line-$line'), findsOneWidget);
-      }
-      // One checklist: every line done.
+      final gate = card(tester);
+      expect(gate.look, KitRequestLook.question);
+      expect(gate.kind, KitRequestKind.gate);
+      expect(textOf(tester, 'team-merge-title'), 'Merge 14 changes into main?');
+      expect(
+        find.text('14 files · +841 / −203 · all 6 checks passed'),
+        findsOneWidget,
+      );
+      // The request waits for an approval: that is the next step, the one
+      // primary; Merge comes after it. Review changes is the secondary.
+      expect(roleOf(tester, 'team-merge-approve'), KitButtonRole.primary);
+      expect(key('team-merge-merge'), findsNothing);
+      expect(roleOf(tester, 'team-merge-review'), KitButtonRole.secondary);
+      // The checks are not listed on the card; Review changes holds them.
+      expect(find.byType(KitChecklist), findsNothing);
+      // No cost: no host reports a task's own.
+      expect(find.textContaining(r'$'), findsNothing);
+    });
+
+    testWidgets('Review changes opens the checks first, then the files', (
+      tester,
+    ) async {
+      final (controller, _) = await boot();
+      await pumpRun(tester, controller);
+      await tester.tap(key('team-merge-review'));
+      await tester.pumpAndSettle();
+      expect(key('team-merge-changes'), findsOneWidget);
       final ticks = [
         for (final step
             in tester.widget<KitChecklist>(find.byType(KitChecklist)).steps)
           step.state,
       ];
       expect(ticks, List.filled(6, KitMarkState.done));
-      // The work line keeps its count as its supporting line.
-      expect(find.text('Work items'), findsOneWidget);
+      for (final line in teamMergeKnownLines) {
+        expect(key('team-merge-line-$line'), findsOneWidget);
+      }
       expect(find.text('18/18 work items'), findsOneWidget);
-      expect(find.text('Tests'), findsOneWidget);
-      expect(find.text('No conflicts'), findsOneWidget);
-      expect(find.text('Acceptance criteria'), findsOneWidget);
-      expect(textOf(tester, 'team-merge-files'), '14 files · +841 / −203');
-      expect(key('team-merge-review'), findsOneWidget);
-      expect(key('team-merge-approve'), findsOneWidget);
-      expect(key('team-merge-merge'), findsOneWidget);
-      expect(enabled(tester, 'team-merge-merge'), isTrue);
-      expect(key('team-merge-disabled-reason'), findsNothing);
+      expect(find.text('lib/sync/engine.dart'), findsOneWidget);
     });
 
-    testWidgets('a missing line disables Merge and names it', (tester) async {
+    testWidgets('a missing line: a calm panel, Merge off with the line '
+        'named', (tester) async {
       final (controller, _) = await boot(
         readiness: _ready(
           lines: [
@@ -509,6 +535,8 @@ void main() {
         ),
       );
       await pumpRun(tester, controller);
+      // Nobody can act yet: no question card, never amber.
+      expect(find.byType(KitRequestCard), findsNothing);
       expect(textOf(tester, 'team-merge-title'), 'Not ready to merge');
       expect(enabled(tester, 'team-merge-merge'), isFalse);
       expect(
@@ -524,7 +552,7 @@ void main() {
       expect(tests.state, KitMarkState.failed);
       expect(find.textContaining('waiting for review: w2'), findsOneWidget);
       // Review changes stays available to look at what is there.
-      expect(enabled(tester, 'team-merge-review'), isTrue);
+      expect(key('team-merge-review'), findsOneWidget);
     });
 
     testWidgets('a pending line says the host is still running it', (
@@ -555,11 +583,12 @@ void main() {
       );
     });
 
-    testWidgets('an unsatisfied boundary is shown and disables Merge', (
+    testWidgets('an unsatisfied boundary turns Merge off with its reason', (
       tester,
     ) async {
-      final (controller, _) = await boot(
+      final (controller, gateway) = await boot(
         readiness: _ready(
+          approvedBy: 'alice@example.com',
           boundaries: const [
             MergeBoundary(
               key: 'require_approval',
@@ -570,12 +599,15 @@ void main() {
         ),
       );
       await pumpRun(tester, controller);
-      expect(textOf(tester, 'team-merge-title'), 'Ready to merge');
+      expect(textOf(tester, 'team-merge-title'), 'Merge 14 changes into main?');
       expect(enabled(tester, 'team-merge-merge'), isFalse);
       expect(
-        textOf(tester, 'team-merge-boundary'),
-        'Host boundary: Never merge without approval',
+        find.text('Host boundary: Never merge without approval'),
+        findsOneWidget,
       );
+      await tester.tap(key('team-merge-merge'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(gateway.calls, isEmpty);
     });
 
     testWidgets('readiness unavailable and no merge roles', (tester) async {
@@ -605,15 +637,11 @@ void main() {
   });
 
   group('approve', () {
-    testWidgets('approves at once (no sheet), then Merge is the next step', (
+    testWidgets('approves at once (no sheet), then the card merges', (
       tester,
     ) async {
       final (controller, gateway) = await boot();
       await pumpRun(tester, controller);
-      expect(enabled(tester, 'team-merge-approve'), isTrue);
-      // The next step is the one primary: Approve while it waits for it.
-      expect(roleOf(tester, 'team-merge-approve'), KitButtonRole.primary);
-      expect(roleOf(tester, 'team-merge-merge'), KitButtonRole.secondary);
       await tester.tap(key('team-merge-approve'));
       await tester.pumpAndSettle();
       expect(key('team-merge-approve-sheet'), findsNothing);
@@ -625,15 +653,15 @@ void main() {
         targetId: _requestId,
       )!;
       expect(record.status, MutationStatus.confirmed);
-      expect(textOf(tester, 'team-merge-approve-receipt'), 'Approval recorded');
       // The readiness is read again after the host answered.
       expect(gateway.readinessReads, 2);
-      // Approved: Merge is the one next step; the receipt stays.
+      // Approved: Merge into main is the card's one next step.
       expect(key('team-merge-approve'), findsNothing);
       expect(roleOf(tester, 'team-merge-merge'), KitButtonRole.primary);
+      expect(find.text('Merge into main'), findsOneWidget);
     });
 
-    testWidgets('gone when the host already recorded an approval', (
+    testWidgets('already approved on the host: straight to Merge', (
       tester,
     ) async {
       final (controller, _) = await boot(
@@ -642,18 +670,16 @@ void main() {
       await pumpRun(tester, controller);
       expect(key('team-merge-approve'), findsNothing);
       expect(roleOf(tester, 'team-merge-merge'), KitButtonRole.primary);
-      expect(
-        textOf(tester, 'team-merge-approved-by'),
-        'Approved by alice@example.com',
-      );
     });
   });
 
   group('merge', () {
-    testWidgets('one confirmation names the task, the files and the branch', (
+    testWidgets('one tap merges: the card is the question, no second sheet', (
       tester,
     ) async {
-      final (controller, gateway) = await boot();
+      final (controller, gateway) = await boot(
+        readiness: _ready(approvedBy: 'alice@example.com'),
+      );
       gateway.answer = (call) async => MutationReceipt(
         id: call.requestId,
         status: MutationReceiptStatus.accepted,
@@ -671,21 +697,9 @@ void main() {
         },
       );
       await pumpRun(tester, controller);
-      expect(find.text('Merge'), findsOneWidget);
-
-      // One tap opens the only confirmation, with the §8a copy and what
-      // is merged; nothing is sent yet.
       await tester.tap(key('team-merge-merge'));
       await tester.pumpAndSettle();
-      expect(key('team-merge-confirm-sheet'), findsOneWidget);
-      expect(find.text('Merge into main?'), findsOneWidget);
-      expect(find.text('This cannot be undone from the phone'), findsOneWidget);
-      expect(find.text('Task: Offline-first sessions'), findsOneWidget);
-      expect(find.textContaining('files · +'), findsWidgets);
-      expect(gateway.calls, isEmpty);
-
-      await tester.tap(key('team-merge-confirm'));
-      await tester.pumpAndSettle();
+      expect(key('team-merge-confirm-sheet'), findsNothing);
       expect(gateway.calls, hasLength(1));
       expect(gateway.calls.single.verb, 'merge');
       expect(gateway.calls.single.target, _runId);
@@ -694,34 +708,23 @@ void main() {
         targetId: _runId,
       )!;
       expect(record.status, MutationStatus.confirmed);
+      // Merged: one quiet line, where it landed, that opens the changes;
+      // no Merge that can no longer do anything.
+      expect(find.byType(KitRequestCard), findsNothing);
       expect(
         textOf(tester, 'team-merge-receipt'),
         'Merged into main · c02e375',
       );
-      expect(textOf(tester, 'team-merge-title'), 'Merged');
-      // Merged: no Merge button that can no longer do anything
-      // (slice-close-team); Review changes stays.
       expect(key('team-merge-merge'), findsNothing);
       expect(key('team-merge-review'), findsOneWidget);
       expect(gateway.readinessReads, 2);
     });
 
-    testWidgets('a cancelled confirmation sends nothing', (tester) async {
-      final (controller, gateway) = await boot();
-      await pumpRun(tester, controller);
-      await tester.tap(key('team-merge-merge'));
-      await tester.pumpAndSettle();
-      expect(key('team-merge-confirm-sheet'), findsOneWidget);
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-      expect(gateway.calls, isEmpty);
-      expect(find.text('Merge'), findsOneWidget);
-    });
-
-    testWidgets('a host refusal on a boundary shows the boundary text', (
-      tester,
-    ) async {
-      final (controller, gateway) = await boot();
+    testWidgets('a host refusal on a boundary stays on the card, and Merge '
+        'is usable again', (tester) async {
+      final (controller, gateway) = await boot(
+        readiness: _ready(approvedBy: 'alice@example.com'),
+      );
       gateway.answer = (call) async => MutationReceipt(
         id: call.requestId,
         status: MutationReceiptStatus.rejected,
@@ -744,40 +747,40 @@ void main() {
       await pumpRun(tester, controller);
       await tester.tap(key('team-merge-merge'));
       await tester.pumpAndSettle();
-      await tester.tap(key('team-merge-confirm'));
-      await tester.pumpAndSettle();
       expect(gateway.calls.single.verb, 'merge');
-      // Refused: why, and the next step (Try again, Review changes).
       expect(
-        textOf(tester, 'team-merge-receipt'),
-        contains('Host boundary: Never merge without approval'),
+        find.textContaining('Host boundary: Never merge without approval'),
+        findsOneWidget,
       );
-      expect(
-        textOf(tester, 'team-merge-receipt'),
-        contains('Nothing was merged.'),
-      );
-      expect(key('team-merge-retry'), findsOneWidget);
-      // A refused merge is settled: the button is usable again.
+      // A refused merge is settled: the card asks again.
       expect(enabled(tester, 'team-merge-merge'), isTrue);
-      await tester.tap(key('team-merge-retry'));
-      await tester.pumpAndSettle();
-      expect(key('team-merge-confirm-sheet'), findsOneWidget);
-    });
-
-    testWidgets('a plain refusal shows the host message', (tester) async {
-      final (controller, gateway) = await boot();
-      gateway.answer = (call) async =>
-          MutationReceipt.rejected(call.requestId, 'not ready: tests exit 1');
-      await pumpRun(tester, controller);
       await tester.tap(key('team-merge-merge'));
       await tester.pumpAndSettle();
-      await tester.tap(key('team-merge-confirm'));
-      await tester.pumpAndSettle();
-      expect(
-        textOf(tester, 'team-merge-receipt'),
-        contains('The host refused: not ready: tests exit 1'),
-      );
+      expect(gateway.calls, hasLength(2));
     });
+
+    testWidgets(
+      'a plain refusal says so in words; the host message is under Details',
+      (tester) async {
+        final (controller, gateway) = await boot(
+          readiness: _ready(approvedBy: 'alice@example.com'),
+        );
+        gateway.answer = (call) async =>
+            MutationReceipt.rejected(call.requestId, 'not ready: tests exit 1');
+        await pumpRun(tester, controller);
+        await tester.tap(key('team-merge-merge'));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('tests exit 1'), findsNothing);
+        expect(find.textContaining('The host refused'), findsNothing);
+        expect(find.textContaining('did not accept'), findsWidgets);
+        await tester.tap(key('team-merge-receipt-details'));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('not ready: tests exit 1'), findsWidgets);
+        await tester.tap(key('team-merge-merge'));
+        await tester.pumpAndSettle();
+        expect(gateway.calls, hasLength(2));
+      },
+    );
 
     testWidgets('already on the target branch: no Merge, the commit shown', (
       tester,
@@ -786,7 +789,6 @@ void main() {
         readiness: _ready(mergeCommit: 'abcdef0123456789', branches: const []),
       );
       await pumpRun(tester, controller);
-      expect(textOf(tester, 'team-merge-title'), 'Merged');
       // Only where it landed and Review changes: no checks, no request,
       // no Merge (slice-close-team).
       expect(
@@ -802,23 +804,24 @@ void main() {
   });
 
   group('receipt states', () {
+    KitReceiptState receiptState(WidgetTester tester) =>
+        tester.widget<KitReceipt>(key('team-merge-receipt')).state;
+
     testWidgets('sent while the host has not answered, then confirmed', (
       tester,
     ) async {
-      final (controller, gateway) = await boot();
+      final (controller, gateway) = await boot(
+        readiness: _ready(approvedBy: 'alice@example.com'),
+      );
       final gate = Completer<MutationReceipt>();
       gateway.answer = (_) => gate.future;
       await pumpRun(tester, controller);
       await tester.tap(key('team-merge-merge'));
-      await tester.pumpAndSettle();
-      await tester.tap(key('team-merge-confirm'));
       await tester.pump();
       await tester.pump();
-      expect(
-        textOf(tester, 'team-merge-receipt'),
-        'Sent · waiting for the host to confirm',
-      );
-      expect(enabled(tester, 'team-merge-merge'), isFalse);
+      // The card says the answer and its receipt; nothing to press twice.
+      expect(receiptState(tester), KitReceiptState.sending);
+      expect(key('team-merge-merge'), findsNothing);
       gate.complete(
         MutationReceipt(
           id: gateway.calls.single.requestId,
@@ -839,7 +842,9 @@ void main() {
     testWidgets('a transport failure is unconfirmed, never re-sent', (
       tester,
     ) async {
-      final (controller, gateway) = await boot();
+      final (controller, gateway) = await boot(
+        readiness: _ready(approvedBy: 'alice@example.com'),
+      );
       gateway.answer = (call) async => MutationReceipt(
         id: call.requestId,
         status: MutationReceiptStatus.pending,
@@ -848,12 +853,7 @@ void main() {
       await pumpRun(tester, controller);
       await tester.tap(key('team-merge-merge'));
       await tester.pumpAndSettle();
-      await tester.tap(key('team-merge-confirm'));
-      await tester.pumpAndSettle();
-      expect(
-        textOf(tester, 'team-merge-receipt'),
-        'Sent, unconfirmed — check on the host before re-sending',
-      );
+      expect(receiptState(tester), KitReceiptState.notConfirmed);
       expect(gateway.calls, hasLength(1));
       await tester.pump(const Duration(seconds: 90));
       expect(gateway.calls, hasLength(1));
@@ -867,11 +867,7 @@ void main() {
       await tester.tap(key('team-merge-approve'));
       await tester.pump();
       await tester.pump();
-      expect(
-        textOf(tester, 'team-merge-approve-receipt'),
-        'Sent · waiting for the host to confirm',
-      );
-      expect(enabled(tester, 'team-merge-approve'), isFalse);
+      expect(receiptState(tester), KitReceiptState.sending);
       gate.complete(
         MutationReceipt(
           id: gateway.calls.single.requestId,
@@ -881,17 +877,16 @@ void main() {
       );
       await tester.pumpAndSettle();
       // A 202 waits for the host's bead event.
-      expect(
-        textOf(tester, 'team-merge-approve-receipt'),
-        'Sent · waiting for the host to confirm',
-      );
+      expect(receiptState(tester), KitReceiptState.sending);
       gateway.stream.add(
         BeadChanged(beadId: _requestId, change: BeadChange.updated),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pumpAndSettle();
-      expect(textOf(tester, 'team-merge-approve-receipt'), 'Approval recorded');
+      // Recorded: the card's next step is Merge.
+      expect(key('team-merge-approve'), findsNothing);
+      expect(key('team-merge-merge'), findsOneWidget);
     });
   });
 
@@ -971,13 +966,11 @@ void main() {
       for (final word in ['Force', 'Reset', 'Delete', 'worktree']) {
         expect(find.textContaining(word), findsNothing, reason: word);
       }
-      // Design standard §2: the section's three buttons are one kit block
-      // (the next step primary, the other secondary, Review changes
-      // tertiary).
+      // The gate's two buttons: Review changes, then the one next step.
       final section = key('team-merge-section');
       expect(
         find.descendant(of: section, matching: find.byType(KitButton)),
-        findsNWidgets(3),
+        findsNWidgets(2),
       );
     });
   });

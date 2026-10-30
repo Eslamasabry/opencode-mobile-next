@@ -21,6 +21,9 @@ mixin _ConnectionControllerLifecycle on ChangeNotifier {
   bool _disposed = false;
   bool _lifecycleSuspended = false;
   bool _lifecycleWasBackgrounded = false;
+
+  /// Between a suspend and the next resume: the app is out of sight.
+  bool _appBackgrounded = false;
   Future<void>? _lifecycleResume;
 
   /// Completes once the wake-time transport can carry requests, which is
@@ -83,6 +86,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     if (_disposed || isIsolated) return;
     ++_paIdleLifecycleEpoch;
     _resetTurnStalls();
+    _appBackgrounded = true;
     _lifecycleWasBackgrounded = true;
     _usageSubscriptions?.setRuntime(
       foreground: false,
@@ -121,6 +125,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   /// The body of [resumeFromLifecycle].
   Future<void> _resumeFromLifecycle() {
     if (_disposed || isIsolated) return Future.value();
+    _appBackgrounded = false;
     _usageSubscriptions?.setRuntime(
       foreground: true,
       backgroundAllowed: keepLiveInBackground && backgroundLive.active,
@@ -158,6 +163,8 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     _dismissAllCodingAlerts(clearActive: true);
     final profile = _connectedProfile;
     if (profile == null) return Future.value();
+    // Back in front: the link is rebuilt quietly for a moment.
+    _beginResumeQuiet();
     return _trackLifecycleResume(
       (transportReady) => _resumeLifecycleTransport(
         profile,
@@ -170,8 +177,13 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
   }
 
   /// The body of [retryConnection].
-  Future<void> _retryConnection() {
+  Future<void> _retryConnection({bool byPerson = true}) {
     if (_disposed || isIsolated) return Future.value();
+    if (byPerson && _resumeQuietUntil != null) {
+      // The person asked: the line says it is reconnecting at once.
+      _endResumeQuiet();
+      _notifyListeners();
+    }
     final inFlight = _manualReconnect ?? _lifecycleResume;
     if (inFlight != null) return inFlight;
 
@@ -186,6 +198,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
 
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
+    _appBackgrounded = false;
     _dismissAllCodingAlerts(clearActive: true);
 
     late final Future<void> tracked;
@@ -376,7 +389,7 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
     }
     _startEvents(generation, currentApi, automaticRecovery: automaticRecovery);
     onTransportReady?.call();
-    _markDataRefreshReady(generation, currentApi);
+    _markDataRefreshReadyAfterStart(generation, currentApi);
     return true;
   }
 
@@ -396,6 +409,22 @@ extension _ConnectionControllerLifecycleImpl on ConnectionController {
       _transportReady = true;
       dataRefreshRevision += 1;
     }
+  }
+
+  /// [_markDataRefreshReady] right after [_startEvents]. A stream that is
+  /// live already asked for the reload as it connected (see `handleStatus`
+  /// in `_startEvents`); one that is still connecting asks again when it
+  /// is, so the reload now covers a stream that never comes up.
+  void _markDataRefreshReadyAfterStart(
+    int generation,
+    ServerGateway currentApi,
+  ) {
+    if (status == StreamStatus.connected &&
+        _isCurrent(generation, currentApi)) {
+      _transportReady = true;
+      return;
+    }
+    _markDataRefreshReady(generation, currentApi);
   }
 
   bool _isCurrent(int generation, ServerGateway? currentApi) =>

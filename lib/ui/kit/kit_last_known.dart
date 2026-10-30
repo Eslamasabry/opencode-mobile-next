@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import 'kit_max_width.dart';
 import 'kit_row.dart';
 
 /// One row of [KitLastKnown]: a label remembered from the last time the
@@ -56,7 +57,10 @@ class KitLastKnown extends StatelessWidget {
   final Key? labelKey;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final label = refreshing ? l10n.kitLastKnownRefreshing(updated) : updated;
     return Semantics(

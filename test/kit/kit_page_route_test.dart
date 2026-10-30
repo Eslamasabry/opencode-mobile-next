@@ -138,9 +138,12 @@ void main() {
 
   testWidgets(
     'under a bare ThemeData the kit\'s own transition still plays, not the '
-    'platform default',
+    'platform default (off Android: Android has its own since 2026-10-26)',
     (tester) async {
-      final context = await _pumpApp(tester, theme: ThemeData());
+      final context = await _pumpApp(
+        tester,
+        theme: ThemeData(platform: TargetPlatform.fuchsia),
+      );
       unawaited(pushKitPage<void>(context, (_) => const Text('B')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 125));
@@ -215,7 +218,12 @@ void main() {
   testWidgets('RTL: the arriving page slides in from the left (negative x)', (
     tester,
   ) async {
-    final context = await _pumpApp(tester, locale: const Locale('ar'));
+    // The kit's own transition (off Android; Android uses its own).
+    final context = await _pumpApp(
+      tester,
+      locale: const Locale('ar'),
+      theme: ThemeData(platform: TargetPlatform.fuchsia),
+    );
     unawaited(pushKitPage<void>(context, (_) => const Text('B')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 125));

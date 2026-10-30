@@ -239,6 +239,41 @@ final class KitRequestReply extends KitRequestAnswers {
   final Key? sendKey;
 }
 
+/// gate only: the one named act a gate waits for ("Merge into main"), with
+/// the way to look first ([look], "Review changes") above it. There is no
+/// refusal: not acting is the answer, and the work waits (the card's
+/// `ifIgnored` says so). Shortcut A on a PC goes ahead. The primary sits
+/// at the bottom, under the thumb; [look] is the full-width secondary above
+/// it. A missing [onGo] needs its [disabledReason] (STATE-8), said under
+/// the buttons.
+final class KitRequestGo extends KitRequestAnswers {
+  const KitRequestGo({
+    required this.label,
+    required this.onGo,
+    this.icon,
+    this.look,
+    this.working = false,
+    this.disabledReason,
+    this.goKey,
+  }) : assert(
+         onGo != null || disabledReason != null,
+         'KitRequestGo: a missing onGo needs its disabledReason (STATE-8)',
+       );
+
+  /// The act and its target (COPY-8): "Merge into main".
+  final String label;
+  final VoidCallback? onGo;
+  final IconData? icon;
+
+  /// The way to look before going ("Review changes"), a secondary button.
+  final KitAction? look;
+
+  /// The act was sent and runs (the button's own spinner).
+  final bool working;
+  final String? disabledReason;
+  final Key? goKey;
+}
+
 /// form, or anything too long to answer in place: one primary that opens
 /// the sheet ([KitRequestCard.ask]'s `onDetails`). Default label "Answer".
 final class KitRequestInSheet extends KitRequestAnswers {

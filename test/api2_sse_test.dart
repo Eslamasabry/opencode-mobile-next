@@ -68,6 +68,36 @@ void main() {
     transport.close();
   });
 
+  testWidgets('a failed try says when the next one is, before the status '
+      'goes out, and keeps it while that try is in flight', (tester) async {
+    final transport = _FailingTransport();
+    DateTime? heard;
+    late Api2EventStream stream;
+    stream = Api2EventStream(
+      transport: transport,
+      onEvent: (_, _) {},
+      onStatus: (status) {
+        if (status == Api2StreamStatus.reconnecting) {
+          heard = stream.nextAttempt.value;
+        }
+      },
+    );
+    final before = DateTime.now();
+    stream.start();
+    await tester.pump();
+    // The first retry waits 1 s on a real timer.
+    final next = stream.nextAttempt.value;
+    expect(next, isNotNull);
+    expect(heard, next);
+    expect(
+      next!.difference(before).inMilliseconds,
+      inInclusiveRange(900, 1500),
+    );
+    await stream.dispose();
+    expect(stream.nextAttempt.value, isNull);
+    transport.close();
+  });
+
   test('parses bare data frames and keepalive comments', () {
     final frames = parse(
       'data: {"type":"server.connected","data":{}}\n\n'

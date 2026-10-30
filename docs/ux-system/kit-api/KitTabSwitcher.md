@@ -175,6 +175,12 @@ In `test/kit/kit_tab_switcher_test.dart`:
 9. **Reduced motion (G8):** a switch and a count change settle after one `pump()`.
 10. **Overflow (G6):** at 320–1600 dp and 915×412, text 1.0, 1.3 and 2.0, LTR and RTL: no exception.
 
+## Studio additions (Appearance revamp, 2026-10-20)
+
+- `KitTabStrip(accent: true)`: the selected tab is a pill filled in the accent with its words in the on-accent colour, for a studio's one strip of things to customise. Default `false` (the quiet `surface3` pill).
+- `KitTabSwitcher(onSwipe:)`: a horizontal swipe across the body calls `onSwipe(1)` (next) or `onSwipe(-1)` (previous) in reading direction, mirrored in right to left, above `KitTabSwitcher.swipeVelocity` (300 dp/s). Taps and inner horizontal scrollers (a carousel) are untouched.
+- `KitTabSwitcher(shrinkWrap: true)`: the body takes the chosen destination's height (inside a scrolling page) instead of filling the space.
+
 ## Galleries required
 
 `test/goldens/kit/kit_tab_switcher_golden_test.dart`, DPR 3, Android (TEST-9, TEST-20), the strip over a page stub:

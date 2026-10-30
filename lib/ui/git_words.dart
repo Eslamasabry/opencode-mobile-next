@@ -51,6 +51,13 @@ String gitProblemText(
   GitProblem.conflicts => l10n.gitProblemConflicts,
   GitProblem.operationInProgress => l10n.gitProblemOperationInProgress,
   GitProblem.cannotDiscardConflict => l10n.gitProblemCannotDiscardConflict,
+  GitProblem.invalidRemoteName => l10n.gitProblemInvalidRemoteName,
+  GitProblem.invalidRemoteUrl => l10n.gitProblemInvalidRemoteUrl,
+  GitProblem.remoteAddressHasPassword =>
+    l10n.gitProblemRemoteAddressHasPassword,
+  GitProblem.remoteExists => l10n.gitProblemRemoteExists,
+  GitProblem.invalidFolderName => l10n.gitProblemInvalidFolderName,
+  GitProblem.folderExists => l10n.gitProblemFolderExists,
   GitProblem.unknown => l10n.gitProblemUnknown,
 };
 
@@ -72,6 +79,8 @@ String gitBusyText(GitAction action, AppLocalizations l10n) => switch (action) {
   GitAction.createBranch => l10n.gitBusyCreateBranch,
   GitAction.discard => l10n.gitBusyDiscard,
   GitAction.setIdentity => l10n.gitBusySaveIdentity,
+  GitAction.addRemote => l10n.gitBusyAddRemote,
+  GitAction.clone => l10n.gitBusyClone,
 };
 
 /// The button label for [action].
@@ -85,6 +94,8 @@ String gitActionLabel(GitAction action, AppLocalizations l10n) =>
       GitAction.createBranch => l10n.gitActionCreateBranch,
       GitAction.discard => l10n.gitActionDiscard,
       GitAction.setIdentity => l10n.gitActionSaveIdentity,
+      GitAction.addRemote => l10n.gitActionAddRemote,
+      GitAction.clone => l10n.gitActionClone,
     };
 
 /// The status line for a finished action: what worked, or the problem.
@@ -103,14 +114,22 @@ String gitResultText(
   }
   return switch (result.note!) {
     GitActionNote.upToDate => l10n.gitDoneUpToDate,
-    GitActionNote.pulled => l10n.gitDonePulled,
-    GitActionNote.pushed => l10n.gitDonePushed,
-    GitActionNote.pushedAndTracking => l10n.gitDonePushedTracking,
-    GitActionNote.committed => l10n.gitDoneCommitted(result.commit ?? ''),
+    GitActionNote.pulled =>
+      result.count == null
+          ? l10n.gitDonePulled
+          : l10n.gitDoneGotN(result.count!),
+    GitActionNote.pushed ||
+    GitActionNote.pushedAndTracking => l10n.gitDonePushed,
+    GitActionNote.committed =>
+      result.count == null
+          ? l10n.gitDoneSavedPlain
+          : l10n.gitDoneSaved(result.count!),
     GitActionNote.switched => l10n.gitDoneSwitched,
     GitActionNote.created => l10n.gitDoneCreated,
     GitActionNote.discarded => l10n.gitDoneDiscarded,
     GitActionNote.identitySaved => l10n.gitDoneIdentitySaved,
+    GitActionNote.remoteAdded => l10n.gitDoneRemoteAdded,
+    GitActionNote.cloned => l10n.gitDoneCloned(result.clonedTo ?? ''),
   };
 }
 
@@ -152,3 +171,19 @@ String gitHubSignInProblemText(
   GitHubSignInProblem.unexpected ||
   GitHubSignInProblem.cancelled => l10n.gitHubProblemUnexpected,
 };
+
+/// Where a remote lives in plain words: "GitHub", else the host of its
+/// address ("gitlab.com"), else its name. The address itself and the exact
+/// `origin/main` stay under Details.
+String gitPlaceName(GitRemote? remote, AppLocalizations l10n) {
+  if (remote == null) return '';
+  if (remote.isGitHub) return l10n.gitPlaceGitHub;
+  final address = remote.address;
+  if (address != null) {
+    // `https://host/...`, `ssh://git@host/...` or `git@host:path`.
+    final scp = RegExp(r'^[^@/\s]+@([^:/\s]+):').firstMatch(address);
+    final host = scp?.group(1) ?? Uri.tryParse(address)?.host;
+    if (host != null && host.isNotEmpty) return host;
+  }
+  return remote.name;
+}

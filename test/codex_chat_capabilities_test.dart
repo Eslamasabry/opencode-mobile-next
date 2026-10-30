@@ -17,6 +17,7 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat/permission_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/composer_tools.dart';
 
 class _CodexApi extends FakeServerGateway with CompleteMessageHistory {
   _CodexApi() : super(baseUrl: 'http://localhost');
@@ -110,7 +111,7 @@ void main() {
 
     expect(find.byTooltip('Attach and more'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('composer-tools-button')));
+    await openComposerTray(tester);
     await tester.pumpAndSettle();
 
     final attach = tester.widget<KitRow>(
@@ -166,10 +167,7 @@ void main() {
     await tester.pump();
 
     expect(find.byTooltip('Add to this turn'), findsOneWidget);
-    expect(
-      find.text('The agent will read this while it works.'),
-      findsOneWidget,
-    );
+    expect(find.text('Adds to this reply'), findsOneWidget);
     expect(find.byTooltip('Send after this reply'), findsNothing);
     expect(find.text('Sends after this reply'), findsNothing);
     expect(find.byKey(const Key('composer-delivery-control')), findsNothing);
@@ -242,7 +240,7 @@ void main() {
     tester,
   ) async {
     await _pumpChat(tester, _CodexApi());
-    await tester.tap(find.byKey(const Key('composer-tools-button')));
+    await openComposerTools(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('composer-tool-commands')));
     await tester.pumpAndSettle();
@@ -269,7 +267,7 @@ void main() {
     tester,
   ) async {
     await _pumpChat(tester, _CodexApi());
-    await tester.tap(find.byKey(const Key('composer-tools-button')));
+    await openComposerTools(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('composer-tool-commands')));
     await tester.pumpAndSettle();

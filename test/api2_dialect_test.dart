@@ -4,7 +4,7 @@ import 'package:opencode_mobile/api2/plugin_mapper.dart';
 import 'package:opencode_mobile/domain/plugin_inventory.dart';
 
 /// The mapping was derived from the two servers' own `/openapi.json`
-/// (`0.0.0-beta-18600` and `2.0.10`) and proven live by
+/// (`0.0.0-beta-18600` and `2.0.10`; 2.1.1 changed no route) and proven live by
 /// `tool/qa/oc2_live_proof_test.dart`; these pin it without a server.
 void main() {
   // A list, not a record: `equals` compares lists and maps deeply.
@@ -35,6 +35,35 @@ void main() {
       expect(r.query, same(query));
       expect(r.body, same(body));
     }
+  });
+
+  test('2.1 added fields and routes, and moved none', () {
+    // From the 2.0.29 → 2.1.1 `/openapi.json` diff: no operation removed or
+    // moved, so the 2.1 additions the app may send pass through as written.
+    expect(route('PATCH', '/session/ses_1', body: {'archived': true}), [
+      'PATCH',
+      '/session/ses_1',
+      null,
+      {'archived': true},
+    ]);
+    expect(route('GET', '/session', query: {'archived': 'true'}), [
+      'GET',
+      '/session',
+      {'archived': 'true'},
+      null,
+    ]);
+    expect(route('GET', '/session/ses_1/message', query: {'type': 'idle'}), [
+      'GET',
+      '/session/ses_1/message',
+      {'type': 'idle'},
+      null,
+    ]);
+    expect(route('PATCH', '/permission/saved/per_1', body: {}), [
+      'PATCH',
+      '/permission/saved/per_1',
+      null,
+      <String, dynamic>{},
+    ]);
   });
 
   test('server facts, forms and the current project moved', () {

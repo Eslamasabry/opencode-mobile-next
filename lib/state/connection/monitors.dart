@@ -310,8 +310,14 @@ extension _ConnectionControllerMonitorsImpl on ConnectionController {
       profileID: id,
       sessionID: request.sessionID,
       key: key,
+      // A watched server's poll keeps no command and no reply path: the
+      // alert asks in general words and opens the chat.
       allowActions: false,
       monitorToken: token,
+      subtext: notificationSubtitle(
+        store.profiles.where((saved) => saved.id == id).firstOrNull?.name,
+        _projectNameOfDirectory(request.directory),
+      ),
     ),
   )..addListener(_monitorChanged);
   Future<MonitorAttentionDetails> _readMonitorAttention(

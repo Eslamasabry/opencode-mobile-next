@@ -89,6 +89,10 @@ abstract final class KitLayout {
 
   /// The popover widths the KitMenu panel and the KitTerm bubble share
   /// (KitMenu.md, KitTerm.md; README.md decision D2).
+  /// The narrowest row that holds a [KitActionBlock] `pair` side by side
+  /// ("Send as a GitHub issue" · "Copy"); narrower, the pair stacks.
+  static const double pairRowMinWidth = 340;
+
   static const double popoverMinWidth = 200;
   static const double popoverMaxWidth = 320;
 
@@ -122,6 +126,17 @@ abstract final class KitLayout {
 
   /// A page state's width (KitStateView.md).
   static const double stateMaxWidth = 440;
+
+  /// One button or compact control (KitButton, KitOneTimeCode, KitQr,
+  /// KitWheel): it hugs its label and never grows into a bar on a PC
+  /// (docs/ux-system/kit-v2.md §8.6).
+  static const double controlMaxWidth = 400;
+
+  /// A chip, pill, tag or inline value: it hugs its words, then ellipsizes.
+  static const double chipMaxWidth = 320;
+
+  /// An icon, mark, ring or avatar: fixed and small.
+  static const double glyphMaxWidth = 96;
 
   /// A bottom sheet on a medium window: capped and centred (§8.2).
   static const double sheetMaxWidth = 640;

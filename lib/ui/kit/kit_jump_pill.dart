@@ -3,7 +3,8 @@
 // (docs/ux-system/kit-api/KitJumpPill.md; kit-v2.md §1.19, §8.2; STANDARDS
 // Appendix A #24, KIT-31, LOOK-20, LOOK-27, MOT-2).
 //
-// A solid pill — never glass — with kit timings instead of the literal
+// A solid pill (a floating surface under Settings › Appearance › Style:
+// soft raises it) with kit timings instead of the literal
 // 200 ms `easeOutBack` pills it replaces. Always a button with words; an
 // arrow alone is never enough.
 //
@@ -16,7 +17,9 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import 'kit_bottom_inset.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
+import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -87,7 +90,10 @@ class KitJumpPill extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => _KitJumpPillTransition(
+  Widget build(BuildContext context) =>
+      KitMaxWidth.chip(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) => _KitJumpPillTransition(
     label: label,
     onPressed: onPressed,
     visible: visible,
@@ -163,7 +169,7 @@ class KitJumpPillLayer extends StatelessWidget {
 
 /// Motion (KitJumpPill.md "Motion and haptics"): in, fades in and rises
 /// `space2` over `KitMotion.standard` on `KitMotion.enter`; out, fades and
-/// sinks over `KitMotion.standard` on `KitMotion.exit` (a top pill
+/// sinks over `KitMotion.quick` on `KitMotion.exit` (a top pill
 /// drops/rises toward its own edge — the direction mirrors [edge], never a
 /// scale). Under `KitMotion.reduced`, shows and hides at once and settles
 /// in one `pump()`. No haptics.
@@ -199,7 +205,7 @@ class _KitJumpPillTransitionState extends State<_KitJumpPillTransition>
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: KitMotion.standard,
-    reverseDuration: KitMotion.standard,
+    reverseDuration: KitMotion.quick,
   );
   late final CurvedAnimation _curve = CurvedAnimation(
     parent: _controller,
@@ -377,6 +383,8 @@ class _KitJumpPillButton extends StatelessWidget {
       ),
     );
 
+    final style = KitSurfaceLook.styleOf(context);
+    final radius = KitSurfaceLook.stadium;
     // The resting fill sits under the tappable (whose hover and press fills
     // are surface2 over it); the hairline is painted over both.
     return Semantics(
@@ -385,19 +393,29 @@ class _KitJumpPillButton extends StatelessWidget {
       container: true,
       excludeSemantics: true,
       onTap: onPressed,
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: roles.surface3,
-          shape: tokens.shapeOf(KitShape.pill),
+      child: kitSurfaceBox(
+        style: style,
+        decoration: KitSurfaceLook.decorate(
+          context,
+          solid: ShapeDecoration(
+            color: roles.surface3,
+            shape: tokens.shapeOf(KitShape.pill),
+          ),
+          level: KitSurfaceLevel.surface3,
+          role: KitSurfaceRole.floating,
+          borderRadius: radius,
         ),
         child: DecoratedBox(
           position: DecorationPosition.foreground,
+          // The hairline is Solid's edge; the other styles draw their own.
           decoration: ShapeDecoration(
-            shape: StadiumBorder(
-              side: BorderSide(
-                color: roles.hairline,
-                width: KitTokens.hairlineWidth(context),
-              ),
+            shape: tokens.pillBorder(
+              side: KitSurfaceLook.isPlain(context)
+                  ? BorderSide(
+                      color: roles.hairline,
+                      width: KitTokens.hairlineWidth(context),
+                    )
+                  : BorderSide.none,
             ),
           ),
           child: KitTappable(

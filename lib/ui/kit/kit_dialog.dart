@@ -20,6 +20,8 @@ import 'kit_field.dart';
 import 'kit_layout.dart';
 import 'kit_motion.dart';
 import 'kit_sheet.dart';
+import 'kit_surface.dart';
+import 'kit_surface_look.dart';
 import 'kit_technical_value.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -201,7 +203,7 @@ Future<T?> _presentKitDialog<T>(
       opacity: CurvedAnimation(
         parent: animation,
         curve: KitMotion.enter,
-        reverseCurve: KitMotion.exit.flipped,
+        reverseCurve: KitMotion.exit,
       ),
       child: child,
     ),
@@ -222,6 +224,8 @@ class _KitDialogFrame extends StatelessWidget {
     final width = window == KitWindow.compact
         ? available
         : available.clamp(0.0, KitLayout.confirmDialogWidth);
+    final solid = KitSurfaceLook.isPlain(context);
+    final radius = BorderRadius.circular(tokens.panelRadius);
     return Stack(
       children: [
         // A tap outside is caught and ignored: the alert blocks.
@@ -246,17 +250,19 @@ class _KitDialogFrame extends StatelessWidget {
                 padding: EdgeInsets.all(tokens.gutter),
                 child: SizedBox(
                   width: width.floorToDouble(),
-                  child: Material(
-                    color: tokens.panelSurface,
-                    elevation: tokens.panelElevation,
-                    clipBehavior: Clip.antiAlias,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(tokens.panelRadius),
-                    ),
-                    child: Semantics(
-                      scopesRoute: true,
-                      explicitChildNodes: true,
-                      child: Builder(builder: child),
+                  child: _surface(
+                    context,
+                    tokens,
+                    Material(
+                      color: solid ? tokens.panelSurface : Colors.transparent,
+                      elevation: solid ? tokens.panelElevation : 0,
+                      clipBehavior: Clip.antiAlias,
+                      shape: RoundedRectangleBorder(borderRadius: radius),
+                      child: Semantics(
+                        scopesRoute: true,
+                        explicitChildNodes: true,
+                        child: Builder(builder: child),
+                      ),
                     ),
                   ),
                 ),
@@ -267,6 +273,30 @@ class _KitDialogFrame extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The alert's surface for the person's Style (Settings › Appearance):
+/// nothing of its own under Solid (the Material paints the panel), the
+/// style's sheet surface otherwise (the ground's colour under Soft).
+Widget _surface(BuildContext context, KitTokens tokens, Widget material) {
+  final style = KitSurfaceLook.styleOf(context);
+  final radius = BorderRadius.circular(tokens.panelRadius);
+  return kitSurfaceBox(
+    style: style,
+    decoration: KitSurfaceLook.isPlain(context)
+        ? BoxDecoration(borderRadius: radius)
+        : KitSurfaceLook.decorate(
+            context,
+            solid: BoxDecoration(
+              color: tokens.panelSurface,
+              borderRadius: radius,
+            ),
+            level: KitSurfaceLevel.surface2,
+            role: KitSurfaceRole.sheet,
+            borderRadius: radius,
+          ),
+    child: material,
+  );
 }
 
 /// The panel's layout: a scrolling body over pinned actions, on the VL
@@ -773,7 +803,8 @@ class _KitAlertState extends State<_KitAlert> {
 }
 
 /// The alert's icon tile beside the title: `surface3`, the VL tile size and
-/// radius, the glyph in `text1`.
+/// radius, the glyph in `text1`, made for the person's Style like every
+/// other tile (`KitSurface.tile`'s control surface).
 class _KitDialogIconTile extends StatelessWidget {
   const _KitDialogIconTile(this.icon);
 
@@ -785,18 +816,23 @@ class _KitDialogIconTile extends StatelessWidget {
     final roles = tokens.roles;
     final glyph = tokens.iconSize(context, tokens.smallIconSize);
     return ExcludeSemantics(
-      child: Container(
-        width: tokens.iconTileSize,
-        height: tokens.iconTileSize,
-        decoration: BoxDecoration(
-          color: roles.surface3,
+      child: kitSurfaceMaterial(
+        context,
+        level: KitSurfaceLevel.surface3,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(tokens.iconTileRadius),
         ),
-        child: Center(
-          child: OverflowBox(
-            maxWidth: double.infinity,
-            maxHeight: double.infinity,
-            child: Icon(icon, size: glyph, color: roles.text1),
+        fill: roles.surface3,
+        role: KitSurfaceRole.control,
+        clip: false,
+        child: SizedBox.square(
+          dimension: tokens.iconTileSize,
+          child: Center(
+            child: OverflowBox(
+              maxWidth: double.infinity,
+              maxHeight: double.infinity,
+              child: Icon(icon, size: glyph, color: roles.text1),
+            ),
           ),
         ),
       ),

@@ -103,14 +103,21 @@ Future<ServerProfile> ensureBuiltinProfile(
       );
   profile.username = BuiltinLinux.serverUsername;
   if (profile.password.isEmpty || profile.requiresPasswordReentry) {
-    final random = Random.secure();
-    final bytes = List<int>.generate(32, (_) => random.nextInt(256));
-    profile.password = base64UrlEncode(bytes).replaceAll('=', '');
-    profile.requiresPasswordReentry = false;
+    renewBuiltinPassword(profile);
   }
   if (version != null) profile.serverVersion = version;
   await store.upsert(profile);
   return profile;
+}
+
+/// Gives the in-app [profile] a fresh random password. Safe by design: the
+/// server reads its copy from a root-only file that every start rewrites, so
+/// nothing but this app ever needs the old one.
+void renewBuiltinPassword(ServerProfile profile) {
+  final random = Random.secure();
+  final bytes = List<int>.generate(32, (_) => random.nextInt(256));
+  profile.password = base64UrlEncode(bytes).replaceAll('=', '');
+  profile.requiresPasswordReentry = false;
 }
 
 /// What kind of thing stopped a start, so the page can say why in plain
@@ -215,6 +222,7 @@ Future<BuiltinServerStartFailure?> startBuiltinServer({
   bool Function()? stillWanted,
   int? recoveryGeneration,
   bool migrateLegacyHistory = false,
+  Future<void> Function(ServerProfile profile)? saveRenewedPassword,
 }) async {
   const cancelled = BuiltinServerStartFailure.detail(
     'The server start was not confirmed.',
@@ -227,6 +235,17 @@ Future<BuiltinServerStartFailure?> startBuiltinServer({
       'Your phone server needs to move to OpenCode 2. Your earlier conversations are safe.',
       problem: BuiltinStartProblem.interrupted,
     );
+  }
+  // The Keystore lost the password (backup restore, phone move): the server
+  // takes whatever this start writes, so make a new one, keep it, go on.
+  if ((profile.password.isEmpty || profile.requiresPasswordReentry) &&
+      saveRenewedPassword != null) {
+    try {
+      renewBuiltinPassword(profile);
+      await saveRenewedPassword(profile);
+    } catch (_) {
+      profile.password = '';
+    }
   }
   if (profile.password.isEmpty) {
     return const BuiltinServerStartFailure.detail(
@@ -360,6 +379,10 @@ class BuiltinServerStarter extends ChangeNotifier {
   /// App binding persists the selected phone owner before an explicit start.
   /// Failure prevents dispatch rather than risking a different profile's policy.
   Future<void> Function(ServerProfile profile)? beforeManualStart;
+
+  /// Saves a password the start had to make because the saved one was lost.
+  /// Unset, a lost password still ends the start as before.
+  Future<void> Function(ServerProfile profile)? saveRenewedPassword;
 
   bool _starting = false;
   BuiltinServerStartFailure? _failure;
@@ -529,6 +552,7 @@ class BuiltinServerStarter extends ChangeNotifier {
         stillWanted: () => !_disposed && (stillWanted?.call() ?? true),
         recoveryGeneration: recoveryGeneration,
         migrateLegacyHistory: migrateLegacyHistory,
+        saveRenewedPassword: saveRenewedPassword,
       );
     } catch (error) {
       failure = BuiltinServerStartFailure.detail(

@@ -20,8 +20,25 @@ enum _ToolKind {
   worktreeSetup,
   connectorSearch,
   backgroundNotice,
+  agentMessage,
   card,
   generic,
+}
+
+/// The file a read, edit or write touches: OpenCode says `filePath`, other
+/// agents `file_path` or `path`. Without it a running row read a bare
+/// "Read" or "Edit".
+String? _inputPath(Map<String, dynamic> input) =>
+    _valueString(input['filePath']) ??
+    _valueString(input['file_path']) ??
+    _valueString(input['path']);
+
+/// The server's own title for the call, when it names something other than
+/// the tool itself (its title starts as the tool's name before the input
+/// arrives).
+String? _titleNamingAFile(ToolState state, String toolName) {
+  final title = _valueString(state.title);
+  return title == null || title.toLowerCase() == toolName ? null : title;
 }
 
 String? _valueString(dynamic value) {
@@ -98,6 +115,205 @@ String? _subagentState(ToolState state, {required bool nativeSubagent}) {
   return _taskOutputState(state.output, nativeSubagent: nativeSubagent);
 }
 
+/// Claude Code's notice that a background task ended, in the app's words.
+/// Claude names the task in quotes inside one English sentence
+/// (`Background agent "Fix login" didn't finish before the previous session
+/// ended`), which Paseo hands over as the call's label and again as its
+/// text: the row says the name and how it ended once, and the sentence
+/// shows only when it says more than that.
+class _TaskNotice {
+  const _TaskNotice({
+    required this.end,
+    this.summary,
+    this.name,
+    this.cutOff = false,
+  });
+
+  final BackgroundTaskEnd end;
+
+  /// Claude's sentence about the task.
+  final String? summary;
+
+  /// The task's name, from the quotes in [summary].
+  final String? name;
+
+  /// The task never finished: Claude's previous session (its process) ended
+  /// under it.
+  final bool cutOff;
+
+  factory _TaskNotice.of(Map<String, dynamic> input) {
+    final summary =
+        _valueString(input['summary']) ??
+        _valueString(input['description']) ??
+        _valueString(input['name']);
+    final cutOff =
+        summary != null &&
+        _previousSession.hasMatch(summary) &&
+        _unfinished.hasMatch(summary) &&
+        !_restarted.hasMatch(summary);
+    final name = summary == null
+        ? null
+        : _quoted.firstMatch(summary)?.group(1)?.trim();
+    return _TaskNotice(
+      end: cutOff ? BackgroundTaskEnd.stopped : backgroundTaskEnd(input),
+      summary: summary,
+      name: name == null || name.isEmpty ? null : name,
+      cutOff: cutOff,
+    );
+  }
+
+  static final _quoted = RegExp(r'["\u201C]([^"\u201D\n]{1,120})["\u201D]');
+  static final _previousSession = RegExp(
+    r'previous (claude code )?(session|process)',
+    caseSensitive: false,
+  );
+  static final _unfinished = RegExp(
+    r"(didn't|did not|couldn't|could not) (finish|complete|be)|"
+    r'no completion record|was interrupted',
+    caseSensitive: false,
+  );
+  static final _restarted = RegExp(
+    r'automatically restarted from|running in the background again',
+    caseSensitive: false,
+  );
+
+  String title(AppLocalizations strings) {
+    final raw = name;
+    final named = raw == null ? null : KitBidi.auto(raw);
+    if (cutOff) {
+      return named == null
+          ? strings.chatUiToolBackgroundTaskCutOff
+          : strings.chatUiToolBackgroundNamedCutOff(named);
+    }
+    if (named != null) {
+      return switch (end) {
+        BackgroundTaskEnd.finished => strings.chatUiToolBackgroundNamedFinished(
+          named,
+        ),
+        BackgroundTaskEnd.failed => strings.chatUiToolBackgroundNamedFailed(
+          named,
+        ),
+        BackgroundTaskEnd.stopped => strings.chatUiToolBackgroundNamedStopped(
+          named,
+        ),
+        BackgroundTaskEnd.ended => strings.chatUiToolBackgroundNamedEnded(
+          named,
+        ),
+      };
+    }
+    return switch (end) {
+      BackgroundTaskEnd.failed => strings.chatUiToolBackgroundTaskFailed,
+      BackgroundTaskEnd.stopped => strings.chatUiToolBackgroundTaskStopped,
+      BackgroundTaskEnd.finished => strings.chatUiToolBackgroundTaskFinished,
+      BackgroundTaskEnd.ended => strings.chatUiToolBackgroundTaskEnded,
+    };
+  }
+
+  /// The task's own words on the row's line, when the title did not say
+  /// them already ("Background task finished · Release build").
+  String? get lineDetail => cutOff || name != null ? null : summary;
+
+  /// Whether [summary] belongs in the opened step too: not when the title
+  /// already says all of it, nor when the line shows it whole.
+  bool get summaryInBody {
+    final text = summary;
+    if (text == null || cutOff) return false;
+    if (name == null) return text.characters.length > 40;
+    // What the sentence says besides the name: "completed" adds nothing;
+    // "failed: the build ran out of memory" does.
+    final rest = text
+        .replaceFirst(RegExp('^.*?${RegExp.escape(name!)}["\u201D]?'), '')
+        .trim();
+    return rest.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length > 3;
+  }
+}
+
+/// An agent-to-agent message (Claude Code's SendMessage). Claude writes the
+/// same message as `to`/`message` and as `recipient`/`content`, in the call
+/// and again in its answer: each fact is read once, from the first place
+/// that has it.
+class _AgentMessage {
+  const _AgentMessage({
+    this.recipient,
+    this.summary,
+    this.text,
+    this.structured,
+    this.broadcast = false,
+  });
+
+  /// Who it goes to, as Claude wrote it: a teammate's name, `main`, `*`,
+  /// or an agent's id.
+  final String? recipient;
+
+  /// Claude's few words for it ("assign task 1").
+  final String? summary;
+
+  /// What it says.
+  final String? text;
+
+  /// A message that is a request rather than words (a shutdown request):
+  /// technical detail only.
+  final Map<dynamic, dynamic>? structured;
+
+  /// To every teammate at once.
+  final bool broadcast;
+
+  factory _AgentMessage.of(ToolState state) {
+    final input = state.input;
+    final answer = state.outputValue;
+    final sources = [input, if (answer is Map) answer];
+    String? pick(List<String> keys) {
+      for (final source in sources) {
+        for (final key in keys) {
+          final value = source[key];
+          if (value is String && _valueString(value) != null) {
+            return value.trim();
+          }
+        }
+      }
+      return null;
+    }
+
+    final recipient = pick(const ['to', 'recipient']);
+    final message = input['message'] ?? input['content'];
+    return _AgentMessage(
+      recipient: recipient,
+      summary: pick(const ['summary']),
+      // An answer's `message` is Claude's note to itself ("Message sent"),
+      // never the message.
+      text:
+          _valueString(_rawString(message)) ??
+          (answer is Map ? _valueString(_rawString(answer['content'])) : null),
+      structured: message is Map ? message : null,
+      broadcast:
+          recipient == '*' ||
+          pick(const ['type'])?.toLowerCase() == 'broadcast',
+    );
+  }
+
+  /// [recipient] as a name a person reads; null for an id, `*` and none.
+  String? get name {
+    final value = recipient;
+    if (value == null || value == '*' || _looksLikeId(value)) return null;
+    return value;
+  }
+
+  /// [recipient] when it is an id: technical detail, never the title.
+  String? get recipientId {
+    final value = recipient;
+    return value != null && value != '*' && _looksLikeId(value) ? value : null;
+  }
+
+  /// "a1b2c3d4e5f6", "agent-7f3e9a01", a UUID: a run of eight or more hex
+  /// characters with a digit in it, and no spaces.
+  static bool _looksLikeId(String value) =>
+      !value.contains(RegExp(r'\s')) &&
+      RegExp(
+        r'(?=[0-9a-f]*[0-9])[0-9a-f]{8,}',
+        caseSensitive: false,
+      ).hasMatch(value);
+}
+
 /// The one name a person sees for a tool call: the step row's title
 /// ("Read", "Show card", "Background task finished", a sub-agent's name, or
 /// an unknown id as words). Every surface that names a tool (the timeline,
@@ -112,6 +328,11 @@ String toolLabel(String rawName, {ToolState? state, AppLocalizations? l10n}) =>
       l10n: l10n,
     ).title;
 
+/// Whether the call runs a shell command (Bash, a shell step): what a
+/// person calls "the command".
+bool isShellTool(String rawName, ToolState state) =>
+    _ToolContract.from(rawName, state).kind == _ToolKind.shell;
+
 /// Compact "Title · subtitle" line for the tool currently executing, used by
 /// the chat tool-group header as a live ticker while a run is active.
 String runningToolTicker(
@@ -124,6 +345,57 @@ String runningToolTicker(
   return subtitle == null || subtitle.isEmpty
       ? contract.title
       : '${contract.title} · $subtitle';
+}
+
+/// The live line's words for the tool currently executing (concept C,
+/// 20 Oct 2026): what the agent is doing, as a person would say it,
+/// "Writing index.html", "Running npm test", "Reading game.js". A tool with
+/// no everyday verb keeps [runningToolTicker]'s "Title · subtitle".
+///
+/// [named] false leaves out what it touches ("Running a command") for a
+/// line whose step is drawn right above it with its command or path: the
+/// command is said once (owner, 2026-10-27).
+String runningToolPhrase(
+  String rawName,
+  ToolState state, {
+  AppLocalizations? l10n,
+  bool named = true,
+}) {
+  final strings = l10n ?? lookupAppLocalizations(const Locale('en'));
+  final contract = _ToolContract.from(rawName, state, l10n: strings);
+  final raw = contract.subtitle?.trim();
+  String? name;
+  if (named && raw != null && raw.isNotEmpty) {
+    // One short line: a long command or pattern is cut, never wrapped.
+    var first = raw.split('\n').first.trim();
+    // A shell step shows the command, not the folder it starts in.
+    if (contract.kind == _ToolKind.shell) {
+      first = first
+          .replaceFirst(RegExp(r'^cd\s+("[^"]*"|\S+)\s*(;|&&)\s*'), '')
+          .trim();
+    }
+    name = first.characters.length > 40
+        ? '${first.characters.take(39)}\u2026'
+        : first;
+    if (contract.technical) name = KitBidi.ltr(name);
+  }
+  return switch (contract.kind) {
+    _ToolKind.read || _ToolKind.webFetch =>
+      name == null ? strings.chatLiveReadingAny : strings.chatLiveReading(name),
+    _ToolKind.edit || _ToolKind.patch =>
+      name == null ? strings.chatLiveEditingAny : strings.chatLiveEditing(name),
+    _ToolKind.write =>
+      name == null ? strings.chatLiveWritingAny : strings.chatLiveWriting(name),
+    _ToolKind.shell =>
+      name == null ? strings.chatLiveRunningAny : strings.chatLiveRunning(name),
+    _ToolKind.grep || _ToolKind.glob || _ToolKind.list =>
+      name == null
+          ? strings.chatLiveSearchingAny
+          : strings.chatLiveSearching(name),
+    _ToolKind.webSearch => strings.chatLiveSearchingWeb,
+    _ToolKind.todo || _ToolKind.plan => strings.chatLivePlanning,
+    _ => runningToolTicker(rawName, state, l10n: strings),
+  };
 }
 
 /// What a tool call says about itself, in words, before any widget: its
@@ -146,6 +418,9 @@ class _ToolContract {
   final int? exitCode;
   final bool nativeSubagent;
 
+  /// A background task's notice: how the task ended.
+  final BackgroundTaskEnd? noticeEnd;
+
   const _ToolContract({
     required this.kind,
     required this.title,
@@ -156,6 +431,7 @@ class _ToolContract {
     this.removed,
     this.exitCode,
     this.nativeSubagent = false,
+    this.noticeEnd,
   });
 
   factory _ToolContract.from(
@@ -176,12 +452,14 @@ class _ToolContract {
     int? added;
     int? removed;
     int? exitCode;
+    BackgroundTaskEnd? noticeEnd;
     switch (name) {
       case 'read':
         kind = _ToolKind.read;
         title = strings.chatUiRead;
-        final path = _valueString(input['filePath']);
-        subtitle = path == null ? null : _fileName(path);
+        final path = _inputPath(input);
+        final named = path == null ? _titleNamingAFile(state, name) : null;
+        subtitle = path != null ? _fileName(path) : named;
         technical = true;
         if (_valueNumber(input['offset']) case final value?) {
           details.add(strings.chatUiFromLine(value));
@@ -247,8 +525,10 @@ class _ToolContract {
       case 'edit':
         kind = _ToolKind.edit;
         title = strings.chatUiEdit;
-        final path = _valueString(input['filePath']);
-        subtitle = path == null ? state.title : _fileName(path);
+        final path = _inputPath(input);
+        subtitle = path == null
+            ? _titleNamingAFile(state, name)
+            : _fileName(path);
         technical = path != null;
         final filediff = metadata['filediff'];
         if (filediff is Map) {
@@ -259,8 +539,10 @@ class _ToolContract {
       case 'write':
         kind = _ToolKind.write;
         title = strings.chatUiWrite;
-        final path = _valueString(input['filePath']);
-        subtitle = path == null ? state.title : _fileName(path);
+        final path = _inputPath(input);
+        subtitle = path == null
+            ? _titleNamingAFile(state, name)
+            : _fileName(path);
         technical = path != null;
         // Only what the host said: no "Updated" guess when it is silent.
         if (metadata['exists'] == false) details.add(strings.chatUiNewFile);
@@ -360,18 +642,27 @@ class _ToolContract {
         break;
       case _ when isBackgroundTaskNotice(name):
         // Claude Code's notice that a background task it started ended.
+        // One plain line: the task's name and how it ended, said once.
         kind = _ToolKind.backgroundNotice;
-        title = switch (backgroundTaskEnd(input)) {
-          BackgroundTaskEnd.failed => strings.chatUiToolBackgroundTaskFailed,
-          BackgroundTaskEnd.stopped => strings.chatUiToolBackgroundTaskStopped,
-          BackgroundTaskEnd.finished =>
-            strings.chatUiToolBackgroundTaskFinished,
-          BackgroundTaskEnd.ended => strings.chatUiToolBackgroundTaskEnded,
-        };
-        subtitle =
-            _valueString(input['summary']) ??
-            _valueString(input['description']) ??
-            _valueString(input['name']);
+        final notice = _TaskNotice.of(input);
+        noticeEnd = notice.end;
+        title = notice.title(strings);
+        subtitle = notice.lineDetail;
+      case 'sendmessage':
+      case 'send_message':
+        // Claude Code writing to another agent: who it goes to, in words,
+        // and its one-line summary; the text itself is the body.
+        kind = _ToolKind.agentMessage;
+        final message = _AgentMessage.of(state);
+        final to = message.name;
+        title = message.broadcast
+            ? strings.chatUiToolMessageToEveryone
+            : message.recipient == 'main'
+            ? strings.chatUiToolMessageToMain
+            : to != null
+            ? strings.chatUiToolMessageTo(KitBidi.auto(to))
+            : message.summary ?? strings.chatUiToolMessageToAgent;
+        subtitle = title == message.summary ? null : message.summary;
       case 'toolsearch':
         // Claude Code looking up which of its tools to load.
         kind = _ToolKind.generic;
@@ -440,6 +731,7 @@ class _ToolContract {
       removed: removed,
       exitCode: exitCode,
       nativeSubagent: name == 'subagent',
+      noticeEnd: noticeEnd,
     );
   }
 
@@ -486,7 +778,7 @@ class _ToolContract {
     _ToolKind.shell => KitToolKind.shell,
     _ToolKind.edit || _ToolKind.write || _ToolKind.patch => KitToolKind.edit,
     _ToolKind.webFetch || _ToolKind.webSearch => KitToolKind.web,
-    _ToolKind.task => KitToolKind.agent,
+    _ToolKind.task || _ToolKind.agentMessage => KitToolKind.agent,
     _ToolKind.todo || _ToolKind.plan => KitToolKind.todo,
     _ToolKind.question => KitToolKind.question,
     _ToolKind.skill => KitToolKind.skill,

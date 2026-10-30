@@ -10,6 +10,10 @@ mixin _ConnectionControllerSettings on ChangeNotifier {
   late final ValueNotifier<AppAppearance> appearance;
   late final ValueNotifier<ThemePackId> themePack;
 
+  /// Settings › Appearance › Accent: a swatch id, or null to match the
+  /// theme's own partner colour.
+  late final ValueNotifier<String?> appearanceAccent;
+
   /// Settings › Appearance › Effects, provided to the app by
   /// `KitEffectsScope` in `main.dart`.
   late final ValueNotifier<KitEffects> effects;
@@ -60,6 +64,14 @@ mixin _ConnectionControllerSettings on ChangeNotifier {
     await _self.store.setTextSize(value);
   }
 
+  /// Saves the Accent swatch (null: match the theme); every controller
+  /// follows once storage acknowledges it.
+  Future<void> setAppearanceAccent(String? value) async {
+    await _self.store.setAppearanceAccent(value);
+    if (_self._disposed) return;
+    appearanceAccent.value = value;
+  }
+
   /// Publishes the choice to every controller after storage acknowledges it.
   Future<void> setEffects(KitEffects value) => _self._setEffects(value);
 }
@@ -71,6 +83,7 @@ extension _ConnectionControllerSettingsImpl on ConnectionController {
     appLocale.value = value.locale;
     appearance.value = value.appearance;
     themePack.value = value.themePack;
+    appearanceAccent.value = value.accent;
     effects.value = value.effects;
     textSize.value = value.textSize;
     transcriptReasoningExpanded = value.reasoningExpanded;

@@ -141,7 +141,10 @@ Widget _app(ConnectionController controller) => ProviderScope(
       }
       return null;
     },
-    home: SettingsScreen(controller: controller),
+    home: SettingsScreen(
+      controller: controller,
+      initialGroup: SettingsGroup.ai,
+    ),
   ),
 );
 

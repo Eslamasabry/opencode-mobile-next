@@ -112,6 +112,16 @@ extension _OcAppLaunchRoute on _OcAppState {
             );
           case LaunchAction.usageSignIn:
             await _openUsageSignInForLaunch(navigator, current);
+          case LaunchAction.linux:
+            _consumeLaunchAction(current);
+            if (platformCapabilities.supportsTermux) {
+              unawaited(
+                navigator.pushNamed(
+                  thisPhoneRoute,
+                  arguments: PhoneHostKind.inApp,
+                ),
+              );
+            }
           case LaunchAction.phoneSetup:
           case LaunchAction.phoneSetupDone:
             // Never waits on the connection: setup has its own screens, and

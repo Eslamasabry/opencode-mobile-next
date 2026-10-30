@@ -2,8 +2,10 @@ import 'support/fake_server_capabilities.dart';
 import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemChannels;
 import 'package:opencode_mobile/builtin/local_terminal.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/domain/agent_tools/agent_certification.dart';
 import 'package:opencode_mobile/domain/mark_catalog.dart';
 import 'package:opencode_mobile/ui/screens/agents/agent_sheet.dart';
 import 'package:opencode_mobile/domain/agent_sign_in.dart';
@@ -12,6 +14,8 @@ import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:opencode_mobile/domain/phone_agents.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
+import 'package:opencode_mobile/ui/screens/agents/agent_model_sheet.dart'
+    show agentDefaultModelName;
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/agents/agents_section.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
@@ -19,9 +23,9 @@ import 'package:opencode_mobile/ui/screens/chats/new_chat_screen.dart';
 
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
 import 'support/agents_fakes.dart';
+import 'support/chats_fakes.dart';
 import 'support/fake_local_terminal.dart';
 import 'support/fake_sign_in_foreground.dart';
-import 'support/chats_fakes.dart';
 
 final _now = DateTime(2026, 10, 3, 12);
 
@@ -50,8 +54,10 @@ Future<void> _newChat(
   await tester.pumpAndSettle();
 }
 
+/// The agent sheet, opened the way the app does from the start screen's
+/// "Set up" cards and from Settings.
 Future<void> _openSheet(WidgetTester tester) async {
-  await tester.tap(find.byKey(const ValueKey('chats-new-agent')));
+  unawaited(showAgentSheet(tester.element(find.byType(NewChatScreen))));
   await tester.pumpAndSettle();
 }
 
@@ -72,7 +78,7 @@ void main() {
   group('the agent chip', () {
     testWidgets('is hidden without phone agents', (tester) async {
       await _newChat(tester, _host());
-      expect(find.byKey(const ValueKey('chats-new-agent')), findsNothing);
+      expect(find.byType(KitAgentChoice), findsNothing);
     });
 
     testWidgets('is hidden while phoneAgentsAvailable is false', (
@@ -82,15 +88,68 @@ void main() {
         tester,
         _host(agents: FakePhoneAgentsSource(available: false)),
       );
-      expect(find.byKey(const ValueKey('chats-new-agent')), findsNothing);
+      expect(find.byType(KitAgentChoice), findsNothing);
     });
 
     testWidgets('shows OpenCode beside the project when available', (
       tester,
     ) async {
-      await _newChat(tester, _host(agents: FakePhoneAgentsSource()));
-      expect(_name('OpenCode'), findsOneWidget);
-      expect(_name('alpha'), findsOneWidget);
+      await _newChat(
+        tester,
+        _host(agents: FakePhoneAgentsSource(rows: const [])),
+      );
+      // One agent never shows one lonely card: the quiet line instead.
+      expect(find.byType(KitAgentChoice), findsNothing);
+      expect(find.textContaining('OpenCode'), findsWidgets);
+      expect(find.textContaining('alpha'), findsWidgets);
+    });
+
+    testWidgets('several agents are cards; the chosen one is selected and '
+        'the button names it', (tester) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.ready)],
+        selected: 'claude',
+      );
+      await _newChat(tester, _host(agents: agents));
+      expect(find.byType(KitAgentChoice), findsNWidgets(2));
+      expect(find.text('Careful with big changes'), findsOneWidget);
+      expect(find.text('Any model, free ones too'), findsOneWidget);
+      expect(find.text('Start with Claude Code'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('chats-new-agent-opencode')));
+      await tester.pumpAndSettle();
+      expect(agents.calls, contains('select:opencode'));
+      expect(find.text('Start with OpenCode'), findsOneWidget);
+    });
+
+    testWidgets('an agent not set up is a dimmed card that opens its setup', (
+      tester,
+    ) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.notInstalled)],
+      );
+      await _newChat(tester, _host(agents: agents));
+      expect(find.byType(KitAgentChoice), findsNWidgets(2));
+      expect(find.text('Set up'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('chats-new-agent-claude')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('agents-sheet')), findsOneWidget);
+    });
+
+    testWidgets('an agent that setting up would still not make a choice is '
+        'left out', (tester) async {
+      // Codex is not certified for chat on this version: installing it
+      // would end at "not certified", so the start screen offers no card.
+      final agents = FakePhoneAgentsSource(
+        rows: [
+          agentRowFor('claude', FakeAgentStage.ready),
+          agentRowFor('codex', FakeAgentStage.notInstalled),
+        ],
+        selected: 'claude',
+      );
+      await _newChat(tester, _host(agents: agents));
+      expect(find.byType(KitAgentChoice), findsNWidgets(2));
+      expect(find.text('Set up'), findsNothing);
+      expect(find.byKey(const ValueKey('chats-new-agent-codex')), findsNothing);
     });
 
     testWidgets('send starts the conversation with the chosen agent', (
@@ -102,7 +161,7 @@ void main() {
       );
       final host = _host(agents: agents);
       await _newChat(tester, host);
-      expect(_name('Claude Code'), findsOneWidget);
+      expect(find.text('Start with Claude Code'), findsOneWidget);
       await tester.enterText(
         find.byKey(const ValueKey('chats-new-field')),
         'Review this',
@@ -125,9 +184,9 @@ void main() {
       );
       await _newChat(tester, _host(agents: agents));
       expect(find.text('Server default'), findsNothing);
-      expect(find.text('Default model'), findsOneWidget);
-      expect(find.textContaining('Ask Claude Code'), findsWidgets);
-      await tester.tap(find.byKey(const ValueKey('chats-new-agent-model')));
+      // The agent's own default, by its plain name.
+      expect(_name('Opus'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('chats-new-model')));
       await tester.pumpAndSettle();
       expect(find.text('Choose a model'), findsOneWidget);
       expect(agents.calls, contains('models:claude'));
@@ -135,13 +194,65 @@ void main() {
       await tester.pumpAndSettle();
       expect(agents.chosenModel['claude'], 'sonnet');
       expect(find.text('Choose a model'), findsNothing);
-      expect(find.text('Sonnet'), findsOneWidget);
+      expect(_name('Sonnet'), findsOneWidget);
     });
 
-    testWidgets('OpenCode keeps the server model chip', (tester) async {
+    testWidgets('the row follows the chosen card\'s own default', (
+      tester,
+    ) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.ready)],
+        selected: 'claude',
+      );
+      await _newChat(tester, _host(agents: agents));
+      Finder value(String text) => find.descendant(
+        of: find.byKey(const ValueKey('chats-new-model')),
+        matching: find.text(text),
+      );
+      expect(value(KitBidi.auto('Opus')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('chats-new-agent-opencode')));
+      await tester.pumpAndSettle();
+      expect(value('Server default'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('chats-new-agent-claude')));
+      await tester.pumpAndSettle();
+      expect(value(KitBidi.auto('Opus')), findsOneWidget);
+    });
+
+    testWidgets('says Default model only when the list names no model', (
+      tester,
+    ) async {
+      final agents = FakePhoneAgentsSource(
+        rows: [agentRowFor('claude', FakeAgentStage.ready)],
+        selected: 'claude',
+      );
+      agents.models['claude'] = const [
+        AgentModelChoice(id: 'default', name: 'Default', isDefault: true),
+        AgentModelChoice(id: 'sonnet', name: 'Sonnet'),
+      ];
+      await _newChat(tester, _host(agents: agents));
+      expect(find.text('Default model'), findsOneWidget);
+      expect(find.text('default'), findsNothing);
+    });
+
+    test('a default is named plainly, never by a raw id', () {
+      String? name(String id, String label) => agentDefaultModelName([
+        AgentModelChoice(id: id, name: label, isDefault: true),
+        const AgentModelChoice(id: 'other', name: 'Other'),
+      ]);
+      expect(name('default', 'Default (Opus)'), 'Opus');
+      expect(name('default', 'Default (recommended)'), isNull);
+      expect(name('default', 'Default'), isNull);
+      expect(name('claude-sonnet-5-5', 'Sonnet 5.5'), 'Sonnet 5.5');
+      expect(
+        name('claude-sonnet-5-5', 'claude-sonnet-5-5'),
+        isNot('claude-sonnet-5-5'),
+      );
+      expect(agentDefaultModelName(const []), isNull);
+    });
+
+    testWidgets('OpenCode keeps the server model', (tester) async {
       await _newChat(tester, _host(agents: FakePhoneAgentsSource()));
       expect(find.text('Server default'), findsOneWidget);
-      expect(find.byKey(const ValueKey('chats-new-agent-model')), findsNothing);
     });
   });
 
@@ -172,7 +283,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(agents.calls, contains('select:claude'));
       expect(find.text('Choose an agent'), findsNothing);
-      expect(_name('Claude Code'), findsOneWidget);
+      expect(find.text('Start with Claude Code'), findsOneWidget);
     });
 
     testWidgets('certified ready agents come first; the rest are dimmed and '
@@ -262,7 +373,13 @@ void main() {
       await tester.pumpAndSettle();
       // The setup step replaced the list; there is still one sheet.
       expect(find.byType(BottomSheet), findsOneWidget);
-      expect(find.textContaining('Set up'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('agents-sheet')),
+          matching: find.textContaining('Set up'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Choose an agent'), findsNothing);
       await tester.tap(find.byKey(const ValueKey('agents-install')));
       // The install bar is indeterminate until bytes arrive: it animates.
@@ -322,11 +439,15 @@ void main() {
       terminal.exit(1, 0);
       await tester.pumpAndSettle();
       expect(find.text('Signed in'), findsOneWidget);
+      // Still there after a second: long enough to read.
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Signed in'), findsOneWidget);
+      expect(agents.calls, isNot(contains('select:claude')));
       await tester.pump(const Duration(seconds: 2));
       await tester.pumpAndSettle();
       expect(agents.calls, contains('select:claude'));
       expect(find.text('Signed in'), findsNothing);
-      expect(_name('Claude Code'), findsOneWidget);
+      expect(find.text('Start with Claude Code'), findsOneWidget);
       // No code ever went through the app.
       expect(agents.submitted, isEmpty);
     });
@@ -583,7 +704,7 @@ void main() {
       expect(find.byKey(const ValueKey('agents-error')), findsOneWidget);
       expect(
         find.text(
-          "This phone can't run this agent yet. Check again, or open Details to see why.",
+          "This phone can't run this agent yet. Open Details to see why.",
         ),
         findsOneWidget,
       );
@@ -598,6 +719,10 @@ void main() {
         find.textContaining('AgentHostException(unavailable)'),
         findsOneWidget,
       );
+      // The type name is said once, not twice.
+      expect(find.textContaining('AgentHostException:'), findsNothing);
+      // The words name no action that is not on the sheet.
+      expect(find.textContaining('Check again'), findsNothing);
     });
   });
 
@@ -626,6 +751,44 @@ void main() {
       await tester.pumpAndSettle();
       return terminal;
     }
+
+    testWidgets('with a screen reader, sign-in success is announced and the '
+        'sheet waits for the person', (tester) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(accessibleNavigation: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      final spoken = <String>[];
+      tester.binding.defaultBinaryMessenger
+          .setMockDecodedMessageHandler<dynamic>(SystemChannels.accessibility, (
+            message,
+          ) async {
+            if (message is Map && message['type'] == 'announce') {
+              spoken.add((message['data'] as Map)['message'] as String);
+            }
+            return null;
+          });
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger
+            .setMockDecodedMessageHandler<dynamic>(
+              SystemChannels.accessibility,
+              null,
+            ),
+      );
+      final agents = signedOutClaude();
+      final terminal = await openTerminal(tester, _host(agents: agents));
+      agents.signedInAfterTerminal = true;
+      terminal.exit(1, 0);
+      await tester.pumpAndSettle();
+      expect(spoken.single, startsWith('Signed in.'));
+      // Nothing moves the person on; "Use Claude Code" is the way.
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pumpAndSettle();
+      expect(agents.calls, isNot(contains('select:claude')));
+      expect(find.text('Signed in'), findsOneWidget);
+      expect(find.byKey(const ValueKey('agents-sign-in-done')), findsOneWidget);
+    });
 
     testWidgets('runs Claude\'s own sign-in; its page opens through the '
         'safe opener and no code passes through the app', (tester) async {
@@ -846,6 +1009,42 @@ void main() {
       expect(agents.calls, contains('recheck:claude'));
     });
 
+    testWidgets(
+      'an agent New conversation does not offer asks for no sign-in',
+      (tester) async {
+        // Codex is installed but not certified for chat on this version:
+        // signing in would lead nowhere, so Conversations stays quiet.
+        expect(
+          AgentCertificationMatrix.bundled.certifiedForChat('codex'),
+          isFalse,
+        );
+        await pumpHome(
+          tester,
+          script: (a) {
+            a.rows = [agentRowFor('codex', FakeAgentStage.signedOut)];
+            a.lines = const [
+              PhoneAgentStatusLine(
+                agentId: 'codex',
+                agentName: 'Codex',
+                kind: PhoneAgentStatusLineKind.signedOut,
+              ),
+              PhoneAgentStatusLine(
+                agentId: 'codex',
+                agentName: 'Codex',
+                kind: PhoneAgentStatusLineKind.limitReached,
+              ),
+            ];
+          },
+        );
+        expect(find.text('Codex signed out'), findsNothing);
+        expect(
+          find.byKey(const ValueKey('agents-status-sign-in-codex')),
+          findsNothing,
+        );
+        expect(find.textContaining('Codex plan limit'), findsNothing);
+      },
+    );
+
     testWidgets('Stopped in the background resumes the host', (tester) async {
       final agents = await pumpHome(
         tester,
@@ -1035,7 +1234,7 @@ void main() {
       semantics.dispose();
     });
 
-    testWidgets('each act is a short chip, all starting at one edge', (
+    testWidgets('each act is a short chip, all ending on the trailing edge', (
       tester,
     ) async {
       final semantics = tester.ensureSemantics();
@@ -1064,11 +1263,13 @@ void main() {
       ]) {
         expect(find.bySemanticsLabel(act), findsOneWidget, reason: id);
       }
-      final starts = {
+      // A chip ends where the chevrons of the rows around it end, so the
+      // trailing edge is one line down the list.
+      final ends = {
         for (final id in ['codex', 'gemini', 'omp-acp', 'fx'])
-          tester.getTopLeft(find.byKey(ValueKey('agents-fix-$id'))).dx,
+          tester.getTopRight(find.byKey(ValueKey('agents-fix-$id'))).dx,
       };
-      expect(starts, hasLength(1), reason: '$starts');
+      expect(ends, hasLength(1), reason: '$ends');
       // A tap still runs the act for its own agent.
       await tester.tap(find.byKey(const ValueKey('agents-fix-fx')));
       await tester.pumpAndSettle();
@@ -1154,7 +1355,13 @@ void main() {
       await pumpSection(tester, FakePhoneAgentsSource());
       await tester.tap(find.byKey(const ValueKey('agents-fix-claude')));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Set up'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('agents-sheet')),
+          matching: find.textContaining('Set up'),
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

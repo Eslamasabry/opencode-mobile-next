@@ -728,7 +728,9 @@ class _OAuthInputsFormState extends State<_OAuthInputsForm> {
     super.initState();
     for (final prompt in widget.method.prompts) {
       if (prompt['type'] == 'text') {
-        _textControllers[prompt['key'].toString()] = TextEditingController();
+        _textControllers[prompt['key'].toString()] = TextEditingController(
+          text: prompt['default']?.toString() ?? '',
+        );
       }
     }
   }

@@ -80,6 +80,11 @@ class _TeamConversationScreenState extends State<TeamConversationScreen> {
   /// The transcript's scroll: a message just sent is brought into view
   /// (the Now line above can take room and leave it under the fold).
   final _scroll = ScrollController();
+
+  /// The first thing that waits on the person (a gate card, else the merge
+  /// section): the conversation opens on it, once.
+  final _waitingKey = GlobalKey();
+  bool _openedAtWaiting = false;
   Timer? _tick;
   String? _runId;
 
@@ -250,6 +255,61 @@ class _TeamConversationScreenState extends State<TeamConversationScreen> {
             TeamNowKind.review => true,
             _ => false,
           };
+      // The Now line is the header's second line (vision 2026-10-20): what
+      // the team does, since when, what next. A host condition (paused, not
+      // answering) keeps the host words; a question keeps them too, under
+      // the header's needs-you mark, since its card is the question.
+      final mergeWaits = run != null && teamMergeWaitsOnYou(_team, run);
+      final hostWords = l10n.teamChatSubtitle(
+        teamHostPhrase(l10n, _team, working: working, startingWorker: starting),
+      );
+      final hostCondition = teamHostCondition(
+        l10n,
+        _team,
+        working: working,
+        startingWorker: starting,
+      );
+      final nowInput = gone
+          ? null
+          : _nowInput(
+              run: run,
+              work: work,
+              gates: gates,
+              pendingRecord: pendingRecord,
+              connected: true,
+            );
+      // Who is on the step the Now line speaks of: the same fact, never
+      // a worker busy with another step.
+      final step = now?.workTitle;
+      final stepId = work
+          .where((item) => item.title == step)
+          .map((item) => item.id)
+          .firstOrNull;
+      final worker = agents
+          .where(
+            (agent) =>
+                (now?.agentId != null && agent.id == now?.agentId) ||
+                (stepId != null && agent.currentWorkId == stepId),
+          )
+          .firstOrNull;
+      final headerLine = hostCondition != null || nowInput == null
+          ? null
+          : teamTaskHeaderLine(
+              l10n,
+              nowInput,
+              now: _clock(),
+              who: worker == null
+                  ? null
+                  : _teamAgentTitle(
+                      l10n,
+                      worker,
+                      agents,
+                      _roleName(l10n, run, work),
+                    ),
+              step: step == null || _sameTaskText(step, title) ? null : step,
+              mergeNext: teamMergeGateOnHost(_team),
+              mergeWaits: mergeWaits,
+            );
       return KitScreen(
         key: const ValueKey('team-conversation'),
         width: KitScreenWidth.reading,
@@ -260,15 +320,9 @@ class _TeamConversationScreenState extends State<TeamConversationScreen> {
           titleKey: const ValueKey('team-conversation-title'),
           // Never "Paused" while this task's worker starts or works: the
           // task's own state and its agents' sessions say so.
-          subtitle: l10n.teamChatSubtitle(
-            teamHostPhrase(
-              l10n,
-              _team,
-              working: working,
-              startingWorker: starting,
-            ),
-          ),
-          needsYou: gates.length,
+          subtitle: headerLine?.line ?? hostWords,
+          subtitleTail: headerLine?.next,
+          needsYou: gates.length + (mergeWaits ? 1 : 0),
           actions: [
             KitAction(
               key: const ValueKey('team-conversation-team-page'),
@@ -365,6 +419,7 @@ class _TeamConversationScreenState extends State<TeamConversationScreen> {
                   agents,
                   run: run,
                   work: work,
+                  waiting: gates.isNotEmpty || mergeWaits,
                 ),
               ),
       );

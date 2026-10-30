@@ -197,7 +197,7 @@ class KitRowGroup extends StatelessWidget {
     required this.children,
     this.label,
     this.labelTrailing,
-    this.leadingIcons = true,
+    this.leadingIcons,           // null: read off the rows (KitRowGroup.rowsLead)
     this.margin,
   });
 }
@@ -225,6 +225,7 @@ class KitRowGroup extends StatelessWidget {
 
   A disabled row with no reason renders as today, apart from the colour change. In strict mode it asserts (KitAction.md, Open question 1).
 - **`KitRow.badge` and `titleAccent` (2026-10-03, open-project polish):** `KitRow.badge(context, icon, accent: false)` is a round icon badge (same size as the tile): quiet (`surface3`) by default, or accent-tinted (accent at 18 % behind an accent glyph) for the row that starts something. `titleAccent: true` paints the title in the accent. New project (accent) and Search this phone (quiet) are siblings in one `KitRowGroup`.
+- **Every tappable row says what a tap does (2026-10-26, flat polish):** a row that opens a page ends in a chevron (`KitRowValue` or `KitChevron`); a row that acts in place (Restart, Stop, Send a test notification, Reset to defaults) takes `titleAccent: true`, the accent words of a text button, and no chevron. A notice's actions under its words are small tonal buttons (`KitButton` secondary, not full width), never bare words that read as a caption.
 - **Internal keys (TEST-5):** `kit-row-menu-action-<index>` is for tests of the semantic actions only. Existing keys (`titleKey`, `supportingKey`, callers' `ValueKey`s such as `session-subtitle-<id>`) are unchanged.
 
 ## States
@@ -306,7 +307,7 @@ class KitRowGroup extends StatelessWidget {
 
 - **Hover and pressed:** the fill cross-fades on `KitMotion.quick`, and is instant under reduced motion.
 - **No layout animation:** the row never animates its own size (MOT-5). Swipe motion is in KitSwipeAction.md, and the menu's in KitMenu.md.
-- **Haptics:** none (MOT-11: rows are silent).
+- **Haptics:** a tap is silent; a long-press that opens the row's menu ticks once (`KitHaptics.longPress`, MOT-11 since 2026-10-26). On Android a press draws the native ripple (KitTappable).
 
 ## Data safety and honest state
 
@@ -409,3 +410,13 @@ class KitRowChip {
 - **Used by:** Settings › Agents (`agents_section.dart`) and the agent picker
   (`agent_sheet.dart`).
 
+
+## Current check and needs-you dot (2026-10-20)
+
+- `KitRow.check(context)`: the one-in-use mark at a row's end, an accent check, for a list
+  whose selected row must not be a solid fill (vision rule "mint fill means the main
+  action"). Pair it with a word ("Connected") so colour is never the only sign.
+- `KitRow.icon(context, icon, needsYou: true)` and `KitRow.glyph(context, icon,
+  needsYou: true)`: the needs-you dot on the tile's or glyph's top-end corner, amber in a
+  ring of the panel colour. Only beside the words "Needs you" in the row's line
+  (STATE-9). Used by the server sheet.

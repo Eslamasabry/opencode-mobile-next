@@ -21,11 +21,13 @@ import 'package:opencode_mobile/domain/orchestration_gateway.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations_en.dart';
 import 'package:opencode_mobile/state/orchestration.dart';
+import 'package:opencode_mobile/ui/kit/kit_top_bar.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/team/team_board_screen.dart';
 
 import '../support/team_chat_fixture.dart';
 import 'chat_3_support.dart';
+import '../support/composer_tools.dart';
 
 final _en = AppLocalizationsEn();
 
@@ -264,7 +266,13 @@ void main() {
     _test('a task that moves says nothing of the kind', (tester) async {
       await pump(tester);
       expect(_key('team-conversation-no-progress'), findsNothing);
-      expect(nowLine(tester), isNot(contains('No progress')));
+      // Calm: the Now line is the header's (vision 2026-10-20); no line of
+      // its own under it.
+      expect(_key('team-conversation-now'), findsNothing);
+      expect(
+        tester.widget<KitTopBar>(find.byType(KitTopBar)).subtitle,
+        isNot(contains('No progress')),
+      );
     });
   });
 
@@ -330,14 +338,12 @@ void main() {
   });
 
   group('nothing covers the transcript', () {
-    _test('no chip row sits between the Now line and the prompt', (
-      tester,
-    ) async {
+    _test('no chip row sits between the header and the prompt', (tester) async {
       await pump(tester);
       expect(_key('team-conversation-family'), findsNothing);
-      final now = tester.getRect(_key('team-conversation-now'));
+      final bar = tester.getRect(find.byType(KitTopBar));
       final list = tester.getRect(_key('team-conversation-list'));
-      expect(now.bottom, lessThanOrEqualTo(list.top));
+      expect(bar.bottom, lessThanOrEqualTo(list.top));
       final prompt = tester.getRect(_key('team-conversation-prompt'));
       expect(prompt.top, greaterThanOrEqualTo(list.top));
     });
@@ -483,6 +489,9 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.ensureVisible(_key('team-start-run-backlog'));
+      // The sheet's body scrolls the button clear of the screen edge; let
+      // that layout land before the tap point is read.
+      await tester.pumpAndSettle();
       await tester.tap(_key('team-start-run-backlog'));
       await tester.pumpAndSettle();
       expect(gateway.created.single.$1, 'Add a changelog');
@@ -546,6 +555,41 @@ void main() {
     });
   });
 
+  testWidgets('the default-model notice folds away by itself after a few '
+      'seconds (owner, 2026-10-27)', (tester) async {
+    chat3MockSecureStorage();
+    final conn = await chat3Controller();
+    addTearDown(conn.dispose);
+    conn
+      ..catalog = CatalogSnapshot(
+        providers: const [],
+        models: [
+          CatalogModel(
+            id: 'sonnet',
+            providerID: 'anthropic',
+            name: 'Claude Sonnet 4',
+            enabled: true,
+            status: 'active',
+            contextLimit: 200000,
+            outputLimit: 8000,
+            reasoning: true,
+            attachments: true,
+            tools: true,
+            variants: const [],
+          ),
+        ],
+        agents: const [],
+      )
+      ..selectedModel = ModelRef(providerID: 'anthropic', modelID: 'sonnet');
+    await pumpChat3(tester, conn);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(_key('chat-default-model-notice'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 7));
+    await tester.pumpAndSettle();
+    expect(_key('chat-default-model-notice'), findsNothing);
+  });
+
   group('the default-model notice agrees with the composer chip (E1)', () {
     CatalogModel model(String id, String name) => CatalogModel(
       id: id,
@@ -587,7 +631,18 @@ void main() {
         ModelRef(providerID: 'free', modelID: 'catjam'),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Cat Jam Free'), findsWidgets);
+      // The model is a row of the composer's + sheet, not a chip.
+      await openComposerTools(tester);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('composer-setting-model')),
+          matching: find.textContaining('Cat Jam Free'),
+        ),
+        findsOneWidget,
+      );
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
       expect(_key('chat-default-model-notice'), findsNothing);
       expect(
         find.textContaining('Nemotron 3.5 Super VL Free, this server'),
@@ -652,7 +707,7 @@ void main() {
       final conn = await chat3Controller(api: api);
       addTearDown(conn.dispose);
       await pumpChat3(tester, conn);
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('composer-tool-commands')));
       await tester.pumpAndSettle();

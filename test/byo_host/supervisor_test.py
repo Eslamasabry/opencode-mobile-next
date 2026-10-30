@@ -453,7 +453,7 @@ class BundleTests(unittest.TestCase):
                 self.archive, first["archiveSha256"], destination
             )
         self.assertEqual(manifest["bundleVersion"], "2.0.0")
-        self.assertEqual(manifest["openCodeVersion"], "2.0.29")
+        self.assertEqual(manifest["openCodeVersion"], "2.1.1")
         self.assertEqual(
             set(x.name for x in destination.iterdir()),
             {"supervisor.py", "install.sh", "opencode", "manifest.json"},

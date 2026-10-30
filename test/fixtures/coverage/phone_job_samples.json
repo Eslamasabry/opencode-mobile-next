@@ -133,7 +133,7 @@
           },
           "opencode": {
             "runtime": "opencode2",
-            "version": "2.0.29"
+            "version": "2.1.1"
           }
         },
         "components": {
@@ -222,7 +222,7 @@
           "path": "state",
           "kind": "enum",
           "probes": [
-            "Setting up OpenCode on this phone"
+            "Pause setup"
           ],
           "primary": false
         },
@@ -733,7 +733,7 @@
           "opencode": {
             "state": "done",
             "weight": 20,
-            "version": "2.0.29"
+            "version": "2.1.1"
           },
           "start": {
             "state": "done",
@@ -884,7 +884,7 @@
           "path": "version",
           "kind": "string",
           "probes": [
-            "2.0.29"
+            "2.1.1"
           ],
           "primary": false
         },
@@ -1191,7 +1191,7 @@
           "path": "state",
           "kind": "enum",
           "probes": [
-            "Setup stopped"
+            "Setup is paused"
           ],
           "primary": false
         },

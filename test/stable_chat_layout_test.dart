@@ -49,6 +49,16 @@ class _Api extends FakeServerGateway with CompleteMessageHistory {
   Future<Session> session(String id) async => current;
 }
 
+MessageWithParts _prompt(String id, String text) => MessageWithParts(
+  info: MessageInfo(
+    id: id,
+    sessionID: _sessionID,
+    role: 'user',
+    time: MsgTime(created: 1),
+  ),
+  parts: [Part(id: '$id-text', messageID: id, type: 'text', text: text)],
+);
+
 MessageWithParts _reply(String id, String text) => MessageWithParts(
   info: MessageInfo(
     id: id,
@@ -246,7 +256,10 @@ void main() {
       'at 320dp and ${scale}x the keyboard leaves the field and Send on '
       'screen while a run is active, and the draft survives',
       (tester) async {
-        final conn = await _controller(_Api(title: _longTitle));
+        // A run answers a prompt: Stop lives on that turn's live line.
+        final api = _Api(title: _longTitle)
+          ..transcript = [_prompt('u1', 'Fix the checkout test.')];
+        final conn = await _controller(api);
         addTearDown(conn.dispose);
         await _pumpChat(
           tester,
@@ -274,13 +287,23 @@ void main() {
         );
 
         // A run starts: Send stays above the keyboard, and the delivery
-        // words do not push it off screen. Typed words keep Send; Stop leads
-        // the row, never beside it.
+        // words do not push it off screen. Typed words keep Send; Stop sits
+        // in the chips row above the field (never beside it).
         conn.busySessions.add(_sessionID);
         conn.notifyListeners();
         await _pumpFrames(tester);
         expect(tester.takeException(), isNull);
-        expect(find.byKey(const ValueKey('kit-composer-stop')), findsOneWidget);
+        expect(find.byKey(const ValueKey('kit-composer-stop')), findsNothing);
+        // Stop is always on screen above the field, at 320 dp and large
+        // text too, and a full touch target.
+        final stopChip = find.byKey(const Key('chat-stop-button'));
+        expect(stopChip, findsOneWidget);
+        expect(find.byKey(const Key('live-stop')), findsNothing);
+        final stopRect = tester.getRect(stopChip);
+        expect(stopRect.bottom, lessThanOrEqualTo(visibleBottom));
+        expect(stopRect.left, greaterThanOrEqualTo(0));
+        expect(stopRect.right, lessThanOrEqualTo(320));
+        expect(stopRect.height, greaterThanOrEqualTo(48));
         expect(find.text('Sends after this reply'), findsOneWidget);
         expect(tester.getRect(_send).bottom, lessThanOrEqualTo(visibleBottom));
         expect(tester.getRect(_field).bottom, lessThanOrEqualTo(visibleBottom));

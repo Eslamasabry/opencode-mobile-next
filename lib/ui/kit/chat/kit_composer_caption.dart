@@ -88,7 +88,17 @@ class _Circle extends StatelessWidget {
     this.shortcut,
     this.working = false,
     this.disabledReason,
+    this.secondary = false,
+    this.menu = const [],
   });
+
+  /// A long-press (and right-click, Shift+F10) menu on the button: Send's
+  /// "Send later or repeat", Stop's "Stop after this step".
+  final List<KitMenuItem> menu;
+
+  /// Not the main action now (the mic beside Stop): a quiet surface, not
+  /// the solid accent.
+  final bool secondary;
 
   final _CircleKind kind;
   final String label;
@@ -103,19 +113,40 @@ class _Circle extends StatelessWidget {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
     final stop = kind == _CircleKind.stop;
+    // Send for an agent that stops its reply to take the message: an amber
+    // pill with a stop square and the words, not a disc.
+    final pill = kind == _CircleKind.stopAndSend;
     final disabled = kind == _CircleKind.sendDisabled;
     // Stop is neutral (owner decision 2 Oct, 02B): a text-colour circle with
     // a ground square. Red is reserved for destructive actions.
-    final fill = stop
+    final fill = pill
+        ? roles.attentionFill
+        : stop
         ? roles.text1
         : disabled
         ? roles.surface3
+        : secondary
+        ? roles.surface3
         : roles.accent;
-    final ink = stop
+    // The main action keeps the accent and Stop its text colour as their
+    // own fills; the quiet discs (the mic beside Stop, a send that cannot
+    // run yet) are the style's own round control.
+    final primary = !stop && !disabled && !secondary;
+    final Color? own = primary || pill || stop ? fill : null;
+    final ink = pill
+        ? roles.onAttentionFill
+        : stop
         ? roles.ground
         : disabled
         ? roles.text3
-        : roles.onAccent;
+        : secondary
+        ? roles.text2
+        // Hook H3: a style may say the words on its accent.
+        : KitSurfaceLook.wordsOn(
+            context,
+            fallback: roles.onAccent,
+            color: roles.accent,
+          );
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final still = KitMotion.reduced(context);
 
@@ -131,7 +162,7 @@ class _Circle extends StatelessWidget {
               dimension: KitIconSize.small.logical,
               child: CircularProgressIndicator(strokeWidth: 2, color: ink),
             );
-    } else if (stop) {
+    } else if (stop || pill) {
       const side = KitTokens.composerStopSquare;
       glyph = SizedBox.square(
         key: const ValueKey('kit-composer-stop-square'),
@@ -157,17 +188,58 @@ class _Circle extends StatelessWidget {
       }
     }
 
-    Widget disc = SizedBox.square(
-      dimension: KitTokens.composerActionSize,
-      child: DecoratedBox(
+    Widget disc = SizedBox(
+      width: pill ? null : KitTokens.composerActionSize,
+      height: KitTokens.composerActionSize,
+      child: kitSurfaceBox(
         key: ValueKey('kit-composer-circle-${kind.name}'),
-        decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
-        child: Center(child: glyph),
+        style: KitSurfaceLook.styleOf(context),
+        decoration: KitSurfaceLook.decorate(
+          context,
+          solid: BoxDecoration(
+            color: fill,
+            shape: pill ? BoxShape.rectangle : BoxShape.circle,
+            borderRadius: pill
+                ? BorderRadius.circular(KitTokens.composerActionSize / 2)
+                : null,
+          ),
+          role: KitSurfaceRole.control,
+          level: KitSurfaceLevel.surface3,
+          circle: !pill,
+          color: own,
+        ),
+        child: pill
+            ? Padding(
+                padding: EdgeInsets.symmetric(horizontal: tokens.space4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    glyph,
+                    SizedBox(width: tokens.space2),
+                    ExcludeSemantics(
+                      child: Text(
+                        label,
+                        style: KitText.styleOf(
+                          context,
+                          KitTextRole.body,
+                        ).copyWith(color: ink),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : Center(child: glyph),
       ),
     );
     // Stop wears a slowly turning ring: the work has no known length.
     if (stop) {
-      disc = _StopRing(color: roles.text2, track: roles.hairline, child: disc);
+      // In the Accent (Settings › Appearance), the main colour keeping the
+      // disc and the glow. A waiting stop shows the ring still and whole.
+      disc = _StopRing(
+        color: roles.partner,
+        track: roles.partner.withValues(alpha: .75),
+        child: disc,
+      );
     }
 
     return KitTappable(
@@ -178,8 +250,10 @@ class _Circle extends StatelessWidget {
       shortcut: shortcut,
       disabledReason: onTap == null ? (disabledReason ?? label) : null,
       onTap: onTap,
-      child: SizedBox.square(
-        dimension: tokens.minTarget,
+      menu: onTap == null ? const [] : menu,
+      child: SizedBox(
+        width: pill ? null : tokens.minTarget,
+        height: tokens.minTarget,
         child: Center(child: disc),
       ),
     );
@@ -214,6 +288,10 @@ class _StopRingState extends State<_StopRing>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _sync();
+  }
+
+  void _sync() {
     if (_MovingPartScope.of(context) != _MovingPart.stopRing ||
         !KitMotion.loops) {
       _turn.stop();

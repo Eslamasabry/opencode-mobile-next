@@ -18,6 +18,8 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/orchestration.dart';
 import 'package:opencode_mobile/state/orchestration_store.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/state/team_project_demo.dart'
+    show teamProjectDemoConfig;
 import 'package:opencode_mobile/ui/screens/settings/plugins_screen.dart'
     show teamRowSubtitle, teamFirstProbeGrace;
 import 'package:opencode_mobile/ui/screens/team/team_page.dart';
@@ -332,6 +334,20 @@ void main() {
         );
       },
     );
+
+    test('the simulator Try the demo attaches reads Demo, never On', () {
+      final p = profile(config: teamProjectDemoConfig);
+      expect(
+        teamRowSubtitle(
+          l10n,
+          profile: p,
+          orchestration: null,
+          discovery: null,
+          now: DateTime.utc(2026, 10, 28),
+        ),
+        l10n.teamProjectDemo,
+      );
+    });
 
     test('read-only and unreachable states', () async {
       final store = OrchestrationStore(prefs, secure: secure);

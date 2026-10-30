@@ -76,7 +76,7 @@ class _TermuxStorageRowState extends State<TermuxStorageRow> {
           );
     return KitRow(
       key: const Key('termux-storage-row'),
-      leading: KitRow.icon(context, AppIconography.database),
+      leading: KitRow.icon(context, AppIconography.storage),
       title: l10n.thisPhoneStorage,
       supporting: TextSpan(text: storageSubtitle),
       supportingKey: const Key('termux-storage-row-subtitle'),
@@ -109,7 +109,7 @@ class PhoneProcessesRow extends StatelessWidget {
     final report = this.report;
     return KitRow(
       key: const Key('termux-procs-row'),
-      leading: KitRow.icon(context, AppIconography.processor),
+      leading: KitRow.icon(context, AppIconography.heartbeat),
       title: l10n.termuxProcsTitle,
       supporting: TextSpan(
         text: report == null

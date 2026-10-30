@@ -162,7 +162,7 @@ void main() {
     });
   });
 
-  group('project-hub: live lines under Changes and Terminal', () {
+  group('project-hub: the count on Changes', () {
     Future<(_HubController, _HubRepository)> pump(
       WidgetTester tester, {
       int changed = 3,
@@ -188,37 +188,38 @@ void main() {
       return (controller, repository);
     }
 
-    Finder line(String tool, String text) => find.descendant(
-      of: _key('project-hub-$tool'),
-      matching: find.text(text, findRichText: true),
-    );
+    // The Files page is the project's files (vision 2026-10-20): the count
+    // rides on Changes in the bar's ⋯, read when the page opens.
+    Future<Finder> changes(WidgetTester tester, String text) async {
+      await tester.tap(_key('project-hub-menu'));
+      await tester.pumpAndSettle();
+      final found = find.descendant(
+        of: _key('project-hub-changes'),
+        matching: find.text(text, findRichText: true),
+      );
+      return found;
+    }
 
-    testWidgets('Changes says how many files changed; Terminal how many run', (
-      tester,
-    ) async {
+    Future<void> closeMenu(WidgetTester tester) async {
+      await tester.tapAt(const Offset(4, 4));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Changes says how many files changed', (tester) async {
       await pump(tester);
-      expect(line('changes', '3 files changed'), findsOneWidget);
-      expect(line('terminal', '1 running'), findsOneWidget);
+      expect(await changes(tester, 'Changes · 3 files'), findsOneWidget);
     });
 
-    testWidgets('nothing changed says so; no terminal running says nothing', (
-      tester,
-    ) async {
+    testWidgets('nothing changed: Changes alone, no count', (tester) async {
       await pump(tester, changed: 0, terminals: const [false]);
-      expect(line('changes', 'No changes'), findsOneWidget);
-      expect(
-        find.descendant(
-          of: _key('project-hub-terminal'),
-          matching: find.textContaining('running', findRichText: true),
-        ),
-        findsNothing,
-      );
+      expect(await changes(tester, 'Changes'), findsOneWidget);
     });
 
     testWidgets('read again when the last conversation finishes, never on a '
         'timer', (tester) async {
       final (controller, repository) = await pump(tester, changed: 1);
-      expect(line('changes', '1 file changed'), findsOneWidget);
+      expect(await changes(tester, 'Changes · 1 file'), findsOneWidget);
+      await closeMenu(tester);
       final reads = repository.statusReads;
       // Time alone reads nothing.
       await tester.pump(const Duration(minutes: 5));
@@ -231,7 +232,7 @@ void main() {
       controller.poke();
       await tester.pumpAndSettle();
       expect(repository.statusReads, reads + 1);
-      expect(line('changes', '4 files changed'), findsOneWidget);
+      expect(await changes(tester, 'Changes · 4 files'), findsOneWidget);
     });
   });
 

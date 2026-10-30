@@ -12,6 +12,7 @@ import 'package:opencode_mobile/domain/models.dart';
 import 'package:opencode_mobile/ui/kit/kit_diff_view.dart';
 import 'package:opencode_mobile/ui/kit/kit_request_card.dart';
 import 'package:opencode_mobile/ui/screens/chat/permission_sheet.dart';
+import 'support/plain_text_finder.dart';
 
 PermissionRequest _permission({
   String permission = 'bash',
@@ -179,7 +180,7 @@ void main() {
       ),
       onReply: (reply, {message}) async {},
     );
-    expect(find.text('Edit this file?'), findsOneWidget);
+    expect(findPlainText('Edit main.dart?'), findsOneWidget);
     await tester.tap(find.byKey(const Key('permission-card-review')));
     await tester.pumpAndSettle();
     expect(find.byType(KitDiffView), findsOneWidget);

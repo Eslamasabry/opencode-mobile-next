@@ -49,8 +49,14 @@ class ChatFeedItem {
     this.sourceId,
     this.sourceLabel,
     this.finishedUnseen = false,
+    this.stoppedByPerson = false,
     this.contextUsage,
   });
+
+  /// The person pressed Stop on its latest turn from this app: with
+  /// [finishedUnseen] the list says "Stopped", not "Done" (OpenCode 2 reports
+  /// a stop as a normal finish).
+  final bool stoppedByPerson;
 
   /// Its last run finished after the person last opened it (the list's
   /// "Done" tag). Contract of 2026-10-07: computed by each feed from the
@@ -203,7 +209,13 @@ class ChatFeedSnapshot {
     this.stillLoading = const [],
     this.stillLoadingServers = const [],
     this.unreachableServers = const [],
+    this.incompleteSources = const [],
   });
+
+  /// Display names of the connections whose conversations did not all load
+  /// (empty when it is not known which): the Conversations list names them
+  /// and offers to try again.
+  final List<String> incompleteSources;
 
   /// Saved servers (profile ids) the list shows but can't reach now: their
   /// conversations are missing, said by name.

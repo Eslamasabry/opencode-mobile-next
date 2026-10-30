@@ -55,9 +55,11 @@ class _Probe {
   final selections = <int>[];
 }
 
+/// A medium window by default: the rail. A phone (compact) draws no bar
+/// at all (owner, 2026-10-20).
 Future<_Probe> _pump(
   WidgetTester tester, {
-  Size size = const Size(412, 915),
+  Size size = const Size(700, 1000),
   int inbox = 0,
   bool panes = false,
   double textScale = 1,
@@ -132,11 +134,6 @@ void main() {
     onSelected: (_) {},
     child: Text(selected == 0 ? 'Work content' : 'Inbox content'),
   );
-  Widget motionBar(int selected) => KitNavBar(
-    destinations: _destinations(inbox: 2),
-    selected: selected,
-    onSelected: (_) {},
-  );
   Widget motionRail(int selected) => KitNavRail(
     destinations: _destinations(inbox: 2),
     selected: selected,
@@ -150,17 +147,6 @@ void main() {
         build: () => motionNav(0),
         act: (tester, stage) => stage.rebuild(motionNav(1)),
         shows: 'Inbox content',
-      ),
-    },
-  );
-  kitMotionStillTests(
-    'KitNavBar',
-    builds: {'selected work': () => motionBar(0)},
-    changes: {
-      'inbox selected': KitMotionChange(
-        build: () => motionBar(0),
-        act: (tester, stage) => stage.rebuild(motionBar(1)),
-        shows: 'Inbox',
       ),
     },
   );
@@ -179,29 +165,37 @@ void main() {
   // Real faces, so label widths (and the A11Y-8 clamp) are the device's.
   setUpAll(loadKitGalleryFonts);
 
-  testWidgets('layout follows the window class, short windows keep dock/rail', (
+  testWidgets('layout follows the window class, short windows keep the rail', (
     tester,
   ) async {
-    await _pump(tester);
-    expect(find.byType(KitNavBar), findsOneWidget);
+    // A phone: no bar, no destinations; the child is the whole window.
+    await _pump(tester, size: const Size(412, 915));
     expect(find.byType(KitNavRail), findsNothing);
+    expect(find.byKey(const ValueKey('nav-inbox')), findsNothing);
+    expect(
+      tester.getSize(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is ColoredBox && widget.color == const Color(0xFF336699),
+        ),
+      ),
+      const Size(412, 915),
+    );
 
     await _pump(tester, size: const Size(700, 1000));
-    expect(find.byType(KitNavBar), findsNothing);
     expect(_rail(tester)!.extended, isFalse);
 
     await _pump(tester, size: const Size(1280, 800));
     expect(_rail(tester)!.extended, isTrue);
     expect(tester.getSize(find.byType(KitNavRail)).width, 296);
 
-    // Behaviour: "< 480 dp tall keeps the dock (compact) or the rail
-    // (medium-or-wider)"; 915 wide is expanded, so the rail.
+    // Behaviour: "< 480 dp tall keeps the rail (medium-or-wider)"; 915
+    // wide is expanded, so the rail.
     await _pump(tester, size: const Size(915, 412));
-    expect(find.byType(KitNavBar), findsNothing);
     expect(_rail(tester)!.extended, isFalse);
 
     await _pump(tester, size: const Size(412, 300));
-    expect(find.byType(KitNavBar), findsOneWidget);
+    expect(find.byType(KitNavRail), findsNothing);
   });
 
   testWidgets('a tap selects once and the selected one says so', (
@@ -234,26 +228,14 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('keyboard open hides the dock and its clearance', (tester) async {
-    final probe = await _pump(tester, keyboard: 300);
-    expect(find.byType(KitNavBar), findsNothing);
-    expect(probe.clearance!.bottom, 24 + 300);
+  testWidgets('a phone adds nothing above the system inset', (tester) async {
+    final probe = await _pump(tester, size: const Size(412, 915));
+    expect(probe.paddingBottom, 24);
+    expect(probe.hostsPane, isFalse);
   });
 
   testWidgets('clearance published per layout', (tester) async {
-    var probe = await _pump(tester);
-    final dock = tester.getSize(find.byType(KitNavBar)).height;
-    expect(dock, 60);
-    expect(probe.clearance!.bottom, 24 + 8 + dock);
-    expect(probe.paddingBottom, probe.clearance!.bottom);
-    expect(
-      tester.getBottomLeft(find.byType(KitNavBar)).dy,
-      915 - 24 - 8,
-      reason: 'floats space2 above the system inset',
-    );
-    expect(tester.getTopLeft(find.byType(KitNavBar)).dx, 16);
-
-    probe = await _pump(tester, size: const Size(700, 1000));
+    var probe = await _pump(tester, size: const Size(700, 1000));
     expect(probe.clearance!.start, KitLayout.railWidth + 8);
     expect(tester.getSize(find.byType(KitNavRail)).width, 80);
     expect(tester.getTopLeft(find.byType(KitNavRail)).dx, 8);
@@ -332,26 +314,17 @@ void main() {
     expect(find.text('Work pane'), findsNothing);
     expect(probe.hostsPane, isFalse);
 
-    probe = await _pump(tester, panes: true);
+    probe = await _pump(tester, size: const Size(412, 915), panes: true);
     expect(probe.hostsPane, isFalse);
     probe = await _pump(tester, size: const Size(700, 1000), panes: true);
     expect(probe.hostsPane, isFalse);
   });
 
-  testWidgets('dock and rail are solid surfaces at navRadius; sidebar is not', (
+  testWidgets('the rail is a solid surface at navRadius; sidebar is not', (
     tester,
   ) async {
-    await _pump(tester);
-    var glass = tester.widget<KitGlass>(
-      find.descendant(
-        of: find.byType(KitNavBar),
-        matching: find.byType(KitGlass),
-      ),
-    );
-    expect(glass.borderRadius, BorderRadius.circular(22));
-
     await _pump(tester, size: const Size(700, 1000));
-    glass = tester.widget<KitGlass>(
+    final glass = tester.widget<KitGlass>(
       find.descendant(
         of: find.byType(KitNavRail),
         matching: find.byType(KitGlass),
@@ -369,13 +342,12 @@ void main() {
     );
   });
 
-  for (final width in [320.0, 412.0]) {
-    testWidgets('200% text at $width: no overflow, dock grows, labels shown', (
+  for (final height in [1000.0, 600.0]) {
+    testWidgets('200% text, rail $height tall: no overflow, labels shown', (
       tester,
     ) async {
-      await _pump(tester, size: Size(width, 915), textScale: 2);
+      await _pump(tester, size: Size(700, height), textScale: 2);
       expect(tester.takeException(), isNull);
-      expect(tester.getSize(find.byType(KitNavBar)).height, greaterThan(60));
       for (final label in ['Work', 'Inbox', 'Project', 'Settings']) {
         expect(find.text(label), findsOneWidget);
       }
@@ -425,7 +397,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('nav-settings')));
     await tester.pump();
     final after = tester.getRect(lens);
-    expect(after.left, greaterThan(before.left));
+    expect(after.top, greaterThan(before.top));
     await tester.pumpAndSettle();
     expect(tester.getRect(lens), after);
   });

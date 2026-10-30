@@ -3,7 +3,11 @@ import 'phrase_chips.dart';
 
 /// What the chat's state says about the moment, for the phrase chips.
 class PhraseMomentState {
-  const PhraseMomentState(this.moment, {this.continueShown = false});
+  const PhraseMomentState(
+    this.moment, {
+    this.continueShown = false,
+    this.errorShown = false,
+  });
 
   /// Null: no chips (an empty new chat).
   final PhraseMoment? moment;
@@ -11,6 +15,10 @@ class PhraseMomentState {
   /// The transcript already shows its own Continue button for a reply cut off
   /// by length, so the chip row does not repeat "Continue".
   final bool continueShown;
+
+  /// The turn ended in an error notice with its own way on (another model,
+  /// sign in, Send again): no row of phrases stacked under it.
+  final bool errorShown;
 }
 
 const _editTools = {'edit', 'write', 'multiedit', 'patch', 'apply_patch'};
@@ -70,6 +78,13 @@ PhraseMomentState derivePhraseMoment({
     return PhraseMomentState(
       PhraseMoment.stoppedPartway,
       continueShown: kind == MessageErrorKind.outputLength && !offline,
+      // A stop is not an error, and a reply cut by its length keeps the
+      // row's Continue: every other error shows its own notice.
+      errorShown:
+          kind != null &&
+          kind != MessageErrorKind.outputLength &&
+          kind != MessageErrorKind.aborted &&
+          !stoppedByPerson,
     );
   }
   final edited = [for (final message in assistants) ...message.parts].any(

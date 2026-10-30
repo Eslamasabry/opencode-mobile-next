@@ -29,8 +29,8 @@
           "type": "list-tile",
           "label": "/<command slash>  <description>",
           "key": "inline-command-<slash>",
-          "file": "lib/ui/screens/chat/command_launcher.dart",
-          "line": 606,
+          "file": "lib/ui/screens/chat/chat_command_actions.dart",
+          "line": 111,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -64,8 +64,8 @@
           "type": "list-tile",
           "label": "@<agent id>  <description|Delegate>",
           "key": "inline-agent-<agent id>",
-          "file": "lib/ui/screens/chat/command_launcher.dart",
-          "line": 699,
+          "file": "lib/ui/screens/chat/chat_command_actions.dart",
+          "line": 92,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -178,7 +178,7 @@
         {
           "id": "embedded-composer-field",
           "type": "text-field",
-          "label": "Ask OpenCode…",
+          "label": "Ask OpenCode\u2026",
           "key": "chat-composer-field",
           "line": 707,
           "action": "other",
@@ -214,7 +214,7 @@
           "type": "icon-button",
           "label": "Add. Hold to attach a file / Prompt tools",
           "key": "composer-tools-button",
-          "line": 791,
+          "line": 339,
           "action": "open-sheet",
           "target": "prompt-tools-sheet",
           "targetWidget": "_PromptToolsSheet",
@@ -228,7 +228,7 @@
         {
           "id": "embedded-composer-model-chip",
           "type": "button",
-          "label": "<agent · model · variant> | Choose model (tooltip: Model and agent: {model}. Tap to change.{cost})",
+          "label": "<agent \u00b7 model \u00b7 variant> | Choose model (tooltip: Model and agent: {model}. Tap to change.{cost})",
           "key": "composer-model-context",
           "line": 347,
           "action": "open-sheet",
@@ -313,7 +313,7 @@
         {
           "id": "embedded-composer-model-cycle-next",
           "type": "menu-item",
-          "label": "Next recent model · F2",
+          "label": "Next recent model \u00b7 F2",
           "key": null,
           "file": "lib/ui/widgets/model_shortcuts.dart",
           "line": 87,
@@ -329,7 +329,7 @@
         {
           "id": "embedded-composer-model-cycle-previous",
           "type": "menu-item",
-          "label": "Previous recent model · Shift+F2",
+          "label": "Previous recent model \u00b7 Shift+F2",
           "key": null,
           "file": "lib/ui/widgets/model_shortcuts.dart",
           "line": 96,
@@ -363,8 +363,8 @@
           "type": "gesture",
           "label": "Arrow Up (caret at start) / Arrow Down (caret at end)",
           "key": null,
-          "file": "lib/ui/screens/chat_screen.dart",
-          "line": 970,
+          "file": "lib/ui/screens/chat/prompt_history.dart",
+          "line": 124,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -374,6 +374,102 @@
             "selection collapsed and no active IME composing range",
             "!suggestionsOpen",
             "host: !_conn.isIsolated && !_sending && !_promptShelfBusy"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "composer-tray-photos",
+          "type": "button",
+          "label": "Photos",
+          "key": "composer-tool-gallery",
+          "file": "lib/ui/screens/chat/composer_tray.dart",
+          "line": 23,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Picks photos to attach (the \"+\" tray).",
+          "gates": [
+            "server takes files"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "composer-tray-camera",
+          "type": "button",
+          "label": "Camera",
+          "key": "composer-tool-camera",
+          "file": "lib/ui/screens/chat/composer_tray.dart",
+          "line": 30,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Takes a photo to attach.",
+          "gates": [
+            "server takes files"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "composer-tray-file",
+          "type": "button",
+          "label": "File",
+          "key": "composer-tool-attach",
+          "file": "lib/ui/screens/chat/composer_tray.dart",
+          "line": 39,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Picks a file to attach.",
+          "gates": [
+            "server takes files"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "composer-tray-more",
+          "type": "button",
+          "label": "More",
+          "key": "composer-tray-more",
+          "file": "lib/ui/screens/chat/composer_tray.dart",
+          "line": 50,
+          "action": "open-sheet",
+          "target": "prompt-tools-sheet",
+          "targetWidget": null,
+          "effect": "Opens the tools sheet.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "composer-send-later",
+          "type": "menu-item",
+          "label": "Send later or repeat",
+          "key": "composer-send-later",
+          "file": "lib/ui/screens/chat/chat_schedule_send.dart",
+          "line": 10,
+          "action": "open-sheet",
+          "target": "scheduled-prompt-editor",
+          "targetWidget": null,
+          "effect": "Long-press on Send: opens the scheduling sheet seeded with the draft for this conversation.",
+          "gates": [
+            "canSchedulePrompts",
+            "not watching or isolated"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "composer-stop-after-step",
+          "type": "menu-item",
+          "label": "Stop after this step",
+          "key": "composer-stop-after-step",
+          "file": "lib/ui/screens/chat/chat_stop_after_step.dart",
+          "line": 11,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Long-press on Stop: sends a steer note asking the agent to stop after the step it is on (OpenCode 2 reads a steer at the next step boundary). A tap on Stop still stops at once.",
+          "gates": [
+            "promptSteering and the session is busy",
+            "not watching"
           ],
           "destructive": false
         }
@@ -619,12 +715,12 @@
       "id": "command-launcher-sheet",
       "title": "Composer tools",
       "kind": "sheet",
-      "file": "lib/ui/screens/chat/command_launcher.dart",
-      "widget": "_CommandLauncherSheet",
+      "file": "lib/ui/widgets/command_sheet.dart",
+      "widget": "CommandSheet",
       "presentedBy": [
         "_openCommandLauncher"
       ],
-      "line": 125,
+      "line": 180,
       "purpose": "Searchable sheet with a Commands tab (mobile actions plus server slash commands) and a Delegate tab (server subagents to @-mention).",
       "reachedFrom": [
         {
@@ -663,7 +759,8 @@
           "targetWidget": null,
           "effect": "Navigator.pop(context).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/command_launcher.dart"
         },
         {
           "id": "command-launcher-sheet-tabs",
@@ -676,27 +773,29 @@
           "targetWidget": null,
           "effect": "TabBar on _tabs; _onTabChanged clears the search and rebuilds.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/command_launcher.dart"
         },
         {
           "id": "command-launcher-sheet-search",
           "type": "text-field",
           "label": "Find a command or action | Find a subagent",
           "key": "command-launcher-search",
-          "line": 292,
+          "line": 396,
           "action": "other",
           "target": null,
           "targetWidget": null,
           "effect": "onChanged -> setState; filters commands via _ChatCommand.matchesQuery/scoreFor or agents by id/description.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/widgets/command_sheet.dart"
         },
         {
           "id": "command-launcher-sheet-search-clear",
           "type": "icon-button",
           "label": "Clear search",
           "key": null,
-          "line": 305,
+          "line": 57,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -704,7 +803,8 @@
           "gates": [
             "_search.text.isNotEmpty"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/chat_transcript.dart"
         },
         {
           "id": "command-launcher-sheet-retry-commands",
@@ -719,14 +819,15 @@
           "gates": [
             "!agentTab && widget.error() != null"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/command_launcher.dart"
         },
         {
           "id": "command-launcher-sheet-command-row",
           "type": "list-tile",
-          "label": "/<slash> <aliases> mobile|server — <description>",
+          "label": "/<slash> <aliases> mobile|server \u2014 <description>",
           "key": "command-<mobile|server>-<slash>",
-          "line": 566,
+          "line": 86,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -735,7 +836,8 @@
             "Commands tab",
             "tile disabled when !command.enabled"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/chat_command_actions.dart"
         },
         {
           "id": "command-launcher-sheet-search-result",
@@ -751,7 +853,8 @@
             "search text is not empty",
             "each entry's own gate in lib/ui/search/search_index.dart"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/command_launcher.dart"
         },
         {
           "id": "command-launcher-sheet-agents-refresh-button",
@@ -767,14 +870,15 @@
             "Delegate tab",
             "agents.isEmpty && !loading"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/command_launcher.dart"
         },
         {
           "id": "command-launcher-sheet-agent-row",
           "type": "list-tile",
-          "label": "@<agent id> — <description|Delegate this prompt> <model>",
+          "label": "@<agent id> \u2014 <description|Delegate this prompt> <model>",
           "key": "composer-agent-<agent id>",
-          "line": 505,
+          "line": 92,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -782,7 +886,8 @@
           "gates": [
             "Delegate tab"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/chat_command_actions.dart"
         }
       ]
     },
@@ -893,7 +998,7 @@
         {
           "id": "prompt-editor-field",
           "type": "text-field",
-          "label": "Write your OpenCode prompt…",
+          "label": "Write your OpenCode prompt\u2026",
           "key": "prompt-editor-field",
           "line": 169,
           "action": "other",
@@ -1100,7 +1205,7 @@
           "action": "mutate",
           "target": null,
           "targetWidget": "showConfirmSheet",
-          "effect": "Row menu item: the row leaves at once and \"Saved prompt deleted · Undo\" shows; removePromptStash runs when the Undo window closes.",
+          "effect": "Row menu item: the row leaves at once and \"Saved prompt deleted \u00b7 Undo\" shows; removePromptStash runs when the Undo window closes.",
           "gates": [
             "disabled when _unsafe"
           ],
@@ -1468,10 +1573,10 @@
       "id": "embedded-prompt-error-banner",
       "title": "[Prompt error banner]",
       "kind": "overlay",
-      "file": "lib/ui/screens/chat/message_view.dart",
-      "widget": "_PromptErrorBanner",
+      "file": "lib/ui/screens/chat/chat_states.dart",
+      "widget": "_promptErrorStatus",
       "presentedBy": [],
-      "line": 3,
+      "line": 239,
       "purpose": "Live-region banner above the transcript showing the last failed prompt send with dismiss, details and a model fix.",
       "reachedFrom": [
         {
@@ -1500,7 +1605,8 @@
           "targetWidget": null,
           "effect": "onDismiss -> host setState(() => _promptError = null).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/message_view.dart"
         },
         {
           "id": "embedded-prompt-error-banner-details",
@@ -1515,7 +1621,8 @@
           "gates": [
             "errorHasDetails(message)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/message_view.dart"
         },
         {
           "id": "embedded-prompt-error-banner-choose-model",
@@ -1531,7 +1638,8 @@
             "MessageErrorKind.refineFromText(unknown, message) == MessageErrorKind.modelNotFound",
             "onChooseModel != null (host: !_conn.isIsolated)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/message_view.dart"
         }
       ]
     },
@@ -1539,10 +1647,10 @@
       "id": "chat-prompt-error-details-dialog",
       "title": "Error details",
       "kind": "dialog",
-      "file": "lib/ui/screens/chat/message_view.dart",
-      "widget": "_PromptErrorBanner.build",
+      "file": "lib/ui/screens/chat/chat_states.dart",
+      "widget": "_showChatErrorDetails",
       "presentedBy": [],
-      "line": 85,
+      "line": 169,
       "purpose": "Full server error text (stack trace included) for a failed prompt, selectable monospace.",
       "reachedFrom": [
         {
@@ -1563,18 +1671,19 @@
           "targetWidget": null,
           "effect": "Navigator.of(context).pop().",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/message_view.dart"
         }
       ]
     },
     {
       "id": "embedded-subagent-context-banner",
-      "title": "[Subagent session banner: \"Subagent · {count}\"]",
+      "title": "[Subagent session banner: \"Subagent \u00b7 {count}\"]",
       "kind": "overlay",
       "file": "lib/ui/screens/chat/chat_states.dart",
-      "widget": "_SubagentContextBanner",
+      "widget": "_subagentStatus",
       "presentedBy": [],
-      "line": 268,
+      "line": 505,
       "purpose": "Banner shown in a delegated (child) session with links to the parent session and the sibling list.",
       "reachedFrom": [
         {
@@ -1628,9 +1737,9 @@
       "title": "[Shared session banner: \"Shared: anyone with the link can view\"]",
       "kind": "overlay",
       "file": "lib/ui/screens/chat/chat_states.dart",
-      "widget": "_SharedSessionBanner",
+      "widget": "_sharedStatus",
       "presentedBy": [],
-      "line": 300,
+      "line": 522,
       "purpose": "Banner shown while the session has a public share URL.",
       "reachedFrom": [
         {
@@ -1686,7 +1795,7 @@
       "file": "lib/ui/screens/chat/message_view.dart",
       "widget": "_MessageView",
       "presentedBy": [],
-      "line": 1311,
+      "line": 9,
       "purpose": "Transcript body of ChatScreen: the empty-state suggestions, each rendered message (user bubble, assistant prose, tool groups, reasoning, attachments, error cards, v2 notices and background-agent results) and the floating jump/timeline pills.",
       "reachedFrom": [
         {
@@ -1786,7 +1895,7 @@
           "type": "button",
           "label": "Server message details",
           "key": null,
-          "line": 1995,
+          "line": 795,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -1795,12 +1904,12 @@
             "BackgroundAgentResult.fromPart(part) != null"
           ],
           "destructive": false,
-          "file": "lib/ui/screens/chat/message_view.dart"
+          "file": "lib/ui/screens/chat/transcript_rows.dart"
         },
         {
           "id": "embedded-message-view-tool-group-toggle",
           "type": "list-tile",
-          "label": "Tools | Running tools | Explored | Exploring — <summary>",
+          "label": "Tools | Running tools | Explored | Exploring \u2014 <summary>",
           "key": "tool-call-group-header",
           "line": 1069,
           "action": "other",
@@ -1817,7 +1926,7 @@
           "type": "button",
           "label": "<option from a ```choices block>",
           "key": null,
-          "line": 1243,
+          "line": 52,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -1825,14 +1934,15 @@
           "gates": [
             "assistant text part containing a choices block"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/chat_start.dart"
         },
         {
           "id": "embedded-message-view-reasoning-toggle",
           "type": "list-tile",
           "label": "Reasoning (tap to expand) (semantics: Expand/Collapse reasoning details)",
           "key": "reasoning-toggle",
-          "line": 1730,
+          "line": 715,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -1841,14 +1951,14 @@
             "reasoning part whose text is not short (_isShort renders short reasoning inline without a toggle)"
           ],
           "destructive": false,
-          "file": "lib/ui/screens/chat/message_view.dart"
+          "file": "lib/ui/screens/chat/transcript_rows.dart"
         },
         {
           "id": "embedded-message-view-attachment-preview",
           "type": "card",
           "label": "<attachment filename> (tooltip: Preview attachment)",
           "key": null,
-          "line": 1991,
+          "line": 403,
           "action": "open-sheet",
           "target": "file-preview-sheet",
           "targetWidget": "showFilePreviewSheet",
@@ -1894,7 +2004,7 @@
           "type": "gesture",
           "label": "[right-click on a message]",
           "key": null,
-          "line": 1616,
+          "line": 729,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -1902,14 +2012,15 @@
           "gates": [
             "contextActions != null (!_conn.isIsolated)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/chat_transcript.dart"
         },
         {
           "id": "embedded-message-view-error-details",
           "type": "button",
           "label": "Details",
           "key": "error-action-details",
-          "line": 1839,
+          "line": 155,
           "action": "open-dialog",
           "target": "chat-message-error-details-dialog",
           "targetWidget": "_ErrorActionCard._showDetails",
@@ -1918,14 +2029,15 @@
             "m.info.errorText != null",
             "errorHasDetails(raw) (never for providerAuth cards)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/assistant_error_row.dart"
         },
         {
           "id": "embedded-message-view-error-choose-model",
           "type": "button",
           "label": "Choose model",
           "key": "error-action-choose-model",
-          "line": 1845,
+          "line": 78,
           "action": "open-sheet",
           "target": "model-picker",
           "targetWidget": "showModelPicker",
@@ -1934,14 +2046,15 @@
             "error kind == MessageErrorKind.modelNotFound",
             "!_conn.isIsolated"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/assistant_error_row.dart"
         },
         {
           "id": "embedded-message-view-error-compact",
           "type": "button",
           "label": "Compact session",
           "key": "error-action-compact",
-          "line": 1845,
+          "line": 197,
           "action": "mutate",
           "target": null,
           "targetWidget": null,
@@ -1950,14 +2063,15 @@
             "error kind == MessageErrorKind.contextOverflow",
             "!_conn.isIsolated && _supportsSessionCompact"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/assistant_error_row.dart"
         },
         {
           "id": "embedded-message-view-error-open-providers",
           "type": "button",
           "label": "Open providers",
           "key": "error-action-providers",
-          "line": 1845,
+          "line": 207,
           "action": "navigate",
           "target": "integrations",
           "targetWidget": "IntegrationsScreen",
@@ -1966,14 +2080,15 @@
             "error kind == MessageErrorKind.providerAuth",
             "!_conn.isIsolated"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/assistant_error_row.dart"
         },
         {
           "id": "embedded-message-view-error-continue",
           "type": "button",
           "label": "Continue",
           "key": "error-action-continue",
-          "line": 1845,
+          "line": 217,
           "action": "submit",
           "target": null,
           "targetWidget": null,
@@ -1982,7 +2097,8 @@
             "error kind == MessageErrorKind.outputLength",
             "!_conn.isIsolated"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/assistant_error_row.dart"
         }
       ]
     },
@@ -1990,10 +2106,10 @@
       "id": "chat-message-error-details-dialog",
       "title": "Error details",
       "kind": "dialog",
-      "file": "lib/ui/screens/chat/message_view.dart",
-      "widget": "_ErrorActionCard._showDetails",
+      "file": "lib/ui/screens/chat/assistant_error_row.dart",
+      "widget": "_showErrorRowDetails",
       "presentedBy": [],
-      "line": 1778,
+      "line": 239,
       "purpose": "Full server error text for a failed assistant message.",
       "reachedFrom": [
         {
@@ -2014,7 +2130,8 @@
           "targetWidget": null,
           "effect": "Navigator.of(context).pop().",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/message_view.dart"
         }
       ]
     },
@@ -2022,10 +2139,10 @@
       "id": "embedded-pending-sends-strip",
       "title": "[Pending sends strip]",
       "kind": "overlay",
-      "file": "lib/ui/screens/chat/message_view.dart",
+      "file": "lib/ui/screens/chat/pending_sends_strip.dart",
       "widget": "_PendingSendsStrip",
       "presentedBy": [],
-      "line": 1748,
+      "line": 10,
       "purpose": "List between transcript and composer of offline queued drafts and OpenCode 2 inbox items that have not reached the agent yet.",
       "reachedFrom": [
         {
@@ -2048,7 +2165,7 @@
           "type": "icon-button",
           "label": "Send again",
           "key": "queued-action-resend",
-          "line": 1812,
+          "line": 175,
           "action": "submit",
           "target": null,
           "targetWidget": null,
@@ -2057,14 +2174,14 @@
             "entry.dispatched && !sending && !acceptedUnrecorded"
           ],
           "destructive": false,
-          "file": "lib/ui/screens/chat/message_view.dart"
+          "file": "lib/ui/screens/chat/pending_sends_strip.dart"
         },
         {
           "id": "embedded-pending-sends-strip-queued-edit",
           "type": "icon-button",
           "label": "Edit draft",
           "key": "queued-action-edit",
-          "line": 1818,
+          "line": 181,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -2073,14 +2190,14 @@
             "disabled while sending"
           ],
           "destructive": false,
-          "file": "lib/ui/screens/chat/message_view.dart"
+          "file": "lib/ui/screens/chat/pending_sends_strip.dart"
         },
         {
           "id": "embedded-pending-sends-strip-queued-discard",
           "type": "icon-button",
           "label": "Discard draft",
           "key": "queued-action-discard",
-          "line": 1825,
+          "line": 188,
           "action": "open-sheet",
           "target": "chat-discard-queued-prompt-sheet",
           "targetWidget": "_discardQueuedPrompt",
@@ -2089,7 +2206,7 @@
             "disabled while sending"
           ],
           "destructive": true,
-          "file": "lib/ui/screens/chat/message_view.dart"
+          "file": "lib/ui/screens/chat/pending_sends_strip.dart"
         },
         {
           "id": "embedded-pending-sends-strip-inbox-flip-to-queue",
@@ -2128,7 +2245,7 @@
           "type": "icon-button",
           "label": "Cancel and return to the composer",
           "key": "inbox-action-cancel",
-          "line": 1868,
+          "line": 215,
           "action": "mutate",
           "target": null,
           "targetWidget": null,
@@ -2137,7 +2254,7 @@
             "item.type == \"user\""
           ],
           "destructive": true,
-          "file": "lib/ui/screens/chat/message_view.dart"
+          "file": "lib/ui/screens/chat/pending_sends_strip.dart"
         }
       ]
     },
@@ -2175,7 +2292,7 @@
           "action": "open-sheet",
           "target": "session-approvals-sheet",
           "targetWidget": "showSessionApprovalsSheet",
-          "effect": "Card text 'Asked for “{action}” 3 times: this conversation can approve requests for you.'; dismisses the nudge, then showSessionApprovalsSheet(context, controller: _conn, sessionID).",
+          "effect": "Card text 'Asked for \u201c{action}\u201d 3 times: this conversation can approve requests for you.'; dismisses the nudge, then showSessionApprovalsSheet(context, controller: _conn, sessionID).",
           "gates": [
             "third distinct permission request of one kind in this conversation this app run",
             "no request pending",
@@ -2195,7 +2312,7 @@
           "targetWidget": "ReviewWorkspace",
           "effect": "Card text 'This run changed files: review what changed before you continue.'; dismisses the nudge, then _showDiff() (the same review the app bar opens).",
           "gates": [
-            "busy→idle edge with runChangedFiles(_messages) or session.summary.files > 0",
+            "busy\u2192idle edge with runChangedFiles(_messages) or session.summary.files > 0",
             "capabilities.sessionDiff"
           ],
           "destructive": false

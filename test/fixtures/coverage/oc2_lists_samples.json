@@ -381,7 +381,7 @@
       "payload": {
         "id": "ses_lists01",
         "projectID": "prj_shopfront",
-        "agent": "build",
+        "agent": "reviewer",
         "model": {
           "id": "claude-sonnet-5-5",
           "providerID": "openrouter",
@@ -457,7 +457,7 @@
           "path": "agent",
           "kind": "string",
           "probes": [
-            "build"
+            "reviewer"
           ],
           "primary": false
         },
@@ -710,7 +710,7 @@
       "payload": {
         "id": "ses_lists02",
         "projectID": "prj_shopfront",
-        "agent": "build",
+        "agent": "reviewer",
         "model": {
           "id": "claude-sonnet-5-5",
           "providerID": "openrouter",
@@ -763,7 +763,7 @@
           "path": "agent",
           "kind": "string",
           "probes": [
-            "build"
+            "reviewer"
           ],
           "primary": false
         },
@@ -937,7 +937,7 @@
       "payload": {
         "id": "ses_lists03",
         "projectID": "prj_shopfront",
-        "agent": "build",
+        "agent": "reviewer",
         "model": {
           "id": "claude-sonnet-5-5",
           "providerID": "openrouter",
@@ -1006,7 +1006,7 @@
           "path": "agent",
           "kind": "string",
           "probes": [
-            "build"
+            "reviewer"
           ],
           "primary": false
         },
@@ -1227,7 +1227,7 @@
       "payload": {
         "id": "ses_lists08",
         "projectID": "prj_shopfront",
-        "agent": "build",
+        "agent": "reviewer",
         "model": {
           "id": "claude-sonnet-5-5",
           "providerID": "openrouter",
@@ -1279,7 +1279,7 @@
           "path": "agent",
           "kind": "string",
           "probes": [
-            "build"
+            "reviewer"
           ],
           "primary": false
         },
@@ -1446,7 +1446,7 @@
       "payload": {
         "id": "ses_lists04",
         "projectID": "prj_shopfront",
-        "agent": "build",
+        "agent": "reviewer",
         "model": {
           "id": "claude-sonnet-5-5",
           "providerID": "openrouter",
@@ -1522,7 +1522,7 @@
           "path": "agent",
           "kind": "string",
           "probes": [
-            "build"
+            "reviewer"
           ],
           "primary": false
         },

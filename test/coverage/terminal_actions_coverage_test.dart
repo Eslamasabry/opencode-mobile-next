@@ -191,6 +191,8 @@ void main() {
   path(['app terminal.new', 'oc2 POST /api/pty'], (tester) async {
     final repo = ToolsRepo()..terminals = const [_running];
     await openTerminal(tester, repo);
+    await tester.tap(find.byKey(const ValueKey('terminal-surface-menu')));
+    await frames(tester, 6);
     await tester.tap(find.byKey(const ValueKey('terminal-new')).first);
     await frames(tester, 12);
     expect(repo.created, hasLength(1));
@@ -199,9 +201,9 @@ void main() {
   path(['app terminal.rename', 'oc2 PUT /api/pty/{ptyID}'], (tester) async {
     final repo = ToolsRepo()..terminals = const [_running];
     await openTerminal(tester, repo);
-    await tester.longPress(find.text('Build watcher').first);
+    await tester.tap(find.byKey(const ValueKey('terminal-surface-menu')));
     await frames(tester, 6);
-    await tester.tap(find.byKey(const ValueKey('terminal-menu-rename')));
+    await tester.tap(find.byKey(const ValueKey('terminal-rename')));
     await frames(tester, 8);
     await tester.enterText(
       find.byKey(const ValueKey('terminal-rename-field')),
@@ -216,7 +218,7 @@ void main() {
   path(['app terminal.remove-ended'], (tester) async {
     final repo = ToolsRepo()..terminals = const [_running, _ended];
     await openTerminal(tester, repo);
-    await tester.tap(find.byKey(const ValueKey('terminal-list-menu')));
+    await tester.tap(find.byKey(const ValueKey('terminal-surface-menu')));
     await frames(tester, 6);
     await tester.tap(find.byKey(const ValueKey('terminal-remove-ended')));
     await frames(tester, 8);

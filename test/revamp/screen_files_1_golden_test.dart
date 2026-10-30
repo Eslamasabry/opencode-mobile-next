@@ -187,10 +187,12 @@ Future<void> _shot(
 Widget _files(ConnectionController controller) => FilesScreen(
   controller: controller,
   onAttachFile: (_, _) async {},
-  topBar: (folder) => KitTopBar(
-    title: folder ?? 'Files',
+  topBar: (path, search, view) => KitTopBar(
+    title: path.isEmpty ? 'Files' : path.split('/').last,
     exit: KitTopBarExit.back,
     onExit: () {},
+    actions: [search],
+    menu: view,
   ),
 );
 

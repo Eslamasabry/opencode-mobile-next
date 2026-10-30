@@ -25,6 +25,7 @@ import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_termux_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/composer_tools.dart';
 
 class _FakeApi extends FakeServerGateway with CompleteMessageHistory {
   _FakeApi() : super(baseUrl: 'http://localhost');
@@ -307,7 +308,7 @@ void main() {
     }
 
     Future<void> openTools(WidgetTester tester) async {
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('composer-tools-sheet')), findsOneWidget);
     }
@@ -324,12 +325,17 @@ void main() {
       await pumpChat(tester);
       // The collapsed button no longer advertises a tool that is not there.
       expect(find.byTooltip('Attach and more'), findsOneWidget);
+      // Attach is untouched: File in the "+" tray.
+      await openComposerTray(tester);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('composer-tool-attach')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await tester.pumpAndSettle();
       await openTools(tester);
       expect(find.byKey(const Key('composer-tool-voice')), findsNothing);
       expect(find.text('Voice input'), findsNothing);
-      // Commands and Attach are untouched.
+      // Commands are untouched.
       expect(find.byKey(const Key('composer-tool-commands')), findsOneWidget);
-      expect(find.byKey(const Key('composer-tool-attach')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });
@@ -343,7 +349,12 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [connProvider.overrideWithValue(controller)],
-          child: MaterialApp(home: SettingsScreen(controller: controller)),
+          child: MaterialApp(
+            home: SettingsScreen(
+              controller: controller,
+              initialGroup: SettingsGroup.thisApp,
+            ),
+          ),
         ),
       );
       await tester.pumpAndSettle();

@@ -257,6 +257,25 @@ final _groupOverflowScenes = <KitOverflowScene>[
     ),
   ),
   KitOverflowScene(
+    const ['KitProgressRing'],
+    'default',
+    build: (_, _) => const KitProgressRing.measured(
+      value: 0.64,
+      caption: '41 of 64 MB',
+      headline: 'Downloading the Linux base and its packages',
+      semanticsLabel: 'Setup progress',
+      trail: [
+        KitTrailMark.done,
+        KitTrailMark.current,
+        KitTrailMark.waiting,
+        KitTrailMark.waiting,
+        KitTrailMark.waiting,
+        KitTrailMark.waiting,
+        KitTrailMark.waiting,
+      ],
+    ),
+  ),
+  KitOverflowScene(
     const ['KitContextChart', 'KitContextSheet'],
     'default',
     build: (_, c) => KitContextSheet(
@@ -508,10 +527,11 @@ final _groupOverflowScenes = <KitOverflowScene>[
       ],
     ),
   ),
-  // kit_nav.dart: the dock, the rail and the sidebar by window; the
-  // sidebar widens with larger text so its header and primary keep whole.
+  // kit_nav.dart: nothing on a phone, the rail and the sidebar by window;
+  // the sidebar widens with larger text so its header and primary keep
+  // whole.
   KitOverflowScene(
-    const ['KitNav', 'KitNavBar', 'KitNavRail'],
+    const ['KitNav', 'KitNavRail'],
     'default',
     host: KitOverflowHost.fill,
     build: (_, c) => KitNav(

@@ -2,22 +2,32 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../app_iconography.dart';
+import 'kit_arrival.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
 import 'kit_chip.dart';
 import 'kit_divider.dart';
 import 'kit_icon.dart';
+import 'kit_max_width.dart';
 import 'kit_menu.dart';
 import 'kit_motion.dart';
-import 'kit_row_parts.dart' show KitRowMenu;
+import 'kit_optical.dart';
+import 'kit_reach.dart';
+import 'kit_row_parts.dart' show KitExpandRow, KitRowMenu, KitSwitchRow;
 import 'kit_section_label.dart';
+import 'kit_surface.dart' show kitSurfaceMaterial;
+import 'kit_surface_look.dart';
 import 'kit_swipe_action.dart';
 import 'kit_tappable.dart';
-import 'kit_text.dart';
 import 'kit_tokens.dart';
 import 'motion/kit_motion_parts.dart' show KitSwap;
+
+export 'kit_row_value.dart';
+
+part 'kit_row_group_seam.dart';
 
 /// The one list row (design standard §6, visual language §5;
 /// docs/ux-system/kit-api/KitRow.md): a leading icon tile, a title, a muted
@@ -61,11 +71,15 @@ class KitRow extends StatelessWidget {
     this.menuLabel,
     this.swipe,
     this.server,
+    this.titleDetail,
     this.disabledReason,
     this.selected = false,
     this.action,
     this.chip,
     this.titleAccent = false,
+    this.roomy = false,
+    this.titleMark,
+    this.leadingAtTop = false,
   }) : assert(
          action == null || trailing == null,
          'KitRow: the action takes the trailing slot; pass one or the other',
@@ -80,8 +94,31 @@ class KitRow extends StatelessWidget {
        _unavailable = false;
 
   /// The title in the accent colour: the row that starts something (New
-  /// project), beside an accent [KitRow.badge].
+  /// project), beside an accent [KitRow.badge]; a row that acts in place
+  /// instead of opening a page (Restart, Send a test notification), whose
+  /// words then read as a text button's while a row that opens a page shows
+  /// a chevron; or a file the project changed (Files), beside a
+  /// [KitRow.changeMark].
   final bool titleAccent;
+
+  /// A small mark right after the title on its first line ([changeMark]: a
+  /// file with uncommitted changes), so the state is on the name itself and
+  /// never colour alone. It carries its own semantics label.
+  final Widget? titleMark;
+
+  /// A door on a short index (the Settings hub's five rows): at least
+  /// [roomyHeight] tall with one line or two, so a list of a few words
+  /// reads calm instead of packed. Pair it with [KitRow.glyph]. Ordinary
+  /// lists keep the 56/64 dp rows.
+  final bool roomy;
+
+  /// The leading mark sits level with the title's first line instead of
+  /// the row's middle: a tall row (a step with a command or a button under
+  /// its words) keeps its mark by the words that name it.
+  final bool leadingAtTop;
+
+  /// The height of a [roomy] row (one or two lines).
+  static const roomyHeight = 64.0;
 
   /// A capability this server lacks (kit-v2.md §2.5; STATE-12): a dimmed
   /// row that says why and, when the capability can be turned on, offers
@@ -115,6 +152,7 @@ class KitRow extends StatelessWidget {
        titleMaxLines = 2,
        supportingMaxLines = 2,
        titleIsFileName = false,
+       titleDetail = null,
        below = null,
        destructive = false,
        menu = const [],
@@ -123,6 +161,9 @@ class KitRow extends StatelessWidget {
        selected = false,
        action = null,
        titleAccent = false,
+       roomy = false,
+       leadingAtTop = false,
+       titleMark = null,
        _unavailable = true;
 
   final Widget? leading;
@@ -195,6 +236,10 @@ class KitRow extends StatelessWidget {
   /// from another server (multi-server vertical). Wrapped with KitBidi.auto.
   final String? server;
 
+  /// A quiet word after the title on the same line, in the supporting tone
+  /// ("Files · neon-breaker"). Wrapped with KitBidi.auto.
+  final String? titleDetail;
+
   /// With [enabled] false: the visible reason (STATE-8), shown as the
   /// supporting line (replacing [supporting]) and as the semantic hint.
   final String? disabledReason;
@@ -234,19 +279,57 @@ class KitRow extends StatelessWidget {
 
   final bool _unavailable;
 
-  /// A leading icon in its tile (visual language §4): 30 dp of `surface3`
+  /// A leading icon in its tile (visual language §4): 28 dp of `surface3`
   /// with 9 dp corners, the icon in `text1` unless [color] is given. In a
   /// disabled or unavailable row the glyph turns `text3`.
   ///
   /// [mark] names a bundled brand mark (`assets/marks/<slug>.svg`, an agent's
   /// logo); it is drawn in the glyph's place, same size and colour, and
   /// [icon] stays as the fallback for an unknown agent.
+  ///
+  /// [needsYou] adds the needs-you dot at the tile's top-end corner (the
+  /// server sheet's row of a server waiting on the person): amber, ringed
+  /// in the panel colour, and never alone, since the row's line says
+  /// "Needs you" in words (STATE-9).
   static Widget icon(
     BuildContext context,
     IconData icon, {
     Color? color,
     String? mark,
-  }) => _KitRowIconTile(icon: icon, color: color, mark: mark);
+    bool needsYou = false,
+  }) =>
+      _KitRowIconTile(icon: icon, color: color, mark: mark, needsYou: needsYou);
+
+  /// A step's number in the icon tile's shape: "1", "2", "3" for a guide's
+  /// ordered steps. Pair it with [leadingAtTop] when the row is tall.
+  static Widget number(BuildContext context, int n) =>
+      _KitRowIconTile(icon: AppIconography.check, number: n);
+
+  /// A leading glyph without a tile, for [roomy] index rows: the icon at
+  /// 26 dp in `text2`, centred in a slot as wide as a tile, so the words
+  /// start where a tiled row's do. In a disabled row it turns `text3`.
+  ///
+  /// [needsYou] adds the needs-you dot at the glyph's top-end corner, as
+  /// on [icon] (the server sheet's row of a server waiting on the person).
+  /// [accent] draws it in the accent (a changed file's glyph, beside a
+  /// [titleAccent] name).
+  static Widget glyph(
+    BuildContext context,
+    IconData icon, {
+    bool needsYou = false,
+    bool accent = false,
+  }) => _KitRowGlyph(icon: icon, needsYou: needsYou, accent: accent);
+
+  /// The [titleMark] of a changed file or folder: a small accent dot after
+  /// the name. [semanticsLabel] says the state in words ("Modified",
+  /// "2 changed files"), so a screen reader hears it after the name.
+  static Widget changeMark(
+    BuildContext context, {
+    required String semanticsLabel,
+  }) => _KitRowChangeMark(semanticsLabel: semanticsLabel);
+
+  /// A [glyph]'s size before the person's text size grows it.
+  static const glyphSize = 26.0;
 
   /// A round icon badge for a row that starts something: [accent] tints the
   /// circle and the glyph with the accent (the row's main act), otherwise a
@@ -256,6 +339,47 @@ class KitRow extends StatelessWidget {
     IconData icon, {
     bool accent = false,
   }) => _KitRowIconTile(icon: icon, round: true, accent: accent);
+
+  /// The one-in-use mark at a row's end: a check in the accent colour, for
+  /// the row a list is on now (the server in use). A selected row gets a
+  /// check, never a solid accent fill (vision rule "mint fill means the
+  /// main action", 2026-10-20). Pair it with a word that says it ("Connected
+  /// · "), so the colour is never the only sign (STATE-9).
+  /// Its ink ends on the row's end rail, where a chevron's and a switch's
+  /// do ([trailingRailOf], [KitOptical]).
+  static Widget check(BuildContext context, {Key? key}) => Builder(
+    key: key,
+    builder: (context) {
+      final tokens = KitTokens.of(context);
+      final size = tokens.iconSize(context, tokens.markIconSize);
+      return Padding(
+        padding: EdgeInsetsDirectional.only(
+          end: KitOptical.endPad(
+            context,
+            AppIconography.check,
+            size,
+            trailingRailOf(context) ?? tokens.space2,
+          ),
+        ),
+        child: ExcludeSemantics(
+          child: Icon(
+            AppIconography.check,
+            size: size,
+            color: tokens.roles.accent,
+          ),
+        ),
+      );
+    },
+  );
+
+  /// How far a trailing part's ink should end from the end of the trailing
+  /// slot it sits in, so that it ends on the rail the row's words start
+  /// from (impeccable layout pass, 2026-10-28): the row pads its start by
+  /// space4 but its end by space1 (room for a 48 dp target), so the rail is
+  /// space3 inside the slot. Null outside a [KitRow], or in a row with its
+  /// own [padding].
+  static double? trailingRailOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_KitRowScope>()?.trailingRail;
 
   List<KitMenuItem> _menuWithTwin(BuildContext context) {
     final swipe = this.swipe;
@@ -273,7 +397,10 @@ class KitRow extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     assert(
       onLongPress == null || menu.isEmpty,
       'KitRow: long-press opens the menu; pass onLongPress or menu, not both '
@@ -356,58 +483,135 @@ class KitRow extends StatelessWidget {
       );
     }
 
+    // The words and the leading mark keep space2 above and below; a
+    // trailing 48 dp target reaches into that room instead of adding to it,
+    // so a one-line row is 56 dp with or without a chevron or a switch, and
+    // a two-line row 64 (same-role rows, one height: impeccable layout
+    // pass, 2026-10-28). A row with its own [padding] lays out as given.
+    final own = padding == null;
+    Widget padded(Widget child) => own
+        ? Padding(
+            padding: EdgeInsets.symmetric(vertical: tokens.space2),
+            child: child,
+          )
+        : child;
     final Widget content = ConstrainedBox(
-      // 54 dp with one line, 60 with two (§4); minimums, so the row grows
+      // 56 dp with one line, 64 with two (§4); minimums, so the row grows
       // with the text.
       constraints: BoxConstraints(
-        minHeight: line == null && below == null
+        minHeight: roomy
+            ? roomyHeight
+            : line == null && below == null
             ? tokens.rowHeight
             : tokens.rowHeightTwoLine,
       ),
       child: Padding(
         padding:
             padding ??
-            EdgeInsetsDirectional.fromSTEB(
-              tokens.space4,
-              tokens.space2,
-              trailing == null ? tokens.space4 : tokens.space1,
-              tokens.space2,
+            EdgeInsetsDirectional.only(
+              start: tokens.space4,
+              end: trailing == null ? tokens.space4 : tokens.space1,
             ),
         child: Row(
+          crossAxisAlignment: leadingAtTop
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.center,
           children: [
-            if (leading != null) ...[leading, SizedBox(width: tokens.space3)],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    wholeFileName ? kitBreakableFileName(title) : title,
-                    key: titleKey,
-                    semanticsLabel: wholeFileName ? title : null,
-                    // A wrapping file name is shown whole, never cut.
-                    maxLines: wholeFileName ? null : titleLines,
-                    overflow: wholeFileName ? null : TextOverflow.ellipsis,
-                    style: tokens.rowTitle.copyWith(color: titleColor),
+            // The leading column ([KitTokens.leadColumn]): any mark narrower
+            // than a tile is centred in a tile-wide slot, so the words start
+            // on the one text rail whatever the mark's size.
+            if (leading != null) ...[
+              padded(
+                ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: tokens.iconTileSize),
+                  child: Center(
+                    widthFactor: 1,
+                    heightFactor: 1,
+                    child: leading,
                   ),
-                  if (line != null) ...[
-                    const SizedBox(height: KitTokens.rowLineGap),
-                    Text.rich(
-                      line,
-                      key: supportingKey,
-                      // An unavailable row's reason is why the row is dim:
-                      // it wraps in full, never cut (A11Y-8, STATE-12).
-                      maxLines: _unavailable ? null : supportingLines,
-                      overflow: _unavailable ? null : TextOverflow.ellipsis,
-                      style: tokens.rowSupporting,
-                    ),
+                ),
+              ),
+              SizedBox(width: tokens.space3),
+            ],
+            Expanded(
+              child: padded(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (titleDetail case final detail? when detail.isNotEmpty)
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(text: title),
+                            TextSpan(
+                              text: '\u00a0\u00b7 ${KitBidi.auto(detail)}',
+                              style: tokens.rowSupporting.copyWith(
+                                fontSize: tokens.rowTitle.fontSize,
+                                color: roles.text2,
+                              ),
+                            ),
+                          ],
+                        ),
+                        key: titleKey,
+                        maxLines: titleLines,
+                        overflow: TextOverflow.ellipsis,
+                        style: tokens.rowTitle.copyWith(color: titleColor),
+                      )
+                    else if (titleMark case final mark?)
+                      // The mark after the words, not inside them: the title
+                      // stays plain text (found, read and copied as itself).
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              wholeFileName
+                                  ? kitBreakableFileName(title)
+                                  : title,
+                              key: titleKey,
+                              semanticsLabel: wholeFileName ? title : null,
+                              maxLines: wholeFileName ? null : titleLines,
+                              overflow: wholeFileName
+                                  ? null
+                                  : TextOverflow.ellipsis,
+                              style: tokens.rowTitle.copyWith(
+                                color: titleColor,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: tokens.space2),
+                          mark,
+                        ],
+                      )
+                    else
+                      Text(
+                        wholeFileName ? kitBreakableFileName(title) : title,
+                        key: titleKey,
+                        semanticsLabel: wholeFileName ? title : null,
+                        // A wrapping file name is shown whole, never cut.
+                        maxLines: wholeFileName ? null : titleLines,
+                        overflow: wholeFileName ? null : TextOverflow.ellipsis,
+                        style: tokens.rowTitle.copyWith(color: titleColor),
+                      ),
+                    if (line != null) ...[
+                      const SizedBox(height: KitTokens.rowLineGap),
+                      Text.rich(
+                        line,
+                        key: supportingKey,
+                        // An unavailable row's reason is why the row is dim:
+                        // it wraps in full, never cut (A11Y-8, STATE-12).
+                        maxLines: _unavailable ? null : supportingLines,
+                        overflow: _unavailable ? null : TextOverflow.ellipsis,
+                        style: tokens.rowSupporting,
+                      ),
+                    ],
+                    if (below case final below?) ...[
+                      const SizedBox(height: KitTokens.rowLineGap),
+                      below,
+                    ],
+                    if (enableBelow) KitInset(child: enableButton),
                   ],
-                  if (below case final below?) ...[
-                    const SizedBox(height: KitTokens.rowLineGap),
-                    below,
-                  ],
-                  if (enableBelow) KitInset(child: enableButton),
-                ],
+                ),
               ),
             ),
             // The text never runs into what trails it ("UnrestrictedOpen").
@@ -428,7 +632,9 @@ class KitRow extends StatelessWidget {
                   alignment: AlignmentDirectional.centerEnd,
                   child: KeyedSubtree(
                     key: ValueKey<Object>(trailing.key ?? trailing.runtimeType),
-                    child: trailing,
+                    // Level with the title's first line, a top-aligned
+                    // row's trailing part keeps the words' room above it.
+                    child: leadingAtTop ? padded(trailing) : trailing,
                   ),
                 ),
               ),
@@ -437,7 +643,11 @@ class KitRow extends StatelessWidget {
       ),
     );
 
-    final scoped = _KitRowScope(dimmed: dimmed, child: content);
+    final scoped = _KitRowScope(
+      dimmed: dimmed,
+      trailingRail: own ? tokens.space4 - tokens.space1 : null,
+      child: content,
+    );
     final Widget row;
     if (_unavailable) {
       row = _unavailableRow(scoped);
@@ -446,15 +656,57 @@ class KitRow extends StatelessWidget {
         container: true,
         button: onTap != null,
         enabled: false,
-        hint: reason,
+        // The reason is the row's visible supporting line, already in its
+        // label: a hint too would have it said twice.
         child: scoped,
       );
     } else {
       row = _enabledRow(context, scoped);
     }
 
-    final Widget painted = selected
-        ? ColoredBox(color: roles.surface3, child: row)
+    // The chosen row is a content surface marked selected: Solid's
+    // surface3 fill; pressed in under Soft, the tile step under Brutal and
+    // Paper. On a flat list (Solid) it is a rounded plate inset from the
+    // row's ends, like the rounded controls around it and the platform's
+    // own two-pane highlight, never a square band across the page; a
+    // chosen value's check stays the caller's.
+    final Widget painted = selected && KitSurfaceLook.flatLists(context)
+        ? Stack(
+            children: [
+              Positioned.fill(
+                child: Padding(
+                  padding: EdgeInsetsDirectional.symmetric(
+                    horizontal: tokens.space2,
+                  ),
+                  child: kitSurfaceBox(
+                    key: const ValueKey('kit-row-chosen-plate'),
+                    decoration: KitSurfaceLook.decorate(
+                      context,
+                      solid: KitSurfaceDecoration(
+                        fill: roles.surface3,
+                        borderRadius: BorderRadius.circular(tokens.cardRadius),
+                      ),
+                      level: KitSurfaceLevel.surface3,
+                      selected: true,
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+              row,
+            ],
+          )
+        : selected
+        ? kitSurfaceBox(
+            style: KitSurfaceLook.styleOf(context),
+            decoration: KitSurfaceLook.decorate(
+              context,
+              solid: _fill(roles.surface3),
+              level: KitSurfaceLevel.surface3,
+              selected: true,
+            ),
+            child: row,
+          )
         : row;
     final swipe = this.swipe;
     if (swipe == null || dimmed) return painted;
@@ -550,7 +802,8 @@ class KitRowChip {
 }
 
 /// [KitRow.chip] in its column: at least [KitRow.chipColumnWidth] wide with
-/// the chip at the start, so chips of different widths share a start edge.
+/// the chip at the end, so a chip ends where the trailing parts of the rows
+/// around it end.
 /// One button node named with the target.
 class _KitRowChipSlot extends StatelessWidget {
   const _KitRowChipSlot({required this.chip});
@@ -561,9 +814,11 @@ class _KitRowChipSlot extends StatelessWidget {
   Widget build(BuildContext context) => ConstrainedBox(
     constraints: const BoxConstraints(minWidth: KitRow.chipColumnWidth),
     // A Row at its minimum size still honours the column's minimum width,
-    // with the chip at its start.
+    // with the chip at its end, so it ends on the same edge as the chevron
+    // or value of the rows above and below it.
     child: Row(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Flexible(
           child: Semantics(
@@ -587,16 +842,123 @@ class _KitRowChipSlot extends StatelessWidget {
 /// Tells [KitRow.icon] tiles inside a disabled or unavailable row to paint
 /// their glyph in `text3` (LOOK-14: colour, never opacity).
 class _KitRowScope extends InheritedWidget {
-  const _KitRowScope({required this.dimmed, required super.child});
+  const _KitRowScope({
+    required this.dimmed,
+    required this.trailingRail,
+    required super.child,
+  });
 
   final bool dimmed;
+
+  /// See [KitRow.trailingRailOf].
+  final double? trailingRail;
 
   static bool dimmedOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<_KitRowScope>()?.dimmed ??
       false;
 
   @override
-  bool updateShouldNotify(_KitRowScope oldWidget) => oldWidget.dimmed != dimmed;
+  bool updateShouldNotify(_KitRowScope oldWidget) =>
+      oldWidget.dimmed != dimmed || oldWidget.trailingRail != trailingRail;
+}
+
+class _KitRowGlyph extends StatelessWidget {
+  const _KitRowGlyph({
+    required this.icon,
+    this.needsYou = false,
+    this.accent = false,
+  });
+
+  final IconData icon;
+  final bool needsYou;
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    final dimmed = _KitRowScope.dimmedOf(context);
+    final size = tokens.iconSize(context, KitRow.glyphSize);
+    final glyph = Icon(
+      icon,
+      size: size,
+      color: dimmed
+          ? tokens.roles.text3
+          : accent
+          ? tokens.roles.accent
+          : tokens.roles.text2,
+    );
+    return SizedBox(
+      width: size > tokens.iconTileSize ? size : tokens.iconTileSize,
+      child: Center(child: needsYou ? _withNeedsYouDot(context, glyph) : glyph),
+    );
+  }
+}
+
+class _KitRowChangeMark extends StatelessWidget {
+  const _KitRowChangeMark({required this.semanticsLabel});
+
+  final String semanticsLabel;
+
+  /// The dot's diameter before the person's text size grows it.
+  static const _size = 7.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    final size = tokens.iconSize(context, _size);
+    return Semantics(
+      label: semanticsLabel,
+      child: SizedBox.square(
+        dimension: size,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: tokens.roles.accent,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A plain fill: what Solid paints for a row's chosen or held state.
+BoxDecoration _fill(Color color) => BoxDecoration(color: color);
+
+/// The needs-you dot's size and the panel-coloured ring around it.
+const double _needsYouDot = 10;
+const double _needsYouDotRing = 2;
+
+/// [child] with the needs-you dot over its top-end corner: amber inside a
+/// ring of the panel colour, so it reads apart from what it overlaps.
+Widget _withNeedsYouDot(BuildContext context, Widget child) {
+  final roles = KitTokens.of(context).roles;
+  const outset = (_needsYouDot + _needsYouDotRing * 2) / 3;
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+      child,
+      PositionedDirectional(
+        top: -outset,
+        end: -outset,
+        child: Container(
+          key: const ValueKey('kit-row-icon-needs-you'),
+          width: _needsYouDot + _needsYouDotRing * 2,
+          height: _needsYouDot + _needsYouDotRing * 2,
+          padding: const EdgeInsets.all(_needsYouDotRing),
+          decoration: BoxDecoration(
+            color: roles.surface1,
+            shape: BoxShape.circle,
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: roles.attention,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 class _KitRowIconTile extends StatelessWidget {
@@ -606,29 +968,53 @@ class _KitRowIconTile extends StatelessWidget {
     this.mark,
     this.round = false,
     this.accent = false,
+    this.needsYou = false,
+    this.number,
   });
 
   final IconData icon;
+
+  /// A step number drawn in the tile instead of [icon].
+  final int? number;
   final String? mark;
   final Color? color;
   final bool round;
   final bool accent;
+  final bool needsYou;
 
   @override
   Widget build(BuildContext context) {
+    final tile = _tile(context);
+    return needsYou ? _withNeedsYouDot(context, tile) : tile;
+  }
+
+  Widget _tile(BuildContext context) {
     final tokens = KitTokens.of(context);
     final dimmed = _KitRowScope.dimmedOf(context);
+    // Flat lists (Solid): the icon stands on the row without a tile, in the
+    // slot a tile takes, so the words start where they always do. A step's
+    // number keeps its tile: a bare digit would read as words.
+    if (number == null && KitSurfaceLook.flatLists(context)) {
+      return _bare(context, tokens, dimmed: dimmed);
+    }
     return SizedBox.square(
       dimension: tokens.iconTileSize,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: accent
-              ? tokens.roles.accent.withValues(alpha: .18)
-              : tokens.roles.surface3,
-          shape: round ? BoxShape.circle : BoxShape.rectangle,
-          borderRadius: round
-              ? null
-              : BorderRadius.circular(tokens.iconTileRadius),
+      child: kitSurfaceBox(
+        style: KitSurfaceLook.styleOf(context),
+        decoration: KitSurfaceLook.decorate(
+          context,
+          solid: BoxDecoration(
+            color: accent
+                ? tokens.roles.accent.withValues(alpha: .18)
+                : tokens.roles.surface3,
+            shape: round ? BoxShape.circle : BoxShape.rectangle,
+            borderRadius: round
+                ? null
+                : BorderRadius.circular(tokens.iconTileRadius),
+          ),
+          level: KitSurfaceLevel.surface3,
+          role: KitSurfaceRole.control,
+          color: accent ? tokens.roles.accent.withValues(alpha: .18) : null,
         ),
         child: Center(
           child: () {
@@ -639,6 +1025,15 @@ class _KitRowIconTile extends StatelessWidget {
                 ? tokens.roles.accent
                 : color ?? tokens.roles.text1;
             final slug = mark;
+            if (number case final n?) {
+              return Text(
+                '$n',
+                style: tokens.rowTitle.copyWith(
+                  color: tint,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              );
+            }
             return slug == null
                 ? Icon(icon, size: size, color: tint)
                 : IconTheme(
@@ -650,6 +1045,44 @@ class _KitRowIconTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A [_KitRowIconTile]'s icon without its tile: the glyph at
+/// [KitRowIconBare.size] in `text2` (the given colour, the accent, or
+/// `text3` in a disabled row), centred in a tile-wide slot.
+extension on _KitRowIconTile {
+  Widget _bare(BuildContext context, KitTokens tokens, {required bool dimmed}) {
+    final size = tokens.iconSize(context, KitRowIconBare.size);
+    final tint = dimmed
+        ? tokens.roles.text3
+        : accent
+        ? tokens.roles.accent
+        : color ?? tokens.roles.text2;
+    final slug = mark;
+    return SizedBox(
+      width: size > tokens.iconTileSize ? size : tokens.iconTileSize,
+      height: tokens.iconTileSize,
+      child: Center(
+        child: slug == null
+            ? Icon(icon, size: size, color: tint)
+            : IconTheme(
+                data: IconThemeData(color: tint),
+                child: KitIcon.mark(
+                  slug,
+                  size: KitIconSize.large,
+                  growsWithText: true,
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+/// A row icon without a tile ([KitSurfaceLook.flatLists]).
+abstract final class KitRowIconBare {
+  /// The glyph's size before the person's text size grows it: the
+  /// platform's list icon.
+  static const double size = 24;
 }
 
 /// The swipe around a row (KitSwipeAction.md "Wiring in KitRow"): end to
@@ -694,9 +1127,17 @@ class _KitSwipePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
-    return ColoredBox(
+    // The row held aside: the style's pressed state layer.
+    return kitSurfaceBox(
       key: const ValueKey('kit-swipe-background'),
-      color: roles.surface3,
+      style: KitSurfaceLook.styleOf(context),
+      decoration: KitSurfaceLook.decorate(
+        context,
+        solid: _fill(roles.surface3),
+        role: KitSurfaceRole.stateLayer,
+        level: KitSurfaceLevel.surface3,
+        pressed: true,
+      ),
       child: Padding(
         padding: EdgeInsetsDirectional.symmetric(horizontal: tokens.space4),
         child: Align(
@@ -717,125 +1158,6 @@ class _KitSwipePanel extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A row's trailing value in `text3`, optionally before the chevron
-/// (visual language §5: "Claude Sonnet 4 ›"). The value is what the row
-/// is set to now; the chevron says the row opens a screen.
-///
-/// States: none — the row it sits in carries the states.
-class KitRowValue extends StatelessWidget {
-  const KitRowValue(this.value, {super.key, this.chevron = true})
-    : count = null;
-
-  /// A count badge instead of a value: the number in a small pill whose
-  /// digits take the strong neutral ("3" errors kept), "99+" above 99.
-  /// [value] is what it means in words ("3 errors kept"): the badge's
-  /// semantics, so the number is never colour alone (STATE-9). A count
-  /// of 0 or less shows only the chevron.
-  const KitRowValue.count(
-    int this.count,
-    this.value, {
-    super.key,
-    this.chevron = true,
-  });
-
-  final String value;
-  final bool chevron;
-  final int? count;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = KitTokens.of(context);
-    final count = this.count;
-    return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: tokens.minTarget),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (count == null)
-            // A new value cross-fades (KitMotion.quick) rather than popping.
-            Flexible(
-              child: KitSwap(
-                alignment: AlignmentDirectional.centerEnd,
-                child: Text(
-                  value,
-                  key: ValueKey<String>(value),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: tokens.rowValue,
-                ),
-              ),
-            )
-          else
-            // The badge fades in, changes number and fades out with its count.
-            KitSwap(
-              alignment: AlignmentDirectional.centerEnd,
-              child: count > 0
-                  ? Semantics(
-                      key: ValueKey<int>(count),
-                      label: value,
-                      excludeSemantics: true,
-                      child: _KitCountPill(count > 99 ? '99+' : '$count'),
-                    )
-                  : const SizedBox.shrink(key: ValueKey<int>(0)),
-            ),
-          if (chevron)
-            Padding(
-              padding: EdgeInsetsDirectional.only(
-                start: tokens.space1,
-                end: tokens.space3,
-              ),
-              child: Icon(
-                AppIconography.chevronRight,
-                size: tokens.iconSize(context, tokens.smallIconSize),
-                color: tokens.roles.text3,
-              ),
-            )
-          else
-            SizedBox(width: tokens.space4),
-        ],
-      ),
-    );
-  }
-}
-
-/// [KitRowValue.count]'s pill: at least `KitTokens.badgeHeight` /
-/// `badgeMinWidth` and growing with its clamped text (A11Y-8,
-/// `KitTokens.badgeTextScaleMax`), `surface2` with the digits in `text1`.
-class _KitCountPill extends StatelessWidget {
-  const _KitCountPill(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = KitTokens.of(context);
-    final scaler = MediaQuery.textScalerOf(
-      context,
-    ).clamp(maxScaleFactor: KitTokens.badgeTextScaleMax);
-    return Container(
-      constraints: const BoxConstraints(
-        minWidth: KitTokens.badgeMinWidth,
-        minHeight: KitTokens.badgeHeight,
-      ),
-      padding: EdgeInsets.symmetric(horizontal: tokens.space1),
-      alignment: Alignment.center,
-      decoration: ShapeDecoration(
-        color: tokens.roles.surface2,
-        shape: tokens.shapeOf(KitShape.pill),
-      ),
-      child: Text(
-        text,
-        textScaler: scaler,
-        style: KitText.styleOf(context, KitTextRole.caption).copyWith(
-          color: tokens.roles.text1,
-          fontWeight: FontWeight.w600,
-          fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
     );
@@ -872,7 +1194,7 @@ class KitRowGroup extends StatelessWidget {
     required this.children,
     this.label,
     this.labelTrailing,
-    this.leadingIcons = true,
+    this.leadingIcons,
     this.margin,
     this.gapBefore,
     this.labelTerm,
@@ -893,19 +1215,54 @@ class KitRowGroup extends StatelessWidget {
   final double? gapBefore;
 
   /// Whether the rows lead with an icon tile: the separators then start
-  /// where the words do.
-  final bool leadingIcons;
+  /// where the words do, past the icons. Null (the default) reads it off
+  /// the rows themselves ([rowsLead]), so a group of rows without icons
+  /// never draws its separators from an icon column that is not there.
+  final bool? leadingIcons;
 
   /// Around the group; the screen gutter at the sides by default.
   final EdgeInsetsGeometry? margin;
+
+  /// Whether [rows] lead with an icon: true when any [KitRow],
+  /// [KitSwitchRow] or [KitExpandRow] among them (also inside a
+  /// [KitArrival] or a [KeyedSubtree]) has a leading mark, false when every
+  /// such row has none. Another widget does not count; with none of these
+  /// rows to go by the answer is true, as before.
+  static bool rowsLead(Iterable<Widget> rows) {
+    bool? leads(Widget row) => switch (row) {
+      KitRow(:final leading) => leading != null,
+      KitSwitchRow(:final leading) => leading != null,
+      KitExpandRow(:final leading) => leading != null,
+      KitArrival(:final child) => leads(child),
+      KeyedSubtree(:final child) => leads(child),
+      _ => null,
+    };
+    var known = false;
+    for (final row in rows) {
+      switch (leads(row)) {
+        case true:
+          return true;
+        case false:
+          known = true;
+        case null:
+          break;
+      }
+    }
+    return !known;
+  }
 
   static bool _isDestructive(Widget child) =>
       child is KitRow && child.destructive;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
-    final inset = leadingIcons ? KitDividerInset.text : KitDividerInset.gutter;
+    final inset = (leadingIcons ?? rowsLead(children))
+        ? KitDividerInset.text
+        : KitDividerInset.gutter;
     final label = this.label;
     final ordinary = [
       for (final child in children)
@@ -915,52 +1272,138 @@ class KitRowGroup extends StatelessWidget {
       for (final child in children)
         if (_isDestructive(child)) child,
     ];
-    return Padding(
-      padding: margin ?? EdgeInsets.symmetric(horizontal: tokens.gutter),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (label != null)
-            KitSectionLabel(
-              label,
-              trailing: labelTrailing,
-              explanation: labelTerm,
-              margin: EdgeInsets.zero,
-              gapBefore: gapBefore,
-            )
-          else if (gapBefore case final gap? when gap > 0)
-            SizedBox(height: gap),
-          Material(
-            color: tokens.roles.surface1,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var i = 0; i < ordinary.length; i++) ...[
-                  if (i > 0) KitDivider(inset: inset),
-                  ordinary[i],
-                ],
-                for (var i = 0; i < destructive.length; i++) ...[
-                  if (i == 0 && ordinary.isNotEmpty)
-                    const KitDivider(
-                      key: ValueKey('kit-row-group-destructive-divider'),
-                    )
-                  else if (i > 0)
-                    KitDivider(inset: inset),
-                  destructive[i],
-                ],
-              ],
-            ),
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
+    );
+    final margin =
+        this.margin ??
+        EdgeInsetsDirectional.symmetric(horizontal: tokens.gutter);
+    final sides = margin.resolve(Directionality.of(context));
+    // A panel the style sets straight on the page, with no fill, edge or
+    // shadow of its own (Paper), would leave its rows' words a row inset
+    // in from the label above them: the rows then reach out into the
+    // margin by that inset (as far as the margin goes), so the words start
+    // flush with the label, and the row inset stays inside the press
+    // highlight.
+    // Flat lists (Solid): the rows sit on the page itself, like a bare
+    // panel, and reach out the same way.
+    // In a sheet the rows reach on out over its rails ([KitReach]), so
+    // their words start on the sheet title's line, not a row inset in.
+    final flat = KitSurfaceLook.flatLists(context);
+    final panel = flat
+        ? KitSurfaceLook.bare
+        : KitSurfaceLook.decorate(context, solid: _fill(tokens.roles.surface1));
+    final margins = math.min(sides.left, sides.right);
+    final reach = KitSurfaceDecoration.isBare(panel)
+        ? math.min(tokens.space4, margins + KitReach.of(context))
+        : 0.0;
+    // What the margin cannot give, the rows take from around the group.
+    final beyond = math.max(0.0, reach - margins);
+    final back = EdgeInsetsDirectional.symmetric(horizontal: reach);
+    // The rules between the rows stop at the margin at the end too, as the
+    // section rule above them does, however far the rows reach.
+    final rule = KitDivider(inset: inset, endInset: reach);
+    // A panel the style frames (an edge or a shadow: Soft, Brutal)
+    // set right under another group would double its edge on the one above
+    // and catch that one's shadow: it keeps a small gap instead.
+    final seam = label == null && (gapBefore ?? 0) == 0 && _frames(panel);
+    // KitSectionLabel draws the section rule (Paper) itself, right above
+    // the words.
+    final Widget? heading = label == null
+        ? null
+        : KitSectionLabel(
+            label,
+            trailing: labelTrailing,
+            explanation: labelTerm,
+            margin: EdgeInsets.zero,
+            gapBefore: gapBefore,
+          );
+    // Outermost, so a press in the reach is still the row's where the
+    // parents above pass it on.
+    return KitReach.extend(
+      by: beyond,
+      child: Padding(
+        padding: margin.subtract(
+          EdgeInsetsDirectional.symmetric(horizontal: reach - beyond),
+        ),
+        child: _KitRowGroupMark(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (heading != null)
+                reach > 0 ? Padding(padding: back, child: heading) : heading
+              else if (gapBefore case final gap? when gap > 0)
+                SizedBox(height: gap)
+              else if (seam)
+                _KitGroupSeam(gap: tokens.space3),
+              _panel(
+                context,
+                flat: flat,
+                shape: shape,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < ordinary.length; i++) ...[
+                      if (i > 0) rule,
+                      ordinary[i],
+                    ],
+                    for (var i = 0; i < destructive.length; i++) ...[
+                      if (i == 0 && ordinary.isNotEmpty)
+                        Padding(
+                          padding: back,
+                          child: const KitDivider(
+                            key: ValueKey('kit-row-group-destructive-divider'),
+                          ),
+                        )
+                      else if (i > 0)
+                        rule,
+                      destructive[i],
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
+
+  /// The rows' panel: the page itself where lists are [flat] (a clear
+  /// Material, so the rows' ink still has one), else the style's surface1.
+  static Widget _panel(
+    BuildContext context, {
+    required bool flat,
+    required ShapeBorder shape,
+    required Widget child,
+  }) => flat
+      ? Material(type: MaterialType.transparency, child: child)
+      : kitSurfaceMaterial(
+          context,
+          level: KitSurfaceLevel.surface1,
+          fill: KitTokens.of(context).roles.surface1,
+          shape: shape,
+          child: child,
+        );
+
+  /// Whether [panel] draws a boundary of its own: an edge or a shadow.
+  static bool _frames(Decoration panel) => switch (panel) {
+    KitSurfaceDecoration(
+      :final edgeStart,
+      :final edgeEnd,
+      :final edgeWidth,
+      :final shadows,
+      :final hardShadow,
+      :final distance,
+    ) =>
+      (edgeWidth > 0 && (edgeStart.a > 0 || edgeEnd.a > 0)) ||
+          shadows.isNotEmpty ||
+          hardShadow.a > 0 ||
+          distance > 0,
+    _ => false,
+  };
 }
 
 /// [name] with zero-width break chances after `_` and `-` and before the

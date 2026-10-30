@@ -115,6 +115,8 @@ void main() {
       'codex',
       'gemini',
       'qwen',
+      'kilo',
+      'cline',
       'goose',
       'omp-acp',
       'fx',

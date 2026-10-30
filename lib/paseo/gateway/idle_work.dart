@@ -117,9 +117,14 @@ final class _PaseoWorkInventory {
       remove(id, explicit: snapshotRevision == null);
       return true;
     }
-    final busy = status(raw['status']);
+    // A saved record the helper has not loaded (no `activeTurn`) has no
+    // process, so it runs nothing even when its last stored status was
+    // running (a reboot mid-turn); loading it just to reset that would start
+    // its process.
+    final busy = raw.containsKey('activeTurn') ? status(raw['status']) : false;
     agents[id] = busy;
-    // Even an unloaded parent can retain independently running children.
+    // A loaded parent's children need an inventory before idle; the list
+    // page covers an unloaded one without asking (see page).
     observeParent(id);
     final pending = raw['pendingPermissions'];
     if (pending is! List) return false;
@@ -217,7 +222,16 @@ final class _PaseoWorkInventory {
         final id = raw['id'] as String;
         active.seen.add(id);
         if (raw['archivedAt'] is! String) {
-          active.parents.add(id);
+          // The helper answers a sub-agent list by loading the parent, which
+          // starts its process. A saved agent it has not loaded (no
+          // `activeTurn` in its snapshot) runs no process and so no
+          // sub-agent: it is covered without asking. Once loaded, its
+          // children arrive as provider_subagents pushes.
+          if (raw.containsKey('activeTurn')) {
+            active.parents.add(id);
+          } else {
+            coveredParents.add(id);
+          }
         }
       }
     }

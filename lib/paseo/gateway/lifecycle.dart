@@ -21,11 +21,25 @@ class _PaseoEventChannel implements LiveEventChannel {
   }
 }
 
+/// The conversation's channel: it retries on the gateway's schedule.
+class _PaseoRetryingChannel extends _PaseoEventChannel
+    implements RetryingEventChannel {
+  _PaseoRetryingChannel(
+    super.disposeCallback, {
+    super.onStart,
+    required this.nextAttempt,
+  });
+
+  @override
+  final ValueListenable<DateTime?> nextAttempt;
+}
+
 extension _PaseoLifecycle on PaseoGateway {
   void _scheduleReconnect() {
     if (!_listening || _closed || _retry != null || _recovering != null) return;
     final delay = Duration(seconds: 1 << _retryAttempt.clamp(0, 4));
     _retryAttempt++;
+    _nextAttempt.value = DateTime.now().add(delay);
     _retry = Timer(delay, () {
       _retry = null;
       unawaited(_recover());
@@ -134,9 +148,11 @@ extension _PaseoLifecycle on PaseoGateway {
     _providerRevision++;
     _retry?.cancel();
     _retry = null;
+    _nextAttempt.value = null;
     _agents.clear();
     _sessions.clear();
     _statuses.clear();
+    _cancelRecordBusyExpiry();
     _drafts.clear();
     _draftProviders.clear();
     _draftModels.clear();

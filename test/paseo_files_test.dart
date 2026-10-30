@@ -761,7 +761,6 @@ void main() {
       for (final kind in [
         PaseoFailureKind.unavailable,
         PaseoFailureKind.disconnected,
-        PaseoFailureKind.invalidResponse,
       ]) {
         expect(
           productErrorText(PaseoFailure(kind)),
@@ -769,6 +768,19 @@ void main() {
           reason: kind.name,
         );
       }
+    });
+
+    test('a reply the app cannot read says it answered, and which reply', () {
+      final failure = PaseoFailure(
+        PaseoFailureKind.invalidResponse,
+        reason: 'fetch_agent_timeline_response',
+      );
+      expect(
+        productErrorText(failure),
+        "It answered, but this app couldn't read the reply. Try again, or "
+        'report a problem.',
+      );
+      expect(productErrorDetails(failure), contains('fetch_agent_timeline'));
     });
 
     test('a Git failure in the project says the history cannot be read', () {

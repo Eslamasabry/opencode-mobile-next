@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../kit_buttons.dart';
 import '../kit_chip.dart';
+import '../kit_max_width.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
 import 'kit_team_data.dart';
@@ -27,7 +28,10 @@ class KitFindingsCard extends StatelessWidget {
   final KitAction? primary;
   final List<KitAction> actions;
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final t = KitTokens.of(context);
     return teamCard(
       context,

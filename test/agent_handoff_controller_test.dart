@@ -518,6 +518,19 @@ void main() {
     },
   );
 
+  test('a closed agent connection is named in the details', () async {
+    final fixture = await _setup();
+    final controller = fixture.controller();
+    final draft = await controller.prepare(lastState: 'Idle');
+    fixture.target.isClosed = true;
+    await expectLater(
+      controller.send(draft.prompt),
+      _failure(HandoffFailureKind.staleScope),
+    );
+    expect(controller.failureDetail, 'agent connection closed');
+    expect(fixture.target.mutations, isEmpty);
+  });
+
   for (final deletion in [false, true]) {
     test(
       '${deletion ? 'profile deletion' : 'scope change'} during target preparation fences prompt dispatch',

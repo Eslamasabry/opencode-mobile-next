@@ -61,6 +61,21 @@ void main() {
     );
   });
 
+  test('an automatic session keeps its own rules, denials included', () {
+    final policy = session(rules: [rule('shell', 'deny')]);
+    final update = policy.updateForAgent(
+      agent('build', [rule('*', 'allow')]),
+      serverRuns: true,
+    );
+    expect(update['permissions'], [rule('shell', 'deny')]);
+    // Switching back asks again, from the same original rules.
+    final back = session(
+      rules: update['permissions'] as List,
+      metadata: update['metadata'] as Map<String, dynamic>,
+    ).updateForAgent(agent('build', [rule('*', 'allow')]));
+    expect(back['permissions'], [ask, ask, rule('shell', 'deny')]);
+  });
+
   test('readback metadata key order does not affect confirmation', () {
     final update = session().updateForAgent(agent('build', []));
     final applied =

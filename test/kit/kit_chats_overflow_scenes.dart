@@ -1,6 +1,7 @@
 // G6 scenes for the Chats home parts: the feed item, its status tag, the
 // filter chips and the floating action. The matrix supplies compact and
 // expanded windows, large text and both directions.
+import 'package:opencode_mobile/domain/agent_persona.dart';
 import 'package:flutter/material.dart';
 import 'package:opencode_mobile/ui/app_iconography.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
@@ -83,6 +84,84 @@ final kitChatsOverflowScenes = <KitOverflowScene>[
       icon: AppIconography.add,
       onPressed: _noop,
       child: const SizedBox.expand(),
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitAgentLine'],
+    'default',
+    build: (_, c) => KitAgentLine(
+      agent: c.t('Claude Code', 'كلود كود'),
+      place: c.t(
+        'in a project with a very long name indeed',
+        'في مشروع باسم طويل جدًا فعلًا',
+      ),
+      semanticsLabel: c.t('Change the agent', 'غيّر الوكيل'),
+      onPressed: _noop,
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitAskField'],
+    'default',
+    build: (_, c) => KitAskField(
+      controller: TextEditingController(
+        text: c.t(
+          'Make the ball a little faster and add a combo counter',
+          'اجعل الكرة أسرع قليلًا وأضف عدّاد الضربات',
+        ),
+      ),
+      focusNode: FocusNode(),
+      hint: c.t('Ask for a change…', 'اطلب تغييرًا…'),
+      sendLabel: c.t('Send to the conversation', 'أرسل إلى المحادثة'),
+      onSend: _noop,
+      onVoice: _noop,
+      note: c.t('Sent to the conversation', 'أُرسل إلى المحادثة'),
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitSessionTabs'],
+    'default',
+    build: (_, c) => KitSessionTabs(
+      semanticsLabel: c.t('Open terminals', 'الطرفيات المفتوحة'),
+      tabs: [
+        for (var i = 0; i < 5; i++)
+          KitSessionTab(
+            label: c.t('A terminal with a long name $i', 'طرفية باسم طويل $i'),
+            selected: i == 0,
+            onTap: _noop,
+          ),
+      ],
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitStartBox'],
+    'default',
+    build: (_, c) => KitStartBox(
+      controller: TextEditingController(),
+      focusNode: FocusNode(),
+      question: c.t('What would you like to build?', 'ماذا تريد أن تبني؟'),
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitAgentChoice', 'KitAgentGrid', 'KitAgentGridSpan'],
+    'default',
+    build: (_, c) => KitAgentGrid(
+      children: [
+        KitAgentChoice(
+          persona: AgentPersona.claudeCode,
+          state: KitAgentChoiceState.selected,
+          onPressed: _noop,
+        ),
+        KitAgentChoice(
+          persona: AgentPersona.openCode,
+          state: KitAgentChoiceState.needsSetup,
+          onPressed: _noop,
+        ),
+        KitAgentChoice(
+          persona: AgentPersona.codex,
+          state: KitAgentChoiceState.available,
+          onPressed: _noop,
+        ),
+      ],
     ),
   ),
 ];

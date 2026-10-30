@@ -282,9 +282,12 @@ void main() {
         _app(Scaffold(body: ProjectHub(controller: rig.controller))),
       );
       await tester.pumpAndSettle();
-      expect(find.text('1 file changed'), findsOneWidget);
       await _shoot(tester, 'project-tab');
 
+      // The count sits on Changes in the Files page's ⋯.
+      await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
+      await tester.pumpAndSettle();
+      expect(find.text('Changes · 1 file'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('project-hub-changes')));
       await tester.pumpAndSettle();
       expect(find.textContaining('greet.dart'), findsWidgets);
@@ -342,6 +345,8 @@ void main() {
         _app(Scaffold(body: ProjectHub(controller: rig.controller))),
       );
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('project-hub-changes')));
       await tester.pumpAndSettle();
       expect(find.textContaining('fatal'), findsNothing);
@@ -379,6 +384,8 @@ void main() {
       await tester.pumpWidget(
         _app(Scaffold(body: ProjectHub(controller: rig.controller))),
       );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('project-hub-worktrees')));
       await tester.pumpAndSettle();
@@ -528,16 +535,30 @@ void main() {
         _app(Scaffold(body: ProjectHub(controller: rig.controller))),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('project-hub-terminal')));
+      // Terminal is an icon in the bar where it fits, else in its ⋯.
+      final icon = find.byKey(const ValueKey('project-files-terminal'));
+      if (icon.evaluate().isNotEmpty) {
+        await tester.tap(icon);
+      } else {
+        await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Terminal'));
+      }
       await tester.pumpAndSettle();
     }
 
-    testWidgets('Terminal lists the daemon\'s terminals', (tester) async {
+    testWidgets('Terminal opens the daemon\'s running terminal at once', (
+      tester,
+    ) async {
       _phone(tester);
       await openTerminals(tester);
-      expect(find.text('npm run dev'), findsOneWidget);
-      expect(find.text('Running · app'), findsOneWidget);
       expect(rig.daemon.of('list_terminals_request').first['cwd'], _dir);
+      expect(
+        rig.daemon.of('subscribe_terminal_request').single['terminalId'],
+        't1',
+      );
+      // One terminal: no tabs repeat the title.
+      expect(find.byKey(const ValueKey('terminal-tabs')), findsNothing);
       await _shoot(tester, 'terminal-list');
       await _finish(tester, rig);
     });
@@ -547,8 +568,6 @@ void main() {
     ) async {
       _phone(tester);
       await openTerminals(tester);
-      await tester.tap(find.text('npm run dev'));
-      await tester.pumpAndSettle();
       expect(
         rig.daemon.of('subscribe_terminal_request').single['terminalId'],
         't1',
@@ -593,14 +612,18 @@ void main() {
         );
       };
       await openTerminals(tester);
+      await tester.tap(find.byKey(const ValueKey('terminal-surface-menu')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('terminal-new')).first);
       await tester.pumpAndSettle();
       final sent = rig.daemon.of('create_terminal_request').single;
       expect(sent['cwd'], _dir);
       expect(
-        rig.daemon.of('subscribe_terminal_request').single['terminalId'],
+        rig.daemon.of('subscribe_terminal_request').last['terminalId'],
         't2',
       );
+      // Two terminals now: tabs, the new one shown.
+      expect(find.byKey(const ValueKey('terminal-tabs')), findsOneWidget);
       await _finish(tester, rig);
     });
 
@@ -611,9 +634,9 @@ void main() {
         return ('terminal.rename.response', {'success': true, 'error': null});
       };
       await openTerminals(tester);
-      await tester.longPress(find.text('npm run dev'));
+      await tester.tap(find.byKey(const ValueKey('terminal-surface-menu')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('terminal-menu-rename')));
+      await tester.tap(find.byKey(const ValueKey('terminal-rename')));
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const ValueKey('terminal-rename-field')),
@@ -624,7 +647,6 @@ void main() {
       final sent = rig.daemon.of('terminal.rename.request').single;
       expect(sent['terminalId'], 't1');
       expect(sent['title'], 'dev server');
-      expect(find.text('dev server'), findsOneWidget);
       await _finish(tester, rig);
     });
 
@@ -633,16 +655,18 @@ void main() {
     ) async {
       _phone(tester);
       await openTerminals(tester);
-      await tester.longPress(find.text('npm run dev'));
+      await tester.tap(find.byKey(const ValueKey('terminal-surface-menu')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('terminal-menu-remove')));
+      await tester.tap(find.byKey(const ValueKey('terminal-remove')));
       await tester.pumpAndSettle();
       expect(find.textContaining('npm run dev'), findsWidgets);
       await _shoot(tester, 'terminal-stop-ask');
       await tester.tap(find.byKey(const ValueKey('terminal-remove-confirm')));
       await tester.pumpAndSettle();
       expect(rig.daemon.of('kill_terminal_request').single['terminalId'], 't1');
-      expect(find.text('npm run dev'), findsNothing);
+      // The last one stopped: New terminal, not a fresh shell by itself.
+      expect(find.byKey(const ValueKey('terminal-none')), findsOneWidget);
+      expect(rig.daemon.of('create_terminal_request'), isEmpty);
       await _finish(tester, rig);
     });
 

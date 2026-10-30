@@ -1,7 +1,7 @@
 // P8.4 "Failed jobs carry their log": a failed team run (the Gate sheet's
 // Run failed), a failed AI Team start and a failed dev service offer
 // "Report this failure", which opens Report a problem with the job's
-// redacted log in a KitLogPanel and in the previewed report. A job that
+// redacted log under its Details, exactly as the report sends it. A job that
 // kept no log says so. Fakes only: no network, no upload, fake keys.
 import 'dart:async';
 
@@ -52,20 +52,21 @@ void _tall(WidgetTester tester) {
   addTearDown(tester.view.reset);
 }
 
-/// Every line the report page's job log panel holds.
-List<String> _panelLines(WidgetTester tester) => [
-  for (final line
-      in tester
-          .widget<KitLogPanel>(
-            find.ancestor(
-              of: _key('report-problem-job-log'),
-              matching: find.byType(KitLogPanel),
-            ),
-          )
-          .lines
-          .value)
-    line.text,
-];
+/// The job log lines the report carries, read from Details (exactly what
+/// is sent): the lines after "Failed job log (last lines)".
+Future<List<String>> _panelLines(WidgetTester tester) async {
+  if (_key('report-problem-preview-text').evaluate().isEmpty) {
+    await tester.ensureVisible(_key('report-problem-details'));
+    await tester.pumpAndSettle();
+    await tester.tap(_key('report-problem-details'));
+    await tester.pumpAndSettle();
+  }
+  final text = tester.widget<KitText>(_key('report-problem-preview-text')).text;
+  final lines = text.split('\n');
+  final start = lines.indexOf('Failed job log (last lines)');
+  if (start < 0) return const [];
+  return lines.skip(start + 1).takeWhile((line) => line.isNotEmpty).toList();
+}
 
 Future<String> _previewText(WidgetTester tester) async {
   await tester.enterText(
@@ -76,9 +77,10 @@ Future<String> _previewText(WidgetTester tester) async {
     'It failed',
   );
   await tester.pumpAndSettle();
-  await tester.ensureVisible(_key('report-problem-review'));
+  // Details holds exactly what is sent.
+  await tester.ensureVisible(_key('report-problem-details'));
   await tester.pumpAndSettle();
-  await tester.tap(_key('report-problem-review'));
+  await tester.tap(_key('report-problem-details'));
   await tester.pumpAndSettle();
   return tester.widget<KitText>(_key('report-problem-preview-text')).text;
 }
@@ -265,9 +267,8 @@ void main() {
   });
 
   group('Report a problem with a job attached', () {
-    testWidgets('shows the log in a panel and previews it, redacted', (
-      tester,
-    ) async {
+    testWidgets('says the log is attached and shows it under Details, '
+        'redacted', (tester) async {
       _tall(tester);
       await tester.pumpWidget(
         _app(
@@ -277,19 +278,16 @@ void main() {
               log: 'step 1 ok\nboom: token=abc\nexit 2',
             ),
             version: () async => '9.9.9+1',
-            share: (_, _) async => true,
           ),
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Attached: Sync engine stopped'), findsOneWidget);
-      expect(_key('report-problem-job-log'), findsOneWidget);
-      expect(find.text(_en.reportProblemJobLog), findsOneWidget);
-      expect(_panelLines(tester), ['step 1 ok', 'boom: token=abc', 'exit 2']);
-      expect(_key('report-problem-job-log-none'), findsNothing);
+      expect(find.text('Sync engine stopped'), findsOneWidget);
+      expect(find.text(_en.reportProblemJobLead), findsOneWidget);
 
       final preview = await _previewText(tester);
       expect(preview, contains('Failed job log (last lines)'));
+      expect(preview, contains('step 1 ok'));
       expect(preview, contains('exit 2'));
     });
 
@@ -304,8 +302,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(_key('report-problem-job-log'), findsNothing);
-      expect(find.text(_en.reportProblemJobLogNone), findsOneWidget);
+      expect(find.text(_en.reportProblemJobNoLogLead), findsOneWidget);
+      final preview = await _previewText(tester);
+      expect(preview, contains('Failed job log: none was kept'));
     });
   });
 
@@ -429,12 +428,10 @@ void main() {
       expect(_key('team-gate-sheet'), findsNothing);
       expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
       expect(
-        find.text(
-          'Attached: ${_en.teamUiGateRunStoppedTitle('Add subtract() to calc.py')}',
-        ),
+        find.text(_en.teamUiGateRunStoppedTitle('Add subtract() to calc.py')),
         findsOneWidget,
       );
-      expect(_panelLines(tester), [
+      expect(await _panelLines(tester), [
         'FAILED test_subtract',
         'AssertionError: 1 != -1',
       ]);
@@ -481,7 +478,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(gateway.outputRequests, isEmpty);
       expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
-      expect(find.text(_en.reportProblemJobLogNone), findsOneWidget);
+      expect(find.text(_en.reportProblemJobNoLogLead), findsOneWidget);
       await team.stop();
     });
   });
@@ -537,7 +534,7 @@ void main() {
     await tester.tap(_key('builtin-team-report'));
     await tester.pumpAndSettle();
     expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
-    expect(_panelLines(tester).last, 'supervisor exited 1');
+    expect((await _panelLines(tester)).last, 'supervisor exited 1');
   });
 
   group('a failed dev service', () {
@@ -614,8 +611,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(_key('development-services-logs'), findsNothing);
       expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
-      expect(find.text('Attached: Shopfront preview'), findsOneWidget);
-      expect(_panelLines(tester), ['Error: listen EADDRINUSE :::5173']);
+      expect(find.text('Shopfront preview'), findsOneWidget);
+      expect(await _panelLines(tester), ['Error: listen EADDRINUSE :::5173']);
       KitUndo.commitPending();
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();

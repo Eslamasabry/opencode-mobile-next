@@ -16,6 +16,7 @@ import 'package:opencode_mobile/state/connection.dart';
 
 import '../../tool/capture/fixtures.dart' show loadCaptureFonts;
 import 'chat_3_support.dart';
+import '../support/composer_tools.dart';
 
 typedef _Scene =
     Future<void> Function(WidgetTester tester, ConnectionController conn);
@@ -26,7 +27,7 @@ Future<void> _type(WidgetTester tester, String text) async {
 }
 
 Future<void> _openPrompts(WidgetTester tester) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await tester.pumpAndSettle();
   await Scrollable.ensureVisible(
     tester.element(find.byKey(const Key('composer-tools-prompts'))),
@@ -64,7 +65,7 @@ final _scenes = <String, (_Scene?, _Scene)>{
   'chat_3_tools_sheet': (
     null,
     (tester, conn) async {
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
       await tester.pumpAndSettle();
     },
   ),

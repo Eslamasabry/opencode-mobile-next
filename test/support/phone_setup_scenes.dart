@@ -18,6 +18,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/termux_running_server.dart';
 import 'package:opencode_mobile/termux/bridge.dart' show TermuxRuntime;
+import 'package:opencode_mobile/ui/app_iconography.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_progress_screen.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_ready_screen.dart';
@@ -163,10 +164,16 @@ Future<void> _openCustomize(WidgetTester tester) async {
 
 /// Opens the progress screen's Details (the live log), found by its words
 /// so the same step works on the code before and after the redesign.
+/// Opens Details (the sheet with every step), then its folded log.
 Future<void> _openDetails(WidgetTester tester) async {
-  await tester.ensureVisible(find.text('Details'));
+  final details = find.byKey(const Key('setup-progress-details'));
+  await tester.ensureVisible(details);
   await tester.pump();
-  await tester.tap(find.text('Details'));
+  await tester.tap(details);
+  for (var i = 0; i < 12; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  await tester.tap(find.text('Details').last);
   for (var i = 0; i < 12; i++) {
     await tester.pump(const Duration(milliseconds: 100));
   }
@@ -223,40 +230,68 @@ Widget _progress() => PhoneSetupProgressScreen(
   openReady: (_) async {},
 );
 
-/// The first-run welcome's top, where the line about a started setup sits.
+/// The first-run welcome's question and its "On this phone" card, which
+/// says where a started setup stands, and the main button that acts on it.
 Widget _welcome() => Scaffold(
   appBar: AppBar(),
   body: SafeArea(
     child: Builder(
       builder: (context) {
-        final theme = Theme.of(context);
         final l10n = lookupAppLocalizations(Localizations.localeOf(context));
         return ListView(
           padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
           children: [
-            Text(
-              l10n.onboardingValueTitle,
-              style: theme.textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.onboardingValueBody,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+            KitHeroQuestion(l10n.firstRunWhereQuestion),
             const SizedBox(height: 32),
-            const PhoneSetupWelcomeEntry(restoreTimeout: Duration.zero),
-            Text(
-              l10n.firstRunWhereQuestion,
-              style: theme.textTheme.titleMedium,
-            ),
+            const WelcomePhoneCardScene(),
           ],
         );
       },
     ),
   ),
 );
+
+/// The welcome's phone card and main button, fed by the real
+/// [PhoneSetupWelcomeEntry] (no restore wait).
+class WelcomePhoneCardScene extends StatelessWidget {
+  const WelcomePhoneCardScene({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    return PhoneSetupWelcomeEntry(
+      restoreTimeout: Duration.zero,
+      builder: (context, offer) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          KitChoiceCards<int>(
+            choices: [
+              KitChoice(
+                key: const ValueKey('welcome-choice-phone'),
+                value: 0,
+                leading: const KitIcon(AppIconography.phone),
+                title: l10n.onboardingTermuxSetup,
+                supporting: offer.line,
+              ),
+            ],
+            selected: 0,
+            busy: offer.working ? 0 : null,
+            onSelected: (_) {},
+          ),
+          const SizedBox(height: 24),
+          KitButton.primary(
+            key: const ValueKey('welcome-primary'),
+            hero: true,
+            label: offer.action,
+            working: offer.working,
+            onPressed: offer.onPressed,
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// Settings → Servers with "This phone" above another saved server.
 Widget _servers({bool connected = false}) => Consumer(

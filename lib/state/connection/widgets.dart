@@ -38,7 +38,7 @@ extension _ConnectionControllerWidgets on ConnectionController {
   Map<String, int> get _widgetAppTheme {
     final palette = effectiveThemePack(themePack.value).palette(
       switch (appearance.value) {
-        AppAppearance.dark => Brightness.dark,
+        AppAppearance.dark || AppAppearance.saver => Brightness.dark,
         AppAppearance.light => Brightness.light,
         AppAppearance.system => PlatformDispatcher.instance.platformBrightness,
       },
@@ -185,6 +185,95 @@ extension _ConnectionControllerWidgets on ConnectionController {
     return name == null ? '' : safeWidgetTitle(name);
   }
 
+  /// The server's name on the home-screen card: "This phone" for a server on
+  /// this device, else the name it was saved under (a bare address reads
+  /// "Computer at …"). Never a URL.
+  String get _widgetServerName {
+    final owner = _connectedProfile;
+    if (owner == null) return '';
+    final host = Uri.tryParse(owner.baseUrl)?.host ?? '';
+    if (looksLikeInAppServer(owner) || isLoopbackHost(host)) {
+      return _shellStrings().phoneSetupProfileName;
+    }
+    final name = plainServerName(owner.name);
+    return name.contains('://') ? '' : name;
+  }
+
+  /// Every server the Conversations list shows (this connection first, then
+  /// the others), for the Status widget: its name, whether it answers, and
+  /// since when it has not. Names only, never an address.
+  List<Map<String, Object?>> _widgetServers() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final rows = <Map<String, Object?>>[];
+    final seen = <String>{};
+    void add(ServerProfile owner, StreamStatus state, bool connected) {
+      if (!seen.add(owner.id)) return;
+      final host = Uri.tryParse(owner.baseUrl)?.host ?? '';
+      final phone = looksLikeInAppServer(owner) || isLoopbackHost(host);
+      final name = phone
+          ? _shellStrings().phoneSetupProfileName
+          : plainServerName(owner.name);
+      final String word;
+      if (connected) {
+        word = 'online';
+        _widgetOfflineSince.remove(owner.id);
+      } else if (state == StreamStatus.connecting) {
+        word = 'connecting';
+      } else {
+        word = 'offline';
+      }
+      rows.add({
+        'name': name.contains('://') ? '' : name,
+        'state': word,
+        if (word == 'offline')
+          'since': _widgetOfflineSince.putIfAbsent(owner.id, () => now),
+        if (phone) 'phone': true,
+      });
+    }
+
+    final main = _connectedProfile ?? profile;
+    if (main != null) {
+      add(main, status, status == StreamStatus.connected);
+    }
+    for (final entry in _sides.entries) {
+      final side = entry.value;
+      final owner = side.profile;
+      if (side._disposed || owner == null) continue;
+      add(owner, side.status, side.isConnected);
+    }
+    _widgetOfflineSince.removeWhere((id, _) => !seen.contains(id));
+    return rows;
+  }
+
+  /// The projects a Conversations widget can be scoped to, most recent
+  /// first: this server's recent projects, then those of the conversations
+  /// it lists. The writer keeps the folder names only.
+  List<String> _widgetProjects(
+    List<Session> sessions,
+    List<WidgetOtherConversation> others,
+  ) => [
+    for (final location in recentLocations) location.directory ?? '',
+    for (final session in sessions) session.directory ?? '',
+    for (final other in others) other.project,
+  ];
+
+  /// The first thing an agent question or form asks, for a card that can only
+  /// open the chat. Null when nothing of the kind waits in [sessionID].
+  String? _widgetQuestion(String sessionID) {
+    for (final question in questions.values) {
+      if (question.sessionID != sessionID) continue;
+      final prompt = question.prompts.firstOrNull;
+      final text = (prompt?.question.trim().isNotEmpty ?? false)
+          ? prompt!.question
+          : prompt?.title ?? '';
+      return safeWidgetTitle(text);
+    }
+    for (final form in forms.values) {
+      if (form.sessionID == sessionID) return '';
+    }
+    return null;
+  }
+
   /// The Conversations screen's default view (all projects and connections,
   /// subagents excluded) minus what this controller already shows with full
   /// details: the widget lists them as plain rows.
@@ -207,6 +296,7 @@ extension _ConnectionControllerWidgets on ConnectionController {
             updatedAt: item.lastActivity.millisecondsSinceEpoch,
             busy: item.status == ChatStatus.running,
             needsYou: item.status == ChatStatus.needsYou,
+            server: item.sourceLabel ?? '',
           ),
     ].take(WidgetSessionSnapshot.maxSessions).toList();
   }
@@ -231,6 +321,9 @@ extension _ConnectionControllerWidgets on ConnectionController {
         if (permissionForSession(session.id) case final request?) ...{
           'requestID': request.id,
           'ask': _widgetAsk(request),
+        } else if (_widgetQuestion(session.id) case final question?) ...{
+          'needsYou': true,
+          if (question.isNotEmpty) 'ask': {'kind': 'other', 'q': question},
         },
         'todos': [
           for (final (index, task)
@@ -395,6 +488,7 @@ extension _ConnectionControllerWidgets on ConnectionController {
             break;
           }
           if (action.action == 'stop') {
+            noteStopFromThisApp(action.sessionID);
             await gateway.abort(action.sessionID);
           } else {
             final mode = _widgetSteerMode(action.sessionID);

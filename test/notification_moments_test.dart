@@ -90,6 +90,7 @@ _harness({bool quiet = false}) async {
   controller.sessionsById['session-1'] = Session(
     id: 'session-1',
     title: 'Fix login',
+    directory: '/home/me/api-server',
   );
   controller.suspendForLifecycle();
   calls.clear();
@@ -166,15 +167,18 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('what the shade shows, never the lock screen', () {
-    test('a permission alert carries the chat and the command', () async {
+    test('a permission alert asks to run the command it shows', () async {
       final h = await _harness();
       addTearDown(h.controller.dispose);
       _ask(h.controller);
       await _flush();
       final args = _shown(h.calls).single.arguments!;
-      expect(args['chatTitle'], 'Fix login');
+      // "Run npm run?" over the exact command; server · project below.
+      expect(args['askAction'], 'run');
+      expect(args['askTarget'], 'npm run');
       expect(args['detail'], 'npm run build');
-      expect(args['shellCommand'], isTrue);
+      expect(args['subtext'], 'api-server');
+      expect(args['chatTitle'], 'Fix login');
     });
 
     test('a secret in the command never leaves the app', () async {
@@ -196,7 +200,7 @@ void main() {
     });
   });
 
-  test('a file permission is not asked as "Run this command?"', () async {
+  test('a file permission asks to edit the file by name', () async {
     final h = await _harness();
     addTearDown(h.controller.dispose);
     h.controller.handleEventForTesting(
@@ -211,34 +215,34 @@ void main() {
       ),
     );
     await _flush();
-    expect(
-      _shown(h.calls).single.arguments!.containsKey('shellCommand'),
-      isFalse,
-    );
+    final args = _shown(h.calls).single.arguments!;
+    expect(args['askAction'], 'edit');
+    expect(args['askTarget'], 'main.dart');
+    expect(args['detail'], 'lib/main.dart');
   });
 
   group('questions', () {
-    test('three or fewer short options become buttons', () async {
-      final h = await _harness();
-      addTearDown(h.controller.dispose);
-      _question(h.controller, ['Ship it', 'Wait']);
-      await _flush();
-      expect(_shown(h.calls).single.arguments!['options'], ['Ship it', 'Wait']);
-    });
-
     test(
-      'four options give no buttons: the alert just opens the app',
+      'three or fewer short options are listed under the question',
       () async {
         final h = await _harness();
         addTearDown(h.controller.dispose);
-        _question(h.controller, ['a', 'b', 'c', 'd']);
+        _question(h.controller, ['Ship it', 'Wait']);
         await _flush();
-        expect(
-          _shown(h.calls).single.arguments!.containsKey('options'),
-          isFalse,
-        );
+        expect(_shown(h.calls).single.arguments!['options'], [
+          'Ship it',
+          'Wait',
+        ]);
       },
     );
+
+    test('four options are not listed: the alert just opens the app', () async {
+      final h = await _harness();
+      addTearDown(h.controller.dispose);
+      _question(h.controller, ['a', 'b', 'c', 'd']);
+      await _flush();
+      expect(_shown(h.calls).single.arguments!.containsKey('options'), isFalse);
+    });
 
     test('an option button answers the question with its own label', () async {
       final h = await _harness();

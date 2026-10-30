@@ -14,6 +14,9 @@ import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../kit_chip.dart';
+import '../kit_filter_chips.dart';
+import '../kit_frost.dart';
+import '../kit_max_width.dart';
 import '../kit_menu.dart';
 import '../kit_tokens.dart';
 
@@ -43,30 +46,41 @@ class KitPhraseChips extends StatelessWidget {
   final ValueChanged<String> onHide;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     if (phrases.isEmpty) return const SizedBox.shrink();
-    final tokens = KitTokens.of(context);
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
-    return Semantics(
-      container: true,
-      label: l10n.phraseChipsRowLabel,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsetsDirectional.symmetric(horizontal: tokens.gutter),
-        child: Row(
-          children: [
-            for (var i = 0; i < phrases.length; i++) ...[
-              if (i > 0) SizedBox(width: tokens.space2),
+    // space2 under the row: its 48 dp targets never touch the status chips'
+    // targets under it, so a tap meant for one never lands on the other
+    // (impeccable audit 2026-10-28: 0 dp between the two rows' targets).
+    // On the chat composer's glass pane the rows sit at the composer's own
+    // rhythm: space1, the targets still apart (coordinator review
+    // 2026-10-30: the pane read as empty space between the rows).
+    final tokens = KitTokens.of(context);
+    final onPane = KitFrost.lineInsetOf(context) > 0;
+    return Padding(
+      padding: EdgeInsetsDirectional.only(
+        bottom: onPane ? tokens.space1 : tokens.space2,
+      ),
+      child: Semantics(
+        container: true,
+        label: l10n.phraseChipsRowLabel,
+        // One line that scrolls sideways; an edge it runs past fades, never a
+        // hard cut mid-word (KitFilterChips).
+        child: KitFilterChips(
+          chips: [
+            for (final phrase in phrases)
               Builder(
                 builder: (chipContext) => KitChip.action(
-                  key: ValueKey('phrase-chip-${phrases[i]}'),
-                  label: phrases[i],
-                  spoken: l10n.phraseChipsSend(phrases[i]),
-                  onPressed: () => onChoose(phrases[i]),
-                  onLongPress: () => _menu(chipContext, phrases[i]),
+                  key: ValueKey('phrase-chip-$phrase'),
+                  label: phrase,
+                  spoken: l10n.phraseChipsSend(phrase),
+                  onPressed: () => onChoose(phrase),
+                  onLongPress: () => _menu(chipContext, phrase),
                 ),
               ),
-            ],
           ],
         ),
       ),

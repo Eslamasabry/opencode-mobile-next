@@ -12,6 +12,7 @@ import '../app_iconography.dart';
 import 'kit_buttons.dart';
 import 'kit_field.dart';
 import 'kit_icon_button.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
 import 'kit_row.dart';
 import 'kit_segmented.dart';
@@ -1361,7 +1362,10 @@ class KitDateTimeRow extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final l10n = _l10n(context);
     final tokens = KitTokens.of(context);
     final value = _formatted(context) ?? placeholder ?? l10n.kitDateTimeNotSet;

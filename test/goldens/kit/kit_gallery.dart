@@ -15,6 +15,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' show FlutterView;
 
 import 'package:flutter/foundation.dart';
@@ -221,6 +222,7 @@ Future<void> kitGalleryShot(
         await then(tester);
         if (settleAfterThen) await tester.pumpAndSettle();
       }
+      await kitGalleryDecodeImages(tester);
       expect(tester.takeException(), isNull);
       await expectKitGalleryAccessible(
         tester,
@@ -325,9 +327,12 @@ Future<void> expectKitGalleryAccessible(
   for (final MapEntry(key: check, value: guideline) in _guidelines.entries) {
     final result = await guideline.evaluate(tester);
     if (!result.passed) {
-      failures.addAll(
-        _splitGuidelineReason(check, result.reason ?? guideline.description),
+      var split = _splitGuidelineReason(
+        check,
+        result.reason ?? guideline.description,
       );
+      if (check == 'textContrast') split = await _inkFailures(tester, split);
+      failures.addAll(split);
     }
   }
   for (final (node, problem) in _readingOrderProblems(
@@ -376,6 +381,150 @@ Future<void> expectKitGalleryAccessible(
       '${messages.join('\n\n')}',
     );
   }
+}
+
+/// The text-contrast failures that hold when measured with the words' own
+/// colour.
+///
+/// The framework's check reads no colour from the text: it splits the
+/// pixels around the words at their mean lightness and compares the most
+/// common colour on each side. Words a pixel or two thick are mostly
+/// anti-aliased shades, so on a shaded ground (Soft's well, a gradient)
+/// the "dark" side's most common colour is a band of the ground and the
+/// words measure about 1:1 however dark they are. A failure is kept unless
+/// every painted copy of its words reaches the ratio when its declared
+/// colours (each span's, blended onto the ground) are measured against
+/// every ground colour that fills at least [_groundShare] of the box around
+/// them. A failure with no measurable copy is kept.
+Future<List<_G5Failure>> _inkFailures(
+  WidgetTester tester,
+  List<_G5Failure> failures,
+) async {
+  if (failures.every((f) => f.node.isEmpty)) return failures;
+  final view = tester.binding.renderViews.first;
+  final layer = view.debugLayer! as OffsetLayer;
+  late final int width;
+  late final int height;
+  final bytes = await tester.binding.runAsync<ByteData?>(() async {
+    // The framework's own capture: one pixel per logical pixel.
+    final image = await layer.toImage(
+      view.paintBounds,
+      pixelRatio: 1 / view.flutterView.devicePixelRatio,
+    );
+    width = image.width;
+    height = image.height;
+    final data = await image.toByteData();
+    image.dispose();
+    return data;
+  });
+  if (bytes == null) return failures;
+  return [
+    for (final failure in failures)
+      if (failure.node.isEmpty ||
+          !kitTextInkHolds(
+            find.text(failure.node).hitTestable().evaluate(),
+            bytes,
+            width,
+            height,
+          ))
+        failure,
+  ];
+}
+
+/// Whether [a] and [b] are the same colour within a step of rounding.
+bool _near(Color a, Color b) =>
+    (a.r - b.r).abs() <= 2 / 255 &&
+    (a.g - b.g).abs() <= 2 / 255 &&
+    (a.b - b.b).abs() <= 2 / 255;
+
+/// The share of the box around the words a ground colour must fill to be
+/// measured against them.
+const _groundShare = .05;
+
+/// Whether every element in [texts] (Text or EditableText, as the framework
+/// check finds them) reaches the WCAG AA ratio for its size, measured with
+/// its declared colours on the ground read from [bytes] (RGBA, [width] ×
+/// [height], one pixel per logical pixel). False when none can be measured.
+@visibleForTesting
+bool kitTextInkHolds(
+  Iterable<Element> texts,
+  ByteData bytes,
+  int width,
+  int height,
+) {
+  var measured = 0;
+  for (final element in texts) {
+    final box = element.renderObject;
+    if (box is! RenderBox || !box.hasSize) return false;
+    final widget = element.widget;
+    final List<TextStyle> styles;
+    final TextStyle base;
+    if (widget is Text) {
+      final inherited = DefaultTextStyle.of(element).style;
+      base = widget.style == null || widget.style!.inherit
+          ? inherited.merge(widget.style)
+          : widget.style!;
+      styles = [base];
+      widget.textSpan?.visitChildren((span) {
+        final style = span.style;
+        if (style?.color != null) styles.add(base.merge(style));
+        return true;
+      });
+    } else if (widget is EditableText) {
+      base = widget.style;
+      styles = [base];
+    } else {
+      return false;
+    }
+    final rect = MatrixUtils.transformRect(
+      box.getTransformTo(null),
+      box.paintBounds.inflate(4),
+    ).intersect(Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()));
+    if (rect.isEmpty) return false;
+    final counts = <int, int>{};
+    var total = 0;
+    for (var y = rect.top.floor(); y < rect.bottom.ceil(); y++) {
+      for (var x = rect.left.floor(); x < rect.right.ceil(); x++) {
+        final rgba = bytes.getUint32((y * width + x) * 4);
+        counts.update(rgba, (n) => n + 1, ifAbsent: () => 1);
+        total++;
+      }
+    }
+    final grounds = [
+      for (final MapEntry(key: rgba, value: n) in counts.entries)
+        if (n >= total * _groundShare)
+          Color((rgba << 24) | (rgba >> 8) & 0xFFFFFF),
+    ];
+    if (grounds.isEmpty) return false;
+    for (final style in styles) {
+      final ink = style.color;
+      if (ink == null || style.foreground != null) return false;
+      final size = style.fontSize ?? 12;
+      final bold = style.fontWeight == FontWeight.bold;
+      final target =
+          (bold && size >= MinimumTextContrastGuideline.kBoldTextMinimumSize) ||
+              size >= MinimumTextContrastGuideline.kLargeTextMinimumSize
+          ? MinimumTextContrastGuideline.kMinimumRatioLargeText
+          : MinimumTextContrastGuideline.kMinimumRatioNormalText;
+      // The glyphs' own full-coverage pixels are the ink, not a ground.
+      bool isInk(Color c) => [
+        ink,
+        for (final under in grounds) Color.alphaBlend(ink, under),
+      ].any((i) => _near(i, c));
+      final paper = grounds.where((g) => !isInk(g)).toList();
+      if (paper.isEmpty) return false;
+      for (final ground in paper) {
+        final words = Color.alphaBlend(ink, ground).computeLuminance();
+        final under = ground.computeLuminance();
+        final ratio =
+            (math.max(words, under) + .05) / (math.min(words, under) + .05);
+        // The framework's own tolerance.
+        if (ratio - target < -.01) return false;
+      }
+    }
+    measured++;
+  }
+  return measured > 0;
 }
 
 /// Splits a guideline's reason, which joins one paragraph per failing node
@@ -630,6 +779,7 @@ Future<void> kitGalleryPart(
         ),
       );
       await tester.pumpAndSettle();
+      await kitGalleryDecodeImages(tester);
       expect(tester.takeException(), isNull);
       await expectKitGalleryAccessible(
         tester,
@@ -642,4 +792,28 @@ Future<void> kitGalleryPart(
     semantics.dispose();
   }
   await expectLater(find.byKey(boundary), matchesGoldenFile('$name.png'));
+}
+
+/// Decodes every [Image] on screen before the frame is captured. An image
+/// decodes on the engine's own thread, which the test clock does not wait
+/// for, so a golden taken straight after `pumpAndSettle` can catch a
+/// thumbnail still blank. Each image is precached outside the fake-async
+/// zone, then one frame is pumped so the widget picks the result up. A
+/// loading-state gallery shows an image that never completes on purpose,
+/// so each wait is capped; left uncapped it hung the test for good.
+Future<void> kitGalleryDecodeImages(WidgetTester tester) async {
+  final images = find.byType(Image).evaluate().toList();
+  if (images.isEmpty) return;
+  await tester.runAsync(() async {
+    for (final element in images) {
+      final image = element.widget as Image;
+      await precacheImage(
+        image.image,
+        element,
+        onError: (_, _) {},
+      ).timeout(const Duration(seconds: 2), onTimeout: () {});
+    }
+  });
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
 }

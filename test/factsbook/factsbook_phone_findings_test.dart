@@ -10,6 +10,7 @@ import 'package:opencode_mobile/ui/screens/factsbook/about_you_screen.dart';
 import 'package:opencode_mobile/ui/screens/factsbook/reminders_screen.dart';
 import 'package:opencode_mobile/ui/screens/factsbook/settings_screen.dart';
 
+import '../support/part_semantics.dart';
 import 'factsbook_test_support.dart';
 
 Future<void> _tapKey(WidgetTester tester, String key) async {
@@ -89,9 +90,10 @@ void main() {
   ) async {
     final semantics = tester.ensureSemantics();
     await pumpFacts(tester, const FactsBookAboutYouScreen());
-    final label = tester
-        .getSemantics(find.byKey(const ValueKey('factsbook-about-needs-you')))
-        .label;
+    final label = partSemantics(
+      tester,
+      find.byKey(const ValueKey('factsbook-about-needs-you')),
+    ).label;
     expect(RegExp('Needs you').allMatches(label).length, 1, reason: label);
     semantics.dispose();
   });

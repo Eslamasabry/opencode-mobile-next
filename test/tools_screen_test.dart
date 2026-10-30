@@ -11,6 +11,7 @@ import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/tools_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/settings_doors.dart';
 
 class _ToolsRepository implements ProductRepository {
   Object? capabilitiesError;
@@ -356,6 +357,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await openSettingsGroup(tester, SettingsGroup.ai);
 
     // One door (P3.10 Settings IA, 2bec3ed3): Settings › Tools, in the
     // Agent group, is the one Tools page, with a tab for the model's tools.
@@ -375,7 +377,7 @@ void main() {
 
     expect(find.byType(CapabilitiesScreen), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('capabilities-tab-Tools')));
+    await tester.tap(find.byKey(const ValueKey('capabilities-tab-Built-in')));
     await tester.pumpAndSettle();
 
     expect(find.byType(ToolsScreen), findsOneWidget);

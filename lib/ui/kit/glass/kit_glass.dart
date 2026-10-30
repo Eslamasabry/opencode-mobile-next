@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../kit_frost.dart';
+import '../kit_surface_look.dart';
 import '../kit_tokens.dart';
+
+// The chat composer's layer (kit/chat, a part of kit_composer.dart) builds
+// the frosted pane and the header's measure from these.
+export '../kit_frost.dart'
+    show
+        GlassChoiceStore,
+        KitFrost,
+        KitFrostRole,
+        KitFrostStrength,
+        KitGlassChoice;
+export '../kit_frost_header.dart'
+    show KitFrostHeader, KitFrostHeaderHost, KitFrostTopClaim;
 
 /// A plain solid surface for a bounded control or a short row of controls
 /// that floats over scrolling content: the bottom dock, the side rail, the
@@ -9,7 +23,14 @@ import '../kit_tokens.dart';
 /// Opaque `surface2`, the theme's hairline border, rounded corners and the
 /// one tight elevation shadow ([KitTokens.surfaceShadows]). No blur, no
 /// translucency, no rim highlight. (The name is historical: it used to be
-/// the liquid glass part.)
+/// the liquid glass part.) Under another Style (Settings › Appearance) it
+/// is that style's floating piece ([KitSurfaceLook], role floating): Soft
+/// raises it, Brutal and Paper ink it.
+///
+/// The one exception is the chat composer: inside its frosted pane
+/// ([KitFrost.wellOf], from `KitComposer.layer`) the surface becomes the
+/// pane's denser inner well ([KitFrost.wellAlpha]) while content is
+/// scrolled under it (owner, 2026-10-30; [KitFrost]).
 ///
 /// States: none — a surface around its child, it holds no data.
 class KitGlass extends StatelessWidget {
@@ -68,18 +89,77 @@ class KitGlass extends StatelessWidget {
       false;
 
   Widget _piece(BuildContext context, Widget content, KitTokens tokens) {
-    final radius = borderRadius ?? BorderRadius.circular(tokens.navRadius);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: tokens.roles.surface2,
-        borderRadius: radius,
-        border: Border.all(
-          color: tokens.roles.hairline,
-          width: KitTokens.hairlineWidth(context),
+    final well = trailing == null ? KitFrost.wellOf(context) : null;
+    if (well != null) {
+      // Inside the composer's frosted pane: the field's well, a little
+      // denser than the pane, its surface thinning as the glass fades in.
+      return AnimatedBuilder(
+        animation: well,
+        child: content,
+        builder: (context, content) => _surface(
+          context,
+          content!,
+          tokens,
+          alpha: 1 - (1 - KitFrost.wellAlpha) * well.value,
         ),
-        boxShadow: shadow ? tokens.surfaceShadows : null,
+      );
+    }
+    return _surface(context, content, tokens);
+  }
+
+  Widget _surface(
+    BuildContext context,
+    Widget content,
+    KitTokens tokens, {
+    double alpha = 1,
+  }) {
+    final radius = borderRadius ?? BorderRadius.circular(tokens.navRadius);
+    final solid = BoxDecoration(
+      color: alpha >= 1
+          ? tokens.roles.surface2
+          : tokens.roles.surface2.withValues(alpha: alpha),
+      borderRadius: radius,
+      border: Border.all(
+        color: tokens.roles.hairline,
+        width: KitTokens.hairlineWidth(context),
       ),
-      child: ClipRRect(borderRadius: radius, child: content),
+      // A shadow under a see-through well would darken it from inside:
+      // it fades out as the glass fades in.
+      boxShadow: !shadow
+          ? null
+          : alpha >= 1
+          ? tokens.floatingShadows(context)
+          : [
+              for (final s in tokens.floatingShadows(context))
+                s.copyWith(
+                  color: s.color.withValues(
+                    alpha:
+                        s.color.a *
+                        (alpha - KitFrost.wellAlpha) /
+                        (1 - KitFrost.wellAlpha),
+                  ),
+                ),
+            ],
+    );
+    final style = KitSurfaceLook.styleOf(context);
+    // Under the Style choice (Settings › Appearance): that style's
+    // floating piece.
+    return kitSurfaceBox(
+      style: style,
+      decoration: KitSurfaceLook.decorate(
+        context,
+        solid: solid,
+        level: KitSurfaceLevel.surface2,
+        role: KitSurfaceRole.floating,
+        borderRadius: radius,
+      ),
+      // The words on the pane on a layer of their own (scroll-perf,
+      // 2026-10-23): the page around a floating piece is recorded again on
+      // every frame of a scroll's stretch and while its scrollbar fades.
+      child: ClipRRect(
+        borderRadius: radius,
+        child: RepaintBoundary(child: content),
+      ),
     );
   }
 

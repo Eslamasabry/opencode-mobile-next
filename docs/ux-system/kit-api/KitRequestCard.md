@@ -505,3 +505,85 @@ outcome under it; an optional read-only body behind the title line).
 `KitRequestCard.ask(inList: true)` sits under a list row as the list places
 it, as `KitAgentCard(inList: true)` does; the caller passes secondary
 answers there.
+
+## The question look (vision 2026-10-20, "Chat with a question")
+
+`KitRequestCard.ask(look: KitRequestLook.question)` is the conversation's
+card; every list, sheet and team screen keeps `KitRequestLook.standard`.
+
+- Frame (`kitRequestFrame(edge: true)`): `surface1` under the attention
+  colour at `KitTokens.needsYouLineAlpha` (.5), an attention edge of
+  `KitTokens.needsYouEdgeWidth` (4 dp) at the start inside the corners, no
+  ring (its width is kept as padding, so the card sits where every request
+  card sits).
+- Caption: an attention dot (`KitTokens.needsYouDotSize`) and "Needs you ·
+  20 s" at the label role, counting with `KitSince(ticks:
+  secondsThenMinutes)` and `KitSince.shortAge`; "· 1 more is waiting" after.
+- The ask at the title role below 1.3 text (a promoted question when it is
+  64 characters or fewer on one line), the headline otherwise.
+- `targets` (`KitRequestTarget(text, change:, file:)`): what the request runs
+  or touches, one bordered mono block on `ground`; a single target wraps to
+  three lines with Details as the block's own underlined accent link; several
+  are hairline rows (paths cut in the middle, the file glyph, the change's
+  size such as "+4 −1"), the first `maxTargetsInPlace` (3) then "+{n} more"
+  and Details on a footer row. Without `targets` the `summary` is the one
+  target.
+- Answers: Reject then the primary side by side; stacked, Reject on top and
+  the primary at the bottom, under the thumb.
+- The quiet line is centred and underlined: the named standing grant
+  ("Always allow npm install"), and Details only when no block holds it.
+
+Only what the request carries is drawn: the host builds `targets` and the
+grant's name from the request (`permissionAsk` in
+`lib/ui/screens/chat/permission_sheet.dart`).
+
+## The Inbox row (`asRow(place:, onOpen:, openLabel:, openKey:)`, 2026-10-20)
+
+The Inbox's one row (vision slice `docs/qa/vision-inbox-2026-10-20/`), a list of its
+own where no row above names the place. Lives in `lib/ui/kit/kit_request_row.dart` (a
+part of the card); the server sheet keeps its own compact rows.
+
+- **Place line** (`place`): the attention dot (`KitTokens.needsYouDotSize`, growing with
+  the text up to 1.5x, centred on the first line of words) and "server · project ·
+  conversation" in `secondary`, up to two lines. The caller isolates each name in it
+  (COPY-30); the line keeps the page's direction. Once answered the dot is `text3`: amber
+  only while it waits.
+- **Question:** `headline`; the command (`summary`) in the one mono box.
+- **Open target** (`onOpen`, `openLabel`): the place line and the question are one
+  `KitTappable` (its own semantics node, spoken as `openLabel`, "Open Fix the build") that
+  opens the request's conversation. The answers keep their own targets.
+- **Answers:** a `KitRequestDecide` draws Reject (tertiary) then Allow once at the row's
+  end, filled unless `secondary`; the answer, receipt, Undo window, once-only guard (G9)
+  and A / D keys are the card's own. With no answers in place (a question or form owner
+  decision 1 sends to the chat) the one act is a secondary "Open" (`kitRequestOpen`, key
+  `openKey`) at the end of the question's line, under it from 1.3x text. Opening is not an
+  answer: no once-only guard and no send haptic. Any other answer kind keeps the card.
+- **Answered:** the place line stays above the quiet outcome line (which request was
+  answered, with its Undo while held).
+
+## A gate's one act (`KitRequestGo`, vision 2026-10-20, "AI Team task")
+
+`KitRequestGo` is a gate's answer when the gate waits for one named act and has no refusal: the AI
+Team task's merge gate ("Merge 6 changes into main?" → **Merge into main**). Not acting is the
+answer and the work waits (the card's `ifIgnored` says so), so there is no Send back.
+
+```dart
+final class KitRequestGo extends KitRequestAnswers {
+  const KitRequestGo({
+    required this.label,        // the act and its target: "Merge into main"
+    required this.onGo,         // null needs disabledReason (STATE-8)
+    this.icon,                  // AppIconography.branch
+    this.look,                  // KitAction: "Review changes", the secondary above
+    this.working = false,
+    this.disabledReason,        // said under the buttons when onGo is null
+    this.goKey,
+  });
+}
+```
+
+- Fits `KitRequestKind.gate` only (G37 assert).
+- Drawn as two full-width buttons, `look` (secondary) above and the named act (primary) under the
+  thumb, so both labels read whole at any width; the reason under them when the act is off.
+- The tapped-once guard, the send haptic and shortcut **A** on a PC are the card's, as for
+  `KitRequestDecide`. In the sheet the act is the primary and `look` the secondary.
+- Tests: `test/kit/kit_request_card_test.dart` group "a gate's one act".

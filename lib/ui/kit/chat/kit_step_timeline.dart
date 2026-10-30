@@ -13,25 +13,33 @@
 // rows keep their plain look anywhere else. A step that draws no node (plain
 // text) still sits beside the rail; only its node is missing.
 //
-// No glass, no shadow, no size animation (MOT-5): the opened steps appear at
-// once and the host may fade them in. The rail mirrors under Arabic.
+// No glass, no shadow. Opening and shutting fold the steps in and out
+// (size and fade over [KitMotion.standard]); a step that
+// arrives while the timeline is open slides and fades in under the ones
+// before it (owner request, 2026-10-27). The rail mirrors under Arabic.
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../kit_diff_view.dart';
 import '../kit_effects.dart';
+import '../kit_max_width.dart';
 import '../kit_motion.dart';
 import '../kit_surface.dart';
+import '../kit_surface_look.dart';
 import '../kit_tappable.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
+import '../kit_word_text.dart';
 import '../motion/kit_motion_parts.dart';
+import '../style/kit_signal.dart';
 
 part 'kit_step_light.dart';
 part 'kit_step_node.dart';
+part 'kit_step_signal.dart';
 
 /// A few lines of what a file write or edit changed, for the timeline's
 /// preview card: at most [maxLines] lines with their numbers, and whether
@@ -410,10 +418,23 @@ class KitStepTimeline extends StatefulWidget {
 class _KitStepTimelineState extends State<KitStepTimeline> {
   final _RailRegistry _registry = _RailRegistry();
 
+  /// The steps the open timeline has shown, by their keys: one not among
+  /// them arrives with [_StepArrival]. Opening shows the steps it finds
+  /// without an arrival each (the fold already brings them in).
+  Set<Object> _seen = const {};
+  bool _wasOpen = false;
+
+  static Object _identity(Widget step, int index) => step.key ?? index;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final hasSteps = widget.steps.isNotEmpty || widget.head != null;
-    final registry = _registry..nodes.clear();
+    final registry = _registry
+      ..nodes.clear()
+      ..live = widget.live;
     final line = _StepLine(
       registry: registry,
       label: widget.label,
@@ -429,6 +450,17 @@ class _KitStepTimelineState extends State<KitStepTimeline> {
     final open = widget.expanded && hasSteps;
     final count = widget.steps.length + (widget.head == null ? 0 : 1);
     registry.count = open ? count : 0;
+    // A step the open timeline had not shown yet arrives; one shown when it
+    // opened (or before) is already there.
+    final ids = [
+      for (var i = 0; i < widget.steps.length; i++)
+        _identity(widget.steps[i], i),
+    ];
+    final arrivals = [
+      for (final id in ids) open && _wasOpen && !_seen.contains(id) ? id : null,
+    ];
+    _seen = ids.toSet();
+    _wasOpen = open;
     // One shape open or shut: the line never remounts, so keyboard focus
     // stays on it when it toggles.
     Widget? rail = open
@@ -446,13 +478,16 @@ class _KitStepTimelineState extends State<KitStepTimeline> {
                   child: widget.head!,
                 ),
               for (var i = 0; i < widget.steps.length; i++)
-                _RailSlot(
-                  key: registry.keyFor(i + (widget.head == null ? 0 : 1)),
-                  index: i + (widget.head == null ? 0 : 1),
-                  registry: registry,
-                  stalled: widget.stalled,
-                  last: i == widget.steps.length - 1,
-                  child: widget.steps[i],
+                _StepArrival(
+                  arrival: arrivals[i],
+                  child: _RailSlot(
+                    key: registry.keyFor(i + (widget.head == null ? 0 : 1)),
+                    index: i + (widget.head == null ? 0 : 1),
+                    registry: registry,
+                    stalled: widget.stalled,
+                    last: i == widget.steps.length - 1,
+                    child: widget.steps[i],
+                  ),
                 ),
             ],
           )
@@ -465,8 +500,211 @@ class _KitStepTimelineState extends State<KitStepTimeline> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         line,
-        if (rail != null) KeyedSubtree(key: widget.stepsKey, child: rail),
+        // Opening unfolds the steps and fades them in; shutting folds them
+        // away (the steps as they were, while they leave). Under reduced
+        // motion both are instant. Without a host fade the fold fades.
+        _RailFold(
+          fade: widget.fade == null,
+          child: rail == null
+              ? null
+              : KeyedSubtree(key: widget.stepsKey, child: rail),
+        ),
       ],
+    );
+  }
+}
+
+/// A step that arrived while its timeline was open: it unfolds into place,
+/// fading in and, under Animations: Full, rising a few dp, over
+/// [KitMotion.standard]. Every other step (and every step under reduced
+/// motion) is simply there. The same widgets moving or still, so a step
+/// that settles keeps its state.
+class _StepArrival extends StatefulWidget {
+  const _StepArrival({required this.arrival, required this.child});
+
+  /// Non-null for the one build in which the step arrives (its identity);
+  /// a new value plays the arrival again.
+  final Object? arrival;
+  final Widget child;
+
+  /// How far an arriving step rises into place, in dp.
+  static const rise = 6.0;
+
+  @override
+  State<_StepArrival> createState() => _StepArrivalState();
+}
+
+class _StepArrivalState extends State<_StepArrival>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: KitMotion.standard,
+    value: 1,
+  );
+  late final CurvedAnimation _curve = CurvedAnimation(
+    parent: _controller,
+    curve: KitMotion.enter,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.arrival != null) _controller.value = 0;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (KitMotion.reduced(context)) {
+      _controller.value = 1;
+    } else if (_controller.value == 0 && !_controller.isAnimating) {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(_StepArrival old) {
+    super.didUpdateWidget(old);
+    final arrival = widget.arrival;
+    if (arrival != null &&
+        arrival != old.arrival &&
+        !KitMotion.reduced(context)) {
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _curve.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Calm: it unfolds and fades without rising (KitMotion.travels).
+    final rise = KitMotion.travels(context) ? _StepArrival.rise : 0.0;
+    return AnimatedBuilder(
+      animation: _curve,
+      builder: (context, child) => _folded(
+        _curve.value,
+        Opacity(
+          opacity: _curve.value,
+          child: Transform.translate(
+            offset: Offset(0, rise * (1 - _curve.value)),
+            child: child,
+          ),
+        ),
+      ),
+      child: widget.child,
+    );
+  }
+}
+
+/// [child] at [factor] of its height from the top, clipped only while it
+/// is cut short: a settled step's light and glow may reach past its box.
+/// The same widgets at every factor, so nothing remounts as it settles.
+Widget _folded(double factor, Widget child) => ClipRect(
+  clipBehavior: factor < 1 ? Clip.hardEdge : Clip.none,
+  child: Align(
+    alignment: AlignmentDirectional.topStart,
+    heightFactor: factor.clamp(0.0, 1.0),
+    child: child,
+  ),
+);
+
+/// The opened steps folding in and out (owner request, 2026-10-27): like
+/// [KitReveal] (size and fade, in over [KitMotion.standard] and out over
+/// [KitMotion.quick]; the first build shows what is there; reduced motion
+/// is instant; a leaving rail ignores touches and screen readers), but
+/// clipped only while it moves, so the nodes' lights are never cut at the
+/// rail's edge once it has settled.
+class _RailFold extends StatefulWidget {
+  const _RailFold({required this.child, required this.fade});
+
+  final Widget? child;
+  final bool fade;
+
+  @override
+  State<_RailFold> createState() => _RailFoldState();
+}
+
+class _RailFoldState extends State<_RailFold>
+    with SingleTickerProviderStateMixin {
+  // Made at once (not on first use): it starts where the first build is.
+  late final AnimationController _controller;
+  late final CurvedAnimation _curve;
+  late Widget? _shown = widget.child;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: KitMotion.standard,
+      reverseDuration: KitMotion.quick,
+      value: widget.child == null ? 0 : 1,
+    )..addStatusListener(_onStatus);
+    _curve = CurvedAnimation(
+      parent: _controller,
+      curve: KitMotion.enter,
+      reverseCurve: KitMotion.exit,
+    );
+  }
+
+  void _onStatus(AnimationStatus status) {
+    if (status == AnimationStatus.dismissed && widget.child == null) {
+      setState(() => _shown = null);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_RailFold old) {
+    super.didUpdateWidget(old);
+    final reduced = KitMotion.reduced(context);
+    if (widget.child != null) {
+      _shown = widget.child;
+      if (reduced) {
+        _controller.value = 1;
+      } else if (old.child == null ||
+          _controller.status == AnimationStatus.reverse) {
+        _controller.forward();
+      }
+    } else if (old.child != null) {
+      if (reduced) {
+        _controller.value = 0;
+        _shown = null;
+      } else {
+        _controller.reverse();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _curve.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = _shown;
+    if (shown == null) return const SizedBox.shrink();
+    final leaving = widget.child == null;
+    return IgnorePointer(
+      ignoring: leaving,
+      child: ExcludeSemantics(
+        excluding: leaving,
+        child: AnimatedBuilder(
+          animation: _curve,
+          builder: (context, child) => _folded(
+            _curve.value,
+            widget.fade ? Opacity(opacity: _curve.value, child: child) : child!,
+          ),
+          child: shown,
+        ),
+      ),
     );
   }
 }
@@ -483,7 +721,11 @@ class _Rail {
       scaler = MediaQuery.textScalerOf(context),
       dpr = MediaQuery.devicePixelRatioOf(context) {
     glyph = tokens.iconSize(context, tokens.smallIconSize).roundToDouble();
+    signal = KitTrack.on(context) ? kitSignalColors(context) : null;
   }
+
+  /// Signal's palette while the rail is the track; null otherwise.
+  late final KitSignalColors? signal;
 
   final KitTokens tokens;
   final TextScaler scaler;
@@ -491,7 +733,7 @@ class _Rail {
   late final double glyph;
 
   /// Where the words start.
-  double get column => glyph + tokens.space2;
+  double get column => glyph + tokens.space3;
 
   /// The rail's distance from the start edge.
   double get centre => glyph / 2;
@@ -519,7 +761,14 @@ class _RailPainter extends CustomPainter {
     required this.rtl,
     this.top = 0,
     this.bottomOf,
+    this.signal,
+    this.liveOf,
   });
+
+  /// Signal's palette: the rail is the track (solid while [liveOf] says
+  /// a step runs, else the dashed siding).
+  final KitSignalColors? signal;
+  final bool Function()? liveOf;
 
   final Color color;
   final double stroke;
@@ -539,6 +788,17 @@ class _RailPainter extends CustomPainter {
     final end = math.min(bottomOf?.call() ?? size.height, size.height);
     if (end <= top) return;
     final x = rtl ? size.width - centre : centre;
+    if (signal case final palette?) {
+      kitPaintTrack(
+        canvas,
+        colors: palette,
+        x: _snap(x, dpr),
+        top: top,
+        bottom: end,
+        live: liveOf?.call() ?? true,
+      );
+      return;
+    }
     final left = _snap(x - stroke / 2, dpr);
     canvas.drawRect(
       Rect.fromLTRB(left, top, left + stroke, end),
@@ -592,6 +852,10 @@ class _RailRegistry {
   double headerStart = 0;
   int count = 0;
 
+  /// A step on this timeline runs or waits (written as the nodes build):
+  /// under Signal its track is solid, else the dashed siding.
+  bool live = false;
+
   GlobalKey keyFor(int index) {
     while (_slotKeys.length <= index) {
       _slotKeys.add(GlobalKey());
@@ -644,6 +908,8 @@ class _RailSlot extends StatelessWidget {
           dpr: rail.dpr,
           rtl: rtl,
           bottomOf: last ? () => registry.centres[index] ?? fallback : null,
+          signal: rail.signal,
+          liveOf: () => registry.live,
         ),
         child: Padding(
           padding: EdgeInsetsDirectional.only(start: rail.column),
@@ -695,19 +961,25 @@ class _StepLine extends StatelessWidget {
     // do; the target grows downward when they wrap.
     final pad = math.max(tokens.space1, (tokens.minTarget - first) / 2);
 
+    final signal = rail.signal;
     final Widget lead = SizedBox(
       width: rail.glyph,
       height: first,
       child: Center(
-        child:
-            mark ??
-            (live
-                ? KitStepTimeline.alone(
-                    context,
-                    icon: icon,
-                    state: KitStepNodeState.running,
-                  )
-                : Icon(icon, size: rail.glyph, color: roles.text2)),
+        child: signal != null
+            ? OverflowBox(
+                maxWidth: double.infinity,
+                maxHeight: double.infinity,
+                child: _signalLead(rail, first, live: live, mark: mark),
+              )
+            : mark ??
+                  (live
+                      ? KitStepTimeline.alone(
+                          context,
+                          icon: icon,
+                          state: KitStepNodeState.running,
+                        )
+                      : Icon(icon, size: rail.glyph, color: roles.text2)),
       ),
     );
 
@@ -718,30 +990,48 @@ class _StepLine extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ExcludeSemantics(child: lead),
-          SizedBox(width: tokens.space2),
-          Flexible(
-            child: KitText(
-              label,
-              role: KitTextRole.secondary,
-              tone: KitTextTone.secondary,
-              // Two lines, then the end is cut; from 1.3x text the words
-              // wrap in full (A11Y-8).
-              maxLines: wide ? null : 2,
-              overflow: TextOverflow.ellipsis,
+          // The rail's column: the words start where the steps' do.
+          SizedBox(width: rail.column - rail.glyph),
+          if (signal != null)
+            Expanded(
+              child: _signalLineWords(
+                context,
+                label: label,
+                expanded: expanded,
+                wide: wide,
+              ),
+            )
+          else ...[
+            Flexible(
+              // Two lines, then cut at a whole word; from 1.3x text the
+              // words wrap in full (A11Y-8).
+              child: wide
+                  ? KitText(
+                      label,
+                      role: KitTextRole.secondary,
+                      tone: KitTextTone.secondary,
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  : KitWordText(
+                      label,
+                      role: KitTextRole.secondary,
+                      tone: KitTextTone.secondary,
+                      maxLines: 2,
+                    ),
             ),
-          ),
-          SizedBox(width: tokens.space1),
-          ExcludeSemantics(
-            child: SizedBox(
-              height: first,
-              child: Center(
-                child: SizedBox.square(
-                  dimension: tokens.smallIconSize,
-                  child: KitSpin.chevron(expanded: expanded),
+            SizedBox(width: tokens.space1),
+            ExcludeSemantics(
+              child: SizedBox(
+                height: first,
+                child: Center(
+                  child: SizedBox.square(
+                    dimension: tokens.smallIconSize,
+                    child: KitSpin.chevron(expanded: expanded),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -772,6 +1062,10 @@ class _StepLine extends StatelessWidget {
     registry.headerStart = startY;
     return CustomPaint(
       key: registry.headerKey,
+      // Signal: the folded line sits between two dashed rules.
+      foregroundPainter: signal == null
+          ? null
+          : _DashedRules(color: roles.hairline, start: rail.column, rtl: rtl),
       painter: railBelow
           ? _RailPainter(
               color: rail.color,
@@ -780,6 +1074,8 @@ class _StepLine extends StatelessWidget {
               dpr: rail.dpr,
               rtl: rtl,
               top: startY,
+              signal: rail.signal,
+              liveOf: () => registry.live,
             )
           : null,
       child: tappable,
@@ -918,7 +1214,7 @@ class _PreviewRow extends StatelessWidget {
               tone: numberTone,
               maxLines: 1,
               softWrap: false,
-              overflow: TextOverflow.clip,
+              overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.end,
             ),
           ),
@@ -930,7 +1226,7 @@ class _PreviewRow extends StatelessWidget {
               tone: KitTextTone.primary,
               maxLines: 1,
               softWrap: false,
-              overflow: TextOverflow.clip,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

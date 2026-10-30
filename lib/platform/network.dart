@@ -100,6 +100,20 @@ class NetworkBridge {
     }
   }
 
+  /// [current] with no deadline and so no timer: for a reader that only
+  /// shows what it hears (the setup cost line) and must leave nothing
+  /// running behind a closed screen.
+  Future<NetworkReading> currentUntimed() async {
+    if (!platformCapabilities.isAndroid) return NetworkReading.unknown;
+    try {
+      return NetworkReading.fromMap(
+        await _channel.invokeMethod<Object?>('current'),
+      );
+    } catch (_) {
+      return NetworkReading.unknown;
+    }
+  }
+
   /// Starts with a native snapshot, then reports changes. Desktop/web explicitly
   /// report unknown; this API makes no HTTP probe and records no network names.
   Stream<NetworkReading> readings() => platformCapabilities.isAndroid

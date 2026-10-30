@@ -475,11 +475,11 @@ void main() {
     testWidgets('without Termux the welcome stays as it was', (tester) async {
       phone.installed = false;
       await pumpServers(tester);
+      expect(find.byKey(const ValueKey('welcome-question')), findsOneWidget);
       expect(
-        find.byKey(const ValueKey('servers-welcome-hero')),
+        find.byKey(const ValueKey('welcome-choice-phone')),
         findsOneWidget,
       );
-      expect(find.byKey(const ValueKey('welcome-question')), findsOneWidget);
       expect(find.byKey(const ValueKey('termux-lead')), findsNothing);
     });
   });
@@ -510,8 +510,8 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Allow access to Termux'), findsOneWidget);
-      // No floating state word, no "Try again".
-      expect(find.byKey(const ValueKey('this-phone-state')), findsNothing);
+      // One plain answer above the cause, no "Try again".
+      expect(find.text(_l10n.thisPhoneAnswerTermux), findsOneWidget);
       expect(
         find.byKey(const ValueKey('this-phone-check-again')),
         findsNothing,

@@ -104,13 +104,42 @@ void main() {
           findsOneWidget,
         );
         expect(find.text('Model → gpt-5.6-sol · high'), findsOneWidget);
-        expect(find.byIcon(AppIconography.processor), findsOneWidget);
+        expect(find.byIcon(AppIconography.model), findsOneWidget);
         // The switch says what it switched to; the previous value is history
         // (chat-1 rethink: a hover-only detail never reached touch).
         expect(find.byType(Tooltip), findsNothing);
         expect(find.textContaining('Previously'), findsNothing);
       },
     );
+
+    testWidgets('a model switch names the model as the picker does', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          V2TranscriptRow(
+            part: _tagged(type: 'v2:switch', kind: 'model', text: 'big-pickle'),
+            messageId: 'msg_2',
+            modelName: (id) => id == 'big-pickle' ? 'Big Pickle' : null,
+          ),
+        ),
+      );
+      expect(find.text('Model → Big Pickle'), findsOneWidget);
+      await tester.pumpWidget(
+        _host(
+          V2TranscriptRow(
+            part: _tagged(
+              type: 'v2:switch',
+              kind: 'model',
+              text: 'gpt-5.6-sol · high',
+            ),
+            messageId: 'msg_3',
+            modelName: (id) => id == 'gpt-5.6-sol' ? 'GPT-5.6 Sol' : null,
+          ),
+        ),
+      );
+      expect(find.text('Model → GPT-5.6 Sol · high'), findsOneWidget);
+    });
 
     testWidgets('agent switch renders its own icon and copy', (tester) async {
       await tester.pumpWidget(

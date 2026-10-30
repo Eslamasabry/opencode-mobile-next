@@ -401,7 +401,7 @@ void main() {
     });
   }
 
-  testWidgets('the Servers welcome has its hero drawing', (tester) async {
+  testWidgets('the Servers welcome is the question, at rest', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final store = _Store(prefs: await SharedPreferences.getInstance());
     final connection = _Connection(store);
@@ -416,12 +416,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final hero = find.byKey(const ValueKey('servers-welcome-hero'));
-    expect(hero, findsOneWidget);
-    expect(
-      tester.getTopLeft(hero).dy,
-      lessThan(tester.getTopLeft(find.text('Keep your work moving.')).dy),
-    );
+    // Vision 2026-10-20: no drawing and no value paragraph; the question
+    // is the page.
+    expect(find.byKey(const ValueKey('servers-welcome-hero')), findsNothing);
+    expect(find.text('Where should your agent run?'), findsOneWidget);
     // A resting screen: nothing keeps moving.
     expect(tester.hasRunningAnimations, isFalse);
   });

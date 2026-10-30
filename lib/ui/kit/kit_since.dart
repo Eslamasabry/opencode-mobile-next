@@ -45,6 +45,10 @@ enum KitSinceTicks {
   /// Rebuilds on every whole second of elapsed time, from the start: a
   /// running reply's "Thinking · 12 s".
   seconds,
+
+  /// Every whole second for the first minute, then once per whole minute:
+  /// a waiting question's "Needs you · 20 s", then "· 4 min".
+  secondsThenMinutes,
 }
 
 /// The kit's one wait timer (KitSince.md, C12). Told when a wait [since]
@@ -111,6 +115,15 @@ class KitSince extends StatefulWidget {
         ? l10n.kitSinceWaitingFor(elapsed.inMinutes)
         : l10n.kitSinceWaitingForLong(durationLabel(context, elapsed));
   }
+
+  /// The age in its shortest words for a line that counts: "20 s" under a
+  /// minute, then [ageLabel]'s "4 min" / "2 h 5 min".
+  static String shortAge(BuildContext context, Duration elapsed) =>
+      elapsed.inMinutes < 1
+      ? lookupAppLocalizations(
+          Localizations.localeOf(context),
+        ).kitTurnLiveSeconds(elapsed.isNegative ? 0 : elapsed.inSeconds)
+      : ageLabel(context, elapsed);
 
   /// The age alone, for a host that places it mid-line: "4 min" / "less
   /// than a minute" / "2 h 5 min". [KitNeedsYou] and [KitRequestCard]'s
@@ -229,8 +242,11 @@ class _KitSinceState extends State<KitSince> with WidgetsBindingObserver {
     _timer?.cancel();
     _timer = null;
     if (widget.since == null) return;
-    if (widget.ticks == KitSinceTicks.seconds &&
-        _status.phase != KitSincePhase.idle) {
+    final everySecond =
+        widget.ticks == KitSinceTicks.seconds ||
+        (widget.ticks == KitSinceTicks.secondsThenMinutes &&
+            _status.elapsed < const Duration(minutes: 1));
+    if (everySecond && _status.phase != KitSincePhase.idle) {
       final intoSecond =
           _status.elapsed - Duration(seconds: _status.elapsed.inSeconds);
       _timer = Timer(const Duration(seconds: 1) - intoSecond, _fire);
@@ -240,7 +256,8 @@ class _KitSinceState extends State<KitSince> with WidgetsBindingObserver {
       KitSincePhase.idle => null,
       KitSincePhase.waiting => KitMotion.escalateAfter - _status.elapsed,
       KitSincePhase.slow =>
-        widget.ticks != KitSinceTicks.minutes
+        widget.ticks != KitSinceTicks.minutes &&
+                widget.ticks != KitSinceTicks.secondsThenMinutes
             ? null
             : const Duration(minutes: 1) -
                   (_status.elapsed -

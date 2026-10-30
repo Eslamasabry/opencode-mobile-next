@@ -53,6 +53,20 @@ class RunChangedFile {
   final String? partID;
 }
 
+/// A file a turn changed, with the line counts its tools reported; null
+/// where a tool did not report one ([RunResult.editedFileStats]).
+class RunFileStat {
+  const RunFileStat({required this.path, this.added, this.removed});
+  final String path;
+  final int? added;
+  final int? removed;
+
+  String get name {
+    final parts = path.split(RegExp(r'[/\\]')).where((p) => p.isNotEmpty);
+    return parts.isEmpty ? path : parts.last;
+  }
+}
+
 /// A bash/shell tool call of the run with whatever the server recorded.
 class RunCommand {
   const RunCommand({
@@ -303,6 +317,95 @@ class RunResult {
       }
     }
     return paths;
+  }
+
+  /// The files a turn's completed edit/write/patch tools touched, in the
+  /// order first touched, with the line counts the tools themselves
+  /// reported. A count is null unless every change to that file reported
+  /// one (an edit's `filediff`, a patch's per-file numbers, a write that made
+  /// a new file): a missing number is never guessed.
+  static List<RunFileStat> editedFileStats(
+    Iterable<MessageWithParts> messages, {
+    int max = maxChangedFiles,
+  }) {
+    final order = <String>[];
+    final added = <String, int?>{};
+    final removed = <String, int?>{};
+    void count(String path, int? plus, int? minus) {
+      if (!added.containsKey(path)) {
+        if (order.length >= max) return;
+        order.add(path);
+        added[path] = 0;
+        removed[path] = 0;
+      }
+      final a = added[path];
+      final r = removed[path];
+      added[path] = a == null || plus == null ? null : a + plus;
+      removed[path] = r == null || minus == null ? null : r + minus;
+    }
+
+    for (final message in messages) {
+      for (final part in message.parts) {
+        if (part.type != 'tool') continue;
+        final tool = (part.toolName ?? '').toLowerCase();
+        final change = _changeOf(tool);
+        if (change == null) continue;
+        final state = part.toolState;
+        if (state.status != 'completed' || !state.executed) continue;
+        final metadata = state.metadata;
+        final files = metadata?['files'];
+        final perFile = <String, Map<dynamic, dynamic>>{};
+        if (files is List) {
+          for (final file in files.whereType<Map<dynamic, dynamic>>()) {
+            final path = (file['path'] ?? file['filePath'] ?? file['file'])
+                ?.toString()
+                .trim();
+            if (path != null && path.isNotEmpty) perFile[path] = file;
+          }
+        }
+        for (final path in _pathsOf(tool, state)) {
+          final (int?, int?) lines = switch (change) {
+            RunFileChange.edited => switch (metadata?['filediff']) {
+              final Map<dynamic, dynamic> diff => (
+                _count(diff['additions']),
+                _count(diff['deletions']),
+              ),
+              _ => (null, null),
+            },
+            RunFileChange.patched => switch (perFile[path]) {
+              final Map<dynamic, dynamic> file => (
+                _count(file['additions']),
+                _count(file['deletions']),
+              ),
+              _ => (null, null),
+            },
+            // Only a new file's lines are a known count; an overwrite's
+            // difference was never reported.
+            RunFileChange.written =>
+              metadata?['exists'] == false && state.input['content'] is String
+                  ? (_lineCount(state.input['content'] as String), 0)
+                  : (null, null),
+          };
+          count(path, lines.$1, lines.$2);
+        }
+      }
+    }
+    return [
+      for (final path in order)
+        RunFileStat(path: path, added: added[path], removed: removed[path]),
+    ];
+  }
+
+  static int? _count(Object? raw) => switch (raw) {
+    final int value when value >= 0 => value,
+    final num value when value >= 0 => value.toInt(),
+    _ => null,
+  };
+
+  static int _lineCount(String text) {
+    if (text.isEmpty) return 0;
+    final lines = '\n'.allMatches(text).length;
+    return text.endsWith('\n') ? lines : lines + 1;
   }
 
   /// True only when the command TEXT names a common test runner or a

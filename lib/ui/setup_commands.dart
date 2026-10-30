@@ -121,7 +121,7 @@ abstract final class HostScripts {
 
   /// First-time install on the host, listening on [port].
   static String install(int port) =>
-      'npm install -g @opencode/cli@2.0.29 &&\n'
+      'npm install -g @opencode/cli@2.1.1 &&\n'
       'opencode2 serve --hostname 127.0.0.1 --port $port';
 
   /// Gas City's three tools are on PATH (docs/ai-team-host.md §1).

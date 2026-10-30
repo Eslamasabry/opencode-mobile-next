@@ -96,6 +96,13 @@ class _NotificationsSettingsScreenState
     if (mounted) setState(() {});
   }
 
+  /// A row's icon tile, which steps aside from 2× text: on a narrow phone
+  /// the words need the width more than the decoration (A11Y-8).
+  Widget? _icon(IconData icon, {Color? color}) =>
+      MediaQuery.textScalerOf(context).scale(1) >= 2.0
+      ? null
+      : KitRow.icon(context, icon, color: color);
+
   Future<void> _toggleBackground(bool value) async {
     final controller = widget.controller;
     if (controller.backgroundLive.busy) return;
@@ -226,7 +233,7 @@ class _NotificationsSettingsScreenState
       if (notifications)
         KitSwitchRow(
           key: const ValueKey('notify-finished-runs'),
-          leading: KitRow.icon(context, AppIconography.checkCircle),
+          leading: _icon(AppIconography.checkCircle),
           title: copy.notifyFinishedRuns,
           supporting: copy.notifyFinishedRunsDetail,
           value: controller.notificationPreferences.finishedRuns,
@@ -237,7 +244,7 @@ class _NotificationsSettingsScreenState
       if (notifications)
         KitSwitchRow(
           key: const ValueKey('notify-requests'),
-          leading: KitRow.icon(context, AppIconography.question),
+          leading: _icon(AppIconography.question),
           title: copy.notifyRequests,
           supporting: copy.notifyRequestsDetail,
           value: controller.notificationPreferences.requests,
@@ -249,7 +256,7 @@ class _NotificationsSettingsScreenState
       // setting on a device that cannot notify.
       KitSwitchRow(
         key: const ValueKey('notify-check-ins'),
-        leading: KitRow.icon(context, AppIconography.clock),
+        leading: _icon(AppIconography.clock),
         title: copy.monitorCheckIn,
         supporting: platformCapabilities.supportsBackgroundService
             ? copy.monitorCheckInDetail
@@ -266,7 +273,7 @@ class _NotificationsSettingsScreenState
       if (checkIn != null)
         KitPickerRow<int>(
           rowKey: const ValueKey('notify-check-in-after'),
-          leading: KitRow.icon(context, AppIconography.timer),
+          leading: _icon(AppIconography.timer),
           title: copy.monitorCheckInAfter,
           valueLabel: copy.monitorMinutes(checkIn),
           choices: [
@@ -284,7 +291,7 @@ class _NotificationsSettingsScreenState
       if (notifications)
         KitRow(
           key: const ValueKey('notify-quota-alerts'),
-          leading: KitRow.icon(context, AppIconography.usage),
+          leading: _icon(AppIconography.usage),
           title: copy.notifyQuotaAlerts,
           supporting: TextSpan(text: copy.notifyQuotaAlertsDetail),
           supportingMaxLines: 2,
@@ -296,8 +303,10 @@ class _NotificationsSettingsScreenState
       if (notifications)
         KitRow(
           key: const ValueKey('notify-send-test'),
-          leading: KitRow.icon(context, AppIconography.notificationImportant),
+          leading: _icon(AppIconography.notificationImportant),
           title: copy.notifySendTest,
+          // It acts in place: the accent words of a text button.
+          titleAccent: true,
           supporting: TextSpan(text: copy.notifySendTestDetail),
           supportingMaxLines: 2,
           enabled: !_sendingTest,
@@ -315,7 +324,7 @@ class _NotificationsSettingsScreenState
     return [
       KitSwitchRow(
         key: const ValueKey('notify-quiet-hours'),
-        leading: KitRow.icon(context, AppIconography.darkMode),
+        leading: _icon(AppIconography.darkMode),
         title: copy.monitorQuiet,
         supporting: copy.notifyQuietDetail,
         value: rules.quietEnabled,
@@ -331,14 +340,14 @@ class _NotificationsSettingsScreenState
       if (rules.quietEnabled) ...[
         KitRow(
           key: const ValueKey('notify-quiet-start'),
-          leading: KitRow.icon(context, AppIconography.clock),
+          leading: _icon(AppIconography.clock),
           title: copy.monitorQuietStart,
           trailing: KitRowValue(_clock(rules.quietStart!)),
           onTap: () => _quietTime(true, rules),
         ),
         KitRow(
           key: const ValueKey('notify-quiet-end'),
-          leading: KitRow.icon(context, AppIconography.clock),
+          leading: _icon(AppIconography.clock),
           title: copy.monitorQuietEnd,
           // The same start and end mean quiet all day: said, not guessed.
           supporting: allDay ? TextSpan(text: copy.notifyQuietAllDay) : null,
@@ -359,9 +368,12 @@ class _NotificationsSettingsScreenState
     return [
       KitSwitchRow(
         key: const ValueKey('background-live-switch'),
-        leading: KitRow.icon(context, AppIconography.sync),
+        leading: _icon(AppIconography.sync),
         title: copy.e7SettingsUi25,
         supporting: copy.e7SettingsUi26,
+        // The cost (battery, a permanent notification) is the end of the
+        // sentence: it is never cut off.
+        supportingMaxLines: 4,
         value: controller.keepLiveInBackground,
         onChanged: _toggleBackground,
         below: error == null
@@ -376,8 +388,7 @@ class _NotificationsSettingsScreenState
       if (controller.keepLiveInBackground)
         KitRow(
           key: const ValueKey('background-battery-row'),
-          leading: KitRow.icon(
-            context,
+          leading: _icon(
             live.batteryOptimizationIgnored
                 ? AppIconography.batteryCharging
                 : AppIconography.batteryWarning,
@@ -427,7 +438,7 @@ class _NotificationsSettingsScreenState
       if (servers.isEmpty)
         KitRow(
           key: const ValueKey('notify-no-servers'),
-          leading: KitRow.icon(context, AppIconography.server),
+          leading: _icon(AppIconography.server),
           title: copy.notifyNoServersTitle,
           supporting: TextSpan(text: copy.notifyNoServersDetail),
           supportingMaxLines: 2,
@@ -438,7 +449,7 @@ class _NotificationsSettingsScreenState
       if (wifi)
         KitSwitchRow(
           key: const ValueKey('notify-wifi-only'),
-          leading: KitRow.icon(context, AppIconography.network),
+          leading: _icon(AppIconography.network),
           title: copy.notifyWifiOnly,
           supporting: copy.monitorWifiDetail,
           value: rules.wifiOnly,
@@ -462,7 +473,7 @@ class _NotificationsSettingsScreenState
     return [
       KitSwitchRow(
         key: ValueKey('monitor-enabled-${profile.id}'),
-        leading: KitRow.icon(context, AppIconography.server),
+        leading: _icon(AppIconography.server),
         title: serverDisplayName(
           profile,
           lookupAppLocalizations(Localizations.localeOf(context)),
@@ -480,7 +491,7 @@ class _NotificationsSettingsScreenState
           platformCapabilities.supportsNotifications)
         KitSwitchRow(
           key: ValueKey('monitor-notify-${profile.id}'),
-          leading: KitRow.icon(context, AppIconography.notificationImportant),
+          leading: _icon(AppIconography.notificationImportant),
           title: copy.monitorNotifications,
           value: rules.notifications,
           onChanged: (value) => onSave(rules.copyWith(notifications: value)),
@@ -524,7 +535,15 @@ class _NotificationsSettingsScreenState
         ('servers', copy.notifySectionServers, _savedServers(rules)),
       ],
       if (showBackground && only == null)
-        ('background', copy.notifySectionBackground, _background()),
+        (
+          'background',
+          // The page is already named "Background": a header repeating it
+          // is dropped.
+          page == NotificationsPage.background
+              ? null
+              : copy.notifySectionBackground,
+          _background(),
+        ),
     ].where((section) => section.$3.isNotEmpty).toList();
     final hasServers =
         showNotifications &&
@@ -537,14 +556,20 @@ class _NotificationsSettingsScreenState
       // The honest state (P0.6): Android is refusing this app's
       // notifications, so every switch below is decoration until this is
       // fixed. Comes before everything else.
+      // The page's one main action while it holds: a solid button, not a
+      // tertiary word under the notice.
       if (_notificationsBlocked)
-        KitNotice(
-          key: const ValueKey('notifications-blocked-notice'),
-          icon: AppIconography.notificationImportant,
-          title: copy.notifyBlockedTitle,
-          message: copy.notifyBlockedMessage,
-          actions: [
-            KitAction(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            KitNotice(
+              key: const ValueKey('notifications-blocked-notice'),
+              icon: AppIconography.notificationImportant,
+              title: copy.notifyBlockedTitle,
+              message: copy.notifyBlockedMessage,
+            ),
+            SizedBox(height: tokens.space3),
+            KitButton.primary(
               key: const ValueKey('notifications-open-settings'),
               label: copy.notifyTurnOnInAndroid,
               onPressed: () =>
@@ -605,7 +630,21 @@ class _NotificationsSettingsScreenState
                   child: notice,
                 ),
               for (final (index, (slug, title, rows)) in sections.indexed) ...[
-                if (index > 0) SizedBox(height: tokens.sectionGap),
+                // A section without a heading (Quiet hours names itself)
+                // goes on from the list above it with the rows' own
+                // hairline, not an empty section gap that names nothing
+                // (impeccable audit 2026-10-28, #14). A style that frames
+                // its panels keeps KitRowGroup's seam between them.
+                if (index > 0 && title == null)
+                  if (KitSurfaceLook.flatLists(context))
+                    KitDivider(
+                      inset: KitDividerInset.text,
+                      endInset: tokens.gutter,
+                    )
+                  else
+                    const SizedBox.shrink()
+                else if (index > 0)
+                  SizedBox(height: tokens.sectionGap),
                 KeyedSubtree(
                   key: _sectionKey(slug),
                   child: KitRowGroup(

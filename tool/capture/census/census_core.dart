@@ -31,6 +31,7 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/widgets/provider_logo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../audit/audit_env.dart';
 import '../fixtures.dart';
 
 // ---------------------------------------------------------------------------
@@ -433,6 +434,8 @@ Future<Uint8List> _captureView(WidgetTester tester) async {
   final view = tester.binding.renderViews.first;
   final layer = view.debugLayer! as OffsetLayer;
   Uint8List? bytes;
+  // AUDIT TOOLING: blurred shadows when AUDIT_STYLE is set.
+  await auditWithShadows(tester, () async {});
   await tester.runAsync(() async {
     final image = await layer.toImage(view.paintBounds);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -545,9 +548,8 @@ Future<void> _renderShot(
   _setPhoneView(tester);
   // Surfaces that follow the system theme (the bootstrap gate, OcApp on
   // "system") draw dark like the rest of the census.
-  tester.platformDispatcher.platformBrightnessTestValue = censusLight
-      ? Brightness.light
-      : Brightness.dark;
+  tester.platformDispatcher.platformBrightnessTestValue =
+      (AuditEnv.light ?? censusLight) ? Brightness.light : Brightness.dark;
   final list = _results.putIfAbsent(area.id, () => []);
   // Recorded up front so a shot the timeout cuts off still shows up in the
   // manifest; replaced by the real result when the shot finishes.

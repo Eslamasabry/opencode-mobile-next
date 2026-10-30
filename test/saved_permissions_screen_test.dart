@@ -452,7 +452,7 @@ void main() {
       );
       expect(
         tester.getTopLeft(find.text('Current project')).dy - intro.bottom,
-        moreOrLessEquals(22, epsilon: 0.01),
+        moreOrLessEquals(24, epsilon: 0.01),
       );
     });
 

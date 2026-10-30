@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,6 +27,7 @@ import 'package:opencode_mobile/voice/voice_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'revamp/screen_voice_1_fixtures.dart';
+import 'support/settings_doors.dart';
 
 // The Settings rebuild (docs/design/settings-ia-audit-2026-10-12.md and the
 // Settings Standard): five groups, no pickers with one server, "By server"
@@ -148,6 +150,7 @@ void main() {
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
 
+      await openSettingsGroup(tester, SettingsGroup.connections);
       expect(find.text(_en.settingsV3ByServer), findsNothing);
       expect(_row('settings-servers-block'), findsNothing);
       expect(find.text(_en.settingsV3ServersBlock), findsNothing);
@@ -167,20 +170,33 @@ void main() {
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
 
-      // The long subtitles of the old hub moved to the pages they open.
-      expect(find.textContaining('Your common short phrases'), findsNothing);
-      expect(find.text(_en.transcriptTogglesReasoningOn), findsNothing);
-      // The five labels never change with the server.
+      // The five words never change with the server.
       for (final label in [
-        _en.settingsV3GroupConnections,
-        _en.settingsV3GroupAi,
-        _en.settingsV3GroupChat,
+        _en.settingsHubServer,
+        _en.settingsHubGroupAgent,
+        _en.settingsHubGroupConversations,
         _en.settingsHubGroupThisApp,
-        _en.settingsV3GroupHelp,
+        _en.settingsHubHelp,
       ]) {
         expect(find.text(label), findsOneWidget, reason: label);
       }
-      expect(find.text('Workstation'), findsNothing);
+      // Only Server says more: where the server runs and how it is doing.
+      expect(
+        find.descendant(
+          of: _row('settings-hub-row-connections'),
+          matching: find.text(
+            _en.settingsHubServerLine(
+              KitBidi.auto('Workstation'),
+              _en.e7WorkspaceConnected,
+            ),
+          ),
+        ),
+        findsOneWidget,
+      );
+      // The long subtitles of the old hub moved to the pages they open.
+      await openSettingsGroup(tester, SettingsGroup.chat);
+      expect(find.textContaining('Your common short phrases'), findsNothing);
+      expect(find.text(_en.transcriptTogglesReasoningOn), findsNothing);
     });
 
     testWidgets(
@@ -201,6 +217,7 @@ void main() {
         );
         await tester.pumpWidget(_app(controller));
         await tester.pumpAndSettle();
+        await openSettingsGroup(tester, SettingsGroup.ai);
 
         expect(find.text(_en.modelServerDefault), findsNothing);
         expect(
@@ -224,23 +241,29 @@ void main() {
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
 
-      for (final key in [
-        'settings-model-and-mode',
-        'settings-providers',
-        'settings-tools',
-        'default-shell-settings-entry',
+      for (final (group, keys) in [
+        (
+          SettingsGroup.ai,
+          ['settings-model-and-mode', 'settings-providers', 'settings-tools'],
+        ),
+        (SettingsGroup.chat, ['default-shell-settings-entry']),
       ]) {
-        expect(
-          _valueOn(key, _en.settingsV3ByServer),
-          findsOneWidget,
-          reason: key,
-        );
+        await openSettingsGroup(tester, group);
+        for (final key in keys) {
+          expect(
+            _valueOn(key, _en.settingsV3ByServer),
+            findsOneWidget,
+            reason: key,
+          );
+        }
+        await closeSettingsGroup(tester);
       }
+      await openSettingsGroup(tester, SettingsGroup.connections);
       expect(
         _valueOn('settings-saved-servers', _en.settingsV3ServersCount(2)),
         findsOneWidget,
       );
-      // Under the groups: the line, then each server by its own name.
+      // Under Server's rows: the line, then each server by its own name.
       expect(find.text(_en.settingsV3ServersBlock), findsOneWidget);
       expect(_row('settings-server-profile-1'), findsOneWidget);
       expect(_row('settings-server-profile-2'), findsOneWidget);
@@ -262,6 +285,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.ai);
 
       await tester.tap(_row('settings-model-and-mode'));
       await tester.pumpAndSettle();
@@ -285,6 +309,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.ai);
       await tester.tap(_row('settings-model-and-mode'));
       await tester.pumpAndSettle();
 
@@ -305,6 +330,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.ai);
       await tester.tap(_row('settings-tools'));
       await tester.pumpAndSettle();
       expect(find.byType(ByServerScreen), findsOneWidget);
@@ -319,6 +345,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.connections);
       await tester.tap(_row('settings-server-profile-2'));
       await tester.pumpAndSettle();
       final status = _row('server-row-status');
@@ -346,6 +373,7 @@ void main() {
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
 
+      await openSettingsGroup(tester, SettingsGroup.connections);
       await tester.tap(_row('settings-server-profile-1'));
       await tester.pumpAndSettle();
 
@@ -364,6 +392,34 @@ void main() {
       expect(_row('server-use-my-default'), findsNothing);
     });
 
+    testWidgets('a long model name never shortens the model row label', (
+      tester,
+    ) async {
+      await _tall(tester);
+      // The test font draws every letter 16 dp wide, so the label alone needs
+      // 432 dp: give the page room for it, then only the value could cut it.
+      tester.view.physicalSize = const Size(560, 3000);
+      final controller = await _controller(servers: 2);
+      addTearDown(controller.dispose);
+      await controller.store.setModel(
+        'profile-1',
+        'some-provider',
+        'a-very-long-model-name-that-goes-on-and-on-v12-preview',
+      );
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.connections);
+      await tester.tap(_row('settings-server-profile-1'));
+      await tester.pumpAndSettle();
+      final label = tester.widget<Text>(find.text(_en.settingsV3ModelNew));
+      final box = tester.renderObject<RenderParagraph>(
+        find.text(_en.settingsV3ModelNew),
+      );
+      expect(label.data, _en.settingsV3ModelNew);
+      expect(box.didExceedMaxLines, isFalse);
+      expect(box.size.height, lessThan(30));
+    });
+
     testWidgets('a server the app is not connected to says what it can', (
       tester,
     ) async {
@@ -373,6 +429,7 @@ void main() {
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
 
+      await openSettingsGroup(tester, SettingsGroup.connections);
       await tester.tap(_row('settings-server-profile-2'));
       await tester.pumpAndSettle();
 
@@ -407,6 +464,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.thisApp);
 
       double chevronRight(String rowKey) {
         final chevron = find.descendant(
@@ -442,6 +500,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Like Slack's "Channel-specific notifications 1".
+      await openSettingsGroup(tester, SettingsGroup.thisApp);
       expect(
         _valueOn(
           'settings-category-notifications',
@@ -449,6 +508,8 @@ void main() {
         ),
         findsOneWidget,
       );
+      await closeSettingsGroup(tester);
+      await openSettingsGroup(tester, SettingsGroup.connections);
 
       await tester.tap(_row('settings-server-profile-2'));
       await tester.pumpAndSettle();
@@ -472,6 +533,8 @@ void main() {
       expect(_row('server-use-my-default'), findsNothing);
       await tester.pageBack();
       await tester.pumpAndSettle();
+      await closeSettingsGroup(tester);
+      await openSettingsGroup(tester, SettingsGroup.thisApp);
       expect(find.textContaining('Different on'), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
       controller.dispose();
@@ -500,6 +563,7 @@ void main() {
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
 
+      await openSettingsGroup(tester, SettingsGroup.connections);
       await tester.tap(_row('settings-server-profile-2'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
@@ -528,6 +592,7 @@ void main() {
       await controller.store.setModel('profile-2', 'anthropic', 'claude');
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.connections);
       await tester.tap(_row('settings-server-profile-2'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
@@ -552,6 +617,7 @@ void main() {
       expect(consent.enabled('profile-2'), isTrue);
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.connections);
 
       bool shareRead() =>
           tester.widget<KitSwitchRow>(_row('server-row-share-read')).value;
@@ -861,7 +927,12 @@ void main() {
 
   group('round 2', () {
     testWidgets('the Settings tab has no server switcher chip', (tester) async {
-      await _tall(tester);
+      // The rail's Settings destination (a tablet); a phone opens Settings
+      // as a page from the gear instead.
+      tester.view
+        ..physicalSize = const Size(800, 1280)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final controller = await _controller(servers: 2);
       addTearDown(controller.dispose);
       await tester.pumpWidget(
@@ -876,7 +947,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('settings-group-ai')), findsOneWidget);
+      expect(settingsDoor(SettingsGroup.ai), findsOneWidget);
       // The tab starts with its title, like Chats and Files.
       expect(find.byKey(const ValueKey('settings-tab-title')), findsOneWidget);
       expect(
@@ -995,8 +1066,11 @@ void main() {
       await tester.pumpWidget(_app(controller, locale: const Locale('ar')));
       await tester.pumpAndSettle();
 
-      expect(find.text(_ar.settingsV3GroupConnections), findsOneWidget);
+      expect(find.text(_ar.settingsHubServer), findsOneWidget);
+      await openSettingsGroup(tester, SettingsGroup.connections);
       expect(find.text(_ar.settingsV3ServersBlock), findsOneWidget);
+      await closeSettingsGroup(tester);
+      await openSettingsGroup(tester, SettingsGroup.ai);
       expect(
         _valueOn('settings-model-and-mode', _ar.settingsV3ByServer),
         findsOneWidget,
@@ -1014,32 +1088,40 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('a tablet keeps the groups on the left and the servers there', (
-      tester,
-    ) async {
-      tester.view
-        ..physicalSize = const Size(1280, 800)
-        ..devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      final controller = await _controller(servers: 2);
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(controller));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'a tablet keeps the five words on the left, a group on the right',
+      (tester) async {
+        tester.view
+          ..physicalSize = const Size(1280, 800)
+          ..devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final controller = await _controller(servers: 2);
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(_app(controller));
+        await tester.pumpAndSettle();
 
-      final list = find.byKey(const ValueKey('settings-list-pane'));
-      final detail = find.byKey(const ValueKey('settings-detail-pane'));
-      expect(list, findsOneWidget);
-      expect(
-        find.descendant(of: list, matching: _row('settings-server-profile-2')),
-        findsOneWidget,
-      );
-      await tester.tap(_row('settings-index-ai'));
-      await tester.pumpAndSettle();
-      expect(
-        find.descendant(of: detail, matching: _row('settings-model-and-mode')),
-        findsOneWidget,
-      );
-      expect(tester.takeException(), isNull);
-    });
+        final list = find.byKey(const ValueKey('settings-list-pane'));
+        final detail = find.byKey(const ValueKey('settings-detail-pane'));
+        expect(list, findsOneWidget);
+        // Server is open first; its page lists each server.
+        expect(
+          find.descendant(
+            of: detail,
+            matching: _row('settings-server-profile-2'),
+          ),
+          findsOneWidget,
+        );
+        await tester.tap(settingsDoor(SettingsGroup.ai));
+        await tester.pumpAndSettle();
+        expect(
+          find.descendant(
+            of: detail,
+            matching: _row('settings-model-and-mode'),
+          ),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 }

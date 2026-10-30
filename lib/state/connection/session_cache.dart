@@ -19,6 +19,15 @@ mixin _ConnectionControllerSessionCache on ChangeNotifier {
   SessionTailPreview? cachedSessionTail(String sessionID) =>
       _self._cachedSessionTail(sessionID);
 
+  /// Re-saves the opening excerpt from a chat's in-memory history, which live
+  /// events keep newer than the last read. Call when the person leaves the
+  /// chat or the app goes to the background. Best effort; it never saves
+  /// while a revert is staged.
+  void saveSessionTailSnapshot(
+    String sessionID,
+    List<MessageWithParts> messages,
+  ) => _self._saveSessionTailSnapshot(sessionID, messages);
+
   /// Whether [loadSessionTail] can read [sessionID] now. Chat hydration uses
   /// the shared read when it can and reads the gateway itself otherwise (an
   /// isolated or test host with a gateway but no saved, connected server).
@@ -68,20 +77,50 @@ extension _ConnectionControllerSessionCacheImpl on ConnectionController {
         sessionsById[sessionID]?.stagedRevert != null) {
       return null;
     }
+    return _sessionTailCache.read(owner.id, _tailScope(owner), sessionID);
+  }
+
+  /// The inventory scope the opening excerpt is keyed to.
+  String _tailScope(ServerProfile owner) {
     final saved = store.locationFor(owner.id);
     final restoring = api == null || _restoringSavedLocation;
-    return _sessionTailCache.read(
-      owner.id,
-      SessionInventoryCache.scopeFor(
-        owner,
-        restoring
-            ? (owner.usesAgentSocket ? owner.codexDirectory : saved?.directory)
-            : directory,
-        restoring
-            ? (owner.usesAgentSocket ? null : saved?.workspace)
-            : workspace,
+    return SessionInventoryCache.scopeFor(
+      owner,
+      restoring
+          ? (owner.usesAgentSocket ? owner.codexDirectory : saved?.directory)
+          : directory,
+      restoring ? (owner.usesAgentSocket ? null : saved?.workspace) : workspace,
+    );
+  }
+
+  /// The body of [saveSessionTailSnapshot].
+  void _saveSessionTailSnapshot(
+    String sessionID,
+    List<MessageWithParts> messages,
+  ) {
+    final owner = _connectedProfile ?? profile;
+    if (owner == null ||
+        messages.isEmpty ||
+        !isProfileReadable(owner.id) ||
+        _deletedSessionIDs.contains(sessionID) ||
+        sessionsById[sessionID]?.stagedRevert != null) {
+      return;
+    }
+    final generation = _generation;
+    final deletionRevision = _profileDeletionRevisions[owner.id];
+    unawaited(
+      _sessionTailCache.save(
+        owner.id,
+        _tailScope(owner),
+        sessionID,
+        messages,
+        isCurrent: () =>
+            _generation == generation &&
+            isProfileReadable(owner.id) &&
+            _profileDeletionRevisions[owner.id] == deletionRevision &&
+            sessionsById[sessionID]?.stagedRevert == null &&
+            !_deletedSessionIDs.contains(sessionID),
       ),
-      sessionID,
     );
   }
 

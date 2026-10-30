@@ -45,8 +45,9 @@ extension _PhraseChips on _ChatScreenState {
   }
 
   /// The row, or nothing: hidden in an empty chat, while the person types or
-  /// has files staged, while a question, request or form waits, in a window
-  /// with no room, and when the person turned it off.
+  /// has files staged, while a question, request or form waits, under an
+  /// error notice, in a window with no room, and when the person turned it
+  /// off.
   Widget _phraseChipsRow(
     BoxConstraints bodyConstraints,
     List<PermissionRequest> pendingPermissions,
@@ -73,15 +74,36 @@ extension _PhraseChips on _ChatScreenState {
           return const SizedBox.shrink();
         }
         final state = _phraseMomentState();
-        final moment = state.moment;
-        if (moment == null) return const SizedBox.shrink();
+        // While the first history read is on its way the chat shows the end
+        // it had last time (the opening excerpt): the row that history will
+        // bring is there already, so the conversation does not rise by a
+        // row when it lands (jitter J9, 2026-10-28).
+        final moment =
+            state.moment ?? (_openingExcerptShown ? PhraseMoment.idle : null);
+        // While the agent works the screen is the conversation, the live
+        // line and the glowing composer (concept C): no row of phrases over
+        // it. "What's the update?" is what the live line already answers.
+        if (moment == null || moment == PhraseMoment.working) {
+          return const SizedBox.shrink();
+        }
+        // Under an error the notice holds the way on (another model, Send
+        // again); retries in a row of chips would only crowd it. The
+        // transcript's own reading counts too ([_unanswered]: the newest
+        // prompt ended on an error, its reply never stored as a message).
+        final ended = _unanswered;
+        final endedOnError = ended != null && !ended.$3 && !state.continueShown;
+        if (state.errorShown || endedOnError) return const SizedBox.shrink();
         final strings = _chatL10n(context);
         final continueWord = strings.returnBriefContinue;
         final chips = store.chipsFor(
           moment,
           starters: switch (moment) {
-            PhraseMoment.working => [strings.phraseChipsWorkingStarter],
-            PhraseMoment.stoppedPartway => [continueWord],
+            // The redo in full ("Try again", never a bare "Try"), right
+            // after Continue so it is never under the row's fading end.
+            PhraseMoment.stoppedPartway => [
+              continueWord,
+              strings.phraseChipsRetryStarter,
+            ],
             _ => const <String>[],
           },
           // The transcript's own Continue button is on screen: not twice.
@@ -102,17 +124,18 @@ extension _PhraseChips on _ChatScreenState {
     );
   }
 
+  /// The chat shows its opening excerpt (chat_page.dart's rule): the end
+  /// of the conversation as it read last time, while the live history loads.
+  bool get _openingExcerptShown =>
+      _loading &&
+      _messages.isEmpty &&
+      !_watching &&
+      !_conn.isIsolated &&
+      (_conn.cachedSessionTail(widget.sessionID)?.messages.isNotEmpty ?? false);
+
   /// A tap: the phrase goes through the normal send path, as if typed and
   /// sent (the delivery choice while the agent works, the offline queue).
-  Future<void> _sendPhrase(String text) async {
-    if (_sending) return;
-    final draft = _composer.text;
-    _composer.text = text;
-    await _send();
-    if (mounted && _composer.text.isEmpty && draft.trim().isNotEmpty) {
-      _composer.text = draft;
-    }
-  }
+  Future<void> _sendPhrase(String text) => _sendInsteadOfDraft(text);
 
   /// Menu › Edit: the words in the box, not sent.
   void _editPhrase(String text) {

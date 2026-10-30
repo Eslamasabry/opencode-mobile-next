@@ -13,7 +13,7 @@ enum ServerFlavor { v2, unknown }
 
 /// Install the supported server without modifying its conversation data.
 const openCode2UpgradeCommand =
-    'npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.0.29';
+    'npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.1.1';
 const unsupportedOpenCode1Message =
     'This server runs OpenCode 1, which this app no longer supports. '
     'Update it to OpenCode 2.';

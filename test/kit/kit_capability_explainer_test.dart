@@ -630,6 +630,9 @@ void main() {
         tester,
         KitCapabilityExplainer.offer(
           capability: 'team.on',
+          // Short enough for one line inside the 720 dp reading cap, so the
+          // action and the close sit side by side as at any wide window.
+          message: 'Turn it on.',
           onNotNow: () => notNow++,
         ),
         size: const Size(1280, 800),

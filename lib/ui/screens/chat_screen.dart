@@ -1,4 +1,11 @@
 import 'scheduling/schedule_routes.dart';
+import 'scheduling/schedule_sheet.dart'
+    show showScheduleSheet, ScheduleSheetExit;
+import 'scheduling/schedule_copy.dart' show scheduleProjectName;
+import '../../scheduling/models.dart' show ScheduledPrompt, ScheduleRecurrence;
+import '../../scheduling/controller.dart' show ScheduledPromptsController;
+import '../../scheduling/agent_connection.dart'
+    show scheduledProfileFingerprint;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -10,9 +17,9 @@ import 'package:clock/clock.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'
-    show SynchronousFuture, compute, listEquals;
+    show SynchronousFuture, compute, listEquals, setEquals;
 import 'package:flutter/scheduler.dart' show SchedulerPhase;
-import 'package:flutter/rendering.dart' show ScrollDirection;
+import 'package:flutter/rendering.dart' show ScrollDirection, SemanticsService;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,7 +30,6 @@ import '../../domain/connection_status.dart' show ConnectionStatusPhase;
 import '../../domain/server_gateway.dart' show StreamStatus;
 import '../../domain/provider_presentation.dart';
 import '../../domain/product_repository.dart';
-
 import '../../domain/agent_catalog.dart' show AgentCatalog;
 import '../../domain/chat_feed.dart'
     show ChatFeedItem, isTemporaryProjectDirectory;
@@ -38,11 +44,13 @@ import '../../domain/model_display_name.dart';
 import '../../domain/prompt_attachment.dart';
 import 'agents/agent_sheet.dart' show AgentSheetStep, showAgentSheet;
 import '../../domain/background_work.dart';
+import '../../domain/background_tasks.dart';
 import '../../domain/background_agent_result.dart';
 import '../../domain/background_shell_result.dart';
 import '../../domain/session_handoff.dart';
 import '../../domain/run_result.dart';
 import '../../domain/session_history.dart';
+import '../../domain/session_stop.dart';
 import '../../domain/transcript_search.dart';
 import '../../domain/turn_stall.dart';
 import '../../domain/transcript_settle.dart';
@@ -55,8 +63,12 @@ import '../../state/agent_handoff_links.dart' show AgentHandoffLinks;
 import '../../state/continue_with.dart'
     show ContinueWithLinkLine, continueWithLinkLines;
 import '../../state/offline_queue.dart';
+import '../../state/chat_git_holder.dart';
 import '../../state/connection.dart';
+import '../../state/tips.dart' show TipMoment;
+import '../teaching/teaching.dart' show TeachingIds, offerTip, teachingEntry;
 import '../../state/first_reply_notify_offer.dart';
+import '../../state/chat_notice_memory.dart';
 import '../../state/free_model_notice.dart'
     show FreeModelNoteDismissals, freeModelNoteDue;
 import '../../state/session_tail_cache.dart' show SessionTailPreview;
@@ -83,14 +95,17 @@ import '../../voice/read_aloud.dart';
 import '../navigation/chat_route.dart';
 import '../navigation/last_project.dart';
 import '../../domain/agent_error_text.dart';
+import '../../domain/agent_run_failure.dart';
 import '../../domain/office_text.dart';
 import '../agent_error_words.dart';
+import '../send_failure_words.dart';
 import '../app_theme.dart';
 import '../desktop/desktop_interaction.dart';
 import '../desktop/file_drop.dart';
 import '../desktop/shortcuts.dart';
 import '../widgets/agent_features_chip.dart';
 import '../widgets/always_allow_invitation.dart';
+import '../git/git_sheet.dart';
 import '../widgets/command_sheet.dart';
 import '../widgets/session_menu.dart';
 import '../widgets/safety_confirms.dart';
@@ -101,6 +116,7 @@ import '../widgets/markdown.dart';
 import '../widgets/phone_server_card.dart' show serverDisplayName;
 import '../widgets/pickers.dart';
 import '../widgets/model_shortcuts.dart';
+import '../../domain/product_failure.dart';
 import '../widgets/product_states.dart';
 import '../widgets/prompt_history_navigation.dart';
 import '../widgets/last_known_sessions.dart' show LastKnownSessions;
@@ -123,6 +139,8 @@ import '../../feedback/bug_report.dart' show openBugReport;
 import '../kit/kit.dart';
 import '../../domain/orchestration_gateway.dart';
 import '../../domain/team_agent_sessions.dart';
+import '../../domain/session_title_text.dart'
+    show displaySessionTitleText, isPlaceholderSessionTitle, stripIsoStamp;
 import '../../state/orchestration.dart';
 import '../../state/team_glance.dart';
 import '../../builtin/builtin_server.dart';
@@ -145,7 +163,8 @@ import '../widgets/team_role_copy.dart';
 import '../widgets/team_vocabulary.dart';
 import 'team/agent_screen.dart' show AgentScreen;
 import 'team/gate_sheet.dart' show showGateSheet;
-import 'team/merge_section.dart' show TeamMergeSection;
+import 'team/merge_section.dart'
+    show TeamMergeSection, teamMergeGateOnHost, teamMergeWaitsOnYou;
 import 'team/task_details_sheet.dart' show showTeamTaskDetails;
 import 'team/team_home_screen.dart' show TeamHomeScreen;
 import 'team/team_page.dart' show openTeamPage;
@@ -161,9 +180,8 @@ import 'app_diagnostics_screen.dart';
 import '../../diagnostics/perf_trace.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
-import 'files_screen.dart';
+import 'project_hub_screen.dart' show ProjectHub, openProjectFiles;
 import 'global_sessions_screen.dart';
-import 'home_screen.dart';
 import 'library_screen.dart';
 import 'mcp_catalog_screen.dart' show McpCatalogScreen;
 import 'project_health_screen.dart';
@@ -189,6 +207,7 @@ import 'web_sources_screen.dart';
 // closure every time, so removeListener would miss it and
 // MarkdownFileLinks and the tool rows would see a new callback every build.
 part 'chat/timeline_sheet.dart';
+part 'chat/stuck_command.dart';
 part 'chat/transcript_find.dart';
 part 'chat/command_launcher.dart';
 part 'chat/prompt_editor.dart';
@@ -196,6 +215,8 @@ part 'chat/prompt_history.dart';
 part 'chat/prompt_stash.dart';
 part 'chat/composer.dart';
 part 'chat/phrase_chips.dart';
+part 'chat/chat_schedule_send.dart';
+part 'chat/chat_stop_after_step.dart';
 part 'chat/message_view.dart';
 part 'chat/assistant_error_row.dart';
 part 'chat/session_sheets.dart';
@@ -237,6 +258,7 @@ part 'chat/chat_top_bar.dart';
 part 'chat/chat_transcript.dart';
 part 'chat/chat_composer_region.dart';
 part 'chat/chat_page.dart';
+part 'chat/chat_page_cache.dart';
 part 'chat/chat_status_line.dart';
 part 'chat/chat_body.dart';
 part 'chat/transcript_turns.dart';
@@ -246,9 +268,11 @@ part 'chat/team_conversation_parts.dart';
 part 'chat/team_agent_conversation.dart';
 part 'chat/team_conversation_actions.dart';
 part 'chat/composer_tools.dart';
+part 'chat/composer_tray.dart';
 part 'chat/agent_cards.dart';
 part 'chat/sent_photos.dart';
 part 'chat/chat_gallery.dart';
+part 'chat/no_reply_reason.dart';
 
 AppLocalizations _chatL10n(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -352,9 +376,18 @@ class _ChatScreenState extends State<ChatScreen>
         _ChatRequestFields,
         _ChatCommandFields,
         _ChatSessionMenuFields,
-        _ChatTranscriptFields {
+        _ChatTranscriptFields,
+        _ChatStopAfterStepFields,
+        _ChatStuckFields {
   late final ConnectionController _conn;
+
+  /// The project's Git state: names the branch on the header chip and backs
+  /// the Git sheet (lib/ui/git/git_sheet.dart).
+  final ChatGitHolder _git = ChatGitHolder();
   late final StreamSubscription<EventEnvelope> _sub;
+  // One loader for the screen's life: a fresh extension tear-off per build
+  // would make every tool-output preview load its file again.
+  late final _toolOutputLoader = _loadToolOutputFile;
   List<MessageWithParts> _messages = [];
   bool _loading = true;
   Object? _error;
@@ -418,9 +451,11 @@ class _ChatScreenState extends State<ChatScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _messagePositions.itemPositions.addListener(_syncEarlierCount);
     _openedMicros = PerfTrace.nowMicros;
     _composer.text = widget.initialText;
     _conn = _readConn();
+    _git.addListener(_gitChanged);
     _loadHandoffLinks();
     if (!_conn.isIsolated) {
       _attachments.addAll(widget.initialAttachments);
@@ -455,8 +490,7 @@ class _ChatScreenState extends State<ChatScreen>
             false)) {
       _draftRecoveryFuture = _recoverDraftAttachments();
     }
-    _composer.addListener(_scheduleDraftSave);
-    _composer.addListener(_onMentionText);
+    _listenToComposer(true);
     _focus.onKeyEvent = (_, event) => _navigatePromptHistory(event);
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
@@ -493,6 +527,7 @@ class _ChatScreenState extends State<ChatScreen>
     _notifyOffer = FirstReplyNotifyOffer(_conn)
       ..addListener(_notifyOfferChanged);
     _wasBusy = _conn.busySessions.contains(widget.sessionID);
+    _waitedForYou = !_conn.isIsolated && _waitsForYou;
     if (_watching) {
       _startWatchPolling();
     } else {
@@ -506,6 +541,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (!_conn.isIsolated &&
         (widget.initialText.isNotEmpty ||
             widget.initialAttachments.isNotEmpty)) {
+      _draftSettled.value = false;
       _draftSaveTimer = Timer(const Duration(milliseconds: 600), _persistDraft);
     }
   }
@@ -525,6 +561,7 @@ class _ChatScreenState extends State<ChatScreen>
       }
       unawaited(_stopReading());
       _persistDraft();
+      _saveOpeningExcerpt();
     } else if (_voiceSettingsOpened) {
       _voiceSettingsOpened = false;
       _retryVoiceAfterSettings();
@@ -575,27 +612,16 @@ class _ChatScreenState extends State<ChatScreen>
         listEquals(_attachments, _lastDraftAttachments)) {
       return;
     }
-    _promptContentRevision++;
-    _lastDraftText = _composer.text;
-    _lastDraftAttachments = List.of(_attachments);
-    _draftSaveTimer?.cancel();
-    _draftSaveTimer = Timer(const Duration(milliseconds: 600), _persistDraft);
+    _queueDraftSave();
   }
 
   void _onPhotosChanged() {
     if (mounted) setState(() {});
   }
 
-  /// A message's words. A person's answer to an agent card is the app's own
-  /// envelope; its words are the summary, never the tag or the JSON.
+  /// A message's words ([_chatMessageText]).
   static String _messageText(MessageWithParts message) =>
-      (message.info.role == 'user' ? genUiAnswerEnvelope(message) : null)
-          ?.summary ??
-      message.parts
-          .where((part) => part.type == 'text' && !part.synthetic)
-          .map((part) => part.text)
-          .where((value) => value.trim().isNotEmpty)
-          .join('\n\n');
+      _chatMessageText(message);
 
   void _notifyOfferChanged() {
     if (mounted) setState(() {});
@@ -616,7 +642,7 @@ class _ChatScreenState extends State<ChatScreen>
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _noteRunFinished();
     _checkVoiceReply();
-    setState(() {});
+    _rebuildForConnection();
     final scopeChanged =
         _requestedHistoryScope != null &&
         _requestedHistoryScope != _historyScope;
@@ -708,38 +734,6 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  Future<FilePreviewData> _loadToolOutputFile(ToolOutputFile file) async {
-    final strings = _chatL10n(context);
-    if (_conn.isIsolated) {
-      return FilePreviewData(
-        name: file.displayName,
-        mimeType: file.mimeType,
-        error: strings.chatUiFilesAreUnavailableInThisPreview,
-      );
-    }
-    final path = file.path;
-    final api = await _conn.prepareActionTransport();
-    if (path == null || path.isEmpty || api == null) {
-      return FilePreviewData(
-        name: file.displayName,
-        mimeType: file.mimeType,
-        error: strings.chatUiTheGeneratedFileIsNotAvailableFrom,
-      );
-    }
-    final content = await api.fileContent(path);
-    final binary = content.isBinary || content.encoding == 'base64';
-    final bytes = binary ? content.bytes() : null;
-    return FilePreviewData(
-      name: file.displayName,
-      mimeType: file.mimeType ?? content.mimeType,
-      bytes: bytes,
-      text: binary ? null : content.content,
-      error: binary && bytes!.isEmpty
-          ? strings.chatUiTheServerReturnedEmptyImageData
-          : null,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return _buildPage(context);
@@ -749,6 +743,8 @@ class _ChatScreenState extends State<ChatScreen>
   void dispose() {
     // Leaving the chat sends any answer still inside its undo window.
     unawaited(_conn.delayedAnswers.flush());
+    _saveOpeningExcerpt();
+    _stopTipTimer?.cancel();
     _voiceEpoch.value++;
     _voiceEpoch.dispose();
     _conn.profileDataChanges.removeListener(_readAloudScopeChanged);
@@ -756,12 +752,12 @@ class _ChatScreenState extends State<ChatScreen>
     _readAloud?.dispose();
     if (!_conn.isIsolated) _conn.promptPhotos.removeListener(_onPhotosChanged);
     _stopWatchPolling();
-    _draftTrackingEnabled = false;
-    _persistDraft();
-    _composer.removeListener(_scheduleDraftSave);
-    _composer.removeListener(_onMentionText);
+    _endDraftTracking();
+    _listenToComposer(false);
     _stopMentionSearch();
     WidgetsBinding.instance.removeObserver(this);
+    _messagePositions.itemPositions.removeListener(_syncEarlierCount);
+    _earlierCount.dispose();
     _conn.removeListener(_onConnectionChanged);
     _stopNudges();
     _notifyOffer
@@ -781,7 +777,9 @@ class _ChatScreenState extends State<ChatScreen>
     _findController.dispose();
     _findFocus.dispose();
     _findNavigationFocus.dispose();
-    _composerNoteTimer?.cancel();
+    _autoApproveNoteTimer?.cancel();
+    _modelDefaultNoteTimer?.cancel();
+    _freeModelNoteTimer?.cancel();
     _retryTicker?.cancel();
     _voiceListened?.removeListener(_onVoiceChanged);
     unawaited(_voice?.cancel());
@@ -792,6 +790,9 @@ class _ChatScreenState extends State<ChatScreen>
     _historyRefreshTimer?.cancel();
     _historyChanges.dispose();
     _backgroundSupportState.dispose();
+    _git
+      ..removeListener(_gitChanged)
+      ..dispose();
     super.dispose();
   }
 }

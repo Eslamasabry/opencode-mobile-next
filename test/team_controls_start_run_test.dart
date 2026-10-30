@@ -162,11 +162,12 @@ void main() {
         await tester.tap(key('team-home-planning-key-1'));
         await tester.pumpAndSettle();
         expect(find.byType(TeamConversationScreen), findsOneWidget);
-        // Eight seconds with no plan: the line says why, and its Why
-        // unfolds the ways out in place. The page reads the pinned clock,
-        // so the clock moves with the pump.
-        clock = clock.add(const Duration(seconds: 9));
-        await tester.pump(const Duration(seconds: 9));
+        // Planning past its usual time: the line under the header says
+        // why, and its Why unfolds the ways out in place (before that the
+        // header's own Now words say "planning", vision 2026-10-20). The
+        // page reads the pinned clock, so the clock moves with the pump.
+        clock = clock.add(const Duration(minutes: 6));
+        await tester.pump(const Duration(minutes: 6));
         await tester.pumpAndSettle();
         await tester.tap(key('team-conversation-now-why'));
         await tester.pumpAndSettle();
@@ -207,9 +208,9 @@ void main() {
       await tester.tap(key('team-home-start-run'));
       await tester.pumpAndSettle();
       await tester.enterText(key('team-start-run-objective'), 'Add dark mode');
-      await tapVisible(tester, key('team-start-run-project'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('ocproof').last);
+      // The project's own row: the list's middle is the rule between its
+      // rows, now that the rows sit on the sheet (flat lists).
+      await tapVisible(tester, find.text('ocproof').last);
       await tester.pumpAndSettle();
       await tapVisible(tester, key('team-start-run-send'));
       await tester.pumpAndSettle();
@@ -777,15 +778,17 @@ void main() {
       await tapVisible(tester, key('team-start-run-send'));
       await tester.pumpAndSettle();
       expect(key('team-start-run-sheet'), findsOneWidget);
+      expect(find.textContaining('identity not allowed'), findsNothing);
       expect(
         find.descendant(
           of: key('team-start-run-refused'),
-          matching: find.text(
-            'The host refused the objective: identity not allowed',
-          ),
+          matching: find.text('The host did not accept this task.'),
         ),
         findsOneWidget,
       );
+      await tester.tap(key('team-start-run-refused-details'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('identity not allowed'), findsWidgets);
     });
 
     test('the planning message round-trips through its record', () {

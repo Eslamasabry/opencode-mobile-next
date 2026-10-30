@@ -23,9 +23,11 @@ import '../screens/phone_setup/phone_setup_routes.dart';
 import '../screens/terminal_screen.dart' show TerminalPage, TerminalSource;
 import '../screens/this_phone_screen.dart' show openThisPhone;
 import 'phone_server_consents.dart';
+import 'phone_server_names.dart';
 import 'product_states.dart';
 import 'queued_prompt_move_sheet.dart' show showQueuedPromptMoveSheet;
-import 'termux_running_server_entry.dart' show isManagedPhoneProfile;
+
+export 'phone_server_names.dart';
 
 /// Screen D of phone setup (docs/design/phone-setup-v2-2026-09-24.md): the
 /// one place OpenCode running inside this app is managed, wherever servers
@@ -66,81 +68,6 @@ ServerProfile? phoneServerProfile(
     chosen = profile;
   }
   return chosen;
-}
-
-/// The name to show for [profile]: "This phone" for the in-app server,
-/// otherwise the name it was saved under.
-///
-/// Setup saves one in-app profile per OpenCode generation, and both are
-/// "This phone". When [among] (the saved profiles) holds the other
-/// generation too, the name says which one this is ("This phone ·
-/// OpenCode 2"), so two of them never sit side by side looking the same.
-/// Only the shown name changes; the stored names stay as they were saved.
-String serverDisplayName(
-  ServerProfile? profile,
-  AppLocalizations l10n, {
-  Iterable<ServerProfile> among = const [],
-}) {
-  if (profile == null) return 'OpenCode';
-  // OpenCode in Termux is named as its row on Servers and in the switcher
-  // ("This phone · Termux"), not by the name setup saved it under; the
-  // app's own server is plain "This phone".
-  if (isManagedPhoneProfile(profile)) return l10n.phoneServerTermuxTitle;
-  if (!looksLikeInAppServer(profile)) {
-    return _distinctServerName(profile, among);
-  }
-  return phoneServerDisplayName(profile, l10n, among: among);
-}
-
-/// The plain name, made distinct when another saved server would read the
-/// same ("Computer at 10.0.2.2" three times): the port is added, and when
-/// the address is the same too, the server's number among them.
-String _distinctServerName(
-  ServerProfile profile,
-  Iterable<ServerProfile> among,
-) {
-  final name = plainServerName(profile.name);
-  final same = [
-    for (final other in among)
-      if (other.id == profile.id ||
-          (!looksLikeInAppServer(other) &&
-              !isManagedPhoneProfile(other) &&
-              plainServerName(other.name) == name))
-        other,
-  ];
-  if (same.length < 2 || !same.any((o) => o.id == profile.id)) return name;
-  String portOf(ServerProfile p) {
-    final uri = Uri.tryParse(p.baseUrl);
-    return uri != null && uri.hasPort ? ':${uri.port}' : '';
-  }
-
-  final port = portOf(profile);
-  // "Computer at 10.0.2.2:4443 (secure)": a secure address that shares its
-  // host with a plain one says so, since a port alone can look arbitrary.
-  final secure =
-      Uri.tryParse(profile.baseUrl)?.scheme == 'https' &&
-      same.any((o) => Uri.tryParse(o.baseUrl)?.scheme != 'https');
-  final tag = secure ? ' (secure)' : '';
-  final withPort = '${port.isEmpty ? name : '$name$port'}$tag';
-  final clashes = same
-      .where((o) => o.id != profile.id && portOf(o) == port)
-      .toList();
-  if (clashes.isEmpty) return withPort;
-  final index = same
-      .where((o) => portOf(o) == port)
-      .toList()
-      .indexWhere((o) => o.id == profile.id);
-  return '$withPort (${index + 1})';
-}
-
-/// [serverDisplayName] for a profile known to be the in-app server (the
-/// "This phone" card's own title).
-String phoneServerDisplayName(
-  ServerProfile profile,
-  AppLocalizations l10n, {
-  Iterable<ServerProfile> among = const [],
-}) {
-  return l10n.phoneServerCardTitle;
 }
 
 /// Test seams for the routes this card calls but other screens own.
@@ -653,7 +580,12 @@ class PhoneServerCard extends ConsumerStatefulWidget {
     this.onDisconnect,
     this.linux,
     this.pollInterval = const Duration(seconds: 5),
-  }) : asRow = false;
+  }) : asRow = false,
+       switcher = false,
+       stateDetail = null,
+       needsYou = false,
+       askLine = null,
+       askAction = null;
 
   /// The same server as one row of a list's [KitRowGroup] (the Servers
   /// list's one urgency-ordered group), in place of the card's own panel:
@@ -673,7 +605,55 @@ class PhoneServerCard extends ConsumerStatefulWidget {
     this.onDisconnect,
     this.linux,
     this.pollInterval = const Duration(seconds: 5),
-  }) : asRow = true;
+  }) : asRow = true,
+       switcher = false,
+       stateDetail = null,
+       needsYou = false,
+       askLine = null,
+       askAction = null;
+
+  /// The row in the server switcher's one group (vision 2026-10-20): the
+  /// same server and menu, said the switcher's way. A plain phone tile (the
+  /// one in use gets the accent check at the end, never a filled tile), the
+  /// state in words on the line ("Connected · 1 working", "Stopped"), no
+  /// runtime name, and no ⋮: the row's tap connects, or opens the menu on
+  /// the server in use, and long-press opens it anywhere. While the server
+  /// in use waits on the person, [askLine] takes the line and
+  /// [askAction] the check's place.
+  const PhoneServerCard.switcherRow({
+    super.key,
+    required this.connection,
+    required this.profile,
+    this.connected = false,
+    this.onOpen,
+    this.onAction,
+    this.onDisconnect,
+    this.stateDetail,
+    this.needsYou = false,
+    this.askLine,
+    this.askAction,
+    this.linux,
+    this.pollInterval = const Duration(seconds: 5),
+  }) : asRow = true,
+       switcher = true,
+       onOpenPage = null,
+       onRemoved = null;
+
+  /// Drawn the server switcher's way ([PhoneServerCard.switcherRow]).
+  final bool switcher;
+
+  /// Words after the state on the switcher row ("1 working").
+  final String? stateDetail;
+
+  /// Something waits on the person here: the switcher row's needs-you dot.
+  final bool needsYou;
+
+  /// The switcher row's line while this server, in use, waits on the
+  /// person ("Needs you · npm install"); null on the other shapes.
+  final InlineSpan? askLine;
+
+  /// The switcher row's act for [askLine] (Allow once, Open, Undo).
+  final Widget? askAction;
 
   final ConnectionController connection;
 
@@ -1279,6 +1259,48 @@ class _PhoneServerCardState extends ConsumerState<PhoneServerCard> {
         )
       : null;
 
+  /// The switcher row's line: "Connected" in the accent colour when it is
+  /// the server in use, else the state word; then [stateDetail] and any
+  /// prompts waiting to send.
+  InlineSpan _switcherLine(
+    BuildContext context,
+    AppLocalizations l10n,
+    String label,
+  ) {
+    final attention = widget.askLine;
+    if (attention != null && widget.connected) return attention;
+    final extra = widget.stateDetail;
+    final queued = _queue.count;
+    final strong = KitText.styleOf(
+      context,
+      KitTextRole.label,
+      tone: KitTextTone.primary,
+    );
+    final parts = <TextSpan>[
+      if (widget.connected)
+        () {
+          final span = kitCurrentSpan(context, l10n.serverRowConnected);
+          return TextSpan(
+            text: span.text?.replaceFirst(RegExp(r'\s*·\s*$'), ''),
+            style: span.style,
+          );
+        }()
+      else
+        TextSpan(text: label),
+      if (queued > 0)
+        TextSpan(text: l10n.serverRowQueuedWaiting(queued), style: strong),
+      if (extra != null && extra.isNotEmpty) TextSpan(text: extra),
+    ];
+    return TextSpan(
+      children: [
+        for (final (i, part) in parts.indexed) ...[
+          if (i > 0) const TextSpan(text: ' · '),
+          part,
+        ],
+      ],
+    );
+  }
+
   /// [PhoneServerCard.row]: the shape of a [LocalServerRow]. The line reads
   /// "Connected · OpenCode 2 · Running"; Start or Set up is a small trailing
   /// button (under the line at large text, so the name keeps its width);
@@ -1328,9 +1350,13 @@ class _PhoneServerCardState extends ConsumerState<PhoneServerCard> {
         ),
       if (act != null && !atEnd) KitInset(child: act),
     ];
+    final switcher = widget.switcher;
     final trailing = <Widget>[
       if (act != null && atEnd) act,
-      if (menu.isNotEmpty)
+      if (switcher && widget.connected && act == null)
+        widget.askAction ??
+            KitRow.check(context, key: const ValueKey('phone-server-current')),
+      if (menu.isNotEmpty && !switcher)
         KitRowMenu(
           key: const ValueKey('phone-server-menu'),
           tooltip: l10n.phoneServerCardMore,
@@ -1347,19 +1373,27 @@ class _PhoneServerCardState extends ConsumerState<PhoneServerCard> {
         child: KitRow(
           leading: working
               ? const KitStatusMark(state: KitMarkState.working)
+              : switcher
+              ? KitRow.glyph(
+                  context,
+                  AppIconography.phone,
+                  needsYou: widget.needsYou,
+                )
               : KitRowIcon(AppIconography.phone, current: widget.connected),
           title: name,
           titleKey: const ValueKey('phone-server-title'),
           titleMaxLines: large ? 3 : 1,
-          supporting: TextSpan(
-            children: [
-              if (widget.connected)
-                kitCurrentSpan(context, l10n.serverRowConnected),
-              ?_queuedSpan(context, l10n, _queue.count),
-              TextSpan(text: detail),
-              TextSpan(text: ' · $label'),
-            ],
-          ),
+          supporting: switcher
+              ? _switcherLine(context, l10n, label)
+              : TextSpan(
+                  children: [
+                    if (widget.connected)
+                      kitCurrentSpan(context, l10n.serverRowConnected),
+                    ?_queuedSpan(context, l10n, _queue.count),
+                    TextSpan(text: detail),
+                    TextSpan(text: ' · $label'),
+                  ],
+                ),
           supportingKey: const ValueKey('phone-server-detail'),
           supportingMaxLines: large ? 3 : (_queue.count > 0 ? 2 : 1),
           below: below.isEmpty
@@ -1373,6 +1407,8 @@ class _PhoneServerCardState extends ConsumerState<PhoneServerCard> {
               : (widget.onOpenPage ?? (canOpen ? widget.onOpen : null)),
           menu: menu,
           menuLabel: name,
+          // The switcher's rows are one calm height: each is a place.
+          roomy: switcher,
           trailing: trailing.isEmpty
               ? null
               : Row(mainAxisSize: MainAxisSize.min, children: trailing),

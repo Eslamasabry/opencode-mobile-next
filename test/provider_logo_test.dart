@@ -64,7 +64,7 @@ void main() {
       ColorFilter.mode(KitTokens.of(context).roles.text1, BlendMode.srcIn),
     );
     // The default is the kit's tile size, so it lines up with row tiles.
-    expect(tester.getSize(find.byType(ProviderLogo)), const Size(30, 30));
+    expect(tester.getSize(find.byType(ProviderLogo)), const Size(28, 28));
   });
 
   testWidgets('a logo that cannot load keeps the monogram, no badge', (

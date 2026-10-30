@@ -91,6 +91,10 @@
     "scope": "other",
     "why": "key alias in the Keystore, not a preference"
   },
+  "oc.certificatePin.": {
+    "scope": "profile",
+    "why": "exact-origin certificate fingerprint; profile id suffix swept by profileScopedPreferenceKeys"
+  },
   "oc.chat": {
     "scope": "other",
     "why": "route name, not a preference"
@@ -103,9 +107,29 @@
     "scope": "profile",
     "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
   },
-  "oc.certificatePin.": {
+  "oc.agentTurnFailures.": {
     "scope": "profile",
-    "why": "exact-origin certificate fingerprint; profile id suffix swept by profileScopedPreferenceKeys"
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.chatNoticesSeen.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.agentSignedOut.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.mainFeed.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.conversationTitles.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
+  "oc.withdrawnPrompts.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
   },
   "oc.chatTail.": {
     "scope": "profile",
@@ -171,7 +195,15 @@
     "scope": "global",
     "why": "app-wide, not tied to one server"
   },
+  "oc.effectsBackgroundOn": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
   "oc.effectsLiveBackground": {
+    "scope": "other",
+    "why": "retired live background switch, read for cleanup only"
+  },
+  "oc.effectsLiveHeldByStyle": {
     "scope": "global",
     "why": "app-wide, not tied to one server"
   },
@@ -182,6 +214,34 @@
   "oc.effectsLiveStyle": {
     "scope": "global",
     "why": "app-wide, not tied to one server"
+  },
+  "oc.appearanceAccent": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.appearanceGuide": {
+    "scope": "global",
+    "why": "the guided Appearance page on this device: guide finished or skipped, questions seen, the question last used per chip and changed last; app-wide, not tied to one server"
+  },
+  "oc.effectsSurfaceStyle": {
+    "scope": "global",
+    "why": "app-wide, not tied to one server"
+  },
+  "oc.effectsCorners": {
+    "scope": "global",
+    "why": "app-wide Fine-tune knob over the Style, not tied to one server"
+  },
+  "oc.effectsDepth": {
+    "scope": "global",
+    "why": "app-wide Fine-tune knob over the Style, not tied to one server"
+  },
+  "oc.effectsDensity": {
+    "scope": "global",
+    "why": "app-wide Fine-tune knob over the Style, not tied to one server"
+  },
+  "oc.effectsEdges": {
+    "scope": "global",
+    "why": "app-wide Fine-tune knob over the Style, not tied to one server"
   },
   "oc.effectsMotion": {
     "scope": "global",
@@ -223,6 +283,10 @@
     "scope": "profile",
     "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
   },
+  "oc.genui.covered.": {
+    "scope": "profile",
+    "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
+  },
   "oc.genui.enabled.": {
     "scope": "profile",
     "why": "profile id is the suffix or infix, swept by profileScopedPreferenceKeys"
@@ -234,6 +298,10 @@
   "oc.githubToken.": {
     "scope": "profile",
     "why": "secure-storage GitHub sign-in for the Git page; profile id is the suffix, deleted by ProfileStore.remove and swept by profileScopedPreferenceKeys"
+  },
+  "oc.glass": {
+    "scope": "global",
+    "why": "device choice: Settings > Appearance > Glass (KitFrost), not tied to one server"
   },
   "oc.glassLiquidActive": {
     "scope": "other",
@@ -626,6 +694,10 @@
   "oc.thermalPause.": {
     "scope": "other",
     "why": "keyed by team id, cleared when the team is removed"
+  },
+  "oc.tips": {
+    "scope": "global",
+    "why": "teaching tips and mini tutorials shown, counts and done flags; app-wide, reset by Help › Tips › Show tips again"
   },
   "oc.transcript.reasoningExpanded": {
     "scope": "global",

@@ -2,7 +2,7 @@ part of '../settings_screen.dart';
 
 // ---- OD1 agent lane: update Paseo on the computer ------------------------
 
-extension _ServerHostUpdate on _ServerSettingsScreenState {
+extension _ServerHostUpdate on _ServerPageScreenState {
   /// The gateway that can update its computer's helper, or null.
   HostDaemonUpdateGateway? get _hostUpdater {
     final api = widget.controller.api;

@@ -19,15 +19,18 @@ import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
+import 'kit_code_surface.dart';
 import 'kit_details_fold.dart';
 import 'kit_icon_button.dart';
 import 'kit_jump_pill.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
 import 'kit_notice.dart';
-import 'kit_search_field.dart';
 import 'kit_redact.dart';
+import 'kit_search_field.dart';
 import 'kit_since.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
@@ -710,7 +713,10 @@ class _KitLogPanelState extends State<KitLogPanel> with WidgetsBindingObserver {
   ].join('\n');
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final all = widget.lines.value;
     final shown = all.length > widget.maxLines
@@ -797,14 +803,13 @@ class _KitLogPanelState extends State<KitLogPanel> with WidgetsBindingObserver {
       ],
     );
 
-    return DecoratedBox(
+    return kitCodeSurface(
+      context,
       key: widget.panelKey ?? const ValueKey('kit-log-panel'),
-      decoration: BoxDecoration(
-        color: tokens.detailsSurface,
-        borderRadius: folded
-            ? BorderRadius.circular(tokens.detailsRadius)
-            : BorderRadius.zero,
-      ),
+      fill: tokens.detailsSurface,
+      borderRadius: folded
+          ? BorderRadius.circular(tokens.detailsRadius)
+          : BorderRadius.zero,
       child: ClipRRect(
         borderRadius: folded
             ? BorderRadius.circular(tokens.detailsRadius)
@@ -1041,12 +1046,22 @@ class _Header extends StatelessWidget {
       words = const SizedBox.shrink();
     }
 
+    // The line under the header is the style's divider (none under Soft:
+    // the band keeps its place).
+    final line = KitSurfaceLook.divider(
+      context,
+      color: tokens.roles.hairline,
+      width: KitTokens.hairlineWidth(context),
+    );
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(
-            color: tokens.roles.hairline,
-            width: KitTokens.hairlineWidth(context),
+          // The width is the divider's: KitTokens.hairlineWidth or the
+          // style's.
+          bottom: BorderSide.none.copyWith(
+            style: BorderStyle.solid,
+            color: line.color,
+            width: line.width,
           ),
         ),
       ),
@@ -1323,14 +1338,14 @@ class _LineRow extends StatelessWidget {
                         style: style,
                         softWrap: wrap,
                         maxLines: wrap ? null : 1,
-                        overflow: wrap ? null : TextOverflow.clip,
+                        overflow: wrap ? null : TextOverflow.ellipsis,
                         textDirection: TextDirection.ltr,
                       )
                     : Text.rich(
                         _marked(text, style, tokens),
                         softWrap: wrap,
                         maxLines: wrap ? null : 1,
-                        overflow: wrap ? null : TextOverflow.clip,
+                        overflow: wrap ? null : TextOverflow.ellipsis,
                         textDirection: TextDirection.ltr,
                       ),
               ),
@@ -1366,7 +1381,7 @@ class _DroppedRow extends StatelessWidget {
       ),
       maxLines: wrap ? null : 1,
       softWrap: wrap,
-      overflow: wrap ? null : TextOverflow.clip,
+      overflow: wrap ? null : TextOverflow.ellipsis,
     ),
   );
 }

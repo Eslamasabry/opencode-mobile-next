@@ -95,11 +95,16 @@ class _ProbeState extends State<_Probe> {
 
 void main() {
   group('page transitions', () {
-    test('every platform but iOS uses the one kit transition', () {
+    test('Android moves the Android way; the rest but iOS use the kit '
+        'transition', () {
       for (final theme in [AppTheme.dark(), AppTheme.light()]) {
         final builders = theme.pageTransitionsTheme.builders;
+        // Owner rule 2026-10-26: native Android motion, predictive back.
+        expect(
+          builders[TargetPlatform.android],
+          isA<KitAndroidPageTransitionsBuilder>(),
+        );
         for (final platform in [
-          TargetPlatform.android,
           TargetPlatform.linux,
           TargetPlatform.windows,
           TargetPlatform.macOS,
@@ -115,8 +120,10 @@ void main() {
     });
 
     testWidgets('a page fades through: the old one clears before the new '
-        'one slides in, and both rest still', (tester) async {
-      await tester.pumpWidget(_app(const _Opener()));
+        'one slides in, and both rest still (off Android)', (tester) async {
+      await tester.pumpWidget(
+        _app(const _Opener(), platform: TargetPlatform.fuchsia),
+      );
       await tester.tap(find.text('Open'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 40));
@@ -175,6 +182,8 @@ void main() {
         ),
       ),
       reduced: reduced,
+      // The kit's own page transition around the tabs (off Android).
+      platform: TargetPlatform.fuchsia,
     );
 
     testWidgets('the tab being left clears before the chosen one fades in, '

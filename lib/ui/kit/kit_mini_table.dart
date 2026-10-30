@@ -2,8 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'kit_max_width.dart';
 import 'kit_scrollbar.dart';
 import 'kit_surface.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
@@ -67,7 +69,10 @@ class _KitMiniTableState extends State<KitMiniTable> {
       );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     assert(
       widget.columns.length <= KitMiniTable.maxColumns &&
           widget.rows.length <= KitMiniTable.maxRows,
@@ -79,9 +84,17 @@ class _KitMiniTableState extends State<KitMiniTable> {
     final rows = widget.rows.take(KitMiniTable.maxRows).toList();
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
-    final border = BorderSide(
+    // The lines under the rows are the style's dividers.
+    final rule = KitSurfaceLook.divider(
+      context,
       color: roles.hairline,
       width: KitTokens.hairlineWidth(context),
+    );
+    // The width is the divider's: KitTokens.hairlineWidth or the style's.
+    final border = BorderSide.none.copyWith(
+      style: BorderStyle.solid,
+      color: rule.color,
+      width: rule.width,
     );
     final numeric = [
       for (var c = 0; c < columns.length; c++) _numeric(c, rows),
@@ -154,27 +167,45 @@ class _KitMiniTableState extends State<KitMiniTable> {
       );
     }
 
+    // The rule under every row; the header band is a surface in the
+    // table's panel. A style that keeps one face per stack sets the band on
+    // the panel's face, inside the panel's edge rather than over it, and
+    // the rule is then drawn on its own.
+    final ruled = BoxDecoration(border: Border(bottom: border));
+    final band = ruled.copyWith(color: roles.surface2);
+
     // One row is one thing to a screen reader: "lib/main.dart, 12, 3".
-    Widget line(List<String> cells, double scale, {required bool header}) {
+    // [inPanel] is a context inside the panel, which hosts the band.
+    Widget line(
+      BuildContext inPanel,
+      List<String> cells,
+      double scale, {
+      required bool header,
+    }) {
+      final look = header
+          ? KitSurfaceLook.decorate(
+              inPanel,
+              solid: band,
+              level: KitSurfaceLevel.surface2,
+            )
+          : ruled;
+      Widget row = Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var c = 0; c < columns.length; c++)
+            cell(
+              c < cells.length ? cells[c] : '',
+              c,
+              widths[c] * scale,
+              header: header,
+            ),
+        ],
+      );
+      if (look is KitSurfaceDecoration) {
+        row = DecoratedBox(decoration: ruled, child: row);
+      }
       return MergeSemantics(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: header ? roles.surface2 : null,
-            border: Border(bottom: border),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (var c = 0; c < columns.length; c++)
-                cell(
-                  c < cells.length ? cells[c] : '',
-                  c,
-                  widths[c] * scale,
-                  header: header,
-                ),
-            ],
-          ),
-        ),
+        child: DecoratedBox(decoration: look, child: row),
       );
     }
 
@@ -199,9 +230,9 @@ class _KitMiniTableState extends State<KitMiniTable> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    line(columns, scale, header: true),
+                    line(context, columns, scale, header: true),
                     for (final row in rows)
-                      line(row.cells, scale, header: false),
+                      line(context, row.cells, scale, header: false),
                   ],
                 ),
               ),

@@ -230,6 +230,18 @@ class GitHubAccountController extends ChangeNotifier {
     return credential.accessToken;
   }
 
+  /// The name and private email to put on saves, from the account (null when
+  /// signed out or GitHub cannot be reached). The token stays in here.
+  Future<GitHubProfile?> commitProfile() async {
+    final token = await tokenForGit();
+    if (token == null) return null;
+    try {
+      return await _flow.fetchProfile(token);
+    } on GitHubSignInException {
+      return null;
+    }
+  }
+
   /// GitHub refused the token during a push or pull: forget it and ask for
   /// a new sign-in (feasibility doc, exact flow step 4).
   Future<void> tokenRejected() => _forget(GitHubSignInProblem.tokenRejected);

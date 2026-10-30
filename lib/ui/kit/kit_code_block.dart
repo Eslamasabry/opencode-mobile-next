@@ -8,10 +8,14 @@ import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../theme_roles.dart';
 import 'kit_buttons.dart';
+import 'kit_code_surface.dart';
 import 'kit_copy.dart';
+import 'kit_divider.dart';
 import 'kit_icon_button.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
+import 'kit_optical.dart';
 import 'kit_redact.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
@@ -269,7 +273,8 @@ class KitCodeBlock extends StatefulWidget {
   }) : fill = false,
        marks = const [],
        activeMark = null,
-       initialLine = null;
+       initialLine = null,
+       hangingIndent = false;
 
   /// The same block filling its host: no cap, no outer radius, virtualised
   /// by line (`ListView.builder`), for KitViewer and full readers. [marks]
@@ -289,6 +294,7 @@ class KitCodeBlock extends StatefulWidget {
     this.activeMark,
     this.initialLine,
     this.blockKey,
+    this.hangingIndent = false,
   }) : fill = true,
        caption = null,
        fileName = null,
@@ -312,6 +318,12 @@ class KitCodeBlock extends StatefulWidget {
   final bool showWrapToggle, copyable, highlight, lineNumbers, fill;
   final List<TextRange> marks;
   final Key? blockKey, copyKey, showAllKey;
+
+  /// `.fill` only, while wrapping: a wrapped line's continuation hangs
+  /// under the line's own indent instead of starting at the margin, so an
+  /// indented statement still reads as one (the Files reader). The leading
+  /// spaces stay real text, so selecting and copying keeps them.
+  final bool hangingIndent;
 
   /// The wrap a block uses when [wrap] is null: `command` and `code`
   /// scroll sideways on every window, so a long line is never broken
@@ -512,7 +524,10 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     // SEC-4: a command never carries a real credential; it carries a
     // placeholder ("<your key>"). This is a debug-only contract check, not
     // a display transform (the text itself is still redacted below).
@@ -587,11 +602,20 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
         // shrink to space1: the 48 dp Copy target fills that edge and the
         // line is centred on it, so the first glyph still sits well clear of
         // the curve (R3: a one-line command is one line tall).
+        // The Copy glyph's ink ends space4 inside the block, the inset its
+        // text starts at, not 3 dp further in (impeccable layout pass,
+        // 2026-10-28: trailing glyphs on one rail).
+        final copyEnd = KitOptical.endPad(
+          context,
+          AppIconography.copy,
+          AppIconography.actionSize,
+          tokens.space4 - (tokens.minTarget - AppIconography.actionSize) / 2,
+        );
         final padding = plan.inline
             ? EdgeInsetsDirectional.fromSTEB(
                 tokens.space4,
                 tokens.space1,
-                tokens.space1,
+                widget.copyable ? copyEnd : tokens.space1,
                 tokens.space1,
               )
             : header != null &&
@@ -607,11 +631,10 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
                 tokens.space4,
               )
             : EdgeInsetsDirectional.all(tokens.space4);
-        return DecoratedBox(
-          decoration: ShapeDecoration(
-            color: tokens.detailsSurface,
-            shape: _blockShape(context, tokens),
-          ),
+        return kitCodeSurface(
+          context,
+          fill: tokens.detailsSurface,
+          shape: _blockShape(context, tokens),
           child: Padding(padding: padding, child: column),
         );
       },
@@ -640,11 +663,10 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
     if (widget.fill) {
       return Padding(padding: EdgeInsets.all(tokens.space3), child: text);
     }
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: tokens.detailsSurface,
-        shape: _blockShape(context, tokens),
-      ),
+    return kitCodeSurface(
+      context,
+      fill: tokens.detailsSurface,
+      shape: _blockShape(context, tokens),
       child: Padding(padding: EdgeInsets.all(tokens.space4), child: text),
     );
   }
@@ -930,7 +952,7 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
           TextSpan(children: children),
           textDirection: TextDirection.ltr,
           softWrap: wrap,
-          overflow: wrap ? TextOverflow.clip : TextOverflow.visible,
+          overflow: wrap ? TextOverflow.clip : TextOverflow.ellipsis,
         );
       }
       return Column(
@@ -1161,23 +1183,58 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
     int lineStart = 0,
     bool commandStart = true,
   }) {
-    final content = _lineSpan(line, lineStart, roles, monoStyle, wrap: wrap);
     final key = widget.fill ? ValueKey('kit-code-line-${index + 1}') : null;
-    final text = Text.rich(
-      content,
-      key: key,
-      textDirection: TextDirection.ltr,
-      softWrap: wrap,
-      overflow: wrap ? TextOverflow.clip : TextOverflow.visible,
-    );
+    final indent = wrap && widget.hangingIndent
+        ? line.length - line.trimLeft().length
+        : 0;
+    Widget text;
+    if (indent > 0 && indent < line.length) {
+      // The indent as its own (selectable) run, the rest wrapping beside
+      // it: continuation lines start under the code, not the margin.
+      text = Row(
+        key: key,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            line.substring(0, indent),
+            textDirection: TextDirection.ltr,
+            style: monoStyle,
+          ),
+          Expanded(
+            child: Text.rich(
+              _lineSpan(
+                line.substring(indent),
+                lineStart + indent,
+                roles,
+                monoStyle,
+                wrap: wrap,
+              ),
+              textDirection: TextDirection.ltr,
+              softWrap: true,
+              overflow: TextOverflow.clip,
+            ),
+          ),
+        ],
+      );
+    } else {
+      text = Text.rich(
+        _lineSpan(line, lineStart, roles, monoStyle, wrap: wrap),
+        key: key,
+        textDirection: TextDirection.ltr,
+        softWrap: wrap,
+        overflow: wrap ? TextOverflow.clip : TextOverflow.ellipsis,
+      );
+    }
     if (!_hasGutter) return text;
     // A line that continues the command above (a heredoc body, a trailing
     // `\`) gets no prompt of its own.
     final gutterLabel = widget.kind == KitCodeKind.command
         ? (commandStart ? r'$' : '')
         : (index + 1).toString();
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final row = Row(
+      crossAxisAlignment: widget.hangingIndent
+          ? CrossAxisAlignment.stretch
+          : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
@@ -1193,9 +1250,16 @@ class _KitCodeBlockState extends State<KitCodeBlock> {
           ),
         ),
         SizedBox(width: KitTokens.of(context).space2),
+        if (widget.hangingIndent) ...[
+          // The reader's rule between the numbers and the code: one
+          // hairline per line row, so the rows draw one unbroken line.
+          const KitDivider.vertical(),
+          SizedBox(width: KitTokens.of(context).space3),
+        ],
         wrap ? Expanded(child: text) : text,
       ],
     );
+    return widget.hangingIndent ? IntrinsicHeight(child: row) : row;
   }
 
   /// [line]'s spans: syntax-highlighted for `code` when [KitCodeBlock.highlight]

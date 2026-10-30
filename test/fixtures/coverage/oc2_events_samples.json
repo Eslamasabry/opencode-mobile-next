@@ -1456,6 +1456,14 @@
               "lib/upload/upload_screen.dart"
             ]
           }
+        },
+        {
+          "id": "evt_0014",
+          "created": 1788960000014,
+          "type": "session.execution.succeeded",
+          "data": {
+            "sessionID": "ses_checkout"
+          }
         }
       ],
       "fields": [
@@ -1655,7 +1663,7 @@
           "path": "data.model",
           "kind": "any",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -2033,6 +2041,27 @@
           "kind": "any",
           "probes": [],
           "primary": false
+        },
+        {
+          "key": "envelope.id",
+          "path": "id",
+          "kind": "string",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "envelope.created",
+          "path": "created",
+          "kind": "number",
+          "probes": [],
+          "primary": false
+        },
+        {
+          "key": "event:session.execution.succeeded.data.sessionID",
+          "path": "data.sessionID",
+          "kind": "any",
+          "probes": [],
+          "primary": false
         }
       ]
     },
@@ -2040,16 +2069,16 @@
       "id": "live_streaming",
       "payload": [
         {
-          "id": "evt_0014",
-          "created": 1788960000014,
+          "id": "evt_0015",
+          "created": 1788960000015,
           "type": "session.execution.started",
           "data": {
             "sessionID": "ses_checkout"
           }
         },
         {
-          "id": "evt_0015",
-          "created": 1788960000015,
+          "id": "evt_0016",
+          "created": 1788960000016,
           "type": "session.inbox.enqueued",
           "data": {
             "sessionID": "ses_checkout",
@@ -2064,8 +2093,8 @@
           }
         },
         {
-          "id": "evt_0016",
-          "created": 1788960000016,
+          "id": "evt_0017",
+          "created": 1788960000017,
           "type": "session.inbox.delivered",
           "data": {
             "sessionID": "ses_checkout",
@@ -2073,8 +2102,8 @@
           }
         },
         {
-          "id": "evt_0017",
-          "created": 1788960000017,
+          "id": "evt_0018",
+          "created": 1788960000018,
           "type": "session.step.started",
           "data": {
             "sessionID": "ses_checkout",
@@ -2087,8 +2116,8 @@
           }
         },
         {
-          "id": "evt_0018",
-          "created": 1788960000018,
+          "id": "evt_0019",
+          "created": 1788960000019,
           "type": "session.reasoning.started",
           "data": {
             "sessionID": "ses_checkout",
@@ -2097,8 +2126,8 @@
           }
         },
         {
-          "id": "evt_0019",
-          "created": 1788960000019,
+          "id": "evt_0020",
+          "created": 1788960000020,
           "type": "session.reasoning.delta",
           "data": {
             "sessionID": "ses_checkout",
@@ -2108,8 +2137,8 @@
           }
         },
         {
-          "id": "evt_0020",
-          "created": 1788960000020,
+          "id": "evt_0021",
+          "created": 1788960000021,
           "type": "session.text.started",
           "data": {
             "sessionID": "ses_checkout",
@@ -2118,8 +2147,8 @@
           }
         },
         {
-          "id": "evt_0021",
-          "created": 1788960000021,
+          "id": "evt_0022",
+          "created": 1788960000022,
           "type": "session.text.delta",
           "data": {
             "sessionID": "ses_checkout",
@@ -2422,16 +2451,16 @@
       "id": "tool_run",
       "payload": [
         {
-          "id": "evt_0022",
-          "created": 1788960000022,
+          "id": "evt_0023",
+          "created": 1788960000023,
           "type": "session.execution.started",
           "data": {
             "sessionID": "ses_checkout"
           }
         },
         {
-          "id": "evt_0023",
-          "created": 1788960000023,
+          "id": "evt_0024",
+          "created": 1788960000024,
           "type": "session.inbox.enqueued",
           "data": {
             "sessionID": "ses_checkout",
@@ -2446,8 +2475,8 @@
           }
         },
         {
-          "id": "evt_0024",
-          "created": 1788960000024,
+          "id": "evt_0025",
+          "created": 1788960000025,
           "type": "session.inbox.delivered",
           "data": {
             "sessionID": "ses_checkout",
@@ -2455,8 +2484,8 @@
           }
         },
         {
-          "id": "evt_0025",
-          "created": 1788960000025,
+          "id": "evt_0026",
+          "created": 1788960000026,
           "type": "session.step.started",
           "data": {
             "sessionID": "ses_checkout",
@@ -2469,8 +2498,8 @@
           }
         },
         {
-          "id": "evt_0026",
-          "created": 1788960000026,
+          "id": "evt_0027",
+          "created": 1788960000027,
           "type": "session.tool.input.started",
           "data": {
             "sessionID": "ses_checkout",
@@ -2480,8 +2509,8 @@
           }
         },
         {
-          "id": "evt_0027",
-          "created": 1788960000027,
+          "id": "evt_0028",
+          "created": 1788960000028,
           "type": "session.tool.input.delta",
           "data": {
             "sessionID": "ses_checkout",
@@ -2491,8 +2520,8 @@
           }
         },
         {
-          "id": "evt_0028",
-          "created": 1788960000028,
+          "id": "evt_0029",
+          "created": 1788960000029,
           "type": "session.tool.input.ended",
           "data": {
             "sessionID": "ses_checkout",
@@ -2502,8 +2531,8 @@
           }
         },
         {
-          "id": "evt_0029",
-          "created": 1788960000029,
+          "id": "evt_0030",
+          "created": 1788960000030,
           "type": "session.tool.called",
           "data": {
             "sessionID": "ses_checkout",
@@ -2520,8 +2549,8 @@
           }
         },
         {
-          "id": "evt_0030",
-          "created": 1788960000030,
+          "id": "evt_0031",
+          "created": 1788960000031,
           "type": "session.tool.progress",
           "data": {
             "sessionID": "ses_checkout",
@@ -2533,8 +2562,8 @@
           }
         },
         {
-          "id": "evt_0031",
-          "created": 1788960000031,
+          "id": "evt_0032",
+          "created": 1788960000032,
           "type": "session.tool.success",
           "data": {
             "sessionID": "ses_checkout",
@@ -2556,8 +2585,8 @@
           }
         },
         {
-          "id": "evt_0032",
-          "created": 1788960000032,
+          "id": "evt_0033",
+          "created": 1788960000033,
           "type": "session.tool.called",
           "data": {
             "sessionID": "ses_checkout",
@@ -2570,8 +2599,8 @@
           }
         },
         {
-          "id": "evt_0033",
-          "created": 1788960000033,
+          "id": "evt_0034",
+          "created": 1788960000034,
           "type": "session.tool.failed",
           "data": {
             "sessionID": "ses_checkout",
@@ -3149,16 +3178,16 @@
       "id": "step_failed_and_retry",
       "payload": [
         {
-          "id": "evt_0034",
-          "created": 1788960000034,
+          "id": "evt_0035",
+          "created": 1788960000035,
           "type": "session.execution.started",
           "data": {
             "sessionID": "ses_checkout"
           }
         },
         {
-          "id": "evt_0035",
-          "created": 1788960000035,
+          "id": "evt_0036",
+          "created": 1788960000036,
           "type": "session.inbox.enqueued",
           "data": {
             "sessionID": "ses_checkout",
@@ -3173,8 +3202,8 @@
           }
         },
         {
-          "id": "evt_0036",
-          "created": 1788960000036,
+          "id": "evt_0037",
+          "created": 1788960000037,
           "type": "session.inbox.delivered",
           "data": {
             "sessionID": "ses_checkout",
@@ -3182,8 +3211,8 @@
           }
         },
         {
-          "id": "evt_0037",
-          "created": 1788960000037,
+          "id": "evt_0038",
+          "created": 1788960000038,
           "type": "session.step.started",
           "data": {
             "sessionID": "ses_checkout",
@@ -3196,8 +3225,8 @@
           }
         },
         {
-          "id": "evt_0038",
-          "created": 1788960000038,
+          "id": "evt_0039",
+          "created": 1788960000039,
           "type": "session.step.failed",
           "data": {
             "sessionID": "ses_checkout",
@@ -3229,8 +3258,8 @@
           }
         },
         {
-          "id": "evt_0039",
-          "created": 1788960000039,
+          "id": "evt_0040",
+          "created": 1788960000040,
           "type": "session.execution.failed",
           "data": {
             "sessionID": "ses_checkout",
@@ -3493,16 +3522,16 @@
       "id": "retry_only",
       "payload": [
         {
-          "id": "evt_0040",
-          "created": 1788960000040,
+          "id": "evt_0041",
+          "created": 1788960000041,
           "type": "session.execution.started",
           "data": {
             "sessionID": "ses_checkout"
           }
         },
         {
-          "id": "evt_0041",
-          "created": 1788960000041,
+          "id": "evt_0042",
+          "created": 1788960000042,
           "type": "session.inbox.enqueued",
           "data": {
             "sessionID": "ses_checkout",
@@ -3517,8 +3546,8 @@
           }
         },
         {
-          "id": "evt_0042",
-          "created": 1788960000042,
+          "id": "evt_0043",
+          "created": 1788960000043,
           "type": "session.inbox.delivered",
           "data": {
             "sessionID": "ses_checkout",
@@ -3526,8 +3555,8 @@
           }
         },
         {
-          "id": "evt_0043",
-          "created": 1788960000043,
+          "id": "evt_0044",
+          "created": 1788960000044,
           "type": "session.step.started",
           "data": {
             "sessionID": "ses_checkout",
@@ -3540,8 +3569,8 @@
           }
         },
         {
-          "id": "evt_0044",
-          "created": 1788960000044,
+          "id": "evt_0045",
+          "created": 1788960000045,
           "type": "session.retry.scheduled",
           "data": {
             "sessionID": "ses_checkout",
@@ -3746,16 +3775,16 @@
       "id": "tool_progress_only",
       "payload": [
         {
-          "id": "evt_0045",
-          "created": 1788960000045,
+          "id": "evt_0046",
+          "created": 1788960000046,
           "type": "session.execution.started",
           "data": {
             "sessionID": "ses_checkout"
           }
         },
         {
-          "id": "evt_0046",
-          "created": 1788960000046,
+          "id": "evt_0047",
+          "created": 1788960000047,
           "type": "session.inbox.enqueued",
           "data": {
             "sessionID": "ses_checkout",
@@ -3770,8 +3799,8 @@
           }
         },
         {
-          "id": "evt_0047",
-          "created": 1788960000047,
+          "id": "evt_0048",
+          "created": 1788960000048,
           "type": "session.inbox.delivered",
           "data": {
             "sessionID": "ses_checkout",
@@ -3779,8 +3808,8 @@
           }
         },
         {
-          "id": "evt_0048",
-          "created": 1788960000048,
+          "id": "evt_0049",
+          "created": 1788960000049,
           "type": "session.step.started",
           "data": {
             "sessionID": "ses_checkout",
@@ -3793,8 +3822,8 @@
           }
         },
         {
-          "id": "evt_0049",
-          "created": 1788960000049,
+          "id": "evt_0050",
+          "created": 1788960000050,
           "type": "session.tool.input.started",
           "data": {
             "sessionID": "ses_checkout",
@@ -3804,8 +3833,8 @@
           }
         },
         {
-          "id": "evt_0050",
-          "created": 1788960000050,
+          "id": "evt_0051",
+          "created": 1788960000051,
           "type": "session.tool.called",
           "data": {
             "sessionID": "ses_checkout",
@@ -3818,8 +3847,8 @@
           }
         },
         {
-          "id": "evt_0051",
-          "created": 1788960000051,
+          "id": "evt_0052",
+          "created": 1788960000052,
           "type": "session.tool.progress",
           "data": {
             "sessionID": "ses_checkout",
@@ -4101,16 +4130,16 @@
       "id": "interrupted_and_inbox",
       "payload": [
         {
-          "id": "evt_0052",
-          "created": 1788960000052,
+          "id": "evt_0053",
+          "created": 1788960000053,
           "type": "session.execution.started",
           "data": {
             "sessionID": "ses_checkout"
           }
         },
         {
-          "id": "evt_0053",
-          "created": 1788960000053,
+          "id": "evt_0054",
+          "created": 1788960000054,
           "type": "session.inbox.enqueued",
           "data": {
             "sessionID": "ses_checkout",
@@ -4125,8 +4154,8 @@
           }
         },
         {
-          "id": "evt_0054",
-          "created": 1788960000054,
+          "id": "evt_0055",
+          "created": 1788960000055,
           "type": "session.inbox.delivered",
           "data": {
             "sessionID": "ses_checkout",
@@ -4134,8 +4163,8 @@
           }
         },
         {
-          "id": "evt_0055",
-          "created": 1788960000055,
+          "id": "evt_0056",
+          "created": 1788960000056,
           "type": "session.inbox.enqueued",
           "data": {
             "sessionID": "ses_checkout",
@@ -4150,8 +4179,8 @@
           }
         },
         {
-          "id": "evt_0056",
-          "created": 1788960000056,
+          "id": "evt_0057",
+          "created": 1788960000057,
           "type": "session.inbox.delivery.changed",
           "data": {
             "sessionID": "ses_checkout",
@@ -4160,8 +4189,8 @@
           }
         },
         {
-          "id": "evt_0057",
-          "created": 1788960000057,
+          "id": "evt_0058",
+          "created": 1788960000058,
           "type": "session.inbox.cancelled",
           "data": {
             "sessionID": "ses_checkout",
@@ -4169,8 +4198,8 @@
           }
         },
         {
-          "id": "evt_0058",
-          "created": 1788960000058,
+          "id": "evt_0059",
+          "created": 1788960000059,
           "type": "session.execution.interrupted",
           "data": {
             "sessionID": "ses_checkout",
@@ -4397,8 +4426,8 @@
       "id": "compaction_run",
       "payload": [
         {
-          "id": "evt_0059",
-          "created": 1788960000059,
+          "id": "evt_0060",
+          "created": 1788960000060,
           "type": "session.compaction.started",
           "data": {
             "sessionID": "ses_checkout",
@@ -4408,8 +4437,8 @@
           }
         },
         {
-          "id": "evt_0060",
-          "created": 1788960000060,
+          "id": "evt_0061",
+          "created": 1788960000061,
           "type": "session.compaction.delta",
           "data": {
             "sessionID": "ses_checkout",
@@ -4417,8 +4446,8 @@
           }
         },
         {
-          "id": "evt_0061",
-          "created": 1788960000061,
+          "id": "evt_0062",
+          "created": 1788960000062,
           "type": "session.compaction.ended",
           "data": {
             "sessionID": "ses_checkout",
@@ -4428,8 +4457,8 @@
           }
         },
         {
-          "id": "evt_0062",
-          "created": 1788960000062,
+          "id": "evt_0063",
+          "created": 1788960000063,
           "type": "session.compacted",
           "data": {
             "sessionID": "ses_checkout"
@@ -4576,8 +4605,8 @@
       "id": "compaction_failed",
       "payload": [
         {
-          "id": "evt_0063",
-          "created": 1788960000063,
+          "id": "evt_0064",
+          "created": 1788960000064,
           "type": "session.compaction.failed",
           "data": {
             "sessionID": "ses_checkout",
@@ -4640,8 +4669,8 @@
       "id": "notices_and_revert",
       "payload": [
         {
-          "id": "evt_0064",
-          "created": 1788960000064,
+          "id": "evt_0065",
+          "created": 1788960000065,
           "type": "session.inbox.enqueued",
           "data": {
             "sessionID": "ses_checkout",
@@ -4656,8 +4685,8 @@
           }
         },
         {
-          "id": "evt_0065",
-          "created": 1788960000065,
+          "id": "evt_0066",
+          "created": 1788960000066,
           "type": "session.inbox.delivered",
           "data": {
             "sessionID": "ses_checkout",
@@ -4665,8 +4694,8 @@
           }
         },
         {
-          "id": "evt_0066",
-          "created": 1788960000066,
+          "id": "evt_0067",
+          "created": 1788960000067,
           "type": "session.synthetic",
           "data": {
             "sessionID": "ses_checkout",
@@ -4681,8 +4710,8 @@
           }
         },
         {
-          "id": "evt_0067",
-          "created": 1788960000067,
+          "id": "evt_0068",
+          "created": 1788960000068,
           "type": "session.revert.staged",
           "data": {
             "sessionID": "ses_checkout",
@@ -4693,16 +4722,16 @@
           }
         },
         {
-          "id": "evt_0068",
-          "created": 1788960000068,
+          "id": "evt_0069",
+          "created": 1788960000069,
           "type": "session.revert.cleared",
           "data": {
             "sessionID": "ses_checkout"
           }
         },
         {
-          "id": "evt_0069",
-          "created": 1788960000069,
+          "id": "evt_0070",
+          "created": 1788960000070,
           "type": "session.revert.committed",
           "data": {
             "sessionID": "ses_checkout",
@@ -4710,8 +4739,8 @@
           }
         },
         {
-          "id": "evt_0070",
-          "created": 1788960000070,
+          "id": "evt_0071",
+          "created": 1788960000071,
           "type": "session.message.content.updated",
           "data": {
             "sessionID": "ses_checkout",
@@ -4725,8 +4754,8 @@
           }
         },
         {
-          "id": "evt_0071",
-          "created": 1788960000071,
+          "id": "evt_0072",
+          "created": 1788960000072,
           "type": "session.renamed",
           "data": {
             "sessionID": "ses_checkout",
@@ -4990,8 +5019,8 @@
       "id": "status_busy_idle",
       "payload": [
         {
-          "id": "evt_0072",
-          "created": 1788960000072,
+          "id": "evt_0073",
+          "created": 1788960000073,
           "type": "session.inbox.enqueued",
           "data": {
             "sessionID": "ses_checkout",
@@ -5006,8 +5035,8 @@
           }
         },
         {
-          "id": "evt_0073",
-          "created": 1788960000073,
+          "id": "evt_0074",
+          "created": 1788960000074,
           "type": "session.inbox.delivered",
           "data": {
             "sessionID": "ses_checkout",
@@ -5015,8 +5044,8 @@
           }
         },
         {
-          "id": "evt_0074",
-          "created": 1788960000074,
+          "id": "evt_0075",
+          "created": 1788960000075,
           "type": "session.status",
           "data": {
             "sessionID": "ses_checkout",
@@ -5026,16 +5055,16 @@
           }
         },
         {
-          "id": "evt_0075",
-          "created": 1788960000075,
+          "id": "evt_0076",
+          "created": 1788960000076,
           "type": "session.execution.succeeded",
           "data": {
             "sessionID": "ses_checkout"
           }
         },
         {
-          "id": "evt_0076",
-          "created": 1788960000076,
+          "id": "evt_0077",
+          "created": 1788960000077,
           "type": "session.idle",
           "data": {
             "sessionID": "ses_checkout"
@@ -5184,8 +5213,8 @@
       "id": "status_retry_with_action",
       "payload": [
         {
-          "id": "evt_0077",
-          "created": 1788960000077,
+          "id": "evt_0078",
+          "created": 1788960000078,
           "type": "session.inbox.enqueued",
           "data": {
             "sessionID": "ses_checkout",
@@ -5200,8 +5229,8 @@
           }
         },
         {
-          "id": "evt_0078",
-          "created": 1788960000078,
+          "id": "evt_0079",
+          "created": 1788960000079,
           "type": "session.inbox.delivered",
           "data": {
             "sessionID": "ses_checkout",
@@ -5209,8 +5238,8 @@
           }
         },
         {
-          "id": "evt_0079",
-          "created": 1788960000079,
+          "id": "evt_0080",
+          "created": 1788960000080,
           "type": "session.status",
           "data": {
             "sessionID": "ses_checkout",
@@ -5335,8 +5364,8 @@
       "id": "permission_asked",
       "payload": [
         {
-          "id": "evt_0080",
-          "created": 1788960000080,
+          "id": "evt_0081",
+          "created": 1788960000081,
           "type": "permission.asked",
           "data": {
             "id": "per_ev1",
@@ -5445,8 +5474,8 @@
       "id": "permission_replied",
       "payload": [
         {
-          "id": "evt_0081",
-          "created": 1788960000081,
+          "id": "evt_0082",
+          "created": 1788960000082,
           "type": "permission.asked",
           "data": {
             "id": "per_ev2",
@@ -5468,8 +5497,8 @@
           }
         },
         {
-          "id": "evt_0082",
-          "created": 1788960000082,
+          "id": "evt_0083",
+          "created": 1788960000083,
           "type": "permission.replied",
           "data": {
             "sessionID": "ses_checkout",
@@ -5593,8 +5622,8 @@
       "id": "form_created",
       "payload": [
         {
-          "id": "evt_0083",
-          "created": 1788960000083,
+          "id": "evt_0084",
+          "created": 1788960000084,
           "type": "form.created",
           "data": {
             "form": {
@@ -5649,8 +5678,8 @@
       "id": "form_replied_cancelled",
       "payload": [
         {
-          "id": "evt_0084",
-          "created": 1788960000084,
+          "id": "evt_0085",
+          "created": 1788960000085,
           "type": "form.created",
           "data": {
             "form": {
@@ -5668,8 +5697,8 @@
           }
         },
         {
-          "id": "evt_0085",
-          "created": 1788960000085,
+          "id": "evt_0086",
+          "created": 1788960000086,
           "type": "form.replied",
           "data": {
             "id": "frm_ev2",
@@ -5680,8 +5709,8 @@
           }
         },
         {
-          "id": "evt_0086",
-          "created": 1788960000086,
+          "id": "evt_0087",
+          "created": 1788960000087,
           "type": "form.created",
           "data": {
             "form": {
@@ -5699,8 +5728,8 @@
           }
         },
         {
-          "id": "evt_0087",
-          "created": 1788960000087,
+          "id": "evt_0088",
+          "created": 1788960000088,
           "type": "form.cancelled",
           "data": {
             "id": "frm_ev3",

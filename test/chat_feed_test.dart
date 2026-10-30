@@ -182,8 +182,15 @@ GlobalSessionResult _global(
   int updated = 0,
   String? parent,
   String? name,
+  String? title,
 }) => GlobalSessionResult(
-  session: _session(id, directory, updated: updated, parent: parent),
+  session: _session(
+    id,
+    directory,
+    updated: updated,
+    parent: parent,
+    title: title,
+  ),
   projectDirectory: directory,
   projectName: name,
 );
@@ -612,4 +619,83 @@ void main() {
       controller.dispose();
     },
   );
+
+  group('feed revision', () {
+    testWidgets('notifies that change nothing do not derive the rows again', (
+      tester,
+    ) async {
+      final script = _Script()
+        ..global = [
+          _global('a', '/work/app', updated: 1),
+          _global('b', '/work/app', updated: 2),
+        ];
+      final controller = await _connect(tester, await _store(), script);
+      await controller.refreshChatFeed();
+      controller.chatFeed();
+      final derivedBefore = controller.chatFeedDerivations;
+      final revision = controller.chatFeedRevision;
+      for (var i = 0; i < 20; i++) {
+        controller.markStoppedByPerson('unrelated-$i');
+        controller.chatFeed();
+        controller.chatFeed(const ChatFeedFilter(running: true));
+        controller.projectSummaries;
+      }
+      expect(controller.chatFeedRevision, revision);
+      expect(controller.chatFeedDerivations, derivedBefore);
+      controller.dispose();
+    });
+
+    testWidgets('a new session, a title, a time and a status show at once', (
+      tester,
+    ) async {
+      final script = _Script()
+        ..global = [
+          _global('a', '/work/app', updated: 1),
+          _global('b', '/work/app', updated: 2),
+        ];
+      final controller = await _connect(tester, await _store(), script);
+      await controller.refreshChatFeed();
+      expect(controller.chatFeed().items.map((i) => i.sessionID), ['b', 'a']);
+      final before = controller.chatFeedRevision;
+
+      script.global = [...script.global, _global('c', '/work/app', updated: 3)];
+      await controller.refreshChatFeed();
+      expect(controller.chatFeed().items.map((i) => i.sessionID), [
+        'c',
+        'b',
+        'a',
+      ]);
+      expect(controller.chatFeedRevision, greaterThan(before));
+
+      script.global = [
+        _global('a', '/work/app', updated: 1, title: 'Renamed'),
+        _global('b', '/work/app', updated: 2),
+        _global('c', '/work/app', updated: 3),
+      ];
+      await controller.refreshChatFeed();
+      expect(
+        controller.chatFeed().items.firstWhere((i) => i.sessionID == 'a').title,
+        'Renamed',
+      );
+
+      script.global = [
+        _global('a', '/work/app', updated: 9, title: 'Renamed'),
+        _global('b', '/work/app', updated: 2),
+        _global('c', '/work/app', updated: 3),
+      ];
+      await controller.refreshChatFeed();
+      expect(controller.chatFeed().items.first.sessionID, 'a');
+
+      controller.elsewhereAttention.handle(
+        _event('session.status', '/work/app', {
+          'sessionID': 'c',
+          'status': {'type': 'busy'},
+        }),
+      );
+      final feed = controller.chatFeed();
+      expect(feed.items.first.sessionID, 'c');
+      expect(feed.items.first.status, ChatStatus.running);
+      controller.dispose();
+    });
+  });
 }

@@ -302,8 +302,9 @@ void _listQuestionTests() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(
-            child: Builder(
-              builder: (context) =>
+            child: ListenableBuilder(
+              listenable: c,
+              builder: (context, _) =>
                   ConnectionChatsHost(c).listRequest(context, x.row) ??
                   const SizedBox(),
             ),

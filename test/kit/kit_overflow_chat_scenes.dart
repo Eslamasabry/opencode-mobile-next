@@ -515,6 +515,24 @@ final kitOverflowChatScenes = <KitOverflowScene>[
         ],
       ),
     ),
+  for (final count in [1, 2])
+    KitOverflowScene(
+      const ['KitBackgroundWorkLine'],
+      count == 1 ? 'one task' : 'several tasks',
+      build: (_, c) => KitBackgroundWorkLine(
+        tasks: [
+          for (var i = 0; i < count; i++)
+            KitBackgroundTask(
+              name: c.t(
+                'Build the release APK for the owner phone and sign it',
+                'بناء حزمة الإصدار لهاتف المالك وتوقيعها',
+              ),
+              since: DateTime(2026, 10, 27, 7),
+            ),
+        ],
+        onOpenTask: (_) {},
+      ),
+    ),
 ];
 
 KitTurn _turn(
@@ -629,7 +647,6 @@ class _ComposerSceneState extends State<_ComposerScene> {
       focusNode: _focus,
       hint: c.t('Ask OpenCode…', 'اسأل OpenCode…'),
       onSend: _noop,
-      onStop: _noop,
       onTools: _noop,
       onVoice: _noop,
       onOpenEditor: _noop,

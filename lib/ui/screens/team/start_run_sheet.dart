@@ -685,9 +685,16 @@ class _StartRunSheetState extends State<StartRunSheet> {
             icon: AppIconography.error,
             title: refused.isEmpty
                 ? l10n.teamUiGateAnswerRejectedNoMessage
-                : l10n.teamUiStartRunRefused(refused),
+                : l10n.teamUiStartRunRefused,
             message: l10n.teamStartRunRefusedKept,
           ),
+          if (refused.isNotEmpty)
+            KitDetailsFold(
+              label: l10n.teamUiTechnicalDetails,
+              foldKey: const ValueKey('team-start-run-refused-details'),
+              notes: [l10n.teamDispatchHostWords],
+              text: refused,
+            ),
         ],
         ..._backlogRefusal(l10n, tokens),
         SizedBox(height: tokens.space5),

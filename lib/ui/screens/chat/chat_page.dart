@@ -38,19 +38,6 @@ extension _ChatPage on _ChatScreenState {
         busy && !_conn.supportsInbox && _midTurnPrompt == null
         ? _queuedAfterIndex(_messages)
         : -1;
-    // A closing event that never came (a compaction line, a tool call still
-    // spinning under later words) is settled before anything draws it.
-    final messages = settleStaleLive(_messages, busy: busy);
-    final displayParts = _timelineDisplayParts(messages, liveTail: busy);
-    _live = _liveTurn(busy: busy, queuedAfterIndex: queuedAfterIndex);
-    _unanswered = _conn.isIsolated || _watching
-        ? null
-        : _unansweredTurn(
-            messages,
-            refused: _promptError != null,
-            running: busy || _sending || _live != null,
-            stoppedPromptID: _stoppedPromptID,
-          );
     // A prompt waiting in the server's inbox (steering, or queued behind the
     // run) is shown once, as its waiting bubble above the composer, where
     // it can still be flipped or cancelled. Its optimistic copy in the
@@ -68,37 +55,61 @@ extension _ChatPage on _ChatScreenState {
     };
     // Where the agent's latest words end. A waiting prompt is always after
     // them; an older prompt with the same words is history and stays.
-    final lastAssistant = messages.lastIndexWhere(
+    final lastAssistant = _messages.lastIndexWhere(
       (message) => message.info.role == 'assistant',
     );
     final waitingLocalIDs = <String>{
       if (waiting.isNotEmpty)
-        for (var i = 0; i < messages.length; i++)
-          if (messages[i].info.role == 'user' &&
-              v2VariantPart(messages[i]) == null &&
+        for (var i = 0; i < _messages.length; i++)
+          if (_messages[i].info.role == 'user' &&
+              v2VariantPart(_messages[i]) == null &&
               // The server admits a prompt under the id it will keep, and
               // the optimistic copy is swapped for that message at once, so
               // the copy in the transcript usually carries the item's id.
-              (waitingIDs.contains(messages[i].info.id) ||
+              (waitingIDs.contains(_messages[i].info.id) ||
                   (i > lastAssistant &&
                       waitingTexts.contains(
-                        _ChatScreenState._messageText(messages[i]).trim(),
+                        _ChatScreenState._messageText(_messages[i]).trim(),
                       ))))
-            messages[i].info.id,
+            _messages[i].info.id,
     };
-    final turnActionOwners = _turnActionOwners(
-      messages,
-      displayParts,
-      ignore: waitingLocalIDs,
+    _waitingPromptIDs = waitingLocalIDs;
+    // A closing event that never came (a compaction line, a tool call still
+    // spinning under later words) is settled before anything draws it. The
+    // display passes run again only for what changed since the last build.
+    final derived = _deriveTranscript(
+      busy: busy,
       metaAlways: _conn.transcriptTimestampsVisible,
-      running: _conn.busySessions.contains(widget.sessionID),
+      ignore: waitingLocalIDs,
     );
+    final messages = derived.messages;
+    final displayParts = derived.displayParts;
+    final turnActionOwners = derived.owners;
+    _live = _withStopAfterStep(
+      _liveTurn(busy: busy, queuedAfterIndex: queuedAfterIndex),
+    );
+    // A turn the server interrupted ends on its stopped line like one
+    // stopped here, saying who or what stopped it.
+    final stoppedPromptID =
+        _stoppedPromptID ??
+        (_serverStoppedTurn
+            ? messages.where(_isPrompt).lastOrNull?.info.id
+            : null);
+    _unanswered = _conn.isIsolated || _watching
+        ? null
+        : _unansweredTurn(
+            messages,
+            refused: _promptError != null,
+            running: busy || _sending || _live != null,
+            stoppedPromptID: stoppedPromptID,
+          );
+    _noteTurnFailure();
     _stoppedRow = _conn.isIsolated || _watching
         ? null
         : _stoppedTurnRow(
             messages,
             turnActionOwners,
-            stoppedPromptID: _stoppedPromptID,
+            stoppedPromptID: stoppedPromptID,
             running: busy || _sending || _live != null,
           );
     final showAttachmentNote = _attachmentNoteVisible();
@@ -182,11 +193,23 @@ extension _ChatPage on _ChatScreenState {
       );
     }
 
-    final screen = PopScope(
-      canPop: _conn.isIsolated || _allowRoutePop || _watching,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) unawaited(_leaveChat());
-      },
+    // Predictive back: the page follows the finger and shows the one beneath
+    // whenever Back loses nothing; the draft is written and an untouched new
+    // conversation deleted after the page has gone. Back waits only for
+    // words not saved yet, so a refused save can still ask
+    // ([_askLeaveUnsavedDraft]).
+    final screen = ValueListenableBuilder<bool>(
+      valueListenable: _draftSettled,
+      builder: (context, settled, page) => PopScope(
+        canPop:
+            _conn.isIsolated ||
+            _allowRoutePop ||
+            _watching ||
+            _backLeavesAtOnce(context, settled: settled),
+        onPopInvokedWithResult: (didPop, _) =>
+            didPop ? _leftByBack() : unawaited(_leaveChat()),
+        child: page!,
+      ),
       // The page frame (kit-v2.md §8.2): full width on a phone, the
       // conversation centred at its cap from a tablet up, and the detail
       // pane of Work's two panes on a PC (no Back there).
@@ -216,7 +239,6 @@ extension _ChatPage on _ChatScreenState {
           siblingIndex: siblingIndex,
         ),
         header: [
-          ..._handoffLinkHeader(),
           // The demo has no bar of its own here; its one extra action sits
           // under the host's bar. While the keyboard is up the room goes to
           // the conversation and what waits on the person; the action is

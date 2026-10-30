@@ -94,7 +94,7 @@ class _DefaultShellRowState extends State<DefaultShellRow>
       // uses it: the sheet says whose it is before anything is chosen.
       subtitle: widget.controller.profile == null
           ? copy.e7SettingsUi36
-          : '${copy.e7SettingsUi36} ${copy.settingsV3SavedOn(serverDisplayName(widget.controller.profile, lookupAppLocalizations(Localizations.localeOf(context)), among: widget.controller.store.profiles))}',
+          : '${copy.e7SettingsUi36} ${savedOnNote(copy, serverDisplayName(widget.controller.profile, lookupAppLocalizations(Localizations.localeOf(context)), among: widget.controller.store.profiles))}',
       selected: settings.selected,
       choices: [
         for (final choice in choices)

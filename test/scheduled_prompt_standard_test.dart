@@ -10,7 +10,7 @@ import 'package:opencode_mobile/scheduling/models.dart';
 import 'package:opencode_mobile/scheduling/platform.dart';
 import 'package:opencode_mobile/scheduling/store.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/screens/scheduling/schedule_editor_screen.dart';
+import 'package:opencode_mobile/ui/screens/scheduling/schedule_sheet.dart';
 import 'package:opencode_mobile/ui/screens/scheduling/scheduled_prompts_screen.dart';
 
 import '../widgetbook/test/standard_measure.dart';
@@ -58,6 +58,9 @@ Future<void> _loadFonts() async {
       'Noto Sans Arabic',
       '/usr/share/fonts/truetype/noto/NotoSansArabicUI-Regular.ttf',
     ),
+    // The Arabic theme's face: Latin words in it (a prompt, a project) are
+    // measured in a real font, as on a phone, not in the test's blocks.
+    ('sans-serif', 'tool/capture/fonts/Roboto-Regular.ttf'),
   ]) {
     final file = File(path);
     if (!file.existsSync()) continue;
@@ -68,6 +71,39 @@ Future<void> _loadFonts() async {
 }
 
 enum _Scene { empty, populated, history, weekdayEditor, onceEditor }
+
+/// The list with its creation sheet opened over it, as a tap opens it.
+class _SheetHost extends StatefulWidget {
+  const _SheetHost({required this.controller, required this.target});
+  final ScheduledPromptsController controller;
+  final ScheduledPrompt target;
+  @override
+  State<_SheetHost> createState() => _SheetHostState();
+}
+
+class _SheetHostState extends State<_SheetHost> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showScheduleSheet(
+        context,
+        controller: widget.controller,
+        seed: widget.target,
+        existing: widget.target.recurrence.kind == ScheduleRecurrenceKind.once
+            ? widget.target
+            : null,
+        where: 'launch · Laptop',
+      );
+    });
+  }
+
+  // The sheet alone: the list's own main action under the scrim is not
+  // part of the sheet's first view.
+  @override
+  Widget build(BuildContext context) => const SizedBox.expand();
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -147,15 +183,11 @@ void main() {
             tester,
             name: name,
             home: (_) => editor
-                ? ScheduleEditorScreen(
-                    controller: controller,
-                    target: target,
-                    agents: const ['build', 'plan'],
-                  )
+                ? _SheetHost(controller: controller, target: target)
                 : ScheduledPromptsScreen(
                     controller: controller,
                     target: target,
-                    agents: const ['build', 'plan'],
+                    serverName: 'Laptop',
                     onOpenRun: (_) async {},
                   ),
             theme: AppTheme.forLocale(baseTheme, locale),

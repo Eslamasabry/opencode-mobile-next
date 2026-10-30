@@ -144,23 +144,44 @@ void main() {
   const wide = Size(1280, 800);
 
   for (final light in [false, true]) {
-    testWidgets('dock default (${light ? 'light' : 'dark'})', (tester) async {
+    // A phone draws no navigation (owner, 2026-10-20): KitNav is the content
+    // alone, edge to edge, with no bar and no clearance under it.
+    testWidgets('phone: no bar (${light ? 'light' : 'dark'})', (tester) async {
       await kitGalleryShot(
         tester,
-        name: kitGalleryName('kit_nav_dock_default', phone, light: light),
+        name: kitGalleryName('kit_nav_phone_no_bar', phone, light: light),
         size: phone,
         light: light,
         open: (context) => _open(context, _scene(child: _nav())),
       );
     });
 
-    testWidgets('dock needs you (${light ? 'light' : 'dark'})', (tester) async {
+    // The rail on its own, at a phone's height (it shows from medium; this
+    // keeps its look pinned at the census size).
+    testWidgets('rail part (${light ? 'light' : 'dark'})', (tester) async {
       await kitGalleryShot(
         tester,
-        name: kitGalleryName('kit_nav_dock_needs_you', phone, light: light),
+        name: kitGalleryName('kit_nav_rail_part', phone, light: light),
         size: phone,
         light: light,
-        open: (context) => _open(context, _scene(child: _nav(inbox: 1))),
+        open: (context) => _open(
+          context,
+          _scene(
+            child: Builder(
+              builder: (context) => Align(
+                alignment: AlignmentDirectional.topStart,
+                child: Padding(
+                  padding: EdgeInsets.all(KitTokens.of(context).space2),
+                  child: KitNavRail(
+                    destinations: _destinations(inbox: 1),
+                    selected: 0,
+                    onSelected: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       );
     });
 
@@ -174,24 +195,6 @@ void main() {
         light: light,
         open: (context) =>
             _open(context, _scene(child: _nav(inbox: 3, wide: true))),
-      );
-    });
-
-    testWidgets('dock default text 2.0 (${light ? 'light' : 'dark'})', (
-      tester,
-    ) async {
-      await kitGalleryShot(
-        tester,
-        name: kitGalleryName(
-          'kit_nav_dock_default',
-          phone,
-          light: light,
-          text2: true,
-        ),
-        size: phone,
-        light: light,
-        textScale: 2,
-        open: (context) => _open(context, _scene(child: _nav())),
       );
     });
 

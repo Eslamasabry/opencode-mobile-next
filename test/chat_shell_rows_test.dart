@@ -25,7 +25,7 @@ ToolState _shell() => ToolState.fromJson({
   'metadata': {'exit': 0},
 }, toolName: 'bash');
 
-Future<void> _pumpCard(WidgetTester tester) async {
+Future<void> _pumpCard(WidgetTester tester, {bool open = true}) async {
   tester.view.physicalSize = const Size(412, 915);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -44,6 +44,7 @@ Future<void> _pumpCard(WidgetTester tester) async {
       ),
     ),
   );
+  if (!open) return;
   await tester.tap(find.text('Shell'));
   await tester.pumpAndSettle();
 }
@@ -58,10 +59,9 @@ class _Api extends CaptureApi {
 }
 
 void main() {
-  testWidgets('the step title is the command, cut once at the end', (
-    tester,
-  ) async {
-    await _pumpCard(tester);
+  testWidgets('the step title is the command, cut once at the end; opened, '
+      'the box says it and the line does not repeat it', (tester) async {
+    await _pumpCard(tester, open: false);
     // The line's own text: the whole command (the cut is the renderer's),
     // and the last path never appears as a second, separate piece.
     final line = find.byWidgetPredicate(
@@ -72,6 +72,15 @@ void main() {
     );
     expect(line, findsOneWidget);
     expect(find.text('/root/projects'), findsNothing);
+    // Opened, the command box holds the command; the line above it is the
+    // step's name alone (owner, 2026-10-27: said once, not twice).
+    await tester.tap(find.text('Shell'));
+    await tester.pumpAndSettle();
+    expect(line, findsNothing);
+    expect(
+      find.textContaining('space-and-time', findRichText: true),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Run this command again has no decoration and no bar over it', (

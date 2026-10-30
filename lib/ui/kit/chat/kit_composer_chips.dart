@@ -4,7 +4,6 @@
 // switch), the attachments and references a message carries, and the
 // inline suggestions that appear when the person types `/` or `@`. The same
 // attachment chips, read-only, show what a sent prompt carried.
-//
 // Three named forms of one part (NAME-1): [KitComposerChips.model],
 // [KitComposerChips.attachments] and [KitComposerChips.suggestions]. The
 // line of standing facts above the composer is [KitComposerStatusStrip].
@@ -30,12 +29,16 @@ import '../kit_copy.dart';
 import '../kit_divider.dart';
 import '../kit_icon.dart';
 import '../kit_image.dart';
+import '../kit_ink_layer.dart';
 import '../kit_layout.dart';
+import '../kit_max_width.dart';
 import '../kit_menu.dart';
 import '../kit_motion.dart';
-import '../kit_text.dart';
+import '../kit_surface_look.dart';
 import '../kit_tappable.dart' show KitPressTracker;
+import '../kit_text.dart';
 import '../kit_tokens.dart';
+import '../style/kit_style.dart';
 
 export 'kit_composer_status_strip.dart';
 
@@ -220,7 +223,8 @@ class KitComposerChips extends StatelessWidget {
       (suggestions != null && note != null);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext c) => KitMaxWidth.conversation(child: _body(c));
+  Widget _body(BuildContext context) {
     final label = this.label;
     if (label != null) {
       return _ModelChip(
@@ -259,16 +263,20 @@ class KitComposerChips extends StatelessWidget {
 /// The chip's surface (KitChip's pill): a [KitShape.pill] stadium in
 /// `surface3` (`surface2` while hovered or pressed), at least
 /// [KitTokens.chipHeight] tall, with an `accent` focus ring outside it
-/// (LOOK-21).
+/// (LOOK-21). A small control from the style resolver, as KitChip: Solid
+/// keeps this pill; another style gives it its own face, edge and depth,
+/// [pressed] in while held.
 class _Pill extends StatelessWidget {
   const _Pill({
     required this.active,
+    required this.pressed,
     required this.focused,
     required this.padding,
     required this.child,
   });
 
   final bool active;
+  final bool pressed;
   final bool focused;
   final EdgeInsetsDirectional padding;
   final Widget child;
@@ -277,13 +285,20 @@ class _Pill extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
-    Widget pill = DecoratedBox(
-      decoration: ShapeDecoration(
-        color: active ? roles.surface2 : roles.surface3,
-        shape: tokens.shapeOf(KitShape.pill),
+    Widget pill = kitSurfaceBox(
+      style: KitSurfaceLook.styleOf(context),
+      decoration: KitSurfaceLook.decorate(
+        context,
+        solid: ShapeDecoration(
+          color: active ? roles.surface2 : roles.surface3,
+          shape: tokens.shapeOf(KitShape.pill),
+        ),
+        role: KitSurfaceRole.control,
+        level: active ? KitSurfaceLevel.surface2 : KitSurfaceLevel.surface3,
+        pressed: pressed,
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: KitTokens.chipHeight),
+        constraints: BoxConstraints(minHeight: tokens.pillHeight),
         child: Padding(padding: padding, child: child),
       ),
     );
@@ -291,7 +306,7 @@ class _Pill extends StatelessWidget {
       pill = DecoratedBox(
         position: DecorationPosition.foreground,
         decoration: ShapeDecoration(
-          shape: StadiumBorder(
+          shape: tokens.pillBorder(
             side: BorderSide(
               color: roles.accent,
               width: KitTokens.focusRingWidth(context),
@@ -442,9 +457,11 @@ class _ModelChipState extends State<_ModelChip> {
     final spoken = words;
     final tip = words;
 
+    // The chips row's one look: the same words as the chips beside it
+    // (KitChip's emphasised label).
     final labelStyle = KitText.styleOf(
       context,
-      KitTextRole.label,
+      KitTextRole.secondary,
       tone: KitTextTone.primary,
     );
     final glyphSize = tokens.iconSize(context, tokens.smallIconSize);
@@ -470,7 +487,7 @@ class _ModelChipState extends State<_ModelChip> {
         final glyph = Icon(
           AppIconography.model,
           size: glyphSize,
-          color: roles.text1,
+          color: roles.text2,
         );
         final chevron = Icon(
           AppIconography.chevronDown,
@@ -514,6 +531,7 @@ class _ModelChipState extends State<_ModelChip> {
         }
 
         final hasMenu = _hasMenu;
+        final pressedFill = _press.shown && !KitInk.on(context);
         Widget chip = ConstrainedBox(
           constraints: BoxConstraints(
             minWidth: tokens.minTarget,
@@ -523,11 +541,16 @@ class _ModelChipState extends State<_ModelChip> {
             alignment: AlignmentDirectional.center,
             children: [
               ExcludeSemantics(
-                child: _Pill(
-                  active: _hovered || _press.shown,
-                  focused: _focused,
-                  padding: padding,
-                  child: content,
+                child: KitInkLayer(
+                  key: _press.inkKey,
+                  shape: tokens.shapeOf(KitShape.pill),
+                  child: _Pill(
+                    active: _hovered || pressedFill,
+                    pressed: pressedFill,
+                    focused: _focused,
+                    padding: padding,
+                    child: content,
+                  ),
                 ),
               ),
               PositionedDirectional(
@@ -546,7 +569,9 @@ class _ModelChipState extends State<_ModelChip> {
                     context: context,
                     press: _press,
                     onTap: widget.onPressed,
-                    onLongPress: hasMenu ? _openMenu : null,
+                    onLongPress: hasMenu
+                        ? () => _press.longPressed(context, _openMenu)
+                        : null,
                     onSecondaryTapUp: hasMenu
                         ? (details) =>
                               _openMenu(position: details.globalPosition)
@@ -739,7 +764,7 @@ class _AttachmentStripState extends State<_AttachmentStrip>
                   opacity: CurvedAnimation(
                     parent: controller,
                     curve: KitMotion.enter,
-                    reverseCurve: KitMotion.exit.flipped,
+                    reverseCurve: KitMotion.exit,
                   ),
                   child: chip,
                 ),
@@ -768,11 +793,12 @@ class _AttachmentChip extends StatefulWidget {
 class _AttachmentChipState extends State<_AttachmentChip> {
   final _hovered = <_Zone>{};
   final _focused = <_Zone>{};
+  final _ink = GlobalKey<KitInkLayerState>(debugLabel: 'attachment ink');
   late final _press = {
     for (final zone in _Zone.values)
       zone: KitPressTracker(() {
         if (mounted) setState(() {});
-      }),
+      }, ink: _ink),
   };
 
   @override
@@ -879,6 +905,9 @@ class _AttachmentChipState extends State<_AttachmentChip> {
             ),
     );
     final removeLabel = l10n.kitChipRemove(a.label);
+    // On Android a press draws the ripple on the pill instead (KitInk).
+    final pressedFill =
+        _press.values.any((press) => press.shown) && !KitInk.on(context);
 
     Widget chip = ConstrainedBox(
       constraints: BoxConstraints(
@@ -892,13 +921,16 @@ class _AttachmentChipState extends State<_AttachmentChip> {
         alignment: AlignmentDirectional.centerStart,
         children: [
           ExcludeSemantics(
-            child: _Pill(
-              active:
-                  _hovered.isNotEmpty ||
-                  _press.values.any((press) => press.shown),
-              focused: _focused.isNotEmpty,
-              padding: padding,
-              child: content,
+            child: KitInkLayer(
+              key: _ink,
+              shape: tokens.shapeOf(KitShape.pill),
+              child: _Pill(
+                active: _hovered.isNotEmpty || pressedFill,
+                pressed: pressedFill,
+                focused: _focused.isNotEmpty,
+                padding: padding,
+                child: content,
+              ),
             ),
           ),
           PositionedDirectional(
@@ -1013,11 +1045,7 @@ class _SuggestionNote extends StatelessWidget {
     return Semantics(
       container: true,
       liveRegion: true,
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: tokens.roles.surface2,
-          shape: tokens.shapeOf(KitShape.panel),
-        ),
+      child: _PanelSurface(
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: tokens.minTarget),
           child: Padding(
@@ -1033,6 +1061,52 @@ class _SuggestionNote extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The suggestions' panel (and the note in its place): a `surface2` panel
+/// from the style resolver, a content surface on the composer's face. Solid
+/// keeps this panel; every style that nests surfaces sets it on the
+/// composer's face with nothing of its own ([onFace], the nesting rule),
+/// so the composer stays one box. What it holds is clipped to its corners.
+class _PanelSurface extends StatelessWidget {
+  const _PanelSurface({required this.child});
+
+  final Widget child;
+
+  /// Whether the panel sits on the composer's face, unboxed: the nesting
+  /// rule, which the resolver keeps only for content in content (the
+  /// composer is a floating surface), said here for the one panel that
+  /// lives inside it.
+  static bool onFace(BuildContext context) =>
+      !kitStyleSpec(KitSurfaceLook.styleOf(context)).tokens.keepsNestedSurfaces;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    final look = KitSurfaceLook.decorate(
+      context,
+      solid: ShapeDecoration(
+        color: tokens.roles.surface2,
+        shape: tokens.shapeOf(KitShape.panel),
+      ),
+      level: KitSurfaceLevel.surface2,
+    );
+    return kitSurfaceBox(
+      style: KitSurfaceLook.styleOf(context),
+      decoration: onFace(context) && look is KitSurfaceDecoration
+          ? look.nested
+          : look,
+      child: ClipPath(
+        clipper: ShapeBorderClipper(
+          shape: RoundedRectangleBorder(
+            borderRadius:
+                KitSurfaceDecoration.radiusOf(look) ?? BorderRadius.zero,
+          ),
+        ),
+        child: child,
       ),
     );
   }
@@ -1058,54 +1132,56 @@ class _SuggestionPanel extends StatelessWidget {
     // The host passes [onShowAll] only when it holds more than it gave
     // (a phone shows fewer rows than [KitComposerChips.visibleCount]).
     final showAll = onShowAll != null;
-    final shape = tokens.shapeOf(KitShape.panel);
+    // On the composer's face the rows are one group: lines inset to the
+    // words, which a style may part by space alone (Brutal). On Solid's
+    // own panel they run edge to edge, as before.
+    final divider = KitDivider(
+      inset: _PanelSurface.onFace(context)
+          ? KitDividerInset.gutter
+          : KitDividerInset.none,
+    );
     return Semantics(
       container: true,
       label: l10n.kitSuggestionsLabel,
       explicitChildNodes: true,
-      child: DecoratedBox(
-        decoration: ShapeDecoration(color: tokens.roles.surface2, shape: shape),
-        child: ClipPath(
-          clipper: ShapeBorderClipper(shape: shape),
-          child: FocusTraversalGroup(
-            child: Shortcuts(
-              // Arrow keys move between rows as Tab does; Enter selects
-              // (the app's default ActivateIntent).
-              shortcuts: const {
-                SingleActivator(LogicalKeyboardKey.arrowDown):
-                    NextFocusIntent(),
-                SingleActivator(LogicalKeyboardKey.arrowUp):
-                    PreviousFocusIntent(),
-              },
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (var i = 0; i < visible.length; i++) ...[
-                    if (i > 0) const KitDivider(),
-                    _SuggestionRow(
-                      key: visible[i].key,
-                      suggestion: visible[i],
-                      onSelected: onSelected,
-                    ),
-                  ],
-                  if (showAll) ...[
-                    const KitDivider(),
-                    Padding(
-                      padding: EdgeInsetsDirectional.symmetric(
-                        horizontal: tokens.space2,
-                      ),
-                      child: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: KitButton.tertiary(
-                          label: l10n.kitSuggestionsShowAll,
-                          onPressed: onShowAll,
-                        ),
-                      ),
-                    ),
-                  ],
+      child: _PanelSurface(
+        child: FocusTraversalGroup(
+          child: Shortcuts(
+            // Arrow keys move between rows as Tab does; Enter selects
+            // (the app's default ActivateIntent).
+            shortcuts: const {
+              SingleActivator(LogicalKeyboardKey.arrowDown): NextFocusIntent(),
+              SingleActivator(LogicalKeyboardKey.arrowUp):
+                  PreviousFocusIntent(),
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < visible.length; i++) ...[
+                  if (i > 0) divider,
+                  _SuggestionRow(
+                    key: visible[i].key,
+                    suggestion: visible[i],
+                    onSelected: onSelected,
+                  ),
                 ],
-              ),
+                if (showAll) ...[
+                  divider,
+                  Padding(
+                    padding: EdgeInsetsDirectional.symmetric(
+                      horizontal: tokens.space2,
+                    ),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: KitButton.tertiary(
+                        label: l10n.kitSuggestionsShowAll,
+                        onPressed: onShowAll,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -1271,12 +1347,26 @@ class _SuggestionRowState extends State<_SuggestionRow> {
         child: body,
       ),
     );
-    row = DecoratedBox(
-      decoration: BoxDecoration(
-        color: _hovered || _press.shown ? roles.surface3 : null,
+    // The hover and pressed highlight, from the style resolver (the
+    // `stateLayer` role, pressed in while held); none at rest.
+    final pressedFill = _press.shown && !KitInk.on(context);
+    final active = _hovered || pressedFill;
+    final highlight = BoxDecoration(color: active ? roles.surface3 : null);
+    row = KitInkLayer(
+      key: _press.inkKey,
+      shape: const RoundedRectangleBorder(),
+      child: kitSurfaceBox(
+        style: KitSurfaceLook.styleOf(context),
+        decoration: active
+            ? KitSurfaceLook.decorate(
+                context,
+                solid: highlight,
+                role: KitSurfaceRole.stateLayer,
+                pressed: pressedFill,
+              )
+            : highlight,
+        child: row,
       ),
-      position: DecorationPosition.background,
-      child: row,
     );
     if (_focused) {
       row = DecoratedBox(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/models.dart';
@@ -13,8 +14,71 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'support/connection_sse_fixtures.dart';
 
+/// A channel with a real retry timer of its own (vision 2026-10-20).
+class _RetryingStream extends FakeEventStream implements RetryingEventChannel {
+  _RetryingStream({
+    required super.api,
+    required super.onEvent,
+    required super.onStatus,
+    super.onError,
+  });
+
+  final next = ValueNotifier<DateTime?>(null);
+
+  @override
+  ValueListenable<DateTime?> get nextAttempt => next;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('the link\'s own retry time reaches the snapshot while it is '
+      'down, and leaves it when the link is up', (tester) async {
+    final api = ControlledApi('laptop');
+    final streams = <_RetryingStream>[];
+    final controller = ConnectionController(
+      await memoryProfileStore(),
+      apiFactory: (_) => api,
+      repositoryFactory: testRepositoryFactory,
+      eventStreamFactory:
+          ({required api, required onEvent, required onStatus, onError}) {
+            final stream = _RetryingStream(
+              api: api,
+              onEvent: onEvent,
+              onStatus: onStatus,
+              onError: onError,
+            );
+            streams.add(stream);
+            return stream;
+          },
+    );
+    addTearDown(controller.dispose);
+    final connecting = controller.connect(testProfile('laptop'));
+    await tester.pump();
+    api.healthResult.complete(Health(healthy: true));
+    await connecting;
+    final stream = streams.single;
+    stream.emitStatus(StreamStatus.connected);
+    expect(controller.connectionStatus.nextAttemptAt, isNull);
+
+    var notified = 0;
+    void count() => notified++;
+    controller.addListener(count);
+    stream.emitStatus(StreamStatus.reconnecting);
+    final at = DateTime.now().add(const Duration(seconds: 8));
+    notified = 0;
+    stream.next.value = at;
+    // A new retry time is news for the line that counts down to it.
+    expect(notified, greaterThan(0));
+    expect(controller.connectionStatus.nextAttemptAt, at);
+
+    // Connected again: no try is due, whatever the channel still holds.
+    stream.emitStatus(StreamStatus.connected);
+    expect(controller.connectionStatus.nextAttemptAt, isNull);
+    controller.removeListener(count);
+    await controller.disconnect();
+    await tester.pump(const Duration(seconds: 10));
+  });
 
   testWidgets(
     'healthy versionless transport remains ready through reconnect and retires on disconnect',

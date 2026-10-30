@@ -34,6 +34,7 @@ void main() {
       sources: [
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentHost.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentInventory.kt',
+        'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentChecks.kt',
         'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PaseoStaleLock.kt',
         helper.path,
         'test/native/phone_agent_host_harness.kt',

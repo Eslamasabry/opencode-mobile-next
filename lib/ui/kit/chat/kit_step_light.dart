@@ -133,6 +133,10 @@ class _StepLightState extends State<_StepLight> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    // Signal: the node is a signal on the track (kit_step_signal.dart).
+    if (KitTrack.on(context)) {
+      return _signalNode(context, widget.state, widget.size, widget.mark);
+    }
     final roles = KitTokens.of(context).roles;
     final state = widget.state;
     final size = widget.size;
@@ -144,34 +148,59 @@ class _StepLightState extends State<_StepLight> with TickerProviderStateMixin {
         ? roles.accent
         : (state == KitStepNodeState.queued ? roles.text3 : roles.text2);
 
+    // The node's tile is made for the person's Style like every other
+    // tile (KitSurface.tile's control surface); the light keeps its shape.
+    // A tiny tile on the rail throws no shadow of its own (owner,
+    // 2026-10-22: one under every step read as busy): it is set as inside
+    // a cast, so a style that keeps one shadow per stack (Brutal, hook H9)
+    // keeps its edge and drops the shadow. Other styles are unchanged.
     Widget tile(Widget glyph) => SizedBox.square(
       key: _tile,
       dimension: size,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: roles.surface3,
-          borderRadius: BorderRadius.circular(radius),
+      child: KitSurfaceLook.castScope(
+        context,
+        // What the tiles sit in for hook H9: a surface that casts. Never
+        // painted.
+        decoration: KitSurfaceDecoration(
+          fill: Colors.transparent,
+          hardShadow: roles.text1,
+          hardOffset: 1,
         ),
-        child: Center(child: glyph),
+        child: kitSurfaceMaterial(
+          context,
+          level: KitSurfaceLevel.surface3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radius),
+          ),
+          fill: roles.surface3,
+          role: KitSurfaceRole.control,
+          clip: false,
+          child: Center(child: glyph),
+        ),
       ),
     );
 
+    // The light on a layer of its own: its lap repaints the light and
+    // nothing else, never the steps' names around it (scroll-perf,
+    // 2026-10-23).
     Widget outline(_Look look) => Positioned.fill(
       child: IgnorePointer(
-        child: CustomPaint(
-          key: const ValueKey('kit-step-light'),
-          painter: _LightPainter(
-            look: look,
-            tile: _tile,
-            registry: widget.registry,
-            index: widget.index,
-            last: widget.last,
-            lone: widget.lone,
-            size: size,
-            radius: radius,
-            dpr: MediaQuery.devicePixelRatioOf(context),
-            railColor: roles.text3,
-            repaint: look.lap,
+        child: RepaintBoundary(
+          child: CustomPaint(
+            key: const ValueKey('kit-step-light'),
+            painter: _LightPainter(
+              look: look,
+              tile: _tile,
+              registry: widget.registry,
+              index: widget.index,
+              last: widget.last,
+              lone: widget.lone,
+              size: size,
+              radius: radius,
+              dpr: MediaQuery.devicePixelRatioOf(context),
+              railColor: roles.text3,
+              repaint: look.lap,
+            ),
           ),
         ),
       ),
@@ -611,26 +640,90 @@ class _StepSweepState extends State<_StepSweep>
     if (!_moving) return widget.child;
     final roles = KitTokens.of(context).roles;
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    return AnimatedBuilder(
-      animation: _sweep,
-      child: widget.child,
-      builder: (context, child) {
-        final t = _sweep.value;
-        final centre = -0.3 + 1.6 * (rtl ? 1 - t : t);
-        return ShaderMask(
-          key: const ValueKey('kit-step-sweep'),
-          blendMode: BlendMode.srcIn,
-          shaderCallback: (bounds) => LinearGradient(
+    // Paint only: the light moves on [_sweep] without a rebuild, and the
+    // name keeps its picture under it. Rebuilt on every frame, as it was,
+    // the sweep relaid out the step row's LayoutBuilder and recorded the
+    // whole page around it again each frame (scroll-perf, 2026-10-23).
+    return RepaintBoundary(
+      child: _SweepMask(
+        key: const ValueKey('kit-step-sweep'),
+        sweep: _sweep,
+        shaderCallback: (bounds) {
+          final t = _sweep.value;
+          final centre = -0.3 + 1.6 * (rtl ? 1 - t : t);
+          return LinearGradient(
             colors: [roles.text1, roles.accent, roles.text1],
             stops: [
               (centre - 0.18).clamp(0.0, 1.0),
               centre.clamp(0.0, 1.0),
               (centre + 0.18).clamp(0.0, 1.0),
             ],
-          ).createShader(bounds),
-          child: child,
-        );
-      },
+          ).createShader(bounds);
+        },
+        child: RepaintBoundary(child: widget.child),
+      ),
     );
+  }
+}
+
+/// A [ShaderMask] (source-in) that paints again on each tick of [sweep],
+/// with no rebuild and no layout.
+///
+/// It stays a [ShaderMask] so the parts that look for a recolouring mask
+/// above their words still find it: `KitTextHalo` keeps the halo and the
+/// words' plate out from under it (a plate under a source-in mask is
+/// painted in the sweep's colours too, a pale block with the words lost in
+/// it; seen on the phone, 2026-10-24).
+class _SweepMask extends ShaderMask {
+  const _SweepMask({
+    super.key,
+    required this.sweep,
+    required super.shaderCallback,
+    required super.child,
+  }) : super(blendMode: BlendMode.srcIn);
+
+  final Animation<double> sweep;
+
+  @override
+  _RenderSweepMask createRenderObject(BuildContext context) =>
+      _RenderSweepMask(sweep: sweep, shaderCallback: shaderCallback);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _RenderSweepMask renderObject,
+  ) {
+    renderObject
+      ..sweep = sweep
+      ..shaderCallback = shaderCallback;
+  }
+}
+
+class _RenderSweepMask extends RenderShaderMask {
+  _RenderSweepMask({
+    required Animation<double> sweep,
+    required super.shaderCallback,
+  }) : _sweep = sweep,
+       super(blendMode: BlendMode.srcIn);
+
+  Animation<double> _sweep;
+  set sweep(Animation<double> value) {
+    if (identical(value, _sweep)) return;
+    if (attached) _sweep.removeListener(markNeedsPaint);
+    _sweep = value;
+    if (attached) _sweep.addListener(markNeedsPaint);
+    markNeedsPaint();
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _sweep.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _sweep.removeListener(markNeedsPaint);
+    super.detach();
   }
 }

@@ -18,9 +18,16 @@ import '../kit_motion.dart';
 ///   skipped under reduced motion, like the celebration it accompanies.
 /// - [commit]: a firm tick when the person confirms a stop, a delete or a
 ///   discard.
+/// - [longPress]: the platform's long-press tick when a long-press opens a
+///   menu or starts a selection, as every Android long-click does (owner
+///   rule 2026-10-26, kit-v2 §7.1: native Android feel). Nothing on other
+///   platforms ([Feedback.forLongPress]).
+/// - [select]: a light selection click when a switch flips, a segment is
+///   chosen or a wheel moves onto the next value.
 ///
-/// Never on scrolling, on every row, or on a failure the screen already
-/// shows: feedback that fires often stops meaning anything.
+/// Never on scrolling, on a plain tap of a row or a button, or on a failure
+/// the screen already shows: feedback that fires often stops meaning
+/// anything.
 abstract final class KitHaptics {
   /// Settings › Appearance › Vibration ([KitEffects.haptics]), mirrored
   /// here by the app so a call without a context obeys it too.
@@ -42,6 +49,20 @@ abstract final class KitHaptics {
   static void commit([BuildContext? context]) {
     if (!_allowed(context)) return;
     unawaited(HapticFeedback.mediumImpact());
+  }
+
+  /// The platform's long-press feedback (Android's LONG_PRESS haptic): a
+  /// long-press opened a menu or started a selection.
+  static void longPress(BuildContext context) {
+    if (!_allowed(context)) return;
+    unawaited(Feedback.forLongPress(context));
+  }
+
+  /// A light selection click: a switch flipped, a segment or a wheel value
+  /// was chosen.
+  static void select([BuildContext? context]) {
+    if (!_allowed(context)) return;
+    unawaited(HapticFeedback.selectionClick());
   }
 
   /// A soft confirmation: something the person waited for finished.

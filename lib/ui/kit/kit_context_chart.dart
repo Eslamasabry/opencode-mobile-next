@@ -6,6 +6,7 @@ import 'package:intl/intl.dart' hide TextDirection;
 import '../../l10n/app_localizations.dart';
 import '../theme_roles.dart';
 import 'kit_context_ring.dart';
+import 'kit_max_width.dart';
 import 'kit_tokens.dart';
 
 /// One assistant reply in a [KitContextChart]: the share of the window the
@@ -55,7 +56,10 @@ class KitContextChart extends StatelessWidget {
       bars.length <= maxBars ? bars : bars.sublist(bars.length - maxBars);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final drawn = shown;
     if (drawn.length < 2) return const SizedBox.shrink();
     final tokens = KitTokens.of(context);

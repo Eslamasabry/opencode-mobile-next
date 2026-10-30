@@ -215,37 +215,49 @@ String _plainServerVersion(String raw) =>
     RegExp(r'\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?').firstMatch(raw)?.group(0) ??
     raw.trim();
 
-/// First run asks the only real fork, one question with plain answers (UX
-/// plan 5.6 step 1). Product names, private networks and the guide are met
-/// later, at the step where each one matters.
+/// Where the first-run welcome's one question can be answered.
+enum _WelcomeChoice { phone, computer }
+
+/// First run asks the only real fork, one question with two plain answers
+/// (vision 2026-10-20, concept A): "Where should your agent run?", a large
+/// card for this phone with what setting up costs, a card for a computer,
+/// and one main button that names the chosen answer. The demo and phone
+/// setup's own page (Termux, what to install) are quiet text actions under
+/// it. Product names, private networks and the guide are met later, at the
+/// step where each one matters.
 class _WelcomeView extends StatelessWidget {
+  final KitTopBar topBar;
   final bool busy;
 
-  /// The detected on-device server, above the question. It renders nothing
-  /// unless a running server was actually observed: a live thing the app
-  /// found outranks every generic choice.
+  /// The detected on-device server. It renders nothing unless a running
+  /// server was actually observed: a live thing the app found outranks
+  /// every generic choice.
   final Widget runningServer;
 
-  /// A phone setup that was started and not finished (or finished with
-  /// nothing saved). Like [runningServer] it renders nothing when there is
-  /// no such job, and it outranks the generic question when there is.
-  final Widget phoneSetup;
+  /// The phone card's words and the main button's action for it; null
+  /// where this platform has no phone path.
+  final PhoneWelcomeOffer? phone;
+  final _WelcomeChoice choice;
+  final ValueChanged<_WelcomeChoice> onChoice;
   final VoidCallback onComputer;
-  final VoidCallback onPhone;
+  final VoidCallback onPhoneSetup;
   final VoidCallback onDemo;
 
   /// OpenCode or Termux was found on this phone: [runningServer] leads the
   /// page, the in-app server is the fresh start after it, and the other
-  /// ways follow in a compact list. No welcome hero.
+  /// ways follow in a compact list. No question.
   final bool found;
 
   const _WelcomeView({
+    required this.topBar,
     required this.busy,
     this.found = false,
     required this.runningServer,
-    required this.phoneSetup,
+    required this.phone,
+    required this.choice,
+    required this.onChoice,
     required this.onComputer,
-    required this.onPhone,
+    required this.onPhoneSetup,
     required this.onDemo,
   });
 
@@ -253,54 +265,139 @@ class _WelcomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final copy = _connectionL10n(context);
     final tokens = KitTokens.of(context);
-    final busyReason = busy ? copy.e7SetupServerOperation : null;
-    final largeText = MediaQuery.textScalerOf(context).scale(1) >= 1.3;
-    Widget choice({
-      required String key,
-      required IconData icon,
-      required String title,
-      required String detail,
-      required VoidCallback onTap,
-      bool recommended = false,
-    }) => KitRow(
-      key: ValueKey(key),
-      leading: KitRow.icon(context, icon),
-      title: title,
-      titleMaxLines: 2,
-      supporting: TextSpan(
-        children: [
-          if (recommended) kitRecommendedSpan(context),
-          TextSpan(text: detail),
-        ],
-      ),
-      supportingMaxLines: 3,
-      trailing: const KitChevron(),
-      enabled: !busy,
-      disabledReason: busyReason,
-      onTap: onTap,
-    );
     // Keyed, so the found server keeps its state while the page around it
     // changes shape.
     final lead = KeyedSubtree(
       key: const ValueKey('welcome-termux'),
       child: runningServer,
     );
-    final computer = choice(
-      key: 'welcome-choice-computer',
-      icon: AppIconography.server,
-      title: copy.firstRunOnComputer,
-      detail: copy.firstRunOnComputerDetail,
-      onTap: onComputer,
+    if (found) return _found(context, copy, tokens, lead);
+    final phone = this.phone;
+    // Off the phone path the computer is the only answer, chosen.
+    final chosen = phone == null ? _WelcomeChoice.computer : choice;
+    final phoneWorking = phone != null && phone.working;
+    final KitButton primary = switch (chosen) {
+      _WelcomeChoice.phone => KitButton.primary(
+        key: const ValueKey('welcome-primary'),
+        hero: true,
+        label: phone!.action,
+        working: phone.working,
+        onPressed: busy || phone.working ? null : phone.onPressed,
+      ),
+      _WelcomeChoice.computer => KitButton.primary(
+        key: const ValueKey('welcome-primary'),
+        hero: true,
+        label: copy.welcomeComputerConnect,
+        onPressed: busy || phoneWorking ? null : onComputer,
+      ),
+    };
+    final quiet = <Widget>[
+      KitButton.tertiary(
+        key: const ValueKey('welcome-choice-demo'),
+        label: copy.firstRunJustShowMe,
+        onPressed: busy || phoneWorking ? null : onDemo,
+      ),
+      if (phone != null)
+        KitButton.tertiary(
+          key: const ValueKey('welcome-more-ways'),
+          label: copy.welcomeMoreWays,
+          onPressed: busy || phoneWorking ? null : onPhoneSetup,
+        ),
+    ];
+    return KitScreen(
+      topBar: topBar,
+      width: KitScreenWidth.reading,
+      // The one main action at the thumb, naming the chosen answer.
+      bottom: primary,
+      body: ListView(
+        key: const ValueKey('first-run-welcome'),
+        padding: EdgeInsetsDirectional.only(
+          // Air above the question; large text needs the room for words.
+          top: AppTheme.stackedActions(context)
+              ? tokens.space4
+              : tokens.space6 + tokens.space6,
+          bottom: KitScreen.endPadding(context),
+        ),
+        children: [
+          if (platformCapabilities.supportsTermux) lead,
+          _Rails(
+            child: KitHeroQuestion(
+              copy.firstRunWhereQuestion,
+              textKey: const ValueKey('welcome-question'),
+            ),
+          ),
+          SizedBox(height: tokens.space6 + tokens.space2),
+          _Rails(
+            child: KitChoiceCards<_WelcomeChoice>(
+              key: const ValueKey('welcome-choices'),
+              semanticsLabel: copy.firstRunWhereQuestion,
+              selected: chosen,
+              busy: phoneWorking ? _WelcomeChoice.phone : null,
+              onSelected: onChoice,
+              choices: [
+                if (phone != null)
+                  KitChoice(
+                    key: const ValueKey('welcome-choice-phone'),
+                    value: _WelcomeChoice.phone,
+                    leading: const KitIcon(AppIconography.phone),
+                    title: copy.onboardingTermuxSetup,
+                    supporting: phone.line,
+                  ),
+                KitChoice(
+                  key: const ValueKey('welcome-choice-computer'),
+                  value: _WelcomeChoice.computer,
+                  leading: const KitIcon(AppIconography.computer),
+                  title: copy.firstRunOnComputer,
+                  supporting: copy.welcomeComputerLine,
+                ),
+              ],
+            ),
+          ),
+          // The quiet ways in, under the answers they sit beside.
+          SizedBox(height: tokens.space2),
+          _Rails(
+            child: Wrap(spacing: tokens.space4, children: quiet),
+          ),
+        ],
+      ),
     );
-    final demo = choice(
-      key: 'welcome-choice-demo',
-      icon: AppIconography.playCircle,
-      title: copy.firstRunJustShowMe,
-      detail: copy.onboardingDemoNote,
-      onTap: onDemo,
+  }
+
+  /// OpenCode or Termux was found on this phone: that server leads (with
+  /// its move to the in-app server under it), then a fresh in-app setup,
+  /// then the other ways.
+  Widget _found(
+    BuildContext context,
+    AppLocalizations copy,
+    KitTokens tokens,
+    Widget lead,
+  ) {
+    final busyReason = busy ? copy.e7SetupServerOperation : null;
+    Widget choice({
+      required String key,
+      required IconData icon,
+      required String title,
+      required String detail,
+      required VoidCallback onTap,
+    }) => KitRow(
+      key: ValueKey(key),
+      leading: KitRow.icon(context, icon),
+      title: title,
+      titleMaxLines: 2,
+      supporting: TextSpan(text: detail),
+      supportingMaxLines: 3,
+      trailing: const KitChevron(),
+      enabled: !busy,
+      disabledReason: busyReason,
+      onTap: onTap,
     );
-    if (found) {
-      return ListView(
+    final phone = this.phone;
+    // A setup in the app that already started says where it stands.
+    final started = phone != null && phone.state != SetupState.idle;
+    return KitScreen(
+      topBar: topBar,
+      width: KitScreenWidth.reading,
+      body: ListView(
         key: const ValueKey('first-run-welcome'),
         padding: EdgeInsetsDirectional.only(
           top: tokens.space6,
@@ -309,7 +406,6 @@ class _WelcomeView extends StatelessWidget {
         children: [
           lead,
           SizedBox(height: tokens.sectionGap),
-          if (platformCapabilities.supportsTermux) phoneSetup,
           KitRowGroup(
             key: const ValueKey('welcome-in-app-instead'),
             children: [
@@ -317,8 +413,8 @@ class _WelcomeView extends StatelessWidget {
                 key: 'welcome-choice-in-app',
                 icon: AppIconography.phone,
                 title: copy.termuxInAppInstead,
-                detail: copy.termuxInAppInsteadDetail,
-                onTap: onPhone,
+                detail: started ? phone.line : copy.termuxInAppInsteadDetail,
+                onTap: started ? phone.onPressed : onPhoneSetup,
               ),
             ],
           ),
@@ -326,88 +422,25 @@ class _WelcomeView extends StatelessWidget {
           KitRowGroup(
             key: const ValueKey('welcome-other-ways'),
             label: copy.phoneSetupStartOtherWays,
-            children: [computer, demo],
-          ),
-        ],
-      );
-    }
-    return ListView(
-      key: const ValueKey('first-run-welcome'),
-      padding: EdgeInsetsDirectional.only(
-        top: tokens.space6,
-        bottom: KitScreen.endPadding(context),
-      ),
-      children: [
-        // The hero (design standard §10): this phone and the computer the
-        // agent runs on. Drawn in once; the welcome is a resting screen, so
-        // it never loops. From 1.3x text it steps aside: the picture says
-        // nothing the words don't, and the choices are what the person came
-        // for (emulator QA B3: at 2.0 they started below the fold).
-        if (!largeText) ...[
-          const _Rails(
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: KitIllustration(
-                key: ValueKey('servers-welcome-hero'),
-                scene: ServersWelcomeScene(),
-              ),
-            ),
-          ),
-          SizedBox(height: tokens.space5),
-        ],
-        _Rails(
-          child: Semantics(
-            header: true,
-            child: KitText(
-              copy.onboardingValueTitle,
-              role: KitTextRole.largeTitle,
-            ),
-          ),
-        ),
-        SizedBox(height: tokens.space2),
-        _Rails(
-          child: KitText(copy.onboardingValueBody, tone: KitTextTone.secondary),
-        ),
-        SizedBox(height: tokens.space6),
-        if (platformCapabilities.supportsTermux) phoneSetup,
-        lead,
-        _Rails(
-          child: Semantics(
-            header: true,
-            child: KitText(
-              copy.firstRunWhereQuestion,
-              key: const ValueKey('welcome-question'),
-              role: KitTextRole.headline,
-            ),
-          ),
-        ),
-        SizedBox(height: tokens.space2),
-        // FB3: someone with no server gets one clear default, as the
-        // phone needs nothing else. The computer and the demo stay one tap
-        // away, under "Other ways".
-        if (platformCapabilities.supportsTermux) ...[
-          KitRowGroup(
-            key: const ValueKey('welcome-recommended'),
             children: [
               choice(
-                key: 'welcome-choice-phone',
-                icon: AppIconography.phone,
-                title: copy.onboardingTermuxSetup,
-                detail: copy.firstRunOnPhoneDetail,
-                onTap: onPhone,
-                recommended: true,
+                key: 'welcome-choice-computer',
+                icon: AppIconography.computer,
+                title: copy.firstRunOnComputer,
+                detail: copy.welcomeComputerLine,
+                onTap: onComputer,
+              ),
+              choice(
+                key: 'welcome-choice-demo',
+                icon: AppIconography.playCircle,
+                title: copy.firstRunJustShowMe,
+                detail: copy.welcomeDemoLine,
+                onTap: onDemo,
               ),
             ],
           ),
-          SizedBox(height: tokens.sectionGap),
-          KitRowGroup(
-            key: const ValueKey('welcome-other-ways'),
-            label: copy.phoneSetupStartOtherWays,
-            children: [computer, demo],
-          ),
-        ] else
-          KitRowGroup(children: [computer, demo]),
-      ],
+        ],
+      ),
     );
   }
 }

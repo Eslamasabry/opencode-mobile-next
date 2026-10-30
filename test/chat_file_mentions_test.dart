@@ -16,6 +16,7 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/complete_message_history.dart';
+import 'support/composer_tools.dart';
 
 class _Api extends FakeServerGateway with CompleteMessageHistory {
   _Api({this.files = true}) : super(baseUrl: 'http://localhost');
@@ -280,7 +281,7 @@ void main() {
     addTearDown(controller.dispose);
     await _pump(tester, controller);
 
-    await tester.tap(find.byKey(const Key('composer-tools-button')));
+    await openComposerTools(tester);
     await _settle(tester);
     await tester.tap(find.byKey(const Key('composer-tool-project-file')));
     await _settle(tester);
@@ -315,7 +316,7 @@ void main() {
     addTearDown(controller.dispose);
     await _pump(tester, controller);
 
-    await tester.tap(find.byKey(const Key('composer-tools-button')));
+    await openComposerTools(tester);
     await _settle(tester);
     await tester.tap(find.byKey(const Key('composer-tool-project-file')));
     await _settle(tester);
@@ -352,7 +353,7 @@ void main() {
     expect(find.byKey(const Key('inline-file-lib/server.dart')), findsNothing);
     expect(find.byKey(const Key('inline-agent-server-helper')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('composer-tools-button')));
+    await openComposerTools(tester);
     await _settle(tester);
     expect(find.byKey(const Key('composer-tool-project-file')), findsNothing);
   });

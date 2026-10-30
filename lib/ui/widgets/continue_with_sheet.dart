@@ -11,6 +11,7 @@ import '../../state/continue_with_connection.dart';
 import '../app_theme.dart';
 import '../kit/kit_buttons.dart';
 import '../kit/kit_field.dart';
+import '../kit/kit_details_fold.dart';
 import '../kit/kit_handoff_record.dart';
 import '../kit/kit_key_value.dart';
 import '../kit/kit_notice.dart';
@@ -54,13 +55,18 @@ Future<String?> showContinueWith(
       sessionId: sessionId,
       untitled: l10n.chatUiOpenCodeSession,
     );
-    final result = await showContinueWithSheet(
-      context,
-      host: host,
-      draftScope: connection.profile == null
-          ? null
-          : (profileId: connection.profile!.id, sessionId: sessionId),
-    );
+    final ContinueWithResult? result;
+    try {
+      result = await showContinueWithSheet(
+        context,
+        host: host,
+        draftScope: connection.profile == null
+            ? null
+            : (profileId: connection.profile!.id, sessionId: sessionId),
+      );
+    } finally {
+      host.release();
+    }
     if (result == null || !context.mounted) return null;
     final signIn = result.signInAgentId;
     if (signIn != null) {
@@ -413,11 +419,13 @@ class _Choices extends StatelessWidget {
         ),
         ContinueWithBlock.notSameProject => l10n.continueWithErrProject,
         ContinueWithBlock.noRecordWriter => l10n.continueWithErrNoWriter,
-        ContinueWithBlock.modelUnavailable => l10n.continueWithErrTarget,
       };
       final signIn =
           choice.block == ContinueWithBlock.needsSignIn &&
           choice.agentId != null;
+      // A helper Android or an update stopped can take longer than the
+      // sheet's wait to start: reading again is the way forward.
+      final retry = choice.block == ContinueWithBlock.notReady;
       return KitRow.unavailable(
         key: key,
         title: choice.agentName,
@@ -430,6 +438,14 @@ class _Choices extends StatelessWidget {
                 semanticsLabel:
                     '${l10n.continueWithSignIn} ${choice.agentName}',
                 onPressed: () => onSignIn(choice.agentId!),
+              )
+            : retry
+            ? KitRowChip(
+                key: ValueKey('continue-with-retry-${choice.key}'),
+                label: l10n.continueWithTryAgain,
+                semanticsLabel:
+                    '${l10n.continueWithTryAgain} ${choice.agentName}',
+                onPressed: flow.load,
               )
             : null,
       );
@@ -583,19 +599,31 @@ class _Selection extends StatelessWidget {
               ? null
               : Padding(
                   padding: EdgeInsets.only(top: tokens.space3),
-                  child: KitNotice(
-                    key: const ValueKey('continue-with-problem'),
-                    tone: AppStatusTone.failure,
-                    message: _problemText(l10n, problem),
-                    actions: [
-                      if (problem == ContinueWithProblem.source ||
-                          problem == ContinueWithProblem.read)
-                        KitAction(
-                          key: const ValueKey('continue-with-prepare-again'),
-                          label: l10n.continueWithPrepareAgain,
-                          icon: AppIconography.retry,
-                          onPressed: flow.prepareAgain,
-                        ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      KitNotice(
+                        key: const ValueKey('continue-with-problem'),
+                        tone: AppStatusTone.failure,
+                        message: _problemText(l10n, problem),
+                        actions: [
+                          // Nothing was sent: a fresh preparation is safe.
+                          if (problem == ContinueWithProblem.source ||
+                              problem == ContinueWithProblem.read ||
+                              problem == ContinueWithProblem.scope ||
+                              problem == ContinueWithProblem.file)
+                            KitAction(
+                              key: const ValueKey(
+                                'continue-with-prepare-again',
+                              ),
+                              label: l10n.continueWithPrepareAgain,
+                              icon: AppIconography.retry,
+                              onPressed: flow.prepareAgain,
+                            ),
+                        ],
+                      ),
+                      if (flow.problemDetail case final String detail)
+                        KitDetailsFold(text: detail),
                     ],
                   ),
                 ),

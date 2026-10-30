@@ -157,9 +157,7 @@ const _migrated = <String, List<String>>{
   // §9 step 6: Settings (goldens: test/goldens/settings_golden_test.dart).
   'lib/ui/screens/settings_screen.dart': ['settings_hub'],
   'lib/ui/screens/settings/default_shell_row.dart': ['settings_hub'],
-  'lib/ui/screens/settings/server_settings_screen.dart': [
-    'settings_this_server',
-  ],
+  'lib/ui/screens/settings/server_page.dart': ['settings_this_server'],
   'lib/ui/screens/settings/notifications_settings_screen.dart': [
     'settings_notifications',
   ],
@@ -320,8 +318,8 @@ const _grandfathered = <String>{
   'lib/ui/screens/settings/default_shell_row.dart',
   'lib/ui/screens/settings/notifications_settings_screen.dart',
   'lib/ui/screens/settings/personal_settings_screens.dart',
+  'lib/ui/screens/settings/server_page.dart',
   'lib/ui/screens/settings/server_plugins_section.dart',
-  'lib/ui/screens/settings/server_settings_screen.dart',
   'lib/ui/screens/settings_screen.dart',
   'lib/ui/screens/team/agent_screen.dart',
   'lib/ui/screens/team/gate_sheet.dart',

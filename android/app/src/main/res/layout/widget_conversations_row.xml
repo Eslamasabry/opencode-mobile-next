@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One more conversation on the Conversations widget: its title, then the project and age. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/cv_row"
+    android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical"
+    android:layoutDirection="locale">
+    <TextView android:id="@+id/cv_row_title" android:layout_width="0dp" android:layout_weight="1"
+        android:layout_height="wrap_content" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"
+        android:textDirection="firstStrong" android:gravity="start" android:textColor="#FFF3F3F1" />
+    <TextView android:id="@+id/cv_row_meta" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginStart="10dp" android:maxWidth="190dp" android:textSize="12.5sp" android:maxLines="1"
+        android:ellipsize="end" android:textDirection="locale" android:textColor="#FF8C8F96" />
+</LinearLayout>

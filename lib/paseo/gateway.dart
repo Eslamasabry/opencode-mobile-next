@@ -1,10 +1,7 @@
-/// Optional experimental Paseo gateway (daemon 0.8.0, protocol 1).
-///
-/// The Paseo daemon runs beside the agent CLIs on the user's computer and
-/// drives Claude Code, Pi, Codex and others for this app. One daemon *agent*
-/// is one conversation and is shown as a session; the model picker's provider
-/// chooses which runtime a new conversation uses, and the daemon's permission
-/// modes are offered where OpenCode offers agents.
+/// The Paseo gateway (protocol 1). The daemon runs beside the agent CLIs and
+/// drives Claude Code, Pi, Codex and others; one daemon *agent* is one
+/// conversation, shown as a session. The model picker's provider chooses the
+/// runtime; the daemon's modes are offered where OpenCode offers agents.
 library;
 
 import 'dart:async';
@@ -12,14 +9,17 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart' as crypto;
+import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 
 import '../domain/models.dart';
+import '../domain/agent_run_failure.dart';
 import '../domain/gen_ui_history_http.dart';
 import '../domain/agent_tools/agent_tool_adapter.dart';
 import '../domain/agent_tools/browser_claude_launch.dart';
 import '../domain/genui/gen_ui_history.dart';
 import '../domain/server_gateway.dart';
 import '../domain/agent_handoff.dart';
+import '../domain/background_tasks.dart';
 import '../ui/kit/kit_redact.dart';
 import 'mappers.dart';
 import 'host_agent_providers.dart';
@@ -47,9 +47,13 @@ part 'gateway/handoff.dart';
 part 'gateway/changes.dart';
 part 'gateway/worktrees.dart';
 part 'gateway/terminals.dart';
+part 'gateway/copies.dart';
 part 'gateway/host_update.dart';
 part 'gateway/agent_features.dart';
 part 'gateway/provider_import.dart';
+part 'gateway/uncertain_start.dart';
+part 'gateway/idle_guard.dart';
+part 'gateway/background_tasks.dart';
 
 class PaseoGateway extends _PaseoWorkspace
     implements
@@ -59,11 +63,14 @@ class PaseoGateway extends _PaseoWorkspace
         HostAgentPermissionGateway,
         SessionSelectionGateway,
         GenUiHistoryGateway,
+        GenUiRecoverySnapshotGateway,
+        GenUiLoadGuardGateway,
         CorrelatedPromptGateway,
         HostDaemonUpdateGateway,
         AgentFeatureGateway,
         MidTurnPromptGateway,
         ProviderConversationImportGateway,
+        AgentTurnFailureGateway,
         AgentHandoffTargetGateway {
   @override
   final PaseoTransport transport;
@@ -149,18 +156,26 @@ class PaseoGateway extends _PaseoWorkspace
   /// The model a draft starts on (its first prompt creates the agent).
   final _draftModels = <String, ModelRef>{};
   final _draftFeatureValues = <String, Map<String, Object>>{};
+  @override
   final _liveAgentSessions = <String>{};
   final _uncertain = <String>{};
 
   /// Sessions whose prompt was accepted but whose turn has not started. The
   /// daemon reports a freshly spawned agent as idle for a moment before the
   /// turn begins; that gap must not read as a finished run.
+  @override
   final _awaitingTurn = <String>{};
 
   /// Sessions with a turn the stream says is running. Agent snapshots lag the
   /// stream (an `idle` snapshot can land after `turn_started`), so while a
   /// turn is open the stream owns the busy state.
+  @override
   final _turnActive = <String>{};
+
+  /// A running status believed only from an agent's saved record ends when
+  /// its bound passes ([paseoRecordBusyUntil]): one timer per session, which
+  /// reports the session idle then, as a turn end would.
+  final _recordBusyExpiry = <String, Timer>{};
   final _watching = <String>{};
   final _permissions = <String, _PaseoPermission>{};
   final _questions = <String, _PaseoQuestion>{};
@@ -262,6 +277,7 @@ class PaseoGateway extends _PaseoWorkspace
   // a call as failed with the person's own reason as its error text, so only
   // this record tells that apart from a real failure.
   final _rejectedCalls = <String>{};
+  @override
   final _live = <String, _PaseoLive>{};
 
   /// The released daemon (0.8.0) names a new agent itself, but a conversation
@@ -280,6 +296,9 @@ class PaseoGateway extends _PaseoWorkspace
   late final StreamSubscription<int> _daemonDisconnects;
   Timer? _retry;
   int _retryAttempt = 0;
+
+  /// When [_retry] fires (see [RetryingEventChannel]).
+  final _nextAttempt = ValueNotifier<DateTime?>(null);
   @override
   int _locationEpoch = 0;
   bool _listening = false;
@@ -354,8 +373,13 @@ class PaseoGateway extends _PaseoWorkspace
   @override
   String handoffSessionId(String sessionID) => daemonSessionId(sessionID);
 
+  /// The daemon's id, not this gateway's draft alias: a phone agent's chat
+  /// opens on its own backend, a fresh gateway that knows the agent only by
+  /// the daemon's id (see `startAgentChatIn`); the alias there is an unknown
+  /// agent, and the daemon answers `agent: null`.
   @override
-  String handoffNavigationSessionId(String sessionID) => _app(sessionID);
+  String handoffNavigationSessionId(String sessionID) =>
+      daemonSessionId(sessionID);
 
   @override
   Future<void> promptAgentHandoff(
@@ -367,7 +391,7 @@ class PaseoGateway extends _PaseoWorkspace
     required void Function() beforeSend,
   }) => _promptAsync(
     sessionID,
-    messageID: _uuid(),
+    messageID: _paseoUuid(),
     beforeSend: beforeSend,
     text: text,
     model: model,
@@ -425,6 +449,7 @@ class PaseoGateway extends _PaseoWorkspace
     _agents.clear();
     _sessions.clear();
     _statuses.clear();
+    _cancelRecordBusyExpiry();
     _drafts.clear();
     _draftProviders.clear();
     _draftModels.clear();
@@ -445,6 +470,7 @@ class PaseoGateway extends _PaseoWorkspace
     _recoveryDegraded = false;
   }
 
+  @override
   String _real(String appID) => _realIDs[appID] ?? appID;
 
   /// True while the daemon holds [appID]'s agent in memory (starting,
@@ -467,8 +493,11 @@ class PaseoGateway extends _PaseoWorkspace
   }
 
   /// True while the daemon reports [appID]'s agent in an error state (its last
-  /// turn ended in a failure and nothing has run since).
-  bool agentFailed(String appID) => _agents[appID]?['status'] == 'error';
+  /// turn ended in a failure and nothing has run since), or the app read its
+  /// last turn end on the agent's own failure line ("API Error: …", which
+  /// the daemon reports as an ordinary finished turn).
+  bool agentFailed(String appID) =>
+      _agents[appID]?['status'] == 'error' || lastTurnFailed(appID);
 
   /// Whether [appID]'s record has a title of its own (not the
   /// "Claude Code conversation" stand-in).
@@ -493,6 +522,11 @@ class PaseoGateway extends _PaseoWorkspace
   /// its app id until the first prompt creates it). Another gateway on the
   /// same daemon opens the conversation by this id.
   String daemonSessionId(String appID) => _real(appID);
+
+  /// This gateway's id for the daemon's [realID]: the draft's id when this
+  /// gateway created the agent (its chat list rows carry that id).
+  String appSessionId(String realID) => _app(realID);
+  @override
   String _app(String realID) => _appIDs[realID] ?? realID;
 
   @override
@@ -566,27 +600,15 @@ class PaseoGateway extends _PaseoWorkspace
     );
   }
 
-  static String _uuid() {
-    final random = Random.secure();
-    final b = List<int>.generate(16, (_) => random.nextInt(256));
-    b[6] = (b[6] & 0x0f) | 0x40;
-    b[8] = (b[8] & 0x3f) | 0x80;
-    final h = b.map((v) => v.toRadixString(16).padLeft(2, '0')).join();
-    return '${h.substring(0, 8)}-${h.substring(8, 12)}-${h.substring(12, 16)}-'
-        '${h.substring(16, 20)}-${h.substring(20)}';
-  }
-
   /// The runtime is only known once the composer names a model, so a new
-  /// conversation is local until its first prompt. The daemon accepts a
-  /// client-chosen agent id, which keeps the session id stable across that
-  /// hand-off.
+  /// conversation is local until its first prompt; its id stays the app's.
   @override
   Future<Session> createSession() async {
     final scope = _scope;
     await transport.connect();
     final now = DateTime.now().millisecondsSinceEpoch;
     final session = Session(
-      id: _uuid(),
+      id: _paseoUuid(),
       title: 'New conversation',
       directory: scope,
       time: SessionTime(created: now, updated: now),
@@ -694,21 +716,12 @@ class PaseoGateway extends _PaseoWorkspace
     _forget(id);
   }
 
-  /// The title [appID]'s record lost to a resume (the older record of the
-  /// same conversation had it): shown here while the record has none of its
-  /// own. Nothing is written to the helper (an update there moves the
-  /// conversation to the top as if it had just been used).
-  void keepTitle(String appID, String title) {
-    if (title.trim().isEmpty) return;
-    _titleHints[appID] = title;
-    if (hasOwnTitle(appID)) return;
-    final agent = _agents[appID];
-    if (agent != null) _agents[appID] = {...agent, 'title': title};
-    final session = _sessions[appID];
-    if (session != null) _sessions[appID] = session.copyWith(title: title);
-  }
-
   final _titleHints = <String, String>{};
+
+  /// The title the app saved for a conversation (by `provider:sessionId`):
+  /// a record without a title of its own shows it, in every list and header.
+  String? Function(String sessionKey)? savedTitle;
+  final _archivedCopies = <String>{};
 
   @override
   Future<void> renameSession(String id, String title) async {
@@ -769,6 +782,10 @@ class PaseoGateway extends _PaseoWorkspace
   // ---- history -----------------------------------------------------------
 
   @override
+  ({String? promptStamp, bool idle})? genUiRecoverySnapshot(String sessionID) =>
+      _genUiRecoverySnapshot(sessionID);
+
+  @override
   Future<bool> genUiSessionIdle(String sessionID) => _genUiIdle(sessionID);
 
   @override
@@ -780,7 +797,7 @@ class PaseoGateway extends _PaseoWorkspace
 
   @override
   Future<List<MessageWithParts>> messages(String id) async {
-    if (_drafts.contains(id) && !_uncertain.contains(id)) return const [];
+    if (_drafts.contains(id) && !await _draftStarted(id)) return const [];
     if (_isSubagent(id)) return _subagentMessages(id);
     final scope = _scope;
     final epoch = _locationEpoch;
@@ -792,40 +809,44 @@ class PaseoGateway extends _PaseoWorkspace
       'projection': 'projected',
     }, timeout: const Duration(seconds: 45));
     _checkLocation(scope, epoch);
+    _noteLoadedAgent(id, result);
     final busy = paseoSessionStatus(agent) == 'busy';
-    final tools = <String, Map<String, dynamic>>{};
-    final messages = paseoTimelineMessages(
-      id,
-      result,
-      busy: busy,
-      toolCalls: tools,
-    );
-    if (busy) unawaited(_watchUntilIdle(id));
-    // Hydrated items are known to the chat from here on, so later stream
-    // events for them are deltas and snapshots, never first announcements.
-    final live = _live.putIfAbsent(id, _PaseoLive.new);
-    live.tools
-      ..clear()
-      ..addAll(tools);
-    live.announced.clear();
-    live.runID = null;
-    live.runType = null;
-    for (final message in messages) {
-      live.announced[message.info.id] = StringBuffer(
-        message.parts.isEmpty ? '' : message.parts.first.text,
+    // Later messages wait until the history is in place, as if mapped inline.
+    return transport.holdingMessages(() async {
+      final (messages, tools) = await paseoTimelineReply(
+        id,
+        result,
+        busy: busy,
       );
-    }
-    final streamEpoch = result['epoch'];
-    if (streamEpoch is String) live.epoch = streamEpoch;
-    final end = result['endCursor'];
-    if (end is Map && end['seq'] is int) live.lastSeq = end['seq'] as int;
-    _uncertain.remove(id);
-    _localWork.changed();
-    final linked = _linkMessages(id, messages);
-    // Its sub-agents (an old conversation's too), read beside the history:
-    // their cards link to them when the list arrives.
-    if (_subagentsLoaded.add(id)) unawaited(_loadSubagents(id));
-    return linked;
+      _checkLocation(scope, epoch);
+      if (busy) unawaited(_watchUntilIdle(id));
+      // Hydrated items are known to the chat from here on, so later stream
+      // events for them are deltas and snapshots, never first announcements.
+      final live = _live.putIfAbsent(id, _PaseoLive.new);
+      live.tools
+        ..clear()
+        ..addAll(tools);
+      live.announced.clear();
+      live.runID = null;
+      live.runType = null;
+      for (final message in messages) {
+        live.announced[message.info.id] = StringBuffer(
+          message.parts.isEmpty ? '' : message.parts.first.text,
+        );
+      }
+      final streamEpoch = result['epoch'];
+      if (streamEpoch is String) live.epoch = streamEpoch;
+      final end = result['endCursor'];
+      if (end is Map && end['seq'] is int) live.lastSeq = end['seq'] as int;
+      _uncertain.remove(id);
+      _localWork.changed();
+      _noteTimeline(id, messages);
+      final linked = _linkMessages(id, messages);
+      // Its sub-agents (an old conversation's too), read beside the history:
+      // their cards link to them when the list arrives.
+      if (_subagentsLoaded.add(id)) unawaited(_loadSubagents(id));
+      return linked;
+    });
   }
 
   @override
@@ -841,7 +862,7 @@ class PaseoGateway extends _PaseoWorkspace
   // ---- prompts -----------------------------------------------------------
 
   @override
-  String createPromptMessageID() => _uuid();
+  String createPromptMessageID() => _paseoUuid();
 
   @override
   Future<void> promptAsync(
@@ -855,7 +876,7 @@ class PaseoGateway extends _PaseoWorkspace
     PromptDelivery? delivery,
   }) => _promptAsync(
     sessionID,
-    messageID: _uuid(),
+    messageID: _paseoUuid(),
     text: text,
     model: model,
     agent: agent,
@@ -921,7 +942,7 @@ class PaseoGateway extends _PaseoWorkspace
       throw PaseoFailure(PaseoFailureKind.unavailable);
     }
     final images = paseoImages(attachments);
-    if (_uncertain.contains(sessionID)) {
+    if (await _sendIsUncertain(sessionID)) {
       throw PaseoFailure(PaseoFailureKind.deliveryUnknown);
     }
     final scope = _scope;
@@ -995,13 +1016,8 @@ class PaseoGateway extends _PaseoWorkspace
       }
       _checkLocation(scope, epoch);
       _statuses[sessionID] = 'busy';
-    } catch (error) {
-      _awaitingTurn.remove(sessionID);
-      if (error is PaseoFailure &&
-          error.kind == PaseoFailureKind.deliveryUnknown) {
-        _uncertain.add(sessionID);
-      }
-      rethrow;
+    } catch (error, stack) {
+      _sendFailed(sessionID, error, stack, model);
     }
   });
 
@@ -1105,7 +1121,7 @@ class PaseoGateway extends _PaseoWorkspace
     return HostAgentContinuation(
       sessionId: sessionId,
       providerId: provider,
-      state: _liveAgentSessions.contains(sessionId)
+      state: _liveAgentSessions.contains(sessionId) || _daemonHolds(agent)
           ? HostAgentContinuationState.liveSession
           : !intact
           ? HostAgentContinuationState.missingHandle
@@ -1115,11 +1131,13 @@ class PaseoGateway extends _PaseoWorkspace
     );
   }
 
-  /// Reopens a conversation the helper no longer holds (it ran before the
-  /// helper last started) through the runtime's own session resume:
-  /// `resume_agent_request` with the agent's persistence handle. Returns the
-  /// id the conversation opens by. Throws when the daemon or the runtime
-  /// refuses, so the caller can offer a new conversation instead.
+  /// Reopens a conversation the helper no longer holds, in place: reading
+  /// its timeline loads the saved agent under its own id, whatever its last
+  /// status (session.js handleFetchAgentTimelineRequest → ensureAgentLoaded,
+  /// Paseo 0.11.2). `resume_agent_request` takes no id and makes a new agent
+  /// every time, which forked Kilo on each reopen (emulator 3920). Returns
+  /// the id; throws when the helper cannot load it, so the caller can offer
+  /// a new conversation instead.
   Future<String> resumeHostAgentChat(String sessionId) => _withPayloadUse(
     () async {
       final scope = _scope;
@@ -1138,30 +1156,26 @@ class PaseoGateway extends _PaseoWorkspace
       await _revokeBrowserSession(sessionId);
       final browserRevision = _browserRevision(sessionId);
       _checkLocation(scope, epoch);
-      final result = await transport.request(
-        'resume_agent_request',
-        {'handle': handle},
-        mutation: true,
-        timeout: const Duration(seconds: 90),
-      );
+      final result = await transport.request('fetch_agent_timeline_request', {
+        'agentId': _real(sessionId),
+        'direction': 'tail',
+        'limit': 1,
+        'projection': 'projected',
+      }, timeout: const Duration(seconds: 90));
       _checkLocation(scope, epoch);
       if (browserRequested && _browserRevision(sessionId) != browserRevision) {
         throw _browserUnavailable;
       }
       final resumed = {...paseoObject(result['agent'])};
-      // A resumed record may come back without the title it had.
+      // A loaded record may come back without the title it had.
       final title = resumed['title'];
       if ((title is! String || title.trim().isEmpty) &&
           agent['title'] is String) {
         resumed['title'] = agent['title'];
       }
       final realID = paseoString(resumed['id'], max: 256);
-      // The resumed agent may be a new record: the row the person tapped
-      // opens it.
       if (realID != _real(sessionId)) {
-        _moveBrowserRequest(_real(sessionId), realID);
-        _realIDs[sessionId] = realID;
-        _appIDs[realID] = sessionId;
+        throw PaseoFailure(PaseoFailureKind.invalidResponse);
       }
       if (_remember(resumed) == null) {
         throw PaseoFailure(PaseoFailureKind.scopeMismatch);
@@ -1402,6 +1416,8 @@ class PaseoGateway extends _PaseoWorkspace
 
   @override
   String? agentFeaturesOwner(String sessionID) => _agentOwnerName(sessionID);
+  @override
+  AgentLastTurn lastAgentTurn(String sessionID) => _lastAgentTurn(sessionID);
 
   @override
   Future<List<AgentFeature>> agentFeatures(String sessionID) =>
@@ -1446,14 +1462,16 @@ class PaseoGateway extends _PaseoWorkspace
       onError: onError ?? (Object _) {},
     );
     final states = _streamStates.stream.listen(onStatus);
-    return _PaseoEventChannel(
+    return _PaseoRetryingChannel(
       () async {
         await events.cancel();
         await states.cancel();
         _listening = false;
         _retry?.cancel();
         _retry = null;
+        _nextAttempt.value = null;
       },
+      nextAttempt: _nextAttempt,
       onStart: () {
         if (!_closed && _listening) {
           _emitState(StreamStatus.connecting);

@@ -26,6 +26,30 @@ class NativeRecoveryBudgetTest {
     }
 
     @Test
+    fun aBootOrUpdateStartsASettledCountOverButKeepsAnAttemptInFlight() {
+        var spent = NativeRecoveryBudget()
+        repeat(3) { index ->
+            spent = spent.reserve(at = 100L + index, generation = 7L, id = "event-$index")
+                .copy(pending = false, eventId = null, recoveryGeneration = null)
+        }
+        // Three updates in one day each spent a restore; the fourth must still restore.
+        val fresh = spent.afterSystemEvent()
+        assertEquals(0, fresh.attempts)
+        assertNull(fresh.nextAt)
+        assertEquals(spent.revision + 1, fresh.revision)
+        assertEquals(1, fresh.reserve(at = 300L, generation = 7L, id = "after-update").attempts)
+
+        val waiting = NativeRecoveryBudget(attempts = 1, nextAt = 500L, revision = 4L)
+        assertEquals(NativeRecoveryBudget(revision = 5L), waiting.afterSystemEvent())
+
+        val unused = NativeRecoveryBudget(revision = 2L)
+        assertEquals(unused, unused.afterSystemEvent())
+
+        val inFlight = NativeRecoveryBudget().reserve(at = 100L, generation = 7L, id = "running")
+        assertEquals(inFlight, inFlight.afterSystemEvent())
+    }
+
+    @Test
     fun threeReservationsAreTheLifetimeLimitEvenAfterReceiptsFinish() {
         var budget = NativeRecoveryBudget()
         repeat(3) { index ->
@@ -315,6 +339,39 @@ class NativeRecoveryBudgetTest {
         rejects("corrupt archive with unconfirmed attempt") {
             NativeRecoveryBudget.archiveConfirmed(corruptArchive, NativeRecoveryBudget())
         }
+    }
+
+    @Test
+    fun `presence resets only an open app's healthy settled server`() {
+        assertTrue(PresenceCase().allowed())
+        assertFalse(PresenceCase(resumed = false).allowed())
+        assertFalse(PresenceCase(wanted = false).allowed())
+        assertFalse(PresenceCase(userStopped = true).allowed())
+        assertFalse(PresenceCase(boundProfile = "other").allowed())
+        assertFalse(PresenceCase(running = false).allowed())
+        assertFalse(PresenceCase(pending = true).allowed())
+        assertFalse(PresenceCase(restoreInFlight = true).allowed())
+    }
+
+    private data class PresenceCase(
+        val resumed: Boolean = true,
+        val wanted: Boolean = true,
+        val userStopped: Boolean = false,
+        val boundProfile: String? = "profile",
+        val running: Boolean = true,
+        val pending: Boolean = false,
+        val restoreInFlight: Boolean = false,
+    ) {
+        fun allowed(): Boolean = NativeRecoveryBudget.presenceResetAllowed(PresenceReset(
+            resumed = resumed,
+            wanted = wanted,
+            userStopped = userStopped,
+            boundProfile = boundProfile,
+            requestedProfile = "profile",
+            running = running,
+            pending = pending,
+            restoreInFlight = restoreInFlight,
+        ))
     }
 
     private data class ManualResetCase(

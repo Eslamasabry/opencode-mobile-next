@@ -192,14 +192,16 @@ void main() {
     });
   });
 
-  testWidgets('Files: an empty folder is the open folder', (tester) async {
+  testWidgets('Files: an empty folder is the calm line, no drawing (vision '
+      '2026-10-20)', (tester) async {
     final controller = await _connected();
     await _mount(
       tester,
       controller,
       _page(FilesScreen(controller: controller)),
     );
-    expect(_drawn(tester), [isA<StatesFolderScene>()]);
+    expect(_drawn(tester), isEmpty);
+    expect(find.text('Folder is empty'), findsOneWidget);
     await _unmount(tester);
   });
 

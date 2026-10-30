@@ -34,9 +34,9 @@ const int arabicTranslatedPercent = 100;
 
 /// The same share for every language the picker offers, in whole per cent.
 /// English is the catalogue itself and is not listed. Spanish, Japanese,
-/// Brazilian Portuguese, Russian and Simplified Chinese carry the first-run
-/// screens and the chat core (docs/l10n/fg5-key-set.md); the rest of the app
-/// reads in English there. `test/revamp/shared_settings_1_test.dart` fails
+/// Brazilian Portuguese and Russian carry the first-run screens and the chat
+/// core (docs/l10n/fg5-key-set.md), Spanish a second tier too, and
+/// Simplified Chinese almost every message; the rest reads in English there. `test/revamp/shared_settings_1_test.dart` fails
 /// when one of these drifts by more than 3 points.
 const Map<String, int> languageTranslatedPercent = {
   'ar': arabicTranslatedPercent,
@@ -44,7 +44,7 @@ const Map<String, int> languageTranslatedPercent = {
   'ja': 9,
   'pt': 9,
   'ru': 9,
-  'zh': 100,
+  'zh': 92,
 };
 
 /// Opens the Language sheet.

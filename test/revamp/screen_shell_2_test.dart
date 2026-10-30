@@ -103,9 +103,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('shell frame', () {
-    testWidgets('a phone gets the dock and the glass top controls', (
-      tester,
-    ) async {
+    testWidgets('a phone gets no bar: the top controls carry search and the '
+        'Settings gear', (tester) async {
       _mockSecureStorage(tester);
       _size(tester, const Size(412, 915));
       final controller = await workController(sessions: workLoadedSessions());
@@ -113,17 +112,10 @@ void main() {
       await tester.pumpWidget(_Shell().app(controller));
       await _settle(tester);
 
-      expect(find.byType(KitNavBar), findsOneWidget);
+      // Owner, 2026-10-20: no bottom bar on a phone.
       expect(find.byType(KitNavRail), findsNothing);
-      for (final label in ['Conversations', 'Files', 'Settings']) {
-        expect(
-          find.descendant(
-            of: find.byType(KitNavBar),
-            matching: find.text(label),
-          ),
-          findsOneWidget,
-        );
-      }
+      expect(find.byKey(const ValueKey('home-shell-tab-files')), findsNothing);
+      expect(find.byKey(const ValueKey('home-shell-settings')), findsOneWidget);
       // The server pill says the state in words, not only by colour.
       expect(
         find.byKey(const ValueKey('server-switcher-button')),
@@ -155,13 +147,18 @@ void main() {
       await tester.pumpWidget(_Shell().app(controller, initialTab: 1));
       await _settle(tester);
 
-      expect(find.byType(KitNavBar), findsNothing);
       final rail = tester.widget<KitNavRail>(find.byType(KitNavRail));
       expect(rail.extended, isTrue);
       expect(rail.destinations[rail.selected].label, 'Files');
       // slice-R14: the pane has no bar repeating the highlighted
-      // destination; it starts with the destination's own content.
-      expect(find.byType(KitTopBar), findsNothing);
+      // destination. The Files browser keeps an untitled bar for its search,
+      // terminal and menu (vision Files, 2026-10-20), and no Back.
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is KitTopBar && widget.title.isNotEmpty,
+        ),
+        findsNothing,
+      );
       expect(find.byKey(const ValueKey('current-tab-title')), findsNothing);
       // The sidebar holds the server pill.
       expect(
@@ -184,7 +181,6 @@ void main() {
       await tester.pumpWidget(_Shell().app(controller));
       await _settle(tester);
 
-      expect(find.byType(KitNavBar), findsNothing);
       expect(
         tester.widget<KitNavRail>(find.byType(KitNavRail)).extended,
         isFalse,
@@ -293,7 +289,8 @@ void main() {
       tester,
     ) async {
       _mockSecureStorage(tester);
-      _size(tester, const Size(412, 915));
+      // The rail's Files destination (a phone has no tabs to go away).
+      _size(tester, const Size(700, 1000));
       final controller = await workController(sessions: workLoadedSessions());
       addTearDown(controller.dispose);
       await tester.pumpWidget(_Shell().app(controller, initialTab: 1));
@@ -321,7 +318,7 @@ void main() {
       // Picking a tab is the person moving on.
       await tester.tap(
         find.descendant(
-          of: find.byType(KitNavBar),
+          of: find.byType(KitNavRail),
           matching: find.text('Conversations'),
         ),
       );

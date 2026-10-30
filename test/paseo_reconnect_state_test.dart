@@ -194,7 +194,8 @@ void main() {
           );
           await _drain(tester);
           expect(world.controller.busySessions, contains(_id));
-          expect(find.text('Working on the task'), findsOneWidget);
+          // Mid-reply: the caret follows the words.
+          expect(find.textContaining('Working on the task'), findsOneWidget);
           expect(
             tester.widget<KitTurn>(find.byType(KitTurn).last).phase,
             KitTurnPhase.running,

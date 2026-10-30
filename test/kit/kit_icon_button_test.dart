@@ -672,6 +672,77 @@ void main() {
     },
   );
 
+  group('a toggled glyph cross-fades', () {
+    Widget eye(bool shown, {bool still = false}) => _host(
+      KitIconButton(
+        icon: shown ? AppIconography.hidden : AppIconography.visible,
+        tooltip: 'Show',
+        selected: shown,
+        onPressed: () {},
+      ),
+      disableAnimations: still,
+    );
+    Finder glyph(IconData icon) =>
+        find.descendant(of: _button, matching: find.byIcon(icon));
+
+    testWidgets('the old glyph fades out as the new one fades in', (
+      tester,
+    ) async {
+      await tester.pumpWidget(eye(false));
+      await tester.pumpWidget(eye(true));
+      await tester.pump(KitMotion.quick ~/ 2);
+      expect(glyph(AppIconography.visible), findsOneWidget);
+      expect(glyph(AppIconography.hidden), findsOneWidget);
+      final fading = tester
+          .widgetList<FadeTransition>(
+            find.ancestor(
+              of: glyph(AppIconography.hidden),
+              matching: find.byType(FadeTransition),
+            ),
+          )
+          .map((t) => t.opacity.value);
+      expect(fading.any((o) => o > 0 && o < 1), isTrue);
+      await tester.pumpAndSettle();
+      expect(glyph(AppIconography.visible), findsNothing);
+      expect(glyph(AppIconography.hidden), findsOneWidget);
+    });
+
+    testWidgets('under reduced motion the glyph changes at once', (
+      tester,
+    ) async {
+      await tester.pumpWidget(eye(false, still: true));
+      await tester.pumpWidget(eye(true, still: true));
+      await tester.pump();
+      expect(glyph(AppIconography.visible), findsNothing);
+      expect(glyph(AppIconography.hidden), findsOneWidget);
+    });
+
+    testWidgets('a colour change alone eases in place, with one glyph', (
+      tester,
+    ) async {
+      Widget pin(bool on) => _host(
+        KitIconButton(
+          icon: AppIconography.retry,
+          tooltip: 'Pin',
+          selected: on,
+          onPressed: () {},
+        ),
+      );
+      await tester.pumpWidget(pin(false));
+      await tester.pumpAndSettle();
+      final roles = ThemeRoles.resolve(AppTheme.dark());
+      expect(_glyphColor(tester), roles.text1);
+      await tester.pumpWidget(pin(true));
+      await tester.pump(KitMotion.quick ~/ 2);
+      expect(glyph(AppIconography.retry), findsOneWidget);
+      final midway = _glyphColor(tester);
+      expect(midway, isNot(roles.text1));
+      expect(midway, isNot(roles.accent));
+      await tester.pumpAndSettle();
+      expect(_glyphColor(tester), roles.accent);
+    });
+  });
+
   group('reduced motion settles after one pump (G8x)', () {
     const iconKey = ValueKey('kit-icon-button-icon');
     const workingKey = ValueKey('kit-icon-button-working');
@@ -929,9 +1000,246 @@ void main() {
         DecorationPosition.foreground,
       );
       expect(
-        find.descendant(of: ring, matching: find.byType(Material)),
+        // The press layer's clip (the ripple surface inside it has no
+        // shape of its own).
+        find.descendant(
+          of: ring,
+          matching: find.byWidgetPredicate(
+            (w) => w is Material && w.shape is CircleBorder,
+          ),
+        ),
         findsOneWidget,
       );
     },
   );
+
+  group('the turn motion (the Settings gear)', () {
+    double turns(WidgetTester tester) => tester
+        .widget<RotationTransition>(
+          find.byKey(
+            const ValueKey('kit-icon-button-turn'),
+            skipOffstage: false,
+          ),
+        )
+        .turns
+        .value;
+
+    Widget opener({bool reduce = false}) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: AppTheme.dark(),
+      builder: (context, widget) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: reduce),
+        child: widget!,
+      ),
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: Center(
+            child: KitIconButton(
+              icon: Icons.settings,
+              tooltip: 'Settings',
+              motion: KitIconMotion.turn,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const Scaffold(body: Text('Settings page')),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    testWidgets('turns a quarter in 200 ms as the page opens, holds while it '
+        'is open, and turns back on return', (tester) async {
+      await tester.pumpWidget(opener());
+      expect(turns(tester), 0);
+      await tester.tap(_button);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      final mid = turns(tester);
+      expect(mid, greaterThan(0));
+      expect(mid, lessThan(.25));
+      await tester.pumpAndSettle();
+      expect(find.text('Settings page'), findsOneWidget);
+      expect(turns(tester), closeTo(.25, 1e-9));
+      tester.state<NavigatorState>(find.byType(Navigator)).pop();
+      await tester.pumpAndSettle();
+      expect(turns(tester), 0);
+    });
+
+    testWidgets('with nothing opened it turns back by itself', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          KitIconButton(
+            icon: Icons.settings,
+            tooltip: 'Settings',
+            motion: KitIconMotion.turn,
+            onPressed: () {},
+          ),
+        ),
+      );
+      await tester.tap(_button);
+      await tester.pumpAndSettle();
+      expect(turns(tester), 0);
+    });
+
+    testWidgets('under reduced motion it does not turn', (tester) async {
+      await tester.pumpWidget(opener(reduce: true));
+      await tester.tap(_button);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(turns(tester), 0);
+      await tester.pumpAndSettle();
+      expect(find.text('Settings page'), findsOneWidget);
+    });
+
+    testWidgets('at rest nothing moves (no idle or looping animation)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(opener());
+      await tester.pump(const Duration(seconds: 3));
+      expect(tester.binding.hasScheduledFrame, isFalse);
+      expect(turns(tester), 0);
+    });
+
+    testWidgets('the shell bar gear is 24 and search 22, each on a round '
+        '48 dp surface', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: 400,
+            child: KitShellControls(
+              server: 'Laptop',
+              serverStatus: 'Connected',
+              onServer: () {},
+              onSearch: () {},
+              onSettings: () {},
+              searchKey: const ValueKey('search'),
+              settingsKey: const ValueKey('gear'),
+            ),
+          ),
+        ),
+      );
+      final gear = tester.widget<KitIconButton>(
+        find.byKey(const ValueKey('gear')),
+      );
+      final search = tester.widget<KitIconButton>(
+        find.byKey(const ValueKey('search')),
+      );
+      expect(
+        (gear.size, gear.round, gear.motion),
+        (24, true, KitIconMotion.turn),
+      );
+      expect((search.size, search.round), (22, true));
+      for (final key in ['gear', 'search']) {
+        final round = find.descendant(
+          of: find.byKey(ValueKey(key)),
+          matching: find.byKey(const ValueKey('kit-icon-button-round')),
+        );
+        expect(round, findsOneWidget);
+        expect(tester.getSize(round), const Size(48, 48));
+      }
+    });
+  });
+
+  group('round (the shell bar\'s search and gear)', () {
+    Widget round(KitSurfaceStyle style, {bool isRound = true}) => _host(
+      KitEffectsScope(
+        effects: const KitEffects().withSurfaceStyle(style),
+        child: KitIconButton(
+          icon: Icons.search,
+          tooltip: 'Search',
+          round: isRound,
+          onPressed: () {},
+        ),
+      ),
+    );
+
+    Iterable<BoxDecoration> circles(WidgetTester tester) => tester
+        .widgetList<DecoratedBox>(
+          find.descendant(
+            of: find.byKey(const ValueKey('kit-icon-button-round')),
+            matching: find.byType(DecoratedBox),
+          ),
+        )
+        .map((box) => box.decoration)
+        .whereType<BoxDecoration>()
+        .where((d) => d.shape == BoxShape.circle && d.color != null);
+
+    testWidgets('Solid light: the one quiet drop, black .10, y 4, blur 12', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Center(
+              child: KitIconButton(
+                icon: Icons.search,
+                tooltip: 'Search',
+                round: true,
+                onPressed: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      final shadow = circles(tester).single.boxShadow!.single;
+      expect(shadow.color.a, closeTo(.10, .005));
+      expect(shadow.offset, const Offset(0, 4));
+      expect(shadow.blurRadius, 12);
+      expect(shadow.spreadRadius, -4);
+    });
+
+    testWidgets('a plain button draws no circle of its own', (tester) async {
+      await tester.pumpWidget(round(KitSurfaceStyle.solid, isRound: false));
+      expect(find.byKey(const ValueKey('kit-icon-button-round')), findsNothing);
+    });
+
+    testWidgets('Solid: a surface2 circle with the hairline, no shadow in '
+        'dark, outside the press clip, the full 48', (tester) async {
+      await tester.pumpWidget(round(KitSurfaceStyle.solid));
+      final surface = find.byKey(const ValueKey('kit-icon-button-round'));
+      expect(tester.getSize(surface), const Size(48, 48));
+      final roles = KitTokens.of(
+        tester.element(find.byType(KitIconButton)),
+      ).roles;
+      final circle = circles(tester).single;
+      expect(circle.color, roles.surface2);
+      expect(circle.border, isNotNull);
+      // Unslop 2026-10-30: in dark surface2 and the hairline lift it; the
+      // quiet drop (black .10) is light mode's only.
+      expect(circle.boxShadow ?? const <BoxShadow>[], isEmpty);
+      // The press layer's clip is inside the circle, so a shadow is whole.
+      expect(
+        // The press layer's clip (the ripple surface inside it has no
+        // shape of its own).
+        find.descendant(
+          of: surface,
+          matching: find.byWidgetPredicate(
+            (w) => w is Material && w.shape is CircleBorder,
+          ),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    for (final style in KitSurfaceStyle.values) {
+      testWidgets('${style.name}: the style draws a resting circle', (
+        tester,
+      ) async {
+        await tester.pumpWidget(round(style));
+        expect(tester.takeException(), isNull);
+        expect(
+          find.byKey(const ValueKey('kit-icon-button-round')),
+          findsOneWidget,
+        );
+        await tester.tap(find.byType(KitIconButton));
+        await tester.pump();
+      });
+    }
+  });
 }

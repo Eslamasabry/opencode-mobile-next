@@ -4,7 +4,7 @@ The app supports OpenCode 2. On a computer with Node.js and npm installed,
 install the pinned official CLI and start a loopback-only server:
 
 ```sh
-npm install -g @opencode/cli@2.0.29 &&
+npm install -g @opencode/cli@2.1.1 &&
 opencode2 serve --hostname 127.0.0.1 --port 4096
 ```
 

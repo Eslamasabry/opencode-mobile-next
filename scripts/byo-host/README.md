@@ -1,7 +1,7 @@
 # Private BYO host bundle
 
 Original stdlib Python supervisor and deterministic packaging for bundle **2.0.0**,
-OpenCode **2.0.29**. This is the host half of the Ubuntu SSH adoption backend.
+OpenCode **2.1.1**. This is the host half of the Ubuntu SSH adoption backend.
 No infrastructure API credential is stored here. No service is published, no
 upstream artifact is executed by these files, and no real host has been
 provisioned by the offline tests. The release builder downloads pinned public
@@ -68,7 +68,7 @@ returns `unsupportedHost`.
 
 ## Packaging and SSH install contract
 
-The maintainer supplies the **already verified** extracted Linux OpenCode 2.0.29
+The maintainer supplies the **already verified** extracted Linux OpenCode 2.1.1
 ELF binary and its reviewed SHA-256. The script verifies that digest and ELF
 architecture; release provenance/version must already have been verified by the
 maintainer (it does not run a potentially foreign-architecture binary).
@@ -116,7 +116,7 @@ bundle. Upgrade/replacement is intentionally unavailable in this slice.
 Success stdout (and CLI `pair`) is one JSON object:
 
 ```json
-{"hostId":"STABLE_UUID","bundleVersion":"2.0.0","openCodeVersion":"2.0.29","port":4096,"deviceId":"PROFILE_ID"}
+{"hostId":"STABLE_UUID","bundleVersion":"2.0.0","openCodeVersion":"2.1.1","port":4096,"deviceId":"PROFILE_ID"}
 ```
 
 Failures return a fixed JSON `error` code and nonzero exit. Never display arbitrary
@@ -192,7 +192,7 @@ both workflows arrange the same draft sequentially. It never publishes a release
 or replaces an existing release asset. Its only write permission is repository
 contents in the tag job; checkout does not retain the token in Git config.
 
-The committed `release-pins.json` freezes official OpenCode **2.0.29** Linux
+The committed `release-pins.json` freezes official OpenCode **2.1.1** Linux
 npm tarball hashes, copied from the reviewed `OpenCodePins.v2*` used by in-app
 setup. Those tarballs were checked against npm SHA-512 integrity on 2026-10-14.
 The builder verifies SHA-256 before reading only `package/bin/opencode` and

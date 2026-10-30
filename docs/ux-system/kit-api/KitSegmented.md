@@ -223,3 +223,8 @@ In `test/kit/kit_segmented_test.dart` (G9, G14, G37, TEST-15):
 ## Open questions
 
 None. The Segmented → ChoiceList dependency for the stacked form is in README.md's build_units list.
+
+## Appearance revamp additions (2026-10-20)
+
+- **The chosen segment is filled in the accent** (`roles.accent`), its words, check and icon in `onAccent`, as the studio's tab pill is. This replaces the neutral `surface3` indicator everywhere the control is used. The keyboard focus ring is still a 2 physical px accent stroke inside the segment (on a chosen segment the ring and the fill share the colour; the ring is drawn as an outline over it).
+- **`iconOnly: true`** draws a compact pill of icons, as wide as its icons (`minTarget * 1.15` each), at the start edge. Every segment needs an icon; its `label` stays as the tooltip and the semantics label, so an icon is never the only name. It never stacks. Used for light, dark and system on Appearance.

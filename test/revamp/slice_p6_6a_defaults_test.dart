@@ -81,7 +81,7 @@ Future<void> _pumpReview(
   await tester.pumpAndSettle();
 }
 
-Finder _header(String path) => find.byKey(ValueKey('review-file-header-$path'));
+Finder _header(String path) => find.byKey(ValueKey('review-fold-$path'));
 
 final _reviewNotice = find.byKey(const Key('review-default-scope'));
 
@@ -269,7 +269,10 @@ void main() {
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: SettingsScreen(controller: controller),
+          home: SettingsScreen(
+            controller: controller,
+            initialGroup: SettingsGroup.ai,
+          ),
         ),
       );
       await tester.pumpAndSettle();

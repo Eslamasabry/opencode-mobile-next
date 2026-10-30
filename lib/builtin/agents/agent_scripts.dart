@@ -53,16 +53,18 @@ def account(value):
 home = os.environ.get('HOME', '')
 if os.getuid() != 1000 or not home.startswith('/home/oc/.oc-profiles/') or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', home[len('/home/oc/.oc-profiles/'):]):
     fail('invalidContext')
-if agent not in ('claude', 'fx'):
+if agent not in ('claude', 'fx', 'codex', 'kilo', 'cline'):
     fail('probeUnsupported')
 binary = '/home/oc/.local/bin/' + executable
 if not os.access(binary, os.X_OK): fail('notInstalled')
-def run(args, parse=True):
+def run(args, parse=True, stderr=False):
     # Keep even a misbehaving CLI bounded; kill only this owned process group.
-    process = subprocess.Popen([binary] + args, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, start_new_session=True)
+    # A CLI that reports on stderr (Codex) has that stream read instead.
+    process = subprocess.Popen([binary] + args, stdout=subprocess.DEVNULL if stderr else subprocess.PIPE, stderr=subprocess.PIPE if stderr else subprocess.DEVNULL, start_new_session=True)
+    stream = process.stderr if stderr else process.stdout
     output = bytearray()
     selector = selectors.DefaultSelector()
-    selector.register(process.stdout, selectors.EVENT_READ)
+    selector.register(stream, selectors.EVENT_READ)
     # A freshly replaced native binary can take longer to cold-start under PRoot.
     deadline = time.monotonic() + (60 if agent == 'claude' and action == 'probe' else 8)
     try:
@@ -76,7 +78,7 @@ def run(args, parse=True):
                 else:
                     output.extend(block)
                     if len(output) > 65536: raise ValueError()
-        return process.wait(timeout=max(0.01, deadline-time.monotonic())), json.loads(output) if parse else None
+        return process.wait(timeout=max(0.01, deadline-time.monotonic())), json.loads(output) if parse else output.decode('utf-8', 'replace')
     finally:
         selector.close()
         try: os.killpg(process.pid, signal.SIGKILL)
@@ -115,6 +117,40 @@ try:
             if action == 'logout': fail('signOutFailed')
             emit('signedIn')
         else: fail('invalidResponse')
+    elif agent == 'codex':
+        # `codex login status` says it on stderr: "Logged in using ChatGPT"
+        # or "... an API key - <masked>" with exit 0, "Not logged in" with 1.
+        if os.environ.get('CODEX_HOME') != home + '/codex': fail('invalidContext')
+        code, text = run(['login', 'status'], parse=False, stderr=True)
+        lines = [line.strip() for line in text.splitlines()]
+        if code == 0 and any(line.startswith('Logged in using ') for line in lines): emit('signedIn')
+        elif code == 1 and 'Not logged in' in lines: emit('signedOut')
+        else: fail('invalidResponse')
+    else:
+        # Kilo and Cline have no non-interactive status command: their own
+        # credential stores say whether a sign-in or a key is there. Only
+        # presence is read; no value leaves this process.
+        def stored(path):
+            try:
+                with open(path, encoding='utf-8') as source: return json.load(source)
+            except FileNotFoundError: return None
+        def present(value): return isinstance(value, str) and value.strip() != ''
+        if agent == 'kilo':
+            data = stored(home + '/.local/share/kilo/auth.json')
+            if data is None: emit('signedOut')
+            elif not isinstance(data, dict): fail('invalidResponse')
+            elif any(isinstance(entry, dict) and entry.get('type') in ('oauth', 'api', 'wellknown') for entry in data.values()): emit('signedIn')
+            else: emit('signedOut')
+        else:
+            data = stored(home + '/.cline/data/settings/providers.json')
+            if data is None: emit('signedOut')
+            elif not isinstance(data, dict) or not isinstance(data.get('providers', {}), dict): fail('invalidResponse')
+            else:
+                entry = data.get('providers', {}).get(data.get('lastUsedProvider') or 'cline')
+                settings = entry.get('settings') if isinstance(entry, dict) else None
+                auth = settings.get('auth') if isinstance(settings, dict) else None
+                if isinstance(settings, dict) and (present(settings.get('apiKey')) or (isinstance(auth, dict) and present(auth.get('accessToken')))): emit('signedIn')
+                else: emit('signedOut')
 except (subprocess.TimeoutExpired, TimeoutError): fail('timedOut')
 except (ValueError, TypeError, KeyError): fail('invalidResponse')
 except OSError: fail('hostUnavailable')

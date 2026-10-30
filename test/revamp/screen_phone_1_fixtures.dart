@@ -17,12 +17,15 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/termux_running_server.dart';
+import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_undo.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_start_screen.dart';
 import 'package:opencode_mobile/voice/device.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../tool/capture/fixtures.dart' show captureTheme;
+// AUDIT TOOLING (audit/style-coherence): no-op unless AUDIT_STYLE is set.
+import '../../tool/capture/audit/audit_env.dart';
 import '../support/fake_setup_engine.dart';
 
 const phoneSize = Size(412, 915);
@@ -175,9 +178,13 @@ Future<FakeSetupEngine> pumpPhone(
   void Function(ConnectionController controller)? configure,
   List<Override> overrides = const [],
   Duration readyTimeout = const Duration(seconds: 90),
+  double pixelRatio = 1,
+  Locale? locale,
+  double textScale = 1,
+  bool animations = false,
 }) async {
-  tester.view.physicalSize = size;
-  tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = size * pixelRatio;
+  tester.view.devicePixelRatio = pixelRatio;
   addTearDown(tester.view.reset);
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
@@ -215,12 +222,18 @@ Future<FakeSetupEngine> pumpPhone(
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
-          theme: captureTheme(light: light),
+          theme: locale == null
+              ? captureTheme(light: light)
+              : AppTheme.forLocale(captureTheme(light: light), locale),
+          locale: locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(disableAnimations: true),
-            child: child!,
+            data: MediaQuery.of(context).copyWith(
+              disableAnimations: !animations,
+              textScaler: TextScaler.linear(textScale),
+            ),
+            child: auditWrap(context, child!),
           ),
           routes: {
             '/': (_) => home,

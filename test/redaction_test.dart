@@ -296,6 +296,11 @@ const _verbatimOwnContent = <String, (int, String)>{
     1,
     'Copy contents copies the person\'s own file as it is (SEC-13)',
   ),
+  'lib/ui/kit/kit_viewer_build.dart': (
+    1,
+    'the reader\'s Copy (beside Ask about this file) copies the same text '
+        'as Copy contents: the person\'s own project file as it is (SEC-13)',
+  ),
   'lib/ui/kit/kit_diff_view.dart': (
     1,
     'copies the selected lines of the person\'s own diff (SEC-13)',
@@ -711,12 +716,7 @@ void main() {
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: AppDiagnosticsScreen(
-            diagnostics: diagnostics,
-            version: () async => '9.9.9+1',
-            linkLauncher: (_) async => true,
-            share: (_, _) async => true,
-          ),
+          home: AppDiagnosticsKeptScreen(diagnostics: diagnostics),
         ),
       );
       await tester.pumpAndSettle();
@@ -742,8 +742,8 @@ void main() {
     );
   });
 
-  testWidgets('Report a problem: the preview, Copy, Share and the GitHub '
-      'link carry no secret', (tester) async {
+  testWidgets('Report a problem: Details, Copy and the GitHub link carry '
+      'no secret', (tester) async {
     final clipboard = _clipboard(tester);
     final handedOut = <String>[];
     final diagnostics = AppDiagnosticsController();
@@ -776,12 +776,6 @@ void main() {
                 ..add(Uri.decodeFull(uri.toString()));
               return true;
             },
-            share: (text, subject) async {
-              handedOut
-                ..add(text)
-                ..add(subject);
-              return true;
-            },
           ),
         ),
       );
@@ -797,19 +791,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      Future<void> review() async {
-        final button = find.byKey(const ValueKey('report-problem-review'));
-        await tester.ensureVisible(button);
-        await tester.pumpAndSettle();
-        await tester.tap(button);
-        await tester.pumpAndSettle();
-        expect(
-          find.byKey(const ValueKey('report-problem-preview-sheet')),
-          findsOneWidget,
-        );
-      }
-
-      Future<void> tapInSheet(String key) async {
+      Future<void> tapKey(String key) async {
         final button = find.byKey(ValueKey(key));
         await tester.ensureVisible(button);
         await tester.pumpAndSettle();
@@ -817,7 +799,8 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      await review();
+      // Details holds exactly what is sent.
+      await tapKey('report-problem-details');
       final preview = tester
           .widget<KitText>(
             find.byKey(const ValueKey('report-problem-preview-text')),
@@ -827,39 +810,27 @@ void main() {
       expect(
         _leaksIn(preview),
         isEmpty,
-        reason: 'the preview is exactly what is sent',
+        reason: 'Details is exactly what is sent',
       );
-      // The sheet's own rendered text, before the field is on screen again.
-      final sheetText = [
+      // The page's own rendered text, apart from the field.
+      final pageText = [
         for (final widget in tester.allWidgets)
           if (widget is RichText) widget.text.toPlainText(),
       ].where((t) => !t.startsWith('$_marker ${_fakes.first.line}'));
-      for (final text in sheetText) {
-        expect(_leaksIn(text), isEmpty, reason: 'the preview sheet renders');
+      for (final text in pageText) {
+        expect(_leaksIn(text), isEmpty, reason: 'the page renders');
       }
 
-      await tapInSheet('report-problem-copy');
+      await tapKey('report-problem-copy');
       await _settleTimers(tester);
 
-      await tapInSheet('report-problem-share');
-      await _settleTimers(tester);
-
-      await tester.enterText(
-        find.descendant(
-          of: find.byKey(const ValueKey('report-problem-description')),
-          matching: find.byType(EditableText),
-        ),
-        '$_marker ${_fakes.first.line}',
-      );
-      await tester.pumpAndSettle();
-      await review();
-      await tapInSheet('report-problem-open-github');
+      await tapKey('report-problem-send');
       await tester.tap(find.text('Open link'));
       await tester.pumpAndSettle();
       await _settleTimers(tester);
     });
     expect(clipboard, isNotEmpty, reason: 'Copy reached the clipboard');
-    expect(handedOut, isNotEmpty, reason: 'Share and GitHub were used');
+    expect(handedOut, isNotEmpty, reason: 'GitHub was used');
     // The description field itself holds what the person typed; every
     // other drawn string, and everything handed out, is checked.
     final field = find.descendant(

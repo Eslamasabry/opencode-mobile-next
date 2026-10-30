@@ -67,6 +67,7 @@ class KitMarkdown extends StatefulWidget {
     this.onCodeWrapChanged,         // the reader preference; null: each block keeps its own
     this.onOpenCode,                // non-null: capped code says "Open full output" and calls this
     this.codeLanguage,              // non-null: all of [data] is one code block in this language
+    this.streaming = false,         // true: a KitStreamCaret after the last words (paragraph, heading, quote or list tail; none after code, a table or pictures)
   }) : assert(role == KitTextRole.body || role == KitTextRole.secondary,
            'KitMarkdown runs in body or secondary only');
 
@@ -82,6 +83,7 @@ class KitMarkdown extends StatefulWidget {
   final ValueChanged<bool>? onCodeWrapChanged;
   final void Function(String code, String? language)? onOpenCode;
   final String? codeLanguage;
+  final bool streaming;
 
   /// Conservative path test, moved from markdown.dart: multi-segment, no
   /// spaces, no scheme, anchored (/, ~/, ./) or ending in an extension.
@@ -114,7 +116,7 @@ class KitMarkdown extends StatefulWidget {
 
 **Compatibility (KIT-43, R11, R12).** `lib/ui/widgets/markdown.dart` keeps every public name with its signature. No `@Deprecated` (KIT-43 overrides the work-units acceptance line "a @Deprecated wrapper"). Each old name gets a `/// Retired by kit-KitMarkdown: use KitMarkdown` note and a G2 pattern:
 
-- `MarkdownText(data, {baseStyle, codeBlockLanguage, selectable, onChoice})` builds a `KitMarkdown`. `baseStyle` non-null maps to `role: secondary, tone: secondary`. `codeBlockLanguage` maps to `codeLanguage`. `onChoice` and the three agent blocks are passed as a `blockBuilder` that builds `AgentChoicesBlock`/`AgentChecklistBlock`/`AgentCommandBlock` as today (the wrapper, not the kit, imports `agent_blocks.dart`). `TranscriptHighlight.decorate` is passed as the `highlighter`. `MarkdownInteractionScope` and `MarkdownFileLinks` stay in `markdown.dart` as they are; the wrapper reads them and passes `interactive` and `fileLinks`. `ReaderPreferencesScope`'s `wrapCode` is passed as `codeWrap`/`onCodeWrapChanged`. The wrapper passes an `onOpenCode` that pushes the reader page.
+- `MarkdownText(data, {baseStyle, codeBlockLanguage, selectable, onChoice, streaming})` builds a `KitMarkdown`. `baseStyle` non-null maps to `role: secondary, tone: secondary`. `codeBlockLanguage` maps to `codeLanguage`. `onChoice` and the three agent blocks are passed as a `blockBuilder` that builds `AgentChoicesBlock`/`AgentChecklistBlock`/`AgentCommandBlock` as today (the wrapper, not the kit, imports `agent_blocks.dart`). `TranscriptHighlight.decorate` is passed as the `highlighter`. `MarkdownInteractionScope` and `MarkdownFileLinks` stay in `markdown.dart` as they are; the wrapper reads them and passes `interactive` and `fileLinks`. `ReaderPreferencesScope`'s `wrapCode` is passed as `codeWrap`/`onCodeWrapChanged`. The wrapper passes an `onOpenCode` that pushes the reader page.
 - `MarkdownText.debugParseCount` becomes a static getter/setter over `KitMarkdown.debugParseCount`.
 - `looksLikeFilePath`, `stripPathLineSuffix` and `markdownProseForSpeech` forward to the statics.
 - `CodeBlock({code, originalSource, language, highlightEnabled, initialWrap, canExpand})` builds `KitCodeBlock(text: code, copyText: originalSource, language, highlight: highlightEnabled, wrap: initialWrap, maxLines: canExpand ? 12 : null)`.
@@ -176,9 +178,10 @@ KitMarkdown lays out at the width its host gives it. The chat host caps the conv
 
 ## Motion and haptics
 
-- Nothing animates: blocks appear as parsed. A path chip turning into a link swaps colour without a transition.
+- While `streaming` (owner request, 2026-10-27): the words just appended to the block being written fade in over `KitMotion.standard` on `enter` (colour only, paint-only for the paragraph); a block that begins mid-reply fades in whole; the reply's box grows to each new height on `KitMotion.replyGrow` (a critically damped spring, about 210 ms a line, keeping its speed when a line lands mid-way; its words clipped at the bottom until it gets there) so the transcript above glides up and the live line under it stays put. A shrink is instant. A finished reply, and one drawn as its page opens, show at once.
+- Otherwise nothing animates: blocks appear as parsed. A path chip turning into a link swaps colour without a transition.
 - Code blocks' "Show all" is KitCodeBlock's (KitReveal, not in a scrolling list's layout).
-- Reduced motion: nothing to reduce; one `pump()` settles (G8x).
+- Reduced motion: no fade and no glide; one `pump()` settles (G8x).
 - Haptics: none (MOT-11).
 
 ## Data safety and honest state

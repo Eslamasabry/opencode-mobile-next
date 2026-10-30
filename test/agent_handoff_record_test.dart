@@ -39,6 +39,33 @@ void main() {
   setUp(KitRedact.clearKnownSecrets);
   tearDown(KitRedact.clearKnownSecrets);
 
+  test('the record stays the same when the writers mask it again', () {
+    // A phone chat's file list: the first path is long enough to be masked,
+    // and the quoted line break turns the next one into a 32-character run.
+    final built = record([
+      message(
+        'assistant',
+        'Listed the files',
+        extra: [
+          Part(
+            type: 'tool',
+            toolName: 'bash',
+            toolState: ToolState(
+              status: 'completed',
+              output:
+                  'lib/state/app_state_premium.dart\n'
+                  'lib/l10n/app_localizations_ar.dart\n'
+                  'lib/l10n/app_localizations.dart\n',
+            ),
+          ),
+        ],
+      ),
+    ]);
+    expect(KitRedact.opaqueTokens(built.markdown), built.markdown);
+    expect(built.redacted, isTrue);
+    expect(built.byteLength, utf8.encode(built.markdown).length);
+  });
+
   test('retains exact user text and assistant text in source order', () {
     const prompt = '  Fix this\n```dart\nfinal answer = 42;\n```\nالعربية 🚀';
     final result = record([

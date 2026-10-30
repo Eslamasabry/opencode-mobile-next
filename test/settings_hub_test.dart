@@ -27,6 +27,8 @@ import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/search/search_index.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'support/settings_doors.dart';
+
 class _Api extends FakeServerGateway {
   _Api(this._capabilities) : super(baseUrl: 'http://localhost');
 
@@ -146,13 +148,26 @@ void main() {
     await tester.pumpWidget(_app(controller));
     await tester.pumpAndSettle();
 
-    // Settings Standard G1: Connections, AI, Chat, This app, Help and about,
-    // five fixed labels that never change with the server.
+    // Vision 2026-10-20: a search and five one-word doors, Server, Agent,
+    // Conversations, This app and Help, that never change with the server.
     const slugs = ['connections', 'ai', 'chat', 'this-app', 'help'];
     expect(SettingsGroup.values.map((group) => group.slug), slugs);
+    expect(_row('settings-hub-search-field'), findsOneWidget);
+    for (final word in [
+      _en.settingsHubServer,
+      _en.settingsHubGroupAgent,
+      _en.settingsHubGroupConversations,
+      _en.settingsHubGroupThisApp,
+      _en.settingsHubHelp,
+    ]) {
+      expect(find.text(word), findsOneWidget, reason: word);
+    }
+    // No section headers and no rows of the groups on the hub itself.
+    expect(_row('settings-saved-servers'), findsNothing);
+    expect(_row('settings-model-and-mode'), findsNothing);
     var previous = double.negativeInfinity;
     for (final slug in slugs) {
-      final group = _row('settings-group-$slug');
+      final group = _row('settings-hub-row-$slug');
       expect(group, findsOneWidget, reason: slug);
       final top = tester.getTopLeft(group).dy;
       expect(top, greaterThan(previous), reason: '$slug is out of order');
@@ -440,6 +455,7 @@ void main() {
     addTearDown(controller.dispose);
     await tester.pumpWidget(_app(controller));
     await tester.pumpAndSettle();
+    await openSettingsGroup(tester, SettingsGroup.help);
     final last = _row('settings-group-help');
     for (final key in [
       'settings-setup-guide',
@@ -535,37 +551,39 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(capabilities.serverCatalog, isFalse);
-        expect(_row('settings-models'), findsNothing);
+        final pages = await visitSettingsGroups(tester);
+        final ids = settingsRowIds(pages);
+        expect(ids, isNot(contains('settings-models')));
         // One row for whoever the model is paid through: the Codex account
         // on Codex, nothing on Paseo.
-        expect(
-          _row('settings-providers'),
-          capabilities.agentAccount ? findsOneWidget : findsNothing,
-        );
-        expect(_row('settings-mcp'), findsNothing);
-        expect(_row('settings-commands-tools'), findsNothing);
-        expect(_row('library-terminal'), findsNothing);
+        expect(ids.contains('settings-providers'), capabilities.agentAccount);
+        expect(ids, isNot(contains('settings-mcp')));
+        expect(ids, isNot(contains('settings-commands-tools')));
+        expect(ids, isNot(contains('library-terminal')));
         // Neither runtime keeps a list of standing grants the app can read.
-        expect(_row('saved-permissions-entry'), findsNothing);
+        expect(ids, isNot(contains('saved-permissions-entry')));
         // Import lives in All conversations' menu, not in Settings.
-        expect(_row('library-import-session'), findsNothing);
+        expect(ids, isNot(contains('library-import-session')));
         expect(
-          _row('default-shell-settings-entry'),
-          capabilities.shellSettings ? findsOneWidget : findsNothing,
+          ids.contains('default-shell-settings-entry'),
+          capabilities.shellSettings,
         );
         // No exception any more: the shell row is absent, not disabled, and
-        // Help → "Available on this server" says why (rule 7).
-        expect(_row('gated-shell-settings'), findsNothing);
-        expect(_row('settings-unavailable'), findsOneWidget);
+        // the page whose rows went says so in one line with a Why (rule 7).
+        expect(ids, isNot(contains('gated-shell-settings')));
+        expect(
+          pages.notes.values.fold<int>(0, (a, b) => a + b),
+          greaterThanOrEqualTo(1),
+        );
         // The Providers row is the account's door; no second row for it.
-        expect(_row('settings-accounts'), findsNothing);
+        expect(ids, isNot(contains('settings-accounts')));
         // Tools stays: plugins and external agents are not the server's.
-        expect(_row('settings-tools'), findsOneWidget);
+        expect(ids, contains('settings-tools'));
         // Absent rows are absent from search too, not dead results.
         expect(_found(controller, 'mcp'), isNot(contains('settings-mcp')));
         // What is about the app, not the server, survives.
-        expect(_row('settings-category-appearance'), findsOneWidget);
-        expect(_row('settings-saved-servers'), findsOneWidget);
+        expect(ids, contains('settings-category-appearance'));
+        expect(ids, contains('settings-saved-servers'));
       });
     }
 
@@ -584,16 +602,17 @@ void main() {
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
 
+      final ids = settingsRowIds(await visitSettingsGroups(tester));
       for (final key in agentSetupRows) {
-        expect(_row(key), findsNothing, reason: key);
+        expect(ids, isNot(contains(key)), reason: key);
       }
       // Plugins ("In this app") still needs only a saved server.
-      expect(_row('settings-group-connections'), findsOneWidget);
+      expect(settingsDoor(SettingsGroup.connections), findsOneWidget);
       // Notifications stays off Android: saved-server monitoring and
       // check-ins work in the open app, so its row is never empty. The
       // Background row is Android's alone and goes.
-      expect(_row('settings-category-notifications'), findsOneWidget);
-      expect(_row('settings-category-background'), findsNothing);
+      expect(ids, contains('settings-category-notifications'));
+      expect(ids, isNot(contains('settings-category-background')));
       expect(find.textContaining('Background:'), findsNothing);
 
       // Usage has one row, for "Spending" or "Plans". With neither usage
@@ -606,8 +625,9 @@ void main() {
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(_app(bare));
       await tester.pumpAndSettle();
-      expect(_row('settings-category-usage'), findsNothing);
-      expect(_row('settings-group-help'), findsOneWidget);
+      final bareIds = settingsRowIds(await visitSettingsGroups(tester));
+      expect(bareIds, isNot(contains('settings-category-usage')));
+      expect(settingsDoor(SettingsGroup.help), findsOneWidget);
     });
   });
 
@@ -641,6 +661,7 @@ void main() {
       );
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.ai);
       // Once, as the Model row's value (one Model row, R3).
       expect(find.textContaining('Nemotron Ultra'), findsOneWidget);
       expect(find.textContaining('opencode/nemotron-free'), findsNothing);
@@ -685,7 +706,7 @@ void main() {
     expect(_found(controller, 'terminal'), isNot(contains('library-terminal')));
   });
 
-  testWidgets('an entry point can open the hub scrolled to a group', (
+  testWidgets('an entry point on a phone opens its group\'s page', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 700);
@@ -697,13 +718,13 @@ void main() {
     await tester.pumpWidget(_app(controller, initialGroup: SettingsGroup.help));
     await tester.pumpAndSettle();
 
-    final help = tester.getRect(_row('settings-group-help'));
-    expect(help.top, lessThan(700));
-    expect(help.top, greaterThanOrEqualTo(0));
-    expect(
-      tester.getRect(_row('settings-group-connections')).bottom,
-      lessThan(0),
-    );
+    // The page itself, titled with the group's word: no hub doors above it.
+    expect(find.byType(SettingsGroupScreen), findsOneWidget);
+    expect(find.text(_en.settingsHubHelp), findsOneWidget);
+    expect(settingsDoor(SettingsGroup.help), findsNothing);
+    final guide = tester.getRect(_row('settings-setup-guide'));
+    expect(guide.top, greaterThanOrEqualTo(0));
+    expect(guide.bottom, lessThan(700));
   });
 
   group('screen-settings-1: two panes from expanded', () {
@@ -728,10 +749,7 @@ void main() {
       expect(detail, findsOneWidget);
       for (final group in SettingsGroup.values) {
         expect(
-          find.descendant(
-            of: list,
-            matching: _row('settings-index-${group.slug}'),
-          ),
+          find.descendant(of: list, matching: settingsDoor(group)),
           findsOneWidget,
           reason: group.slug,
         );
@@ -743,7 +761,7 @@ void main() {
       );
       expect(_row('settings-setup-guide'), findsNothing);
 
-      await tester.tap(_row('settings-index-help'));
+      await tester.tap(settingsDoor(SettingsGroup.help));
       await tester.pumpAndSettle();
       expect(
         find.descendant(of: detail, matching: _row('settings-setup-guide')),
@@ -779,7 +797,8 @@ void main() {
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('settings-list-pane')), findsNothing);
-      expect(_row('settings-group-connections'), findsOneWidget);
+      expect(settingsDoor(SettingsGroup.connections), findsOneWidget);
+      expect(_row('settings-saved-servers'), findsNothing);
     });
 
     testWidgets('Show tips again says so on its row, not in a snackbar', (
@@ -827,19 +846,14 @@ void main() {
 
       final titles = <String>[];
       var total = 0;
+      final pages = await visitSettingsGroups(tester);
       for (final group in SettingsGroup.values) {
-        final panel = _row('settings-group-${group.slug}');
-        expect(panel, findsOneWidget, reason: group.slug);
-        final rows = find.descendant(
-          of: panel,
-          matching: find.byType(KitArrival),
-        );
-        final count = rows.evaluate().length;
+        final ids = pages.rows[group];
+        expect(ids, isNotNull, reason: group.slug);
+        final count = ids!.length;
         expect(count, inInclusiveRange(2, 6), reason: group.slug);
         total += count;
-        for (final row in tester.widgetList<KitArrival>(rows)) {
-          titles.add(row.id);
-        }
+        titles.addAll(ids);
       }
       // Android, OpenCode 1, nothing set up on this phone: every target-ia
       // row but the setup assistant (P2.2, not built yet) and This phone,
@@ -847,7 +861,8 @@ void main() {
       // it up is one of Add server's ways, R3).
       // Agents is on every phone (where it cannot run it says why).
       // Phrase suggestions (the chat's own-phrase chips) is one Conversations row.
-      expect(total, 21);
+      // Help › Tips (the teaching system, 2026-10-21) is one Help row.
+      expect(total, 22);
       expect(titles.toSet().length, titles.length);
       // The pairs that used to sit side by side are one row each now.
       for (final gone in [
@@ -890,6 +905,7 @@ void main() {
         addTearDown(controller.dispose);
         await tester.pumpWidget(_app(controller));
         await tester.pumpAndSettle();
+        await openSettingsGroup(tester, SettingsGroup.connections);
         expect(
           find.descendant(
             of: _row('settings-group-connections'),
@@ -914,11 +930,12 @@ void main() {
       },
     );
 
-    testWidgets('the transcript switches act on the hub', (tester) async {
+    testWidgets('the transcript switches act on Conversations', (tester) async {
       final controller = await _controller();
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.chat);
       expect(controller.transcriptReasoningExpanded, isFalse);
       expect(controller.transcriptTimestampsVisible, isFalse);
 
@@ -928,8 +945,8 @@ void main() {
       await tester.tap(reasoning);
       await tester.pumpAndSettle();
       expect(controller.transcriptReasoningExpanded, isTrue);
-      // In place: no sheet, no page.
-      expect(find.byType(SettingsScreen), findsOneWidget);
+      // In place: no sheet, no further page.
+      expect(find.byType(SettingsGroupScreen), findsOneWidget);
       expect(find.text(_en.chatUiTranscriptDisplay), findsNothing);
 
       await tester.tap(_row('settings-show-timestamps'));
@@ -954,11 +971,18 @@ void main() {
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
 
-      // Rows never move because a server lacks a feature (N6): every missing
-      // row is counted once, under the groups, never one note per group.
-      expect(find.byType(KitGroupNote), findsOneWidget);
+      // Rows never move because a server lacks a feature (N6): the hub keeps
+      // its five doors, and a group's page counts what it lost in one line.
+      expect(find.byType(KitGroupNote), findsNothing);
+      final pages = await visitSettingsGroups(tester);
+      final withNote = [
+        for (final MapEntry(key: group, value: notes) in pages.notes.entries)
+          if (notes > 0) group,
+      ];
+      expect(withNote, isNotEmpty);
+      expect(pages.notes.values.every((notes) => notes <= 1), isTrue);
+      await openSettingsGroup(tester, withNote.first);
       final note = _row('settings-unavailable');
-      expect(note, findsOneWidget);
       expect(
         find.descendant(
           of: note,
@@ -980,7 +1004,8 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
-      expect(find.byType(KitGroupNote), findsNothing);
+      final pages = await visitSettingsGroups(tester);
+      expect(pages.notes.values.every((notes) => notes == 0), isTrue);
     });
 
     testWidgets('Tools is one page: MCP, the catalog and external agents', (
@@ -990,6 +1015,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.ai);
       await tester.ensureVisible(_row('settings-tools'));
       await tester.pumpAndSettle();
       await tester.tap(_row('settings-tools'));
@@ -1045,6 +1071,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.thisApp);
       final privacy = _row('settings-category-privacy');
       await tester.ensureVisible(privacy);
       await tester.pumpAndSettle();
@@ -1089,6 +1116,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(_app(controller));
       await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.help);
       await tester.tap(_row('settings-about-notices'));
       await tester.pumpAndSettle();
       expect(find.byType(AboutScreen), findsOneWidget);
@@ -1139,24 +1167,30 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         expect(
-          Directionality.of(tester.element(_row('settings-group-help'))),
+          Directionality.of(tester.element(settingsDoor(SettingsGroup.help))),
           locale.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
         );
+        void noRowWiderThanThePhone() {
+          for (final tile in tester.widgetList<KitRow>(find.byType(KitRow))) {
+            final box = tester.renderObject<RenderBox>(find.byWidget(tile));
+            expect(box.size.width, lessThanOrEqualTo(phone.width));
+          }
+        }
 
-        // Walk the whole hub so every row has been laid out and painted.
-        final scrollable = find
-            .descendant(
-              of: find.byKey(const ValueKey('settings-hub-list')),
-              matching: find.byType(Scrollable),
-            )
-            .first;
+        noRowWiderThanThePhone();
+        // Every group's page, walked to its end so each row is laid out.
         for (final group in SettingsGroup.values) {
-          await tester.scrollUntilVisible(
-            _row('settings-group-${group.slug}'),
-            300,
-            scrollable: scrollable,
-          );
+          await openSettingsGroup(tester, group);
           expect(tester.takeException(), isNull, reason: group.slug);
+          final list = find.byKey(
+            ValueKey('settings-group-page-${group.slug}'),
+          );
+          await tester.drag(list, const Offset(0, -3000));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: group.slug);
+          noRowWiderThanThePhone();
+          Navigator.of(tester.element(list)).pop();
+          await tester.pumpAndSettle();
         }
         // No row is wider than the phone.
         for (final tile in tester.widgetList<KitRow>(find.byType(KitRow))) {
@@ -1165,5 +1199,171 @@ void main() {
         }
       });
     }
+  });
+
+  group('vision 2026-10-20: a search and five words', () {
+    String serverLine(WidgetTester tester) => tester
+        .widget<Text>(find.byKey(const ValueKey('settings-hub-server-line')))
+        .textSpan!
+        .toPlainText();
+
+    testWidgets('Server says where the server runs and how it is connected', (
+      tester,
+    ) async {
+      final phone = await _controller(baseUrl: 'http://127.0.0.1:4097');
+      addTearDown(phone.dispose);
+      await tester.pumpWidget(_app(phone));
+      await tester.pumpAndSettle();
+      expect(
+        serverLine(tester),
+        _en.settingsHubServerLine(
+          _en.settingsHubServerOnPhone,
+          _en.e7WorkspaceConnected,
+        ),
+      );
+      // Only Server has a second line: no summaries under the other words.
+      for (final group in SettingsGroup.values.skip(1)) {
+        expect(
+          find.descendant(of: settingsDoor(group), matching: find.byType(Text)),
+          findsOneWidget,
+          reason: group.slug,
+        );
+      }
+
+      final computer = await _controller();
+      addTearDown(computer.dispose);
+      computer.status = StreamStatus.disconnected;
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(_app(computer));
+      await tester.pumpAndSettle();
+      // Never red and never a guess: the switcher's own word.
+      expect(
+        serverLine(tester),
+        _en.settingsHubServerLine(
+          KitBidi.auto('Workstation'),
+          _en.e7WorkspaceOffline,
+        ),
+      );
+
+      final none = await _controller(savedServer: false);
+      addTearDown(none.dispose);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(_app(none));
+      await tester.pumpAndSettle();
+      expect(serverLine(tester), _en.settingsHubServerNone);
+      // The offline controller's quiet reconnect waits 15 s.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 16));
+    });
+
+    testWidgets('each word opens its group\'s page, titled with the word', (
+      tester,
+    ) async {
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+      final words = {
+        SettingsGroup.connections: _en.settingsHubServer,
+        SettingsGroup.ai: _en.settingsHubGroupAgent,
+        SettingsGroup.chat: _en.settingsHubGroupConversations,
+        SettingsGroup.thisApp: _en.settingsHubGroupThisApp,
+        SettingsGroup.help: _en.settingsHubHelp,
+      };
+      for (final MapEntry(key: group, value: word) in words.entries) {
+        await openSettingsGroup(tester, group);
+        final page = find.byType(SettingsGroupScreen);
+        expect(
+          find.descendant(of: page, matching: find.text(word)),
+          findsOneWidget,
+          reason: word,
+        );
+        expect(_row('settings-group-${group.slug}'), findsOneWidget);
+        await closeSettingsGroup(tester);
+      }
+    });
+
+    testWidgets('the search finds a setting inside a page and opens it', (
+      tester,
+    ) async {
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(_row('settings-hub-search-field'), 'quiet hours');
+      // The query settles after typing stops.
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
+      // The five words give way to what matches, each with where it lives.
+      expect(settingsDoor(SettingsGroup.help), findsNothing);
+      final result = _row('settings-hub-result-inside-notifications-quiet');
+      expect(result, findsOneWidget);
+      // Settings only: the app's places stay with the header's search.
+      expect(
+        find.descendant(
+          of: _row('settings-hub-results'),
+          matching: find.textContaining('Project'),
+        ),
+        findsNothing,
+      );
+      await tester.tap(result);
+      await tester.pumpAndSettle();
+      expect(find.byType(NotificationsSettingsScreen), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      // Nothing matches: one plain state, then the words are back on clear.
+      await tester.enterText(_row('settings-hub-search-field'), 'xylophone');
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
+      expect(_row('settings-hub-no-match'), findsOneWidget);
+      expect(find.text(_en.kitSearchResults(0)), findsNothing);
+      await tester.tap(_row('kit-search-clear'));
+      await tester.pumpAndSettle();
+      expect(settingsDoor(SettingsGroup.help), findsOneWidget);
+    });
+
+    testWidgets('at 320 dp and 2x text the words keep the row', (tester) async {
+      tester.view
+        ..physicalSize = const Size(320, 900)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(
+            size: Size(320, 900),
+            textScaler: TextScaler.linear(2),
+          ),
+          child: _app(controller),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      // No glyph and no chevron: "Conversations" is never cut mid-word.
+      final door = settingsDoor(SettingsGroup.chat);
+      expect(
+        find.descendant(of: door, matching: find.byType(Icon)),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: door,
+          matching: find.byIcon(AppIconography.chevronRight),
+        ),
+        findsNothing,
+      );
+      // The word itself is whole (the capture checks it in the real font;
+      // the test font draws every letter as a wide square).
+      expect(
+        find.descendant(
+          of: door,
+          matching: find.text(_en.settingsHubGroupConversations),
+        ),
+        findsOneWidget,
+      );
+    });
   });
 }

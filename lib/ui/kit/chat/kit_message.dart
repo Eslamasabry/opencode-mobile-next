@@ -18,9 +18,12 @@ import '../kit_copy.dart';
 import '../kit_divider.dart';
 import '../kit_image.dart';
 import '../kit_layout.dart';
+import '../kit_max_width.dart';
 import '../kit_menu.dart';
 import '../kit_motion.dart';
+import '../kit_since.dart';
 import '../kit_status_mark.dart';
+import '../kit_surface_look.dart';
 import '../kit_tappable.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
@@ -28,6 +31,8 @@ import '../motion/kit_motion_parts.dart';
 import 'kit_composer_chips.dart';
 import 'kit_markdown.dart';
 import 'kit_step_timeline.dart';
+
+part 'kit_message_lift.dart';
 
 /// Which piece of the transcript a [KitMessage] is.
 enum KitMessageKind { prompt, reply, thought, notice, marker }
@@ -62,6 +67,10 @@ class KitMessage extends StatelessWidget {
     this.menu = const <KitMenuItem>[],
     this.bubbleKey,
     this.bubbleWidth = KitBubbleWidth.auto,
+    this.liftFrom,
+    this.note,
+    this.noteAction,
+    this.noteSince,
   }) : kind = KitMessageKind.prompt,
        text = null,
        heading = null,
@@ -85,6 +94,10 @@ class KitMessage extends StatelessWidget {
     required KitMarkdown this.body,
     this.bodyKey,
   }) : kind = KitMessageKind.reply,
+       note = null,
+       noteAction = null,
+       noteSince = null,
+       liftFrom = null,
        bubbleWidth = KitBubbleWidth.auto,
        attachments = const <KitAttachment>[],
        time = null,
@@ -117,6 +130,10 @@ class KitMessage extends StatelessWidget {
     this.onExpansionChanged,
     this.thoughtKey,
   }) : kind = KitMessageKind.thought,
+       note = null,
+       noteAction = null,
+       noteSince = null,
+       liftFrom = null,
        bubbleWidth = KitBubbleWidth.auto,
        attachments = const <KitAttachment>[],
        time = null,
@@ -147,6 +164,10 @@ class KitMessage extends StatelessWidget {
     this.onExpansionChanged,
     this.noticeKey,
   }) : kind = KitMessageKind.notice,
+       note = null,
+       noteAction = null,
+       noteSince = null,
+       liftFrom = null,
        bubbleWidth = KitBubbleWidth.auto,
        body = null,
        attachments = const <KitAttachment>[],
@@ -169,6 +190,10 @@ class KitMessage extends StatelessWidget {
     this.working = false,
     this.markerKey,
   }) : kind = KitMessageKind.marker,
+       note = null,
+       noteAction = null,
+       noteSince = null,
+       liftFrom = null,
        bubbleWidth = KitBubbleWidth.auto,
        body = null,
        attachments = const <KitAttachment>[],
@@ -195,11 +220,29 @@ class KitMessage extends StatelessWidget {
   /// [KitMessage.prompt]: how wide the bubble may grow ([KitBubbleWidth]).
   final KitBubbleWidth bubbleWidth;
 
+  /// [KitMessage.prompt] just sent: where its words were typed (the
+  /// composer's field, in global coordinates). The bubble lifts from there
+  /// into its place once, when it is first built; null (every other time)
+  /// shows it in place.
+  final Rect? liftFrom;
+
   /// prompt: read-only chips under the text (KitComposerChips).
   final List<KitAttachment> attachments;
 
   /// prompt: shown as a caption under the bubble when non-null.
   final DateTime? time;
+
+  /// prompt: one quiet line under the bubble about when the agent reads it
+  /// ("Claude Code reads this when the command finishes"). It fades in and
+  /// out ([KitMotion.quick]; at once under reduced motion). Null: none.
+  final String? note;
+
+  /// prompt, with [note]: one tertiary action at the note's end ("Stop the
+  /// command"). It appears once the wait that began at [noteSince] turns
+  /// slow ([KitMotion.escalateAfter]), so a short wait offers no way out;
+  /// without [noteSince] it shows at once.
+  final KitAction? noteAction;
+  final DateTime? noteSince;
 
   /// prompt: Copy message, Edit and resend, Revert to here… Empty makes the
   /// bubble inert.
@@ -240,7 +283,10 @@ class KitMessage extends StatelessWidget {
   final Key? bubbleKey, bodyKey, thoughtKey, noticeKey, markerKey;
 
   @override
-  Widget build(BuildContext context) => switch (kind) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) => switch (kind) {
     KitMessageKind.prompt => _Prompt(message: this),
     KitMessageKind.reply => KeyedSubtree(
       key: bodyKey,
@@ -264,12 +310,41 @@ Color kitPromptBubbleFill(ThemeRoles roles) => roles.isDark
 
 /// The bubble's corners: 20 everywhere but the bottom end (6), mirrored
 /// under RTL through the directional radius (VL §5 "20/20/6/20").
-const BorderRadiusDirectional _bubbleRadius = BorderRadiusDirectional.only(
-  topStart: Radius.circular(KitTokens.bubbleRadius),
-  topEnd: Radius.circular(KitTokens.bubbleRadius),
-  bottomStart: Radius.circular(KitTokens.bubbleRadius),
-  bottomEnd: Radius.circular(KitTokens.bubbleTailRadius),
-);
+/// (Hook H5: the corners follow Corners through the instance tokens.)
+BorderRadiusDirectional _bubbleRadius(KitTokens tokens) =>
+    BorderRadiusDirectional.only(
+      topStart: Radius.circular(tokens.bubbleCorner),
+      topEnd: Radius.circular(tokens.bubbleCorner),
+      bottomStart: Radius.circular(tokens.bubbleCorner),
+      bottomEnd: Radius.circular(tokens.bubbleTailCorner),
+    );
+
+/// Your own prompt's bubble, as the style makes it: Solid's fill
+/// ([kitPromptBubbleFill]) in the bubble's corners with a plain hairline
+/// edge (no second hue in the chrome); every other style a content surface one
+/// step up (raised under Soft, boxed under Brutal and
+/// Paper). The queued bubble ([KitQueuedMessage]) asks for it with no
+/// [edge], so the two always look alike in every style but Solid's edge.
+Decoration kitPromptBubbleDecoration(BuildContext context, {bool edge = true}) {
+  final tokens = KitTokens.of(context);
+  final roles = tokens.roles;
+  final radius = _bubbleRadius(tokens);
+  return KitSurfaceLook.decorate(
+    context,
+    solid: BoxDecoration(
+      color: kitPromptBubbleFill(roles),
+      borderRadius: radius,
+      border: edge
+          ? Border.all(
+              color: roles.hairline,
+              width: KitTokens.hairlineWidth(context),
+            )
+          : null,
+    ),
+    level: KitSurfaceLevel.surface2,
+    borderRadius: radius.resolve(Directionality.of(context)),
+  );
+}
 
 class _Prompt extends StatelessWidget {
   const _Prompt({required this.message});
@@ -312,7 +387,11 @@ class _Prompt extends StatelessWidget {
                   : CrossAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _Bubble(message: message),
+                _Lift(
+                  from: message.liftFrom,
+                  child: _Bubble(message: message),
+                ),
+                _PromptNote(message: message),
                 if (timeWords != null)
                   Padding(
                     padding: EdgeInsetsDirectional.only(
@@ -333,6 +412,62 @@ class _Prompt extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// [KitMessage.note] under the bubble: caption words at the end edge and,
+/// once its wait is slow, [KitMessage.noteAction] after them. It fades in
+/// when it appears and out when it goes; its height does not animate in
+/// the scrolling list (MOT-5).
+class _PromptNote extends StatelessWidget {
+  const _PromptNote({required this.message});
+
+  final KitMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    final note = message.note;
+    final action = message.noteAction;
+    Widget? line;
+    if (note != null && note.isNotEmpty) {
+      line = Padding(
+        key: const ValueKey('kit-prompt-note'),
+        padding: EdgeInsetsDirectional.only(
+          top: tokens.space1,
+          end: tokens.space2,
+        ),
+        child: KitSince(
+          since: message.noteSince,
+          builder: (context, status) => Wrap(
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: tokens.space2,
+            children: [
+              KitText(
+                note,
+                role: KitTextRole.caption,
+                tone: KitTextTone.tertiary,
+                textAlign: TextAlign.end,
+              ),
+              if (action != null &&
+                  (message.noteSince == null || status.isSlow))
+                KitButton.fromAction(action, role: KitButtonRole.tertiary),
+            ],
+          ),
+        ),
+      );
+    }
+    return AnimatedSwitcher(
+      duration: KitMotion.reduced(context) ? Duration.zero : KitMotion.quick,
+      switchInCurve: KitMotion.enter,
+      switchOutCurve: KitMotion.exit,
+      layoutBuilder: (current, previous) => Stack(
+        alignment: AlignmentDirectional.topEnd,
+        children: [...previous, ?current],
+      ),
+      child: line ?? const SizedBox(key: ValueKey('kit-prompt-no-note')),
     );
   }
 }
@@ -500,15 +635,14 @@ class _BubbleState extends State<_Bubble> {
     final ringWidth = KitTokens.focusRingWidth(context);
     Widget bubble = DecoratedBox(
       key: message.bubbleKey,
-      decoration: BoxDecoration(
-        color: kitPromptBubbleFill(roles),
-        borderRadius: _bubbleRadius,
-      ),
+      decoration: kitPromptBubbleDecoration(context),
       position: DecorationPosition.background,
       child: CustomPaint(
         foregroundPainter: _focusRingVisible
             ? _BubbleRingPainter(
-                radius: _bubbleRadius.resolve(Directionality.of(context)),
+                radius: _bubbleRadius(
+                  tokens,
+                ).resolve(Directionality.of(context)),
                 color: roles.accent,
                 width: ringWidth,
               )

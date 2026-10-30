@@ -112,3 +112,65 @@ List<String> notificationOptionsOf(PendingQuestion question) {
   if (labels.toSet().length != labels.length) return const [];
   return labels;
 }
+
+/// What a permission asks, for a notification title: an action token
+/// (`run`, `edit`, `read`, `folder`) and its short, masked target ("npm
+/// install", "settings.dart"). Native puts them into "Run npm install?".
+/// Both are empty when the ask names neither a command nor a file, and then
+/// the alert cannot be allowed from the shade. Tokens must match
+/// `AlertCopy.of` in StatusNotificationModel.kt.
+({String action, String target}) permissionAskOf(PermissionRequest request) {
+  final command = request.commandPreview;
+  if (command != null && command.trim().isNotEmpty) {
+    return (action: 'run', target: commandHead(command));
+  }
+  final path = request.filePath;
+  if (path != null && path.trim().isNotEmpty) {
+    final action = switch (request.permission.toLowerCase()) {
+      'read' => 'read',
+      'external_directory' => 'folder',
+      _ => 'edit',
+    };
+    return (action: action, target: _lastSegment(path));
+  }
+  return (action: '', target: '');
+}
+
+/// A command's program and, when it has one, its sub-command: "npm install"
+/// for `npm install --save left-pad`, "git push" for `git push origin main`,
+/// "pytest" for `/usr/bin/pytest -q`. Masked; at most 40 characters.
+String commandHead(String command) {
+  final words = redactForNotification(
+    command,
+    maxLength: 400,
+  ).split(' ').where((word) => word.isNotEmpty).toList();
+  // Leading `NAME=value` assignments only set the environment.
+  while (words.isNotEmpty &&
+      RegExp(r'^[A-Za-z_][A-Za-z0-9_]*=').hasMatch(words.first)) {
+    words.removeAt(0);
+  }
+  if (words.isEmpty) return '';
+  final program = _lastSegment(words.first);
+  final head =
+      words.length > 1 && RegExp(r'^[a-z][a-z0-9:_-]*$').hasMatch(words[1])
+      ? '$program ${words[1]}'
+      : program;
+  return redactForNotification(head, maxLength: 40);
+}
+
+/// The notification subtitle: "MacBook · api-server". Either part may be
+/// missing; empty when both are.
+String notificationSubtitle(String? server, String? project) => [
+  for (final part in [server, project])
+    if (part != null && part.trim().isNotEmpty) part.trim(),
+].join(' · ');
+
+/// The last folder or file name of [path]; [path] itself when it has none.
+String _lastSegment(String path) {
+  final parts = path.trim().split(RegExp(r'[\\/]+'))
+    ..removeWhere((part) => part.isEmpty);
+  return redactForNotification(
+    parts.isEmpty ? path.trim() : parts.last,
+    maxLength: 40,
+  );
+}

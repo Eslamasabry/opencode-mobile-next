@@ -24,6 +24,11 @@ class KitArrivalScope extends InheritedWidget {
   /// The row this page was opened for.
   String get rowId => _request.rowId;
 
+  /// The row the page under [context] was opened for, or null when it was
+  /// opened some other way: a page with tabs picks the tab that holds it.
+  static String? maybeRowId(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<KitArrivalScope>()?.rowId;
+
   /// Whether the row [id] under [context] is the one this page was opened
   /// for, still unclaimed. True at most once per scope.
   static bool claim(BuildContext context, String id) =>
@@ -138,7 +143,7 @@ class _KitArrivalState extends State<KitArrival> {
                 duration: _marked || KitMotion.reduced(context)
                     ? Duration.zero
                     : KitMotion.entrance,
-                curve: KitMotion.exit,
+                curve: KitMotion.enter,
                 child: ColoredBox(color: wash),
               ),
             ),

@@ -213,6 +213,35 @@ void main() {
       return gateway;
     }
 
+    testWidgets('a role with no note has no empty second line', (tester) async {
+      final controller = TeamProjectController(
+        _Gateway(
+          const TeamWorkspace(
+            roles: [
+              TeamProjectRole(id: 'planner', name: 'Planner'),
+              TeamProjectRole(id: 'checker', name: 'Checker', readOnly: true),
+              TeamProjectRole(id: 'frontend', name: 'Frontend'),
+            ],
+          ),
+        ),
+      );
+      await controller.load();
+      addTearDown(controller.dispose);
+      final context = await pumpKitHost(
+        tester,
+        effects: const KitEffects(motion: KitMotionLevel.off),
+      );
+      unawaited(openTeamRoles(context, controller));
+      await tester.pumpAndSettle();
+      double height(String title) => tester
+          .getSize(
+            find.ancestor(of: find.text(title), matching: find.byType(KitRow)),
+          )
+          .height;
+      expect(height('Planner'), lessThan(height('Checker')));
+      expect(height('Planner'), height('Frontend'));
+    });
+
     testWidgets('B-5: model and fallback use the picker; checker is marked', (
       tester,
     ) async {

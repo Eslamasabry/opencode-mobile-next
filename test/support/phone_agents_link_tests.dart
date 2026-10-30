@@ -166,6 +166,79 @@ void _phoneAgentLinkTests() {
     }
   });
 
+  testWidgets('a helper too loaded to answer its health check while a command '
+      'runs reads as reconnecting, for as long as a command may run', (
+    tester,
+  ) async {
+    final (w, backend) = await openRunningChat(tester, holdLists: () => false);
+    final c = w.controller;
+    try {
+      // An APK build on this phone: the agent's Bash call runs, and the
+      // phone is too busy for the helper to answer its health check in
+      // time.
+      backend.handleEventForTesting(
+        EventEnvelope(
+          type: 'message.part.updated',
+          properties: {
+            'sessionID': 'c1',
+            'part': {
+              'id': 'prt_build',
+              'type': 'tool',
+              'sessionID': 'c1',
+              'tool': 'bash',
+              'state': {'status': 'running'},
+            },
+          },
+        ),
+      );
+      expect(backend.hasRunningTool, isTrue);
+      backend.agentCommandHoldOff = const Duration(minutes: 3);
+      w.state.daemonAnswers = false;
+      w.state.refuseSockets = true;
+      w.state.failOpens = 1000;
+      dropEveryLink(w);
+      for (var second = 0; second < 170; second += 10) {
+        await tester.pump(const Duration(seconds: 10));
+        expect(
+          backend.connectionStatus.phase,
+          isNot(ConnectionStatusPhase.notAnswering),
+          reason: 'at $second s',
+        );
+      }
+      expect(
+        await bannerWords(tester, backend),
+        isNot(contains("isn't answering")),
+      );
+      // Past the longest a command may run: a helper that still says
+      // nothing is named.
+      for (
+        var second = 0;
+        second < 300 &&
+            backend.connectionStatus.phase !=
+                ConnectionStatusPhase.notAnswering;
+        second += 10
+      ) {
+        await tester.pump(const Duration(seconds: 10));
+      }
+      expect(
+        backend.connectionStatus.phase,
+        ConnectionStatusPhase.notAnswering,
+      );
+      // The build ends and the helper answers again: no tap needed.
+      w.state.daemonAnswers = true;
+      w.state.refuseSockets = false;
+      w.state.failOpens = 0;
+      for (var i = 0; i < 12 && !backend.isConnected; i++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
+      expect(backend.isConnected, isTrue);
+    } finally {
+      await tester.pumpWidget(const SizedBox());
+      c.dispose();
+      await tester.pump(const Duration(seconds: 3));
+    }
+  });
+
   testWidgets('a helper that really stops answering is named, offers Restart, '
       'and is reconnected by itself once it answers again', (tester) async {
     final (w, backend) = await openRunningChat(tester, holdLists: () => false);

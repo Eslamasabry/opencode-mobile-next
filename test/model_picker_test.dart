@@ -269,6 +269,13 @@ Future<void> _tap(WidgetTester tester, Finder target) async {
   await tester.pump();
 }
 
+/// The sheet opens on its plain choices when there are honest ones; this
+/// goes on to every model.
+Future<void> _openAllModels(WidgetTester tester) async {
+  await _tap(tester, find.byKey(const Key('model-picker-all')));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   // Provider logos are bundled marks; tests that want initials override the loader.
@@ -560,9 +567,23 @@ void main() {
 
     expect(find.text('Choose a model'), findsNothing);
 
-    // Reopening the picker for that session starts from its own choice.
+    // Reopening the picker for that session starts from its own choice:
+    // in use and checked on the first view, beside the server's default.
     await _tap(tester, find.text('Choose model'));
     await tester.pumpAndSettle();
+    expect(find.byKey(const Key('model-picker-apply')), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('model-choice-inUse')),
+        matching: find.text('Nemotron Ultra'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('kit-choice-tile-mark-on')),
+      findsOneWidget,
+    );
+    await _openAllModels(tester);
     expect(find.byKey(const Key('model-picker-apply')), findsOneWidget);
     expect(
       tester
@@ -1002,6 +1023,7 @@ void main() {
       );
       await _tap(tester, find.text('Choose model'));
       await tester.pumpAndSettle();
+      await _openAllModels(tester);
       expect(find.text('Thinking: deep · high effort'), findsOneWidget);
       expect(find.text('Agent: Build'), findsOneWidget);
       await tester.enterText(

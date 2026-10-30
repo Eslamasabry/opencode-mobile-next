@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart' show CancelToken;
+import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 
 import 'events.dart';
 import 'transport.dart';
@@ -149,6 +150,13 @@ class Api2EventStream {
   bool _disposed = false;
   int _attempt = 0;
   int _generation = 0;
+  final _nextAttempt = ValueNotifier<DateTime?>(null);
+
+  /// When the next automatic try is, set with the retry timer and kept
+  /// while that try is in flight (a time already past); null while
+  /// connected and once disposed. A real schedule, so a screen may count
+  /// down to it.
+  ValueListenable<DateTime?> get nextAttempt => _nextAttempt;
 
   void start() {
     assert(!_disposed);
@@ -162,6 +170,7 @@ class Api2EventStream {
     _generation += 1;
     _retryTimer?.cancel();
     _retryTimer = null;
+    _nextAttempt.value = null;
     _cancelToken?.cancel('Event stream disposed');
     _cancelToken = null;
     final subscription = _subscription;
@@ -194,12 +203,18 @@ class Api2EventStream {
         _running = false;
         _attempt += 1;
         final ms = (500 * (1 << _attempt.clamp(0, 5))).clamp(500, 16000);
+        // Known before the status goes out, so whoever hears "reconnecting"
+        // already reads when the next try is.
+        _nextAttempt.value = DateTime.now().add(Duration(milliseconds: ms));
         onStatus(
           _attempt >= _giveUpVisualAfter
               ? Api2StreamStatus.disconnected
               : Api2StreamStatus.reconnecting,
         );
-        if (!_isCurrent(generation)) return;
+        if (!_isCurrent(generation)) {
+          _nextAttempt.value = null;
+          return;
+        }
         _retryTimer = Timer(Duration(milliseconds: ms), () {
           _retryTimer = null;
           if (_isCurrent(generation)) _connect();
@@ -229,6 +244,7 @@ class Api2EventStream {
         cancelToken: cancelToken,
       );
       if (!_isCurrent(generation)) return;
+      _nextAttempt.value = null;
       onStatus(Api2StreamStatus.connected);
       backoffResetTimer = Timer(_backoffResetAfter, () {
         if (_isCurrent(generation)) _attempt = 0;

@@ -13,7 +13,7 @@ import 'package:opencode_mobile/ui/kit/kit_text.dart';
 
 import 'kit_motion_still.dart';
 
-const _sectionGap = 22.0;
+const _sectionGap = 24.0;
 const _gutter = 16.0;
 
 Widget _app(Widget body) => MaterialApp(
@@ -76,22 +76,32 @@ void main() {
       'on the same line as a KitField label', (tester) async {
     await tester.pumpWidget(
       _app(
-        SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const KitSectionLabel('On the page'),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: const [
-                    KitSectionLabel('In the sheet', margin: EdgeInsets.zero),
-                    KitField(label: 'Supervision'),
-                  ],
-                ),
+        // A page no wider than the reading cap, as a phone or a sheet is.
+        Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 600,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const KitSectionLabel('On the page'),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: const [
+                        KitSectionLabel(
+                          'In the sheet',
+                          margin: EdgeInsets.zero,
+                        ),
+                        KitField(label: 'Supervision'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

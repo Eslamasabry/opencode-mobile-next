@@ -28,6 +28,46 @@ internal class WidgetOverlayStyle(
         )
     }
 
+    /** The project this widget lists ("" for all projects). */
+    fun project(): String = saved()?.optString("project").orEmpty()
+
+    /** The projects it can be scoped to, as the app last published them. */
+    fun projects(): List<String> {
+        val list = WidgetV2Bridge.snapshot(activity)?.optJSONArray("projects") ?: return emptyList()
+        return (0 until list.length()).map { list.optString(it) }.filter { it.isNotBlank() }
+    }
+
+    /** Scopes the Conversations widget to one project, or to all with "". */
+    fun saveProject(arguments: Any?, result: MethodChannel.Result) {
+        val project = (arguments as? Map<*, *>)?.get("project") as? String
+        if (project == null || (project.isNotEmpty() && project !in projects())) {
+            result.error("invalidProject", null, null)
+            return
+        }
+        val prefs = activity.getSharedPreferences(WidgetV2Bridge.PREFS, Context.MODE_PRIVATE)
+        val styles = runCatching { JSONObject(prefs.getString(key, "{}") ?: "{}") }.getOrElse { JSONObject() }
+        val entry = styles.optJSONObject(widgetId.toString()) ?: JSONObject()
+        styles.put(widgetId.toString(), entry.put("project", project))
+        finishSaved(prefs.edit().putString(key, styles.toString()).commit(), result)
+    }
+
+    private fun saved(): JSONObject? = runCatching {
+        JSONObject(activity.getSharedPreferences(WidgetV2Bridge.PREFS, Context.MODE_PRIVATE)
+            .getString(key, "{}") ?: "{}").optJSONObject(widgetId.toString())
+    }.getOrNull()
+
+    private fun finishSaved(saved: Boolean, result: MethodChannel.Result) {
+        if (!saved) {
+            result.error("unavailable", null, null)
+            return
+        }
+        SessionsWidgetProvider.refreshAll(activity)
+        UsageWidgetProvider.refreshAll(activity)
+        activity.setResult(Activity.RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
+        result.success(mapOf("saved" to true))
+        activity.finish()
+    }
+
     fun save(arguments: Any?, result: MethodChannel.Result) {
         val args = arguments as? Map<*, *>
         val background = args?.get("background") as? String
@@ -39,16 +79,9 @@ internal class WidgetOverlayStyle(
         } else {
             val prefs = activity.getSharedPreferences(WidgetV2Bridge.PREFS, Context.MODE_PRIVATE)
             val styles = runCatching { JSONObject(prefs.getString(key, "{}") ?: "{}") }.getOrElse { JSONObject() }
-            styles.put(widgetId.toString(), JSONObject(mapOf("background" to background, "accent" to accent)))
-            if (!prefs.edit().putString(key, styles.toString()).commit()) {
-                result.error("unavailable", null, null)
-            } else {
-                SessionsWidgetProvider.refreshAll(activity)
-                UsageWidgetProvider.refreshAll(activity)
-                activity.setResult(Activity.RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
-                result.success(mapOf("saved" to true))
-                activity.finish()
-            }
+            val entry = styles.optJSONObject(widgetId.toString()) ?: JSONObject()
+            styles.put(widgetId.toString(), entry.put("background", background).put("accent", accent))
+            finishSaved(prefs.edit().putString(key, styles.toString()).commit(), result)
         }
     }
 }

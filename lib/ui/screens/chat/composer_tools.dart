@@ -24,6 +24,30 @@ Uint8List? _thumbnailBytes(PromptAttachment attachment) {
   }
 }
 
+/// One of this conversation's own settings, as a row at the top of the "+"
+/// sheet: the model, how approvals are answered, the agent's plan, sending
+/// the running work to the background. They used to be chips on a line over
+/// the composer all through every run (owner decision 4, 20 Oct 2026).
+/// [custom] stands in for the row where it is not a plain tap (the
+/// Auto-approve switch); [onTap] runs once the sheet has closed.
+class _ComposerSetting {
+  const _ComposerSetting({
+    required this.key,
+    required this.icon,
+    required this.title,
+    this.supporting,
+    this.onTap,
+    this.custom,
+  });
+
+  final String key;
+  final IconData icon;
+  final String title;
+  final String? supporting;
+  final VoidCallback? onTap;
+  final Widget? custom;
+}
+
 /// The "+" sheet's rows, most used first (map prompt-tools-sheet): attach,
 /// photos, camera and voice; the door to commands; then the prompt shelf
 /// and the rarer tools folded under their own rows. A tool this server or
@@ -44,7 +68,18 @@ class _PromptToolsList extends StatelessWidget {
     required this.canOpenStash,
     required this.onPick,
     this.agentName,
+    this.inTray = const {},
+    this.settings = const [],
+    this.onSetting,
   });
+
+  /// Tools the composer's tray already offers (Photos, Camera, File): the
+  /// sheet, opened from its More, does not list them again.
+  final Set<_PromptTool> inTray;
+
+  /// This conversation's own settings, above the tools.
+  final List<_ComposerSetting> settings;
+  final ValueChanged<_ComposerSetting>? onSetting;
 
   /// The agent a text-only conversation talks to (Claude Code), named in
   /// place of "this server".
@@ -92,6 +127,23 @@ class _PromptToolsList extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (settings.isNotEmpty)
+          KitRowGroup(
+            children: [
+              for (final setting in settings)
+                setting.custom ??
+                    KitRow(
+                      key: Key('composer-setting-${setting.key}'),
+                      leading: KitRowIcon(setting.icon),
+                      title: setting.title,
+                      supporting: setting.supporting == null
+                          ? null
+                          : TextSpan(text: setting.supporting),
+                      supportingMaxLines: 2,
+                      onTap: () => onSetting?.call(setting),
+                    ),
+            ],
+          ),
         KitRowGroup(
           children: [
             // Pointing at a project file uploads nothing, so it stays live
@@ -104,7 +156,9 @@ class _PromptToolsList extends StatelessWidget {
                 title: l10n.mentionToolTitle,
                 supporting: l10n.mentionToolSupporting,
               ),
-            if (attachmentsSupported && !imagesOnly)
+            if (inTray.contains(_PromptTool.attach))
+              ...const <Widget>[]
+            else if (attachmentsSupported && !imagesOnly)
               tool(
                 _PromptTool.attach,
                 key: 'attach',
@@ -128,7 +182,9 @@ class _PromptToolsList extends StatelessWidget {
                     ? l10n.composerToolsTextOnly
                     : l10n.composerToolsAgentTextOnly(KitBidi.auto(agentName!)),
               ),
-            if (attachmentsSupported && photos) ...[
+            if (attachmentsSupported &&
+                photos &&
+                !inTray.contains(_PromptTool.gallery)) ...[
               tool(
                 _PromptTool.gallery,
                 key: 'gallery',

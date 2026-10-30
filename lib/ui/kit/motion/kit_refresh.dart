@@ -252,7 +252,7 @@ class _RefreshPainter extends CustomPainter {
     final beyond = math.max(0.0, p - armed) / (1 - armed);
     final y = top - disc + (rest + disc) * KitMotion.enter.transform(reach);
     final centre = Offset(size.width / 2, y + disc / 2 + 12 * beyond);
-    final gone = KitMotion.exit.transform(leave.value);
+    final gone = KitMotion.enter.transform(leave.value);
     final scale = 1 - gone;
     if (scale <= 0 || reach <= 0) return;
 

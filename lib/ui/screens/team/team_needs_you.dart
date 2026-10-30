@@ -127,7 +127,12 @@ class TeamNeedsYouCard extends StatefulWidget {
     required this.keyPrefix,
     this.detail,
     this.onOpenTask,
+    this.look = KitRequestLook.standard,
   });
+
+  /// [KitRequestLook.question] in the task's conversation (the chat's
+  /// question card); the AI Team home and lists keep the standard card.
+  final KitRequestLook look;
 
   final OrchestrationController controller;
   final OrchestrationGate gate;
@@ -200,8 +205,17 @@ class _TeamNeedsYouCardState extends State<TeamNeedsYouCard> {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.controller,
-    builder: (context, _) =>
-        KeyedSubtree(key: ValueKey(widget.keyPrefix), child: _card(context)),
+    builder: (context, _) {
+      final card = _card(context);
+      return KeyedSubtree(
+        key: ValueKey(widget.keyPrefix),
+        // In the conversation the transcript's own gutter places the
+        // question; it rises in like the chat's.
+        child: widget.look == KitRequestLook.question
+            ? KitEntrance(child: card)
+            : card,
+      );
+    },
   );
 
   KitRequestCard _card(BuildContext context) {
@@ -296,7 +310,10 @@ class _TeamNeedsYouCardState extends State<TeamNeedsYouCard> {
       ?widget.detail,
       ?watchOnly,
     ].join('\n');
+    final question = widget.look == KitRequestLook.question;
     return KitRequestCard.ask(
+      look: widget.look,
+      inList: question,
       kind: kind,
       icon: teamGateMark(gate.kind).icon,
       title: gate.title,
@@ -308,6 +325,10 @@ class _TeamNeedsYouCardState extends State<TeamNeedsYouCard> {
       ifIgnored: teamGateIfIgnored(l10n, gate.kind),
       announcement: l10n.teamUiHomeNeedsYouAnnouncement(gate.title),
       detail: detail.isEmpty ? null : detail,
+      // A gate's question is its title and its prompt the context (often a
+      // plan): in the question look the prompt reads under the question,
+      // formatted and bounded, never over it.
+      detailMarkdown: question && promptShown,
       since: gate.createdAt,
       phase: phase,
       receipt: receipt,

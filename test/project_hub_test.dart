@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'support/fake_server_capabilities.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -120,12 +122,17 @@ Widget _shell(
 Finder _tool(ProjectTool tool) =>
     find.byKey(ValueKey('project-hub-${tool.name}'));
 
-void _phone(WidgetTester tester, [Size size = const Size(390, 844)]) {
+/// A tablet by default: the Files destination lives on the rail there. A
+/// phone has no destinations; it opens the same hub as a page
+/// ([openProjectFiles]).
+void _window(WidgetTester tester, [Size size = const Size(800, 1280)]) {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 }
+
+AppLocalizations _l10n(Locale locale) => lookupAppLocalizations(locale);
 
 Future<void> _openProjectTab(WidgetTester tester) async {
   await tester.tap(find.byKey(const ValueKey('home-shell-tab-files')));
@@ -227,7 +234,7 @@ void main() {
 
     for (final entry in expected.entries) {
       testWidgets('${entry.key}: the tab and exactly its rows', (tester) async {
-        _phone(tester);
+        _window(tester);
         final (capabilities, tools) = entry.value;
         final controller = await _controller(capabilities);
         addTearDown(controller.dispose);
@@ -248,6 +255,45 @@ void main() {
         await _openProjectTab(tester);
         final navigation = tester.widget<KitNav>(find.byType(KitNav));
         expect(navigation.destinations[navigation.selected].label, 'Files');
+        if (tools.contains(ProjectTool.files)) {
+          // The destination is the files themselves (vision 2026-10-20):
+          // Search and Terminal are icons in the bar, the other tools are
+          // in its ⋯, each still on its own gate.
+          expect(find.byType(FilesScreen), findsOneWidget);
+          expect(
+            find.byKey(const ValueKey('project-files-search')),
+            findsOneWidget,
+          );
+          expect(
+            find.byKey(const ValueKey('project-files-terminal')),
+            tools.contains(ProjectTool.terminal)
+                ? findsOneWidget
+                : findsNothing,
+            reason: '${entry.key}: terminal',
+          );
+          expect(find.bySemanticsLabel(RegExp('app')), findsWidgets);
+          expect(find.text('/srv/app'), findsNothing);
+          await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
+          await tester.pumpAndSettle();
+          for (final tool in const [
+            ProjectTool.changes,
+            ProjectTool.health,
+            ProjectTool.worktrees,
+            ProjectTool.services,
+            ProjectTool.workspaces,
+          ]) {
+            expect(
+              _tool(tool),
+              tools.contains(tool) ? findsOneWidget : findsNothing,
+              reason: '${entry.key}: ${tool.name}',
+            );
+          }
+          expect(
+            find.byKey(const ValueKey('project-hub-copy-path')),
+            findsOneWidget,
+          );
+          return;
+        }
         for (final tool in everyTool) {
           // Terminal stays listed, dimmed with its reason, on a server
           // without one (slice-P3.11a).
@@ -307,66 +353,24 @@ void main() {
     }
   });
 
-  group('each row opens the existing screen', () {
-    testWidgets(
-      'Files opens inside the tab and the header returns to the hub',
-      (tester) async {
-        _phone(tester);
-        final controller = await _controller(testServerCapabilities);
-        addTearDown(controller.dispose);
-        await tester.pumpWidget(_shell(controller));
-        await tester.pumpAndSettle();
-        await _openProjectTab(tester);
-        expect(find.byType(FilesScreen), findsNothing);
-
-        await tester.tap(_tool(ProjectTool.files));
-        await tester.pumpAndSettle();
-        expect(find.byType(FilesScreen), findsOneWidget);
-        expect(find.byKey(const ValueKey('home-shell-nav')), findsOneWidget);
-        expect(_tool(ProjectTool.files).hitTestable(), findsNothing);
-
-        await tester.tap(find.byKey(const ValueKey('project-hub-files-back')));
-        await tester.pumpAndSettle();
-        expect(_tool(ProjectTool.files).hitTestable(), findsOneWidget);
-        expect(
-          find.byKey(const ValueKey('files-search-field')).hitTestable(),
-          findsNothing,
-        );
-      },
-    );
-
-    testWidgets('the Project tab tapped again leaves Files for the hub', (
+  group('each tool opens the existing screen', () {
+    testWidgets('the destination is the files; Search opens the field', (
       tester,
     ) async {
-      _phone(tester);
+      _window(tester);
       final controller = await _controller(testServerCapabilities);
       addTearDown(controller.dispose);
       await tester.pumpWidget(_shell(controller));
       await tester.pumpAndSettle();
       await _openProjectTab(tester);
-      await tester.tap(_tool(ProjectTool.files));
-      await tester.pumpAndSettle();
-      expect(_tool(ProjectTool.files).hitTestable(), findsNothing);
-
-      await _openProjectTab(tester);
-      expect(_tool(ProjectTool.files).hitTestable(), findsOneWidget);
-    });
-
-    testWidgets('Files exposes its own search field without a second hub row', (
-      tester,
-    ) async {
-      _phone(tester);
-      final controller = await _controller(testServerCapabilities);
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_shell(controller));
-      await tester.pumpAndSettle();
-      await _openProjectTab(tester);
-
-      expect(_tool(ProjectTool.search), findsNothing);
-      await tester.tap(_tool(ProjectTool.files));
-      await tester.pumpAndSettle();
       expect(find.byType(FilesScreen), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('files-search-field')));
+      // No Browse files row and no Search row: the page is the files, and
+      // the field waits behind the bar's Search.
+      expect(_tool(ProjectTool.files), findsNothing);
+      expect(_tool(ProjectTool.search), findsNothing);
+      expect(find.byKey(const ValueKey('files-search-field')), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('project-files-search')));
       await tester.pumpAndSettle();
       expect(
         tester.binding.focusManager.primaryFocus?.debugLabel,
@@ -377,31 +381,37 @@ void main() {
     testWidgets('Terminal, Changes, Project health and Worktrees push theirs', (
       tester,
     ) async {
-      _phone(tester);
+      _window(tester);
       final controller = await _controller(testServerCapabilities);
       addTearDown(controller.dispose);
       await tester.pumpWidget(_shell(controller));
       await tester.pumpAndSettle();
       await _openProjectTab(tester);
 
-      Future<void> opens(ProjectTool tool, Type screen) async {
-        await tester.ensureVisible(_tool(tool));
-        await tester.pumpAndSettle();
-        await tester.tap(_tool(tool));
+      Future<void> opens(Finder door, Type screen, {bool menu = true}) async {
+        if (menu) {
+          await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
+          await tester.pumpAndSettle();
+        }
+        await tester.tap(door);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 500));
-        expect(find.byType(screen), findsOneWidget, reason: tool.name);
+        expect(find.byType(screen), findsOneWidget, reason: '$screen');
         Navigator.of(tester.element(find.byType(screen))).pop();
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 500));
-        expect(find.byType(screen), findsNothing, reason: tool.name);
+        expect(find.byType(screen), findsNothing, reason: '$screen');
       }
 
-      await opens(ProjectTool.terminal, TerminalPage);
-      await opens(ProjectTool.changes, ReviewWorkspace);
-      await opens(ProjectTool.health, ProjectHealthScreen);
-      await opens(ProjectTool.worktrees, WorktreesScreen);
-      await opens(ProjectTool.workspaces, ManagedWorkspacesScreen);
+      await opens(
+        find.byKey(const ValueKey('project-files-terminal')),
+        TerminalPage,
+        menu: false,
+      );
+      await opens(_tool(ProjectTool.changes), ReviewWorkspace);
+      await opens(_tool(ProjectTool.health), ProjectHealthScreen);
+      await opens(_tool(ProjectTool.worktrees), WorktreesScreen);
+      await opens(_tool(ProjectTool.workspaces), ManagedWorkspacesScreen);
     });
   });
 
@@ -409,36 +419,26 @@ void main() {
     testWidgets('the hub fits 320 dp at 2.5x text in ${locale.languageCode}', (
       tester,
     ) async {
-      _phone(tester, const Size(320, 640));
+      _window(tester, const Size(320, 640));
       final controller = await _controller(testServerCapabilities);
       addTearDown(controller.dispose);
       await tester.pumpWidget(
         _shell(controller, locale: locale, textScale: 2.5),
       );
       await tester.pumpAndSettle();
-      await _openProjectTab(tester);
-      expect(find.byType(ProjectHub), findsOneWidget);
-      // The last row scrolls clear of the dock rather than ending under it.
-      final scrollable = tester.state<ScrollableState>(
-        find
-            .descendant(
-              of: find.byKey(const ValueKey('project-hub')),
-              matching: find.byType(Scrollable),
-            )
-            .first,
+      // A phone: the hub is the Files page over the home.
+      unawaited(
+        openProjectFiles(tester.element(find.byType(HomeScreen)), controller),
       );
-      // The list is lazy: its extent is only final once the end is built.
-      for (var i = 0; i < 4; i++) {
-        scrollable.position.jumpTo(scrollable.position.maxScrollExtent);
-        await tester.pumpAndSettle();
-      }
-      expect(_tool(ProjectTool.workspaces).hitTestable(), findsOneWidget);
-      expect(
-        tester.getRect(_tool(ProjectTool.workspaces)).bottom,
-        lessThanOrEqualTo(
-          tester.getRect(find.byKey(const ValueKey('home-shell-nav'))).top,
-        ),
-      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('project-files-page')), findsOneWidget);
+      expect(find.byKey(const ValueKey('project-hub-title')), findsOneWidget);
+      // On a phone the bar keeps one icon (Search); Terminal joins the
+      // other tools in ⋯, which lists every one of them.
+      await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
+      await tester.pumpAndSettle();
+      expect(find.text(_l10n(locale).libraryTerminalTitle), findsOneWidget);
+      expect(_tool(ProjectTool.workspaces), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }

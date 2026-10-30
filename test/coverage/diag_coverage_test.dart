@@ -189,11 +189,7 @@ void main() {
       }
       final boundary = await pump(
         tester,
-        AppDiagnosticsScreen(
-          diagnostics: diagnostics,
-          version: () async => '9.9.9+1',
-          share: (_, _) async => true,
-        ),
+        AppDiagnosticsKeptScreen(diagnostics: diagnostics),
       );
       final screen = await openRows(tester, ['diagnostic-entry-1']);
       await finish(tester, boundary, errorFamily, variant, screen);
@@ -236,11 +232,7 @@ void main() {
       }
       final boundary = await pump(
         tester,
-        AppDiagnosticsScreen(
-          diagnostics: diagnostics,
-          version: () async => '9.9.9+1',
-          crash: crash,
-        ),
+        AppDiagnosticsKeptScreen(diagnostics: diagnostics, crash: crash),
       );
       var screen = await openRows(tester, ['crash-report-0']);
       final details = find.text('Details');

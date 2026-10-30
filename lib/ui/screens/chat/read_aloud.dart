@@ -27,7 +27,9 @@ extension _ChatReadAloud on _ChatScreenState {
       !_readAloudRequestBusy &&
       _conn.isProfileReadable(_conn.promptShelfProfileID) &&
       message.info.role == 'assistant' &&
-      _ChatScreenState._messageText(message).trim().isNotEmpty;
+      markdownProseForSpeech(
+        _ChatScreenState._messageText(message),
+      ).trim().isNotEmpty;
 
   String _speechFailure(ReadAloudFailure failure) => switch (failure) {
     ReadAloudFailure.unsupported => _chatL10n(context).readAloudUnsupported,

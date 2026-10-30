@@ -8,6 +8,7 @@ import '../../domain/settings_search.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../kit/kit_row.dart';
+import '../kit/kit_row_parts.dart' show KitChevron;
 import '../kit/kit_search_field.dart';
 import '../kit/kit_sheet.dart';
 import '../kit/kit_text.dart';
@@ -457,6 +458,10 @@ class _AppShortcutsState extends State<AppShortcuts> {
 // Command launcher
 // =====================================================================
 
+/// The groups of Search's empty state (mockup 6): "Go to" places, then the
+/// most recent conversations.
+enum DesktopCommandSection { goTo, recent }
+
 /// One entry in the Ctrl+K launcher.
 class DesktopCommand {
   const DesktopCommand({
@@ -467,9 +472,27 @@ class DesktopCommand {
     this.keys,
     this.keywords,
     this.onlyWhenSearched = false,
+    this.onlyWhenEmpty = false,
+    this.section,
+    this.detail,
+    this.key,
   });
 
   final String label;
+
+  /// A quiet word after the label on the same line ("Files · neon-breaker").
+  final String? detail;
+
+  /// Shown in Search's empty state, in this group. When any command has a
+  /// section, an empty query lists only those, by section.
+  final DesktopCommandSection? section;
+
+  /// Listed in the empty state only; typing searches the same things as
+  /// themselves (the Recent rows: conversations are searched anyway).
+  final bool onlyWhenEmpty;
+
+  /// The row's test handle; defaults to one made from the label.
+  final Key? key;
   final IconData icon;
   final VoidCallback onInvoke;
 
@@ -499,8 +522,8 @@ Future<void> showCommandPalette(
   return showKitSheet<void>(
     context,
     sheetKey: const ValueKey('desktop-command-palette'),
-    title: _shortcutL10n(context).e7LocaleUiCommandLauncher,
-    icon: AppIconography.lightning,
+    // The phone's Search button and Ctrl/Cmd+K open the same place.
+    title: _shortcutL10n(context).kitTopBarSearch,
     body: (_) => _CommandPalette(commands: commands),
   );
 }
@@ -515,24 +538,36 @@ List<DesktopCommand> matchCommands(
   String query,
 ) {
   if (query.trim().isEmpty) {
+    // Search's own menu: the Go to places, then the recent conversations.
+    if (commands.any((command) => command.section != null)) {
+      return [
+        for (final section in DesktopCommandSection.values)
+          for (final command in commands)
+            if (command.section == section) command,
+      ];
+    }
     return [
       for (final command in commands)
         if (!command.onlyWhenSearched) command,
     ];
   }
+  final searched = [
+    for (final command in commands)
+      if (!command.onlyWhenEmpty) command,
+  ];
   final index = SettingsSearchIndex([
-    for (final (i, command) in commands.indexed)
+    for (final (i, command) in searched.indexed)
       SettingsSearchDocument(
         id: '$i',
         title: command.label,
         parent: command.hint ?? '',
-        aliases: command.keywords ?? '',
+        aliases: [?command.detail, ?command.keywords].join(' '),
         target: const SettingsSearchTarget(pageId: 'command'),
       ),
   ]);
   return [
     for (final document in index.search(query))
-      commands[int.parse(document.id)],
+      searched[int.parse(document.id)],
   ];
 }
 
@@ -589,6 +624,48 @@ class _CommandPaletteState extends State<_CommandPalette> {
     super.dispose();
   }
 
+  Widget _row(
+    BuildContext context,
+    DesktopCommand command,
+    List<DesktopCommand> matches,
+    int index,
+    bool showKeys,
+    String query,
+  ) {
+    final detail = command.detail;
+    return KitRow(
+      // Labels repeat (a tab and a setting both called "Files"): a repeated
+      // label is numbered, so filtering never leaves a stale row behind
+      // under a shared key.
+      key:
+          command.key ??
+          ValueKey(
+            matches.where((other) => other.label == command.label).length > 1
+                ? 'command-${command.label}-$index'
+                : 'command-${command.label}',
+          ),
+      leading: KitRow.icon(context, command.icon),
+      title: command.label,
+      titleDetail: detail,
+      // In the empty menu the rows are plain places; their hints are for
+      // matching.
+      supporting:
+          command.hint == null || command.section == DesktopCommandSection.goTo
+          ? null
+          : TextSpan(text: command.hint),
+      // What Enter runs, filled rather than tinted.
+      selected: index == 0 && query.isNotEmpty,
+      trailing: !showKeys || command.keys == null
+          ? const KitChevron()
+          : KitText(
+              command.keys!,
+              role: KitTextRole.mono,
+              tone: KitTextTone.secondary,
+            ),
+      onTap: () => _run(command),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = _shortcutL10n(context);
@@ -610,39 +687,34 @@ class _CommandPaletteState extends State<_CommandPalette> {
           onSubmitted: (_) => _runFirst(),
         ),
         if (matches.isEmpty)
-          KitSearchNoMatch(query: query, onClear: _query.clear)
-        else
+          KitSearchNoMatch(query: query, onClear: _query.clear, calm: true)
+        else if (query.isEmpty &&
+            matches.any((command) => command.section != null))
+        // The empty state: one labelled group per section (mockup 6).
+        ...[
+          for (final section in DesktopCommandSection.values)
+            if (matches.any((command) => command.section == section))
+              KitRowGroup(
+                key: ValueKey('command-section-${section.name}'),
+                // The sheet already keeps the gutter: rows line up with
+                // the field above them.
+                margin: EdgeInsets.zero,
+                label: switch (section) {
+                  DesktopCommandSection.goTo => l10n.discoverSearchGoTo,
+                  DesktopCommandSection.recent => l10n.searchRecentTitle,
+                },
+                children: [
+                  for (final command in matches)
+                    if (command.section == section)
+                      _row(context, command, matches, -1, showKeys, query),
+                ],
+              ),
+        ] else
           KitRowGroup(
+            margin: EdgeInsets.zero,
             children: [
               for (final (index, command) in matches.indexed)
-                KitRow(
-                  // Labels repeat (a tab and a setting both called "Files"):
-                  // a repeated label is numbered, so filtering never leaves
-                  // a stale row behind under a shared key.
-                  key: ValueKey(
-                    matches
-                                .where((other) => other.label == command.label)
-                                .length >
-                            1
-                        ? 'command-${command.label}-$index'
-                        : 'command-${command.label}',
-                  ),
-                  leading: KitRow.icon(context, command.icon),
-                  title: command.label,
-                  supporting: command.hint == null
-                      ? null
-                      : TextSpan(text: command.hint),
-                  // What Enter runs, filled rather than tinted.
-                  selected: index == 0 && query.isNotEmpty,
-                  trailing: !showKeys || command.keys == null
-                      ? null
-                      : KitText(
-                          command.keys!,
-                          role: KitTextRole.mono,
-                          tone: KitTextTone.secondary,
-                        ),
-                  onTap: () => _run(command),
-                ),
+                _row(context, command, matches, index, showKeys, query),
             ],
           ),
       ],

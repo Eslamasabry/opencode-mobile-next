@@ -101,6 +101,8 @@ class PermissionRequest {
               )
             : null,
         message: json['message']?.toString(),
+        // Absent on OpenCode's own requests: they can always be saved.
+        canAlwaysAllow: json['canAlwaysAllow'] != false,
       );
 
   static const _commandPermissions = {'bash', 'shell'};

@@ -61,6 +61,33 @@ void main() {
 
   tearDownAll(() => ProviderLogo.logoLoaderOverride = null);
 
+  testWidgets('the empty resources state sits on the page gutter once', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final repository = IntegrationsRepository();
+
+    await tester.pumpWidget(
+      app(await integrationsController(repository, withAuthorization: true)),
+    );
+    await tester.pumpAndSettle();
+
+    final title = find.text('No resources available');
+    await tester.scrollUntilVisible(
+      title,
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    // The kit state view insets itself; wrapping it in another gutter
+    // doubled the indent (62 against 31 on Usage).
+    final gutter =
+        tester.getTopLeft(find.byType(KitScreen)).dx +
+        KitTokens.of(tester.element(title)).gutter;
+    expect(tester.getTopLeft(title).dx, gutter);
+  });
+
   testWidgets('MCP resources remain available when integrations fail', (
     tester,
   ) async {

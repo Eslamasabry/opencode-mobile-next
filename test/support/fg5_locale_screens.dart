@@ -190,7 +190,8 @@ Future<Future<void> Function()> mountFg5Welcome(
 void _noop() {}
 
 /// A new chat's composer in [locale]: the question above, the starter chips,
-/// and the composer with a draft, the model chip and the offline note.
+/// the model chip on the line above the box, and the composer with a draft
+/// and the offline note.
 Future<Future<void> Function()> mountFg5Composer(
   WidgetTester tester, {
   required Locale locale,
@@ -249,6 +250,17 @@ Future<Future<void> Function()> mountFg5Composer(
                     ),
                   ),
                 ),
+                // The model chip sits on the line above the box, as in a
+                // chat (concept C, owner 20 Oct 2026).
+                const KitComposerStatusStrip(
+                  chips: [],
+                  model: KitComposerChips.model(
+                    label: '',
+                    onPressed: _noop,
+                    state: KitModelChipState.chooseNeeded,
+                  ),
+                ),
+                SizedBox(height: tokens.space2),
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     tokens.gutter,
@@ -265,11 +277,6 @@ Future<Future<void> Function()> mountFg5Composer(
                     onTools: _noop,
                     onVoice: _noop,
                     onOpenEditor: _noop,
-                    model: const KitComposerChips.model(
-                      label: '',
-                      onPressed: _noop,
-                      state: KitModelChipState.chooseNeeded,
-                    ),
                   ),
                 ),
               ],

@@ -110,7 +110,7 @@ void main() {
         final starter = BuiltinServerStarter(linux: linux);
         addTearDown(starter.dispose);
         serverProbe = ({required baseUrl, username, password}) async =>
-            const ServerProbeResult.success('2.0.29', flavor: ServerFlavor.v2);
+            const ServerProbeResult.success('2.1.1', flavor: ServerFlavor.v2);
         addTearDown(() => serverProbe = probeServerConnection);
         var connected = false;
         final finish = BuiltinSetupFinisher(
@@ -130,7 +130,7 @@ void main() {
             host: SetupHostKind.builtin,
             runtime: TermuxRuntime.openCode2,
             openCodeChanged: true,
-            version: '2.0.29',
+            version: '2.1.1',
           ),
         );
         expect(store.saved.single.id, 'owner');

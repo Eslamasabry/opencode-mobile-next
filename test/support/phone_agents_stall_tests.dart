@@ -248,6 +248,56 @@ void _turnStallControllerTests() {
   );
 
   testWidgets(
+    'a shell command still running after a return from the background is '
+    'activity: no stall after more than 10 silent minutes (owner, 2026-10-27)',
+    (tester) async {
+      final w = await _world(tester);
+      final c = w.controller;
+      var elapsed = Duration.zero;
+      var probes = 0;
+      c.configureTurnStallForTesting(
+        elapsed: () => elapsed,
+        probe: () async {
+          probes++;
+          return const TurnStallEvidence(
+            transportConnected: true,
+            endpointReachable: true,
+          );
+        },
+      );
+      // `timeout 900 flutter test …`: one long Bash call, then nothing.
+      c.noteLocalTurn('long');
+      c.handleEventForTesting(
+        EventEnvelope(
+          type: 'message.part.updated',
+          properties: {
+            'sessionID': 'long',
+            'part': {
+              'id': 'prt_flutter_test',
+              'type': 'tool',
+              'sessionID': 'long',
+              'tool': 'bash',
+              'state': {'status': 'running'},
+            },
+          },
+        ),
+      );
+      // The person looks at another app and comes back: the link is rebuilt
+      // and the running call is not sent again.
+      c.suspendForLifecycle();
+      await c.resumeFromLifecycle();
+      c.notifyListeners();
+      elapsed = const Duration(minutes: 11);
+      await tester.pump(const Duration(minutes: 11));
+      await tester.pump();
+      expect(probes, 0);
+      expect(c.turnStallFor('long'), isNull);
+      expect(c.hasRunningTool, isTrue);
+      c.dispose();
+    },
+  );
+
+  testWidgets(
     'an alive but silent phone server is busy: quiet at first, one neutral line after a long command',
     (tester) async {
       final w = await _world(tester);

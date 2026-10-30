@@ -218,10 +218,29 @@ class _FileRowState extends State<_FileRow> {
 /// labelled row ("Max results  5"), a list of simple values as lines, and
 /// anything nested only behind "Technical details".
 class _Readable extends StatelessWidget {
-  const _Readable({required this.value, required this.name, this.foldLabel});
+  const _Readable({
+    required this.value,
+    required this.name,
+    this.foldLabel,
+    this.shown = const {},
+  });
 
   final Object value;
   final String name;
+
+  /// Values the card already shows (what was sent, beside what came back):
+  /// a row that would repeat one is left out.
+  final Set<String> shown;
+
+  /// The simple values of [value] as their rows show them.
+  static Set<String> simpleValues(Object? value) => {
+    if (value is Map)
+      for (final entry in value.values)
+        if (_simple(entry)) _shownText(entry),
+  };
+
+  static String _shownText(Object? value) =>
+      value is String ? value.trim() : '$value';
 
   /// The fold's words when the card has two (what was sent, what came back);
   /// "Technical details" when it has one.
@@ -243,10 +262,14 @@ class _Readable extends StatelessWidget {
     Object? nested;
     if (value is Map) {
       final rest = <Object?, Object?>{};
+      // Each value once: a tool that writes the same thing under two names
+      // ("to" and "recipient") shows it under the first.
+      final seen = {...shown};
       for (final entry in value.entries) {
-        final text = entry.value is String
-            ? (entry.value as String).trim()
-            : '${entry.value}';
+        final text = _shownText(entry.value);
+        if (_simple(entry.value) && text.isNotEmpty && !seen.add(text)) {
+          continue;
+        }
         if (_simple(entry.value) &&
             text.isNotEmpty &&
             rows.length < KitKeyValue.maxRows) {

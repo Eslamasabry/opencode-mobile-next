@@ -6,6 +6,8 @@
 // Regenerate deliberately:
 //   flutter test --update-goldens test/goldens/agents_ui_golden_test.dart
 // and look at every changed image before committing it.
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +16,7 @@ import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
+import 'package:opencode_mobile/ui/screens/agents/agent_sheet.dart';
 import 'package:opencode_mobile/ui/screens/agents/agents_screen.dart';
 import 'package:opencode_mobile/ui/screens/agents/agents_section.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
@@ -45,6 +48,11 @@ enum _Scene {
 
   const _Scene(this.name);
   final String name;
+}
+
+/// The agent sheet, opened the way the app does from a "Set up" card.
+Future<void> _openAgent(WidgetTester tester) async {
+  unawaited(showAgentSheet(tester.element(find.byType(NewChatScreen))));
 }
 
 Future<void> _mount(
@@ -180,11 +188,11 @@ Future<void> _mount(
   await tester.pumpAndSettle();
   switch (scene) {
     case _Scene.sheetList || _Scene.sheetMixed:
-      await tester.tap(find.byKey(const ValueKey('chats-new-agent')));
+      await _openAgent(tester);
     case _Scene.sheetInstall:
       // A real install reports bytes, so the bar is determinate and settles.
       agents.installBytes = (101000000, 253000000);
-      await tester.tap(find.byKey(const ValueKey('chats-new-agent')));
+      await _openAgent(tester);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
       await tester.pumpAndSettle();
@@ -193,7 +201,7 @@ Future<void> _mount(
       agents.installError = const AgentHostException(
         AgentHostFailure.unavailable,
       );
-      await tester.tap(find.byKey(const ValueKey('chats-new-agent')));
+      await _openAgent(tester);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
       await tester.pumpAndSettle();
@@ -201,11 +209,11 @@ Future<void> _mount(
       await tester.pumpAndSettle();
       await tester.tap(find.text('Details'));
     case _Scene.sheetSignIn:
-      await tester.tap(find.byKey(const ValueKey('chats-new-agent')));
+      await _openAgent(tester);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
     case _Scene.newChatClaude:
-      await tester.tap(find.byKey(const ValueKey('chats-new-agent')));
+      await _openAgent(tester);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('agents-choice-claude')));
     case _Scene.homeResume:

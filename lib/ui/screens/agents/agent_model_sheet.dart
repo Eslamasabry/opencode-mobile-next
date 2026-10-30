@@ -9,72 +9,73 @@ import '../../app_iconography.dart';
 import '../../kit/kit.dart';
 import '../../widgets/product_states.dart' show productErrorText;
 
-/// The model chip on New conversation while an agent on this phone (Claude
-/// Code, …) is chosen: its own models, not the OpenCode server's.
-class AgentModelChip extends StatefulWidget {
-  const AgentModelChip({
-    super.key,
-    required this.agents,
-    required this.agentId,
-  });
-
-  final PhoneAgentsSource agents;
-  final String agentId;
-
-  @override
-  State<AgentModelChip> createState() => _AgentModelChipState();
+/// The agent's model in words for a row value: the one the person chose
+/// ("Sonnet"), else the agent's own default by its plain name ("Opus") once a
+/// model list has said which it is, else "Default model". Names come from
+/// the last model list ([rememberAgentModels]); until one is read a chosen
+/// id is made readable instead. Never a raw id.
+String agentModelLabel(
+  AppLocalizations l10n,
+  PhoneAgentsSource agents,
+  String agentId,
+) {
+  final chosen = agents.selectedAgentModel(agentId);
+  // A model's name is the agent's words: isolated, so "Opus 5.5" keeps its
+  // order in a right-to-left row.
+  if (chosen == null) {
+    final fallback = _AgentModelNames.defaultOf(agentId);
+    return fallback == null ? l10n.agentsModelDefault : KitBidi.auto(fallback);
+  }
+  return KitBidi.auto(
+    _AgentModelNames.of(agentId, chosen) ?? modelNameFromId(chosen),
+  );
 }
 
-class _AgentModelChipState extends State<AgentModelChip> {
-  String? _named;
+/// Keeps [models]' names (and which one is the agent's default) for
+/// [agentModelLabel]; the start screen calls it when it has read the list.
+void rememberAgentModels(String agentId, List<AgentModelChoice> models) =>
+    _AgentModelNames.remember(agentId, models);
 
-  /// A chosen model is named ("Sonnet 5"), not shown by its id: the names
-  /// are read from the agent once.
-  void _learnNames(String agentId) {
-    if (_named == agentId) return;
-    _named = agentId;
-    unawaited(
-      widget.agents.agentModels(agentId).then((models) {
-        _AgentModelNames.remember(agentId, models);
-        if (mounted) setState(() {});
-      }, onError: (Object _) {}),
-    );
+/// The plain name of the model the agent uses when the person picks none,
+/// or null when the list does not say: "Default (Opus)" names Opus, a real
+/// model marked default names itself, and a bare "Default" alias (or
+/// "Default (recommended)") names nothing.
+String? agentDefaultModelName(List<AgentModelChoice> models) {
+  final model = models.where((m) => m.isDefault).firstOrNull;
+  if (model == null) return null;
+  final name = model.name.trim();
+  final inner = RegExp(
+    r'^default\s*\((.+)\)$',
+    caseSensitive: false,
+  ).firstMatch(name)?.group(1)?.trim();
+  if (inner != null) {
+    const generic = {'recommended', 'auto', 'default'};
+    return inner.isEmpty || generic.contains(inner.toLowerCase())
+        ? null
+        : inner;
   }
-
-  @override
-  Widget build(BuildContext context) {
-    final agents = widget.agents;
-    final agentId = widget.agentId;
-    final l10n = AppLocalizations.of(context);
-    final chosen = agents.selectedAgentModel(agentId);
-    if (chosen != null && _AgentModelNames.of(agentId, chosen) == null) {
-      _learnNames(agentId);
-    }
-    return KitComposerChips.model(
-      chipKey: const ValueKey('chats-new-agent-model'),
-      label: chosen == null
-          ? l10n.agentsModelDefault
-          : _AgentModelNames.of(agentId, chosen) ?? modelNameFromId(chosen),
-      state: chosen == null
-          ? KitModelChipState.serverDefault
-          : KitModelChipState.chosen,
-      onPressed: () => unawaited(
-        showAgentModelSheet(context, agents: agents, agentId: agentId),
-      ),
-    );
+  if (model.id == 'default' || name.toLowerCase().startsWith('default')) {
+    return null;
   }
+  return name.isEmpty || name == model.id ? modelNameFromId(model.id) : name;
 }
 
-/// Names read the last time the sheet listed an agent's models, so the chip
-/// can say "Sonnet" instead of an id without asking the host on every build.
+/// Names read the last time a list of an agent's models was read, so the
+/// row can say "Sonnet" instead of an id without asking the host on every
+/// build.
 abstract final class _AgentModelNames {
   static final _names = <String, Map<String, String>>{};
+  static final _defaults = <String, String?>{};
 
   static String? of(String agentId, String modelId) =>
       _names[agentId]?[modelId];
 
-  static void remember(String agentId, List<AgentModelChoice> models) =>
-      _names[agentId] = {for (final model in models) model.id: model.name};
+  static String? defaultOf(String agentId) => _defaults[agentId];
+
+  static void remember(String agentId, List<AgentModelChoice> models) {
+    _names[agentId] = {for (final model in models) model.id: model.name};
+    _defaults[agentId] = agentDefaultModelName(models);
+  }
 }
 
 /// "Choose a model": the agent's own default first, then each model it

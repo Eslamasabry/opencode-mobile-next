@@ -297,18 +297,28 @@ void main() {
       findsNothing,
     );
 
-    // Order: current, saved, Add, Manage.
+    // Order: current, saved, then the one quiet Add a server (vision
+    // 2026-10-20: no Manage servers row; Servers stays in Settings and Go
+    // to, and every row's tap opens it to connect).
     double top(String key) => tester.getTopLeft(find.byKey(ValueKey(key))).dy;
     final order = [
       top('server-switcher-current'),
       top('server-switcher-profile-home'),
       top('server-switcher-add'),
-      top('server-switcher-manage'),
     ];
     expect(order, [...order]..sort());
     expect(find.text('Servers'), findsOneWidget);
-    expect(inSheet(find.text('Add server')), findsOneWidget);
-    expect(inSheet(find.text('Manage servers')), findsOneWidget);
+    expect(inSheet(find.text('Add a server')), findsOneWidget);
+    expect(inSheet(find.text('Manage servers')), findsNothing);
+    // The one in use carries the check, never a filled tile.
+    expect(
+      find.descendant(
+        of: current,
+        matching: find.byKey(const ValueKey('server-switcher-check')),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('kit-row-current-mark')), findsNothing);
     // Disconnect is in the current row's menu, which a tap opens.
     expect(find.text('Disconnect'), findsNothing);
     await tester.tap(current);
@@ -453,7 +463,7 @@ void main() {
     expect(find.text('https://locked.example.test'), findsWidgets);
   });
 
-  testWidgets('Add server opens the editor; Manage servers opens Servers', (
+  testWidgets('Add a server opens the editor; a saved row opens Servers', (
     tester,
   ) async {
     final connection = await pumpShell(tester, profiles: [work, home]);
@@ -487,13 +497,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(HomeScreen), findsOneWidget);
 
-    await openSwitcher(tester);
-    await tester.tap(find.byKey(const ValueKey('server-switcher-manage')));
-    await tester.pumpAndSettle();
-    expect(find.byType(ServersScreen), findsOneWidget);
-    expect(find.byKey(const ValueKey('server-url-field')), findsNothing);
-    expect(connection.attempted, isEmpty);
-    expect(connection.api, isNotNull);
+    expect(find.byKey(const ValueKey('server-switcher-manage')), findsNothing);
   });
 
   testWidgets('Disconnect confirms: cancel stays connected, confirm leaves', (
@@ -686,22 +690,22 @@ void main() {
 
         await openSwitcher(tester);
         expect(tester.takeException(), isNull);
-        final sheet = tester.getRect(
-          find.byKey(const ValueKey('server-switcher-sheet')),
-        );
+        expect(find.byKey(const ValueKey('server-switcher-sheet')), findsOne);
         for (final key in [
           'server-switcher-current',
           'termux-running-server',
           'server-switcher-profile-work',
           'server-switcher-add',
-          'server-switcher-manage',
         ]) {
           final finder = find.byKey(ValueKey(key));
           await tester.ensureVisible(finder);
           await tester.pumpAndSettle();
           final rect = tester.getRect(finder);
-          expect(rect.left, greaterThanOrEqualTo(sheet.left), reason: key);
-          expect(rect.right, lessThanOrEqualTo(sheet.right), reason: key);
+          // A flat list in a sheet runs its rows out over the sheet's rails
+          // (KitReach), so a row may start left of the body: it must still
+          // sit inside the window.
+          expect(rect.left, greaterThanOrEqualTo(0), reason: key);
+          expect(rect.right, lessThanOrEqualTo(320), reason: key);
         }
         expect(tester.takeException(), isNull);
       },

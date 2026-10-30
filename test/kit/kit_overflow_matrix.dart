@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderShiftedBox;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/kit/kit_choice_list.dart' show KitChoiceRow;
@@ -186,7 +187,12 @@ String? kit24Problem({
     return 'labels do not fit, but no KitSegmented is shown (KIT-24)';
   }
   for (final part in segmented) {
-    final partBox = part.renderObject! as RenderBox;
+    var partBox = part.renderObject! as RenderBox;
+    // The part builds inside a KitMaxWidth (kit-v2 §8.6): its rows fill the
+    // box the cap leaves it, not the wider box the caller gave.
+    if (partBox.runtimeType.toString() == '_RenderKitMaxWidth') {
+      partBox = (partBox as RenderShiftedBox).child!;
+    }
     final available = partBox.constraints.maxWidth;
     if (available.isFinite && partBox.size.width < available - 0.5) {
       return 'KitSegmented is ${partBox.size.width} of $available dp '

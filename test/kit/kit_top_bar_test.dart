@@ -9,11 +9,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/kit/glass/kit_glass.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit_effects.dart';
 import 'package:opencode_mobile/ui/kit/kit_icon_button.dart';
 import 'package:opencode_mobile/ui/kit/kit_menu.dart';
+import 'package:opencode_mobile/ui/kit/kit_text.dart';
 import 'package:opencode_mobile/ui/kit/kit_top_bar.dart';
 
 Future<void> _pump(
@@ -90,8 +90,11 @@ void main() {
       ),
     },
   );
+  // A short name: in the test font (every glyph an em wide) a longer one
+  // would be cut beside "Connected", and then the green dot alone says it
+  // (impeccable audit 2026-10-28, #7).
   Widget motionControls(bool connected) => KitShellControls(
-    server: 'Office computer',
+    server: 'PC',
     serverStatus: connected ? 'Connected' : 'Reconnecting',
     serverTone: connected ? AppStatusTone.ok : AppStatusTone.progress,
     onServer: () {},
@@ -104,7 +107,7 @@ void main() {
       'connects': KitMotionChange(
         build: () => motionControls(false),
         act: (tester, stage) => stage.rebuild(motionControls(true)),
-        shows: ' · Connected',
+        shows: 'Connected',
       ),
     },
   );
@@ -127,6 +130,44 @@ void main() {
     expect(data.label, 'Fix login, Working · 2 min');
     expect(data.flagsCollection.isHeader, isTrue);
     expect(data.flagsCollection.namesRoute, isTrue);
+    semantics.dispose();
+  });
+
+  testWidgets('subtitleTail: kept while the line fits, dropped before the '
+      'state is cut; read whole either way', (tester) async {
+    final semantics = tester.ensureSemantics();
+    String shown() => tester
+        .widgetList<RichText>(find.byType(RichText))
+        .map((t) => t.text.toPlainText())
+        .firstWhere((t) => t.startsWith('Now:'));
+    await _pump(
+      tester,
+      const KitTopBar(
+        title: 'Tasks',
+        subtitle: 'Now: Sync',
+        subtitleTail: 'Next',
+        titleKey: ValueKey('title'),
+      ),
+    );
+    expect(shown(), 'Now: Sync · Next');
+    await _pump(
+      tester,
+      const KitTopBar(
+        title: 'Tasks',
+        subtitle: 'Now: Sync',
+        subtitleTail: 'Next',
+        titleKey: ValueKey('title'),
+      ),
+      size: const Size(150, 640),
+    );
+    expect(shown(), 'Now: Sync');
+    expect(
+      tester
+          .getSemantics(find.byKey(const ValueKey('title')))
+          .getSemanticsData()
+          .label,
+      'Tasks, Now: Sync, Next',
+    );
     semantics.dispose();
   });
 
@@ -163,6 +204,34 @@ void main() {
       tester.getCenter(find.byTooltip('Close')).dx,
       greaterThan(tester.getCenter(find.text('Edit')).dx),
     );
+  });
+
+  testWidgets('centred: the title at the true centre, Close at the end', (
+    tester,
+  ) async {
+    await _pump(tester, const SizedBox.shrink());
+    final nav = tester.state<NavigatorState>(find.byType(Navigator));
+    nav.push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => const Scaffold(
+          body: KitTopBar(title: 'New conversation', centred: true),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getCenter(find.text('New conversation')).dx,
+      closeTo(412 / 2, .5),
+    );
+    expect(find.byTooltip('Close'), findsOneWidget);
+    expect(
+      tester.getCenter(find.byTooltip('Close')).dx,
+      greaterThan(tester.getRect(find.text('New conversation')).right),
+    );
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('New conversation'), findsNothing);
   });
 
   testWidgets('onExit overrides the pop', (tester) async {
@@ -333,12 +402,13 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('shell: pill with status word, search, dim glass', (
+  testWidgets('shell: pill with status word, then search and the gear', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
     var servers = 0;
     var searches = 0;
+    var settings = 0;
     await _pump(
       tester,
       KitTopBar.shell(
@@ -348,6 +418,7 @@ void main() {
           serverTone: AppStatusTone.ok,
           onServer: () => servers++,
           onSearch: () => searches++,
+          onSettings: () => settings++,
         ),
       ),
     );
@@ -361,12 +432,13 @@ void main() {
     );
     await tester.tap(find.textContaining('Connected', findRichText: true));
     await tester.tap(find.byTooltip('Search'));
-    expect((servers, searches), (1, 1));
-    // Pill and search are one solid pair that sits together while the page
-    // is scrolled.
-    final glass = tester.widgetList<KitGlass>(find.byType(KitGlass));
-    expect(glass.length, 1);
-    expect(glass.single.trailing, isNotNull);
+    await tester.tap(find.byTooltip('Settings'));
+    expect((servers, searches, settings), (1, 1, 1));
+    // The pill at the start; search, then the gear, at the end.
+    final pill = tester.getRect(find.textContaining('Laptop'));
+    final search = tester.getRect(find.byTooltip('Search'));
+    final gear = tester.getRect(find.byTooltip('Settings'));
+    expect(pill.right < search.left && search.right <= gear.left, isTrue);
     semantics.dispose();
   });
 
@@ -396,46 +468,96 @@ void main() {
     expect(find.text('Connected'), findsNothing);
   });
 
-  testWidgets('shell at 200 % text: a status that needs words stays on one '
-      'line under the name', (tester) async {
+  // The owner's concepts (2026-10-22): one line, "name · state", at the
+  // chips' size; the pill keeps the 48 dp target.
+  for (final direction in TextDirection.values) {
+    testWidgets('shell at 100 % text: name · status on one line '
+        '(${direction.name})', (tester) async {
+      await _pump(
+        tester,
+        KitTopBar.shell(
+          controls: KitShellControls(
+            // Short enough to share the line whole in the test font.
+            server: 'PC',
+            serverStatus: 'Connected',
+            serverTone: AppStatusTone.ok,
+            onServer: () {},
+            onSearch: () {},
+            serverKey: const ValueKey('pill'),
+          ),
+        ),
+        direction: direction,
+      );
+      final name = find.textContaining('PC');
+      final status = find.text('Connected');
+      expect(status, findsOneWidget);
+      expect(find.text(' · '), findsOneWidget);
+      expect(tester.getCenter(status).dy, tester.getCenter(name).dy);
+      final rtl = direction == TextDirection.rtl;
+      expect(
+        tester.getCenter(status).dx > tester.getCenter(name).dx,
+        !rtl,
+        reason: 'the status follows the name in reading order',
+      );
+      expect(tester.getSize(find.byKey(const ValueKey('pill'))).height, 48);
+      expect(
+        tester
+            .widget<KitText>(
+              find.byKey(const ValueKey('kit-shell-server-status')),
+            )
+            .role,
+        KitTextRole.secondary,
+      );
+    });
+  }
+
+  testWidgets('shell: the pill sits space4 under the top, beside round search '
+      'and gear one space4 apart', (tester) async {
     await _pump(
       tester,
       KitTopBar.shell(
         controls: KitShellControls(
-          server: '127.0.0.1',
-          serverStatus: 'Reconnecting',
-          serverTone: AppStatusTone.attention,
+          server: 'Laptop',
+          serverStatus: 'Connected',
           onServer: () {},
           onSearch: () {},
+          onSettings: () {},
+          serverKey: const ValueKey('pill'),
+          searchKey: const ValueKey('search'),
+          settingsKey: const ValueKey('gear'),
         ),
       ),
-      textScale: 2,
     );
-    expect(tester.takeException(), isNull);
-    final name = find.textContaining('127.0.0.1');
-    final status = find.text('Reconnecting');
-    expect(status, findsOneWidget);
+    final pill = tester.getRect(find.byKey(const ValueKey('pill')));
+    final search = tester.getRect(find.byKey(const ValueKey('search')));
+    final gear = tester.getRect(find.byKey(const ValueKey('gear')));
+    expect(pill.top, 16);
+    expect(search.size, const Size(48, 48));
+    expect(gear.size, const Size(48, 48));
+    expect(search.center.dy, pill.center.dy);
+    expect(gear.left - search.right, 16);
     expect(
-      tester.getTopLeft(status).dy,
-      greaterThan(tester.getBottomLeft(name).dy - 1),
+      find.byKey(const ValueKey('kit-icon-button-round')),
+      findsNWidgets(2),
     );
   });
 
-  testWidgets('shell at 100 % text: name and status share one line', (
+  testWidgets('shell without onSettings has no gear (a rail names Settings)', (
     tester,
   ) async {
     await _pump(
       tester,
       KitTopBar.shell(
         controls: KitShellControls(
-          server: '127.0.0.1',
+          server: 'Laptop',
           serverStatus: 'Connected',
           onServer: () {},
           onSearch: () {},
         ),
       ),
     );
-    expect(find.text(' · Connected'), findsOneWidget);
+    expect(find.byTooltip('Settings'), findsNothing);
+    expect(find.byTooltip('Search'), findsOneWidget);
   });
 
   testWidgets('sidebar: pill, project, search stacked; no project row '
@@ -590,4 +712,78 @@ void main() {
       expect(find.byKey(key), findsOneWidget);
     });
   });
+
+  group('scope link', () {
+    testWidgets('a link alone: mark, words, the act; one 48 dp target', (
+      tester,
+    ) async {
+      var taps = 0;
+      await _pump(
+        tester,
+        KitTopBar(
+          title: 'Terminal',
+          scope: KitTopBarScope(
+            label: '',
+            semanticsLabel: 'Runs on Laptop',
+            link: KitTopBarLink(
+              linkKey: const ValueKey('link'),
+              label: 'Dev server running',
+              action: 'Open preview',
+              onTap: () => taps++,
+            ),
+          ),
+        ),
+      );
+      expect(find.textContaining('Open preview'), findsOneWidget);
+      expect(
+        tester.getSize(find.byKey(const ValueKey('link'))).height,
+        greaterThanOrEqualTo(48),
+      );
+      await tester.tap(find.byKey(const ValueKey('link')));
+      expect(taps, 1);
+    });
+
+    testWidgets('a place with nothing to open has no chevron and no target', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        const KitTopBar(
+          title: 'Terminal',
+          scope: KitTopBarScope(
+            label: 'Laptop',
+            semanticsLabel: 'Runs on Laptop',
+          ),
+        ),
+      );
+      expect(find.text('Laptop'), findsOneWidget);
+      expect(find.byIcon(AppIconography.chevronDown), findsNothing);
+    });
+  });
+
+  testWidgets(
+    'Paper sets the page title at its own size; Solid keeps the role',
+    (tester) async {
+      double size() {
+        final text = tester.widget<Text>(find.text('Project'));
+        return text.style!.fontSize!;
+      }
+
+      await _pump(tester, const KitTopBar(title: 'Project'));
+      expect(size(), 16, reason: 'the headline role');
+      await _pump(
+        tester,
+        const KitTopBar(title: 'Project'),
+        effects: const KitEffects(surfaceStyle: KitSurfaceStyle.paper),
+      );
+      expect(size(), 24);
+      // A card's headline elsewhere keeps the role's 16 under Paper.
+      await _pump(
+        tester,
+        const KitText('Card', role: KitTextRole.headline),
+        effects: const KitEffects(surfaceStyle: KitSurfaceStyle.paper),
+      );
+      expect(tester.widget<Text>(find.text('Card')).style!.fontSize, 16);
+    },
+  );
 }

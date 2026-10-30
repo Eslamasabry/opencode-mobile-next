@@ -508,6 +508,7 @@ void main() {
           findsOneWidget,
         );
         expect(_editable(tester, 'mcp-name').controller.text, 'weather');
+        await _reveal(tester, 'mcp-url');
         expect(
           _editable(tester, 'mcp-url').controller.text,
           'https://weather.example/mcp',
@@ -572,6 +573,7 @@ void main() {
       await _openCatalog(tester, controller, _Registry());
 
       await _tapSwitch(tester, 'files-mcp');
+      await _reveal(tester, 'mcp-command');
       expect(
         _editable(tester, 'mcp-command').controller.text,
         'npx\n-y\n@acme/files-mcp@1.2.0',

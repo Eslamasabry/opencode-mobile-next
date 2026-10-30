@@ -17,7 +17,7 @@ ServerProfile _p(String id, String url) => ServerProfile(
   name: 'Computer at 10.0.2.2',
   baseUrl: url,
   flavor: ServerFlavor.v2,
-  serverVersion: '2.0.29',
+  serverVersion: '2.1.1',
   password: 'synthetic',
 );
 
@@ -46,7 +46,11 @@ void main() {
   testWidgets('the header chip shortens the host, never the port', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(360, 800);
+    // The status word shares the pill's line (owner concepts, 2026-10-22),
+    // and the test font draws every glyph a full em wide: 480 leaves the
+    // name the room a real font has on a 360 dp phone (the rails gave the
+    // pill more room, so 520 now fits the whole name).
+    tester.view.physicalSize = const Size(480, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
@@ -74,5 +78,36 @@ void main() {
       find.text('Computer at 10.0.2.2'),
     );
     expect(head.didExceedMaxLines, isTrue);
+  });
+
+  testWidgets('with no room for the name beside the status, the pill takes '
+      'two lines and still keeps the port', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: KitTopBar.shell(
+            controls: KitShellControls(
+              server: 'Computer at 10.0.2.2:4443',
+              serverStatus: 'Connected',
+              serverTone: AppStatusTone.ok,
+              onServer: () {},
+              onSearch: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.text(':4443'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Connected')).dy,
+      greaterThanOrEqualTo(tester.getBottomLeft(find.text(':4443')).dy - 1),
+    );
   });
 }

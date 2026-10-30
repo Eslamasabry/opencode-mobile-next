@@ -170,18 +170,40 @@ KitStatus? appExitKitStatus(
               inCurrent((current) => onSwitchToPhone(current, phoneId)),
         )
       : null;
+  final back = serverBack || (elsewhere && recovery.phoneServerRunning);
+  final full = appExitMessage(
+    l10n,
+    notice,
+    appExitTimeText(context, l10n, notice.at, now: now),
+    serverBack: back,
+  );
+  // Information only: the phone's OpenCode is back or coming back by
+  // itself, nothing else stopped, and no switch is on offer. That is one
+  // quiet line; the time stays in what a screen reader says.
+  final quiet =
+      switchToPhone == null &&
+      !notice.teamStopped &&
+      (back || notice.recoveryAllowed);
+  if (quiet) {
+    return KitStatus(
+      kind: KitStatusKind.appStopped,
+      id: 'app-stopped',
+      key: const ValueKey('app-exit-notice'),
+      icon: AppIconography.restart,
+      message: back ? l10n.appExitQuietRestarted : l10n.appExitQuietRestarting,
+      semanticsLabel: full,
+      action: keepRunning,
+      onDismiss: recovery.dismiss,
+      quiet: true,
+    );
+  }
   return KitStatus(
     kind: KitStatusKind.appStopped,
     id: 'app-stopped',
     key: const ValueKey('app-exit-notice'),
     icon: AppIconography.restart,
     tone: AppStatusTone.neutral,
-    message: appExitMessage(
-      l10n,
-      notice,
-      appExitTimeText(context, l10n, notice.at, now: now),
-      serverBack: serverBack || (elsewhere && recovery.phoneServerRunning),
-    ),
+    message: full,
     action: switchToPhone ?? keepRunning,
     more: [if (switchToPhone != null) ?keepRunning],
     onDismiss: recovery.dismiss,

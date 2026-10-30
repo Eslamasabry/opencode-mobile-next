@@ -67,7 +67,10 @@ Future<(_PaseoApi, ConnectionController)> _open(WidgetTester tester) async {
       boundaryKey: _boundary,
       controller: controller,
       store: store,
-      home: ServerSettingsScreen(controller: controller),
+      home: ServerPageScreen(
+        controller: controller,
+        profileId: controller.profile!.id,
+      ),
     ),
   );
   await frames(tester, 10);
@@ -93,6 +96,8 @@ void main() {
 
   Future<void> confirm(WidgetTester tester) async {
     await tester.ensureVisible(row);
+    await tester.pump();
+    await tester.ensureVisible(row);
     await tester.tap(row);
     await frames(tester, 10);
     await tester.tap(find.byKey(const Key('confirm-host-update')));
@@ -104,6 +109,8 @@ void main() {
   ) async {
     final (api, _) = await _open(tester);
     expect(find.text('Update agents on Build box'), findsOneWidget);
+    await tester.ensureVisible(row);
+    await tester.pump();
     await tester.ensureVisible(row);
     await tester.tap(row);
     await frames(tester, 10);
@@ -180,6 +187,8 @@ void main() {
     expect(find.textContaining('EACCES'), findsNothing);
     final details = find.byKey(const Key('server-host-update-details'));
     await tester.ensureVisible(details);
+    await tester.pump();
+    await tester.ensureVisible(details);
     await tester.tap(details);
     await frames(tester, 10);
     expect(
@@ -211,7 +220,10 @@ void main() {
         boundaryKey: GlobalKey(),
         controller: controller,
         store: store,
-        home: ServerSettingsScreen(controller: controller),
+        home: ServerPageScreen(
+          controller: controller,
+          profileId: controller.profile!.id,
+        ),
       ),
     );
     await frames(tester, 10);
@@ -228,6 +240,8 @@ void main() {
     );
     final (api, _) = await _open(tester);
     await shot('1-page');
+    await tester.ensureVisible(row);
+    await tester.pump();
     await tester.ensureVisible(row);
     await tester.tap(row);
     await frames(tester, 10);

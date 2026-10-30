@@ -239,10 +239,10 @@ The menu shows no server data, so it has no loading or error state. A caller tha
 
 ## Motion and haptics
 
-- **Open and close:** a cross-fade of the panel on `KitMotion.quick` (`enter` in, `exit` out). There is no scale, size or fade-scale animation: Material's popup size tween is replaced (MOT-2).
+- **Open and close:** a cross-fade of the panel on `KitMotion.quick` (`enter` in, `exit` out). There is no scale, size or fade-scale animation: Material's popup size tween is replaced (MOT-2). Under Animations: Full the panel also drops `space2` from its anchor as it opens (rises, when it opens above); only its position moves, never its layout, and closing fades only. Calm fades only (`KitMotion.travels`; micro-motion audit 2026-10-27).
 - **Reduced motion:** it appears and disappears at once and settles after one `pump()` (G8).
 - **Item highlight:** it follows focus and hover instantly.
-- **Haptics:** none (MOT-11: menus, rows and copy are silent).
+- **Haptics:** choosing an item is silent; the long-press that opened the menu ticked once (`KitHaptics.longPress`, MOT-11 since 2026-10-26). On Android an item answers a press with the native ripple (kit-v2 top note, 2026-10-26).
 
 ## Data safety and honest state
 

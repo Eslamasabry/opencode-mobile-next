@@ -3,7 +3,7 @@ import 'package:opencode_mobile/scheduling/controller.dart';
 import 'package:opencode_mobile/scheduling/models.dart';
 import 'package:opencode_mobile/scheduling/platform.dart';
 import 'package:opencode_mobile/scheduling/store.dart';
-import 'package:opencode_mobile/ui/screens/scheduling/schedule_editor_screen.dart';
+import 'package:opencode_mobile/ui/screens/scheduling/schedule_sheet.dart';
 import 'package:opencode_mobile/ui/screens/scheduling/scheduled_prompts_screen.dart';
 import 'package:widgetbook/widgetbook.dart';
 
@@ -194,20 +194,45 @@ class _ScheduleSceneState extends State<_ScheduleScene> {
       if (widget.scene == _Scene.weekdays ||
           widget.scene == _Scene.once ||
           widget.scene == _Scene.longPrompt) {
-        return ScheduleEditorScreen(
-          controller: controller,
-          target: target,
-          agents: const ['build', 'plan'],
-        );
+        return _SheetOpener(controller: controller, target: target);
       }
       return ScheduledPromptsScreen(
         controller: controller,
         target: target,
-        agents: const ['build', 'plan'],
+        serverName: 'Laptop',
         onOpenRun: (_) async {},
       );
     },
   );
+}
+
+/// The creation sheet, opened over an empty page as a tap opens it.
+class _SheetOpener extends StatefulWidget {
+  const _SheetOpener({required this.controller, required this.target});
+  final ScheduledPromptsController controller;
+  final ScheduledPrompt target;
+  @override
+  State<_SheetOpener> createState() => _SheetOpenerState();
+}
+
+class _SheetOpenerState extends State<_SheetOpener> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showScheduleSheet(
+        context,
+        controller: widget.controller,
+        seed: widget.target,
+        existing: widget.target,
+        where: 'launch · Laptop',
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.expand();
 }
 
 CatalogComponent scheduledPromptsScreen() => catalogComponent(
@@ -252,8 +277,8 @@ CatalogComponent scheduledPromptsScreen() => catalogComponent(
 
 CatalogComponent scheduleEditorScreen() => catalogComponent(
   area: 'Schedules',
-  screen: 'ScheduleEditorScreen',
-  name: 'Schedule editor',
+  screen: 'showScheduleSheet',
+  name: 'Schedule sheet',
   useCases: [
     WidgetbookUseCase(
       name: 'Every weekday',

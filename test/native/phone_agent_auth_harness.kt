@@ -431,7 +431,7 @@ fun main(args: Array<String>) {
             val parsed = checkNotNull(PhoneAgentAuthRequest.parse(valid))
             check(parsed.profileId == PROFILE && parsed.agentId == "claude" && parsed.action == "probe")
             check(parsed.timeoutSeconds == 65L && parsed.script == valid["script"])
-            for (agent in listOf("claude", "codex", "gemini", "qwen", "goose", "omp-acp", "fx")) {
+            for (agent in listOf("claude", "codex", "gemini", "qwen", "kilo", "cline", "goose", "omp-acp", "fx")) {
                 check(PhoneAgentAuthRequest.parse(request(fixtures, agent))?.timeoutSeconds ==
                     if (agent == "claude") 65L else 10L)
             }

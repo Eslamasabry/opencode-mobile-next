@@ -183,6 +183,10 @@ const _widgetBases = {'InheritedNotifier', 'InheritedModel', 'InheritedTheme'};
 const _nonWidgetClasses = {
   'KitTokens': 'ThemeExtension',
   'KitPageTransitionsBuilder': 'PageTransitionsBuilder',
+  'KitAndroidPageTransitionsBuilder': 'PageTransitionsBuilder',
+  // The ripple layer's state (its start/confirm/cancel handle for
+  // KitPressTracker); KitInkLayer is the part.
+  'KitInkLayerState': 'State',
   // A route lays out its caller's page, not a kit part.
   'KitPageRoute': 'PageRoute',
   'KitZoomController': 'ChangeNotifier',
@@ -196,6 +200,9 @@ const _nonWidgetClasses = {
   'KitContextArcPainter': 'CustomPainter',
   'KitContextHaloPainter': 'CustomPainter',
   'KitContextChartPainter': 'CustomPainter',
+  // The render object behind KitWordsPlate (a plate round words); the widget
+  // is the part.
+  'RenderKitWordsPlate': 'RenderProxyBox',
 };
 
 /// Every `export` and `part` directive in a scanned file; each one must match

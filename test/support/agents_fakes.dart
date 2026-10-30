@@ -88,6 +88,11 @@ class FakePhoneAgentsSource extends ChangeNotifier
   bool needRestart = false;
   List<AgentRow> _rows;
   String selected;
+
+  /// Agents offered as ready choices with no row of their own, as a
+  /// certified agent would be (id, name): renders of the start screen with
+  /// more agents than this build has certified.
+  List<(String, String)> alsoReady = const [];
   AgentSetupProgress progress = const AgentSetupProgress(
     agentId: '',
     phase: AgentSetupPhase.idle,
@@ -154,6 +159,13 @@ class FakePhoneAgentsSource extends ChangeNotifier
           selected: selected == row.id,
           row: row,
         ),
+    for (final (id, name) in alsoReady)
+      ChatAgentChoice(
+        agentId: id,
+        name: name,
+        iconKey: id,
+        selected: selected == id,
+      ),
   ];
 
   @override

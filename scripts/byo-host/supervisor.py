@@ -32,7 +32,7 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 BUNDLE_VERSION = "2.0.0"
-OPENCODE_VERSION = "2.0.29"
+OPENCODE_VERSION = "2.1.1"
 DEFAULT_PORT = 4096
 MAX_BODY = 16 * 1024 * 1024
 ID = re.compile(r"[A-Za-z0-9_-]{1,128}\Z")

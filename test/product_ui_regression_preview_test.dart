@@ -165,6 +165,9 @@ void main() {
       // Files now parses the complete CSV and caps rows in KitViewer; the
       // source itself is intact, so its truncated table is still honest.
       expect(find.byKey(const ValueKey('kit-viewer-table')), findsOneWidget);
+      // Attach waits in the reader's ⋯ (Ask about this file is its main
+      // action).
+      await _openViewerMenu(tester);
       await tester.tap(find.byKey(const Key('project-file-attach')));
       await tester.pumpAndSettle();
       expect(attached?.copyText, original);
@@ -212,8 +215,6 @@ void main() {
 
     await _openViewerMenu(tester);
     expect(find.byKey(const Key('project-file-download')), findsOneWidget);
-    await tester.tapAt(const Offset(4, 4));
-    await tester.pumpAndSettle();
     expect(find.byKey(const Key('project-file-attach')), findsOneWidget);
     await tester.tap(find.byKey(const Key('project-file-attach')));
     await tester.pumpAndSettle();

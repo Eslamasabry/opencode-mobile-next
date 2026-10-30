@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
+
 import '../../domain/models.dart';
 
 /// Connection lifecycle surfaced to the UI.
@@ -8,6 +10,17 @@ enum StreamStatus { connecting, connected, reconnecting, disconnected }
 abstract class LiveEventChannel {
   void start();
   Future<void> dispose();
+}
+
+/// A [LiveEventChannel] that retries on a schedule of its own after the
+/// link drops says when its next try is, so a screen can count down to it
+/// ("trying again in 12 s") instead of spinning. [nextAttempt] holds the
+/// moment its retry timer fires while one is set, and null while a try is
+/// in flight, while connected, and once disposed. A channel without a real
+/// timer does not implement this: nothing may promise a retry it will not
+/// make.
+abstract interface class RetryingEventChannel {
+  ValueListenable<DateTime?> get nextAttempt;
 }
 
 enum VcsDiffMode { workingTree, branch }

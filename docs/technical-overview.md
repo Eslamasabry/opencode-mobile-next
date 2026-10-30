@@ -107,7 +107,7 @@ on loopback: bind the server to `127.0.0.1` and bring the connection to
 - **On-device (Termux)** — tap **On-device (Termux)** on the Servers
   screen. The app detects Termux (or opens its F-Droid page), walks you
   through the one required unlock line, installs Ubuntu via proot-distro
-  plus Node and `@opencode/cli@2.0.29` in the chroot, launches
+  plus Node and `@opencode/cli@2.1.1` in the chroot, launches
   `opencode2 serve` detached, health-polls until live, and connects. A "Live
   log in Termux" button streams install/server logs at any time. The native
   side is
@@ -122,7 +122,7 @@ on loopback: bind the server to `127.0.0.1` and bring the connection to
   proot-distro install ubuntu
   proot-distro login ubuntu     # then inside the chroot:
     apt update && apt install -y nodejs npm
-    npm i -g @opencode/cli@2.0.29
+    npm i -g @opencode/cli@2.1.1
     opencode2 serve --hostname 127.0.0.1 --port 4096
     exit
   ```
@@ -162,7 +162,7 @@ uncertain delivery must not silently retry or resend a mutation.
 OpenCode 2 is the only supported OpenCode protocol. The handwritten
 `lib/api2/` client handles HTTP Basic authentication, `/api` routes, typed
 messages, volatile SSE events, cursor pagination, forms, inbox delivery and
-single-use terminal connection tickets. Stable 2.0.29 uses `/api/info` for
+single-use terminal connection tickets. Stable 2.1.1 uses `/api/info` for
 identity; the earlier beta uses `/api/health`. Reconnects reconcile state by
 refetching because the global event stream does not replay missed events.
 
@@ -174,7 +174,7 @@ sign-in, git initialization, worktree creation and shell settings are supported
 by the existing OpenCode 2 adapters.
 
 A remote OpenCode 1 response produces the plain explanation that support has
-ended and a copyable `npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.0.29` upgrade command.
+ended and a copyable `npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.1.1` upgrade command.
 Managed phone installations instead enter the automatic history-migration
 flow. It preserves the saved profile ID and original database, copies history
 before the first OpenCode 2 start, and requires server-side import confirmation

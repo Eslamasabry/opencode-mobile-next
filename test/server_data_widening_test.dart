@@ -519,7 +519,12 @@ void main() {
           },
         }),
       );
-      final part = out.single.properties['part'] as Map;
+      // A call this adapter never saw start also asks for a reread.
+      final part =
+          out
+                  .firstWhere((e) => e.type == 'message.part.updated')
+                  .properties['part']
+              as Map;
       final state = ToolState.fromJson(part['state']);
       // The raw flag is forwarded; a completed call still reads as executed
       // because the outcome wins over beta-18600's provider-side flag.

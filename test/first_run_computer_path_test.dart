@@ -120,8 +120,7 @@ void main() {
     final (store, controller) = await _state();
     addTearDown(controller.dispose);
     await tester.pumpWidget(_app(store, controller));
-    await tester.tap(find.byKey(const ValueKey('welcome-choice-computer')));
-    await tester.pumpAndSettle();
+    await chooseComputerOnWelcome(tester);
 
     // One path (P3.9): the editor itself, asking what runs there.
     expect(find.byKey(const ValueKey('server-profile-editor')), findsOneWidget);
@@ -382,18 +381,7 @@ void main() {
             _app(store, controller, textScale: 2.5, locale: locale),
           );
           await tester.pumpAndSettle();
-          final computer = find.byKey(
-            const ValueKey('welcome-choice-computer'),
-          );
-          await tester.scrollUntilVisible(
-            computer,
-            120,
-            scrollable: find.byType(Scrollable).first,
-          );
-          await tester.ensureVisible(computer);
-          await tester.pumpAndSettle();
-          await tester.tap(computer);
-          await tester.pumpAndSettle();
+          await chooseComputerOnWelcome(tester);
           expect(tester.takeException(), isNull);
 
           for (final key in ['opencode', 'paseo', 'codex']) {

@@ -1,0 +1,40 @@
+base: frames=85 mean=46.7ms p90=56.3ms worst=62.8ms janky(>25ms)=100%
+  cpu over 4.1s: 1.raster=4250ms, opencode_mobile=1790ms, ANGLE-Submit=520ms, HeapTaskDaemon=30ms, DartWorker=10ms
+  flutter frames=92 build(mean/p90)=0.8/1.3 raster=46.7/54.3 total=85.1/101.6
+nobar: frames=127 mean=16.8ms p90=18.1ms worst=37.0ms janky(>25ms)=0%
+  cpu over 4.1s: opencode_mobile=1900ms, 1.raster=1630ms, ANGLE-Submit=90ms, HeapTaskDaemon=40ms, binder:21099_1=20ms, Jit_thread_pool=10ms
+  flutter frames=255 build(mean/p90)=0.4/0.6 raster=6.7/11.3 total=7.9/12.4
+nopill: frames=127 mean=17.0ms p90=19.0ms worst=30.3ms janky(>25ms)=1%
+  cpu over 4.1s: 1.raster=2160ms, opencode_mobile=2040ms, ANGLE-Submit=120ms, HeapTaskDaemon=30ms, binder:21949_4=10ms, binder:21949_3=10ms
+  flutter frames=249 build(mean/p90)=0.8/1.2 raster=9.0/13.9 total=11.7/19.4
+noglass: frames=127 mean=16.8ms p90=18.5ms worst=30.1ms janky(>25ms)=0%
+  cpu over 4.1s: opencode_mobile=2060ms, 1.raster=2000ms, ANGLE-Submit=110ms, DartWorker=40ms, HeapTaskDaemon=30ms, binder:22774_1=10ms
+  flutter frames=254 build(mean/p90)=0.8/1.3 raster=8.0/10.0 total=9.8/12.0
+noslot: frames=84 mean=47.3ms p90=55.6ms worst=76.0ms janky(>25ms)=100%
+  cpu over 4.1s: 1.raster=4280ms, opencode_mobile=1860ms, ANGLE-Submit=530ms, HeapTaskDaemon=40ms
+  flutter frames=91 build(mean/p90)=0.9/1.3 raster=47.4/55.7 total=87.4/102.3
+noinclip: frames=85 mean=47.1ms p90=55.7ms worst=86.4ms janky(>25ms)=100%
+  cpu over 4.1s: 1.raster=4270ms, opencode_mobile=1800ms, ANGLE-Submit=520ms, HeapTaskDaemon=40ms, Jit_thread_pool=10ms
+  flutter frames=91 build(mean/p90)=0.9/1.4 raster=47.3/54.4 total=86.3/98.8
+notap: frames=84 mean=47.3ms p90=54.1ms worst=72.9ms janky(>25ms)=100%
+  cpu over 4.1s: 1.raster=4270ms, opencode_mobile=1850ms, ANGLE-Submit=530ms, HeapTaskDaemon=40ms
+  flutter frames=91 build(mean/p90)=0.9/1.3 raster=47.4/52.1 total=86.7/97.9
+nopilltext: frames=127 mean=16.7ms p90=18.0ms worst=20.6ms janky(>25ms)=0%
+  cpu over 4.1s: 1.raster=2180ms, opencode_mobile=2020ms, ANGLE-Submit=110ms, HeapTaskDaemon=30ms, binder:26249_1=20ms, Jit_thread_pool=10ms
+  flutter frames=254 build(mean/p90)=0.8/1.2 raster=8.8/11.8 total=10.9/14.3
+nopillshadow: frames=83 mean=48.1ms p90=58.9ms worst=82.5ms janky(>25ms)=100%
+  cpu over 4.1s: 1.raster=4290ms, opencode_mobile=1860ms, ANGLE-Submit=520ms, HeapTaskDaemon=40ms, DartWorker=40ms, binder:27128_4=10ms
+  flutter frames=90 build(mean/p90)=0.9/1.3 raster=48.1/55.0 total=88.9/110.5
+noround: frames=85 mean=46.8ms p90=54.9ms worst=76.9ms janky(>25ms)=100%
+  cpu over 4.1s: 1.raster=4270ms, opencode_mobile=1840ms, ANGLE-Submit=540ms, HeapTaskDaemon=40ms
+  flutter frames=92 build(mean/p90)=0.8/1.3 raster=46.9/53.2 total=85.9/99.4
+nobatch: frames=78 mean=51.2ms p90=59.7ms worst=78.5ms janky(>25ms)=100%
+  cpu over 4.1s: 1.raster=4280ms, opencode_mobile=1940ms, ANGLE-Submit=500ms, HeapTaskDaemon=40ms, binder:28843_5=10ms, Jit_thread_pool=10ms
+  flutter frames=84 build(mean/p90)=1.0/1.4 raster=51.3/55.7 total=93.8/110.1
+rbbar: frames=127 mean=17.1ms p90=18.6ms worst=59.4ms janky(>25ms)=1%
+  cpu over 4.2s: 1.raster=2520ms, opencode_mobile=2010ms, ANGLE-Submit=150ms, HeapTaskDaemon=40ms, Thread-4=30ms, binder:29733_1=20ms
+  flutter frames=250 build(mean/p90)=0.6/0.9 raster=10.6/13.9 total=13.5/23.4
+base: frames=85 mean=47.3ms p90=54.6ms worst=77.6ms janky(>25ms)=100%
+  cpu over 4.1s: 1.raster=4330ms, opencode_mobile=1830ms, ANGLE-Submit=530ms, HeapTaskDaemon=30ms, Thread-4=20ms
+  flutter frames=92 build(mean/p90)=0.9/1.2 raster=47.5/52.3 total=87.7/100.5
+Fri Oct 23 02:03:40 AM +04 2026

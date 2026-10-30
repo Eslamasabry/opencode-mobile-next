@@ -4,12 +4,13 @@ part of '../files_screen.dart';
 extension _FilesBody on _FilesScreenState {
   Widget _body(BuildContext context) {
     final l10n = readerL10n(context);
-    final crumbs = _crumbs;
     final viewer = _viewer;
+    final quiet = _quietSearch;
     final screen = KitScreen.twoPane(
       listPaneKey: const ValueKey('files-list-pane'),
       detailPaneKey: const ValueKey('files-detail-pane'),
-      search: _searchField(l10n),
+      // Under a host bar the field opens in the list, under the heading.
+      search: quiet ? null : _searchField(l10n),
       status: _fileStatusesError == null
           ? null
           : KitStatus(
@@ -22,7 +23,7 @@ extension _FilesBody on _FilesScreenState {
       loadingLabel: _surface == _FileSurface.files
           ? l10n.filesLoadingFolder
           : l10n.filesSearching,
-      list: _listPane(context, l10n, crumbs),
+      list: _listPane(context, l10n),
       detail: viewer == null ? null : _embeddedViewer(viewer),
       emptyDetail: KitStateView(
         key: const ValueKey('files-detail-empty'),
@@ -30,7 +31,16 @@ extension _FilesBody on _FilesScreenState {
         title: l10n.readerUiSelectFile,
       ),
     );
-    final topBar = widget.topBar?.call(crumbs.isEmpty ? null : crumbs.last);
+    final topBar = widget.topBar?.call(
+      _path,
+      KitAction(
+        key: const ValueKey('project-files-search'),
+        label: l10n.readerUiSearchFiles,
+        icon: AppIconography.search,
+        onPressed: _focusSearch,
+      ),
+      _viewItems(l10n),
+    );
     if (topBar == null) return screen;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,6 +65,7 @@ extension _FilesBody on _FilesScreenState {
           ? null
           : (wrap) => unawaited(saveReaderPreferences(context, wrapCode: wrap)),
       viewerKey: const ValueKey('files-viewer'),
+      reader: true,
     );
   }
 
@@ -69,11 +80,11 @@ extension _FilesBody on _FilesScreenState {
     if (symbols || text) {
       activeFilter = symbols ? l10n.readerUiSymbols : l10n.filesTextSurface;
       clearFilter = () => _selectSurface(_FileSurface.files);
-    } else if (sourceFirst) {
+    } else if (!_quietSearch && sourceFirst) {
       activeFilter = l10n.readerUiSourceFirst;
       clearFilter = () =>
           unawaited(saveReaderPreferences(context, sourceFirst: false));
-    } else if (_showHidden) {
+    } else if (!_quietSearch && _showHidden) {
       activeFilter = l10n.filesShowHidden;
       clearFilter = () => _set(() => _showHidden = false);
     } else {
@@ -121,62 +132,65 @@ extension _FilesBody on _FilesScreenState {
               onSelected: () => _selectSurface(_FileSurface.text),
             ),
         ],
-        if (!symbols && !text && preferences != null) ...[
-          KitMenuItem(
-            key: const ValueKey('files-order-server'),
-            label: l10n.readerUiServerOrder,
-            group: 'order',
-            checked: !sourceFirst,
-            onSelected: () =>
-                unawaited(saveReaderPreferences(context, sourceFirst: false)),
-          ),
-          KitMenuItem(
-            key: const ValueKey('files-order-source-first'),
-            label: l10n.readerUiSourceFirst,
-            group: 'order',
-            checked: sourceFirst,
-            onSelected: () =>
-                unawaited(saveReaderPreferences(context, sourceFirst: true)),
-          ),
-        ],
-        if (!symbols && !text)
-          KitMenuItem(
-            key: const ValueKey('files-show-hidden'),
-            label: l10n.filesShowHidden,
-            icon: AppIconography.hidden,
-            checked: _showHidden,
-            onSelected: () => _set(() => _showHidden = !_showHidden),
-          ),
+        if (!_quietSearch && !symbols && !text) ..._viewItems(l10n),
       ],
     );
   }
 
-  Widget _listPane(
-    BuildContext context,
-    AppLocalizations l10n,
-    List<String> crumbs,
-  ) {
+  /// How the list is shown: the order and Show hidden files. In the
+  /// search field's filter without a host bar; in the bar's ⋯ with one.
+  List<KitMenuItem> _viewItems(AppLocalizations l10n) {
+    final preferences = ReaderPreferencesScope.maybeOf(context);
+    final sourceFirst = preferences?.value.sourceFirst ?? false;
+    return [
+      if (preferences != null) ...[
+        KitMenuItem(
+          key: const ValueKey('files-order-server'),
+          label: l10n.readerUiServerOrder,
+          group: 'order',
+          checked: !sourceFirst,
+          onSelected: () =>
+              unawaited(saveReaderPreferences(context, sourceFirst: false)),
+        ),
+        KitMenuItem(
+          key: const ValueKey('files-order-source-first'),
+          label: l10n.readerUiSourceFirst,
+          group: 'order',
+          checked: sourceFirst,
+          onSelected: () =>
+              unawaited(saveReaderPreferences(context, sourceFirst: true)),
+        ),
+      ],
+      KitMenuItem(
+        key: const ValueKey('files-show-hidden'),
+        label: l10n.filesShowHidden,
+        icon: AppIconography.hidden,
+        checked: _showHidden,
+        onSelected: () => _set(() => _showHidden = !_showHidden),
+      ),
+    ];
+  }
+
+  Widget _listPane(BuildContext context, AppLocalizations l10n) {
     final tokens = KitTokens.of(context);
-    final files = _surface == _FileSurface.files;
     final notice = _notice;
+    final header = widget.header?.call(_path);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (files && crumbs.isNotEmpty && _search.text.isEmpty)
-          Padding(
-            padding: EdgeInsetsDirectional.only(
-              start: tokens.gutter,
-              end: tokens.gutter,
-              top: tokens.space2,
-            ),
-            child: KitBreadcrumb(
-              breadcrumbKey: const ValueKey('files-breadcrumb'),
-              rootLabel: l10n.filesProjectRoot,
-              segments: crumbs,
-              onSelected: (index) => _navigateTo(
-                index < 0 ? '' : crumbs.take(index + 1).join('/'),
-              ),
-            ),
+        ?header,
+        if (_quietSearch)
+          KitReveal(
+            child: _showsSearch
+                ? Padding(
+                    padding: EdgeInsetsDirectional.only(
+                      start: tokens.gutter,
+                      end: tokens.gutter,
+                      bottom: tokens.space2,
+                    ),
+                    child: _searchField(l10n),
+                  )
+                : null,
           ),
         if (notice != null)
           Padding(
@@ -224,28 +238,6 @@ extension _FilesBody on _FilesScreenState {
     ],
   );
 
-  /// UX-102: after a run the question is "what changed?", so the changed
-  /// set is one tap away as the list's first row: the same inset and
-  /// hairline as the file rows under it, not a card of its own. It opens
-  /// the diff itself (Review, KitDiffView with its one "Change 1 of N"
-  /// navigator and file list); no list of the same files in between.
-  Widget? _changesRow(AppLocalizations l10n) {
-    if (_fileStatuses.isEmpty) return null;
-    var added = 0, removed = 0;
-    for (final change in _fileStatuses.values) {
-      added += change.additions;
-      removed += change.deletions;
-    }
-    return KitRow(
-      key: const ValueKey('files-changes-card'),
-      leading: KitRow.icon(context, AppIconography.review),
-      title: l10n.readerUiChangedCount(_fileStatuses.length),
-      supporting: TextSpan(text: KitBidi.ltr('+$added −$removed')),
-      trailing: const KitChevron(),
-      onTap: () => unawaited(_reviewChanges()),
-    );
-  }
-
   /// While a file name is typed on a server that can search text, the first
   /// row offers the same words as a search inside the files.
   Widget? _searchInsideRow(AppLocalizations l10n) {
@@ -281,46 +273,42 @@ extension _FilesBody on _FilesScreenState {
     }
     final hidden = <FileNode>[];
     final entries = _displayEntries(hidden);
-    final changes = _changesRow(l10n);
     final inside = _searchInsideRow(l10n);
     if (_entries != null && entries.isEmpty) {
       final searching = _search.text.isNotEmpty;
       final onlyHidden = !searching && hidden.isNotEmpty;
       final state = KitRefresh(
         onRefresh: _refreshFiles,
-        // An empty folder is the open folder; a filter that matched nothing
-        // is the magnifier (one drawing per kind of state).
-        child: KitStateView(
+        // Calm (vision 2026-10-20): the big line and one plain next step;
+        // Refresh, or showing what is hidden, is the quiet text action at
+        // the bottom (pull to refresh does the same).
+        child: KitStateView.calm(
           key: ValueKey(searching ? 'files-no-match' : 'files-empty-folder'),
           icon: AppIconography.folderOpen,
-          illustration: searching
-              ? const StatesSearchScene()
-              : const StatesFolderScene(),
           title: searching ? l10n.readerUiNoFiles : l10n.readerUiEmptyFolder,
           body: searching
               ? l10n.readerUiTryFileName
               : onlyHidden
               ? l10n.filesOnlyHidden
               : l10n.readerUiPullRefresh,
-          // Hidden files (a new project's .git) are not what the person
-          // came for: a quiet second action, never the big green one.
-          primary: searching || onlyHidden
-              ? null
-              : KitAction(
-                  key: const ValueKey('files-refresh'),
-                  label: l10n.fileReload,
-                  onPressed: () => unawaited(_refreshFiles()),
-                ),
-          secondary: onlyHidden
-              ? KitAction(
-                  key: const ValueKey('files-show-hidden-action'),
-                  label: l10n.filesShowHidden,
-                  onPressed: () => _set(() => _showHidden = true),
-                )
-              : null,
+          tertiary: [
+            if (onlyHidden)
+              KitAction(
+                key: const ValueKey('files-show-hidden-action'),
+                label: l10n.filesShowHidden,
+                onPressed: () => _set(() => _showHidden = true),
+              )
+            else if (!searching)
+              KitAction(
+                key: const ValueKey('files-refresh'),
+                label: l10n.fileReload,
+                icon: AppIconography.retry,
+                onPressed: () => unawaited(_refreshFiles()),
+              ),
+          ],
         ),
       );
-      final leads = [?inside, ?changes];
+      final leads = [?inside];
       if (leads.isEmpty) return state;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -345,7 +333,7 @@ extension _FilesBody on _FilesScreenState {
         ],
       );
     }
-    final leads = [?inside, ?changes];
+    final leads = [?inside];
     final lead = leads.length;
     return KitRefresh(
       onRefresh: _refreshFiles,
@@ -367,6 +355,11 @@ extension _FilesBody on _FilesScreenState {
     );
   }
 
+  /// One entry: its glyph and name, nothing else. An uncommitted change
+  /// shows on the name itself (accent, and a dot so it is never colour
+  /// alone; the state in words for a screen reader), on a folder too when
+  /// a file inside changed. A deleted file stays where it was, dimmed in
+  /// words ("Deleted"), and opens its review.
   Widget _fileRow(BuildContext context, AppLocalizations l10n, FileNode node) {
     final change = node.isDir ? null : _fileStatuses[node.path];
     final deleted = change?.status == 'deleted';
@@ -375,23 +368,42 @@ extension _FilesBody on _FilesScreenState {
               .where((path) => path.startsWith('${node.path}/'))
               .length
         : 0;
-    final detail = _fileDetail(node, change, descendantChanges);
+    final marked = !deleted && (change != null || descendantChanges > 0);
+    // A search result says which folder it is in (the name is the title).
+    final where = _search.text.isNotEmpty && node.path != node.name
+        ? KitBidi.ltr(
+            node.path.substring(0, node.path.length - node.name.length - 1),
+          )
+        : null;
+    final detail = [
+      ?where,
+      if (deleted) _fileStatusLabel(context, change!.status),
+    ];
     return KitRow(
       key: ValueKey('project-file-${node.path}'),
-      leading: KitRow.icon(
+      leading: KitRow.glyph(
         context,
         node.isDir
             ? AppIconography.files
             : deleted
             ? AppIconography.removeCircle
-            : _FilesBody._fileTypeIcon(node.name),
+            : AppIconography.file,
+        accent: marked,
       ),
       title: node.name,
       titleMaxLines: 2,
-      supporting: detail == null ? null : TextSpan(text: detail),
+      titleAccent: marked,
+      titleMark: marked
+          ? KitRow.changeMark(
+              context,
+              semanticsLabel: change != null
+                  ? _fileStatusLabel(context, change.status)
+                  : l10n.readerUiChangedCount(descendantChanges),
+            )
+          : null,
+      supporting: detail.isEmpty ? null : TextSpan(text: detail.join(' · ')),
       supportingMaxLines: 2,
       selected: node.path == _viewer?.path,
-      trailing: node.isDir ? const KitChevron() : null,
       // Long-press, right-click and the keyboard open the row's menu; its
       // items are also the row's semantic actions (KIT-28).
       menu: _fileRowMenu(l10n, node, change),
@@ -418,19 +430,19 @@ extension _FilesBody on _FilesScreenState {
     final deleted = change?.status == 'deleted';
     final path = _relativePath(node.path);
     return [
+      if (!node.isDir && !deleted)
+        KitMenuItem(
+          key: const ValueKey('file-menu-ask'),
+          label: l10n.filesAskAboutFile,
+          icon: AppIconography.chat,
+          onSelected: () => unawaited(_askAbout(path, null)),
+        ),
       if (!node.isDir && !deleted && widget.onAttachFile != null)
         KitMenuItem(
           key: const ValueKey('file-menu-attach'),
           label: l10n.readerUiAttachPrompt,
           icon: AppIconography.attach,
           onSelected: () => unawaited(_attachFile(path)),
-        ),
-      if (!node.isDir && !deleted && widget.handoff != null)
-        KitMenuItem(
-          key: const ValueKey('file-menu-reference'),
-          label: l10n.readerUiAddReference,
-          icon: AppIconography.link,
-          onSelected: () => _stageProjectFile(path, null),
         ),
       if (change != null)
         KitMenuItem(
@@ -453,8 +465,8 @@ extension _FilesBody on _FilesScreenState {
     ];
   }
 
-  /// Type-aware glyphs so a directory scans by kind, matching the developer
-  /// file browsers cited in docs/design-inspiration.md.
+  /// A file's kind by its extension: which files the reader shows as code
+  /// ([_FilesViewer._isCode]). The list itself draws one plain file glyph.
   static IconData _fileTypeIcon(String name) {
     return switch (_FilesViewer._extension(name)) {
       'dart' ||

@@ -332,7 +332,19 @@ void main() {
       await tester.pumpAndSettle();
       expect(gateway.edits.single.verb, 'unassign');
       expect(find.byKey(const ValueKey('team-board-failure')), findsOne);
-      expect(find.text('bead bd-rename is locked'), findsOneWidget);
+      // Plain words and a way forward; the host's text is under Details.
+      expect(find.textContaining('bead bd-rename is locked'), findsNothing);
+      expect(find.text('Try again'), findsOneWidget);
+      await tester.tap(
+        find.byKey(const ValueKey('team-board-failure-details')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('bead bd-rename is locked'), findsWidgets);
+      // Try again really asks the host again.
+      await tester.tap(find.byKey(const ValueKey('team-board-failure-retry')));
+      await tester.pumpAndSettle();
+      expect(gateway.edits, hasLength(2));
+      expect(gateway.edits.last.verb, 'unassign');
       // Still in Ready, not moving.
       expect(_card('bd-rename'), findsOneWidget);
       expect(find.textContaining('Moving to'), findsNothing);

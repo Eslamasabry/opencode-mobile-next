@@ -264,17 +264,21 @@ extension _EditorRoles on _EditorState {
     ];
   }
 
+  String _roleNote(TeamProjectRole role) => [
+    role.model,
+    if (role.readOnly) _l.teamProjectEditorReadOnlyShort,
+  ].where((t) => t.isNotEmpty).join(' · ');
+
   List<Widget> _roleFields() => [
     if (_role == null) ...[
       for (final role in _orderedRoles())
         KitRow(
           title: role.name,
-          supporting: TextSpan(
-            text: [
-              role.model,
-              if (role.readOnly) _l.teamProjectEditorReadOnlyShort,
-            ].where((t) => t.isNotEmpty).join(' · '),
-          ),
+          // A role with no model and no note has no second line, not an
+          // empty one that holds a line's height open.
+          supporting: _roleNote(role).isEmpty
+              ? null
+              : TextSpan(text: _roleNote(role)),
           onTap: () => _editRole(role),
         ),
       _button(

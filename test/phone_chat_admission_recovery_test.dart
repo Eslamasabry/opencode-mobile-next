@@ -157,7 +157,7 @@ class _Phone {
   Future<void> close() async {
     connection.dispose();
     if (!api.healthGate.isCompleted) {
-      api.healthGate.complete(Health(healthy: true, version: '2.0.29'));
+      api.healthGate.complete(Health(healthy: true, version: '2.1.1'));
     }
     await settle(connect);
     await settle(connection.phoneProjectEngine.close());

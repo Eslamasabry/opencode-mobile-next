@@ -173,6 +173,14 @@ void main() {
       expect(inside('what', key), findsOneWidget, reason: key);
     }
     expect(inside('quiet', 'notify-quiet-hours'), findsOneWidget);
+    // Quiet hours has no heading: it goes on from the list above with the
+    // rows' hairline, not an empty 22 dp section gap that names nothing
+    // (impeccable audit 2026-10-28, #14).
+    expect(
+      tester.getTopLeft(_key('notifications-section-quiet')).dy -
+          tester.getBottomLeft(_key('notifications-section-what')).dy,
+      lessThanOrEqualTo(1),
+    );
     for (final key in [
       'background-live-switch',
       'background-battery-row',
@@ -276,6 +284,35 @@ void main() {
     expect(controller.profileMonitor.rulesFor('profile-1').enabled, isTrue);
     // "Notify" needs notifications.
     expect(_key('monitor-notify-profile-1'), findsNothing);
+    await _finish(tester, controller);
+  });
+
+  testWidgets('the Background page shows the whole cost and no repeated '
+      'header', (tester) async {
+    tester.view.physicalSize = const Size(400, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final controller = await _controller(servers: 0);
+    await tester.pumpWidget(
+      _app(
+        NotificationsSettingsScreen(
+          controller: controller,
+          page: NotificationsPage.background,
+        ),
+      ),
+    );
+    await tester.pump();
+    // The page is named Background: no header under it says so again, so the
+    // word appears once (the page title).
+    expect(find.text(_en.notifySectionBackground), findsOneWidget);
+    // The description is laid out in full, not cut at "Uses...".
+    final text = tester.widget<RichText>(
+      find.descendant(
+        of: _key('background-live-switch'),
+        matching: find.textContaining('Uses more battery', findRichText: true),
+      ),
+    );
+    expect(text.maxLines, greaterThanOrEqualTo(3));
     await _finish(tester, controller);
   });
 
@@ -498,7 +535,14 @@ void main() {
 
   testWidgets('the hub row opens this screen', (tester) async {
     final controller = await _controller();
-    await tester.pumpWidget(_app(SettingsScreen(controller: controller)));
+    await tester.pumpWidget(
+      _app(
+        SettingsScreen(
+          controller: controller,
+          initialGroup: SettingsGroup.thisApp,
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
     final row = _key('settings-category-notifications');
     await tester.ensureVisible(row);

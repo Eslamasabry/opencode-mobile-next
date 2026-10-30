@@ -593,8 +593,9 @@ void main() {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
-          body: Builder(
-            builder: (context) =>
+          body: ListenableBuilder(
+            listenable: host.listenable!,
+            builder: (context, _) =>
                 host.listRequest(context, row) ?? const SizedBox(),
           ),
         ),
@@ -650,8 +651,9 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(
-            child: Builder(
-              builder: (context) =>
+            child: ListenableBuilder(
+              listenable: host.listenable!,
+              builder: (context, _) =>
                   host.listRequest(context, row) ?? const SizedBox(),
             ),
           ),

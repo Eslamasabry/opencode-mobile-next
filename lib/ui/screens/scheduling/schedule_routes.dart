@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../domain/models.dart' show ModelRef, SessionSelection;
+import '../../../l10n/app_localizations.dart';
 import '../../../scheduling/agent_connection.dart';
 import '../../../scheduling/controller.dart';
 import '../../../scheduling/models.dart';
 import '../../../scheduling/store.dart';
 import '../../../state/connection.dart';
 import '../../kit/kit.dart';
+import '../../widgets/phone_server_card.dart' show serverDisplayName;
 import '../chat_screen.dart';
 import 'scheduled_prompts_screen.dart';
 
@@ -66,7 +68,7 @@ Future<void> openScheduledPrompts(
     agent: seed.agent,
     modelProviderId: seed.model?.providerID,
     modelId: seed.model?.modelID,
-    recurrence: const ScheduleRecurrence.weekdays(),
+    recurrence: const ScheduleRecurrence.weekdays(hour: 9),
     createdAt: DateTime.now(),
   );
   try {
@@ -75,7 +77,11 @@ Future<void> openScheduledPrompts(
       (_) => ScheduledPromptsScreen(
         controller: controller,
         target: target,
-        agents: connection.agents.map((a) => a.name).toList(),
+        serverName: serverDisplayName(
+          profile,
+          AppLocalizations.of(context),
+          among: connection.store.profiles,
+        ),
         onOpenRun: (run) async {
           final schedule = controller.schedules
               .where((s) => s.id == run.scheduleId)
@@ -108,7 +114,13 @@ Future<void> openStoredScheduledPrompts(
       (_) => ScheduledPromptsScreen(
         controller: controller,
         target: target,
-        agents: [?target.agent],
+        serverName: connection.profile?.id == target.profileId
+            ? serverDisplayName(
+                connection.profile,
+                AppLocalizations.of(context),
+                among: connection.store.profiles,
+              )
+            : null,
         onOpenRun: (run) async {
           final schedule = controller.schedules
               .where((s) => s.id == run.scheduleId)

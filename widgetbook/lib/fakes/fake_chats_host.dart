@@ -8,7 +8,7 @@ import 'package:opencode_mobile/domain/chat_feed.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart'
     show ProviderConversationImportGateway, WorkspaceProject;
-import 'package:opencode_mobile/ui/kit/kit.dart';
+import 'package:opencode_mobile/ui/kit/kit_feed_item.dart' show KitFeedRunning;
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
 
 /// A [ChatFeedSource] over fixed rows, filtered as the contract says.
@@ -110,6 +110,9 @@ class FakeHost implements ChatsHost {
   bool get hasBuiltInProfile => false;
 
   @override
+  String? get profileId => null;
+
+  @override
   String connectionName(BuildContext context, String id, String fallback) =>
       fallback;
 
@@ -117,14 +120,26 @@ class FakeHost implements ChatsHost {
   Widget? listRequest(BuildContext context, ChatFeedItem item) => null;
 
   @override
+  KitFeedRunning? runningOf(ChatFeedItem item) => null;
+
+  @override
+  int get inboxCount => feed
+      .chatFeed()
+      .items
+      .where((item) => item.status == ChatStatus.needsYou)
+      .length;
+
+  @override
+  Future<void> openInbox(BuildContext context) async {}
+
+  @override
   Widget leftoverNotice(BuildContext context) => const SizedBox.shrink();
 
   @override
-  Widget modelChip(BuildContext context) => KitComposerChips.model(
-    label: 'Server default',
-    state: KitModelChipState.serverDefault,
-    onPressed: () {},
-  );
+  String modelValue(BuildContext context) => 'Server default';
+
+  @override
+  Future<void> chooseModel(BuildContext context) async {}
 
   @override
   Future<String?> openChat(BuildContext context, ChatFeedItem item) async =>
@@ -148,8 +163,9 @@ class FakeHost implements ChatsHost {
   @override
   Future<String?> startSeparateCopy(
     BuildContext context,
-    WorkspaceProject project,
-  ) async => null;
+    WorkspaceProject project, {
+    String initialTask = '',
+  }) async => null;
 
   @override
   Future<String> startChat(

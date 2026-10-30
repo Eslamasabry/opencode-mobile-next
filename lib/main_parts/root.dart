@@ -18,14 +18,23 @@ class _TopRouteTracker extends NavigatorObserver {
     return null;
   }
 
+  /// A page (not a dialog or sheet) opened or closed: app lines that wait
+  /// for the screen to change anyway fold then (AppExitFoldOnPageChange).
+  static void _pageChanged(Route<dynamic>? route) {
+    if (route is PageRoute) appPageChanges.value++;
+  }
+
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     _stack.add(route);
+    // The navigator's first page is where the app opens, not a change.
+    if (previousRoute != null) _pageChanged(route);
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     _stack.remove(route);
+    _pageChanged(route);
   }
 
   @override
@@ -462,13 +471,7 @@ class _RootState extends ConsumerState<_Root> {
     final agents = conn.savedAgentSessionPreviews;
     final sessions = [...?cached?.sessions, ...agents]
       ..sort((a, b) => b.updated.compareTo(a.updated));
-    final lastKnown = sessions.isEmpty
-        ? null
-        : SessionInventoryPreview(
-            cached?.fetchedAt ?? DateTime.now(),
-            sessions,
-          );
-    final opening = lastKnown != null;
+    final opening = sessions.isNotEmpty;
     // While the launch start is pending, an early refused connect or a
     // first failed try is not the answer yet: the page keeps connecting.
     final pending = _autoStartPending && looksLikeInAppServer(profile);
@@ -486,6 +489,12 @@ class _RootState extends ConsumerState<_Root> {
         : startFailure != null
         ? l10n.builtinServerStartFailed(startFailure.reason(l10n))
         : conn.lastError;
+    final notAnswering =
+        runningSilent ||
+        !pending &&
+            status.phase == ConnectionStatusPhase.notAnswering &&
+            status.since != null;
+    final inAppStartFailed = !pending && startFailure != null;
     final card = SavedServerConnectionCard(
       size: opening ? KitStateSize.inline : KitStateSize.page,
       profileName: serverDisplayName(profile, l10n, among: conn.store.profiles),
@@ -498,14 +507,10 @@ class _RootState extends ConsumerState<_Root> {
       attempts: _attempts,
       // The controller's one eight-second clock, shared with every status
       // line; `since` is set once an attempt actually began (P4.4).
-      notAnswering:
-          runningSilent ||
-          !pending &&
-              status.phase == ConnectionStatusPhase.notAnswering &&
-              status.since != null,
+      notAnswering: notAnswering,
       inAppServer: inApp,
       startingInAppServer: inApp && _builtin.starting,
-      inAppStartFailed: !pending && startFailure != null,
+      inAppStartFailed: inAppStartFailed,
       // Why it did not start, in plain words (QA B1); the technical line
       // stays under Details.
       inAppStartFailedBody: pending ? null : startFailure?.explanation(l10n),
@@ -567,6 +572,33 @@ class _RootState extends ConsumerState<_Root> {
         _retrying = false;
       },
     );
+    if (opening) {
+      // Last time's titles: the home itself, read-only under the honest
+      // connection state, so its bar, title, filters and rows are already
+      // where they stay once the server answers; the root then builds this
+      // same HomeScreen without the opening and nothing moves (jitter J2,
+      // 2026-10-29). The pill says Starting or Connecting; the card comes
+      // above the rows only when the server needs the person.
+      final needsPerson =
+          error != null ||
+          notAnswering ||
+          inAppStartFailed ||
+          profile.requiresCodexTokenReentry;
+      return HomeScreen(
+        opening: HomeOpening(
+          rows: sessions,
+          status: needsPerson
+              ? l10n.e7WorkspaceOffline
+              : inApp && _builtin.starting
+              ? l10n.phoneServerCardStarting
+              : l10n.e7WorkspaceConnecting,
+          tone: needsPerson ? AppStatusTone.failure : AppStatusTone.progress,
+          onServer: () =>
+              navigator.pushNamedAndRemoveUntil('/servers', (_) => false),
+          notice: needsPerson ? card : null,
+        ),
+      );
+    }
     // A KitScreen, so the app's line (a share waiting for this server)
     // shows above the card (map page root-connecting). The card is this
     // server's connection state, with its own Try again and Details, so the
@@ -575,20 +607,8 @@ class _RootState extends ConsumerState<_Root> {
     return _Ground(
       child: KitScreen(
         bodySays: const {KitStatusKind.connection},
-        width: opening ? KitScreenWidth.list : KitScreenWidth.full,
-        body: lastKnown != null
-            ? ListView(
-                key: const ValueKey('opening-shell'),
-                children: [
-                  card,
-                  LastKnownSessions(
-                    preview: lastKnown,
-                    refreshing:
-                        error == null && !profile.requiresCodexTokenReentry,
-                  ),
-                ],
-              )
-            : card,
+        width: KitScreenWidth.full,
+        body: card,
       ),
     );
   }

@@ -3,6 +3,11 @@ part of '../terminal_screen.dart';
 /// One server terminal, live: the shell with the kit's key bar, one status
 /// line only while it is not connected, Copy in the bar and the rest
 /// (readable text, paste, reconnect, rename, details, stop) in its menu.
+///
+/// On the Terminal page it is the page itself ([scope] set): titled
+/// "Terminal" with the place line, the host's tabs as [header], the calm
+/// one-row terminal, Copy in the bar only while text is selected, and the
+/// host's own acts ([leadingMenu], [trailingMenu]) around its menu.
 class TerminalSurface extends StatefulWidget {
   final ServerOperationsGateway repository;
   final ServerOperationsGateway? Function()? repositoryResolver;
@@ -19,7 +24,33 @@ class TerminalSurface extends StatefulWidget {
     this.keepLiveInBackgroundResolver,
     this.repositoryChanges,
     required this.process,
+    this.page = false,
+    this.scope,
+    this.header = const [],
+    this.leadingMenu = const [],
+    this.trailingMenu = const [],
+    this.onRemoved,
+    this.onRenamed,
   });
+
+  /// The surface is the Terminal page itself (see the class doc).
+  final bool page;
+
+  /// The Terminal page's line under the title.
+  final KitTopBarScope? scope;
+
+  /// Fixed rows under the top bar (the page's session tabs).
+  final List<Widget> header;
+
+  /// The host's acts before and after the surface's own menu.
+  final List<KitMenuItem> leadingMenu;
+  final List<KitMenuItem> trailingMenu;
+
+  /// After this terminal is stopped or removed; null leaves the page.
+  final VoidCallback? onRemoved;
+
+  /// After a rename here, with the new name.
+  final ValueChanged<String>? onRenamed;
 
   @override
   State<TerminalSurface> createState() => _TerminalSurfaceState();
@@ -72,10 +103,17 @@ class _TerminalSurfaceState extends State<TerminalSurface>
       _error == null &&
       _channel != null;
 
+  bool get _page => widget.page;
+
+  void _selectionChanged() {
+    if (mounted && _page) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _terminalController.addListener(_selectionChanged);
     widget.repositoryChanges?.addListener(_repositoryChanged);
     _activeRepository = _repository;
     _activeDataRefreshRevision =
@@ -377,7 +415,10 @@ class _TerminalSurfaceState extends State<TerminalSurface>
       widget.process,
       () async => _repository,
     );
-    if (renamed != null && mounted) setState(() => _renamed = renamed.trim());
+    if (renamed != null && mounted) {
+      setState(() => _renamed = renamed.trim());
+      widget.onRenamed?.call(renamed.trim());
+    }
   }
 
   Future<void> _remove() async {
@@ -396,7 +437,13 @@ class _TerminalSurfaceState extends State<TerminalSurface>
       ),
       () async => _repository,
     );
-    if (removed && mounted) await Navigator.of(context).maybePop();
+    if (!removed || !mounted) return;
+    final onRemoved = widget.onRemoved;
+    if (onRemoved != null) {
+      onRemoved();
+    } else {
+      await Navigator.of(context).maybePop();
+    }
   }
 
   Future<void> _details() {
@@ -408,6 +455,11 @@ class _TerminalSurfaceState extends State<TerminalSurface>
       title: l10n.terminalScreenDetailsTitle(_title),
       text: '',
       values: [
+        KitTechnicalValue(
+          l10n.terminalScreenDetailState,
+          // The server's own word for the program, not the connection's.
+          process.running ? l10n.terminalStateRunning : l10n.terminalStateEnded,
+        ),
         KitTechnicalValue(l10n.terminalScreenDetailCommand, command),
         if (process.directory.isNotEmpty)
           KitTechnicalValue(l10n.terminalScreenDetailFolder, process.directory),
@@ -459,6 +511,19 @@ class _TerminalSurfaceState extends State<TerminalSurface>
         action: reconnect,
       );
     }
+    final process = widget.process;
+    if (_closed && !process.running) {
+      // The program ended: say so with its code, not "connection closed".
+      final code = process.exitCode;
+      return KitStatus(
+        kind: KitStatusKind.connection,
+        id: 'terminal-connection',
+        icon: AppIconography.terminal,
+        message: code == null
+            ? l10n.terminalScreenRowEndedNoCode(process.command)
+            : l10n.terminalScreenRowEnded('$code', process.command),
+      );
+    }
     if (_closed) {
       return KitStatus(
         kind: KitStatusKind.connection,
@@ -476,21 +541,37 @@ class _TerminalSurfaceState extends State<TerminalSurface>
     final l10n = _l10nOf(context);
     final canWrite = _canWrite;
     final running = widget.process.running && !_closed;
+    final selected = _terminalController.selection != null;
     return KitScreen(
       status: _status(l10n),
       loading: _connecting,
       loadingLabel: l10n.terminalScreenConnecting,
+      header: widget.header,
       topBar: KitTopBar(
-        title: _title,
+        title: _page ? l10n.libraryTerminalTitle : _title,
+        scope: widget.scope,
         menuKey: const ValueKey('terminal-surface-menu'),
         actions: [
-          KitAction.copy(
-            key: const ValueKey('terminal-copy'),
-            label: l10n.terminalScreenCopy,
-            text: _copyText,
-          ),
+          // On the page, Copy shows while text is selected (long-press);
+          // the whole output stays one tap away in the menu.
+          if (!_page || selected)
+            KitAction.copy(
+              key: const ValueKey('terminal-copy'),
+              label: _page
+                  ? l10n.localTerminalCopySelection
+                  : l10n.terminalScreenCopy,
+              text: _copyText,
+            ),
         ],
         menu: [
+          ...widget.leadingMenu,
+          if (_page)
+            KitMenuItem(
+              key: const ValueKey('terminal-copy-all'),
+              label: l10n.terminalScreenCopy,
+              icon: AppIconography.copy,
+              onSelected: () => unawaited(KitCopy.copy(context, _transcript)),
+            ),
           KitMenuItem(
             key: const Key('terminal-accessible-mode'),
             label: _accessibleMode
@@ -539,6 +620,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
             destructive: true,
             onSelected: () => unawaited(_remove()),
           ),
+          ...widget.trailingMenu,
         ],
       ),
       body: _accessibleMode
@@ -556,7 +638,8 @@ class _TerminalSurfaceState extends State<TerminalSurface>
               focusNode: _focus,
               readOnly: !canWrite,
               keys: _keys,
-              interruptKeys: true,
+              interruptKeys: !_page,
+              calm: _page,
               // Desktop: hardware keys only, so a keystroke is never
               // delivered twice (key event + IME delta).
               onKeyEvent: desktopInteractions ? _onTerminalKey : null,
@@ -570,6 +653,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
     WidgetsBinding.instance.removeObserver(this);
     widget.repositoryChanges?.removeListener(_repositoryChanged);
     _connectionGeneration++;
+    _terminalController.removeListener(_selectionChanged);
     _resizeTimer?.cancel();
     _slowTimer?.cancel();
     unawaited(_subscription?.cancel().catchError((_) {}));

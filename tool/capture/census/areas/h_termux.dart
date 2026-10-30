@@ -78,7 +78,7 @@ Future<CaptureController> _controller(
   List<ServerProfile> profiles = const [],
   String? active,
   bool connected = false,
-  String version = '2.0.29',
+  String version = '2.1.1',
 }) async {
   final store = _Store(
     prefs: await kit.prefs(),
@@ -167,11 +167,11 @@ Future<void> _termuxHost(
 /// The installed runtime page with OpenCode 2 running and in use.
 Future<TermuxFake> _installedRunning(CensusKit kit) async {
   final fake = TermuxFake()
-    ..inventory = 'ubuntu=installed\nversion=2.0.29\nruntime=opencode2\n'
+    ..inventory = 'ubuntu=installed\nversion=2.1.1\nruntime=opencode2\n'
     ..status = managerStatus(
       phase: 'ready',
       message: 'OpenCode is ready',
-      version: '2.0.29',
+      version: '2.1.1',
       runtime: 'opencode2',
       output: '[oc] authenticated server ready on 127.0.0.1:4096\n',
     );
@@ -240,7 +240,7 @@ class _CensusLinux extends BuiltinLinux {
   }) async {
     if (script == BuiltinLinux.versionScript(TermuxRuntime.openCode2)) {
       return openCode
-          ? const BuiltinLinuxRunResult(exitCode: 0, output: '2.0.29\n')
+          ? const BuiltinLinuxRunResult(exitCode: 0, output: '2.1.1\n')
           : const BuiltinLinuxRunResult(exitCode: 1, output: '');
     }
     return const BuiltinLinuxRunResult(exitCode: 0, output: '');
@@ -252,7 +252,7 @@ class _CensusLinux extends BuiltinLinux {
 }
 
 const _serverLog =
-    '''INFO  2026-09-25T09:12:04 +0ms service=default version=2.0.29 args=["serve","--hostname","127.0.0.1","--port","4097"] opencode
+    '''INFO  2026-09-25T09:12:04 +0ms service=default version=2.1.1 args=["serve","--hostname","127.0.0.1","--port","4097"] opencode
 INFO  2026-09-25T09:12:05 +812ms service=server listening on http://127.0.0.1:4097
 INFO  2026-09-25T09:12:09 +4102ms service=provider init
 INFO  2026-09-25T09:12:11 +2011ms service=session id=ses_7f2a created
@@ -268,7 +268,7 @@ Future<void> _builtin(CensusKit kit, _CensusLinux linux) async {
     baseUrl: BuiltinLinux.serverUrl,
     username: BuiltinLinux.serverUsername,
     password: 'synthetic-test-secret',
-    serverVersion: '2.0.29',
+    serverVersion: '2.1.1',
   );
   final controller = await _controller(
     kit,
@@ -418,13 +418,13 @@ final hTermuxArea = CensusArea(
       await _setup(
         kit,
         TermuxFake()
-          ..inventory = 'ubuntu=installed\nversion=2.0.29\nruntime=opencode2\n'
+          ..inventory = 'ubuntu=installed\nversion=2.1.1\nruntime=opencode2\n'
           ..status = managerStatus(
             phase: 'failed',
             message:
                 'OpenCode server did not become authenticated and ready '
                 'within 30 seconds',
-            version: '2.0.29',
+            version: '2.1.1',
             runtime: 'opencode2',
             output: failedLog,
           ),

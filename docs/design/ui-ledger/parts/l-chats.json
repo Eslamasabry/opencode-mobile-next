@@ -35,7 +35,7 @@
           "file": "lib/ui/screens/chats/chats_home_screen.dart",
           "line": 164,
           "action": "other",
-          "target": null,
+          "target": "inbox",
           "targetWidget": null,
           "effect": "Toggles the Needs you filter; with Running also on, either matches.",
           "gates": [],
@@ -418,12 +418,102 @@
           "destructive": false
         }
       ]
+    },
+    {
+      "id": "inbox",
+      "title": "Inbox",
+      "kind": "screen",
+      "file": "lib/ui/screens/inbox/inbox_screen.dart",
+      "widget": "InboxScreen",
+      "presentedBy": [
+        "openInbox"
+      ],
+      "line": 38,
+      "purpose": "Everything that waits on the person across connections, oldest first, cleared top to bottom: permission asks answer in place (Allow once / Reject with the exact command), everything else opens its chat.",
+      "reachedFrom": [
+        {
+          "page": "chats-home",
+          "element": "chats-home-filter-needs-you"
+        },
+        {
+          "page": "system",
+          "element": null,
+          "trigger": "notifications, the Quick Settings tile, the widgets and Search's Go to"
+        }
+      ],
+      "gates": [],
+      "elements": [
+        {
+          "id": "inbox-request",
+          "type": "card",
+          "label": "{permission ask}",
+          "key": "inbox-request-{id}",
+          "file": "lib/ui/screens/inbox/inbox_screen.dart",
+          "line": 260,
+          "action": "submit",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Allow once / Reject with Undo; the card names the exact command.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "inbox-open",
+          "type": "list-tile",
+          "label": "{conversation}",
+          "key": "inbox-open-{identity}",
+          "file": "lib/ui/screens/inbox/inbox_screen.dart",
+          "line": 285,
+          "action": "navigate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Opens the conversation that waits.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "inbox-watched",
+          "type": "list-tile",
+          "label": "{watched server request}",
+          "key": "inbox-watched-{key}",
+          "file": "lib/ui/screens/inbox/inbox_screen.dart",
+          "line": 318,
+          "action": "navigate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Opens the server the request is on.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "inbox-unreachable-retry",
+          "type": "button",
+          "label": "Try again",
+          "key": "inbox-unreachable-retry",
+          "file": "lib/ui/screens/inbox/inbox_screen.dart",
+          "line": 450,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Reads an unreachable source again.",
+          "gates": [],
+          "destructive": false
+        }
+      ]
     }
   ],
   "notPages": [
     {
       "file": "lib/ui/screens/chats/chats_host.dart",
       "reason": "No surface: the one seam between the Chats screens and the connection (feed source, server pill, opening a conversation, model chip)."
+    },
+    {
+      "file": "lib/ui/screens/inbox/inbox_items.dart",
+      "reason": "Data only: the InboxEntry kinds the Inbox page (lib/ui/screens/inbox/inbox_screen.dart, page inbox) lists; no surface or control of its own."
+    },
+    {
+      "file": "lib/ui/screens/home_opening.dart",
+      "reason": "Data only: HomeOpening, the last conversation titles, status and tone the home shows read-only while the saved server is still connecting on a cold start; no surface of its own."
     }
   ],
   "notes": [

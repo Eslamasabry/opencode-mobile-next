@@ -80,6 +80,14 @@ abstract final class AppIconography {
     fontFamily: 'AppPhosphorRegular',
     matchTextDirection: false,
   );
+
+  /// The Settings gear in the phone's top bar (Phosphor "gear"): the one door
+  /// to Settings once there is no navigation bar (owner, 2026-10-20).
+  static const settingsGear = IconData(
+    0xe270,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
   static const search = IconData(
     0xe30c,
     fontFamily: 'AppPhosphorRegular',
@@ -180,8 +188,28 @@ abstract final class AppIconography {
     fontFamily: 'AppPhosphorRegular',
     matchTextDirection: false,
   );
+
+  /// The model, one glyph everywhere (a processor, never a brain): the
+  /// composer's chip, New conversation's Model row, the pickers and the
+  /// transcript's "Model →" line.
   static const model = IconData(
-    0xe74e,
+    0xe610,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+
+  /// Storage on a disk (a hard drive): never the database glyph, which is
+  /// Servers.
+  static const storage = IconData(
+    0xe29e,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+
+  /// Running on this phone: a heartbeat (what is alive on it), not the
+  /// processor (the model) and not the speedometer (the free model).
+  static const heartbeat = IconData(
+    0xe2ac,
     fontFamily: 'AppPhosphorRegular',
     matchTextDirection: false,
   );
@@ -213,6 +241,14 @@ abstract final class AppIconography {
   static const bug = IconData(
     0xe5f4,
     fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+
+  /// GitHub's mark, monochrome (Phosphor's filled `github-logo`): an action whose
+  /// target is GitHub ("Send as a GitHub issue").
+  static const github = IconData(
+    0xe576,
+    fontFamily: 'AppPhosphorFill',
     matchTextDirection: false,
   );
   static const appearance = IconData(
@@ -495,6 +531,13 @@ abstract final class AppIconography {
   );
   static const darkMode = IconData(
     0xe330,
+    fontFamily: 'AppPhosphorRegular',
+    matchTextDirection: false,
+  );
+
+  /// Saver (true black, no motion): Phosphor's leaf.
+  static const leaf = IconData(
+    0xe2da,
     fontFamily: 'AppPhosphorRegular',
     matchTextDirection: false,
   );

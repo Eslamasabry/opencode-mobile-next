@@ -121,14 +121,14 @@ void main() {
       for (final tab in const [
         'MCP',
         'Commands',
-        'Tools',
+        'Built-in',
         'Skills',
         'References',
         'External agents',
       ]) {
         expect(find.byKey(ValueKey('capabilities-tab-$tab')), findsOneWidget);
       }
-      await tester.tap(find.byKey(const ValueKey('capabilities-tab-Tools')));
+      await tester.tap(find.byKey(const ValueKey('capabilities-tab-Built-in')));
       await tester.pumpAndSettle();
       expect(
         find.byKey(const ValueKey('capabilities-tools-unavailable')),

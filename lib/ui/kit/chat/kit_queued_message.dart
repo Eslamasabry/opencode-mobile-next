@@ -7,16 +7,17 @@ import '../../../l10n/app_localizations.dart';
 import '../kit_buttons.dart';
 import '../kit_divider.dart';
 import '../kit_layout.dart';
+import '../kit_max_width.dart';
 import '../kit_menu.dart';
 import '../kit_motion.dart';
 import '../kit_receipt.dart';
 import '../kit_since.dart';
-import '../kit_technical_value.dart';
 import '../kit_tappable.dart';
+import '../kit_technical_value.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
-import 'kit_message.dart' show kitPromptBubbleFill;
 import '../motion/kit_animated_rows.dart';
+import 'kit_message.dart' show kitPromptBubbleDecoration;
 
 /// Where one waiting message stands. The host maps its queue entry or its
 /// server inbox item; the bubble says it in words.
@@ -139,7 +140,10 @@ class KitQueuedMessage extends StatelessWidget {
   final Key? bubbleKey;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final reduced = KitMotion.reduced(context);
     return AnimatedSwitcher(
       duration: reduced ? Duration.zero : KitMotion.quick,
@@ -179,7 +183,6 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
-    final roles = tokens.roles;
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final count = items.length;
     final allWaiting = items.every(
@@ -244,19 +247,11 @@ class _Bubble extends StatelessWidget {
       ),
     );
 
+    // The prompt bubble's look in every style: Solid keeps the queued
+    // bubble's own fill without the prompt's Accent edge.
     final bubble = DecoratedBox(
       key: bubbleKey,
-      decoration: ShapeDecoration(
-        color: kitPromptBubbleFill(roles),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadiusDirectional.only(
-            topStart: Radius.circular(KitTokens.bubbleRadius),
-            topEnd: Radius.circular(KitTokens.bubbleRadius),
-            bottomStart: Radius.circular(KitTokens.bubbleRadius),
-            bottomEnd: Radius.circular(KitTokens.bubbleTailRadius),
-          ),
-        ),
-      ),
+      decoration: kitPromptBubbleDecoration(context, edge: false),
       child: body,
     );
 

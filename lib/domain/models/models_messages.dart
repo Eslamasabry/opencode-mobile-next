@@ -111,6 +111,12 @@ enum MessageErrorKind {
 /// chosen by the error's [MessageErrorKind]. OpenCode 2 beta-18600 sends
 /// `{type: 'provider.auth', message: ''}` when a provider rejects the
 /// model's credentials; an empty banner tells the user nothing.
+/// [value] as trimmed text, or null when it is missing or only whitespace.
+String? _nonBlankText(Object? value) {
+  final text = value?.toString().trim();
+  return text == null || text.isEmpty ? null : text;
+}
+
 String sessionErrorFallbackText(String? name) {
   final kind = MessageErrorKind.fromName(name) ?? MessageErrorKind.unknown;
   return switch (kind) {
@@ -207,13 +213,20 @@ class MessageInfo {
     if (err is Map<String, dynamic>) {
       final data = err['data'];
       final nestedMessage = data is Map ? data['message'] : null;
-      errText = (err['message'] ?? nestedMessage ?? err['name'])?.toString();
+      final name = _nonBlankText(err['name']) ?? _nonBlankText(err['type']);
+      // A blank message is no message: an empty string would win over the
+      // nested message and the name, and leave Error details empty.
+      errText =
+          _nonBlankText(err['message']) ??
+          _nonBlankText(nestedMessage) ??
+          name ??
+          (err.isEmpty ? null : sessionErrorFallbackText(null));
       errKind =
-          MessageErrorKind.fromName((err['name'] ?? err['type'])?.toString()) ??
+          MessageErrorKind.fromName(name) ??
           (errText == null ? null : MessageErrorKind.unknown);
-    } else if (err is String) {
-      errText = err;
-      errKind = MessageErrorKind.fromName(err) ?? MessageErrorKind.unknown;
+    } else if (err is String && err.trim().isNotEmpty) {
+      errText = err.trim();
+      errKind = MessageErrorKind.fromName(errText) ?? MessageErrorKind.unknown;
     }
     return MessageInfo(
       id: j['id'] as String,
@@ -604,6 +617,11 @@ class Part {
   final String? url;
   final bool synthetic;
 
+  /// The server said this text or thought is complete (v1 `time.end`, v2
+  /// `session.text.ended`). False while it streams, and also where a server
+  /// never says: the message's own end then stands for it.
+  final bool ended;
+
   /// A small, allowlisted presentation contract for server-authored notices.
   /// It contains no arbitrary provider/configuration metadata.
   final Map<String, String> noticeMetadata;
@@ -620,6 +638,7 @@ class Part {
     this.filename,
     this.url,
     this.synthetic = false,
+    this.ended = false,
     this.noticeMetadata = const {},
   }) : toolState = toolState ?? ToolState(status: 'pending');
 
@@ -655,6 +674,10 @@ class Part {
       filename: j['filename']?.toString(),
       url: j['url']?.toString(),
       synthetic: (j['synthetic'] as bool?) ?? false,
+      ended: switch (j['time']) {
+        final Map<dynamic, dynamic> time => time['end'] != null,
+        _ => false,
+      },
     );
   }
 }
@@ -664,4 +687,55 @@ class MessageWithParts {
   List<Part> parts;
   MessageWithParts({required this.info, List<Part>? parts})
     : parts = parts ?? [];
+}
+
+/// Why a server ended a running turn early, when it says so (OpenCode 2's
+/// `session.execution.interrupted` reason, carried on the idle event as
+/// `interruptReason`). The chat uses it to say who or what stopped a reply
+/// instead of claiming the person did.
+enum TurnInterruptReason {
+  /// A Stop from some client: this app, another app, or another device.
+  user,
+
+  /// The server's idle sweep: an hour with no activity in the project.
+  inactivity,
+
+  /// The server shut down or restarted.
+  shutdown,
+
+  /// A newer run took this one's place.
+  superseded,
+
+  /// Interrupted, for a reason this app does not know.
+  unknown;
+
+  /// The reason named by an idle event's [properties], or null when the
+  /// turn was not interrupted (it finished, or the server does not say).
+  static TurnInterruptReason? fromIdleEvent(Map<String, dynamic> properties) {
+    final value = properties['interruptReason'];
+    if (value == null) return null;
+    return switch (value.toString()) {
+      'user' => user,
+      'inactivity' => inactivity,
+      'shutdown' => shutdown,
+      'superseded' => superseded,
+      _ => unknown,
+    };
+  }
+}
+
+/// The server's word on whether a turn that looks cut off still runs,
+/// asked before the chat says "The connection dropped".
+enum TurnRunCheck {
+  /// Asked; no answer yet. The turn keeps reading as running meanwhile.
+  checking,
+
+  /// The server is still working on it.
+  running,
+
+  /// The server is idle: the reply really ended unfinished.
+  ended,
+
+  /// The server could not be asked (no transport, an error, no answer).
+  unreachable,
 }

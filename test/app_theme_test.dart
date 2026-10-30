@@ -11,7 +11,9 @@ void main() {
     expect(theme.brightness, Brightness.dark);
     expect(theme.scaffoldBackgroundColor, AppTheme.background);
     expect(theme.appBarTheme.surfaceTintColor, Colors.transparent);
-    expect(theme.navigationBarTheme.backgroundColor, isNotNull);
+    // No navigation-bar theme: the kit draws the rail itself, and a phone
+    // has no bar (owner, 2026-10-20).
+    expect(theme.navigationBarTheme.backgroundColor, isNull);
     expect(theme.inputDecorationTheme.filled, isTrue);
 
     final foreground = scheme.onSurface.computeLuminance();
@@ -37,7 +39,9 @@ void main() {
       theme.appBarTheme.systemOverlayStyle?.statusBarIconBrightness,
       Brightness.dark,
     );
-    expect(theme.navigationBarTheme.backgroundColor, isNotNull);
+    // No navigation-bar theme: the kit draws the rail itself, and a phone
+    // has no bar (owner, 2026-10-20).
+    expect(theme.navigationBarTheme.backgroundColor, isNull);
     expect(theme.inputDecorationTheme.filled, isTrue);
 
     final foreground = scheme.onSurface.computeLuminance();
@@ -134,5 +138,67 @@ void main() {
         isNot(switches.thumbColor!.resolve(live)),
       );
     }
+  });
+
+  group('corners come from the kit tokens (style audit 2026-10-21, R8)', () {
+    double tooltip(ThemeData t) =>
+        ((t.tooltipTheme.decoration! as BoxDecoration).borderRadius!
+                as BorderRadius)
+            .topLeft
+            .x;
+    double button(ButtonStyle? style) =>
+        ((style!.shape!.resolve(const {})! as RoundedRectangleBorder)
+                    .borderRadius
+                as BorderRadius)
+            .topLeft
+            .x;
+
+    test('the built theme takes its own tokens: tooltips are popovers', () {
+      for (final theme in [AppTheme.dark(), AppTheme.light()]) {
+        final kit = theme.extension<KitTokens>()!;
+        expect(tooltip(theme), kit.popoverCorner);
+        expect(button(theme.filledButtonTheme.style), kit.buttonRadius);
+        expect(button(theme.iconButtonTheme.style), kit.buttonRadius);
+        final field =
+            theme.inputDecorationTheme.enabledBorder! as OutlineInputBorder;
+        expect(field.borderRadius.topLeft.x, kit.fieldCorner);
+        final menu = theme.popupMenuTheme.shape! as RoundedRectangleBorder;
+        expect(
+          (menu.borderRadius as BorderRadius).topLeft.x,
+          kit.popoverCorner,
+        );
+        expect(theme.chipTheme.shape, isA<StadiumBorder>());
+      }
+    });
+
+    test('shaped under Corners › Sharp: tooltips, buttons, fields and chips '
+        'follow', () {
+      final theme = AppTheme.dark();
+      final sharp = theme.extension<KitTokens>()!.styled(
+        const KitKnobs(corners: KitCorners.sharp),
+        sharpRadius: 2,
+      );
+      final shaped = AppTheme.shaped(theme, sharp);
+      expect(tooltip(shaped), 2);
+      expect(button(shaped.filledButtonTheme.style), 2);
+      expect(button(shaped.textButtonTheme.style), 2);
+      final field =
+          shaped.inputDecorationTheme.focusedBorder! as OutlineInputBorder;
+      expect(field.borderRadius.topLeft.x, 2);
+      // The field keeps its own colour and width.
+      expect(
+        field.borderSide,
+        (theme.inputDecorationTheme.focusedBorder! as OutlineInputBorder)
+            .borderSide,
+      );
+      expect(shaped.chipTheme.shape, isA<RoundedRectangleBorder>());
+      expect(
+        shaped.floatingActionButtonTheme.shape,
+        isA<RoundedRectangleBorder>(),
+      );
+      // Everything else is the theme's own; memoised per theme and tokens.
+      expect(shaped.colorScheme, theme.colorScheme);
+      expect(identical(AppTheme.shaped(theme, sharp), shaped), isTrue);
+    });
   });
 }

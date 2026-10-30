@@ -120,16 +120,16 @@ Session lifecycle (aggregate = sessionID; ⚡ = ephemeral, others durable):
 | `session.tool.success` | `{sessionID, assistantMessageID, id, content:[ToolContent,...], metadata?, executed, resultState?}` |
 | `session.tool.failed` | `{sessionID, assistantMessageID, id, error, content?, metadata?, executed, resultState?}` |
 | `session.retry.scheduled` | `{sessionID, assistantMessageID, attempt, at, error}` |
-| `session.compaction.started` | `{sessionID, reason:"auto"\|"manual", recent, inputID?}` |
+| `session.compaction.started` | `{sessionID, reason:"auto"\|"manual", recent, inputID?}` (2.1: no `recent`) |
 | ⚡ `session.compaction.delta` | `{sessionID, text}` |
-| `session.compaction.ended` | `{sessionID, reason, text, recent}` |
+| `session.compaction.ended` | `{sessionID, reason, text, recent}` (2.1: no `recent`) |
 | `session.compaction.failed` | `{sessionID, reason, error, inputID?}` |
 | `session.revert.staged` | `{sessionID, revert: Revert}` |
 | `session.revert.cleared` | `{sessionID}` |
 | `session.revert.committed` | `{sessionID, to: messageID}` |
 | `session.message.content.updated` | `{sessionID, messageID, content:[AssistantContent…]}` (message edited via PATCH) |
 
-Session status (all ⚡): `session.status` `{sessionID, status}` where status is `{type:"idle"}` | `{type:"busy"}` | `{type:"retry", attempt, message, next, action?:{reason,provider,title,message,label,link?}}`; deprecated `session.idle` `{sessionID}`; `session.compacted` `{sessionID}`.
+Session status (all ⚡): `session.status` `{sessionID, status}` where status is `{type:"idle"}` | `{type:"busy"}` | `{type:"retry", attempt, message, next, action?:{reason,provider,title,message,label,link?}}`; deprecated `session.idle` `{sessionID}`; `session.compacted` `{sessionID}` (declared through 2.0.x but never emitted on 2.0.29; removed in 2.1 — use `session.compaction.ended`).
 
 Permissions/forms (all ⚡): `permission.asked` (payload = full `Permission.Request`, §7), `permission.replied` `{sessionID, requestID, reply}`, `form.created` `{form: Form.Info}`, `form.replied` `{id, sessionID, answer}`, `form.cancelled` `{id, sessionID}`.
 
@@ -232,7 +232,7 @@ All optional fields are simply **absent** when unset (the server strips `undefin
 | `agent-switched` | `agent`, `previous?` |
 | `model-switched` | `model`, `previous?` |
 | `location-switched` | `location`, `projectID?`, `subpath?`, `previous?` |
-| `compaction` | `status:"running"\|"completed"\|"failed"`, `reason:"auto"\|"manual"`, `summary`/`recent` (running/completed) or `error` (failed) |
+| `compaction` | `status:"running"\|"completed"\|"failed"`, `reason:"auto"\|"manual"`, `summary`/`recent` (running/completed; 2.1 dropped `recent`) or `error` (failed) |
 
 **AssistantContent** union (discriminated by `type`):
 
@@ -259,6 +259,8 @@ Endpoints:
 | `GET /api/session/{id}/context` | `{"data":[Message...]}` — the live model context (everything after the last compaction). |
 
 **Streaming model:** while a turn runs, the messages endpoint lags; build the in-flight assistant message from events: `step.started` (gives `assistantMessageID`, agent, model) → per-ordinal `text/reasoning .started/.delta/.ended` → per-callID `tool.input.started/.delta/.ended` → `tool.called` (parsed input) → `tool.progress`* → `tool.success|failed` → `step.streamed` → `step.ended` (finish/cost/tokens) → next step or `execution.succeeded|failed|interrupted`. `message.updated`-style events do not exist; refetch or project.
+
+Live on stable 2.0.28 (2026-10-19, MiniMax M3.1 Flash Free): each step is its own assistant message, and `step.ended` comes only after every tool of that step settled; the next `step.started` follows one to several seconds later. No `session.status` event is sent at all: busy is `execution.started` until `execution.succeeded|failed|interrupted`, so a finished step never ends the run. `GET /api/session/active` listed the running session through every step gap, and `GET /session/{id}/message` already showed each tool's settled state about a second after its `tool.success` (no lag observed on 2.0.28). An interrupt sends `tool.failed` (`aborted`, "Tool execution interrupted") for running tools, then `step.failed`, then `execution.interrupted`.
 
 ## 6. Prompt flow, inbox, steer/queue
 

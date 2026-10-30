@@ -87,14 +87,20 @@ internal fun ScheduledPromptStore.rebaseCalendar(profile: String) = synchronized
 
 private fun rebaseRow(row: JSONObject, now: Long) {
     val recurrence = row.getJSONObject("recurrence")
-    val weekdays = row.optBoolean("enabled") && recurrence.optString("kind") == "weekdays" &&
+    val kind = recurrence.optString("kind")
+    val wallClock = row.optBoolean("enabled") && (kind == "weekdays" || kind == "daily") &&
         !row.isNull("nextRunAt")
-    if (!weekdays) return
+    if (!wallClock) return
     val previous = Instant.parse(row.getString("nextRunAt")).toEpochMilli()
     // Preserve overdue occurrences for the user's catch-up/skip policy.
     if (previous <= now) return
-    val next = ScheduledPromptPolicy.nextWeekday(
-        recurrence.getInt("hour"), recurrence.getInt("minute"), now, ZoneId.systemDefault(),
-    )
+    val hour = recurrence.getInt("hour")
+    val minute = recurrence.getInt("minute")
+    val zone = ZoneId.systemDefault()
+    val next = if (kind == "daily") {
+        ScheduledPromptPolicy.nextDaily(hour, minute, now, zone)
+    } else {
+        ScheduledPromptPolicy.nextWeekday(hour, minute, now, zone)
+    }
     row.put("nextRunAt", Instant.ofEpochMilli(next).toString())
 }

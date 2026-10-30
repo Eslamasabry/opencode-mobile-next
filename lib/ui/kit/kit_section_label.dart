@@ -3,9 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'kit_divider.dart';
+import 'kit_max_width.dart';
+import 'kit_surface_look.dart';
 import 'kit_term.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
+import 'style/kit_style.dart';
 
 /// A section's name above its content (visual language §5, slice-R4): the
 /// one section caption, at the same start inset as [KitRowGroup]'s label,
@@ -29,6 +33,11 @@ import 'kit_tokens.dart';
 /// `Padding` or `SliverPadding` the label sits first in, collapses into the
 /// gap, so a caller's older spacing never doubles it. Pass a number to
 /// force a gap, 0 for none.
+///
+/// **Rule.** A style that sets a rule above each section (Paper: the
+/// `divider` role asked with `selected: true`) gets it right above the
+/// words, after the gap, with [KitTokens.space2] between; every other style
+/// lays out as before ([KitSurfaceLook.sectionRule]).
 ///
 /// **Explanation.** With [explanation] the words are a [KitTerm]: tap,
 /// long-press or hover explains them (Providers, MCP servers, Resources).
@@ -78,7 +87,10 @@ class KitSectionLabel extends StatelessWidget {
   final Key? textKey;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final explanation = this.explanation;
     final trailing = this.trailing;
@@ -88,14 +100,21 @@ class KitSectionLabel extends StatelessWidget {
     // an explained label keeps a plain label's rhythm (the target overlaps
     // the empty space rather than pushing the section apart).
     var reach = 0.0;
+    // An engraved style (Signal) sets the words in capitals; a screen
+    // reader still reads them as written. Arabic has no capitals.
+    final engraved = kitStyleSpec(
+      KitSurfaceLook.styleOf(context),
+    ).tokens.type.engravedLabels;
+    final shown = engraved ? text.toUpperCase() : text;
     if (explanation == null) {
       words = Semantics(
         header: true,
         child: KitText(
-          text,
+          shown,
           key: textKey,
           role: KitTextRole.label,
           tone: KitTextTone.secondary,
+          semanticsLabel: engraved ? text : null,
         ),
       );
     } else {
@@ -116,7 +135,7 @@ class KitSectionLabel extends StatelessWidget {
         child: Transform.translate(
           offset: Offset(rtl ? tokens.space2 : -tokens.space2, 0),
           child: KitTerm(
-            text,
+            shown,
             explanation: explanation,
             role: KitTextRole.label,
             termKey: textKey,
@@ -126,6 +145,14 @@ class KitSectionLabel extends StatelessWidget {
     }
     // The target's reach already covers part of the label gap.
     final labelBottom = math.max(tokens.labelGap - reach, 0.0);
+    // The section rule sits right above the words, not at the top of the
+    // gap, so it reads as the section's own head.
+    final ruled =
+        KitSurfaceLook.sectionRule(
+          context,
+          hairline: KitTokens.hairlineWidth(context),
+        ) !=
+        null;
     return Padding(
       padding: margin ?? EdgeInsets.symmetric(horizontal: tokens.gutter),
       child: Column(
@@ -133,6 +160,10 @@ class KitSectionLabel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _KitSectionGap(gap: gapBefore, trim: reach),
+          if (ruled) ...[
+            const KitDivider.section(),
+            SizedBox(height: math.max(tokens.space2 - reach, 0.0)),
+          ],
           Padding(
             padding: EdgeInsetsDirectional.only(bottom: labelBottom),
             child: trailing == null
@@ -148,7 +179,14 @@ class KitSectionLabel extends StatelessWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     spacing: tokens.space2,
                     runSpacing: tokens.space1,
-                    children: [words, trailing],
+                    // Its own node: plain words at the end of the line
+                    // (a group's figures) would otherwise merge up into
+                    // whatever node holds the page's loose text, far from
+                    // the heading they belong to.
+                    children: [
+                      words,
+                      Semantics(container: true, child: trailing),
+                    ],
                   ),
           ),
         ],

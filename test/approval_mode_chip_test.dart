@@ -12,15 +12,17 @@ import 'package:opencode_mobile/state/automation_policy.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/session_auto_approval.dart';
-import 'package:opencode_mobile/ui/app_iconography.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/complete_message_history.dart';
+import 'support/composer_tools.dart';
 
-/// The composer's approval chip is a mode switcher: always on screen in a
-/// conversation, naming the mode with no count, and opening a menu of the
-/// modes this phone really supports.
+/// How a conversation answers permission requests (chat fidelity round,
+/// 2026-10-20): while the agent is not working, the Auto-approve and model
+/// chips sit over the composer; while it works they fold away (concept C),
+/// one muted line under the header says Auto-approve is on, and the switch,
+/// the model and the approval settings stay behind the composer's +.
 
 class _Api extends FakeServerGateway with CompleteMessageHistory {
   _Api({this.asksBeforeActing = true}) : super(baseUrl: 'http://localhost');
@@ -92,8 +94,10 @@ Future<void> _pump(
   WidgetTester tester,
   ConnectionController controller, {
   String session = 'parent',
+  bool settle = true,
+  Size size = const Size(412, 915),
 }) async {
-  tester.view.physicalSize = const Size(412, 915);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
@@ -106,9 +110,19 @@ Future<void> _pump(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+  }
 }
 
+/// Short enough that the chips over the composer fold into the + sheet, so the
+/// line under the header is the one that says Auto-approve is on.
+const _short = Size(412, 500);
+
+final _line = find.byKey(const ValueKey('chat-status-auto-approve'));
 final _chip = find.byKey(const Key('auto-approval-indicator'));
 final _menu = find.byKey(const Key('approval-mode-menu'));
 
@@ -116,6 +130,20 @@ Future<void> _openMenu(WidgetTester tester) async {
   await tester.tap(_chip);
   await tester.pumpAndSettle();
   expect(_menu, findsOneWidget);
+}
+
+/// The agent is at work on this conversation.
+void _working(ConnectionController controller) {
+  controller.busySessions = {'parent'};
+  controller.notifyListeners();
+}
+
+final _switchRow = find.byKey(const Key('composer-setting-approval'));
+
+Future<void> _openPlus(WidgetTester tester) async {
+  await openComposerTools(tester);
+  await tester.pumpAndSettle();
+  expect(find.byKey(const Key('composer-tools-sheet')), findsOneWidget);
 }
 
 Future<void> _tapKey(WidgetTester tester, String key) async {
@@ -126,180 +154,276 @@ Future<void> _tapKey(WidgetTester tester, String key) async {
 SessionAutoApprovalStore _stored(SharedPreferences prefs) =>
     SessionAutoApprovalStore(prefs);
 
-void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
-  testWidgets('the chip names each mode, with no count', (tester) async {
-    final (controller, _) = await _boot();
-    await _pump(tester, controller);
-    expect(_chip, findsOneWidget);
-    expect(find.text('Asks first'), findsOneWidget);
-    // Copy ending in a full stop is not read out with two.
-    final spoken = tester.getSemantics(_chip).label;
-    expect(spoken, isNot(contains('..')));
-
-    await controller.setSessionAutoApproval(
+Future<void> _auto(ConnectionController controller) =>
+    controller.setSessionAutoApproval(
       'parent',
       const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
     );
-    await tester.pumpAndSettle();
-    expect(find.text('Auto-approve'), findsOneWidget);
-    expect(
-      find.descendant(of: _chip, matching: find.textContaining('·')),
-      findsNothing,
-    );
 
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('idle: the Auto-approve and model chips sit over the '
+      'composer, and no line says it twice', (tester) async {
+    final (controller, _) = await _boot();
+    await _auto(controller);
+    await _pump(tester, controller);
+    expect(find.byKey(const Key('composer-status-strip')), findsOneWidget);
+    expect(_chip, findsOneWidget);
+    expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
+    expect(_line, findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('working: the chips stay in the row with Stop, and the line '
+      'does not say it twice', (tester) async {
+    final (controller, _) = await _boot();
+    await _auto(controller);
+    await _pump(tester, controller);
+    _working(controller);
+    await tester.pumpAndSettle();
+    expect(_chip, findsOneWidget);
+    expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
+    expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
+    expect(_line, findsNothing);
+    // The reply ends: the chips stay and Stop goes.
+    controller.busySessions = {};
+    controller.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(_chip, findsOneWidget);
+    expect(find.byKey(const Key('chat-stop-button')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the chip says on or off at a glance, with no count', (
+    tester,
+  ) async {
+    final (controller, _) = await _boot();
+    await _pump(tester, controller);
+    // The state reads at a glance: "Ask first" with the plain shield, and
+    // "Auto-approve on" with the kit's mint check.
+    final onMark = find.descendant(
+      of: _chip,
+      matching: find.byKey(const ValueKey('kit-chip-check')),
+    );
+    expect(_chip, findsOneWidget);
+    expect(find.text('Ask first'), findsOneWidget);
+    expect(onMark, findsNothing);
+    // Copy ending in a full stop is not read out with two.
+    expect(tester.getSemantics(_chip).label, isNot(contains('..')));
+    await _auto(controller);
+    await tester.pumpAndSettle();
+    expect(find.text('Auto-approve on'), findsOneWidget);
+    expect(onMark, findsOneWidget);
     await controller.setSessionAutoApproval('parent', null);
     await controller.setApprovesEverything(true);
     await tester.pumpAndSettle();
     // Both automatic modes read the same; the menu says which.
-    expect(find.text('Auto-approve'), findsOneWidget);
+    expect(find.text('Auto-approve on'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a runtime that never asks before acting shows no chip', (
-    tester,
-  ) async {
-    // FC1: the mode is shown for runtimes that ask (a capability), and
-    // hidden otherwise, even when a saved mode would say "Auto-approve".
-    final (controller, _) = await _boot(asksBeforeActing: false);
-    await controller.setSessionAutoApproval(
-      'parent',
-      const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
-    );
-    await _pump(tester, controller);
-    expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
-    expect(_chip, findsNothing);
-    expect(find.text('Asks first'), findsNothing);
-    expect(find.text('Auto-approve'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('tapping the chip lists the supported modes and settings', (
-    tester,
-  ) async {
-    final (controller, _) = await _boot();
-    await _pump(tester, controller);
-    await _openMenu(tester);
-    expect(find.byKey(const Key('approval-mode-ask')), findsOneWidget);
-    expect(find.byKey(const Key('approval-mode-auto')), findsOneWidget);
-    expect(find.byKey(const Key('approval-mode-everything')), findsOneWidget);
-    expect(find.text('Approval settings…'), findsOneWidget);
-    // One plain line each, and the current mode carries the check.
-    expect(find.text('You answer each request.'), findsOneWidget);
-    expect(find.text('Allowed once, as they arrive.'), findsOneWidget);
-    expect(
-      find.descendant(of: _menu, matching: find.byIcon(AppIconography.check)),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('every mode is offered whatever the AI Team supervision', (
-    tester,
-  ) async {
-    // The team's supervision level governs the team, not conversations.
-    final (controller, _) = await _boot(
-      supervision: AutomationSupervision.high,
-    );
+  testWidgets('tapping the chip lists the modes, and a stricter one applies '
+      'at once and is saved', (tester) async {
+    final (controller, prefs) = await _boot();
+    await _auto(controller);
     await _pump(tester, controller);
     await _openMenu(tester);
     expect(find.byKey(const Key('approval-mode-ask')), findsOneWidget);
     expect(find.byKey(const Key('approval-mode-auto')), findsOneWidget);
     expect(find.byKey(const Key('approval-mode-everything')), findsOneWidget);
     expect(find.byKey(const Key('approval-mode-settings')), findsOneWidget);
-  });
-
-  testWidgets('a stricter mode applies at once and is saved', (tester) async {
-    final (controller, prefs) = await _boot();
-    await controller.setSessionAutoApproval(
-      'parent',
-      const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
-    );
-    await _pump(tester, controller);
-    await _openMenu(tester);
     await _tapKey(tester, 'approval-mode-ask');
-
     expect(find.byKey(const Key('approval-mode-confirm')), findsNothing);
     expect(controller.autoApprovalFor('parent').automatic, isFalse);
-    expect(find.text('Asks first'), findsOneWidget);
-    expect(find.text('This conversation asks first.'), findsOneWidget);
-    final saved = _stored(prefs).explicitFor('server-a', 'parent');
-    expect(saved?.mode, AutoApprovalMode.ask);
+    expect(find.text('Ask first'), findsOneWidget);
+    expect(
+      _stored(prefs).explicitFor('server-a', 'parent')?.mode,
+      AutoApprovalMode.ask,
+    );
     await tester.pump(const Duration(seconds: 4));
   });
 
-  testWidgets('auto-approve applies at once, with no confirm, and is saved', (
+  testWidgets('one line under the header while it works with auto-approve '
+      'on', (tester) async {
+    final (controller, _) = await _boot();
+    await _pump(tester, controller, size: _short);
+    _working(controller);
+    await tester.pumpAndSettle();
+    expect(_line, findsNothing);
+
+    await _auto(controller);
+    await tester.pumpAndSettle();
+    expect(_line, findsOneWidget);
+    expect(find.text('Auto-approve is on'), findsOneWidget);
+
+    await controller.setSessionAutoApproval('parent', null);
+    await controller.setApprovesEverything(true);
+    await tester.pumpAndSettle();
+    // Both automatic modes read the same.
+    expect(find.text('Auto-approve is on'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the line says its piece once: it folds away by itself and '
+      'stays away in this conversation (owner, 2026-10-27)', (tester) async {
+    final (controller, _) = await _boot();
+    await _auto(controller);
+    await _pump(tester, controller, size: _short);
+    _working(controller);
+    await tester.pump();
+    await tester.pump();
+    expect(_line, findsOneWidget);
+    await tester.pump(const Duration(seconds: 7));
+    await tester.pumpAndSettle();
+    expect(_line, findsNothing);
+    // The chip and the + sheet keep the state; reopening the chat does not
+    // bring the line back.
+    expect(controller.autoApprovalFor('parent').automatic, isTrue);
+    await tester.pumpWidget(const SizedBox());
+    await _pump(tester, controller, size: _short);
+    await tester.pump();
+    expect(_line, findsNothing);
+  });
+
+  testWidgets('Dismiss folds the line away now and for this conversation; '
+      'turning auto-approve on again says it once more', (tester) async {
+    final (controller, _) = await _boot();
+    await _auto(controller);
+    await _pump(tester, controller, size: _short);
+    _working(controller);
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(_line, findsOneWidget);
+    await tester.tap(
+      find.descendant(of: _line, matching: find.byTooltip('Dismiss')),
+    );
+    await tester.pumpAndSettle();
+    expect(_line, findsNothing);
+
+    controller.busySessions = {};
+    controller.notifyListeners();
+    await tester.pumpAndSettle();
+    // Off, then on again from the chip's menu (a tall window shows the chip).
+    tester.view.physicalSize = const Size(412, 915);
+    await tester.pumpAndSettle();
+    await _openMenu(tester);
+    await tester.tap(find.byKey(const Key('approval-mode-ask')));
+    await tester.pumpAndSettle();
+    await _openMenu(tester);
+    await tester.tap(find.byKey(const Key('approval-mode-auto')));
+    await tester.pumpAndSettle();
+    tester.view.physicalSize = _short;
+    await tester.pumpAndSettle();
+    _working(controller);
+    await tester.pump();
+    await tester.pump();
+    expect(_line, findsOneWidget);
+    await tester.pump(const Duration(seconds: 7));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('the line turns auto-approve off in one tap, and it is saved', (
+    tester,
+  ) async {
+    final (controller, prefs) = await _boot();
+    await _auto(controller);
+    await _pump(tester, controller, size: _short);
+    _working(controller);
+    await tester.pumpAndSettle();
+    await _tapKey(tester, 'chat-auto-approve-off');
+
+    expect(controller.autoApprovalFor('parent').automatic, isFalse);
+    expect(_line, findsNothing);
+    expect(find.text('This conversation asks first.'), findsOneWidget);
+    expect(
+      _stored(prefs).explicitFor('server-a', 'parent')?.mode,
+      AutoApprovalMode.ask,
+    );
+    await tester.pump(const Duration(seconds: 4));
+  });
+
+  testWidgets('a runtime that never asks before acting shows nothing', (
+    tester,
+  ) async {
+    // FC1: the mode is shown for runtimes that ask (a capability), and
+    // hidden otherwise, even when a saved mode would say "Auto-approve".
+    final (controller, _) = await _boot(asksBeforeActing: false);
+    await _auto(controller);
+    await _pump(tester, controller);
+    expect(_chip, findsNothing);
+    _working(controller);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(_line, findsNothing);
+    controller.busySessions = {};
+    controller.notifyListeners();
+    await tester.pumpAndSettle();
+    await _openPlus(tester);
+    expect(_switchRow, findsNothing);
+    expect(
+      find.byKey(const Key('composer-setting-approval-settings')),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the + sheet turns auto-approve on and off, no confirm', (
     tester,
   ) async {
     final (controller, prefs) = await _boot();
     await _pump(tester, controller);
-    await _openMenu(tester);
-    await _tapKey(tester, 'approval-mode-auto');
+    await _openPlus(tester);
+    expect(_switchRow, findsOneWidget);
+    expect(tester.widget<Switch>(find.byType(Switch).first).value, isFalse);
 
+    await tester.tap(_switchRow);
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('approval-mode-confirm')), findsNothing);
     expect(controller.autoApprovalFor('parent').automatic, isTrue);
-    expect(
-      find.text('This conversation approves automatically.'),
-      findsOneWidget,
-    );
-    // Persisted through the same store the sheet writes.
+    // The sheet shows the new state at once; it does not go stale.
+    expect(tester.widget<Switch>(find.byType(Switch).first).value, isTrue);
     expect(
       _stored(prefs).explicitFor('server-a', 'parent')?.mode,
       AutoApprovalMode.autoOnce,
     );
-    await tester.pump(const Duration(seconds: 4));
-  });
 
-  testWidgets('approve everything is confirmed and saved server-wide', (
-    tester,
-  ) async {
-    final (controller, prefs) = await _boot();
-    await _pump(tester, controller);
-    await _openMenu(tester);
-    await _tapKey(tester, 'approval-mode-everything');
-    expect(find.textContaining('without asking'), findsOneWidget);
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(_switchRow);
     await tester.pumpAndSettle();
-    expect(controller.approvesEverything, isFalse);
-
-    await _openMenu(tester);
-    await _tapKey(tester, 'approval-mode-everything');
-    await tester.tap(find.text('Approve everything').last);
-    await tester.pumpAndSettle();
-    expect(controller.approvesEverything, isTrue);
-    expect(_stored(prefs).approvesEverything('server-a'), isTrue);
-    expect(find.text('Auto-approve'), findsOneWidget);
+    expect(controller.autoApprovalFor('parent').automatic, isFalse);
+    expect(tester.widget<Switch>(find.byType(Switch).first).value, isFalse);
     await tester.pump(const Duration(seconds: 4));
   });
 
   testWidgets('Approval settings opens the detailed sheet', (tester) async {
     final (controller, _) = await _boot();
     await _pump(tester, controller);
-    await _openMenu(tester);
-    await _tapKey(tester, 'approval-mode-settings');
+    await _openPlus(tester);
+    await _tapKey(tester, 'composer-setting-approval-settings');
     expect(find.byKey(const Key('session-approvals-sheet')), findsOneWidget);
   });
 
-  testWidgets('disconnected: automatic mode reads paused, asking does not', (
-    tester,
-  ) async {
-    final (controller, _) = await _boot();
-    await _pump(tester, controller);
-    controller.status = StreamStatus.reconnecting;
-    controller.notifyListeners();
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Asks first'), findsOneWidget);
+  testWidgets(
+    'disconnected: automatic mode reads paused, asking says nothing',
+    (tester) async {
+      final (controller, _) = await _boot();
+      await _pump(tester, controller);
+      controller.busySessions = {'parent'};
+      controller.status = StreamStatus.reconnecting;
+      controller.notifyListeners();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(_line, findsNothing);
 
-    await controller.setSessionAutoApproval(
-      'parent',
-      const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
-    );
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Auto-approve paused'), findsOneWidget);
-    await tester.pump(const Duration(seconds: 9));
-    // The reconnect grace timer belongs to the controller, not the widget.
-    controller.dispose();
-  });
+      await _auto(controller);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Auto-approve paused'), findsOneWidget);
+      // Nothing is being approved, so there is nothing to turn off.
+      expect(find.byKey(const Key('chat-auto-approve-off')), findsNothing);
+      await tester.pump(const Duration(seconds: 9));
+      // The reconnect grace timer belongs to the controller, not the widget.
+      controller.dispose();
+    },
+  );
 
   testWidgets('cold start shows the conversation model then fresh selection', (
     tester,
@@ -316,9 +440,13 @@ void main() {
     controller.sessionsById['parent'] = Session(id: 'parent');
     controller.status = StreamStatus.connecting;
     await _pump(tester, controller);
+    await _openPlus(tester);
     expect(find.textContaining('Loading conversation selection'), findsNothing);
-    expect(find.text('Saved Claude model'), findsOneWidget);
+    // On the model chip and on the sheet's Model row.
+    expect(find.text('Saved Claude model'), findsNWidgets(2));
     expect(controller.modelForSession('parent'), isNull);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
     controller.sessionsById['parent'] = Session(
       id: 'parent',
       selection: SessionSelection(
@@ -329,8 +457,9 @@ void main() {
     controller.status = StreamStatus.connected;
     controller.notifyListeners();
     await tester.pump(const Duration(milliseconds: 400));
+    await _openPlus(tester);
     expect(find.text('Saved Claude model'), findsNothing);
-    expect(find.text('Fresh Claude model'), findsOneWidget);
+    expect(find.text('Fresh Claude model'), findsNWidgets(2));
     expect(find.textContaining('Refreshing'), findsNothing);
   });
 
@@ -341,38 +470,43 @@ void main() {
     controller.ownsSelection = true;
     controller.status = StreamStatus.connecting;
     await _pump(tester, controller);
+    await _openPlus(tester);
     expect(find.textContaining('Loading conversation selection'), findsNothing);
-    expect(find.text('Choose a model'), findsOneWidget);
+    expect(find.text('Choose a model'), findsWidgets);
   });
 
   testWidgets('cold start does not label automatic approval paused', (
     tester,
   ) async {
     final (controller, _) = await _boot();
-    await controller.setSessionAutoApproval(
-      'parent',
-      const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
-    );
+    await _auto(controller);
     controller.status = StreamStatus.connecting;
-    await _pump(tester, controller);
+    controller.busySessions = {'parent'};
+    // Within the line's few seconds: it folds away by itself after them.
+    await _pump(tester, controller, settle: false);
     expect(find.text('Auto-approve paused'), findsNothing);
-    expect(find.text('Auto-approve'), findsOneWidget);
+    expect(find.text('Auto-approve is on'), findsOneWidget);
     controller.status = StreamStatus.disconnected;
     controller.notifyListeners();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Auto-approve paused'), findsOneWidget);
+    // The connection's own grace clock runs out inside the test.
+    await tester.pump(const Duration(seconds: 9));
   });
 
-  testWidgets('an isolated walkthrough shows no chip', (tester) async {
+  testWidgets('an isolated walkthrough shows no line and no chips', (
+    tester,
+  ) async {
     final (controller, _) = await _boot(isolated: true);
     await _pump(tester, controller);
+    expect(_line, findsNothing);
     expect(_chip, findsNothing);
   });
 
   group('the approvals sheet', () {
     Future<void> openSheet(WidgetTester tester) async {
-      await _openMenu(tester);
-      await _tapKey(tester, 'approval-mode-settings');
+      await _openPlus(tester);
+      await _tapKey(tester, 'composer-setting-approval-settings');
       expect(find.byKey(const Key('session-approvals-sheet')), findsOneWidget);
     }
 
@@ -382,7 +516,13 @@ void main() {
       final (controller, prefs) = await _boot();
       await _pump(tester, controller);
       await openSheet(tester);
-      expect(find.text('Ask first'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('session-approvals-sheet')),
+          matching: find.text('Ask first'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Auto-approve this conversation'), findsOneWidget);
       expect(find.text('Approve everything'), findsOneWidget);
       expect(find.text('You answer each request.'), findsOneWidget);

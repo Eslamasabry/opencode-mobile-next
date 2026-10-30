@@ -69,7 +69,6 @@ class GuideScreen extends StatelessWidget {
           children: [
             _Step(
               n: 1,
-              icon: AppIconography.computer,
               title: l10n.e7SharedOnYourComputerRunOneCommand,
               body: l10n.e7SharedInATerminalOnTheComputerWhere,
               below: Column(
@@ -88,7 +87,6 @@ class GuideScreen extends StatelessWidget {
             ),
             _Step(
               n: 2,
-              icon: canScan ? AppIconography.qrCode : AppIconography.paste,
               title: canScan
                   ? l10n.e7SharedScanTheQROrPasteTheCode
                   : l10n.e7SharedPasteTheCodeInThisApp,
@@ -111,7 +109,6 @@ class GuideScreen extends StatelessWidget {
             ),
             _Step(
               n: 3,
-              icon: AppIconography.chat,
               title: l10n.e7SharedStartTalking,
               body: l10n.e7SharedPickAProjectAndSendYourFirst,
             ),
@@ -253,7 +250,7 @@ class GuideScreen extends StatelessWidget {
       'proot-distro install ubuntu\n'
       'proot-distro login ubuntu\n'
       '  apt update && apt install -y nodejs npm\n'
-      '  npm i -g @opencode/cli@2.0.29\n'
+      '  npm i -g @opencode/cli@2.1.1\n'
       '  opencode2 serve --hostname 127.0.0.1 --port 4096 &\n'
       'exit';
 
@@ -274,14 +271,12 @@ class GuideScreen extends StatelessWidget {
 class _Step extends StatelessWidget {
   const _Step({
     required this.n,
-    required this.icon,
     required this.title,
     required this.body,
     this.below,
   });
 
   final int n;
-  final IconData icon;
   final String title;
   final String body;
   final Widget? below;
@@ -294,7 +289,8 @@ class _Step extends StatelessWidget {
       container: true,
       label: _sharedCopy(context).e7SharedDetail307(n),
       child: KitRow(
-        leading: KitRow.icon(context, icon),
+        leading: KitRow.number(context, n),
+        leadingAtTop: true,
         title: title,
         titleMaxLines: 3,
         supporting: TextSpan(text: body),

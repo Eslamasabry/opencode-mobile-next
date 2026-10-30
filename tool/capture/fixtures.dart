@@ -26,6 +26,9 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// AUDIT TOOLING (audit/style-coherence): no-op unless AUDIT_STYLE is set.
+import 'audit/audit_env.dart';
+
 // ---------------------------------------------------------------------------
 // Fonts and viewport
 // ---------------------------------------------------------------------------
@@ -86,6 +89,19 @@ Future<void> loadCaptureFonts() async {
   await load('AppPhosphorDuotone', [
     'assets/fonts/phosphor/Phosphor-Duotone.ttf',
   ]);
+  // AUDIT TOOLING (audit/style-coherence): the Arabic faces for AUDIT_RTL.
+  if (AuditEnv.rtl) {
+    const noto = [
+      'test/fixtures/fonts/NotoSansArabic-Regular.ttf',
+      'test/fixtures/fonts/NotoSansArabic-Bold.ttf',
+    ];
+    await load('Noto Sans Arabic', noto);
+    await load('sans-serif', const [
+      'tool/capture/fonts/Roboto-Regular.ttf',
+      'tool/capture/fonts/Roboto-Medium.ttf',
+      'tool/capture/fonts/Roboto-Bold.ttf',
+    ]);
+  }
 }
 
 /// Rasterises the [RepaintBoundary] behind [key] and returns PNG bytes.
@@ -97,17 +113,20 @@ Future<Uint8List> capturePng(
   final boundary =
       key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
   Uint8List? bytes;
-  await tester.runAsync(() async {
-    final image = await boundary.toImage(pixelRatio: pixelRatio);
-    final data = await image.toByteData(format: ui.ImageByteFormat.png);
-    bytes = data!.buffer.asUint8List();
-    image.dispose();
-  });
+  await auditWithShadows(
+    tester,
+    () => tester.runAsync(() async {
+      final image = await boundary.toImage(pixelRatio: pixelRatio);
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      bytes = data!.buffer.asUint8List();
+      image.dispose();
+    }),
+  );
   return bytes!;
 }
 
 Future<void> writePng(String path, Uint8List bytes) async {
-  final file = File(path);
+  final file = File(auditPath(path));
   file.parent.createSync(recursive: true);
   file.writeAsBytesSync(bytes, flush: true);
 }
@@ -133,11 +152,14 @@ const captionHeight = 44.0;
 
 /// The theme the captures use: the app's own palette on the Android path so
 /// body text lands on Roboto.
-ThemeData captureTheme({bool light = false}) =>
-    (light || const bool.fromEnvironment('CENSUS_LIGHT')
-            ? AppTheme.light()
-            : AppTheme.dark())
-        .copyWith(platform: TargetPlatform.android);
+ThemeData captureTheme({bool light = false}) => auditTheme(
+  light,
+  (light) =>
+      (light || const bool.fromEnvironment('CENSUS_LIGHT')
+              ? AppTheme.light()
+              : AppTheme.dark())
+          .copyWith(platform: TargetPlatform.android),
+);
 
 /// Wraps [home] the way main.dart does (theme, localisation, chat route) under
 /// a [RepaintBoundary] so a frame can be rasterised. When [caption] is given,
@@ -151,8 +173,16 @@ Widget captureApp({
   ValueListenable<String>? caption,
   GlobalKey<NavigatorState>? navigatorKey,
   Map<String, WidgetBuilder> routes = const {},
+  // Above the navigator, as main.dart hosts the app's status scope, so a
+  // pushed page sees it too.
+  Widget Function(Widget child)? aboveNavigator,
+  // A theme of the caller's own (Settings › Appearance captures: the pack,
+  // Accent and Saver the controller holds, as main.dart builds them).
+  ThemeData? theme,
 }) {
-  final theme = captureTheme(light: light);
+  final ThemeData appTheme = AuditEnv.on
+      ? captureTheme(light: light)
+      : theme ?? captureTheme(light: light);
   return RepaintBoundary(
     key: boundaryKey,
     child: ProviderScope(
@@ -167,7 +197,8 @@ Widget captureApp({
       child: MaterialApp(
         navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
-        theme: theme,
+        theme: appTheme,
+        locale: AuditEnv.locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routes: routes,
@@ -182,12 +213,14 @@ Widget captureApp({
           final media = MediaQuery.of(
             context,
           ).copyWith(disableAnimations: false);
-          final body = child ?? const SizedBox.shrink();
+          final routed = child ?? const SizedBox.shrink();
+          final audited = auditWrap(context, routed);
+          final body = aboveNavigator?.call(audited) ?? audited;
           if (caption == null) {
             return MediaQuery(data: media, child: body);
           }
           return ColoredBox(
-            color: theme.scaffoldBackgroundColor,
+            color: appTheme.scaffoldBackgroundColor,
             child: Column(
               children: [
                 Expanded(
@@ -841,6 +874,7 @@ Future<CaptureController> captureController({
         : const [],
   );
   final controller = CaptureController(store);
+  if (AuditEnv.on) controller.effects.value = AuditEnv.effects;
   if (!connected) return controller;
   final activeApi = api ?? CaptureApi();
   controller

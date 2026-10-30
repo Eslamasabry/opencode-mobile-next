@@ -159,12 +159,19 @@ void main() {
         ),
       );
       expect(find.text('Setting up OpenCode on this phone'), findsNothing);
-      expect(find.text("Setup didn't finish"), findsOneWidget);
+      expect(
+        find.text(
+          state == SetupState.interrupted
+              ? 'Setup was interrupted'
+              : 'Setup is paused',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Continue setup'), findsOneWidget);
     });
   }
 
-  testWidgets('progress: a stage-only step draws no second bar (§4)', (
+  testWidgets('progress: a stage-only step shows steps, no bar (§4)', (
     tester,
   ) async {
     await _pump(
@@ -186,7 +193,10 @@ void main() {
       ),
     );
     expect(find.text('Installing OpenCode'), findsOneWidget);
-    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    // One measure, the ring, as steps done: no bar and no invented percent.
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+    expect(find.text('steps done'), findsOneWidget);
+    expect(find.textContaining('%'), findsNothing);
   });
 
   testWidgets('ready: Create stacks full width under the name (§2)', (

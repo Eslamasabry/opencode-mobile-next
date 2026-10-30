@@ -147,11 +147,76 @@ printf '%s\n' '{"kind":"status","auth":"future source"}'
     test(
       'unsupported agents reach a typed final error without launching',
       () async {
-        for (final id in ['codex', 'gemini', 'qwen', 'goose', 'omp-acp']) {
+        for (final id in ['gemini', 'qwen', 'goose', 'omp-acp']) {
           expect((await run(id)).error, AgentAuthProbeError.probeUnsupported);
         }
       },
     );
+
+    // Issue #95: Codex, Kilo and Cline signed in on the phone but the app
+    // never believed it, so they could not be chosen.
+    test('Codex login status on stderr decides the account state', () async {
+      await Directory('$home/codex').create();
+      await cli('codex', r'''
+[ "$1 $2" = "login status" ] || exit 9
+printf '%s\n' 'Logged in using an API key - sk-synthetic-secret' >&2
+''');
+      expect((await run('codex')).state, AgentAuthProbeState.signedIn);
+      await cli('codex', r'''
+printf '%s\n' 'Logged in using ChatGPT' >&2
+''');
+      expect((await run('codex')).state, AgentAuthProbeState.signedIn);
+      await cli('codex', r'''
+printf '%s\n' 'Not logged in' >&2
+exit 1
+''');
+      expect((await run('codex')).state, AgentAuthProbeState.signedOut);
+      // A configuration error is not a signed-out account.
+      await cli('codex', r'''
+printf '%s\n' 'Error loading configuration: synthetic-secret' >&2
+exit 1
+''');
+      expect((await run('codex')).error, AgentAuthProbeError.invalidResponse);
+    });
+
+    test('Kilo reads only whether its credential store has one', () async {
+      await cli('kilo', 'exit 9');
+      expect((await run('kilo')).state, AgentAuthProbeState.signedOut);
+      final store = File('$home/.local/share/kilo/auth.json');
+      await store.create(recursive: true);
+      await store.writeAsString('{}');
+      expect((await run('kilo')).state, AgentAuthProbeState.signedOut);
+      await store.writeAsString(
+        '{"kilo":{"type":"oauth","access":"synthetic-secret","refresh":"r","expires":1}}',
+      );
+      expect((await run('kilo')).state, AgentAuthProbeState.signedIn);
+      await store.writeAsString(
+        '{"anthropic":{"type":"api","key":"synthetic-secret"}}',
+      );
+      expect((await run('kilo')).state, AgentAuthProbeState.signedIn);
+      await store.writeAsString('[1]');
+      expect((await run('kilo')).error, AgentAuthProbeError.invalidResponse);
+    });
+
+    test('Cline reads its chosen provider\'s key or sign-in', () async {
+      await cli('cline', 'exit 9');
+      expect((await run('cline')).state, AgentAuthProbeState.signedOut);
+      final store = File('$home/.cline/data/settings/providers.json');
+      await store.create(recursive: true);
+      // What a first run leaves: the default provider with no credential.
+      await store.writeAsString(
+        '{"version":1,"lastUsedProvider":"cline","providers":{"cline":{"settings":{"provider":"cline","model":"m"},"tokenSource":"manual"}}}',
+      );
+      expect((await run('cline')).state, AgentAuthProbeState.signedOut);
+      await store.writeAsString(
+        '{"version":1,"lastUsedProvider":"cline","providers":{"cline":{"settings":{"provider":"cline","auth":{"accessToken":"synthetic-secret"}},"tokenSource":"oauth"}}}',
+      );
+      expect((await run('cline')).state, AgentAuthProbeState.signedIn);
+      await store.writeAsString(
+        '{"version":1,"lastUsedProvider":"anthropic","providers":{"anthropic":{"settings":{"provider":"anthropic","apiKey":"synthetic-secret"}}}}',
+      );
+      expect((await run('cline')).state, AgentAuthProbeState.signedIn);
+    });
 
     test('missing installation is distinct from signed out', () async {
       expect((await run('fx')).error, AgentAuthProbeError.notInstalled);

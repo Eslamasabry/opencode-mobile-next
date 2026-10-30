@@ -8,6 +8,7 @@ import 'kit_since.dart';
 import 'kit_task_mark.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
+import 'motion/kit_motion_parts.dart' show KitSwap;
 
 /// Why the app asks (AUTO-9; G38 wants exactly these three): the mark, the
 /// span, the badge and the row all say the same reason in the same words
@@ -310,13 +311,10 @@ class _KitNeedsYouBadgeState extends State<_KitNeedsYouBadge>
             child: ExcludeSemantics(
               child: FadeTransition(
                 opacity: _opacity,
-                child: AnimatedSwitcher(
-                  duration: _reduced ? Duration.zero : KitMotion.quick,
-                  switchInCurve: KitMotion.enter,
-                  switchOutCurve: KitMotion.exit,
-                  transitionBuilder: (child, animation) =>
-                      FadeTransition(opacity: animation, child: child),
-                  child: _KitNeedsYouPill(key: ValueKey(text), text: text),
+                // The pill stays; its number rolls to the next one.
+                child: _KitNeedsYouPill(
+                  text: text,
+                  shown: _shownCount > 99 ? 100 : _shownCount,
                 ),
               ),
             ),
@@ -337,9 +335,13 @@ class _KitNeedsYouBadgeState extends State<_KitNeedsYouBadge>
 /// clamped text, `KitShape.pill`; A11Y-8's named text-scale clamp,
 /// `KitTokens.badgeTextScaleMax`).
 class _KitNeedsYouPill extends StatelessWidget {
-  const _KitNeedsYouPill({super.key, required this.text});
+  const _KitNeedsYouPill({required this.text, required this.shown});
 
   final String text;
+
+  /// The count [text] says (100 for "99+"), so the number rolls only when
+  /// what it says changes.
+  final int shown;
 
   @override
   Widget build(BuildContext context) {
@@ -364,7 +366,10 @@ class _KitNeedsYouPill extends StatelessWidget {
           color: tokens.roles.attentionFill,
           shape: tokens.shapeOf(KitShape.pill),
         ),
-        child: Text(text, style: style, textScaler: scaler),
+        child: KitSwap.count(
+          count: shown,
+          child: Text(text, style: style, textScaler: scaler),
+        ),
       ),
     );
   }

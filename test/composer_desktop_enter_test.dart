@@ -155,8 +155,10 @@ void main() {
     expect(api.prompts, isEmpty);
   });
 
-  testWidgets('a sent prompt runs at once: the status in the turn, Send '
-      'becomes Stop, and the mic stays beside it', (tester) async {
+  testWidgets('a sent prompt runs at once: the status in the turn, Stop '
+      'is in the chips row, and the mic stays beside the field', (
+    tester,
+  ) async {
     final semantics = tester.ensureSemantics();
     final api = _ComposerApi();
     await _pump(tester, api);
@@ -171,15 +173,15 @@ void main() {
     expect(find.text('Thinking…'), findsOneWidget);
     final stop = find.byKey(const Key('chat-stop-button'));
     expect(stop, findsOneWidget);
-    expect(find.bySemanticsLabel(RegExp('Stop the reply')), findsOneWidget);
-    // Stop took Send's slot (nothing left to send); the mic, where the
-    // platform has one, is its own button beside it.
-    expect(find.byKey(const Key('chat-send-button')), findsNothing);
+    expect(find.bySemanticsLabel(RegExp('^Stop .*OpenCode')), findsOneWidget);
+    // Stop is in the chips row; the field shows its Send spinner while the
+    // send is on its way, and the mic, where the platform has one, beside it.
     expect(
       find.byKey(const Key('composer-voice-button')).evaluate().length,
       lessThanOrEqualTo(1),
     );
 
+    await tester.pump(const Duration(seconds: 1));
     await tester.tap(stop);
     await tester.pumpAndSettle();
     expect(api.abortCalls, 1);

@@ -173,34 +173,109 @@ extension _ChatTopBar on _ChatScreenState {
   /// The project this conversation lives in, as a quiet line under the title
   /// (with the server after it when several are connected) and a compact menu of what can be done there. Absent for a temporary folder
   /// (never shown as a project), a watched team worker and the demo.
+  void _gitChanged() {
+    if (mounted) _setChatState(() {});
+  }
+
+  /// The Git chip: the project's branch (or "Git" until one is known),
+  /// opening the Git sheet.
+  KitTopBarBranch _gitChip(String? directory, AppLocalizations l10n) {
+    _git.bind(profile: _conn.profile, gateway: _conn.api, directory: directory);
+    final branch = _git.branchName;
+    return KitTopBarBranch(
+      chipKey: const ValueKey('chat-git-chip'),
+      label: branch == null ? l10n.gitSheetTitle : KitBidi.auto(branch),
+      semanticsLabel: branch == null
+          ? l10n.gitSheetChipSemanticsPlain
+          : l10n.gitSheetChipSemantics(branch),
+      onTap: _openGitSheet,
+    );
+  }
+
+  Future<void> _openGitSheet() async {
+    final page = _git.page;
+    if (page == null) return;
+    await showGitSheet(
+      context,
+      page: page,
+      account: _git.account,
+      hostName: _conn.profile?.name,
+      // "Ask the agent to fix conflicts" goes through the normal send path;
+      // "Write it for me" fills the commit message with the agent's own
+      // words for its last turn.
+      onAskAgent: _conn.isIsolated || _watching
+          ? null
+          : (prompt) => unawaited(_sendPhrase(prompt)),
+      summary: _turnSummary(),
+    );
+  }
+
+  /// The agent's own one-line account of its latest turn ("Added a combo
+  /// counter and screen shake."): the first sentence of its last reply's
+  /// words, at most a commit subject's length. Null when it said nothing.
+  String? _turnSummary() {
+    for (var i = _messages.length - 1; i >= 0; i--) {
+      final message = _messages[i];
+      if (message.info.role != 'assistant') continue;
+      final words = _ChatScreenState._messageText(message).trim();
+      if (words.isEmpty) continue;
+      final line = words
+          .split(RegExp(r'\n'))
+          .map((l) => l.replaceAll(RegExp(r'[#*`>_]'), '').trim())
+          .firstWhere((l) => l.isNotEmpty, orElse: () => '');
+      final end = RegExp(r'[.!?](\s|$)').firstMatch(line);
+      var first = end == null ? line : line.substring(0, end.start + 1);
+      if (first.characters.length > 72) {
+        final cut = first.characters.take(72).toString();
+        final space = cut.lastIndexOf(' ');
+        first = '${space > 40 ? cut.substring(0, space) : cut}\u2026';
+      }
+      return first.isEmpty ? null : first;
+    }
+    return null;
+  }
+
   KitTopBarScope? _projectScope(
     Session? session,
     AppLocalizations l10n, {
     String? serverName,
   }) {
-    if (_watching || _conn.isIsolated) return null;
+    final origin = _handoffOrigin();
+    // No project to name: the line is the server (when several are
+    // connected) and where this work came from.
+    KitTopBarScope? plain() => origin == null
+        ? null
+        : KitTopBarScope(
+            label: serverName ?? '',
+            semanticsLabel: serverName ?? '',
+            origin: origin,
+          );
+    if (_watching || _conn.isIsolated) return plain();
     final directory = session?.directory ?? _conn.directory;
-    if (isTemporaryProjectDirectory(directory)) return null;
+    if (isTemporaryProjectDirectory(directory)) return plain();
     final parts = directory!.split('/').where((part) => part.isNotEmpty);
     final name = parts.isEmpty ? directory : parts.last;
     final capabilities = _conn.capabilities;
+    // The project's Files page (concept 9, owner 2026-10-20): one tap from
+    // the chip to the project's files and tools, and from there to another
+    // project. A server without project tools keeps the small menu of what
+    // it does offer.
+    if (ProjectHub.isAvailable(capabilities)) {
+      return KitTopBarScope(
+        chipKey: const ValueKey('chat-project-chip'),
+        label: KitBidi.auto(name),
+        suffix: serverName,
+        semanticsLabel: serverName == null
+            ? l10n.chatProjectChipFilesSemantics(name)
+            : l10n.chatProjectServerChipFilesSemantics(name, serverName),
+        icon: AppIconography.folderOpen,
+        onTap: () => unawaited(_openProjectFilesPage(directory)),
+        branch: _gitChip(directory, l10n),
+        origin: origin,
+      );
+    }
+    // (A terminal alone already makes the Files page available.)
     final items = <KitMenuItem>[
-      if (capabilities.fileBrowsing)
-        KitMenuItem(
-          key: const ValueKey('chat-project-files'),
-          label: l10n.readerUiFiles,
-          icon: AppIconography.files,
-          onSelected: () =>
-              unawaited(_executeMobileCommand(_ChatCommandAction.files)),
-        ),
-      if (capabilities.terminal)
-        KitMenuItem(
-          key: const ValueKey('chat-project-terminal'),
-          label: l10n.libraryTerminalTitle,
-          icon: AppIconography.terminal,
-          onSelected: () =>
-              unawaited(_executeMobileCommand(_ChatCommandAction.terminal)),
-        ),
       if (capabilities.sessionDiff)
         KitMenuItem(
           key: const ValueKey('chat-project-changes'),
@@ -209,7 +284,7 @@ extension _ChatTopBar on _ChatScreenState {
           onSelected: () => unawaited(_showDiff()),
         ),
     ];
-    if (items.isEmpty) return null;
+    if (items.isEmpty) return plain();
     return KitTopBarScope(
       chipKey: const ValueKey('chat-project-chip'),
       label: KitBidi.auto(name),
@@ -220,8 +295,21 @@ extension _ChatTopBar on _ChatScreenState {
       icon: AppIconography.folderOpen,
       menuLabel: l10n.chatProjectMenuLabel,
       items: items,
+      branch: _gitChip(directory, l10n),
+      origin: origin,
     );
   }
+
+  /// This conversation's project, as the Files page: attaching a file or a
+  /// review comment from there goes to this composer.
+  Future<void> _openProjectFilesPage(String directory) => openProjectFiles(
+    context,
+    _conn,
+    directory: directory,
+    onAttachFile: _attachProjectFile,
+    onReviewPrompt: _addReviewPrompt,
+    handoff: _handoff,
+  );
 
   KitTopBar _chatTopBar({
     required Session? session,

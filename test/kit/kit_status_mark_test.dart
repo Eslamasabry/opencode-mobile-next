@@ -500,6 +500,8 @@ void main() {
         text3: faint,
         accent: base.accent,
         onAccent: base.onAccent,
+        partner: base.partner,
+        onPartner: base.onPartner,
         attention: base.attention,
         attentionFill: base.attentionFill,
         onAttentionFill: base.onAttentionFill,

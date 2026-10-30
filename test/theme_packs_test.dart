@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/kit/kit_undo.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/theme_packs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/appearance_guide.dart';
 
 Future<ConnectionController> _controller() async {
   SharedPreferences.setMockInitialValues({});
@@ -209,13 +210,12 @@ void main() {
     );
     await tester.pump();
 
-    // Unharvested Material You stays visible but disabled with truth.
+    // Unharvested Material You stays visible but disabled with truth: it is
+    // past the first eight, under "See all".
+    await openAppearance(tester, 'colours', 'theme');
+    await seeAllThemes(tester);
     final dynamicTile = find.byKey(const ValueKey('theme-pack-dynamic'));
-    await tester.dragUntilVisible(
-      dynamicTile,
-      find.byType(ListView),
-      const Offset(0, -120),
-    );
+    await bringIntoView(tester, dynamicTile);
     expect(
       find.text('Material You colors are not available on this device.'),
       findsOneWidget,
@@ -224,29 +224,18 @@ void main() {
     await tester.pump();
     expect(controller.themePack.value, ThemePackId.opencode);
 
+    // A theme card applies at once, and the preview follows.
     final solarized = find.byKey(const ValueKey('theme-pack-solarized'));
-    await tester.dragUntilVisible(
+    await tester.scrollUntilVisible(
       solarized,
-      find.byType(ListView),
-      const Offset(0, -120),
+      -150,
+      scrollable: appearanceScroll(),
     );
-    // Centre the tile: at 2x its centre can still sit below the fold.
-    await Scrollable.ensureVisible(tester.element(solarized), alignment: 0.5);
     await tester.pumpAndSettle();
     await tester.tap(solarized);
     await tester.pumpAndSettle();
-    expect(controller.themePack.value, ThemePackId.opencode);
-    // Apply ends the preview sheet's scrolling body; it is built before
-    // it is on screen, so bring it into view rather than scroll until it
-    // exists.
-    await tester.ensureVisible(find.text('Apply'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Apply'));
-    await tester.pumpAndSettle();
     expect(controller.themePack.value, ThemePackId.solarized);
     expect(tester.takeException(), isNull);
-    // Apply offers Undo (063f4741); close its window.
-    KitUndo.commitPending();
   });
 
   testWidgets('a harvested Material You pack becomes selectable', (
@@ -278,32 +267,17 @@ void main() {
     );
     await tester.pump();
 
+    await openAppearance(tester, 'colours', 'theme');
+    await seeAllThemes(tester);
     final dynamicTile = find.byKey(const ValueKey('theme-pack-dynamic'));
-    await tester.dragUntilVisible(
-      dynamicTile,
-      find.byType(ListView),
-      const Offset(0, -120),
-    );
+    await bringIntoView(tester, dynamicTile);
     expect(
       find.text('Material You colors are not available on this device.'),
       findsNothing,
     );
-    // Centre the swatch: the grid's last row can sit under the fold.
-    await Scrollable.ensureVisible(tester.element(dynamicTile), alignment: 0.5);
-    await tester.pumpAndSettle();
     await tester.tap(dynamicTile);
     await tester.pumpAndSettle();
-    expect(controller.themePack.value, ThemePackId.opencode);
-    // Apply ends the preview sheet's scrolling body; it is built before
-    // it is on screen, so bring it into view rather than scroll until it
-    // exists.
-    await tester.ensureVisible(find.text('Apply'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Apply'));
-    await tester.pumpAndSettle();
     expect(controller.themePack.value, ThemePackId.dynamic);
-    // Apply offers Undo (063f4741); close its window.
-    KitUndo.commitPending();
   });
 
   group('screen-settings-1: appearance', () {
@@ -319,14 +293,16 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(page(controller));
       await tester.pumpAndSettle();
+      // Colours opens Light or dark straight away.
+      await openAppearance(tester, 'colours');
 
-      await tester.tap(find.text('Light'));
+      await tester.tap(find.byKey(const ValueKey('appearance-mode-light')));
       await tester.pumpAndSettle();
       expect(controller.appearance.value, AppAppearance.light);
       // No sheet opened on the way.
       expect(find.byKey(const Key('appearance-picker')), findsNothing);
 
-      await tester.tap(find.text('Dark'));
+      await tester.tap(find.byKey(const ValueKey('appearance-mode-dark')));
       await tester.pumpAndSettle();
       expect(controller.appearance.value, AppAppearance.dark);
     });
@@ -344,7 +320,10 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.light(),
-          home: SettingsScreen(controller: controller),
+          home: SettingsScreen(
+            controller: controller,
+            initialGroup: SettingsGroup.thisApp,
+          ),
         ),
       );
       await tester.pumpAndSettle();

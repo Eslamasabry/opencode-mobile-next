@@ -29,6 +29,7 @@ import 'package:opencode_mobile/ui/screens/team/policy_block.dart';
 import 'package:opencode_mobile/ui/screens/team/task_details_sheet.dart';
 import 'package:opencode_mobile/ui/screens/team/start_run_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/part_semantics.dart';
 
 const _runId = 'oc-xru';
 
@@ -716,7 +717,8 @@ void main() {
         await pumpSheet(tester, controller);
         for (final level in AutomationSupervision.values) {
           expect(
-            tester.getSemantics(
+            partSemantics(
+              tester,
               key('team-start-run-supervision-${level.name}'),
             ),
             isSemantics(isSelected: level.name == expected),

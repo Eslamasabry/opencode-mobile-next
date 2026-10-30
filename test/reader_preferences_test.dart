@@ -395,6 +395,14 @@ void main() {
       Directionality.of(tester.element(find.text('after'))),
       TextDirection.ltr,
     );
+    // At this scale the question (Looks good, Send back) takes the bottom of
+    // the screen, so the line must be scrolled into the diff's own viewport,
+    // not just built, before it is tapped.
+    await Scrollable.ensureVisible(
+      tester.element(find.byKey(const ValueKey('review-line-0-current-1'))),
+      alignment: .5,
+    );
+    await tester.pumpAndSettle();
     // The kit's expanded gutter hit area handles taps over the line number.
     await tester.tapAt(
       tester.getCenter(find.byKey(const ValueKey('review-line-0-current-1'))),

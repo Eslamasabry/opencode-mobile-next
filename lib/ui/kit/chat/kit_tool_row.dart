@@ -15,16 +15,18 @@
 // A step may instead open elsewhere (onOpen): a forward chevron, no fold.
 import 'package:flutter/material.dart';
 
+import '../style/kit_signal.dart' show KitTrack, kitSegmentTimer;
 import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../kit_buttons.dart';
 import '../kit_icon_button.dart';
+import '../kit_max_width.dart';
 import '../kit_menu.dart';
-import '../kit_redact.dart';
-import '../kit_surface.dart';
 import '../kit_motion.dart';
+import '../kit_redact.dart';
 import '../kit_since.dart';
 import '../kit_status_mark.dart';
+import '../kit_surface.dart';
 import '../kit_tappable.dart';
 import '../kit_task_mark.dart';
 import '../kit_text.dart';
@@ -386,7 +388,10 @@ class _KitToolRowState extends State<KitToolRow>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final inTimeline = KitStepTimeline.inside(context);
     if (widget._agent) return _buildAgent(context, inTimeline);
     return inTimeline ? _buildTimelineStep(context) : _buildStep(context);
@@ -532,14 +537,21 @@ class _KitToolRowState extends State<KitToolRow>
         ? KitSince(
             since: started,
             ticks: KitSinceTicks.seconds,
-            builder: (context, since) => KitText(
-              KitTurnLive.elapsedText(l10n, since.elapsed),
-              key: const ValueKey('kit-step-counter'),
-              role: KitTextRole.caption,
-              tone: KitTextTone.secondary,
-              tabular: true,
-              maxLines: 1,
-            ),
+            // Signal: the running time is a segment display.
+            builder: (context, since) => KitTrack.on(context)
+                ? kitSegmentTimer(
+                    KitTurnLive.elapsedText(l10n, since.elapsed),
+                    key: const ValueKey('kit-step-counter'),
+                    size: 13,
+                  )
+                : KitText(
+                    KitTurnLive.elapsedText(l10n, since.elapsed),
+                    key: const ValueKey('kit-step-counter'),
+                    role: KitTextRole.caption,
+                    tone: KitTextTone.secondary,
+                    tabular: true,
+                    maxLines: 1,
+                  ),
           )
         : _stepWords(status, word, durationWords, maxLines: wide ? 2 : 1);
     // Only the group's line has a chevron; a step that opens another page
@@ -765,7 +777,11 @@ class _KitToolRowState extends State<KitToolRow>
     );
 
     Widget? second;
-    if (path != null && path.isNotEmpty) {
+    // Open, a shell step's command box says the command whole: the line
+    // above it does not say it a second time (owner, 2026-10-27).
+    final commandShown =
+        open && row.command != null && row.kind == KitToolKind.shell;
+    if (path != null && path.isNotEmpty && !commandShown) {
       second = KitText.mono(path, cut: row.pathCut, maxLines: 1);
       if (!_opens) {
         // A row that opens shows the full path through its KitTappable
@@ -894,7 +910,8 @@ class _KitToolRowState extends State<KitToolRow>
                     : CrossAxisAlignment.center,
                 children: [
                   glyph,
-                  SizedBox(width: tokens.space2),
+                  // The transcript's compact rail (leadColumnCompact).
+                  SizedBox(width: tokens.space3),
                   Expanded(child: middle),
                   if (end != null) ...[
                     SizedBox(width: tokens.space2),
@@ -1093,7 +1110,7 @@ class _KitToolRowState extends State<KitToolRow>
                           ),
                         )
                       : const _Glyph(AppIconography.agent),
-                  SizedBox(width: tokens.space2),
+                  SizedBox(width: tokens.space3),
                   Expanded(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,

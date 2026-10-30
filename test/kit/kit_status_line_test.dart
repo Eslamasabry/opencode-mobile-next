@@ -593,4 +593,48 @@ void main() {
       expect(find.text('Phone is hot'), findsNothing);
     });
   });
+
+  group('countdown (vision 2026-10-20)', () {
+    // The test font draws every glyph a square: short words keep the line
+    // whole at 412 dp.
+    KitStatusLine line({String message = 'Offline'}) => KitStatusLine(
+      icon: AppIconography.cloudOff,
+      message: message,
+      messageKey: _messageKey,
+      countdownTo: _now().add(const Duration(milliseconds: 3400)),
+      countdownLine: (left) => left == Duration.zero
+          ? 'Trying again now'
+          : 'Trying again in ${(left.inMilliseconds / 1000).ceil()} s',
+      action: KitAction(label: 'Try now', onPressed: () {}),
+    );
+
+    testWidgets('the second line counts down once a second, the live region '
+        'keeps the message', (tester) async {
+      await _pump(tester, line());
+      expect(find.text('Trying again in 4 s'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Trying again in 3 s'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+      expect(find.text('Trying again now'), findsOneWidget);
+      expect(_announced(tester), 'Offline');
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('large text: one quiet line keeps Try now in sight', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        line(message: 'Laptop isn’t answering'),
+        size: const Size(320, 693),
+        textScale: 2,
+      );
+      expect(
+        find.text('Laptop isn’t answering · Trying again in 4 s'),
+        findsOneWidget,
+      );
+      expect(find.text('Try now'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
 }

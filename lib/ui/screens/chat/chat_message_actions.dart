@@ -57,6 +57,30 @@ extension _ChatMessageActions on _ChatScreenState {
         icon: AppIcons.copy,
         onSelected: () => unawaited(_copyMessageText(message)),
       ),
+    // The error row shows two fixes (another model, sign in to the agent),
+    // so its Error details is here.
+    if (_agentRunFor(message.info) case final run? when _accountNeeded(run))
+      KitMenuItem(
+        key: const ValueKey('message-menu-error-details'),
+        label: _chatL10n(context).chatUiErrorDetails,
+        icon: AppIconography.info,
+        onSelected: () => unawaited(
+          _showErrorRowDetails(
+            context,
+            info: message.info,
+            run: run,
+            text: _agentRunWords(run),
+          ),
+        ),
+      ),
+    // The prompt that got no reply shows two fixes; its Error details is here.
+    if (message.info.role == 'user' && _noReplyDetailsInMenu(message))
+      KitMenuItem(
+        key: const ValueKey('message-menu-no-reply-details'),
+        label: _chatL10n(context).chatUiErrorDetails,
+        icon: AppIconography.info,
+        onSelected: () => unawaited(_showNoReplyDetails(_noReplyFailure()!)),
+      ),
     if (_offersContinueAfterFailure(message))
       KitMenuItem(
         key: const ValueKey('message-menu-continue-with'),
@@ -278,3 +302,14 @@ extension _ChatMessageActions on _ChatScreenState {
     ),
   );
 }
+
+/// A message's words. A person's answer to an agent card is the app's own
+/// envelope; its words are the summary, never the tag or the JSON.
+String _chatMessageText(MessageWithParts message) =>
+    (message.info.role == 'user' ? genUiAnswerEnvelope(message) : null)
+        ?.summary ??
+    message.parts
+        .where((part) => part.type == 'text' && !part.synthetic)
+        .map((part) => part.text)
+        .where((value) => value.trim().isNotEmpty)
+        .join('\n\n');

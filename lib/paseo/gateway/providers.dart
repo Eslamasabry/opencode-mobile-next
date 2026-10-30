@@ -8,8 +8,20 @@ extension _PaseoProviders on PaseoGateway {
     final matches = (await _providers()).where(
       (entry) => entry['provider'] == id,
     );
-    if (matches.length != 1 || !paseoProviderCanStart(matches.single)) {
-      throw PaseoFailure(PaseoFailureKind.unavailable);
+    if (matches.length != 1) throw PaseoFailure(PaseoFailureKind.unavailable);
+    final entry = matches.single;
+    if (!paseoProviderCanStart(entry)) {
+      // The helper's own word for why this agent can't start ("AuthRequired",
+      // "not installed"), so a refused send can say what to do.
+      final error = entry['error'];
+      throw PaseoFailure(
+        PaseoFailureKind.unavailable,
+        reason: error is String && error.trim().isNotEmpty
+            ? error
+            : entry['enabled'] == false
+            ? 'Provider $id is disabled'
+            : 'Provider $id is not ready (${entry['status']})',
+      );
     }
   }
 

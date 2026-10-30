@@ -7,10 +7,12 @@ import 'dart:ui' show Tristate;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
+import 'package:opencode_mobile/state/effects.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_row_parts.dart';
 import 'package:opencode_mobile/ui/kit/kit_status_line.dart';
 import 'package:opencode_mobile/ui/kit/kit_status_slot.dart';
+import '../support/part_semantics.dart';
 
 Widget _app(Widget child, {double textScale = 1, double width = 412}) =>
     MaterialApp(
@@ -124,6 +126,130 @@ void main() {
       expect(values.length, greaterThan(1));
     });
 
+    // Slice S3 of the style cleanup: away from Solid's defaults the switch
+    // is drawn from the style resolver, and works the same.
+    group('under a style', () {
+      Widget styled(Widget child) => KitEffectsScope(
+        effects: const KitEffects(surfaceStyle: KitSurfaceStyle.brutal),
+        child: child,
+      );
+
+      testWidgets('Solid keeps the platform switch', (tester) async {
+        await tester.pumpWidget(
+          _app(KitSwitchRow(title: 'Sounds', value: false, onChanged: (_) {})),
+        );
+        expect(find.byType(Switch), findsOneWidget);
+      });
+
+      // Style recheck F8: no Fine-tune knob names the switch, so Solid
+      // keeps the platform switch under every one.
+      for (final (name, fineTune) in const [
+        ('Corners › Sharp', KitFineTune(corners: KitCorners.sharp)),
+        ('Density › Compact', KitFineTune(density: KitDensity.compact)),
+        ('Depth › Raised', KitFineTune(depth: KitDepth.raised)),
+        ('Edges › Off', KitFineTune(edges: KitEdges.none)),
+      ]) {
+        testWidgets('Solid with $name keeps the platform switch', (
+          tester,
+        ) async {
+          await tester.pumpWidget(
+            _app(
+              KitEffectsScope(
+                effects: KitEffects(fineTune: fineTune),
+                child: KitSwitchRow(
+                  title: 'Sounds',
+                  value: true,
+                  onChanged: (_) {},
+                ),
+              ),
+            ),
+          );
+          expect(find.byType(Switch), findsOneWidget);
+        });
+      }
+
+      testWidgets('drawn by the style; a tap and Space toggle; toggled '
+          'semantics', (tester) async {
+        final semantics = tester.ensureSemantics();
+        final values = <bool>[];
+        await tester.pumpWidget(
+          _app(
+            styled(
+              KitSwitchRow(
+                title: 'Sounds',
+                value: false,
+                switchKey: const ValueKey('sounds'),
+                onChanged: values.add,
+              ),
+            ),
+          ),
+        );
+        expect(find.byType(Switch), findsNothing);
+        expect(find.byKey(const ValueKey('sounds')), findsOneWidget);
+        final data = partSemantics(
+          tester,
+          find.byType(KitSwitchRow),
+        ).getSemanticsData();
+        expect(data.flagsCollection.isToggled, Tristate.isFalse);
+        await tester.tap(find.byKey(const ValueKey('sounds')));
+        expect(values, [true]);
+        await tester.tap(find.text('Sounds'));
+        expect(values, [true, true]);
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await tester.pumpAndSettle();
+        expect(values.length, greaterThan(2));
+        semantics.dispose();
+      });
+
+      testWidgets('a row that opens: only the switch toggles', (tester) async {
+        final log = <String>[];
+        await tester.pumpWidget(
+          _app(
+            styled(
+              KitSwitchRow(
+                title: 'Morning summary',
+                value: true,
+                switchKey: const ValueKey('summary'),
+                onChanged: (v) => log.add('changed:$v'),
+                onOpen: () => log.add('open'),
+                openLabel: 'Edit schedule',
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Morning summary'));
+        await tester.tap(find.byKey(const ValueKey('summary')));
+        expect(log, ['open', 'changed:false']);
+      });
+
+      testWidgets('disabled: no toggle, not enabled', (tester) async {
+        final semantics = tester.ensureSemantics();
+        await tester.pumpWidget(
+          _app(
+            styled(
+              const KitSwitchRow(
+                title: 'Sounds',
+                value: true,
+                switchKey: ValueKey('sounds'),
+                onChanged: null,
+                disabledReason: 'Turn on notifications first',
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.byKey(const ValueKey('sounds')));
+        final data = partSemantics(
+          tester,
+          find.byType(KitSwitchRow),
+        ).getSemanticsData();
+        expect(data.flagsCollection.isEnabled, Tristate.isFalse);
+        expect(data.flagsCollection.isToggled, Tristate.isTrue);
+        semantics.dispose();
+      });
+    });
+
     testWidgets('disabled shows its reason as text and hint, undimmed', (
       tester,
     ) async {
@@ -139,9 +265,10 @@ void main() {
         ),
       );
       expect(find.text('Turn on notifications first'), findsOneWidget);
-      final data = tester
-          .getSemantics(find.byType(KitSwitchRow))
-          .getSemanticsData();
+      final data = partSemantics(
+        tester,
+        find.byType(KitSwitchRow),
+      ).getSemanticsData();
       expect(data.hint, 'Turn on notifications first');
       expect(data.flagsCollection.isEnabled, Tristate.isFalse);
       final dimmed = tester
@@ -293,12 +420,15 @@ void main() {
       );
       await tester.tap(find.text('Core tools'));
       expect(calls, 0);
-      final data = tester
-          .getSemantics(find.byType(KitSwitchRow))
-          .getSemanticsData();
+      final data = partSemantics(
+        tester,
+        find.byType(KitSwitchRow),
+      ).getSemanticsData();
       expect(data.flagsCollection.isToggled, Tristate.isTrue);
       expect(data.flagsCollection.isEnabled, Tristate.isFalse);
-      expect(data.hint, 'Always included');
+      // Said once, in the label: not again as a hint.
+      expect(data.hint, isEmpty);
+      expect('Always included'.allMatches(data.label).length, 1);
       semantics.dispose();
     });
 

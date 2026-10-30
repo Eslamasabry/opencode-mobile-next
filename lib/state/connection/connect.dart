@@ -279,6 +279,10 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
       pair = _v2GatewayFactory(profile);
     }
     final gateway = pair.gateway;
+    if (gateway is Api2Gateway) {
+      gateway.serverRunsTools = (id) =>
+          identical(api, gateway) && _autoApprovalFor(id).automatic;
+    }
     if (gateway is Api2Gateway &&
         BuiltinLinux.managesServerUrl(profile.baseUrl)) {
       gateway.beforeSessionDispatch = (id) =>
@@ -314,7 +318,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     bool redetectOnFailure = true,
     bool preserveConnectionAttempt = false,
   }) async {
-    if (_connectedProfile?.id != profile.id) _resetTurnStalls();
+    if (_connectedProfile?.id != profile.id) _forgetTurnStalls();
     if (isIsolated) {
       throw StateError('An isolated session cannot connect to a server.');
     }
@@ -516,7 +520,7 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     }
 
     _startEvents(generation, currentApi);
-    _markDataRefreshReady(generation, currentApi);
+    _markDataRefreshReadyAfterStart(generation, currentApi);
     _notifyListeners();
     unawaited(
       _loadAfterConnect(
@@ -764,7 +768,9 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     bool silent = false,
   }) async {
     ++_paIdleLifecycleEpoch;
-    _resetTurnStalls();
+    _forgetTurnStalls();
+    _endResumeQuiet();
+    _appBackgrounded = false;
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;

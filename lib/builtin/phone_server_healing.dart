@@ -77,11 +77,9 @@ class PhoneServerHealing {
     connection.addListener(_syncProfile);
     connection.addListener(_connectionChanged);
     starter.beforeManualStart = _claimProfile;
+    starter.saveRenewedPassword = connection.store.upsert;
     _syncProfile();
-    _workHeartbeat = Timer.periodic(
-      const Duration(seconds: 15),
-      (_) => _observeAgentWork(),
-    );
+    _lastStreamStatus = connection.status;
     setForeground(
       WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed,
     );
@@ -103,6 +101,10 @@ class PhoneServerHealing {
   })?
   resumeAgentsAfterIdle;
   Timer? _workHeartbeat;
+  // What the last native work observation carried. Notifies that change none
+  // of it (every streamed message update) send nothing.
+  String? _lastObservation;
+  StreamStatus? _lastStreamStatus;
   Future<void> _workObservations = Future<void>.value();
   int _workObservationRevision = 0;
   int _idleEpoch = 0;
@@ -180,14 +182,18 @@ class PhoneServerHealing {
         : owner == null
         ? (profiles.length == 1 ? profiles.single : null)
         : profiles.where((profile) => profile.id == owner).firstOrNull;
-    if (!identical(_owner, selected)) {
+    // Most notifies are streamed message updates that change neither the
+    // selected profile nor its owner: they do no bookkeeping and no checks.
+    final changed = !identical(_owner, selected);
+    if (changed) {
       _invalidateIdle();
       _owner = selected;
+      _lastObservation = null;
       report.invalidate();
     }
     recovery.setProfile(selected);
     _observeAgentWork();
-    if (_foreground && !_manualClaiming && selected != null) {
+    if (changed && _foreground && !_manualClaiming && selected != null) {
       unawaited(check(selected));
     }
   }
@@ -203,15 +209,50 @@ class PhoneServerHealing {
   }
 
   void _connectionChanged() {
-    if (!_disposed && _connectionUnsettled()) recovery.expedite();
+    if (_disposed) return;
+    final status = connection.status;
+    final previous = _lastStreamStatus;
+    _lastStreamStatus = status;
+    if (_connectionUnsettled()) recovery.expedite();
+    // The health pipeline runs on the way down, not on every update: a
+    // transition into disconnected or reconnecting while on this phone's
+    // own server asks whether that server died.
+    final owner = _owner;
+    if (status != previous &&
+        (status == StreamStatus.disconnected ||
+            status == StreamStatus.reconnecting) &&
+        owner != null &&
+        _foreground &&
+        !_manualClaiming &&
+        connection.profile?.id == owner.id) {
+      unawaited(check(owner));
+    }
     _observeAgentWork();
   }
 
-  void _observeAgentWork() {
+  /// Native only reads this evidence while the app is in the background
+  /// (BuiltinLinux.kt observeIdle ignores it while the activity is resumed)
+  /// and discards it after 45 s (NativeIdleHeartbeat). So it is renewed every
+  /// 15 s in the background and never in the foreground.
+  void _syncHeartbeat() {
+    if (_disposed || _foreground) {
+      _workHeartbeat?.cancel();
+      _workHeartbeat = null;
+      return;
+    }
+    _workHeartbeat ??= Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _observeAgentWork(force: true),
+    );
+  }
+
+  void _observeAgentWork({bool force = false}) {
     if (_disposed) return;
-    final revision = ++_workObservationRevision;
     final owner = _owner;
     if (owner == null || !connection.isProfileReadable(owner.id)) {
+      if (_lastObservation == 'none' && !force) return;
+      _lastObservation = 'none';
+      _workObservationRevision++;
       agentWork.observe(profileId: null, busy: null);
       return;
     }
@@ -221,6 +262,10 @@ class PhoneServerHealing {
       // BA resolves the readable server alias into the shared agent owner.
       busy = localAgentWorkBusy?.call(owner.id);
     } catch (_) {}
+    final key = '${owner.id}|$profileId|$busy';
+    if (!force && key == _lastObservation) return;
+    _lastObservation = key;
+    final revision = ++_workObservationRevision;
     agentWork.observe(profileId: profileId, busy: busy);
     // Native idle truth uses the readable server alias. CPU ownership above uses
     // the canonical helper owner; neither alias invents an idle answer.
@@ -243,7 +288,11 @@ class PhoneServerHealing {
   }
 
   void setForeground(bool value) {
+    final was = _foreground;
     _foreground = value;
+    _syncHeartbeat();
+    // Backgrounding hands native a fresh sample at once, not 15 s later.
+    if (!value && was && !_disposed) _observeAgentWork(force: true);
     if (value) {
       _foregroundWaiter?.complete();
       _foregroundWaiter = null;
@@ -582,6 +631,7 @@ class PhoneServerHealing {
     connection.removeListener(_syncProfile);
     connection.removeListener(_connectionChanged);
     starter.beforeManualStart = null;
+    starter.saveRenewedPassword = null;
     recovery.removeListener(_recoveryChanged);
     agentWork.dispose();
     recovery.dispose();

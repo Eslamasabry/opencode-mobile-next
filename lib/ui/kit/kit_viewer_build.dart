@@ -10,8 +10,9 @@ extension _KitViewerBuild on _KitViewerState {
     final path = widget.path;
     final folder = path == null ? null : KitViewer.folderOf(path, widget.name);
     final routeNamed = _KitViewerRouteScope.of(context);
-    // Binary content offers the caller's action in its own state instead.
-    final primary = _content?.kind == KitViewerKind.binary
+    // Binary content offers the caller's action in its own state instead;
+    // the reader pins it at the bottom.
+    final primary = _content?.kind == KitViewerKind.binary || widget.reader
         ? null
         : widget.primary;
     final title = Column(
@@ -61,6 +62,17 @@ extension _KitViewerBuild on _KitViewerState {
               child: title,
             ),
           ),
+          if (widget.reader && _codeText != null && !_isEmpty)
+            FocusTraversalOrder(
+              order: const NumericFocusOrder(2),
+              child: KitIconButton(
+                key: const ValueKey('kit-viewer-wrap'),
+                icon: AppIconography.wrapText,
+                tooltip: l10n.kitWrapLines,
+                selected: _effectiveWrap(context),
+                onPressed: _toggleWrap,
+              ),
+            ),
           FocusTraversalOrder(
             order: const NumericFocusOrder(2),
             child: Builder(
@@ -136,6 +148,83 @@ extension _KitViewerBuild on _KitViewerState {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [top, primaryRow],
       ),
+    );
+  }
+
+  /// The reader's bottom bar: the caller's one action as the solid main
+  /// button where the thumb is, and Copy beside it for text. Null when
+  /// there is neither (a picture opened with no action).
+  Widget? _readerBar(
+    BuildContext context,
+    KitTokens tokens,
+    AppLocalizations l10n,
+  ) {
+    final content = _content;
+    final primary = content?.kind == KitViewerKind.binary
+        ? null
+        : widget.primary;
+    final large = MediaQuery.textScalerOf(context).scale(1) >= 1.6;
+    // At large text the code keeps the room: Copy stays in ⋯ (Copy
+    // contents) and the bar holds the main action alone.
+    final copyText =
+        _loading || _error != null || _isEmpty || (large && primary != null)
+        ? null
+        : content?.copyText;
+    if (primary == null && copyText == null) return null;
+    final copy = copyText == null
+        ? null
+        : KitAction(
+            key: const ValueKey('kit-viewer-copy'),
+            label: l10n.kitCopy,
+            icon: AppIconography.copy,
+            onPressed: () =>
+                unawaited(KitCopy.copy(context, copyText, redact: false)),
+          );
+    final children = <Widget>[
+      if (primary != null)
+        KeyedSubtree(
+          key: const ValueKey('kit-viewer-primary'),
+          child: KitButton.fromAction(primary, role: KitButtonRole.primary),
+        ),
+      if (copy != null)
+        KitButton.fromAction(
+          copy,
+          role: KitButtonRole.secondary,
+          expand: primary == null || large,
+        ),
+    ];
+    final bar = Padding(
+      padding: EdgeInsetsDirectional.fromSTEB(
+        tokens.gutter,
+        tokens.space3,
+        tokens.gutter,
+        tokens.space3,
+      ),
+      // Side by side, the main action taking the room; stacked at large
+      // text, so neither label is cut.
+      child: large || children.length == 1
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (i, child) in children.indexed) ...[
+                  if (i > 0) SizedBox(height: tokens.space2),
+                  child,
+                ],
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: children.first),
+                SizedBox(width: tokens.space2),
+                children.last,
+              ],
+            ),
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [const KitDivider(), bar],
     );
   }
 
@@ -362,7 +451,8 @@ extension _KitViewerBuild on _KitViewerState {
 
   // The inline KitStateView brings its own gutter at the sides; adding
   // another would put it at twice the gutter, off the name's line.
-  Widget _centred(KitTokens tokens, Widget child) => Center(
+  Widget _centred(KitTokens tokens, Widget child) => Align(
+    alignment: AlignmentDirectional.centerStart,
     child: SingleChildScrollView(
       padding: EdgeInsets.symmetric(vertical: tokens.gutter),
       child: child,
@@ -388,6 +478,7 @@ extension _KitViewerBuild on _KitViewerState {
       marks: _findOpen ? _marks : const [],
       activeMark: _findOpen && _marks.isNotEmpty ? _active : null,
       initialLine: initialLine,
+      hangingIndent: widget.reader,
     );
     // The body starts on the same gutter as the header's name.
     final inset = EdgeInsetsDirectional.symmetric(
@@ -438,6 +529,9 @@ extension _KitViewerBuild on _KitViewerState {
     }
     return Directionality(
       textDirection: TextDirection.ltr,
+      // The file fills the viewer sheet edge to edge: the sheet is its
+      // frame (a code box here would double Brutal's ink edges), and the
+      // fill is opaque in every style (contract F7).
       child: ColoredBox(color: tokens.detailsSurface, child: body),
     );
   }

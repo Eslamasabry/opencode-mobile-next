@@ -86,6 +86,22 @@ void main() {
     expect(host.target.mutations, isEmpty);
   });
 
+  testWidgets('an agent that is not ready yet can be read again', (
+    tester,
+  ) async {
+    final host = FakeContinueWithHost(
+      prefs,
+      agentBlock: ContinueWithBlock.notReady,
+    );
+    await _open(tester, host);
+    expect(_text("Claude Code isn't ready on this phone yet."), findsOneWidget);
+    expect(host.loads, 1);
+    await tester.tap(_text('Try again'));
+    await tester.pumpAndSettle();
+    expect(host.loads, 2);
+    expect(host.target.mutations, isEmpty);
+  });
+
   testWidgets('a model of this server keeps the conversation and switches it', (
     tester,
   ) async {

@@ -22,6 +22,19 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
   List<GlobalSessionResult> _feedGlobal = const [];
   List<WorkspaceProject> _feedProjects = const [];
   Set<String> _feedBusy = const {};
+
+  /// Live run starts and ends seen per session, numbered in arrival order.
+  /// The status read behind [_feedBusy] is a snapshot: once a session's own
+  /// run event arrives after the read left, the live state answers for it
+  /// (`busySessions` in the open project, the server-wide tally elsewhere).
+  /// Otherwise a read taken mid-run kept the row "Working" after the run
+  /// ended, while the chat showed it idle: OpenCode 2 sends no
+  /// `session.updated` that would read again.
+  final Map<String, int> _feedRunSignals = {};
+  int _feedRunSignal = 0;
+
+  /// [_feedRunSignal] when the read behind [_feedBusy] left.
+  int _feedBusyAt = 0;
   bool _feedLoaded = false;
   bool _feedLoading = false;
   bool _feedComplete = true;
@@ -29,6 +42,22 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
   int? _feedRefreshingGeneration;
   int _feedRequestRevision = 0;
   Timer? _feedDebounce;
+
+  /// Bumped only when something the rows are built from really changed
+  /// (sessions, their statuses, titles, times, previews, scope). A notify
+  /// that changed none of it leaves it alone, and the rows and sort order
+  /// built for it are served again instead of derived again.
+  int _feedRevision = 0;
+  Object? _feedSignature;
+  final Map<bool, List<ChatFeedItem>> _feedItemsMemo = {};
+  final Map<ChatFeedFilter, ChatFeedSnapshot> _feedSnapshotMemo = {};
+
+  /// Times the rows were derived from scratch (a test handle).
+  @visibleForTesting
+  int chatFeedDerivations = 0;
+
+  /// The feed revision as of the last read; changes only with its content.
+  int get chatFeedRevision => _feedRevision;
 
   bool get _ocAcross =>
       _self.api != null && _self.capabilities.globalSessionSearch;
@@ -123,6 +152,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
       _feedGlobal = const [];
       _feedProjects = const [];
       _feedBusy = const {};
+      _feedRunSignals.clear();
       _feedLoaded = false;
     }
     _feedLoading = !_feedLoaded;
@@ -153,6 +183,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
       projects = null;
     }
     Map<String, String>? statuses;
+    final signalAt = _feedRunSignal;
     try {
       statuses = await currentApi.sessionStatuses();
     } catch (_) {
@@ -174,6 +205,9 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
         for (final entry in statuses.entries)
           if (entry.value == 'busy' || entry.value == 'retry') entry.key,
       };
+      // Run events from before the read are in it; later ones outrank it.
+      _feedBusyAt = signalAt;
+      _feedRunSignals.removeWhere((_, at) => at <= signalAt);
     }
     _feedLoaded = true;
     _feedLoading = false;
@@ -182,6 +216,36 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     if (_self._disposed || !_self._isCurrent(generation, currentApi)) return;
     _self._genUiRefreshFeed();
     _self._notifyListeners();
+    // The next start paints these rows at once (phone_agents_saved.dart).
+    _self._paSaveMainRows();
+  }
+
+  /// Whether the last status read still answers for [sessionID]: it listed
+  /// the session, and no run event for it has arrived since the read left.
+  bool _feedReadSaysBusy(String sessionID) =>
+      _feedBusy.contains(sessionID) &&
+      (_feedRunSignals[sessionID] ?? 0) <= _feedBusyAt;
+
+  /// Notes a run start or end from either event channel. True when it
+  /// takes a "busy" from the status read off a row, so the caller can tell
+  /// listeners when nothing else will.
+  bool _feedObserveRunEvent(EventEnvelope event) {
+    final props = event.properties;
+    switch (event.type) {
+      case 'session.idle' || 'session.error':
+        break;
+      case 'session.status':
+        final raw = props['status'];
+        final type = raw is Map ? raw['type']?.toString() : raw?.toString();
+        if (type != 'idle' && type != 'busy' && type != 'retry') return false;
+      default:
+        return false;
+    }
+    final sessionID = props['sessionID']?.toString();
+    if (sessionID == null || sessionID.isEmpty) return false;
+    final shown = _feedReadSaysBusy(sessionID);
+    _feedRunSignals[sessionID] = ++_feedRunSignal;
+    return shown;
   }
 
   /// A project the server calls Git (OpenCode 2 says so per project) or a
@@ -248,7 +312,125 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     return '';
   }
 
+  /// A hash of everything the rows are built from. Far cheaper than building
+  /// them (no row objects, previews, paths or sorting). Moves the revision
+  /// when it differs from the last one seen.
+  int _feedSyncRevision() {
+    final here = _self.directory;
+    int set(Iterable<Object?> values) {
+      var sum = 0;
+      for (final value in values) {
+        sum = (sum + value.hashCode) & 0x3fffffff;
+      }
+      return sum;
+    }
+
+    final cardScope = _self._genUiScope;
+    int cards(Session s) => cardScope == null
+        ? 0
+        : _self._genUiState
+              .waiting(
+                GenUiScope(
+                  profileID: cardScope.profileID,
+                  sourceId: cardScope.sourceId,
+                  directory: s.directory ?? here ?? '/',
+                  workspace: cardScope.workspace,
+                ),
+                s.id,
+              )
+              .length;
+
+    int session(Session s) => Object.hash(
+      s.id,
+      s.title,
+      s.time?.created,
+      s.time?.updated,
+      s.time?.idle,
+      s.time?.viewed,
+      s.archived,
+      s.parentID,
+      s.directory,
+      s.lastRunFailed,
+      s.stagedRevert != null,
+      s.contextUse?.fraction ?? _self.contextUsageMemory?.usageOf(s.id),
+      _self.isSessionUnread(s),
+      _self.finishedUnseen(s.id),
+      _self.stoppedByPerson(s.id),
+      identityHashCode(_self.cachedSessionTail(s.id)),
+      cards(s),
+    );
+
+    final signature = Object.hashAll([
+      here,
+      _feedOwnerID,
+      _feedProfileID,
+      _ocAcross,
+      _feedLoading,
+      _feedComplete,
+      _feedLoaded,
+      _self._genUiLocal?.recoveryIncomplete ?? false,
+      _self._sessionInventoryInitialized,
+      set(_self._sessionInventoryIDs),
+      identityHashCode(_feedGlobal),
+      identityHashCode(_feedProjects),
+      identityHashCode(_feedBusy),
+      _feedBusyAt,
+      set(_feedRunSignals.entries.map((e) => Object.hash(e.key, e.value))),
+      set(_self.awaitingPermissions.map((p) => p.sessionID)),
+      set(_self.questions.values.map((q) => q.sessionID)),
+      set(_self.forms.values.map((f) => f.sessionID)),
+      set(_self.busySessions),
+      if (_self.api is BackgroundTaskGateway)
+        BackgroundTaskBook.shared.revision,
+      set(_self._failedAttentionSessions.keys),
+      set(
+        _self.elsewhereAttention
+            .activity(except: here)
+            .map((a) => Object.hash(set(a.running), set(a.waiting))),
+      ),
+      set(
+        _self.elsewhereAttention
+            .observations(except: here)
+            .map((o) => Object.hash(o.kind, o.sessionID)),
+      ),
+      cardScope == null
+          ? null
+          : Object.hash(
+              cardScope.profileID,
+              cardScope.sourceId,
+              cardScope.workspace,
+            ),
+      set(_self.sessionsById.values.map(session)),
+      if (_ocAcross)
+        set(
+          _feedGlobal.map(
+            (r) => Object.hash(
+              session(r.session),
+              r.projectName,
+              r.projectDirectory,
+            ),
+          ),
+        ),
+      _self.capabilities.projectsAreGitRepositories,
+    ]);
+    if (_feedSignature != signature) {
+      _feedSignature = signature;
+      _feedRevision++;
+      _feedItemsMemo.clear();
+      _feedSnapshotMemo.clear();
+    }
+    return _feedRevision;
+  }
+
   List<ChatFeedItem> _feedAllItems({required bool includeSubagents}) {
+    _feedSyncRevision();
+    return _feedItemsMemo[includeSubagents] ??= _feedDeriveItems(
+      includeSubagents: includeSubagents,
+    );
+  }
+
+  List<ChatFeedItem> _feedDeriveItems({required bool includeSubagents}) {
+    chatFeedDerivations++;
     final here = _self.directory;
     final waiting = <String>{
       for (final permission in _self.awaitingPermissions) permission.sessionID,
@@ -257,6 +439,18 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
     };
     final running = <String>{..._self.busySessions};
     final failed = <String>{..._self._failedAttentionSessions.keys};
+    // A turn that ended with work still going on in the background reads as
+    // running (lib/domain/background_tasks.dart has the rule), unless the
+    // turn itself failed: the agent stopped, whatever it left running.
+    if (_self.api case final BackgroundTaskGateway background) {
+      for (final id in _self.sessionsById.keys) {
+        if (background.lastTurnFailed(id)) {
+          failed.add(id);
+        } else if (background.backgroundTasksRunning(id)) {
+          running.add(id);
+        }
+      }
+    }
     // The server-wide tally already covers other projects; the selected one
     // answers from its own live state above.
     for (final activity in _self.elsewhereAttention.activity(except: here)) {
@@ -272,7 +466,8 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
       }
     }
     final other = _ocAcross && _feedCacheCurrent;
-    if (other) running.addAll(_feedBusy);
+    // The status read fills in runs no live event has spoken for yet.
+    if (other) running.addAll(_feedBusy.where(_feedReadSaysBusy));
 
     final byID = <String, ChatFeedItem>{};
     void add(Session session, String? directory, String? projectName) {
@@ -335,6 +530,7 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
         finishedUnseen:
             status == ChatStatus.idle &&
             (_self.isSessionUnread(session) || _self.finishedUnseen(id)),
+        stoppedByPerson: _self.stoppedByPerson(id),
       );
     }
 
@@ -360,6 +556,11 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
   }
 
   ChatFeedSnapshot _ocChatFeed([ChatFeedFilter filter = ChatFeedFilter.all]) {
+    _feedSyncRevision();
+    return _feedSnapshotMemo[filter] ??= _ocDeriveChatFeed(filter);
+  }
+
+  ChatFeedSnapshot _ocDeriveChatFeed(ChatFeedFilter filter) {
     final across = _ocAcross;
     final wantDirectory = filter.projectDirectory == null
         ? null
@@ -395,9 +596,9 @@ mixin _ConnectionControllerChatFeed on ChangeNotifier {
       items: List.unmodifiable(rows),
       acrossProjects: across,
       loading: _feedLoading && rows.isEmpty,
-      complete:
-          (across ? _feedComplete : true) &&
-          !(_self._genUiLocal?.recoveryIncomplete ?? false),
+      // Card recovery retries on its own (GenUiStateController): a card
+      // not read yet is no conversation missing from the list.
+      complete: across ? _feedComplete : true,
     );
   }
 

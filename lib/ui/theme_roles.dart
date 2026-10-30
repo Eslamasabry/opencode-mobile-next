@@ -28,6 +28,8 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
     required this.text3,
     required this.accent,
     required this.onAccent,
+    required this.partner,
+    required this.onPartner,
     required this.attention,
     required this.attentionFill,
     required this.onAttentionFill,
@@ -77,6 +79,18 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
   /// Text and icons on [accent].
   final Color onAccent;
 
+  /// The Accent of Settings > Appearance: the theme's second colour (its
+  /// partner hue), or the swatch the person picked. [accent] stays the main
+  /// colour (the glow, steps, the selected tab, the main action); [partner]
+  /// rings Send and Stop, edges the person's own message bubble, colours
+  /// links and marks the chosen swatch. It reads as text on the ground and
+  /// on [surface1] (4.5:1), carries [onPartner] at 4.5:1, and keeps away
+  /// from amber (LOOK-39), like [accent].
+  final Color partner;
+
+  /// Text and icons on [partner].
+  final Color onPartner;
+
   /// "Needs you": text and icons.
   final Color attention;
 
@@ -116,13 +130,6 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
   /// colour scheme (a bare `ThemeData` in a test).
   static ThemeRoles of(BuildContext context) => resolve(Theme.of(context));
 
-  /// The box a widget that failed to build shows instead
-  /// (`ErrorWidget.builder` in app_diagnostics.dart). It may be drawn above
-  /// any theme, so it reads no roles: these two fixed colours are its ground
-  /// and its words.
-  static const bootErrorGround = Color(0xFF201A18);
-  static const bootErrorText = Color(0xFFFFDCCB);
-
   static ThemeRoles resolve(ThemeData theme) =>
       theme.extension<ThemeRoles>() ??
       deriveRoles(
@@ -140,6 +147,30 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
     return copyWith(accent: a, onAccent: onColor(a));
   }
 
+  /// These roles with another [partner] (the Accent swatch the person
+  /// picked): moved only as far as it takes to read on the ground and carry
+  /// its on-colour, as [withAccent] does.
+  ThemeRoles withPartner(Color partner) {
+    final p = _guardAccent(partner, [ground, surface1], brightness);
+    return copyWith(partner: p, onPartner: onColor(p));
+  }
+
+  /// Saver's roles (true black, for OLED screens): a dark theme on a
+  /// #000000 ground with its surfaces moved a third of the way to black,
+  /// every other role kept. The grounds only get darker, so every text role
+  /// keeps (or gains) its contrast. A light theme is returned as is (Saver
+  /// is always dark).
+  ThemeRoles get saver {
+    if (!isDark) return this;
+    const black = Color(0xFF000000);
+    return copyWith(
+      ground: black,
+      surface1: _mix(surface1, black, .3),
+      surface2: _mix(surface2, black, .3),
+      surface3: _mix(surface3, black, .3),
+    );
+  }
+
   @override
   ThemeRoles copyWith({
     Color? ground,
@@ -152,6 +183,8 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
     Color? text3,
     Color? accent,
     Color? onAccent,
+    Color? partner,
+    Color? onPartner,
     Color? attention,
     Color? attentionFill,
     Color? onAttentionFill,
@@ -175,6 +208,8 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
     text3: text3 ?? this.text3,
     accent: accent ?? this.accent,
     onAccent: onAccent ?? this.onAccent,
+    partner: partner ?? this.partner,
+    onPartner: onPartner ?? this.onPartner,
     attention: attention ?? this.attention,
     attentionFill: attentionFill ?? this.attentionFill,
     onAttentionFill: onAttentionFill ?? this.onAttentionFill,
@@ -204,6 +239,8 @@ class ThemeRoles extends ThemeExtension<ThemeRoles> {
       text3: c(text3, other.text3),
       accent: c(accent, other.accent),
       onAccent: c(onAccent, other.onAccent),
+      partner: c(partner, other.partner),
+      onPartner: c(onPartner, other.onPartner),
       attention: c(attention, other.attention),
       attentionFill: c(attentionFill, other.attentionFill),
       onAttentionFill: c(onAttentionFill, other.onAttentionFill),
@@ -239,6 +276,9 @@ const graphiteDark = ThemeRoles(
   text3: Color(0xFF8C8F96),
   accent: Color(0xFF3DDC8A),
   onAccent: Color(0xFF03140B),
+  // The partner hue the glow's two-colour mode always used (codeKeyword).
+  partner: Color(0xFFC7A6FF),
+  onPartner: Color(0xFF111214),
   attention: Color(0xFFFFB547),
   attentionFill: Color(0xFFFFB547),
   onAttentionFill: Color(0xFF1A1000),
@@ -269,6 +309,8 @@ const graphiteLight = ThemeRoles(
   // one step deeper reaches 4.5:1 for both (links are text).
   accent: Color(0xFF087F43),
   onAccent: Color(0xFFFFFFFF),
+  partner: Color(0xFF6D4AFF),
+  onPartner: Color(0xFFFFFFFF),
   attention: Color(0xFF9A5700),
   attentionFill: Color(0xFFFFB547),
   onAttentionFill: Color(0xFF1A1000),
@@ -298,6 +340,39 @@ const graphiteAccents = <({String name, Color dark, Color light})>[
   (name: 'teal', dark: Color(0xFF3CCFCF), light: Color(0xFF0D7377)),
   (name: 'violet', dark: Color(0xFFC7A6FF), light: Color(0xFF6D4AFF)),
 ];
+
+/// The Accent swatches of Settings > Appearance, after "Match theme" (the
+/// theme's own [ThemeRoles.partner]). Each has a dark and a light colour; the
+/// light ones are deep enough for white to read on them, and both are guarded
+/// again by [ThemeRoles.withPartner]. None sits near amber (LOOK-39): the
+/// neutral pair (mono, silver) took the mock's cream, which did.
+/// Stored by [AppearanceAccent.id] in `oc.appearanceAccent`.
+const appearanceAccents = <AppearanceAccent>[
+  AppearanceAccent('mint', dark: Color(0xFF3DDC8A), light: Color(0xFF087F43)),
+  AppearanceAccent('teal', dark: Color(0xFF3CCFCF), light: Color(0xFF0D7377)),
+  AppearanceAccent('blue', dark: Color(0xFF5AB0FF), light: Color(0xFF1F6FEB)),
+  AppearanceAccent('violet', dark: Color(0xFFC7A6FF), light: Color(0xFF6D4AFF)),
+  AppearanceAccent('pink', dark: Color(0xFFF2A7E6), light: Color(0xFFAD2E99)),
+  AppearanceAccent('mono', dark: Color(0xFFF1F2F4), light: Color(0xFF262B36)),
+  AppearanceAccent('silver', dark: Color(0xFFB9BDC6), light: Color(0xFF5A606C)),
+];
+
+/// One Accent swatch: its stored [id] and its colour in each brightness.
+@immutable
+class AppearanceAccent {
+  const AppearanceAccent(this.id, {required this.dark, required this.light});
+
+  final String id;
+  final Color dark;
+  final Color light;
+
+  Color of(Brightness brightness) =>
+      brightness == Brightness.dark ? dark : light;
+}
+
+/// The swatch stored as [id]; null for "Match theme" or an unknown id.
+AppearanceAccent? appearanceAccentById(String? id) =>
+    appearanceAccents.where((a) => a.id == id).firstOrNull;
 
 // ---------------------------------------------------------------------------
 // LOOK-39: an accent keeps its meaning. The one check every accent passes
@@ -482,6 +557,7 @@ ThemeRoles deriveRoles({
   Color? text,
   Color? attention,
   Color? success,
+  List<Color> partners = const [],
 }) {
   final dark = brightness == Brightness.dark;
   final far = dark ? Colors.white : Colors.black;
@@ -533,6 +609,20 @@ ThemeRoles deriveRoles({
   );
   Color code(Color hue) =>
       readableOn(hue, [surface1, surface2], 4.5, toward: far);
+  // The partner: the first of the theme's own second colours ([partners],
+  // its secondary then tertiary) that keeps away from amber (LOOK-39) and
+  // reads apart from the main colour; else the kit's code violet or sky,
+  // whichever does; guarded like the accent.
+  bool usable(Color c) =>
+      hueDistance(c, att) >= accentMinHueDistance &&
+      deltaE2000(c, att) >= accentMinDeltaE &&
+      deltaE2000(c, a) >= accentMinDeltaE;
+  final partnerHue = [
+    ...partners,
+    defaults.codeKeyword,
+    defaults.codeType,
+  ].firstWhere(usable, orElse: () => defaults.codeKeyword);
+  final p = _guardAccent(partnerHue, [ground, surface1], brightness);
   return ThemeRoles(
     brightness: brightness,
     ground: ground,
@@ -545,6 +635,8 @@ ThemeRoles deriveRoles({
     text3: text3,
     accent: a,
     onAccent: onColor(a),
+    partner: p,
+    onPartner: onColor(p),
     attention: att,
     attentionFill: defaults.attentionFill,
     onAttentionFill: defaults.onAttentionFill,

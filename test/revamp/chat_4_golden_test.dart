@@ -20,11 +20,12 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
 import '../support/team_chat_fixture.dart';
 import 'chat_3_support.dart';
+import '../support/composer_tools.dart';
 
 typedef _Scene = Future<void> Function(WidgetTester tester);
 
 Future<void> _openLauncher(WidgetTester tester) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('composer-tool-commands')));
   await tester.pumpAndSettle();

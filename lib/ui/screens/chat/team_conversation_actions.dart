@@ -89,6 +89,29 @@ extension _TeamConversationActions on _TeamConversationScreenState {
     }
   }
 
+  /// The conversation opens on what waits for the person (concept B,
+  /// 20 Oct 2026): once, after the first layout where something waits, the
+  /// transcript goes to its end (above the composer) and, when the first
+  /// waiting card's question would still sit above the top, to that card.
+  void _openAtWaiting(bool waiting) {
+    if (_openedAtWaiting || !waiting) return;
+    _openedAtWaiting = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      final position = _scroll.position;
+      position.jumpTo(position.maxScrollExtent);
+      final card = _waitingKey.currentContext;
+      final box = card?.findRenderObject();
+      final viewport = context.findRenderObject();
+      if (card == null || box is! RenderBox || viewport is! RenderBox) return;
+      final top = box.localToGlobal(Offset.zero).dy;
+      final listTop = viewport.localToGlobal(Offset.zero).dy;
+      if (top < listTop) {
+        unawaited(Scrollable.ensureVisible(card, duration: Duration.zero));
+      }
+    });
+  }
+
   /// Scrolls the transcript to its end once the sent message is laid out.
   void _showLatest() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -532,15 +555,20 @@ extension _TeamConversationActions on _TeamConversationScreenState {
     final stop = run == null
         ? null
         : _team.latestMutation(kind: MutationKind.cancelRun, targetId: run.id);
+    _openAtWaiting(
+      gates.isNotEmpty || (run != null && teamMergeWaitsOnYou(_team, run)),
+    );
     // The end padding is read under the composer layer, which adds its
     // height to the bottom inset.
     return Builder(
       builder: (context) => ListView(
         key: const ValueKey('team-conversation-list'),
         controller: _scroll,
+        // The top clears the frosted header when the list runs under it
+        // (KitFrostHeader).
         padding: EdgeInsetsDirectional.fromSTEB(
           tokens.gutter,
-          tokens.space3,
+          tokens.space3 + KitFrostHeader.topClearanceOf(context),
           tokens.gutter,
           KitScreen.endPadding(context),
         ),
@@ -619,8 +647,10 @@ extension _TeamConversationActions on _TeamConversationScreenState {
               // card (P4.2a).
               for (final gate in gates)
                 KitArrival(
+                  key: gate == gates.first ? _waitingKey : null,
                   id: chatRequestArrivalId(gate.id),
                   child: TeamNeedsYouCard(
+                    look: KitRequestLook.question,
                     keyPrefix: 'team-conversation-gate-${gate.id}',
                     controller: _team,
                     gate: gate,
@@ -667,6 +697,9 @@ extension _TeamConversationActions on _TeamConversationScreenState {
               merged: run.state == RunState.completed && run.merged,
             ),
             Padding(
+              key: gates.isEmpty && teamMergeWaitsOnYou(_team, run)
+                  ? _waitingKey
+                  : null,
               padding: EdgeInsetsDirectional.only(top: tokens.space4),
               child: TeamMergeSection(
                 controller: _team,
@@ -689,6 +722,7 @@ extension _TeamConversationActions on _TeamConversationScreenState {
     List<OrchestrationAgent> agents, {
     OrchestrationRun? run,
     List<WorkItem> work = const [],
+    bool waiting = false,
   }) {
     final l10n = _chatL10n(context);
     final roleName = _roleName(l10n, run, work);
@@ -704,10 +738,14 @@ extension _TeamConversationActions on _TeamConversationScreenState {
       sendKey: const ValueKey('team-conversation-send'),
       controller: _message,
       focusNode: _focus,
-      hint: l10n.teamChatComposerHint,
+      // A gate or the merge waits on the person: the box dims to "Waiting
+      // for you" (concept B); the card's answer is the one solid mint. A
+      // message typed now still goes to the team.
+      hint: waiting ? l10n.kitTurnLiveWaitingForYou : l10n.teamChatComposerHint,
       fieldLabel: l10n.teamChatComposerHint,
+      quiet: waiting,
       readOnlyReason: readOnly,
-      note: to == null
+      note: to == null || waiting
           ? null
           : l10n.teamChatComposerGoesTo(
               _teamAgentTitle(l10n, to, agents, roleName),

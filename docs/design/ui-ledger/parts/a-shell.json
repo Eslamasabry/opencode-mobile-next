@@ -9,7 +9,7 @@
       "widget": "AppBootstrapGate",
       "presentedBy": [],
       "line": 73,
-      "purpose": "Pre-app surface shown while AppBootstrap.create loads preferences/secure storage: a spinner with 'Starting OpenCode…', or a start-failure message with a retry.",
+      "purpose": "Pre-app surface shown while AppBootstrap.create loads preferences/secure storage: a spinner with 'Starting OpenCode\u2026', or a start-failure message with a retry.",
       "reachedFrom": [
         {
           "page": "system",
@@ -42,10 +42,10 @@
       "id": "root-connecting",
       "title": "Connecting to {name}",
       "kind": "screen",
-      "file": "lib/main.dart",
+      "file": "lib/main_parts/root.dart",
       "widget": "_Root",
       "presentedBy": [],
-      "line": 1335,
+      "line": 52,
       "purpose": "Route '/' while a saved server profile is being reconnected: shows SavedServerConnectionCard (progress, or a diagnosed failure with checks and recovery actions). _Root itself returns ServersScreen when there is no profile or it needs credential re-entry, and HomeScreen once connected.",
       "reachedFrom": [
         {
@@ -230,7 +230,7 @@
     },
     {
       "id": "home-shell",
-      "title": "{server name} · Chats / Files / Settings",
+      "title": "{server name} \u00b7 Chats / Files / Settings",
       "kind": "screen",
       "file": "lib/ui/screens/home_screen.dart",
       "widget": "HomeScreen",
@@ -329,7 +329,7 @@
         {
           "id": "home-shell-shortcut-destinations",
           "type": "gesture",
-          "label": "Ctrl/Cmd+1 … 3",
+          "label": "Ctrl/Cmd+1 \u2026 3",
           "key": null,
           "line": 80,
           "action": "navigate",
@@ -767,11 +767,11 @@
       "title": "OpenCode needs input",
       "kind": "sheet",
       "file": "lib/ui/screens/chat/question_sheet.dart",
-      "widget": "_QuestionSheet",
+      "widget": "showQuestionSheet",
       "presentedBy": [
         "showQuestionSheet"
       ],
-      "line": 1,
+      "line": 351,
       "purpose": "Answer surface for a pending assistant question: per-prompt choices (single/multi), optional custom answer, dismiss or send.",
       "reachedFrom": [],
       "gates": [
@@ -838,7 +838,7 @@
           "action": "other",
           "target": null,
           "targetWidget": null,
-          "effect": "FindInSurfaceIntent: no shell fallback (no-op) — only a claiming surface (HomeScreen on Files, others) services it; registered so the key does not type a character.",
+          "effect": "FindInSurfaceIntent: no shell fallback (no-op) \u2014 only a claiming surface (HomeScreen on Files, others) services it; registered so the key does not type a character.",
           "gates": [
             "desktopInteractions (platformCapabilities.isDesktop); AppShortcuts returns child untouched otherwise"
           ],
@@ -908,7 +908,7 @@
         {
           "id": "global-shortcuts-destinations",
           "type": "gesture",
-          "label": "Ctrl/Cmd+1 … 4",
+          "label": "Ctrl/Cmd+1 \u2026 4",
           "key": null,
           "line": 346,
           "action": "navigate",
@@ -947,7 +947,7 @@
         {
           "id": "command-palette-dialog-query",
           "type": "text-field",
-          "label": "Type a command…",
+          "label": "Type a command\u2026",
           "key": "command-palette-query",
           "line": 471,
           "action": "other",
@@ -966,7 +966,7 @@
           "action": "other",
           "target": null,
           "targetWidget": null,
-          "effect": "CallbackShortcuts: _move(±1) changes the highlighted row.",
+          "effect": "CallbackShortcuts: _move(\u00b11) changes the highlighted row.",
           "gates": [],
           "destructive": false
         },
@@ -986,10 +986,10 @@
         {
           "id": "command-palette-dialog-cmd-new-session",
           "type": "list-tile",
-          "label": "New session (Ctrl + N; ⌘ on macOS)",
+          "label": "New session (Ctrl + N; \u2318 on macOS)",
           "key": "command-New session",
           "file": "lib/main.dart",
-          "line": 1094,
+          "line": 471,
           "action": "navigate",
           "target": "chat",
           "targetWidget": "/chat/<sessionID>",
@@ -1000,7 +1000,7 @@
         {
           "id": "command-palette-dialog-cmd-workspace",
           "type": "list-tile",
-          "label": "Workspace (Ctrl + 1; ⌘ on macOS)",
+          "label": "Workspace (Ctrl + 1; \u2318 on macOS)",
           "key": "command-Workspace",
           "file": "lib/main.dart",
           "line": 1101,
@@ -1014,7 +1014,7 @@
         {
           "id": "command-palette-dialog-cmd-files",
           "type": "list-tile",
-          "label": "Files (Ctrl + 2; ⌘ on macOS)",
+          "label": "Files (Ctrl + 2; \u2318 on macOS)",
           "key": "command-Files",
           "file": "lib/main.dart",
           "line": 1108,
@@ -1028,7 +1028,7 @@
         {
           "id": "command-palette-dialog-cmd-activity",
           "type": "list-tile",
-          "label": "Activity (Ctrl + 3; ⌘ on macOS)",
+          "label": "Activity (Ctrl + 3; \u2318 on macOS)",
           "key": "command-Activity",
           "file": "lib/main.dart",
           "line": 1115,
@@ -1042,7 +1042,7 @@
         {
           "id": "command-palette-dialog-cmd-more",
           "type": "list-tile",
-          "label": "More (Ctrl + 4; ⌘ on macOS)",
+          "label": "More (Ctrl + 4; \u2318 on macOS)",
           "key": "command-More",
           "file": "lib/main.dart",
           "line": 1122,
@@ -1056,7 +1056,7 @@
         {
           "id": "command-palette-dialog-cmd-settings",
           "type": "list-tile",
-          "label": "Settings (Ctrl + 4; ⌘ on macOS)",
+          "label": "Settings (Ctrl + 4; \u2318 on macOS)",
           "key": "command-Settings",
           "file": "lib/main.dart",
           "line": 1125,
@@ -1070,10 +1070,10 @@
         {
           "id": "command-palette-dialog-cmd-shortcuts",
           "type": "list-tile",
-          "label": "Keyboard shortcuts (Ctrl + /; ⌘ on macOS)",
+          "label": "Keyboard shortcuts (Ctrl + /; \u2318 on macOS)",
           "key": "command-Keyboard shortcuts",
-          "file": "lib/main.dart",
-          "line": 1135,
+          "file": "lib/ui/desktop/shortcuts.dart",
+          "line": 403,
           "action": "open-dialog",
           "target": "shortcuts-help-dialog",
           "targetWidget": "showShortcutsHelp",
@@ -1100,8 +1100,8 @@
           "type": "list-tile",
           "label": "Diagnostics",
           "key": "command-Diagnostics",
-          "file": "lib/main.dart",
-          "line": 1146,
+          "file": "lib/main_parts/alerts_and_shortcuts.dart",
+          "line": 247,
           "action": "navigate",
           "target": "app-diagnostics",
           "targetWidget": "/debug",
@@ -1114,8 +1114,8 @@
           "type": "list-tile",
           "label": "<search index entry title> (In <parent screen>)",
           "key": null,
-          "file": "lib/main.dart",
-          "line": 1166,
+          "file": "lib/main_parts/alerts_and_shortcuts.dart",
+          "line": 255,
           "action": "navigate",
           "target": null,
           "effect": "One DesktopCommand per gated entry of searchIndex(l10n, scope) except the four tabs, Keyboard shortcuts and Diagnostics (already listed): entry.open(navigator overlay context, scope). The palette also matches the entry's hidden keywords.",
@@ -1137,7 +1137,7 @@
         "showShortcutsHelp"
       ],
       "line": 548,
-      "purpose": "Read-only AlertDialog (key 'keyboard-shortcuts-sheet') listing every shortcut: Mod+K, N, F, 1…4, ',', '`', W, Enter (send prompt), C (copy transcript), F2/Shift+F2 (recent model), Ctrl+B (move running work to background), F3/Shift+F3 (next/previous find match), ↑/↓ (prompt history), '/', Esc, and context-menu keys.",
+      "purpose": "Read-only AlertDialog (key 'keyboard-shortcuts-sheet') listing every shortcut: Mod+K, N, F, 1\u20264, ',', '`', W, Enter (send prompt), C (copy transcript), F2/Shift+F2 (recent model), Ctrl+B (move running work to background), F3/Shift+F3 (next/previous find match), \u2191/\u2193 (prompt history), '/', Esc, and context-menu keys.",
       "reachedFrom": [
         {
           "page": "global-shortcuts",
@@ -1259,9 +1259,9 @@
           "key": null,
           "line": 645,
           "action": "navigate",
-          "target": "activity",
-          "targetWidget": "ActivityScreen",
-          "effect": "_openActivityForLaunch: pushes ActivityScreen(controller) named '/activity/launch'; without a saved profile opens '/servers'.",
+          "target": "chats-home",
+          "targetWidget": "ChatsHomeScreen",
+          "effect": "_openActivityForLaunch: dispatches OpenChatsIntent(needsYou: true) at the shell root so Chats opens on its 'Needs you' filter; without a saved profile opens '/servers'.",
           "gates": [
             "_controller.profile != null"
           ],
@@ -1289,9 +1289,9 @@
           "key": null,
           "line": 880,
           "action": "navigate",
-          "target": "activity",
-          "targetWidget": "ActivityScreen",
-          "effect": "_openTeamLink/_pushTeamDestination: pushes ActivityScreen(initialTeamGateId: link.id) which opens showGateSheet once the orchestration snapshot settles; switches server first like the session link.",
+          "target": "team-projects",
+          "targetWidget": "TeamProjectsScreen",
+          "effect": "_openTeamLink/_pushTeamDestination: pushes teamProjectDestination (TeamProjectsScreen) with the gate's project selected and its sheet opening once the orchestration snapshot settles; a profile without the plugin gets Chats on 'Needs you'; switches server first like the session link.",
           "gates": [
             "saved profile exists, no credential re-entry",
             "_controller.hasConnectedServer && !_controller.connectionLoading && !_controller.locationLoading"
@@ -1331,13 +1331,14 @@
           "type": "gesture",
           "label": "[notification tap: monitored profile request]",
           "key": null,
-          "line": 1011,
+          "line": 83,
           "action": "other",
           "target": null,
           "targetWidget": "openMonitoredRequest",
           "effect": "target.monitorToken non-empty: profileMonitor.routeForToken(...) then openMonitoredRequest(navigator.context, _controller, route) (lib/ui/screens/profile_monitor_screen.dart); mismatch -> snackbar monitorOpenFailed.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/main_parts/alerts_and_shortcuts.dart"
         },
         {
           "id": "system-entry-alert-question",
@@ -1346,9 +1347,9 @@
           "key": null,
           "line": 1033,
           "action": "navigate",
-          "target": "activity",
-          "targetWidget": "ActivityScreen",
-          "effect": "Pushes ActivityScreen(initialQuestionSessionID: target.sessionID) which auto-opens the question sheet.",
+          "target": "chat",
+          "targetWidget": "/chat/<sessionID>",
+          "effect": "_pushAlertChat lands on the question's card in its conversation (landOnRequestID), where answering is inline.",
           "gates": [
             "_controller.hasConnectedServer"
           ],
@@ -1359,7 +1360,7 @@
           "type": "gesture",
           "label": "[notification tap: other coding alert]",
           "key": null,
-          "line": 1044,
+          "line": 68,
           "action": "navigate",
           "target": "chat",
           "targetWidget": "ChatScreen",
@@ -1367,7 +1368,8 @@
           "gates": [
             "_controller.hasConnectedServer"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/main_parts/share_route.dart"
         }
       ]
     },
@@ -1407,10 +1409,10 @@
       "id": "session-link-server-missing-banner",
       "title": "This server is not saved on this phone. Add it under Servers, then scan the code again.",
       "kind": "overlay",
-      "file": "lib/main.dart",
+      "file": "lib/main_parts/link_routes.dart",
       "widget": "_showSessionLinkServerMissing",
       "presentedBy": [],
-      "line": 917,
+      "line": 299,
       "purpose": "MaterialBanner (key 'session-link-server-missing') for a session or AI Team link naming an unknown server.",
       "reachedFrom": [
         {
@@ -1429,13 +1431,14 @@
           "type": "button",
           "label": "Dismiss",
           "key": null,
-          "line": 930,
+          "line": 309,
           "action": "dismiss",
           "target": null,
           "targetWidget": null,
           "effect": "hideCurrentMaterialBanner().",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/main_parts/link_routes.dart"
         },
         {
           "id": "session-link-server-missing-banner-open-servers",
@@ -1489,13 +1492,13 @@
     },
     {
       "id": "shorebird-update-notice",
-      "title": "Shorebird update ready — restart to apply.",
+      "title": "Shorebird update ready \u2014 restart to apply.",
       "kind": "overlay",
       "file": "lib/update/shorebird_update_notice.dart",
       "widget": "ShorebirdUpdateNotice",
       "presentedBy": [],
       "line": 58,
-      "purpose": "Code-push notices via the app ScaffoldMessenger: a day-long 'Receiving Shorebird update…' progress snackbar (line 130, no action) and a 10s ready snackbar. Hard-coded English.",
+      "purpose": "Code-push notices via the app ScaffoldMessenger: a day-long 'Receiving Shorebird update\u2026' progress snackbar (line 130, no action) and a 10s ready snackbar. Hard-coded English.",
       "reachedFrom": [
         {
           "page": "system",
@@ -1809,109 +1812,6 @@
       ]
     },
     {
-      "id": "embedded-product-states",
-      "title": "[Shared empty / error / refresh / gated states]",
-      "kind": "overlay",
-      "file": "lib/ui/widgets/product_states.dart",
-      "widget": "ProductErrorState",
-      "presentedBy": [],
-      "line": 210,
-      "purpose": "Shared state widgets embedded in many screens. Host agents should trace onRetry/onAction to their own methods; Activity's instances are recorded on the activity page.",
-      "reachedFrom": [],
-      "gates": [],
-      "elements": [
-        {
-          "id": "embedded-product-states-error-retry",
-          "type": "button",
-          "label": "Try again",
-          "key": null,
-          "line": 240,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "ProductErrorState: calls host onRetry (Future<void> Function()). Hard-coded English.",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "embedded-product-states-error-report-bug",
-          "type": "button",
-          "label": "Report a bug",
-          "key": "product-error-report-bug",
-          "line": 248,
-          "action": "other",
-          "target": null,
-          "targetWidget": "openBugReport",
-          "effect": "ProductErrorState: openBugReport(context) (lib/feedback/bug_report.dart:88). Hard-coded English.",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "embedded-product-states-refresh-retry",
-          "type": "button",
-          "label": "Retry",
-          "key": null,
-          "line": 86,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "ProductRefreshBody MaterialBanner ('refresh failed' + message): calls host onRetry.",
-          "gates": [
-            "message != null"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "embedded-product-states-empty-action",
-          "type": "button",
-          "label": "<actionLabel>",
-          "key": null,
-          "line": 188,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "ProductEmptyState FilledButton.tonal: calls host onAction.",
-          "gates": [
-            "actionLabel != null && onAction != null"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "embedded-product-states-inline-action",
-          "type": "button",
-          "label": "<actionLabel>",
-          "key": null,
-          "line": 318,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "ProductInlineEmpty TextButton: calls host onAction.",
-          "gates": [
-            "actionLabel != null && onAction != null"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "embedded-product-states-gated-row",
-          "type": "list-tile",
-          "label": "<title> (disabled, 55% opacity)",
-          "key": "gated-<feature>",
-          "line": 403,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "GatedRowTile: tap shows snackbar 'Requires an OpenCode {requiresGeneration} server'. Key 'gated-<feature>'. Used by ProjectHealthScreen:301, SettingsScreen (Default shell row):210, ServerSettingsScreen:294.",
-          "gates": [],
-          "destructive": false
-        }
-      ],
-      "embeddedIn": [
-        "ProductErrorState: TerminalPage, SessionContextScreen, ReviewWorkspace, ActiveContextScreen, WorktreesScreen, ProjectsScreen, SavedPermissionsScreen, SessionRelationsScreen, AgentScreen, RunScreen, FilesScreen, SessionDestinationSheet, session_sheets, CommandsScreen, SkillsScreen, ReferencesScreen, TeamHomeScreen, ActivityScreen, GlobalSessionsScreen, ToolsScreen, ChatScreen, ManagedWorkspacesScreen, lib/voice/notices.dart",
-        "ProductRefreshBody: TerminalPage, ReviewWorkspace, SkillsScreen, ReferencesScreen, CommandsScreen",
-        "GatedRowTile: ProjectHealthScreen, SettingsScreen (Default shell row), ServerSettingsScreen"
-      ]
-    },
-    {
       "id": "demo",
       "title": "Offline demo",
       "kind": "screen",
@@ -2008,7 +1908,7 @@
       "widget": "CapabilitiesScreen",
       "presentedBy": [],
       "line": 11,
-      "purpose": "Settings › Tools (target-ia §1.3 row 7, FG6): the one page for what the agent can use besides the model. Tabs MCP, Commands, Tools, Skills, References and External agents; each embeds another screen with embedded: true and is built on first visit. Without a shared catalog (Codex, Paseo, no saved server) only External agents shows, with one muted line and a Why.",
+      "purpose": "Settings \u203a Tools (target-ia \u00a71.3 row 7, FG6): the one page for what the agent can use besides the model. Tabs MCP, Commands, Tools, Skills, References and External agents; each embeds another screen with embedded: true and is built on first visit. Without a shared catalog (Codex, Paseo, no saved server) only External agents shows, with one muted line and a Why.",
       "reachedFrom": [
         {
           "page": "?",
@@ -2165,7 +2065,7 @@
     }
   ],
   "notes": [
-    "ROUTE TABLE (lib/main.dart:1227-1260, initialRoute '/'):\n'/' -> _Root (ServersScreen when conn.profile == null or the profile requiresPasswordReentry/requiresCodexTokenReentry; HomeScreen when conn.hasConnectedServer; else the root-connecting card)\n'/servers' -> ServersScreen (RouteSettings.arguments 'edit-active' opens the active profile editor)\n'/home' -> HomeScreen\n'/activity' -> ActivityScreen(controller)\n'/requests' -> ActivityScreen(controller) (legacy deep link alias)\n'/guide' -> GuideScreen(embedded: false)\n'/about' -> AboutScreen\n'/termux-setup' -> TermuxSetupScreen — registered only if platformCapabilities.supportsTermux\n'/debug' -> AppDiagnosticsScreen(controller)\nonGenerateRoute: '/chat/<sessionID>' -> ChatScreen(sessionID, discardIfUntouched: arguments is ChatRouteArguments && arguments.discardIfUntouched); any other name -> null\nUnregistered route name used only for top-of-stack tracking: '/activity/launch' (main.dart:665, pushed as MaterialPageRoute of ActivityScreen)",
+    "ROUTE TABLE (lib/main.dart:1227-1260, initialRoute '/'):\n'/' -> _Root (ServersScreen when conn.profile == null or the profile requiresPasswordReentry/requiresCodexTokenReentry; HomeScreen when conn.hasConnectedServer; else the root-connecting card)\n'/servers' -> ServersScreen (RouteSettings.arguments 'edit-active' opens the active profile editor)\n'/home' -> HomeScreen\n'/activity' -> ActivityScreen(controller)\n'/requests' -> ActivityScreen(controller) (legacy deep link alias)\n'/guide' -> GuideScreen(embedded: false)\n'/about' -> AboutScreen\n'/termux-setup' -> TermuxSetupScreen \u2014 registered only if platformCapabilities.supportsTermux\n'/debug' -> AppDiagnosticsScreen(controller)\nonGenerateRoute: '/chat/<sessionID>' -> ChatScreen(sessionID, discardIfUntouched: arguments is ChatRouteArguments && arguments.discardIfUntouched); any other name -> null\nUnregistered route name used only for top-of-stack tracking: '/activity/launch' (main.dart:665, pushed as MaterialPageRoute of ActivityScreen)",
     "main.dart opens no showDialog/showModalBottomSheet itself. Its surfaces are two MaterialBanners (share-session-failed-banner main.dart:427, session-link-server-missing-banner main.dart:925) and action-less snackbars via _messengerKey: shareWaitingForServer (367), _showLaunchNotice (693) with launchShortcutWaiting / launchUiSessionWaiting / launchShortcutNoServer / launchShortcutReentry / launchShortcutConnectionFailed / launchShortcutNewTaskFailed / launchUiSessionNoServer / launchUiSessionOtherServer / launchUiSessionReentry / launchUiSessionConnectionFailed / launchUiActivityNoServer / handoffUiLinkWaiting / handoffUiLinkReentry / handoffUiLinkConnectionFailed, quotaMonitorSourceChanged (991), monitorOpenFailed (1021), new-session failure productErrorText (1066).",
     "MaterialApp.builder wrapper order (main.dart:1171-1209): Theme(AppTheme.forLocale) > MediaQuery(text scale capped at AppTheme.maxTextScale) > ShorebirdUpdateNotice > DesktopReleaseNotice > AppShortcuts > navigator child.",
     "page 'system-entry' is a synthetic overlay page added so system-triggered edges into pages owned by other agents (ChatScreen, ServersScreen, QuotaMonitorScreen, RunScreen, openMonitoredRequest) carry a resolvable targetWidget; coordinator may fold its elements into those pages' reachedFrom as {page:'system'}.",

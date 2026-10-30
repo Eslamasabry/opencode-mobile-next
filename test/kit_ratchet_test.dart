@@ -56,6 +56,33 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+/// G49: the files that may paint a raw decoration inside the kit: the
+/// resolver itself, and parts whose look is meaning or content, never a
+/// style (style coherence audit 2026-10-21 §2 "Correctly exempt").
+const _styleExemptFiles = <String, String>{
+  'lib/ui/kit/kit_surface_look.dart': 'the style resolver itself',
+  'lib/ui/kit/kit_surface.dart': 'the resolver\'s Material host',
+  'lib/ui/kit/style/': 'the style specs: they make the decorations',
+  'lib/ui/kit/kit_qr.dart': 'a QR code must scan on white paper',
+  'lib/ui/kit/kit_scanner.dart': 'the camera ground',
+  'lib/ui/kit/kit_progress.dart': 'an indicator, not a surface',
+  'lib/ui/kit/kit_progress_ring.dart': 'an indicator, not a surface',
+  'lib/ui/kit/kit_chart.dart': 'data colours',
+  'lib/ui/kit/kit_image_markup.dart': 'the person\'s markup colours',
+  'lib/ui/kit/kit_swatch.dart': 'a theme preview',
+  'lib/ui/kit/scenes/': 'scenes are style-agnostic by contract',
+  'lib/ui/kit/kit_illustration.dart': 'illustrations are style-agnostic',
+  'lib/ui/kit/kit_live_background.dart': 'the live background ground',
+  'lib/ui/kit/motion/kit_page_transitions.dart': 'the page transition wash',
+  'lib/ui/kit/kit_arrival.dart': 'the arrival wash',
+  'lib/ui/kit/kit_needs_you.dart': 'amber means needs you, in every style',
+  'lib/ui/kit/kit_date_time_picker.dart': 'the picker\'s day circles',
+  'lib/ui/kit/kit_carousel.dart': 'the page dots: an indicator, not a surface',
+  'lib/ui/kit/kit_window_row.dart': 'a usage bar: an indicator, not a surface',
+  'lib/ui/kit/kit_viewer_build.dart':
+      'the file body fills the viewer sheet, its frame; opaque by contract F7',
+};
+
 /// file -> reason, for G1/G15/G16 exemptions that cannot move into the kit.
 /// Keep this empty or near-empty: the kit itself is already out of scope
 /// (excluded by directory), so an entry here means a *non-kit* file that
@@ -711,10 +738,6 @@ const _glassFiles = <String, String>{
       'the floating tab bar and rail are navigation-layer glass (LOOK-27)',
   'lib/ui/kit/kit_top_bar.dart':
       'the top controls are navigation-layer glass (LOOK-27)',
-  'lib/ui/screens/home_screen.dart':
-      'shrinking allowlist until the dock moves into a kit part (LOOK-27)',
-  'lib/ui/widgets/glass_surface.dart':
-      'shrinking allowlist: the old wrapper forwards to KitGlass (LOOK-27)',
 };
 
 /// KitScene drawings (TEST-14) shape their paths with arc and corner radii in
@@ -773,11 +796,34 @@ bool _asymmetricLeftRight(String args) {
 /// missing (the default is one logical pixel) or not read from KitTokens,
 /// and a numeric `thickness:` other than 0 (0 is the one-physical-pixel
 /// hairline).
+/// The names [code] binds to the style's divider
+/// (`final line = KitSurfaceLook.divider(...)`, also behind a condition):
+/// their `.width` is the style's stroke (S0's `divider` role).
+Set<String> _dividerNames(String code) => {
+  for (final m in RegExp(
+    r'\b(?:final|var)\s+(\w+)\s*=\s*[^;]*?\bKitSurfaceLook\.divider\(',
+  ).allMatches(code))
+    m.group(1)!,
+};
+
+/// Whether a stroke [width] comes from the kit: a KitTokens width, the
+/// style's divider (`KitSurfaceLook.divider(...).width`), or the `.width`
+/// of a name bound to it ([dividers]).
+bool _kitStrokeWidth(String width, Set<String> dividers) {
+  if (width.contains('KitTokens') ||
+      RegExp(r'\bKitSurfaceLook\.divider\(').hasMatch(width)) {
+    return true;
+  }
+  final field = RegExp(r'^(\w+)[!?]?\.width$').firstMatch(width.trim());
+  return field != null && dividers.contains(field.group(1));
+}
+
 int _kitStrokeCount(String code, String path) {
+  final dividers = _dividerNames(code);
   final strokes = _call(r'Border\.all|BorderSide', (a) {
     if (a.contains('BorderStyle.none')) return false;
     final width = _namedArg(a, 'width');
-    return width == null || !width.contains('KitTokens');
+    return width == null || !_kitStrokeWidth(width, dividers);
   })(code, path);
   final thickness = RegExp(
     r'\bthickness:\s*(\d+(?:\.\d+)?)\b',
@@ -1382,6 +1428,37 @@ final List<_Rule> _rules = [
     absolute: true,
   ),
 
+  // G49 — inside the kit a surface asks the style resolver (style
+  // coherence audit 2026-10-21, R1; docs/design/design-schools/briefs/
+  // README.md "How a part asks for the style"). A raw decoration painted
+  // from fixed roles ignores Glass, Soft, Brutal and Paper, so each file's
+  // count may only shrink as slices S1-S8 move their parts onto
+  // KitSurfaceLook.decorate / kitSurfaceBox / kitSurfaceMaterial.
+  for (final (name, counter) in <(String, _Counter)>[
+    ('BoxDecoration(', _re(r'(?<![A-Za-z0-9_.$])BoxDecoration\(')),
+    ('ShapeDecoration(', _re(r'(?<![A-Za-z0-9_.$])ShapeDecoration\(')),
+    ('ColoredBox(', _re(r'(?<![A-Za-z0-9_.$])ColoredBox\(')),
+    (
+      'Material(color:',
+      _call(r'Material', (a) => _namedArg(a, 'color') != null),
+    ),
+  ])
+    _Rule(
+      'G49',
+      name,
+      counter,
+      ids: const ['LOOK-20'],
+      fix:
+          'paint the surface through the style resolver: '
+          'KitSurfaceLook.decorate(context, solid: <your decoration>, '
+          'role: ...) into kitSurfaceBox, or kitSurfaceMaterial for a '
+          'Material host; pass the part\'s own decoration as solid so Solid '
+          'stays pixel-identical (briefs/README.md "How a part asks for the '
+          'style")',
+      scope: _In.insideKit,
+      allow: _styleExemptFiles,
+    ),
+
   // G48 — multiline input in a kit sheet keeps a draft.
   _Rule(
     'G48',
@@ -1411,7 +1488,7 @@ final _flutterUiImport = RegExp(
 );
 
 /// The gates `_rules` covers, in baseline order.
-const _ruleGates = ['G2', 'G7', 'G15x', 'G17', 'G21', 'G48'];
+const _ruleGates = ['G2', 'G7', 'G15x', 'G17', 'G21', 'G48', 'G49'];
 
 final _fileCache = <String, List<String>>{};
 
@@ -1731,6 +1808,9 @@ void main() {
     'G17': 'G17 colour: every colour comes from a ThemeRoles role',
     'G21': 'G21 look and motion: numbers and effects come from the kit',
     'G48': 'G48 drafts: multiline input in a kit sheet keeps a draft',
+    'G49':
+        'G49 style: kit surfaces ask the style resolver, not raw '
+        'decorations (shrink only)',
   };
   for (final gate in _ruleGates) {
     test(ruleGateTitles[gate]!, () {
@@ -1800,6 +1880,38 @@ void main() {
               '`ratchet-tighten: <gate> <pattern>` in the commit body (KIT-44).',
       ].join('\n'),
     );
+  });
+
+  // A key whose file is gone, or that no longer needs its exemption, only
+  // hides the next file to take that path (the old glass_surface.dart and
+  // home_screen.dart glass rows, style audit 2026-10-21 §2).
+  test('allowlist keys name a file or folder that exists', () {
+    final gone = [
+      for (final keys in _allowlistsInCode(_rules).values)
+        for (final key in keys.values.expand((k) => k))
+          if (!(key.endsWith('/')
+              ? Directory(key).existsSync()
+              : File(key).existsSync()))
+            key,
+    ];
+    expect(gone, isEmpty, reason: 'drop these allowlist keys: $gone');
+  });
+
+  test('the glass allowlist names only files that still build glass', () {
+    final glass = _rules.singleWhere(
+      (r) => r.gate == 'G21' && r.name == 'KitGlass(/GlassSurface(',
+    );
+    final idle = [
+      for (final key in glass.allow.keys)
+        if (!key.endsWith('/') &&
+            glass.count(
+                  _stripLineComments(File(key).readAsStringSync()),
+                  key,
+                ) ==
+                0)
+          key,
+    ];
+    expect(idle, isEmpty, reason: 'drop these glass allowlist keys: $idle');
   });
 
   test('allowlist keys are exact paths or folders under lib/', () {
@@ -2251,6 +2363,24 @@ Divider(thickness: 1); Divider(thickness: 0); Divider(thickness: t);
       expect(
         count('G21', 'stroke width not KitTokens in kit', source, path: kit),
         4,
+      );
+
+      // The style's divider is a kit width too (S6 and S7 had to dodge the
+      // gate with `BorderSide.none.copyWith`): its `.width` read inline or
+      // through the name it is bound to, also behind a condition. Any other
+      // name's `.width` still counts.
+      const divider = '''
+final line = KitSurfaceLook.divider(context, color: c, width: w);
+final rule = solid ? null : KitSurfaceLook.divider(context, color: c, width: w);
+final other = Size(2, 2);
+Border(bottom: BorderSide(color: line.color, width: line.width));
+Border.all(color: c, width: rule!.width);
+BorderSide(width: KitSurfaceLook.divider(context, color: c, width: w).width);
+BorderSide(color: c, width: other.width);
+''';
+      expect(
+        count('G21', 'stroke width not KitTokens in kit', divider, path: kit),
+        1,
       );
       final rule = _rules.singleWhere(
         (r) => r.gate == 'G21' && r.name == 'stroke width not KitTokens in kit',

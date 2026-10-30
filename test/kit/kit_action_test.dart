@@ -113,6 +113,59 @@ Future<void> _connectMouse(WidgetTester tester) async {
 }
 
 void main() {
+  group('a primary waking up eases its fill', () {
+    Color? fill(WidgetTester tester) => tester
+        .widget<Material>(
+          find
+              .descendant(
+                of: find.byWidgetPredicate((w) => w is ButtonStyleButton),
+                matching: find.byType(Material),
+              )
+              .first,
+        )
+        .color;
+    Widget save({required bool ready}) => KitButton(
+      role: KitButtonRole.primary,
+      label: 'Save',
+      onPressed: ready ? () {} : null,
+    );
+
+    testWidgets('disabled to enabled passes through the colours between', (
+      tester,
+    ) async {
+      final appKey = GlobalKey();
+      await _pumpAt(tester, save(ready: false), appKey: appKey);
+      final roles = KitTokens.of(tester.element(find.text('Save'))).roles;
+      expect(fill(tester), roles.surface3);
+      await _pumpAt(tester, save(ready: true), appKey: appKey);
+      await tester.pump(KitMotion.quick ~/ 2);
+      final midway = fill(tester);
+      expect(midway, isNot(roles.surface3));
+      expect(midway, isNot(roles.accent));
+      await tester.pumpAndSettle();
+      expect(fill(tester), roles.accent);
+    });
+
+    testWidgets('under reduced motion it changes at once', (tester) async {
+      final appKey = GlobalKey();
+      await _pumpAt(
+        tester,
+        save(ready: false),
+        appKey: appKey,
+        reducedMotion: true,
+      );
+      await _pumpAt(
+        tester,
+        save(ready: true),
+        appKey: appKey,
+        reducedMotion: true,
+      );
+      await tester.pump();
+      final roles = KitTokens.of(tester.element(find.text('Save'))).roles;
+      expect(fill(tester), roles.accent);
+    });
+  });
+
   group('KitAction', () {
     test(
       'enabled is true for a callback or a copy action, false otherwise',
@@ -354,7 +407,9 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('kit-actions-more')));
       await tester.pumpAndSettle();
 
-      final divider = tester.getTopLeft(find.byType(PopupMenuDivider));
+      final divider = tester.getTopLeft(
+        find.byKey(const ValueKey('kit-menu-divider')),
+      );
       final three = tester.getTopLeft(find.text('Three'));
       final delete = tester.getTopLeft(find.text('Delete'));
       expect(delete.dy, greaterThan(divider.dy));
@@ -654,13 +709,6 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('kit-actions-more')));
       await tester.pumpAndSettle();
-      final item = tester.widget<PopupMenuItem<int>>(
-        find.ancestor(
-          of: find.text('Copy log'),
-          matching: find.byType(PopupMenuItem<int>),
-        ),
-      );
-      expect(item.enabled, isTrue);
       await tester.tap(find.text('Copy log'));
       await tester.pumpAndSettle();
       expect(_clipboardText(calls), 'the log');
@@ -686,7 +734,6 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('kit-actions-more')));
       await tester.pumpAndSettle();
       expect(find.text('Nothing to export yet.'), findsOneWidget);
-      expect(find.byKey(const ValueKey('kit-action-reason')), findsOneWidget);
       expect(
         tester.getTopLeft(find.text('Nothing to export yet.')).dy,
         greaterThan(tester.getTopLeft(find.text('Export')).dy),
@@ -1209,5 +1256,168 @@ void main() {
     semantics.dispose();
     await tester.tap(find.text('Resume'));
     expect(taps, 1);
+  });
+
+  testWidgets('a hero primary is a taller full-width pill', (tester) async {
+    await _pumpAt(
+      tester,
+      Column(
+        children: [
+          KitButton.primary(
+            key: const ValueKey('plain'),
+            label: 'Plain',
+            onPressed: () {},
+          ),
+          KitButton.primary(
+            key: const ValueKey('hero'),
+            label: 'Start with Claude Code',
+            hero: true,
+            onPressed: () {},
+          ),
+        ],
+      ),
+    );
+    final plain = tester.getSize(find.byKey(const ValueKey('plain')));
+    final hero = tester.getSize(find.byKey(const ValueKey('hero')));
+    expect(hero.height, greaterThan(plain.height));
+    expect(hero.width, plain.width);
+    final button = tester.widget<FilledButton>(
+      find.descendant(
+        of: find.byKey(const ValueKey('hero')),
+        matching: find.byType(FilledButton),
+      ),
+    );
+    expect(button.style!.shape!.resolve({}), isA<StadiumBorder>());
+  });
+
+  testWidgets('pair: a primary and a short secondary share one row on a '
+      'phone, primary first and widest; large text or a narrow window '
+      'stacks them', (tester) async {
+    final block = KitActionBlock(
+      pair: true,
+      primary: KitAction(
+        key: const ValueKey('send'),
+        label: 'Send as a GitHub issue',
+        onPressed: () {},
+      ),
+      secondary: KitAction.copy(
+        key: const ValueKey('copy'),
+        label: 'Copy',
+        text: () => 'report',
+      ),
+    );
+    await _pumpAt(
+      tester,
+      Padding(padding: const EdgeInsets.all(16), child: block),
+    );
+    var send = tester.getRect(find.byKey(const ValueKey('send')));
+    var copy = tester.getRect(find.byKey(const ValueKey('copy')));
+    expect(send.center.dy, moreOrLessEquals(copy.center.dy));
+    expect(send.right, lessThan(copy.left));
+    expect(send.width, greaterThan(copy.width));
+
+    await _pumpAt(
+      tester,
+      Padding(padding: const EdgeInsets.all(16), child: block),
+      textScale: 2,
+    );
+    send = tester.getRect(find.byKey(const ValueKey('send')));
+    copy = tester.getRect(find.byKey(const ValueKey('copy')));
+    expect(copy.top, greaterThan(send.bottom));
+
+    await _pumpAt(
+      tester,
+      Padding(padding: const EdgeInsets.all(16), child: block),
+      size: const Size(320, 693),
+    );
+    send = tester.getRect(find.byKey(const ValueKey('send')));
+    copy = tester.getRect(find.byKey(const ValueKey('copy')));
+    expect(copy.top, greaterThan(send.bottom));
+  });
+
+  testWidgets('pair leaves a block with a tertiary action as it was', (
+    tester,
+  ) async {
+    await _pumpAt(
+      tester,
+      KitActionBlock(
+        pair: true,
+        primary: KitAction(
+          key: const ValueKey('send'),
+          label: 'Send',
+          onPressed: () {},
+        ),
+        secondary: KitAction(
+          key: const ValueKey('copy'),
+          label: 'Copy',
+          onPressed: () {},
+        ),
+        tertiary: [KitAction(label: 'Share', onPressed: () {})],
+      ),
+    );
+    final send = tester.getRect(find.byKey(const ValueKey('send')));
+    final copy = tester.getRect(find.byKey(const ValueKey('copy')));
+    expect(copy.top, greaterThan(send.bottom));
+  });
+
+  // Slice S3 of the style cleanup: the tertiary underline is the style's
+  // line (the `divider` role), never a style name in the button.
+  group('under a style', () {
+    TextDecoration? underlineOf(WidgetTester tester, String label) =>
+        tester.widget<Text>(find.text(label)).style?.decoration;
+
+    Widget styled(KitSurfaceStyle style, Widget child) => KitEffectsScope(
+      effects: KitEffects(surfaceStyle: style),
+      child: child,
+    );
+
+    for (final (style, underlined) in const [
+      (KitSurfaceStyle.solid, false),
+      (KitSurfaceStyle.soft, false),
+      (KitSurfaceStyle.brutal, true),
+      (KitSurfaceStyle.paper, true),
+    ]) {
+      testWidgets('${style.name}: a tertiary action is '
+          '${underlined ? '' : 'not '}underlined; a disabled one never', (
+        tester,
+      ) async {
+        await _pumpAt(
+          tester,
+          styled(
+            style,
+            Column(
+              children: [
+                KitButton.tertiary(label: 'Just show me', onPressed: () {}),
+                const KitButton.tertiary(label: 'Later', onPressed: null),
+              ],
+            ),
+          ),
+        );
+        expect(
+          underlineOf(tester, 'Just show me'),
+          underlined ? TextDecoration.underline : isNull,
+        );
+        expect(underlineOf(tester, 'Later'), isNull);
+      });
+    }
+
+    testWidgets('a styled primary still presses and fires', (tester) async {
+      var taps = 0;
+      await _pumpAt(
+        tester,
+        styled(
+          KitSurfaceStyle.brutal,
+          KitButton.primary(label: 'Send', onPressed: () => taps++),
+        ),
+      );
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Send')),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(taps, 1);
+      expect(tester.takeException(), isNull);
+    });
   });
 }

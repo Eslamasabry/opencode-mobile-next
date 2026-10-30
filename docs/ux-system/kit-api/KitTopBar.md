@@ -35,6 +35,7 @@ class KitTopBar extends StatelessWidget {
     super.key,
     required this.title,             // the place, in the person's words (COPY-10)
     this.subtitle,                   // one line of state: "Working · 2 min", the server
+    this.subtitleTail,               // its last words ("Next: review"), drawn only while the line fits
     this.subtitleTone = AppStatusTone.neutral,
     this.needsYou = 0,               // > 0: subtitle starts with KitNeedsYou.span; badge on a switcher
     this.onTitleTap,                 // the title is a switcher (project, conversation): chevron + button semantics
@@ -146,7 +147,10 @@ Structural rules (debug asserts, G37):
 - The overflow button appears only when something is in it.
 - A screen inside a tab never builds a second bar: `KitScreen(topBar:)` inside the shell's KitScreen asserts (KIT-36, K2 §1.18 rule).
 - `scope` (a `KitTopBarScope`: chip label, semantics label, at least one menu item) puts one small `KitChip.action` under the title and subtitle. It names what the page belongs to (a conversation's project) and opens a compact `KitMenu` of what can be done there. The chip is its own semantics node, outside the title's header label. Chats-first shell, 2026-10-03.
+- `KitTopBarScope.branch` (a `KitTopBarBranch`: label, semantics label, `onTap`) adds a second chip at the end of the same scope line: the project's Git branch, one tap to the host's Git sheet. It is its own target and semantics node, adds no row to the bar, and ellipsizes a long branch name (its full name is in the semantics label). Git-in-chat, 2026-10-20.
 - `KitTopBar` is not a `PreferredSizeWidget` (a deliberate change from K2 §1.18): it has no fixed height and is hosted only by `KitScreen(topBar:)`, which lets it grow at 200 % text. G16 removes `Scaffold`/`AppBar` outside the kit, so nothing else can host it.
+
+- `subtitleTail` (vision 2026-10-20, the AI Team task's Now line): the subtitle's last words, joined with " · ". The bar measures the whole line at its width and drops the tail before the state itself would be cut ("Now: Worker on Sync engine · 5 min" stays whole on a phone with two actions; "· Next: review" shows where it fits). The title's label always reads the tail. Drawn by `_KitTopBarTailLine` (`kit_top_bar_tail.dart`); without a tail the line is the same `KitText.rich` as before, so other screens are unchanged.
 
 ## States
 

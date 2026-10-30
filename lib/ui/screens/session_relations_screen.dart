@@ -262,7 +262,13 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
         if (api == null) {
           throw StateError(l10n.e7SharedOpenCodeIsReconnectingTryAgain);
         }
-        await api.abort(session.id);
+        controller.noteStopFromThisApp(session.id);
+        try {
+          await api.abort(session.id);
+        } catch (_) {
+          controller.noteStopFromThisApp(session.id, asked: false);
+          rethrow;
+        }
       },
     );
   }

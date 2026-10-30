@@ -34,8 +34,15 @@ class _World {
       'fetch_agent_response',
       {'agent': agentJson(request['agentId'] as String)},
     );
-    daemon.handlers['resume_agent_request'] = (_) =>
-        ('resume_agent_response', {'agent': agentJson('a2')});
+    daemon.handlers['fetch_agent_timeline_request'] = (request) => (
+      'fetch_agent_timeline_response',
+      {
+        'agentId': request['agentId'],
+        // Reading the timeline loads the agent in place (Paseo 0.11.2).
+        'agent': agentJson(request['agentId'] as String),
+        'entries': <Object>[],
+      },
+    );
     daemon.handlers['get_providers_snapshot_request'] = (_) => (
       'get_providers_snapshot_response',
       {
@@ -154,13 +161,13 @@ void main() {
   });
 
   test(
-    'resume acquires before fetching and releases after daemon request',
+    'reopening acquires before fetching and releases after the load',
     () async {
       final w = _World();
       addTearDown(w.gateway.close);
       await w.gateway.resumeHostAgentChat('a1');
       expect(w.trace.first, 'acquire');
-      expect(w.trace, contains('rpc:resume_agent_request'));
+      expect(w.trace, contains('rpc:fetch_agent_timeline_request'));
       expect(w.trace.last, 'release');
       expect(w.active, 0);
       expect(w.released, 1);
@@ -267,7 +274,8 @@ void main() {
         text: 'next',
       );
       expect(w.daemon.of('create_agent_request'), hasLength(1));
-      expect(w.daemon.of('resume_agent_request'), hasLength(1));
+      expect(w.daemon.of('fetch_agent_timeline_request'), hasLength(1));
+      expect(w.daemon.of('resume_agent_request'), isEmpty);
       expect(w.daemon.of('send_agent_message_request'), hasLength(1));
       expect(w.released, 0);
     },

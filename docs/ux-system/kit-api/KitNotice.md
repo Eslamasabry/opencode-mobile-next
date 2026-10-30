@@ -62,7 +62,7 @@ class KitNotice extends StatelessWidget {
     this.tone = AppStatusTone.neutral,
     this.icon,
     this.notes = const [],
-    this.actions = const [],      // tertiary, at most 2 shown
+    this.actions = const [],      // small tonal buttons, at most 2 shown
     this.onDismiss,               // only when dismissing changes nothing real
     this.messageKey,
     this.liveRegion = true,
@@ -185,7 +185,7 @@ abstract final class KitReportHook {
 
 ## States
 
-| Constructor | States | Actions shown (tertiary, at most 2 in words) |
+| Constructor | States | Actions shown (small tonal buttons, at most 2; the offer's one stays a tertiary link in its line) |
 |---|---|---|
 | default | neutral, progress, ok, attention*, failure | the caller's `actions` (first 2) and an optional dismiss |
 | `.cost` | static | none |

@@ -165,13 +165,26 @@ void main() {
 
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';
-    testWidgets('hub, every group · $mode', (tester) async {
+    testWidgets('hub, search and five words · $mode', (tester) async {
       await _shot(
         tester,
         'p310_settings_hub_full_$mode',
         light: light,
         home: hub,
-        size: const Size(412, 2300),
+      );
+    });
+  }
+
+  // Each word's page: the rows that group holds (vision 2026-10-20).
+  for (final group in SettingsGroup.values) {
+    testWidgets('${group.slug} page · dark', (tester) async {
+      await _shot(
+        tester,
+        'p310_settings_group_${group.slug.replaceAll('-', '_')}_dark',
+        light: false,
+        home: (controller) =>
+            SettingsScreen(controller: controller, initialGroup: group),
+        size: const Size(412, 1200),
       );
     });
   }
@@ -182,7 +195,7 @@ void main() {
       'p310_settings_hub_text200_dark',
       light: false,
       home: hub,
-      size: const Size(412, 4400),
+      size: const Size(412, 1400),
       textScale: 2,
     );
   });
@@ -202,8 +215,12 @@ void main() {
       tester,
       'p310_settings_hub_paseo_dark',
       light: false,
-      home: hub,
-      size: const Size(412, 2300),
+      // The hub keeps its five words; the Agent page counts what it lost.
+      home: (controller) => SettingsScreen(
+        controller: controller,
+        initialGroup: SettingsGroup.ai,
+      ),
+      size: const Size(412, 1200),
       capabilities: paseoServerCapabilities,
     );
   });

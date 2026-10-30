@@ -23,12 +23,21 @@ internal object ScheduledPromptPolicy {
         sdk >= EXPEDITED_MIN_SDK && fromAlarm && delay == 0L && !digest
     fun remaining(started: Long, now: Long): Long =
         (WORKER_BUDGET_MS - (now - started).coerceAtLeast(0)).coerceIn(0, WORKER_BUDGET_MS)
-    fun nextWeekday(hour: Int, minute: Int, after: Long, zone: java.time.ZoneId): Long {
+    fun nextWeekday(hour: Int, minute: Int, after: Long, zone: java.time.ZoneId): Long =
+        nextWallClock(hour, minute, after, zone, weekdaysOnly = true)
+
+    /** Every day at a wall-clock time, kept across daylight-saving changes. */
+    fun nextDaily(hour: Int, minute: Int, after: Long, zone: java.time.ZoneId): Long =
+        nextWallClock(hour, minute, after, zone, weekdaysOnly = false)
+
+    private fun nextWallClock(
+        hour: Int, minute: Int, after: Long, zone: java.time.ZoneId, weekdaysOnly: Boolean,
+    ): Long {
         require(hour in 0..LAST_HOUR && minute in 0..LAST_MINUTE)
         val now = java.time.Instant.ofEpochMilli(after).atZone(zone)
         for (offset in 0L..WEEK_LOOKAHEAD_DAYS) {
             val day = now.toLocalDate().plusDays(offset)
-            if (day.dayOfWeek.value > LAST_WEEKDAY) continue
+            if (weekdaysOnly && day.dayOfWeek.value > LAST_WEEKDAY) continue
             val candidate = day.atTime(hour, minute).atZone(zone).toInstant().toEpochMilli()
             if (candidate > after) return candidate
         }

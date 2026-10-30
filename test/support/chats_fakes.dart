@@ -9,10 +9,13 @@ import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart'
     show ProviderConversationImportGateway, WorkspaceProject;
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/ui/kit/kit.dart';
+import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/kit/kit_feed_item.dart' show KitFeedRunning;
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
 
 import '../../tool/capture/fixtures.dart' show captureTheme;
+// AUDIT TOOLING (audit/style-coherence): no-op unless AUDIT_STYLE is set.
+import '../../tool/capture/audit/audit_env.dart';
 import 'agents_fakes.dart';
 
 /// A [ChatFeedSource] over a fixed list, filtered as the contract says.
@@ -31,6 +34,7 @@ class FakeChatFeedSource implements ChatFeedSource {
   bool complete;
   List<String> stillLoading = const [];
   List<String> unreachableServers = const [];
+  List<String> incompleteSources = const [];
   String? lastUsed;
 
   int refreshes = 0;
@@ -60,6 +64,7 @@ class FakeChatFeedSource implements ChatFeedSource {
       complete: complete,
       stillLoading: stillLoading,
       unreachableServers: unreachableServers,
+      incompleteSources: incompleteSources,
     );
   }
 
@@ -130,6 +135,10 @@ class FakeChatsHost implements ChatsHost {
   /// Whether this phone has a saved built-in server to switch to.
   bool builtInProfile = false;
 
+  /// The connected profile's id; null keeps no draft on the device.
+  @override
+  String? profileId;
+
   /// The connections the list can show; null: only the one.
   @override
   FakeListSources? listSources;
@@ -144,7 +153,28 @@ class FakeChatsHost implements ChatsHost {
   @override
   Widget? listRequest(BuildContext context, ChatFeedItem item) =>
       requestCards[item.sessionID];
+
+  /// What each running conversation does now, by session id.
+  final running = <String, KitFeedRunning>{};
+
+  @override
+  KitFeedRunning? runningOf(ChatFeedItem item) => running[item.sessionID];
   int switched = 0;
+
+  /// What the "Needs you" chip counts (the Inbox's count): by default every
+  /// conversation of the feed that waits on the person, across projects.
+  int? inboxCountOverride;
+
+  @override
+  int get inboxCount =>
+      inboxCountOverride ??
+      fake.items.where((item) => item.status == ChatStatus.needsYou).length;
+
+  /// How many times the Inbox was opened.
+  int inboxOpens = 0;
+
+  @override
+  Future<void> openInbox(BuildContext context) async => inboxOpens++;
 
   @override
   bool get hasBuiltInProfile => builtInProfile;
@@ -203,12 +233,16 @@ class FakeChatsHost implements ChatsHost {
   @override
   GitRepairActions? projectGitRepair(String directory) => gitRepair;
 
+  final copyTasks = <String>[];
+
   @override
   Future<String?> startSeparateCopy(
     BuildContext context,
-    WorkspaceProject project,
-  ) async {
+    WorkspaceProject project, {
+    String initialTask = '',
+  }) async {
     copies.add(project.directory);
+    copyTasks.add(initialTask);
     return copyResult;
   }
 
@@ -237,12 +271,13 @@ class FakeChatsHost implements ChatsHost {
     return openProjectResult;
   }
 
+  var modelPicks = 0;
+
   @override
-  Widget modelChip(BuildContext context) => KitComposerChips.model(
-    label: 'Server default',
-    state: KitModelChipState.serverDefault,
-    onPressed: () {},
-  );
+  String modelValue(BuildContext context) => 'Server default';
+
+  @override
+  Future<void> chooseModel(BuildContext context) async => modelPicks++;
 }
 
 /// The app around [home] with the fake host.
@@ -253,6 +288,7 @@ Widget chatsApp(
   double textScale = 1,
   Locale locale = const Locale('en'),
   LocalTerminalSessions? terminal,
+  ThemeData? theme,
 }) => ProviderScope(
   overrides: [
     chatsHostProvider.overrideWithValue(host),
@@ -260,7 +296,7 @@ Widget chatsApp(
   ],
   child: MaterialApp(
     debugShowCheckedModeBanner: false,
-    theme: captureTheme(light: light),
+    theme: theme ?? AppTheme.forLocale(captureTheme(light: light), locale),
     locale: locale,
     supportedLocales: AppLocalizations.supportedLocales,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -268,7 +304,7 @@ Widget chatsApp(
       data: MediaQuery.of(
         context,
       ).copyWith(textScaler: TextScaler.linear(textScale)),
-      child: child!,
+      child: auditWrap(context, child!),
     ),
     // The app's own surface: pages sit on a Material, so text carries no
     // debug underline.
@@ -296,6 +332,7 @@ ChatFeedItem chat(
   String? sourceId,
   String? sourceLabel,
   bool finishedUnseen = false,
+  bool stoppedByPerson = false,
   double? contextUsage,
 }) => ChatFeedItem(
   sessionID: id,
@@ -312,6 +349,7 @@ ChatFeedItem chat(
   sourceId: sourceId,
   sourceLabel: sourceLabel,
   finishedUnseen: finishedUnseen,
+  stoppedByPerson: stoppedByPerson,
   contextUsage: contextUsage,
 );
 

@@ -230,8 +230,10 @@ Future<void> _close(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 1));
 }
 
-Finder _lastKnownRow(int i) =>
-    find.byKey(ValueKey('last-known-session-cached-$i'));
+Finder _row(int i) => find.byKey(ValueKey('chats-row-cached-$i'));
+
+/// The server pill in the home's bar.
+final _pill = find.byKey(const ValueKey('server-switcher-button'));
 
 void main() {
   testWidgets('before: no saved titles, the root says only "Connecting"', (
@@ -240,7 +242,7 @@ void main() {
     await _seed(cache: false);
     final h = await _open(tester);
     expect(find.byKey(const ValueKey('saved-server-connecting')), findsOne);
-    expect(find.byType(KitLastKnown), findsNothing);
+    expect(find.byType(HomeScreen), findsNothing);
     for (final title in _titles) {
       expect(find.text(title), findsNothing);
     }
@@ -261,27 +263,30 @@ void main() {
     expect(h.api.healthCalls, 1);
     expect(h.api.sessionReads, 0);
     for (final title in _titles) {
-      expect(find.text(title), findsOneWidget, reason: title);
+      expect(find.textContaining(title), findsOneWidget, reason: title);
     }
-    expect(find.text('Updated 12 min ago · Refreshing'), findsOneWidget);
-    // The connection state stays honest and in charge.
-    expect(find.byKey(const ValueKey('saved-server-connecting')), findsOne);
+    // The home's own frame, with the connection state honest in its pill:
+    // "Laptop · Connecting", never "Connected".
+    expect(find.byType(HomeScreen), findsOne);
+    expect(find.text('Conversations'), findsWidgets);
+    expect(
+      find.descendant(of: _pill, matching: find.textContaining('Connecting')),
+      findsOne,
+    );
     expect(find.text('Connected'), findsNothing);
-    expect(find.byType(HomeScreen), findsNothing);
     expect(conn.hasConnectedServer, isFalse);
     expect(conn.sessionsById, isEmpty);
-    // Read-only: no live session rows, nothing to tap on the titles.
-    expect(find.byKey(const ValueKey('session-row-cached-0')), findsNothing);
+    // Read-only: nothing to tap on the titles, no + to start one yet.
     expect(
-      find.descendant(
-        of: find.byType(KitLastKnown),
-        matching: find.byType(KitTappable),
-      ),
+      find.descendant(of: _row(0), matching: find.byType(KitTappable)),
       findsNothing,
     );
-    await tester.tap(_lastKnownRow(0), warnIfMissed: false);
+    expect(find.byKey(const ValueKey('chats-new-chat')), findsNothing);
+    final routes = find.byType(HomeScreen).evaluate().length;
+    await tester.tap(_row(0), warnIfMissed: false);
     await tester.pump();
-    expect(find.byType(HomeScreen), findsNothing);
+    expect(find.byType(HomeScreen).evaluate().length, routes);
+    expect(h.api.sessionReads, 0);
     debugPrint(
       'OPENING_SHELL after: titles_visible=${_titles.length} '
       'health_calls=${h.api.healthCalls} session_reads=${h.api.sessionReads} '
@@ -290,7 +295,7 @@ void main() {
 
     // Held for a long time: still the titles, now under "not answering".
     await tester.pump(const Duration(seconds: 12));
-    expect(find.text(_titles.first), findsOneWidget);
+    expect(find.textContaining(_titles.first), findsOneWidget);
     expect(conn.hasConnectedServer, isFalse);
     await _close(tester);
   });
@@ -304,10 +309,10 @@ void main() {
     addTearDown(tester.view.reset);
     await _seed();
     await _open(tester);
-    final page = find.byKey(const ValueKey('opening-shell'));
-    expect(page, findsOneWidget);
-    expect(tester.getTopLeft(page).dy, greaterThanOrEqualTo(40));
-    expect(tester.getBottomLeft(page).dy, lessThanOrEqualTo(915 - 24));
+    expect(_pill, findsOneWidget);
+    expect(tester.getTopLeft(_pill).dy, greaterThanOrEqualTo(40));
+    expect(tester.getTopLeft(_row(0)).dy, greaterThanOrEqualTo(40));
+    expect(tester.getBottomLeft(_row(0)).dy, lessThanOrEqualTo(915 - 24));
     await _close(tester);
   });
 
@@ -321,10 +326,17 @@ void main() {
     );
     await tester.pump();
     await tester.pump();
+    // The card comes above the titles when the server needs the person.
     expect(find.byKey(const ValueKey('saved-server-failed')), findsOne);
-    expect(find.text(_titles.first), findsOneWidget);
-    expect(find.text('Updated 12 min ago'), findsOneWidget);
-    expect(find.textContaining('Refreshing'), findsNothing);
+    expect(find.textContaining(_titles.first), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('saved-server-failed'))).dy,
+      lessThan(tester.getTopLeft(_row(0)).dy),
+    );
+    expect(
+      find.descendant(of: _pill, matching: find.textContaining('Connecting')),
+      findsNothing,
+    );
     // The raw failure is not copy on the page.
     expect(find.text('connection refused'), findsNothing);
     expect(h.controller().hasConnectedServer, isFalse);
@@ -334,9 +346,102 @@ void main() {
   testWidgets('titles saved for another project never show', (tester) async {
     await _seed(directory: '/elsewhere');
     await _open(tester);
-    expect(find.byType(KitLastKnown), findsNothing);
+    expect(find.byType(HomeScreen), findsNothing);
     expect(find.text(_titles.first), findsNothing);
     expect(find.byKey(const ValueKey('saved-server-connecting')), findsOne);
+    await _close(tester);
+  });
+  testWidgets('the server answering keeps the bar and the rows in place '
+      '(jitter J2): one home before and after, no frame without rows', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(412, 915);
+    addTearDown(tester.view.reset);
+    await _seed();
+    final h = await _open(tester);
+    final conn = h.controller();
+    expect(conn.hasConnectedServer, isFalse);
+    final home = tester.state(find.byType(HomeScreen));
+    final pill = tester.getRect(_pill);
+    final heading = tester.getRect(find.text('Conversations'));
+    final rows = [for (var i = 0; i < 3; i++) tester.getRect(_row(i))];
+
+    void same(String when) {
+      expect(find.byType(HomeScreen), findsOne, reason: when);
+      expect(
+        identical(tester.state(find.byType(HomeScreen)), home),
+        isTrue,
+        reason: '$when: the opening and the home are one screen',
+      );
+      // The pill's word changes (Connecting, Connected); it stays put.
+      expect(tester.getTopLeft(_pill), pill.topLeft, reason: '$when: the bar');
+      expect(
+        tester.getSize(_pill).height,
+        pill.height,
+        reason: '$when: the bar',
+      );
+      expect(
+        tester.getRect(find.text('Conversations')),
+        heading,
+        reason: '$when: the title',
+      );
+      for (var i = 0; i < rows.length; i++) {
+        expect(_row(i), findsOne, reason: '$when: row $i is there');
+        expect(
+          tester.getRect(_row(i)).top,
+          rows[i].top,
+          reason: '$when: row $i stays',
+        );
+      }
+    }
+
+    // The server answers health; its list is still being read.
+    h.api.healthResult.complete(Health(healthy: true));
+    for (var i = 0; i < 30 && !conn.hasConnectedServer; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      same('health answered, frame $i');
+    }
+    expect(conn.hasConnectedServer, isTrue);
+    for (final stream in h.streams) {
+      stream.connected();
+    }
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      same('connected, list loading, frame $i');
+    }
+    // Its list arrives: the same conversations, now live.
+    h.api.firstPage.complete(
+      ServerPage(
+        items: [
+          for (var i = 0; i < _titles.length; i++)
+            Session(
+              id: 'cached-$i',
+              title: _titles[i],
+              time: SessionTime(
+                created: 0,
+                updated: DateTime.now()
+                    .subtract(Duration(hours: i + 1))
+                    .millisecondsSinceEpoch,
+              ),
+            ),
+        ],
+      ),
+    );
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      same('list arrived, frame $i');
+    }
+    // Live now: the rows open their conversations and the + is there.
+    expect(
+      find.descendant(of: _row(0), matching: find.byType(KitTappable)),
+      findsOne,
+    );
+    expect(find.byKey(const ValueKey('chats-new-chat')), findsOne);
+    expect(
+      find.descendant(of: _pill, matching: find.textContaining('Connecting')),
+      findsNothing,
+    );
     await _close(tester);
   });
 }

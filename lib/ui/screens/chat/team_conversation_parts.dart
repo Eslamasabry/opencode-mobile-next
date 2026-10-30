@@ -46,22 +46,17 @@ class _TeamLeadReply extends StatefulWidget {
     String? roleName,
   }) {
     final l10n = _chatL10n(context);
-    String at(DateTime? time, {bool seconds = false}) {
-      if (time == null) return '';
-      final clock = teamClockLabel(context, time);
-      if (!seconds) return ' · $clock';
-      final second = time.toLocal().second.toString().padLeft(2, '0');
-      return ' · $clock:$second';
-    }
+    // Minutes only (concept B, 20 Oct 2026): an update line is a quiet
+    // fact, not a stopwatch.
+    String at(DateTime? time) =>
+        time == null ? '' : ' · ${teamClockLabel(context, time)}';
 
     return [
       if (pending case final task?)
         '${l10n.teamChatLeadSent}${at(task.sentAt)}',
       for (final line in lines)
-        // The moment a worker began the task is said to the second: it is
-        // the pickup the person waited for.
         '${teamLeadSentence(l10n, line, taskTitle: taskTitle, roleName: roleName)}'
-            '${at(line.at, seconds: line.event == TeamLeadEvent.claimed)}',
+            '${at(line.at)}',
     ];
   }
 
@@ -101,13 +96,23 @@ class _TeamLeadReplyState extends State<_TeamLeadReply> {
           ),
           SizedBox(height: tokens.space2),
         ],
-        KitMessage.reply(
-          bodyKey: const ValueKey('team-conversation-lead-reply'),
-          body: KitMarkdown(
-            (recent.isEmpty ? [l10n.teamChatLeadNothingYet] : recent).join(
-              '\n\n',
-            ),
-          ),
+        // The team's updates are quiet, small lines (concept B): the
+        // person's words and the questions carry the page, not the log.
+        Column(
+          key: const ValueKey('team-conversation-lead-reply'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final (i, row)
+                in (recent.isEmpty ? [l10n.teamChatLeadNothingYet] : recent)
+                    .indexed) ...[
+              if (i > 0) SizedBox(height: tokens.space1),
+              KitText(
+                row,
+                role: KitTextRole.secondary,
+                tone: KitTextTone.secondary,
+              ),
+            ],
+          ],
         ),
       ],
     );
@@ -242,6 +247,9 @@ class _TeamNowLine extends StatelessWidget {
                           KitSince.durationWords(l10n, quiet),
                         ),
                   explains: quiet == null,
+                  // The calm line is the header's; this one only when
+                  // something is wrong and has a way out.
+                  calmInHeader: true,
                 ),
         );
       },

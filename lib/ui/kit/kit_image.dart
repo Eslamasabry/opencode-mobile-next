@@ -18,6 +18,7 @@ import '../theme_roles.dart';
 import 'kit_icon_button.dart';
 import 'kit_layout.dart';
 import 'kit_motion.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
@@ -299,13 +300,20 @@ class KitImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
     final shapeBorder = tokens.shapeOf(shape);
+    // The frame behind the image (seen while it loads, and through a clear
+    // one) is a `content` surface in the style; the image is clipped to it.
     final content = SizedBox(
       width: width,
       height: height,
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: tokens.roles.surface2,
-          shape: shapeBorder,
+      child: kitSurfaceBox(
+        style: KitSurfaceLook.styleOf(context),
+        decoration: KitSurfaceLook.decorate(
+          context,
+          solid: ShapeDecoration(
+            color: tokens.roles.surface2,
+            shape: shapeBorder,
+          ),
+          level: KitSurfaceLevel.surface2,
         ),
         child: ClipPath(
           clipper: ShapeBorderClipper(shape: shapeBorder),
@@ -446,7 +454,7 @@ class _KitImageFailure extends StatelessWidget {
 }
 
 /// [KitAvatar]'s fixed sizes (KitImage.md): [tile] is
-/// [KitTokens.iconTileSize] (30), [mark] is [KitTokens.markSize] (44).
+/// [KitTokens.iconTileSize] (28), [mark] is [KitTokens.markSize] (44).
 enum KitAvatarSize { tile, mark }
 
 /// The one identity mark (docs/ux-system/kit-api/KitImage.md): an image or
@@ -1349,6 +1357,16 @@ class _KitZoomState extends State<KitZoom> with SingleTickerProviderStateMixin {
     // "Zoom in · Ctrl+="); a disabled control keeps its reason alone.
     String withKeys(String action, String key) =>
         finePointer ? l10n.kitZoomShortcut(action, key) : action;
+    final controlsLook = KitSurfaceLook.decorate(
+      context,
+      solid: ShapeDecoration(
+        color: tokens.roles.surface2,
+        shape: const StadiumBorder(),
+      ),
+      role: KitSurfaceRole.floating,
+      level: KitSurfaceLevel.surface2,
+      borderRadius: KitSurfaceLook.stadium,
+    );
     return Stack(
       children: [
         PositionedDirectional(
@@ -1362,11 +1380,11 @@ class _KitZoomState extends State<KitZoom> with SingleTickerProviderStateMixin {
           PositionedDirectional(
             end: tokens.space4,
             bottom: tokens.space4,
-            child: DecoratedBox(
-              decoration: ShapeDecoration(
-                color: tokens.roles.surface2,
-                shape: const StadiumBorder(),
-              ),
+            // The zoom controls float over the image: the style's floating
+            // piece.
+            child: kitSurfaceBox(
+              style: KitSurfaceLook.styleOf(context),
+              decoration: controlsLook,
               child: Padding(
                 padding: EdgeInsetsDirectional.symmetric(
                   horizontal: tokens.space2,

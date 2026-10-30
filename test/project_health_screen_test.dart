@@ -381,7 +381,7 @@ void main() {
       );
       final vcs = group('feature/mobile');
       final services = group('Dart analysis server');
-      // The words start where the panel does: the one inset (R4).
+      // The one inset (R4).
       final panel = tester
           .getTopLeft(
             find
@@ -397,16 +397,21 @@ void main() {
                 .first,
           )
           .dx;
+      // Flat lists (Solid): the rows reach out of the margin by their own
+      // inset, so their words start under the label.
+      final reach = KitTokens.of(
+        tester.element(find.text('feature/mobile')),
+      ).space4;
       for (final label in ['Version control', 'Language services']) {
-        expect(tester.getTopLeft(find.text(label)).dx, panel);
+        expect(tester.getTopLeft(find.text(label)).dx, panel + reach);
       }
       expect(
         tester.getTopLeft(find.text('Language services')).dy - vcs.bottom,
-        moreOrLessEquals(22, epsilon: 0.01),
+        moreOrLessEquals(24, epsilon: 0.01),
       );
       expect(
         tester.getTopLeft(find.text('Formatters')).dy - services.bottom,
-        moreOrLessEquals(22, epsilon: 0.01),
+        moreOrLessEquals(24, epsilon: 0.01),
       );
     });
 
@@ -438,7 +443,7 @@ void main() {
       expect(
         tester.getTopLeft(find.text('Language services')).dy -
             tester.getRect(notice.first).bottom,
-        moreOrLessEquals(22, epsilon: 0.01),
+        moreOrLessEquals(24, epsilon: 0.01),
       );
       expect(services, findsOneWidget);
     });

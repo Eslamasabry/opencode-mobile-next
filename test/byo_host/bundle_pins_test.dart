@@ -11,7 +11,7 @@ void main() {
               File('scripts/byo-host/release-pins.json').readAsStringSync(),
             )
             as Map<String, dynamic>;
-    expect(ledger['openCodeVersion'], '2.0.29');
+    expect(ledger['openCodeVersion'], '2.1.1');
     expect(
       ledger['appVersions'],
       isEmpty,

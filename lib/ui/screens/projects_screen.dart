@@ -372,27 +372,34 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             if (_loading && projects == null)
               const KitSkeletonRows()
             else if (_error != null && projects == null)
-              KitStateView.error(
-                title: l10n.e7ProjectProjectsRefreshFailed,
+              // Calm (vision 2026-10-20): plain words, no red, Try again
+              // as the quiet way on; the folder rows above stay usable.
+              KitStateView.calm(
+                key: const ValueKey('projects-load-failed'),
+                icon: AppIconography.cloudOff,
+                title: l10n.projectsLoadFailedTitle,
                 body: _error,
                 size: KitStateSize.inline,
-                retry: KitAction(
-                  label: l10n.workspaceRetryProjects,
-                  onPressed: _load,
-                ),
+                tertiary: [
+                  KitAction(
+                    label: l10n.workspaceRetryProjects,
+                    onPressed: _load,
+                  ),
+                ],
               )
             else if (projects != null && usable.isEmpty)
               // Coherent with the Workspace chooser: the server's home folder
               // is never a project, so a fresh server starts with a new or
               // typed folder.
-              KitStateView(
+              KitStateView.calm(
+                key: const ValueKey('projects-empty'),
                 icon: AppIconography.folders,
                 title: l10n.e7ProjectProjectsEmpty,
                 body: l10n.e7ProjectProjectsEmptyDetail,
                 size: KitStateSize.inline,
               )
             else if (visible.isEmpty && query.isNotEmpty)
-              KitSearchNoMatch(query: query, onClear: _search.clear)
+              KitSearchNoMatch(query: query, onClear: _search.clear, calm: true)
             else if (visible.isNotEmpty)
               // The label keeps the section gap from the folder actions.
               KitRowGroup(

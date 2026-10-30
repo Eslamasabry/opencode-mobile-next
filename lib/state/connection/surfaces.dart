@@ -28,12 +28,24 @@ mixin _ConnectionControllerSurfaces on ChangeNotifier {
   final Set<String> _widgetActionsInFlight = {};
   final Map<String, List<MobileTaskItem>> _widgetTasks = {};
 
+  /// When each shown server was first seen unreachable, by profile id, for
+  /// the Status widget's "offline 12 min". Cleared when it answers again.
+  final Map<String, int> _widgetOfflineSince = {};
+
   /// The ongoing "OpenCode is connected" notification's content, derived
   /// from the same truth the Activity tab shows: how many sessions run, how
   /// many requests wait, the most recently active busy session's title, and
   /// a generic sentence for the tool it is running.
   @visibleForTesting
   LiveStatus liveStatus() => _self._liveStatus();
+
+  /// What [sessionID] does while it runs, for its row on the Conversations
+  /// list: since when its turn runs, the shell command it runs now (its
+  /// first line) and otherwise the task in progress or the tool's sentence.
+  /// Null while it does not run.
+  ({DateTime since, String? command, String? line})? runningNow(
+    String sessionID,
+  ) => _self._runningNow(sessionID);
 }
 
 extension _ConnectionControllerSurfacesImpl on ConnectionController {
@@ -104,9 +116,27 @@ extension _ConnectionControllerSurfacesImpl on ConnectionController {
     );
   }
 
+  ({DateTime since, String? command, String? line})? _runningNow(
+    String sessionID,
+  ) {
+    if (!busySessions.contains(sessionID)) return null;
+    final since =
+        _openTurns[sessionID] ??
+        _busySince.putIfAbsent(sessionID, DateTime.now);
+    return (
+      since: since,
+      command: _runningCommand[sessionID],
+      line: _sessionTasks[sessionID]?.current ?? _runningToolDetail[sessionID],
+    );
+  }
+
   /// A session's project: the last folder of its directory.
-  String _projectNameOf(Session? session) {
-    final directory = session?.directory?.trim() ?? '';
+  String _projectNameOf(Session? session) =>
+      _projectNameOfDirectory(session?.directory);
+
+  /// A project's name: the last folder of [path].
+  String _projectNameOfDirectory(String? path) {
+    final directory = path?.trim() ?? '';
     if (directory.isEmpty) return '';
     final parts = directory.split(RegExp(r'[\\/]+'))
       ..removeWhere((part) => part.isEmpty);
@@ -246,6 +276,7 @@ extension _ConnectionControllerSurfacesImpl on ConnectionController {
   void _noteRunEnded(String sessionID, {required bool replied}) {
     _widgetRunMarkers.remove(sessionID);
     _busySince.remove(sessionID);
+    _runningCommand.remove(sessionID);
     _sessionTasks.remove(sessionID);
     _widgetTasks.remove(sessionID);
     if (replied && sessionsById[sessionID]?.parentID == null) {
@@ -287,6 +318,7 @@ extension _ConnectionControllerSurfacesImpl on ConnectionController {
   void _publishLiveStatus() {
     if (_disposed || !keepLiveInBackground || !backgroundLive.active) return;
     _runningToolDetail.removeWhere((id, _) => !busySessions.contains(id));
+    _runningCommand.removeWhere((id, _) => !busySessions.contains(id));
     // Plans and start times are dropped when a run ends ([_noteRunEnded]),
     // not here: a polled "busy" can arrive after the plan's first event.
     // Only a runaway map is trimmed.

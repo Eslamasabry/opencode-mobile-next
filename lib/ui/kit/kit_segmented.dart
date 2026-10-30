@@ -5,10 +5,16 @@ import 'package:intl/intl.dart' show NumberFormat;
 import '../app_iconography.dart';
 import 'kit_choice_list.dart';
 import 'kit_divider.dart';
+import 'kit_ink_layer.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
+import 'kit_surface.dart';
+import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
+import 'motion/kit_haptics.dart';
+import 'motion/kit_motion_parts.dart' show KitSwap;
 
 /// One choice of a [KitSegmented] group
 /// (docs/ux-system/kit-api/KitSegmented.md): a value, its visible label and
@@ -73,6 +79,9 @@ class KitSegmented<T> extends StatelessWidget {
     required this.onChanged,
     required this.semanticsLabel,
     this.disabledReason,
+    this.iconOnly = false,
+    this.fitLabels = false,
+    this.tall = false,
   }) : assert(
          segments.length >= 2 && segments.length <= 4,
          'KitSegmented needs 2 to 4 segments (KitSegmented.md); use '
@@ -101,13 +110,44 @@ class KitSegmented<T> extends StatelessWidget {
   /// Shown as text under the control when [onChanged] is null.
   final String? disabledReason;
 
+  /// A compact pill of icons, each [KitSegment.label] kept as its tooltip and
+  /// its semantics (an icon alone is never the only name). Every segment
+  /// needs an icon. It is as wide as its icons, never stacks, and sits at the
+  /// start of the space it is given.
+  final bool iconOnly;
+
+  /// Each segment as wide as its own words (plus an even share of the
+  /// room left over) instead of an equal share, so four choices of
+  /// different lengths ("Once", "Every day", "Weekdays", "Custom") stay on
+  /// one line where equal shares would stack. It still stacks when the
+  /// words together do not fit, or at 2× text.
+  final bool fitLabels;
+
+  /// Each segment as its icon over its word, in a taller track (Settings ›
+  /// Appearance's Auto / Light / Dark / Saver). Every segment needs an icon.
+  /// The chosen one is the filled block, its words on the accent; there is
+  /// no check (the fill is a shape, not colour alone). It stacks like the
+  /// row form when a word does not fit its share, or at 2× text.
+  final bool tall;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     // Not in the constructor: `Iterable.any` is not a constant expression,
     // and the constructor stays `const` as the frozen API declares it.
     assert(
       segments.any((s) => s.value == selected),
       'KitSegmented.selected must be the value of one of its segments.',
+    );
+    assert(
+      !iconOnly || segments.every((s) => s.icon != null),
+      'KitSegmented.iconOnly needs an icon on every segment.',
+    );
+    assert(
+      !tall || segments.every((s) => s.icon != null),
+      'KitSegmented.tall needs an icon on every segment.',
     );
     return _SegmentedGroup<T>(part: this);
   }
@@ -324,7 +364,9 @@ class _SegmentedGroupState<T> extends State<_SegmentedGroup<T>> {
   void _choose(int index) {
     if (!_canChoose(index)) return;
     final value = _segments[index].value;
-    if (value != _part.selected) _part.onChanged!(value);
+    if (value == _part.selected) return;
+    KitHaptics.select(context);
+    _part.onChanged!(value);
   }
 
   void _setHovered(int index, bool hovered) {
@@ -362,10 +404,27 @@ class _SegmentedGroupState<T> extends State<_SegmentedGroup<T>> {
           onFocusChange: _groupFocusChanged,
           child: LayoutBuilder(
             builder: (context, constraints) {
+              if (_part.iconOnly) {
+                final tokens = KitTokens.of(context);
+                return _withReasons(
+                  context,
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    widthFactor: 1,
+                    child: SizedBox(
+                      width: _segments.length * tokens.minTarget * 1.15,
+                      child: _track(context),
+                    ),
+                  ),
+                  _reasons(),
+                );
+              }
               final stacked = _stacks(context, constraints.maxWidth);
               return _withReasons(
                 context,
-                stacked ? _stack(context) : _track(context),
+                stacked
+                    ? _stack(context)
+                    : _track(context, width: constraints.maxWidth),
                 // In the stack a disabled segment's reason is on its row;
                 // only the whole control's reason stays under it.
                 stacked
@@ -383,7 +442,6 @@ class _SegmentedGroupState<T> extends State<_SegmentedGroup<T>> {
   /// insets) is wider than its equal share of [width], or the text is at
   /// 2.0 or more. Measured like KitAskLine, with the styles the row draws.
   bool _stacks(BuildContext context, double width) {
-    final tokens = KitTokens.of(context);
     final scaler = MediaQuery.textScalerOf(context);
     final labelStyle = KitText.styleOf(context, KitTextRole.label);
     if (labelStyle.fontSize case final size?
@@ -391,6 +449,20 @@ class _SegmentedGroupState<T> extends State<_SegmentedGroup<T>> {
       return true;
     }
     if (!width.isFinite) return false;
+    final needed = _neededWidths(context);
+    final room = width - 2 * KitTokens.hairlineWidth(context);
+    if (_part.fitLabels) {
+      return needed.fold<double>(0, (a, b) => a + b) > room;
+    }
+    final share = room / _segments.length;
+    return needed.any((w) => w > share);
+  }
+
+  /// Each segment's one line: check, icon, label, count and insets.
+  List<double> _neededWidths(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    final scaler = MediaQuery.textScalerOf(context);
+    final labelStyle = KitText.styleOf(context, KitTextRole.label);
     final direction = Directionality.of(context);
     double measure(String text, TextStyle style) {
       final painter = TextPainter(
@@ -409,22 +481,31 @@ class _SegmentedGroupState<T> extends State<_SegmentedGroup<T>> {
       KitTextRole.caption,
     ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
     final iconSize = tokens.iconSize(context, tokens.smallIconSize);
-    final share =
-        (width - 2 * KitTokens.hairlineWidth(context)) / _segments.length;
-    for (final segment in _segments) {
-      var needed =
-          2 * tokens.space2 +
-          iconSize +
-          tokens.space1 +
-          measure(segment.label, labelStyle);
-      if (segment.icon != null) needed += iconSize + tokens.space1;
-      if (segment.count case final count?) {
-        needed +=
-            tokens.space1 + measure(_formatCount(context, count), countStyle);
-      }
-      if (needed > share) return true;
+    if (_part.tall) {
+      final small = KitText.styleOf(context, KitTextRole.caption);
+      return [
+        for (final segment in _segments)
+          2 * tokens.space1 +
+              (measure(segment.label, small) > iconSize
+                  ? measure(segment.label, small)
+                  : iconSize),
+      ];
     }
-    return false;
+    return [
+      for (final segment in _segments)
+        2 * tokens.space2 +
+            iconSize +
+            tokens.space1 +
+            measure(segment.label, labelStyle) +
+            (segment.icon != null ? iconSize + tokens.space1 : 0) +
+            (segment.count == null
+                ? 0
+                : tokens.space1 +
+                      measure(
+                        _formatCount(context, segment.count!),
+                        countStyle,
+                      )),
+    ];
   }
 
   Widget _withReasons(
@@ -478,12 +559,13 @@ class _SegmentedGroupState<T> extends State<_SegmentedGroup<T>> {
       skipTraversal: true,
       includeSemantics: false,
       onKeyEvent: _handleStackKey,
-      child: Material(
-        color: roles.surface1,
+      child: kitSurfaceMaterial(
+        context,
+        level: KitSurfaceLevel.surface1,
+        fill: roles.surface1,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
         ),
-        clipBehavior: Clip.antiAlias,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -537,7 +619,7 @@ class _SegmentedGroupState<T> extends State<_SegmentedGroup<T>> {
     );
   }
 
-  Widget _track(BuildContext context) {
+  Widget _track(BuildContext context, {double width = double.infinity}) {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
     final reduced = KitMotion.reduced(context);
@@ -549,56 +631,160 @@ class _SegmentedGroupState<T> extends State<_SegmentedGroup<T>> {
     final indicatorAlign = n > 1
         ? AlignmentDirectional(-1 + selectedIndex * (2 / (n - 1)), 0)
         : AlignmentDirectional.center;
+    // [KitSegmented.fitLabels]: each segment its own words' width plus an
+    // even share of what is left.
+    List<double>? widths;
+    if (_part.fitLabels && width.isFinite) {
+      final needed = _neededWidths(context);
+      final room = width - 2 * hairline;
+      final spare = room - needed.fold<double>(0, (a, b) => a + b);
+      widths = [for (final w in needed) w + spare / n];
+    }
+    final fitted = widths;
 
-    return Container(
-      // `BoxDecoration.border` already insets the child by its own width
-      // (`Container` folds a decoration's padding in), so no extra padding
-      // is added here; the track is taller by that inset so a segment never
-      // shrinks under [KitTokens.minTarget] (A11Y-3).
-      height: tokens.minTarget + 2 * hairline,
-      decoration: BoxDecoration(
-        color: roles.surface1,
-        borderRadius: BorderRadius.circular(tokens.buttonRadius),
-        border: Border.all(
-          color: roles.hairline,
-          width: KitTokens.hairlineWidth(context),
+    final style = KitSurfaceLook.styleOf(context);
+    // Solid: the chosen segment is a neutral step up from the track
+    // (surface2 in light, surface3 in dark, with the hairline), as the tab
+    // strip's is; its words in text1 and the check in the accent. Every
+    // other style draws a chosen control in mint its own way (Soft's well,
+    // Paper's inverted ink).
+    final quiet = style == KitSurfaceStyle.solid;
+    final step = roles.isDark ? roles.surface3 : roles.surface2;
+    final indicatorRadius = BorderRadius.circular(tokens.buttonRadius - inset);
+    final indicator = kitSurfaceBox(
+      style: style,
+      decoration: KitSurfaceLook.decorate(
+        context,
+        solid: BoxDecoration(
+          color: quiet ? step : roles.accent,
+          borderRadius: indicatorRadius,
+          border: quiet
+              ? Border.all(
+                  color: roles.hairline,
+                  width: KitTokens.hairlineWidth(context),
+                )
+              : null,
         ),
+        role: KitSurfaceRole.control,
+        color: quiet ? step : roles.accent,
+        selected: true,
       ),
-      child: Stack(
-        alignment: AlignmentDirectional.center,
-        children: [
-          AnimatedAlign(
-            duration: reduced ? Duration.zero : KitMotion.quick,
-            curve: KitMotion.enter,
-            alignment: indicatorAlign,
-            child: FractionallySizedBox(
-              widthFactor: 1 / n,
-              heightFactor: 1,
-              // Inset from the track's own hairline and concentric with its
-              // corners, with no border of its own: two hairlines side by
-              // side would read as one doubled line (LOOK-21).
-              child: Padding(
-                padding: EdgeInsets.all(inset),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: roles.surface3,
-                    borderRadius: BorderRadius.circular(
-                      tokens.buttonRadius - inset,
+      child: const SizedBox.expand(),
+    );
+    final trackRadius = BorderRadius.circular(tokens.buttonRadius);
+    return SizedBox(
+      // The track is taller by its hairline on each side so a segment never
+      // shrinks under [KitTokens.minTarget] (A11Y-3); the segments sit inside
+      // that hairline in every style.
+      height:
+          (_part.tall ? _tallHeight(context) : tokens.minTarget) + 2 * hairline,
+      child: kitSurfaceBox(
+        style: style,
+        decoration: KitSurfaceLook.decorate(
+          context,
+          solid: BoxDecoration(
+            color: roles.surface1,
+            borderRadius: trackRadius,
+            border: Border.all(
+              color: roles.hairline,
+              width: KitTokens.hairlineWidth(context),
+            ),
+          ),
+          role: KitSurfaceRole.track,
+          borderRadius: trackRadius,
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(hairline),
+          child: Stack(
+            alignment: AlignmentDirectional.center,
+            children: [
+              if (fitted != null)
+                AnimatedPositionedDirectional(
+                  duration: reduced ? Duration.zero : KitMotion.quick,
+                  curve: KitMotion.enter,
+                  start: fitted
+                      .take(selectedIndex)
+                      .fold<double>(0, (a, b) => a + b),
+                  width: fitted[selectedIndex],
+                  top: 0,
+                  bottom: 0,
+                  child: Padding(
+                    padding: EdgeInsets.all(inset),
+                    child: indicator,
+                  ),
+                )
+              else
+                AnimatedAlign(
+                  duration: reduced ? Duration.zero : KitMotion.quick,
+                  curve: KitMotion.enter,
+                  alignment: indicatorAlign,
+                  child: FractionallySizedBox(
+                    widthFactor: 1 / n,
+                    heightFactor: 1,
+                    // Inset from the track's own hairline and concentric with its
+                    // corners, with no border of its own: two hairlines side by
+                    // side would read as one doubled line (LOOK-21).
+                    child: Padding(
+                      padding: EdgeInsets.all(inset),
+                      // The chosen segment is filled in the accent, as the
+                      // studio's tab pill is.
+                      child: indicator,
                     ),
                   ),
                 ),
+              Row(
+                children: [
+                  for (var i = 0; i < n; i++)
+                    if (fitted != null)
+                      SizedBox(
+                        width: fitted[i],
+                        child: _segment(context, i, reduced: reduced),
+                      )
+                    else
+                      Expanded(
+                        child: _part.tall && i < n - 1
+                            // The tall track parts its resting segments with a
+                            // hairline; none beside the chosen block.
+                            ? DecoratedBox(
+                                position: DecorationPosition.foreground,
+                                decoration: BoxDecoration(
+                                  border: BorderDirectional(
+                                    end: BorderSide(
+                                      color:
+                                          i == selectedIndex ||
+                                              i + 1 == selectedIndex
+                                          ? roles.hairline.withAlpha(0)
+                                          : roles.hairline,
+                                      width: KitTokens.hairlineWidth(context),
+                                    ),
+                                  ),
+                                ),
+                                child: _segment(context, i, reduced: reduced),
+                              )
+                            : _segment(context, i, reduced: reduced),
+                      ),
+                ],
               ),
-            ),
-          ),
-          Row(
-            children: [
-              for (var i = 0; i < n; i++)
-                Expanded(child: _segment(context, i, reduced: reduced)),
             ],
           ),
-        ],
+        ),
       ),
     );
+  }
+
+  /// The tall track's height: the icon, a small gap and one line of the
+  /// small words, inside the same insets as a row segment.
+  double _tallHeight(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    final scaler = MediaQuery.textScalerOf(context);
+    final small = KitText.styleOf(context, KitTextRole.caption);
+    final line = scaler.scale(small.fontSize ?? 12) * (small.height ?? 1.3);
+    final content =
+        tokens.iconSize(context, tokens.smallIconSize) * 1.2 +
+        tokens.space1 +
+        line +
+        2 * tokens.space2;
+    return content < tokens.minTarget ? tokens.minTarget : content;
   }
 
   Widget _segment(BuildContext context, int index, {required bool reduced}) {
@@ -614,23 +800,40 @@ class _SegmentedGroupState<T> extends State<_SegmentedGroup<T>> {
     // next step whose colour differs (surface2 in dark, surface3 in light),
     // pressed the step after that, at most surface3. The selected segment
     // already sits on the surface3 indicator.
+    // On Android a press draws the native ripple instead (KitInk).
+    final pressedFill =
+        (_presses[index]?.shown ?? false) && !KitInk.on(context);
     final KitSurfaceLevel? step = !enabled || isSelected
         ? null
-        : _presses[index]?.shown ?? false
+        : pressedFill
         ? KitSurfaceLevel.surface3
         : _hovered == index
         ? (roles.isDark ? KitSurfaceLevel.surface2 : KitSurfaceLevel.surface3)
         : null;
+    final own = BoxDecoration(
+      color: step == null ? null : tokens.fillOf(step),
+      borderRadius: radius,
+    );
     final iconSize = tokens.iconSize(context, tokens.smallIconSize);
+    // Solid's chosen segment is a neutral step: text1 words, accent check.
+    final quiet = KitSurfaceLook.styleOf(context) == KitSurfaceStyle.solid;
     final tone = !enabled
         ? KitTextTone.tertiary
         : isSelected
-        ? KitTextTone.primary
+        ? (quiet ? KitTextTone.primary : KitTextTone.onAccent)
         : KitTextTone.secondary;
+    // Hook H3: a style may say the chosen segment's words colour.
+    final chosenInk = KitSurfaceLook.wordsOn(
+      context,
+      fallback: quiet ? roles.text1 : roles.onAccent,
+      role: KitSurfaceRole.control,
+      color: roles.accent,
+      selected: true,
+    );
     final Color color = !enabled
         ? roles.text3
         : isSelected
-        ? roles.text1
+        ? chosenInk
         : roles.text2;
 
     final count = segment.count;
@@ -638,50 +841,93 @@ class _SegmentedGroupState<T> extends State<_SegmentedGroup<T>> {
         ? segment.label
         : '${segment.label}, ${_formatCount(context, count)}';
 
-    final content = Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedOpacity(
-          opacity: isSelected ? 1 : 0,
-          duration: reduced ? Duration.zero : KitMotion.quick,
-          curve: KitMotion.enter,
-          child: Padding(
-            padding: EdgeInsetsDirectional.only(end: tokens.space1),
-            child: Icon(
-              AppIconography.check,
-              size: iconSize,
-              color: !enabled ? roles.text3 : roles.accent,
-            ),
-          ),
-        ),
-        if (segment.icon case final icon?) ...[
-          Icon(icon, size: iconSize, color: color),
-          SizedBox(width: tokens.space1),
-        ],
-        Flexible(
-          // One line that always fits: when it would not, the part stacks
-          // instead (KIT-24, [_stacks]); nothing truncates.
-          child: Text(
-            segment.label,
-            maxLines: 1,
-            softWrap: false,
-            style: KitText.styleOf(context, KitTextRole.label, tone: tone),
-          ),
-        ),
-        if (count != null) ...[
-          SizedBox(width: tokens.space1),
-          Text(
-            _formatCount(context, count),
-            style: KitText.styleOf(
-              context,
-              KitTextRole.caption,
-              tone: tone,
-            ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
-          ),
-        ],
-      ],
-    );
+    // Solid's tall and icon-only segments have no check: the chosen one's
+    // glyph takes the accent instead, its one accent mark.
+    final glyph = quiet && isSelected && enabled ? roles.accent : color;
+    final Widget content = _part.tall
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(segment.icon, size: iconSize * 1.2, color: glyph),
+              SizedBox(height: tokens.space1),
+              Text(
+                segment.label,
+                maxLines: 1,
+                softWrap: false,
+                style: KitText.styleOf(
+                  context,
+                  KitTextRole.caption,
+                  tone: tone,
+                ).copyWith(color: color),
+              ),
+            ],
+          )
+        : _part.iconOnly
+        ? Tooltip(
+            message: segment.label,
+            child: Icon(segment.icon, size: iconSize * 1.2, color: glyph),
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // fitLabels: the words stay centred; only the chosen one
+              // shows its check (each width already has room for it).
+              if (!_part.fitLabels || isSelected)
+                AnimatedOpacity(
+                  opacity: isSelected ? 1 : 0,
+                  duration: reduced ? Duration.zero : KitMotion.quick,
+                  curve: KitMotion.enter,
+                  child: Padding(
+                    padding: EdgeInsetsDirectional.only(end: tokens.space1),
+                    child: Icon(
+                      AppIconography.check,
+                      size: iconSize,
+                      color: !enabled
+                          ? roles.text3
+                          : quiet
+                          ? roles.accent
+                          : chosenInk,
+                    ),
+                  ),
+                ),
+              if (segment.icon case final icon?) ...[
+                Icon(icon, size: iconSize, color: color),
+                SizedBox(width: tokens.space1),
+              ],
+              Flexible(
+                // One line that always fits: when it would not, the part stacks
+                // instead (KIT-24, [_stacks]); nothing truncates.
+                child: Text(
+                  segment.label,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: KitText.styleOf(
+                    context,
+                    KitTextRole.label,
+                    tone: tone,
+                  ),
+                ),
+              ),
+              if (count != null) ...[
+                SizedBox(width: tokens.space1),
+                KitSwap.count(
+                  count: count,
+                  child: Text(
+                    _formatCount(context, count),
+                    style:
+                        KitText.styleOf(
+                          context,
+                          KitTextRole.caption,
+                          tone: tone,
+                        ).copyWith(
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                  ),
+                ),
+              ],
+            ],
+          );
 
     return Semantics(
       key: segment.key,
@@ -728,29 +974,39 @@ class _SegmentedGroupState<T> extends State<_SegmentedGroup<T>> {
                       _choose(index);
                     }
                   : null,
-              child: Container(
-                constraints: BoxConstraints(minHeight: tokens.minTarget),
-                alignment: Alignment.center,
-                padding: EdgeInsetsDirectional.symmetric(
-                  horizontal: tokens.space2,
-                ),
-                decoration: BoxDecoration(
-                  color: step == null ? null : tokens.fillOf(step),
-                  borderRadius: radius,
-                ),
-                // The keyboard ring is painted over the segment, inside its
-                // bounds, so it never moves the content (LOOK-21: 2 physical px
-                // in accent).
-                foregroundDecoration: _ring == index
-                    ? BoxDecoration(
-                        borderRadius: radius,
-                        border: Border.all(
-                          color: roles.accent,
-                          width: KitTokens.focusRingWidth(context),
+              child: KitInkLayer(
+                key: _press(index).inkKey,
+                shape: RoundedRectangleBorder(borderRadius: radius),
+                child: Container(
+                  constraints: BoxConstraints(minHeight: tokens.minTarget),
+                  alignment: Alignment.center,
+                  padding: EdgeInsetsDirectional.symmetric(
+                    horizontal: tokens.space2,
+                  ),
+                  // Hover and pressed: the style's state layer.
+                  decoration: step == null
+                      ? own
+                      : KitSurfaceLook.decorate(
+                          context,
+                          solid: own,
+                          role: KitSurfaceRole.stateLayer,
+                          level: step,
+                          pressed: pressedFill,
                         ),
-                      )
-                    : null,
-                child: content,
+                  // The keyboard ring is painted over the segment, inside its
+                  // bounds, so it never moves the content (LOOK-21: 2 physical px
+                  // in accent).
+                  foregroundDecoration: _ring == index
+                      ? BoxDecoration(
+                          borderRadius: radius,
+                          border: Border.all(
+                            color: roles.accent,
+                            width: KitTokens.focusRingWidth(context),
+                          ),
+                        )
+                      : null,
+                  child: content,
+                ),
               ),
             ),
           ),

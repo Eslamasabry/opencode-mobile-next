@@ -116,10 +116,19 @@ sort -u "$out/local/agg-failed.txt" "$out/remote/agg-failed.txt" "$out/remote/st
 : >"$out/recheck-failed.txt"
 if [[ -s "$out/recheck.txt" ]]; then
   echo "run_tests_split: running $(wc -l <"$out/recheck.txt") suspect file(s) alone here"
-  "$root/tool/qa/machine_lock.sh" test -- "$flutter" test -j "$local_jobs" \
-    --reporter=failures-only $(cat "$out/recheck.txt") >"$out/recheck.log" 2>&1 || true
+  # At least one process, even when this machine takes no share of the plan
+  # (OC_SPLIT_LOCAL_JOBS=0): flutter test refuses -j 0.
+  recheck_rc=0
+  "$root/tool/qa/machine_lock.sh" test -- "$flutter" test -j "$((local_jobs > 0 ? local_jobs : 1))" \
+    --reporter=failures-only $(cat "$out/recheck.txt") >"$out/recheck.log" 2>&1 || recheck_rc=$?
   grep -F '[E]' "$out/recheck.log" | grep -oE 'test/[A-Za-z0-9_/.-]+_test\.dart' |
     sort -u >"$out/recheck-failed.txt" || true
+  # A recheck that failed without naming a test (bad arguments, a load error)
+  # proves nothing: every suspect file stays failed.
+  if [[ $recheck_rc != 0 && ! -s "$out/recheck-failed.txt" ]]; then
+    echo "run_tests_split: the recheck did not run (see recheck.log); counting every suspect file as failed" >&2
+    cp "$out/recheck.txt" "$out/recheck-failed.txt"
+  fi
 fi
 sort -u "$out/local/standalone-failed.txt" "$out/recheck-failed.txt" | sed 's/^/FAILED /' | tee "$out/failed.txt"
 [[ -s "$out/failed.txt" ]] && status=1

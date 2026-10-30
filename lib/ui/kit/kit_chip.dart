@@ -25,10 +25,14 @@ import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../theme_roles.dart' show readableOn;
 import 'kit_icon.dart';
+import 'kit_ink_layer.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
+import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
+import 'style/kit_signal.dart' show KitTrack;
 
 /// Semantic severity for worded chips; neutral preserves the existing look.
 /// [active] is a worded "this is on" state: an accent-tinted pill with
@@ -194,8 +198,22 @@ class KitChip extends StatelessWidget {
   /// a handle of its own to find it and check its focus.
   static const _bodyKey = ValueKey('kit-chip-body');
 
+  /// Hook H3: a style may say the words' colour on a chosen chip; every
+  /// other chip, and every chip in Solid, keeps [own].
+  Color _chosenInk(BuildContext context, Color own) => selected == true
+      ? KitSurfaceLook.wordsOn(
+          context,
+          fallback: own,
+          role: KitSurfaceRole.control,
+          selected: true,
+        )
+      : own;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.chip(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
     final reduceMotion = KitMotion.reduced(context);
@@ -221,11 +239,19 @@ class KitChip extends StatelessWidget {
             4.7,
             toward: roles.text1,
           );
-    final emphasized = KitText.styleOf(
-      context,
-      KitTextRole.secondary,
-      tone: KitTextTone.primary,
-    ).copyWith(color: tone == KitChipTone.neutral ? roles.text1 : toneColor);
+    final emphasized =
+        KitText.styleOf(
+          context,
+          KitTextRole.secondary,
+          tone: KitTextTone.primary,
+        ).copyWith(
+          color: _chosenInk(
+            context,
+            tone == KitChipTone.neutral ? roles.text1 : toneColor,
+          ),
+          // Signal: a filter's words are set firm in its ink outline.
+          fontWeight: KitTrack.on(context) ? FontWeight.w600 : null,
+        );
     final quiet = KitText.styleOf(
       context,
       KitTextRole.secondary,
@@ -501,12 +527,14 @@ class _ChipFrameState extends State<_ChipFrame> {
   final _hovered = <_Zone>{};
   final _focused = <_Zone>{};
   // Each zone's press shows on the next frame of a touch (KitPressTracker),
-  // not after the InkWell's tap-or-scroll wait.
+  // not after the InkWell's tap-or-scroll wait. On Android both zones draw
+  // their ripple on the one pill ([_ink]), bounded to it.
+  final _ink = GlobalKey<KitInkLayerState>(debugLabel: 'KitChip ink');
   late final _press = {
     for (final zone in _Zone.values)
       zone: KitPressTracker(() {
         if (mounted) setState(() {});
-      }),
+      }, ink: _ink),
   };
 
   @override
@@ -559,7 +587,9 @@ class _ChipFrameState extends State<_ChipFrame> {
               onTap();
             },
             onTapCancel: _press[zone]!.cancel,
-            onLongPress: onLongPress,
+            onLongPress: onLongPress == null
+                ? null
+                : () => _press[zone]!.longPressed(context, onLongPress),
             onHover: (on) => _mark(_hovered, zone, on),
             onFocusChange: (on) => _mark(_focused, zone, on),
             splashFactory: NoSplash.splashFactory,
@@ -618,18 +648,31 @@ class _ChipFrameState extends State<_ChipFrame> {
         if (onPressed != null || named) {
           row = ExcludeSemantics(child: row);
         }
+        // On Android the ripple answers a press (KitInk); the flat pressed
+        // fill is for the other platforms and reduced motion.
+        final pressed =
+            _press.values.any((p) => p.shown) && !KitInk.on(context);
         final pill = _PillSurface(
           tokens: tokens,
           fill:
               widget.tint ??
-              (_hovered.isNotEmpty || _press.values.any((p) => p.shown)
+              (_hovered.isNotEmpty || pressed
                   ? roles.surface2
                   : roles.surface3),
+          tinted: widget.tint != null,
+          selected: widget.toggled == true,
+          pressed: pressed,
           focused: _focused.isNotEmpty,
           child: row,
         );
 
-        final children = <Widget>[pill];
+        final children = <Widget>[
+          KitInkLayer(
+            key: _ink,
+            shape: tokens.shapeOf(KitShape.pill),
+            child: pill,
+          ),
+        ];
         if (onRemove != null) {
           // The body zone runs from the start to the ×'s 48 dp zone.
           Widget? body = onPressed == null
@@ -762,22 +805,51 @@ class _PillSurface extends StatelessWidget {
     required this.fill,
     required this.focused,
     required this.child,
+    this.tinted = false,
+    this.selected = false,
+    this.pressed = false,
   });
 
   final KitTokens tokens;
   final Color fill;
   final bool focused;
+
+  /// [fill] is the chip's own accent tint, kept in every Surfaces style.
+  final bool tinted;
+
+  /// An on filter: pressed in under Soft.
+  final bool selected;
+  final bool pressed;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final shape = tokens.shapeOf(KitShape.pill);
-    Widget pill = DecoratedBox(
-      decoration: ShapeDecoration(color: fill, shape: shape),
+    Widget pill = kitSurfaceBox(
+      style: KitSurfaceLook.styleOf(context),
+      decoration: KitSurfaceLook.decorate(
+        context,
+        solid: ShapeDecoration(color: fill, shape: shape),
+        level: fill == tokens.roles.surface2 && !tinted
+            ? KitSurfaceLevel.surface2
+            : KitSurfaceLevel.surface3,
+        role: KitSurfaceRole.control,
+        color: tinted ? fill : null,
+        selected: selected,
+        pressed: pressed,
+      ),
+      // Signal: a filter is a flat outlined key, a step taller and wider
+      // (concept CD, 36 dp), every filter the same height.
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: KitTokens.chipHeight),
+        constraints: BoxConstraints(
+          minHeight: KitTrack.on(context)
+              ? tokens.pillHeight + tokens.space1
+              : tokens.pillHeight,
+        ),
         child: Padding(
-          padding: EdgeInsetsDirectional.symmetric(horizontal: tokens.space3),
+          padding: EdgeInsetsDirectional.symmetric(
+            horizontal: KitTrack.on(context) ? tokens.space4 : tokens.space3,
+          ),
           child: child,
         ),
       ),
@@ -786,7 +858,7 @@ class _PillSurface extends StatelessWidget {
       pill = DecoratedBox(
         position: DecorationPosition.foreground,
         decoration: ShapeDecoration(
-          shape: StadiumBorder(
+          shape: tokens.pillBorder(
             side: BorderSide(
               color: tokens.roles.accent,
               width: KitTokens.focusRingWidth(context),
@@ -813,11 +885,14 @@ class KitChipWrap extends StatelessWidget {
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     return Wrap(
       spacing: tokens.space2,
-      runSpacing: tokens.minTarget - KitTokens.chipHeight,
+      runSpacing: tokens.minTarget - tokens.pillHeight,
       alignment: WrapAlignment.start,
       runAlignment: WrapAlignment.start,
       crossAxisAlignment: WrapCrossAlignment.start,

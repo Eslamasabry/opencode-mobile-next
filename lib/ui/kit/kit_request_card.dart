@@ -9,6 +9,7 @@ import 'chat/kit_markdown.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
 import 'kit_choice_list.dart';
+import 'kit_code_surface.dart';
 import 'kit_field.dart';
 import 'kit_layout.dart';
 import 'kit_motion.dart';
@@ -16,13 +17,20 @@ import 'kit_needs_you.dart';
 import 'kit_receipt.dart';
 import 'kit_sheet.dart';
 import 'kit_since.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tappable.dart';
 import 'kit_tokens.dart';
 import 'motion/kit_haptics.dart';
 import 'motion/kit_reveal.dart';
+import 'style/kit_style.dart' show KitStyleGlow, kitStyleSpec;
+import 'style/kit_signal.dart' show KitSignalAspect, KitTrack, kitSignalHead;
+import 'style/kit_signal_slip.dart';
 
 part 'kit_request_answers.dart';
+part 'kit_request_question.dart';
+part 'kit_request_row.dart';
+part 'kit_request_shape.dart';
 
 /// What the agent asks for (docs/ux-system/kit-api/KitRequestCard.md). No
 /// `change` variant (P2 deferred, C50).
@@ -99,12 +107,18 @@ class KitRequestCard extends StatefulWidget {
     this.detailsKey,
     this.inList = false,
     this.queued = 0,
+    this.targets = const [],
+    this.look = KitRequestLook.standard,
   }) : _icon = icon,
        tone = null,
        body = null,
        primary = null,
        secondary = null,
-       _ask = true;
+       _ask = true,
+       _place = null,
+       _onOpen = null,
+       _openLabel = null,
+       _openKey = null;
 
   /// Retired by kit-KitRequestCard-v2: use [KitRequestCard.ask].
   /// The pre-v2 constructor, kept working (KIT-43, never @Deprecated); its
@@ -139,11 +153,94 @@ class KitRequestCard extends StatefulWidget {
        detailsKey = null,
        inList = false,
        queued = 0,
-       _ask = false;
+       targets = const [],
+       look = KitRequestLook.standard,
+       _ask = false,
+       _place = null,
+       _onOpen = null,
+       _openLabel = null,
+       _openKey = null;
+
+  /// The Inbox's row (docs/qa/vision-inbox-2026-10-20/): a list of its own,
+  /// with no row above to name the place, so the request starts with the
+  /// amber needs-you dot and [place] ("Laptop · shopfront · Fix the build"),
+  /// then the question, the command in one mono box and the answers at the
+  /// row's end. The place line and the question are one target that opens
+  /// the conversation ([openLabel] says so). A [KitRequestDecide] answers in
+  /// place; a request with no answers (a question or form owner decision 1
+  /// sends to the chat) has one "Open" ([openKey]). The answer, receipt,
+  /// Undo and once-only guard are the card's own. Any other answer kind
+  /// keeps the card's shape.
+  KitRequestCard asRow({
+    required String place,
+    required VoidCallback onOpen,
+    String? openLabel,
+    Key? openKey,
+  }) => _ask && (answers is KitRequestDecide || answers == null)
+      ? KitRequestCard._row(
+          this,
+          place: place,
+          onOpen: onOpen,
+          openLabel: openLabel,
+          openKey: openKey,
+        )
+      : this;
+
+  KitRequestCard._row(
+    KitRequestCard card, {
+    required String place,
+    required VoidCallback onOpen,
+    String? openLabel,
+    Key? openKey,
+  }) : kind = card.kind,
+       title = card.title,
+       who = card.who,
+       reason = card.reason,
+       ifIgnored = card.ifIgnored,
+       announcement = card.announcement,
+       phase = card.phase,
+       server = card.server,
+       detail = card.detail,
+       detailMarkdown = card.detailMarkdown,
+       summary = card.summary,
+       answers = card.answers,
+       answer = card.answer,
+       receipt = card.receipt,
+       onDetails = card.onDetails,
+       since = card.since,
+       tertiary = card.tertiary,
+       _icon = card._icon,
+       titleKey = card.titleKey,
+       detailsKey = card.detailsKey,
+       inList = true,
+       queued = card.queued,
+       targets = card.targets,
+       look = card.look,
+       tone = null,
+       body = null,
+       primary = null,
+       secondary = null,
+       _ask = true,
+       _place = place,
+       _onOpen = onOpen,
+       _openLabel = openLabel,
+       _openKey = openKey,
+       super(key: card.key);
+
+  /// The Inbox row's place line, open target, its spoken name and the Open
+  /// button's key ([asRow]); null for every other card.
+  final String? _place;
+  final VoidCallback? _onOpen;
+  final String? _openLabel;
+  final Key? _openKey;
 
   /// More choices than this are not listed in place: the first
   /// (maxChoicesInPlace − 1) show, then "{n} more answers" opens Details.
   static const int maxChoicesInPlace = 5;
+
+  /// At most this many [targets] show in place; then "+{n} more", and
+  /// Details lists them all.
+  static const int maxTargetsInPlace = 3;
 
   /// permission: permissions · question: question · form: editNote ·
   /// choice: checks · gate: policy · reply: reply.
@@ -194,6 +291,16 @@ class KitRequestCard extends StatefulWidget {
 
   /// A command, path or pattern: mono, left to right, two lines.
   final String? summary;
+
+  /// What the request will run or touch, one mono line each (B's list):
+  /// every path an edit names, the size of each change when the request
+  /// carries it. In place of [summary] when given; the first
+  /// [maxTargetsInPlace] show, then "+{n} more".
+  final List<KitRequestTarget> targets;
+
+  /// [KitRequestLook.question] in a conversation; every other place keeps
+  /// the standard card.
+  final KitRequestLook look;
 
   /// Null: nothing in place (Details only).
   final KitRequestAnswers? answers;
@@ -305,6 +412,7 @@ bool _debugCheckAsk(KitRequestCard card) {
     null || KitRequestInSheet() => true,
     KitRequestDecide() =>
       kind == KitRequestKind.permission || kind == KitRequestKind.gate,
+    KitRequestGo() => kind == KitRequestKind.gate,
     KitRequestChoose() || KitRequestChooseMany() =>
       kind == KitRequestKind.question || kind == KitRequestKind.choice,
     KitRequestReply() => kind == KitRequestKind.reply,
@@ -400,6 +508,14 @@ class _KitRequestCardState extends State<KitRequestCard> {
     }
     final key = event.physicalKey;
     final answers = widget.answers;
+    if (answers is KitRequestGo) {
+      final go = answers.onGo;
+      if (key != PhysicalKeyboardKey.keyA || go == null) {
+        return KeyEventResult.ignored;
+      }
+      if (_mayAnswer()) go();
+      return KeyEventResult.handled;
+    }
     if (answers is KitRequestDecide) {
       final act = key == PhysicalKeyboardKey.keyA
           ? answers.onAllow
@@ -440,7 +556,13 @@ class _KitRequestCardState extends State<KitRequestCard> {
         switchOutCurve: KitMotion.exit,
         child: KeyedSubtree(
           key: ValueKey(collapsed),
-          child: collapsed ? _collapsed(context) : _card(context),
+          child: widget._place != null
+              ? (collapsed ? _rowAnswered(context) : _rowAsk(context))
+              : collapsed
+              ? _collapsed(context)
+              : widget.look == KitRequestLook.question
+              ? _questionCard(context)
+              : _card(context),
         ),
       );
     }
@@ -456,6 +578,8 @@ class _KitRequestCardState extends State<KitRequestCard> {
     required bool attention,
     required Widget child,
     Key? key,
+    bool edge = false,
+    bool endsWithTap = false,
   }) {
     final focused =
         _focus.hasPrimaryFocus &&
@@ -465,6 +589,8 @@ class _KitRequestCardState extends State<KitRequestCard> {
       key: key,
       attention: attention,
       focused: focused,
+      edge: edge,
+      endsWithTap: endsWithTap,
       // The v2 card is one Tab stop; the pre-v2 card keeps today's traversal.
       wrapCard: (card) => Focus(
         focusNode: _focus,
@@ -481,16 +607,46 @@ class _KitRequestCardState extends State<KitRequestCard> {
   Widget _tile(BuildContext context, {required bool attention}) =>
       kitRequestTile(context, icon: widget.icon, attention: attention);
 
-  Widget _summary(BuildContext context, String summary) {
+  Widget _summary(BuildContext context, String summary, {bool first = false}) {
     final tokens = KitTokens.of(context);
+    if (KitTrack.on(context)) {
+      // Signal: the command is printed on the slip itself, in firm mono,
+      // a shell command after its prompt ("\$ git push origin main").
+      final shell = widget.icon == AppIconography.terminal;
+      return Padding(
+        padding: first
+            ? EdgeInsets.zero
+            : EdgeInsetsDirectional.only(top: tokens.space3),
+        child: Semantics(
+          container: true,
+          label: summary,
+          textDirection: TextDirection.ltr,
+          child: ExcludeSemantics(
+            child: Text(
+              shell ? '\$ $summary' : summary,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textDirection: TextDirection.ltr,
+              style: KitText.styleOf(
+                context,
+                KitTextRole.mono,
+                tone: KitTextTone.primary,
+              ).copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+      );
+    }
     return Padding(
       padding: EdgeInsetsDirectional.only(top: tokens.space3),
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: tokens.roles.ground,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(tokens.codeRadius),
-          ),
+      // The command is code: under Paper and Soft the ground it is filled
+      // with is the card's own face too, and the style's code edge (the
+      // rule, the well) is what keeps it visible.
+      child: kitCodeSurface(
+        context,
+        fill: tokens.roles.ground,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(tokens.codeRadius),
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(
@@ -529,7 +685,9 @@ class _KitRequestCardState extends State<KitRequestCard> {
   /// The words above the answers: scroll together at 2.0 text.
   Widget _scrollWhenLarge(BuildContext context, Widget child) {
     final large = MediaQuery.textScalerOf(context).scale(10) >= 20;
-    return large ? Flexible(child: SingleChildScrollView(child: child)) : child;
+    return large
+        ? Flexible(flex: 2, child: SingleChildScrollView(child: child))
+        : child;
   }
 
   // ── The v2 card ────────────────────────────────────────────────────────
@@ -576,26 +734,35 @@ class _KitRequestCardState extends State<KitRequestCard> {
             !widget.detailMarkdown &&
             detail != null &&
             detail.isNotEmpty;
+        // Signal, under its row on a list: the row already says "Needs you"
+        // and carries the conversation, so the slip holds what runs and the
+        // keys (concept CD); a slip with nothing to print keeps its words.
+        final underRow = widget.inList && KitTrack.on(context);
+        final bare =
+            underRow && !promote && summary != null && summary.isNotEmpty;
         final header = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            KitText(
-              widget.queued > 0
-                  ? '${l10n.kitRequestNeedsYouLabel} · '
-                        '${l10n.chatRequestMoreWaiting(widget.queued).replaceFirst(RegExp(r'[.。]$'), '')}'
-                  : l10n.kitRequestNeedsYouLabel,
-              role: KitTextRole.caption,
-              tone: waiting ? KitTextTone.attention : KitTextTone.secondary,
-            ),
-            SizedBox(height: tokens.space1),
-            KitText(
-              promote ? detail : widget.title,
-              key: widget.titleKey,
-              role: KitTextRole.headline,
-              tone: KitTextTone.primary,
-            ),
-            if (!promote && detail != null && detail.isNotEmpty)
+            if (!underRow || widget.queued > 0) ...[
+              kitRequestNeedsYouTag(
+                context,
+                text: widget.queued > 0
+                    ? '${l10n.kitRequestNeedsYouLabel} · '
+                          '${l10n.chatRequestMoreWaiting(widget.queued).replaceFirst(RegExp(r'[.。]$'), '')}'
+                    : l10n.kitRequestNeedsYouLabel,
+                waiting: waiting,
+              ),
+              if (!bare) SizedBox(height: tokens.space1),
+            ],
+            if (!bare)
+              KitText(
+                promote ? detail : widget.title,
+                key: widget.titleKey,
+                role: KitTextRole.headline,
+                tone: KitTextTone.primary,
+              ),
+            if (!bare && !promote && detail != null && detail.isNotEmpty)
               Padding(
                 padding: EdgeInsetsDirectional.only(top: tokens.space1),
                 child: widget.detailMarkdown
@@ -622,7 +789,7 @@ class _KitRequestCardState extends State<KitRequestCard> {
               child: ExcludeSemantics(child: header),
             ),
             if (summary != null && summary.isNotEmpty)
-              _summary(context, summary),
+              _summary(context, summary, first: bare && widget.queued == 0),
             if (waiting && widget.receipt != null)
               Padding(
                 padding: EdgeInsetsDirectional.only(top: tokens.space3),
@@ -654,6 +821,7 @@ class _KitRequestCardState extends State<KitRequestCard> {
             context,
             attention: true,
             key: const ValueKey('kit-request-card'),
+            endsWithTap: !large && tertiary != null,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -694,6 +862,13 @@ class _KitRequestCardState extends State<KitRequestCard> {
     return switch (answers) {
       null => (null, null),
       KitRequestDecide() => (null, _decide(context, answers)),
+      // At 2.0 text the way to look scrolls with the words, so the
+      // question stays readable and the act stays in sight under them.
+      KitRequestGo() when MediaQuery.textScalerOf(context).scale(10) >= 20 => (
+        _goLook(context, answers),
+        _go(context, answers, withLook: false),
+      ),
+      KitRequestGo() => (null, _go(context, answers)),
       KitRequestChoose() => (
         answers._build(context, this, semanticsLabel: widget.title),
         null,
@@ -758,8 +933,12 @@ class _KitRequestCardState extends State<KitRequestCard> {
         (gate ? l10n.kitRequestSendBack : l10n.kitRequestReject);
     final onAllow = answers.onAllow;
     final onReject = answers.onReject;
+    // Signal: Allow is the slip's green key wherever the slip is; on a
+    // list it is still the screen's only colour (New is an ink key).
     final allow = KitButton(
-      role: answers.secondary ? KitButtonRole.secondary : KitButtonRole.primary,
+      role: answers.secondary && !KitTrack.on(context)
+          ? KitButtonRole.secondary
+          : KitButtonRole.primary,
       key: answers.allowKey,
       label: allowLabel,
       shortcut: 'A',
@@ -796,13 +975,16 @@ class _KitRequestCardState extends State<KitRequestCard> {
             ],
           );
         }
+        // Stacked, the question look keeps the main answer at the bottom,
+        // under the thumb, as it keeps it at the end side by side.
+        final thumb = widget.look == KitRequestLook.question;
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            allow,
+            thumb ? reject : allow,
             SizedBox(height: tokens.space2),
-            reject,
+            thumb ? allow : reject,
           ],
         );
       },
@@ -822,6 +1004,60 @@ class _KitRequestCardState extends State<KitRequestCard> {
             tone: KitTextTone.secondary,
           ),
         ),
+      ],
+    );
+  }
+
+  /// A gate's one act: [KitRequestGo.look] full width above, the named
+  /// primary under the thumb, each on its own line so both read whole; the
+  /// reason under them when the act is off.
+  Widget? _goLook(BuildContext context, KitRequestGo answers) {
+    final look = answers.look;
+    if (look == null) return null;
+    return KitButton.secondary(
+      key: look.key,
+      label: look.label,
+      icon: look.icon,
+      onPressed: look.onPressed,
+    );
+  }
+
+  Widget _go(
+    BuildContext context,
+    KitRequestGo answers, {
+    bool withLook = true,
+  }) {
+    final tokens = KitTokens.of(context);
+    final onGo = answers.onGo;
+    final look = withLook ? _goLook(context, answers) : null;
+    final reason = answers.disabledReason;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (look != null) ...[look, SizedBox(height: tokens.space2)],
+        KitButton(
+          role: KitButtonRole.primary,
+          key: answers.goKey,
+          label: answers.label,
+          icon: answers.icon,
+          shortcut: 'A',
+          working: answers.working,
+          onPressed: onGo == null
+              ? null
+              : () {
+                  if (_mayAnswer()) onGo();
+                },
+        ),
+        if (onGo == null && reason != null)
+          Padding(
+            padding: EdgeInsetsDirectional.only(top: tokens.space2),
+            child: KitText(
+              reason,
+              role: KitTextRole.secondary,
+              tone: KitTextTone.secondary,
+            ),
+          ),
       ],
     );
   }
@@ -906,7 +1142,11 @@ class _KitRequestCardState extends State<KitRequestCard> {
   /// The quiet line under the answers (LAY-13): the standing grant and the
   /// one more act on the left, "Details" on the right, in small plain
   /// buttons. It wraps rather than clips at large text.
-  Widget? _quietLine(BuildContext context) {
+  Widget? _quietLine(
+    BuildContext context, {
+    bool centred = false,
+    bool withDetails = true,
+  }) {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final tokens = KitTokens.of(context);
     final answers = widget.answers;
@@ -933,11 +1173,26 @@ class _KitRequestCardState extends State<KitRequestCard> {
       disabledReason: onTap == null ? (reason ?? label) : null,
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: tokens.space3),
-        child: KitText(
-          label,
-          role: KitTextRole.secondary,
-          tone: KitTextTone.secondary,
-        ),
+        child: centred
+            // The question look underlines its quiet acts, as links.
+            ? Text(
+                label,
+                textAlign: TextAlign.center,
+                style:
+                    KitText.styleOf(
+                      context,
+                      KitTextRole.secondary,
+                      tone: KitTextTone.secondary,
+                    ).copyWith(
+                      decoration: TextDecoration.underline,
+                      decorationColor: tokens.roles.text3,
+                    ),
+              )
+            : KitText(
+                label,
+                role: KitTextRole.secondary,
+                tone: KitTextTone.secondary,
+              ),
       ),
     );
     final start = <Widget>[
@@ -953,10 +1208,18 @@ class _KitRequestCardState extends State<KitRequestCard> {
       for (final action in widget.tertiary.take(1))
         quiet(action.label, action.onPressed, key: action.key),
     ];
-    final end = details != null && !sheetPrimary
+    final end = details != null && !sheetPrimary && withDetails
         ? quiet(l10n.kitDetails, details, key: widget.detailsKey)
         : null;
     if (start.isEmpty && end == null) return null;
+    if (centred) {
+      return Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: tokens.space6,
+        children: [...start, ?end],
+      );
+    }
     // Alone, "Details" sits at the far end like it does beside a grant.
     if (start.isEmpty) {
       return Align(alignment: AlignmentDirectional.centerEnd, child: end);
@@ -1071,303 +1334,24 @@ class _KitRequestCardState extends State<KitRequestCard> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _scrollWhenLarge(context, words),
-          if (!actions.isEmpty) ...[SizedBox(height: tokens.space3), actions],
-        ],
-      ),
-    );
-  }
-}
-
-// ── The one shape (FC2) ──────────────────────────────────────────────────
-//
-// Everything an agent asks the person is drawn with these: [KitRequestCard]
-// (permissions, questions, forms, choices, gates, replies) and
-// [KitAgentCard] (an agent's own card). One frame, one heading, one answered
-// row, one placement (docs/design/FC2-one-card-shape.md).
-
-/// Where a request card sits: in a conversation, centred at the reading
-/// width with its border on the page gutter (the ring adds its own width
-/// around it) and an entrance; [inList], exactly as the list places it.
-Widget kitRequestPlacement(
-  BuildContext context, {
-  required bool inList,
-  required Widget child,
-}) {
-  if (inList) return child;
-  final tokens = KitTokens.of(context);
-  return KitEntrance(
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: KitLayout.readingWidth),
-        child: Padding(
-          padding: EdgeInsetsDirectional.symmetric(
-            horizontal: tokens.gutter - KitTokens.needsYouRingWidth,
-            vertical: tokens.space1,
-          ),
-          child: child,
-        ),
-      ),
-    ),
-  );
-}
-
-/// The request card's frame: the needs-you look when [attention] (the
-/// attention surface and line, and outside them the one 4 dp ring LOOK-20
-/// allows), else a plain `surface1` card with a hairline; the accent border
-/// while [focused]. [wrapCard] wraps the bordered card before the ring (a
-/// [Focus]). With [capHeight], at 2.0 text the card never takes more than
-/// 45 % of the window (its words scroll inside).
-Widget kitRequestFrame(
-  BuildContext context, {
-  required bool attention,
-  required Widget child,
-  Key? key,
-  bool focused = false,
-  bool capHeight = true,
-  Widget Function(Widget card)? wrapCard,
-}) {
-  final tokens = KitTokens.of(context);
-  final roles = tokens.roles;
-  final side = focused
-      ? BorderSide(
-          color: roles.accent,
-          width: KitTokens.focusRingWidth(context),
-        )
-      : BorderSide(
-          color: attention ? roles.attentionLine : roles.hairline,
-          width: KitTokens.hairlineWidth(context),
-        );
-  final large = MediaQuery.textScalerOf(context).scale(10) >= 20;
-  Widget card = DecoratedBox(
-    key: key,
-    decoration: ShapeDecoration(
-      color: attention
-          ? Color.alphaBlend(roles.attentionSurface, roles.surface1)
-          : roles.surface1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(tokens.cardRadius),
-        side: side,
-      ),
-    ),
-    child: Padding(padding: EdgeInsets.all(tokens.space4), child: child),
-  );
-  if (capHeight && large) {
-    final largest = MediaQuery.textScalerOf(context).scale(10) >= 25;
-    card = ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight:
-            MediaQuery.sizeOf(context).height *
-            (largest
-                ? KitTokens.requestMaxHeightShareLarge
-                : KitTokens.requestMaxHeightShare),
-      ),
-      child: card,
-    );
-  }
-  if (wrapCard != null) card = wrapCard(card);
-  if (!attention) {
-    return Padding(
-      padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: KitTokens.needsYouRingWidth,
-      ),
-      child: card,
-    );
-  }
-  return DecoratedBox(
-    decoration: ShapeDecoration(
-      color: roles.attention.withValues(alpha: KitTokens.needsYouRingAlpha),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(
-          tokens.cardRadius + KitTokens.needsYouRingWidth,
-        ),
-      ),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(KitTokens.needsYouRingWidth),
-      child: card,
-    ),
-  );
-}
-
-/// The request's glyph in its tinted tile: the attention tint while it
-/// needs the person, else `surface3`.
-Widget kitRequestTile(
-  BuildContext context, {
-  required IconData icon,
-  required bool attention,
-}) {
-  final tokens = KitTokens.of(context);
-  final roles = tokens.roles;
-  final tint = attention
-      ? roles.attention.withValues(alpha: tokens.markTintAlpha)
-      : roles.surface3;
-  return ExcludeSemantics(
-    child: SizedBox.square(
-      dimension: KitTokens.requestTileSize,
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: tint,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(KitTokens.requestTileRadius),
-          ),
-        ),
-        child: Center(
-          child: Icon(
-            icon,
-            size: tokens.smallIconSize,
-            color: attention ? roles.attention : roles.text1,
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-/// The card's heading: the tile ([kitRequestTile]), then the [caption] line
-/// (who asks and why), the [title] as the headline, and [lines] under it
-/// (each brings its own top gap).
-Widget kitRequestHeading(
-  BuildContext context, {
-  required IconData icon,
-  required bool attention,
-  required String caption,
-  required KitTextTone captionTone,
-  required String title,
-  Key? titleKey,
-  List<Widget> lines = const [],
-}) {
-  final tokens = KitTokens.of(context);
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      kitRequestTile(context, icon: icon, attention: attention),
-      SizedBox(width: tokens.space3),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            KitText(caption, role: KitTextRole.caption, tone: captionTone),
-            SizedBox(height: tokens.space1),
-            KitText(
-              title,
-              key: titleKey,
-              role: KitTextRole.headline,
-              tone: KitTextTone.primary,
-            ),
-            ...lines,
+          if (!actions.isEmpty) ...[
+            SizedBox(height: tokens.space3),
+            _actionsWhenLarge(context, actions),
           ],
-        ),
-      ),
-    ],
-  );
-}
-
-/// The one answered row: a request that no longer needs the person
-/// (LOOK-4): no card, border, ring or attention colour. The glyph, the
-/// [title], and under it the [outcome] (a [KitReceipt]; "Not answered";
-/// "Stopped waiting"). With [onToggle] the title line opens [body] read-only
-/// under the row ([open]; [toggleLabel] names the tap); nothing in the body
-/// takes a tap.
-Widget kitAnsweredRow(
-  BuildContext context, {
-  Key? key,
-  required IconData icon,
-  required String title,
-  Key? titleKey,
-  required Widget outcome,
-  bool open = false,
-  VoidCallback? onToggle,
-  String? toggleLabel,
-  List<Widget> body = const [],
-}) {
-  final tokens = KitTokens.of(context);
-  final roles = tokens.roles;
-  final twoLines = MediaQuery.textScalerOf(context).scale(10) >= 13;
-  final canOpen = onToggle != null && body.isNotEmpty;
-  Widget titleLine = KitText(
-    title,
-    key: titleKey,
-    role: KitTextRole.secondary,
-    tone: KitTextTone.secondary,
-    maxLines: twoLines ? 2 : 1,
-    overflow: TextOverflow.ellipsis,
-  );
-  if (canOpen) {
-    titleLine = KitTappable(
-      onTap: onToggle,
-      label: toggleLabel,
-      selected: open,
-      child: Row(
-        children: [
-          Expanded(child: titleLine),
-          ExcludeSemantics(
-            child: Icon(
-              open ? AppIconography.chevronUp : AppIconography.chevronDown,
-              size: tokens.smallIconSize,
-              color: roles.text2,
-            ),
-          ),
         ],
       ),
     );
   }
-  final row = ConstrainedBox(
-    key: canOpen ? null : key,
-    constraints: BoxConstraints(minHeight: tokens.rowHeight),
-    child: Padding(
-      padding: EdgeInsetsDirectional.symmetric(horizontal: tokens.space4),
-      child: Row(
-        children: [
-          ExcludeSemantics(
-            child: Icon(icon, size: tokens.smallIconSize, color: roles.text2),
-          ),
-          SizedBox(width: tokens.space3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [titleLine, outcome],
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-  if (!canOpen) return row;
-  return Column(
-    key: key,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      row,
-      KitReveal(
-        child: open
-            ? Padding(
-                padding: EdgeInsetsDirectional.only(
-                  start: tokens.space4 + tokens.smallIconSize + tokens.space3,
-                  top: tokens.space2,
-                  end: tokens.space4,
-                ),
-                // The body is a record now: nothing in it takes a tap.
-                child: IgnorePointer(
-                  child: ExcludeFocus(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (final piece in body) ...[
-                          piece,
-                          SizedBox(height: tokens.space3),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              )
-            : null,
-      ),
-    ],
-  );
+
+  /// The buttons under the words: at 2.0 text, inside the card's height cap,
+  /// they scroll too when they outgrow their third, the decide button first
+  /// and so always in sight.
+  Widget _actionsWhenLarge(BuildContext context, Widget actions) {
+    final large = MediaQuery.textScalerOf(context).scale(10) >= 20;
+    return large
+        ? Flexible(child: SingleChildScrollView(child: actions))
+        : actions;
+  }
 }
 
 /// A plan or other long Markdown in a request card: formatted, a bounded

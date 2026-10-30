@@ -8,10 +8,10 @@ import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/review_handoff.dart';
-import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
 import 'package:opencode_mobile/ui/kit/kit_status_line.dart';
 import 'package:opencode_mobile/ui/screens/review_workspace.dart';
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
+import 'package:opencode_mobile/ui/screens/project_hub_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/product_ui_regression_fixtures.dart';
@@ -49,19 +49,8 @@ Future<void> _openInReview(WidgetTester tester, String path) async {
 }
 
 Future<void> _openReviewComment(WidgetTester tester, String path) async {
-  final header = find.byKey(ValueKey('review-file-header-$path'));
-  final more = find.descendant(of: header, matching: find.byTooltip('More'));
-  // With one change the header has no More button: its menu is a long press.
-  if (more.evaluate().isNotEmpty) {
-    await tester.tap(more);
-  } else {
-    await tester.longPress(
-      find.descendant(
-        of: header,
-        matching: find.byKey(const ValueKey('review-file-header-menu')),
-      ),
-    );
-  }
+  // The file's menu is a long press on its row.
+  await tester.longPress(find.byKey(ValueKey('review-fold-header-$path')));
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('review-file-comment')));
   await tester.pumpAndSettle();
@@ -131,7 +120,7 @@ void main() {
     },
   );
 
-  testWidgets('nested files use project-relative API paths and breadcrumbs', (
+  testWidgets('nested files use project-relative API paths and Back walks up', (
     tester,
   ) async {
     final requestedPaths = <String>[];
@@ -172,10 +161,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(requestedPaths, ['', 'lib', 'lib/ui']);
-    expect(find.bySemanticsLabel('Open Project root'), findsOneWidget);
+    // No breadcrumb (vision 2026-10-20): Back walks up a folder.
     expect(find.text('/lib/ui'), findsNothing);
-
-    await tester.tap(find.bySemanticsLabel('Open folder lib'));
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(requestedPaths.last, 'lib');
   });
@@ -263,8 +251,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('1 changed file'), findsOneWidget);
-      expect(find.text('Modified'), findsOneWidget);
+      // The marks are on the names, said in words to a screen reader: the
+      // folder counts what changed inside, a file says how.
+      expect(find.bySemanticsLabel(RegExp('1 changed file')), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('Modified')), findsOneWidget);
       expect(find.text('gone.txt'), findsOneWidget);
       expect(find.text('Deleted'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -290,21 +280,12 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      await tester.scrollUntilVisible(
-        find.text('lib'),
-        -200,
-        scrollable: find
-            .descendant(
-              of: find.byType(ListView),
-              matching: find.byType(Scrollable),
-            )
-            .first,
-      );
+      await tester.ensureVisible(find.text('lib'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('lib'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Added'), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('Added')), findsOneWidget);
       expect(repository.statusLoads, greaterThanOrEqualTo(2));
       expect(tester.takeException(), isNull);
     },
@@ -450,8 +431,8 @@ void main() {
     );
   });
 
-  testWidgets('changes row opens the diff itself (slice-P3.7a): totals on '
-      'the row, no list of the same files in between', (tester) async {
+  testWidgets('Changes opens the diff itself (slice-P3.7a): the count on '
+      'the item, no list of the same files in between', (tester) async {
     final api = TestApi(
       files: (_) async => [
         FileNode(name: 'README.md', path: 'README.md', isDir: false),
@@ -486,6 +467,8 @@ void main() {
       repository: repository,
     );
     addTearDown(controller.dispose);
+    // The Files page shows an open project's files.
+    controller.directory = '/srv/app';
     final store = ReviewHandoffStore();
 
     await tester.pumpWidget(
@@ -493,7 +476,7 @@ void main() {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
-          body: FilesScreen(
+          body: ProjectHub(
             controller: controller,
             handoff: ReviewHandoffSession(store: store, sessionID: 's1'),
           ),
@@ -502,12 +485,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // The row names the set and its totals.
-    expect(find.byKey(const ValueKey('files-changes-card')), findsOneWidget);
-    expect(find.text('2 changed files'), findsOneWidget);
-    expect(find.text(KitBidi.ltr('+42 −2')), findsOneWidget);
-
-    await tester.tap(find.byKey(const ValueKey('files-changes-card')));
+    // The Files page's ⋯ names the set with its count.
+    await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
+    await tester.pumpAndSettle();
+    expect(find.text('Changes · 2 files'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('project-hub-changes')));
     await tester.pumpAndSettle();
 
     // Straight into Review: the diff with its one navigator, no sheet.
@@ -518,9 +500,9 @@ void main() {
     expect(find.text('Change 1 of 1'), findsNothing);
 
     // A changed file stages as a reference from the diff's own menu (a long
-    // press on its header: one change has no More button).
+    // press on its row).
     await tester.longPress(
-      find.byKey(const ValueKey('review-file-header-menu')).last,
+      find.byKey(const ValueKey('review-fold-header-lib/main.dart')),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('review-add-file')));
@@ -568,12 +550,12 @@ void main() {
     await tester.tap(find.text('README.md'));
     await tester.pumpAndSettle();
 
-    // Add-to-prompt (a reference) and attach (an upload) are separate
+    // Ask about this file (a reference) and attach (an upload) are separate
     // affordances; only the reference one exists without an attach handler.
-    expect(find.byKey(const Key('project-file-add-reference')), findsOneWidget);
+    expect(find.byKey(const Key('project-file-ask')), findsOneWidget);
     expect(find.byKey(const Key('project-file-attach')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('project-file-add-reference')));
+    await tester.tap(find.byKey(const Key('project-file-ask')));
     await tester.pumpAndSettle();
     final staged = store.referencesFor('s1').single;
     expect(staged.kind, ReviewReferenceKind.file);
@@ -633,7 +615,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(KitStatusLine), findsNothing);
-      expect(find.text('Modified'), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('Modified')), findsOneWidget);
       expect(repository.statusLoads, 2);
     },
   );

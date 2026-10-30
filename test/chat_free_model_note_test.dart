@@ -1,7 +1,7 @@
 // The chat's free-model note (coordinator's request on
 // slice-fix-inbox-status): a conversation whose replies come from
 // OpenCode's free model because no provider is signed in says so in one
-// quiet line in the page's status slot, with "Sign in to a provider". It is
+// quiet line in the page's status slot, with "Add your key". It is
 // never a blocking banner, it can be dismissed once per conversation, and
 // showing or dismissing it never moves the reply (F16's concern too).
 //
@@ -182,8 +182,8 @@ void main() {
     await _open(tester, c, 's1');
 
     expect(_note, findsOneWidget);
-    expect(find.text(_en.freeModelNotice), findsOneWidget);
-    expect(find.text(_en.freeModelSignIn), findsOneWidget);
+    expect(find.text(_en.chatFreeModelNote), findsOneWidget);
+    expect(find.text(_en.chatFreeModelAddKey), findsOneWidget);
     // A line in the status slot, not a banner over the conversation.
     expect(tester.widget(_note), isA<KitStatusLine>());
 

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The adaptive card, every size from 2x2 up: header, the one thing that matters now
+     (a request, a working turn, or the last finished conversation), more rows only when the
+     height has room, and one bottom action (Allow once / Open, or the quiet field).
+     WidgetCardBinder sets every view on every update; the defaults here are the empty card. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:layoutDirection="locale" android:background="@drawable/widget_card_dark"
+    android:paddingStart="18dp" android:paddingEnd="18dp" android:paddingTop="16dp" android:paddingBottom="12dp">
+
+    <LinearLayout android:id="@+id/wc_header" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:minHeight="24dp"
+        android:gravity="center_vertical">
+        <FrameLayout android:id="@+id/wc_tile" android:layout_width="24dp" android:layout_height="24dp"
+            android:background="@drawable/widget_tile_dark">
+            <ImageView android:id="@+id/wc_mark" android:layout_width="13dp" android:layout_height="13dp"
+                android:layout_gravity="center" android:src="@drawable/ic_widget_mark"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
+        <TextView android:id="@+id/wc_app" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:layout_marginStart="9dp" android:text="@string/widget_label_short"
+            android:fontFamily="sans-serif-medium" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"
+            android:textDirection="locale" android:gravity="start" android:textColor="#FFA3A5AB" />
+        <ImageView android:id="@+id/wc_dot" android:layout_width="7dp" android:layout_height="7dp"
+            android:layout_marginStart="8dp" android:layout_marginEnd="6dp" android:src="@drawable/widget_dot"
+            android:importantForAccessibility="no" android:visibility="gone" />
+        <TextView android:id="@+id/wc_status" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"
+            android:textDirection="locale" android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Spare height is shared above and below the story (wc_gap, wc_gap_bottom), so no band
+         is left under the header or over the action; a tall card gives it to the rows instead. -->
+    <FrameLayout android:id="@+id/wc_gap" android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:minHeight="10dp" />
+    <!-- With rows the weighted gaps are gone; the header keeps this much air. -->
+    <FrameLayout android:id="@+id/wc_gap_rows" android:layout_width="match_parent" android:layout_height="12dp"
+        android:visibility="gone" />
+
+    <TextView android:id="@+id/wc_title" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:fontFamily="sans-serif" android:textStyle="bold" android:textSize="22sp" android:lineHeight="27sp"
+        android:maxLines="2" android:ellipsize="end" android:textDirection="firstStrong" android:gravity="start"
+        android:textColor="#FFF3F3F1" />
+    <!-- The exact command or file: code, left to right in every language. -->
+    <TextView android:id="@+id/wc_cmd" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" android:fontFamily="monospace" android:textSize="13sp" android:lineHeight="18sp"
+        android:maxLines="2" android:ellipsize="end" android:textDirection="ltr" android:gravity="start"
+        android:textColor="#FFA3A5AB" android:visibility="gone" />
+    <LinearLayout android:id="@+id/wc_live_row" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="5dp" android:gravity="center_vertical" android:visibility="gone">
+        <ImageView android:id="@+id/wc_live_dot" android:layout_width="7dp" android:layout_height="7dp"
+            android:layout_marginEnd="8dp" android:src="@drawable/widget_dot" android:importantForAccessibility="no" />
+        <Chronometer android:id="@+id/wc_live" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"
+            android:textDirection="firstStrong" android:gravity="start" android:textColor="#FFA3A5AB" />
+        <TextView android:id="@+id/wc_live_still" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"
+            android:textDirection="firstStrong" android:gravity="start" android:textColor="#FFA3A5AB" />
+    </LinearLayout>
+    <TextView android:id="@+id/wc_meta" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" android:textSize="15sp" android:maxLines="1" android:ellipsize="end"
+        android:textDirection="firstStrong" android:gravity="start" android:textColor="#FF8C8F96"
+        android:visibility="gone" />
+
+    <!-- Larger sizes: the other conversations, one hairline row each. -->
+    <LinearLayout android:id="@+id/wc_rows" android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:layout_marginTop="10dp" android:layout_marginBottom="10dp" android:orientation="vertical"
+        android:visibility="gone" />
+
+    <FrameLayout android:id="@+id/wc_gap_bottom" android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:minHeight="12dp" />
+
+    <LinearLayout android:id="@+id/wc_buttons" android:layout_width="match_parent" android:layout_height="48dp"
+        android:visibility="gone">
+        <TextView android:id="@+id/wc_allow" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="match_parent" android:layout_marginEnd="10dp" android:gravity="center"
+            android:fontFamily="sans-serif-medium" android:textSize="15sp" android:maxLines="1" android:ellipsize="end"
+            android:background="@drawable/widget_btn_mint_dark" android:textColor="#FF03140B" />
+        <LinearLayout android:id="@+id/wc_open" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="match_parent" android:gravity="center"
+            android:background="@drawable/widget_btn_outline_dark">
+            <TextView android:id="@+id/wc_open_text" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:textSize="15sp"
+                android:maxLines="1" android:ellipsize="end" android:text="@string/widget_v2_open"
+                android:textColor="#FFF3F3F1" />
+            <ImageView android:id="@+id/wc_open_arrow" android:layout_width="16dp" android:layout_height="16dp"
+                android:layout_marginStart="8dp" android:src="@drawable/ic_widget_ph_arrow"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/wc_field" android:layout_width="match_parent" android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:background="@drawable/widget_field_dark">
+        <TextView android:id="@+id/wc_field_text" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:paddingStart="16dp" android:paddingEnd="8dp"
+            android:textSize="14sp" android:maxLines="1" android:ellipsize="end" android:textDirection="firstStrong"
+            android:gravity="start" android:textColor="#FF8C8F96" />
+        <FrameLayout android:id="@+id/wc_mic" android:layout_width="48dp" android:layout_height="48dp">
+            <ImageView android:id="@+id/wc_mic_icon" android:layout_width="18dp" android:layout_height="18dp"
+                android:layout_gravity="center" android:src="@drawable/ic_widget_ph_mic"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
+    </LinearLayout>
+</LinearLayout>

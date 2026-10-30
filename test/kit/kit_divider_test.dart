@@ -251,7 +251,7 @@ void main() {
     },
   );
 
-  testWidgets('insets: none 0, gutter 16, text 58 from the start edge', (
+  testWidgets('insets: none 0, gutter 16, text 56 from the start edge', (
     tester,
   ) async {
     for (final direction in TextDirection.values) {
@@ -279,7 +279,7 @@ void main() {
           inset: KitDividerInset.text,
           direction: direction,
         ),
-        closeTo(58, 0.001),
+        closeTo(56, 0.001),
         reason: '$direction text',
       );
     }

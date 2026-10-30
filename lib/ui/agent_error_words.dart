@@ -37,6 +37,10 @@ AgentErrorWords agentErrorWords(String raw, AppLocalizations l10n) {
       l10n.agentErrorOutOfCredit,
       l10n.agentErrorOutOfCreditHint,
     ),
+    AgentErrorCause.usageLimit => (
+      l10n.agentErrorUsageLimit,
+      l10n.agentErrorUsageLimitHint,
+    ),
     AgentErrorCause.providerAuth => (
       l10n.agentErrorProviderAuth,
       l10n.agentErrorProviderAuthHint,

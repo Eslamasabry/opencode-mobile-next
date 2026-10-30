@@ -18,7 +18,7 @@
   "job.logTail": "shown",
   "job.order[]": "shown",
   "job.params._job.adding": "shown",
-  "job.params._job.first": "shown",
+  "job.params._job.first": "ignored: where the job ends (naming the first project); the progress page reads the same either way",
   "job.params.opencode.runtime": "ignored: which OpenCode to install; the finished row shows the version that went in",
   "job.params.opencode.version": "ignored: which OpenCode to install; the finished row shows the version that went in",
   "job.startedAt": "ignored: used to work out the time left, which the page shows as \"min left\"",

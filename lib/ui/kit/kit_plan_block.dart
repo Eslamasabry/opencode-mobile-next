@@ -3,6 +3,7 @@
 // the end, and the lines of what it holds under them.
 import 'package:flutter/material.dart';
 
+import 'kit_max_width.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -45,7 +46,10 @@ class KitPlanBlock extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final note = titleNote;
     final summary = this.summary;

@@ -501,7 +501,11 @@ void main() {
         200,
         scrollable: reviewScroll,
       );
-      await tester.ensureVisible(_destinationRow);
+      // scrollUntilVisible stops at the first pixel in view, which on this
+      // short viewport is still under the pinned Import bar; the list's end
+      // padding lets the row scroll clear of it, as a person would.
+      await tester.drag(reviewScroll, const Offset(0, -200));
+      await tester.pumpAndSettle();
       await tester.tap(_destinationRow);
       await tester.pumpAndSettle();
       await tester.tap(

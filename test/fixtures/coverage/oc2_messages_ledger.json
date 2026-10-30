@@ -46,7 +46,7 @@
   "Session.Message.Assistant.id": "ignored: an internal id the server uses to link records; nothing a person reads",
   "Session.Message.Assistant.metadata": "ignored: bookkeeping the server attaches to a message (where it came from); nothing to read",
   "Session.Message.Assistant.model.id": "shown",
-  "Session.Message.Assistant.model.providerID": "shown",
+  "Session.Message.Assistant.model.providerID": "ignored: the turn footer names the model as a person reads it (\"Opus 5.5\", the catalog's name or one made from model.id), never \"provider/model\" (owner, 2026-10-20); the provider with the exact id is on the conversation's Context page",
   "Session.Message.Assistant.model.variant": "ignored: server bookkeeping about how the reply was produced (agent, finish reason, saved snapshot, provider state); a failure is decided in the error group, the content in its own groups, and a retry in progress is shown live from the status line",
   "Session.Message.Assistant.providerState": "ignored: server bookkeeping about how the reply was produced (agent, finish reason, saved snapshot, provider state); a failure is decided in the error group, the content in its own groups, and a retry in progress is shown live from the status line",
   "Session.Message.Assistant.rawFinish": "ignored: server bookkeeping about how the reply was produced (agent, finish reason, saved snapshot, provider state); a failure is decided in the error group, the content in its own groups, and a retry in progress is shown live from the status line",

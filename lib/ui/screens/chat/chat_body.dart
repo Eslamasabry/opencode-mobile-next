@@ -44,6 +44,7 @@ extension _ChatBody on _ChatScreenState {
           )
         : LayoutBuilder(
             builder: (context, bodyConstraints) {
+              _bodyHeightSeen = bodyConstraints.maxHeight;
               // The composer keeps one editor structure. A keyboard or
               // short window reduces its line budget without reparenting
               // the focused field or moving its controls.

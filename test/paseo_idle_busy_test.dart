@@ -216,6 +216,40 @@ void main() {
     expect(gateway.localWorkBusy, isTrue);
   });
 
+  test('a saved agent the helper has not loaded is never loaded to ask '
+      'for sub-agents', () async {
+    // The helper answers a sub-agent list by loading the parent, which starts
+    // its process; sub-agents only run inside a loaded parent.
+    entries = [
+      {'agent': agentJson('local')},
+      {'agent': agentJson('saved', loaded: false)},
+    ];
+    await gateway.sessions();
+    expect(
+      daemon
+          .of('agent.provider_subagents.list.request')
+          .map((m) => m['parentAgentId']),
+      isNot(contains('saved')),
+    );
+    expect(gateway.localWorkBusy, isFalse);
+  });
+
+  test('a saved agent stored as running after a reboot does not keep the '
+      'phone busy', () async {
+    entries = [
+      {'agent': agentJson('local')},
+      {'agent': agentJson('rebooted', status: 'running', loaded: false)},
+    ];
+    await gateway.sessions();
+    expect(
+      daemon
+          .of('agent.provider_subagents.list.request')
+          .map((m) => m['parentAgentId']),
+      isNot(contains('rebooted')),
+    );
+    expect(gateway.localWorkBusy, isFalse);
+  });
+
   test('unsupported subagent inventory cannot prove idle', () async {
     daemon.handlers['agent.provider_subagents.list.request'] = (_) =>
         ('agent.provider_subagents.list.response', {'error': 'unsupported'});

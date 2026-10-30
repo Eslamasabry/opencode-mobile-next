@@ -144,7 +144,6 @@ KitComposer _composer({
   hint: 'Ask OpenCode…',
   onSend: _noop,
   busy: busy,
-  onStop: _noop,
   sending: sending,
   canSendWhileBusy: canSendWhileBusy,
   delivery: delivery,

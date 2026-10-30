@@ -43,6 +43,8 @@ import '../../widgets/product_states.dart'
 import '../project_folder_actions.dart';
 import '../library_screen.dart' show defaultModelLabel;
 import '../servers_screen.dart' show ServersRouteRequest;
+import '../inbox/inbox_items.dart' as inbox show inboxCount;
+import '../inbox/inbox_screen.dart' as inbox_screen show openInbox;
 
 /// What the Chats screens need from the app besides the feed itself. One
 /// seam: the screens never touch the connection controller, and a test hands
@@ -69,8 +71,12 @@ abstract interface class ChatsHost {
   /// The "Open a project" sheet; the chosen folder, or null when closed.
   Future<String?> openProject(BuildContext context);
 
-  /// The model chip for the start screen's composer.
-  Widget modelChip(BuildContext context);
+  /// The chosen model in words ("Server default"), for the start screen's
+  /// choices.
+  String modelValue(BuildContext context);
+
+  /// Opens the model picker.
+  Future<void> chooseModel(BuildContext context);
 
   /// The leftover-process notice (a helper burning CPU on this phone's own
   /// server) as a quiet status with its Stop. Draws nothing until the watcher
@@ -87,8 +93,9 @@ abstract interface class ChatsHost {
   /// once it exists in the copy, or null when the person closed the step.
   Future<String?> startSeparateCopy(
     BuildContext context,
-    WorkspaceProject project,
-  );
+    WorkspaceProject project, {
+    String initialTask = '',
+  });
 
   /// The agents on this phone, or null when this connection has none (the
   /// agent chip and every agent surface stay hidden).
@@ -122,6 +129,10 @@ abstract interface class ChatsHost {
   /// True when this phone has a saved built-in server to switch to.
   bool get hasBuiltInProfile;
 
+  /// The connected server profile's id, which scopes what this screen keeps
+  /// on the device (New conversation's unsent words); null keeps nothing.
+  String? get profileId;
+
   /// The connections whose conversations the list shows, and the person's
   /// choice of which; null when there is only the one.
   ChatListSources? get listSources;
@@ -132,12 +143,25 @@ abstract interface class ChatsHost {
 
   /// The request [item]'s conversation waits on, as the card that answers
   /// it right here (Allow once, Always allow, Reject, with Undo); null when
-  /// there is none or it can only be answered in the conversation.
+  /// there is none or it can only be answered in the conversation. The
+  /// caller builds it again whenever [listenable] fires.
   Widget? listRequest(BuildContext context, ChatFeedItem item);
+
+  /// What [item]'s conversation does while it runs (since when, the shell
+  /// command it runs now); null when it does not run or nothing is known.
+  /// The caller reads it again whenever [listenable] fires.
+  KitFeedRunning? runningOf(ChatFeedItem item);
 
   /// Connects to the built-in server through the Servers screen's own
   /// connect flow.
   Future<void> switchToBuiltIn(BuildContext context);
+
+  /// How many things wait on the person across every connection: the
+  /// Inbox's own count, so the "Needs you" chip says what the Inbox lists.
+  int get inboxCount;
+
+  /// Opens the Inbox (everything that waits on the person) as a page.
+  Future<void> openInbox(BuildContext context);
 
   /// The repair of [directory]'s Git history (object links Git can't
   /// follow) on this phone's built-in Ubuntu; null where it can't reach.
@@ -164,16 +188,30 @@ class ConnectionChatsHost implements ChatsHost {
   ChatListSources? get listSources => _conn;
 
   @override
+  KitFeedRunning? runningOf(ChatFeedItem item) {
+    final now = _conn.connectionForRow(item)?.runningNow(item.sessionID);
+    return now == null
+        ? null
+        : KitFeedRunning(
+            since: now.since,
+            command: now.command,
+            line: now.line,
+          );
+  }
+
+  @override
   Widget? listRequest(BuildContext context, ChatFeedItem item) {
     // Native feed requests belong to the list's gateway, independently of
     // whether this conversation has an open chat backend.
     final owner = _conn.connectionForRow(item);
     final answers = owner == null ? null : PermissionAnswers.of(owner);
     final feedAnswers = PermissionAnswers.of(_conn);
+    // The list rebuilds this on every change of [listenable] (the
+    // connection), so it listens only to what changes without one: the
+    // answer slots and a side server's own connection.
     return ListenableBuilder(
       listenable: Listenable.merge([
-        _conn,
-        ?owner,
+        if (owner != null && !identical(owner, _conn)) owner,
         ?answers,
         feedAnswers,
         _conn.delayedAnswers,
@@ -297,6 +335,13 @@ class ConnectionChatsHost implements ChatsHost {
       },
     );
   }
+
+  @override
+  int get inboxCount => inbox.inboxCount(_conn);
+
+  @override
+  Future<void> openInbox(BuildContext context) =>
+      inbox_screen.openInbox(context, _conn);
 
   @override
   String connectionName(BuildContext context, String id, String fallback) {
@@ -425,6 +470,9 @@ class ConnectionChatsHost implements ChatsHost {
   bool get hasBuiltInProfile => _builtInProfile != null;
 
   @override
+  String? get profileId => _conn.profile?.id;
+
+  @override
   Future<void> switchToBuiltIn(BuildContext context) async {
     final profile = _builtInProfile;
     if (profile == null) return;
@@ -489,8 +537,9 @@ class ConnectionChatsHost implements ChatsHost {
   @override
   Future<String?> startSeparateCopy(
     BuildContext context,
-    WorkspaceProject project,
-  ) async {
+    WorkspaceProject project, {
+    String initialTask = '',
+  }) async {
     if (!ConnectionController.sameDirectoryPath(
       _conn.directory ?? '',
       project.directory,
@@ -502,29 +551,22 @@ class ConnectionChatsHost implements ChatsHost {
       context,
       controller: _conn,
       project: project,
+      initialTask: initialTask,
     );
     return session?.id;
   }
 
   @override
-  Widget modelChip(BuildContext context) => ListenableBuilder(
-    listenable: _conn,
-    builder: (context, _) {
-      final l10n = _l10n(context);
-      final model = _conn.selectedModel;
-      final picked = model != null && model.modelID.isNotEmpty;
-      return KitComposerChips.model(
-        label: picked
-            ? defaultModelLabel(_conn, l10n)
-            : l10n.modelServerDefault,
-        state: picked
-            ? KitModelChipState.chosen
-            : KitModelChipState.serverDefault,
-        onPressed: () => unawaited(showModelPicker(context)),
-        chipKey: const ValueKey('chats-new-model'),
-      );
-    },
-  );
+  String modelValue(BuildContext context) {
+    final l10n = _l10n(context);
+    final model = _conn.selectedModel;
+    return model != null && model.modelID.isNotEmpty
+        ? defaultModelLabel(_conn, l10n)
+        : l10n.modelServerDefault;
+  }
+
+  @override
+  Future<void> chooseModel(BuildContext context) => showModelPicker(context);
 
   AppLocalizations _l10n(BuildContext context) =>
       Localizations.of<AppLocalizations>(context, AppLocalizations) ??

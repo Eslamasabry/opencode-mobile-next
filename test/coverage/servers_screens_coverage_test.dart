@@ -110,7 +110,7 @@ void main() {
     await writeCasePng(tester, boundary, 'srvscene_welcome');
     expect(
       flat(screenText(tester).join('\n')),
-      contains('Where does your coding agent run?'),
+      contains('Where should your agent run?'),
     );
   });
 

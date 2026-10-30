@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import '../../state/effects.dart' show KitTextSize;
 import '../theme_roles.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
+import 'kit_text_halo.dart';
+import 'style/kit_style.dart';
 
 /// The type roles of the visual language (docs/design/visual-language-2026-09-26.md
 /// §2, rounded to whole pixels per §7).
@@ -66,7 +69,8 @@ enum KitSelectMode {
 
 /// What [KitText.mono] does when it does not fit (KitText v2, A11Y-8).
 enum KitMonoCut {
-  /// Wraps at any character: a code line, a long command.
+  /// Wraps at any character: a code line, a long command. With a
+  /// `maxLines` (and not selectable) the last line ends in "…".
   wrap,
 
   /// One line, "…" at the end: an id, a host.
@@ -101,6 +105,7 @@ class KitText extends StatelessWidget {
     this.softWrap,
     this.semanticsLabel,
     this.tabular = false,
+    this.pageTitle = false,
   }) : span = null,
        cut = KitMonoCut.wrap,
        _monoSelectable = false,
@@ -118,6 +123,7 @@ class KitText extends StatelessWidget {
       span = null,
       cut = KitMonoCut.wrap,
       _monoSelectable = false,
+      pageTitle = false,
       _kind = _KitTextKind.plain;
 
   /// Spans in one role; a span may carry its own tone colour
@@ -136,6 +142,7 @@ class KitText extends StatelessWidget {
   }) : text = '',
        cut = KitMonoCut.wrap,
        _monoSelectable = false,
+       pageTitle = false,
        _kind = _KitTextKind.rich;
 
   /// Text the person can select and copy (KitText v2). Long-press on touch,
@@ -155,6 +162,7 @@ class KitText extends StatelessWidget {
        softWrap = null,
        cut = KitMonoCut.wrap,
        _monoSelectable = false,
+       pageTitle = false,
        _kind = _KitTextKind.selectable;
 
   /// Selectable spans (the Markdown part's paragraphs; KitText v2).
@@ -172,6 +180,7 @@ class KitText extends StatelessWidget {
        softWrap = null,
        cut = KitMonoCut.wrap,
        _monoSelectable = false,
+       pageTitle = false,
        _kind = _KitTextKind.selectableRich;
 
   /// A technical value the app did not write: a path, command, host, id,
@@ -201,6 +210,7 @@ class KitText extends StatelessWidget {
        softWrap = null,
        tabular = false,
        _monoSelectable = selectable,
+       pageTitle = false,
        _kind = _KitTextKind.mono;
 
   final String text;
@@ -220,6 +230,11 @@ class KitText extends StatelessWidget {
   /// Tabular figures ([FontFeature.tabularFigures]) for numbers that line
   /// up (LOOK-18; KitText v2). Ignored by [KitText.mono].
   final bool tabular;
+
+  /// The page's own title in the top bar ([KitTextRole.headline] only): a
+  /// style's [KitStyleType.titleSize] sets it larger than a card's
+  /// headline (Paper's big bold name). Solid's is the role's own.
+  final bool pageTitle;
 
   /// [KitText.mono] only: what happens when the value does not fit.
   final KitMonoCut cut;
@@ -264,22 +279,25 @@ class KitText extends StatelessWidget {
   /// The base style of [role]: size, line height, weight, tracking and (for
   /// mono) the family. No colour: [styleOf] adds it.
   static TextStyle styleFor(KitTextRole role) => switch (role) {
+    // Hierarchy from size and colour, not weight (unslop 2026-10-30): the
+    // titles and the small roles at 500, the secondary line at 400. A
+    // Style with type of its own keeps the firmer table ([_firm]).
     KitTextRole.largeTitle => const TextStyle(
       fontSize: 28,
       height: 34 / 28,
-      fontWeight: FontWeight(650),
-      letterSpacing: -0.8,
+      fontWeight: FontWeight.w500,
+      letterSpacing: -0.28,
     ),
     KitTextRole.title => const TextStyle(
       fontSize: 22,
       height: 28 / 22,
-      fontWeight: FontWeight(650),
-      letterSpacing: -0.48,
+      fontWeight: FontWeight.w500,
+      letterSpacing: 0,
     ),
     KitTextRole.headline => const TextStyle(
       fontSize: 16,
       height: 22 / 16,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w500,
       letterSpacing: -0.17,
     ),
     KitTextRole.body => const TextStyle(
@@ -297,25 +315,25 @@ class KitText extends StatelessWidget {
     KitTextRole.secondary => const TextStyle(
       fontSize: 13,
       height: 18 / 13,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w400,
       letterSpacing: 0,
     ),
     KitTextRole.label => const TextStyle(
       fontSize: 13,
       height: 18 / 13,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w500,
       letterSpacing: 0,
     ),
     KitTextRole.caption => const TextStyle(
       fontSize: 13,
       height: 18 / 13,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w500,
       letterSpacing: 0,
     ),
     KitTextRole.button => const TextStyle(
       fontSize: 16,
       height: 20 / 16,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w500,
       letterSpacing: 0,
     ),
     KitTextRole.mono => const TextStyle(
@@ -350,6 +368,7 @@ class KitText extends StatelessWidget {
     BuildContext context,
     KitTextRole role, {
     KitTextTone? tone,
+    bool pageTitle = false,
   }) {
     final theme = Theme.of(context);
     final roles = ThemeRoles.resolve(theme);
@@ -372,7 +391,156 @@ class KitText extends StatelessWidget {
         letterSpacing: 0,
       );
     }
-    return style.copyWith(color: toneColor(roles, tone ?? defaultTone(role)));
+    style = styled(context, role, style, arabic: arabic, pageTitle: pageTitle);
+    final resolved = tone ?? defaultTone(role);
+    // On a bright live background the quieter tones keep a halo of the
+    // ground around their letters (KitTextHalo).
+    final halo =
+        resolved == KitTextTone.secondary || resolved == KitTextTone.tertiary
+        ? KitTextHalo.of(context)
+        : null;
+    return style.copyWith(color: toneColor(roles, resolved), shadows: halo);
+  }
+
+  /// [style] under the Style's type tweaks (hook H1,
+  /// [KitStyleTokens.type]): display weight and tracking for the large
+  /// title, title and headline; the large title's and the [pageTitle]'s
+  /// size; the body weight; mono section labels and captions. Under an Arabic locale only the weights change
+  /// (the face and zero tracking stay). Solid has none, so its text is
+  /// exactly as before.
+  static TextStyle styled(
+    BuildContext context,
+    KitTextRole role,
+    TextStyle style, {
+    bool arabic = false,
+    bool pageTitle = false,
+  }) {
+    final type = kitStyleSpec(KitStyles.styleOf(context)).tokens.type;
+    return applyType(
+      role,
+      style,
+      type,
+      arabic: arabic,
+      pageTitle: pageTitle,
+      sectionLabel:
+          role == KitTextRole.label &&
+          (type.monoLabels || type.engravedLabels) &&
+          !arabic &&
+          _inHeading(context),
+    );
+  }
+
+  /// The weights (and the titles' tracking) a Style with type of its own
+  /// keeps ([KitStyleType.firmWeights]): the table before the 2026-10-30
+  /// unslop pass, so Signal, Soft, Brutal and Paper read as they did.
+  static TextStyle _firm(
+    KitTextRole role,
+    TextStyle style, {
+    bool arabic = false,
+  }) {
+    final (int weight, double? tracking) = switch (role) {
+      KitTextRole.largeTitle => (650, -0.8),
+      KitTextRole.title => (650, -0.48),
+      KitTextRole.headline || KitTextRole.label => (600, null),
+      KitTextRole.caption || KitTextRole.button => (600, null),
+      KitTextRole.secondary => (500, null),
+      _ => (style.fontWeight?.value ?? 400, null),
+    };
+    return style.copyWith(
+      fontWeight: FontWeight(weight),
+      letterSpacing: tracking == null || arabic ? null : tracking,
+    );
+  }
+
+  /// Whether the Style here keeps the firm weights
+  /// ([KitStyleType.firmWeights]); Solid sets its display text lighter.
+  static bool firmType(BuildContext context) =>
+      kitStyleSpec(KitStyles.styleOf(context)).tokens.type.firmWeights;
+
+  /// Whether [context] sits under a heading ([Semantics] with `header`):
+  /// a section label is one, a segment's or a tab's words never are.
+  static bool _inHeading(BuildContext context) {
+    var heading = false;
+    context.visitAncestorElements((element) {
+      final widget = element.widget;
+      if (widget is Semantics && widget.properties.header != null) {
+        heading = widget.properties.header!;
+        return false;
+      }
+      return true;
+    });
+    return heading;
+  }
+
+  /// [styled] without a context (KitTokens' own text styles use it). The
+  /// label role is taken as a [sectionLabel] unless told otherwise (the
+  /// tokens' one label style is the section label's).
+  static TextStyle applyType(
+    KitTextRole role,
+    TextStyle style,
+    KitStyleType type, {
+    bool arabic = false,
+    bool pageTitle = false,
+    bool sectionLabel = true,
+  }) {
+    if (type.isNone || role == KitTextRole.mono) return style;
+    if (type.firmWeights) style = _firm(role, style, arabic: arabic);
+    final display =
+        role == KitTextRole.largeTitle ||
+        role == KitTextRole.title ||
+        role == KitTextRole.headline;
+    var weight = style.fontWeight?.value.toDouble() ?? 400;
+    if (display && type.displayWeight != null) weight = type.displayWeight!;
+    if (role == KitTextRole.largeTitle && type.largeTitleWeight != null) {
+      weight = type.largeTitleWeight!;
+    }
+    if ((role == KitTextRole.body || role == KitTextRole.rowTitle) &&
+        type.bodyWeight != null) {
+      weight = type.bodyWeight!;
+    }
+    weight = weight.clamp(100, 900);
+    var next = style.copyWith(fontWeight: FontWeight(weight.round()));
+    if (role == KitTextRole.largeTitle && type.largeTitleSize != null) {
+      final size = type.largeTitleSize!;
+      final ratio = size / (style.fontSize ?? size);
+      next = next.copyWith(
+        fontSize: size,
+        letterSpacing: (style.letterSpacing ?? 0) * ratio,
+      );
+    }
+    if (pageTitle && role == KitTextRole.headline && type.titleSize != null) {
+      // The title role's leading (28 on 22): a big name stays one block.
+      final size = type.titleSize!;
+      final ratio = size / (style.fontSize ?? size);
+      next = next.copyWith(
+        fontSize: size,
+        height: (size + 6) / size,
+        letterSpacing: (style.letterSpacing ?? 0) * ratio,
+      );
+    }
+    if (arabic) return next;
+    if (display &&
+        role != KitTextRole.headline &&
+        type.displayTracking != null) {
+      next = next.copyWith(
+        letterSpacing: type.displayTracking! * (next.fontSize ?? 16),
+      );
+    }
+    if (type.monoLabels &&
+        ((role == KitTextRole.label && sectionLabel) ||
+            role == KitTextRole.caption)) {
+      next = next.copyWith(fontFamily: 'AppMono', letterSpacing: 0);
+    }
+    if (type.engravedLabels && role == KitTextRole.label && sectionLabel) {
+      // Engraved: 12 dp capitals tracked wide, on the label's own leading.
+      next = next.copyWith(
+        fontSize: 12,
+        height: 18 / 12,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 12 * .12,
+      );
+    }
+    return next;
   }
 
   /// Material's type scale said in the kit's roles (LOOK-12, LOOK-17):
@@ -416,9 +584,48 @@ class KitText extends StatelessWidget {
     );
   }
 
+  static const _monoFamily = 'AppMono';
+  static final _monoGap = RegExp('[ \u00A0]+');
+
+  /// [text] in runs: the words in the paragraph's (mono) style, each run
+  /// of spaces in the sans face.
+  static TextSpan _narrowSpaces(String text) {
+    final children = <InlineSpan>[];
+    var at = 0;
+    for (final gap in _monoGap.allMatches(text)) {
+      if (gap.start > at) {
+        children.add(TextSpan(text: text.substring(at, gap.start)));
+      }
+      children.add(
+        TextSpan(
+          text: gap.group(0),
+          style: const TextStyle(fontFamily: 'AppSans'),
+        ),
+      );
+      at = gap.end;
+    }
+    if (at < text.length) children.add(TextSpan(text: text.substring(at)));
+    return TextSpan(children: children);
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final style = styleOf(context, role, tone: tone);
+  Widget build(BuildContext context) => KitMaxWidth.reading(
+    // A value that ends its row, or words centred on a page, keep their
+    // edge when the box is wider than the reading measure.
+    alignment: switch (textAlign) {
+      TextAlign.end => AlignmentDirectional.centerEnd,
+      TextAlign.center => AlignmentDirectional.center,
+      _ => AlignmentDirectional.centerStart,
+    },
+    child: _buildContent(context),
+  );
+
+  Widget _buildContent(BuildContext context) {
+    final style = styleOf(context, role, tone: tone, pageTitle: pageTitle);
+    // Words cut by a line limit say so: a limit with no overflow named ends
+    // in an ellipsis, never in a silent cut (kit-v2 §8.6).
+    final shownOverflow =
+        overflow ?? (maxLines == null ? null : TextOverflow.ellipsis);
     switch (_kind) {
       case _KitTextKind.plain:
       case _KitTextKind.rich:
@@ -428,12 +635,29 @@ class KitText extends StatelessWidget {
         final resolved = tabular
             ? style.copyWith(fontFeatures: const [FontFeature.tabularFigures()])
             : style;
+        // A style that sets labels in mono (Brutal, Paper; hook H1): the
+        // mono face's space is a full 0.6 em cell, so the spaces between
+        // the words take the sans width ("19 s", not "19  s").
+        if (_kind == _KitTextKind.plain &&
+            !mono &&
+            resolved.fontFamily == _monoFamily &&
+            text.contains(_monoGap)) {
+          return Text.rich(
+            _narrowSpaces(text),
+            style: resolved,
+            maxLines: maxLines,
+            overflow: shownOverflow,
+            textAlign: textAlign,
+            softWrap: softWrap,
+            semanticsLabel: semanticsLabel,
+          );
+        }
         return _kind == _KitTextKind.plain
             ? Text(
                 text,
                 style: resolved,
                 maxLines: maxLines,
-                overflow: overflow,
+                overflow: shownOverflow,
                 textAlign: textAlign,
                 softWrap: softWrap,
                 semanticsLabel: semanticsLabel,
@@ -443,7 +667,7 @@ class KitText extends StatelessWidget {
                 span!,
                 style: resolved,
                 maxLines: maxLines,
-                overflow: overflow,
+                overflow: shownOverflow,
                 textAlign: textAlign,
                 softWrap: softWrap,
                 semanticsLabel: semanticsLabel,
@@ -673,10 +897,12 @@ class _KitMonoText extends StatelessWidget {
           semanticsLabel: semanticsLabel,
         );
       }
+      // Cut at [maxLines] with "…", never a line clipped mid-glyph.
       return Text(
         text,
         style: style,
         maxLines: maxLines,
+        overflow: maxLines == null ? null : TextOverflow.ellipsis,
         textAlign: align,
         textDirection: TextDirection.ltr,
         semanticsLabel: semanticsLabel,
@@ -722,6 +948,9 @@ class _KitMonoText extends StatelessWidget {
           style: style,
           maxLines: 1,
           softWrap: false,
+          // The cut above measured this string; words that still do not fit
+          // (text changed after it, a larger scale) end in an ellipsis.
+          overflow: TextOverflow.ellipsis,
           textAlign: align,
           textDirection: TextDirection.ltr,
           semanticsLabel: fullValueLabel,

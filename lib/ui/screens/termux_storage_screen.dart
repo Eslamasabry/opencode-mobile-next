@@ -359,7 +359,7 @@ class _TermuxStorageScreenState extends State<TermuxStorageScreen> {
   }
 
   Widget _buildIntro(AppLocalizations l10n) => KitStateView(
-    icon: AppIconography.database,
+    icon: AppIconography.storage,
     title: l10n.termuxStorageRowNotScanned,
     body: l10n.termuxStorageIntro,
     bodyKey: const Key('termux-storage-intro'),
@@ -388,7 +388,7 @@ class _TermuxStorageScreenState extends State<TermuxStorageScreen> {
       ),
       children: [
         KitStateView(
-          icon: AppIconography.database,
+          icon: AppIconography.storage,
           tone: AppStatusTone.progress,
           title: l10n.termuxStorageScanning,
           titleKey: const Key('termux-storage-scanning'),

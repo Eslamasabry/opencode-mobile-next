@@ -22,8 +22,39 @@ Widget _part() => SizedBox(
   ),
 );
 
+Widget _disabled() => const SizedBox(
+  height: 320,
+  width: 360,
+  child: KitFloatingAction(
+    label: 'New conversation',
+    icon: AppIconography.add,
+    onPressed: null,
+    child: SizedBox.expand(),
+  ),
+);
+
 void main() {
   setUpAll(loadKitGalleryFonts);
+
+  // Disabled: no tap handler (read-only).
+  for (final light in [false, true]) {
+    final mode = light ? 'light' : 'dark';
+    for (final size in kitGalleryScaledSizes) {
+      testWidgets('disabled · ${kitGallerySize(size)} · $mode', (tester) async {
+        await kitGalleryPart(
+          tester,
+          name: kitGalleryName(
+            'kit_floating_action_disabled',
+            size,
+            light: light,
+          ),
+          size: size,
+          light: light,
+          child: _disabled(),
+        );
+      });
+    }
+  }
 
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';

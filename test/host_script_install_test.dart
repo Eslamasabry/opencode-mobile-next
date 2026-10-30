@@ -98,8 +98,8 @@ void main() {
 
   String pinnedAsset() =>
       switch (Process.runSync('uname', ['-m']).stdout.toString().trim()) {
-        'x86_64' || 'amd64' => 'cli-linux-x64-baseline-2.0.29.tgz',
-        'aarch64' || 'arm64' => 'cli-linux-arm64-2.0.29.tgz',
+        'x86_64' || 'amd64' => 'cli-linux-x64-baseline-2.1.1.tgz',
+        'aarch64' || 'arm64' => 'cli-linux-arm64-2.1.1.tgz',
         final other => throw StateError('no OpenCode build for $other'),
       };
 
@@ -154,7 +154,7 @@ cp "$FAKE_ROOT/release.tar.gz" "$out"
         expect(
           read('curl.log').trim(),
           'https://registry.npmjs.org/@opencode/'
-          '${pinnedAsset().replaceFirst('-2.0.29.tgz', '')}/-/${pinnedAsset()}',
+          '${pinnedAsset().replaceFirst('-2.1.1.tgz', '')}/-/${pinnedAsset()}',
         );
         expect(
           File('${home.path}/.opencode/bin/opencode').existsSync(),

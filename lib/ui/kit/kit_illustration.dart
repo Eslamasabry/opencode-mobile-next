@@ -416,6 +416,9 @@ class _ScenePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ScenePainter old) =>
+      // A slot can swap one kind of scene for another (the connecting card's
+      // phone for the portal); a scene's differs() compares only its own kind.
+      scene.runtimeType != old.scene.runtimeType ||
       scene.differs(old.scene) ||
       palette != old.palette ||
       mirror != old.mirror;

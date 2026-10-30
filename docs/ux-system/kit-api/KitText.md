@@ -55,7 +55,7 @@ enum KitSelectMode {
 
 /// What mono text does when it does not fit (new; A11Y-8).
 enum KitMonoCut {
-  wrap,   // wraps at any character; a code line, a long command
+  wrap,   // wraps at any character; a code line, a long command; with maxLines (not selectable) the last line ends in "…"
   end,    // one line, "…" at the end; an id, a host
   middle, // one line, "…" in the middle; a path keeps its root and its file name
 }

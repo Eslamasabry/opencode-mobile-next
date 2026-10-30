@@ -46,6 +46,17 @@ class ScheduledPromptPolicyTest {
         val next = ScheduledPromptPolicy.nextWeekday(8, 0, friday, java.time.ZoneId.of("Europe/London"))
         assertEquals("2026-03-30T07:00:00Z", java.time.Instant.ofEpochMilli(next).toString())
     }
+    @Test fun dailyRunsOnWeekendsToo() {
+        val friday = java.time.Instant.parse("2026-10-16T09:00:00Z").toEpochMilli()
+        val next = ScheduledPromptPolicy.nextDaily(8, 0, friday, java.time.ZoneId.of("Asia/Dubai"))
+        assertEquals("2026-10-17T04:00:00Z", java.time.Instant.ofEpochMilli(next).toString())
+    }
+    @Test fun dailyWallClockStaysFixedAcrossDaylightSavingBoundary() {
+        // London leaves summer time early on 2026-10-25: 9:00 stays 9:00.
+        val evening = java.time.Instant.parse("2026-10-24T18:00:00Z").toEpochMilli()
+        val next = ScheduledPromptPolicy.nextDaily(9, 0, evening, java.time.ZoneId.of("Europe/London"))
+        assertEquals("2026-10-25T09:00:00Z", java.time.Instant.ofEpochMilli(next).toString())
+    }
     @Test fun rolledBackClockNeverAdmitsAnEarlyOccurrence() {
         assertFalse(ScheduledPromptPolicy.isDue(2000, 1000))
         assertTrue(ScheduledPromptPolicy.isDue(2000, 2000))

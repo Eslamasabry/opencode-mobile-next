@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../theme_roles.dart';
+import 'kit_effects.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
@@ -37,6 +39,7 @@ class KitSurface extends StatelessWidget {
     this.padding = KitSurfacePadding.panel,
     this.outlined = false,
     this.clip = true,
+    this.flatInLists = false,
   }) : _panelTitle = null,
        _panelIcon = null,
        _panelTitleKey = null,
@@ -60,6 +63,7 @@ class KitSurface extends StatelessWidget {
        shape = KitShape.panel,
        outlined = false,
        clip = true,
+       flatInLists = false,
        _panelTitle = title,
        _panelIcon = icon,
        _panelTitleKey = titleKey,
@@ -79,6 +83,7 @@ class KitSurface extends StatelessWidget {
        shape = KitShape.panel,
        outlined = false,
        clip = true,
+       flatInLists = false,
        _panelTitle = null,
        _panelIcon = null,
        _panelTitleKey = null,
@@ -102,6 +107,7 @@ class KitSurface extends StatelessWidget {
        padding = KitSurfacePadding.none,
        outlined = false,
        clip = true,
+       flatInLists = false,
        _panelTitle = null,
        _panelIcon = null,
        _panelTitleKey = null,
@@ -123,6 +129,13 @@ class KitSurface extends StatelessWidget {
   /// constructor exposes this; every named form clips.
   final bool clip;
 
+  /// A box that holds a page's leading group (Report a problem's summary):
+  /// where the style sets its lists flat on the page (Solid), it does too,
+  /// with no fill, edge or padding of its own, so its words start on the
+  /// page's gutter with everything under it. Every other style draws it as
+  /// given. Only the default constructor exposes this.
+  final bool flatInLists;
+
   final String? _panelTitle;
   final IconData? _panelIcon;
   final Key? _panelTitleKey;
@@ -130,6 +143,28 @@ class KitSurface extends StatelessWidget {
   final IconData? _tileIcon;
   final KitTextTone? _tileTone;
   final String? _tileSemanticsLabel;
+
+  /// The decoration of a [level] surface here, for the person's Surfaces
+  /// choice ([KitSurfaceLook.decorate]): [solid] unchanged under Solid.
+  static Decoration decorate(
+    BuildContext context,
+    KitSurfaceLevel level, {
+    required Decoration solid,
+    KitSurfaceRole role = KitSurfaceRole.content,
+    BorderRadius? borderRadius,
+    Color? color,
+    bool selected = false,
+    bool pressed = false,
+  }) => KitSurfaceLook.decorate(
+    context,
+    solid: solid,
+    level: level,
+    role: role,
+    borderRadius: borderRadius,
+    color: color,
+    selected: selected,
+    pressed: pressed,
+  );
 
   static EdgeInsetsGeometry _paddingOf(
     KitTokens tokens,
@@ -145,7 +180,20 @@ class KitSurface extends StatelessWidget {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
     if (_tileIcon case final tileIcon?) {
-      return _buildTile(tokens, roles, tileIcon);
+      return _buildTile(context, tokens, roles, tileIcon);
+    }
+    if (flatInLists && KitSurfaceLook.flatLists(context)) {
+      // A clear Material, so a field or an ink inside still has one.
+      return Material(
+        type: MaterialType.transparency,
+        child: kitPanelBody(
+          tokens,
+          title: _panelTitle,
+          icon: _panelIcon,
+          titleKey: _panelTitleKey,
+          child: child,
+        ),
+      );
     }
     final fill = _inset ? tokens.insetSurface : tokens.fillOf(level);
     final base = tokens.shapeOf(shape);
@@ -157,12 +205,14 @@ class KitSurface extends StatelessWidget {
             ),
           )
         : base;
-    return Material(
-      type: MaterialType.canvas,
-      color: fill,
-      elevation: 0,
+    // An inset panel is a well: pressed into the sheet under Soft.
+    return kitSurfaceMaterial(
+      context,
+      level: level,
       shape: resolvedShape,
-      clipBehavior: clip ? Clip.antiAlias : Clip.none,
+      fill: fill,
+      inset: _inset,
+      clip: clip,
       child: _content(tokens),
     );
   }
@@ -178,7 +228,12 @@ class KitSurface extends StatelessWidget {
     ),
   );
 
-  Widget _buildTile(KitTokens tokens, ThemeRoles roles, IconData icon) {
+  Widget _buildTile(
+    BuildContext context,
+    KitTokens tokens,
+    ThemeRoles roles,
+    IconData icon,
+  ) {
     final color = KitText.toneColor(roles, _tileTone ?? KitTextTone.primary);
     final glyph = Icon(icon, size: tokens.smallIconSize, color: color);
     final label = _tileSemanticsLabel;
@@ -190,12 +245,12 @@ class KitSurface extends StatelessWidget {
             excludeSemantics: true,
             child: glyph,
           );
-    return Material(
-      type: MaterialType.canvas,
-      color: tokens.fillOf(level),
-      elevation: 0,
+    return kitSurfaceMaterial(
+      context,
+      level: level,
       shape: tokens.shapeOf(shape),
-      clipBehavior: Clip.antiAlias,
+      fill: tokens.fillOf(level),
+      role: KitSurfaceRole.control,
       child: SizedBox(
         width: tokens.iconTileSize,
         height: tokens.iconTileSize,
@@ -204,6 +259,79 @@ class KitSurface extends StatelessWidget {
     );
   }
 }
+
+/// Kit-internal: a canvas [Material] of [fill] in [shape] at elevation 0,
+/// as every solid kit surface is painted, made for the person's Style.
+/// Under Solid at its defaults ([KitSurfaceLook.isPlain]) it is exactly
+/// that Material; otherwise (another style, or Solid with Fine-tune moved)
+/// the Material turns clear and a [kitSurfaceBox] paints the resolved
+/// surface beneath, both cross-fading, so the child (a field, a menu
+/// anchor) keeps its Material ancestor and its state.
+///
+/// A `ground` [level] surface with the default role hosts a whole page: it
+/// resolves as [KitSurfaceRole.ground] (its fill alone, never a shadow), so
+/// the surfaces on the page keep theirs.
+Widget kitSurfaceMaterial(
+  BuildContext context, {
+  required KitSurfaceLevel level,
+  required ShapeBorder shape,
+  required Color fill,
+  required Widget child,
+  KitSurfaceRole role = KitSurfaceRole.content,
+  Color? color,
+  bool inset = false,
+  bool selected = false,
+  bool clip = true,
+}) {
+  final style = KitSurfaceLook.styleOf(context);
+  final solid = KitSurfaceLook.isPlain(context);
+  final surfaceRole =
+      level == KitSurfaceLevel.ground && role == KitSurfaceRole.content
+      ? KitSurfaceRole.ground
+      : role;
+  // The shape alone, so a change of style fades the corners in place.
+  final circle = shape is CircleBorder;
+  final outline = BoxDecoration(
+    shape: circle ? BoxShape.circle : BoxShape.rectangle,
+    borderRadius: circle
+        ? null
+        : KitSurfaceDecoration.radiusOf(ShapeDecoration(shape: shape)),
+  );
+  final decoration = solid
+      ? outline
+      : KitSurfaceLook.decorate(
+          context,
+          solid: ShapeDecoration(color: fill, shape: shape),
+          level: level,
+          role: surfaceRole,
+          color: color,
+          selected: selected,
+          pressed: inset,
+        );
+  final reduced =
+      (MediaQuery.maybeDisableAnimationsOf(context) ?? false) ||
+      KitEffects.of(context).motion == KitMotionLevel.off;
+  return kitSurfaceBox(
+    style: style,
+    decoration: decoration,
+    child: TweenAnimationBuilder<Color?>(
+      tween: ColorTween(end: solid ? fill : fill.withValues(alpha: 0)),
+      duration: reduced ? Duration.zero : KitSurfaceLook.styleFade,
+      builder: (context, color, child) => Material(
+        type: MaterialType.canvas,
+        color: color,
+        elevation: 0,
+        shape: solid ? shape : _clearEdge(shape),
+        clipBehavior: clip ? Clip.antiAlias : Clip.none,
+        child: child,
+      ),
+      child: child,
+    ),
+  );
+}
+
+ShapeBorder _clearEdge(ShapeBorder shape) =>
+    shape is OutlinedBorder ? shape.copyWith(side: BorderSide.none) : shape;
 
 /// Kit-internal, not part of `KitSurface`'s frozen API: the panel header — a
 /// [KitTokens.smallIconSize] [icon] in `text2` at the start and a headline

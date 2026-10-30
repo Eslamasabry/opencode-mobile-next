@@ -74,6 +74,13 @@ Future<void> _pump(
 KitTopBar _bar([String title = 'Page']) => KitTopBar(title: title);
 
 void main() {
+  testWidgets('a page blurs nothing behind its parts', (tester) async {
+    await _pump(tester, KitScreen(topBar: _bar(), body: _rows()));
+    // The bar and a chat's composer share one backdrop read (KitFrost):
+    // the group is there, but nothing blurs at rest.
+    expect(find.byType(BackdropFilter), findsNothing);
+  });
+
   testWidgets('v1 parameters build as before, bottom keeps its key', (
     tester,
   ) async {
@@ -636,9 +643,7 @@ void main() {
     });
   });
 
-  testWidgets('a tab snack bar shows inside the shell, above the dock', (
-    tester,
-  ) async {
+  testWidgets('a tab snack bar shows inside the shell', (tester) async {
     // The shell (HomeScreen) is a KitScreen page inside KitNav with no
     // Scaffold; tabs that still call ScaffoldMessenger.showSnackBar must
     // show their snack bar there, floating above the glass dock.
@@ -673,7 +678,10 @@ void main() {
     expect(tester.getRect(snack).height, greaterThan(0));
     expect(
       tester.getRect(find.byType(SnackBar)).bottom,
-      lessThanOrEqualTo(tester.getRect(find.byType(KitNavBar)).top),
+      // No dock on a phone (owner, 2026-10-20): inside the window.
+      lessThanOrEqualTo(
+        tester.view.physicalSize.height / tester.view.devicePixelRatio,
+      ),
     );
     // The page itself keeps its own MediaQuery: its body is not lifted.
     expect(tester.getRect(find.text('Row 0')).top, lessThan(200));

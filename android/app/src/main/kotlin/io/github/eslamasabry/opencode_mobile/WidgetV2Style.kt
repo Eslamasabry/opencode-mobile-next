@@ -59,6 +59,10 @@ object WidgetV2Style {
     fun backgroundMode(context: Context, widgetId: Int, snapshot: JSONObject?): String =
         savedStyle(context, widgetId, snapshot?.optString("profileID").orEmpty()).optString("background", "solid")
 
+    /** The project a Conversations widget lists, "" for all projects (its Edit). */
+    fun project(context: Context, widgetId: Int, snapshot: JSONObject?): String =
+        savedStyle(context, widgetId, snapshot?.optString("profileID").orEmpty()).optString("project")
+
     private fun themeColor(context: Context, theme: JSONObject?, key: String, fallback: Int): Int =
         theme?.optLong(key)?.takeIf { it != 0L }?.toInt() ?: context.getColor(fallback)
 

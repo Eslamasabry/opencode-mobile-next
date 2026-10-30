@@ -134,6 +134,28 @@ List<MessageWithParts> _transcript() => [
     ),
     parts: [for (final id in _rawIds) _tool('a1', id)],
   ),
+  MessageWithParts(
+    info: MessageInfo(
+      id: 'a2',
+      sessionID: 'session-1',
+      role: 'assistant',
+      time: MsgTime(created: 20, completed: 21),
+    ),
+    parts: [
+      Part(
+        id: 'a2-bash',
+        messageID: 'a2',
+        callID: 'a2-bash',
+        type: 'tool',
+        toolName: 'bash',
+        toolState: ToolState.fromJson({
+          'status': 'completed',
+          'input': {'command': 'uptime'},
+          'output': 'ok',
+        }, toolName: 'bash'),
+      ),
+    ],
+  ),
 ];
 
 Future<void> _pumpChat(WidgetTester tester) async {
@@ -215,6 +237,21 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('timeline-row-a1')), findsOneWidget);
       _expectNoRawId();
+      // A shell step's row says what it ran, not only "Tools: Shell".
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('timeline-row-a2')),
+          matching: find.textContaining('uptime', findRichText: true),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('timeline-row-a2')),
+          matching: find.text('Tools: Shell'),
+        ),
+        findsNothing,
+      );
       expect(
         find.textContaining('Show card', findRichText: true),
         findsWidgets,

@@ -7,6 +7,11 @@
 // animations off first (for its own G5 accessibility pass), which would hide
 // the very thing these frames exist to show.
 //
+// Since 2026-10-26 (owner: native Android motion) Android pages use the
+// platform's predictive back transition: the kit's shared axis shots run
+// under a non-Android theme platform (fuchsia), and the `android` shots show
+// the Android fade-forwards slide mid-way.
+//
 // Regenerate deliberately:
 //   flutter test --update-goldens test/goldens/kit/kit_page_route_golden_test.dart
 // and look at every changed image before committing it.
@@ -53,12 +58,14 @@ Future<void> _shot(
   required String name,
   required bool light,
   Locale locale = const Locale('en'),
+  bool android = false,
   required Future<void> Function(BuildContext context, ThemeData theme) drive,
 }) async {
   tester.view.physicalSize = _size * 3.0;
   tester.view.devicePixelRatio = 3.0;
   addTearDown(tester.view.reset);
-  final theme = _theme(light: light);
+  final own = _theme(light: light);
+  final theme = android ? own : own.copyWith(platform: TargetPlatform.fuchsia);
   final boundary = GlobalKey();
   late BuildContext context;
   // ARCH-11: rendered as Android.
@@ -113,6 +120,20 @@ void main() {
           unawaited(pushKitPage<void>(context, (_) => _page('B', theme)));
           await tester.pump();
           await tester.pump(const Duration(milliseconds: 125));
+        },
+      );
+    });
+
+    testWidgets('kit_page_route android mid forward · $mode', (tester) async {
+      await _shot(
+        tester,
+        name: 'kit_page_route_android_mid_forward_$mode',
+        light: light,
+        android: true,
+        drive: (context, theme) async {
+          unawaited(pushKitPage<void>(context, (_) => _page('B', theme)));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 200));
         },
       );
     });

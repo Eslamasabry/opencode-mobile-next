@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The exact command a request asks about, Graphite light. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FFF1F1EE" />
+    <corners android:radius="8dp" />
+</shape>

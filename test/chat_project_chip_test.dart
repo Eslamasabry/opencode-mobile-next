@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/ui/screens/files_screen.dart' show FilesScreen;
 import 'support/fake_server_gateway.dart';
 import 'package:opencode_mobile/domain/models.dart' show FileNode;
 import 'package:opencode_mobile/domain/server_gateway.dart';
@@ -23,8 +24,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
 import 'support/complete_message_history.dart';
 
-/// The conversation's project, as a small chip under the title, with a
-/// compact menu of what can be done there (chats-first shell).
+/// The conversation's project, as a small chip under the title that opens
+/// the project's Files page (no bottom bar, owner 2026-10-20).
 const _sessionID = 'session-1';
 
 class _Api extends FakeServerGateway with CompleteMessageHistory {
@@ -48,6 +49,7 @@ class _Api extends FakeServerGateway with CompleteMessageHistory {
     fileBrowsing: capable,
     terminal: capable,
     sessionDiff: capable,
+    projectManagement: capable,
   );
 
   // This fixture exercises the project chip, without claiming the folder is
@@ -171,21 +173,33 @@ void main() {
     expect(tester.takeException(), isNull);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
-  testWidgets('tapping the chip opens Files, Terminal and Changes', (
-    tester,
-  ) async {
-    final conn = await _controller(_Api(directory: '/root/projects/IPTV_King'));
-    addTearDown(conn.dispose);
-    await _pumpChat(tester, conn);
-    await tester.tap(_chip);
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('chat-project-files')), findsOneWidget);
-    expect(find.byKey(const ValueKey('chat-project-terminal')), findsOneWidget);
-    expect(find.byKey(const ValueKey('chat-project-changes')), findsOneWidget);
-    expect(find.text('Files'), findsOneWidget);
-    expect(find.text('Terminal'), findsOneWidget);
-    expect(find.text('Changes'), findsOneWidget);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  testWidgets(
+    "tapping the chip opens the project's Files page, and Back returns",
+    (tester) async {
+      final conn = await _controller(
+        _Api(directory: '/root/projects/IPTV_King'),
+      );
+      addTearDown(conn.dispose);
+      await _pumpChat(tester, conn);
+      await tester.tap(_chip);
+      await tester.pumpAndSettle();
+      // One tap: the project's files, its tools one more in the bar's ⋯.
+      expect(find.byKey(const ValueKey('project-files-page')), findsOneWidget);
+      expect(find.byType(FilesScreen), findsOneWidget);
+      expect(find.textContaining('IPTV_King'), findsWidgets);
+      await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
+      await tester.pumpAndSettle();
+      expect(find.text('Terminal'), findsOneWidget);
+      expect(find.byKey(const ValueKey('project-hub-changes')), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('project-files-page')), findsNothing);
+      expect(_chip, findsOneWidget);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
 
   testWidgets('a server with none of the project tools shows no chip', (
     tester,
@@ -249,7 +263,7 @@ void main() {
     );
     await tester.tap(_chip);
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('chat-project-files')), findsOneWidget);
+    expect(find.byKey(const ValueKey('project-files-page')), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   testWidgets('at text size 2.0 the title stays beside the back arrow', (

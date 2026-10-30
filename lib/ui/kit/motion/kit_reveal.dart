@@ -1,12 +1,15 @@
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 
 import '../kit_motion.dart';
 
 /// A part that comes and goes (design standard §10): a notice, a status
 /// line, a folded section's rows. When [child] turns non-null it unfolds
-/// downwards and fades in; when it turns null it folds away and fades out,
-/// both over [KitMotion.standard]. A change to a child that stays is shown
-/// in place, without motion.
+/// downwards and fades in over [KitMotion.standard]; when it turns null it
+/// folds away and fades out over [KitMotion.quick] (leaving is quicker
+/// than arriving). A change to a child that stays is shown in place,
+/// without motion.
 ///
 /// The first build shows what is there at once: a screen opening with a
 /// notice already present does not animate it (the page transition already
@@ -42,7 +45,7 @@ class _KitRevealState extends State<KitReveal>
   late final CurvedAnimation _curve = CurvedAnimation(
     parent: _controller,
     curve: KitMotion.enter,
-    reverseCurve: KitMotion.exit.flipped,
+    reverseCurve: KitMotion.exit,
   );
   late Widget? _shown = widget.child;
 
@@ -53,6 +56,7 @@ class _KitRevealState extends State<KitReveal>
     _controller = AnimationController(
       vsync: this,
       duration: KitMotion.standard,
+      reverseDuration: KitMotion.quick,
       value: widget.child == null ? 0 : 1,
     )..addStatusListener(_onStatus);
   }
@@ -105,10 +109,20 @@ class _KitRevealState extends State<KitReveal>
       ignoring: leaving,
       child: ExcludeSemantics(
         excluding: leaving,
-        child: SizeTransition(
-          sizeFactor: _curve,
-          alignment: AlignmentDirectional.topStart,
+        // A SizeTransition clips always, so a settled part lost its shadow,
+        // outline and glow at its box edge (an opened command box, owner
+        // 2026-10-29). The clip stays only while the part is folding.
+        child: AnimatedBuilder(
+          animation: _curve,
           child: part,
+          builder: (context, child) => ClipRect(
+            clipBehavior: _curve.value >= 1 ? Clip.none : Clip.hardEdge,
+            child: Align(
+              alignment: AlignmentDirectional.topStart,
+              heightFactor: math.max(0.0, _curve.value),
+              child: child,
+            ),
+          ),
         ),
       ),
     );
@@ -123,7 +137,8 @@ class _KitRevealScope extends InheritedWidget {
 }
 
 /// A part arriving (design standard §10): it fades in and rises a few dp
-/// into place over [KitMotion.standard], once when it is built and again
+/// into place over [KitMotion.standard] (the rise only under Animations:
+/// Full; under Calm it only fades), once when it is built and again
 /// whenever [trigger] changes (a state that became a different state).
 ///
 /// Paint and transform only: nothing is laid out again, and the part is
@@ -197,15 +212,19 @@ class _KitEntranceState extends State<KitEntrance>
   }
 
   @override
-  Widget build(BuildContext context) => FadeTransition(
-    opacity: _curve,
-    child: AnimatedBuilder(
-      animation: _curve,
-      builder: (context, child) => Transform.translate(
-        offset: Offset(0, widget.rise * (1 - _curve.value)),
-        child: child,
+  Widget build(BuildContext context) {
+    // Calm: the part fades in where it lands (KitMotion.travels).
+    final rise = KitMotion.travels(context) ? widget.rise : 0.0;
+    return FadeTransition(
+      opacity: _curve,
+      child: AnimatedBuilder(
+        animation: _curve,
+        builder: (context, child) => Transform.translate(
+          offset: Offset(0, rise * (1 - _curve.value)),
+          child: child,
+        ),
+        child: widget.child,
       ),
-      child: widget.child,
-    ),
-  );
+    );
+  }
 }

@@ -169,6 +169,42 @@ void main() {
     expect(opened, 1);
   });
 
+  testWidgets('accent row: Tab reaches each swatch and Enter chooses it', (
+    tester,
+  ) async {
+    final chosen = <String?>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: KitAccentRow(
+            semanticsLabel: 'Accent',
+            matchLabel: 'Match theme',
+            theme: graphiteDark,
+            swatches: const [
+              KitAccentSwatch(
+                id: 'teal',
+                color: Color(0xFF3CCFCF),
+                label: 'Teal',
+              ),
+            ],
+            selected: null,
+            onChanged: chosen.add,
+          ),
+        ),
+      ),
+    );
+    // Match theme first, then the swatch.
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(chosen, ['teal']);
+  });
+
   testWidgets('window row is read-only: Tab passes over it', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

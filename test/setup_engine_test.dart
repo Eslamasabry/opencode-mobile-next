@@ -724,7 +724,7 @@ void main() {
         linux.checks = {
           'essentials': (true, '2.43.0'),
           'node': (true, '24.21.0'),
-          'opencode': (true, '2.0.29'),
+          'opencode': (true, '2.1.1'),
         };
         final params = {
           ...SetupJobParams.adding({'python', 'aiteam'}),
@@ -734,7 +734,7 @@ void main() {
         expect(linux.started.single['params'], params);
         expect(linux.runs.single, contains('command -v opencode2'));
         expect(spec(linux, 'opencode')['skipped'], isTrue);
-        expect(spec(linux, 'opencode')['version'], '2.0.29');
+        expect(spec(linux, 'opencode')['version'], '2.1.1');
         expect(
           spec(linux, 'start')['data'],
           containsPair('runtime', 'opencode2'),

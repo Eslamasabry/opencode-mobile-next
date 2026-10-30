@@ -17,6 +17,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/staged_revert_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/composer_tools.dart';
 
 MessageWithParts _user(String id, String text, int created) => MessageWithParts(
   info: MessageInfo(
@@ -201,7 +202,7 @@ Future<void> _undoFromPrompt(WidgetTester tester, String prompt) async {
 
 /// Door 2: the command sheet's "Undo last prompt" (/undo, slice-P10.1).
 Future<void> _undoFromMenu(WidgetTester tester) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await tester.pumpAndSettle();
   final commands = find.byKey(const Key('composer-tool-commands'));
   await tester.ensureVisible(commands);

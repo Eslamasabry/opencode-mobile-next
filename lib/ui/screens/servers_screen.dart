@@ -28,7 +28,7 @@ import '../../termux/bridge.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
 import '../kit/scenes/servers_link_scene.dart';
-import '../kit/scenes/servers_welcome_scene.dart';
+import '../../builtin/setup/setup_contract.dart' show SetupState;
 import '../setup_commands.dart';
 import '../widgets/product_states.dart'
     show connectionErrorText, productErrorDetails, productErrorText;

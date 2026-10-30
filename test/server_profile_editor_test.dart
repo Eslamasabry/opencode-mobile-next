@@ -643,11 +643,7 @@ void main() {
     addTearDown(controller.dispose);
     await tester.pumpWidget(_app(store, controller));
     Future<void> openAddServer() async {
-      final computer = find.byKey(const ValueKey('welcome-choice-computer'));
-      await tester.ensureVisible(computer);
-      await tester.pumpAndSettle();
-      await tester.tap(computer);
-      await tester.pumpAndSettle();
+      await chooseComputerOnWelcome(tester);
     }
 
     await openAddServer();

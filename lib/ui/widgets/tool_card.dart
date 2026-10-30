@@ -11,10 +11,8 @@ import '../app_iconography.dart';
 import '../kit/chat/kit_markdown.dart';
 import '../kit/chat/kit_step_timeline.dart';
 import '../kit/chat/kit_tool_row.dart';
-import '../kit/kit_bidi.dart';
 import '../kit/kit_buttons.dart';
 import '../kit/kit_code_block.dart';
-import '../kit/kit_details_fold.dart';
 import '../kit/kit_diff_view.dart';
 import '../kit/kit_image.dart';
 import '../kit/kit_key_value.dart';
@@ -24,6 +22,7 @@ import '../kit/kit_row.dart';
 import '../kit/kit_row_parts.dart';
 import '../kit/kit_status_mark.dart';
 import '../kit/kit_tappable.dart';
+import '../kit/kit_technical_value.dart';
 import '../kit/kit_text.dart';
 import '../kit/kit_tokens.dart';
 import 'file_preview.dart';
@@ -33,6 +32,19 @@ import 'product_states.dart' show productErrorText;
 part 'tool_card_contract.dart';
 part 'tool_card_body.dart';
 part 'tool_card_parts.dart';
+
+/// A step its turn cut off: the app's and the server's note "Tool execution
+/// interrupted", not the tool's own error. Its row says Stopped.
+bool toolStepCutOff(ToolState state) => _cutOffNote.hasMatch(
+  (state.output ?? '').replaceFirst(RegExp(r'^Error:\s*'), '').trim(),
+);
+
+// Newer servers name the tool after the note ("Tool execution interrupted:
+// read"): still the same cut, not the tool's own error.
+final _cutOffNote = RegExp(
+  r'^tool execution (was )?interrupted(:\s*[\w.-]+)?\.?$',
+  caseSensitive: false,
+);
 
 // The host adapter for one tool call (embedded-tool-card; chat-2). It maps a
 // server `ToolState` to a KitToolRow — kind, words, status, +/− and time —
@@ -336,9 +348,21 @@ class _ToolCardState extends State<ToolCard> {
       case 'running':
         return KitToolStatus.running;
       case 'error':
-        return state.declined ? KitToolStatus.declined : KitToolStatus.failed;
+        if (state.declined) return KitToolStatus.declined;
+        return toolStepCutOff(state)
+            ? KitToolStatus.stopped
+            : KitToolStatus.failed;
       case 'cancelled' || 'killed':
         return KitToolStatus.stopped;
+    }
+    // A background task's notice is a finished call either way: its row
+    // reads how the task itself ended.
+    if (contract.kind == _ToolKind.backgroundNotice) {
+      return switch (contract.noticeEnd) {
+        BackgroundTaskEnd.failed => KitToolStatus.failed,
+        BackgroundTaskEnd.stopped => KitToolStatus.stopped,
+        _ => KitToolStatus.done,
+      };
     }
     if (contract.kind == _ToolKind.task) {
       final child = _subagentState(

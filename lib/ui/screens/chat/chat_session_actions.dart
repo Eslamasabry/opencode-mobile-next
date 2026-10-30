@@ -6,19 +6,54 @@ part of '../chat_screen.dart';
 mixin _ChatSessionActionFields {
   bool _aborting = false;
   String? _localShareUrl;
+
+  /// Completed when the person presses Stop while a send waits (for the
+  /// connection, the model choice, storage): the send goes no further.
+  Completer<void>? _sendCancel;
+
+  /// The bubble the send in flight shows, taken back out by a Stop.
+  _PendingSend? _sendingBubble;
+
+  /// The prompt request has left: a Stop now stops the turn on the server.
+  bool _promptOnWire = false;
+
+  /// Stop was pressed while the prompt request was on its way: the turn is
+  /// stopped again once the server took it, in case it started after the
+  /// first stop arrived.
+  bool _stopAfterDispatch = false;
+
+  /// The last [_abort] reached the server and stopped the turn.
+  bool _abortSucceeded = false;
 }
 
 extension _ChatSessionActions on _ChatScreenState {
   String? get _shareUrl =>
       _conn.sessionsById[widget.sessionID]?.shareUrl ?? _localShareUrl;
 
+  /// How long a Stop waits for the connection before it says it could not
+  /// reach the server: the person pressed it to stop something now.
+  static const _abortTransportWait = Duration(seconds: 5);
+
   Future<void> _abort() async {
+    _abortSucceeded = false;
     if (_aborting) return;
     if (!_conn.isIsolated) KitHaptics.commit(context);
+    // The send is still waiting (for the connection, the model choice):
+    // it is called off here, and nothing reaches the server.
+    if (_sending && _sendCancel != null && !_promptOnWire) {
+      _stopPendingSend();
+      return;
+    }
+    // Its request is on the way: the turn is stopped now and once more
+    // when the server has taken it.
+    if (_sending && _promptOnWire) _stopAfterDispatch = true;
     final location = _conn.locationRevision;
     final profileID = _conn.profile?.id;
     _setChatState(() => _aborting = true);
-    final actionApi = await _conn.prepareActionTransport();
+    final actionApi = await _conn.prepareActionTransport().timeout(
+      _abortTransportWait,
+      onTimeout: () => null,
+    );
     if (!mounted) return;
     if (location != _conn.locationRevision || profileID != _conn.profile?.id) {
       _setChatState(() => _aborting = false);
@@ -32,8 +67,13 @@ extension _ChatSessionActions on _ChatScreenState {
       );
       return;
     }
+    // Noted before the call: the server's interrupt can arrive before the
+    // call returns, and must not read as a stop from another device.
+    _conn.noteStopFromThisApp(widget.sessionID);
     try {
       await actionApi.abort(widget.sessionID);
+      _abortSucceeded = true;
+      _conn.markStoppedByPerson(widget.sessionID);
       if (mounted) {
         final prompt = _messages.lastIndexWhere(_isPrompt);
         _setChatState(() {
@@ -42,10 +82,114 @@ extension _ChatSessionActions on _ChatScreenState {
         });
       }
     } catch (error) {
+      _conn.noteStopFromThisApp(widget.sessionID, asked: false);
       if (mounted) _showActionError(error);
     } finally {
       if (mounted) _setChatState(() => _aborting = false);
     }
+  }
+
+  // A send in flight, and Stop while it still waits.
+
+  /// How long a send made while the connection is away waits for it to
+  /// come back (a wake's reconnect) before it is queued or kept as a draft.
+  static const _sendTransportWait = Duration(seconds: 10);
+
+  /// Whether the connection is back for a send made while it was away:
+  /// the action transport answered (it waits out a wake's reconnect) and
+  /// the event stream is up or coming up on it.
+  Future<bool> _connectionBackForSend() async {
+    final ServerGateway? api;
+    try {
+      api = await _untilSendStopped<ServerGateway?>(
+        _conn.prepareActionTransport().timeout(
+          _sendTransportWait,
+          onTimeout: () => null,
+        ),
+      );
+    } catch (_) {
+      return false;
+    }
+    if (api == null || !mounted) return false;
+    final status = _conn.status;
+    return status == StreamStatus.connected ||
+        (status == StreamStatus.connecting && _conn.hasConnectedServer);
+  }
+
+  /// Whether the person stopped the send in flight ([_stopPendingSend]).
+  bool get _sendStopped => _sendCancel?.isCompleted ?? false;
+
+  /// [work], or null as soon as the person stops the send.
+  Future<T?> _untilSendStopped<T>(Future<T> work) {
+    final cancel = _sendCancel;
+    if (cancel == null) return work;
+    return Future.any<T?>([work, cancel.future.then((_) => null)]);
+  }
+
+  /// Stop while the send still waits, before its request left: nothing is
+  /// sent, the bubble goes and the words are back in the box.
+  void _stopPendingSend() {
+    final cancel = _sendCancel;
+    if (cancel == null || cancel.isCompleted) return;
+    cancel.complete();
+    final bubble = _sendingBubble;
+    _sendingBubble = null;
+    if (bubble != null) _rollbackOptimisticBubble(bubble);
+    _setChatState(() => _sending = false);
+  }
+
+  /// Whether the server still works on this conversation's newest turn,
+  /// asked before a reply that looks cut off is called dropped: true while
+  /// it is asked and when it says so. An unreachable server leaves the
+  /// call to the chat's own reading.
+  bool _serverStillRunsTurn() {
+    final id = widget.sessionID;
+    final word = _conn.turnRunCheck(id);
+    if (word == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_conn.checkTurnStillRuns(id));
+      });
+      return true;
+    }
+    return word == TurnRunCheck.checking || word == TurnRunCheck.running;
+  }
+
+  /// Whether the newest turn's prompt ended without its reply because the
+  /// server interrupted it (OpenCode 2), so that turn ends on a stopped line.
+  bool get _serverStoppedTurn =>
+      !_conn.busySessions.contains(widget.sessionID) &&
+      _conn.turnInterruptReason(widget.sessionID) != null;
+
+  /// The line that ends a stopped turn, and its way on: "You stopped this
+  /// reply." (null) only when the stop came from this app; otherwise who or
+  /// what stopped it, as the server said, or plainly that it was stopped.
+  (String?, KitAction?) _stoppedLine({
+    required bool latest,
+    VoidCallback? onContinue,
+  }) {
+    final l10n = _chatL10n(context);
+    final id = widget.sessionID;
+    if (latest &&
+        (_stoppedPromptID != null || _conn.turnStoppedFromThisApp(id))) {
+      return (null, null);
+    }
+    KitAction? resume() => onContinue == null
+        ? null
+        : KitAction(
+            key: const Key('stopped-continue'),
+            label: l10n.messageViewContinueReply,
+            onPressed: onContinue,
+          );
+    return switch (latest ? _conn.turnInterruptReason(id) : null) {
+      TurnInterruptReason.inactivity => (l10n.chatTurnPausedInactive, resume()),
+      TurnInterruptReason.shutdown => (
+        l10n.chatTurnStoppedServerRestart,
+        resume(),
+      ),
+      TurnInterruptReason.user => (l10n.chatTurnStoppedElsewhere, null),
+      TurnInterruptReason.superseded => (l10n.chatTurnSuperseded, null),
+      TurnInterruptReason.unknown || null => (l10n.chatTurnStoppedEarly, null),
+    };
   }
 
   Future<void> _share() async {
@@ -234,15 +378,8 @@ extension _ChatSessionActions on _ChatScreenState {
     }
   }
 
-  Future<void> _continueTruncated() async {
-    if (_sending) return;
-    final draft = _composer.text;
-    _composer.text = _chatL10n(context).returnBriefContinue;
-    await _send();
-    if (mounted && _composer.text.isEmpty && draft.trim().isNotEmpty) {
-      _composer.text = draft;
-    }
-  }
+  Future<void> _continueTruncated() =>
+      _sendInsteadOfDraft(_chatL10n(context).returnBriefContinue);
 
   /// "Undo last prompt" (conversation menu, /undo): the same "Undo from
   /// here" flow as a prompt's own menu, from the newest prompt.

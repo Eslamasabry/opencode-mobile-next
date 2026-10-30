@@ -5,6 +5,8 @@ extension _ModelCatalogFooter on _ModelCatalogViewState {
   /// agent, each a chip that opens its menu. A chip that has nothing to
   /// choose is left out (a model with one level, a server without agents).
   Widget _footer(BuildContext context) {
+    // The plain choices apply on tap: nothing to pin with them.
+    if (_inChoices) return const SizedBox.shrink();
     final catalog = _catalog;
     if (catalog == null || catalog.models.isEmpty) {
       return const SizedBox.shrink();

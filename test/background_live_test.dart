@@ -408,7 +408,6 @@ void main() {
       'kind': 'question',
       'sessionID': 'session-1',
       'key': 'input:session-1',
-      'quickReply': false,
       'requestID': '',
     });
     expect(calls[3].$1, 'dismissCodingAlert');
@@ -523,6 +522,23 @@ void main() {
     expect(target?.kind, CodingAlertKind.complete);
     expect(target?.sessionID, 'session-1');
     expect(target?.profileID, 'server-1');
+  });
+
+  test('a widget Reply opens the chat ready to type; Open does not', () {
+    final reply = CodingAlertOpen.fromPlatform({
+      'kind': 'complete',
+      'sessionID': 'session-1',
+      'profileID': 'server-1',
+      'reply': 'true',
+    });
+    expect(reply?.reply, isTrue);
+    final open = CodingAlertOpen.fromPlatform({
+      'kind': 'complete',
+      'sessionID': 'session-1',
+      'profileID': 'server-1',
+      'reply': 'false',
+    });
+    expect(open?.reply, isFalse);
   });
 
   test('an Android foreground-service timeout turns live mode off', () async {

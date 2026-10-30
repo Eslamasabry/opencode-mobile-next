@@ -1,0 +1,52 @@
+=== RESULTS
+ok     probe
+ok     health
+ok     providers
+ok     agents
+ok     chat defaults
+ok     catalog
+ok     sessions
+ok     session statuses
+ok     pending permissions
+ok     pending forms
+ok     projects
+ok     current project
+ok     commands
+ok     skills
+ok     references
+ok     mcp servers
+ok     plugins
+ok     vcs health
+ok     vcs file statuses
+ok     worktrees
+ok     cloud environments
+ok     global sessions
+ok     running shells
+ok     shell identity
+ok     terminals
+ok     files
+ok     read file
+ok     find file
+ok     create session
+ok     rename
+ok     session details
+ok     note save
+ok     note load
+ok     inbox
+ok     forms
+ok     set model
+ok     prompt
+ok     turn finishes
+ok     messages
+ok     active context
+ok     export
+ok     children
+ok     todos
+ok     diff
+ok     abort (idle)
+ok     delete session
+0 of 46 steps broken
+00:03 +1: All tests passed!
+probe: ok=true flavor=ServerFlavor.v2 version=2.0.29
+  assistant: reasoning,text pong
+event types seen: [message.part.delta, message.part.updated, message.updated, server.connected, session.created, session.deleted, session.idle, session.inbox.delivered, session.inbox.enqueued, session.instructions.updated, session.metadata.updated, session.model.selected, session.status, session.usage.updated]

@@ -98,6 +98,10 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   bool _paChecking = false;
   final _paSources =
       <String, ({PaseoGateway gateway, PaseoChatFeedSource source})>{};
+
+  /// Folders an open "Continue with…" sheet writes to, counted per sheet:
+  /// the folder sync keeps their connections even when it lists others.
+  final _paHandoffHolds = <String, int>{};
   MergedChatFeed? _paMerged;
   StreamSubscription<void>? _paMergedSub;
 
@@ -631,6 +635,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         (_paAutoResumedAt == null ||
             now.difference(_paAutoResumedAt!) > const Duration(minutes: 1));
     _paRows = List.unmodifiable(rows);
+    _paSaveStatusLines();
     _paHostRunning = running || _paHelperAvailable;
     _paScheduleSignInRecheck(rows);
     if (syncSources) {
@@ -690,8 +695,12 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     });
   }
 
+  /// What the rows read live say, with the sign-in lines the last start
+  /// knew standing in for agents not read yet (phone_agents_saved.dart).
   @override
-  List<PhoneAgentStatusLine> get agentStatusLines => List.unmodifiable([
+  List<PhoneAgentStatusLine> get agentStatusLines => _paStatusLines();
+
+  List<PhoneAgentStatusLine> _paLiveStatusLines() => List.unmodifiable([
     for (final row in agentRows)
       if (row.status == PhoneAgentStatus.limitReached ||
           row.status == PhoneAgentStatus.signedOut ||
@@ -780,20 +789,37 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       phoneAgentsAvailable ? (_paHostProfile ?? _paProfile?.id) : null;
 
   @override
-  Future<void> recheckAgentSignIn(String agentId) async {
+  Future<void> recheckAgentSignIn(String agentId) =>
+      _paRecheckSignIn(agentId, awaitRows: true);
+
+  /// Reads [agentId]'s sign-in. The sign-in step and terminal read the
+  /// answer as soon as it is in; the rows follow once every agent has been
+  /// read again, which can take a minute (issue #95: "Checking sign-in…"
+  /// waited on all of it).
+  Future<void> _paRecheckSignIn(
+    String agentId, {
+    required bool awaitRows,
+  }) async {
     final host = _paEnsureHost();
     final owner = _paHostProfile;
     final result = await _paProbeSignIn(host, agentId);
     if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
     _paAuthResults[agentId] = result;
-    await refreshAgentRows();
-    if (!_self._disposed) _self._notifyListeners();
+    _self._notifyListeners();
+    final rows = refreshAgentRows().then((_) {
+      if (!_self._disposed) _self._notifyListeners();
+    });
+    if (awaitRows) {
+      await rows;
+    } else {
+      unawaited(rows.catchError((Object _) {}));
+    }
   }
 
   /// A terminal exit, including zero, is never authentication proof.
   @override
   Future<bool> confirmAgentSignIn(String agentId) async {
-    await recheckAgentSignIn(agentId);
+    await _paRecheckSignIn(agentId, awaitRows: false);
     return _paAuthResults[agentId]?.state == AgentAuthProbeState.signedIn;
   }
 
@@ -888,7 +914,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
         : const <String>[];
     var changed = false;
     for (final directory in _paSources.keys.toList()) {
-      if (!wanted.contains(directory)) {
+      if (!wanted.contains(directory) &&
+          !_paHandoffHolds.containsKey(directory)) {
         await _paDropSource(directory);
         changed = true;
       }
@@ -1196,6 +1223,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       stillLoading: List.unmodifiable(reading),
       stillLoadingServers: List.unmodifiable(servers),
       unreachableServers: List.unmodifiable(_self._sidesUnreachable),
+      incompleteSources: snapshot.incompleteSources,
       // OpenCode answers for every project; a scoped phone source never makes
       // the whole list look single-project.
       acrossProjects: _self._ocAcross,
@@ -1237,6 +1265,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
       for (final item in _self._sideSavedRows)
         if (!shown.contains(item.identity) && chatFeedMatches(item, filter))
           item,
+      ..._paMainSavedRows(snapshot, filter),
     ];
     final backend = _paBackendLive;
     return List<ChatFeedItem>.unmodifiable(

@@ -15,6 +15,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
+import 'package:opencode_mobile/state/effects.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit_choice_list.dart';
@@ -352,6 +353,190 @@ void main() {
     testWidgets('disabled: the reason shows under the answers', (tester) async {
       await _pump(tester, _permission(disabledReason: 'Reconnect to answer.'));
       expect(find.text('Reconnect to answer.'), findsOneWidget);
+    });
+  });
+
+  group('a gate\'s one act (KitRequestGo, vision team task)', () {
+    const goKey = Key('go');
+    const lookKey = Key('look');
+    KitRequestCard gate({VoidCallback? onGo, String? reason, int? looked}) =>
+        KitRequestCard.ask(
+          look: KitRequestLook.question,
+          kind: KitRequestKind.gate,
+          title: 'Merge 6 changes into main?',
+          who: 'The team',
+          reason: KitNeedsYouReason.decision,
+          ifIgnored: 'The changes wait on their branch.',
+          announcement: 'Ready to merge. Merge 6 changes into main?',
+          detail: '6 files · +312 / −87 · all 5 checks passed',
+          answers: KitRequestGo(
+            label: 'Merge into main',
+            goKey: goKey,
+            onGo: reason == null ? (onGo ?? () {}) : null,
+            disabledReason: reason,
+            look: KitAction(
+              key: lookKey,
+              label: 'Review changes',
+              onPressed: () {},
+            ),
+          ),
+        );
+
+    testWidgets('the way to look above, the named act under the thumb; one '
+        'tap, once, one haptic', (tester) async {
+      final haptics = recordHaptics(tester);
+      var went = 0;
+      await _pump(tester, gate(onGo: () => went++));
+      expect(
+        tester.widget<KitButton>(find.byKey(goKey)).role,
+        KitButtonRole.primary,
+      );
+      expect(
+        tester.widget<KitButton>(find.byKey(lookKey)).role,
+        KitButtonRole.secondary,
+      );
+      expect(
+        tester.getTopLeft(find.byKey(lookKey)).dy,
+        lessThan(tester.getTopLeft(find.byKey(goKey)).dy),
+      );
+      // Full width each: both labels read whole.
+      expect(
+        tester.getSize(find.byKey(goKey)).width,
+        tester.getSize(find.byKey(lookKey)).width,
+      );
+      // There is no refusal: not acting is the answer.
+      expect(find.text('Send back'), findsNothing);
+      await tester.tap(find.byKey(goKey));
+      await tester.pump();
+      await tester.tap(find.byKey(goKey));
+      await tester.pump();
+      expect(went, 1);
+      expect(haptics, hasLength(1));
+    });
+
+    testWidgets('off: the reason under the buttons, nothing sent', (
+      tester,
+    ) async {
+      await _pump(tester, gate(reason: 'Merge is off until the team answers.'));
+      expect(find.text('Merge is off until the team answers.'), findsOneWidget);
+      expect(tester.widget<KitButton>(find.byKey(goKey)).onPressed, isNull);
+    });
+
+    testWidgets('only a gate goes', (tester) async {
+      await _pump(
+        tester,
+        KitRequestCard.ask(
+          kind: KitRequestKind.permission,
+          title: 'Run a shell command',
+          who: 'fox',
+          reason: KitNeedsYouReason.decision,
+          ifIgnored: 'The agent waits.',
+          announcement: 'Permission needed',
+          answers: KitRequestGo(label: 'Run', onGo: () {}),
+        ),
+      );
+      expect(tester.takeException(), isA<AssertionError>());
+    });
+  });
+
+  group('the Inbox row (asRow with place and onOpen)', () {
+    testWidgets('the place line, the question and the command; the line and '
+        'the question open the conversation', (tester) async {
+      final semantics = tester.ensureSemantics();
+      var opened = 0;
+      var allowed = 0;
+      await _pump(
+        tester,
+        _permission(onAllow: () => allowed++).asRow(
+          place: 'Laptop · shopfront · Fix the build',
+          onOpen: () => opened++,
+          openLabel: 'Open Fix the build',
+        ),
+      );
+      expect(find.text('Laptop · shopfront · Fix the build'), findsOneWidget);
+      expect(
+        find.text('flutter test --concurrency=1 test/offline_queue_test.dart'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Run a shell command'));
+      await tester.pump();
+      expect(opened, 1);
+      expect(allowed, 0);
+      await tester.tap(find.byKey(_allowKey));
+      await tester.pump();
+      expect(allowed, 1);
+      expect(opened, 1);
+      expect(find.bySemanticsLabel('Open Fix the build'), findsOneWidget);
+      semantics.dispose();
+    });
+
+    testWidgets('a request with no answers in place has one Open', (
+      tester,
+    ) async {
+      var opened = 0;
+      await _pump(
+        tester,
+        const KitRequestCard.ask(
+          kind: KitRequestKind.question,
+          title: 'Which branch should I use?',
+          who: 'Laptop',
+          reason: KitNeedsYouReason.decision,
+          ifIgnored: 'The agent waits; nothing is lost.',
+          announcement: 'Which branch should I use?',
+        ).asRow(
+          place: 'Laptop · shopfront',
+          onOpen: () => opened++,
+          openKey: const ValueKey('open'),
+        ),
+      );
+      expect(find.text('Allow once'), findsNothing);
+      expect(find.text('Open'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('open')));
+      await tester.tap(find.byKey(const ValueKey('open')));
+      await tester.pump();
+      // Opening is not an answer: no once-only guard.
+      expect(opened, 2);
+    });
+
+    testWidgets('choices answered in place keep the card', (tester) async {
+      await _pump(
+        tester,
+        _choice().asRow(place: 'Laptop · shopfront', onOpen: () {}),
+      );
+      expect(find.byKey(const ValueKey('kit-request-row')), findsNothing);
+      expect(find.text('Laptop · shopfront'), findsNothing);
+    });
+
+    testWidgets('answered: the place line stays above the outcome and Undo', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _permission(
+          phase: KitRequestPhase.answered,
+          answer: 'Allowed',
+          receipt: KitReceipt(
+            state: KitReceiptState.confirmed,
+            label: 'Allowed',
+            onUndo: () {},
+          ),
+        ).asRow(place: 'Laptop · shopfront', onOpen: () {}),
+      );
+      expect(find.text('Laptop · shopfront'), findsOneWidget);
+      expect(find.text('Undo'), findsOneWidget);
+    });
+
+    testWidgets('fits at 2x text on a 320 dp phone', (tester) async {
+      await _pump(
+        tester,
+        _permission().asRow(
+          place: 'Studio Mac · site · Set up the landing page',
+          onOpen: () {},
+        ),
+        size: const Size(320, 693),
+        textScale: 2,
+      );
+      expect(tester.takeException(), isNull);
     });
   });
 
@@ -1115,6 +1300,80 @@ void main() {
           isNot(roles.accent.toARGB32() & 0xFFFFFF),
         );
       }
+    });
+  });
+
+  // Style recheck F8: under Solid a Fine-tune knob changes only what it
+  // names. No knob draws an attention line over the card (Edges › Off takes
+  // the card's edge like every panel's), and Depth › Raised's shadow is
+  // never cut by the start edge's clip.
+  group('Solid with Fine-tune', () {
+    const knobs = {
+      'Corners › Sharp': KitFineTune(corners: KitCorners.sharp),
+      'Density › Compact': KitFineTune(density: KitDensity.compact),
+      'Depth › Raised': KitFineTune(depth: KitDepth.raised),
+      'Edges › Off': KitFineTune(edges: KitEdges.none),
+    };
+    Widget tuned(KitFineTune fineTune, Widget card) => KitEffectsScope(
+      effects: KitEffects(fineTune: fineTune),
+      child: card,
+    );
+    Iterable<Decoration> overCard(WidgetTester tester) => tester
+        .widgetList<DecoratedBox>(
+          find.descendant(
+            of: find.byKey(_cardKey),
+            matching: find.byType(DecoratedBox),
+          ),
+        )
+        .where((box) => box.position == DecorationPosition.foreground)
+        .map((box) => box.decoration);
+    BorderSide sideOf(WidgetTester tester) {
+      final face = tester.widget<DecoratedBox>(find.byKey(_cardKey)).decoration;
+      return ((face as ShapeDecoration).shape as OutlinedBorder).side;
+    }
+
+    for (final MapEntry(key: name, value: fineTune) in knobs.entries) {
+      for (final (kind, card) in [
+        ('full card', _permission()),
+        ('question look', _choice()),
+      ]) {
+        testWidgets('$name, $kind: no line over the card', (tester) async {
+          await _pump(tester, tuned(fineTune, card));
+          for (final decoration in overCard(tester)) {
+            expect(decoration, const BoxDecoration(), reason: name);
+          }
+          final side = sideOf(tester);
+          if (fineTune.edges == KitEdges.none) {
+            expect(side, BorderSide.none, reason: 'Edges › Off');
+          } else {
+            expect(
+              side.width,
+              greaterThan(0),
+              reason: 'the card keeps its edge',
+            );
+          }
+        });
+      }
+    }
+
+    testWidgets('Depth › Raised: the question card keeps its shadow', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        tuned(const KitFineTune(depth: KitDepth.raised), _choice()),
+      );
+      final face =
+          tester.widget<DecoratedBox>(find.byKey(_cardKey)).decoration
+              as ShapeDecoration;
+      expect(face.shadows, isNotEmpty);
+      expect(
+        find.ancestor(
+          of: find.byKey(_cardKey),
+          matching: find.byType(ClipRRect),
+        ),
+        findsNothing,
+      );
     });
   });
 

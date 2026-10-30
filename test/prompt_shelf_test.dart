@@ -23,6 +23,7 @@ import 'package:opencode_mobile/ui/widgets/prompt_history_navigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import '../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
+import 'support/composer_tools.dart';
 
 class _RefusingStore extends InMemorySharedPreferencesStore {
   _RefusingStore() : super.withData({});
@@ -142,7 +143,7 @@ Future<(_Controller, ReviewHandoffStore)> _pump(
 }
 
 Future<void> _tool(WidgetTester tester, String key) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await tester.pumpAndSettle();
   // The sheet scrolls under its header at large text: centre each row
   // before tapping it.

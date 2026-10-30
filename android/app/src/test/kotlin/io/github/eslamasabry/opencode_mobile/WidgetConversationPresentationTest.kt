@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import io.github.eslamasabry.opencode_mobile.WidgetLayoutPolicy.CardNeeds
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -68,76 +69,50 @@ class WidgetConversationPresentationTest {
         assertEquals(16, WidgetSizePolicy.launcherSizes((1..100).map { it.toFloat() to 224f }).size)
     }
 
-    @Test fun cardSpendsItsHeightOnWholeLinesInPriorityOrder() {
-        // 2x2 at 180dp (the mock): a two-line title and a two-line live line fit; a third title line does not.
-        assertEquals(WidgetLayoutPolicy.CardLines(2, 2, 0), WidgetLayoutPolicy.cardLines(180, 2, 2, 0))
-        assertEquals(WidgetLayoutPolicy.CardLines(2, 1, 0), WidgetLayoutPolicy.cardLines(180, 3, 1, 0))
-        // The owner's 223dp card holds three title lines and two meta lines.
-        assertEquals(WidgetLayoutPolicy.CardLines(3, 2, 0), WidgetLayoutPolicy.cardLines(223, 3, 2, 0))
-        // Too short for any meta line: the title keeps its one line, nothing is clipped.
-        assertEquals(WidgetLayoutPolicy.CardLines(1, 0, 0), WidgetLayoutPolicy.cardLines(110, 3, 2, 0))
-        // 4x2 as 2x2 plus whole reply lines; never more than asked or four.
-        assertEquals(WidgetLayoutPolicy.CardLines(1, 0, 2), WidgetLayoutPolicy.cardLines(180, 1, 0, 3))
-        assertEquals(WidgetLayoutPolicy.CardLines(1, 0, 4), WidgetLayoutPolicy.cardLines(300, 1, 0, 9))
-        assertEquals(0, WidgetLayoutPolicy.cardLines(300, 1, 0, 0).preview)
-        // Whatever the height, the lines chosen fit in it.
-        for (h in 100..420) for (preview in 0..5) {
-            val c = WidgetLayoutPolicy.cardLines(h, 3, 2, preview)
-            val used = 102 + c.title * 21 + c.meta * 16 + if (c.preview > 0) 6 + c.preview * 18 else 0
-            assertTrue("h=$h $c", used <= h || (c.title == 1 && c.meta == 0 && c.preview == 0))
+    @Test fun cardSpendsItsHeightInPriorityOrder() {
+        // 4x2 portrait (about 200dp): question, the exact command, the meta line.
+        assertEquals(WidgetLayoutPolicy.CardPlan(1, 1, false, true, 0),
+            WidgetLayoutPolicy.cardPlan(200, false, CardNeeds(1, 1, false, true, 3)))
+        // A two-line question takes its second line before the meta line.
+        assertEquals(WidgetLayoutPolicy.CardPlan(2, 0, false, false, 0),
+            WidgetLayoutPolicy.cardPlan(190, false, CardNeeds(2, 0, false, true, 0)))
+        // A shorter 4x2 keeps the command before the meta line.
+        assertEquals(WidgetLayoutPolicy.CardPlan(1, 1, false, false, 0),
+            WidgetLayoutPolicy.cardPlan(176, false, CardNeeds(2, 1, false, true, 0)))
+        // A command that does not fit whole is not shown at all (and so Allow is not offered).
+        assertEquals(0, WidgetLayoutPolicy.cardPlan(150, false, CardNeeds(1, 2, false, true, 0)).command)
+        // Working: the live line comes before the meta line.
+        assertEquals(WidgetLayoutPolicy.CardPlan(1, 0, true, false, 0),
+            WidgetLayoutPolicy.cardPlan(180, false, CardNeeds(1, 0, true, true, 0)))
+        // A tall card spends what is left on whole rows of the other conversations, at most five.
+        val tall = WidgetLayoutPolicy.cardPlan(400, false, CardNeeds(2, 0, true, true, 9))
+        assertEquals(2, tall.title)
+        assertEquals((400 - 122 - 27 - 24 - 24 - 27 - 20) / WidgetLayoutPolicy.ROW_DP, tall.rows)
+        assertEquals(1, WidgetLayoutPolicy.cardPlan(400, false, CardNeeds(1, 0, false, true, 1)).rows)
+        assertEquals(5, WidgetLayoutPolicy.cardPlan(1000, false, CardNeeds(1, 0, false, true, 9)).rows)
+        // Larger text (height divided by the font scale) drops lines, never cuts one.
+        for (h in 100..600 step 7) {
+            val p = WidgetLayoutPolicy.cardPlan(h, h % 2 == 0, CardNeeds(2, 2, true, true, 4))
+            assertTrue(p.title in 1..2 && p.command in setOf(0, 2) && p.rows in 0..4)
         }
     }
 
-    @Test fun needsYouCardShowsTheQuestionThenTheFileThenAsMuchContextAsFits() {
-        // Too short for anything but the question.
-        assertEquals(
-            WidgetLayoutPolicy.AskLines(1, 0, listOf(0, 0)),
-            WidgetLayoutPolicy.askLines(110, 2, 1, listOf(1, 1))
-        )
-        // The 223dp card: the file, the folder, where it came from and two lines of the last reply fit.
-        val roomy = WidgetLayoutPolicy.askLines(223, 1, 1, listOf(1, 1, 2))
-        assertEquals(1, roomy.file)
-        assertEquals(listOf(1, 1, 2), roomy.details)
-        // Context is dropped from the end, never from the front.
-        val tighter = WidgetLayoutPolicy.askLines(180, 1, 1, listOf(1, 1, 2))
-        assertEquals(listOf(1, 1), tighter.details.takeWhile { it > 0 })
-        assertEquals(0, tighter.details.last())
-        // A long command takes a second line when there is room, never a middle cut.
-        assertEquals(2, WidgetLayoutPolicy.askLines(223, 1, 2).file)
-        assertEquals(1, WidgetLayoutPolicy.askLines(150, 1, 2).file)
-        // Whatever the height, what is chosen fits.
-        for (h in 100..420) {
-            val a = WidgetLayoutPolicy.askLines(h, 2, 2, listOf(1, 1, 2))
-            val used = 100 + 19 + (if (a.question == 2) 19 else 0) + (if (a.file > 0) 4 + a.file * 16 else 0) +
-                a.details.filter { it > 0 }.sumOf { 4 + it * 16 }
-            assertTrue("h=$h $a", used <= h || a.file == 0)
-        }
+    @Test fun aShortCommandReadsInTheQuestionAndALongOneUnderIt() {
+        assertEquals(WidgetLayoutPolicy.Ask("Run npm install?", ""),
+            WidgetLayoutPolicy.ask("npm install", "Run %s?", "Run this command?"))
+        val long = "npm run build -- --mode production --watch=false"
+        assertEquals(WidgetLayoutPolicy.Ask("Run this command?", long),
+            WidgetLayoutPolicy.ask(long, "Run %s?", "Run this command?"))
+        // No file or command: the plain question, nothing under it.
+        assertEquals(WidgetLayoutPolicy.Ask("Allow webfetch?", ""), WidgetLayoutPolicy.ask("", null, "Allow webfetch?"))
+        // A kind without a template keeps its question and shows what it names under it.
+        assertEquals(WidgetLayoutPolicy.Ask("Allow this?", "x"), WidgetLayoutPolicy.ask("x", null, "Allow this?"))
     }
-
-    @Test fun aListThatDoesNotFillGivesItsTopRowWholeLinesOfItsOwnText() {
-        assertEquals(5, WidgetLayoutPolicy.listBodyLines(375, 2))
-        assertEquals(5, WidgetLayoutPolicy.listBodyLines(375, 3))
-        assertEquals(2, WidgetLayoutPolicy.listBodyLines(375, 4))
-        assertEquals(0, WidgetLayoutPolicy.listBodyLines(375, 5))
-        assertEquals(0, WidgetLayoutPolicy.listBodyLines(120, 1))
-    }
-
     @Test fun workingSinceReadsInMinutesThenHours() {
         assertEquals(null, WidgetElapsedPolicy.sinceUnit(1_000_000, 0))
         assertEquals(null, WidgetElapsedPolicy.sinceUnit(1_000_000, 960_000))
         assertEquals("min" to 3, WidgetElapsedPolicy.sinceUnit(1_000_000, 1_000_000 - 3 * 60_000L - 5_000))
         assertEquals("hour" to 2, WidgetElapsedPolicy.sinceUnit(10_000_000, 10_000_000 - 2 * 3_600_000L - 60_000))
-    }
-
-    @Test fun listFitsOnlyWholeRowsAndNeverMoreThanThereAre() {
-        assertEquals(1, WidgetLayoutPolicy.listRows(300, 1))
-        assertEquals(5, WidgetLayoutPolicy.listRows(375, 9))
-        assertEquals(5, WidgetLayoutPolicy.listRows(375 + 57, 5))
-        assertEquals(6, WidgetLayoutPolicy.listRows(375 + 57, 9))
-        assertEquals(3, WidgetLayoutPolicy.listRows(1000, 3))
-        assertEquals(8, WidgetLayoutPolicy.listRows(1000, 20))
-        // Larger text divides the height first.
-        assertEquals(3, WidgetLayoutPolicy.listRows((375 / 1.3f).toInt(), 9))
     }
 
     @Test fun rowsSortNeedsYouThenWorkingThenTheRest() {
@@ -154,22 +129,6 @@ class WidgetConversationPresentationTest {
         assertEquals(3, WidgetStatusRules.workingCount(3, 0))
     }
 
-    @Test fun workingCardHasItsTimeInTheHeaderAndItsLiveTextAsBody() {
-        assertEquals("my-app · 1 min", WidgetLayoutPolicy.headerTail("my-app", "1 min"))
-        assertEquals("1 min", WidgetLayoutPolicy.headerTail("", "1 min"))
-        assertEquals("my-app", WidgetLayoutPolicy.headerTail("my-app", ""))
-        // The live step wins; otherwise the latest reply, as the list's top row shows it.
-        assertEquals("Editing x.dart", WidgetStatusRules.liveBody("Editing x.dart", "Done. Now let me look"))
-        assertEquals("Done. Now let me look", WidgetStatusRules.liveBody("", "Done. Now let me look"))
-        assertEquals("", WidgetStatusRules.liveBody("", ""))
-        // On a narrow card the time wins over the project; on a wide one both fit.
-        assertEquals("1 min", WidgetLayoutPolicy.headerTailFit("Working", "my-app", "1 min", 156f))
-        assertEquals("my-app · 1 min", WidgetLayoutPolicy.headerTailFit("Working", "my-app", "1 min", 344f))
-        assertEquals("my-app", WidgetLayoutPolicy.headerTailFit("Working", "my-app", "", 156f))
-        // Under a minute there is no time yet, so the header is just the project.
-        assertEquals(null, WidgetElapsedPolicy.sinceUnit(1_000_000, 1_000_000 - 30_000L))
-    }
-
     @Test fun leadWordsNeverDuplicate() {
         assertEquals(WidgetLayoutPolicy.Lead.NEEDS_YOU, WidgetStatusRules.lead(true, true, true))
         assertEquals(WidgetLayoutPolicy.Lead.OFFLINE, WidgetStatusRules.lead(false, true, true))
@@ -178,16 +137,6 @@ class WidgetConversationPresentationTest {
         assertEquals("Ready · my-app", WidgetLayoutPolicy.join("Ready", "my-app"))
         assertEquals("my-app", WidgetLayoutPolicy.join("", "my-app", " "))
         assertEquals("", WidgetLayoutPolicy.join("", ""))
-    }
-
-    @Test fun shortQuestionNamesTheFileOrFallsBackToTheFullQuestion() {
-        assertEquals("Write outside-test.txt?",
-            WidgetLayoutPolicy.shortAsk("outside-test.txt", "Write %s?", "Write outside this project?"))
-        assertEquals("Write outside this project?",
-            WidgetLayoutPolicy.shortAsk("", "Write %s?", "Write outside this project?"))
-        assertEquals("Use a tool?", WidgetLayoutPolicy.shortAsk("x", null, "Use a tool?"))
-        // A file name with a percent sign is text, not a format.
-        assertEquals("Write 100%.txt?", WidgetLayoutPolicy.shortAsk("100%.txt", "Write %s?", "q"))
     }
 
     @Test fun estimatedLinesErrHighAndAreCapped() {

@@ -23,6 +23,8 @@ enum GitAction {
   createBranch,
   discard,
   setIdentity,
+  addRemote,
+  clone,
 }
 
 /// Something worth saying about an action that worked.
@@ -45,15 +47,30 @@ enum GitActionNote {
   created,
   discarded,
   identitySaved,
+
+  /// A remote was added.
+  remoteAdded,
+
+  /// A repository was cloned ([GitActionResult.clonedTo] is its folder).
+  cloned,
 }
 
 class GitActionResult {
-  const GitActionResult.success(this.action, this.note, {this.commit})
-    : failure = null;
+  const GitActionResult.success(
+    this.action,
+    this.note, {
+    this.commit,
+    this.clonedTo,
+    this.count,
+    this.target,
+  }) : failure = null;
 
   const GitActionResult.failure(this.action, GitFailure this.failure)
     : note = null,
-      commit = null;
+      commit = null,
+      clonedTo = null,
+      count = null,
+      target = null;
 
   final GitAction action;
   final GitActionNote? note;
@@ -61,6 +78,15 @@ class GitActionResult {
 
   /// Short id of the commit a commit action made.
   final String? commit;
+
+  /// The folder a clone made, as the project's shell sees it.
+  final String? clonedTo;
+
+  /// How many files a commit saved, or how many new commits a pull brought.
+  final int? count;
+
+  /// The remote branch a push went to or a pull came from (`origin/main`).
+  final String? target;
 
   bool get ok => failure == null;
   GitProblem? get problem => failure?.problem;
@@ -111,6 +137,76 @@ bool isValidGitBranchName(String name) {
     }
   }
   return true;
+}
+
+/// True when [name] can name a remote (`origin`, `my-fork.2`): letters,
+/// digits, `.`, `_` and `-`, not starting with `-` or `.`.
+bool isValidGitRemoteName(String name) =>
+    RegExp(r'^[A-Za-z0-9_][A-Za-z0-9._-]{0,99}$').hasMatch(name);
+
+/// True when [name] can be the folder a clone makes beside the project.
+bool isValidGitFolderName(String name) =>
+    RegExp(r'^[A-Za-z0-9_][A-Za-z0-9._-]{0,99}$').hasMatch(name) &&
+    !name.endsWith('.lock');
+
+/// Why [url] cannot be a remote's address, or null when it can. Checked
+/// before any command runs: the app accepts `https://`, `http://`, `ssh://`,
+/// `git://` and `file://` addresses, `user@host:path` and a folder path, and
+/// refuses one that carries a password or token.
+GitProblem? gitRemoteAddressProblem(String url) {
+  final value = url.trim();
+  if (value.isEmpty || value.startsWith('-')) {
+    return GitProblem.invalidRemoteUrl;
+  }
+  if (RegExp(r'[\s\x00-\x1f\x7f]').hasMatch(value)) {
+    return GitProblem.invalidRemoteUrl;
+  }
+  final scheme = RegExp(r'^([A-Za-z][A-Za-z0-9+.-]*)://').firstMatch(value);
+  if (scheme != null) {
+    final name = scheme.group(1)!.toLowerCase();
+    if (!const {'https', 'http', 'ssh', 'git', 'file'}.contains(name)) {
+      return GitProblem.invalidRemoteUrl;
+    }
+    final uri = Uri.tryParse(value);
+    if (uri == null) return GitProblem.invalidRemoteUrl;
+    if (name != 'file' && uri.host.isEmpty) return GitProblem.invalidRemoteUrl;
+    if (uri.userInfo.contains(':') &&
+        (name == 'https' || name == 'http' || name == 'git')) {
+      return GitProblem.remoteAddressHasPassword;
+    }
+    return null;
+  }
+  if (value.startsWith('/')) return null;
+  if (RegExp(r'^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+:[^:]').hasMatch(value)) {
+    return null;
+  }
+  return GitProblem.invalidRemoteUrl;
+}
+
+/// The folder name a clone of [url] would get: the last part of the
+/// address without `.git` (`https://github.com/o/app.git` is `app`). Empty
+/// when none can be made.
+String suggestGitCloneFolder(String url) {
+  var value = url.trim();
+  while (value.endsWith('/')) {
+    value = value.substring(0, value.length - 1);
+  }
+  final cut = value.lastIndexOf(RegExp(r'[/:]'));
+  var name = cut < 0 ? value : value.substring(cut + 1);
+  if (name.endsWith('.git')) name = name.substring(0, name.length - 4);
+  return isValidGitFolderName(name) ? name : '';
+}
+
+/// The folder holding [path] (`/` for a top-level folder): where a clone
+/// beside the project lands.
+String gitParentFolder(String path) {
+  var value = path;
+  while (value.length > 1 && value.endsWith('/')) {
+    value = value.substring(0, value.length - 1);
+  }
+  final cut = value.lastIndexOf('/');
+  if (cut < 0) return '.';
+  return cut == 0 ? '/' : value.substring(0, cut);
 }
 
 class GitRepository {
@@ -172,6 +268,7 @@ class GitRepository {
         ]),
         GitStep('operation', ['sh', '-c', _operationProbe]),
         GitStep('remotes', ['sh', '-c', _remotesProbe]),
+        GitStep('identity', ['sh', '-c', _identityProbe], optional: true),
       ],
     );
     final GitEnvelope envelope;
@@ -206,6 +303,7 @@ class GitRepository {
             _okOut(envelope['operation'], parseGitOperation) ??
             GitOperation.none,
         remotes: _okOut(envelope['remotes'], parseGitRemotes) ?? const [],
+        identity: _okOut(envelope['identity'], parseGitIdentity),
       ),
     );
   }
@@ -219,6 +317,11 @@ class GitRepository {
       'for f in MERGE_HEAD REBASE_HEAD CHERRY_PICK_HEAD REVERT_HEAD '
       r'rebase-merge rebase-apply; do test -e "$g/$f" && echo "$f"; done; '
       'exit 0';
+
+  /// The name and email a commit here would carry, one per line.
+  static const _identityProbe =
+      'printf \'%s\\n%s\\n\' "\$(git config user.name)" '
+      '"\$(git config user.email)"; exit 0';
 
   /// Remote names and addresses with any user info removed before printing
   /// (an address can hold a token: `https://user:token@host/...`).
@@ -259,6 +362,12 @@ class GitRepository {
                 '--ff-only',
                 '--no-rebase',
               ]),
+              GitStep('count', [
+                ..._git,
+                'rev-list',
+                '--count',
+                'ORIG_HEAD..HEAD',
+              ], optional: true),
             ],
           ),
           networkTimeout,
@@ -291,8 +400,49 @@ class GitRepository {
         return GitActionResult.success(
           GitAction.pull,
           upToDate ? GitActionNote.upToDate : GitActionNote.pulled,
+          count: upToDate
+              ? null
+              : int.tryParse((envelope['count']?.stdout ?? '').trim()),
+          target: upstream.stdout.trim(),
         );
       });
+
+  /// `git fetch`: reads what is new on the remote without changing any file
+  /// here. A branch with no remote is [GitProblem.noUpstream].
+  Future<GitActionResult> fetch({String? gitHubToken}) => _withToken(
+    GitAction.refresh,
+    gitHubToken,
+    (auth) async {
+      final envelope = await _run(
+        GitScript(
+          directory: directory,
+          environment: auth.environment,
+          removeOnExit: auth.removeOnExit,
+          steps: [
+            GitStep('upstream', [
+              ..._git,
+              'rev-parse',
+              '--abbrev-ref',
+              '--symbolic-full-name',
+              '@{u}',
+            ], stopOnFailure: true),
+            GitStep('fetch', [..._git, ...auth.options, 'fetch', '--quiet']),
+          ],
+        ),
+        networkTimeout,
+      );
+      final upstream = envelope['upstream']!;
+      if (!upstream.ok) {
+        return _fail(GitAction.refresh, GitProblem.noUpstream, upstream, auth);
+      }
+      final step = envelope['fetch']!;
+      if (!step.ok) return _fail(GitAction.refresh, null, step, auth);
+      return const GitActionResult.success(
+        GitAction.refresh,
+        GitActionNote.upToDate,
+      );
+    },
+  );
 
   /// `git push`, or `git push --set-upstream <remote> <branch>` the first
   /// time. The remote is `origin`, else the only remote.
@@ -335,7 +485,9 @@ class GitRepository {
       final branch = head.stdout.trim();
       final hasUpstream = plan['upstream']?.ok ?? false;
       final List<String> pushArgs;
+      String? target;
       if (hasUpstream) {
+        target = (plan['upstream']?.stdout ?? '').trim();
         pushArgs = const ['push'];
       } else {
         final remotes = (plan['remotes']?.stdout ?? '')
@@ -358,6 +510,7 @@ class GitRepository {
           );
         }
         pushArgs = ['push', '--set-upstream', remote, branch];
+        target = '$remote/$branch';
       }
       final envelope = await _run(
         GitScript(
@@ -380,6 +533,7 @@ class GitRepository {
             : hasUpstream
             ? GitActionNote.pushed
             : GitActionNote.pushedAndTracking,
+        target: target,
       );
     },
   );
@@ -424,6 +578,16 @@ class GitRepository {
               ...selected,
             ], stopOnFailure: true),
             GitStep('id', [..._git, 'rev-parse', '--short', 'HEAD']),
+            GitStep('files', [
+              ..._git,
+              'diff-tree',
+              '--root',
+              '--no-commit-id',
+              '--name-only',
+              '-r',
+              '-M',
+              'HEAD',
+            ], optional: true),
           ],
         ),
         readTimeout,
@@ -446,6 +610,12 @@ class GitRepository {
         GitAction.commit,
         GitActionNote.committed,
         commit: envelope['id']?.stdout.trim(),
+        count: envelope['files'] == null || !envelope['files']!.ok
+            ? null
+            : envelope['files']!.stdout
+                  .split('\n')
+                  .where((l) => l.trim().isNotEmpty)
+                  .length,
       );
     });
   }
@@ -606,6 +776,83 @@ class GitRepository {
     });
   }
 
+  /// `git remote add <name> <url>`. The address is checked first and never
+  /// may carry a password.
+  Future<GitActionResult> addRemote({
+    required String name,
+    required String url,
+  }) async {
+    final cleanName = name.trim();
+    final cleanUrl = url.trim();
+    if (!isValidGitRemoteName(cleanName)) {
+      return const GitActionResult.failure(
+        GitAction.addRemote,
+        GitFailure(GitProblem.invalidRemoteName),
+      );
+    }
+    final bad = gitRemoteAddressProblem(cleanUrl);
+    if (bad != null) {
+      return GitActionResult.failure(GitAction.addRemote, GitFailure(bad));
+    }
+    return _single(GitAction.addRemote, [
+      ..._git,
+      'remote',
+      'add',
+      cleanName,
+      cleanUrl,
+    ], GitActionNote.remoteAdded);
+  }
+
+  /// Clones [url] into a new folder [folderName] beside this project (in its
+  /// parent folder). A GitHub sign-in, when given, is used for the clone; the
+  /// saved remote keeps the address as typed.
+  Future<GitActionResult> clone({
+    required String url,
+    required String folderName,
+    String? gitHubToken,
+  }) async {
+    final cleanUrl = url.trim();
+    final bad = gitRemoteAddressProblem(cleanUrl);
+    if (bad != null) {
+      return GitActionResult.failure(GitAction.clone, GitFailure(bad));
+    }
+    final folder = folderName.trim();
+    if (!isValidGitFolderName(folder)) {
+      return const GitActionResult.failure(
+        GitAction.clone,
+        GitFailure(GitProblem.invalidFolderName),
+      );
+    }
+    final parent = gitParentFolder(directory);
+    return _withToken(GitAction.clone, gitHubToken, (auth) async {
+      final envelope = await _run(
+        GitScript(
+          directory: parent,
+          environment: auth.environment,
+          removeOnExit: auth.removeOnExit,
+          steps: [
+            GitStep('clone', [
+              ..._git,
+              ...auth.options,
+              'clone',
+              '--',
+              cleanUrl,
+              folder,
+            ]),
+          ],
+        ),
+        networkTimeout,
+      );
+      final step = envelope['clone']!;
+      if (!step.ok) return _fail(GitAction.clone, null, step, auth);
+      return GitActionResult.success(
+        GitAction.clone,
+        GitActionNote.cloned,
+        clonedTo: parent.endsWith('/') ? '$parent$folder' : '$parent/$folder',
+      );
+    });
+  }
+
   // -------------------------------------------------------------- helpers
 
   Future<GitActionResult> _single(
@@ -734,7 +981,7 @@ class GitRepository {
     // Every stopOnFailure step must have reported; a step that ran must
     // have its result. A missing required step means a cut-off answer.
     for (final step in script.steps) {
-      if (envelope[step.name] != null) continue;
+      if (envelope[step.name] != null || step.optional) continue;
       final earlierStopped = script.steps
           .takeWhile((s) => s != step)
           .any((s) => s.stopOnFailure && envelope[s.name]?.ok == false);

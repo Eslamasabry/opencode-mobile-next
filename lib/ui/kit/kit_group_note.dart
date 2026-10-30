@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'kit_buttons.dart';
+import 'kit_max_width.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
@@ -27,7 +28,10 @@ class KitGroupNote extends StatelessWidget {
   final KitAction? action;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final action = this.action;
     return Padding(

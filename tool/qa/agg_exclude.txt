@@ -53,3 +53,13 @@ test/team_on_work_test.dart  # aggregate loses all six host disclaimer states; s
 test/team_runtime_test.dart  # aggregate loopback request returns HTTP 400; standalone accepts the request
 test/termux_migration_transport_test.dart  # aggregate bridge resume reports unavailable; standalone resumes flushed chunks
 test/voice_downloader_test.dart  # aggregate TLS cancellation receives a response; standalone observes cancellation
+test/kit/style/crystal_test.dart  # hangs when aggregated: test timed out after 10 min and wedged the whole shard (2026-10-24 run took 5 h)
+test/kit/kit_surface_look_test.dart  # hangs when aggregated: test timed out after 10 min and wedged the whole shard (2026-10-24 run took 5 h)
+test/kit/kit_top_bar_test.dart  # fails when aggregated, passes alone (2026-10-24, e9fefa89b)
+test/background_discoverability_test.dart  # fails when aggregated, passes alone (2026-10-24, e9fefa89b)
+test/team_control_mutations_test.dart  # fails when aggregated, passes alone (2026-10-24, e9fefa89b)
+test/api2_integration_form_test.dart  # fails when aggregated, passes alone (2026-10-24, e9fefa89b)
+test/kit/kit_code_block_test.dart  # fails when aggregated, passes alone (2026-10-24, e9fefa89b)
+test/kit/kit_keyboard_test.dart  # fails when aggregated, passes alone (2026-10-24, e9fefa89b)
+test/phone_chat_admission_recovery_test.dart  # fails when aggregated, passes alone (2026-10-24, e9fefa89b)
+test/installer_admission_native_test.dart  # fails when aggregated, passes alone (2026-10-24, e9fefa89b)

@@ -651,4 +651,38 @@ void main() {
       }
     }
   });
+
+  // Flat polish (sweep 3730, 45-report): Report a problem's summary was
+  // still a white rounded card in Solid, where every list sits on the page.
+  testWidgets('flatInLists: on the page in Solid, its words on the box\'s '
+      'own edge; a padded box otherwise', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        const SizedBox(
+          width: 300,
+          child: Column(
+            children: [
+              KitSurface(
+                key: ValueKey('flat'),
+                outlined: true,
+                flatInLists: true,
+                child: Text('Android closed the app'),
+              ),
+              KitSurface(
+                key: ValueKey('card'),
+                outlined: true,
+                child: Text('A card'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    final tokens = KitTokens.of(tester.element(find.text('A card')));
+    double inset(String key, String text) =>
+        tester.getTopLeft(find.text(text)).dx -
+        tester.getTopLeft(find.byKey(ValueKey(key))).dx;
+    expect(inset('flat', 'Android closed the app'), 0);
+    expect(inset('card', 'A card'), tokens.space4);
+  });
 }

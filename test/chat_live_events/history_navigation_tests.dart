@@ -206,8 +206,9 @@ void _historyAndNavigationTests() {
       );
       await _pumpEvent(tester);
       await tester.pumpAndSettle();
+      // Still open (no end time): the caret follows its words.
       expect(
-        find.text('The delegated keyboard review is ready.'),
+        find.textContaining('The delegated keyboard review is ready.'),
         findsOneWidget,
       );
       expect(find.text('My unsent draft'), findsOneWidget);
@@ -256,7 +257,9 @@ void _historyAndNavigationTests() {
       conn.notifyListeners();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 250));
-      // Send became Stop; the status is written in the turn.
+      // Words are typed: Send stays Send and the one Stop is in the chips
+      // row above the field (none on the live line or beside the field).
+      expect(find.byKey(const Key('live-stop')), findsNothing);
       expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
       await tester.tap(find.byKey(const Key('chat-stop-button')));
       await tester.pump();
@@ -665,6 +668,152 @@ void _historyAndNavigationTests() {
   );
 
   testWidgets(
+    'sending a little way up still brings the new message into view',
+    (tester) async {
+      // Scrolled up less than the earlier-messages pill needs: the new
+      // bubble landed below the screen and the send looked lost (emulator,
+      // 2026-10-25).
+      final prompt = Completer<void>();
+      final api = _FakeOpenCodeApi()
+        ..promptCompleter = prompt
+        ..pageHandler = (cursor) async => ServerPage(
+          items: [for (var i = 0; i < 40; i++) historyMessage('recent-$i')],
+        );
+      await _pumpChat(tester, api);
+      await tester.pumpAndSettle();
+      final listFinder = find.byType(ScrollablePositionedList);
+      await tester.drag(listFinder, const Offset(0, 300));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('jump-to-latest')), findsNothing);
+
+      await tester.enterText(find.byType(TextField), 'sent from a bit up');
+      await tester.pump();
+      await tester.tap(find.byTooltip('Send'));
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      final list = tester.getRect(listFinder);
+      final bubble = tester.getRect(find.text('sent from a bit up'));
+      expect(bubble.top, greaterThanOrEqualTo(list.top));
+      expect(bubble.bottom, lessThanOrEqualTo(list.bottom));
+      prompt.complete();
+    },
+  );
+
+  testWidgets(
+    'the reply to a message sent a little way up lands above the composer',
+    (tester) async {
+      // The jump to the newest row put it flush with the list's edge, under
+      // the composer and phrase chips: the prompt showed, its reply stayed
+      // hidden until scrolled (emulator, 3550).
+      final prompt = Completer<void>();
+      final api = _FakeOpenCodeApi()
+        ..promptCompleter = prompt
+        ..pageHandler = (cursor) async => ServerPage(
+          items: [for (var i = 0; i < 40; i++) historyMessage('recent-$i')],
+        );
+      final conn = await _pumpChat(tester, api);
+      await tester.pumpAndSettle();
+      final listFinder = find.byType(ScrollablePositionedList);
+      await tester.drag(listFinder, const Offset(0, 300));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'sent from a bit up');
+      await tester.pump();
+      await tester.tap(find.byTooltip('Send'));
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      conn.handleEventForTesting(
+        _event('message.updated', {
+          'info': {
+            'id': 'reply-1',
+            'sessionID': 'session-1',
+            'role': 'assistant',
+            'time': {'created': 999999},
+          },
+        }),
+      );
+      conn.handleEventForTesting(
+        _event('message.part.updated', {
+          'sessionID': 'session-1',
+          'part': {
+            'id': 'reply-1-text',
+            'messageID': 'reply-1',
+            'sessionID': 'session-1',
+            'type': 'text',
+            'text': 'the reply word',
+          },
+        }),
+      );
+      await _pumpEvent(tester);
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      final composerTop = tester
+          .getRect(find.byKey(const Key('chat-composer-field')))
+          .top;
+      final reply = tester.getRect(find.textContaining('the reply word'));
+      expect(reply.bottom, lessThanOrEqualTo(composerTop));
+      prompt.complete();
+    },
+  );
+
+  testWidgets('a history reload during the jump after a send shows the reply', (
+    tester,
+  ) async {
+    // OC2 delivers each prompt through the inbox, which reloads recent
+    // history. The reload restored the old newest row at the bottom, so the
+    // reply it brought sat under the composer and phrase chips (emulator,
+    // 3550/3560).
+    var withReply = false;
+    final api = _FakeOpenCodeApi()
+      ..pageHandler = (cursor) async => ServerPage(
+        items: [
+          for (var i = 0; i < 40; i++) historyMessage('recent-$i'),
+          if (withReply)
+            _message('reply-new', 'assistant', [
+              Part(
+                id: 'reply-new-text',
+                messageID: 'reply-new',
+                type: 'text',
+                text: 'the reloaded reply',
+              ),
+            ], created: 2),
+        ],
+      );
+    final conn = await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    await tester.drag(
+      find.byType(ScrollablePositionedList),
+      const Offset(0, 300),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'sent before reload');
+    await tester.pump();
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pump(const Duration(milliseconds: 50));
+
+    // The inbox delivery lands while the jump to the newest row is still
+    // moving.
+    withReply = true;
+    conn.handleEventForTesting(
+      _event('session.inbox.delivered', {'sessionID': 'session-1'}),
+    );
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    final composerTop = tester
+        .getRect(find.byKey(const Key('chat-composer-field')))
+        .top;
+    final reply = tester.getRect(find.textContaining('the reloaded reply'));
+    expect(reply.bottom, lessThanOrEqualTo(composerTop));
+  });
+
+  testWidgets(
     'paged history retains older prefix on overlapping head refresh',
     (tester) async {
       var refreshed = false;
@@ -868,6 +1017,35 @@ void _historyAndNavigationTests() {
     expect(requested.length, greaterThanOrEqualTo(2));
     expect(api.deleteCalls, ['session-1']);
     expect(find.byKey(const ValueKey('provisional-chat-host')), findsOneWidget);
+  });
+
+  testWidgets('Back leaves an empty new conversation at once, with the '
+      'predictive preview, and checks it is empty after it has gone', (
+    tester,
+  ) async {
+    final check = Completer<List<MessageWithParts>>();
+    var opened = false;
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) => opened ? check.future : Future.value([]);
+    await _pumpProvisionalChat(tester, api);
+    await tester.pumpAndSettle();
+    opened = true;
+    // Nothing to lose: the route may pop, so the back gesture follows the
+    // finger and shows the page underneath.
+    final route = ModalRoute.of(tester.element(find.byType(ChatScreen)))!;
+    expect(route.popDisposition, RoutePopDisposition.pop);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    // Gone while the server has not answered yet.
+    expect(find.byType(ChatScreen), findsNothing);
+    expect(find.byKey(const ValueKey('provisional-chat-host')), findsOneWidget);
+    expect(api.deleteCalls, isEmpty);
+    check.complete(const []);
+    await tester.pumpAndSettle();
+    expect(api.deleteCalls, ['session-1']);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('back preserves a newly created session after server messages', (

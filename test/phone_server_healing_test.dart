@@ -8,6 +8,7 @@ import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/builtin_server.dart';
 import 'package:opencode_mobile/builtin/builtin_server_recovery.dart';
 import 'package:opencode_mobile/builtin/phone_server_healing.dart';
+import 'package:opencode_mobile/domain/server_gateway.dart' show StreamStatus;
 import 'package:opencode_mobile/domain/while_away.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/automation_policy.dart';
@@ -38,6 +39,11 @@ class _Store extends ProfileStore {
 
 class _Connection extends ConnectionController {
   _Connection(super.store) : super(isIsolated: true);
+
+  StreamStatus shownStatus = StreamStatus.connected;
+
+  @override
+  StreamStatus get status => shownStatus;
 
   final blocked = <String>{};
   final connections = <String>[];
@@ -164,8 +170,12 @@ class _Linux extends BuiltinLinux {
     return BuiltinWorkLeaseStatus(held: on);
   }
 
+  int statusCalls = 0;
+
   @override
-  Future<BuiltinLinuxStatus> status() async => BuiltinLinuxStatus(
+  Future<BuiltinLinuxStatus> status() async => _status(++statusCalls);
+
+  BuiltinLinuxStatus _status(int _) => BuiltinLinuxStatus(
     installed: true,
     phase: BuiltinLinuxPhase.ready,
     serverRunning: running,
@@ -1139,5 +1149,91 @@ void main() {
         expect(connection.connections, hasLength(2));
       },
     );
+  });
+
+  group('streamed updates do not re-run the health pipeline', () {
+    Future<void> settle() async {
+      for (var i = 0; i < 20; i++) {
+        await Future<void>.delayed(Duration.zero);
+      }
+    }
+
+    test('a notify storm costs no native call', () async {
+      final owner = bind(localAgentWorkBusy: (_) => false);
+      owner.setForeground(true);
+      await settle();
+      final statuses = linux.statusCalls;
+      final observed = linux.observations.length;
+      for (var i = 0; i < 25; i++) {
+        connection.notifyListeners();
+      }
+      await settle();
+      expect(linux.statusCalls, statuses);
+      expect(linux.observations.length, observed);
+    });
+
+    test('work observation follows a busy change only', () async {
+      var busy = false;
+      final owner = bind(localAgentWorkBusy: (_) => busy);
+      owner.setForeground(true);
+      await settle();
+      final observed = linux.observations.length;
+      connection.notifyListeners();
+      await settle();
+      expect(linux.observations.length, observed);
+      busy = true;
+      connection.notifyListeners();
+      await settle();
+      expect(linux.observations.length, observed + 1);
+      expect(linux.observations.last.busy, isTrue);
+    });
+
+    test('going down checks the server once and restarts a dead one', () async {
+      linux
+        ..running = true
+        ..healthy = true;
+      bind().setForeground(true);
+      await settle();
+      linux
+        ..running = false
+        ..healthy = false;
+      final statuses = linux.statusCalls;
+      connection.shownStatus = StreamStatus.reconnecting;
+      connection.notifyListeners();
+      await settle();
+      expect(linux.statusCalls, greaterThan(statuses));
+      expect(linux.restarts, 1);
+      // Staying down through more updates is not a new transition.
+      final after = linux.statusCalls;
+      connection.notifyListeners();
+      connection.notifyListeners();
+      await settle();
+      expect(linux.statusCalls, after);
+    });
+
+    testWidgets('the work heartbeat renews only in the background', (
+      tester,
+    ) async {
+      final owner = bind(localAgentWorkBusy: (_) => false);
+      owner.setForeground(true);
+      await tester.pump();
+      final foreground = linux.observations.length;
+      await tester.pump(const Duration(seconds: 60));
+      expect(linux.observations.length, foreground);
+
+      owner.setForeground(false);
+      await tester.pump();
+      expect(linux.observations.length, foreground + 1);
+      await tester.pump(const Duration(seconds: 30));
+      expect(linux.observations.length, foreground + 3);
+
+      owner.setForeground(true);
+      await tester.pump();
+      final back = linux.observations.length;
+      await tester.pump(const Duration(seconds: 60));
+      expect(linux.observations.length, back);
+      owner.dispose();
+      healing = null;
+    });
   });
 }

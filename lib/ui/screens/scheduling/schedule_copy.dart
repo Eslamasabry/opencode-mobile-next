@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../../scheduling/models.dart';
 
 String scheduleErrorCopy(AppLocalizations l, String? code) => switch (code) {
   'busy' => l.scheduleBusy,
@@ -52,10 +53,76 @@ String scheduleWhen(AppLocalizations l, DateTime moment, DateTime now) {
   if (days == 0) return l.scheduleToday(clock);
   if (days == 1) return l.scheduleTomorrow(clock);
   if (days > 1 && days < 7) {
-    return '${DateFormat.E(l.localeName).format(t)}, $clock';
+    return l.scheduleDayAt(DateFormat.E(l.localeName).format(t), clock);
   }
   if ((days >= 7 || days < 0) && days.abs() < 183) {
-    return '${DateFormat.MMMd(l.localeName).format(t)}, $clock';
+    return l.scheduleDayAt(DateFormat.MMMd(l.localeName).format(t), clock);
   }
-  return '${DateFormat.yMMMd(l.localeName).format(t)}, $clock';
+  return l.scheduleDayAt(DateFormat.yMMMd(l.localeName).format(t), clock);
+}
+
+/// A wall-clock time the way the person's locale writes it: "9:00 AM".
+String scheduleClock(AppLocalizations l, int hour, int minute) =>
+    DateFormat.jm(l.localeName).format(DateTime(2000, 1, 1, hour, minute));
+
+/// How a schedule repeats, in plain words: "Every weekday at 9:00 AM",
+/// "Every day at 9:00 AM", "Every 3 hours", or, for a one-time schedule,
+/// its moment ("Tomorrow, 9:00 AM").
+String scheduleRule(AppLocalizations l, ScheduleRecurrence r, DateTime now) =>
+    switch (r.kind) {
+      ScheduleRecurrenceKind.daily => l.scheduleRuleDaily(
+        scheduleClock(l, r.hour, r.minute),
+      ),
+      ScheduleRecurrenceKind.weekdays => l.scheduleRuleWeekdays(
+        scheduleClock(l, r.hour, r.minute),
+      ),
+      ScheduleRecurrenceKind.interval => l.scheduleRuleHours(r.hours),
+      ScheduleRecurrenceKind.once => scheduleWhen(l, r.at!, now),
+    };
+
+/// The day of a past moment, said inside a sentence: "today", "yesterday",
+/// "Mon", "Oct 12".
+String scheduleDay(AppLocalizations l, DateTime moment, DateTime now) {
+  final t = moment.toLocal();
+  final n = now.toLocal();
+  final days = DateTime(
+    n.year,
+    n.month,
+    n.day,
+  ).difference(DateTime(t.year, t.month, t.day)).inDays;
+  if (days <= 0) return l.scheduleDayToday;
+  if (days == 1) return l.scheduleDayYesterday;
+  if (days < 7) return DateFormat.E(l.localeName).format(t);
+  return DateFormat.MMMd(l.localeName).format(t);
+}
+
+/// What the last run did, honestly: "Sent yesterday" (the server took the
+/// prompt), "Didn't go out today", "Skipped Mon", "Sending now".
+String scheduleLastResult(
+  AppLocalizations l,
+  ScheduledPromptRun run,
+  DateTime now,
+) {
+  final day = scheduleDay(l, run.finishedAt ?? run.scheduledAt, now);
+  return switch (run.status) {
+    ScheduledPromptRunStatus.ran => l.scheduleSent(day),
+    ScheduledPromptRunStatus.failed => l.scheduleNotSent(day),
+    ScheduledPromptRunStatus.skipped => l.scheduleSkippedWhen(day),
+    ScheduledPromptRunStatus.running => l.scheduleSendingNow,
+  };
+}
+
+/// A schedule's prompt as its name: the first line with words.
+String scheduleName(AppLocalizations l, ScheduledPrompt s) {
+  final first = s.prompt
+      .split('\n')
+      .map((line) => line.trim())
+      .firstWhere((line) => line.isNotEmpty, orElse: () => '');
+  return first.isEmpty ? l.schedulePrompt : first;
+}
+
+/// The project's own name: the last part of its folder.
+String scheduleProjectName(String path) {
+  final parts = path.split(RegExp(r'[/\\]')).where((p) => p.isNotEmpty);
+  return parts.isEmpty ? path : parts.last;
 }

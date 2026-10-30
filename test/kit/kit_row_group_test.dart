@@ -61,7 +61,8 @@ void main() {
       );
     }
     // One separator between each pair of rows, none above the first.
-    expect(find.byType(KitDivider), findsNWidgets(2));
+    // (The section rule above the label draws nothing in Solid.)
+    expect(find.byKey(const ValueKey('kit-divider-line')), findsNWidgets(2));
     semantics.dispose();
   });
 

@@ -33,6 +33,12 @@ enum AgentErrorCause {
   /// The provider account has no credit or quota left.
   outOfCredit,
 
+  /// A plan's usage allowance for this model is used up for now (OpenCode's
+  /// free models and Go plan say "Free usage limit reached" / "Go usage
+  /// limit exceeded"). It resets with the plan's window; another model works
+  /// meanwhile.
+  usageLimit,
+
   /// The provider needs a missing or rejected credential replaced.
   providerAuth,
 
@@ -58,6 +64,16 @@ final _rules = <(RegExp, AgentErrorCause)>[
       caseSensitive: false,
     ),
     AgentErrorCause.requestTooLarge,
+  ),
+  // A plan's allowance used up: before credit and rate rules, since the
+  // same reply can carry a 429 or a "subscribe" link.
+  (
+    RegExp(
+      r'usage limit (?:reached|exceeded)|usagelimiterror'
+      r'|(?:free|plan|daily|weekly|monthly|\d+.?hour) limit (?:reached|exceeded)',
+      caseSensitive: false,
+    ),
+    AgentErrorCause.usageLimit,
   ),
   // Providers also use HTTP 429 for exhausted credit. Waiting cannot fix it.
   (

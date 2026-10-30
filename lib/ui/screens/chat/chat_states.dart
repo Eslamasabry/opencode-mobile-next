@@ -75,7 +75,7 @@ class _ChatLoadError extends StatelessWidget {
       title: l10n.chatLoadFailedTitle,
       body: agentName == null
           ? l10n.chatLoadFailedBody
-          : l10n.agentNotAnsweringPhone(KitBidi.auto(agentName!)),
+          : _agentBody(l10n, KitBidi.auto(agentName!)),
       primary: KitAction(
         key: const ValueKey('chat-load-retry'),
         label: l10n.commonRetry,
@@ -90,9 +90,22 @@ class _ChatLoadError extends StatelessWidget {
           onPressed: () => unawaited(openBugReport(context)),
         ),
       ],
-      details: error.toString(),
+      // Which step and reply failed, redacted (the bare sentence alone
+      // didn't say which message the app couldn't read).
+      details: productErrorDetails(error) ?? error.toString(),
     );
   }
+
+  /// Why an agent's conversation didn't open: only "isn't answering" when
+  /// its helper didn't answer.
+  String _agentBody(AppLocalizations l10n, String agent) =>
+      switch (ProductFailure.from(error).category) {
+        ProductFailureCategory.notFound => l10n.chatLoadAgentMissing(agent),
+        ProductFailureCategory.unreadableReply => l10n.chatLoadAgentUnreadable(
+          agent,
+        ),
+        _ => l10n.agentNotAnsweringPhone(agent),
+      };
 }
 
 /// What the chat's status line can say.
@@ -110,7 +123,11 @@ class _ChatStatus {
     this.key,
     this.messageKey,
     this.supportingKey,
+    this.quiet = false,
   });
+
+  /// A standing note drawn as one muted caption ([KitStatus.quiet]).
+  final bool quiet;
 
   /// Stable name of the kind of status, for keys and tests.
   final String id;
@@ -136,6 +153,7 @@ class _ChatStatus {
     messageKey: messageKey,
     supporting: supporting,
     supportingKey: supportingKey,
+    quiet: quiet,
     action: action,
     more: more,
     onDismiss: onDismiss,
@@ -293,15 +311,127 @@ _ChatStatus _promptErrorStatus(
 
 /// A message that did not reach the server. Its text is back in the
 /// message box, so sending it again is the composer's own Send.
+///
+/// An agent that refused the turn and said why ([AgentRunFailure]) is
+/// sorted into what the person can do: sign in (or open the account), choose
+/// another model, or try again later; its own sentence, agent, model and
+/// code are under Details, redacted. Any other failure keeps its words, with
+/// its own technical text under Details (a failure that may have reached the
+/// server offers no Try again: it could send the message twice).
 _ChatStatus _sendErrorStatus(
   BuildContext context, {
   required Object error,
   required VoidCallback onDismiss,
+  VoidCallback? onSignIn,
+  VoidCallback? onChooseModel,
+  VoidCallback? onTryAgain,
+  VoidCallback? onContinueElsewhere,
+  bool accountNeeded = false,
 }) {
   final l10n = _chatL10n(context);
+  final retry = onTryAgain == null
+      ? null
+      : KitAction(
+          key: const ValueKey('chat-send-error-try-again'),
+          label: l10n.commonRetry,
+          onPressed: onTryAgain,
+        );
+  if (agentRunFailureOf(error) case final run?) {
+    final kind = run.kind;
+    final details = KitAction(
+      key: const ValueKey('chat-send-error-details'),
+      label: l10n.chatUiDetails,
+      onPressed: () {
+        final technical = agentRunFailureDetails(run, l10n);
+        unawaited(
+          showKitTechnicalDetails(
+            context,
+            title: l10n.chatSendFailed,
+            values: technical.values,
+            text: technical.text,
+            sheetKey: const ValueKey('chat-error-details'),
+          ),
+        );
+      },
+    );
+    // The agent reads signed in but the model needs its account: the
+    // agent's own sign-in, by name, after another model.
+    final needsAccount = accountNeeded && kind == AgentRunFailureKind.signIn;
+    final account = onSignIn == null
+        ? null
+        : KitAction(
+            key: const ValueKey('chat-send-error-sign-in'),
+            label: needsAccount
+                ? l10n.chatSendFailureSignInToAgent(
+                    agentRunFailureAgentName(run.provider, l10n),
+                  )
+                : kind == AgentRunFailureKind.noCredit
+                ? l10n.chatSendFailureAccountAction
+                : l10n.chatSendFailureSignInAction,
+            onPressed: onSignIn,
+          );
+    final choose = onChooseModel == null
+        ? null
+        : KitAction(
+            key: const ValueKey('chat-send-error-choose-model'),
+            label: l10n.chatUiChooseAnotherModel,
+            onPressed: onChooseModel,
+          );
+    // The fix first; Details always last.
+    final actions = [
+      ...switch (kind) {
+        AgentRunFailureKind.signIn when needsAccount => [choose, account],
+        AgentRunFailureKind.signIn ||
+        AgentRunFailureKind.noCredit => [account, choose],
+        AgentRunFailureKind.modelUnavailable => [choose],
+        AgentRunFailureKind.busy ||
+        AgentRunFailureKind.connectionLost => [retry],
+        AgentRunFailureKind.unknown => [retry, choose],
+      }.nonNulls,
+      details,
+    ];
+    return _ChatStatus(
+      id: 'send-error',
+      icon: AppIconography.error,
+      tone: AppStatusTone.failure,
+      message: l10n.chatSendFailed,
+      supporting: agentRunFailureWords(run, l10n, accountNeeded: needsAccount),
+      supportingKey: const ValueKey('chat-send-error-reason'),
+      action: actions.first,
+      more: actions.skip(1).toList(),
+      onDismiss: onDismiss,
+    );
+  }
   final raw = productErrorText(error, l10n: l10n);
   final words = agentErrorWords(raw, l10n);
-  final reason = words.headline.trim();
+  // The failure's own technical text (redacted), not the words above again.
+  final technical = productErrorDetails(error);
+  // An old agent conversation that cannot go on here: say so, and carry
+  // the work to a new conversation (sending again would only repeat this).
+  final newChat = conversationNeedsNewChat(error);
+  final reason = newChat
+      ? l10n.chatSendFailureNewConversation
+      : words.headline.trim();
+  final elsewhere = newChat && onContinueElsewhere != null
+      ? KitAction(
+          key: const ValueKey('chat-send-error-continue-with'),
+          label: l10n.continueWithMenu,
+          onPressed: onContinueElsewhere,
+        )
+      : null;
+  final details = technical != null || words.humanized || errorHasDetails(raw)
+      ? KitAction(
+          key: const ValueKey('chat-send-error-details'),
+          label: l10n.chatUiDetails,
+          onPressed: () => unawaited(
+            _showChatErrorDetails(
+              context,
+              title: l10n.chatSendFailed,
+              text: technical ?? raw,
+            ),
+          ),
+        )
+      : null;
   return _ChatStatus(
     id: 'send-error',
     icon: AppIconography.error,
@@ -309,19 +439,8 @@ _ChatStatus _sendErrorStatus(
     message: l10n.chatSendFailed,
     supporting: reason.isEmpty ? l10n.chatSendFailedKept : reason,
     supportingKey: const ValueKey('chat-send-error-reason'),
-    action: words.humanized || errorHasDetails(raw)
-        ? KitAction(
-            key: const ValueKey('chat-send-error-details'),
-            label: l10n.chatUiDetails,
-            onPressed: () => unawaited(
-              _showChatErrorDetails(
-                context,
-                title: l10n.chatSendFailed,
-                text: raw,
-              ),
-            ),
-          )
-        : null,
+    action: elsewhere ?? details,
+    more: [if (elsewhere != null) ?details],
     onDismiss: onDismiss,
   );
 }
@@ -373,10 +492,12 @@ _ChatStatus _subagentStatus(
   required int? total,
   required Future<void> Function() onParent,
   required Future<void> Function() onAll,
+  String? supporting,
 }) {
   final l10n = _chatL10n(context);
   return _ChatStatus(
     id: 'subagent',
+    supporting: supporting,
     icon: AppIconography.nested,
     message: position != null && total != null
         ? l10n.chatUiSubagentCount(l10n.chatUiPositionOfTotal(position, total))

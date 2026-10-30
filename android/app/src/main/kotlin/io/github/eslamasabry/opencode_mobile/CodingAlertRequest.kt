@@ -5,7 +5,6 @@ internal data class CodingAlertRequest(
     val kind: String,
     val sessionID: String,
     val key: String,
-    val quickReply: Boolean = false,
     val requestID: String = "",
     val profileID: String = "",
     val allowActions: Boolean = true,
@@ -19,5 +18,8 @@ internal data class CodingAlertRequest(
     val reason: String = "",
     val options: List<String> = emptyList(),
     val silent: Boolean = false,
-    val shellCommand: Boolean = false
+    /** What a permission asks to do: run, edit, read, folder, or empty. */
+    val askAction: String = "",
+    /** The short thing it acts on ("npm install", "settings.dart"), masked by Dart. */
+    val askTarget: String = ""
 )

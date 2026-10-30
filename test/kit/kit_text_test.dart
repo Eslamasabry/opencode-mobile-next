@@ -15,6 +15,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
+import 'package:opencode_mobile/ui/kit/style/kit_style.dart';
 
 import 'kit_motion_still.dart';
 
@@ -229,16 +230,18 @@ void main() {
   // --- KitText v2 (docs/ux-system/kit-api/KitText.md "Tests required") -----
 
   test('1. styleFor(role) equals LOOK-12 exactly for all ten roles', () {
+    // Unslop 2026-10-30: hierarchy from size and colour; titles and the
+    // small roles at 500, the secondary line at 400.
     const table = <KitTextRole, (double, double, FontWeight)>{
-      KitTextRole.largeTitle: (28, 34, FontWeight(650)),
-      KitTextRole.title: (22, 28, FontWeight(650)),
-      KitTextRole.headline: (16, 22, FontWeight.w600),
+      KitTextRole.largeTitle: (28, 34, FontWeight.w500),
+      KitTextRole.title: (22, 28, FontWeight.w500),
+      KitTextRole.headline: (16, 22, FontWeight.w500),
       KitTextRole.body: (16, 24, FontWeight.w400),
       KitTextRole.rowTitle: (16, 22, FontWeight.w500),
-      KitTextRole.secondary: (13, 18, FontWeight.w500),
-      KitTextRole.label: (13, 18, FontWeight.w600),
-      KitTextRole.caption: (13, 18, FontWeight.w600),
-      KitTextRole.button: (16, 20, FontWeight.w600),
+      KitTextRole.secondary: (13, 18, FontWeight.w400),
+      KitTextRole.label: (13, 18, FontWeight.w500),
+      KitTextRole.caption: (13, 18, FontWeight.w500),
+      KitTextRole.button: (16, 20, FontWeight.w500),
       KitTextRole.mono: (13, 19, FontWeight.w400),
     };
     for (final MapEntry(key: role, value: (size, line, weight))
@@ -248,12 +251,48 @@ void main() {
       expect(style.height, closeTo(line / size, 1e-9), reason: '$role height');
       expect(style.fontWeight, weight, reason: '$role weight');
     }
-    // G19: the button role in particular is pinned at 16/20 w600, unchanged
-    // from the visual-language branch (no value change in this unit).
-    final button = KitText.styleFor(KitTextRole.button);
-    expect(button.fontSize, 16);
-    expect(button.height, 20 / 16);
-    expect(button.fontWeight, FontWeight.w600);
+    expect(KitText.styleFor(KitTextRole.largeTitle).letterSpacing, -0.28);
+    expect(KitText.styleFor(KitTextRole.title).letterSpacing, 0);
+  });
+
+  test('1b. a Style with type of its own keeps the firm weights', () {
+    const firm = KitStyleType(firmWeights: true);
+    const table = <KitTextRole, FontWeight>{
+      KitTextRole.largeTitle: FontWeight(650),
+      KitTextRole.title: FontWeight(650),
+      KitTextRole.headline: FontWeight.w600,
+      KitTextRole.secondary: FontWeight.w500,
+      KitTextRole.label: FontWeight.w600,
+      KitTextRole.caption: FontWeight.w600,
+      KitTextRole.button: FontWeight.w600,
+      KitTextRole.body: FontWeight.w400,
+    };
+    for (final MapEntry(key: role, value: weight) in table.entries) {
+      final style = KitText.applyType(
+        role,
+        KitText.styleFor(role),
+        firm,
+        sectionLabel: false,
+      );
+      expect(style.fontWeight, weight, reason: '$role weight');
+    }
+    expect(
+      KitText.applyType(
+        KitTextRole.largeTitle,
+        KitText.styleFor(KitTextRole.largeTitle),
+        firm,
+      ).letterSpacing,
+      -0.8,
+    );
+    for (final style in [
+      KitSurfaceStyle.signal,
+      KitSurfaceStyle.soft,
+      KitSurfaceStyle.brutal,
+      KitSurfaceStyle.paper,
+    ]) {
+      expect(kitStyleSpec(style).tokens.type.firmWeights, isTrue);
+    }
+    expect(kitStyleSpec(KitSurfaceStyle.solid).tokens.type.firmWeights, false);
   });
 
   testWidgets(

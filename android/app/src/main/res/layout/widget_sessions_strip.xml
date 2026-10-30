@@ -1,29 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 4x1: dot, title and one status line, the mic (or Allow) on the right. -->
+<!-- 4x1: the same card in one row. The app mark, the one thing that matters now on one line,
+     one state line under it, and Allow once (or the mic) at the end. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/background" android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="horizontal" android:gravity="center_vertical" android:layoutDirection="locale"
-    android:background="@drawable/widget_card_bg" android:paddingStart="16dp" android:paddingEnd="12dp">
-    <ImageView android:id="@+id/wc_dot" android:layout_width="8dp" android:layout_height="8dp"
-        android:layout_marginEnd="12dp" android:src="@drawable/widget_dot" android:importantForAccessibility="no" />
+    android:background="@drawable/widget_card_dark" android:paddingStart="14dp" android:paddingEnd="12dp">
+    <FrameLayout android:id="@+id/wc_tile" android:layout_width="30dp" android:layout_height="30dp"
+        android:background="@drawable/widget_tile_dark">
+        <ImageView android:id="@+id/wc_mark" android:layout_width="15dp" android:layout_height="15dp"
+            android:layout_gravity="center" android:src="@drawable/ic_widget_mark" android:importantForAccessibility="no" />
+    </FrameLayout>
     <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_marginStart="12dp" android:orientation="vertical">
         <TextView android:id="@+id/wc_title" android:layout_width="match_parent" android:layout_height="wrap_content"
             android:textSize="15sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end"
-            android:textDirection="firstStrong" android:gravity="start" android:textColor="@color/widgetText" />
-        <TextView android:id="@+id/wc_sub" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:textDirection="firstStrong"
-            android:gravity="start" android:textColor="@color/widgetHint" />
-        <Chronometer android:id="@+id/wc_live" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:textDirection="firstStrong"
-            android:gravity="start" android:textColor="@color/widgetHint" android:visibility="gone" />
+            android:textDirection="firstStrong" android:gravity="start" android:textColor="#FFF3F3F1" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="2dp" android:gravity="center_vertical">
+            <ImageView android:id="@+id/wc_dot" android:layout_width="6dp" android:layout_height="6dp"
+                android:layout_marginEnd="6dp" android:src="@drawable/widget_dot" android:importantForAccessibility="no"
+                android:visibility="gone" />
+            <Chronometer android:id="@+id/wc_sub" android:layout_width="0dp" android:layout_weight="1"
+                android:layout_height="wrap_content" android:textSize="13sp" android:maxLines="1" android:ellipsize="end"
+                android:textDirection="firstStrong" android:gravity="start" android:textColor="#FF8C8F96" />
+            <TextView android:id="@+id/wc_sub_still" android:layout_width="0dp" android:layout_weight="1"
+                android:layout_height="wrap_content" android:textSize="13sp" android:maxLines="1" android:ellipsize="end"
+                android:textDirection="firstStrong" android:gravity="start" android:textColor="#FF8C8F96" />
+        </LinearLayout>
     </LinearLayout>
-    <FrameLayout android:id="@+id/wc_mic" android:layout_width="36dp" android:layout_height="36dp"
-        android:layout_marginStart="10dp" android:background="@drawable/widget_pill">
-        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:layout_gravity="center"
-            android:id="@+id/wc_mic_icon" android:src="@drawable/ic_widget_mic" android:importantForAccessibility="no" />
+    <FrameLayout android:id="@+id/wc_mic" android:layout_width="38dp" android:layout_height="38dp"
+        android:layout_marginStart="10dp" android:background="@drawable/widget_field_dark">
+        <ImageView android:id="@+id/wc_mic_icon" android:layout_width="18dp" android:layout_height="18dp"
+            android:layout_gravity="center" android:src="@drawable/ic_widget_ph_mic" android:importantForAccessibility="no" />
     </FrameLayout>
-    <TextView android:id="@+id/wc_btn1" android:layout_width="84dp" android:layout_height="36dp"
-        android:layout_marginStart="10dp" android:gravity="center" android:textSize="13sp" android:textStyle="bold"
-        android:maxLines="1" android:background="@drawable/widget_pill" android:visibility="gone" />
+    <TextView android:id="@+id/wc_allow" android:layout_width="wrap_content" android:layout_height="38dp"
+        android:minWidth="84dp" android:paddingStart="16dp" android:paddingEnd="16dp" android:layout_marginStart="10dp"
+        android:gravity="center" android:fontFamily="sans-serif-medium" android:textSize="14sp" android:maxLines="1"
+        android:background="@drawable/widget_btn_mint_dark" android:textColor="#FF03140B" android:visibility="gone" />
 </LinearLayout>

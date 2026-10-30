@@ -38,6 +38,46 @@ Widget _card({
 );
 
 void main() {
+  // Jitter J1 (2026-10-28): above the last-known list on a cold start, the
+  // card went "Starting OpenCode…" (with Switch server) then "Connecting…"
+  // (without it, another picture) and the list under it jumped +47 / -38 dp.
+  testWidgets('above the last-known list, starting and connecting keep one '
+      'height', (tester) async {
+    Future<double> height({required bool starting}) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: ListView(
+              children: [
+                SavedServerConnectionCard(
+                  key: const ValueKey('card'),
+                  size: KitStateSize.inline,
+                  profileName: 'On this phone',
+                  baseUrl: 'http://127.0.0.1:4097',
+                  error: null,
+                  attempts: 1,
+                  supportsTermux: false,
+                  inAppServer: true,
+                  startingInAppServer: starting,
+                  onStartPhoneServer: () {},
+                  onChangeServer: () {},
+                  onRetry: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      return tester.getSize(find.byKey(const ValueKey('card'))).height;
+    }
+
+    final starting = await height(starting: true);
+    expect(await height(starting: false), starting);
+    expect(find.byKey(const ValueKey('saved-server-change')), findsOneWidget);
+  });
+
   testWidgets('changed certificate offers review of this server', (
     tester,
   ) async {

@@ -10,7 +10,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/desktop/desktop_interaction.dart';
-import 'package:opencode_mobile/ui/kit/kit.dart' show KitNavBar;
+import 'package:opencode_mobile/ui/kit/kit.dart' show KitNavRail;
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -181,7 +181,7 @@ void main() {
   desktopTest('the shell destinations all scroll with a pinned thumb', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(420, 900);
+    tester.view.physicalSize = const Size(1280, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -200,10 +200,10 @@ void main() {
     // is pinned in that slice's tests.
     for (final destination in const ['Files', 'Settings']) {
       await tester.tap(
-        // The dock is KitNavBar since c36409dc (KitNav: dock, rail and
-        // sidebar from one destination list).
+        // A PC: the destinations are the sidebar's (no dock anywhere since
+        // 2026-10-20).
         find.descendant(
-          of: find.byType(KitNavBar),
+          of: find.byType(KitNavRail),
           matching: find.text(destination),
         ),
       );

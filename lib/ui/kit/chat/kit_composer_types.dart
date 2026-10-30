@@ -29,6 +29,32 @@ class KitComposerFailure {
   final Key? actionKey;
 }
 
+/// One round button of the composer's tray (plus-menu concept C, owner
+/// 20 Oct 2026): what "+" opens in place, a short row attached to the box
+/// above the field ("Photos", "Camera", "File", "More").
+@immutable
+class KitComposerTrayAction {
+  const KitComposerTrayAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.disabledReason,
+    this.buttonKey,
+  });
+
+  final IconData icon;
+
+  /// One short word under the button.
+  final String label;
+
+  /// Runs once the tray has closed.
+  final VoidCallback onTap;
+
+  /// Non-null: the button stays in its place, dimmed, and says why.
+  final String? disabledReason;
+  final Key? buttonKey;
+}
+
 /// What Send does while a reply is being written.
 enum KitComposerDelivery {
   /// A server that cannot steer (OpenCode 1) runs the message when the reply
@@ -73,6 +99,17 @@ enum KitVoicePhase {
 
   /// The engine failed: the reason, with a fix.
   failed,
+}
+
+/// A teaching tip on one of the composer's buttons ([KitComposer.stopTip],
+/// [KitComposer.sendTip]): its one sentence, and the host's word that it
+/// faded.
+@immutable
+class KitComposerTip {
+  const KitComposerTip({required this.message, required this.onDismissed});
+
+  final String message;
+  final VoidCallback onDismissed;
 }
 
 /// Voice mode's state and actions. Non-null [KitComposer.voice] turns the

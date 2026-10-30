@@ -53,6 +53,7 @@ extension _KitDiffRows on _KitDiffViewState {
       g,
     ),
     _HunkItem(:final seg, :final line) => _hunkRow(tokens, seg, line, g),
+    _MdItem(:final unit) => _mdRow(context, tokens, unit, g),
     _GapItem(:final seg, :final gap) => _gapView(context, tokens, seg, gap, g),
   };
 
@@ -377,8 +378,14 @@ extension _KitDiffRows on _KitDiffViewState {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           side(_half(tokens, old, KitDiffSide.old, g)),
+          // The style's divider between the halves (none under Soft: the
+          // space stays).
           ColoredBox(
-            color: tokens.roles.hairline,
+            color: KitSurfaceLook.divider(
+              context,
+              color: tokens.roles.hairline,
+              width: divider,
+            ).color,
             child: SizedBox(width: divider),
           ),
           side(_half(tokens, current, KitDiffSide.current, g)),
@@ -410,14 +417,18 @@ extension _KitDiffRows on _KitDiffViewState {
         ? l10n.kitDiffFoldBelow(remaining)
         : l10n.kitDiffFoldBetween(remaining);
 
+    final rendered = _renderedFor(widget.files[_file]);
     Widget rowsOf(Iterable<KitDiffLine> ls) => Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final line in ls)
-          g.split
-              ? _splitRow(context, tokens, line, line, g)
-              : _unifiedRow(context, tokens, line, g),
+        if (rendered)
+          ..._renderedRows(context, tokens, ls.toList(), g)
+        else
+          for (final line in ls)
+            g.split
+                ? _splitRow(context, tokens, line, line, g)
+                : _unifiedRow(context, tokens, line, g),
       ],
     );
 
@@ -441,6 +452,8 @@ extension _KitDiffRows on _KitDiffViewState {
               icon: AppIconography.unfoldLess,
               indent: indent,
               flat: widget.inline,
+              // The shown lines follow it.
+              rule: _KitDiffRule.bottom,
               onTap: () => _update(() {
                 _shownTop.remove(seg);
                 _shownBottom.remove(seg);
@@ -458,6 +471,9 @@ extension _KitDiffRows on _KitDiffViewState {
               icon: null,
               indent: indent,
               flat: widget.inline,
+              // Before the changes the lines follow it; after them it
+              // follows the lines.
+              rule: seg == 0 ? _KitDiffRule.bottom : _KitDiffRule.top,
               // Next to the changes: from the bottom of the lines above the
               // first change, from the top of the rest.
               onTap: expandable
@@ -560,6 +576,7 @@ class _GapBar extends StatelessWidget {
     required this.indent,
     required this.onTap,
     this.flat = false,
+    this.rule = _KitDiffRule.none,
   });
 
   final String label;
@@ -568,6 +585,10 @@ class _GapBar extends StatelessWidget {
 
   /// No fill of its own: the bar sits on the page (an inline diff).
   final bool flat;
+
+  /// The edge facing the lines, ruled in a style that draws the code
+  /// frame.
+  final _KitDiffRule rule;
   final VoidCallback? onTap;
 
   @override
@@ -597,8 +618,15 @@ class _GapBar extends StatelessWidget {
         ),
       ),
     );
-    final bar = ColoredBox(
-      color: flat ? Colors.transparent : roles.surface2,
+    // The code's own face in the frame; an inline diff's bar has no fill
+    // of its own.
+    final bar = _kitDiffBand(
+      context,
+      fill: flat ? Colors.transparent : roles.surface2,
+      level: KitSurfaceLevel.surface2,
+      styled: !flat,
+      inCode: true,
+      rule: flat ? _KitDiffRule.none : rule,
       child: onTap == null
           ? Semantics(
               container: true,

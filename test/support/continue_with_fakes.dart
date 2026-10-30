@@ -200,8 +200,11 @@ class FakeContinueWithHost implements ContinueWithHost {
   @override
   String get lastState => 'Waiting for you';
 
+  int loads = 0;
+
   @override
   Future<ContinueWithPlan> load() async {
+    loads++;
     if (loadError case final Object error) throw error;
     return ContinueWithPlan(
       sourceTitle: 'Repair parser',
@@ -277,10 +280,11 @@ class FakeContinueWithHost implements ContinueWithHost {
   }
 
   @override
-  Future<void> adopt(
+  Future<String> adopt(
     ContinueWithChoice choice,
     String navigationSessionId,
   ) async {
     adopted.add(navigationSessionId);
+    return navigationSessionId;
   }
 }

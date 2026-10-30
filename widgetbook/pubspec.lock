@@ -707,7 +707,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.4.0+54"
+    version: "2.0.0+56"
   package_config:
     dependency: transitive
     description:
@@ -1420,10 +1420,9 @@ packages:
   xterm:
     dependency: transitive
     description:
-      name: xterm
-      sha256: "168dfedca77cba33fdb6f52e2cd001e9fde216e398e89335c19b524bb22da3a2"
-      url: "https://pub.dev"
-    source: hosted
+      path: "../third_party/xterm"
+      relative: true
+    source: path
     version: "4.0.0"
   yaml:
     dependency: transitive

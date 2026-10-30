@@ -2,6 +2,19 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
+## 2.1.0+57 — 2026-10-31
+
+Two home-screen widgets (Conversations and Status), Git inside the
+conversation, an Inbox for everything that waits on you, one Stop that is
+always in the same place, a new Appearance with five styles (Solid, Soft,
+Brutal, Paper and the new Signal) and optional Glass, Simplified Chinese for
+about 92 % of the app (thanks @Azx8788, #107), the phone's server on OpenCode
+2.1.1 and keeping itself up to date, and many fixes for replies that stalled,
+failed or showed the wrong state. After you update, everyone starts on the
+Solid style with the moving background off. Full notes:
+[docs/releases/v2.1.0+57.md](docs/releases/v2.1.0+57.md); pictures:
+[docs/releases/v2.1.0+57/README.md](docs/releases/v2.1.0+57/README.md).
+
 ## 2.0.0+56 — 2026-10-19
 
 Scheduled prompts that run with the app closed, dev servers you can watch,

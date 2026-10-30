@@ -9,7 +9,8 @@ import '../api2/transport.dart' show Api2Error, Api2NetworkError;
 import '../builtin/builtin_folders.dart'
     show FolderListException, FolderListProblem;
 import '../builtin/builtin_linux.dart' show BuiltinLinuxException;
-import '../paseo/transport.dart' show PaseoFailure;
+import 'agent_run_failure.dart' show AgentRunFailure;
+import '../paseo/transport.dart' show PaseoFailure, PaseoFailureKind;
 import '../state/local_server_controls.dart' show LocalServerControlFailure;
 import '../state/profiles.dart' show SecureStorageUnavailable;
 import '../termux/bridge.dart' show TermuxBridgeException;
@@ -79,6 +80,10 @@ enum ProductFailureCategory {
   /// The computer running the agent did not answer or did not do it
   /// (Paseo daemon): not a clash, not an OpenCode server fault.
   computer,
+
+  /// The agent's helper answered, but with a reply this app can't read (a
+  /// newer or older daemon): not a computer that is off.
+  unreadableReply,
   busy,
   server,
   rejected,
@@ -124,6 +129,24 @@ final RegExp _gitReason = RegExp(
 
 bool _isGitReason(String? reason) =>
     reason != null && _gitReason.hasMatch(reason);
+
+/// Why an agent host refused this send and what it concerns, when the
+/// host said ([PaseoFailure.runFailure]); null for any other failure. The
+/// chat sorts it into what the person can do (agent_run_failure.dart).
+AgentRunFailure? agentRunFailureOf(Object? error) => switch (error) {
+  PaseoFailure(:final runFailure?) => runFailure,
+  ProductException(:final cause?) when cause is! ProductException =>
+    agentRunFailureOf(cause),
+  _ => null,
+};
+
+/// A send the app refused because this agent's conversation cannot go on
+/// where it is: an old conversation of an agent (ACP: Kilo, Gemini) that
+/// the helper no longer holds and that cannot be shown to reopen. A new
+/// conversation carrying this one's work is the way on; trying again never
+/// works, so the chat must not say "could not finish" over it.
+bool conversationNeedsNewChat(Object? error) =>
+    error is PaseoFailure && error.kind == PaseoFailureKind.newChatRequired;
 
 /// The kind of failure a status code says.
 ProductFailureCategory _forStatus(int code) => switch (code) {
@@ -287,10 +310,12 @@ ProductFailureCategory _classify(Object error) {
     }
     final code = error.statusCode;
     if (code != null && code >= 400) return _forStatus(code);
+    if (error.errorTag == 'Paseo invalidResponse') {
+      return ProductFailureCategory.unreadableReply;
+    }
     if (const {
       'Paseo unavailable',
       'Paseo disconnected',
-      'Paseo invalidResponse',
       'Paseo hostRefused',
       'Paseo invalidEndpoint',
       'Paseo incompatibleProtocol',

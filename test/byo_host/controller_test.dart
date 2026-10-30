@@ -99,7 +99,7 @@ class FakeRunner implements ByoHostSshRunner {
   }
 
   String bundleVersion = '1.1.0';
-  String openCodeVersion = '2.0.29';
+  String openCodeVersion = '2.1.1';
 
   ByoHostDescriptor get descriptor => ByoHostDescriptor(
     hostId: hostId,
@@ -147,7 +147,7 @@ void main() {
   late ByoHostController controller;
   final bundle = ByoHostBundle(
     version: '1.1.0',
-    openCodeVersion: '2.0.29',
+    openCodeVersion: '2.1.1',
     artifacts: {
       'x64': ByoHostArtifact(
         url: 'https://example.invalid/bundle.tar.gz',
@@ -264,14 +264,14 @@ void main() {
     'OC2 bundle selects OC2 while retaining per-phone proxy credentials',
     () async {
       runner.bundleVersion = '2.0.0';
-      runner.openCodeVersion = '2.0.29';
+      runner.openCodeVersion = '2.1.1';
       controller = ByoHostController(
         profileId: 'phone-a',
         runner: runner,
         store: store,
         bundle: ByoHostBundle(
           version: '2.0.0',
-          openCodeVersion: '2.0.29',
+          openCodeVersion: '2.1.1',
           artifacts: bundle.artifacts,
         ),
         enabled: true,
@@ -279,7 +279,7 @@ void main() {
       await add();
       final profile = controller.connectedProfile(name: 'OC2 host');
       expect(profile.flavor, ServerFlavor.v2);
-      expect(profile.serverVersion, '2.0.29');
+      expect(profile.serverVersion, '2.1.1');
       expect(profile.username, 'phone-a');
       expect(profile.password, store.secrets!.deviceToken);
       await controller.dispose();

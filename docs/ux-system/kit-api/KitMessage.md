@@ -38,6 +38,10 @@ class KitMessage extends StatelessWidget {
     this.time,                                // shown as a caption under the bubble when non-null
     this.menu = const <KitMenuItem>[],        // Copy message, Edit and resend, Revert to here…
     this.bubbleKey,                           // today's ValueKey('user-prompt-<id>')
+    this.liftFrom,                            // just sent: the composer field's global rect; the bubble lifts from it once
+    this.note,                                // one quiet line under the bubble: when the agent reads it
+    this.noteAction,                          // one tertiary action at the note's end ("Stop the command")
+    this.noteSince,                           // the note's wait began; the action shows once it is slow
   });
 
   /// The agent's prose: plain body text on the prose's start edge.
@@ -90,6 +94,9 @@ class KitMessage extends StatelessWidget {
   final KitMarkdown? body;
   final List<KitAttachment> attachments;
   final DateTime? time;
+  final String? note;
+  final KitAction? noteAction;
+  final DateTime? noteSince;
   final List<KitMenuItem> menu;
   final String? text;
   final String? heading;
@@ -108,7 +115,7 @@ class KitMessage extends StatelessWidget {
 
 **Frozen behaviour.**
 
-- **Prompt bubble.** Aligned to the end edge; hugs its words and stops at `KitLayout.bubbleMaxShare` (0.85) of the column (owner decision 04A, 2 Oct; `full` fills the width minus `KitLayout.bubbleStartInset`); replies stay full width. Padding `space3` vertical, `space4` horizontal; fill `kitPromptBubbleFill(roles)`: `surface2` in dark, and in light `text1` at 7 % over the ground (light `surface2` is white, the page's colour, so the bubble was invisible; the fill stays visible on ground and on white and keeps `text2`/`text3` words above 4.5:1; `kit_message_test` checks it); corners `bubbleRadius` (20) except the bottom-end corner, `bubbleTailRadius` (6) (pre-wave tokens; VL §5 "20/20/6/20", mirrored under RTL). No border, shadow or glass (LOOK-20, LOOK-27). Attachments sit under the text inside the bubble as `KitComposerChips.attachments(items:, onRemove: null)` (read-only). A photo with pixels (`kind: image` and a `thumbnail`) shows as its picture instead of a chip: a `KitLayout.promptPhotoSize` (96) square `KitImage` (cover, `KitShape.tile`), several in a `Wrap` with `space2` gaps above the chips; with `onOpen` it is its own button node ("Preview <label>", the host's full view), without it an image node ("Image, <label>"). `time` is a `caption` in `text3` under the bubble at the end edge, formatted with `MaterialLocalizations.formatTimeOfDay` (digits from the locale, COPY-30).
+- **Prompt bubble.** Aligned to the end edge; hugs its words and stops at `KitLayout.bubbleMaxShare` (0.85) of the column (owner decision 04A, 2 Oct; `full` fills the width minus `KitLayout.bubbleStartInset`); replies stay full width. Padding `space3` vertical, `space4` horizontal; fill `kitPromptBubbleFill(roles)`: `surface2` in dark, and in light `text1` at 7 % over the ground (light `surface2` is white, the page's colour, so the bubble was invisible; the fill stays visible on ground and on white and keeps `text2`/`text3` words above 4.5:1; `kit_message_test` checks it); corners `bubbleRadius` (20) except the bottom-end corner, `bubbleTailRadius` (6) (pre-wave tokens; VL §5 "20/20/6/20", mirrored under RTL). No border, shadow or glass (LOOK-20, LOOK-27). Attachments sit under the text inside the bubble as `KitComposerChips.attachments(items:, onRemove: null)` (read-only). A photo with pixels (`kind: image` and a `thumbnail`) shows as its picture instead of a chip: a `KitLayout.promptPhotoSize` (96) square `KitImage` (cover, `KitShape.tile`), several in a `Wrap` with `space2` gaps above the chips; with `onOpen` it is its own button node ("Preview <label>", the host's full view), without it an image node ("Image, <label>"). `time` is a `caption` in `text3` under the bubble at the end edge, formatted with `MaterialLocalizations.formatTimeOfDay` (digits from the locale, COPY-30). `note` (owner report 2026-10-28: a steer sent while a command runs) is a `caption` in `text3` under the bubble at the end edge, saying when the agent reads the message ("Claude Code reads this when the command finishes"); `noteAction` follows it as a `KitButton.tertiary` once the wait that began at `noteSince` reaches `KitMotion.escalateAfter` (read through `KitSince`), at once without `noteSince`. The host words the note and clears it when the agent answers.
 - **Prompt menu.** The bubble has no visible control (STATE-16). Long-press (touch) and right-click (pointer) open `showKitMenu(position: <gesture point>)`; Shift+F10 and the Menu key open it anchored; every item is also a `CustomSemanticsAction` (KIT-28, A11Y-5). An empty `menu` makes the bubble inert.
 - **Reply.** `body` on the prose's start edge, full available width, no fill, no frame.
 - **Thought.** A fold row: a 20 dp thought glyph, the title in `secondary`, and a chevron; opened, the body sits under it in `secondary`/`text2`, indented `space3` behind a one-pixel `hairline` stroke at the start edge (the work line's indent).
@@ -119,7 +126,7 @@ class KitMessage extends StatelessWidget {
 
 ## States
 
-Declared (KIT-12): **prompt** (plain; with attachments; with time), **reply**, **thought** working / folded / open, **notice** quiet / failed / with action / open, **marker** still / working. No loading, empty or error of its own: the host passes words it has (a reply still streaming is simply a growing `body`). No disabled. No working other than `thought.running` and `marker.working`, which describe the agent, not a tap.
+Declared (KIT-12): **prompt** (plain; with attachments; with time; with a note, and its action once the wait is slow), **reply**, **thought** working / folded / open, **notice** quiet / failed / with action / open, **marker** still / working. No loading, empty or error of its own: the host passes words it has (a reply still streaming is simply a growing `body`). No disabled. No working other than `thought.running` and `marker.working`, which describe the agent, not a tap.
 
 ## Tokens
 
@@ -154,6 +161,8 @@ Declared (KIT-12): **prompt** (plain; with attachments; with time), **reply**, *
 
 - A new prompt or reply appears without animation (the list owns arrivals; `KitAnimatedRows` is the host's choice for notices).
 - Folds: the chevron turns (`KitSpin.chevron`, `KitMotion.standard`); the opened body appears at once and fades in over `KitMotion.quick`; no size animation in the scrolling list (MOT-5).
+- A prompt with `liftFrom` (the one just sent, owner request 2026-10-27) rises from the composer into its place over `KitMotion.standard` on `enter`: from .92 scale and transparent, paint and transform only, from behind the composer. Under Calm it fades in at its place, with no rise or scale.
+- The prompt's `note` fades in and out over `KitMotion.quick` (`enter` in, `exit` out) at the end edge; its height does not animate (MOT-5). Under reduced motion it appears and goes at once.
 - The working mark is KitStatusMark's. Under `KitMotion.reduced` nothing moves and one `pump()` settles (G8x).
 - Haptics: none (MOT-11; the send haptic belongs to the composer).
 
@@ -187,6 +196,7 @@ Declared (KIT-12): **prompt** (plain; with attachments; with time), **reply**, *
 9. Semantics: prompt label starts with "You said"; folds are buttons with `expanded`; no live regions; targets ≥ 48×48.
 10. Desktop capabilities: Tab reaches the prompt and each fold in order; Shift+F10 opens the prompt menu; focus ring visible.
 11. 200 % text at 320 dp, LTR and RTL: no overflow (G6).
+12. Prompt `note`: its words sit under the bubble at the end edge; `noteAction` stays hidden until the wait from `noteSince` is slow, then calls back once; a note that goes fades out over `KitMotion.quick`; under reduced motion nothing runs after one pump.
 
 ## Galleries required
 

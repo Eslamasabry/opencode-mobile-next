@@ -223,7 +223,7 @@ void main() {
         addTearDown(starter.dispose);
         final originalProbe = serverProbe;
         serverProbe = ({required baseUrl, username, password}) async =>
-            const ServerProbeResult.success('2.0.29');
+            const ServerProbeResult.success('2.1.1');
         addTearDown(() => serverProbe = originalProbe);
         ServerProfile? connected;
         final finisher = BuiltinSetupFinisher(

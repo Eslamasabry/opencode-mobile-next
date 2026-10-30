@@ -57,7 +57,6 @@ Future<void> _pump(
                 focusNode: focus,
                 hint: 'Ask',
                 onSend: () {},
-                onStop: () {},
                 busy: busy,
                 activityGlow: glow,
               ),
@@ -153,11 +152,9 @@ void main() {
     expect(_glow(), findsNothing);
   });
 
-  testWidgets('Stop and the box are unchanged with the glow on', (
-    tester,
-  ) async {
+  testWidgets('the box is unchanged with the glow on', (tester) async {
     await _pump(tester, busy: true);
-    expect(find.bySemanticsLabel('Stop the reply'), findsWidgets);
+    expect(find.bySemanticsLabel('Stop the reply'), findsNothing);
     expect(find.text('Writing…'), findsNothing);
   });
 

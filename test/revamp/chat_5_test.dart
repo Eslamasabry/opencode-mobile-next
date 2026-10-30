@@ -27,6 +27,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/complete_message_history.dart';
 import 'chat_3_support.dart' show chat3MockSecureStorage;
+import '../support/plain_text_finder.dart';
 
 class _Api extends FakeServerGateway with CompleteMessageHistory {
   _Api({this.forms = false}) : super(baseUrl: 'http://localhost');
@@ -208,7 +209,7 @@ void main() {
     final card = _card(tester);
     expect(card.kind, KitRequestKind.permission);
     expect(card.who, isNotNull, reason: 'the v2 card, never the legacy one');
-    expect(find.text('Run this command?'), findsOneWidget);
+    expect(findPlainText('Run flutter test in app?'), findsOneWidget);
     expect(find.byKey(const Key('permission-sheet')), findsNothing);
 
     await tester.tap(find.byKey(const Key('permission-card-allow')));

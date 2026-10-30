@@ -61,6 +61,17 @@ Widget _missingEnable({KitStateSize size = KitStateSize.inline}) =>
       size: size,
     );
 
+/// The calm form (vision 2026-10-20): the big line, one next step, the main
+/// action at the bottom and one quiet text action.
+Widget _calm({KitStateSize size = KitStateSize.page}) => KitStateView.calm(
+  icon: AppIconography.chat,
+  title: 'Nothing running',
+  body: 'Start a conversation, or open one to pick up where you left off.',
+  primary: size == KitStateSize.page ? _act('New conversation') : null,
+  tertiary: [_act('Show all conversations')],
+  size: size,
+);
+
 /// The page states, keyed by their shot stem.
 Map<String, Widget Function()> _pageStates() => {
   'loading': () => const KitStateView(
@@ -85,6 +96,7 @@ Map<String, Widget Function()> _pageStates() => {
     switchServer: _act('Switch server'),
   ),
   'error_other': _errorOther,
+  'calm': _calm,
   'missing_explains': () => const KitStateView.missing(
     capability: 'terminal.local',
     title: 'Terminal needs a server on this phone',
@@ -142,6 +154,36 @@ void main() {
         size: _phone,
         light: light,
         child: _errorOther(size: KitStateSize.inline),
+      );
+    });
+
+    testWidgets('calm · inline · $mode', (tester) async {
+      await kitGalleryPart(
+        tester,
+        name: kitGalleryName(
+          'kit_state_view_calm_inline',
+          _phone,
+          light: light,
+        ),
+        size: _phone,
+        light: light,
+        child: _calm(size: KitStateSize.inline),
+      );
+    });
+
+    testWidgets('calm · 2.0 text · $mode', (tester) async {
+      await kitGalleryPart(
+        tester,
+        name: kitGalleryName(
+          'kit_state_view_calm',
+          _phone,
+          light: light,
+          text2: true,
+        ),
+        size: _phone,
+        light: light,
+        textScale: 2,
+        child: _page(_phone, _calm()),
       );
     });
 

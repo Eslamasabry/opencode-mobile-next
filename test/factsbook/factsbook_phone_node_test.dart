@@ -747,6 +747,30 @@ void main() {
       expect(find.byType(FactsBookCaptureScreen), findsOneWidget);
     });
 
+    factsTest('the explanation reads naturally and no build says what to do', (
+      tester,
+    ) async {
+      final node = make(
+        FakeNodeHost(facts: const NodeHostFacts(linuxReady: true)),
+      );
+      await pumpFacts(
+        tester,
+        const FactsBookPhoneNodeScreen(),
+        overrides: [factsBookPhoneNodeProvider.overrideWithValue(node)],
+      );
+      await settle(tester);
+      expect(find.text('No memory build yet'), findsOneWidget);
+      expect(find.textContaining('Update the app'), findsOneWidget);
+      final what = tester.widget<Text>(
+        find.descendant(
+          of: find.byKey(const ValueKey('factsbook-node-what')),
+          matching: find.byType(Text),
+        ),
+      );
+      expect(what.data, isNot(contains('runs in On this phone')));
+      expect(what.data, contains('runs on this phone'));
+    });
+
     factsTest('the manual form is behind Connect to my own server', (
       tester,
     ) async {

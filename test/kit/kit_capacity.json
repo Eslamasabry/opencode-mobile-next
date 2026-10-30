@@ -1,0 +1,2907 @@
+{
+  "_about": "The kit capacity contract (docs/ux-system/kit-v2.md §8.6), read by test/kit/kit_capacity_test.dart and its shards. For every exported kit part: its role, which sets its maximum painted width (roles[role].maxWidth, a token resolved in test/kit/kit_capacity_contract.dart; a part's own maxWidth overrides it); each text slot's overflow rule, keyed by its words as the gallery scene writes them (wrap, ellipsis:N, fade:N, scroll; clip:N and visible:N are recorded but are violations); and each list-like field's rule beyond what fits (grows, wraps, scroll, more, page, fixed with shows, not-items; unknown is a gap, allowlisted). minTarget is the smallest tap target in dp (kit-v2 §8.3). Text slots are recorded with KIT_CAPACITY_WRITE=1; review the diff.",
+  "minTarget": 48,
+  "roles": {
+    "chip": {
+      "maxWidth": "KitLayout.chipMaxWidth",
+      "why": "Chips, pills, tags and inline values: hug their words, at most 320 dp, then ellipsize."
+    },
+    "confirm": {
+      "maxWidth": "KitLayout.confirmMediumWidth",
+      "why": "A confirmation: 560 dp on a medium window, a 480 dp dialog wider up (kit-v2 §8.2)."
+    },
+    "control": {
+      "maxWidth": "KitLayout.controlMaxWidth",
+      "why": "One button or one compact control: hugs its label, never wider than 400 dp, so a primary action on a PC is not a 1,500 dp bar."
+    },
+    "conversation": {
+      "maxWidth": "KitLayout.paneDetailMaxWidth",
+      "why": "Transcript and composer parts: the conversation column's cap (LAY-5), about 70 characters of body text, the prose measure."
+    },
+    "dialog": {
+      "maxWidth": "KitLayout.confirmDialogWidth",
+      "why": "A dialog (alert, short input): 480 dp, inside Material 3's 560 dp dialog maximum (kit-v2 §8.2)."
+    },
+    "fill": {
+      "maxWidth": "fill",
+      "why": "Fills the region its caller gives it by design: a screen, a bar, a full-screen viewer or layer, a divider. The caller's region carries the cap."
+    },
+    "glyph": {
+      "maxWidth": "KitLayout.glyphMaxWidth",
+      "why": "Icons, marks, rings, avatars, meters: a fixed small size; 96 dp is the ceiling for the largest (a 56 dp FAB, a 64 dp ring)."
+    },
+    "lane": {
+      "maxWidth": "KitLayout.laneMaxWidth",
+      "why": "A board lane and its cards (KitBoardLane.md, LAY-2)."
+    },
+    "list": {
+      "maxWidth": "KitLayout.listWidth",
+      "why": "Rows, lists, tables, code and logs: a list on its own, wide enough for a row's value at the far edge without losing the eye."
+    },
+    "popover": {
+      "maxWidth": "KitLayout.popoverMaxWidth",
+      "why": "Menus, term bubbles and tips: a popover; Material 3 menus are 112–280 dp, the kit allows 200–320 (KitMenu.md D2)."
+    },
+    "reading": {
+      "maxWidth": "KitLayout.readingWidth",
+      "why": "Prose, cards, notices, forms and their controls: the reading measure (65–75 characters at body size)."
+    },
+    "scope": {
+      "maxWidth": "scope",
+      "why": "Draws nothing (an inherited scope)."
+    },
+    "sheet": {
+      "maxWidth": "KitLayout.sheetMaxWidth",
+      "why": "A bottom sheet: Material 3's 640 dp maximum, centred; on a wide window it becomes a dialog panel (560) or side sheet (≤480), both inside this cap."
+    },
+    "state": {
+      "maxWidth": "KitLayout.stateMaxWidth",
+      "why": "A page state (empty, error, working): a short centred column (KitStateView.md)."
+    },
+    "toast": {
+      "maxWidth": "KitLayout.undoMaxWidth",
+      "why": "The undo bar / snackbar: 480 dp from a medium window up (KitUndo.md, kit-v2 §8.2); Material 3 snackbars cap at 600."
+    },
+    "wrapper": {
+      "maxWidth": "wrapper",
+      "why": "Takes its child's size (motion, focus, scroll, selection, direction wrappers); the child's own cap applies."
+    }
+  },
+  "parts": {
+    "KitAccentRow": {
+      "lists": {
+        "swatches": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Match theme": "clip:2, ellipsis:2"
+      }
+    },
+    "KitActionBlock": {
+      "lists": {
+        "tertiary": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Choose another folder": "ellipsis:2",
+        "Copy the address": "ellipsis:2",
+        "Open settings": "ellipsis:2",
+        "Start the server": "ellipsis:2"
+      }
+    },
+    "KitActionStack": {
+      "lists": {
+        "tertiary": {
+          "beyond": "fixed",
+          "shows": 2
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Connect to this server": "ellipsis:2",
+        "Copy the address": "ellipsis:2",
+        "Item number # in the list": "ellipsis:2",
+        "Open settings": "ellipsis:2",
+        "Scan the code instead": "ellipsis:2"
+      }
+    },
+    "KitAgentCard": {
+      "lists": {
+        "body": {
+          "beyond": "grows"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "#:##": "wrap",
+        "Branch": "wrap",
+        "Claude Code asks": "wrap",
+        "Deploy main": "ellipsis:2",
+        "Duration": "wrap",
+        "Not answered": "wrap",
+        "Undo": "ellipsis:2",
+        "Which branch should I deploy to the staging serv": "ellipsis:1, wrap",
+        "feature/a-very-long-branch-name-that-keeps-going": "wrap",
+        "⁨Sent: main⁩": "wrap"
+      }
+    },
+    "KitAgentChoice": {
+      "role": "reading",
+      "text": {
+        "Careful with big changes": "clip:3",
+        "Claude Code": "ellipsis:2",
+        "Codex": "ellipsis:2",
+        "Fast edits and reviews": "clip:3, ellipsis:3",
+        "OpenCode": "ellipsis:2",
+        "Set up": "clip:3, ellipsis:3"
+      }
+    },
+    "KitAgentGrid": {
+      "lists": {
+        "children": {
+          "beyond": "grows"
+        }
+      },
+      "role": "reading",
+      "text": {}
+    },
+    "KitAgentGridSpan": {
+      "role": "scope",
+      "text": {}
+    },
+    "KitAgentLine": {
+      "role": "conversation",
+      "text": {
+        "Claude Code · in a project with a very long name": "ellipsis:1"
+      }
+    },
+    "KitAgentStrip": {
+      "lists": {
+        "agents": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "⁨Planner⁩": "scroll",
+        "⁨Queue reviewer #⁩": "scroll",
+        "⁨Researcher⁩": "scroll",
+        "⁨Reviewer⁩": "scroll"
+      }
+    },
+    "KitAnimatedBox": {
+      "role": "wrapper",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Uploaded ## % of the build": "wrap",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitAnimatedRows": {
+      "lists": {
+        "children": {
+          "beyond": "grows"
+        }
+      },
+      "role": "wrapper",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitAnimatedValue": {
+      "role": "wrapper",
+      "text": {}
+    },
+    "KitArrival": {
+      "role": "wrapper",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitArrivalScope": {
+      "role": "scope",
+      "text": {}
+    },
+    "KitAskField": {
+      "role": "conversation",
+      "text": {
+        "Sent to the conversation": "wrap"
+      }
+    },
+    "KitAskLine": {
+      "role": "conversation",
+      "text": {
+        "Keep awake": "ellipsis:2",
+        "Keep the phone awake while agents work?": "ellipsis:2",
+        "Not now": "ellipsis:2"
+      }
+    },
+    "KitAvatar": {
+      "role": "glyph",
+      "text": {
+        "OA": "clip:1"
+      }
+    },
+    "KitBackgroundWorkLine": {
+      "lists": {
+        "tasks": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "# tasks still running in the background": "ellipsis:2",
+        "Still running in the background · Build the rele": "ellipsis:2"
+      }
+    },
+    "KitBoardLane": {
+      "lists": {
+        "cards": {
+          "beyond": "grows"
+        }
+      },
+      "role": "lane",
+      "text": {
+        "#": "scroll",
+        "High priority": "wrap",
+        "No tasks in this lane": "wrap",
+        "No work in this column": "wrap",
+        "Review": "scroll",
+        "Review checkout accessibility": "ellipsis:2",
+        "Review the release notes before publishing": "ellipsis:2",
+        "Reviewer": "wrap",
+        "Working": "scroll",
+        "·": "wrap"
+      }
+    },
+    "KitBoardLanes": {
+      "lists": {
+        "columns": {
+          "beyond": "fixed",
+          "shows": 8
+        }
+      },
+      "role": "fill",
+      "text": {
+        "#": "scroll",
+        "High priority": "wrap",
+        "No tasks to review": "wrap",
+        "Ready for review": "scroll",
+        "Review checkout accessibility": "ellipsis:2",
+        "Reviewer": "wrap",
+        "Working": "scroll",
+        "·": "wrap"
+      }
+    },
+    "KitBottomInset": {
+      "role": "wrapper",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitBrandMark": {
+      "role": "glyph",
+      "text": {}
+    },
+    "KitBreadcrumb": {
+      "lists": {
+        "segments": {
+          "beyond": "more"
+        }
+      },
+      "role": "list",
+      "text": {
+        "…": "clip:1, ellipsis:1",
+        "⁨Project root⁩": "clip:1, clip:2, ellipsis:1, ellipsis:2",
+        "⁨Project⁩": "clip:1, clip:2, ellipsis:1, ellipsis:2",
+        "⁨a-long-screen-file-name⁩": "clip:2, ellipsis:2",
+        "⁨a-long-…r-name⁩": "clip:1, ellipsis:1",
+        "⁨folder##⁩": "clip:1, ellipsis:1",
+        "⁨folder##⁩ #2": "clip:2, ellipsis:2",
+        "⁨lib⁩": "clip:1, ellipsis:1",
+        "⁨packages⁩": "clip:1, ellipsis:1",
+        "⁨projects⁩": "clip:1, ellipsis:1",
+        "⁨release-notes-for-the-next-preview-build⁩": "clip:2, ellipsis:2",
+        "⁨screens⁩": "clip:2, ellipsis:2",
+        "⁨ui⁩": "clip:1, ellipsis:1"
+      }
+    },
+    "KitButton": {
+      "role": "control",
+      "text": {
+        "Discard the message": "ellipsis:2",
+        "Retry": "ellipsis:2",
+        "Save as a draft": "ellipsis:2",
+        "Send to the agent": "ellipsis:2",
+        "Sending to the agent": "ellipsis:2"
+      }
+    },
+    "KitCapabilityExplainer": {
+      "lists": {
+        "cost": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "About ### MB · about # min": "wrap",
+        "Download voice model": "ellipsis:2",
+        "Files and Terminal": "ellipsis:2",
+        "Files and terminal": "ellipsis:2",
+        "Files and terminal aren't available on ⁨Codex⁩. ": "wrap",
+        "Files and terminal aren't available on ⁨laptop i": "wrap",
+        "Model sign-in": "wrap",
+        "Needs a voice model on this phone.": "wrap",
+        "Sign in to a model": "ellipsis:2",
+        "Sign in to a model provider so the agent can rep": "wrap",
+        "Type by voice on this phone. Download a voice mo": "wrap",
+        "Voice typing": "ellipsis:2",
+        "Voice typing #2": "wrap"
+      }
+    },
+    "KitCarousel": {
+      "role": "reading",
+      "text": {
+        "Drawings appear, nothing keeps moving": "clip:3, ellipsis:3",
+        "Soft ring": "scroll"
+      }
+    },
+    "KitChart": {
+      "lists": {
+        "labels": {
+          "beyond": "not-items"
+        },
+        "series": {
+          "beyond": "not-items"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Added": "wrap",
+        "Removed": "wrap",
+        "files": "wrap"
+      }
+    },
+    "KitChecklist": {
+      "lists": {
+        "cost": {
+          "beyond": "unknown"
+        },
+        "onSlow": {
+          "beyond": "fixed",
+          "shows": 2
+        },
+        "steps": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "About eight minutes the first time": "wrap",
+        "Allow access": "ellipsis:2",
+        "Continue setup": "ellipsis:2",
+        "Download and prepare OpenCode": "ellipsis:2",
+        "Downloads about ### MB": "wrap",
+        "Install the Linux environment": "ellipsis:2",
+        "Install the tools for local conversations": "ellipsis:2",
+        "Keep the phone connected while the tools install": "ellipsis:4",
+        "Needs you · Keep the phone connected while the t": "ellipsis:4",
+        "Needs you · The installation files stay on this ": "ellipsis:4",
+        "Open Termux": "ellipsis:2",
+        "Open the log": "ellipsis:2",
+        "Prepare this phone": "ellipsis:2",
+        "Step # of # · Download and prepare OpenCode": "ellipsis:2",
+        "Step # of # · Install the tools for local conver": "ellipsis:2",
+        "Stop setup": "ellipsis:2",
+        "The installation files stay on this phone": "ellipsis:4",
+        "Try again": "ellipsis:2",
+        "Waiting # min": "ellipsis:4"
+      }
+    },
+    "KitChevron": {
+      "role": "glyph",
+      "text": {}
+    },
+    "KitChip": {
+      "role": "chip",
+      "text": {
+        "Needs you": "ellipsis:1",
+        "Read # files · edited #": "ellipsis:1",
+        "Tasks · #": "ellipsis:1",
+        "feature/checkout-retry": "ellipsis:1",
+        "lib/checkout/retry.dart": "ellipsis:1"
+      }
+    },
+    "KitChipWrap": {
+      "lists": {
+        "children": {
+          "beyond": "wraps"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Item number # in the list": "ellipsis:1",
+        "Item number ## in the list": "ellipsis:1"
+      }
+    },
+    "KitChoiceCards": {
+      "lists": {
+        "choices": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "About # minutes · ### MB download": "wrap",
+        "Not on this device · About # minutes · ### MB do": "wrap",
+        "On my computer": "wrap",
+        "On this phone": "wrap",
+        "Pair with a code, or type its address": "wrap"
+      }
+    },
+    "KitChoiceList": {
+      "lists": {
+        "choices": {
+          "beyond": "grows"
+        },
+        "selectedSet": {
+          "beyond": "not-items"
+        }
+      },
+      "role": "list",
+      "text": {
+        "# selected": "wrap",
+        "Balanced": "wrap",
+        "Balanced voice model": "wrap",
+        "Clear speech for everyday replies · Recommended": "wrap",
+        "Download a voice": "ellipsis:2",
+        "Download the model to use this voice": "wrap",
+        "Download this model first": "wrap",
+        "Earlier messages in this conversation": "wrap",
+        "Files in this project": "wrap",
+        "For everyday project work": "wrap",
+        "Higher quality voice model": "wrap",
+        "Item number # in the list": "wrap",
+        "Item number ## in the list": "wrap",
+        "No models available": "wrap",
+        "No voices downloaded yet": "wrap",
+        "Take more time to check the result": "wrap",
+        "Thorough": "wrap"
+      }
+    },
+    "KitChoiceRow": {
+      "lists": {
+        "menu": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        }
+      },
+      "role": "list",
+      "text": {
+        "Answered on ⁨the office laptop⁩": "wrap",
+        "Balanced": "wrap",
+        "Balanced voice model": "wrap",
+        "Clear speech for everyday replies · Recommended": "wrap",
+        "Current · For everyday project work": "wrap",
+        "Download this model first · For everyday project": "wrap",
+        "For everyday project work": "wrap",
+        "Sending…": "wrap",
+        "⁨Voice selected⁩": "wrap"
+      }
+    },
+    "KitChoiceTiles": {
+      "lists": {
+        "choices": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "All models (##)": "wrap",
+        "Cheapest": "wrap",
+        "Claude Sonnet #.#": "wrap",
+        "Default": "wrap",
+        "GPT-# Sol": "wrap",
+        "Nemotron #.# Super": "wrap",
+        "Recently used": "wrap",
+        "Saving the choice… · Claude Sonnet #.#": "wrap",
+        "Saving the choice… · GPT-# Sol": "wrap",
+        "Saving the choice… · Nemotron #.# Super": "wrap"
+      }
+    },
+    "KitCodeBlock": {
+      "lists": {
+        "marks": {
+          "beyond": "not-items"
+        }
+      },
+      "role": "list",
+      "text": {
+        "$": "wrap",
+        "All tests passed.": "scroll",
+        "Empty": "wrap",
+        "Open full output": "ellipsis:2",
+        "Project checks": "wrap",
+        "final title = \"Review the release notes before p": "scroll, wrap",
+        "flutter test test/project_settings_test.dart": "scroll",
+        "flutter test test/project_settings_test.dart All": "scroll",
+        "flutter test test/​project_settings_test.dart Al": "wrap",
+        "release_notes.dart": "clip:1, ellipsis:1"
+      }
+    },
+    "KitComposer": {
+      "lists": {
+        "sendMenu": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        },
+        "tray": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "Allow microphone": "ellipsis:2",
+        "Allow microphone access to speak.": "wrap",
+        "Ask OpenCode…": "ellipsis:1",
+        "Getting the microphone ready…": "wrap",
+        "Listening…": "wrap",
+        "Paused · the agent needs you": "wrap",
+        "Read it aloud": "ellipsis:2",
+        "Read replies aloud": "ellipsis:1",
+        "Reading the reply aloud": "wrap",
+        "Sends after this reply": "wrap",
+        "Sends when OpenCode answers": "wrap",
+        "The microphone is off for this app": "wrap",
+        "The recording could not be read.": "wrap",
+        "The reply is ready": "wrap",
+        "This conversation is read only": "wrap",
+        "Try again": "ellipsis:2",
+        "Voice stopped": "wrap",
+        "Waiting for the reply…": "wrap",
+        "Watching this worker’s conversation": "wrap",
+        "Writing down what you said…": "wrap",
+        "You can send when this reply finishes": "wrap"
+      }
+    },
+    "KitComposerChips": {
+      "lists": {
+        "items": {
+          "beyond": "unknown"
+        },
+        "menu": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        },
+        "suggestions": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "/review-#": "ellipsis:1",
+        "Choose a model": "ellipsis:1",
+        "Inspect the current working changes": "ellipsis:2",
+        "Queue reviewer #": "ellipsis:1",
+        "Recovered": "ellipsis:1",
+        "Review checkout": "ellipsis:1",
+        "Review model · High effort": "ellipsis:1",
+        "Review the pending changes before the next relea": "ellipsis:2",
+        "Show all": "ellipsis:2",
+        "Sign in to a model": "ellipsis:1",
+        "Sonnet #.# · High": "ellipsis:1",
+        "checkout_review_notes.md": "clip:1, ellipsis:1",
+        "lib/…/offline_queue.dart:###–###": "clip:1, ellipsis:1",
+        "l…ffline_queue.dart:###–###": "clip:1, ellipsis:1",
+        "reconnect-screenshot.png": "clip:1, ellipsis:1"
+      }
+    },
+    "KitComposerStatusStrip": {
+      "lists": {
+        "chips": {
+          "beyond": "grows"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "Automatic approvals": "scroll",
+        "Background": "scroll",
+        "Review model": "ellipsis:1",
+        "Waiting for the next step": "scroll"
+      }
+    },
+    "KitConfirmSheet": {
+      "lists": {
+        "consequenceItems": {
+          "beyond": "unknown"
+        },
+        "consequences": {
+          "beyond": "unknown"
+        },
+        "details": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "confirm",
+      "text": {
+        "Cancel": "ellipsis:2",
+        "Delete conversation": "ellipsis:2",
+        "Delete the conversation?": "wrap",
+        "Details": "wrap",
+        "It is removed from the server for everyone who c": "wrap",
+        "Its ## messages are gone": "wrap",
+        "Keep running": "ellipsis:2",
+        "Shared links stop working": "wrap",
+        "Stop the agent?": "wrap",
+        "Stop working": "ellipsis:2",
+        "That didn't finish. You can try again.": "wrap",
+        "The reply so far stays in the conversation.": "wrap",
+        "Try again": "ellipsis:2",
+        "Type the name exactly as shown to turn this on.": "wrap",
+        "Type ⁦release-notes-draft⁩ to confirm": "ellipsis:1"
+      }
+    },
+    "KitConsequences": {
+      "lists": {
+        "items": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Files the agent changed stay as they are": "wrap",
+        "The conversation and its ## messages are removed": "wrap"
+      }
+    },
+    "KitContextChart": {
+      "lists": {
+        "bars": {
+          "beyond": "not-items"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "## %": "clip:1",
+        "###,###": "wrap",
+        "###,### of ###,### tokens": "wrap",
+        "After the last reply": "wrap",
+        "Claude Sonnet #.# · High reasoning": "wrap",
+        "Compacted here": "wrap",
+        "Context window": "wrap",
+        "Each reply": "wrap",
+        "Measured": "wrap",
+        "Model": "wrap",
+        "The context window is how much of the conversati": "wrap"
+      }
+    },
+    "KitContextRegion": {
+      "role": "wrapper",
+      "text": {
+        "###.##.#.#": "ellipsis:1",
+        "Computer address": "ellipsis:1",
+        "Review the release notes": "ellipsis:1",
+        "Updated a minute ago": "ellipsis:1"
+      }
+    },
+    "KitContextRing": {
+      "maxWidth": "KitLayout.readingWidth",
+      "role": "glyph",
+      "text": {
+        "## %": "clip:1",
+        "Compacting": "clip:1"
+      }
+    },
+    "KitContextSheet": {
+      "lists": {
+        "bars": {
+          "beyond": "not-items"
+        }
+      },
+      "role": "sheet",
+      "text": {}
+    },
+    "KitContinuedLine": {
+      "role": "conversation",
+      "text": {
+        "Continued in Claude Code: fix the login redirect": "ellipsis:1",
+        "This conversation is no longer available.": "ellipsis:1"
+      }
+    },
+    "KitDateTimeRow": {
+      "role": "list",
+      "text": {
+        "Choose a future date": "wrap",
+        "Choose a time after quiet hours": "wrap",
+        "Connect to change this date": "ellipsis:1",
+        "Due date": "ellipsis:1",
+        "Not set": "ellipsis:1",
+        "Remind me about this conversation": "ellipsis:1",
+        "Sep ##, ####": "ellipsis:1",
+        "Sep ##, #### #:##": "ellipsis:1",
+        "Turn on reminders in settings first": "ellipsis:1",
+        "Use the time zone on this device": "ellipsis:1"
+      }
+    },
+    "KitDetailsFold": {
+      "lists": {
+        "notes": {
+          "beyond": "unknown"
+        },
+        "values": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Address": "wrap",
+        "Check the address on your workstation": "wrap",
+        "Check the connection address": "wrap",
+        "Connection details": "wrap",
+        "Copy all": "ellipsis:2",
+        "Details": "wrap",
+        "Project": "wrap",
+        "Working folder": "wrap"
+      }
+    },
+    "KitDiffView": {
+      "lists": {
+        "files": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "fill",
+      "text": {
+        "#": "wrap",
+        "+": "wrap",
+        "+# −#": "wrap",
+        "After": "wrap",
+        "Before": "wrap",
+        "Binary file · not shown": "wrap",
+        "Could not load changes": "wrap",
+        "Couldn't load the changes": "wrap",
+        "Lines #–#": "wrap",
+        "No changes": "wrap",
+        "Open all": "ellipsis:2",
+        "Showing # of # lines": "wrap",
+        "Source": "ellipsis:2",
+        "The changes could not be loaded. Check the serve": "wrap",
+        "Try again": "ellipsis:2",
+        "final title = \"Draft\";": "wrap",
+        "final title = \"Release notes ready for review\";": "wrap",
+        "publish(title);": "wrap",
+        "⁦assets/⁩": "ellipsis:2",
+        "⁦docs/⁩ · Renamed from ⁦docs/draft-release-notes": "ellipsis:2",
+        "⁦lib/features/conversations/⁩": "ellipsis:1",
+        "⁦notes.txt⁩": "ellipsis:2",
+        "⁦release-banner.png⁩": "ellipsis:2",
+        "⁦release-notes.md⁩": "ellipsis:2",
+        "⁦release_notes.dart⁩": "ellipsis:2",
+        "−": "wrap"
+      }
+    },
+    "KitDigest": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        },
+        "items": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "App repo · # acceptance checks": "wrap",
+        "Approve and start": "ellipsis:2",
+        "Backend · Home PC": "wrap",
+        "Data model for the saved draft": "wrap",
+        "Frontend · after Data model": "wrap",
+        "Settings screen": "wrap",
+        "Settings screen and data model": "wrap",
+        "The check could not finish. Retry the check.": "wrap",
+        "Waiting for your review · # min": "wrap"
+      }
+    },
+    "KitDim": {
+      "role": "wrapper",
+      "text": {}
+    },
+    "KitDivider": {
+      "role": "fill",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitEffectsScope": {
+      "role": "scope",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitEntrance": {
+      "role": "wrapper",
+      "text": {}
+    },
+    "KitErrorFallback": {
+      "role": "fill",
+      "text": {
+        "This part of OpenCode hit an error. Go back and ": "wrap"
+      }
+    },
+    "KitExpandRow": {
+      "lists": {
+        "children": {
+          "beyond": "grows"
+        },
+        "menu": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        }
+      },
+      "role": "list",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Other ways to connect": "ellipsis:1",
+        "Scan a code or type an address": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitFactRow": {
+      "lists": {
+        "answers": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "list",
+      "text": {
+        "From a shared message · Sep ##": "wrap",
+        "It guessed · Oct # · waiting for your OK": "wrap",
+        "It guessed · Sep ## · from a shared message": "wrap",
+        "Not right": "ellipsis:2",
+        "Statement is due on the ##th of each month.": "wrap",
+        "The annual fee for the travel card is [AMOUNT] C": "wrap",
+        "Travel card": "ellipsis:2",
+        "Worked out · Sep ##": "wrap",
+        "Yes, keep it": "ellipsis:2",
+        "You told it · Sep ##": "wrap"
+      }
+    },
+    "KitFeedItem": {
+      "role": "list",
+      "text": {
+        "⁨Add dark mode⁩": "ellipsis:1",
+        "⁨Claude Code⁩ · Needs you · ⁨opencode-mobile⁩ · ": "ellipsis:1",
+        "⁨Rename the settings page and move its tests nex": "ellipsis:1",
+        "⁨beta⁩ · # min ago": "ellipsis:1"
+      }
+    },
+    "KitField": {
+      "lists": {
+        "inputFormatters": {
+          "beyond": "not-items"
+        },
+        "onSlow": {
+          "beyond": "fixed",
+          "shows": 2
+        }
+      },
+      "role": "reading",
+      "text": {
+        "A name you can recognize in your server list": "wrap",
+        "Choose a name that is not already used.": "wrap",
+        "Enter a name before continuing": "wrap",
+        "Name for this workstation": "wrap",
+        "Project name": "wrap",
+        "Reconnect to rename the project.": "wrap",
+        "Replace": "ellipsis:2",
+        "Saved": "wrap",
+        "Server password": "wrap",
+        "Used to find this project later.": "wrap",
+        "Wait until the server finishes connecting": "wrap"
+      }
+    },
+    "KitFilterChip": {
+      "role": "chip",
+      "text": {}
+    },
+    "KitFilterChips": {
+      "lists": {
+        "chips": {
+          "beyond": "scroll"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Item number # in the list": "scroll",
+        "Item number ## in the list": "scroll",
+        "Needs you · #": "scroll",
+        "Running": "scroll"
+      }
+    },
+    "KitFindingsCard": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        },
+        "findings": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Approve and start": "ellipsis:2",
+        "Criterion # · survives restart": "wrap",
+        "Critical": "ellipsis:1",
+        "Keep the saved choice after restart": "wrap",
+        "Major": "ellipsis:1",
+        "Preserve the saved draft": "wrap",
+        "Settings screen and data model": "wrap",
+        "The check could not finish. Retry the check.": "wrap",
+        "Waiting for your review · # min": "wrap"
+      }
+    },
+    "KitFineTunePanel": {
+      "lists": {
+        "knobs": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Comfortable": "clip:1",
+        "Compact": "clip:1",
+        "Compact fits more on the screen.": "wrap",
+        "Default: Comfortable": "wrap",
+        "Density": "wrap",
+        "Reset to Brutal defaults": "ellipsis:2"
+      }
+    },
+    "KitFloatingAction": {
+      "role": "glyph",
+      "text": {}
+    },
+    "KitFloatingPanel": {
+      "role": "fill",
+      "text": {
+        "A small panel over the home screen": "wrap"
+      }
+    },
+    "KitFrost": {
+      "role": "wrapper",
+      "text": {
+        "Steer while it works on the focus ring tests": "wrap"
+      }
+    },
+    "KitGlass": {
+      "role": "wrapper",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitGroupNote": {
+      "role": "reading",
+      "text": {
+        "Two settings are not available on this server.": "wrap",
+        "Why": "ellipsis:2"
+      }
+    },
+    "KitGuide": {
+      "lists": {
+        "items": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "fill",
+      "text": {
+        "## quick questions, all optional": "clip:2, ellipsis:2",
+        "All": "clip:1, ellipsis:1",
+        "Changes Buttons, links, the send key and the glo": "wrap",
+        "Colours": "ellipsis:1, ellipsis:2",
+        "Colours #2": "ellipsis:2",
+        "Dark, Tokyo Night": "ellipsis:2",
+        "Default, full motion": "ellipsis:2",
+        "Glow while a reply is written?": "wrap",
+        "Off in Saver": "ellipsis:2",
+        "Pick one.": "wrap",
+        "Start with Colours": "ellipsis:2",
+        "Start with Colours, the biggest change. Every ch": "wrap",
+        "Style": "ellipsis:2",
+        "Text & motion": "ellipsis:2"
+      }
+    },
+    "KitHandoffRecord": {
+      "role": "conversation",
+      "text": {
+        "# Conversation record Fix the login redirect on ": "wrap",
+        "About ## KB · ## messages left out": "wrap",
+        "Anything that looked like a password or key was ": "wrap",
+        "Hide preview": "wrap",
+        "Older turns were left out to keep the record sma": "wrap",
+        "Saved as .opencode/handoff/finance-hub-login-red": "wrap"
+      }
+    },
+    "KitHeroQuestion": {
+      "role": "reading",
+      "text": {
+        "Where should your agent run?": "wrap"
+      }
+    },
+    "KitIcon": {
+      "role": "glyph",
+      "text": {}
+    },
+    "KitIconButton": {
+      "role": "glyph",
+      "text": {}
+    },
+    "KitIllustration": {
+      "role": "reading",
+      "text": {}
+    },
+    "KitImage": {
+      "role": "reading",
+      "text": {}
+    },
+    "KitImageGallery": {
+      "lists": {
+        "pictures": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "fill",
+      "text": {
+        "# of #": "ellipsis:1",
+        "Check the connection, then try again.": "wrap",
+        "Send": "ellipsis:2",
+        "This picture could not be loaded": "wrap",
+        "Try again": "ellipsis:2",
+        "⁨Screenshot of the settings page #.png⁩": "ellipsis:1"
+      }
+    },
+    "KitImageMarkup": {
+      "role": "fill",
+      "text": {
+        "Check the connection, then try again.": "wrap",
+        "Edit picture": "ellipsis:1",
+        "This picture could not be loaded": "wrap",
+        "⁨Screenshot of the settings page.png⁩": "ellipsis:1"
+      }
+    },
+    "KitInkLayer": {
+      "role": "wrapper",
+      "text": {
+        "Open project details": "wrap"
+      }
+    },
+    "KitInset": {
+      "role": "wrapper",
+      "text": {
+        "Agents keep working while the phone is locked.": "wrap"
+      }
+    },
+    "KitJumpPill": {
+      "role": "chip",
+      "text": {
+        "# new messages · Jump to latest": "ellipsis:1",
+        "# new · Jump to latest": "ellipsis:1",
+        "Conversation update #": "ellipsis:1",
+        "Conversation update ##": "ellipsis:1",
+        "Earlier messages": "ellipsis:1",
+        "Load earlier messages": "ellipsis:1",
+        "The release checks finished. Open the report to ": "ellipsis:1"
+      }
+    },
+    "KitJumpPillLayer": {
+      "role": "fill",
+      "text": {
+        "# new lines · Jump to latest": "ellipsis:1",
+        "Build output line #": "wrap",
+        "Build output line ##": "wrap"
+      }
+    },
+    "KitKeyValue": {
+      "lists": {
+        "rows": {
+          "beyond": "fixed",
+          "shows": 20
+        }
+      },
+      "role": "reading",
+      "text": {
+        "# files": "wrap",
+        "## files": "wrap",
+        "#:##": "wrap",
+        "Branch": "wrap",
+        "Duration": "wrap",
+        "Item number # in the list": "wrap",
+        "Item number ## in the list": "wrap",
+        "feature/a-very-long-branch-name-that-keeps-going": "wrap"
+      }
+    },
+    "KitLastKnown": {
+      "lists": {
+        "rows": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "list",
+      "text": {
+        "#h ago": "ellipsis:1",
+        "New conversation": "ellipsis:2",
+        "Release notes for #.#.## and the store listing c": "ellipsis:2",
+        "Updated ##m ago · Refreshing": "wrap"
+      }
+    },
+    "KitLeadColumn": {
+      "role": "wrapper",
+      "text": {
+        "No reply came back from the model this time": "wrap"
+      }
+    },
+    "KitLevelMeter": {
+      "role": "reading",
+      "text": {}
+    },
+    "KitLinkScope": {
+      "role": "scope",
+      "text": {
+        "Links in this text go through the safe gate": "wrap"
+      }
+    },
+    "KitLiveBackground": {
+      "role": "fill",
+      "text": {
+        "Find latest finance hub project in the folder": "wrap"
+      }
+    },
+    "KitLiveLookPreview": {
+      "role": "reading",
+      "text": {}
+    },
+    "KitLoadingBar": {
+      "role": "fill",
+      "text": {}
+    },
+    "KitLogPanel": {
+      "role": "list",
+      "text": {
+        "# earlier lines not shown": "wrap",
+        "Ended · exit ⁦#⁩": "wrap",
+        "Failed · exit ⁦#⁩": "wrap",
+        "Live": "wrap",
+        "No output yet": "ellipsis:1",
+        "Phone server output": "wrap",
+        "Preparing /data/local/opencode/projects/release-": "wrap",
+        "Review output": "wrap",
+        "Reviewing checkout configuration: step #": "wrap",
+        "The review command failed": "wrap",
+        "The setup process stopped before completion.": "wrap",
+        "Waiting for the server to answer": "wrap"
+      }
+    },
+    "KitLtr": {
+      "role": "wrapper",
+      "text": {}
+    },
+    "KitMarkdown": {
+      "role": "conversation",
+      "text": {
+        "File": "wrap",
+        "Keep the draft.": "wrap",
+        "Passed": "wrap",
+        "Read the guide.": "wrap",
+        "Reconnect check": "wrap",
+        "Result": "wrap",
+        "Review the checkout changes before the next rele": "wrap",
+        "Review the checkout.": "wrap",
+        "The draft is still saved. I checked the reconnec": "wrap",
+        "The server may still be working.": "wrap",
+        "Wait for confirmation.": "wrap",
+        "final pending = queue.where((item) => item.profi": "scroll",
+        "final review = inspectCheckout();": "scroll",
+        "offline_queue.dart": "wrap",
+        "•": "wrap"
+      }
+    },
+    "KitMenuPanel": {
+      "lists": {
+        "items": {
+          "beyond": "scroll"
+        }
+      },
+      "role": "popover",
+      "text": {
+        "Archive conversation": "wrap",
+        "Delete conversation": "wrap",
+        "Item number # in the list": "wrap",
+        "Item number ## in the list": "wrap",
+        "Rename conversation": "wrap"
+      }
+    },
+    "KitMergeQueue": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        },
+        "items": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "App repo · # acceptance checks": "wrap",
+        "Approve and start": "ellipsis:2",
+        "Backend · Home PC": "wrap",
+        "Data model for the saved draft": "wrap",
+        "Frontend · after Data model": "wrap",
+        "Settings screen": "wrap",
+        "Settings screen and data model": "wrap",
+        "The check could not finish. Retry the check.": "wrap",
+        "Waiting for your review · # min": "wrap"
+      }
+    },
+    "KitMessage": {
+      "lists": {
+        "attachments": {
+          "beyond": "unknown"
+        },
+        "menu": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "#:##": "wrap",
+        "AGENTS.md": "clip:1, ellipsis:1",
+        "Check why the queued message disappeared after r": "wrap",
+        "Checking the changes": "wrap",
+        "Compacting the conversation": "wrap",
+        "Connect again and retry the request.": "wrap",
+        "Continuing the conversation": "wrap",
+        "Project instructions updated": "wrap",
+        "Recovered": "ellipsis:1",
+        "Review the checkout changes before the next rele": "wrap",
+        "Switched to the review agent": "wrap",
+        "The draft is still saved. I checked the reconnec": "wrap",
+        "The server could not finish this request.": "wrap",
+        "Thinking…": "wrap",
+        "Thought for ## seconds": "wrap",
+        "Try again": "ellipsis:2",
+        "View changes": "ellipsis:2",
+        "l…e_queue.dart:###–###": "clip:1, ellipsis:1",
+        "reconnect-screenshot.png": "clip:1, ellipsis:1"
+      }
+    },
+    "KitMilestoneRow": {
+      "role": "list",
+      "text": {
+        "Settings screen and data model": "wrap",
+        "The check could not finish. Retry the check.": "wrap",
+        "Waiting for your review · # min": "wrap"
+      }
+    },
+    "KitMiniTable": {
+      "lists": {
+        "columns": {
+          "beyond": "fixed",
+          "shows": 6
+        },
+        "rows": {
+          "beyond": "fixed",
+          "shows": 20
+        }
+      },
+      "role": "list",
+      "text": {
+        "#": "wrap",
+        "##": "wrap",
+        "###": "wrap",
+        "Added": "wrap",
+        "Changed": "wrap",
+        "Column #": "wrap",
+        "File": "wrap",
+        "Item number ## in the list": "wrap",
+        "Item number ### in the list": "wrap",
+        "Removed": "wrap",
+        "Status": "wrap",
+        "docs/old.md": "wrap",
+        "lib/ui/kit/kit_chart.dart": "wrap"
+      }
+    },
+    "KitNav": {
+      "lists": {
+        "destinations": {
+          "beyond": "fixed",
+          "shows": 5
+        }
+      },
+      "role": "fill",
+      "text": {}
+    },
+    "KitNavRail": {
+      "lists": {
+        "destinations": {
+          "beyond": "fixed",
+          "shows": 5
+        }
+      },
+      "role": "fill",
+      "text": {}
+    },
+    "KitNotice": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        },
+        "costItems": {
+          "beyond": "unknown"
+        },
+        "notes": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Copy the address": "ellipsis:2",
+        "Keys start with sk-": "wrap",
+        "Nothing was saved": "wrap",
+        "Open settings": "ellipsis:2",
+        "The key was not accepted": "wrap",
+        "The provider said the key has expired. Paste a n": "wrap"
+      }
+    },
+    "KitOneTimeCode": {
+      "role": "control",
+      "text": {
+        "VPFI-KC#ZK-LONGER": "wrap",
+        "Your code": "wrap"
+      }
+    },
+    "KitOptionCard": {
+      "role": "reading",
+      "text": {
+        "Calm": "ellipsis:1",
+        "Drawings appear, nothing keeps moving and nothin": "clip:3, ellipsis:3",
+        "Material You": "ellipsis:1",
+        "Not available on this phone": "ellipsis:4"
+      }
+    },
+    "KitOwnScrollbar": {
+      "role": "wrapper",
+      "text": {}
+    },
+    "KitPageHeading": {
+      "role": "reading",
+      "text": {
+        "Files": "ellipsis:2",
+        "neon-breaker / src": "ellipsis:1"
+      }
+    },
+    "KitPanel": {
+      "role": "reading",
+      "text": {
+        "Android may pause agents after a few minutes in ": "wrap",
+        "Battery saver is on": "wrap"
+      }
+    },
+    "KitPhaseCard": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        },
+        "items": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "App repo · # acceptance checks": "wrap",
+        "Approve and start": "ellipsis:2",
+        "Backend · Home PC": "wrap",
+        "Data model for the saved draft": "wrap",
+        "Frontend · after Data model": "wrap",
+        "Settings screen": "wrap",
+        "Settings screen and data model": "wrap",
+        "The check could not finish. Retry the check.": "wrap",
+        "Waiting for your review · # min": "wrap"
+      }
+    },
+    "KitPhraseChips": {
+      "lists": {
+        "phrases": {
+          "beyond": "scroll"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "Commit this": "scroll",
+        "Continue": "scroll",
+        "Item number # in the list": "scroll",
+        "Item number ## in the list": "scroll",
+        "Run the tests and fix what fails": "scroll"
+      }
+    },
+    "KitPickerRow": {
+      "lists": {
+        "choices": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "list",
+      "text": {
+        "Connect to choose a model": "wrap",
+        "Model": "wrap",
+        "Voice for spoken replies": "wrap",
+        "Wait for the current reply to finish": "wrap",
+        "⁨Balanced voice model⁩": "wrap",
+        "⁨Balanced⁩": "wrap"
+      }
+    },
+    "KitPlanBlock": {
+      "lists": {
+        "children": {
+          "beyond": "grows"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "# hours": "wrap",
+        "##% · Thursday": "wrap",
+        "##% · Thursday #:##": "wrap",
+        "Back at Thursday #:##": "wrap",
+        "Codex Plus, the shared team plan": "wrap",
+        "Week": "wrap"
+      }
+    },
+    "KitPlanCard": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        },
+        "items": {
+          "beyond": "unknown"
+        },
+        "phases": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "App repo · # acceptance checks": "wrap",
+        "Approve and start": "ellipsis:2",
+        "Backend · Home PC": "wrap",
+        "Data model for the saved draft": "wrap",
+        "Frontend · after Data model": "wrap",
+        "Settings screen": "wrap",
+        "Settings screen and data model": "wrap",
+        "The check could not finish. Retry the check.": "wrap",
+        "Waiting for your review · # min": "wrap"
+      }
+    },
+    "KitPresence": {
+      "role": "wrapper",
+      "text": {
+        "Find latest finance hub project in the folder": "wrap"
+      }
+    },
+    "KitPriorityGlyph": {
+      "role": "glyph",
+      "text": {}
+    },
+    "KitProgressRing": {
+      "lists": {
+        "trail": {
+          "beyond": "not-items"
+        }
+      },
+      "maxWidth": "KitLayout.readingWidth",
+      "role": "glyph",
+      "text": {
+        "## of ## MB": "clip:1",
+        "##%": "clip:1",
+        "Downloading the Linux base and its packages": "clip:3, ellipsis:3"
+      }
+    },
+    "KitProgressRow": {
+      "lists": {
+        "fills": {
+          "beyond": "not-items"
+        },
+        "segments": {
+          "beyond": "more",
+          "shows": 4
+        }
+      },
+      "role": "reading",
+      "text": {
+        "## thousand tokens": "ellipsis:1, wrap",
+        "###% · resets in three hours · Limit reached": "wrap",
+        "##% · resets in three hours": "wrap",
+        "##% · resets in three hours · Near limit": "wrap",
+        "##k": "ellipsis:1, wrap",
+        "#% · resets in three hours": "wrap",
+        "Conversation context": "ellipsis:2",
+        "Conversation history": "ellipsis:1",
+        "Conversation messages": "ellipsis:1",
+        "Last reported usage: ##% · as of #:##": "wrap",
+        "Provider usage": "ellipsis:2",
+        "Provider usage for the current five-hour window": "ellipsis:2",
+        "Tokens used in this conversation": "wrap",
+        "Tokens used in this conversation · Limit reached": "wrap",
+        "Tokens used in this conversation · Near limit": "wrap",
+        "Tools and file references": "ellipsis:1",
+        "Tools and instructions": "ellipsis:1"
+      }
+    },
+    "KitProgressView": {
+      "role": "reading",
+      "text": {
+        "## of ## MB · about # min left": "wrap",
+        "Waiting for the server": "wrap"
+      }
+    },
+    "KitProjectFileList": {
+      "role": "list",
+      "text": {
+        "Check the connection to the server and try again": "wrap",
+        "Find a file by name": "ellipsis:1",
+        "Project folder": "ellipsis:1",
+        "README​.md": "wrap",
+        "Search did not finish": "wrap",
+        "Try again": "ellipsis:2",
+        "Type part of a file name to search this project.": "wrap",
+        "a_​very_​long_​file_​name_​that_​keeps_​going_​a": "wrap",
+        "⁦lib⁩": "ellipsis:1",
+        "⁦test⁩": "ellipsis:1"
+      }
+    },
+    "KitProjectRow": {
+      "role": "list",
+      "text": {
+        "Settings screen and data model": "wrap",
+        "The check could not finish. Retry the check.": "wrap",
+        "Waiting for your review · # min": "wrap"
+      }
+    },
+    "KitPromoteCard": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        },
+        "items": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "App repo · # acceptance checks": "wrap",
+        "Approve and start": "ellipsis:2",
+        "Backend · Home PC": "wrap",
+        "Data model for the saved draft": "wrap",
+        "Frontend · after Data model": "wrap",
+        "Settings screen": "wrap",
+        "Settings screen and data model": "wrap",
+        "The check could not finish. Retry the check.": "wrap",
+        "Waiting for your review · # min": "wrap"
+      }
+    },
+    "KitQr": {
+      "role": "control",
+      "text": {}
+    },
+    "KitQueuedMessage": {
+      "lists": {
+        "items": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "# attachments": "wrap",
+        "Adds to this turn": "wrap",
+        "Check why the queued message disappeared after r": "ellipsis:2",
+        "Checking whether your message arrived…": "wrap",
+        "Edit": "ellipsis:2",
+        "Not accepted: ⁨The connection closed before conf": "wrap",
+        "Not accepted: ⁨The server did not confirm the me": "wrap",
+        "Not confirmed yet": "wrap",
+        "Not confirmed yet: ⁨The connection closed before": "wrap",
+        "Not confirmed yet: ⁨The server did not confirm t": "wrap",
+        "Reached the server": "wrap",
+        "Review the checkout when the current reply ends.": "ellipsis:2",
+        "Sending…": "wrap",
+        "Sends after this reply": "wrap",
+        "This phone can't safely record sends right now, ": "wrap",
+        "Try again": "ellipsis:2",
+        "Update waiting": "wrap",
+        "Waiting to send": "wrap",
+        "Waiting to send · #": "wrap",
+        "Waiting to send · # · Sends when you're back onl": "wrap",
+        "We couldn't confirm your message arrived.": "wrap"
+      }
+    },
+    "KitReach": {
+      "role": "wrapper",
+      "text": {
+        "Find latest finance hub project in the folder": "wrap"
+      }
+    },
+    "KitReceipt": {
+      "role": "reading",
+      "text": {
+        "Answered on ⁨another connected device⁩": "wrap",
+        "Answered on ⁨the workstation in the office⁩": "wrap",
+        "Done": "wrap",
+        "Not accepted: ⁨This conversation is read-only on": "wrap",
+        "Not accepted: ⁨Your access to this project has c": "wrap",
+        "Not confirmed yet": "wrap",
+        "Sending…": "wrap",
+        "Sent": "wrap",
+        "Try again": "ellipsis:2",
+        "Undo": "ellipsis:2",
+        "⁨Moved to review⁩": "wrap",
+        "⁨Moving to review⁩": "wrap",
+        "⁨Restarted the phone server⁩ at #:##": "wrap",
+        "⁨Restarted the phone server⁩ ·": "wrap"
+      }
+    },
+    "KitRefresh": {
+      "role": "wrapper",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitRequestCard": {
+      "lists": {
+        "targets": {
+          "beyond": "unknown"
+        },
+        "tertiary": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "Allow once": "ellipsis:2",
+        "Always allow in this project": "ellipsis:2",
+        "Answered on another device": "ellipsis:2",
+        "Deny": "ellipsis:2",
+        "Push the release branch to the shared remote": "ellipsis:2",
+        "Run a command?": "ellipsis:1",
+        "git push origin main --force-with-lease --no-ver": "ellipsis:2"
+      }
+    },
+    "KitReveal": {
+      "role": "wrapper",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitRow": {
+      "lists": {
+        "menu": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        }
+      },
+      "role": "list",
+      "text": {
+        "A conversation title that runs long enough to wr": "ellipsis:2",
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Download voice model": "ellipsis:2",
+        "Needs a voice model on this phone. It downloads ": "wrap",
+        "Open": "ellipsis:2",
+        "Updated # minutes ago in the release project": "ellipsis:2",
+        "Voice typing": "ellipsis:2",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitRowGroup": {
+      "lists": {
+        "children": {
+          "beyond": "grows"
+        }
+      },
+      "role": "list",
+      "text": {
+        "Ask first": "ellipsis:1",
+        "Claude Sonnet #": "ellipsis:1",
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Item number # in the list": "ellipsis:1",
+        "Item number ## in the list": "ellipsis:1",
+        "Laptop on the office network": "wrap",
+        "Model": "ellipsis:1",
+        "Servers": "wrap",
+        "What agents may do": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitRowIcon": {
+      "role": "glyph",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "English": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitRowMenu": {
+      "lists": {
+        "items": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        }
+      },
+      "role": "glyph",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitRowValue": {
+      "role": "chip",
+      "text": {}
+    },
+    "KitScanner": {
+      "lists": {
+        "onSlow": {
+          "beyond": "fixed",
+          "shows": 2
+        }
+      },
+      "role": "fill",
+      "text": {
+        "Opening the camera…": "wrap",
+        "Point the camera at the pairing code on your com": "wrap",
+        "Point the camera at the pairing code on your wor": "wrap",
+        "That is not a pairing code. Try the code shown b": "wrap",
+        "This is not a pairing code for your server": "wrap"
+      }
+    },
+    "KitScreen": {
+      "lists": {
+        "bodyQuiets": {
+          "beyond": "not-items"
+        },
+        "bodySays": {
+          "beyond": "not-items"
+        },
+        "header": {
+          "beyond": "grows"
+        }
+      },
+      "role": "fill",
+      "text": {
+        "Add a server": "ellipsis:2",
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Copy the address": "ellipsis:2",
+        "Open settings": "ellipsis:2",
+        "Servers": "wrap",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitScrollArea": {
+      "role": "wrapper",
+      "text": {
+        "Conversation #": "ellipsis:1",
+        "Conversation ##": "ellipsis:1",
+        "Release check ##: completed": "wrap",
+        "Release check #: completed": "wrap"
+      }
+    },
+    "KitScrollFade": {
+      "role": "wrapper",
+      "text": {
+        "Ask first": "scroll",
+        "Auto Accept": "scroll"
+      }
+    },
+    "KitScrollbar": {
+      "role": "wrapper",
+      "text": {
+        "Release report #": "ellipsis:1",
+        "Release report ##": "ellipsis:1"
+      }
+    },
+    "KitSearchField": {
+      "lists": {
+        "filters": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        }
+      },
+      "role": "list",
+      "text": {
+        "## loaded · searching the server…": "wrap",
+        "## results": "wrap",
+        "Clear search": "ellipsis:2",
+        "Connect to search conversations.": "wrap",
+        "Current project": "ellipsis:1",
+        "No results": "wrap",
+        "Nothing in ⁨conversations⁩ matches “⁨Release not": "wrap",
+        "Search all projects": "ellipsis:2",
+        "Search conversations": "ellipsis:1"
+      }
+    },
+    "KitSearchNoMatch": {
+      "role": "state",
+      "text": {
+        "Clear search": "ellipsis:2",
+        "Nothing in ⁨conversations⁩ matches “⁨release-not": "wrap"
+      }
+    },
+    "KitSectionLabel": {
+      "role": "list",
+      "text": {
+        "# connected": "wrap",
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Model context protocol servers on this workstati": "wrap",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitSegmented": {
+      "lists": {
+        "segments": {
+          "beyond": "fixed",
+          "shows": 4
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Every conversation in this project": "wrap",
+        "Every conversation on this computer": "wrap",
+        "Every conversation on this server": "wrap",
+        "Only the current conversation": "wrap",
+        "Only this conversation": "wrap",
+        "This month": "clip:1",
+        "This week": "clip:1",
+        "Today": "clip:1"
+      }
+    },
+    "KitSelectable": {
+      "role": "wrapper",
+      "text": {
+        "Fix the flaky checkout test before the release": "wrap",
+        "OPENCODE_SERVER=http://###.#.#.#:####": "wrap"
+      }
+    },
+    "KitSenseAsk": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        },
+        "items": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "# of #": "wrap",
+        "#.# MB": "wrap",
+        "Add a photo first": "wrap",
+        "Choose photo": "ellipsis:2",
+        "IMG_####.jpg": "wrap",
+        "Send photos": "ellipsis:2",
+        "Show me the screen where the error appears.": "wrap",
+        "Take photo": "ellipsis:2",
+        "That is the most it can take": "wrap"
+      }
+    },
+    "KitServerLane": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        },
+        "items": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "lane",
+      "text": {
+        "App repo · # acceptance checks": "wrap",
+        "Approve and start": "ellipsis:2",
+        "Backend · Home PC": "wrap",
+        "Data model for the saved draft": "wrap",
+        "Frontend · after Data model": "wrap",
+        "Settings screen": "wrap",
+        "Settings screen and data model": "wrap",
+        "The check could not finish. Retry the check.": "wrap",
+        "Waiting for your review · # min": "wrap"
+      }
+    },
+    "KitServerTrustBody": {
+      "role": "sheet",
+      "text": {
+        "Allow HTTP for this server": "ellipsis:2",
+        "At this public HTTP address, your password and c": "wrap",
+        "SHA-### fingerprint": "wrap",
+        "The certificate no longer matches the one you tr": "wrap",
+        "The server's certificate changed": "wrap",
+        "This connection is encrypted, but this device ca": "wrap",
+        "This private network or Tailscale address uses p": "wrap",
+        "Trust replacement certificate": "ellipsis:2",
+        "Trust this certificate?": "wrap",
+        "Trust this fingerprint": "ellipsis:2",
+        "Use unencrypted HTTP?": "wrap",
+        "Valid from Thursday, October ##, #### to Friday,": "wrap",
+        "http://development-server.example.com:####": "wrap",
+        "http://workstation.example-tailnet.ts.net:####": "wrap",
+        "https://development-server.example.com:####": "wrap"
+      }
+    },
+    "KitSessionTabs": {
+      "lists": {
+        "tabs": {
+          "beyond": "scroll"
+        }
+      },
+      "role": "fill",
+      "text": {
+        "A terminal with a long name #": "scroll",
+        "Item number # in the list": "scroll",
+        "Item number ## in the list": "scroll"
+      }
+    },
+    "KitSheet": {
+      "lists": {
+        "menu": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        },
+        "tertiary": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "sheet",
+      "text": {
+        "Arabic": "ellipsis:1",
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "English": "ellipsis:1",
+        "German": "ellipsis:1",
+        "Keep current": "ellipsis:2",
+        "Language": "wrap",
+        "More languages": "ellipsis:2",
+        "Use English": "ellipsis:2",
+        "Used for menus and messages": "ellipsis:1",
+        "Words across the whole app": "wrap",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitShellControls": {
+      "role": "fill",
+      "text": {
+        "#": "wrap",
+        "Connected": "clip:1, ellipsis:1",
+        "Not answering": "clip:1, ellipsis:1",
+        "Reconnecting": "clip:1, ellipsis:1",
+        "Search": "ellipsis:1",
+        "·": "clip:1, ellipsis:1",
+        "⁨Office workstation⁩": "ellipsis:1, wrap",
+        "⁨oc_app⁩": "ellipsis:2"
+      }
+    },
+    "KitSince": {
+      "role": "wrapper",
+      "text": {
+        "Waiting for the server to answer · slow": "wrap"
+      }
+    },
+    "KitSkeletonRows": {
+      "role": "list",
+      "text": {}
+    },
+    "KitSkeletonTranscript": {
+      "role": "conversation",
+      "text": {}
+    },
+    "KitSliverRowGroup": {
+      "lists": {
+        "children": {
+          "beyond": "grows"
+        }
+      },
+      "role": "list",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Recent conversations in this project": "wrap",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitSpecBlock": {
+      "role": "reading",
+      "text": {
+        "Keep the saved draft across restarts and explain": "wrap",
+        "Two or three sentences are enough.": "wrap",
+        "What the project must do": "wrap"
+      }
+    },
+    "KitSpin": {
+      "role": "wrapper",
+      "text": {}
+    },
+    "KitStartBox": {
+      "role": "conversation",
+      "text": {
+        "What would you like to build?": "wrap"
+      }
+    },
+    "KitStateView": {
+      "lists": {
+        "cost": {
+          "beyond": "unknown"
+        },
+        "detailNotes": {
+          "beyond": "unknown"
+        },
+        "detailValues": {
+          "beyond": "unknown"
+        },
+        "onSlow": {
+          "beyond": "fixed",
+          "shows": 2
+        },
+        "tertiary": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "state",
+      "text": {
+        "## of ## MB · about # min left": "wrap",
+        "Add a server": "ellipsis:2",
+        "Check that the computer is awake and on the same": "wrap",
+        "Clear the search": "ellipsis:2",
+        "Connect a computer": "ellipsis:2",
+        "Connect your first server": "wrap",
+        "Copy the address": "ellipsis:2",
+        "Could not reach the server": "wrap",
+        "Details": "wrap",
+        "Edit the server": "ellipsis:2",
+        "New conversation": "ellipsis:2",
+        "No conversations yet": "wrap",
+        "No matching files": "wrap",
+        "Open settings": "ellipsis:2",
+        "Say what you want to build, and an agent gets to": "wrap",
+        "Setting up the phone": "wrap",
+        "Stop setup": "ellipsis:2",
+        "This takes a few minutes the first time.": "wrap",
+        "Try a shorter name.": "wrap",
+        "Try again": "ellipsis:2",
+        "Your agents run there; this phone steers them.": "wrap"
+      }
+    },
+    "KitStatusAnswer": {
+      "role": "conversation",
+      "text": {
+        "Android closed the server": "wrap",
+        "It restarts by itself in about ## s": "wrap",
+        "No conversations yet": "wrap",
+        "Say what you want to build, and an agent gets to": "wrap",
+        "Use this phone's server": "ellipsis:2"
+      }
+    },
+    "KitStatusContribution": {
+      "role": "scope",
+      "text": {}
+    },
+    "KitStatusLine": {
+      "lists": {
+        "more": {
+          "beyond": "unknown"
+        },
+        "onSlow": {
+          "beyond": "fixed",
+          "shows": 2
+        }
+      },
+      "role": "fill",
+      "text": {
+        "Last reply # minutes ago": "wrap",
+        "Reconnecting to the workstation on the office ne": "wrap",
+        "Saved to the server": "wrap",
+        "The workstation isn’t answering · Trying again i": "wrap",
+        "Try now": "ellipsis:2, wrap",
+        "Undo": "ellipsis:2"
+      }
+    },
+    "KitStatusLineSlot": {
+      "lists": {
+        "compact": {
+          "beyond": "not-items"
+        },
+        "omit": {
+          "beyond": "not-items"
+        }
+      },
+      "role": "fill",
+      "text": {}
+    },
+    "KitStatusMark": {
+      "role": "glyph",
+      "text": {}
+    },
+    "KitStatusScope": {
+      "role": "scope",
+      "text": {
+        "Conversation update #": "ellipsis:1",
+        "Conversation update ##": "ellipsis:1",
+        "Project settings": "wrap",
+        "Reconnecting to the office workstation": "wrap",
+        "Running the release checks": "wrap",
+        "The release checks finished. Open the report to ": "ellipsis:1",
+        "Try again": "ellipsis:2",
+        "Your settings were saved on this phone.": "wrap"
+      }
+    },
+    "KitStatusTag": {
+      "role": "chip",
+      "text": {
+        "Needs you": "ellipsis:1",
+        "Running": "ellipsis:1"
+      }
+    },
+    "KitSteerBox": {
+      "role": "conversation",
+      "text": {
+        "Add to this turn": "ellipsis:2",
+        "Send": "ellipsis:2",
+        "Sending…": "wrap",
+        "Sending… #2": "ellipsis:2",
+        "Sent": "wrap",
+        "Sent #2": "ellipsis:2",
+        "The conversation changed. Your message is still ": "wrap",
+        "Waiting for conversation details…": "wrap",
+        "Write a message": "wrap"
+      }
+    },
+    "KitStepSlider": {
+      "lists": {
+        "steps": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "A": "wrap",
+        "Small": "wrap"
+      }
+    },
+    "KitStepTimeline": {
+      "lists": {
+        "steps": {
+          "beyond": "grows"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "# seconds": "ellipsis:1",
+        "+#": "clip:1, ellipsis:1",
+        "+##": "clip:1, ellipsis:1",
+        "Checking saved messages": "ellipsis:1",
+        "Read # files · edited # file · ran # commands · ": "ellipsis:2",
+        "Run the queue regression tests": "ellipsis:1",
+        "The draft is still saved. I checked the reconnec": "wrap",
+        "Write the queue test": "ellipsis:1",
+        "expect(queue.items, hasLength(#)); // The draft ": "clip:1, ellipsis:1",
+        "t…ct_test.dart": "clip:1, ellipsis:1",
+        "t…ect_test.dart": "clip:1, ellipsis:1"
+      }
+    },
+    "KitStreamCaret": {
+      "role": "glyph",
+      "text": {
+        "On it, grouping the options￼": "wrap"
+      }
+    },
+    "KitSurface": {
+      "role": "wrapper",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitSwap": {
+      "role": "wrapper",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitSwatch": {
+      "maxWidth": "KitLayout.chipMaxWidth",
+      "role": "glyph",
+      "text": {
+        "Attach": "ellipsis:2",
+        "Fix the login bug": "ellipsis:1",
+        "Needs Android ## or later": "wrap",
+        "Needs you": "ellipsis:1",
+        "On": "wrap",
+        "Send": "ellipsis:2",
+        "Working · # min": "ellipsis:1",
+        "⁦final ready = true;⁩": "wrap",
+        "⁨Graphite⁩": "ellipsis:2",
+        "⁨Material You⁩": "ellipsis:2"
+      }
+    },
+    "KitSwatchGrid": {
+      "lists": {
+        "children": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {}
+    },
+    "KitSwitchRow": {
+      "role": "list",
+      "text": {
+        "Android allows about six hours a day": "ellipsis:2",
+        "Keep agents working in the background": "ellipsis:2",
+        "Vibrate when a reply arrives": "ellipsis:2"
+      }
+    },
+    "KitTabStrip": {
+      "lists": {
+        "tabs": {
+          "beyond": "fixed",
+          "shows": 8
+        }
+      },
+      "role": "fill",
+      "text": {
+        "#": "scroll",
+        "# #2": "wrap",
+        "##": "scroll",
+        "Backlog": "scroll",
+        "Completed": "scroll",
+        "Finished": "scroll",
+        "Item number # in the list": "scroll",
+        "Needs your answer": "scroll",
+        "Waiting for review": "scroll",
+        "Working": "scroll"
+      }
+    },
+    "KitTabSwitcher": {
+      "lists": {
+        "children": {
+          "beyond": "grows"
+        },
+        "preload": {
+          "beyond": "not-items"
+        },
+        "tabs": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "fill",
+      "text": {
+        "Connected · last reply a minute ago": "ellipsis:1",
+        "Workstation on the office network": "ellipsis:1"
+      }
+    },
+    "KitTappable": {
+      "lists": {
+        "menu": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        }
+      },
+      "role": "wrapper",
+      "text": {
+        "Connect to the server first": "wrap",
+        "Open project details": "wrap",
+        "Open the release report": "wrap"
+      }
+    },
+    "KitTaskCard": {
+      "lists": {
+        "menu": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        },
+        "meta": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "lane",
+      "text": {
+        "# h ago": "wrap",
+        "## min ago": "wrap",
+        "Bug": "wrap",
+        "Choose the release branch": "ellipsis:2",
+        "Fix the sync engine dropping queued messages aft": "ellipsis:2",
+        "High": "wrap",
+        "High priority": "wrap",
+        "Needs you · Which branch to ship?": "wrap",
+        "Review checkout accessibility": "ellipsis:2",
+        "Reviewer": "wrap",
+        "fox": "wrap",
+        "owl": "wrap",
+        "·": "wrap"
+      }
+    },
+    "KitTaskChip": {
+      "role": "chip",
+      "text": {
+        "##/##": "ellipsis:1"
+      }
+    },
+    "KitTaskMark": {
+      "role": "glyph",
+      "text": {}
+    },
+    "KitTerm": {
+      "role": "chip",
+      "text": {
+        "MCP": "wrap"
+      }
+    },
+    "KitTerminalView": {
+      "role": "fill",
+      "text": {}
+    },
+    "KitText": {
+      "role": "reading",
+      "text": {
+        "$ flutter test test/checkout_test.dart": "wrap",
+        "Fix the flaky checkout test before the release": "wrap"
+      }
+    },
+    "KitTextHalo": {
+      "role": "wrapper",
+      "text": {
+        "Find latest finance hub project in the folder": "wrap"
+      }
+    },
+    "KitThemePreview": {
+      "role": "reading",
+      "text": {}
+    },
+    "KitTimelineDay": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        },
+        "items": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "App repo · # acceptance checks": "wrap",
+        "Approve and start": "ellipsis:2",
+        "Backend · Home PC": "wrap",
+        "Data model for the saved draft": "wrap",
+        "Frontend · after Data model": "wrap",
+        "Settings screen": "wrap",
+        "Settings screen and data model": "wrap",
+        "The check could not finish. Retry the check.": "wrap",
+        "Waiting for your review · # min": "wrap"
+      }
+    },
+    "KitTip": {
+      "role": "popover",
+      "text": {
+        "Hold to stop after this step": "wrap"
+      }
+    },
+    "KitTipBubble": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "popover",
+      "text": {}
+    },
+    "KitToolRow": {
+      "lists": {
+        "body": {
+          "beyond": "grows"
+        },
+        "menu": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "#:## +##: All tests passed!": "scroll",
+        "Check why the queued message disappeared after r": "ellipsis:2",
+        "Checking saved messages": "ellipsis:1",
+        "Expected: # saved message Actual: # saved messag": "scroll",
+        "Failed": "ellipsis:1",
+        "Not run": "ellipsis:1",
+        "Queue reviewer · Worker · Running": "wrap",
+        "Read checkout configuration": "ellipsis:1",
+        "Run the queue regression tests": "ellipsis:1",
+        "Started in the background": "ellipsis:1",
+        "Stopped": "ellipsis:1",
+        "The configuration uses the saved server address.": "wrap",
+        "The reconnect test failed": "ellipsis:1",
+        "This checks that reconnecting keeps the draft un": "wrap",
+        "Waiting": "ellipsis:1",
+        "Waiting for you": "ellipsis:1",
+        "You declined this": "ellipsis:1",
+        "l….dart": "clip:1, ellipsis:1",
+        "l…ation.dart": "clip:1, ellipsis:1",
+        "l…ion.dart": "clip:1, ellipsis:1",
+        "l…n.dart": "clip:1, ellipsis:1",
+        "l…nfiguration.dart": "clip:1, ellipsis:1",
+        "l…ration.dart": "clip:1",
+        "l…tion.dart": "clip:1, ellipsis:1"
+      }
+    },
+    "KitTopBar": {
+      "lists": {
+        "actions": {
+          "beyond": "unknown"
+        },
+        "menu": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        }
+      },
+      "role": "fill",
+      "text": {
+        "#": "wrap",
+        "# need you · A release decision is waiting": "ellipsis:1",
+        "Conversation update #": "ellipsis:1",
+        "Conversation update ##": "ellipsis:1",
+        "Ready for your next message": "ellipsis:1",
+        "Reconnecting": "clip:1, ellipsis:1, wrap",
+        "Review the release notes": "ellipsis:1, ellipsis:2",
+        "Search": "ellipsis:1",
+        "Server is not answering": "ellipsis:1",
+        "The release checks finished. Open the report to ": "ellipsis:1",
+        "Working on the release checks": "ellipsis:1",
+        "·": "clip:1, ellipsis:1",
+        "⁨Office computer⁩": "ellipsis:1, wrap",
+        "⁨opencode⁩": "ellipsis:2"
+      }
+    },
+    "KitTranscriptExcerpt": {
+      "lists": {
+        "messages": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "Fix the flaky checkout test before the release": "wrap",
+        "The checkout test waited on a timer the stub nev": "wrap",
+        "Updated ##m ago · Refreshing": "wrap"
+      }
+    },
+    "KitTurn": {
+      "lists": {
+        "blocks": {
+          "beyond": "grows"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "Allow the agent to run the tests?": "wrap",
+        "Check why the queued message disappeared after r": "wrap",
+        "Review request": "ellipsis:2",
+        "Review the checkout changes before the next rele": "wrap",
+        "Sonnet #.# · ##k tokens · #:##": "wrap",
+        "Starting the model…": "wrap",
+        "Still waiting for the model · ######## s": "wrap",
+        "The checkout review is complete.": "wrap",
+        "The connection dropped before this reply finishe": "wrap",
+        "The draft is still saved. I checked the reconnec": "wrap",
+        "The server stopped answering": "wrap",
+        "You stopped this reply.": "wrap",
+        "Your prompt is saved here.": "wrap"
+      }
+    },
+    "KitViewer": {
+      "lists": {
+        "more": {
+          "beyond": "scroll",
+          "via": "KitMenuPanel.items"
+        }
+      },
+      "role": "fill",
+      "text": {
+        "/projects/mobile/docs/": "clip:1, ellipsis:1",
+        "Can't show this file": "wrap",
+        "Check the latest changes before continuing.": "wrap",
+        "Couldn't open release-notes.md": "wrap",
+        "Details": "wrap",
+        "Open all": "ellipsis:2",
+        "Project notes": "wrap",
+        "Release notes": "wrap",
+        "Review the updated conversation controls before ": "wrap",
+        "Showing part of this file": "wrap",
+        "Showing the first # of ### lines": "wrap",
+        "This file is empty": "wrap",
+        "Try again": "ellipsis:2",
+        "application/octet-stream · # KB": "wrap",
+        "application/octet-stream · ## KB": "wrap",
+        "notes.txt": "wrap",
+        "release-notes.md": "wrap"
+      }
+    },
+    "KitWebPreview": {
+      "role": "reading",
+      "text": {
+        "Open in the browser": "ellipsis:2",
+        "Preview isn't available here": "wrap",
+        "This device cannot show the page inside the app.": "wrap"
+      }
+    },
+    "KitWheel": {
+      "lists": {
+        "columns": {
+          "beyond": "fixed",
+          "shows": 3
+        }
+      },
+      "role": "control",
+      "text": {
+        "#": "clip:1",
+        "##": "clip:1",
+        "AM": "clip:1",
+        "PM": "clip:1"
+      }
+    },
+    "KitWidgetPreview": {
+      "role": "reading",
+      "text": {
+        "Allow": "ellipsis:1",
+        "Fix the sign-in page": "ellipsis:1",
+        "Stop": "ellipsis:1",
+        "Write the release notes": "ellipsis:1"
+      }
+    },
+    "KitWidgetStyleForm": {
+      "lists": {
+        "accentIds": {
+          "beyond": "unknown"
+        }
+      },
+      "role": "reading",
+      "text": {
+        "Accent colour": "wrap",
+        "Background": "wrap",
+        "Editing files": "ellipsis:1",
+        "Fix the sign-in page": "ellipsis:1",
+        "Medium": "clip:1",
+        "Small": "clip:1",
+        "Solid": "clip:1",
+        "Steer": "ellipsis:1",
+        "Stop": "ellipsis:1",
+        "Tinted": "clip:1",
+        "Transparent": "clip:1",
+        "Wide": "clip:1",
+        "blue": "wrap"
+      }
+    },
+    "KitWindowRow": {
+      "role": "list",
+      "text": {
+        "# hours": "wrap",
+        "##% left · #:##": "wrap",
+        "##% · Thu #:##": "wrap",
+        "A very long window name": "wrap",
+        "Resets at Wed #:##, in ## hours": "wrap",
+        "Used up · Sep #": "wrap",
+        "Week": "wrap"
+      }
+    },
+    "KitWordText": {
+      "role": "reading",
+      "text": {
+        "Ran the checkout tests on a clean cache and retr": "ellipsis:2"
+      }
+    },
+    "KitWorkGraph": {
+      "lists": {
+        "nodes": {
+          "beyond": "not-items"
+        }
+      },
+      "role": "fill",
+      "text": {
+        "Failed": "ellipsis:1",
+        "Needs you": "ellipsis:1",
+        "No work items yet": "wrap",
+        "Waiting · needs Review checkout": "ellipsis:1",
+        "Waiting · needs Review the conversation changes": "ellipsis:1",
+        "Working": "ellipsis:1",
+        "⁨Prepare the release⁩": "ellipsis:1, ellipsis:2",
+        "⁨Publish the approved release notes⁩": "ellipsis:2",
+        "⁨Review checkout⁩": "ellipsis:1, ellipsis:2",
+        "⁨Review the conversation changes⁩": "ellipsis:2"
+      }
+    },
+    "KitWorkLine": {
+      "lists": {
+        "steps": {
+          "beyond": "grows"
+        }
+      },
+      "role": "conversation",
+      "text": {
+        "Checking saved messages": "ellipsis:1",
+        "Checking the reconnect path": "ellipsis:2",
+        "Expected: # saved message Actual: # saved messag": "scroll",
+        "Failed": "ellipsis:1",
+        "Read # files": "ellipsis:2",
+        "Read # files · edited # file": "ellipsis:2",
+        "Read # files · edited # file · Didn't finish": "ellipsis:2",
+        "Read # files · edited # file · Stopped": "ellipsis:2",
+        "Read # files · edited # file · ran # commands": "ellipsis:2",
+        "Read # files · edited # file · ran # commands · ": "ellipsis:2",
+        "Read configuration": "wrap",
+        "Reading checkout configuration": "ellipsis:2",
+        "Run the queue regression tests": "ellipsis:1",
+        "Stopped": "ellipsis:1",
+        "The reconnect test failed": "ellipsis:1",
+        "This checks that reconnecting keeps the draft un": "wrap",
+        "Thought": "wrap",
+        "Updated the checkout test": "wrap",
+        "Waiting for you": "ellipsis:2",
+        "Waiting for you #2": "ellipsis:1"
+      }
+    },
+    "KitZoom": {
+      "role": "fill",
+      "text": {}
+    },
+    "showKitAlert": {
+      "role": "dialog",
+      "text": {
+        "Close": "ellipsis:2",
+        "Details": "wrap",
+        "File unavailable": "wrap",
+        "Open report": "ellipsis:2",
+        "The release checks finished. Review the report b": "wrap",
+        "The report is ready": "wrap",
+        "Try opening the file again.": "wrap"
+      }
+    },
+    "showKitChoiceSheet": {
+      "role": "sheet",
+      "text": {
+        "Balanced": "wrap",
+        "Balanced voice model": "wrap",
+        "Choose a voice model": "wrap",
+        "Choose model": "wrap",
+        "Clear speech for everyday replies · Recommended": "wrap",
+        "Download the model to use this voice": "wrap",
+        "For everyday project work": "wrap",
+        "Higher quality voice model": "wrap",
+        "Take more time to check the result": "wrap",
+        "Thorough": "wrap"
+      }
+    },
+    "showKitConfirm": {
+      "role": "confirm",
+      "text": {}
+    },
+    "showKitDatePicker": {
+      "role": "sheet",
+      "text": {
+        "#": "clip:1, ellipsis:1",
+        "##": "clip:1, ellipsis:1",
+        "Choose a reminder date": "wrap",
+        "Due date": "wrap",
+        "F": "clip:1, ellipsis:1",
+        "M": "clip:1, ellipsis:1",
+        "S": "clip:1, ellipsis:1",
+        "September ####": "wrap",
+        "Set date": "ellipsis:2",
+        "T": "clip:1, ellipsis:1",
+        "Type a date": "ellipsis:2",
+        "W": "clip:1, ellipsis:1"
+      }
+    },
+    "showKitDateTimePicker": {
+      "role": "sheet",
+      "text": {
+        "#": "clip:1, ellipsis:1",
+        "##": "clip:1, ellipsis:1",
+        "AM": "clip:1",
+        "F": "clip:1, ellipsis:1",
+        "Hour": "wrap",
+        "M": "clip:1, ellipsis:1",
+        "Minute": "wrap",
+        "PM": "clip:1",
+        "S": "clip:1, ellipsis:1",
+        "September ####": "wrap",
+        "Set": "ellipsis:2",
+        "Start date and time": "wrap",
+        "T": "clip:1, ellipsis:1",
+        "Type a date": "ellipsis:2",
+        "W": "clip:1, ellipsis:1",
+        "When to remind me": "wrap"
+      }
+    },
+    "showKitDiff": {
+      "role": "fill",
+      "text": {
+        "#": "wrap",
+        "+": "wrap",
+        "+# −#": "wrap",
+        "After": "wrap",
+        "Before": "wrap",
+        "Changes in this reply": "ellipsis:1",
+        "Lines #–#": "wrap",
+        "Review changes": "ellipsis:1",
+        "final title = \"Draft\";": "wrap",
+        "final title = \"Release notes ready for review\";": "wrap",
+        "publish(title);": "wrap",
+        "⁦lib/features/conversations/⁩": "ellipsis:1",
+        "⁦notes.txt⁩": "ellipsis:2",
+        "⁦release_notes.dart⁩": "ellipsis:2",
+        "−": "wrap"
+      }
+    },
+    "showKitFramedSheet": {
+      "role": "sheet",
+      "text": {
+        "Choose a project folder": "wrap",
+        "Claude Code works inside one folder of the Ubunt": "wrap",
+        "Continue": "ellipsis:2",
+        "my-first-project": "wrap"
+      }
+    },
+    "showKitImageGallery": {
+      "role": "fill",
+      "text": {
+        "# of #": "ellipsis:1",
+        "Check the connection, then try again.": "wrap",
+        "Send": "ellipsis:2",
+        "This picture could not be loaded": "wrap",
+        "Try again": "ellipsis:2",
+        "⁨Screenshot of the settings page #.png⁩": "ellipsis:1"
+      }
+    },
+    "showKitImageMarkup": {
+      "role": "fill",
+      "text": {
+        "Check the connection, then try again.": "wrap",
+        "Edit picture": "ellipsis:1",
+        "This picture could not be loaded": "wrap",
+        "⁨Screenshot of the settings page.png⁩": "ellipsis:1"
+      }
+    },
+    "showKitInputDialog": {
+      "role": "dialog",
+      "text": {
+        "Cancel": "ellipsis:2",
+        "Conversation name": "wrap",
+        "Project name": "wrap",
+        "Rename": "ellipsis:2",
+        "Rename conversation": "wrap",
+        "Rename project": "wrap",
+        "Use a name that makes the conversation easy to f": "wrap",
+        "Use a name you will recognize later.": "wrap"
+      }
+    },
+    "showKitMenu": {
+      "role": "popover",
+      "text": {
+        "Archive conversation": "wrap",
+        "Rename conversation": "wrap"
+      }
+    },
+    "showKitProjectFileSheet": {
+      "role": "sheet",
+      "text": {
+        "Find a file by name": "ellipsis:1",
+        "Project files": "wrap",
+        "Project folder": "ellipsis:1",
+        "README​.md": "wrap",
+        "a_​very_​long_​file_​name_​that_​keeps_​going_​a": "wrap",
+        "⁦lib⁩": "ellipsis:1",
+        "⁦test⁩": "ellipsis:1"
+      }
+    },
+    "showKitRequestSheet": {
+      "role": "sheet",
+      "text": {
+        "$": "wrap",
+        "Allow once": "ellipsis:2",
+        "Current stable release": "wrap",
+        "Details": "wrap",
+        "Next preview release": "wrap",
+        "Reject": "ellipsis:2",
+        "Run a shell command": "wrap",
+        "Run the regression tests": "wrap",
+        "The agent waits for your answer.": "wrap",
+        "The agent waits; nothing is lost.": "wrap",
+        "Which release should I check?": "wrap",
+        "flutter test --no-pub test/offline_queue_test.da": "wrap",
+        "⁨Choose the release used by the affected device.": "wrap",
+        "⁨Fox⁩": "wrap",
+        "⁨Queue reviewer⁩ on ⁨Office workstation⁩": "wrap"
+      }
+    },
+    "showKitServerTrust": {
+      "role": "sheet",
+      "text": {}
+    },
+    "showKitSheet": {
+      "role": "sheet",
+      "text": {}
+    },
+    "showKitTaskSheet": {
+      "role": "sheet",
+      "text": {
+        "# of # done": "wrap",
+        "Find every raw colour in the screens": "wrap",
+        "Old idea": "wrap",
+        "Run the tests and fix what they show about the s": "wrap",
+        "Ship it": "wrap",
+        "Tasks": "wrap"
+      }
+    },
+    "showKitTechnicalDetails": {
+      "role": "sheet",
+      "text": {
+        "Check that the server is running, then try again": "wrap",
+        "Connection details": "wrap",
+        "Copy all": "ellipsis:2",
+        "Server": "wrap",
+        "Working folder": "wrap"
+      }
+    },
+    "showKitTerm": {
+      "role": "popover",
+      "text": {
+        "A way to give the assistant extra tools, such as": "wrap",
+        "MCP": "wrap"
+      }
+    },
+    "showKitTerminalLinkSheet": {
+      "role": "sheet",
+      "text": {
+        "Copy link": "ellipsis:2",
+        "Link in the terminal": "wrap",
+        "Open link": "ellipsis:2"
+      }
+    },
+    "showKitTimePicker": {
+      "role": "sheet",
+      "text": {
+        "AM": "clip:1",
+        "Hour": "wrap",
+        "Minute": "wrap",
+        "Notifications wait until quiet hours end": "wrap",
+        "PM": "clip:1",
+        "Set time": "ellipsis:2",
+        "Start time": "wrap",
+        "When quiet hours begin": "wrap"
+      }
+    },
+    "showKitUndo": {
+      "role": "toast",
+      "text": {}
+    },
+    "showKitViewer": {
+      "role": "fill",
+      "text": {
+        "/projects/mobile/docs/": "clip:1, ellipsis:1",
+        "Project notes": "wrap",
+        "Release notes": "wrap",
+        "Review the conversation changes before publishin": "wrap",
+        "notes.txt": "wrap",
+        "release-notes.md": "wrap"
+      }
+    }
+  }
+}

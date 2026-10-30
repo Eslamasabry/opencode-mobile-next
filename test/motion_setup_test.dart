@@ -109,23 +109,18 @@ void main() {
   });
 
   group('setup progress', () {
-    testWidgets('the log opens in view, under a bar that stays', (
-      tester,
-    ) async {
+    testWidgets('the log opens in view, in the Details sheet', (tester) async {
       // Opening Details brings the log into view (design regressions ledger
-      // row 16). Since 231e31ec the job is one KitStateView whose drawing
-      // and title scroll with it, so on a 915 dp phone the title goes under
-      // the top bar; the progress bar stays in view above the log.
+      // row 16). Since the vision ring (2026-10-20) the steps and the log
+      // are one tap down, in the Details sheet over the ring.
       await _scene(tester, 'setup_progress_log');
-      final topBar = tester.getRect(find.byType(KitTopBar));
-      final bar = tester.getRect(
-        find.byKey(const Key('setup-progress-overall')),
+      final sheet = tester.getRect(
+        find.byKey(const Key('phone-setup-progress-details-sheet')),
       );
-      expect(bar.top, greaterThanOrEqualTo(topBar.bottom));
       // The newest log line is on screen, not below the fold.
       final log = tester.getRect(find.byKey(const Key('setup-progress-log')));
       expect(log.bottom, lessThanOrEqualTo(915));
-      expect(log.bottom, greaterThan(bar.bottom));
+      expect(log.top, greaterThan(sheet.top));
     });
 
     testWidgets('each log line takes one line, in one box', (tester) async {
@@ -134,8 +129,9 @@ void main() {
       await _scene(tester, 'setup_progress_log');
       final log = find.byKey(const Key('setup-progress-log'));
       expect(log, findsOneWidget);
-      // One tinted box: nothing inside the panel draws another (the live
-      // dot is a circle, not a box).
+      // One tinted box: the panel's own surface, which the style resolver
+      // builds just under the panel's key. Nothing inside it draws another
+      // (the live dot is a circle, not a box).
       bool tintedBox(Decoration? decoration) =>
           decoration is BoxDecoration &&
           decoration.color != null &&
@@ -148,7 +144,7 @@ void main() {
               (w is Container && tintedBox(w.decoration)),
         ),
       );
-      expect(boxes, findsNothing);
+      expect(boxes, findsOneWidget);
       final lines = find.descendant(
         of: log,
         matching: find.byWidgetPredicate(
@@ -166,22 +162,22 @@ void main() {
       expect(heights, hasLength(1));
     });
 
-    testWidgets('Cancel sits with the steps, before the folded Details', (
+    testWidgets('Pause sits at the thumb, Details under the sentence', (
       tester,
     ) async {
       await _scene(tester, 'setup_progress_running');
-      final cancel = tester.getRect(
+      final pause = tester.getRect(
         find.byKey(const Key('setup-progress-cancel')),
       );
       final details = tester.getRect(
         find.byKey(const Key('setup-progress-details')),
       );
-      final lastRow = tester.getRect(
-        find.byKey(const ValueKey('setup-progress-row-opencode')),
+      final sentence = tester.getRect(
+        find.byKey(const Key('setup-progress-title')),
       );
-      expect(cancel.top, greaterThan(lastRow.bottom));
-      expect(cancel.top - lastRow.bottom, lessThan(32));
-      expect(details.top, greaterThan(cancel.bottom));
+      expect(details.top, greaterThan(sentence.bottom));
+      expect(pause.top, greaterThan(details.bottom));
+      expect(pause.bottom, greaterThan(915 - 96));
     });
   });
 

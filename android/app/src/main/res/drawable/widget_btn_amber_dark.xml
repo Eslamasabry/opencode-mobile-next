@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Allow on a request that needs you: the attention colour, Graphite dark. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FFFFB547" />
+    <corners android:radius="100dp" />
+</shape>

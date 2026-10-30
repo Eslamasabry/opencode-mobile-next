@@ -6,7 +6,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/ui/kit/kit_screen.dart';
+import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/kit/kit.dart';
+import 'package:opencode_mobile/ui/kit/style/kit_style_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'kit_gallery.dart';
 
@@ -106,6 +109,72 @@ void main() {
     );
     expect(message, contains('[labeledTapTarget] node ""'));
     expect(message, contains('isButton'));
+  });
+
+  // S6 found Soft's permission card failing here. The framework's check
+  // reads no colour from the text: it splits the pixels around the words at
+  // their mean lightness and takes the most common colour on each side. The
+  // command's glyphs are a pixel thick, so on Soft's shaded well both "most
+  // common" colours were bands of the well (1.12:1). The words' own colour
+  // on the well is what G5 measures now.
+  group('textContrast on a shaded ground', () {
+    setUpAll(loadKitGalleryFonts);
+    setUp(() => SharedPreferences.setMockInitialValues({}));
+
+    Widget card() => MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      home: KitEffectsScope(
+        effects: const KitEffects(surfaceStyle: KitSurfaceStyle.soft),
+        child: kitStyleTheme(
+          child: Scaffold(
+            body: Center(
+              child: KitRequestCard.ask(
+                kind: KitRequestKind.permission,
+                title: 'Run a shell command',
+                who: 'fox',
+                reason: KitNeedsYouReason.decision,
+                ifIgnored: 'The agent waits; nothing is lost.',
+                announcement: 'Permission needed: Run a shell command',
+                summary: 'flutter test --concurrency=1',
+                answers: KitRequestDecide(
+                  allowLabel: 'Run once',
+                  rejectLabel: "Don't run",
+                  onAllow: () {},
+                  onReject: () {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Future<String?> check(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final semantics = tester.ensureSemantics();
+      try {
+        await tester.pumpWidget(card());
+        await tester.pumpAndSettle();
+        await expectKitGalleryAccessible(
+          tester,
+          shot: 'zz_g5_fixture_light',
+          direction: TextDirection.ltr,
+          baseline: const {},
+        );
+        return null;
+      } on TestFailure catch (error) {
+        return error.message;
+      } finally {
+        semantics.dispose();
+      }
+    }
+
+    testWidgets("Soft's permission command passes", (tester) async {
+      expect(await check(tester), isNull);
+    });
   });
 
   testWidgets('textContrast: 2.3:1 text fails on its own node', (tester) async {

@@ -228,7 +228,7 @@ void main() {
             size: size,
             home: CapabilitiesScreen(controller: controller),
             act: () => tester.tap(
-              find.byKey(const ValueKey('capabilities-tab-Tools')),
+              find.byKey(const ValueKey('capabilities-tab-Built-in')),
             ),
           );
         });

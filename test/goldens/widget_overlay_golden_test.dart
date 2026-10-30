@@ -1,6 +1,6 @@
 // Golden renders of the home-screen widgets' floating windows at 412x915, dark
 // and light, over a stand-in home screen (the real window is transparent over
-// the launcher): the style window, the steer box, the box with a draft that
+// the launcher): the Conversations widget's project window, the style window, the steer box, the box with a draft that
 // could not be sent, and the voice box.
 //
 // Regenerate deliberately:
@@ -28,6 +28,8 @@ class _Api implements WidgetOverlayApi {
     required String background,
     required String accent,
   }) async {}
+  @override
+  Future<void> saveProject(String project) async {}
   @override
   Future<String> dictate({String? languageTag}) async => heard;
   @override
@@ -76,6 +78,8 @@ void main() {
     _Api? api,
     String? type,
     bool tapSend = false,
+    List<String> projects = const [],
+    String project = '',
   }) async {
     tester.view.physicalSize = const Size(412, 915) * 3;
     tester.view.devicePixelRatio = 3;
@@ -95,6 +99,8 @@ void main() {
               steerMode: steerMode,
               styleBackground: background,
               styleAccent: accent,
+              projects: projects,
+              project: project,
             ),
             appearance: light ? AppAppearance.light : AppAppearance.dark,
           ),
@@ -123,6 +129,16 @@ void main() {
         name: 'widget_overlay_configure_$mode',
         light: light,
         route: '/widgets/configure',
+      );
+    });
+    testWidgets('project · $mode', (tester) async {
+      await shot(
+        tester,
+        name: 'widget_overlay_project_$mode',
+        light: light,
+        route: '/widgets/project',
+        projects: const ['IPTV_King', 'settings-demo', 'oc_app'],
+        project: 'settings-demo',
       );
     });
     testWidgets('steer · $mode', (tester) async {

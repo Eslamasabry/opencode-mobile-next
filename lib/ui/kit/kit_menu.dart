@@ -12,8 +12,11 @@ import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import 'kit_bidi.dart';
 import 'kit_copy.dart';
+import 'kit_ink_layer.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
@@ -214,6 +217,11 @@ Future<KitMenuItem?> showKitMenu(
   }
   final gutter = KitTokens.of(context).gutter;
   final reduced = KitMotion.reduced(context);
+  // The panel drops a few dp from what opened it as it fades in (rises,
+  // when it opens above); Calm only fades it (KitMotion.travels).
+  final travel = KitMotion.travels(context)
+      ? KitTokens.of(context).space2
+      : 0.0;
   final rtl = Directionality.of(context) == TextDirection.rtl;
   // Decided from the invoking gesture itself, not from the focus highlight
   // mode (a mouse click also switches that to "traditional"): Shift+F10,
@@ -232,6 +240,7 @@ Future<KitMenuItem?> showKitMenu(
       rtl: rtl,
       gutter: gutter,
       reducedMotion: reduced,
+      travel: travel,
       focusFirstItem: fromKeyboard,
       semanticsLabel: semanticsLabel,
       menuKey: menuKey,
@@ -309,7 +318,10 @@ class KitMenuPanel extends StatelessWidget {
   final bool _focusFirstItem;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.popover(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final rows = kitMenuLayout(items);
     final hasLeadingSlot = items.any(
       (item) => item.icon != null || item.checked != null,
@@ -436,6 +448,14 @@ class _KitMenuBodyState extends State<_KitMenuBody> {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
     final hairline = KitTokens.hairlineWidth(context);
+    final surfaceStyle = KitSurfaceLook.styleOf(context);
+    final plain = KitSurfaceLook.isPlain(context);
+    // Between groups: the style's line, or its space alone (Soft).
+    final divider = KitSurfaceLook.divider(
+      context,
+      color: roles.hairline,
+      width: hairline,
+    );
 
     var itemCursor = 0;
     var dividerCursor = 0;
@@ -458,8 +478,8 @@ class _KitMenuBodyState extends State<_KitMenuBody> {
             key: ValueKey<int>(dividerCursor++),
             child: SizedBox(
               key: const ValueKey('kit-menu-divider'),
-              height: hairline,
-              child: ColoredBox(color: roles.hairline),
+              height: divider.width,
+              child: ColoredBox(color: divider.color),
             ),
           ),
     ];
@@ -501,19 +521,28 @@ class _KitMenuBodyState extends State<_KitMenuBody> {
             key: const ValueKey('kit-menu'),
             position: DecorationPosition.foreground,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(KitTokens.popoverRadius),
-              border: Border.all(
-                color: roles.hairline,
-                width: KitTokens.hairlineWidth(context),
-              ),
+              borderRadius: BorderRadius.circular(tokens.popoverCorner),
+              // Soft draws no edge (Settings › Appearance › Style).
+              border: plain
+                  ? Border.all(
+                      color: roles.hairline,
+                      width: KitTokens.hairlineWidth(context),
+                    )
+                  : null,
             ),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: roles.surface2,
-                borderRadius: BorderRadius.circular(KitTokens.popoverRadius),
+            child: kitSurfaceBox(
+              style: surfaceStyle,
+              decoration: KitSurfaceLook.decorate(
+                context,
+                solid: BoxDecoration(
+                  color: roles.surface2,
+                  borderRadius: BorderRadius.circular(tokens.popoverCorner),
+                ),
+                level: KitSurfaceLevel.surface2,
+                role: KitSurfaceRole.sheet,
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(KitTokens.popoverRadius),
+                borderRadius: BorderRadius.circular(tokens.popoverCorner),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     minWidth: KitLayout.popoverMinWidth,
@@ -699,26 +728,32 @@ class _KitMenuItemTile extends StatelessWidget {
       button: true,
       checked: item.checked,
       hint: item.shortcut,
-      child: InkWell(
-        key: item.key,
-        focusNode: node,
-        onTap: () => onSelected(item),
-        hoverColor: roles.surface3,
-        focusColor: roles.surface3,
-        splashFactory: NoSplash.splashFactory,
-        highlightColor: Colors.transparent,
-        child: node == null
-            ? sized
-            : ListenableBuilder(
-                listenable: node,
-                builder: (context, child) => Stack(
-                  children: [
-                    child!,
-                    if (node.hasFocus) const _KitMenuFocusRing(),
-                  ],
+      // The native ripple on Android (KitInk), on its own clear Material so
+      // no panel fill below hides it; no splash elsewhere.
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          key: item.key,
+          focusNode: node,
+          onTap: () => onSelected(item),
+          hoverColor: roles.surface3,
+          focusColor: roles.surface3,
+          splashFactory: KitInk.splashFactory(context),
+          splashColor: KitInk.color(context),
+          highlightColor: Colors.transparent,
+          child: node == null
+              ? sized
+              : ListenableBuilder(
+                  listenable: node,
+                  builder: (context, child) => Stack(
+                    children: [
+                      child!,
+                      if (node.hasFocus) const _KitMenuFocusRing(),
+                    ],
+                  ),
+                  child: sized,
                 ),
-                child: sized,
-              ),
+        ),
       ),
     );
   }
@@ -743,9 +778,7 @@ class _KitMenuFocusRing extends StatelessWidget {
       child: IgnorePointer(
         child: DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(
-              KitTokens.popoverRadius - inset,
-            ),
+            borderRadius: BorderRadius.circular(tokens.popoverCorner - inset),
             border: Border.all(
               color: tokens.roles.accent,
               width: KitTokens.focusRingWidth(context),
@@ -772,7 +805,15 @@ class _KitMenuLayoutDelegate extends SingleChildLayoutDelegate {
     required this.gutter,
     required this.insets,
     required this.devicePixelRatio,
-  });
+    this.drop,
+    this.travel = 0,
+  }) : super(relayout: drop);
+
+  /// The route's entrance: while it runs forward the panel starts [travel]
+  /// dp back towards its anchor and settles on its place. Only the panel's
+  /// position moves; its own layout is untouched. Closing only fades.
+  final Animation<double>? drop;
+  final double travel;
 
   final Rect anchor;
   final bool byPoint;
@@ -799,6 +840,7 @@ class _KitMenuLayoutDelegate extends SingleChildLayoutDelegate {
     final area = _area(size);
     double left;
     double top;
+    var above = false;
     if (byPoint) {
       left = rtl ? anchor.left - childSize.width : anchor.left;
       top = anchor.top;
@@ -807,14 +849,23 @@ class _KitMenuLayoutDelegate extends SingleChildLayoutDelegate {
       top = anchor.bottom;
       final fitsBelow = top + childSize.height <= area.bottom;
       final fitsAbove = anchor.top - childSize.height >= area.top;
-      if (!fitsBelow && fitsAbove) top = anchor.top - childSize.height;
+      if (!fitsBelow && fitsAbove) {
+        top = anchor.top - childSize.height;
+        above = true;
+      }
     }
     final maxLeft = math.max(area.left, area.right - childSize.width);
     final maxTop = math.max(area.top, area.bottom - childSize.height);
-    return Offset(
+    final placed = Offset(
       _snap(left.clamp(area.left, maxLeft)),
       _snap(top.clamp(area.top, maxTop)),
     );
+    final drop = this.drop;
+    if (drop == null || travel == 0 || drop.status != AnimationStatus.forward) {
+      return placed;
+    }
+    final still = 1 - KitMotion.enter.transform(drop.value);
+    return placed.translate(0, still * travel * (above ? 1 : -1));
   }
 
   double _snap(double value) => devicePixelRatio > 0
@@ -828,11 +879,14 @@ class _KitMenuLayoutDelegate extends SingleChildLayoutDelegate {
       rtl != oldDelegate.rtl ||
       gutter != oldDelegate.gutter ||
       insets != oldDelegate.insets ||
-      devicePixelRatio != oldDelegate.devicePixelRatio;
+      devicePixelRatio != oldDelegate.devicePixelRatio ||
+      drop != oldDelegate.drop ||
+      travel != oldDelegate.travel;
 }
 
 /// The route [showKitMenu] pushes: a transparent, dismissible barrier, a
-/// cross-fade on [KitMotion.quick] (no scale, MOT-2), and Esc to close.
+/// cross-fade on [KitMotion.quick] with a short drop from the anchor under
+/// Animations: Full (no scale, MOT-2), and Esc to close.
 class _KitMenuRoute extends PopupRoute<KitMenuItem> {
   _KitMenuRoute({
     required this.items,
@@ -841,6 +895,7 @@ class _KitMenuRoute extends PopupRoute<KitMenuItem> {
     required this.rtl,
     required this.gutter,
     required this.reducedMotion,
+    required this.travel,
     required this.focusFirstItem,
     required this.semanticsLabel,
     required this.menuKey,
@@ -852,6 +907,9 @@ class _KitMenuRoute extends PopupRoute<KitMenuItem> {
   final bool rtl;
   final double gutter;
   final bool reducedMotion;
+
+  /// How far the panel drops in as it opens; 0 fades only.
+  final double travel;
   final bool focusFirstItem;
   final String? semanticsLabel;
   final Key? menuKey;
@@ -902,6 +960,8 @@ class _KitMenuRoute extends PopupRoute<KitMenuItem> {
                 MediaQuery.paddingOf(routeContext) +
                 MediaQuery.viewInsetsOf(routeContext),
             devicePixelRatio: MediaQuery.devicePixelRatioOf(routeContext),
+            drop: travel == 0 ? null : animation,
+            travel: travel,
           ),
           child: KitMenuPanel._route(
             key: menuKey,

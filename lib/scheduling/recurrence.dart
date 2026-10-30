@@ -5,7 +5,8 @@ const scheduledPromptLateTolerance = Duration(minutes: 15);
 
 /// Finds one occurrence strictly after [after]. Once schedules finish at null.
 /// Intervals retain an absolute anchor, so delayed work does not drift.
-/// Weekdays follow the device's local calendar, including timezone changes.
+/// Daily and weekday schedules follow the device's local calendar, including
+/// timezone and daylight-saving changes.
 DateTime? nextScheduledOccurrence(
   ScheduleRecurrence recurrence,
   DateTime after,
@@ -22,7 +23,9 @@ DateTime? nextScheduledOccurrence(
       return anchor.add(
         Duration(microseconds: (elapsed ~/ period + 1) * period),
       );
+    case ScheduleRecurrenceKind.daily:
     case ScheduleRecurrenceKind.weekdays:
+      final weekdaysOnly = recurrence.kind == ScheduleRecurrenceKind.weekdays;
       final local = after.toLocal();
       for (var offset = 0; offset <= 7; offset++) {
         // Calendar construction, not adding 24 hours, preserves wall-clock time
@@ -34,7 +37,8 @@ DateTime? nextScheduledOccurrence(
           recurrence.hour,
           recurrence.minute,
         );
-        if (candidate.weekday <= DateTime.friday && candidate.isAfter(after)) {
+        if ((!weekdaysOnly || candidate.weekday <= DateTime.friday) &&
+            candidate.isAfter(after)) {
           return candidate.toUtc();
         }
       }

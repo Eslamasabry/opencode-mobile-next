@@ -654,7 +654,7 @@ class _TermuxMigrationScreenState extends ConsumerState<TermuxMigrationScreen> {
     final free = snapshot.availableBytes;
     return KitStateView(
       key: const ValueKey('migration-needs-space'),
-      icon: AppIconography.database,
+      icon: AppIconography.storage,
       title: l10n.migrationNeedsSpace,
       body: free == null
           ? l10n.migrationNeedsSpaceBodyUnknown(needed)
@@ -1106,7 +1106,7 @@ class _TermuxMigrationScreenState extends ConsumerState<TermuxMigrationScreen> {
               if (space != null)
                 KitNotice(
                   key: const ValueKey('migration-space'),
-                  icon: AppIconography.database,
+                  icon: AppIconography.storage,
                   tone: space.sufficient == false
                       ? AppStatusTone.failure
                       : AppStatusTone.neutral,

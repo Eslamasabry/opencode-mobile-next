@@ -112,7 +112,11 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
           _controller.openWidgetConversation(target.sessionID).then((opened) {
             if (!mounted) return;
             if (opened) {
-              _pushAlertChat(navigator, target.sessionID);
+              _pushAlertChat(
+                navigator,
+                target.sessionID,
+                focusComposer: target.reply,
+              );
             } else {
               // Not found (deleted, or its connection is gone): the
               // Conversations screen, never a broken chat.
@@ -122,7 +126,7 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
         );
         return;
       }
-      _pushAlertChat(navigator, target.sessionID);
+      _pushAlertChat(navigator, target.sessionID, focusComposer: target.reply);
     });
   }
 
@@ -133,16 +137,20 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
     NavigatorState navigator,
     String sessionID, {
     String? landOnRequestID,
+    bool focusComposer = false,
   }) {
-    if (_routeTracker.topName == '/chat/$sessionID') return;
-    unawaited(
-      navigator.push(
-        chatLandingRoute(
-          sessionID: sessionID,
-          landOnRequestID: landOnRequestID,
-        ),
-      ),
+    final route = chatLandingRoute(
+      sessionID: sessionID,
+      landOnRequestID: landOnRequestID,
+      focusComposer: focusComposer,
     );
+    if (_routeTracker.topName == '/chat/$sessionID') {
+      // Already showing. A widget's Reply still lands ready to type: the
+      // same chat replaces itself with its composer focused.
+      if (focusComposer) unawaited(navigator.pushReplacement(route));
+      return;
+    }
+    unawaited(navigator.push(route));
   }
 
   // ------------------------------------------------------------------
@@ -209,22 +217,28 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
         keys: '$mod + 1',
         onInvoke: () => go(0),
       ),
-      // Same order as the dock: the number in the hint is the tab's position.
-      DesktopCommand(
-        label: l10n.e7LocaleUiFiles,
-        icon: Icons.folder_outlined,
-        hint: l10n.e7LocaleUiFilesHint,
-        keys: '$mod + 2',
-        onInvoke: () => go(1),
-      ),
-      // One Settings command: the third tab is the hub. "$mod + ," still
-      // opens the same hub over the current screen without leaving it.
-      DesktopCommand(
-        label: l10n.e7LocaleUiSettings,
-        icon: Icons.settings_outlined,
-        hint: l10n.e7LocaleUiMoreHint,
-        keys: '$mod + 3',
-        onInvoke: () => go(2),
+      // Search's own empty state (mockup 6): Files, Projects, Settings,
+      // Servers, Terminal, Scheduled prompts, the AI Team and Help where this
+      // connection has them, then the last three conversations. Files and
+      // Settings carry $mod + 2 and 3; "$mod + ," still opens Settings over
+      // the current screen.
+      ...goToCommands(
+        l10n,
+        controller: _controller,
+        mod: mod,
+        target: () => _navigatorKey.currentState?.overlay?.context,
+        atShell: (intent) {
+          final navigator = _navigatorKey.currentState;
+          if (navigator == null) return;
+          dispatchAtShellRoot(navigator, _shortcutSignals, intent);
+        },
+        openChat: (target, item) async {
+          final problem = await ConnectionChatsHost(
+            _controller,
+          ).openChat(target, item);
+          if (problem != null && mounted) _say(problem, failed: true);
+          return problem;
+        },
       ),
       DesktopCommand(
         label: l10n.e7LocaleUiKeyboardShortcuts,
@@ -248,6 +262,7 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
       // three tabs are the numbered commands above.
       for (final entry in searchIndex(l10n, scope))
         if (!entry.id.startsWith('tab-') &&
+            !_goToEntryIds.contains(entry.id) &&
             entry.id != 'library-keyboard-shortcuts' &&
             entry.id != 'app-diagnostics-entry')
           DesktopCommand(
@@ -290,6 +305,40 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
               );
             },
           ),
+      // Projects by name, once typed: each opens that project's Files page
+      // (the phone has no Files tab; a project's files are one search away).
+      if (ProjectHub.isAvailable(_controller.capabilities))
+        for (final project in ConnectionChatsHost(
+          _controller,
+        ).source.projectSummaries.take(200))
+          if (!isTemporaryProjectDirectory(project.directory))
+            DesktopCommand(
+              label: project.name,
+              icon: AppIconography.folderOpen,
+              hint: l10n.discoverSearchIn(l10n.shellTabFiles),
+              keywords: '${l10n.shellTabFiles} ${project.directory}',
+              onlyWhenSearched: true,
+              onInvoke: () {
+                final target = _navigatorKey.currentState?.overlay?.context;
+                if (target == null) return;
+                unawaited(
+                  openProjectFiles(
+                    target,
+                    _controller,
+                    directory: project.directory,
+                  ),
+                );
+              },
+            ),
     ];
   }
 }
+
+/// Index entries a Go to row already stands for: listing them too would
+/// show each place twice once something is typed.
+const _goToEntryIds = {
+  'settings-saved-servers',
+  'project-terminal',
+  'ai-team',
+  'settings-setup-guide',
+};

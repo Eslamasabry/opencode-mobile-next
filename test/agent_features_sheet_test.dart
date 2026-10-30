@@ -14,6 +14,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
+import 'package:opencode_mobile/ui/widgets/agent_features_chip.dart';
 import 'package:opencode_mobile/ui/widgets/pickers.dart';
 import 'package:opencode_mobile/ui/widgets/provider_logo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -226,6 +227,8 @@ void main() {
     expect(find.text('Fast mode off'), findsNothing);
     expect(find.bySemanticsLabel('Fast mode, off'), findsOneWidget);
     await _shot(tester, '1-chat-chip-off');
+    await tester.ensureVisible(chip);
+    await tester.pumpAndSettle();
     await tester.tap(chip);
     await tester.pumpAndSettle();
     expect(find.text('Claude Code settings'), findsOneWidget);
@@ -249,31 +252,34 @@ void main() {
   });
 
   for (final scale in [1.0, 1.3]) {
-    testWidgets('Fast, Asks first and the model are one row · ${scale}x text', (
+    testWidgets('Fast is the only chip over the composer · ${scale}x text', (
       tester,
     ) async {
       tester.platformDispatcher.textScaleFactorTestValue = scale;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       await _chat(tester);
-      final fastChip = tester.getRect(chip);
-      final asks = tester.getRect(find.text('Asks first'));
-      final model = tester.getRect(
-        find.byKey(const Key('composer-model-context')),
-      );
+      // The model chip and Stop share the row; the approval chip is behind +.
+      expect(find.text('Asks first'), findsNothing);
+      expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
       expect(find.text('Fast'), findsOneWidget);
-      expect((fastChip.center.dy - model.center.dy).abs(), lessThan(2));
-      expect((asks.center.dy - model.center.dy).abs(), lessThan(2));
-      expect(fastChip.right, lessThanOrEqualTo(asks.left));
-      expect(asks.right, lessThanOrEqualTo(model.left));
+      // The row holds Ask first, Fast, the model chip and Stop: Fast scrolls
+      // into view, and never lies under the model chip or Stop.
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(chip).right,
+        lessThanOrEqualTo(
+          tester.getRect(find.byKey(const Key('composer-model-context'))).left,
+        ),
+      );
+      expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
       expect(find.textContaining('default ·'), findsNothing);
       expect(tester.takeException(), isNull);
       if (scale == 1.0) await _shot(tester, 'one-row-off');
     });
   }
 
-  testWidgets('with Fast on the chip is lit and the row stays one row', (
-    tester,
-  ) async {
+  testWidgets('with Fast on the chip is lit', (tester) async {
     await _chat(
       tester,
       setUpApi: (api) => api.features = [
@@ -285,15 +291,12 @@ void main() {
         ),
       ],
     );
-    final fastChip = tester.getRect(chip);
-    final model = tester.getRect(
-      find.byKey(const Key('composer-model-context')),
-    );
-    expect((fastChip.center.dy - model.center.dy).abs(), lessThan(2));
+    expect(chip, findsOneWidget);
+    expect(find.bySemanticsLabel('Fast mode, on'), findsOneWidget);
     await _shot(tester, 'one-row-on');
   });
 
-  testWidgets('an OpenCode chat has no switch chip and one row', (
+  testWidgets('an OpenCode chat has no chip over the composer at all', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(412, 915);
@@ -319,10 +322,7 @@ void main() {
     });
     await frames(tester);
     expect(chip, findsNothing);
-    final model = tester.getRect(
-      find.byKey(const Key('composer-model-context')),
-    );
-    expect(model.right, greaterThan(412 - 24));
+    expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
     expect(tester.takeException(), isNull);
     await writePng(
       'build/coverage/one-row-opencode.png',
@@ -342,6 +342,8 @@ void main() {
       tester,
       setUpApi: (api) => api.hold = Completer<void>(),
     );
+    await tester.ensureVisible(chip);
+    await tester.pumpAndSettle();
     await tester.tap(chip);
     await tester.pumpAndSettle();
     await tester.tap(fast);
@@ -356,6 +358,8 @@ void main() {
     tester,
   ) async {
     final api = await _chat(tester, setUpApi: (api) => api.refuse = true);
+    await tester.ensureVisible(chip);
+    await tester.pumpAndSettle();
     await tester.tap(chip);
     await tester.pumpAndSettle();
     await tester.tap(fast);
@@ -374,6 +378,30 @@ void main() {
     await _chat(tester, setUpApi: (api) => api.features = const []);
     expect(chip, findsNothing);
   });
+
+  // Jitter J9 (2026-10-28): every open of an agent chat inserted the
+  // switches chip into the chip row once its read landed, and the model
+  // chip beside it shrank. A conversation read this run starts with them.
+  test(
+    'a conversation opened again has its switches before they are read',
+    () async {
+      final gateway = _HeldFeatures();
+      final first = AgentFeaturesModel(gateway, 'j9-session');
+      expect(first.features, isNull);
+      gateway.answer.complete(const [
+        AgentFeature(
+          id: 'fast_mode',
+          label: 'Fast',
+          kind: AgentFeatureKind.toggle,
+        ),
+      ]);
+      await first.load();
+      first.dispose();
+      final again = AgentFeaturesModel(_HeldFeatures(), 'j9-session');
+      expect(again.features?.single.id, 'fast_mode');
+      again.dispose();
+    },
+  );
 
   testWidgets('switches that could not be read leave no chip', (tester) async {
     await _chat(tester, setUpApi: (api) => api.failLoad = true);
@@ -396,6 +424,8 @@ void main() {
     );
     expect(find.text('Plan first'), findsOneWidget);
     expect(find.bySemanticsLabel('Plan first, off'), findsOneWidget);
+    await tester.ensureVisible(chip);
+    await tester.pumpAndSettle();
     await tester.tap(chip);
     await tester.pumpAndSettle();
     expect(find.text('Draft a plan before editing.'), findsOneWidget);
@@ -429,6 +459,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Fast'), findsNothing);
+    await tester.ensureVisible(chip);
+    await tester.pumpAndSettle();
     await tester.tap(chip);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('agent-feature-effort')));
@@ -447,4 +479,25 @@ void main() {
   ) async {
     await _modelSheet(tester, 'm2-model-sheet-with-model', withModel: true);
   });
+}
+
+/// Switches answered when the test says.
+class _HeldFeatures implements AgentFeatureGateway {
+  final answer = Completer<List<AgentFeature>>();
+
+  @override
+  bool get agentFeaturesSupported => true;
+
+  @override
+  String? agentFeaturesOwner(String sessionID) => 'Kilo';
+
+  @override
+  Future<List<AgentFeature>> agentFeatures(String sessionID) => answer.future;
+
+  @override
+  Future<List<AgentFeature>> setAgentFeature(
+    String sessionID,
+    String featureId,
+    Object value,
+  ) => answer.future;
 }

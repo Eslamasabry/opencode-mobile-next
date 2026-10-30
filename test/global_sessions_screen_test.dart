@@ -1278,12 +1278,12 @@ void main() {
       expect(tester.getTopLeft(find.byType(KitSegmented<bool>)).dx, 16);
       expect(alpha.left, 0);
       expect(segments.dx, greaterThanOrEqualTo(16));
-      // The second project's label starts one section gap (22) under the
+      // The second project's label starts one section gap (24) under the
       // first project's panel, not two (the group's own gap only).
       expect(beta.top, alpha.bottom);
       expect(
         tester.getTopLeft(find.text('Project 2')).dy - beta.top,
-        moreOrLessEquals(22, epsilon: 0.01),
+        moreOrLessEquals(24, epsilon: 0.01),
       );
     });
   });

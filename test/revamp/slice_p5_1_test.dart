@@ -290,11 +290,12 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final said = _words(tester, _key('team-conversation-now-text'));
-      // The worker's name is its own line's, below; the Now line is the
-      // stage.
+      // The Now line is the header's second line (vision 2026-10-20): the
+      // stage, the worker named the way its own line names it, never the
+      // host's generated name.
+      final said = tester.widget<KitTopBar>(find.byType(KitTopBar)).subtitle!;
       expect(said, isNot(contains('furiosa')));
-      expect(said, startsWith('Starting a worker'));
+      expect(said, allOf(startsWith('Now: '), contains('starting')));
       // The retired strip and its How sheet are gone for good.
       expect(_key('team-cycle-strip'), findsNothing);
       expect(find.text('How the host dispatches'), findsNothing);
@@ -355,8 +356,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(TeamConversationScreen), findsOneWidget);
       expect(
-        _words(tester, _key('team-conversation-now-text')),
-        'Waiting for a plan',
+        tester.widget<KitTopBar>(find.byType(KitTopBar)).subtitle,
+        startsWith('Now: planning the steps'),
       );
       await tester.pumpWidget(const SizedBox.shrink());
       // The sent message's receipt timer runs out.

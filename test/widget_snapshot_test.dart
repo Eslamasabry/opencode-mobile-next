@@ -197,6 +197,39 @@ void main() {
   }
 
   test(
+    'the Status widget gets each server as a name, a state and since when',
+    () async {
+      final (snapshot, prefs, _) = await harness();
+      await snapshot.update(
+        sessions: const [],
+        busySessions: const {},
+        connected: true,
+        servers: [
+          {'name': 'This phone', 'state': 'online', 'phone': true},
+          {
+            'name': 'Laptop',
+            'state': 'offline',
+            'since': 1700000000000,
+            'url': 'http://10.0.0.2:4096',
+          },
+          {'name': 'Studio', 'state': 'weird'},
+        ],
+      );
+      final servers =
+          jsonDecode(
+                prefs.getString(WidgetSessionSnapshot.prefsKey)!,
+              )['servers']
+              as List;
+      expect(servers, [
+        {'name': 'This phone', 'state': 'online', 'phone': true},
+        {'name': 'Laptop', 'state': 'offline', 'since': 1700000000000},
+        // Anything unknown is not claimed to be online.
+        {'name': 'Studio', 'state': 'offline'},
+      ]);
+    },
+  );
+
+  test(
     'a permission ask carries only its question, kind, file and folder',
     () async {
       final (snapshot, prefs, _) = await harness();
@@ -359,7 +392,7 @@ void main() {
     );
   });
   test(
-    'writes at most six sessions with busy flags and title fallback',
+    'writes at most twelve sessions with busy flags and title fallback',
     () async {
       final (snapshot, prefs, refreshes) = await harness();
       await snapshot.update(
@@ -370,7 +403,9 @@ void main() {
           _session('s4', title: 'Docs', updated: 20),
           _session('s5', title: 'Fifth', updated: 10),
           _session('s6', title: 'Sixth', updated: 9),
-          _session('s7', title: 'Never shown', updated: 8),
+          for (var i = 7; i <= 12; i++)
+            _session('s$i', title: 'Row $i', updated: 9 - i),
+          _session('s13', title: 'Never shown', updated: -10),
         ],
         busySessions: {'s1', 's3'},
         connected: true,
@@ -385,7 +420,9 @@ void main() {
       // profile switch opens the app normally instead of a foreign chat.
       expect(decoded['profileID'], 'server-1');
       final sessions = decoded['sessions'] as List;
-      expect(sessions, hasLength(6));
+      // Enough rows for a Conversations widget scoped to one project.
+      expect(sessions, hasLength(WidgetSessionSnapshot.maxSessions));
+      expect(WidgetSessionSnapshot.maxSessions, 12);
       expect(sessions[0], {
         'id': 's1',
         'title': 'Fix auth',
@@ -605,5 +642,46 @@ void main() {
     expect(jsonEncode(rows), isNot(contains('/home/secret')));
     // The active controller's own row keeps its details.
     expect(rows.last['preview'], 'kept preview');
+  });
+
+  test('rows name their server and mark what waits on the person', () async {
+    final (snapshot, prefs, _) = await harness();
+    await snapshot.update(
+      sessions: [_session('mine', title: 'Mine', updated: 100)],
+      busySessions: {},
+      connected: true,
+      server: 'This phone',
+      details: {
+        // A question: it waits on the person but has no request identity.
+        'mine': {
+          'project': 'neon-breaker',
+          'needsYou': true,
+          'ask': {'kind': 'other', 'q': 'Which colour?'},
+        },
+      },
+      others: const [
+        WidgetOtherConversation(
+          id: 'far',
+          title: 'Far away',
+          project: 'api-server',
+          updatedAt: 1,
+          busy: false,
+          needsYou: true,
+          server: 'MacBook',
+        ),
+      ],
+    );
+    final decoded =
+        jsonDecode(prefs.getString(WidgetSessionSnapshot.prefsKey)!) as Map;
+    final rows = {
+      for (final r in (decoded['sessions'] as List).cast<Map>()) r['id']: r,
+    };
+    expect(rows['mine']!['server'], 'This phone');
+    expect(rows['mine']!['needsYou'], isTrue);
+    expect(rows['mine']!.containsKey('requestID'), isFalse);
+    expect((rows['mine']!['ask'] as Map)['q'], 'Which colour?');
+    expect(rows['far']!['server'], 'MacBook');
+    expect(rows['far']!['needsYou'], isTrue);
+    expect(rows['far']!['onDemandActions'], isEmpty);
   });
 }

@@ -15,6 +15,7 @@ import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/ui/widgets/tool_card.dart';
 
 import 'chat_3_support.dart';
+import '../support/composer_tools.dart';
 
 class _Chat8Api extends Chat3Api {
   final shells = <String>[];
@@ -46,7 +47,7 @@ class _CodexChat8Api extends _Chat8Api {
 }
 
 Future<void> _openLauncher(WidgetTester tester) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('composer-tool-commands')));
   await tester.pumpAndSettle();

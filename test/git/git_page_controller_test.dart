@@ -139,6 +139,73 @@ void main() {
     expect(page.snapshot!.status.branch.head, 'lonely');
   });
 
+  group('save and send in one tap', () {
+    test('saves, then sends, then reads once; busy names each half', () async {
+      final drop = FakeCredentialDrop();
+      final shell = FakeGitShell([
+        _snapshot(),
+        envelope({'add': ok(), 'commit': ok(), 'id': ok('abc1234\n')}),
+        _pushPlan(),
+        envelope({'push': ok('To github.com:o/r.git\n')}),
+        _snapshot(status: fx.statusNoUpstream),
+      ]);
+      final page = _controller(shell, drop: drop, account: _Account());
+      await page.refresh();
+      final busy = <GitAction?>[];
+      page.addListener(() => busy.add(page.busy));
+      final result = await page.commitAndPush(['keep.txt'], 'Update keep');
+      expect(result!.action, GitAction.push);
+      expect(result.ok, isTrue);
+      expect(page.savedBeforeSend, isTrue);
+      expect(busy, [GitAction.commit, GitAction.push, null]);
+      expect(shell.scripts[1], contains("'commit' '-m' 'Update keep'"));
+      expect(shell.scripts[3], contains("'push'"));
+      expect(shell.scripts, hasLength(5));
+      // The token went through the drop only, never into a script.
+      expect(drop.secrets, [fakeGitHubToken]);
+      expect(shell.scripts.join(), isNot(contains(fakeGitHubToken)));
+      page.clearLastResult();
+      expect(page.savedBeforeSend, isFalse);
+    });
+
+    test('a failed save stops there: nothing is sent', () async {
+      final shell = FakeGitShell([
+        _snapshot(),
+        envelope({'add': ok(), 'commit': failed('pre-commit hook failed\n')}),
+        _snapshot(),
+      ]);
+      final page = _controller(shell);
+      await page.refresh();
+      final result = await page.commitAndPush(['keep.txt'], 'm');
+      expect(result!.ok, isFalse);
+      expect(result.action, GitAction.commit);
+      expect(page.savedBeforeSend, isFalse);
+      expect(shell.scripts.any((s) => s.contains("'push'")), isFalse);
+    });
+
+    test('a failed send keeps the save and says so', () async {
+      final shell = FakeGitShell([
+        _snapshot(),
+        envelope({'add': ok(), 'commit': ok(), 'id': ok('abc1234\n')}),
+        _pushPlan(),
+        envelope({
+          'push': failed(
+            "fatal: could not read Username for 'https://github.com'\n",
+          ),
+        }),
+        _snapshot(),
+      ]);
+      final page = _controller(shell);
+      await page.refresh();
+      final result = await page.commitAndPush(['keep.txt'], 'm');
+      expect(result!.ok, isFalse);
+      expect(result.problem, GitProblem.authRequired);
+      expect(page.savedBeforeSend, isTrue);
+      expect(page.lastResult, same(result));
+      expect(page.busy, isNull);
+    });
+  });
+
   test('one action at a time', () async {
     final shell = FakeGitShell([
       _snapshot(),

@@ -289,49 +289,62 @@ void main() {
     expect(prefs.getString(draftKey), isNull);
   });
 
-  testWidgets('a refused task stays in the sheet with the host\'s words and '
-      'the draft, to edit and send again', (tester) async {
-    final (controller, gateway) = await boot();
-    gateway.answer = (requestId) async =>
-        MutationReceipt.rejected(requestId, 'the planner is busy');
-    final results = await pumpOpener(tester, controller);
-    await open(tester);
-    await tester.enterText(find.byKey(objective), 'Ship dark mode');
-    await tester.pumpAndSettle();
-    await send(tester);
+  testWidgets(
+    'a refused task stays in the sheet with plain words, the host\'s text under Details and '
+    'the draft, to edit and send again',
+    (tester) async {
+      final (controller, gateway) = await boot();
+      gateway.answer = (requestId) async =>
+          MutationReceipt.rejected(requestId, 'the planner is busy');
+      final results = await pumpOpener(tester, controller);
+      await open(tester);
+      await tester.enterText(find.byKey(objective), 'Ship dark mode');
+      await tester.pumpAndSettle();
+      await send(tester);
 
-    expect(gateway.messages, hasLength(1));
-    expect(find.byKey(const ValueKey('team-start-run-sheet')), findsOneWidget);
-    final refused = find.byKey(const ValueKey('team-start-run-refused'));
-    expect(refused, findsOneWidget);
-    expect(
-      find.descendant(
-        of: refused,
-        matching: find.textContaining('the planner is busy'),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: refused,
-        matching: find.text(l10n.teamStartRunRefusedKept),
-      ),
-      findsOneWidget,
-    );
-    expect(results, isEmpty, reason: 'the sheet did not close');
-    expect(prefs.getString(draftKey), 'Ship dark mode');
+      expect(gateway.messages, hasLength(1));
+      expect(
+        find.byKey(const ValueKey('team-start-run-sheet')),
+        findsOneWidget,
+      );
+      final refused = find.byKey(const ValueKey('team-start-run-refused'));
+      expect(refused, findsOneWidget);
+      // Plain words first; the host's own text waits under Details.
+      expect(
+        find.descendant(
+          of: refused,
+          matching: find.text('The host did not accept this task.'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('the planner is busy'), findsNothing);
+      await tester.tap(
+        find.byKey(const ValueKey('team-start-run-refused-details')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('the planner is busy'), findsWidgets);
+      expect(
+        find.descendant(
+          of: refused,
+          matching: find.text(l10n.teamStartRunRefusedKept),
+        ),
+        findsOneWidget,
+      );
+      expect(results, isEmpty, reason: 'the sheet did not close');
+      expect(prefs.getString(draftKey), 'Ship dark mode');
 
-    // Edit and send again: the host takes it this time.
-    gateway.answer = null;
-    await tester.enterText(find.byKey(objective), 'Ship dark mode today');
-    await tester.pumpAndSettle();
-    await send(tester);
-    expect(gateway.messages, hasLength(2));
-    expect(gateway.messages.last, contains('Ship dark mode today'));
-    expect(find.byKey(const ValueKey('team-start-run-sheet')), findsNothing);
-    expect(results.single?.kind, MutationKind.message);
-    await drain(tester);
-  });
+      // Edit and send again: the host takes it this time.
+      gateway.answer = null;
+      await tester.enterText(find.byKey(objective), 'Ship dark mode today');
+      await tester.pumpAndSettle();
+      await send(tester);
+      expect(gateway.messages, hasLength(2));
+      expect(gateway.messages.last, contains('Ship dark mode today'));
+      expect(find.byKey(const ValueKey('team-start-run-sheet')), findsNothing);
+      expect(results.single?.kind, MutationKind.message);
+      await drain(tester);
+    },
+  );
 
   testWidgets('a task the host took clears the draft', (tester) async {
     final (controller, gateway) = await boot();

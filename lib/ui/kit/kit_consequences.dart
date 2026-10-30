@@ -93,15 +93,15 @@ class KitConsequences extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
-    return DecoratedBox(
+    return KitSurface.inset(
       key: const ValueKey('kit-consequences'),
-      decoration: BoxDecoration(
-        color: tokens.insetSurface,
-        borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
-      ),
+      padding: KitSurfacePadding.none,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -10,6 +10,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/plain_text_finder.dart';
 
 class _FakeOpenCodeApi extends FakeServerGateway with CompleteMessageHistory {
   _FakeOpenCodeApi() : super(baseUrl: 'http://localhost');
@@ -18,9 +19,10 @@ class _FakeOpenCodeApi extends FakeServerGateway with CompleteMessageHistory {
   bool failReplies = false;
   bool permissionNotFound = false;
   List<PermissionRequest> pendingPermissionsResult = [];
+  List<MessageWithParts> history = [];
 
   @override
-  Future<List<MessageWithParts>> messages(String id) async => [];
+  Future<List<MessageWithParts>> messages(String id) async => history;
 
   @override
   Future<void> respondPermission(
@@ -118,15 +120,70 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Run this command?'), findsOneWidget);
-    expect(find.text('Edit this file?'), findsNothing);
+    expect(findPlainText('Run git status?'), findsOneWidget);
+    expect(findPlainText('Edit main.dart?'), findsNothing);
     expect(find.textContaining('1 more request is waiting'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('permission-card-allow')));
     await _afterHold(tester);
 
     expect(api.replies, [(requestID: 'request-1', reply: 'once')]);
-    expect(find.text('Edit this file?'), findsOneWidget);
+    expect(findPlainText('Edit main.dart?'), findsOneWidget);
+  });
+
+  // Dry run of build 2567: "Thinking…" stood over the card that waited for
+  // the person. While a card waits it is the state; the thought in hand
+  // does not say the agent is busy.
+  testWidgets('while a request waits, the thought in hand does not say '
+      'Thinking…', (tester) async {
+    final api = _FakeOpenCodeApi();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    api.history = [
+      MessageWithParts(
+        info: MessageInfo(
+          id: 'msg-user',
+          sessionID: 'session-1',
+          role: 'user',
+          time: MsgTime(created: now - 9000),
+        ),
+        parts: [
+          Part(
+            id: 'p-user',
+            messageID: 'msg-user',
+            type: 'text',
+            text: 'Create hello.txt',
+          ),
+        ],
+      ),
+      MessageWithParts(
+        info: MessageInfo(
+          id: 'msg-reply',
+          sessionID: 'session-1',
+          role: 'assistant',
+          time: MsgTime(created: now - 8000),
+        ),
+        parts: [
+          Part(
+            id: 'p-think',
+            messageID: 'msg-reply',
+            type: 'reasoning',
+            text: 'Writing two lines about tea first.',
+          ),
+        ],
+      ),
+    ];
+    final controller = await _controller(api);
+    controller.busySessions = {'session-1'};
+    await pumpChat(tester, controller);
+    expect(find.text('Thinking…'), findsOneWidget);
+
+    controller.handleEventForTesting(
+      _permission('request-1', 'edit', 'hello.txt'),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(findPlainText('Edit hello.txt?'), findsOneWidget);
+    expect(find.text('Thinking…'), findsNothing);
   });
 
   group('undo window', () {
@@ -303,7 +360,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Run this command?'), findsOneWidget);
+      expect(findPlainText('Run git status?'), findsOneWidget);
 
       controller.handleEventForTesting(
         EventEnvelope(
@@ -313,8 +370,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Run this command?'), findsNothing);
-      expect(find.text('Edit this file?'), findsOneWidget);
+      expect(findPlainText('Run git status?'), findsNothing);
+      expect(findPlainText('Edit main.dart?'), findsOneWidget);
       expect(find.text('lib/main.dart'), findsOneWidget);
       expect(find.textContaining('no longer pending'), findsNothing);
     },
@@ -337,8 +394,8 @@ void main() {
       await _afterHold(tester);
 
       expect(controller.permissions.keys, ['request-2']);
-      expect(find.text('Run this command?'), findsNothing);
-      expect(find.text('Edit this file?'), findsOneWidget);
+      expect(findPlainText('Run git status?'), findsNothing);
+      expect(findPlainText('Edit main.dart?'), findsOneWidget);
       expect(find.textContaining('Not accepted'), findsNothing);
 
       controller.handleEventForTesting(
@@ -405,13 +462,13 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Run this command?'), findsOneWidget);
+    expect(findPlainText('Run git status?'), findsOneWidget);
 
     await controller.refreshPendingPermissions();
     await tester.pumpAndSettle();
 
     expect(controller.permissions, isEmpty);
-    expect(find.text('Run this command?'), findsNothing);
+    expect(findPlainText('Run git status?'), findsNothing);
     expect(find.byType(AlertDialog), findsNothing);
   });
 

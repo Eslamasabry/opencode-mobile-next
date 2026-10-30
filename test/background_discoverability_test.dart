@@ -80,7 +80,10 @@ void main() {
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: SettingsScreen(controller: controller),
+        home: SettingsScreen(
+          controller: controller,
+          initialGroup: SettingsGroup.thisApp,
+        ),
       ),
     );
     await tester.pumpAndSettle();

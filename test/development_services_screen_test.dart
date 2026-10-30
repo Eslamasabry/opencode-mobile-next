@@ -462,6 +462,9 @@ void main() {
     addTearDown(connection.dispose);
     await tester.pumpWidget(app(ProjectHub(controller: connection)));
     await tester.pumpAndSettle();
+    // The Files page keeps the project's tools in its bar's ⋯.
+    await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Development services'));
     await tester.pumpAndSettle();
     expect(find.byType(DevelopmentServicesScreen), findsOneWidget);

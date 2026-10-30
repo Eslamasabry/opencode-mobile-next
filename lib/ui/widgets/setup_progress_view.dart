@@ -46,9 +46,15 @@ class SetupProgressView extends StatefulWidget {
     this.personActions = const {},
     this.failureActions = const {},
     this.timeLine,
+    this.checklistOnly = false,
   });
 
   final SetupProgress progress;
+
+  /// Only the steps and the log, with no title, drawing, bar or buttons:
+  /// the Details sheet of a host that shows the job its own way (the phone
+  /// setup ring). Report this failure stays on a failed row.
+  final bool checklistOnly;
 
   /// Where row titles come from. Before the job reports its own components
   /// (the first poll after `run`), these are listed as pending so the
@@ -112,6 +118,53 @@ class SetupProgressView extends StatefulWidget {
             (error == 'runtime_ownership_unknown' ||
                 RegExp(r'\bownershipUnknown\b').hasMatch(error)),
       );
+
+  /// Why a failed job stopped, in one plain sentence, for a host that
+  /// shows the job its own way: the same words the failed row (or, with no
+  /// failed row, the job) says here. Technical text stays under Details.
+  static String failureSentence(
+    AppLocalizations l10n,
+    SetupProgress progress,
+    String Function(String id) titleOf,
+  ) {
+    if (needsOwnershipRecovery(progress)) {
+      return l10n.inAppServerOwnershipRecoveryBody;
+    }
+    if (_SetupProgressViewState._looksLikeNetwork(progress)) {
+      return l10n.setupProgressViewNoInternet;
+    }
+    ComponentProgress? row;
+    for (final candidate in progress.components) {
+      if (candidate.state == ComponentState.failed) {
+        row = candidate;
+        break;
+      }
+    }
+    if (row == null) {
+      final error = progress.error;
+      final plain = error == null ? null : setupPlainMessage(l10n, error);
+      if (plain != null) return plain;
+      final current = progress.current;
+      return current != null
+          ? l10n.setupProgressViewFailedAt(titleOf(current))
+          : l10n.setupProgressViewFailedUnknown;
+    }
+    final reason = row.error ?? progress.error;
+    final title = titleOf(row.id);
+    if ({
+      l10n.phoneSetupErrorInstall(title),
+      l10n.phoneSetupErrorNoSpace(title),
+      l10n.phoneSetupErrorChecksum(title),
+      l10n.phoneSetupErrorOffline(title),
+    }.contains(reason)) {
+      return reason!;
+    }
+    final plain = reason == null ? null : setupPlainMessage(l10n, reason);
+    if (plain != null) return plain;
+    final stage = row.stage;
+    if (stage != null) return l10n.setupProgressViewFailedDuring(stage);
+    return l10n.setupProgressViewFailedStep;
+  }
 
   /// Formats a byte pair in the total's unit ("18 of 30 MB"). The done
   /// figure is rounded down so the row never claims more than has arrived.
@@ -410,7 +463,9 @@ class _SetupProgressViewState extends State<SetupProgressView> {
           ),
       ],
       since: running ? _lastReport : null,
-      resume: ownershipRecovery
+      resume: widget.checklistOnly
+          ? null
+          : ownershipRecovery
           ? KitAction(
               key: const Key('setup-progress-recover-ownership'),
               label: l10n.e7SetupOpenAppSettings,
@@ -423,7 +478,7 @@ class _SetupProgressViewState extends State<SetupProgressView> {
               onPressed: widget.onContinue,
             )
           : null,
-      stop: running && widget.onCancel != null
+      stop: running && widget.onCancel != null && !widget.checklistOnly
           ? KitAction(
               key: const Key('setup-progress-cancel'),
               label: l10n.setupProgressViewCancel,
@@ -450,6 +505,8 @@ class _SetupProgressViewState extends State<SetupProgressView> {
             : null,
       ),
     );
+
+    if (widget.checklistOnly) return checklist;
 
     return KeyedSubtree(
       key: ValueKey('setup-progress-job-$_generation'),

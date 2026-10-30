@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/gestures.dart'
+    show PointerDeviceKind, kLongPressTimeout, kTouchSlop;
 
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
@@ -15,19 +16,26 @@ import '../glass/kit_glass.dart';
 import '../kit_bottom_inset.dart';
 import '../kit_buttons.dart';
 import '../kit_chip.dart';
+import '../kit_divider.dart';
+import '../kit_effects.dart';
 import '../kit_field.dart';
 import '../kit_icon.dart';
 import '../kit_icon_button.dart';
 import '../kit_layout.dart';
 import '../kit_level_meter.dart';
 import '../kit_live_background.dart';
+import '../kit_max_width.dart';
+import '../kit_menu.dart';
 import '../kit_motion.dart';
+import '../kit_surface_look.dart';
 import '../kit_tappable.dart';
 import '../kit_text.dart';
+import '../kit_tip.dart';
 import '../kit_tokens.dart';
 import '../motion/kit_haptics.dart';
-import '../kit_effects.dart';
 import '../motion/kit_motion_parts.dart';
+import '../motion/kit_reveal.dart';
+import '../style/kit_style.dart';
 import 'kit_composer_chips.dart';
 import 'kit_turn.dart';
 
@@ -37,19 +45,19 @@ part 'kit_composer_glow.dart';
 part 'kit_composer_classic.dart';
 part 'kit_composer_caption.dart';
 part 'kit_composer_layer.dart';
+part 'kit_composer_tray.dart';
 
-/// The composer (VL §5; docs/ux-system/kit-api/KitComposer.md): a solid
-/// surface2 pill (KitGlass) holding attach, the field, voice, and send or
-/// stop. Send is an accent circle. While a reply runs the box is otherwise
-/// idle and Send becomes Stop (owner decisions 1 and 2 Oct, 01B, 11B, 02B):
-/// a text-colour circle with a ground square and a slowly turning ring, the
-/// only Stop in the chat. The mic stays its own button beside it. What the
-/// reply is doing is written in the turn, not here; the model chip sits
-/// above the pill with the status chips ([KitComposerStatusStrip]), or in the
-/// bottom row of a window too tight for that line ([model]).
+/// The composer (VL §5; docs/ux-system/kit-api/KitComposer.md): one solid
+/// surface2 row (concept C, owner 20 Oct 2026) holding "+", the field and
+/// one trailing control: the mic while it is empty, Send once there are
+/// words. Stop is not here: it sits at the trailing end of the chips row
+/// above the pill while a reply runs, with or without text (owner, 30 Oct
+/// 2026; [KitComposerStatusStrip.stop]). What the reply is doing is written
+/// in the turn, not here; the model chip sits above the pill with the status
+/// chips.
 ///
 /// States: idle empty, idle with text, sending, busy empty, busy with text
-/// (stop + send, fixed delivery), busy with text that cannot send yet,
+/// (fixed delivery), busy with text that cannot send yet,
 /// offline, read-only, focused, voice (every [KitVoicePhase]) (KIT-12). No
 /// loading or empty state of its own.
 ///
@@ -64,8 +72,6 @@ class KitComposer extends StatefulWidget {
     required this.onSend,
     this.fieldLabel,
     this.busy = false,
-    this.onStop,
-    this.stopping = false,
     this.sending = false,
     this.canSendWhileBusy = false,
     this.delivery = KitComposerDelivery.afterThisReply,
@@ -77,6 +83,10 @@ class KitComposer extends StatefulWidget {
     this.suggestions,
     this.model,
     this.onTools,
+    this.tray = const [],
+    this.sendMenu = const [],
+    this.sendTip,
+    this.stuckNote,
     this.toolsDisabledReason,
     this.onVoice,
     this.voice,
@@ -85,14 +95,20 @@ class KitComposer extends StatefulWidget {
     this.composerKey,
     this.fieldKey,
     this.sendKey,
-    this.stopKey,
     this.toolsKey,
     this.voiceButtonKey,
     this.editorKey,
     this.hasAttachments = false,
     this.activityGlow,
     this.failure,
+    this.quiet = false,
   });
+
+  /// Something else on the screen is the main action now (a question the
+  /// agent waits on): the mic draws as a quiet surface, not the solid
+  /// accent, so the one solid mint is the question's answer. Send with
+  /// words typed keeps its accent.
+  final bool quiet;
 
   /// The message carries attachments or references, so Send is live (and
   /// the editor button shows) even with an empty field (chat-3).
@@ -119,9 +135,6 @@ class KitComposer extends StatefulWidget {
   /// A reply is being written.
   final bool busy;
 
-  /// Stop's own tap is in flight.
-  final bool stopping;
-
   /// Send's own tap is in flight.
   final bool sending;
 
@@ -133,11 +146,6 @@ class KitComposer extends StatefulWidget {
 
   /// Whose answer a waiting message is for ("Sends when OpenCode answers").
   final String offlineAgentName;
-
-  /// Stop: it takes Send's place while [busy] and the field is empty (and
-  /// leads the row when words are typed). Null: no Stop (a host that cannot
-  /// stop); while busy and empty the trailing control is then the mic.
-  final VoidCallback? onStop;
 
   /// What Send does while a reply runs. It is fixed by the agent, never a
   /// choice: the words say it on the button and in the note.
@@ -166,6 +174,26 @@ class KitComposer extends StatefulWidget {
   /// "+": the host's tools sheet (attach, photos, commands…).
   final VoidCallback? onTools;
 
+  /// What "+" opens in place (plus-menu concept C): a compact row of round
+  /// buttons attached to the box above the field, "+" turning into "×".
+  /// Empty: "+" runs [onTools] instead. Needs [onTools] to show "+" at all.
+  final List<KitComposerTrayAction> tray;
+
+  /// Send's long-press menu ("Send later or repeat"). With a menu, a
+  /// finger sends when it lifts (read from the pointer, so a button that
+  /// slid away under it still sends) unless it was held for the menu;
+  /// without one a finger sends the moment it lands ([_sendOnPress]).
+  final List<KitMenuItem> sendMenu;
+
+  /// The teaching system's tip over Send ("Hold Send to send later or
+  /// repeat"), shown while non-null.
+  final KitComposerTip? sendTip;
+
+  /// The host's words for the note while the running step looks stuck ("Waits
+  /// for git add -A to finish. Stop it to get through now."); it replaces
+  /// the delivery's own note. Null: the delivery's note.
+  final String? stuckNote;
+
   /// The mic: the host enters voice mode; null: no voice.
   final VoidCallback? onVoice;
 
@@ -181,7 +209,6 @@ class KitComposer extends StatefulWidget {
   final Key? composerKey,
       fieldKey,
       sendKey,
-      stopKey,
       toolsKey,
       voiceButtonKey,
       editorKey;
@@ -220,10 +247,20 @@ class KitComposer extends StatefulWidget {
   State<KitComposer> createState() => _KitComposerState();
 }
 
-enum _Trailing { mic, send, sendDisabled, sending, stop, none }
+enum _Trailing { mic, send, sendDisabled, sending, none }
 
 class _KitComposerState extends State<KitComposer> {
   bool _hasText = false;
+
+  /// The tray "+" opens ([KitComposer.tray]).
+  bool _trayOpen = false;
+
+  void _toggleTray() => setState(() => _trayOpen = !_trayOpen);
+
+  void _pickFromTray(KitComposerTrayAction action) {
+    setState(() => _trayOpen = false);
+    action.onTap();
+  }
 
   /// Esc hid the suggestions; they come back when the text changes or the
   /// host hands new ones.
@@ -252,6 +289,7 @@ class _KitComposerState extends State<KitComposer> {
 
   @override
   void dispose() {
+    _holdTimer?.cancel();
     widget.controller.removeListener(_onText);
     super.dispose();
   }
@@ -270,10 +308,6 @@ class _KitComposerState extends State<KitComposer> {
   }
 
   bool get _hasContent => _hasText || widget.hasAttachments;
-
-  /// The height a touch caret handle hangs below the line it marks (the
-  /// Material handle; Cupertino's is shorter).
-  static const double _handleClearance = 22;
 
   bool get _readOnly => widget.readOnlyReason != null;
 
@@ -308,6 +342,52 @@ class _KitComposerState extends State<KitComposer> {
     if (_sentOnPress) scheduleMicrotask(() => _sentOnPress = false);
   }
 
+  /// With a long-press menu ([KitComposer.sendMenu]) a finger cannot send
+  /// the moment it lands, or a long-press could not offer the menu without
+  /// sending. It sends when it lifts, unless it was held long enough for
+  /// the menu or slid away. The lift is read from the pointer itself, not
+  /// from a tap gesture, so it still counts when the composer slides down
+  /// under the finger as the keyboard hides (the lost first Send).
+  int? _heldPointer;
+  Offset _heldAt = Offset.zero;
+  bool _heldLong = false;
+  Timer? _holdTimer;
+
+  void _pressDown(PointerDownEvent event) {
+    if (widget.sendMenu.isEmpty) {
+      _sendOnPress(event);
+      return;
+    }
+    if (event.kind != PointerDeviceKind.touch || !_canSendNow) return;
+    _heldPointer = event.pointer;
+    _heldAt = event.position;
+    _heldLong = false;
+    _holdTimer?.cancel();
+    _holdTimer = Timer(kLongPressTimeout, () => _heldLong = true);
+  }
+
+  void _pressUp(PointerUpEvent event) {
+    if (event.pointer == _heldPointer) {
+      _holdTimer?.cancel();
+      _heldPointer = null;
+      final slid = (event.position - _heldAt).distance > kTouchSlop;
+      if (!_heldLong && !slid && _canSendNow) {
+        // The tap that follows in this same lift does not send again.
+        _sentOnPress = true;
+        _send();
+      }
+    }
+    _endPress();
+  }
+
+  void _pressCancel(PointerCancelEvent event) {
+    _sentOnPress = false;
+    if (event.pointer == _heldPointer) {
+      _holdTimer?.cancel();
+      _heldPointer = null;
+    }
+  }
+
   void _sendOnTap() {
     if (_sentOnPress) return;
     _send();
@@ -319,6 +399,10 @@ class _KitComposerState extends State<KitComposer> {
   }
 
   void _escape() {
+    if (_trayOpen) {
+      setState(() => _trayOpen = false);
+      return;
+    }
     if (_suggestionsShown) {
       setState(() {
         _suggestionsHidden = true;
@@ -335,52 +419,41 @@ class _KitComposerState extends State<KitComposer> {
   }
 
   _Trailing _trailing() {
-    if (_readOnly) {
-      return widget.busy && widget.onStop != null
-          ? _Trailing.stop
-          : _Trailing.none;
-    }
-    final stop = widget.onStop != null;
-    // One trailing control (owner Fix): Send when there is something to
-    // send, Stop when there is not. While a run works and words are typed,
-    // Stop moves to the start of the row ([_stopLeads]), never beside Send.
+    if (_readOnly) return _Trailing.none;
+    // One trailing control: Send when there is something to send, the mic
+    // when there is not. Stop is not here (it sits above the pill, in the
+    // chips row: [KitComposerStatusStrip.stop]).
     if (widget.sending) return _Trailing.sending;
     if (widget.busy) {
-      // A host whose Stop lives on the running turn ([KitTurnLive]) passes
-      // no [onStop]: the mic stays, so a message can be spoken while the
-      // reply runs and sent after it.
       if (!_hasContent) {
-        return stop
-            ? _Trailing.stop
-            : widget.onVoice != null
-            ? _Trailing.mic
-            : _Trailing.sendDisabled;
+        return widget.onVoice != null ? _Trailing.mic : _Trailing.sendDisabled;
       }
-      if (widget.canSendWhileBusy) return _Trailing.send;
-      return stop ? _Trailing.stop : _Trailing.none;
+      return widget.canSendWhileBusy ? _Trailing.send : _Trailing.none;
     }
     if (_hasContent) return _Trailing.send;
     return widget.onVoice != null ? _Trailing.mic : _Trailing.sendDisabled;
   }
 
-  /// Stop while the trailing slot is Send: a run works and there is
-  /// something to send. It sits at the start of the row, after "+", so a
-  /// thumb reaching for Send never lands on it.
-  bool get _stopLeads =>
-      !_readOnly &&
-      widget.busy &&
-      widget.onStop != null &&
-      (widget.sending || (_hasContent && widget.canSendWhileBusy));
-
-  /// The mic as its own button: while a reply runs, Stop has Send's slot and
-  /// the mic stays reachable beside it, so a message can be spoken now and
-  /// sent after the reply.
-  bool get _micBeside =>
-      !_readOnly &&
-      widget.onVoice != null &&
-      widget.busy &&
-      _trailing() == _Trailing.stop &&
-      !_stopLeads;
+  /// Whether [text] runs past one line of the field ([width] wide): only
+  /// then does the full-screen editor's button take a corner of it.
+  static bool _runsPastOneLine(
+    BuildContext context,
+    String text,
+    TextStyle style,
+    double width,
+  ) {
+    if (text.contains('\n')) return true;
+    if (!width.isFinite || width <= 0) return false;
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout(maxWidth: width);
+    final over = painter.didExceedMaxLines;
+    painter.dispose();
+    return over;
+  }
 
   String _sendWords(AppLocalizations l10n) {
     if (widget.sending) return l10n.kitComposerSending;
@@ -406,17 +479,22 @@ class _KitComposerState extends State<KitComposer> {
       if (widget.busy && _hasContent && !widget.canSendWhileBusy)
         l10n.kitComposerCannotSendYet,
       if (widget.busy && _hasContent && widget.canSendWhileBusy)
-        switch (widget.delivery) {
-          KitComposerDelivery.addToThisTurn => l10n.kitComposerAddToTurnNote,
-          KitComposerDelivery.stopAndSend => l10n.kitComposerStopAndSendNote,
-          KitComposerDelivery.afterThisReply => l10n.kitComposerSendsAfter,
-        },
+        widget.stuckNote ??
+            switch (widget.delivery) {
+              KitComposerDelivery.addToThisTurn => l10n.kitComposerAddsToReply,
+              KitComposerDelivery.stopAndSend =>
+                l10n.kitComposerCantTakeMidReply(widget.offlineAgentName),
+              KitComposerDelivery.afterThisReply => l10n.kitComposerSendsAfter,
+            },
     ];
     return parts.isEmpty ? null : parts.join(' · ');
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final radius = KitLayout.windowOf(context).isWide
@@ -517,62 +595,61 @@ class _KitComposerState extends State<KitComposer> {
       ),
     );
 
-    final bottomRow = <Widget>[
-      if (!readOnly &&
-          widget.onTools != null &&
-          widget.toolsDisabledReason == null)
-        KitIconButton(
-          key: widget.toolsKey,
-          icon: AppIconography.add,
-          tooltip: l10n.kitComposerTools,
-          onPressed: widget.onTools,
-        ),
-      if (_stopLeads) _stopControl(l10n),
-      if (!readOnly && widget.model != null)
-        Flexible(
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: widget.model!,
-          ),
-        )
-      else
-        const Spacer(),
-      if (_micBeside)
-        _Circle(
-          key: const ValueKey('kit-composer-mic'),
-          kind: _CircleKind.mic,
-          label: l10n.kitComposerVoice,
-          tappableKey: widget.voiceButtonKey,
-          onTap: widget.onVoice,
-        ),
-      KitSwap(child: _trailingControl(context, l10n)),
-    ];
+    // One row (concept C, owner 20 Oct 2026): "+" at the start, the field,
+    // and the one trailing control (mic, Send or Stop) at the end, all on
+    // the field's last line as it grows.
+    final tools =
+        !readOnly &&
+        widget.onTools != null &&
+        widget.toolsDisabledReason == null;
+    final hasTray = tools && widget.tray.isNotEmpty;
+    final trayShown = hasTray && _trayOpen;
     // The full-screen editor opens from the field's top corner, where it
-    // belongs to the words, not from the send row (owner Fix).
-    final editor = !readOnly && _hasContent && widget.onOpenEditor != null;
+    // belongs to the words, not from the send row (owner Fix). Only once the
+    // words run past one line, or the message carries files (the editor is
+    // where they are reviewed): a short message needs no bigger editor.
+    final canEdit = !readOnly && _hasContent && widget.onOpenEditor != null;
+    final bodyStyle = KitText.styleOf(context, KitTextRole.body);
     // One tree whether or not the editor button shows: the field keeps its
     // place (and its editing state, selection and keyboard) as words come
     // and go, a run finishes or the keyboard resizes the page.
-    final fieldWithEditor = Stack(
-      children: [
-        Padding(
-          padding: editor
-              ? EdgeInsetsDirectional.only(end: tokens.minTarget)
-              : EdgeInsets.zero,
-          child: field,
-        ),
-        if (editor)
-          PositionedDirectional(
-            top: 0,
-            end: 0,
-            child: KitIconButton(
-              key: widget.editorKey,
-              icon: AppIconography.expand,
-              tooltip: l10n.kitComposerEditor,
-              onPressed: widget.onOpenEditor,
-            ),
-          ),
-      ],
+    final fieldWithEditor = LayoutBuilder(
+      builder: (context, box) => ListenableBuilder(
+        listenable: widget.controller,
+        child: field,
+        builder: (context, field) {
+          final editor =
+              canEdit &&
+              (widget.hasAttachments ||
+                  _runsPastOneLine(
+                    context,
+                    widget.controller.text,
+                    bodyStyle,
+                    box.maxWidth,
+                  ));
+          return Stack(
+            children: [
+              Padding(
+                padding: editor
+                    ? EdgeInsetsDirectional.only(end: tokens.minTarget)
+                    : EdgeInsets.zero,
+                child: field,
+              ),
+              if (editor)
+                PositionedDirectional(
+                  top: 0,
+                  end: 0,
+                  child: KitIconButton(
+                    key: widget.editorKey,
+                    icon: AppIconography.expand,
+                    tooltip: l10n.kitComposerEditor,
+                    onPressed: widget.onOpenEditor,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
     );
 
     // What sits above the field: the note, the
@@ -621,9 +698,6 @@ class _KitComposerState extends State<KitComposer> {
         ),
     ];
 
-    final handleClearance = _hasText && available >= 6 * tokens.minTarget
-        ? _handleClearance
-        : 0.0;
     return LayoutBuilder(
       builder: (context, constraints) {
         final above = accessories.isEmpty
@@ -646,64 +720,146 @@ class _KitComposerState extends State<KitComposer> {
                       ),
                     )
                   : above,
-            Padding(
-              // Keyed so a note, suggestions or attachments appearing above it
-              // never re-create the field (focus and the keyboard stay).
-              key: const ValueKey<String>('kit-composer-field-slot'),
-              padding: EdgeInsetsDirectional.only(
-                start: tokens.space3,
-                end: tokens.space3,
-                // The status caption straddles the border, so its lower half
-                // sits in this room; it is constant, so the box never
-                // changes height when a reply starts.
-                top: tokens.space1,
-                // With words in the field its caret handle can hang below
-                // the last line; this keeps it off the send row, so the
-                // prompt editor and Send stay pressable (320 dp, 2x text).
-                // A short room keeps the height for the field instead.
-                bottom: handleClearance,
-              ),
-              child: fieldWithEditor,
+            KitReveal(
+              child: trayShown
+                  ? _ComposerTray(actions: widget.tray, onPicked: _pickFromTray)
+                  : null,
             ),
-            Row(children: bottomRow),
+            // Once the words run past one line of the one-row field, they
+            // take the composer's whole width and the controls move to a row
+            // under them (owner, 24 Oct 2026: "+", Stop, the editor and Send
+            // beside a growing message left it a narrow column). Measured
+            // against the one-row field's width however it is laid out now,
+            // so the two layouts never take turns. The field stays the first
+            // row's keyed child either way: its focus, selection and the
+            // keyboard stay as it moves.
+            ListenableBuilder(
+              listenable: widget.controller,
+              builder: (context, _) {
+                final leading = <Widget>[
+                  if (tools)
+                    // "+" turns into "×" while the tray is open (a quarter
+                    // of a quarter turn), instantly with reduced motion.
+                    AnimatedRotation(
+                      turns: trayShown ? 1 / 8 : 0,
+                      duration: KitMotion.reduced(context)
+                          ? Duration.zero
+                          : KitMotion.quick,
+                      curve: KitMotion.enter,
+                      child: KitIconButton(
+                        key: widget.toolsKey,
+                        icon: AppIconography.add,
+                        tooltip: trayShown
+                            ? l10n.kitComposerTrayClose
+                            : l10n.kitComposerTools,
+                        onPressed: hasTray ? _toggleTray : widget.onTools,
+                      ),
+                    ),
+                ];
+                final trailing = <Widget>[
+                  if (!readOnly && widget.model != null) widget.model!,
+                  KitSwap(child: _trailingControl(context, l10n)),
+                ];
+                final rowField =
+                    constraints.maxWidth -
+                    tokens.minTarget * (leading.length + 1) -
+                    tokens.space2 -
+                    (leading.isEmpty ? tokens.space3 : 0);
+                final stacked =
+                    !readOnly &&
+                    _runsPastOneLine(
+                      context,
+                      widget.controller.text,
+                      bodyStyle,
+                      rowField,
+                    );
+                final fieldSlot = Expanded(
+                  // Keyed (the row's own child) so a note, suggestions or
+                  // attachments appearing above it, or the controls moving
+                  // under it, never re-create the field (focus and the
+                  // keyboard stay).
+                  key: const ValueKey<String>('kit-composer-field-slot'),
+                  child: Padding(
+                    padding: !stacked && tools
+                        ? EdgeInsetsDirectional.only(end: tokens.space2)
+                        : EdgeInsetsDirectional.only(
+                            start: tokens.space3,
+                            end: tokens.space2,
+                          ),
+                    child: fieldWithEditor,
+                  ),
+                );
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (!stacked) ...leading,
+                        fieldSlot,
+                        if (!stacked) ...trailing,
+                      ],
+                    ),
+                    if (stacked)
+                      Row(
+                        key: const ValueKey<String>('kit-composer-controls'),
+                        children: [...leading, const Spacer(), ...trailing],
+                      ),
+                  ],
+                );
+              },
+            ),
           ],
         );
       },
     );
   }
 
-  Widget _stopControl(AppLocalizations l10n) => _Circle(
-    key: const ValueKey('kit-composer-stop'),
-    kind: _CircleKind.stop,
-    label: l10n.kitComposerStop,
-    tappableKey: widget.stopKey,
-    working: widget.stopping,
-    disabledReason: widget.stopping ? l10n.kitWorking : null,
-    onTap: widget.stopping ? null : widget.onStop,
-  );
-
   Widget _trailingControl(BuildContext context, AppLocalizations l10n) {
     final wide = KitLayout.windowOf(context).isWide;
     final trailing = _trailing();
     final sendShortcut = wide && !_readOnly ? 'Enter' : null;
 
-    Widget stop() => _stopControl(l10n);
+    // An agent that cannot take a message mid-reply: Send is an amber
+    // labelled "Stop and send", so the stop is plain before the tap.
+    final stopAndSend =
+        widget.busy &&
+        !widget.sending &&
+        widget.delivery == KitComposerDelivery.stopAndSend;
 
     Widget send({bool enabled = true}) => Listener(
-      onPointerDown: enabled ? _sendOnPress : null,
-      onPointerUp: (_) => _endPress(),
-      onPointerCancel: (_) => _sentOnPress = false,
-      child: _Circle(
-        key: const ValueKey('kit-composer-send'),
-        kind: enabled ? _CircleKind.send : _CircleKind.sendDisabled,
-        label: _sendWords(l10n),
-        tappableKey: widget.sendKey,
-        shortcut: sendShortcut,
-        working: widget.sending,
-        disabledReason: widget.sending
-            ? l10n.kitComposerSending
-            : (enabled ? null : widget.hint),
-        onTap: enabled && !widget.sending ? _sendOnTap : null,
+      onPointerDown: enabled ? _pressDown : null,
+      onPointerUp: _pressUp,
+      onPointerCancel: _pressCancel,
+      child: KitTip(
+        tipKey: const ValueKey('kit-composer-send-tip-bubble'),
+        message: widget.sendTip?.message ?? '',
+        visible: widget.sendTip != null && enabled,
+        onDismissed: () => widget.sendTip?.onDismissed(),
+        child: enabled && stopAndSend
+            ? _Circle(
+                key: const ValueKey('kit-composer-send'),
+                kind: _CircleKind.stopAndSend,
+                label: l10n.kitComposerStopAndSend,
+                tappableKey: widget.sendKey,
+                shortcut: sendShortcut,
+                menu: widget.sendMenu,
+                onTap: _sendOnTap,
+              )
+            : _Circle(
+                key: const ValueKey('kit-composer-send'),
+                kind: enabled ? _CircleKind.send : _CircleKind.sendDisabled,
+                label: _sendWords(l10n),
+                tappableKey: widget.sendKey,
+                shortcut: sendShortcut,
+                working: widget.sending,
+                menu: widget.sending ? const [] : widget.sendMenu,
+                disabledReason: widget.sending
+                    ? l10n.kitComposerSending
+                    : (enabled ? null : widget.hint),
+                onTap: enabled && !widget.sending ? _sendOnTap : null,
+              ),
       ),
     );
 
@@ -715,13 +871,22 @@ class _KitComposerState extends State<KitComposer> {
         label: l10n.kitComposerVoice,
         tappableKey: widget.voiceButtonKey,
         onTap: widget.onVoice,
+        secondary: widget.quiet,
       ),
       _Trailing.send => send(),
       _Trailing.sending => send(),
       _Trailing.sendDisabled => send(enabled: false),
-      _Trailing.stop => stop(),
     };
   }
 }
 
-enum _CircleKind { send, sendDisabled, mic, stop, listen, voiceSend, voiceDone }
+enum _CircleKind {
+  send,
+  stopAndSend,
+  sendDisabled,
+  mic,
+  stop,
+  listen,
+  voiceSend,
+  voiceDone,
+}

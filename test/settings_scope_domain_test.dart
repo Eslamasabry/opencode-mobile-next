@@ -45,10 +45,10 @@ void main() {
     },
   );
 
-  test('all 64 settings doors have immutable ownership without navigation', () {
+  test('all 67 settings doors have immutable ownership without navigation', () {
     final rows = SettingsScopeCatalog.rows;
-    expect(rows, hasLength(64));
-    expect(rows.map((row) => row.rowId).toSet(), hasLength(64));
+    expect(rows, hasLength(67));
+    expect(rows.map((row) => row.rowId).toSet(), hasLength(67));
     expect(rows.every((row) => row.owners.isNotEmpty), isTrue);
     expect(() => rows.clear(), throwsUnsupportedError);
     expect(() => rows.first.owners.clear(), throwsUnsupportedError);

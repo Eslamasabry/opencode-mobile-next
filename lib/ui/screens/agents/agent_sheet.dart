@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show SemanticsService;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/agent_auth_probe.dart';
@@ -24,24 +25,43 @@ enum AgentSheetStep { list, setup, check, signIn }
 /// Opens the agent sheet: the choice of agent, and, in the same sheet, the
 /// steps that make an agent ready (install, phone check, sign-in). Returns
 /// true when an agent was chosen. One sheet only: every step replaces the
-/// frame in place.
+/// frame in place. [signInAgain] goes straight on to the agent's own
+/// sign-in from the sign-in step, even when it reads signed in (a model
+/// that needs an account the agent's free sign-in doesn't have).
 Future<bool?> showAgentSheet(
   BuildContext context, {
   String? agentId,
   AgentSheetStep step = AgentSheetStep.list,
+  bool signInAgain = false,
 }) => showKitFramedSheet<bool>(
   context,
   sheetKey: const ValueKey('agents-sheet'),
-  builder: (_) => AgentSheet(agentId: agentId, step: step),
+  builder: (_) =>
+      AgentSheet(agentId: agentId, step: step, signInAgain: signInAgain),
 );
+
+/// The step that gets [row] going: install, phone check or sign-in; the plain
+/// list for anything else (resume, a real blocker said in words there).
+AgentSheetStep agentSetupStep(AgentRow? row) => switch (row?.fixAction) {
+  PhoneAgentFixAction.install => AgentSheetStep.setup,
+  PhoneAgentFixAction.runPhoneCheck => AgentSheetStep.check,
+  PhoneAgentFixAction.signIn => AgentSheetStep.signIn,
+  _ => AgentSheetStep.list,
+};
 
 final _never = ValueNotifier<int>(0);
 
 class AgentSheet extends ConsumerStatefulWidget {
-  const AgentSheet({super.key, this.agentId, this.step = AgentSheetStep.list});
+  const AgentSheet({
+    super.key,
+    this.agentId,
+    this.step = AgentSheetStep.list,
+    this.signInAgain = false,
+  });
 
   final String? agentId;
   final AgentSheetStep step;
+  final bool signInAgain;
 
   @override
   ConsumerState<AgentSheet> createState() => _AgentSheetState();
@@ -60,6 +80,11 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
   // Highest bar value shown for the running install.
   double _barFloor = 0;
   bool _signInKicked = false;
+
+  /// The sign-in step's own status read is running. Only then does the step
+  /// say "Checking sign-in…": a read that failed leaves the plain Sign in,
+  /// never a spinner without end (issue #95).
+  late bool _readingSignIn = widget.step == AgentSheetStep.signIn;
   // The agent's own sign-out is running (up to 20 seconds). The frame holds
   // its signed-in layout until it ends, so a failed attempt never flashes the
   // sign-in layout.
@@ -109,6 +134,9 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       if (!mounted) return;
       unawaited(_agents.refreshAgentRows());
       _enter(_step);
+      if (widget.signInAgain && _step == AgentSheetStep.signIn) {
+        unawaited(_openSignIn());
+      }
     });
   }
 
@@ -333,14 +361,20 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
   /// sign-in itself runs on its own terminal ([_openSignIn]).
   Future<void> _beginSignIn() async {
     final id = _agentId;
-    if (id == null || _signInKicked) return;
+    if (_signInKicked) return;
+    final state = id == null ? null : _agents.agentSignInState(id);
+    if (id == null || (state != null && state.inspected)) {
+      setState(() => _readingSignIn = false);
+      return;
+    }
     _signInKicked = true;
-    final state = _agents.agentSignInState(id);
-    if (state != null && state.inspected) return;
+    setState(() => _readingSignIn = true);
     try {
       await _agents.recheckAgentSignIn(id);
     } catch (error) {
       _fail(error);
+    } finally {
+      if (mounted) setState(() => _readingSignIn = false);
     }
   }
 
@@ -367,11 +401,24 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
       ),
     );
     if (!mounted || signedIn != true) return;
-    // "Signed in" shows for a moment, then back to New conversation with
-    // this agent chosen.
+    // "Signed in" shows long enough to read and is said to a screen reader;
+    // then back to New conversation with this agent chosen. A person using
+    // TalkBack or Switch Access is not moved: "Use {agent}" is the way on.
+    final l10n = AppLocalizations.of(context);
+    final view = View.maybeOf(context);
+    if (view != null) {
+      unawaited(
+        SemanticsService.sendAnnouncement(
+          view,
+          '${l10n.agentsSignedIn}. ${l10n.agentsSignedInBody(KitBidi.auto(_name(id)))}',
+          Directionality.of(context),
+        ),
+      );
+    }
     _closeSoon?.cancel();
+    if (MediaQuery.accessibleNavigationOf(context)) return;
     _closeSoon = Timer(
-      const Duration(milliseconds: 900),
+      const Duration(milliseconds: 2400),
       () => unawaited(_chooseAfterSignIn(id)),
     );
   }
@@ -503,10 +550,14 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     // OpenCode and the agents that are ready and certified on the version
     // this app installs come first and can be chosen. Every other agent
     // stays in the list (owner rule: never hide one), dimmed, with one
-    // plain reason and its way forward where there is one.
+    // plain reason and its way forward where there is one. The agent
+    // already chosen is listed as the choice it is.
     final choices = [
       for (final choice in agents.chatAgentChoices)
-        if (choice.row == null || agentChoosable(choice.row!)) choice,
+        if (choice.row == null ||
+            choice.selected ||
+            agentChoosable(choice.row!))
+          choice,
     ];
     final shown = {for (final choice in choices) choice.agentId};
     final rest = [
@@ -834,7 +885,7 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     final name = KitBidi.auto(_name(id));
     final state = _agents.agentSignInState(id);
     final phase = state?.phase;
-    final checking = state == null || !state.inspected;
+    final checking = _readingSignIn && (state == null || !state.inspected);
     final signedIn = phase == AgentSignInPhase.signedIn || _signingOut;
     final hostKey = state?.hostOnlyApiKey ?? false;
     // A signed-in agent at its plan limit reads signed in; its row says limit.

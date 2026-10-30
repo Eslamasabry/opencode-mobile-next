@@ -26,14 +26,25 @@ Future<void> Function(BuildContext context)? localTerminalOpenSetupOverride;
 /// OpenCode server is involved, so it works while the server is stopped or
 /// not answering (docs/design/local-terminal-2026-09-24.md).
 ///
-/// The whole screen: the top bar (with [header] under it, the source choice
-/// of the terminal page), the terminal, and the key bar. Shells outlive the
-/// screen ([localTerminalProvider]); the top bar's menu lists them.
+/// The whole screen: the top bar ("Terminal", with [scope] under it: where
+/// the shell runs, and the dev-server line when one is known), the shells as
+/// tabs once there are two, the terminal, and the one key row. Shells
+/// outlive the screen ([localTerminalProvider]).
 class LocalTerminalView extends ConsumerStatefulWidget {
-  const LocalTerminalView({super.key, this.header, this.sessions, this.linux});
+  const LocalTerminalView({
+    super.key,
+    this.scope,
+    this.placeMenu = const [],
+    this.sessions,
+    this.linux,
+  });
 
-  /// Shown directly under the top bar, above the one loading bar.
-  final Widget? header;
+  /// The line under the title (the terminal page's place and dev server).
+  final KitTopBarScope? scope;
+
+  /// Where the shell runs, at the end of the bar's menu (while the line
+  /// under the title is the dev server's).
+  final List<KitMenuItem> placeMenu;
 
   /// Tests pass fakes; the app uses its providers.
   final LocalTerminalSessions? sessions;
@@ -170,22 +181,57 @@ class _LocalTerminalViewState extends ConsumerState<LocalTerminalView> {
   String _shellName(LocalShell shell) =>
       _l10n.localTerminalShellName(shell.number);
 
-  /// The top bar's menu: every shell (the one showing checked), then New
-  /// shell and Paste, then stopping or closing the one showing.
+  /// The shells as tabs, once there are two: the one showing in mint, each
+  /// with its own Stop or Close on long-press.
+  Widget? _tabs(LocalShell? shell) {
+    final shells = _sessions.shells;
+    if (shells.length < 2) return null;
+    final l10n = _l10n;
+    return Padding(
+      padding: EdgeInsetsDirectional.only(bottom: KitTokens.of(context).space1),
+      child: KitSessionTabs(
+        key: const ValueKey('local-terminal-tabs'),
+        semanticsLabel: l10n.terminalSessionsLabel,
+        endedLabel: l10n.terminalSessionEnded,
+        tabs: [
+          for (final each in shells)
+            KitSessionTab(
+              tabKey: ValueKey('local-terminal-shell-${each.number}'),
+              label: _shellName(each),
+              selected: identical(each, shell),
+              ended: !_live(each),
+              onTap: () => _show(each),
+              menuLabel: _shellName(each),
+              menu: [
+                if (each.running)
+                  KitMenuItem(
+                    label: l10n.localTerminalStopNamed(_shellName(each)),
+                    icon: AppIconography.stopCircle,
+                    destructive: true,
+                    onSelected: () => unawaited(_stop(each)),
+                  )
+                else
+                  KitMenuItem(
+                    label: l10n.localTerminalCloseNamed(_shellName(each)),
+                    icon: AppIconography.close,
+                    destructive: true,
+                    onSelected: () => unawaited(_sessions.remove(each)),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  static bool _live(LocalShell shell) =>
+      shell.running || shell.state == LocalShellState.starting;
+
+  /// The top bar's menu: New shell and Paste, then stopping or closing the
+  /// one showing. The shells themselves are the tabs.
   List<KitMenuItem> _menu(LocalShell? shell) {
     final l10n = _l10n;
     return [
-      for (final each in _sessions.shells)
-        KitMenuItem(
-          key: ValueKey('local-terminal-shell-${each.number}'),
-          label: each.running || each.state == LocalShellState.starting
-              ? _shellName(each)
-              : l10n.localTerminalShellEnded(_shellName(each)),
-          icon: AppIconography.terminal,
-          checked: identical(each, shell),
-          group: 'shells',
-          onSelected: () => _show(each),
-        ),
       KitMenuItem(
         key: const ValueKey('local-terminal-new'),
         label: l10n.localTerminalNewShell,
@@ -255,13 +301,15 @@ class _LocalTerminalViewState extends ConsumerState<LocalTerminalView> {
         (_status == null && _statusFailure == null) ||
         (installed &&
             (shell == null || shell.state == LocalShellState.starting));
-    // Landscape with the keyboard up leaves a strip: the source choice goes
-    // (and the key bar folds into one row), so the shell keeps some lines.
-    final header = _compact(context) ? null : widget.header;
+    // Landscape with the keyboard up leaves a strip: the tabs go (and the
+    // key bar folds into one sliding row), so the shell keeps some lines.
+    final header = _compact(context) || !installed ? null : _tabs(shell);
     final selected = shell != null && _selection.selection != null;
     return KitScreen(
       topBar: KitTopBar(
         title: l10n.libraryTerminalTitle,
+        // A short strip above the keyboard keeps its lines for the shell.
+        scope: _compact(context) ? null : widget.scope,
         menuKey: const ValueKey('local-terminal-menu'),
         actions: [
           if (selected)
@@ -271,7 +319,7 @@ class _LocalTerminalViewState extends ConsumerState<LocalTerminalView> {
               text: () => _selectedText(shell),
             ),
         ],
-        menu: installed ? _menu(shell) : const [],
+        menu: [if (installed) ..._menu(shell), ...widget.placeMenu],
       ),
       header: [?header],
       status: installed && shell != null ? _cost() : null,
@@ -366,6 +414,7 @@ class _LocalTerminalViewState extends ConsumerState<LocalTerminalView> {
                 controller: _selection,
                 focusNode: _focus,
                 readOnly: !shell.running,
+                calm: true,
                 // An ended shell shows its last screen and Restart instead
                 // of keys that would type into nothing.
                 keys: exited ? null : _keys,

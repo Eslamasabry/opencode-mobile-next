@@ -186,7 +186,7 @@ void main() {
             'Basic ${base64Encode(utf8.encode('opencode:private-test-password'))}',
           );
           request.response.headers.contentType = ContentType.json;
-          request.response.write('{"version":"2.0.29"}');
+          request.response.write('{"version":"2.1.1"}');
           await request.response.close();
         });
         final base = 'https://127.0.0.1:${server.port}';
@@ -226,7 +226,7 @@ void main() {
             certificatePinSha256: info.fingerprintSha256,
           );
           try {
-            expect(await accepted.getJson('/info'), {'version': '2.0.29'});
+            expect(await accepted.getJson('/info'), {'version': '2.1.1'});
             expect(requests, 1);
           } finally {
             accepted.close();
@@ -347,7 +347,7 @@ void main() {
         replacement.listen((request) async {
           requests++;
           request.response.headers.contentType = ContentType.json;
-          request.response.write('{"version":"2.0.29"}');
+          request.response.write('{"version":"2.1.1"}');
           await request.response.close();
         });
         final normal = Api2Transport(baseUrl: base, password: '');
@@ -357,7 +357,7 @@ void main() {
           certificatePinSha256: pin,
         );
         try {
-          expect(await normal.getJson('/info'), {'version': '2.0.29'});
+          expect(await normal.getJson('/info'), {'version': '2.1.1'});
           expect(requests, 1);
           await expectLater(
             pinned.getJson('/info'),

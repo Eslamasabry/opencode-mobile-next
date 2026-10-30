@@ -20,8 +20,11 @@ Widget _host(
   TextDirection direction = TextDirection.ltr,
   double textScale = 1,
   bool reduced = false,
+  // A platform without the Android ripple, so a press shows the flat
+  // pressed fill (owner rule 2026-10-26: Android draws the ripple).
+  bool flat = false,
 }) => MaterialApp(
-  theme: _dark,
+  theme: flat ? _dark.copyWith(platform: TargetPlatform.fuchsia) : _dark,
   builder: (context, app) => MediaQuery(
     data: MediaQuery.of(context).copyWith(
       textScaler: TextScaler.linear(textScale),
@@ -138,13 +141,20 @@ const _labels = ['Alpha', 'Bravo', 'Charlie'];
 /// Every colour the control paints with a [Paint] (fills, outlines, the
 /// ring), as 32-bit ARGB so a role colour and a painted colour compare
 /// equal. Text and glyphs are painted as paragraphs and are not included.
-Set<int> _paintColors(WidgetTester tester, {Finder? around}) {
+Set<int> _paintColors(
+  WidgetTester tester, {
+  Finder? around,
+  bool strokesOnly = false,
+}) {
   final colors = <int>{};
   expect(
     around ?? find.byType(KitSegmented<String>),
     paints..everything((method, args) {
       for (final arg in args) {
-        if (arg is Paint) colors.add(arg.color.toARGB32());
+        if (arg is Paint &&
+            (!strokesOnly || arg.style == PaintingStyle.stroke)) {
+          colors.add(arg.color.toARGB32());
+        }
       }
       return true;
     }),
@@ -335,7 +345,7 @@ void main() {
         reason: 'a touch does not move keyboard focus into the group',
       );
       expect(
-        _paintColors(tester),
+        _paintColors(tester, strokesOnly: true),
         isNot(contains(_rolesOf(tester).accent)),
         reason: 'no accent focus ring after a touch',
       );
@@ -649,7 +659,7 @@ void main() {
       await tester.pump();
 
       expect(
-        _paintColors(tester),
+        _paintColors(tester, strokesOnly: true),
         isNot(contains(_rolesOf(tester).accent)),
         reason: 'no ring before focus arrives',
       );
@@ -671,7 +681,7 @@ void main() {
     testWidgets('hover and press fill with surface steps, never overlays', (
       tester,
     ) async {
-      await tester.pumpWidget(_host(_part()));
+      await tester.pumpWidget(_host(_part(), flat: true));
       final roles = _rolesOf(tester);
       // Framework ink paints on the Material behind the control, so the
       // colours are read from there: the page's own ground plus the tokens.
@@ -821,7 +831,18 @@ void main() {
     testWidgets('it stacks the moment a label would not fit, and returns to '
         'one row when it fits again', (tester) async {
       await at(tester, const Size(1280, 800));
-      await tester.pumpWidget(_host(long()));
+      // Labels that fit the 720 dp reading cap on one row (the test font is
+      // one em a glyph), but not 320 dp.
+      Widget mid() => KitSegmented<String>(
+        segments: const [
+          KitSegment(value: 'a', label: 'Only this one'),
+          KitSegment(value: 'b', label: 'Everything here'),
+        ],
+        selected: 'a',
+        onChanged: (_) {},
+        semanticsLabel: 'Permission scope',
+      );
+      await tester.pumpWidget(_host(mid()));
       expect(rows(), findsNothing, reason: 'room for both labels');
       tester.view.physicalSize = const Size(320, 800);
       await tester.pump();
@@ -1083,5 +1104,49 @@ void main() {
         }
       }
     }
+  });
+
+  group('tall', () {
+    Widget tall(String selected, ValueChanged<String> onChanged) =>
+        KitSegmented<String>(
+          semanticsLabel: 'Light or dark',
+          tall: true,
+          selected: selected,
+          segments: const [
+            KitSegment(
+              value: 'auto',
+              label: 'Auto',
+              icon: Icons.brightness_auto,
+            ),
+            KitSegment(value: 'light', label: 'Light', icon: Icons.light_mode),
+            KitSegment(value: 'dark', label: 'Dark', icon: Icons.dark_mode),
+            KitSegment(value: 'saver', label: 'Saver', icon: Icons.eco),
+          ],
+          onChanged: onChanged,
+        );
+
+    testWidgets('each segment is its icon over its word; a tap chooses', (
+      tester,
+    ) async {
+      final chosen = <String>[];
+      await tester.pumpWidget(_host(tall('dark', chosen.add)));
+      for (final word in ['Auto', 'Light', 'Dark', 'Saver']) {
+        expect(find.text(word), findsOneWidget);
+      }
+      expect(
+        tester.getTopLeft(find.byIcon(Icons.eco)).dy,
+        lessThan(tester.getTopLeft(find.text('Saver')).dy),
+      );
+      // No check: the filled block marks the choice.
+      expect(find.byIcon(AppIconography.check), findsNothing);
+      await tester.tap(find.text('Saver'));
+      expect(chosen, ['saver']);
+    });
+
+    testWidgets('stacks at 2x text with nothing cut', (tester) async {
+      await tester.pumpWidget(_host(tall('dark', (_) {}), textScale: 2));
+      expect(tester.takeException(), isNull);
+      expect(find.byType(KitChoiceRow<String>), findsNWidgets(4));
+    });
   });
 }

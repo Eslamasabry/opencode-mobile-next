@@ -14,7 +14,8 @@ import 'transport.dart';
 
 // ---------------- Capabilities ----------------
 
-/// The exact feature truth for an OpenCode 2 server (stable 2.0.29 probed live 2026-10-14; beta-18600 before that), per
+/// The exact feature truth for an OpenCode 2 server (stable 2.1.1 probed live
+/// 2026-10-21 and 2.0.29 on 2026-10-14; beta-18600 before that), per
 /// `docs/opencode2-port-matrix.md` §2:
 ///
 /// - `mcpRuntimeAdds` supports location-scoped MCP additions until restart.
@@ -25,7 +26,8 @@ import 'transport.dart';
 /// - `integrationCredentials` manages stored credentials by their safe IDs.
 /// - `gitInit` (`POST /vcs/init`), `worktreeCreate` (`POST /worktree`
 ///   `{projectID, name}`) and `shellSettings` (`GET /config/shell`,
-///   `PATCH /experimental/config {shell}`) are live on 2.0.29. Every folder
+///   `PATCH /experimental/config {shell}`) are live on 2.0.29 and unchanged in
+///   2.1.1's `/openapi.json`. Every folder
 ///   gets a project and `GET /vcs*` exist, so version control is reported
 ///   truthfully from `/vcs`; `projectsAreGitRepositories` stays false because
 ///   a project can still be a plain folder.
@@ -38,14 +40,26 @@ import 'transport.dart';
 ///   remote upgrade, diagnostics send, provider runtime refresh, `/config/providers` fallback, destructive worktree
 ///   reset, legacy question requests — replaced by forms, wired in a later
 ///   slice).
+/// - `sessionArchive` stays false although 2.1 restored archiving
+///   (`PATCH /session/{id} {archived}`, `GET /session?archived=`): 2.0.x
+///   answers the same PATCH with 204 and ignores it, and these flags do not
+///   yet follow the server version.
 const ServerCapabilities api2ServerCapabilities = ServerCapabilities(
+  // Each v2 step is its own assistant message, finished once its tools
+  // settle; the next step's `session.step.started` comes one to several
+  // seconds later, longer on a slow phone or model. Only
+  // `session.execution.succeeded|failed|interrupted` ends the run (mapped to
+  // `session.idle`/`session.error`). Ending it on a finished step showed a
+  // working agent as idle: no Stop, no live line, the idle phrase chips.
+  messageCompletionEndsRun: false,
   scheduledPrompts: true,
   // `POST /api/shell` (protocol notes §10, contracts beta-18600): the Git
   // page runs git with the server's own sign-in. Not yet proven live.
   remoteShell: true,
   promptSteering: true,
-  // Stable 2.0.29 permission contract; the native engine independently probes
-  // the running version, operations and effective policy before execution.
+  // Stable 2.0.29/2.1.1 permission contract (unchanged between the two); the
+  // native engine independently probes the running version, operations and
+  // effective policy before execution.
   phoneTeamExecution: true,
   projectsAreGitRepositories: false,
   commandReceipts: true,

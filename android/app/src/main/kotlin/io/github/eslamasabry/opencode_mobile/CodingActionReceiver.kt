@@ -38,7 +38,9 @@ class CodingActionReceiver : BroadcastReceiver() {
         var reply = RemoteInput.getResultsFromIntent(intent)
             ?.getCharSequence(BackgroundConnectionService.REMOTE_INPUT_REPLY)
             ?.toString()
-        // An option button answers with its own label, exactly like a typed reply.
+        // Alerts posted before the two-action copy could carry a Reply field
+        // or option buttons; an option answers with its own label, exactly
+        // like a typed reply.
         if (decision.startsWith("option")) {
             reply = intent.getStringExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_OPTION_TEXT)
             decision = "reply"
@@ -51,6 +53,9 @@ class CodingActionReceiver : BroadcastReceiver() {
         }
 
         val appContext = context.applicationContext
+        val again = CodingAlertRequest(
+            kind = kind, sessionID = sessionID, key = key, requestID = requestID, profileID = profileID
+        )
         Handler(Looper.getMainLooper()).post {
             channel.invokeMethod(
                 "codingAlertAction",
@@ -66,14 +71,14 @@ class CodingActionReceiver : BroadcastReceiver() {
                     override fun success(result: Any?) {
                         val handled = (result as? Map<*, *>)?.get("handled") == true
                         if (!handled) {
-                            repost(appContext, kind, sessionID, key, decision, requestID, profileID)
+                            repost(appContext, again)
                         }
                         // A handled reply's RemoteInput spinner resolves when
                         // Dart's resolution lifecycle cancels the alert.
                     }
 
                     override fun error(code: String, message: String?, details: Any?) {
-                        repost(appContext, kind, sessionID, key, decision, requestID, profileID)
+                        repost(appContext, again)
                     }
 
                     override fun notImplemented() {
@@ -84,29 +89,14 @@ class CodingActionReceiver : BroadcastReceiver() {
         }
     }
 
-    // Re-posting keeps a failed action visible and actionable instead of
-    // silently swallowing the pending request.
-    private fun repost(
-        context: Context,
-        kind: String,
-        sessionID: String,
-        key: String,
-        decision: String,
-        requestID: String,
-        profileID: String
-    ) {
-        if (key.isBlank()) return
-        BackgroundConnectionService.showCodingAlert(
-            context,
-            CodingAlertRequest(
-                kind = kind,
-                sessionID = sessionID,
-                key = key,
-                quickReply = decision == "reply",
-                requestID = requestID,
-                profileID = profileID
-            )
-        )
+    // Re-posting keeps a failed action visible instead of silently swallowing
+    // the pending request. The intent carries no command, so a repost asks in
+    // general words and opens the chat rather than offering Allow once.
+    private fun repost(context: Context, request: CodingAlertRequest) {
+        // An answer that failed leaves the alert in the shade with its
+        // command and both buttons; only one that is gone is posted again.
+        if (request.key.isBlank() || BackgroundConnectionService.isCodingAlertShowing(context, request.key)) return
+        BackgroundConnectionService.showCodingAlert(context, request)
     }
 
     private fun openApp(context: Context, kind: String, sessionID: String, profileID: String) {

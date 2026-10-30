@@ -25,6 +25,7 @@ extension _FilesViewer on _FilesScreenState {
             : (wrap) =>
                   unawaited(saveReaderPreferences(context, wrapCode: wrap)),
         viewerKey: const ValueKey('files-viewer'),
+        reader: true,
       );
     } finally {
       _viewerOpen = false;
@@ -37,28 +38,34 @@ extension _FilesViewer on _FilesScreenState {
           context,
         ).readerUiPathLine(session.path, session.initialLine!);
 
-  /// The one labelled action: Add to prompt when Files came from a
-  /// conversation, otherwise Attach when the host can take a file.
-  KitAction? _viewerPrimary(_ViewerSession session) {
-    final l10n = readerL10n(context);
+  /// The reader's one main action, at the bottom: Ask about this file.
+  /// From a conversation it puts the file in that composer (as a
+  /// reference, with the line when one was opened) and goes back there;
+  /// from anywhere else it starts a conversation in this project with the
+  /// file named in the field, unsent.
+  KitAction _viewerPrimary(_ViewerSession session) => KitAction(
+    key: const Key('project-file-ask'),
+    label: readerL10n(context).filesAskAboutFile,
+    icon: AppIconography.chat,
+    onPressed: () => unawaited(_askAbout(session.path, session.initialLine)),
+  );
+
+  Future<void> _askAbout(String path, int? line) async {
     if (widget.handoff != null) {
-      return KitAction(
-        key: const Key('project-file-add-reference'),
-        label: l10n.readerUiAddReference,
-        icon: AppIconography.link,
-        onPressed: () => _stageProjectFile(session.path, session.initialLine),
+      final outcome = _stageProjectFile(
+        path,
+        line,
+        returning: widget.onAsked != null,
       );
+      // Already in the tray counts as done: it is in the composer.
+      if (outcome != ReviewStageOutcome.full) widget.onAsked?.call();
+      return;
     }
-    if (widget.onAttachFile != null) {
-      return KitAction(
-        key: const Key('project-file-attach'),
-        label: l10n.readerUiAttachPrompt,
-        icon: AppIconography.attach,
-        working: _attaching,
-        onPressed: () => unawaited(_attachFromViewer(session)),
-      );
-    }
-    return null;
+    final directory = widget.controller.directory;
+    final navigator = Navigator.of(context);
+    if (_viewerOpen) await navigator.maybePop();
+    if (!mounted) return;
+    await showNewChat(context, directory: directory, initialText: '@$path ');
   }
 
   List<KitMenuItem> _viewerMore(
@@ -68,7 +75,7 @@ extension _FilesViewer on _FilesScreenState {
     final l10n = readerL10n(context);
     final change = _fileStatuses[session.path];
     return [
-      if (widget.handoff != null && widget.onAttachFile != null)
+      if (widget.onAttachFile != null)
         KitMenuItem(
           key: const Key('project-file-attach'),
           // Named apart from "Add to prompt": this one uploads the file's

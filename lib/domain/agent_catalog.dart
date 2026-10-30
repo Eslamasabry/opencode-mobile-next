@@ -279,17 +279,17 @@ AgentCatalog _builtInCatalog() {
         'opencode',
         AgentSignInMethod.apiKeyHost,
         AgentInstallRecipe(
-          version: '2.0.29',
+          version: '2.1.1',
           executable: 'opencode',
           artifacts: {
             AgentArchitecture.arm64: archive(
-              'https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.0.29.tgz',
-              '0af39e75dbdfacc20f8f531ef35fb4dcc0b44c08084203518614272f232283ae',
+              'https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.1.1.tgz',
+              'cfa3ae6363fc3082f03072297069d81f53559a761371fdb4b56fe6bfa01ca066',
               'package/bin/opencode',
             ),
             AgentArchitecture.x64: archive(
-              'https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.0.29.tgz',
-              '152c42ff57b15728f39e1d7b68a9c13b0635fe1c5e6dcccdc8b710955e4cef0b',
+              'https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.1.1.tgz',
+              '216d3861d0a167adad5850282439bae13483203f4b110f0510f260118bba2858',
               'package/bin/opencode',
             ),
           },

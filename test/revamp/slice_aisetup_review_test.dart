@@ -87,7 +87,7 @@ class _Api extends Api2Gateway {
       paseo ? paseoServerCapabilities : super.capabilities;
 
   @override
-  Future<Health> health() async => Health(healthy: true, version: '2.0.29');
+  Future<Health> health() async => Health(healthy: true, version: '2.1.1');
 }
 
 class _Store extends ProfileStore {
@@ -154,7 +154,7 @@ Future<ConnectionController> _connection({
       _Store(prefs: await SharedPreferences.getInstance()),
     )
     ..api = _Api(paseo: paseo, routes: routes)
-    ..version = '2.0.29'
+    ..version = '2.1.1'
     ..status = StreamStatus.connected;
 }
 
@@ -238,16 +238,20 @@ void main() {
       );
       addTearDown(connection.dispose);
       await tester.pumpWidget(
-        _app(ServerSettingsScreen(controller: connection)),
+        _app(
+          ServerPageScreen(
+            controller: connection,
+            profileId: connection.profile!.id,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
 
       final entry = find.byKey(const Key('ai-setup-entry'));
       expect(entry, findsOneWidget);
-      expect(
-        find.text('Models, tools and suggestions for this server'),
-        findsOneWidget,
-      );
+      await tester.ensureVisible(entry);
+      await tester.pump();
+      await tester.ensureVisible(entry);
       await tester.tap(entry);
       await tester.pumpAndSettle();
 
@@ -266,7 +270,12 @@ void main() {
       final connection = await _connection(paseo: true);
       addTearDown(connection.dispose);
       await tester.pumpWidget(
-        _app(ServerSettingsScreen(controller: connection)),
+        _app(
+          ServerPageScreen(
+            controller: connection,
+            profileId: connection.profile!.id,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
 

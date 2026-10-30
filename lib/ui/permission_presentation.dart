@@ -5,7 +5,7 @@ import 'widgets/tool_card.dart' show toolLabel;
 String permissionRequestTitle(String permission, {AppLocalizations? l10n}) {
   final strings = l10n ?? AppLocalizationsEn();
   return switch (permission) {
-    'bash' => strings.e7PermissionAction1,
+    'bash' || 'shell' => strings.e7PermissionAction1,
     'edit' => strings.e7PermissionAction2,
     'read' => strings.e7PermissionAction3,
     'external_directory' => strings.e7PermissionAction4,
@@ -38,7 +38,7 @@ String permissionRequestQuestion(
 }) {
   final strings = l10n ?? AppLocalizationsEn();
   return switch (permission) {
-    'bash' => strings.chatRequestAskCommand,
+    'bash' || 'shell' => strings.chatRequestAskCommand,
     'edit' || 'write' || 'multiedit' || 'patch' => strings.chatRequestAskEdit,
     'read' => strings.chatRequestAskRead,
     'external_directory' => switch (externalDirectoryAction(toolName)) {

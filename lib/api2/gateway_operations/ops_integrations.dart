@@ -20,6 +20,34 @@ mixin _Api2IntegrationOps on _Api2Core {
         ];
       });
 
+  /// One sign-in question in the app's prompt shape. OpenCode 2 sends form
+  /// fields (`title`, `type: string`, `options`, `custom`, `required`,
+  /// `default`, `hidden`); the beta's `text`/`select` prompts pass through.
+  /// A hidden field is never asked: null, and its default is a preset answer.
+  static Map<String, dynamic>? _formPrompt(Map<String, dynamic> field) {
+    if (field['hidden'] == true) return null;
+    final type = field['type']?.toString();
+    if (type == 'text' || type == 'select') return field;
+    final options = [
+      for (final option in (field['options'] as List? ?? const []))
+        if (option is Map && option.containsKey('value'))
+          {
+            'value': option['value'].toString(),
+            'label': (option['label'] ?? option['value']).toString(),
+          },
+    ];
+    return {
+      'key': field['key'],
+      'message': field['title'] ?? field['message'] ?? field['key'],
+      'type': options.isNotEmpty && field['custom'] != true ? 'select' : 'text',
+      if (options.isNotEmpty) 'options': options,
+      'required': field['required'] == true,
+      if (field['placeholder'] != null) 'placeholder': field['placeholder'],
+      if (field['default'] != null) 'default': '${field['default']}',
+      if (field['when'] is Map) 'when': field['when'],
+    };
+  }
+
   IntegrationInfo _integration(Map<String, dynamic> json) {
     final methods = <IntegrationMethodInfo>[];
     if (json['methods'] is List) {
@@ -28,17 +56,28 @@ mixin _Api2IntegrationOps on _Api2Core {
         final method = Map<String, dynamic>.from(raw);
         final type = (method['type'] ?? '').toString();
         if (type.isEmpty) continue;
+        final presets = <String, String>{};
+        final prompts = <Map<String, dynamic>>[];
+        if (method['form'] is List) {
+          for (final field in method['form'] as List) {
+            if (field is! Map) continue;
+            final prompt = _formPrompt(Map<String, dynamic>.from(field));
+            if (prompt == null) {
+              final key = field['key']?.toString();
+              final value = field['default'];
+              if (key != null && value != null) presets[key] = '$value';
+            } else {
+              prompts.add(prompt);
+            }
+          }
+        }
         methods.add(
           IntegrationMethodInfo(
             type: type,
             id: method['id']?.toString(),
             label: (method['label'] ?? type).toString(),
-            prompts: method['form'] is List
-                ? [
-                    for (final field in method['form'] as List)
-                      if (field is Map) Map<String, dynamic>.from(field),
-                  ]
-                : const [],
+            prompts: prompts,
+            presetAnswers: presets,
             environmentNames: method['names'] is List
                 ? (method['names'] as List)
                       .map((value) => value.toString())

@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../kit_buttons.dart';
-import '../kit_motion.dart';
+import '../kit_max_width.dart';
 import '../kit_status_mark.dart';
 import 'kit_step_timeline.dart';
 
@@ -217,8 +217,7 @@ class KitWorkLine extends StatefulWidget {
   State<KitWorkLine> createState() => _KitWorkLineState();
 }
 
-class _KitWorkLineState extends State<KitWorkLine>
-    with SingleTickerProviderStateMixin {
+class _KitWorkLineState extends State<KitWorkLine> {
   /// The uncontrolled choice; ignored while [KitWorkLine.expanded] is set.
   late bool _open = KitWorkLine.opensByDefault(widget.state);
 
@@ -243,57 +242,31 @@ class _KitWorkLineState extends State<KitWorkLine>
     canRequestFocus: false,
   );
 
-  /// The steps' fade-in on opening (paint only, MOT-5).
-  late final AnimationController _fade = AnimationController(
-    vsync: this,
-    duration: KitMotion.quick,
-    value: 1,
-  );
-
   bool get _expanded => widget.expanded ?? _open;
 
   @override
   void didUpdateWidget(KitWorkLine oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Controlled and opened by the host: the steps fade in all the same.
-    if (widget.expanded == true &&
-        oldWidget.expanded != true &&
-        !_fade.isAnimating) {
-      _startFade();
-    }
     // Uncontrolled and untouched: a turn that comes to end on a failure
     // opens by itself (KitWorkLine.opensByDefault).
     if (widget.expanded == null &&
         !_touched &&
         widget.state != oldWidget.state) {
       final open = KitWorkLine.opensByDefault(widget.state);
-      if (open != _open) {
-        _open = open;
-        if (open) _startFade();
-      }
+      if (open != _open) _open = open;
     }
   }
 
   @override
   void dispose() {
-    _fade.dispose();
     _firstRevealed.dispose();
     super.dispose();
-  }
-
-  void _startFade() {
-    if (KitMotion.reduced(context)) {
-      _fade.value = 1;
-    } else {
-      _fade.forward(from: 0);
-    }
   }
 
   void _toggle() {
     final next = !_expanded;
     _touched = true;
     if (widget.expanded == null) setState(() => _open = next);
-    if (next) _startFade();
     widget.onExpansionChanged?.call(next);
   }
 
@@ -334,7 +307,10 @@ class _KitWorkLineState extends State<KitWorkLine>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final summary = KitWorkLine.summaryOf(context, widget.counts);
     final expanded = _expanded;
@@ -418,9 +394,9 @@ class _KitWorkLineState extends State<KitWorkLine>
             )
           : null,
       steps: shown,
-      // The steps appear at once and fade in (paint only, no size change;
-      // MOT-5). Under reduced motion they are simply there.
-      fade: KitMotion.reduced(context) ? null : _fade,
+      // The timeline folds the steps in and out itself (size and fade,
+      // owner request 2026-10-27); under reduced motion they are simply
+      // there or gone.
       lineKey: widget.lineKey,
       stepsKey: widget.stepsKey,
     );

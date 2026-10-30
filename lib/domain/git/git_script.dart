@@ -24,7 +24,12 @@ import 'git_shell.dart';
 /// One command of a [GitScript]: an argv list, every word quoted when the
 /// script is written.
 class GitStep {
-  const GitStep(this.name, this.argv, {this.stopOnFailure = false});
+  const GitStep(
+    this.name,
+    this.argv, {
+    this.stopOnFailure = false,
+    this.optional = false,
+  });
 
   /// Letters, digits and `-` only; the marker key.
   final String name;
@@ -32,6 +37,10 @@ class GitStep {
 
   /// A failure ends the script here (later steps do not run).
   final bool stopOnFailure;
+
+  /// Extra information: an answer without this step's result is still a
+  /// whole answer.
+  final bool optional;
 }
 
 /// The environment every Git command runs with: no prompts, no pager, no

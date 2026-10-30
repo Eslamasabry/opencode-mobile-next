@@ -39,6 +39,10 @@ Future<void> _pump(
   // the surface it sits on), so idle pixels are otherwise the Scaffold's
   // plain ground colour, not `surface`.
   Color? background,
+  // These tests probe the flat pressed fill, which a platform without the
+  // Android ripple shows (owner rule 2026-10-26: on Android a press draws
+  // the native ripple instead; test/kit/kit_ink_layer_test.dart covers it).
+  bool flat = true,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -52,7 +56,11 @@ Future<void> _pump(
   await tester.pumpWidget(
     MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: light ? AppTheme.light() : AppTheme.dark(),
+      theme: flat
+          ? (light ? AppTheme.light() : AppTheme.dark()).copyWith(
+              platform: TargetPlatform.fuchsia,
+            )
+          : (light ? AppTheme.light() : AppTheme.dark()),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
@@ -751,7 +759,9 @@ void main() {
     expect(find.text('Retry  Ctrl+R'), findsOneWidget);
   });
 
-  testWidgets('10. no HapticFeedback on tap or long-press', (tester) async {
+  testWidgets('10. a tap is silent; a long-press ticks once (MOT-11)', (
+    tester,
+  ) async {
     final calls = recordHaptics(tester);
     var taps = 0;
     await _pump(
@@ -764,10 +774,12 @@ void main() {
     );
     await tester.tap(find.byType(KitTappable));
     await tester.pump();
+    expect(calls, isEmpty, reason: 'taps are silent');
     await tester.longPress(find.byType(KitTappable));
     await tester.pumpAndSettle();
     expect(taps, 1);
-    expect(calls, isEmpty);
+    // The platform's long-press tick (owner rule 2026-10-26, native feel).
+    expect(calls, ['null']);
   });
 
   testWidgets('the child keeps its state across Effects Off and tooltip', (

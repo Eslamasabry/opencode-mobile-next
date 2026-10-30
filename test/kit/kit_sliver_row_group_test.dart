@@ -8,6 +8,7 @@ import 'package:opencode_mobile/ui/kit/kit_divider.dart';
 import 'package:opencode_mobile/ui/kit/kit_row.dart';
 import 'package:opencode_mobile/ui/kit/kit_row_parts.dart' show KitRowIcon;
 import 'package:opencode_mobile/ui/kit/kit_sliver_row_group.dart';
+import 'package:opencode_mobile/ui/kit/kit_surface_look.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 
 import 'kit_motion_still.dart';
@@ -66,19 +67,18 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('one surface1 panel with the panel corners under all rows', (
-    tester,
-  ) async {
+  testWidgets('Solid sets the rows on the page: a bare panel, rows '
+      'reaching the screen edge, words flush with the label', (tester) async {
     await tester.pumpWidget(_app([_recent(count: 3)]));
-    final tokens = KitTokens.of(tester.element(find.text('Recent')));
     final sliver = tester.widget<DecoratedSliver>(find.byType(DecoratedSliver));
-    final decoration = sliver.decoration as BoxDecoration;
-    expect(decoration.color, tokens.roles.surface1);
-    expect(
-      decoration.borderRadius,
-      BorderRadius.circular(tokens.panelCornerRadius),
-    );
+    expect(KitSurfaceDecoration.isBare(sliver.decoration), isTrue);
     expect(find.byType(DecoratedSliver), findsOneWidget);
+    // No rounded ends clip the rows' press fill.
+    expect(
+      find.ancestor(of: find.byType(KitRow), matching: find.byType(ClipRRect)),
+      findsNothing,
+    );
+    expect(tester.getTopLeft(find.byType(KitRow).first).dx, 0);
   });
 
   testWidgets('its label starts where a KitRowGroup label does, with the '

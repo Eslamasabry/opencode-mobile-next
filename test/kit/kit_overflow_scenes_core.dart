@@ -526,6 +526,28 @@ final _coreOverflowScenes = <KitOverflowScene>[
   // kit_state_view.dart
   KitOverflowScene(
     const ['KitStateView'],
+    'calm',
+    host: KitOverflowHost.fill,
+    build: (_, c) => KitStateView.calm(
+      title: c.t('No conversations yet', 'لا توجد محادثات بعد'),
+      body: c.t(
+        'Say what you want to build, and an agent gets to work.',
+        'قل ما تريد بناءه، ويبدأ وكيل العمل عليه.',
+      ),
+      primary: KitAction(
+        label: c.t('New conversation', 'محادثة جديدة'),
+        onPressed: _noop,
+      ),
+      tertiary: [
+        KitAction(
+          label: c.t('Connect a computer', 'ربط حاسوب'),
+          onPressed: _noop,
+        ),
+      ],
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitStateView'],
     'error',
     host: KitOverflowHost.fill,
     build: (_, c) => KitStateView(
@@ -627,6 +649,21 @@ final _coreOverflowScenes = <KitOverflowScene>[
       more: _tertiary(c),
       onDismiss: _noop,
       dismissTooltip: c.t('Dismiss', 'إغلاق'),
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitStatusLine'],
+    'countdown',
+    build: (_, c) => KitStatusLine(
+      icon: AppIconography.cloudOff,
+      message: c.t('The workstation isn’t answering', 'محطة العمل لا تستجيب'),
+      countdownTo: DateTime.now().add(const Duration(seconds: 12)),
+      countdownLine: (left) => c.t(
+        'Trying again in ${left.inSeconds} s',
+        'المحاولة مجددًا خلال ${left.inSeconds} ث',
+      ),
+      action: KitAction(label: c.t('Try now', 'جرّب الآن'), onPressed: _noop),
+      more: _tertiary(c),
     ),
   ),
   KitOverflowScene(

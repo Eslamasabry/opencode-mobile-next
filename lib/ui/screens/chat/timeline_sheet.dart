@@ -95,7 +95,8 @@ class _TimelineSheetState extends State<_TimelineSheet> {
     final tools = <String>{
       for (final part in message.parts)
         if (part.type == 'tool')
-          toolLabel(part.toolName ?? '', state: part.toolState, l10n: strings),
+          // Each with what it ran ("Shell · uptime"), not its name alone.
+          runningToolTicker(part.toolName ?? '', part.toolState, l10n: strings),
     };
     if (tools.isNotEmpty) {
       return strings.chatUiToolsSummary(tools.join(', '));

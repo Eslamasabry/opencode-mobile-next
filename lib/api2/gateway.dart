@@ -8,6 +8,8 @@ library;
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import '../domain/models.dart';
 import '../domain/server_gateway.dart';
 import '../domain/parallel_requests.dart';
@@ -42,6 +44,10 @@ class Api2Gateway
   /// request is not proof of idle: transport failure may follow acceptance.
   Future<void> Function(String sessionID)? beforeSessionDispatch;
   void Function(String sessionID)? sessionDispatchSettled;
+
+  /// Whether the person approves [sessionID] automatically. Such a session
+  /// keeps the server's own rules, so its tools never wait for this phone.
+  bool Function(String sessionID)? serverRunsTools;
 
   Future<void> _dispatch(String sessionID, Future<void> Function() send) async {
     await beforeSessionDispatch?.call(sessionID);
@@ -392,16 +398,79 @@ class Api2Gateway
 
   // ---------------- Prompting ----------------
 
+  Future<Api2SessionPermissionPolicy> _readPermissionPolicy(
+    String sessionID,
+  ) async => Api2SessionPermissionPolicy.fromSession(
+    await transport.getJson('/session/$sessionID'),
+    sessionID,
+  );
+
+  /// Installs the permission mode [sessionID] needs now: the server's own
+  /// rules when it is approved automatically, permission requests otherwise.
+  /// Returns the session as read back, or [policy] when nothing changed.
+  Future<Api2SessionPermissionPolicy> _applyPermissionMode(
+    String sessionID,
+    Api2SessionPermissionPolicy policy,
+  ) async {
+    final agent = policy.agent;
+    final agentResponse = agent == null
+        ? Api2SessionPermissionPolicy.defaultAgent(
+            await transport.getJson('/agent', query: _loc()),
+          )
+        : await _readAgent(agent);
+    final update = policy.updateForAgent(
+      agentResponse,
+      serverRuns: serverRunsTools?.call(sessionID) ?? false,
+    );
+    if (policy.confirms(update)) return policy;
+    await transport.patchJson('/session/$sessionID', body: update);
+    // A successful HTTP response alone cannot establish the permission mode.
+    // Read back before any prompt, command, or offline replay can execute.
+    final confirmed = await _readPermissionPolicy(sessionID);
+    if (confirmed.agent != policy.agent || !confirmed.confirms(update)) {
+      throw const Api2RequestError(
+        'Could not turn on permission requests. Your message was not sent.',
+      );
+    }
+    return confirmed;
+  }
+
+  /// The pinned server drops a project's services after an idle hour and
+  /// boots them again on the next request; for a moment after that boot it
+  /// answers 404 for an agent that exists, which failed the first message
+  /// after a quiet hour. A short retry rides over the boot.
+  Future<Object?> _readAgent(String agent) async {
+    for (var attempt = 0; ; attempt++) {
+      try {
+        return await transport.getJson(
+          '/agent/${Uri.encodeComponent(agent)}',
+          query: _loc(),
+        );
+      } on Api2Error catch (error) {
+        if (error.statusCode != 404 || attempt >= 2) rethrow;
+        await Future<void>.delayed(agentBootRetryDelay);
+      }
+    }
+  }
+
+  @visibleForTesting
+  static Duration agentBootRetryDelay = const Duration(milliseconds: 500);
+
+  /// Applies a changed automatic-approval choice to a session that may be
+  /// running: switched on, its waiting and later tools run without this
+  /// phone; switched off, its next tools ask again.
+  Future<void> syncSessionPermissions(String sessionID) => _run(() async {
+    await _applyPermissionMode(
+      sessionID,
+      await _readPermissionPolicy(sessionID),
+    );
+  });
+
   Future<void> _prepareSessionDispatch(
     String sessionID, {
     bool allowReverted = false,
   }) async {
-    Future<Api2SessionPermissionPolicy> read() async =>
-        Api2SessionPermissionPolicy.fromSession(
-          await transport.getJson('/session/$sessionID'),
-          sessionID,
-        );
-    final policy = await read();
+    final policy = await _readPermissionPolicy(sessionID);
     // The pinned server implicitly commits a stage before admitting a
     // prompt, even with resume:false. Never let Send or offline replay
     // silently perform that permanent operation.
@@ -412,26 +481,7 @@ class Api2Gateway
         errorTag: 'SessionRevertPending',
       );
     }
-    final agent = policy.agent;
-    final agentResponse = agent == null
-        ? Api2SessionPermissionPolicy.defaultAgent(
-            await transport.getJson('/agent', query: _loc()),
-          )
-        : await transport.getJson(
-            '/agent/${Uri.encodeComponent(agent)}',
-            query: _loc(),
-          );
-    final update = policy.updateForAgent(agentResponse);
-    if (policy.confirms(update)) return;
-    await transport.patchJson('/session/$sessionID', body: update);
-    // A successful HTTP response alone cannot establish the permission mode.
-    // Read back before any prompt, command, or offline replay can execute.
-    final confirmed = await read();
-    if (confirmed.agent != policy.agent || !confirmed.confirms(update)) {
-      throw const Api2RequestError(
-        'Could not turn on permission requests. Your message was not sent.',
-      );
-    }
+    final confirmed = await _applyPermissionMode(sessionID, policy);
     if (!allowReverted && confirmed.reverted) {
       throw ApiException(
         'Review the staged revert, then clear it or make it permanent before sending.',

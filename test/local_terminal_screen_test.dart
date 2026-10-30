@@ -12,6 +12,8 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit_state_view.dart';
 import 'package:opencode_mobile/ui/kit/terminal_key_bar.dart';
 import 'package:opencode_mobile/ui/screens/local_terminal_screen.dart';
+import 'package:opencode_mobile/domain/dev_preview.dart';
+import 'package:opencode_mobile/state/project_dev_server.dart';
 import 'package:opencode_mobile/ui/screens/terminal_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xterm/xterm.dart' as xterm;
@@ -204,18 +206,18 @@ void main() {
   });
 
   group('shells', () {
-    testWidgets('the menu lists shells and opens a new one', (tester) async {
+    testWidgets('one shell has no tabs; a second makes them, and a tab '
+        'switches', (tester) async {
       await mountPhone(tester);
+      expect(find.byKey(const ValueKey('local-terminal-tabs')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('local-terminal-menu')));
       await tester.pumpAndSettle();
-      expect(find.text('Shell 1'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('local-terminal-new')));
       await tester.pumpAndSettle();
       expect(sessions.shells.map((shell) => shell.number), [1, 2]);
       expect(sessions.current, sessions.shells.last);
-      await tester.tap(find.byKey(const ValueKey('local-terminal-menu')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Shell 1'));
+      expect(find.byKey(const ValueKey('local-terminal-tabs')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('local-terminal-shell-1')));
       await tester.pumpAndSettle();
       expect(sessions.current, sessions.shells.first);
     });
@@ -283,8 +285,11 @@ void main() {
     ) async {
       await mountPage(tester);
       expect(find.byType(LocalTerminalView), findsOneWidget);
-      expect(find.text('Built-in Linux'), findsOneWidget);
-      expect(find.text('OpenCode server'), findsOneWidget);
+      // The place is said once, under the title; the other is in its menu.
+      expect(find.textContaining('Built-in Linux'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('terminal-source')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('OpenCode server'), findsOneWidget);
     });
 
     testWidgets('without Linux the server is the default', (tester) async {
@@ -296,9 +301,13 @@ void main() {
 
     testWidgets('the choice switches between the two', (tester) async {
       await mountPage(tester);
+      await tester.tap(find.byKey(const ValueKey('terminal-source')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('terminal-source-server')));
       await tester.pumpAndSettle();
       expect(find.byType(TerminalScreen), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('terminal-source')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('terminal-source-phone')));
       await tester.pumpAndSettle();
       expect(find.byType(LocalTerminalView), findsOneWidget);
@@ -327,12 +336,53 @@ void main() {
         find.byKey(const ValueKey('terminal-key-ctrl')),
       );
       expect(ctrl.top, esc.top, reason: 'one row');
+      expect(
+        find.byKey(const ValueKey('terminal-key-pipe')),
+        findsOneWidget,
+        reason: 'the sliding row has the symbols too',
+      );
       // The shell still has lines to show.
       expect(
         tester.getSize(find.byType(xterm.TerminalView)).height,
         greaterThan(40),
       );
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the dev line shows only when the app knows, and the place '
+        'stays in the menu', (tester) async {
+      tester.view
+        ..physicalSize = const Size(412, 915)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      DevPreviewLink? running;
+      final dev = ProjectDevServer(look: () async => running);
+      addTearDown(dev.dispose);
+      await tester.pumpWidget(
+        app(
+          TerminalPage(
+            controller: connection,
+            localSupported: true,
+            devServer: dev,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('terminal-dev-server')), findsNothing);
+      expect(find.byKey(const ValueKey('terminal-source')), findsOneWidget);
+      running = const DevPreviewLink(port: 5173);
+      await dev.refresh();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('terminal-dev-server')), findsOneWidget);
+      expect(find.textContaining('Open preview'), findsOneWidget);
+      // Never a port or address on the line.
+      expect(find.textContaining('5173'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('local-terminal-menu')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('terminal-source-server')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('off Android there is no choice, only the server', (

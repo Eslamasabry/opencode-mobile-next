@@ -70,7 +70,7 @@ void main() {
     linux = _FakeLinux();
     serverProbe = ({required baseUrl, username, password}) async =>
         linux.serverRunning
-        ? const ServerProbeResult.success('2.0.29')
+        ? const ServerProbeResult.success('2.1.1')
         : const ServerProbeResult.failure('refused');
   });
 
@@ -133,7 +133,7 @@ void main() {
       var wanted = true;
       serverProbe = ({required baseUrl, username, password}) async {
         wanted = false;
-        return const ServerProbeResult.success('2.0.29');
+        return const ServerProbeResult.success('2.1.1');
       };
       final failure = await startBuiltinServer(
         linux: linux,

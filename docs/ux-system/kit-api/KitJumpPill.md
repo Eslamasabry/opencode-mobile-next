@@ -114,7 +114,7 @@ Centred, so no mirroring of position; icon then label in reading order (the icon
 
 ## Motion and haptics
 
-- In: fades in and rises `space2` over `KitMotion.standard` on `KitMotion.enter`. Out: fades and sinks over `KitMotion.standard` on `KitMotion.exit` (a top pill drops/rises toward its own edge). Never scales (MOT-2; replaces `easeOutBack`).
+- In: fades in and rises `space2` over `KitMotion.standard` on `KitMotion.enter`. Out: fades and sinks over `KitMotion.quick` on `KitMotion.exit` (out on `KitMotion.quick`: leaving is quicker than arriving) (a top pill drops/rises toward its own edge). Never scales (MOT-2; replaces `easeOutBack`).
 - Under `KitMotion.reduced(context)`: shows and hides at once; one `pump()` settles (G8x).
 - Haptics: none.
 
@@ -134,7 +134,7 @@ Centred, so no mirroring of position; icon then label in reading order (the icon
 
 1. Visible: label and icon shown; tap calls `onPressed` once.
 2. `visible: false`: not hittable, not in semantics, not focusable; after the out animation nothing paints.
-3. Toggling visible animates over `KitMotion.standard` with no `ScaleTransition`/`Transform.scale` in the tree; under reduced motion one `pump()` settles.
+3. Toggling visible animates in over `KitMotion.standard` and out over `KitMotion.quick`, with no `ScaleTransition`/`Transform.scale` in the tree; under reduced motion one `pump()` settles.
 4. `KitJumpPillLayer` with `KitBottomInset(bottom: 140)`: the pill's bottom edge is ≥ 152 dp above the area's bottom; with `clearBottomInset: false` it is `space3` from the area's bottom.
 5. `KitJumpPill.older` sits at the top edge with the up glyph.
 6. `latestLabel(context, newCount: 3)` = "3 new · Jump to latest"; 0 → "Jump to latest"; Arabic plural forms resolve.

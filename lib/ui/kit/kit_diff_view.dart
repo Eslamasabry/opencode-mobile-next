@@ -1,3 +1,4 @@
+import 'dart:collection' show HashMap;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -10,6 +11,7 @@ import 'package:highlight/highlight.dart' show Node;
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../theme_roles.dart';
+import 'chat/kit_markdown.dart' show KitMarkdown;
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
 import 'kit_choice_list.dart';
@@ -23,8 +25,10 @@ import 'kit_page_route.dart';
 import 'kit_progress.dart';
 import 'kit_redact.dart';
 import 'kit_row.dart';
+import 'kit_row_parts.dart' show KitExpandRow;
 import 'kit_screen.dart';
 import 'kit_state_view.dart';
+import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -34,6 +38,7 @@ import 'motion/kit_reveal.dart';
 part 'diff/kit_diff_model.dart';
 part 'diff/kit_diff_chrome.dart';
 part 'diff/kit_diff_rows.dart';
+part 'diff/kit_diff_markdown.dart';
 
 enum KitDiffMode {
   unified,
@@ -92,6 +97,7 @@ class KitDiffView extends StatefulWidget {
     this.onAddToPrompt,
     this.fileActions,
     this.onFileChanged,
+    this.onSelectingChanged,
     this.maxLines,
     this.onOpenAll,
     this.loading = false,
@@ -100,6 +106,7 @@ class KitDiffView extends StatefulWidget {
     this.wrap,
     this.onWrapChanged,
     this.inline = false,
+    this.folded = false,
     this.keyPrefix = 'kit-diff',
   }) : assert(readOnly || onComment != null || onAddToPrompt != null),
        assert(error == null || onRetry != null);
@@ -125,6 +132,11 @@ class KitDiffView extends StatefulWidget {
   /// (the switcher, the file list, or the navigator crossing into another
   /// file), so a host can track the current file.
   final ValueChanged<int>? onFileChanged;
+
+  /// Called with true when lines are selected (the diff then shows its own
+  /// action bar, with the screen's one primary) and false when the
+  /// selection ends, so a host can step its own primary aside.
+  final ValueChanged<bool>? onSelectingChanged;
   final VoidCallback? onOpenAll, onRetry;
 
   /// A failure in words; the part shows it with Try again.
@@ -140,6 +152,13 @@ class KitDiffView extends StatefulWidget {
   /// files keep their header so each is named. The wrap toggle moves to the
   /// host (it passes [wrap]).
   final bool inline;
+
+  /// The calm reading for a review: every file is a folded row (its name,
+  /// folder and counts) that opens its lines in place, [initialFile] (the
+  /// first) open, one at a time. No "Change 1 of N" navigator and no viewed
+  /// ticks; a long press on a row offers [fileActions]. Other hosts keep
+  /// the header and navigator.
+  final bool folded;
 
   /// Internal keys are `<prefix>-…` (the DiffView wrapper passes 'diff').
   final String keyPrefix;
@@ -237,6 +256,19 @@ class _KitDiffViewState extends State<KitDiffView> {
   /// Files opened so far (the file list ticks them).
   final Set<int> _viewed = {};
 
+  /// [KitDiffView.folded]: whether the file at [_file] is unfolded.
+  bool _unfolded = true;
+
+  /// A Markdown file shows its lines as written ("Show source"), not drawn.
+  bool _source = false;
+
+  /// The person switched between drawn and written: the new form fades in.
+  bool _sourceSwitched = false;
+
+  /// A drawn block's first line number on a side to its last: selecting the
+  /// block selects its lines.
+  final Map<(KitDiffSide, int), int> _mdSpans = {};
+
   /// The item the navigator last moved to: keyed, so it can be revealed
   /// precisely once it is built.
   int? _targetItem;
@@ -313,6 +345,7 @@ class _KitDiffViewState extends State<KitDiffView> {
       _file = index;
       _shownTop.clear();
       _shownBottom.clear();
+      _mdSpans.clear();
       _targetItem = null;
       _clearSelectionState();
       final first = _changes.indexWhere((c) => c.$1 == index);
@@ -393,14 +426,20 @@ class _KitDiffViewState extends State<KitDiffView> {
 
   double _estimateExtent(_Item item) => switch (item) {
     _LineItem() || _PairItem() => _lastLineHeight,
+    // Prose runs a little taller than the mono line it replaces.
+    _MdItem(:final unit) => _lastLineHeight * 1.3 * unit.lines.length,
     _HunkItem() => _lastLineHeight + 8,
     _GapItem(:final gap, :final seg) =>
       _lastBarHeight * (gap.lines == null ? 1 : 2) +
           ((_shownTop[seg] ?? 0) + (_shownBottom[seg] ?? 0)) * _lastLineHeight,
   };
 
-  List<_Item> _currentItems({required bool split}) =>
-      _itemsFor(widget.files[_file], split: split);
+  List<_Item> _currentItems({required bool split}) {
+    final file = widget.files[_file];
+    return _renderedFor(file)
+        ? _MdFileIndex.of(file).items
+        : _itemsFor(file, split: split);
+  }
 
   // -------------------------------------------------------------------------
   // Selection
@@ -430,10 +469,17 @@ class _KitDiffViewState extends State<KitDiffView> {
     });
   }
 
-  bool _isSelected(KitDiffSide side, int? line) {
-    if (!_selecting || _side != side || line == null) return false;
+  /// The selected numbers on [_side]; a drawn Markdown block at the end
+  /// brings all of its lines.
+  (int, int) _range() {
     final lo = math.min(_anchor!, _extent!);
     final hi = math.max(_anchor!, _extent!);
+    return (lo, _mdSpans[(_side!, hi)] ?? hi);
+  }
+
+  bool _isSelected(KitDiffSide side, int? line) {
+    if (!_selecting || _side != side || line == null) return false;
+    final (lo, hi) = _range();
     return line >= lo && line <= hi;
   }
 
@@ -517,8 +563,7 @@ class _KitDiffViewState extends State<KitDiffView> {
   List<String> _selectedLines() {
     final side = _side;
     if (side == null || _anchor == null || _extent == null) return const [];
-    final lo = math.min(_anchor!, _extent!);
-    final hi = math.max(_anchor!, _extent!);
+    final (lo, hi) = _range();
     final lines = <String>[];
     for (final line in _FileIndex.of(widget.files[_file]).allLines) {
       if (line.kind == KitDiffLineKind.hunk) continue;
@@ -539,8 +584,7 @@ class _KitDiffViewState extends State<KitDiffView> {
     if (!_selecting) return null;
     final file = widget.files[_file];
     final side = _side!;
-    final lo = math.min(_anchor!, _extent!);
-    final hi = math.max(_anchor!, _extent!);
+    final (lo, hi) = _range();
     return KitDiffSelection(
       file: file,
       side: side,
@@ -660,17 +704,37 @@ class _KitDiffViewState extends State<KitDiffView> {
   /// The side a gutter drag started on (a field: rows rebuild mid-drag).
   KitDiffSide? _dragSide;
 
+  bool _toldSelecting = false;
+
+  void _tellSelecting() {
+    final now = _selecting;
+    if (now == _toldSelecting) return;
+    _toldSelecting = now;
+    final tell = widget.onSelectingChanged;
+    if (tell == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) tell(now);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
     final l10n = _l10n;
+    _tellSelecting();
     if (widget.loading) return _loading(tokens);
     if (widget.error != null) {
-      return KitStateView.error(
+      final failed = KitStateView.error(
         title: l10n.kitDiffLoadFailed,
         body: widget.error,
         size: KitStateSize.inline,
         retry: KitAction(label: l10n.kitTryAgain, onPressed: widget.onRetry),
+      );
+      // A long reason scrolls inside the room the diff was given.
+      return LayoutBuilder(
+        builder: (context, box) => box.hasBoundedHeight
+            ? SingleChildScrollView(child: failed)
+            : failed,
       );
     }
     if (widget.files.isEmpty) {
@@ -687,6 +751,19 @@ class _KitDiffViewState extends State<KitDiffView> {
             : MediaQuery.sizeOf(context).width;
         final window = KitLayout.windowFor(width);
         final bounded = constraints.maxHeight.isFinite;
+        if (widget.folded) {
+          return _foldedFiles(
+            context,
+            tokens,
+            l10n,
+            width: width,
+            split:
+                (widget.mode ?? KitDiffMode.split) == KitDiffMode.split &&
+                window.isWide,
+            wrap: _effectiveWrap(window),
+            height: bounded ? constraints.maxHeight : null,
+          );
+        }
         final showList = window == KitWindow.large && widget.files.length > 1;
         final diffWidth = showList
             ? width - KitLayout.paneListWidth - tokens.space3

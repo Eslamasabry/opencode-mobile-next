@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui';
 
+import '../../../theme_roles.dart' show contrastRatio;
 import '../kit_live_style.dart';
 
 /// Shared drawing helpers of the looks: value noise, colour mixing and a
@@ -140,4 +141,58 @@ void paintField(
   );
   canvas.drawVertices(vertices, BlendMode.dst, Paint());
   vertices.dispose();
+}
+
+/// Whether [p]'s text reads on [paint] mixed [a] into [base]: text1 bare
+/// and text2 and text3 through [halo] of the ground, each at its floor (AA,
+/// or within .2 of the theme's own contrast where that is lower) plus
+/// [spare]; with a halo in a dark theme the accent (the glow) is held to
+/// its floor too, as it reads bare.
+bool liveTextReads(
+  KitLivePalette p,
+  Color base,
+  Color paint,
+  double a, {
+  double halo = 0,
+  double spare = 0,
+}) {
+  double floor(Color text) {
+    final before = contrastRatio(text, p.ground);
+    return (before >= 4.5 ? 4.5 : before - .2) + .04 + spare;
+  }
+
+  final under = Color.lerp(base, paint, a)!;
+  for (final text in [p.ink, if (halo > 0 && p.dark) p.glow]) {
+    if (contrastRatio(text, under) < floor(text)) return false;
+  }
+  final behind = Color.lerp(under, p.ground, halo)!;
+  for (final text in [p.muted, p.faint]) {
+    if (contrastRatio(text, behind) < floor(text)) return false;
+  }
+  return true;
+}
+
+/// The most of [paint] (0..1) that can be mixed into [base] while [p]'s
+/// text reads ([liveTextReads]), less a sliver for rounding.
+double liveMost(
+  KitLivePalette p,
+  Color base,
+  Color paint, {
+  double halo = 0,
+  double spare = 0,
+}) {
+  bool reads(double a) =>
+      liveTextReads(p, base, paint, a, halo: halo, spare: spare);
+  if (!reads(0)) return 0;
+  if (reads(1)) return 1;
+  var lo = 0.0, hi = 1.0;
+  for (var i = 0; i < 18; i++) {
+    final mid = (lo + hi) / 2;
+    if (reads(mid)) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return lo;
 }

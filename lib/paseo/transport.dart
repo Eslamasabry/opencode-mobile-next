@@ -13,11 +13,13 @@ import 'dart:async';
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 
 import '../domain/models.dart';
+import '../domain/agent_run_failure.dart';
 import '../domain/loopback_host.dart';
 import 'tested_versions.dart';
 import '../orchestration/adapters/gascity/gascity_probe.dart'
@@ -36,6 +38,9 @@ enum PaseoFailureKind {
   staleRequest,
   scopeMismatch,
 
+  /// The daemon answered, but has no agent by the id the app asked for.
+  notFound,
+
   /// The daemon refused the handshake because its protocol is not one this
   /// app speaks (`hello.rejected` / close code 4003).
   incompatibleProtocol,
@@ -49,7 +54,11 @@ class PaseoFailure extends ApiException {
   /// never shown as copy: only the Details fold reads it (product_failure).
   final String? reason;
 
-  PaseoFailure(this.kind, {String? reason})
+  /// A send the host refused, with its reason kept with the agent and model
+  /// it concerns (the gateway adds it; see `_sendFailed`).
+  final AgentRunFailure? runFailure;
+
+  PaseoFailure(this.kind, {String? reason, this.runFailure})
     : reason = tidyPaseoReason(reason),
       super(
         switch (kind) {
@@ -75,6 +84,8 @@ class PaseoFailure extends ApiException {
             'This request has changed. Refresh before replying.',
           PaseoFailureKind.scopeMismatch =>
             'This conversation belongs to another project.',
+          PaseoFailureKind.notFound =>
+            'The Paseo daemon has no conversation by this id.',
           PaseoFailureKind.incompatibleProtocol =>
             'The Paseo daemon and this app cannot talk to each other. Update '
                 'the app or the daemon.',
@@ -84,6 +95,7 @@ class PaseoFailure extends ApiException {
         // the app's failure words say so (ProductFailureCategory.computer).
         statusCode: switch (kind) {
           PaseoFailureKind.authentication => 401,
+          PaseoFailureKind.notFound => 404,
           PaseoFailureKind.overloaded => 429,
           PaseoFailureKind.staleRequest ||
           PaseoFailureKind.scopeMismatch ||
@@ -282,6 +294,13 @@ class PaseoTransport {
   static const maxFrameBytes = 8 * 1024 * 1024;
   static const maxPending = 64;
 
+  /// Text frames this long or longer are decoded on a background isolate.
+  /// A whole history arrives as one frame of up to [maxFrameBytes], which
+  /// takes a phone hundreds of milliseconds to decode; below this size
+  /// decoding inline costs less than the isolate hop
+  /// (docs/qa/json-decode-2026-10-28).
+  static const backgroundDecodeChars = 64 * 1024;
+
   /// Sent in `hello`. Below 0.1.45 the daemon hides every provider except
   /// claude, codex and opencode.
   static const clientAppVersion = '0.8.0';
@@ -305,6 +324,10 @@ class PaseoTransport {
   bool _closed = false;
   bool _initialized = false;
   int? _boundedFrameBytes;
+
+  /// Socket messages that arrived while a big frame was still decoding wait
+  /// here, so every frame and the close are handled in arrival order.
+  Future<void>? _inbox;
 
   /// Set by a `hello.rejected` frame so the close that follows reports the
   /// daemon's reason, not just a dropped connection.
@@ -373,8 +396,8 @@ class PaseoTransport {
     final ready = _ready = Completer<void>();
     _subscription = socket.messages.listen(
       (frame) => _receive(epoch, frame),
-      onError: (Object _) => _lost(epoch),
-      onDone: () => _lost(epoch),
+      onError: (Object _) => _inOrder(() => _lost(epoch)),
+      onDone: () => _inOrder(() => _lost(epoch)),
       cancelOnError: true,
     );
     try {
@@ -556,6 +579,72 @@ class PaseoTransport {
 
   void _receive(int epoch, Object? frame) {
     if (epoch != _epoch || _closed) return;
+    final cap = _boundedFrameBytes;
+    if (frame is String &&
+        frame.length >= backgroundDecodeChars &&
+        frame.length <= maxFrameBytes &&
+        (cap == null || frame.length <= cap)) {
+      final decoded = _decodeInBackground(frame);
+      _inOrder(() async => _handle(epoch, frame, await decoded), queue: true);
+    } else {
+      _inOrder(() => _handle(epoch, frame));
+    }
+  }
+
+  /// Runs [work] with message handling paused: messages that arrive meanwhile
+  /// are handled after it, in order, as if [work] ran inside the handler of
+  /// the reply it processes. A long reply uses it to map off the UI isolate.
+  /// [work] must not wait for another reply.
+  Future<T> holdingMessages<T>(Future<T> Function() work) {
+    final done = work();
+    _inOrder(
+      () => done.then<void>((_) {}, onError: (Object _) {}),
+      queue: true,
+    );
+    return done;
+  }
+
+  /// Runs [action] now, or after the messages queued before it when a big
+  /// frame is still decoding ([queue] starts such a wait).
+  void _inOrder(FutureOr<void> Function() action, {bool queue = false}) {
+    final before = _inbox;
+    if (before == null && !queue) {
+      action();
+      return;
+    }
+    late final Future<void> next;
+    next = (before ?? Future<void>.value())
+        .then((_) => action())
+        // A throwing handler is reported as it would be inline, and the
+        // messages behind it still run.
+        .catchError(Zone.current.handleUncaughtError)
+        .whenComplete(() {
+          if (identical(_inbox, next)) _inbox = null;
+        });
+    _inbox = next;
+  }
+
+  /// The frame's JSON decoded on another isolate, or null to decode it here
+  /// (no isolate could run). Malformed JSON comes back as a JSON null, which
+  /// [_handle] rejects like any frame that is not an object.
+  static Future<(Object?,)?> _decodeInBackground(String frame) async {
+    try {
+      return (await Isolate.run(() => _decodeOrNull(frame)),);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Object? _decodeOrNull(String frame) {
+    try {
+      return jsonDecode(frame);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _handle(int epoch, Object? frame, [(Object?,)? decoded]) {
+    if (epoch != _epoch || _closed) return;
     if (frame is! String) {
       // Binary frames carry terminal data, and only a terminal subscription
       // asks for any.
@@ -575,7 +664,7 @@ class PaseoTransport {
           (frame.length > cap || utf8.encode(frame).length > cap)) {
         throw const FormatException();
       }
-      final json = jsonDecode(frame);
+      final json = decoded != null ? decoded.$1 : jsonDecode(frame);
       if (json is! Map<String, dynamic>) throw const FormatException();
       final outer = json['type'];
       if (outer == 'pong' || outer == 'ping') return;
@@ -685,6 +774,8 @@ class PaseoTransport {
 
   void _lost(int epoch) {
     if (epoch != _epoch) return;
+    // Frames still queued belong to this socket and are dropped by epoch.
+    _inbox = null;
     serverVersion = null;
     workspaceFileEditing = false;
     if (_socket == null) return;

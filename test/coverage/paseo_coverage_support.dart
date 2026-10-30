@@ -70,7 +70,7 @@ List<String> screenText(WidgetTester tester) => [
 /// Whitespace-insensitive and blind to the invisible break and direction
 /// marks the kit puts in paths, so a wrapped line still matches.
 String flat(String text) => text
-    .replaceAll(RegExp('[\u200b-\u200f\u2066-\u2069\u202a-\u202e]'), '')
+    .replaceAll(RegExp('[\u200b-\u200f\u2060\u2066-\u2069\u202a-\u202e]'), '')
     .replaceAll(RegExp(r'\s+'), ' ');
 
 /// The ledger rules every family shares.
@@ -133,6 +133,14 @@ void registerLedgerTests(CoverageFamily family) {
   });
 }
 
+/// Whether [screen] holds [probe]. A bare number must stand alone: "410"
+/// is not in a test server's random port "127.0.0.1:41087" (a false hit on
+/// the build server, 2026-10-27), nor in "4100".
+bool probeShows(String screen, String probe) {
+  if (!RegExp(r'^\d+$').hasMatch(probe)) return screen.contains(probe);
+  return RegExp('(?<!\\d)$probe(?!\\d)').hasMatch(screen);
+}
+
 /// The ledger check for one opened case: the problems found on [screenText].
 /// [primaryText] is what was readable before any fold was opened: a field the
 /// case marks `primary` (what is being asked for) must be there already.
@@ -149,7 +157,9 @@ List<String> checkCase(
     final key = field['key'] as String;
     final decision = family.ledger[key];
     final probes = (field['probes'] as List).cast<String>();
-    final visible = [for (final probe in probes) screen.contains(flat(probe))];
+    final visible = [
+      for (final probe in probes) probeShows(screen, flat(probe)),
+    ];
     family.report.add({
       'case': variant['id'],
       'field': key,
@@ -164,7 +174,7 @@ List<String> checkCase(
         if (!visible[i]) {
           problems.add('$key: "${probes[i]}" is not on screen');
         } else if (field['primary'] == true &&
-            !primaryScreen.contains(flat(probes[i]))) {
+            !probeShows(primaryScreen, flat(probes[i]))) {
           problems.add('$key: "${probes[i]}" is behind a fold');
         }
       }

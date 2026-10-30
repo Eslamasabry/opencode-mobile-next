@@ -420,7 +420,7 @@ void main() {
     testWidgets('running: This phone and its version; Stop and Show log in '
         'its menu, no buttons under the row', (tester) async {
       await mountCard(tester, connected: true);
-      expect(find.text('In-app Ubuntu'), findsOneWidget);
+      expect(find.text('On this phone'), findsOneWidget);
       expect(status(tester), 'Running');
       // The size is not on the line (it is said where it matters: Remove).
       expect(detail(tester), 'Connected · OpenCode 2.0.10');
@@ -910,18 +910,16 @@ void main() {
           expect(size.width, greaterThanOrEqualTo(48), reason: key);
         }
         if (locale.languageCode == 'ar') {
-          expect(find.text('أوبونتو داخل التطبيق'), findsOneWidget);
+          expect(find.text('على هذا الهاتف'), findsOneWidget);
           expect(find.text('يعمل'), findsOneWidget);
           expect(
-            Directionality.of(
-              tester.element(find.text('أوبونتو داخل التطبيق')),
-            ),
+            Directionality.of(tester.element(find.text('على هذا الهاتف'))),
             TextDirection.rtl,
           );
           // At 2.5x the status moves under the name and starts where the
           // name starts: on the right in Arabic.
           final status = tester.getRect(find.text('يعمل'));
-          final title = tester.getRect(find.text('أوبونتو داخل التطبيق'));
+          final title = tester.getRect(find.text('على هذا الهاتف'));
           expect(status.top, greaterThanOrEqualTo(title.bottom));
           expect((status.right - title.right).abs(), lessThan(1));
         }
@@ -931,11 +929,8 @@ void main() {
   });
 
   test('the in-app server is named This phone everywhere', () {
-    expect(serverDisplayName(phone(), AppLocalizationsEn()), 'In-app Ubuntu');
-    expect(
-      serverDisplayName(phone(), AppLocalizationsAr()),
-      'أوبونتو داخل التطبيق',
-    );
+    expect(serverDisplayName(phone(), AppLocalizationsEn()), 'On this phone');
+    expect(serverDisplayName(phone(), AppLocalizationsAr()), 'على هذا الهاتف');
     expect(serverDisplayName(work, AppLocalizationsEn()), 'Work server');
     expect(formatPhoneStorage(1181116006), '1.1 GB');
     expect(formatPhoneStorage(734003200), '700.0 MB');
@@ -998,7 +993,7 @@ void main() {
         tester
             .widget<Text>(find.byKey(const ValueKey('phone-server-title')))
             .data,
-        'In-app Ubuntu',
+        'On this phone',
       );
     });
   });
@@ -1041,8 +1036,18 @@ void main() {
       );
       expectNoForbiddenText();
 
+      // The switcher's row has no ⋮: a tap on the server in use opens its
+      // menu (vision 2026-10-20), with the check at its end.
+      expect(find.byKey(const ValueKey('phone-server-menu')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('phone-server-current')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('phone-server-title')));
+      await tester.pumpAndSettle();
       // The sheet closes first; the shell runs the action.
-      await choose(tester, 'phone-server-update');
+      await tester.tap(find.byKey(const ValueKey('phone-server-update')));
+      await tester.pumpAndSettle();
       expect(choice, isA<ServerSwitcherPhoneAction>());
       final action = choice! as ServerSwitcherPhoneAction;
       expect(action.action, PhoneServerAction.update);
@@ -1162,6 +1167,25 @@ void main() {
         reason: 'not connected: nothing to leave',
       );
       expectNoForbiddenText();
+    });
+
+    // Sweep 3680: a list of one row drew a stray hairline at its foot.
+    testWidgets('a list of one row has no divider', (tester) async {
+      store.saved.add(phone());
+      store.selected = 'phone';
+      tester.view
+        ..physicalSize = const Size(400, 1600)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(app(const ServersScreen()));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('servers-list')),
+          matching: find.byType(KitDivider),
+        ),
+        findsNothing,
+      );
     });
 
     testWidgets('a working server ranks above This phone in the one list', (

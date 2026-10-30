@@ -15,6 +15,7 @@ import 'package:opencode_mobile/ui/kit/kit_motion.dart';
 import 'package:opencode_mobile/ui/kit/kit_text.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 import 'package:opencode_mobile/ui/kit/motion/kit_motion_parts.dart';
+import 'package:opencode_mobile/ui/kit/motion/kit_reveal.dart';
 
 import 'kit_motion_still.dart';
 
@@ -508,6 +509,90 @@ void main() {
     });
   });
 
+  group('KitSwap.count', () {
+    Widget count(int n, {KitMotionLevel motion = KitMotionLevel.full}) =>
+        _harness(
+          KitSwap.count(count: n, child: Text('$n')),
+          motion: motion,
+        );
+
+    /// Where [text] paints, in global coordinates.
+    double top(WidgetTester tester, String text) =>
+        tester.getTopLeft(find.text(text)).dy;
+
+    testWidgets('the first build shows the number at once', (tester) async {
+      await tester.pumpWidget(count(3));
+      expect(find.text('3'), findsOneWidget);
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+
+    testWidgets('a rising count rolls up: the new number comes from below, '
+        'the old one leaves above, and both fade', (tester) async {
+      await tester.pumpWidget(count(3));
+      final rest = top(tester, '3');
+      await tester.pumpWidget(count(4));
+      await tester.pump(KitMotion.quick ~/ 3);
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('4'), findsOneWidget);
+      expect(top(tester, '4'), greaterThan(rest));
+      expect(top(tester, '3'), lessThan(rest));
+      expect(_paintedOpacity(tester, find.text('4')), inExclusiveRange(0, 1));
+      expect(_paintedOpacity(tester, find.text('3')), inExclusiveRange(0, 1));
+      // The leaving number is read by nobody and takes no taps.
+      expect(
+        find.descendant(
+          of: find.byWidgetPredicate(
+            (w) => w is ExcludeSemantics && w.excluding,
+          ),
+          matching: find.text('3'),
+        ),
+        findsOneWidget,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('3'), findsNothing);
+      expect(top(tester, '4'), moreOrLessEquals(rest));
+    });
+
+    testWidgets('a falling count rolls down', (tester) async {
+      await tester.pumpWidget(count(4));
+      final rest = top(tester, '4');
+      await tester.pumpWidget(count(3));
+      await tester.pump(KitMotion.quick ~/ 3);
+      expect(top(tester, '3'), lessThan(rest));
+      expect(top(tester, '4'), greaterThan(rest));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('Animations: Calm only cross-fades, without travel', (
+      tester,
+    ) async {
+      await tester.pumpWidget(count(3, motion: KitMotionLevel.calm));
+      final rest = top(tester, '3');
+      await tester.pumpWidget(count(4, motion: KitMotionLevel.calm));
+      await tester.pump(KitMotion.quick ~/ 3);
+      expect(find.text('3'), findsOneWidget);
+      expect(top(tester, '4'), moreOrLessEquals(rest));
+      expect(top(tester, '3'), moreOrLessEquals(rest));
+      expect(_paintedOpacity(tester, find.text('4')), inExclusiveRange(0, 1));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('Animations: Off changes the number at once', (tester) async {
+      await tester.pumpWidget(count(3, motion: KitMotionLevel.off));
+      await tester.pumpWidget(count(4, motion: KitMotionLevel.off));
+      await tester.pump();
+      expect(find.text('3'), findsNothing);
+      expect(find.text('4'), findsOneWidget);
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+
+    testWidgets('the same count rebuilt does not roll', (tester) async {
+      await tester.pumpWidget(count(3));
+      await tester.pumpWidget(count(3));
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+  });
+
   group('KitSpin', () {
     testWidgets('KitSpin(turns: .5) animates', (tester) async {
       await tester.pumpWidget(_harness(const KitSpin(turns: 0, child: _star)));
@@ -823,6 +908,69 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.hasRunningAnimations, isFalse);
     });
+  });
+
+  group('leaving parts start at once (KitMotion.exit in a reverse slot)', () {
+    Widget reveal(bool shown) => _harness(
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          KitReveal(
+            child: shown
+                ? const SizedBox(height: 100, child: Text('Part'))
+                : null,
+          ),
+        ],
+      ),
+    );
+
+    testWidgets('a KitReveal part starts folding away at once', (tester) async {
+      await tester.pumpWidget(reveal(true));
+      await tester.pumpWidget(reveal(false));
+      await tester.pump(const Duration(milliseconds: 50)); // 20 % of 250 ms
+      final h = tester.getSize(find.byType(KitReveal)).height;
+      expect(h, lessThan(67), reason: 'a third of it gone in the first fifth');
+      await tester.pumpAndSettle();
+      expect(find.text('Part'), findsNothing);
+    });
+
+    testWidgets('a KitReveal part is gone 150 ms after it is removed', (
+      tester,
+    ) async {
+      await tester.pumpWidget(reveal(true));
+      await tester.pumpWidget(reveal(false));
+      await tester.pump(const Duration(milliseconds: 151));
+      await tester.pump();
+      expect(find.text('Part'), findsNothing);
+    });
+
+    testWidgets('a KitSwap cross-fade lets the old content go at once', (
+      tester,
+    ) async {
+      Widget swap(String word) =>
+          _harness(KitSwap(child: Text(word, key: ValueKey(word))));
+      await tester.pumpWidget(swap('Old'));
+      await tester.pumpWidget(swap('New'));
+      await tester.pump(const Duration(milliseconds: 30)); // 20 % of 150 ms
+      expect(_paintedOpacity(tester, find.text('Old')), lessThan(.7));
+      await tester.pumpAndSettle();
+    });
+  });
+
+  testWidgets('KitEntrance under Calm fades in place', (tester) async {
+    Widget entrance(int trigger) => _harness(
+      KitEntrance(trigger: trigger, child: const Text('Arrives')),
+      motion: KitMotionLevel.calm,
+    );
+    await tester.pumpWidget(entrance(1));
+    await tester.pumpAndSettle();
+    final place = tester.getTopLeft(find.text('Arrives'));
+    await tester.pumpWidget(entrance(2));
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(_paintedOpacity(tester, find.text('Arrives')), lessThan(1));
+    expect(tester.getTopLeft(find.text('Arrives')), place);
+    await tester.pumpAndSettle();
   });
 
   test(

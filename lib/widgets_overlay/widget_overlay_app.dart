@@ -14,6 +14,7 @@ import '../state/app_locale.dart' show resolveAppLocales;
 import '../state/profiles.dart' show AppAppearance, ProfileStore, ThemePackId;
 import '../ui/app_theme.dart';
 import '../ui/screens/widgets/widget_configure_screen.dart';
+import '../ui/screens/widgets/widget_project_screen.dart';
 import '../ui/screens/widgets/widget_steer_screen.dart';
 import '../ui/theme_packs.dart' show effectiveThemePack;
 import 'widget_overlay_api.dart';
@@ -81,15 +82,18 @@ class WidgetOverlayApp extends StatelessWidget {
       themeMode: switch (appearance) {
         AppAppearance.system => ThemeMode.system,
         AppAppearance.light => ThemeMode.light,
-        AppAppearance.dark => ThemeMode.dark,
+        AppAppearance.dark || AppAppearance.saver => ThemeMode.dark,
       },
       theme: AppTheme.light(pack),
-      darkTheme: AppTheme.dark(pack),
+      darkTheme: appearance == AppAppearance.saver
+          ? AppTheme.saver(pack)
+          : AppTheme.dark(pack),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       localeListResolutionCallback: resolveAppLocales,
       home: switch (launch.route) {
         '/widgets/configure' => WidgetConfigureScreen(api: api, launch: launch),
+        '/widgets/project' => WidgetProjectScreen(api: api, launch: launch),
         '/widgets/steer' => WidgetSteerScreen(api: api, launch: launch),
         '/widgets/voice' => WidgetSteerScreen(
           api: api,

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Conversations widget (4x2): a header with New conversation, the one conversation that
+     matters now (a request with Allow / Reply / Open, a working turn, else the last one), and
+     the next conversations as one-line rows. ConversationsWidgetBinder sets every view on every
+     update; the defaults here are the empty widget. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:layoutDirection="locale" android:background="@drawable/widget_card_dark"
+    android:paddingStart="16dp" android:paddingEnd="7dp" android:paddingTop="5dp" android:paddingBottom="10dp">
+
+    <LinearLayout android:id="@+id/cv_header" android:layout_width="match_parent" android:layout_height="48dp"
+        android:gravity="center_vertical">
+        <FrameLayout android:id="@+id/cv_tile" android:layout_width="22dp" android:layout_height="22dp"
+            android:background="@drawable/widget_tile_dark">
+            <ImageView android:id="@+id/cv_mark" android:layout_width="12dp" android:layout_height="12dp"
+                android:layout_gravity="center" android:src="@drawable/ic_widget_mark"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
+        <TextView android:id="@+id/cv_label" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:layout_marginStart="9dp" android:text="@string/widget_conversations_title"
+            android:fontFamily="sans-serif-medium" android:textSize="13sp" android:maxLines="1" android:ellipsize="end"
+            android:textDirection="locale" android:gravity="start" android:textColor="#FFA3A5AB" />
+        <!-- The 48dp touch area; the 30dp pill inside it keeps the look. -->
+        <FrameLayout android:id="@+id/cv_new" android:layout_width="48dp" android:layout_height="48dp"
+            android:contentDescription="@string/widget_v2_new">
+            <FrameLayout android:id="@+id/cv_new_pill" android:layout_width="30dp" android:layout_height="30dp"
+                android:layout_gravity="center" android:background="@drawable/widget_pill_dark"
+                android:importantForAccessibility="no">
+                <ImageView android:id="@+id/cv_plus" android:layout_width="16dp" android:layout_height="16dp"
+                    android:layout_gravity="center" android:src="@drawable/ic_widget_ph_plus"
+                    android:importantForAccessibility="no" />
+            </FrameLayout>
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- The one that matters now. -->
+    <LinearLayout android:id="@+id/cv_hero" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="2dp" android:layout_marginEnd="9dp" android:minHeight="48dp" android:orientation="vertical">
+        <TextView android:id="@+id/cv_title" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:fontFamily="sans-serif" android:textStyle="bold" android:textSize="18sp" android:maxLines="1"
+            android:ellipsize="end" android:textDirection="firstStrong" android:gravity="start"
+            android:textColor="#FFF3F3F1" />
+        <LinearLayout android:id="@+id/cv_meta_row" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="2dp" android:gravity="center_vertical">
+            <ImageView android:id="@+id/cv_dot" android:layout_width="8dp" android:layout_height="8dp"
+                android:layout_marginEnd="6dp" android:src="@drawable/widget_dot" android:importantForAccessibility="no"
+                android:visibility="gone" />
+            <TextView android:id="@+id/cv_meta" android:layout_width="0dp" android:layout_weight="1"
+                android:layout_height="wrap_content" android:textSize="13sp" android:maxLines="1"
+                android:ellipsize="end" android:textDirection="firstStrong" android:gravity="start"
+                android:textColor="#FF8C8F96" />
+        </LinearLayout>
+        <!-- The exact command: code, left to right in every language. -->
+        <TextView android:id="@+id/cv_ask" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:background="@drawable/widget_code_dark"
+            android:paddingStart="9dp" android:paddingEnd="9dp" android:paddingTop="5dp" android:paddingBottom="5dp"
+            android:fontFamily="monospace" android:textSize="13sp" android:maxLines="2" android:ellipsize="end"
+            android:textDirection="ltr" android:gravity="start" android:textColor="#FFF3F3F1"
+            android:visibility="gone" />
+        <!-- Each answer is a 48dp touch area around a 34dp pill: the pill keeps the look. -->
+        <LinearLayout android:id="@+id/cv_buttons" android:layout_width="match_parent" android:layout_height="48dp"
+            android:layout_marginTop="3dp" android:layout_marginStart="-3dp" android:visibility="gone">
+            <FrameLayout android:id="@+id/cv_allow_hit" android:layout_width="wrap_content"
+                android:layout_height="match_parent" android:layout_marginEnd="2dp">
+                <TextView android:id="@+id/cv_allow" android:layout_width="wrap_content" android:layout_height="34dp"
+                    android:layout_gravity="center" android:layout_marginStart="3dp" android:layout_marginEnd="3dp"
+                    android:minWidth="72dp" android:paddingStart="18dp" android:paddingEnd="18dp" android:gravity="center"
+                    android:fontFamily="sans-serif-medium" android:textStyle="bold" android:textSize="14sp"
+                    android:maxLines="1" android:text="@string/widget_v2_allow_short"
+                    android:importantForAccessibility="no"
+                    android:background="@drawable/widget_btn_amber_dark" android:textColor="#FF1A1300" />
+            </FrameLayout>
+            <FrameLayout android:id="@+id/cv_reply_hit" android:layout_width="wrap_content"
+                android:layout_height="match_parent" android:layout_marginEnd="2dp">
+                <TextView android:id="@+id/cv_reply" android:layout_width="wrap_content" android:layout_height="34dp"
+                    android:layout_gravity="center" android:layout_marginStart="3dp" android:layout_marginEnd="3dp"
+                    android:minWidth="72dp" android:paddingStart="18dp" android:paddingEnd="18dp" android:gravity="center"
+                    android:fontFamily="sans-serif-medium" android:textStyle="bold" android:textSize="14sp"
+                    android:maxLines="1" android:text="@string/widget_reply"
+                    android:importantForAccessibility="no"
+                    android:background="@drawable/widget_pill_dark" android:textColor="#FFF3F3F1" />
+            </FrameLayout>
+            <FrameLayout android:id="@+id/cv_open_hit" android:layout_width="wrap_content"
+                android:layout_height="match_parent">
+                <TextView android:id="@+id/cv_open" android:layout_width="wrap_content" android:layout_height="34dp"
+                    android:layout_gravity="center" android:layout_marginStart="3dp" android:layout_marginEnd="3dp"
+                    android:minWidth="72dp" android:paddingStart="18dp" android:paddingEnd="18dp" android:gravity="center"
+                    android:fontFamily="sans-serif-medium" android:textStyle="bold" android:textSize="14sp"
+                    android:maxLines="1" android:text="@string/widget_v2_open"
+                    android:importantForAccessibility="no"
+                    android:background="@drawable/widget_pill_dark" android:textColor="#FFF3F3F1" />
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- The next conversations, one line each, under a hairline. -->
+    <FrameLayout android:id="@+id/cv_divider" android:layout_width="match_parent" android:layout_height="1dp"
+        android:layout_marginTop="10dp" android:layout_marginEnd="9dp" android:background="#1AFFFFFF" android:visibility="gone" />
+    <LinearLayout android:id="@+id/cv_rows" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginEnd="9dp" android:orientation="vertical" android:visibility="gone" />
+</LinearLayout>

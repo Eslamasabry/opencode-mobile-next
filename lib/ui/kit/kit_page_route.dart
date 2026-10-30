@@ -1,20 +1,25 @@
 // KitPageRoute — the one way to push a page (docs/ux-system/kit-api/
 // KitPageRoute.md; kit-v2 §9.1 "Routes" row, §9.2; design standard §10).
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 import 'kit_motion.dart';
 import 'motion/kit_page_transitions.dart';
 
-/// A pushed page with the kit's one transition (design standard §10): the
-/// shared-axis fade-through of [KitPageTransitionsBuilder], whatever the
-/// ambient theme's platform or `pageTransitionsTheme` says. Screens never
+/// A pushed page with the kit's transition (design standard §10), whatever
+/// the ambient `pageTransitionsTheme` says: on Android the platform's own,
+/// with the predictive back gesture ([KitAndroidPageTransitionsBuilder],
+/// owner rule 2026-10-26); elsewhere the shared-axis fade-through of
+/// [KitPageTransitionsBuilder]. Screens never
 /// choose a transition — construct this (or, from inside a widget, call
 /// [pushKitPage] / [replaceWithKitPage]) instead of `MaterialPageRoute` or
 /// `PageRouteBuilder` (KIT-7 retires both from the kit-only allowlist).
 ///
 /// Everything about the transition is fixed by the kit: [transitionDuration]
-/// and [reverseTransitionDuration] are [KitMotion.standard] with motion on,
-/// and zero when the person asks for reduced motion. The route is
+/// and [reverseTransitionDuration] are the Android transition's own on
+/// Android and [KitMotion.standard] elsewhere with motion on (a page that
+/// grew out of a row closes in at most [KitMotion.rowReturn]), and zero when
+/// the person asks for reduced motion (the back gesture then pops at once,
+/// with no preview). The route is
 /// always [opaque], has no [barrierColor] or [barrierLabel] and is never
 /// [barrierDismissible]. Only [maintainState], [fullscreenDialog] and
 /// [allowSnapshotting] are a call site's to choose.
@@ -42,19 +47,42 @@ class KitPageRoute<T> extends PageRoute<T> {
   @override
   String? get barrierLabel => null;
 
-  static const _transitions = KitPageTransitionsBuilder();
+  static const _kit = KitPageTransitionsBuilder();
+  static const _android = KitAndroidPageTransitionsBuilder();
 
   bool get _reduced {
     final context = navigator?.context;
     return context != null && KitMotion.reduced(context);
   }
 
-  @override
-  Duration get transitionDuration =>
-      _reduced ? Duration.zero : KitMotion.standard;
+  bool get _isAndroid {
+    final context = navigator?.context;
+    return context != null &&
+        KitAndroidPageTransitionsBuilder.appliesTo(context);
+  }
+
+  PageTransitionsBuilder get _transitions => _isAndroid ? _android : _kit;
 
   @override
-  Duration get reverseTransitionDuration => transitionDuration;
+  Duration get transitionDuration => _reduced
+      ? Duration.zero
+      : _isAndroid
+      ? _android.transitionDuration
+      : KitMotion.standard;
+
+  /// The predictive back gesture previews the page underneath only with
+  /// motion on; under reduced motion a back gesture pops at once.
+  @override
+  bool get popGestureEnabled => !_reduced && super.popGestureEnabled;
+
+  /// A page that grew out of a row closes faster than it opened
+  /// ([KitMotion.rowReturn]); every other page closes as it opened.
+  @override
+  Duration get reverseTransitionDuration {
+    final open = transitionDuration;
+    if (!KitPageOrigin.grewFromRow(this)) return open;
+    return open < KitMotion.rowReturn ? open : KitMotion.rowReturn;
+  }
 
   @override
   bool didPop(T? result) {

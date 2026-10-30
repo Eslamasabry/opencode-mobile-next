@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../kit_max_width.dart';
 import 'kit_team_data.dart';
 import 'team_parts.dart';
 
@@ -25,7 +26,10 @@ class KitProjectRow extends StatelessWidget {
   final int? completed;
   final int? total;
   @override
-  Widget build(BuildContext context) => teamRow(
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) => teamRow(
     context,
     title: title,
     status: status,

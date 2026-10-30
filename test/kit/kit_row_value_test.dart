@@ -78,4 +78,15 @@ void main() {
     expect(find.byIcon(AppIconography.chevronRight), findsOneWidget);
     semantics.dispose();
   });
+
+  testWidgets('a prominent value is body size, the quiet one smaller', (
+    tester,
+  ) async {
+    double size(String text) =>
+        tester.widget<Text>(find.text(text)).style!.fontSize!;
+    await tester.pumpWidget(_host(const KitRowValue('quiet')));
+    final quiet = size('quiet');
+    await tester.pumpWidget(_host(const KitRowValue('big', prominent: true)));
+    expect(size('big'), greaterThan(quiet));
+  });
 }

@@ -175,11 +175,16 @@ void main() {
   path(['app tools.tabs'], (tester) async {
     final repo = ToolsRepo();
     await openTools(tester, repo, ToolsSection.mcp);
-    for (final label in ['Commands', 'Tools', 'Skills', 'References']) {
+    for (final (label, section) in [
+      ('Commands', 'commands'),
+      ('Built-in', 'tools'),
+      ('Skills', 'skills'),
+      ('References', 'references'),
+    ]) {
       await tester.tap(find.byKey(ValueKey('capabilities-tab-$label')));
       await frames(tester, 8);
       expect(
-        find.byKey(ValueKey('tools-section-${label.toLowerCase()}')),
+        find.byKey(ValueKey('tools-section-$section')),
         findsOneWidget,
         reason: label,
       );

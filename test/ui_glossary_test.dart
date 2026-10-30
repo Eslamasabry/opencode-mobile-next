@@ -1128,6 +1128,15 @@ const _allowedProductKeys = <String>{
   'linuxMgrKindServer',
   'linuxMgrKindPaseo',
   'linuxMgrCatAgents',
+  // The connection banner's restart names what restarts, as its Claude Code
+  // twin does ("Restart Claude Code"); a bare "Restart the server" is
+  // ambiguous on a phone that runs OpenCode and Paseo.
+  'connectionRestartPhoneServer',
+  // Running on this phone groups and names the app's processes by what
+  // started them, as the person knows it (OpenCode, Claude Code): the name
+  // says which program a group, a row or a Stop is about.
+  'runningPhoneGroup',
+  'runningPhoneName',
   // The app's own name, not a backend label.
   'appTitle',
   'aboutBuildVersion',

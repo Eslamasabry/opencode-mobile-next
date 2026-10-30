@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_new_session">+ جديد</string>
-    <string name="widget_label">المحادثات</string>
-    <string name="widget_preview_title_1">ملاحظات الإصدار</string>
-    <string name="widget_preview_step_1">يعمل · 2 د</string>
-    <string name="widget_preview_title_2">إصلاح تسجيل الدخول</string>
-    <string name="widget_preview_step_2">اكتمل الرد</string>
-    <string name="widget_description">أحدث محادثات OpenCode، تفتحها بنقرة واحدة.</string>
+    <string name="widget_label">محادثة</string>
+    <string name="widget_description">الشيء الوحيد المهم الآن: ما يحتاجك، أو ما يعمل، أو آخر محادثة لك.</string>
     <string name="shortcut_connect_short">اتصال</string>
     <string name="shortcut_connect_long">اختر خادمًا للاتصال به</string>
     <string name="shortcut_new_task_short">محادثة جديدة</string>
@@ -53,16 +49,21 @@
     <string name="native_alert_quota_reset_title">عاد %1$s</string>
     <string name="native_alert_quota_reset_generic_title">أُعيد ضبط حد الاستخدام</string>
     <string name="native_alert_quota_reset_body">افتح التطبيق لترى المتبقي.</string>
-    <string name="native_alert_permission_title">يحتاج %1$s إلى إذن</string>
-    <string name="native_alert_permission_body">انقر لمراجعة الطلب المعلّق.</string>
-    <string name="native_alert_question_title">يحتاج %1$s إلى إجابتك</string>
-    <string name="native_alert_question_body">انقر للإجابة عن السؤال المعلّق.</string>
-    <string name="native_alert_complete_title">أنهى %1$s العمل</string>
-    <string name="native_alert_complete_body">انقر لمراجعة أحدث نتيجة.</string>
-    <string name="native_alert_error_title">تحتاج محادثة %1$s إلى انتباهك</string>
-    <string name="native_alert_error_body">انقر لمراجعة خطأ المحادثة.</string>
+    <string name="native_alert_permission_title">السماح لـ %1$s بالمتابعة؟</string>
+    <string name="native_alert_question_title">لدى %1$s سؤال لك</string>
+    <string name="native_alert_complete_title">اكتمل: %1$s</string>
+    <string name="native_alert_error_title">توقف: %1$s</string>
+    <string name="native_alert_stopped_any">توقفت محادثة</string>
+    <string name="native_ask_run">تشغيل %1$s؟</string>
+    <string name="native_ask_edit">تعديل %1$s؟</string>
+    <string name="native_ask_read">قراءة %1$s؟</string>
+    <string name="native_ask_folder">العمل في %1$s؟</string>
+    <string name="native_public_needs_you">طلب ينتظرك</string>
+    <string name="native_public_finished">اكتملت محادثة</string>
+    <string name="native_test_title">الإشعارات تعمل</string>
+    <string name="native_test_body">ستصلك الأسئلة والأعمال المكتملة هكذا.</string>
     <string name="native_alert_checkin_title">لا يزال %1$s يعمل</string>
-    <string name="native_alert_checkin_body">انقر للاطمئنان على سير المحادثة.</string>
+    <string name="native_alert_checkin_body">افتح المحادثة للاطمئنان عليها.</string>
     <string name="native_team_decision_title">يحتاج فريق الذكاء الاصطناعي إلى قرار</string>
     <string name="native_team_decision_body">انقر للإجابة في التطبيق.</string>
     <string name="native_team_failed_title">فشلت عملية</string>
@@ -74,8 +75,8 @@
     <string name="native_team_title">فريق الذكاء الاصطناعي</string>
     <string name="native_team_working">قيد العمل</string>
     <string name="native_allow_once">السماح مرة واحدة</string>
-    <string name="native_deny">رفض</string>
-    <string name="native_reply">رد</string>
+    <string name="native_reject">رفض</string>
+    <string name="native_open">فتح</string>
     <string name="native_coding_requests_channel">طلبات العمل</string>
     <string name="native_coding_requests_description">تنبيهات عندما يحتاج OpenCode إلى إذن أو إجابة</string>
     <string name="native_coding_status_channel">تحديثات محادثات العمل</string>
@@ -153,13 +154,12 @@
     <string name="native_status_public_paused">OpenCode · متوقف</string>
     <string name="native_status_public_stopped">OpenCode · توقفت محادثة</string>
     <!-- Moments: summaries, plain reasons, quiet hours -->
-    <string name="native_alert_stopped_title">توقفت %1$s</string>
-    <string name="native_alert_reason_auth">رفض المزوّد المفتاح. المس لتسجيل الدخول من جديد.</string>
-    <string name="native_alert_reason_context">المحادثة أطول مما يتسع له النموذج. المس للمراجعة.</string>
-    <string name="native_alert_reason_length">بلغ الرد حدّ الطول. المس للمراجعة.</string>
-    <string name="native_alert_reason_filter">حجب المزوّد الرد. المس للمراجعة.</string>
-    <string name="native_alert_reason_model">هذا النموذج غير متاح. المس لاختيار غيره.</string>
-    <string name="native_alert_reason_other">حدث خطأ ما. المس للمراجعة.</string>
+    <string name="native_alert_reason_auth">رفض المزوّد المفتاح. سجّل الدخول من جديد للمتابعة.</string>
+    <string name="native_alert_reason_context">المحادثة أطول مما يتسع له النموذج.</string>
+    <string name="native_alert_reason_length">بلغ الرد حدّ الطول.</string>
+    <string name="native_alert_reason_filter">حجب المزوّد الرد.</string>
+    <string name="native_alert_reason_model">هذا النموذج غير متاح. اختر غيره للمتابعة.</string>
+    <string name="native_alert_reason_other">حدث خطأ ما.</string>
     <plurals name="native_group_need_you">
         <item quantity="zero">%d طلب ينتظرك</item>
         <item quantity="one">طلب واحد ينتظرك</item>
@@ -169,22 +169,23 @@
         <item quantity="other">%d طلب ينتظرك</item>
     </plurals>
     <plurals name="native_group_finished">
-        <item quantity="zero">لا ردود منتهية</item>
-        <item quantity="one">انتهى رد واحد</item>
-        <item quantity="two">انتهى ردّان</item>
-        <item quantity="few">انتهت %d ردود</item>
-        <item quantity="many">انتهى %d ردًا</item>
-        <item quantity="other">انتهى %d رد</item>
+        <item quantity="zero">لا محادثات مكتملة</item>
+        <item quantity="one">اكتملت محادثة واحدة</item>
+        <item quantity="two">اكتملت محادثتان</item>
+        <item quantity="few">اكتملت %d محادثات</item>
+        <item quantity="many">اكتملت %d محادثة</item>
+        <item quantity="other">اكتملت %d محادثة</item>
     </plurals>
     <string name="native_coding_requests_quiet_channel">طلبات البرمجة (ساعات الهدوء)</string>
     <string name="native_coding_requests_quiet_description">طلبات تصل في ساعات الهدوء بلا صوت</string>
-    <string name="native_alert_permission_command_title">تشغيل هذا الأمر؟</string>
-    <string name="widget_label_wide">محادثة، عريضة</string>
+    <string name="widget_label_wide">المحادثات</string>
     <string name="widget_label_list">قائمة المحادثات</string>
     <string name="widget_label_strip">شريط المحادثة</string>
-    <string name="widget_description_wide">محادثة واحدة مع آخر ردّ، بطاقة عريضة.</string>
-    <string name="widget_description_list">محادثاتك في قائمة، وما يحتاجك أولًا.</string>
-    <string name="widget_description_strip">محادثة واحدة في سطر واحد مع ميكروفون.</string>
+    <string name="widget_description_wide">ما يحتاجك أو يعمل الآن، ومحادثاتك التالية.</string>
+    <string name="widget_description_list">الشيء الوحيد المهم الآن، ومحادثاتك الأخرى تحته.</string>
+    <string name="widget_description_strip">الشيء الوحيد المهم الآن، في سطر واحد.</string>
     <string name="usage_widget_title_wide">الاستخدام، عريض</string>
     <string name="usage_widget_description_wide">ما تبقّى من كل حدّ في خططك، بعمودين.</string>
+    <string name="widget_label_status">الحالة</string>
+    <string name="widget_description_status">خوادمك، ولينكس هذا الهاتف، والمهام الجارية، وأقرب حدّ في خططك إلى النفاد.</string>
 </resources>

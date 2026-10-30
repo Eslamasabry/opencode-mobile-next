@@ -131,7 +131,6 @@ chatStartServerFolder
 chatStartSuggestionsLabel
 chatStartTip
 chatStartWhatChanged
-chatStripApprovalAsk
 chatStripAutoApprove
 chatStripAutoApprovePaused
 chatStripBackground
@@ -214,11 +213,9 @@ chatsHomeAllProjects
 chatsHomeClearFilters
 chatsHomeDone
 chatsHomeEarlier
-chatsHomeEmptyBody
 chatsHomeEmptyTitle
 chatsHomeIncomplete
 chatsHomeNeedsYou
-chatsHomeNeedsYouCount
 chatsHomeNewChat
 chatsHomeNoMatchBody
 chatsHomeNoMatchTitle
@@ -227,7 +224,6 @@ chatsHomeOpening
 chatsHomeOtherFolders
 chatsHomeProjectEmptyTitle
 chatsHomeRunning
-chatsHomeStartChat
 chatsHomeStartChatIn
 chatsHomeStillLoading
 chatsHomeTitle
@@ -334,8 +330,6 @@ e7WorkspaceOffline
 e7WorkspaceSendAnswers
 firstRunJustShowMe
 firstRunOnComputer
-firstRunOnComputerDetail
-firstRunOnPhoneDetail
 firstRunWhereQuestion
 freeModelNotice
 freeModelSignIn
@@ -352,7 +346,6 @@ kitComposerAddToTurn
 kitComposerCannotSendYet
 kitComposerEditor
 kitComposerField
-kitComposerOffline
 kitComposerPillNoAnswer
 kitComposerRailRetry
 kitComposerSend
@@ -461,7 +454,6 @@ kitWorkDidntFinish
 kitWorkEarlierSteps
 kitWorkEdited
 kitWorkFetched
-kitWorkHideSteps
 kitWorkListed
 kitWorkNotRun
 kitWorkOther
@@ -512,13 +504,9 @@ modelRecent
 modelSearchHint
 modelSelectionSaving
 modelServerDefault
-modelSessionScopeNote
 modelSwitchSession
-onboardingDemoNote
 onboardingSetupGuide
 onboardingTermuxSetup
-onboardingValueBody
-onboardingValueTitle
 otherServerWorking
 phoneSetupCustomizeAllInstalled
 phoneSetupCustomizeIncluded
@@ -529,11 +517,7 @@ phoneSetupLinuxTitle
 phoneSetupLinuxWhy
 phoneSetupNodeWhy
 phoneSetupOpenCodeWhy
-phoneSetupOpenWelcomeContinue
-phoneSetupOpenWelcomeRunning
 phoneSetupOpenWelcomeShowProgress
-phoneSetupOpenWelcomeStopped
-phoneSetupOpenWelcomeStoppedDetail
 phoneSetupPreflightLowMemoryBody
 phoneSetupPreflightLowMemoryHeadline
 phoneSetupPreflightLowSpaceBody
@@ -542,9 +526,7 @@ phoneSetupPreflightMayBeSlow
 phoneSetupPreflightOpenStorage
 phoneSetupPreflightUnsupportedBody
 phoneSetupPreflightUnsupportedHeadline
-phoneSetupProgressFirstSetupNote
 phoneSetupProgressKeepGoing
-phoneSetupProgressLeaveHint
 phoneSetupProgressStopConfirm
 phoneSetupProgressStopContinueLater
 phoneSetupProgressStopMessage

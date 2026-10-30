@@ -94,15 +94,11 @@ void main() {
     now: () => teamSceneClock,
   );
 
-  testWidgets('no tasks: the team gathered at an empty board, still', (
+  testWidgets('no tasks: the calm line, no drawing (vision 2026-10-20)', (
     tester,
   ) async {
     await open(tester, TeamScene.empty, home);
-    final drawings = _drawings(tester, _key('team-home-runs-empty'));
-    expect(drawings, hasLength(1));
-    expect(drawings.single.$1, isA<TeamBoardScene>());
-    // A resting screen: it draws itself in once and does not loop.
-    expect(drawings.single.$2, isFalse);
+    expect(_drawings(tester, _key('team-home-runs-empty')), isEmpty);
     // The one sentence still teaches.
     expect(find.text('No recent tasks'), findsOneWidget);
   });

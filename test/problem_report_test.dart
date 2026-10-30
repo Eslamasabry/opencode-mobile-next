@@ -98,6 +98,45 @@ void main() {
       );
     });
 
+    test('the connection goes in the environment, scrubbed; with nothing '
+        'attached or said, the newest kept error titles it', () {
+      final report = ProblemReport.build(
+        description: '',
+        version: '1.4.0+54',
+        platform: 'Android',
+        connection: 'OpenCode 2.0.28 · on this phone · connected',
+        fallbackTitle: 'Lost the live connection to the server',
+      );
+      expect(report.title, 'Lost the live connection to the server');
+      expect(
+        report.whatHappened,
+        endsWith(
+          'Platform: Android\n'
+          'Connection: OpenCode 2.0.28 · on this phone · connected',
+        ),
+      );
+
+      // The person's own words still win over the kept error, and a
+      // connection line never carries an address.
+      final said = ProblemReport.build(
+        description: 'Send did nothing',
+        version: '1.4.0+54',
+        platform: 'Android',
+        connection: 'http://100.70.12.4:4096 · connected',
+        fallbackTitle: 'Lost the live connection to the server',
+      );
+      expect(said.title, 'Send did nothing');
+      expect(said.whatHappened, isNot(contains('100.70.12.4')));
+
+      final none = ProblemReport.build(
+        description: '',
+        version: '1.4.0+54',
+        platform: 'Android',
+      );
+      expect(none.title, 'Problem report');
+      expect(none.whatHappened, isNot(contains('Connection:')));
+    });
+
     test('a failed job report carries no OCTRACE timings: its log ends '
         'with the real error, not status polls', () {
       final report = ProblemReport.build(

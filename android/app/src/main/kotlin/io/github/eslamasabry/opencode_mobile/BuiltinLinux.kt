@@ -297,7 +297,7 @@ class BuiltinLinux(private val context: Context) {
                     redirectOutput(ProcessBuilder.Redirect.appendTo(log))
                 }
             }
-            .start().also { processes.add(it); processConfinement[it] = prootIsConfined }
+            .start().also { processes.add(it); processConfinement[it] = prootIsConfined; orphanReaper.soon() }
     }
 
     private val installerPreferences by lazy {
@@ -747,8 +747,7 @@ class BuiltinLinux(private val context: Context) {
         check(installed && profileId !in blockedAgentProfiles) { "The agent host is unavailable." }
         check(program.isNotEmpty() && program.size <= 5 && program.first() in SIGN_IN_PROGRAMS &&
             program.drop(1).all { Regex("^[A-Za-z0-9-]{1,32}$").matches(it) }) { "That sign-in can't run here." }
-        val profileHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId")
-        Os.chmod(profileHome.absolutePath, 448)
+        val profileHome = prepareAgentProfileHome(profileId)
         shareClaudeSignIn(profileId)
         val guestHome = "/home/oc/.oc-profiles/$profileId"
         val bin = File(profileHome, ".oc-bin").apply { mkdirs() }
@@ -773,6 +772,20 @@ class BuiltinLinux(private val context: Context) {
             "TERM=xterm-256color", "LANG=C.UTF-8",
             "DISABLE_AUTOUPDATER=1", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1") + program
         return prootCommand(command, agentUser = true) to request
+    }
+
+    /**
+     * [profileId]'s private agent home, with the folders its agents are
+     * pointed at by environment. Codex refuses to run at all, sign-in and
+     * `app-server` included, when `CODEX_HOME` names a folder that does not
+     * exist (issue #95: Codex never worked on the phone).
+     */
+    private fun prepareAgentProfileHome(profileId: String): File {
+        val profileHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId")
+        Os.chmod(profileHome.absolutePath, 448)
+        val codexHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId/codex")
+        Os.chmod(codexHome.absolutePath, 448)
+        return profileHome
     }
 
     /**
@@ -838,8 +851,7 @@ class BuiltinLinux(private val context: Context) {
         }
         val workGeneration = if (synchronized(recoveryLock) { activityResumed })
             workLeases.foregroundGeneration() else null
-        val profileHome = PhoneAgentPaths.prepare(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profileId")
-        Os.chmod(profileHome.absolutePath, 448)
+        prepareAgentProfileHome(profileId)
         shareClaudeSignIn(profileId)
         val guestHome = "/home/oc/.oc-profiles/$profileId"
         // CLAUDE_HOME: Paseo's usage reader looks for Claude's sign-in there
@@ -881,6 +893,7 @@ class BuiltinLinux(private val context: Context) {
         workGeneration?.let { agentWorkAdmissions[process] = it }
         authOtherOwners.register(process, privateOutput)
         processConfinement[process] = prootIsConfined
+        orphanReaper.soon()
     }
 
     /** Uses the existing Android foreground-service deadline and exact PID stop. */
@@ -2587,12 +2600,14 @@ class BuiltinLinux(private val context: Context) {
             ?: error("storageUnavailable")))
         val budget = readBudget(profile)
         val idle = idleState.snapshot()
+        // A boot or app update starts a settled count over (afterSystemEvent);
+        // the worker writes that with its reservation, never the receiver.
         val admitted = NativeServerEventPolicy.admitted(
             nativeAdmitted(profile, supervisionGeneration) && idleState.available,
             idle, NativeServerEventPolicy.Owners(supervisionProfile, profile),
-            original.profileId, budget.attempts)
+            original.profileId, budget.afterSystemEvent().attempts)
         if (!admitted || !savedServerEventAuthority(profile)) {
-            restoreUnavailable(if (budget.attempts >= 3) "budgetExhausted" else "policyDisabled")
+            restoreUnavailable(if (budget.afterSystemEvent().attempts >= 3) "budgetExhausted" else "policyDisabled")
             return null
         }
         check(!serverEventComponentPending()) { "componentRecoveryRequired" }
@@ -2782,7 +2797,9 @@ class BuiltinLinux(private val context: Context) {
 
     private fun awaitColdRestoreDelay(worker: NativeRuntimeOwnership.ColdWorker, profile: String,
         event: NativeServerRestoreTicket? = null) {
-        val delayUntil = SystemClock.elapsedRealtime() + restoredDelay()
+        val delayUntil = SystemClock.elapsedRealtime() +
+            if (event != null && event.budget.afterSystemEvent() != event.budget) MIN_RESTART_DELAY_MS
+            else restoredDelay()
         while (SystemClock.elapsedRealtime() < delayUntil) {
             val current = synchronized(recoveryLock) {
                 worker.runIfCurrent(supervisionGeneration, recoveryScheduleId) {
@@ -2802,7 +2819,8 @@ class BuiltinLinux(private val context: Context) {
         var recipe: NativeServerRecipe? = null
         var receipt: NativeRuntimeReceipt? = null
         withColdRestoreAdmission(worker, profile, event) {
-            if (readBudget(profile).attempts >= 3) {
+            val budget = readBudget(profile)
+            if ((if (budget == event?.budget) budget.afterSystemEvent() else budget).attempts >= 3) {
                 restoreUnavailable("budgetExhausted"); throw ColdRestoreRevoked()
             }
             if (componentRecoveryPending()) {
@@ -2888,7 +2906,8 @@ class BuiltinLinux(private val context: Context) {
             serverRecipe = recipe
             // Runtime identity generation is independent of the immutable admission ticket.
             val runtimeGeneration = nextRuntimeGeneration()
-            reservedGeneration = reserveNativeAttempt(profile, runtimeGeneration).recoveryGeneration
+            reservedGeneration = reserveNativeAttempt(profile, runtimeGeneration,
+                event?.budget?.afterSystemEvent()).recoveryGeneration
         }
         return reservedGeneration
     }
@@ -2989,6 +3008,26 @@ class BuiltinLinux(private val context: Context) {
         return reset.map()
     }
 
+    /** See [NativeRecoveryBudget.presenceResetAllowed]; Dart asks after a health probe. */
+    @Synchronized
+    fun confirmServerPresence(profile: String): Map<String, Any?> {
+        val current = readBudget(profile)
+        synchronized(recoveryLock) {
+            check(NativeRecoveryBudget.presenceResetAllowed(PresenceReset(
+                resumed = activityResumed, wanted = restartWanted, userStopped = userStopped,
+                boundProfile = supervisionProfile, requestedProfile = profile, running = serverRunning,
+                pending = current.pending,
+                restoreInFlight = recoveryAttempt != null || serverEventTicket != null || scheduledRecovery,
+            ))) { "recovery_unavailable" }
+        }
+        if (current.attempts == 0 && current.nextAt == null) return current.map()
+        val reset = NativeRecoveryBudget(revision = current.revision + 1)
+        check(recoveryPreferences.edit()
+            .putString(budgetKey(profile), JSONObject(reset.map()).toString()).commit())
+        restartBackoff.reset()
+        return reset.map()
+    }
+
     /** Main-thread revocation does not wait for persistence or process shutdown. */
     fun unbindServerRecovery(profile: String) {
         synchronized(recoveryLock) {
@@ -3056,8 +3095,10 @@ class BuiltinLinux(private val context: Context) {
             migrationMarkerValid(profile), policyPermits(profile))
     }
 
-    private fun reserveNativeAttempt(profile: String, generation: Long): NativeRecoveryBudget {
-        var budget = readBudget(profile)
+    /** [base] replaces the stored count it was derived from, in the same commit as the reservation. */
+    private fun reserveNativeAttempt(profile: String, generation: Long,
+        base: NativeRecoveryBudget? = null): NativeRecoveryBudget {
+        var budget = base ?: readBudget(profile)
         val archived = NativeRecoveryBudget.archiveConfirmed(receipts(profile), budget)
         if (budget.pending) {
             // Preserve health proof even if the process crashes before Dart records its act.
@@ -3511,6 +3552,7 @@ class BuiltinLinux(private val context: Context) {
             throw error
         }
         monitorServiceExit(name, process)
+        orphanReaper.soon()
         return process
     }
 
@@ -3625,6 +3667,8 @@ class BuiltinLinux(private val context: Context) {
 
     /** Keeps the foreground service exactly as long as any service runs. */
     private fun serviceSetChanged() {
+        // A proot started or ended (perhaps killed by Android): clean up after a dead one.
+        orphanReaper.soon()
         recordRunning()
         // A reply cannot run on a server that is gone: never keep the phone
         // awake for it.
@@ -3697,6 +3741,81 @@ class BuiltinLinux(private val context: Context) {
             input.skip(skip)
             return input.readBytes().toString(Charsets.UTF_8)
         }
+    }
+
+    // ---- orphans of a dead proot (NativeOrphanReaper) -----------------------
+
+    private val orphanReaper by lazy {
+        NativeOrphanReaperHost(AndroidProcess.myUid(), AndroidProcess.myPid(),
+            running = { synchronized(this) { trackedRootPids().isNotEmpty() } },
+            liveRoots = { synchronized(this) { trackedRootPids() } + terminalRootPids() })
+    }
+
+    /** The root pid of every process tree the app started that runs now (proots and the engine). */
+    private fun trackedRootPids(): Set<Int> {
+        val roots = processes + services.values.map { it.process } + scheduledPhoneProcesses.values +
+            listOfNotNull(installerProcess)
+        return (roots.filter { it.isAlive }.mapNotNull { pidOf(it) } +
+            listOfNotNull(phoneEngine.ownedIdentity()?.pid)).toSet()
+    }
+
+    /** Read outside this object's lock: the terminal takes its own lock and then this one. */
+    private fun terminalRootPids(): Set<Int> =
+        LocalTerminal.get(context).list().filter { it.running }.map { it.pid }.toSet()
+
+    /** Each live root's owner label for [NativeProcessList]. */
+    private fun rootOwners(): Map<Int, String> {
+        val owners = LinkedHashMap<Int, String>()
+        services.forEach { (name, service) ->
+            val pid = pidOf(service.process).takeIf { service.process.isAlive }
+            if (pid != null) owners[pid] = NativeProcessList.ownerOfService(name)
+        }
+        scheduledPhoneProcesses.values.filter { it.isAlive }.mapNotNull { pidOf(it) }
+            .forEach { owners.putIfAbsent(it, "opencode") }
+        phoneEngine.ownedIdentity()?.pid?.let { owners.putIfAbsent(it, "engine") }
+        trackedRootPids().forEach { owners.putIfAbsent(it, "task") }
+        return owners
+    }
+
+    /** This app user's processes now, for "What's running on this phone" (see [NativeProcessList]). */
+    fun processTable(): Map<String, Any?> {
+        val uid = AndroidProcess.myUid()
+        val began = SystemClock.elapsedRealtime()
+        val before = NativeProcScan.scan(uid)
+        Thread.sleep(CPU_SAMPLE_MS)
+        val after = NativeProcScan.scan(uid, details = true)
+        val clock = NativeProcessList.Clock(SystemClock.elapsedRealtime() - began,
+            Os.sysconf(OsConstants._SC_CLK_TCK), Os.sysconf(OsConstants._SC_PAGESIZE),
+            // CLOCK_BOOTTIME, the clock /proc/uptime and a process's start
+            // time use; an app may not read /proc/uptime (SELinux proc_uptime).
+            SystemClock.elapsedRealtime() / MILLIS_PER_SECOND.toDouble())
+        val roots = synchronized(this) { rootOwners() } + terminalRootPids().associateWith { "terminal" }
+        val appPids = registeredRuntimePids() + AndroidProcess.myPid()
+        val orphans = NativeOrphanReaper.orphans(after, uid, AndroidProcess.myPid(), roots.keys).map { it.pid }
+        val owners = NativeProcessList.owners(after, appPids, roots, orphans.toSet())
+        return mapOf("processes" to NativeProcessList.rows(before, after, clock, owners),
+            "sampledMs" to clock.elapsedMs) + orphanReaper.diagnostics()
+    }
+
+    /**
+     * Stops [pids] (SIGTERM, then SIGKILL after a short wait): only live
+     * processes of this app user, never the app itself nor the root of a tree
+     * the app runs. Says which ended and why the others were refused.
+     */
+    fun stopProcesses(pids: List<Int>): Map<String, Any?> {
+        val uid = AndroidProcess.myUid()
+        val appPids = registeredRuntimePids() + AndroidProcess.myPid()
+        val roots = synchronized(this) { trackedRootPids() } + terminalRootPids()
+        val refused = mutableListOf<Map<String, Any?>>()
+        val targets = pids.distinct().take(MAX_STOP_PIDS).mapNotNull { pid ->
+            val entry = NativeProcScan.read(pid, uid)
+            val reason = NativeProcessList.stopRefusal(pid, entry, uid, appPids, roots)
+            if (reason != null) refused += mapOf("pid" to pid, "reason" to reason)
+            entry.takeIf { reason == null }
+        }
+        val ended = NativeProcScan.terminate(targets, STOP_GRACE_MS)
+        targets.filterNot { it in ended }.forEach { refused += mapOf("pid" to it.pid, "reason" to "stillRunning") }
+        return mapOf("stopped" to ended.map { it.pid }, "refused" to refused)
     }
 
     // ---- bounded independent CPU work ownership -----------------------------
@@ -3788,7 +3907,7 @@ class BuiltinLinux(private val context: Context) {
             "workHeld" to workHeld,
             "workLeases" to workLeases.diagnostics(),
             "services" to serviceDiagnostics(),
-        )
+        ) + orphanReaper.diagnostics()
     }
 
     /** The "Seccomp_filters:" count of [pid] (Linux 5.9+), or null. */
@@ -4099,6 +4218,9 @@ class BuiltinLinux(private val context: Context) {
         private const val MAX_RECEIPT_CHARS = 131_072
         private const val MAX_ENV_BYTES = 131_072
         private const val SERVER_DEFAULT_PORT = 4097
+        private const val CPU_SAMPLE_MS = 1_000L
+        private const val STOP_GRACE_MS = 2_000L
+        private const val MAX_STOP_PIDS = 256
 
         internal fun registeredAppProcessIds(records: List<ActivityManager.RunningAppProcessInfo>?,
             packageName: String, uid: Int): Set<Int> = records.orEmpty().filter {
@@ -4129,6 +4251,11 @@ class BuiltinLinux(private val context: Context) {
          * proot was killed, so the next start failed "port in use"). So the
          * programs inside get SIGTERM first, to finish cleanly; whatever is
          * left after [graceMs] gets SIGKILL, proot last.
+         *
+         * When proot ends first, a program it ran may stay behind, now
+         * traced by nothing (it then runs on at full speed, unreaped: the
+         * 2026-10-27 phone incident). Every program seen below proot at the
+         * start that still runs (same pid and start time) gets SIGKILL then.
          */
         fun stopTree(process: Process, graceMs: Long = 3000) {
             val root = pidOf(process)
@@ -4137,9 +4264,12 @@ class BuiltinLinux(private val context: Context) {
                 if (!process.waitFor(graceMs, TimeUnit.MILLISECONDS)) process.destroyForcibly()
                 return
             }
-            for (pid in descendants(root)) signal(pid, OsConstants.SIGTERM)
+            val below = descendants(root)
+            val members = below.mapNotNull { NativeProcScan.read(it, AndroidProcess.myUid()) }
+            for (pid in below) signal(pid, OsConstants.SIGTERM)
             if (process.waitFor(graceMs, TimeUnit.MILLISECONDS)) {
                 // proot left when its command did; a straggler may remain.
+                members.forEach { NativeProcScan.signalIfSame(it, OsConstants.SIGKILL) }
                 return
             }
             for (pid in descendants(root)) signal(pid, OsConstants.SIGKILL)
@@ -4279,7 +4409,7 @@ class BuiltinLinux(private val context: Context) {
         const val TAG = "OcLinux"
 
         /** The agent programs a sign-in terminal may run (the agent catalog's). */
-        val SIGN_IN_PROGRAMS = setOf("claude", "codex", "gemini", "qwen", "goose", "omp", "fx")
+        val SIGN_IN_PROGRAMS = setOf("claude", "codex", "gemini", "qwen", "goose", "omp", "fx", "kilo", "cline")
 
         /** The longest one wake-lock hold for a reply lasts before renewal. */
         const val MAX_WORK_HOLD_MS = 15 * 60 * 1000L
@@ -4295,6 +4425,10 @@ class BuiltinLinux(private val context: Context) {
         private val NAME = Regex("[a-z][a-z0-9-]{0,31}")
 
         @Volatile private var instance: BuiltinLinux? = null
+
+        /** For the Status widget: whether this process runs the phone server. Never creates the
+         * runtime: no instance means nothing was started in this process. */
+        internal fun serverRunningIfStarted(): Boolean = instance?.serverRunning == true
 
         /** One Ubuntu per app: it owns the server process and the install state. */
         fun get(context: Context): BuiltinLinux =

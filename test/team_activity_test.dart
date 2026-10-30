@@ -993,8 +993,10 @@ void main() {
             const ValueKey('team-gate-unblocks-w-tests'),
           );
           await reveal(tester, unblocks);
-          // Within the sheet's 16 dp rails (design standard §1; was 20).
-          expect(tester.getSize(unblocks).width, lessThanOrEqualTo(288));
+          // A flat list in a sheet runs its rows out over the sheet's rails
+          // (KitReach), so the rows reach the sheet's edges: 320 dp, not the
+          // 288 dp between the rails.
+          expect(tester.getSize(unblocks).width, lessThanOrEqualTo(320));
           await reveal(
             tester,
             find.byKey(const ValueKey('team-gate-answer-on-host')),

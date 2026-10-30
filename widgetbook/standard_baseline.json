@@ -81,6 +81,18 @@
    "cutoff",
    "first-view-items",
    "row-lines"
+  ],
+  "servers/phone-setup-progress/downloading": [
+   "text-sizes"
+  ],
+  "servers/phone-setup-progress/a-step-with-no-amount": [
+   "text-sizes"
+  ],
+  "servers/phone-setup-progress/paused": [
+   "text-sizes"
+  ],
+  "servers/phone-setup-progress/didn't-finish": [
+   "text-sizes"
   ]
  }
 }

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="250dp"
-    android:minResizeWidth="48dp"
-    android:minResizeHeight="40dp"
+    android:minWidth="340dp"
     android:minHeight="110dp"
     android:targetCellWidth="4"
     android:targetCellHeight="2"
@@ -10,8 +8,11 @@
     android:configure="io.github.eslamasabry.opencode_mobile.WidgetConfigureActivity"
     android:widgetFeatures="reconfigurable"
     android:resizeMode="horizontal|vertical"
+    android:minResizeWidth="340dp"
+    android:maxResizeWidth="340dp"
+    android:minResizeHeight="110dp"
+    android:maxResizeHeight="110dp"
     android:widgetCategory="home_screen"
-    android:initialLayout="@layout/widget_sessions_card_single"
-    android:previewLayout="@layout/widget_sessions_preview_wide"
+    android:initialLayout="@layout/widget_conversations"
     android:previewImage="@drawable/widget_preview_sessions_wide"
     android:description="@string/widget_description_wide" />

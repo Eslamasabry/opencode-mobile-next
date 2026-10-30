@@ -51,6 +51,9 @@ const _allowed = <String, Map<String, String>>{
     'ProductFailure.from(error).technicalDetails ?? error.toString();':
         'AgentFailure.technical: shown only in the Details fold '
         '(AgentErrorNotice); the words are agentHostFailureText & co.',
+    '? error.toString()':
+        'AgentHostException.toString() is its fixed reason and code '
+        '(lib/domain/phone_agent_host.dart), never free text; Details only.',
   },
   'widgets/team_host_form.dart': {
     'var text = error.toString();':

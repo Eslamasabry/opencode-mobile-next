@@ -228,7 +228,9 @@ void main() {
     final shown = harness.calls.lastWhere(
       (call) => call.method == 'showCodingAlert',
     );
-    expect(shown.arguments?['quickReply'], isTrue);
+    // Questions open the chat from the shade; an answer from an alert
+    // posted before that still lands.
+    expect(shown.arguments?.containsKey('quickReply'), isFalse);
 
     final result = await harness.backgroundLive.handleNativeAction({
       'kind': 'question',
@@ -258,7 +260,7 @@ void main() {
     final shown = harness.calls.lastWhere(
       (call) => call.method == 'showCodingAlert',
     );
-    expect(shown.arguments?['quickReply'], isFalse);
+    expect(shown.arguments?.containsKey('quickReply'), isFalse);
 
     final result = await harness.backgroundLive.handleNativeAction({
       'kind': 'question',

@@ -340,7 +340,13 @@ class _RunningWorkSheetState extends State<RunningWorkSheet>
         if (api == null || !_scopeMatches) {
           throw ProductException(l10n.workDisconnected);
         }
-        await api.abort(entry.session.id);
+        conn.noteStopFromThisApp(entry.session.id);
+        try {
+          await api.abort(entry.session.id);
+        } catch (_) {
+          conn.noteStopFromThisApp(entry.session.id, asked: false);
+          rethrow;
+        }
       },
     );
     if (stopped && mounted && _visible) await _refresh();

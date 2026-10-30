@@ -40,7 +40,8 @@ class ThemePalette {
   });
 
   /// The whole role set: [roles], or derived from the pack's accent,
-  /// ground, text and success with the contrast floors built in.
+  /// ground, text, success and partner (its secondary) with the contrast
+  /// floors built in.
   /// Meaning stays with the role in every pack (attention is "needs you");
   /// only the hue follows the pack.
   ThemeRoles get themeRoles =>
@@ -51,6 +52,7 @@ class ThemePalette {
         brightness: scheme.brightness,
         text: scheme.onSurface,
         success: success,
+        partners: [scheme.secondary, scheme.tertiary],
       );
 }
 

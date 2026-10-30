@@ -111,7 +111,7 @@
       "G21 TextStyle(": 4,
       "G7 EdgeInsets.fromLTRB asymmetric": 1
     },
-    "lib/ui/screens/settings/server_settings_screen.dart": {},
+    "lib/ui/screens/settings/server_page.dart": {},
     "lib/ui/screens/settings_screen.dart": {},
     "lib/ui/screens/team/agent_screen.dart": {},
     "lib/ui/screens/team/gate_sheet.dart": {},

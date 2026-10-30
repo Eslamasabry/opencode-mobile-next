@@ -15,11 +15,13 @@ extension _ChatNudges on _ChatScreenState {
       conversation: widget.sessionID,
     );
     _nudges.addListener(_nudgesChanged);
+    _conn.tips.addListener(_nudgesChanged);
   }
 
   void _stopNudges() {
     if (_nudgeWatcher == null) return;
     _nudges.removeListener(_nudgesChanged);
+    _conn.tips.removeListener(_nudgesChanged);
     _nudgeWatcher?.dispose();
   }
 
@@ -115,7 +117,18 @@ extension _ChatNudges on _ChatScreenState {
     final said = _presentedModelLabel ?? claimed;
     final strings = _chatL10n(context);
     final canChange = modelDefaultOf(_conn).canChange;
-    void done() => _setChatState(() => _modelDefaultSaid = null);
+    void done() {
+      _modelDefaultNoteTimer?.cancel();
+      _setChatState(() => _modelDefaultSaid = null);
+    }
+
+    // Said once per server (claimed above), and gone by itself after a few
+    // seconds on screen, like every standing note.
+    _noteShown(() {
+      _modelDefaultNoteTimer ??= Timer(_ChatNotices._standingNoteSeenAfter, () {
+        if (mounted) done();
+      });
+    });
     return Padding(
       padding: EdgeInsetsDirectional.only(
         start: KitTokens.of(context).gutter,
@@ -243,4 +256,8 @@ mixin _ChatNudgeFields {
   /// where it is used (the composer); null once dismissed or not to say.
   String? _modelDefaultSaid;
   bool _modelDefaultClaimed = false;
+
+  /// Folds the model notice away once it has been on screen a few seconds
+  /// (owner, 2026-10-27): the model chip keeps saying the model.
+  Timer? _modelDefaultNoteTimer;
 }

@@ -21,6 +21,7 @@ import 'package:opencode_mobile/voice/controller.dart';
 import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
 import 'chat_3_support.dart';
 import 'screen_voice_1_fixtures.dart';
+import '../support/composer_tools.dart';
 
 typedef _Scene =
     Future<void> Function(WidgetTester tester, ScriptedVoiceComposer voice);
@@ -50,7 +51,7 @@ final _scenes = <String, (_Scene, List<Size>)>{
   ),
   'p103_voice_conversation': (
     (tester, voice) async {
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
       await tester.pumpAndSettle();
       await tester.ensureVisible(
         find.byKey(const Key('composer-tools-advanced')),

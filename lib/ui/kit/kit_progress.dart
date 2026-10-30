@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -55,7 +56,10 @@ class KitSkeletonRows extends StatelessWidget {
   static const lineAlpha = .09;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final ink = tokens.roles.text1;
     final shape = ink.withValues(alpha: shapeAlpha);
@@ -270,7 +274,10 @@ class KitProgressView extends StatelessWidget {
   final KitProgress progress;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final theme = Theme.of(context);
     final roles = AppTheme.rolesOf(theme);
     final reduceMotion = KitMotion.reduced(context);

@@ -36,7 +36,7 @@ class _KitHandle extends StatelessWidget {
 enum _KitTileTone { neutral, attention }
 
 /// The one 44 dp header tile (§5 Sheets, new private seam): a rounded square
-/// with a centred glyph, excluded from semantics — the title beside it (or,
+/// with a centred glyph, through the style resolver, excluded from semantics — the title beside it (or,
 /// for a confirmation, the title after it) carries the meaning.
 class _KitIconTile extends StatelessWidget {
   const _KitIconTile({required this.icon, required this.tone});
@@ -64,15 +64,25 @@ class _KitIconTile extends StatelessWidget {
         roles.attention,
       ),
     };
+    // Made for the person's Style like every other tile (KitSurface.tile's
+    // control surface); the attention tint stays the tile's own fill.
     return ExcludeSemantics(
-      child: Container(
-        width: tileSize,
-        height: tileSize,
-        decoration: BoxDecoration(
-          color: background,
+      child: kitSurfaceMaterial(
+        context,
+        level: KitSurfaceLevel.surface3,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(tokens.markRadius),
         ),
-        child: Icon(icon, size: glyphSize, color: glyph),
+        fill: background,
+        role: KitSurfaceRole.control,
+        color: tone == _KitTileTone.neutral ? null : background,
+        clip: false,
+        child: SizedBox.square(
+          dimension: tileSize,
+          child: Center(
+            child: Icon(icon, size: glyphSize, color: glyph),
+          ),
+        ),
       ),
     );
   }

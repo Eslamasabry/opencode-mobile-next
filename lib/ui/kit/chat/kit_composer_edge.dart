@@ -9,7 +9,8 @@ part of 'kit_composer.dart';
 /// box stays idle.
 ///
 /// Full motion travels, Calm holds a still glow, and Off and the system's
-/// remove-animations draw none. The lap's ticker runs only while a reply
+/// remove-animations draw none, except under Saver, where a reply running
+/// shows as one still hairline in the main colour. The lap's ticker runs only while a reply
 /// does, and stops with the route (TickerMode).
 /// What moves while a reply runs. The owner's rule: only one thing.
 enum _MovingPart {
@@ -149,7 +150,12 @@ class _ComposerFrameState extends State<_ComposerFrame>
       effects.glowSpeed,
     );
     final (primary, partner) = _glowHues(context, effects.glowColours);
+    // Hook H8: the style says whether the glow has its soft halo and how
+    // wide its line is (Brutal: a hard ring; Paper: a thin rule).
+    final glow = kitStyleSpec(KitStyles.styleOf(context)).tokens.glow;
     final show = allowed && (classic ? widget.active : true);
+    // Saver turns motion off; the reply still shows, as a still hairline.
+    final saverLine = effects.saver && on && widget.active;
     // Three fixed slots (halo, surface, ring), each the same kind of widget
     // whatever is chosen: Stack matches unkeyed children by type, and a
     // mismatch would rebuild the surface and lose the field's state when a
@@ -160,7 +166,7 @@ class _ComposerFrameState extends State<_ComposerFrame>
         clipBehavior: Clip.none,
         children: [
           Positioned.fill(
-            child: show && classic
+            child: show && classic && glow.halo
                 ? _ClassicHalo(
                     lap: _lap,
                     breathing: mode == _GlowMode.live,
@@ -172,7 +178,22 @@ class _ComposerFrameState extends State<_ComposerFrame>
           widget.surface,
           Positioned.fill(
             child: !show
-                ? const SizedBox.shrink()
+                ? (saverLine
+                      ? IgnorePointer(
+                          child: DecoratedBox(
+                            key: const ValueKey('kit-activity-glow-saver'),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(
+                                widget.radius,
+                              ),
+                              border: Border.all(
+                                color: primary,
+                                width: KitTokens.focusRingWidth(context),
+                              ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink())
                 : classic
                 ? _ClassicRing(
                     lap: _lap,
@@ -181,6 +202,7 @@ class _ComposerFrameState extends State<_ComposerFrame>
                     primary: primary,
                     partner: partner,
                     mode: mode,
+                    lineWidth: glow.lineWidth,
                   )
                 : _ActivityGlow(
                     active: widget.active,
@@ -189,6 +211,8 @@ class _ComposerFrameState extends State<_ComposerFrame>
                     primary: primary,
                     partner: partner,
                     lapsPerSecond: effects.glowSpeed.softLaps,
+                    wash: glow.halo,
+                    ringWidth: glow.lineWidth,
                   ),
           ),
         ],

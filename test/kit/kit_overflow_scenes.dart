@@ -17,18 +17,20 @@ import 'package:flutter/material.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 
+import 'kit_agent_cards_overflow_scenes.dart';
+import 'kit_chat_overflow_scenes.dart';
+import 'kit_chats_overflow_scenes.dart';
+import 'kit_core_overflow_scenes.dart';
+import 'kit_forms_overflow_scenes.dart';
 import 'kit_overflow_chat_scenes.dart';
 import 'kit_overflow_data_scenes.dart';
 import 'kit_overflow_form_scenes.dart';
-import 'kit_overflow_layout_scenes.dart';
 import 'kit_overflow_image_scenes.dart';
+import 'kit_overflow_layout_scenes.dart';
 import 'kit_overflow_team_scenes.dart';
-import 'kit_chat_overflow_scenes.dart';
-import 'kit_core_overflow_scenes.dart';
-import 'kit_forms_overflow_scenes.dart';
-import 'kit_chats_overflow_scenes.dart';
-import 'kit_agent_cards_overflow_scenes.dart';
 import 'kit_overflow_usage_scenes.dart';
+import 'kit_status_answer_overflow_scenes.dart';
+import 'kit_welcome_overflow_scenes.dart';
 
 part 'kit_overflow_scenes_core.dart';
 part 'kit_overflow_scenes_groups.dart';
@@ -47,12 +49,22 @@ enum KitOverflowHost {
 
 /// The words a scene shows, in the direction under test.
 class KitSceneCopy {
-  const KitSceneCopy({required this.rtl});
+  const KitSceneCopy({required this.rtl, this.stress});
 
   final bool rtl;
 
+  /// The capacity gate's content injection (test/kit/kit_capacity_engine.dart):
+  /// when set, every string a scene shows through [t] is replaced by what it
+  /// returns (1,000 characters of prose, a 300-character token, CJK, emoji,
+  /// huge numbers, nothing, or the pseudo-localized original). The overflow
+  /// matrix leaves it null.
+  final String Function(String text, {required bool rtl})? stress;
+
   /// English in left to right, Arabic in right to left.
-  String t(String en, String ar) => rtl ? ar : en;
+  String t(String en, String ar) {
+    final text = rtl ? ar : en;
+    return stress == null ? text : stress!(text, rtl: rtl);
+  }
 }
 
 /// One state of one part, as the overflow matrix pumps it.
@@ -186,6 +198,24 @@ final kitOverflowScenes = <KitOverflowScene>[
   ...kitOverflowImageScenes,
   ...kitOverflowUsageScenes,
   KitOverflowScene(
+    const ['KitReach'],
+    'default',
+    build: (_, c) => KitReach(
+      reach: 16,
+      child: Builder(
+        builder: (context) => KitReach.extend(
+          by: KitReach.of(context),
+          child: KitText(
+            c.t(
+              'Find latest finance hub project in the folder',
+              'ابحث عن أحدث مشروع للمالية في المجلد',
+            ),
+          ),
+        ),
+      ),
+    ),
+  ),
+  KitOverflowScene(
     const ['KitPresence'],
     'default',
     build: (_, c) => Row(
@@ -245,11 +275,15 @@ final kitOverflowScenes = <KitOverflowScene>[
     build: (_, c) => SizedBox(
       height: 240,
       child: KitLiveBackground(
-        child: Center(
-          child: KitText(
-            c.t(
-              'Find latest finance hub project in the folder',
-              'ابحث عن أحدث مشروع للمالية في المجلد',
+        // The background is a layer; the words on it scroll in the room it
+        // gives them, as the caller's content does.
+        child: SingleChildScrollView(
+          child: Center(
+            child: KitText(
+              c.t(
+                'Find latest finance hub project in the folder',
+                'ابحث عن أحدث مشروع للمالية في المجلد',
+              ),
             ),
           ),
         ),
@@ -264,26 +298,6 @@ final kitOverflowScenes = <KitOverflowScene>[
       intensity: KitLiveIntensity.normal,
       enabled: true,
       onTap: _noop,
-    ),
-  ),
-  KitOverflowScene(
-    const ['KitLiveStylePicker'],
-    'default',
-    build: (_, c) => SizedBox(
-      height: 900,
-      child: KitLiveStylePicker(selectedId: 'aurora', onOpen: (_) {}),
-    ),
-  ),
-  KitOverflowScene(
-    const ['KitLiveStylePreview'],
-    'default',
-    build: (_, c) => SizedBox(
-      height: 640,
-      child: KitLiveStylePreview(
-        style: kitLiveStyleById('mesh'),
-        isCurrent: false,
-        onUse: _noop,
-      ),
     ),
   ),
   KitOverflowScene(
@@ -334,6 +348,8 @@ final kitOverflowScenes = <KitOverflowScene>[
     ...kitFormsOverflowScenes,
     ...kitChatsOverflowScenes,
     ...kitAgentCardsOverflowScenes,
+    ...kitStatusAnswerOverflowScenes,
+    ...kitWelcomeOverflowScenes,
     // Infrastructure parts introduced by the September 27 kit migration.
     for (final segments in <String, List<String>>{
       'root': [],
@@ -479,6 +495,14 @@ final kitOverflowScenes = <KitOverflowScene>[
           child: KitText(c.t('Open project details', 'افتح تفاصيل المشروع')),
         ),
       ),
+    KitOverflowScene(
+      const ['KitInkLayer'],
+      'at rest',
+      build: (_, c) => KitInkLayer(
+        shape: const RoundedRectangleBorder(),
+        child: KitText(c.t('Open project details', 'افتح تفاصيل المشروع')),
+      ),
+    ),
     for (final kind in KitCodeKind.values)
       KitOverflowScene(
         const ['KitCodeBlock'],
@@ -699,6 +723,370 @@ final kitOverflowScenes = <KitOverflowScene>[
       '9d1c250a-e61b-44d9-88ed-5944d1962f5e&response_type=code&redirect_uri='
       'https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode%2Fcallback&scope='
       'org%3Acreate_api_key+user%3Aprofile+user%3Ainference',
+    ),
+  ),
+  for (final open in [false, true])
+    KitOverflowScene(
+      const ['KitGuide'],
+      open ? 'question' : 'default',
+      host: KitOverflowHost.fill,
+      build: (_, c) => KitGuide(
+        items: [
+          KitGuideItem(
+            id: 'colours',
+            label: c.t('Colours', 'الألوان'),
+            value: c.t('Dark, Tokyo Night', 'داكن، طوكيو ليلًا'),
+            next: true,
+          ),
+          KitGuideItem(
+            id: 'style',
+            label: c.t('Style', 'النمط'),
+            value: c.t('Off in Saver', 'متوقف في التوفير'),
+            held: true,
+          ),
+          KitGuideItem(
+            id: 'comfort',
+            label: c.t('Text & motion', 'النص والحركة'),
+            value: c.t('Default, full motion', 'افتراضي، حركة كاملة'),
+            done: true,
+          ),
+        ],
+        selected: open ? 'colours' : null,
+        onItem: (_) {},
+        group: open
+            ? KitGuideGroup(label: c.t('Colours', 'الألوان'), onBack: _noop)
+            : null,
+        question: open
+            ? KitGuideQuestion(
+                id: 'mode',
+                title: c.t(
+                  'Glow while a reply is written?',
+                  'توهج أثناء كتابة الرد؟',
+                ),
+                changes: c.t(
+                  'Buttons, links, the send key and the glow',
+                  'الأزرار والروابط وزر الإرسال والتوهج',
+                ),
+                child: KitText(c.t('Pick one.', 'اختر واحدًا.')),
+              )
+            : null,
+        home: KitText(
+          c.t(
+            'Start with Colours, the biggest change. Every choice saves as you go.',
+            'ابدأ بالألوان، فهي التغيير الأكبر. يُحفظ كل اختيار فورًا.',
+          ),
+        ),
+        next: KitGuideNext(
+          count: c.t(
+            '10 quick questions, all optional',
+            '10 أسئلة سريعة، كلها اختيارية',
+          ),
+          label: c.t('Start with Colours', 'ابدأ بالألوان'),
+          onPressed: _noop,
+          ready: true,
+        ),
+      ),
+    ),
+  KitOverflowScene(
+    const ['KitFineTunePanel'],
+    'default',
+    build: (_, c) => KitFineTunePanel(
+      resetLabel: c.t(
+        'Reset to Brutal defaults',
+        'إعادة إعدادات جريء الافتراضية',
+      ),
+      onReset: () {},
+      knobs: [
+        KitFineTuneKnob<KitDensity>(
+          title: c.t('Density', 'الكثافة'),
+          hint: c.t(
+            'Compact fits more on the screen.',
+            'المضغوط يعرض المزيد على الشاشة.',
+          ),
+          defaultNote: c.t('Default: Comfortable', 'الافتراضي: مريح'),
+          selected: KitDensity.compact,
+          segments: [
+            KitSegment(
+              value: KitDensity.comfortable,
+              label: c.t('Comfortable', 'مريح'),
+            ),
+            KitSegment(
+              value: KitDensity.compact,
+              label: c.t('Compact', 'مضغوط'),
+            ),
+          ],
+          onChanged: (_) {},
+        ),
+      ],
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitCarousel'],
+    'default',
+    build: (_, c) => KitCarousel(
+      semanticsLabel: c.t('Themes', 'السمات'),
+      itemCount: 4,
+      itemHeight: KitOptionCard.themeHeight,
+      itemBuilder: (context, i) => KitOptionCard.plain(
+        icon: AppIconography.sparkle,
+        label: c.t('Soft ring', 'حلقة ناعمة'),
+        caption: c.t(
+          'Drawings appear, nothing keeps moving',
+          'تظهر الرسوم ولا يتحرك شيء',
+        ),
+        selected: i == 0,
+        onPressed: _noop,
+      ),
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitAccentRow'],
+    'default',
+    build: (context, c) => KitAccentRow(
+      semanticsLabel: c.t('Accent', 'لون التمييز'),
+      matchLabel: c.t('Match theme', 'مثل السمة'),
+      theme: KitTokens.of(context).roles,
+      swatches: [
+        for (final accent in appearanceAccents)
+          KitAccentSwatch(id: accent.id, color: accent.dark, label: accent.id),
+      ],
+      selected: 'blue',
+      onChanged: (_) {},
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitStreamCaret'],
+    'default',
+    build: (_, c) => Text.rich(
+      TextSpan(
+        text: c.t('On it, grouping the options', 'جارٍ العمل، أجمع الخيارات'),
+        children: const [WidgetSpan(child: KitStreamCaret())],
+      ),
+    ),
+  ),
+  for (final enabled in [true, false])
+    KitOverflowScene(
+      const ['KitOptionCard'],
+      enabled ? 'default' : 'disabled',
+      build: (context, c) => SizedBox(
+        height: KitOptionCard.themeHeight + 40,
+        child: enabled
+            ? KitOptionCard.plain(
+                icon: AppIconography.sparkle,
+                label: c.t('Calm', 'هادئ'),
+                caption: c.t(
+                  'Drawings appear, nothing keeps moving and nothing '
+                      'celebrates',
+                  'تظهر الرسوم ولا يتحرك شيء ولا احتفالات',
+                ),
+                selected: true,
+                onPressed: _noop,
+              )
+            : KitOptionCard.theme(
+                roles: KitTokens.of(context).roles,
+                label: c.t('Material You', 'مواد يو'),
+                selected: false,
+                onPressed: null,
+                disabledReason: c.t(
+                  'Not available on this phone',
+                  'غير متاح على هذا الهاتف',
+                ),
+              ),
+      ),
+    ),
+  for (final enabled in [true, false])
+    KitOverflowScene(
+      const ['KitStepSlider'],
+      enabled ? 'default' : 'disabled',
+      build: (_, c) => KitStepSlider<int>(
+        semanticsLabel: c.t('Text size', 'حجم النص'),
+        selected: 2,
+        steps: [
+          KitSliderStep(value: 1, label: c.t('Smallest', 'الأصغر')),
+          KitSliderStep(value: 2, label: c.t('Small', 'صغير')),
+          KitSliderStep(value: 3, label: c.t('Default', 'افتراضي')),
+          KitSliderStep(value: 4, label: c.t('Large', 'كبير')),
+        ],
+        onChanged: enabled ? (_) {} : null,
+      ),
+    ),
+  // KitChoiceTiles (vision model picker, 2026-10-20): each declared state.
+  for (final state in const ['default', 'disabled', 'working'])
+    KitOverflowScene(
+      const ['KitChoiceTiles'],
+      state,
+      build: (_, c) => KitChoiceTiles<String>(
+        semanticsLabel: c.t('Model', 'النموذج'),
+        selected: 'default',
+        busy: state == 'working' ? 'cheapest' : null,
+        onSelected: (_) {},
+        more: KitChoiceMore(
+          label: c.t('All models (42)', 'كل النماذج (42)'),
+          onTap: () {},
+        ),
+        choices: [
+          for (final (value, title, name) in [
+            ('default', c.t('Default', 'الافتراضي'), 'Claude Sonnet 5.5'),
+            ('recent', c.t('Recently used', 'استُخدم مؤخرًا'), 'GPT-6 Sol'),
+            ('cheapest', c.t('Cheapest', 'الأرخص'), 'Nemotron 3.5 Super'),
+          ])
+            KitChoice<String>(
+              value: value,
+              title: title,
+              supporting: name,
+              enabled: state != 'disabled',
+              disabledReason: state == 'disabled'
+                  ? c.t('Saving the choice…', 'جارٍ حفظ الاختيار…')
+                  : null,
+            ),
+        ],
+      ),
+    ),
+  // KitPageHeading (vision Files page, 2026-10-20): the switcher line
+  // (default) and the plain line with no target (disabled).
+  for (final state in const ['default', 'disabled'])
+    KitOverflowScene(
+      const ['KitPageHeading'],
+      state,
+      build: (_, c) => KitPageHeading(
+        title: c.t('Files', 'الملفات'),
+        line: c.t('neon-breaker / src', 'neon-breaker / src'),
+        onLineTap: state == 'default' ? () {} : null,
+        lineTapLabel: state == 'default'
+            ? c.t(
+                'Project neon-breaker. Switch project',
+                'المشروع neon-breaker. تبديل المشروع',
+              )
+            : null,
+      ),
+    ),
+  // KitWheel (the scheduling sheet's time wheel): two columns, the hour
+  // and the minute, at every scale (the wheel caps its own growth).
+  KitOverflowScene(
+    const ['KitWheel'],
+    'default',
+    build: (_, c) => KitWheel(
+      columns: [
+        KitWheelColumn<int>(
+          values: [for (var h = 1; h <= 12; h++) h],
+          selected: 9,
+          label: (h) => '$h',
+          semanticsLabel: c.t('Hour', 'الساعة'),
+          onChanged: (_) {},
+        ),
+        KitWheelColumn<String>(
+          values: const ['00', '15', '30', '45'],
+          selected: '00',
+          label: (m) => m,
+          semanticsLabel: c.t('Minute', 'الدقيقة'),
+          onChanged: (_) {},
+        ),
+        KitWheelColumn<String>(
+          values: [c.t('AM', 'ص'), c.t('PM', 'م')],
+          selected: c.t('AM', 'ص'),
+          label: (m) => m,
+          semanticsLabel: c.t('Morning or evening', 'صباحًا أو مساءً'),
+          onChanged: (_) {},
+        ),
+      ],
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitTextHalo'],
+    'default',
+    build: (_, c) => KitTextHalo(
+      ground: const Color(0xFF0B0C0E),
+      child: KitText(
+        c.t(
+          'Find latest finance hub project in the folder',
+          'ابحث عن أحدث مشروع للمالية في المجلد',
+        ),
+        role: KitTextRole.secondary,
+        tone: KitTextTone.tertiary,
+      ),
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitTip', 'KitTipBubble'],
+    'shown',
+    build: (_, c) => Padding(
+      padding: const EdgeInsets.only(top: 160),
+      child: KitTip(
+        message: c.t(
+          'Hold to stop after this step',
+          'اضغط مطولًا للتوقف بعد هذه الخطوة',
+        ),
+        visible: true,
+        onDismissed: () {},
+        child: const SizedBox.square(dimension: 48),
+      ),
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitWordText'],
+    'default',
+    build: (_, c) => KitWordText(
+      c.t(
+        'Ran the checkout tests on a clean cache and retry when the first '
+            'run fails because the price refresh races the coupon check',
+        'شغّل اختبارات الدفع على ذاكرة نظيفة وأعد المحاولة عندما يفشل '
+            'التشغيل الأول لأن تحديث السعر يسبق فحص القسيمة',
+      ),
+      maxLines: 2,
+      role: KitTextRole.secondary,
+      tone: KitTextTone.secondary,
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitErrorFallback'],
+    'default',
+    build: (_, c) => const KitErrorFallback(),
+  ),
+  // Impeccable layout pass 2026-10-28: KitScrollFade, KitLeadColumn.
+  KitOverflowScene(
+    const ['KitScrollFade'],
+    'default',
+    build: (_, c) => KitScrollFade(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            KitChip(label: c.t('Ask first', 'اسأل أولًا')),
+            const SizedBox(width: 8),
+            KitChip(label: c.t('Auto Accept', 'قبول تلقائي')),
+          ],
+        ),
+      ),
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitLeadColumn'],
+    'default',
+    build: (_, c) => KitLeadColumn.compact(
+      child: KitNotice(
+        message: c.t(
+          'No reply came back from the model this time',
+          'لم يصل أي رد من النموذج هذه المرة',
+        ),
+      ),
+    ),
+  ),
+  // kit_frost.dart (FROST, 2026-10-30): the composer pane as glass.
+  KitOverflowScene(
+    const ['KitFrost'],
+    'default',
+    build: (context, c) => KitFrost(
+      role: KitFrostRole.composer,
+      strength: KitFrostStrength.balanced,
+      shown: true,
+      tint: KitTokens.of(context).roles.surface2,
+      borderRadius: BorderRadius.circular(26),
+      child: KitText(
+        c.t(
+          'Steer while it works on the focus ring tests',
+          'وجّهه أثناء عمله على اختبارات حلقة التركيز',
+        ),
+      ),
     ),
   ),
 ];

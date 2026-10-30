@@ -160,13 +160,15 @@ String? _promptWordsOnly(MessageWithParts prompt) {
 /// For each turn, the one message that carries its "more" control: the step
 /// that ends the turn when that step draws anything, otherwise the last step
 /// that does. A turn often ends on pure bookkeeping (a `step-finish`), and
-/// the control must not vanish with it.
+/// the control must not vanish with it. [from], when set, is a prompt: the
+/// turns from there on only (the ones before it were worked out already).
 Set<int> _turnActionOwners(
   List<MessageWithParts> messages,
   List<List<Part>> display, {
   required bool metaAlways,
   bool running = false,
   Set<String> ignore = const {},
+  int from = 0,
 }) {
   final owners = <int>{};
   int? lastStep;
@@ -192,7 +194,7 @@ Set<int> _turnActionOwners(
     lastWithBody = null;
   }
 
-  for (var index = 0; index < messages.length; index += 1) {
+  for (var index = from; index < messages.length; index += 1) {
     // Not drawn, so neither a prompt that ends a turn nor a step of one.
     if (ignore.contains(messages[index].info.id)) continue;
     if (_isPrompt(messages[index])) {
@@ -724,4 +726,23 @@ _MessageMeta _messageMeta(List<MessageWithParts> messages, int index) {
     turnTokens: turnTokens > 0 ? turnTokens : null,
     turnCost: turnCost > 0 ? turnCost : null,
   );
+}
+
+/// Whether no prompt follows this message: its footer then shows the
+/// turn's model, time and usage words (older turns keep a quiet footer).
+/// A prompt still [waiting] in the server's inbox (a steer not read yet)
+/// joins this turn; it does not start the next one.
+bool _inLatestTurn(
+  List<MessageWithParts>? messages,
+  int? index, [
+  Set<String>? waiting,
+]) {
+  if (messages == null || index == null || index < 0) return true;
+  for (var next = index + 1; next < messages.length; next += 1) {
+    if (_isPrompt(messages[next]) &&
+        !(waiting?.contains(messages[next].info.id) ?? false)) {
+      return false;
+    }
+  }
+  return true;
 }

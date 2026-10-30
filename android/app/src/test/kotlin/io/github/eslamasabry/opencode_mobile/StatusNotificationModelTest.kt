@@ -168,66 +168,128 @@ class StatusNotificationModelTest {
 }
 
 class AlertButtonsTest {
-    @Test fun aPermissionOffersAllowOnceAndRejectOnly() {
-        val plan = AlertButtons.plan("permission", quickReply = false, options = emptyList())
+    @Test fun aReadablePermissionOffersAllowOnceAndRejectOnly() {
+        val plan = AlertButtons.plan("permission", answerable = true)
         assertEquals(listOf("allow", "deny"), plan.map { it.decision })
+        assertEquals(
+            listOf(AlertButton.Label.ALLOW_ONCE, AlertButton.Label.REJECT),
+            plan.map { it.label },
+        )
         assertTrue(plan.none { it.decision.contains("always") })
     }
 
     @Test fun allowOnceNeedsTheUnlockedPhoneButRejectDoesNot() {
-        val plan = AlertButtons.plan("permission", false, emptyList())
+        val plan = AlertButtons.plan("permission", true)
         assertTrue(plan.first { it.decision == "allow" }.authRequired)
         assertFalse(plan.first { it.decision == "deny" }.authRequired)
     }
 
-    @Test fun optionsNeverAddAlwaysAllowToAPermission() {
-        val plan = AlertButtons.plan("permission", true, listOf("Always", "Never"))
-        assertEquals(listOf("allow", "deny"), plan.map { it.decision })
+    @Test fun aPermissionTheShadeCannotShowOnlyOpens() {
+        assertEquals(listOf(AlertButton.Label.OPEN), AlertButtons.plan("permission", false).map { it.label })
     }
 
-    @Test fun threeShortOptionsBecomeButtons() {
-        val plan = AlertButtons.plan("question", false, listOf("Yes", "No", "Later"))
-        assertEquals(listOf("option0", "option1", "option2"), plan.map { it.decision })
-        assertEquals(listOf("Yes", "No", "Later"), plan.map { it.optionText })
+    @Test fun aQuestionOnlyOpens() {
+        assertEquals(listOf(AlertButton.Label.OPEN), AlertButtons.plan("question", true).map { it.label })
     }
 
-    @Test fun replyKeepsOneSlotSoAtMostTwoOptionsJoinIt() {
-        val plan = AlertButtons.plan("question", true, listOf("Yes", "No", "Later"))
-        assertEquals(listOf("reply", "option0", "option1"), plan.map { it.decision })
+    @Test fun neverMoreThanTwoActions() {
+        for (kind in listOf("permission", "question", "complete", "error", "checkin", "quota", "team_decision")) {
+            for (answerable in listOf(true, false)) {
+                assertTrue(kind, AlertButtons.plan(kind, answerable).size <= 2)
+            }
+        }
     }
 
-    @Test fun moreThanThreeOptionsGiveNoButtons() {
-        assertTrue(AlertButtons.plan("question", false, listOf("a", "b", "c", "d")).isEmpty())
-        assertEquals(
-            listOf("reply"),
-            AlertButtons.plan("question", true, listOf("a", "b", "c", "d")).map { it.decision },
-        )
-    }
-
-    @Test fun aLongOptionMakesTheWholeSetFallBackToOpen() {
-        assertTrue(AlertButtons.shortOptions(listOf("Yes", "x".repeat(25))).isEmpty())
-        assertEquals(listOf("x".repeat(24)), AlertButtons.shortOptions(listOf("x".repeat(24))))
-    }
-
-    @Test fun blankOrRepeatedOptionsGiveNoButtons() {
-        assertTrue(AlertButtons.shortOptions(listOf("Yes", " ")).isEmpty())
-        assertTrue(AlertButtons.shortOptions(listOf("Yes", "Yes")).isEmpty())
-        assertTrue(AlertButtons.shortOptions(emptyList()).isEmpty())
-    }
-
-    @Test fun otherKindsCarryNoButtons() {
-        assertTrue(AlertButtons.plan("complete", false, listOf("a")).isEmpty())
-        assertTrue(AlertButtons.plan("error", false, emptyList()).isEmpty())
+    @Test fun resultsCarryNoButtons() {
+        assertTrue(AlertButtons.plan("complete", true).isEmpty())
+        assertTrue(AlertButtons.plan("error", true).isEmpty())
     }
 }
 
-class AlertTitlesTest {
-    @Test fun aShellCommandPermissionAsksToRunIt() {
-        assertTrue(AlertTitles.usesCommandTitle("permission", true))
+/** The final copy per notification type, before localization. */
+class AlertCopyTest {
+    private fun request(kind: String, detail: String = "", chatTitle: String = "") =
+        CodingAlertRequest(kind = kind, sessionID = "s1", key = "k", detail = detail, chatTitle = chatTitle)
+
+    private fun ask(detail: String, action: String, target: String) =
+        request("permission", detail).copy(askAction = action, askTarget = target)
+
+    @Test fun aCommandAsksToRunItAndShowsTheExactCommand() {
+        val copy = AlertCopy.of(ask("npm install --save left-pad", "run", "npm install"))!!
+        assertEquals(AlertCopy.Copy(AlertCopy.Title.RUN, "npm install", "npm install --save left-pad"), copy)
+        assertTrue(AlertCopy.answerable("permission", true, "npm install --save left-pad"))
     }
 
-    @Test fun otherPermissionsAndKindsKeepTheirTitle() {
-        assertFalse(AlertTitles.usesCommandTitle("permission", false))
-        assertFalse(AlertTitles.usesCommandTitle("question", true))
+    @Test fun aFileEditAsksToEditTheFile() {
+        val copy = AlertCopy.of(ask("lib/settings.dart", "edit", "settings.dart"))!!
+        assertEquals(AlertCopy.Title.EDIT, copy.title)
+        assertEquals("settings.dart", copy.titleArg)
+        assertEquals("lib/settings.dart", copy.body)
+    }
+
+    @Test fun aReadAndAFolderAskInTheirOwnWords() {
+        assertEquals(AlertCopy.Title.READ, AlertCopy.of(ask("a.env", "read", "a.env"))!!.title)
+        assertEquals(AlertCopy.Title.FOLDER, AlertCopy.of(ask("/srv/api", "folder", "api"))!!.title)
+    }
+
+    @Test fun aPermissionWithoutItsCommandAsksInGeneralAndCannotBeAllowed() {
+        val copy = AlertCopy.of(request("permission"))!!
+        assertEquals(AlertCopy.Copy(AlertCopy.Title.ASK), copy)
+        assertFalse(AlertCopy.answerable("permission", true, ""))
+    }
+
+    @Test fun aWatchedServerPermissionCannotBeAllowedFromTheShade() {
+        assertFalse(AlertCopy.answerable("permission", allowActions = false, detail = "rm -rf build"))
+    }
+
+    @Test fun aQuestionIsItsOwnTitleWithItsChoicesBelow() {
+        val copy = AlertCopy.of(
+            request("question", "Which branch should I use?").copy(options = listOf("main", "develop"))
+        )!!
+        assertEquals(AlertCopy.Copy(AlertCopy.Title.LITERAL, "Which branch should I use?", "main · develop"), copy)
+    }
+
+    @Test fun aQuestionWithManyOrLongChoicesShowsNoChoices() {
+        assertEquals("", AlertCopy.choices(listOf("a", "b", "c", "d")))
+        assertEquals("", AlertCopy.choices(listOf("Yes", "x".repeat(25))))
+        assertEquals("", AlertCopy.choices(listOf("Yes", "Yes")))
+    }
+
+    @Test fun aFormWithoutWordsSaysItHasAQuestion() {
+        assertEquals(AlertCopy.Copy(AlertCopy.Title.QUESTION), AlertCopy.of(request("question")))
+    }
+
+    @Test fun finishedWorkNamesTheConversationAndItsFirstLine() {
+        val copy = AlertCopy.of(request("complete", "Added a combo counter and screen shake.",
+            chatTitle = "Add combo counter"))!!
+        assertEquals(
+            AlertCopy.Copy(AlertCopy.Title.FINISHED, "Add combo counter", "Added a combo counter and screen shake."),
+            copy,
+        )
+        assertEquals(AlertCopy.Title.FINISHED_ANY, AlertCopy.of(request("complete"))!!.title)
+    }
+
+    @Test fun aStoppedConversationIsNamedWithoutTheServersError() {
+        assertEquals(AlertCopy.Copy(AlertCopy.Title.STOPPED, "Fix login"),
+            AlertCopy.of(request("error", "raw error text", chatTitle = "Fix login")))
+        assertEquals(AlertCopy.Copy(AlertCopy.Title.STOPPED_ANY), AlertCopy.of(request("error")))
+    }
+
+    @Test fun theFinishedSummaryListsEachConversationOnce() {
+        val finished = request("complete", "Done.", chatTitle = "Add combo counter")
+        assertEquals("Add combo counter", AlertCopy.summaryLine(finished, "Finished: Add combo counter"))
+        assertEquals("Run npm install?", AlertCopy.summaryLine(request("permission"), "Run npm install?"))
+    }
+
+    @Test fun longWordsAreCappedOnOneLine() {
+        val copy = AlertCopy.of(request("question", "Why\n" + "x".repeat(200)))!!
+        assertEquals(AlertCopy.MAX_QUESTION, copy.titleArg.length)
+        assertTrue(copy.titleArg.endsWith("…"))
+        assertFalse(copy.titleArg.contains("\n"))
+    }
+
+    @Test fun otherKindsKeepTheirFixedCopy() {
+        assertEquals(null, AlertCopy.of(request("checkin")))
+        assertEquals(null, AlertCopy.of(request("team_decision")))
     }
 }

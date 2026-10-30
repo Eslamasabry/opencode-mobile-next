@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../kit_buttons.dart';
+import '../kit_max_width.dart';
 import 'kit_team_data.dart';
 import 'team_parts.dart';
 
@@ -24,7 +25,10 @@ class KitPhaseCard extends StatelessWidget {
   final KitAction? primary;
   final List<KitAction> actions;
   @override
-  Widget build(BuildContext context) => teamCard(
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) => teamCard(
     context,
     title: title,
     status: status,

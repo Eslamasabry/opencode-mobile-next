@@ -30,8 +30,9 @@ class _Updater implements AppUpdateService {
 /// platform and asset futures) resolve first.
 Future<void> _settle(WidgetTester tester) async {
   await tester.pumpAndSettle();
-  // The larger document decodes on a background isolate: give it real time.
-  for (var i = 0; i < 20; i++) {
+  // The larger document decodes on a background isolate: give it real time,
+  // up to 10 s (2 s ran out on a loaded test server, 2026-10-27).
+  for (var i = 0; i < 100; i++) {
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 100)),
     );

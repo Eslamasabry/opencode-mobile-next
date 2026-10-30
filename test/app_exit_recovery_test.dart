@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/domain/connection_status.dart';
 import 'package:opencode_mobile/domain/server_probe.dart';
 import 'package:opencode_mobile/builtin/app_exit_recovery.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
@@ -19,7 +20,9 @@ import 'package:opencode_mobile/state/automation_policy.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/keep_running_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
+import 'package:opencode_mobile/ui/widgets/app_connection_status.dart';
 import 'package:opencode_mobile/ui/widgets/app_exit_notice.dart';
+import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The owner's phone (RedMagic NX721J, Android 15), `dumpsys activity
@@ -313,6 +316,7 @@ void main() {
       final elsewhere = await shown(laptop);
       expect(elsewhere.message, contains('is running again'));
       expect(elsewhere.message, isNot(contains('starting again')));
+      expect(elsewhere.quiet, isFalse);
       expect(elsewhere.action?.label, 'Switch to this phone');
       expect(elsewhere.more.map((action) => action.label), ['Keep it running']);
       elsewhere.action!.onPressed!();
@@ -320,7 +324,9 @@ void main() {
 
       // On the phone's own page nothing changes: no switch, Keep it running.
       final own = await shown(phone);
-      expect(own.message, contains('starting again'));
+      expect(own.message, 'Restarting after the app closed');
+      expect(own.semanticsLabel, contains('starting again'));
+      expect(own.quiet, isTrue);
       expect(own.action?.label, 'Keep it running');
       expect(own.more, isEmpty);
     });
@@ -736,7 +742,9 @@ void main() {
       final stopped = await after(_ownerRecord);
       final shown = await status(stopped);
       expect(shown, isNotNull);
-      expect(shown!.message, contains('is running again'));
+      expect(shown!.message, 'Restarted after the app closed');
+      expect(shown.semanticsLabel, contains('is running again'));
+      expect(shown.quiet, isTrue);
       expect(shown.action?.label, 'Keep it running');
     });
 
@@ -953,5 +961,150 @@ void main() {
       expect(find.text(l10n.keepRunningIntro), findsOneWidget);
       expect(find.text(l10n.keepRunningBatteryTitle), findsOneWidget);
     });
+
+    testWidgets('the intro sits above the rows it introduces', (tester) async {
+      await mountScreen(tester, manufacturer: 'nubia');
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      expect(
+        tester.getTopLeft(find.text(l10n.keepRunningIntro)).dy,
+        lessThan(
+          tester
+              .getTopLeft(find.byKey(const ValueKey('keep-running-battery')))
+              .dy,
+        ),
+      );
+    });
   });
+
+  // Jitter J5 (2026-10-28): once the phone's OpenCode was back, the
+  // "Restarted after the app closed" line folded away on a 15-second clock
+  // while the person read the page, and the whole page slid up 49 dp under
+  // it. It now folds at the next moment the screen changes anyway.
+  group('the restart line once the server is back', () {
+    final phone = ServerProfile(
+      id: 'phone',
+      name: 'On this phone',
+      baseUrl: 'http://127.0.0.1:4097',
+    );
+
+    Future<(AppExitRecovery, GlobalKey<NavigatorState>)> mount(
+      WidgetTester tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final recovery = AppExitRecovery(
+        bridge: _FakeBridge(_report(_ownerRecord, ['server'])),
+      );
+      addTearDown(recovery.dispose);
+      final starter = BuiltinServerStarter(linux: _FakeLinux());
+      addTearDown(starter.dispose);
+      await recovery.runOnce(
+        store: _Store(prefs: prefs, all: const []),
+        active: null,
+        starter: starter,
+      );
+      expect(recovery.notice, isNotNull);
+      // The in-app server is an Android thing.
+      debugPlatformCapabilities = const PlatformCapabilities.android();
+      addTearDown(() => debugPlatformCapabilities = null);
+      final controller = _ServerBack(_Store(prefs: prefs, all: [phone]));
+      addTearDown(controller.dispose);
+      final navigator = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            connProvider.overrideWithValue(controller),
+            appExitRecoveryProvider.overrideWithValue(recovery),
+          ],
+          child: MaterialApp(
+            navigatorKey: navigator,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            navigatorObservers: [_PageTracker()],
+            builder: (context, child) => AppConnectionStatusScope(
+              controller: controller,
+              navigatorKey: navigator,
+              child: child!,
+            ),
+            home: const KitScreen(body: Text('First row')),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      return (recovery, navigator);
+    }
+
+    testWidgets('it holds still while the page is read', (tester) async {
+      final (recovery, _) = await mount(tester);
+      expect(find.byKey(const ValueKey('app-exit-notice')), findsOneWidget);
+      final top = tester.getTopLeft(find.text('First row')).dy;
+      // Long past the old 15-second clock: nothing has moved.
+      await tester.pump(const Duration(minutes: 1));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(recovery.notice, isNotNull);
+      expect(find.byKey(const ValueKey('app-exit-notice')), findsOneWidget);
+      expect(tester.getTopLeft(find.text('First row')).dy, top);
+    });
+
+    testWidgets('it folds when the next page opens and never follows the '
+        'person there', (tester) async {
+      final (recovery, navigator) = await mount(tester);
+      unawaited(
+        navigator.currentState!.push(
+          MaterialPageRoute<void>(
+            builder: (_) => const KitScreen(body: Text('Next page')),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(recovery.notice, isNull);
+      await tester.pumpAndSettle();
+      expect(find.text('Next page'), findsOneWidget);
+      expect(find.byKey(const ValueKey('app-exit-notice')), findsNothing);
+    });
+
+    testWidgets('a dialog over the page leaves it alone', (tester) async {
+      final (recovery, navigator) = await mount(tester);
+      unawaited(
+        showDialog<void>(
+          context: navigator.currentContext!,
+          builder: (_) => const Text('A dialog'),
+        ),
+      );
+      await tester.pump();
+      expect(recovery.notice, isNotNull);
+    });
+  });
+}
+
+/// The phone's own OpenCode, connected again after the restart.
+class _ServerBack extends ConnectionController {
+  _ServerBack(super.store);
+
+  @override
+  bool get isConnected => true;
+
+  @override
+  ConnectionStatusSnapshot get connectionStatus =>
+      const ConnectionStatusSnapshot(phase: ConnectionStatusPhase.connected);
+
+  @override
+  ServerProfile? get profile => ServerProfile(
+    id: 'phone',
+    name: 'On this phone',
+    baseUrl: 'http://127.0.0.1:4097',
+  );
+}
+
+/// What the shell's route tracker does (lib/main_parts/root.dart).
+class _PageTracker extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (previousRoute != null && route is PageRoute) appPageChanges.value++;
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PageRoute) appPageChanges.value++;
+  }
 }

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api2/gateway.dart';
+import 'package:opencode_mobile/domain/agent_handoff_history.dart';
 import 'package:opencode_mobile/domain/genui/gen_ui_history.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/paseo/gateway.dart';
@@ -73,6 +74,46 @@ void main() {
     expect(end.hasMore, isFalse);
     expect(requests.last.queryParameters, {'cursor': 'opaque', 'limit': '2'});
   });
+
+  test(
+    'OC2 handoff reads a conversation whose screenshots exceed the card budget',
+    () async {
+      // A tool result carrying a screenshot as a data URI, as in a phone's
+      // Design review chat (one 1.8 MB message).
+      final screenshot = 'data:image/png;base64,${'A' * (1024 * 1024 + 1)}';
+      respond = (request) {
+        final older = request.uri.queryParameters['cursor'] == 'older';
+        request.response.write(
+          jsonEncode({
+            'data': older
+                ? [
+                    {'id': 'm1', 'type': 'user', 'text': 'look at this'},
+                  ]
+                : [
+                    for (var i = 51; i >= 3; i--)
+                      {'id': 'm$i', 'type': 'user', 'text': 'turn $i'},
+                    {'id': 'm2', 'type': 'user', 'text': screenshot},
+                  ],
+            'cursor': {if (!older) 'next': 'older'},
+          }),
+        );
+      };
+      await expectLater(
+        oc2.genUiHistoryPage('ses_1'),
+        throwsA(isA<ProductException>()),
+      );
+      final history = await readAgentHandoffHistory(
+        oc2,
+        'ses_1',
+        isCurrent: () => true,
+      );
+      expect(history.first.info.id, 'm1');
+      expect(history[1].info.id, 'm2');
+      expect(history.last.info.id, 'm51');
+      expect(history, hasLength(51));
+      expect(requests.last.queryParameters, {'cursor': 'older', 'limit': '50'});
+    },
+  );
 
   test(
     'OC2 idle verifies existence and validates active map before absence',

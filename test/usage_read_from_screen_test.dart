@@ -334,7 +334,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(usageKey('usage-read-from-failure'), findsOneWidget);
     expect(
-      find.text(_en.quotaInAppFailNoNode('In-app Ubuntu')),
+      find.text(_en.quotaInAppFailNoNode('On this phone')),
       findsOneWidget,
     );
     expect(usageKey('usage-read-from'), findsOneWidget);

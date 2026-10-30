@@ -177,7 +177,7 @@ void main() {
           'opencode': {'password': 'fake-value'},
         },
         {
-          'opencode': {'version': '2.0.29; echo injected'},
+          'opencode': {'version': '2.1.1; echo injected'},
         },
         {
           '_job': {'adding': 'token=fake-value'},

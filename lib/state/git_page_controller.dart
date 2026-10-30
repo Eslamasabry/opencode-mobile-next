@@ -62,6 +62,19 @@ class GitPageAbilities {
   final bool usesOwnGitSignIn;
 }
 
+/// Where the quiet check of the remote stands (a `git fetch` when the sheet
+/// opens).
+enum GitCheck {
+  /// Not started, or nothing to check (no remote branch to follow).
+  idle,
+  checking,
+  done,
+
+  /// Could not reach the remote. Not an error to show: the row says so
+  /// quietly and one tap tries again.
+  failed,
+}
+
 /// State of the Git page for one project. One action runs at a time; every
 /// write refreshes the snapshot afterwards.
 class GitPageController extends ChangeNotifier {
@@ -112,6 +125,15 @@ class GitPageController extends ChangeNotifier {
   /// The outcome of the last write, for a status line; cleared by
   /// [clearLastResult] or the next action.
   GitActionResult? get lastResult => _lastResult;
+
+  bool _savedBeforeSend = false;
+
+  /// True after [commitAndPush] saved and then tried to send: a failed send
+  /// in [lastResult] then says the save is kept. Cleared with [lastResult].
+  bool get savedBeforeSend => _savedBeforeSend;
+
+  GitCheck _check = GitCheck.idle;
+  GitCheck get check => _check;
 
   bool _disposed = false;
 
@@ -173,10 +195,40 @@ class GitPageController extends ChangeNotifier {
     }
   }
 
-  Future<GitActionResult?> pull() => _act(
-    GitAction.pull,
-    (repo) async => repo.pull(gitHubToken: await _token()),
-  );
+  /// Looks at the remote quietly and re-reads, so "behind" is true. Does not
+  /// show as a running action and never reports a failure as one: [check]
+  /// says [GitCheck.failed] and the row says so in a neutral line.
+  Future<void> checkForUpdates() async {
+    final repo = _repository;
+    final snap = snapshot;
+    if (repo == null || snap == null || _check == GitCheck.checking) return;
+    if (!snap.status.branch.hasUpstream) {
+      _check = GitCheck.idle;
+      _changed();
+      return;
+    }
+    _check = GitCheck.checking;
+    _changed();
+    try {
+      final result = await repo.fetch(gitHubToken: await _token());
+      if (_disposed) return;
+      if (!result.ok) {
+        _check = GitCheck.failed;
+      } else {
+        _check = GitCheck.done;
+        if (_busy == null) await _read(repo, reportFailure: false);
+      }
+    } catch (_) {
+      _check = GitCheck.failed;
+    }
+    _changed();
+  }
+
+  Future<GitActionResult?> pull() => _act(GitAction.pull, (repo) async {
+    final result = await repo.pull(gitHubToken: await _token());
+    if (result.ok) _check = GitCheck.done;
+    return result;
+  });
 
   Future<GitActionResult?> push() => _act(
     GitAction.push,
@@ -188,6 +240,47 @@ class GitPageController extends ChangeNotifier {
     GitAction.commit,
     (repo) => repo.commit(paths: paths, message: message),
   );
+
+  /// Saves exactly [paths] with [message], then sends to the remote: the
+  /// one-tap "Save 2 files and send". A failed save stops there and is the
+  /// result; after a good save the send's outcome is the result and
+  /// [savedBeforeSend] is true. [busy] reads commit, then push.
+  Future<GitActionResult?> commitAndPush(
+    List<String> paths,
+    String message,
+  ) async {
+    final repo = _repository;
+    if (repo == null || _busy != null) return null;
+    _busy = GitAction.commit;
+    _lastResult = null;
+    _savedBeforeSend = false;
+    _changed();
+    GitActionResult result;
+    try {
+      result = await repo.commit(paths: paths, message: message);
+      if (result.ok && !_disposed) {
+        _savedBeforeSend = true;
+        _busy = GitAction.push;
+        _changed();
+        result = await repo.push(gitHubToken: await _token());
+        if (result.problem == GitProblem.gitHubTokenRejected) {
+          await account?.tokenRejected();
+        }
+      }
+      _lastResult = result;
+      if (!_disposed) await _read(repo, reportFailure: false);
+    } catch (_) {
+      result = GitActionResult.failure(
+        _busy ?? GitAction.commit,
+        const GitFailure(GitProblem.unknown),
+      );
+      _lastResult = result;
+    } finally {
+      _busy = null;
+      _changed();
+    }
+    return result;
+  }
 
   Future<GitActionResult?> switchBranch(String name) =>
       _act(GitAction.switchBranch, (repo) => repo.switchBranch(name));
@@ -205,9 +298,25 @@ class GitPageController extends ChangeNotifier {
     (repo) => repo.setIdentity(name: name, email: email),
   );
 
+  /// Adds the remote [name] pointing at [url].
+  Future<GitActionResult?> addRemote(String name, String url) =>
+      _act(GitAction.addRemote, (repo) => repo.addRemote(name: name, url: url));
+
+  /// Clones [url] into a new folder [folderName] beside this project. The
+  /// GitHub sign-in is used where this environment offers it.
+  Future<GitActionResult?> clone(String url, String folderName) => _act(
+    GitAction.clone,
+    (repo) async => repo.clone(
+      url: url,
+      folderName: folderName,
+      gitHubToken: await _token(),
+    ),
+  );
+
   void clearLastResult() {
     if (_lastResult == null) return;
     _lastResult = null;
+    _savedBeforeSend = false;
     _changed();
   }
 
@@ -226,6 +335,7 @@ class GitPageController extends ChangeNotifier {
     if (repo == null || _busy != null) return null;
     _busy = action;
     _lastResult = null;
+    _savedBeforeSend = false;
     _changed();
     GitActionResult result;
     try {

@@ -173,7 +173,7 @@
   "tool:edit.metadata.filediff.file": "shown",
   "tool:glob.input.path": "shown",
   "tool:glob.input.pattern": "shown",
-  "tool:glob.metadata.count": "shown",
+  "tool:glob.metadata.count": "ignored: Active context lists what the model reads (the call and its input); the number of files found is on the step in the chat",
   "tool:glob.metadata.truncated": "ignored: technical bookkeeping the server keeps; nothing a person acts on",
   "tool:glob.output": "shown",
   "tool:grep.input.include": "shown",

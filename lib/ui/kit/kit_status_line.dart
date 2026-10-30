@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
@@ -63,7 +66,16 @@ class KitStatus {
     this.since,
     this.onSlow = const [],
     this.onDismiss,
+    this.quiet = false,
+    this.semanticsLabel,
+    this.countdownTo,
+    this.countdownLine,
+    this.onOpen,
   }) : assert(
+         countdownTo == null || countdownLine != null,
+         'KitStatus: a countdown needs countdownLine',
+       ),
+       assert(
          kind != KitStatusKind.riskySwitch || onDismiss == null,
          'A risky switch line is never dismissible: hiding it would hide a '
          'live risk (SEC-9). Offer its "Turn off" as the action instead.',
@@ -98,6 +110,29 @@ class KitStatus {
   final List<KitAction> onSlow;
   final VoidCallback? onDismiss;
 
+  /// A standing note, not a condition to act on: drawn as one small muted
+  /// caption line with a quiet text action, no divider (the chat's
+  /// "Auto-approve is on · Turn off").
+  final bool quiet;
+
+  /// What a screen reader says for a [quiet] line when its short words
+  /// leave out detail (the time something happened); null: the message.
+  final String? semanticsLabel;
+
+  /// When something the app really scheduled happens (a retry timer): the
+  /// supporting line becomes [countdownLine] for the time left, asked again
+  /// once a second until it passes (then with [Duration.zero]). Wins over
+  /// [supporting]. Never for a time the app only guesses.
+  final DateTime? countdownTo;
+
+  /// The supporting words for the time left until [countdownTo] ("Trying
+  /// again in 12 s").
+  final String Function(Duration left)? countdownLine;
+
+  /// A [quiet] line's words open what is behind them (the connection's
+  /// Details) when tapped; the line keeps no More menu then.
+  final VoidCallback? onOpen;
+
   /// Lower is more important ([kind]'s index).
   int get priority => kind.index;
 
@@ -107,6 +142,8 @@ class KitStatus {
   /// server's connection problem, B6): the truth stays on screen, its ways
   /// out one tap away, without pushing every step of the page down.
   KitStatus compact() {
+    // A quiet line is one line already.
+    if (quiet) return this;
     final action = this.action;
     return KitStatus(
       kind: kind,
@@ -119,6 +156,8 @@ class KitStatus {
       tone: tone,
       more: [?action, ...more],
       onDismiss: onDismiss,
+      quiet: quiet,
+      semanticsLabel: semanticsLabel,
     );
   }
 
@@ -188,7 +227,30 @@ class KitStatusLine extends StatelessWidget {
     this.since,
     this.onSlow = const [],
     this.moreKey,
-  });
+    this.quiet = false,
+    this.semanticsLabel,
+    this.countdownTo,
+    this.countdownLine,
+    this.onOpen,
+  }) : assert(
+         countdownTo == null || countdownLine != null,
+         'KitStatusLine: a countdown needs countdownLine',
+       );
+
+  /// See [KitStatus.onOpen].
+  final VoidCallback? onOpen;
+
+  /// See [KitStatus.countdownTo].
+  final DateTime? countdownTo;
+
+  /// See [KitStatus.countdownLine].
+  final String Function(Duration left)? countdownLine;
+
+  /// See [KitStatus.quiet].
+  final bool quiet;
+
+  /// See [KitStatus.semanticsLabel].
+  final String? semanticsLabel;
 
   /// Renders [status] from its entity's status source (ARCH-8). Its key
   /// defaults to `ValueKey('kit-status-<id or kind>')`, so a new condition is
@@ -212,6 +274,11 @@ class KitStatusLine extends StatelessWidget {
         next: status.next,
         since: status.since,
         onSlow: status.onSlow,
+        quiet: status.quiet,
+        semanticsLabel: status.semanticsLabel,
+        countdownTo: status.countdownTo,
+        countdownLine: status.countdownLine,
+        onOpen: status.onOpen,
       );
 
   final IconData icon;
@@ -273,6 +340,12 @@ class KitStatusLine extends StatelessWidget {
       'KitStatusLine.onSlow offers at most two ways out (got '
       '${onSlow.length}).',
     );
+    if (quiet) {
+      return KitEntrance(
+        trigger: (tone, icon),
+        child: _countingQuietLine(context, action: action, more: more),
+      );
+    }
     return KitEntrance(
       trigger: (tone, icon),
       child: KitSince(
@@ -287,19 +360,274 @@ class KitStatusLine extends StatelessWidget {
                 : action == null
                 ? [...onSlow.skip(1), ...more]
                 : [...onSlow, ...more];
+            final stacked = _stacks(
+              context,
+              constraints.maxWidth,
+              effectiveAction,
+              effectiveMore,
+            );
+            // A countdown at large text: one quiet line ("Laptop isn't
+            // answering · Trying again in 12 s · Try now") keeps the action
+            // in sight where the stacked line would push it out of the
+            // slot's room.
+            if (stacked && countdownTo != null) {
+              return _countingQuietLine(
+                context,
+                action: effectiveAction,
+                more: effectiveMore,
+              );
+            }
             return _line(
               context,
               slow: slow,
               action: effectiveAction,
               more: effectiveMore,
-              stacked: _stacks(
-                context,
-                constraints.maxWidth,
-                effectiveAction,
-                effectiveMore,
-              ),
+              stacked: stacked,
             );
           },
+        ),
+      ),
+    );
+  }
+
+  /// The quiet form: a small icon, the words in the secondary caption style,
+  /// and the action as an underlined caption word whose padding makes the
+  /// 48 dp target. No divider, no row height of its own. With [onDismiss] a
+  /// small close ends the row.
+  /// The quiet form, its words followed by the countdown when there is one
+  /// (asked again once a second; the live region keeps the plain message).
+  Widget _countingQuietLine(
+    BuildContext context, {
+    required KitAction? action,
+    required List<KitAction> more,
+  }) {
+    final until = countdownTo;
+    final line = countdownLine;
+    if (until == null || line == null) {
+      return _quietLine(context, action: action, more: more);
+    }
+    return _Ticker(
+      until: until,
+      builder: (context, left) => _quietLine(
+        context,
+        action: action,
+        more: more,
+        words: '$message · ${line(left)}',
+      ),
+    );
+  }
+
+  Widget _quietLine(
+    BuildContext context, {
+    required KitAction? action,
+    List<KitAction> more = const [],
+    String? words,
+  }) {
+    final roles = ThemeRoles.resolve(Theme.of(context));
+    final tokens = KitTokens.of(context);
+    final style = KitText.styleOf(context, KitTextRole.secondary);
+    final message = words ?? this.message;
+    final moreMenu = _moreMenu(context, more);
+    final dismiss = onDismiss;
+    final color = KitText.toneColor(roles, KitTextTone.secondary);
+    final scaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    double widthOf(String text) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: direction,
+        textScaler: scaler,
+        maxLines: 1,
+      )..layout();
+      final width = painter.width;
+      painter.dispose();
+      return width;
+    }
+
+    return Semantics(
+      container: true,
+      child: Padding(
+        padding: EdgeInsetsDirectional.only(
+          start: tokens.gutter,
+          end: tokens.gutter - tokens.space2,
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Whether the words and the action share one line. When they do
+            // not, the action drops under the words without its "·" (a dot
+            // never starts a line), and the icon stays by the first line.
+            final room =
+                constraints.maxWidth -
+                14 -
+                tokens.space2 -
+                (dismiss == null ? 0 : tokens.minTarget) -
+                (moreMenu == null ? 0 : tokens.minTarget);
+            final oneLine =
+                action == null ||
+                widthOf(message) +
+                        tokens.space2 +
+                        widthOf('·') +
+                        2 * tokens.space2 +
+                        widthOf(action.label) <=
+                    room;
+            // Wrapped: the icon sits level with the first line of words.
+            final firstLine =
+                (style.fontSize ?? 14) *
+                (style.height ?? 1.3) *
+                scaler.scale(1);
+            final iconTop = oneLine
+                ? 0.0
+                : ((firstLine - 14) / 2).clamp(0.0, tokens.minTarget);
+            final lead = <Widget>[
+              Padding(
+                padding: EdgeInsetsDirectional.only(top: iconTop),
+                child: Icon(icon, size: 14, color: color),
+              ),
+              SizedBox(width: tokens.space2),
+              // The action follows the words and drops to its own line when
+              // they do not fit together (large text), never overflowing.
+              Expanded(
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Semantics(
+                      liveRegion: true,
+                      label: semanticsLabel ?? this.message,
+                      onTap: onOpen,
+                      excludeSemantics: true,
+                      child: _openable(
+                        Text(
+                          message,
+                          key: messageKey,
+                          // Counting seconds keep their width.
+                          style: words == null
+                              ? style
+                              : style.copyWith(
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                    if (action != null && oneLine)
+                      ExcludeSemantics(
+                        child: Padding(
+                          padding: EdgeInsetsDirectional.only(
+                            start: tokens.space2,
+                          ),
+                          child: Text('·', style: style),
+                        ),
+                      ),
+                    if (action != null)
+                      Semantics(
+                        button: true,
+                        label: action.label,
+                        excludeSemantics: true,
+                        onTap: action.onPressed,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: InkResponse(
+                            key: action.key,
+                            onTap: action.onPressed,
+                            containedInkWell: true,
+                            highlightShape: BoxShape.rectangle,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight: tokens.minTarget,
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: tokens.space2,
+                                ),
+                                child: Align(
+                                  widthFactor: 1,
+                                  child: Text(
+                                    action.label,
+                                    style: style.copyWith(
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: color,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ];
+            return Row(
+              crossAxisAlignment: oneLine
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.start,
+              children: [
+                ...lead,
+                // The other ways out, the same menu the full line uses.
+                ?moreMenu,
+                // A note that may be put away: one small close at the end, the
+                // same button the full line uses.
+                if (dismiss != null)
+                  KitIconButton(
+                    key: dismissKey ?? _defaultDismissKey,
+                    icon: AppIconography.close,
+                    size: 20,
+                    tooltip:
+                        dismissTooltip ??
+                        lookupAppLocalizations(
+                          Localizations.localeOf(context),
+                        ).kitSheetDismiss,
+                    onPressed: dismiss,
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// The quiet words as a tap target for [onOpen], when there is one.
+  Widget _openable(Widget words) {
+    final open = onOpen;
+    if (open == null) return words;
+    return Material(
+      type: MaterialType.transparency,
+      child: InkResponse(
+        key: const ValueKey('kit-status-open'),
+        onTap: open,
+        containedInkWell: true,
+        highlightShape: BoxShape.rectangle,
+        child: words,
+      ),
+    );
+  }
+
+  /// The small More menu holding [more], or null when there is none.
+  Widget? _moreMenu(BuildContext context, List<KitAction> more) {
+    if (more.isEmpty) return null;
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    return Builder(
+      builder: (anchor) => KitIconButton(
+        key: moreKey ?? _defaultMoreKey,
+        icon: AppIconography.more,
+        size: 20,
+        tooltip: l10n.kitMore,
+        onPressed: () => showKitMenu(
+          anchor,
+          items: [
+            for (final item in more)
+              KitMenuItem(
+                key: item.key,
+                label: item.label,
+                onSelected: () => item.onPressed?.call(),
+                enabled: item.onPressed != null,
+                destructive: item.destructive,
+                disabledReason: item.disabledReason,
+              ),
+          ],
         ),
       ),
     );
@@ -375,30 +703,7 @@ class KitStatusLine extends StatelessWidget {
     final bodyStyle = KitText.styleOf(context, KitTextRole.body);
     final secondaryStyle = KitText.styleOf(context, KitTextRole.secondary);
     final dismiss = onDismiss;
-    final moreMenu = more.isEmpty
-        ? null
-        : Builder(
-            builder: (anchor) => KitIconButton(
-              key: moreKey ?? _defaultMoreKey,
-              icon: AppIconography.more,
-              size: 20,
-              tooltip: l10n.kitMore,
-              onPressed: () => showKitMenu(
-                anchor,
-                items: [
-                  for (final item in more)
-                    KitMenuItem(
-                      key: item.key,
-                      label: item.label,
-                      onSelected: () => item.onPressed?.call(),
-                      enabled: item.onPressed != null,
-                      destructive: item.destructive,
-                      disabledReason: item.disabledReason,
-                    ),
-                ],
-              ),
-            ),
-          );
+    final moreMenu = _moreMenu(context, more);
     final dismissButton = dismiss == null
         ? null
         : KitIconButton(
@@ -411,7 +716,19 @@ class KitStatusLine extends StatelessWidget {
     final slowLabel = KitSince.slowLabel(context);
     final announced = slow ? '$message\n$slowLabel' : message;
     final supporting = this.supporting;
-    final Widget? supportingText = slow
+    final countdownTo = this.countdownTo;
+    final countdownLine = this.countdownLine;
+    final Widget? supportingText = countdownTo != null && countdownLine != null
+        ? KeyedSubtree(
+            key: const ValueKey('kit-status-countdown'),
+            child: _Countdown(
+              until: countdownTo,
+              line: countdownLine,
+              textKey: supportingKey,
+              style: secondaryStyle,
+            ),
+          )
+        : slow
         ? KeyedSubtree(
             key: const ValueKey('kit-status-slow'),
             // Already said by the live region above.
@@ -594,4 +911,85 @@ class KitStatusLine extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Rebuilds [builder] once a second with the time left until [until], then
+/// once more at zero.
+class _Ticker extends StatefulWidget {
+  const _Ticker({required this.until, required this.builder});
+
+  final DateTime until;
+  final Widget Function(BuildContext context, Duration left) builder;
+
+  @override
+  State<_Ticker> createState() => _TickerState();
+}
+
+class _TickerState extends State<_Ticker> {
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _schedule();
+  }
+
+  @override
+  void didUpdateWidget(_Ticker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.until != widget.until) _schedule();
+  }
+
+  void _schedule() {
+    _tick?.cancel();
+    _tick = null;
+    if (!widget.until.isAfter(clock.now())) return;
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() {});
+      if (!widget.until.isAfter(clock.now())) {
+        _tick?.cancel();
+        _tick = null;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final left = widget.until.difference(clock.now());
+    return widget.builder(context, left.isNegative ? Duration.zero : left);
+  }
+}
+
+/// The supporting line of a status with a countdown: asked for its words
+/// once a second until [until] passes, then once more at zero. Not a live
+/// region: the seconds are read on demand, never announced each tick.
+class _Countdown extends StatelessWidget {
+  const _Countdown({
+    required this.until,
+    required this.line,
+    required this.style,
+    this.textKey,
+  });
+
+  final DateTime until;
+  final String Function(Duration left) line;
+  final TextStyle style;
+  final Key? textKey;
+
+  @override
+  Widget build(BuildContext context) => _Ticker(
+    until: until,
+    builder: (context, left) => Text(
+      line(left),
+      key: textKey,
+      style: style.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+    ),
+  );
 }

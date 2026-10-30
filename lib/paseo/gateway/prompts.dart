@@ -1,6 +1,128 @@
 part of '../gateway.dart';
 
 extension _PaseoPrompts on PaseoGateway {
+  /// Whether the daemon holds [agent] in memory with its runtime session
+  /// open: only a loaded agent's snapshot names its `activeTurn` (a turn or
+  /// null); a saved record the daemon has not loaded has none, whatever its
+  /// last status says (session.js listAgentPayloads, agent-projections.js,
+  /// Paseo 0.11.2). A message to a held agent continues that live session,
+  /// so it needs no restoration proof, whichever gateway created it: the
+  /// chat opens on its own gateway, not the list's that created or resumed
+  /// it, and without this every follow-up to an ACP agent (Kilo, Gemini)
+  /// was refused as an old conversation before reaching the daemon.
+  bool _daemonHolds(Map<String, dynamic> agent) =>
+      agent.containsKey('activeTurn') &&
+      const {'initializing', 'running', 'idle'}.contains(agent['status']);
+
+  /// Reading a timeline loads the agent in the helper under its own id
+  /// (session.js handleFetchAgentTimelineRequest → ensureAgentLoaded, Paseo
+  /// 0.11.2), and the answer carries that loaded snapshot. Kept, so a saved
+  /// conversation opened from the list continues in place: the explicit
+  /// `resume_agent_request` would mint a new agent id (it resumes without
+  /// one), and the chat stayed bound to the old id while the new agent ran
+  /// and failed out of sight (emulator, 2026-10-27).
+  void _noteLoadedAgent(String id, Map<String, dynamic> timeline) {
+    final loaded = timeline['agent'];
+    if (loaded is! Map<String, dynamic>) return;
+    if (loaded['id'] != _real(id) || !_daemonHolds(loaded)) return;
+    if (_agents[_app(id)]?['status'] == 'error') {
+      _live.putIfAbsent(_app(id), _PaseoLive.new).failedBeforeLoad = true;
+    }
+    _remember(loaded);
+  }
+
+  /// What the helper says about [id]'s last turn (Paseo 0.11.2). Its
+  /// `lastError` comes with the agent only while the helper still holds the
+  /// failure: a saved record's payload leaves it out and loading the agent
+  /// again starts without it (agent-projections.js buildStoredAgentPayload,
+  /// agent-loading.js). What outlives a restart is the record's status
+  /// "error" (until the helper loads it: [_PaseoLive.failedBeforeLoad]) and
+  /// an `error` attention, which Paseo sets only when none is unread; a later
+  /// turn that worked leaves it too, so the caller asks only about a newest
+  /// turn that got no reply.
+  AgentLastTurn _lastAgentTurn(String id) {
+    final agent = _agents[_app(id)];
+    if (agent == null) {
+      return (failed: false, reason: null, sameConversation: const <String>[]);
+    }
+    final error = agent['lastError'];
+    final provider = agent['provider'];
+    final model = agent['model'];
+    final reason = error is String && error.trim().isNotEmpty
+        ? AgentRunFailure(
+            reason: paseoText(error, max: 2000),
+            provider: provider is String ? provider : null,
+            model: model is String && model != paseoDefaultModel ? model : null,
+          )
+        : null;
+    final failed =
+        reason != null ||
+        agent['status'] == 'error' ||
+        _live[_app(id)]?.failedBeforeLoad == true ||
+        (agent['requiresAttention'] == true &&
+            agent['attentionReason'] == 'error');
+    // Older app builds reopened with `resume_agent_request`, which forked the
+    // agent: the forks share the runtime's session (the list shows one row).
+    final key = sessionKey(_app(id));
+    final forks = key == null
+        ? const <String>[]
+        : [
+            for (final other in _agents.keys)
+              if (other != _app(id) && sessionKey(other) == key) _real(other),
+          ];
+    return (failed: failed, reason: reason, sameConversation: forks);
+  }
+
+  /// A send that failed: the session no longer waits for a turn, an
+  /// uncertain delivery is remembered, and a refusal the host explained (a
+  /// `send_agent_message_response {accepted: false, error}`, a refused model
+  /// change on the way, or a provider entry that can't start) is thrown again
+  /// with its reason kept with the agent and model ([AgentRunFailure]).
+  Never _sendFailed(
+    String sessionID,
+    Object error,
+    StackTrace stack,
+    ModelRef? model,
+  ) {
+    _awaitingTurn.remove(sessionID);
+    if (error is PaseoFailure &&
+        error.kind == PaseoFailureKind.deliveryUnknown) {
+      _uncertain.add(sessionID);
+    }
+    final reason =
+        error is PaseoFailure && error.kind == PaseoFailureKind.unavailable
+        ? error.reason
+        : null;
+    if (reason == null || reason.isEmpty) {
+      Error.throwWithStackTrace(error, stack);
+    }
+    final agent = _agents[sessionID];
+    String? named(Object? value) =>
+        value is String && value.isNotEmpty && value != paseoDefaultModel
+        ? value
+        : null;
+    final runtime = agent?['runtimeInfo'];
+    Error.throwWithStackTrace(
+      PaseoFailure(
+        PaseoFailureKind.unavailable,
+        reason: reason,
+        runFailure: AgentRunFailure(
+          reason: reason,
+          provider:
+              named(agent?['provider']) ??
+              named(model?.providerID) ??
+              named(_draftProviders[sessionID]),
+          model:
+              named(model?.modelID) ??
+              named(agent?['model']) ??
+              named(runtime is Map ? runtime['model'] : null) ??
+              named(_draftModels[sessionID]?.modelID),
+        ),
+      ),
+      stack,
+    );
+  }
+
   Future<void> _createAgent(
     String id, {
     required String prompt,
@@ -39,6 +161,7 @@ extension _PaseoPrompts on PaseoGateway {
     final title = draft?.title;
     final Map<String, dynamic> result;
     _creating++;
+    final sentAt = DateTime.now().millisecondsSinceEpoch;
     try {
       result = await transport.request(
         'create_agent_request',
@@ -73,6 +196,16 @@ extension _PaseoPrompts on PaseoGateway {
           if (!browserRequested) beforeSend?.call();
         },
       );
+    } on PaseoFailure catch (error) {
+      if (error.kind == PaseoFailureKind.deliveryUnknown && !browserRequested) {
+        final start = (
+          messageID: messageID,
+          provider: provider,
+          sentAt: sentAt,
+        );
+        _noteUncertainStart(id, start);
+      }
+      rethrow;
     } finally {
       _creating--;
       if (_creating == 0 && _closed) _heldEvents.clear();

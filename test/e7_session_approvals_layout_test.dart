@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../tool/capture/fixtures.dart'
     show loadCaptureFonts, capturePng, writePng;
 import 'support/complete_message_history.dart';
+import 'support/composer_tools.dart';
 
 const _capture = bool.fromEnvironment('E7_APPROVALS_CAPTURE');
 final _boundary = GlobalKey();
@@ -47,6 +48,15 @@ class _FakeApi extends FakeServerGateway with CompleteMessageHistory {
     if (fail case final error?) throw error;
     replies.add((requestID, reply));
   }
+
+  // A signed-in model, so the status slot is free for the Auto-approve note
+  // (the "No model signed in" note outranks it).
+  @override
+  Future<ProvidersResponse> providers() async => ProvidersResponse(
+    providers: [
+      ProviderInfo(id: 'anthropic', name: 'Anthropic', modelIDs: ['sonnet']),
+    ],
+  );
 
   @override
   Future<List<PermissionRequest>> pendingPermissions() async => [];
@@ -82,9 +92,13 @@ Future<(_Controller, _FakeApi)> _boot() async {
     'server-a',
   ).setSupervision(AutomationSupervision.balanced);
   final api = _FakeApi();
+  // Requests arrive while the agent works, and the Auto-approve line
+  // under the header shows only then (chat fidelity, 20 Oct 2026; idle,
+  // the chip over the composer says it).
   final controller = _Controller(_Store(prefs: prefs))
     ..api = api
-    ..status = StreamStatus.connected;
+    ..status = StreamStatus.connected
+    ..busySessions = {'parent', 'child'};
   addTearDown(controller.dispose);
   controller.sessionsById['parent'] = Session(id: 'parent', title: 'Parent');
   controller.sessionsById['child'] = Session(
@@ -131,7 +145,7 @@ EventEnvelope _ask(String id, String session) => EventEnvelope(
 
 Future<void> _openApprovals(WidgetTester tester) async {
   // Approvals is a command in the command sheet (slice-P10.1).
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await tester.pumpAndSettle();
   final commands = find.byKey(const Key('composer-tool-commands'));
   await tester.ensureVisible(commands);
@@ -173,31 +187,23 @@ Future<void> _closeSheet(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-/// The chip's full wording is its spoken label (it has no tooltip).
-Finder _spoken(String pattern) => find.bySemanticsLabel(RegExp(pattern));
+/// The one muted line under the header while Auto-approve is on.
+final _line = find.byKey(const ValueKey('chat-status-auto-approve'));
 
-/// Taps the approval chip at its leading glyph: at 2.5x the chip can be
-/// wider than the sideways-scrolling strip, so its centre may be clipped.
-/// The glyph itself takes no pointer; the chip under it does. It opens the
-/// mode menu.
-Future<void> _tapChipOnly(WidgetTester tester) async {
-  final glyph = find
-      .descendant(
-        of: find.byKey(const Key('auto-approval-indicator')),
-        matching: find.byType(Icon),
-      )
-      .first;
-  await tester.ensureVisible(glyph);
-  await tester.pumpAndSettle();
-  await tester.tap(glyph, warnIfMissed: false);
-  await tester.pumpAndSettle();
-}
+/// The Auto-approve chip over the composer, first in the chips row.
+final _chip = find.byKey(const Key('auto-approval-indicator'));
 
-/// The chip's menu, then its last item: the detailed approvals sheet.
+/// The composer's +, its More, then the "Approval settings…" row: the
+/// detailed approvals sheet.
 Future<void> _tapChip(WidgetTester tester) async {
-  await _tapChipOnly(tester);
-  expect(find.byKey(const Key('approval-mode-menu')), findsOneWidget);
-  await _tapVisible(tester, find.byKey(const Key('approval-mode-settings')));
+  await _tapVisible(tester, find.byKey(const Key('composer-tools-button')));
+  final more = find.byKey(const Key('composer-tray-more'));
+  if (more.evaluate().isNotEmpty) await _tapVisible(tester, more);
+  expect(find.byKey(const Key('composer-tools-sheet')), findsOneWidget);
+  await _tapVisible(
+    tester,
+    find.byKey(const Key('composer-setting-approval-settings')),
+  );
 }
 
 /// A choice row at 2.5x text is taller than the 740 dp window, so its
@@ -234,12 +240,8 @@ void main() {
         await tester.pumpWidget(_app(controller, 'parent', direction));
         await tester.pumpAndSettle();
 
-        // Default: asking, and the chip says so, with no count.
-        expect(
-          find.byKey(const Key('auto-approval-indicator')),
-          findsOneWidget,
-        );
-        expect(find.text('Asks first'), findsOneWidget);
+        // Default: asking, and nothing sits on screen to say so.
+        expect(_line, findsNothing);
 
         await _openApprovals(tester);
         await _captureScreen(tester, 'sheet-ask-${direction.name}');
@@ -263,24 +265,25 @@ void main() {
         await _closeSheet(tester);
         expect(find.byKey(const Key('session-approvals-sheet')), findsNothing);
 
-        // The chip names the mode while the setting is on, and carries no
-        // count of what it approved.
-        final indicator = find.byKey(const Key('auto-approval-indicator'));
-        expect(indicator, findsOneWidget);
-        expect(find.text('Auto-approve'), findsOneWidget);
+        // The chip over the composer names the mode while the setting is on,
+        // beside Stop while the agent works, and carries no count of what it
+        // approved. A 740 dp window has room for the chips, so the line under
+        // the header does not say it twice (d12253567).
+        expect(_chip, findsOneWidget);
+        expect(find.text('Auto-approve on'), findsOneWidget);
+        expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
+        expect(_line, findsNothing);
 
         // A request is answered without a card, and the record names it.
         controller.handleEventForTesting(_ask('req-1', 'parent'));
         await tester.pumpAndSettle();
         expect(api.replies, [('req-1', 'once')]);
         expect(find.byKey(const Key('permission-card-review')), findsNothing);
-        expect(_spoken('Auto-approved · Run a shell command'), findsOneWidget);
         expect(find.text('Auto-approve · 1'), findsNothing);
         await _captureScreen(tester, 'indicator-${direction.name}');
 
-        // Tapping the indicator reopens the sheet, which lists the record;
-        // turning the switch off stops approval again. At 2.5x the chip can
-        // be wider than the sideways-scrolling strip.
+        // The + reopens the sheet, which lists the record; turning the
+        // switch off stops approval again.
         await _tapChip(tester);
         expect(
           find.byKey(const Key('session-approvals-sheet')),
@@ -297,8 +300,7 @@ void main() {
         await _tapChoice(tester, 'approvals-mode-ask');
         expect(controller.autoApprovalFor('parent').automatic, isFalse);
         await _closeSheet(tester);
-        expect(find.text('Asks first'), findsOneWidget);
-        expect(find.text('Auto-approve'), findsNothing);
+        expect(_line, findsNothing);
         controller.handleEventForTesting(_ask('req-2', 'parent'));
         await tester.pumpAndSettle();
         expect(api.replies, hasLength(1));
@@ -325,8 +327,8 @@ void main() {
         await tester.pumpWidget(_app(controller, 'child', direction));
         await tester.pumpAndSettle();
 
-        expect(find.textContaining('Auto-approve'), findsOneWidget);
-        expect(_spoken('Inherited from parent conversation'), findsOneWidget);
+        // The sub-agent line keeps the one slot and carries the words.
+        expect(find.text('Auto-approve is on'), findsOneWidget);
         await _captureScreen(tester, 'child-indicator-${direction.name}');
 
         await _tapChip(tester);
@@ -364,9 +366,8 @@ void main() {
     );
   }
 
-  testWidgets('disconnecting pauses the indicator without hiding it', (
-    tester,
-  ) async {
+  testWidgets('disconnecting pauses the line, which still folds away once '
+      'seen', (tester) async {
     tester.view.physicalSize = const Size(320, 740);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -378,27 +379,29 @@ void main() {
     );
     await tester.pumpWidget(_app(controller, 'parent', TextDirection.ltr));
     await tester.pumpAndSettle();
-    expect(find.text('Auto-approve'), findsOneWidget);
+    expect(find.text('Auto-approve is on'), findsOneWidget);
 
     controller.status = StreamStatus.reconnecting;
     controller.notifyListeners();
     // The connection banner animates while reconnecting; pump a fixed frame.
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.byKey(const Key('auto-approval-indicator')), findsOneWidget);
+    expect(_line, findsOneWidget);
     expect(find.text('Auto-approve paused'), findsOneWidget);
-    expect(_spoken('This phone is not connected'), findsOneWidget);
     expect(tester.takeException(), isNull);
     // A request arriving now waits for a person: covered by the controller
     // test. (A permission card next to the reconnecting banner at 320dp/2.5x
     // is a pre-existing layout limit unrelated to this slice.)
     expect(api.replies, isEmpty);
 
-    // After the 15-second quiet reconnect window the indicator still stays
-    // paused: automatic approval remains gated on real reachability.
+    // After the 15-second quiet reconnect window nothing is approved by
+    // itself: automatic approval stays gated on real reachability. The
+    // line has said its piece and folded away (owner, 2026-10-27); the
+    // mode stays where it lives (the chip, the + sheet).
     await tester.pump(const Duration(seconds: 16));
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.byKey(const Key('auto-approval-indicator')), findsOneWidget);
-    expect(find.text('Auto-approve paused'), findsOneWidget);
+    expect(_line, findsNothing);
+    expect(controller.autoApprovalFor('parent').automatic, isTrue);
+    expect(api.replies, isEmpty);
     expect(tester.takeException(), isNull);
   });
 
@@ -427,9 +430,9 @@ void main() {
       find.text('Automatic approval failed. Review this request.'),
       findsOneWidget,
     );
-    // The card is the main thing while a person is needed; the chip stays
-    // in the strip so the mode can still be switched.
-    expect(find.byKey(const Key('auto-approval-indicator')), findsOneWidget);
+    // The card is the main thing while a person is needed; the line stays
+    // under the header so the mode can still be turned off.
+    expect(_line, findsOneWidget);
     expect(tester.takeException(), isNull);
 
     api.fail = null;
@@ -437,8 +440,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.replies, [('req-1', 'reject')]);
     expect(find.byKey(const Key('permission-card-review')), findsNothing);
-    expect(find.byKey(const Key('auto-approval-indicator')), findsOneWidget);
-    expect(find.text('Auto-approve'), findsOneWidget);
+    expect(_line, findsOneWidget);
+    expect(find.text('Auto-approve is on'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

@@ -1,5 +1,5 @@
 // One moving part while a reply runs (owner rule): the glowing border OR
-// Stop's turning ring, never both. The decision is `_movingPart` in the
+// the voice mode's Stop-reading ring, never both. The decision is `_movingPart` in the
 // composer kit; these tests look at what actually moves.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -45,8 +45,12 @@ Future<void> _run(
             focusNode: focus,
             hint: 'Ask',
             onSend: () {},
-            onStop: () {},
             busy: true,
+            voice: KitComposerVoice(
+              phase: KitVoicePhase.speakingReply,
+              onExit: () {},
+              onStopSpeaking: () {},
+            ),
           ),
         ),
       ),

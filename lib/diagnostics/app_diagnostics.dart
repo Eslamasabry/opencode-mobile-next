@@ -1,13 +1,10 @@
 import 'dart:convert';
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import '../ui/kit/kit_error_fallback.dart';
 import '../ui/kit/kit_redact.dart';
-import '../ui/kit/kit_text.dart' show KitText, KitTextRole;
-import '../ui/kit/kit_tokens.dart' show KitTokens;
-import '../ui/theme_roles.dart' show ThemeRoles;
 
 @immutable
 class AppDiagnosticEntry {
@@ -241,24 +238,10 @@ AppErrorCaptureHandle installAppErrorCapture(
   };
   ErrorWidget.builder = (details) {
     capture(details.exception, details.stack, 'widget');
-    // Drawn wherever the failed widget was, possibly above every theme and
-    // MediaQuery: fixed colours and the body role's style, nothing that
-    // looks anything up.
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: ColoredBox(
-        color: ThemeRoles.bootErrorGround,
-        child: Padding(
-          padding: const EdgeInsets.all(KitTokens.panelPadding),
-          child: Text(
-            'This part of OpenCode hit an error. Open App diagnostics for details.',
-            style: KitText.styleFor(
-              KitTextRole.body,
-            ).copyWith(color: ThemeRoles.bootErrorText),
-          ),
-        ),
-      ),
-    );
+    // Drawn wherever the failed widget was, possibly above every theme,
+    // Material and Navigator: the kit's fallback looks up only what it can
+    // do without (KitErrorFallback).
+    return const KitErrorFallback();
   };
 
   return AppErrorCaptureHandle._(

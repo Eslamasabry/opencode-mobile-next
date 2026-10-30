@@ -302,6 +302,9 @@ void main() {
   path('app servers.about', (tester) async {
     final (store, controller) = await serversState(profiles: [_profile]);
     await pump(tester, store, controller);
+    // About waits in the bar's menu, beside Report a bug and the guide.
+    await tester.tap(find.byKey(const ValueKey('servers-menu')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('servers-about')));
     await tester.pumpAndSettle();
     expect(find.text('about-route'), findsOneWidget);
@@ -333,6 +336,8 @@ void main() {
     });
     final test = find.text('Test connection');
     expect(test, findsOneWidget);
+    await tester.ensureVisible(test);
+    await tester.pump();
     await tester.ensureVisible(test);
     // The page scrolls to the button over a frame; tap where it ends up.
     await tester.pump();
@@ -367,6 +372,8 @@ void main() {
     expect(store.saved, isEmpty);
     final anyway = find.byKey(const ValueKey('server-save-anyway'));
     expect(anyway, findsOneWidget);
+    await tester.ensureVisible(anyway);
+    await tester.pump();
     await tester.ensureVisible(anyway);
     await tester.tap(anyway);
     await tester.pumpAndSettle();
@@ -504,7 +511,10 @@ void main() {
         // the server); status and updates are its Status and version page.
         home: serverPage
             ? ServerPageScreen(controller: controller, profileId: 'srv')
-            : ServerSettingsScreen(controller: controller),
+            : ServerPageScreen(
+                controller: controller,
+                profileId: controller.profile!.id,
+              ),
       ),
     );
     await frames(tester, 10);
@@ -521,14 +531,19 @@ void main() {
 
   path('app server-settings.change-sign-in', (tester) async {
     final (_, _, pushed) = await settings(tester);
-    await tester.tap(find.byKey(const Key('server-authentication')));
+    final row = find.byKey(const ValueKey('server-row-sign-in'));
+    await tester.ensureVisible(row);
+    await frames(tester, 3);
+    await tester.tap(row);
     await frames(tester, 10);
-    expect(pushed, ['/servers:edit-active']);
+    expect(pushed.single, contains('ServersRouteRequest'));
   });
 
   path('app server-settings.host-management', (tester) async {
     await settings(tester);
     final entry = find.byKey(const Key('host-management-entry'));
+    await tester.ensureVisible(entry);
+    await tester.pump();
     await tester.ensureVisible(entry);
     await tester.tap(entry);
     await frames(tester, 10);
@@ -537,14 +552,19 @@ void main() {
 
   path('app server-settings.edit', (tester) async {
     final (_, _, pushed) = await settings(tester);
-    await tester.tap(find.byKey(const Key('server-edit')));
+    final row = find.byKey(const ValueKey('server-row-address'));
+    await tester.ensureVisible(row);
+    await frames(tester, 3);
+    await tester.tap(row);
     await frames(tester, 10);
-    expect(pushed, ['/servers:edit-active']);
+    expect(pushed.single, contains('ServersRouteRequest'));
   });
 
   path('app server-settings.remove', (tester) async {
     final (_, _, pushed) = await settings(tester, serverPage: true);
     final row = find.byKey(const ValueKey('server-remove'));
+    await tester.ensureVisible(row);
+    await tester.pump();
     await tester.ensureVisible(row);
     await frames(tester, 3);
     expect(find.text('Remove Lab OpenCode'), findsOneWidget);
@@ -577,7 +597,10 @@ void main() {
         controller: controller,
         store: store,
         routes: _routes([]),
-        home: ServerSettingsScreen(controller: controller),
+        home: ServerPageScreen(
+          controller: controller,
+          profileId: controller.profile!.id,
+        ),
       ),
     );
     await frames(tester, 10);
@@ -602,6 +625,8 @@ void main() {
   path('app server-settings.disconnect', (tester) async {
     final (controller, _, pushed) = await settings(tester, serverPage: true);
     final row = find.byKey(const ValueKey('server-disconnect'));
+    await tester.ensureVisible(row);
+    await tester.pump();
     await tester.ensureVisible(row);
     await frames(tester, 3);
     await tester.tap(row);

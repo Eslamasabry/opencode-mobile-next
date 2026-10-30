@@ -5,6 +5,7 @@ import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../l10n/app_localizations.dart';
 import '../theme_roles.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
@@ -273,7 +274,10 @@ class _KitContextRingState extends State<KitContextRing>
       ).format(whole);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final used = widget.used;
     if (used == null) return const SizedBox.shrink();
     final size = widget.size;

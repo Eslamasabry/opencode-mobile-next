@@ -4,11 +4,19 @@ part of '../files_screen.dart';
 extension _FilesActions on _FilesScreenState {
   /// A plain project file staged as a reference: the agent is pointed at the
   /// path (and the line the user was reading), nothing is uploaded.
-  void _stageProjectFile(String path, int? line) {
+  ///
+  /// [returning]: the host goes back to the conversation right after, so
+  /// the composer itself shows the file and no Undo is offered here.
+  ReviewStageOutcome? _stageProjectFile(
+    String path,
+    int? line, {
+    bool returning = false,
+  }) {
     final handoff = widget.handoff;
-    if (handoff == null) return;
+    if (handoff == null) return null;
     final change = _fileStatuses[path];
-    _stageReference(
+    return _stageReference(
+      returning: returning,
       ReviewReference(
         id: handoff.nextID('project-file'),
         kind: change == null
@@ -44,13 +52,19 @@ extension _FilesActions on _FilesScreenState {
 
   /// Shared by every Files add-to-prompt affordance: a staged reference is
   /// done with Undo; a duplicate or a full tray is said in place.
-  void _stageReference(ReviewReference reference) {
+  ReviewStageOutcome? _stageReference(
+    ReviewReference reference, {
+    bool returning = false,
+  }) {
     final handoff = widget.handoff;
-    if (handoff == null) return;
+    if (handoff == null) return null;
     final outcome = handoff.stage(reference);
-    if (!mounted) return;
+    if (!mounted) return outcome;
     final l10n = readerL10n(context);
     switch (outcome) {
+      case ReviewStageOutcome.staged || ReviewStageOutcome.duplicate
+          when returning:
+        break;
       case ReviewStageOutcome.staged:
         showKitUndo(
           context,
@@ -71,15 +85,7 @@ extension _FilesActions on _FilesScreenState {
           ),
         );
     }
-  }
-
-  Future<void> _reviewChanges() async {
-    final prompt = await pushWorkingTreeReview(
-      context,
-      widget.controller,
-      handoff: widget.handoff,
-    );
-    if (mounted) await _deliver(prompt);
+    return outcome;
   }
 
   Future<void> _reviewFileChange(FileNode node) async {

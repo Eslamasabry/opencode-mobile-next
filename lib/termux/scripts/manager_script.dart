@@ -743,7 +743,7 @@ setup() {
   [ "$CURRENT_RUNTIME" = opencode2 ] || { echo managed-runtime-migration-required >&2; return 64; }
   if [ -z "$requested_version" ]; then
     case "$CURRENT_RUNTIME" in
-      opencode2) requested_version=2.0.29 ;;
+      opencode2) requested_version=2.1.1 ;;
     esac
   fi
   SETUP_SUCCEEDED=0
@@ -1025,7 +1025,7 @@ switch_runtime() {
     require_setup_space
     local requested_version
     case "$target" in
-      opencode2) requested_version=2.0.29 ;;
+      opencode2) requested_version=2.1.1 ;;
     esac
     install_runtime "$requested_version"
     installed_version=$(runtime_version 2>/dev/null || true)

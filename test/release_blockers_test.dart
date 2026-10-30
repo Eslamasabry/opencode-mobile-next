@@ -731,13 +731,17 @@ void main() {
     expect(microphone.hitTestable(), findsOneWidget);
     expect(find.byKey(const Key('chat-composer-surface')), findsOneWidget);
     // UX-P0-03: Commands, Attach, and Voice collapsed into one leading
-    // tools button; all three stay reachable from its sheet.
+    // tools button; all three stay reachable from it: File in its tray,
+    // Commands and Voice behind the tray's More.
     final tools = find.byKey(const Key('composer-tools-button'));
     expect(tools, findsOneWidget);
     await tester.tap(tools);
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('composer-tool-commands')), findsOneWidget);
     expect(find.byKey(const Key('composer-tool-attach')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byKey(const Key('composer-tray-more')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('composer-tool-commands')), findsOneWidget);
     expect(find.byKey(const Key('composer-tool-voice')), findsOneWidget);
     await tester.tapAt(const Offset(4, 4));
     await tester.pumpAndSettle();

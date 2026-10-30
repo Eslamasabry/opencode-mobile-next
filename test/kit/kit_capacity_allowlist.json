@@ -1,0 +1,878 @@
+{
+  "_about": "The kit capacity ratchet (docs/ux-system/kit-v2.md §8.6, test/kit/kit_capacity_test.dart). Each entry is a scene that breaks the contract in test/kit/kit_capacity.json today, with the measured value: error/cut/target/items count the failing combinations (or nodes, or items drawn), width is dp painted at 1,600 dp. The file only shrinks: a new violation fails, a worse value fails, a better or fixed one fails until this file is tightened (KIT_CAPACITY_WRITE=1 rewrites it, never adding an entry).",
+  "cut": {
+    "KitAgentChoice/tests-d-default": {
+      "value": 11,
+      "note": "280x640 text 1.0 ltr pseudo: cut with no ellipsis (clip:3, \"⟦Çáŕéƒûļ ŵîţĥ ƀîĝ çĥáñĝéš one two th⟧\")"
+    },
+    "KitAvatar/default": {
+      "value": 10,
+      "note": "280x640 text 1.0 ltr pseudo: cut with no ellipsis (clip:1, \"⟦ÖÅ one⟧\")"
+    },
+    "KitContextChart/default": {
+      "value": 10,
+      "note": "280x640 text 1.0 ltr pseudo: cut with no ellipsis (clip:1, \"⟦84 % one⟧\")"
+    },
+    "KitDiffView/loaded": {
+      "value": 1,
+      "note": "1600x1000 text 2.0 ltr pseudo: cut with no ellipsis (clip:1, \"⟦ƒîñáļ one⟧⟦ ţîţļé =  one ⟧⟦\"Ŕéļéášé ñöţ…\")"
+    },
+    "KitDiffView/too-big": {
+      "value": 1,
+      "note": "1600x1000 text 2.0 ltr pseudo: cut with no ellipsis (clip:1, \"⟦ƒîñáļ one⟧⟦ ţîţļé =  one ⟧⟦\"Ŕéļéášé ñöţ…\")"
+    },
+    "KitFloatingPanel/default": {
+      "value": 21,
+      "note": "280x640 text 1.0 ltr prose: its box is shorter than its lines (\"The agent finished the migration of the …\")"
+    },
+    "KitImageGallery/disabled": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page 2.png⁩\")"
+    },
+    "KitImageGallery/error": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page 2.png⁩\")"
+    },
+    "KitImageGallery/loading": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page 2.png⁩\")"
+    },
+    "KitImageGallery/working": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page 2.png⁩\")"
+    },
+    "KitImageMarkup/error": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page.png⁩\")"
+    },
+    "KitImageMarkup/loading": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page.png⁩\")"
+    },
+    "KitImageMarkup/working": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page.png⁩\")"
+    },
+    "KitNav/default": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr numbers: its box is shorter than its lines (\"1,234,567,890,123 files · 99,999,999+ to…\")"
+    },
+    "KitSegmented/default": {
+      "value": 2,
+      "note": "412x915 text 1.0 ltr pseudo: cut with no ellipsis (clip:1, \"⟦Ţĥîš ŵééķ one ⟧\") (+1 more)"
+    },
+    "KitStepTimeline/expanded": {
+      "value": 18,
+      "note": "280x640 text 1.0 ltr as written: its box is shorter than its lines (\"The draft is still saved. I checked the …\")"
+    },
+    "KitWheel/default": {
+      "value": 2,
+      "note": "280x640 text 1.0 ltr emoji: cut with no ellipsis (clip:1, \"👨‍👩‍👧‍👦👩🏽‍💻🧑🏿‍🚀🏳️‍🌈🇪🇬🇯🇵🇧🇷1️⃣2️⃣#️⃣ 👨‍👩‍👧…\") (+1 more)"
+    },
+    "KitWidgetStyleForm/default": {
+      "value": 3,
+      "note": "280x640 text 1.0 rtl pseudo: cut with no ellipsis (clip:1, \"⟦صغير one⟧\") (+2 more)"
+    },
+    "showKitDiff/loaded": {
+      "value": 1,
+      "note": "1600x1000 text 2.0 ltr pseudo: cut with no ellipsis (clip:1, \"⟦ƒîñáļ one⟧⟦ ţîţļé =  one ⟧⟦\"Ŕéļéášé ñöţ…\")"
+    },
+    "showKitImageGallery/disabled": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page 2.png⁩\")"
+    },
+    "showKitImageGallery/error": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page 2.png⁩\")"
+    },
+    "showKitImageGallery/loading": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page 2.png⁩\")"
+    },
+    "showKitImageGallery/working": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page 2.png⁩\")"
+    },
+    "showKitImageMarkup/error": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page.png⁩\")"
+    },
+    "showKitImageMarkup/loading": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page.png⁩\")"
+    },
+    "showKitImageMarkup/working": {
+      "value": 3,
+      "note": "1600x1000 text 1.0 ltr as written: its box is shorter than its lines (\"⁨Screenshot of the settings page.png⁩\")"
+    }
+  },
+  "error": {
+    "KitBreadcrumb/50 items in segments": {
+      "value": 2,
+      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 46 pixels on the right."
+    },
+    "KitBreadcrumb/collapsed": {
+      "value": 2,
+      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 46 pixels on the right."
+    },
+    "KitBreadcrumb/tests-d-collapsed": {
+      "value": 2,
+      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 46 pixels on the right."
+    },
+    "KitButton/default": {
+      "value": 24,
+      "note": "280x640 text 1.0 ltr prose: A RenderFlex overflowed by 152 pixels on the right."
+    },
+    "KitContextRing/default": {
+      "value": 20,
+      "note": "280x640 text 1.0 ltr pseudo: A RenderFlex overflowed by 13 pixels on the right."
+    },
+    "KitDateTimeRow/row-error": {
+      "value": 16,
+      "note": "280x640 text 2.0 ltr as written: A RenderFlex overflowed by 6.0 pixels on the right."
+    },
+    "KitDiffView/binary": {
+      "value": 2,
+      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 92 pixels on the right."
+    },
+    "KitDiffView/renamed": {
+      "value": 2,
+      "note": "280x640 text 2.0 ltr pseudo: A RenderFlex overflowed by 92 pixels on the right."
+    },
+    "KitField/secret-saved": {
+      "value": 1,
+      "note": "280x640 text 2.0 rtl pseudo: A RenderFlex overflowed by 9.1 pixels on the right."
+    },
+    "KitIconButton/default": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+    },
+    "KitMessage/notice action": {
+      "value": 14,
+      "note": "280x640 text 1.0 ltr prose: A RenderFlex overflowed by 160 pixels on the right."
+    },
+    "KitMessage/prompt attachments": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitMessage/prompt plain": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitMessage/prompt time": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitMessage/tests-d-notice": {
+      "value": 12,
+      "note": "280x640 text 1.0 ltr prose: A RenderFlex overflowed by 160 pixels on the right."
+    },
+    "KitNav/default": {
+      "value": 5,
+      "note": "1600x1000 text 1.0 ltr prose: A RenderFlex overflowed by 3808 pixels on the bottom."
+    },
+    "KitPageHeading/default": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_page_heading.dart': Failed assertion: line 43 pos 10: 'onLineTap == null || (lineTapLabel ?? '') != ''': KitPageHeading: a switcher line needs a lineTapLabel"
+    },
+    "KitQueuedMessage/addToThisTurn": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitQueuedMessage/afterThisReply": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitQueuedMessage/checking": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitQueuedMessage/contextUpdate": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitQueuedMessage/failed": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitQueuedMessage/mixed": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+    },
+    "KitQueuedMessage/notConfirmed": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitQueuedMessage/reachedServer": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitQueuedMessage/sending": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitQueuedMessage/sending slow": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitQueuedMessage/storageFull": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitQueuedMessage/uncertain": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitQueuedMessage/waiting": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitRowMenu/default": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+    },
+    "KitScreen/default": {
+      "value": 6,
+      "note": "280x640 text 2.0 ltr prose: A RenderFlex overflowed by 1522 pixels on the bottom."
+    },
+    "KitSenseAsk/tests-d-default": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+    },
+    "KitSenseAsk/tests-d-working": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+    },
+    "KitStatusLine/default": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+    },
+    "KitStepTimeline/expanded": {
+      "value": 2,
+      "note": "280x640 text 1.0 ltr pseudo: A RenderFlex overflowed by 19 pixels on the right."
+    },
+    "KitTaskCard/default": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_icon_button.dart': Failed assertion: line 56 pos 10: '(tooltip ?? label ?? '').length > 0': KitIconButton needs a non-empty tooltip (KIT-22)"
+    },
+    "KitTip/shown": {
+      "value": 7,
+      "note": "280x640 text 2.0 ltr prose: A RenderFlex overflowed by 1824 pixels on the bottom."
+    },
+    "KitTopBar/brand": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+    },
+    "KitTopBar/close": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+    },
+    "KitTopBar/default": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+    },
+    "KitTopBar/needs_you": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+    },
+    "KitTopBar/not_answering": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+    },
+    "KitTopBar/subtitle_neutral": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+    },
+    "KitTopBar/subtitle_working": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: Multiple exceptions (3) were detected during the running of the current test, and at least one was unexpected."
+    },
+    "KitTopBar/switcher": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:opencode_mobile/ui/kit/kit_top_bar.dart': Failed assertion: line 202 pos 10: 'onTitleTap == null || (titleTapLabel ?? '') != ''': KitTopBar: a switcher title (onTitleTap) needs a titleTapLabel"
+    },
+    "KitTurn/failed": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitTurn/finished": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitTurn/finished latest": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitTurn/highlighted": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitTurn/interrupted": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitTurn/running": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitTurn/starting": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitTurn/starting slow": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitTurn/stopped": {
+      "value": 4,
+      "note": "280x640 text 1.0 ltr empty: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 742 pos 14: 'label != ''': is not true."
+    },
+    "KitTurn/waitingForYou": {
+      "value": 16,
+      "note": "280x640 text 1.0 ltr prose: A RenderFlex overflowed by 160 pixels on the right."
+    }
+  },
+  "items": {},
+  "list": {
+    "KitAccentRow.swatches": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitActionBlock.tertiary": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitAgentStrip.agents": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitBackgroundWorkLine.tasks": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitCapabilityExplainer.cost": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitChecklist.cost": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitChecklist.steps": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitChoiceCards.choices": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitChoiceTiles.choices": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitComposer.tray": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitComposerChips.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitComposerChips.suggestions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitConfirmSheet.consequenceItems": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitConfirmSheet.consequences": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitConfirmSheet.details": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitConsequences.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitDetailsFold.notes": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitDetailsFold.values": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitDiffView.files": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitDigest.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitDigest.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitFactRow.answers": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitFindingsCard.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitFindingsCard.findings": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitFineTunePanel.knobs": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitGuide.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitImageGallery.pictures": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitLastKnown.rows": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitMergeQueue.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitMergeQueue.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitMessage.attachments": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitNotice.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitNotice.costItems": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitNotice.notes": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitPhaseCard.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitPhaseCard.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitPickerRow.choices": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitPlanCard.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitPlanCard.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitPlanCard.phases": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitPromoteCard.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitPromoteCard.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitQueuedMessage.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitRequestCard.targets": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitRequestCard.tertiary": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitSenseAsk.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitSenseAsk.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitServerLane.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitServerLane.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitSheet.tertiary": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitStateView.cost": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitStateView.detailNotes": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitStateView.detailValues": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitStateView.tertiary": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitStatusLine.more": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitStepSlider.steps": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitSwatchGrid.children": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitTabSwitcher.tabs": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitTaskCard.meta": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitTimelineDay.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitTimelineDay.items": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitTipBubble.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitTopBar.actions": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitTranscriptExcerpt.messages": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    },
+    "KitWidgetStyleForm.accentIds": {
+      "value": 1,
+      "note": "no rule for more items than fit has been declared"
+    }
+  },
+  "rule": {
+    "KitAgentChoice/tests-d-default · Careful with big changes": {
+      "value": 1,
+      "note": "clip:3: set up to cut its words without an ellipsis"
+    },
+    "KitAvatar/default · OA": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitContextChart/default · ## %": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitContextRing/default · ## %": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitContextRing/default · Compacting": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitFineTunePanel/default · Comfortable": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitFineTunePanel/default · Compact": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitProgressRing/default · ## of ## MB": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitProgressRing/default · ##%": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitSegmented/default · This month": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitSegmented/default · This week": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitSegmented/default · Today": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitWheel/default · #": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitWheel/default · ##": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitWheel/default · AM": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitWheel/default · PM": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitWidgetStyleForm/default · Medium": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitWidgetStyleForm/default · Small": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitWidgetStyleForm/default · Solid": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitWidgetStyleForm/default · Tinted": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitWidgetStyleForm/default · Transparent": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "KitWidgetStyleForm/default · Wide": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "showKitDateTimePicker/date-and-time · AM": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "showKitDateTimePicker/date-and-time · PM": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "showKitDateTimePicker/tests-d-date-and-time · AM": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "showKitDateTimePicker/tests-d-date-and-time · PM": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "showKitTimePicker/tests-d-time · AM": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "showKitTimePicker/tests-d-time · PM": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "showKitTimePicker/time · AM": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    },
+    "showKitTimePicker/time · PM": {
+      "value": 1,
+      "note": "clip:1: set up to cut its words without an ellipsis"
+    }
+  },
+  "run": {
+    "KitAgentCard.body": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitAgentGrid.children": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitAnimatedRows.children": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitBoardLane.cards": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitBoardLanes.columns": {
+      "value": 1,
+      "note": "fixed is declared but no run proves it"
+    },
+    "KitChecklist.onSlow": {
+      "value": 1,
+      "note": "fixed is declared but no run proves it"
+    },
+    "KitComposerStatusStrip.chips": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitExpandRow.children": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitField.onSlow": {
+      "value": 1,
+      "note": "fixed is declared but no run proves it"
+    },
+    "KitMiniTable.columns": {
+      "value": 1,
+      "note": "fixed is declared but no run proves it"
+    },
+    "KitNav.destinations": {
+      "value": 1,
+      "note": "fixed is declared but no run proves it"
+    },
+    "KitNavRail.destinations": {
+      "value": 1,
+      "note": "fixed is declared but no run proves it"
+    },
+    "KitPlanBlock.children": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitProgressRow.segments": {
+      "value": 1,
+      "note": "more is declared but no run proves it"
+    },
+    "KitScanner.onSlow": {
+      "value": 1,
+      "note": "fixed is declared but no run proves it"
+    },
+    "KitScreen.header": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitSegmented.segments": {
+      "value": 1,
+      "note": "fixed is declared but no run proves it"
+    },
+    "KitSliverRowGroup.children": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitStateView.onSlow": {
+      "value": 1,
+      "note": "fixed is declared but no run proves it"
+    },
+    "KitStatusLine.onSlow": {
+      "value": 1,
+      "note": "fixed is declared but no run proves it"
+    },
+    "KitStepTimeline.steps": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitTabSwitcher.children": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitToolRow.body": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitTurn.blocks": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    },
+    "KitWheel.columns": {
+      "value": 1,
+      "note": "fixed is declared but no run proves it"
+    },
+    "KitWorkLine.steps": {
+      "value": 1,
+      "note": "grows is declared but no run proves it"
+    }
+  },
+  "target": {
+    "showKitTechnicalDetails/default": {
+      "value": 2,
+      "note": "SemanticsNode#423(Rect.fromLTRB(32.0, 118.0, 253.4, 156.0), tags: [RenderViewport.twoPane], actions: [longPress], flags: [isTextField, isMultiline, isReadOnly, isFocusable], value: \"GET /session/status\\nHTTP 503 Service Unavailable\", textDirection: ltr, inputType: text): expected tap target size of at least Size(48.0, 48.0), but found Size(221.4, 38.0)"
+    },
+    "showKitTechnicalDetails/tests-d-default": {
+      "value": 2,
+      "note": "SemanticsNode#400(Rect.fromLTRB(32.0, 88.0, 300.2, 107.0), tags: [RenderViewport.twoPane], actions: [longPress], flags: [isTextField, isMultiline, isReadOnly, isFocusable], value: \"Connection refused: 127.0.0.1:4096\", textDirection: ltr, inputType: text): expected tap target size of at least Size(48.0, 48.0), but found Size(268.2, 19.0)"
+    }
+  },
+  "width": {
+    "KitTurn/failed · KitTurn": {
+      "value": 705.0,
+      "note": "cap KitLayout.paneDetailMaxWidth = 700 dp; widest at 1600x1000 text 1.0 ltr as written"
+    },
+    "KitTurn/finished latest · KitTurn": {
+      "value": 705.0,
+      "note": "cap KitLayout.paneDetailMaxWidth = 700 dp; widest at 1600x1000 text 1.0 ltr as written"
+    },
+    "KitTurn/finished · KitTurn": {
+      "value": 705.0,
+      "note": "cap KitLayout.paneDetailMaxWidth = 700 dp; widest at 1600x1000 text 1.0 ltr as written"
+    },
+    "KitTurn/highlighted · KitTurn": {
+      "value": 705.0,
+      "note": "cap KitLayout.paneDetailMaxWidth = 700 dp; widest at 1600x1000 text 1.0 ltr as written"
+    },
+    "KitTurn/interrupted · KitTurn": {
+      "value": 705.0,
+      "note": "cap KitLayout.paneDetailMaxWidth = 700 dp; widest at 1600x1000 text 1.0 ltr as written"
+    },
+    "KitTurn/stopped · KitTurn": {
+      "value": 705.0,
+      "note": "cap KitLayout.paneDetailMaxWidth = 700 dp; widest at 1600x1000 text 1.0 ltr as written"
+    },
+    "KitTurn/tests-d-failed · KitTurn": {
+      "value": 703.0,
+      "note": "cap KitLayout.paneDetailMaxWidth = 700 dp; widest at 1600x1000 text 1.0 ltr as written"
+    },
+    "KitTurn/tests-d-finished · KitTurn": {
+      "value": 703.0,
+      "note": "cap KitLayout.paneDetailMaxWidth = 700 dp; widest at 1600x1000 text 1.0 ltr as written"
+    },
+    "KitTurn/tests-d-interrupted · KitTurn": {
+      "value": 703.0,
+      "note": "cap KitLayout.paneDetailMaxWidth = 700 dp; widest at 1600x1000 text 1.0 ltr as written"
+    },
+    "KitTurn/tests-d-stopped · KitTurn": {
+      "value": 703.0,
+      "note": "cap KitLayout.paneDetailMaxWidth = 700 dp; widest at 1600x1000 text 1.0 ltr as written"
+    }
+  }
+}

@@ -141,6 +141,7 @@ class MergedChatFeed implements ChatFeedSource, ChatFeedChangeSource {
           sourceId: named.id,
           sourceLabel: named.label,
           finishedUnseen: item.finishedUnseen,
+          stoppedByPerson: item.stoppedByPerson,
           contextUsage: item.contextUsage,
         );
         if (chatFeedMatches(row, filter)) rows.add(row);
@@ -154,9 +155,17 @@ class MergedChatFeed implements ChatFeedSource, ChatFeedChangeSource {
           !_disposed &&
           checks.isNotEmpty &&
           checks.values.every((check) => check.complete),
+      incompleteSources: [
+        if (!_disposed)
+          for (final named in sources)
+            if (!checks[named.id]!.complete) named.label,
+      ],
+      // Placeholders only while no source knows a single row yet. A filter
+      // that matches nothing (Running, with nothing running) keeps its empty
+      // state through every refresh instead of flashing the skeleton.
       loading:
-          rows.isEmpty &&
           !_disposed &&
+          checks.values.every((check) => check.items.isEmpty) &&
           (_refreshing != null || checks.values.any((check) => check.loading)),
     );
   }

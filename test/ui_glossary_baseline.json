@@ -444,9 +444,6 @@
     "e7SetupUpdateHostDetail": {
       "noun sentence host": 1
     },
-    "e7SetupUrlScheme": {
-      "noun sentence local server": 1
-    },
     "e7SharedLatestAssistantRequestIncludingCacheActivity": {
       "noun sentence activity": 1
     },

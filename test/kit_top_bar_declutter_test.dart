@@ -1,8 +1,7 @@
 // The chat header's quiet rules and micro animations at the kit level: one
 // title line on a phone with the full words on a tap, the collapse button and
-// the ring coming and going without a jump, the project line's chevron
-// turning while its menu is open, the server joining the line, and all of it
-// instant under reduced motion.
+// the ring coming and going without a jump, the project line's menu, the
+// server joining the line, and all of it instant under reduced motion.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -164,20 +163,19 @@ void main() {
     }
   });
 
-  testWidgets('the project line chevron turns over while its menu is open', (
+  testWidgets('the project line opens its menu and Escape closes it', (
     tester,
   ) async {
+    // Concept C (owner 20 Oct 2026): the line is quiet words, a place,
+    // with no glyph and no chevron.
     await tester.pumpWidget(_bar());
-    double turns() =>
-        tester.widget<AnimatedRotation>(find.byType(AnimatedRotation)).turns;
-    expect(turns(), 0);
+    expect(find.byType(AnimatedRotation), findsNothing);
     await tester.tap(find.byKey(const Key('chip')));
-    await tester.pump();
-    expect(turns(), 0.5);
     await tester.pumpAndSettle();
+    expect(find.text('Files'), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
-    expect(turns(), 0);
+    expect(find.text('Files'), findsNothing);
   });
 
   testWidgets('the server name joins the line, and leaves it', (tester) async {
@@ -207,9 +205,11 @@ void main() {
   ) async {
     await tester.pumpWidget(_bar());
     final title = tester.getRect(find.byKey(const Key('title')));
-    final glyph = tester.getRect(find.byIcon(Icons.folder_open));
-    expect(glyph.left, closeTo(title.left, 1));
-    // Under the status bar the title sits where other pages' titles do.
-    expect(title.top, greaterThanOrEqualTo(10));
+    final line = tester.getRect(find.textContaining('FinanceHub3'));
+    expect(line.left, closeTo(title.left, 1));
+    // Under the status bar the title's words sit where other pages' titles
+    // do: on the buttons' line, with room above.
+    final words = tester.getRect(find.text(_long));
+    expect(words.top, greaterThanOrEqualTo(10));
   });
 }

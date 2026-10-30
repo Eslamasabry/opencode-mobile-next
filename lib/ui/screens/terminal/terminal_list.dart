@@ -1,7 +1,11 @@
 part of '../terminal_screen.dart';
 
-/// The server's terminals: one list, running first, each row opening its
-/// terminal, with rename and stop or remove in the row's menu.
+/// The server's terminals. As a page of its own it is the terminal: the
+/// running one opens at once (a new one starts when none runs), the others
+/// are tabs once there are two, and New terminal and the clear-up wait in
+/// the bar's menu. Framed by another page it is one list, running first,
+/// each row opening its terminal, with rename and stop or remove in the
+/// row's menu.
 class TerminalScreen extends StatefulWidget {
   final ConnectionController controller;
 
@@ -9,8 +13,12 @@ class TerminalScreen extends StatefulWidget {
   /// page of its own when nothing above it already frames it.
   final bool? page;
 
-  /// Fixed rows under the top bar (the terminal page's source choice).
-  final List<Widget> header;
+  /// The line under the title (the terminal page's place and dev server).
+  final KitTopBarScope? scope;
+
+  /// Where the shell runs, at the end of the bar's menu (while the line
+  /// under the title is the dev server's).
+  final List<KitMenuItem> placeMenu;
 
   /// Offered when this server has no terminals: switch to this phone's.
   final VoidCallback? onUsePhone;
@@ -19,7 +27,8 @@ class TerminalScreen extends StatefulWidget {
     super.key,
     required this.controller,
     this.page,
-    this.header = const [],
+    this.scope,
+    this.placeMenu = const [],
     this.onUsePhone,
   });
 
@@ -43,6 +52,13 @@ class _TerminalScreenState extends State<TerminalScreen> {
   int _dataRefreshRevision = -1;
   int _ptyRevision = -1;
   int _loadGeneration = 0;
+
+  /// The terminal the page shows.
+  String? _selectedId;
+
+  /// The page already started a terminal by itself this visit: once is
+  /// enough (a person who stops the last one gets New terminal, not another).
+  bool _startedOne = false;
 
   ServerOperationsGateway? get _repository => widget.controller.repository;
 
@@ -147,7 +163,9 @@ class _TerminalScreenState extends State<TerminalScreen> {
           _processes = processes;
           _error = null;
           _failure = null;
+          _select(processes);
         });
+        _startIfNoneRuns(processes);
       }
     } catch (error) {
       if (mounted && generation == _loadGeneration) {
@@ -164,6 +182,28 @@ class _TerminalScreenState extends State<TerminalScreen> {
         });
       }
     }
+  }
+
+  /// Keeps the shown terminal while it is listed; otherwise the first
+  /// running one, else the first one.
+  void _select(List<TerminalProcess> processes) {
+    if (processes.any((p) => p.id == _selectedId)) return;
+    final running = processes.where((p) => p.running);
+    _selectedId = running.isNotEmpty
+        ? running.first.id
+        : processes.firstOrNull?.id;
+    // A page that has shown a terminal never starts one by itself again:
+    // stopping the last one leaves New terminal, not a fresh shell.
+    if (_selectedId != null && running.isNotEmpty) _startedOne = true;
+  }
+
+  /// A page with no running terminal starts one, once per visit: opening
+  /// the terminal gives a shell, as on this phone.
+  void _startIfNoneRuns(List<TerminalProcess> processes) {
+    if (!_hasTopBar(context) || _startedOne || _creating) return;
+    if (processes.any((p) => p.running)) return;
+    _startedOne = true;
+    unawaited(_create());
   }
 
   Future<void> _create() async {
@@ -217,6 +257,17 @@ class _TerminalScreenState extends State<TerminalScreen> {
   ]) async {
     final gateway = repository ?? _repository;
     if (gateway == null) return;
+    if (_hasTopBar(context)) {
+      // The page is the terminal: show it here, listed with the others.
+      setState(() {
+        _selectedId = process.id;
+        final processes = _processes ?? const <TerminalProcess>[];
+        if (!processes.any((p) => p.id == process.id)) {
+          _processes = [...processes, process];
+        }
+      });
+      return;
+    }
     await pushKitPage<void>(
       context,
       (_) => TerminalSurface(
@@ -301,11 +352,143 @@ class _TerminalScreenState extends State<TerminalScreen> {
 
   bool _hasTopBar(BuildContext context) => widget.page ?? _standalone(context);
 
+  /// The shown terminal's tabs, once there are two: running first, each
+  /// with Rename and Stop (or Remove) on long-press.
+  Widget? _tabs(List<TerminalProcess> processes) {
+    if (processes.length < 2) return null;
+    final l10n = _l10nOf(context);
+    return Padding(
+      padding: EdgeInsetsDirectional.only(bottom: KitTokens.of(context).space1),
+      child: KitSessionTabs(
+        key: const ValueKey('terminal-tabs'),
+        semanticsLabel: l10n.terminalSessionsLabel,
+        endedLabel: l10n.terminalSessionEnded,
+        tabs: [
+          for (final process in [
+            ...processes.where((p) => p.running),
+            ...processes.where((p) => !p.running),
+          ])
+            KitSessionTab(
+              tabKey: ValueKey('terminal-session-${process.id}'),
+              label: KitBidi.auto(process.title),
+              selected: process.id == _selectedId,
+              ended: !process.running,
+              onTap: () => setState(() => _selectedId = process.id),
+              menuLabel: l10n.terminalScreenMenuLabel(process.title),
+              menu: [
+                KitMenuItem(
+                  key: const ValueKey('terminal-menu-rename'),
+                  label: l10n.terminalScreenRename(process.title),
+                  icon: AppIconography.edit,
+                  onSelected: () => unawaited(_rename(process)),
+                ),
+                KitMenuItem(
+                  key: const ValueKey('terminal-menu-remove'),
+                  label: process.running
+                      ? l10n.terminalScreenStop(process.title)
+                      : l10n.terminalScreenRemove(process.title),
+                  icon: process.running
+                      ? AppIconography.stopCircle
+                      : AppIconography.delete,
+                  destructive: true,
+                  onSelected: () => unawaited(_remove(process)),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Where the shell runs, said once, when no page above says it (the
+  /// conversation's own way here).
+  KitTopBarScope _place() {
+    final l10n = _l10nOf(context);
+    final place = terminalSourceLabels(
+      l10n,
+      widget.controller.profile?.name,
+    ).server;
+    return KitTopBarScope(
+      label: KitBidi.auto(place),
+      semanticsLabel: l10n.terminalPlaceLabel(place),
+    );
+  }
+
+  /// The page showing [process] live.
+  Widget _surface(
+    BuildContext context,
+    List<TerminalProcess> processes,
+    TerminalProcess process,
+  ) {
+    final l10n = _l10nOf(context);
+    final ended = [
+      for (final each in processes)
+        if (!each.running) each,
+    ];
+    final gateway = _repository;
+    if (gateway == null) return const SizedBox.shrink();
+    return TerminalSurface(
+      key: ValueKey('terminal-surface-${process.id}'),
+      repository: gateway,
+      repositoryResolver: () => widget.controller.repository,
+      dataRefreshRevisionResolver: () => widget.controller.dataRefreshRevision,
+      keepLiveInBackgroundResolver: () =>
+          widget.controller.keepLiveInBackground,
+      repositoryChanges: widget.controller,
+      process: process,
+      page: true,
+      scope: widget.scope ?? _place(),
+      header: [?_tabs(processes)],
+      leadingMenu: [
+        KitMenuItem(
+          key: const ValueKey('terminal-new'),
+          label: l10n.e7SetupNewTerminal,
+          icon: AppIconography.add,
+          enabled: !_creating,
+          disabledReason: l10n.terminalScreenLoading,
+          onSelected: () => unawaited(_create()),
+        ),
+      ],
+      trailingMenu: [
+        if (ended.isNotEmpty)
+          KitMenuItem(
+            key: const ValueKey('terminal-remove-ended'),
+            label: l10n.terminalScreenRemoveEnded(ended.length),
+            icon: AppIconography.clearAll,
+            destructive: true,
+            onSelected: () => unawaited(_removeEnded(ended)),
+          ),
+        ...widget.placeMenu,
+      ],
+      onRenamed: (_) => unawaited(_load()),
+      onRemoved: () {
+        setState(() => _selectedId = null);
+        unawaited(_load());
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = _l10nOf(context);
     final processes = _processes;
     final supported = widget.controller.capabilities.terminal;
+    if (supported && processes != null && _hasTopBar(context)) {
+      final shown = processes.where((p) => p.id == _selectedId).firstOrNull;
+      if (shown != null) return _surface(context, processes, shown);
+      if (_creating) {
+        // Starting the one the page opens with: the bar, then the shell.
+        return KitScreen(
+          topBar: KitTopBar(
+            title: l10n.libraryTerminalTitle,
+            scope: widget.scope,
+          ),
+          loading: true,
+          loadingLabel: l10n.localTerminalStarting,
+          body: const SizedBox.shrink(),
+        );
+      }
+    }
     final listed = supported && processes != null && processes.isNotEmpty;
     final ended = [
       if (supported)
@@ -316,6 +499,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
       topBar: _hasTopBar(context)
           ? KitTopBar(
               title: l10n.libraryTerminalTitle,
+              scope: widget.scope,
               menuKey: const ValueKey('terminal-list-menu'),
               // Clearing up is occasional: it waits in the bar's menu
               // rather than under the list.
@@ -331,7 +515,6 @@ class _TerminalScreenState extends State<TerminalScreen> {
               ],
             )
           : null,
-      header: widget.header,
       width: KitScreenWidth.list,
       // One new-terminal action per state: the empty state has its own.
       bottom: listed

@@ -341,7 +341,9 @@ void main() {
 
   group('6b · the live line of a running turn', () {
     testWidgets('says what it does, adds the time after 5 s, turns slow '
-        'after 20 s, with no dot and no Stop', (tester) async {
+        'after 20 s, after one mint dot (concept C) and with no Stop', (
+      tester,
+    ) async {
       await _pump(
         tester,
         KitTurn(
@@ -355,16 +357,21 @@ void main() {
       );
       expect(find.text('Thinking…'), findsOneWidget);
       await tester.pump(const Duration(seconds: 12));
-      expect(find.text('Thinking · 12 s'), findsOneWidget);
+      expect(find.text('Thinking · 12\u00a0s'), findsOneWidget);
       await tester.pump(const Duration(seconds: 13));
-      expect(find.text("Waiting for the model's first word · 25 s"), findsOne);
+      expect(
+        find.text("Waiting for the model's first word · 25\u00a0s"),
+        findsOne,
+      );
       await tester.pump(const Duration(seconds: 40));
       expect(
-        find.text("Waiting for the model's first word · 1 min 5 s"),
+        find.text(
+          "Waiting for the model's first word · 1\u00a0min\u00a05\u00a0s",
+        ),
         findsOne,
       );
       expect(find.text('Stop reply'), findsNothing);
-      expect(find.byKey(const ValueKey('kit-turn-live-dot')), findsNothing);
+      expect(find.byKey(const ValueKey('kit-turn-live-dot')), findsOneWidget);
     });
 
     testWidgets('a light sweeps over the words; reduced motion holds them '
@@ -489,6 +496,22 @@ void main() {
         expect(find.text(words), findsOneWidget);
         expect(find.byKey(_copyKey), findsOneWidget);
         expect(find.textContaining('Starting'), findsNothing);
+        if (phase == KitTurnPhase.stopped) {
+          // The note leads the footer's own line (owner, 2026-10-22): the
+          // actions at its end, no empty line between.
+          expect(
+            find.descendant(
+              of: find.byKey(_footerKey),
+              matching: find.text(words),
+            ),
+            findsOneWidget,
+          );
+          expect(
+            tester.getRect(find.text(words)).right,
+            lessThanOrEqualTo(tester.getRect(find.byKey(_copyKey)).left),
+          );
+          return;
+        }
         // The end line sits before the footer.
         expect(
           tester.getRect(find.text(words)).bottom,
@@ -699,5 +722,52 @@ void main() {
         expect(copy.top, more.top);
       });
     }
+  });
+
+  group('a footer never shows Copy without words to copy', () {
+    testWidgets('a turn of commands only has no footer', (tester) async {
+      await _pump(
+        tester,
+        KitTurn(
+          prompt: _prompt(),
+          blocks: [_line(KitWorkState.done)],
+          phase: KitTurnPhase.finished,
+          footer: KitTurnFooter(copyText: () => '', canCopy: false),
+          turnKey: _turnKey,
+          footerKey: _footerKey,
+          copyKey: _copyKey,
+          moreKey: _moreKey,
+        ),
+      );
+      expect(find.byKey(_copyKey), findsNothing);
+      expect(find.byKey(_footerKey), findsNothing);
+    });
+
+    testWidgets('its More stays, Copy goes', (tester) async {
+      await _pump(
+        tester,
+        _turn(
+          footer: KitTurnFooter(
+            copyText: () => '',
+            canCopy: false,
+            menu: [KitMenuItem(label: 'Revert', onSelected: () {})],
+          ),
+        ),
+      );
+      expect(find.byKey(_copyKey), findsNothing);
+      expect(find.byKey(_moreKey), findsOneWidget);
+    });
+
+    testWidgets('a stopped turn keeps its note, without Copy', (tester) async {
+      await _pump(
+        tester,
+        _turn(
+          phase: KitTurnPhase.stopped,
+          footer: KitTurnFooter(copyText: () => '', canCopy: false),
+        ),
+      );
+      expect(find.byKey(_copyKey), findsNothing);
+      expect(find.text('You stopped this reply.'), findsOneWidget);
+    });
   });
 }

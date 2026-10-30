@@ -15,6 +15,15 @@ Future<T?> _presentKitModal<T>(
 }) {
   final reduced = KitMotion.reduced(context);
   final tokens = KitTokens.of(context);
+  // Under any style but Solid at its defaults the route's own
+  // Material turns clear and [_KitModalSurface] paints the sheet.
+  final solid = KitSurfaceLook.isPlain(context);
+  Color fill(Color color) => solid ? color : Colors.transparent;
+  double lift(double elevation) => solid ? elevation : 0;
+  final sheetRadius = BorderRadius.vertical(
+    top: Radius.circular(tokens.sheetRadius),
+  );
+  final panelRadius = BorderRadius.circular(tokens.panelRadius);
   final style = reduced
       ? AnimationStyle.noAnimation
       : AnimationStyle(
@@ -32,9 +41,9 @@ Future<T?> _presentKitModal<T>(
         isDismissible: dismissible,
         enableDrag: dismissible && enableDrag,
         showDragHandle: false,
-        backgroundColor: tokens.sheetSurface,
+        backgroundColor: fill(tokens.sheetSurface),
         barrierColor: tokens.scrim,
-        elevation: tokens.sheetElevation,
+        elevation: lift(tokens.sheetElevation),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(tokens.sheetRadius),
@@ -42,7 +51,12 @@ Future<T?> _presentKitModal<T>(
         ),
         constraints: BoxConstraints(maxWidth: maxWidth),
         sheetAnimationStyle: style,
-        builder: builder,
+        builder: solid
+            ? builder
+            : (sheetContext) => _KitModalSurface(
+                radius: sheetRadius,
+                child: builder(sheetContext),
+              ),
       );
     case _KitModalShape.panel:
       return showDialog<T>(
@@ -53,8 +67,8 @@ Future<T?> _presentKitModal<T>(
         animationStyle: style,
         builder: (dialogContext) => Dialog(
           insetPadding: EdgeInsets.all(tokens.panelInset),
-          backgroundColor: tokens.panelSurface,
-          elevation: tokens.panelElevation,
+          backgroundColor: fill(tokens.panelSurface),
+          elevation: lift(tokens.panelElevation),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(tokens.panelRadius),
           ),
@@ -66,7 +80,12 @@ Future<T?> _presentKitModal<T>(
                   MediaQuery.sizeOf(dialogContext).height *
                   KitLayout.modalMaxHeight,
             ),
-            child: builder(dialogContext),
+            child: solid
+                ? builder(dialogContext)
+                : _KitModalSurface(
+                    radius: panelRadius,
+                    child: builder(dialogContext),
+                  ),
           ),
         ),
       );
@@ -94,9 +113,14 @@ Future<T?> _presentKitModal<T>(
               width: width,
               height: double.infinity,
               child: Material(
-                color: tokens.sideSheetSurface,
-                elevation: tokens.sideSheetElevation,
-                child: SafeArea(child: builder(dialogContext)),
+                color: fill(tokens.sideSheetSurface),
+                elevation: lift(tokens.sideSheetElevation),
+                child: solid
+                    ? SafeArea(child: builder(dialogContext))
+                    : _KitModalSurface(
+                        radius: BorderRadius.zero,
+                        child: SafeArea(child: builder(dialogContext)),
+                      ),
               ),
             ),
           );
@@ -112,6 +136,35 @@ Future<T?> _presentKitModal<T>(
           );
         },
       );
+  }
+}
+
+/// A modal's surface under any style but Solid at its defaults (Settings ›
+/// Appearance): the style's sheet surface (Soft: the ground's colour lit
+/// along its top edge). The route's Material is clear above it.
+class _KitModalSurface extends StatelessWidget {
+  const _KitModalSurface({required this.radius, required this.child});
+
+  final BorderRadius radius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = KitSurfaceLook.styleOf(context);
+    return kitSurfaceBox(
+      style: style,
+      decoration: KitSurfaceLook.decorate(
+        context,
+        solid: BoxDecoration(
+          color: KitTokens.of(context).sheetSurface,
+          borderRadius: radius,
+        ),
+        level: KitSurfaceLevel.surface2,
+        role: KitSurfaceRole.sheet,
+        borderRadius: radius,
+      ),
+      child: child,
+    );
   }
 }
 
@@ -175,6 +228,7 @@ class _KitSheetHost extends StatefulWidget {
     required this.loading,
     required this.dismissible,
     required this.sheetKey,
+    this.stepListenable,
   });
 
   final String title;
@@ -198,6 +252,7 @@ class _KitSheetHost extends StatefulWidget {
   final ValueListenable<bool>? loading;
   final bool dismissible;
   final Key? sheetKey;
+  final ValueListenable<KitSheetStep?>? stepListenable;
 
   @override
   State<_KitSheetHost> createState() => _KitSheetHostState();
@@ -223,6 +278,7 @@ class _KitSheetHostState extends State<_KitSheetHost> {
     widget.loading?.addListener(_rebuild);
     widget.primaryListenable?.addListener(_rebuild);
     widget.secondaryListenable?.addListener(_rebuild);
+    widget.stepListenable?.addListener(_rebuild);
     _live.add(this);
   }
 
@@ -240,6 +296,7 @@ class _KitSheetHostState extends State<_KitSheetHost> {
     widget.loading?.removeListener(_rebuild);
     widget.primaryListenable?.removeListener(_rebuild);
     widget.secondaryListenable?.removeListener(_rebuild);
+    widget.stepListenable?.removeListener(_rebuild);
     final ask = _ask;
     if (ask != null && !ask.done.isCompleted) ask.done.complete(false);
     _focus.dispose();
@@ -311,7 +368,10 @@ class _KitSheetHostState extends State<_KitSheetHost> {
     final shape = widget.shape;
     final ask = _ask;
     final size = MediaQuery.sizeOf(context);
-    final fill = widget.height != KitSheetHeight.content;
+    final step = widget.stepListenable?.value;
+    final height = step?.height ?? widget.height;
+    final title = step?.title ?? widget.title;
+    final fill = height != KitSheetHeight.content;
     final bottom = shape == _KitModalShape.bottom;
     final secondary = widget.secondaryListenable?.value ?? widget.secondary;
     final primary = widget.primaryListenable?.value ?? widget.primary;
@@ -320,7 +380,9 @@ class _KitSheetHostState extends State<_KitSheetHost> {
         ? _close
         : null;
     // One close control: a secondary that only dismisses replaces the X.
-    final showClose = !(widget.secondaryDismisses && secondary != null);
+    final showClose =
+        !(widget.secondaryDismisses && secondary != null) &&
+        ((step?.showClose ?? true) || !bottom);
     final loading = widget.loading?.value ?? false;
     final frameFill = fill || shape == _KitModalShape.side;
     final footer = widget.footer == null
@@ -330,10 +392,12 @@ class _KitSheetHostState extends State<_KitSheetHost> {
     Widget content = itemBuilder != null
         ? KitSheet.list(
             key: widget.sheetKey,
-            title: widget.title,
+            title: title,
             subtitle: widget.subtitle,
             icon: widget.icon,
             tone: widget.tone,
+            leading: step?.back,
+            step: step?.id,
             itemCount: widget.itemCount!,
             itemBuilder: itemBuilder,
             primary: primary,
@@ -349,10 +413,12 @@ class _KitSheetHostState extends State<_KitSheetHost> {
           )
         : KitSheet(
             key: widget.sheetKey,
-            title: widget.title,
+            title: title,
             subtitle: widget.subtitle,
             icon: widget.icon,
             tone: widget.tone,
+            leading: step?.back,
+            step: step?.id,
             primary: primary,
             secondary: secondary,
             tertiary: widget.tertiary,
@@ -407,7 +473,7 @@ class _KitSheetHostState extends State<_KitSheetHost> {
       ],
     );
     final maxHeight = size.height;
-    final double? fixed = switch ((shape, widget.height)) {
+    final double? fixed = switch ((shape, height)) {
       (_KitModalShape.side, _) => null,
       (_, KitSheetHeight.half) => maxHeight * KitLayout.sheetHalfHeight,
       (_KitModalShape.bottom, KitSheetHeight.full) =>

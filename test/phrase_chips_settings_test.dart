@@ -46,7 +46,10 @@ Widget _app(ConnectionController controller, {Locale? locale}) => MaterialApp(
   locale: locale,
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
-  home: SettingsScreen(controller: controller),
+  home: SettingsScreen(
+    controller: controller,
+    initialGroup: SettingsGroup.chat,
+  ),
 );
 
 Finder _row(String key) => find.byKey(ValueKey(key));

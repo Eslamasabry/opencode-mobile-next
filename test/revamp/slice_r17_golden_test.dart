@@ -39,6 +39,9 @@ Future<void> _shot(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   debugDefaultTargetPlatformOverride = TargetPlatform.android;
+  // A steady cursor: its blink phase moved with every animation length
+  // change before the shot (a 200 ms button ease hid it on 2026-10-27).
+  EditableText.debugDeterministicCursor = true;
   final boundary = GlobalKey();
   try {
     await withClock(Clock.fixed(usageNow), () async {
@@ -55,6 +58,7 @@ Future<void> _shot(
   } finally {
     await tester.pumpWidget(const SizedBox.shrink());
     debugDefaultTargetPlatformOverride = null;
+    EditableText.debugDeterministicCursor = false;
   }
 }
 

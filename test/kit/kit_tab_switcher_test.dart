@@ -132,6 +132,81 @@ void main() {
     });
   });
 
+  group('studio additions', () {
+    testWidgets('accent fills the selected tab with the accent', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          Align(
+            alignment: AlignmentDirectional.topStart,
+            child: KitTabStrip(
+              tabs: _tabs(3),
+              selected: 1,
+              accent: true,
+              onSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+      final roles = KitTokens.of(
+        tester.element(find.byKey(const ValueKey('tab-1'))),
+      ).roles;
+      final fill = tester.widget<AnimatedContainer>(
+        find
+            .descendant(
+              of: find.byKey(const ValueKey('tab-1')),
+              matching: find.byType(AnimatedContainer),
+            )
+            .first,
+      );
+      expect((fill.decoration! as ShapeDecoration).color, roles.accent);
+    });
+
+    testWidgets('a swipe asks for the next or previous destination, mirrored '
+        'in right to left', (tester) async {
+      final steps = <int>[];
+      Widget body(TextDirection d) => _host(
+        direction: d,
+        SizedBox(
+          height: 300,
+          child: KitTabSwitcher(
+            index: 1,
+            onSwipe: steps.add,
+            children: const [_Page('A'), _Page('B'), _Page('C')],
+          ),
+        ),
+      );
+      await tester.pumpWidget(body(TextDirection.ltr));
+      await tester.fling(find.text('B 0'), const Offset(-300, 0), 1200);
+      await tester.pumpAndSettle();
+      expect(steps, [1]);
+      await tester.pumpWidget(body(TextDirection.rtl));
+      await tester.fling(find.text('B 0'), const Offset(-300, 0), 1200);
+      await tester.pumpAndSettle();
+      expect(steps, [1, -1]);
+    });
+
+    testWidgets('shrinkWrap takes the chosen destination height', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          ListView(
+            children: [
+              KitTabSwitcher(
+                index: 0,
+                shrinkWrap: true,
+                children: const [SizedBox(height: 120), SizedBox(height: 300)],
+              ),
+            ],
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byType(KitTabSwitcher)).height, 120);
+    });
+  });
+
   group('counts', () {
     testWidgets('null shows no number; 3 shows "3" and "Working, 3"', (
       tester,

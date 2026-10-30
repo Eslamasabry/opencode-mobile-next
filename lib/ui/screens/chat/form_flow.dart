@@ -67,6 +67,7 @@ Widget capturedFormRequestCard(
   bool secondary = false,
   bool inList = false,
   VoidCallback? onAnswer,
+  KitRequestLook look = KitRequestLook.standard,
 }) => ListenableBuilder(
   key: key,
   listenable: FormAnswerReceipts.instance,
@@ -102,6 +103,7 @@ Widget capturedFormRequestCard(
           onAnswer ??
           () => unawaited(presentCapturedForm(context, connection, request)),
       inList: inList,
+      look: look,
     );
   },
 );

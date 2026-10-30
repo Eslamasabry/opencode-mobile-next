@@ -167,7 +167,7 @@ void main() {
   testWidgets('an OpenCode Termux already has is started, not downloaded '
       'again', (tester) async {
     termux.inventoryOutput =
-        'ubuntu=installed\nversion=2.0.29\nruntime=opencode2\n';
+        'ubuntu=installed\nversion=2.1.1\nruntime=opencode2\n';
     store.saved.add(
       ServerProfile(
         id: 'phone',
@@ -242,7 +242,7 @@ void main() {
       ..devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     termux.inventoryOutput =
-        'ubuntu=installed\nversion=2.0.29\nruntime=opencode2\n';
+        'ubuntu=installed\nversion=2.1.1\nruntime=opencode2\n';
     store.saved.add(
       ServerProfile(
         id: 'phone',

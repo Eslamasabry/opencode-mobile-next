@@ -12,6 +12,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
 import 'package:opencode_mobile/ui/kit/kit_diff_view.dart';
+import 'package:opencode_mobile/ui/kit/kit_effects.dart';
 import 'package:opencode_mobile/ui/kit/kit_icon_button.dart';
 import 'package:opencode_mobile/ui/kit/kit_menu.dart';
 
@@ -896,6 +897,40 @@ void main() {
           expect(tester.takeException(), isNull);
         });
       }
+    }
+  });
+
+  testWidgets('folded: the code frame sits in the gutter, Solid stays put', (
+    tester,
+  ) async {
+    Future<Rect> frameIn(KitSurfaceStyle style) async {
+      await _pump(
+        tester,
+        KitEffectsScope(
+          effects: KitEffects(surfaceStyle: style),
+          child: KitDiffView(files: [_sixty()], folded: true),
+        ),
+      );
+      return tester.getRect(
+        find
+            .ancestor(
+              of: find.text('changed line 31'),
+              matching: find.byType(Focus),
+            )
+            .first,
+      );
+    }
+
+    final solid = await frameIn(KitSurfaceStyle.solid);
+    expect(solid.left, 0, reason: 'Solid keeps its full-width lines');
+    for (final style in [
+      KitSurfaceStyle.soft,
+      KitSurfaceStyle.brutal,
+      KitSurfaceStyle.paper,
+    ]) {
+      final framed = await frameIn(style);
+      expect(framed.left, 16, reason: '$style insets at the start gutter');
+      expect(framed.right, 412 - 16, reason: '$style insets at the end');
     }
   });
 }

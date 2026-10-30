@@ -162,20 +162,27 @@ class _AgentSignInTerminalScreenState
   Future<void> _check() async {
     setState(() => _checking = true);
     final agents = widget.agents;
-    final bool signedIn;
-    if (agents is PhoneAgentAccountSource) {
-      signedIn = await (agents as PhoneAgentAccountSource).confirmAgentSignIn(
-        widget.agentId,
-      );
-    } else {
-      await agents.recheckAgentSignIn(widget.agentId);
-      final row = agents.agentRows
-          .where((row) => row.id == widget.agentId)
-          .firstOrNull;
-      signedIn =
-          agents.agentSignInState(widget.agentId)?.phase ==
-              AgentSignInPhase.signedIn ||
-          (row?.chatSelectable ?? false);
+    bool signedIn;
+    // A check that fails ends in "not signed in yet" with Start again, never
+    // in "Checking sign-in…" without end (issue #95). The check itself is
+    // bounded by the controller.
+    try {
+      if (agents is PhoneAgentAccountSource) {
+        signedIn = await (agents as PhoneAgentAccountSource).confirmAgentSignIn(
+          widget.agentId,
+        );
+      } else {
+        await agents.recheckAgentSignIn(widget.agentId);
+        final row = agents.agentRows
+            .where((row) => row.id == widget.agentId)
+            .firstOrNull;
+        signedIn =
+            agents.agentSignInState(widget.agentId)?.phase ==
+                AgentSignInPhase.signedIn ||
+            (row?.chatSelectable ?? false);
+      }
+    } catch (_) {
+      signedIn = false;
     }
     if (!mounted) return;
     if (signedIn) {

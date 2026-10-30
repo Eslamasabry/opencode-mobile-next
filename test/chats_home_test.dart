@@ -5,16 +5,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/chat_feed.dart';
+import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/ui/kit/kit_bidi.dart';
 import 'package:opencode_mobile/ui/kit/kit_context_ring.dart';
+import 'package:opencode_mobile/ui/kit/kit_feed_item.dart' show KitFeedItem;
+import 'package:opencode_mobile/ui/kit/kit_icon_button.dart' show KitIconButton;
 import 'package:opencode_mobile/ui/kit/motion/kit_reveal.dart' show KitEntrance;
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart'
     show leftoverNoticeLine;
 import 'package:opencode_mobile/ui/widgets/work_status_line.dart'
     show WorkRunawayNotice;
 import 'package:opencode_mobile/ui/screens/chats/chats_home_screen.dart';
+import 'package:opencode_mobile/ui/screens/home_opening.dart';
+import 'package:opencode_mobile/state/session_inventory_cache.dart'
+    show SessionPreview;
+import 'package:opencode_mobile/ui/app_theme.dart' show AppStatusTone;
+import 'package:opencode_mobile/ui/kit/kit_tappable.dart' show KitTappable;
 
 import '../tool/capture/fixtures.dart' show loadCaptureFonts;
+import 'support/agents_fakes.dart' show FakePhoneAgentsSource;
 import 'support/chats_fakes.dart';
 
 final _now = DateTime(2026, 10, 3, 12);
@@ -97,6 +106,25 @@ double _y(WidgetTester tester, String text) =>
 void main() {
   setUpAll(loadCaptureFonts);
 
+  // Audit P2-7 (2026-10-28): at 1280 the rows ran the whole window with
+  // their words in the first third. On a wide window the list keeps a
+  // readable width, centred; a phone keeps the full width.
+  clocked('a wide window keeps the list at a readable width, centred', (
+    tester,
+  ) async {
+    await _pump(tester, FakeChatsHost(_source()));
+    final row = tester.getRect(find.byType(KitFeedItem).first);
+    expect(row.width, lessThanOrEqualTo(720));
+    expect(row.center.dx, closeTo(1280 / 2, 1));
+    final title = tester.getTopLeft(find.text('Conversations').first);
+    expect(title.dx, greaterThan(row.left - 1));
+  }, size: const Size(1280, 800));
+
+  clocked('a phone keeps the list at the full width', (tester) async {
+    await _pump(tester, FakeChatsHost(_source()));
+    expect(tester.getRect(find.byType(KitFeedItem).first).width, 412);
+  });
+
   clocked('lists Today, then Earlier, newest first', (tester) async {
     await _pump(tester, FakeChatsHost(_source()));
     expect(find.text('Conversations'), findsWidgets);
@@ -113,15 +141,23 @@ void main() {
       lessThan(_y(tester, KitBidi.auto('Old idea'))),
     );
     // The two time groups, no group of its own for a chat that needs you
-    // (its amber word and the chip say it), and a subagent is not a row.
-    expect(find.text('Needs you'), findsNothing);
+    // (its amber word and the line under the title say it), and a subagent
+    // is not a row. The one "Needs you" is that line.
+    expect(find.text('Needs you'), findsOneWidget);
+    expect(
+      _y(tester, 'Needs you'),
+      lessThan(_y(tester, KitBidi.auto('Fix the login bug'))),
+    );
     expect(find.text('Today'), findsOneWidget);
     expect(find.text('Earlier'), findsOneWidget);
     expect(find.text(KitBidi.auto('Subagent work')), findsNothing);
     // Two lines per row: the state word only when it matters, then the
     // project and the time. No preview, no Git mark.
     expect(find.textContaining('Working', findRichText: true), findsWidgets);
-    expect(find.textContaining('3d ago', findRichText: true), findsOneWidget);
+    expect(
+      find.textContaining('3d\u00a0ago', findRichText: true),
+      findsOneWidget,
+    );
     expect(find.text(KitBidi.auto('Allow running the tests?')), findsNothing);
     expect(find.text('Git'), findsNothing);
   });
@@ -155,7 +191,7 @@ void main() {
     );
     expect(find.textContaining('Done', findRichText: true), findsOneWidget);
     expect(
-      find.textContaining('Done \u00b7', findRichText: true),
+      find.textContaining('Done\u00a0\u00b7', findRichText: true),
       findsOneWidget,
     );
     expect(find.textContaining('Needs you', findRichText: true), findsWidgets);
@@ -172,6 +208,28 @@ void main() {
         ),
       ),
     );
+    expect(find.textContaining('Done', findRichText: true), findsNothing);
+  });
+
+  clocked('a reply the person stopped says Stopped, not Done', (tester) async {
+    await _pump(
+      tester,
+      FakeChatsHost(
+        FakeChatFeedSource(
+          items: [
+            chat(
+              'a',
+              'Fix the login bug',
+              finishedUnseen: true,
+              stoppedByPerson: true,
+              at: _now.subtract(const Duration(minutes: 2)),
+            ),
+          ],
+          projects: [project('alpha', chats: 1)],
+        ),
+      ),
+    );
+    expect(find.textContaining('Stopped', findRichText: true), findsOneWidget);
     expect(find.textContaining('Done', findRichText: true), findsNothing);
   });
 
@@ -208,9 +266,9 @@ void main() {
         ),
       ),
     );
-    // No group header says it a third time; the chip still counts them.
+    // No group header says it again; the line under the title counts them.
     expect(find.text('Needs you'), findsNothing);
-    expect(find.text('Needs you · 2'), findsOneWidget);
+    expect(find.text('2 need you'), findsOneWidget);
     expect(find.text('Today'), findsOneWidget);
     expect(find.text('Earlier'), findsOneWidget);
     double y(String title) => _y(tester, KitBidi.auto(title));
@@ -305,29 +363,35 @@ void main() {
     expect(find.textContaining('Working', findRichText: true), findsOneWidget);
   });
 
-  clocked('the Needs you chip shows its count and filters', (tester) async {
-    await _pump(tester, FakeChatsHost(_source()));
-    expect(find.text('Needs you · 1'), findsOneWidget);
-    await tester.tap(find.text('Needs you · 1'));
+  clocked('the amber line under the title counts and opens the Inbox', (
+    tester,
+  ) async {
+    final host = FakeChatsHost(_source());
+    await _pump(tester, host);
+    // Said once: under the title, not again as a chip.
+    expect(find.byKey(const ValueKey('chats-filter-needs-you')), findsNothing);
+    expect(find.text('Needs you'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('chats-needs-you')));
     await tester.pump();
-    expect(find.text(KitBidi.auto('Fix the login bug')), findsOneWidget);
-    expect(find.text(KitBidi.auto('Add dark mode')), findsNothing);
-    expect(find.text(KitBidi.auto('Explain the build')), findsNothing);
-    await tester.tap(find.text('Needs you · 1'));
-    await tester.pump();
+    expect(host.inboxOpens, 1);
+    // Not a filter any more: the list stays whole.
     expect(find.text(KitBidi.auto('Explain the build')), findsOneWidget);
+    expect(find.text(KitBidi.auto('Fix the login bug')), findsOneWidget);
   });
 
-  clocked('Running filters, and with Needs you means either', (tester) async {
+  clocked('nothing waiting: no line under the title', (tester) async {
+    final host = FakeChatsHost(_source())..inboxCountOverride = 0;
+    await _pump(tester, host);
+    expect(find.byKey(const ValueKey('chats-needs-you')), findsNothing);
+    expect(find.text('Conversations'), findsOneWidget);
+  });
+
+  clocked('Running filters the list', (tester) async {
     await _pump(tester, FakeChatsHost(_source()));
     await tester.tap(find.byKey(const ValueKey('chats-filter-running')));
     await tester.pump();
     expect(find.text(KitBidi.auto('Add dark mode')), findsOneWidget);
     expect(find.text(KitBidi.auto('Fix the login bug')), findsNothing);
-    await tester.tap(find.text('Needs you · 1'));
-    await tester.pump();
-    expect(find.text(KitBidi.auto('Add dark mode')), findsOneWidget);
-    expect(find.text(KitBidi.auto('Fix the login bug')), findsOneWidget);
     expect(find.text(KitBidi.auto('Explain the build')), findsNothing);
   });
 
@@ -356,7 +420,7 @@ void main() {
     expect(find.text(KitBidi.auto('Old idea')), findsOneWidget);
     expect(find.text(KitBidi.auto('Fix the login bug')), findsNothing);
     expect(find.text('All projects'), findsNothing);
-    // Needs you counts inside the chosen project.
+    // Needs you counts what the Inbox lists: every project.
     expect(find.text('Needs you'), findsOneWidget);
   });
 
@@ -393,14 +457,23 @@ void main() {
     expect(find.text(KitBidi.auto('Fix the login bug')), findsOneWidget);
   });
 
-  clocked('no chats at all offers Start a chat', (tester) async {
+  clocked('no chats at all: the calm line, one New conversation, no '
+      'filters', (tester) async {
     await _pump(tester, FakeChatsHost(FakeChatFeedSource()));
     expect(find.text('No conversations yet'), findsOneWidget);
-    expect(find.text('Start a conversation'), findsOneWidget);
-    expect(find.text('New conversation'), findsNothing);
+    expect(
+      find.text('Say what you want to build, and an agent gets to work.'),
+      findsOneWidget,
+    );
+    // One main action (the floating + is not drawn over it).
+    expect(find.text('New conversation'), findsOneWidget);
+    expect(find.byKey(const ValueKey('chats-new-chat')), findsNothing);
+    // Nothing to filter on a list that holds nothing yet.
+    expect(find.byKey(const ValueKey('chats-filter-running')), findsNothing);
   });
 
-  clocked('no matches offers Clear filters, which clears them', (tester) async {
+  clocked('Running with nothing running says so, with New conversation and '
+      'a way back to all', (tester) async {
     final source = _source()
       ..items = [
         chat(
@@ -410,12 +483,13 @@ void main() {
         ),
       ];
     await _pump(tester, FakeChatsHost(source));
-    await tester.tap(find.text('Needs you'));
+    await tester.tap(find.byKey(const ValueKey('chats-filter-running')));
     await tester.pump();
-    expect(find.text('No matching conversations'), findsOneWidget);
-    // Clear filters is the one primary action here (the shell allows one).
-    expect(find.text('New conversation'), findsNothing);
-    await tester.tap(find.text('Clear filters'));
+    expect(find.text('Nothing running'), findsOneWidget);
+    // One main action: the state's own New conversation, no floating +.
+    expect(find.text('New conversation'), findsOneWidget);
+    expect(find.byKey(const ValueKey('chats-new-chat')), findsNothing);
+    await tester.tap(find.text('Show all conversations'));
     await tester.pump();
     expect(find.text(KitBidi.auto('Explain the build')), findsOneWidget);
   });
@@ -470,10 +544,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(KitBidi.auto('beta')).last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('New conversation'));
+    await tester.tap(find.byKey(const ValueKey('chats-new-chat')));
     await tester.pumpAndSettle();
-    expect(find.text('What should we work on?'), findsOneWidget);
-    expect(find.text(KitBidi.auto('beta')), findsWidgets);
+    expect(find.text('What would you like to build?'), findsOneWidget);
+    expect(find.textContaining(KitBidi.auto('beta')), findsWidgets);
   });
 
   clocked('an initial filter applies, and a new one replaces it', (
@@ -623,6 +697,138 @@ void main() {
     },
   );
 
+  // Jitter J3 (2026-10-28): this server's saved rows stand in until its
+  // live rows land; beside the agents those carry the connection's id. A
+  // row keeping its place must not blink in again as if it were new.
+  clocked('a row whose connection id settles keeps its place, no entrance', (
+    tester,
+  ) async {
+    final source = _source();
+    await _pump(tester, FakeChatsHost(source));
+    source.items = [
+      for (final item in source.items)
+        chat(
+          item.sessionID,
+          item.title,
+          dir: item.directory,
+          project: item.projectName,
+          git: item.isGit,
+          status: item.status,
+          at: item.lastActivity,
+          parent: item.parentID,
+          sourceId: 'opencode',
+        ),
+    ];
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.byKey(const ValueKey('chats-filter-running')));
+      await tester.pump();
+    }
+    expect(find.byType(KitEntrance), findsNothing);
+  });
+
+  // Jitter J2 (2026-10-29): on a cold start the home is already built
+  // while the server opens, with the rows the list kept from last time,
+  // read-only. When it answers the same screen carries on: the rows keep
+  // their place, play no entrance, and open their conversations now.
+  clocked('while the server opens its kept rows show read-only, and stay put '
+      'when it answers', (tester) async {
+    final host = FakeChatsHost(_source());
+    final opening = HomeOpening(
+      rows: const [],
+      status: 'Connecting',
+      tone: AppStatusTone.progress,
+      onServer: () {},
+    );
+    await _pump(tester, host, home: ChatsHomeScreen(opening: opening));
+    final title = KitBidi.auto('Explain the build');
+    final y = _y(tester, title);
+    final row = find.byKey(const ValueKey('chats-row-c'));
+    expect(
+      find.descendant(of: row, matching: find.byType(KitTappable)),
+      findsNothing,
+    );
+    expect(find.byKey(const ValueKey('chats-new-chat')), findsNothing);
+    await tester.tap(find.text(title));
+    await tester.pump();
+    expect(host.opened, isEmpty);
+
+    await tester.pumpWidget(chatsApp(host, const ChatsHomeScreen()));
+    for (var i = 0; i < 16; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(_y(tester, title), y, reason: 'frame $i');
+    }
+    expect(find.byType(KitEntrance), findsNothing);
+    expect(
+      find.descendant(of: row, matching: find.byType(KitTappable)),
+      findsOne,
+    );
+    expect(find.byKey(const ValueKey('chats-new-chat')), findsOne);
+    await tester.tap(find.text(title));
+    await tester.pump();
+    expect(host.opened, isNotEmpty);
+  });
+
+  // 4074 on the emulator: before the server answers, nothing says whether it
+  // lists every project, so the "this project only" line came and went and
+  // the rows moved up when it connected.
+  clocked('the this-project-only line waits for the server to answer', (
+    tester,
+  ) async {
+    final host = FakeChatsHost(_source()..acrossProjects = false);
+    final opening = HomeOpening(
+      rows: const [],
+      status: 'Connecting',
+      tone: AppStatusTone.progress,
+      onServer: () {},
+    );
+    await _pump(tester, host, home: ChatsHomeScreen(opening: opening));
+    expect(find.byKey(const ValueKey('chats-only-project')), findsNothing);
+    await tester.pumpWidget(chatsApp(host, const ChatsHomeScreen()));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('chats-only-project')), findsOneWidget);
+  });
+
+  // With no rows kept yet, the titles saved with the opening stand in, and
+  // they stay through the frames where the server has answered but its list
+  // is not read yet: never an empty list or placeholders in between.
+  clocked('saved titles stand in until the answered server lists its own', (
+    tester,
+  ) async {
+    final source = _source();
+    final live = source.items;
+    source.items = const [];
+    final host = FakeChatsHost(source);
+    final opening = HomeOpening(
+      rows: [
+        for (final item in live)
+          if (item.parentID == null)
+            SessionPreview(
+              item.sessionID,
+              item.title,
+              item.lastActivity.millisecondsSinceEpoch,
+            ),
+      ],
+      status: 'Connecting',
+      tone: AppStatusTone.progress,
+      onServer: () {},
+    );
+    await _pump(tester, host, home: ChatsHomeScreen(opening: opening));
+    final title = KitBidi.auto('Explain the build');
+    final y = _y(tester, title);
+    // Answered, its list not read yet: still the titles, in place.
+    await tester.pumpWidget(chatsApp(host, const ChatsHomeScreen()));
+    await tester.pump();
+    expect(_y(tester, title), y);
+    expect(find.text('No conversations yet'), findsNothing);
+    // Its list arrives.
+    source.items = live;
+    HomeOpening? answered;
+    await tester.pumpWidget(chatsApp(host, ChatsHomeScreen(opening: answered)));
+    await tester.pump();
+    expect(find.byType(KitFeedItem), findsWidgets);
+    expect(find.text('No conversations yet'), findsNothing);
+  });
+
   clocked('a row slow to open says Opening… until it opens', (tester) async {
     final host = FakeChatsHost(_source())..openGate = Completer<String?>();
     await _pump(tester, host);
@@ -638,9 +844,9 @@ void main() {
   clocked('quiet lines scroll with the feed, not in the fixed header', (
     tester,
   ) async {
-    final source = _source()..unreachableServers = ['termux'];
+    final source = _source()..complete = false;
     await _pump(tester, FakeChatsHost(source));
-    final line = find.byKey(const ValueKey('chats-unreachable'));
+    final line = find.byKey(const ValueKey('chats-incomplete'));
     expect(line, findsOneWidget);
     expect(
       find.ancestor(of: line, matching: find.byType(Scrollable)),
@@ -656,8 +862,73 @@ void main() {
     );
   });
 
-  clocked('a server that isn\'t answering is named, with Try again in the '
-      'connections sheet', (tester) async {
+  // Sweep 3680: "Some conversations couldn't load" was a dead end. It names
+  // the connection and tapping Try again retries the list.
+  clocked('an incomplete list names the connection and retries on Try again', (
+    tester,
+  ) async {
+    final source = _source()
+      ..complete = false
+      ..incompleteSources = ['Kilo'];
+    final sources = FakeListSources(const [
+      ChatListSource(
+        id: 'kilo',
+        name: 'Kilo',
+        kind: ChatListSourceKind.openCode,
+        shown: true,
+      ),
+    ]);
+    await _pump(tester, FakeChatsHost(source)..listSources = sources);
+    final line = find.byKey(const ValueKey('chats-incomplete'));
+    expect(
+      find.descendant(
+        of: line,
+        matching: find.textContaining("couldn't load", findRichText: true),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: line,
+        matching: find.textContaining('Kilo', findRichText: true),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('chats-incomplete-retry')));
+    await tester.pump();
+    expect(sources.retried, ['kilo']);
+    expect(source.refreshes, greaterThan(0));
+  });
+
+  // Emulator 3720: each phone agent's list is labelled "Phone agents", so the
+  // line read "OpenCode, Phone agents, Phone agents, Phone agents couldn't
+  // load". Each name shows once.
+  clocked('an incomplete list names each connection once', (tester) async {
+    final source = _source()
+      ..complete = false
+      ..incompleteSources = [
+        'OpenCode',
+        'Phone agents',
+        'Phone agents',
+        'Phone agents',
+      ];
+    await _pump(tester, FakeChatsHost(source));
+    final line = find.byKey(const ValueKey('chats-incomplete'));
+    final words = tester
+        .widgetList<RichText>(
+          find.descendant(of: line, matching: find.byType(RichText)),
+        )
+        .map((t) => t.text.toPlainText())
+        .join(' ');
+    expect('Phone agents'.allMatches(words).length, 1, reason: words);
+    expect(words, contains('OpenCode'));
+  });
+
+  // Owner's phone, 2026-10-20: the line was body text glued to "Today" with
+  // no way forward. It is the one quiet status line now, above the list,
+  // with Try again and ×; and the connections chip waits for a real choice.
+  clocked("a server that isn't answering is the quiet status line with Try "
+      'again and ×', (tester) async {
     final source = _source()..unreachableServers = ['termux'];
     final sources = FakeListSources(const [
       ChatListSource(
@@ -676,14 +947,58 @@ void main() {
       ),
     ]);
     await _pump(tester, FakeChatsHost(source)..listSources = sources);
-    expect(find.byKey(const ValueKey('chats-unreachable')), findsOneWidget);
+    final status = find.byKey(const ValueKey('chats-unreachable'));
+    expect(status, findsOneWidget);
+    // In the status slot, not in the scrolling list.
+    expect(
+      find.ancestor(of: status, matching: find.byType(CustomScrollView)),
+      findsNothing,
+    );
+    expect(
+      find.textContaining("isn't answering", findRichText: true),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('chats-incomplete')), findsNothing);
+    // Only one connection answers: there is nothing to choose between.
+    expect(find.byKey(const ValueKey('chats-filter-sources')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('chats-unreachable-retry')));
+    await tester.pump();
+    expect(sources.retried, ['termux']);
+    await tester.tap(
+      find.descendant(of: status, matching: find.byType(KitIconButton)),
+    );
+    // It folds away (a short exit), then is gone until the set changes.
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+    expect(
+      find.textContaining("isn't answering", findRichText: true),
+      findsNothing,
+    );
+  });
+
+  clocked('two connections answering: the connections chip is there', (
+    tester,
+  ) async {
+    final sources = FakeListSources(const [
+      ChatListSource(
+        id: 'ubuntu',
+        name: 'In-app Ubuntu',
+        kind: ChatListSourceKind.openCode,
+        shown: true,
+        main: true,
+      ),
+      ChatListSource(
+        id: 'termux',
+        name: 'Termux',
+        kind: ChatListSourceKind.openCode,
+        shown: true,
+      ),
+    ]);
+    await _pump(tester, FakeChatsHost(_source())..listSources = sources);
     await tester.tap(find.byKey(const ValueKey('chats-filter-sources')));
     await tester.pumpAndSettle();
-    expect(find.text("Isn't answering"), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('chats-source-retry-termux')));
-    await tester.pumpAndSettle();
-    expect(sources.retried, ['termux']);
+    expect(find.text('Connections in this list'), findsOneWidget);
   });
 
   clocked('a conversation waiting on you answers right in the list', (
@@ -710,16 +1025,48 @@ void main() {
     expect(find.byKey(const ValueKey('chats-filter-sources')), findsNothing);
   });
 
-  clocked('says which conversations are still loading while rows show', (
+  // Jitter J6 (2026-10-28): a "Loading Kilo conversations…" line above the
+  // rows came and went, and the whole list moved 33 dp each time. The bar
+  // under the filters says it, and its label names what is on the way.
+  clocked('the rows hold still while more conversations load and after', (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     final source = _source()..stillLoading = ['Claude Code'];
     await _pump(tester, FakeChatsHost(source));
-    expect(find.byKey(const ValueKey('chats-still-loading')), findsOneWidget);
     expect(find.byKey(const ValueKey('kit-loading-bar')), findsOneWidget);
-    expect(find.textContaining('Loading'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp('Loading .*Claude Code.* conversations')),
+      findsOneWidget,
+    );
+    final loading = _y(tester, KitBidi.auto('Fix the login bug'));
     await _pump(tester, FakeChatsHost(_source()));
-    expect(find.byKey(const ValueKey('chats-still-loading')), findsNothing);
+    expect(find.byKey(const ValueKey('kit-loading-bar')), findsNothing);
+    expect(_y(tester, KitBidi.auto('Fix the login bug')), loading);
+    semantics.dispose();
+  });
+
+  // Audit #14 (2026-10-28): "Today" sat 4 dp under the signed-out notice's
+  // button and 8 dp over its own rows, so it read as part of the notice.
+  clocked('the first section label sits with its rows, not the notice', (
+    tester,
+  ) async {
+    final host = FakeChatsHost(_source())
+      ..phoneAgents = (FakePhoneAgentsSource()
+        ..lines = const [
+          PhoneAgentStatusLine(
+            agentId: 'claude',
+            agentName: 'Claude Code',
+            kind: PhoneAgentStatusLineKind.signedOut,
+          ),
+        ]);
+    await _pump(tester, host);
+    final button = tester.getRect(
+      find.byKey(const ValueKey('agents-status-sign-in-claude')),
+    );
+    final label = tester.getRect(find.text('Today'));
+    final row = tester.getRect(find.byType(KitFeedItem).first);
+    expect(label.top - button.bottom, greaterThan(row.top - label.bottom));
   });
 
   clocked('Other folders is hidden when no conversation lives there', (

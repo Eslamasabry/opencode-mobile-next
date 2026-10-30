@@ -406,7 +406,13 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(500, 1600));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(
-        app(SettingsScreen(controller: controller), scoped: controller),
+        app(
+          SettingsScreen(
+            controller: controller,
+            initialGroup: SettingsGroup.ai,
+          ),
+          scoped: controller,
+        ),
       );
       await settle(tester);
       // Tools (which holds Plugins) is the way in; it exists whether the

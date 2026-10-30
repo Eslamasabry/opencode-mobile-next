@@ -76,6 +76,40 @@ void main() {
     );
   });
 
+  // Owner phone, 2026-10-27: an agent's message, right-aligned in the value
+  // column, read ragged at its start.
+  testWidgets('a value that is prose starts under its label', (tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    const prose =
+        'Start on task #1: read the Browse suites, then tell me which tests '
+        'still fail after the last edit.';
+    await tester.pumpWidget(
+      _host(
+        const KitKeyValue(
+          rows: [
+            KitKeyValueRow(label: 'Message', value: prose),
+            KitKeyValueRow(label: 'Files changed', value: '7'),
+          ],
+        ),
+      ),
+    );
+    expect(
+      tester.getTopLeft(find.text(prose)).dx,
+      tester.getTopLeft(find.text('Message')).dx,
+    );
+    expect(
+      tester.getTopLeft(find.text(prose)).dy,
+      greaterThan(tester.getBottomLeft(find.text('Message')).dy - 1),
+    );
+    // A short fact keeps its column.
+    expect(
+      tester.getTopLeft(find.text('7')).dx,
+      greaterThan(tester.getTopRight(find.text('Files changed')).dx),
+    );
+  });
+
   testWidgets('reads as one phrase per row', (tester) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(_host(const KitKeyValue(rows: _rows)));

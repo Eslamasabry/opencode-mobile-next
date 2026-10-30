@@ -32,6 +32,26 @@ void main() {
   });
 
   group('bridge', () {
+    test('status reads asked at the same time share one call; a read after '
+        'another request is fresh', () async {
+      answer = (call) => call.method == 'status' ? {'installed': true} : null;
+      final linux = BuiltinLinux();
+      final reads = await Future.wait([
+        linux.status(),
+        BuiltinLinux().status(),
+        linux.status(),
+      ]);
+      expect(calls.map((c) => c.method), ['status']);
+      expect(reads.every((s) => s.installed), isTrue);
+
+      calls.clear();
+      final before = linux.status();
+      await linux.startServer('true');
+      final after = linux.status();
+      await Future.wait([before, after]);
+      expect(calls.map((c) => c.method), ['status', 'startServer', 'status']);
+    });
+
     test('status reads the contract map', () async {
       answer = (_) => {
         'installed': true,
@@ -312,7 +332,7 @@ void main() {
       );
       expect(
         BuiltinLinux.installOpenCodeScript(),
-        contains("export OC_REQUESTED_VERSION='2.0.29'"),
+        contains("export OC_REQUESTED_VERSION='2.1.1'"),
       );
       expect(
         BuiltinLinux.serverScript(),
@@ -536,9 +556,9 @@ void main() {
         );
         return;
       }
-      const reviewedLength = 56251;
+      const reviewedLength = 56249;
       const reviewedHash =
-          'cefbc7a97bf7adf983723e7eb6aa5af9aa60d83c98bf3f242eebbb63cfc02922';
+          '2136b3927c9b35f61f89f960991554aae07b53da39a5bb9f9298796493b968f8';
       expect(script.length, reviewedLength);
       expect(sha256.convert(utf8.encode(script)).toString(), reviewedHash);
     });

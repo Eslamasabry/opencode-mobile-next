@@ -219,6 +219,26 @@ class _NativeLinux extends BuiltinLinux {
     confirmations++;
   }
 
+  /// Native refuses (activity not resumed, a restore in flight).
+  bool presenceRefused = false;
+  int presenceResets = 0;
+
+  @override
+  Future<Map<Object?, Object?>> confirmServerPresence(String profileId) async {
+    if (presenceRefused ||
+        boundProfile != profileId ||
+        !running ||
+        !wanted ||
+        scheduled ||
+        budget!['pending'] == true) {
+      throw StateError('Presence not confirmed');
+    }
+    if (budget!['attempts'] == 0) return Map.of(budget!);
+    budget = _budget(revision: (budget!['revision']! as int) + 1);
+    presenceResets++;
+    return Map.of(budget!);
+  }
+
   @override
   Future<Map<Object?, Object?>> confirmManualServerStart(
     String profileId,
@@ -346,6 +366,9 @@ void main() {
         jsonEncode(_budget(attempts: 2)),
       );
       linux.running = true;
+      // Migration alone: an open app's healthy check would also start the
+      // count again (tested on its own below).
+      linux.presenceRefused = true;
       await recovery.check(phone);
       expect(recovery.value.phase, BuiltinRecoveryPhase.ready);
       expect(linux.stagedMigrations.single['attempts'], 2);
@@ -375,6 +398,7 @@ void main() {
       linux.running = true;
       linux.boundProfile = phone.id;
       linux.enabled = true;
+      linux.presenceRefused = true;
       await recovery.check(phone);
       expect(linux.boundProfile, phone.id);
       expect(recovery.value.phase, BuiltinRecoveryPhase.ready);
@@ -513,6 +537,94 @@ void main() {
       expect(acts, isEmpty);
     },
   );
+
+  test(
+    'an open app with a healthy restored server starts the count again',
+    () async {
+      // Three update or boot restores used the budget; each brought the
+      // server back. The fourth was refused (phone, 2026-10-25 19:33).
+      await prefs.setString(
+        BuiltinServerRecovery.keyFor(phone.id),
+        jsonEncode({'version': 2, 'nativeAuthority': true}),
+      );
+      linux.budget = _budget(attempts: 3, revision: 5);
+      linux.running = true;
+      linux.boundProfile = phone.id;
+      linux.enabled = true;
+      await recovery.check(phone);
+      expect(recovery.value.phase, BuiltinRecoveryPhase.ready);
+      expect(linux.presenceResets, 1);
+      expect(linux.attempts, 0);
+      expect(linux.directStarts, 0);
+    },
+  );
+
+  test('the reset happens once per visit', () async {
+    // A server that keeps crashing while the app is open still runs out of
+    // tries: one reset per visit, the next only after leaving and coming
+    // back.
+    await prefs.setString(
+      BuiltinServerRecovery.keyFor(phone.id),
+      jsonEncode({'version': 2, 'nativeAuthority': true}),
+    );
+    linux.budget = _budget(attempts: 3, revision: 5);
+    linux.running = true;
+    linux.boundProfile = phone.id;
+    linux.enabled = true;
+    await recovery.check(phone);
+    expect(linux.presenceResets, 1);
+    linux.budget = _budget(attempts: 3, revision: 9);
+    await recovery.check(phone);
+    expect(linux.presenceResets, 1);
+    expect(linux.attempts, 3);
+    recovery.setForeground(false);
+    recovery.setForeground(true);
+    await recovery.check(phone);
+    expect(linux.presenceResets, 2);
+    expect(linux.attempts, 0);
+  });
+
+  test(
+    'a short visit after a restore is enough: confirm, then reset',
+    () async {
+      // Native restored the server after an update; the first healthy check
+      // confirms that restore and starts the count again in the same pass.
+      await prefs.setString(
+        BuiltinServerRecovery.keyFor(phone.id),
+        jsonEncode({'version': 2, 'nativeAuthority': true}),
+      );
+      linux.budget = _budget(
+        attempts: 3,
+        revision: 5,
+        pending: true,
+        eventId: 'native-restore:1',
+        generation: 4,
+      );
+      linux.nativeOwned = true;
+      linux.running = true;
+      linux.boundProfile = phone.id;
+      linux.enabled = true;
+      await recovery.check(phone);
+      expect(acts, contains('native-restore:1'));
+      expect(linux.presenceResets, 1);
+      expect(linux.attempts, 0);
+    },
+  );
+
+  test('a refused presence leaves the count as it was', () async {
+    await prefs.setString(
+      BuiltinServerRecovery.keyFor(phone.id),
+      jsonEncode({'version': 2, 'nativeAuthority': true}),
+    );
+    linux.budget = _budget(attempts: 2, revision: 5);
+    linux.running = true;
+    linux.boundProfile = phone.id;
+    linux.enabled = true;
+    linux.presenceRefused = true;
+    await recovery.check(phone);
+    expect(recovery.value.phase, BuiltinRecoveryPhase.ready);
+    expect(linux.attempts, 2);
+  });
 
   test('only confirmed manual Start resets native attempts', () async {
     await prefs.setString(

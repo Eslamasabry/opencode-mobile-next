@@ -24,7 +24,38 @@ List<SettingsSearchDocument> settingsSearchRows(
         ),
       );
 
+  SettingsSearchDocument question(
+    String row,
+    String section,
+    String title,
+    String aliases,
+  ) => SettingsSearchDocument(
+    id: 'inside-appearance-$row',
+    title: title,
+    parent: l10n.e7AppearanceTitle,
+    aliases: 'appearance مظهر $aliases',
+    target: SettingsSearchTarget(
+      pageId: 'appearance-settings',
+      sectionId: section,
+      rowId: 'effects-$row',
+    ),
+  );
+
   return [
+    question(
+      'text',
+      'text',
+      l10n.textSizeTitle,
+      'text size font bigger smaller large small read reading zoom '
+          'حجم النص الخط أكبر أصغر كبير صغير قراءة تكبير',
+    ),
+    question(
+      'live-background',
+      'background',
+      l10n.appearanceGroupBackground,
+      'background live background wallpaper look aurora moving behind '
+          'خلفية حية خلفية الشاشة مظهر شفق متحركة',
+    ),
     effect(
       'motion',
       l10n.effectsAnimations,

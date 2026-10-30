@@ -396,8 +396,8 @@
           "line": 340,
           "action": "open-sheet",
           "target": "team-merge-changes-sheet",
-          "targetWidget": "_ChangesSheet",
-          "effect": "_openChanges(readiness): showModalBottomSheet with _ChangesSheet (line 219).",
+          "targetWidget": "_openChanges",
+          "effect": "_openChanges(readiness): showKitSheet with the changed files (+/- counts, no diff) and the run's work items.",
           "gates": [],
           "destructive": false
         },
@@ -407,10 +407,10 @@
           "label": "Approve request",
           "key": "team-merge-approve",
           "line": 345,
-          "action": "open-sheet",
-          "target": "team-merge-approve-sheet",
-          "targetWidget": "showConfirmSheet",
-          "effect": "_onApproveTap(request): confirm sheet, then controller.approveMergeRequest(request.id, runId: run.id).",
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "_approve(request): controller.approveMergeRequest(request.id, runId: run.id) at once; approving is reversible on the host, so there is no confirm sheet and the receipt shows on the card.",
           "gates": [
             "enabled only when canApprove: request != null && !approved && !approveBusy && !controller.isStale && !merged"
           ],
@@ -419,13 +419,13 @@
         {
           "id": "embedded-team-merge-section-merge",
           "type": "button",
-          "label": "Merge (armed: Confirm merge)",
+          "label": "Merge",
           "key": "team-merge-merge",
           "line": 352,
-          "action": "open-sheet",
-          "target": "team-merge-confirm-sheet",
-          "targetWidget": "showConfirmSheet",
-          "effect": "_onMergeTap: first tap arms the button for teamMergeArmWindow (8 s, label \"Confirm merge\"); second tap disarms and opens the destructive confirm sheet, then controller.mergeRun(run.id).",
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "_merge(): controller.mergeRun(run.id) at once; the gate card already asked the question (Merge N changes into the target branch?), so the tap is the answer and there is no armed state or confirm sheet.",
           "gates": [
             "enabled only when canMerge: readiness != null && readiness.canMerge && !merged && !mergeBusy && !controller.isStale"
           ],
@@ -434,109 +434,13 @@
       ]
     },
     {
-      "id": "team-merge-confirm-sheet",
-      "title": "Merge into {branch}?",
-      "kind": "sheet",
-      "file": "lib/ui/screens/team/merge_section.dart",
-      "widget": "_onMergeTap",
-      "presentedBy": [],
-      "line": 184,
-      "purpose": "Destructive confirmation before merging the run into the target branch.",
-      "reachedFrom": [
-        {
-          "page": "embedded-team-merge-section",
-          "element": "embedded-team-merge-section-merge"
-        }
-      ],
-      "gates": [
-        "Merge button armed (second tap within 8 s)"
-      ],
-      "elements": [
-        {
-          "id": "team-merge-confirm-sheet-confirm",
-          "type": "button",
-          "label": "Merge into {branch}",
-          "key": "team-merge-confirm",
-          "file": "lib/ui/kit/kit_confirm_sheet.dart",
-          "line": 82,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "Pops true; _onMergeTap then calls controller.mergeRun(run.id).",
-          "gates": [],
-          "destructive": true
-        },
-        {
-          "id": "team-merge-confirm-sheet-cancel",
-          "type": "button",
-          "label": "Cancel",
-          "key": null,
-          "file": "lib/ui/kit/kit_confirm_sheet.dart",
-          "line": 86,
-          "action": "dismiss",
-          "target": null,
-          "targetWidget": null,
-          "effect": "Navigator.pop(context, false); nothing is sent.",
-          "gates": [],
-          "destructive": false
-        }
-      ]
-    },
-    {
-      "id": "team-merge-approve-sheet",
-      "title": "Approve this merge request?",
-      "kind": "sheet",
-      "file": "lib/ui/screens/team/merge_section.dart",
-      "widget": "_onApproveTap",
-      "presentedBy": [],
-      "line": 200,
-      "purpose": "Single confirmation before approving the merge request.",
-      "reachedFrom": [
-        {
-          "page": "embedded-team-merge-section",
-          "element": "embedded-team-merge-section-approve"
-        }
-      ],
-      "gates": [],
-      "elements": [
-        {
-          "id": "team-merge-approve-sheet-confirm",
-          "type": "button",
-          "label": "Approve request",
-          "key": "team-merge-approve-confirm",
-          "file": "lib/ui/kit/kit_confirm_sheet.dart",
-          "line": 82,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "Pops true; _onApproveTap then calls controller.approveMergeRequest(request.id, runId: run.id).",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "team-merge-approve-sheet-cancel",
-          "type": "button",
-          "label": "Cancel",
-          "key": null,
-          "file": "lib/ui/kit/kit_confirm_sheet.dart",
-          "line": 86,
-          "action": "dismiss",
-          "target": null,
-          "targetWidget": null,
-          "effect": "Navigator.pop(context, false); nothing is sent.",
-          "gates": [],
-          "destructive": false
-        }
-      ]
-    },
-    {
       "id": "team-merge-changes-sheet",
       "title": "Changes",
       "kind": "sheet",
       "file": "lib/ui/screens/team/merge_section.dart",
-      "widget": "_ChangesSheet",
+      "widget": "_openChanges",
       "presentedBy": [],
-      "line": 683,
+      "line": 202,
       "purpose": "Draggable sheet listing changed files with +/- counts (no diff) and the run's work items.",
       "reachedFrom": [
         {
@@ -566,7 +470,7 @@
     },
     {
       "id": "work-sheet",
-      "title": "<work item title> (Work · bead <id>)",
+      "title": "<work item title> (Work \u00b7 bead <id>)",
       "kind": "sheet",
       "file": "lib/ui/screens/team/work_sheet.dart",
       "widget": "WorkSheet",
@@ -678,10 +582,10 @@
       "id": "embedded-work-graph",
       "title": "[Work dependency graph]",
       "kind": "overlay",
-      "file": "lib/ui/screens/team/work_graph.dart",
-      "widget": "WorkGraph",
+      "file": "lib/ui/kit/kit_work_graph.dart",
+      "widget": "KitWorkGraph",
       "presentedBy": [],
-      "line": 218,
+      "line": 576,
       "purpose": "Pan/zoom dependency graph of a run's work items in the run Work tab (graph view).",
       "reachedFrom": [],
       "gates": [
@@ -798,7 +702,7 @@
         {
           "id": "start-run-sheet-who",
           "type": "list-tile",
-          "label": "<suggested role> · Suggested from your words · Change",
+          "label": "<suggested role> \u00b7 Suggested from your words \u00b7 Change",
           "key": "team-start-run-who",
           "line": 1,
           "action": "open-sheet",
@@ -848,7 +752,7 @@
           "line": 250,
           "action": "submit",
           "target": null,
-          "effect": "_keepInBacklog(): controller.createWork(title, details, projectId) — the task is made and given to no one; the sheet closes with StartRunResult(backlog: true) and the board selects its Backlog. Offered when opened from the board and the host creates work.",
+          "effect": "_keepInBacklog(): controller.createWork(title, details, projectId) \u2014 the task is made and given to no one; the sheet closes with StartRunResult(backlog: true) and the board selects its Backlog. Offered when opened from the board and the host creates work.",
           "gates": [
             "offerBacklog",
             "capabilities.controlCreateWork"
@@ -858,170 +762,13 @@
       ]
     },
     {
-      "id": "embedded-team-planning-card",
-      "title": "Planning… (Mayor) / still planning / unconfirmed / refused",
-      "kind": "overlay",
-      "file": "lib/ui/screens/team/start_run_sheet.dart",
-      "widget": "TeamPlanningCard",
-      "presentedBy": [],
-      "line": 463,
-      "purpose": "Pending card on the AI Team home for one Start-a-run request that has not produced a run yet.",
-      "reachedFrom": [
-        {
-          "page": "?",
-          "element": null,
-          "widget": "_TeamHomeScreenState",
-          "file": "lib/ui/screens/team/team_home_screen.dart",
-          "line": 299
-        }
-      ],
-      "gates": [
-        "teamPendingPlanning: request.status != TeamPlanningStatus.started and not dismissed"
-      ],
-      "embeddedIn": [
-        "TeamHomeScreen"
-      ],
-      "elements": [
-        {
-          "id": "embedded-team-planning-card-output",
-          "type": "button",
-          "label": "Watch the planner",
-          "key": "team-planning-output",
-          "line": 567,
-          "action": "navigate",
-          "target": "chat",
-          "targetWidget": "openTeamAgentConversationById",
-          "effect": "_openPlannerOutput: openTeamAgentConversationById(context, controller, request.plannerId): the planner's conversation in watching mode, or TeamWatchLiveScreen (chat-watching-live).",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "embedded-team-planning-card-dismiss",
-          "type": "button",
-          "label": "Dismiss",
-          "key": "team-planning-dismiss",
-          "line": 573,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "controller.dismissPlanning(request.key): hides the card (app-side dismissal; the host request is untouched).",
-          "gates": [],
-          "destructive": false
-        }
-      ]
-    },
-    {
-      "id": "team-phone-onboarding-offer",
-      "title": "Also run an AI team on this phone",
-      "kind": "onboarding-step",
-      "file": "lib/ui/widgets/team_phone_onboarding.dart",
-      "widget": "TeamPhoneOnboardingBlock",
-      "presentedBy": [],
-      "line": 615,
-      "purpose": "Optional offer card after the Termux server is running: download size, battery warning, skip or set up.",
-      "reachedFrom": [],
-      "gates": [
-        "await runtime.supportsAiTeam (absent otherwise)",
-        "managed Termux server profile (block built by This phone's Termux Add tools sheet)",
-        "runtime phase idle/unknown && orchestrationStore.phoneOffer(profile.id) == PhoneOffer.open"
-      ],
-      "embeddedIn": [
-        "_addTools"
-      ],
-      "elements": [
-        {
-          "id": "team-phone-onboarding-offer-skip",
-          "type": "button",
-          "label": "Skip for now",
-          "key": "team-phone-skip",
-          "line": 674,
-          "action": "toggle-setting",
-          "target": null,
-          "targetWidget": null,
-          "effect": "_skip: orchestrationStore.setPhoneOffer(profile.id, PhoneOffer.skipped) and hides the block (re-offered once in Settings > Plugins).",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "team-phone-onboarding-offer-set-up",
-          "type": "button",
-          "label": "Set up AI team",
-          "key": "team-phone-set-up",
-          "line": 468,
-          "action": "open-dialog",
-          "target": "project-folder-open-dialog",
-          "targetWidget": null,
-          "effect": "TeamPhoneReadyScreen._choose delegates to ProjectFolderActions.openFolder; the separate team folder chooser was retired.",
-          "gates": [],
-          "destructive": false,
-          "file": "lib/ui/widgets/team_phone_onboarding.dart"
-        }
-      ]
-    },
-    {
-      "id": "team-phone-onboarding-steps",
-      "title": "Setting up the AI team",
-      "kind": "onboarding-step",
-      "file": "lib/ui/widgets/team_phone_onboarding.dart",
-      "widget": "TeamPhoneOnboardingBlock",
-      "presentedBy": [],
-      "line": 716,
-      "purpose": "Five-step progress list (download, packages, city, start, connect) with the live output panel; polls runtime.status()/logTail() every 2 s.",
-      "reachedFrom": [
-        {
-          "page": "team-phone-onboarding-offer",
-          "element": "team-phone-onboarding-offer-set-up"
-        }
-      ],
-      "gates": [
-        "await runtime.supportsAiTeam (absent otherwise)",
-        "managed Termux server profile (block built by This phone's Termux Add tools sheet)",
-        "status.busy or a part-way phase (installed / cityReady / stopped ...)"
-      ],
-      "embeddedIn": [
-        "_addTools"
-      ],
-      "elements": [
-        {
-          "id": "team-phone-onboarding-steps-copy-log",
-          "type": "icon-button",
-          "label": "Copy output",
-          "key": null,
-          "file": "lib/ui/widgets/setup_terminal.dart",
-          "line": 135,
-          "action": "copy",
-          "target": null,
-          "targetWidget": null,
-          "effect": "SetupTerminal.onCopy -> _copyLog (team_phone_onboarding.dart:575): Clipboard.setData(_log) then SnackBar (l10n.workCopied). Disabled while the log is empty.",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "team-phone-onboarding-steps-continue",
-          "type": "button",
-          "label": "Continue",
-          "key": "team-phone-continue",
-          "line": 468,
-          "action": "open-dialog",
-          "target": "project-folder-open-dialog",
-          "targetWidget": null,
-          "effect": "TeamPhoneReadyScreen._choose delegates to ProjectFolderActions.openFolder; the separate team folder chooser was retired.",
-          "gates": [
-            "!running (neither _busy nor status.busy): a setup interrupted part-way"
-          ],
-          "destructive": false,
-          "file": "lib/ui/widgets/team_phone_onboarding.dart"
-        }
-      ]
-    },
-    {
       "id": "team-phone-onboarding-success",
-      "title": "AI team is running on this phone · {n} agents ready",
+      "title": "AI team is running on this phone \u00b7 {n} agents ready",
       "kind": "onboarding-step",
       "file": "lib/ui/widgets/team_phone_onboarding.dart",
-      "widget": "TeamPhoneOnboardingBlock",
+      "widget": "TeamPhoneReadyScreen",
       "presentedBy": [],
-      "line": 777,
+      "line": 376,
       "purpose": "Success card once the phone supervisor is ready and the profile carries the phone config.",
       "reachedFrom": [],
       "gates": [
@@ -1052,64 +799,13 @@
       ]
     },
     {
-      "id": "team-phone-onboarding-failed",
-      "title": "The AI team could not be set up.",
-      "kind": "onboarding-step",
-      "file": "lib/ui/widgets/team_phone_onboarding.dart",
-      "widget": "TeamPhoneOnboardingBlock",
-      "presentedBy": [],
-      "line": 590,
-      "purpose": "Failure card: honest reason sentence, step list with the failed step, last output, Retry.",
-      "reachedFrom": [],
-      "gates": [
-        "await runtime.supportsAiTeam (absent otherwise)",
-        "managed Termux server profile (block built by This phone's Termux Add tools sheet)",
-        "status.phase == failed, or ready but not healthy, or a TermuxBridgeException on dispatch"
-      ],
-      "embeddedIn": [
-        "_addTools"
-      ],
-      "elements": [
-        {
-          "id": "team-phone-onboarding-failed-copy-log",
-          "type": "icon-button",
-          "label": "Copy output",
-          "key": null,
-          "file": "lib/ui/widgets/setup_terminal.dart",
-          "line": 135,
-          "action": "copy",
-          "target": null,
-          "targetWidget": null,
-          "effect": "SetupTerminal.onCopy -> _copyLog (team_phone_onboarding.dart:575): Clipboard.setData(_log) then SnackBar (l10n.workCopied). Disabled while the log is empty.",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "team-phone-onboarding-failed-retry",
-          "type": "button",
-          "label": "Retry",
-          "key": "team-phone-retry",
-          "line": 468,
-          "action": "open-dialog",
-          "target": "project-folder-open-dialog",
-          "targetWidget": null,
-          "effect": "TeamPhoneReadyScreen._choose delegates to ProjectFolderActions.openFolder; the separate team folder chooser was retired.",
-          "gates": [
-            "disabled while _busy"
-          ],
-          "destructive": false,
-          "file": "lib/ui/widgets/team_phone_onboarding.dart"
-        }
-      ]
-    },
-    {
       "id": "team-phone-onboarding-killed",
       "title": "[Android stopped the team]",
       "kind": "onboarding-step",
       "file": "lib/ui/widgets/team_phone_onboarding.dart",
-      "widget": "TeamPhoneOnboardingBlock",
+      "widget": "TeamPhoneKilledNotice",
       "presentedBy": [],
-      "line": 669,
+      "line": 686,
       "purpose": "Card shown when Android killed the phone supervisor: \"Android stopped the team while the app was away. Nothing is lost.\"",
       "reachedFrom": [],
       "gates": [
@@ -1473,7 +1169,7 @@
         {
           "id": "team-host-sheet-submit",
           "type": "button",
-          "label": "Test and turn on (while testing: Checking the address…)",
+          "label": "Test and turn on (while testing: Checking the address\u2026)",
           "key": "team-host-submit",
           "line": 372,
           "action": "submit",
@@ -1566,59 +1262,6 @@
           "target": null,
           "targetWidget": null,
           "effect": "Navigator.pop(context, false); nothing is sent.",
-          "gates": [],
-          "destructive": false
-        }
-      ]
-    },
-    {
-      "id": "embedded-team-discovery-card",
-      "title": "{server} also runs an AI team. Turn it on?",
-      "kind": "overlay",
-      "file": "lib/ui/widgets/team_discovery_card.dart",
-      "widget": "TeamDiscoveryCard",
-      "presentedBy": [],
-      "line": 137,
-      "purpose": "Offer card shown when the automatic probe found a Gas City host next to the connected server.",
-      "reachedFrom": [
-        {
-          "page": "?",
-          "element": null,
-          "widget": "_PluginsSettingsScreenState",
-          "file": "lib/ui/screens/settings/plugins_screen.dart",
-          "line": 122
-        }
-      ],
-      "gates": [
-        "_discovery.result != null && profile != null && profile.orchestration == null"
-      ],
-      "embeddedIn": [
-        "PluginsSettingsScreen"
-      ],
-      "elements": [
-        {
-          "id": "embedded-team-discovery-card-not-now",
-          "type": "button",
-          "label": "Not now",
-          "key": "team-discovery-not-now",
-          "line": 255,
-          "action": "toggle-setting",
-          "target": null,
-          "targetWidget": null,
-          "effect": "_discovery.dismiss(): orchestrationStore.dismissDiscovery(profile.id) and hides the offer.",
-          "gates": [],
-          "destructive": false
-        },
-        {
-          "id": "embedded-team-discovery-card-turn-on",
-          "type": "button",
-          "label": "Turn on",
-          "key": "team-discovery-turn-on",
-          "line": 260,
-          "action": "mutate",
-          "target": null,
-          "targetWidget": null,
-          "effect": "_discovery.turnOn(): profile.orchestration = teamConfigFromVerdict(found, ...), store.upsert(profile), controller.syncOrchestration().",
           "gates": [],
           "destructive": false
         }
@@ -2055,6 +1698,10 @@
     {
       "file": "lib/ui/screens/team/projects/team_project_editors_roles.dart",
       "reason": "Part file of team_project_editors.dart (same library, same sheets): the per-role model rows, the roles list and plan recovery split out of the editor for size; recorded on the Team editor sheets, not a surface of its own."
+    },
+    {
+      "file": "lib/ui/screens/team/work_graph.dart",
+      "reason": "WorkGraphNode: the mapping from a work item to a KitWorkGraphNode used by Task details; the old Graph view widget is gone (the graph is KitWorkGraph); no surface"
     }
   ],
   "notes": [

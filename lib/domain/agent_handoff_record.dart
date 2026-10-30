@@ -199,15 +199,30 @@ HandoffRecord buildAgentHandoffRecord({
     omitted += turns[start].messageCount;
     start++;
   }
-  final byteLength = totalBytes();
-  if (byteLength > maxBytes) {
-    throw HandoffRecordTooLarge(requiredBytes: byteLength, maxBytes: maxBytes);
+  if (totalBytes() > maxBytes) {
+    throw HandoffRecordTooLarge(
+      requiredBytes: totalBytes(),
+      maxBytes: maxBytes,
+    );
+  }
+  // Pieces are masked one by one, but quoting joins them: an escaped line
+  // break before a path ("\nlib/l10n/…") can form a new token-like run. The
+  // record writers refuse a record whose opaque-token mask would still
+  // change it, so that mask runs on the whole record until it stays the
+  // same. (The credential patterns stay per piece: on the whole record they
+  // misread quoted pieces, and a masked "api_key=" swallowed the rest.)
+  var markdown = '$headerText${coverage()}${renderedTurns.skip(start).join()}';
+  for (var pass = 0; pass < 4; pass++) {
+    final masked = KitRedact.opaqueTokens(markdown);
+    if (masked == markdown) break;
+    writer.redacted = true;
+    markdown = masked;
   }
   return HandoffRecord(
-    markdown: '$headerText${coverage()}${renderedTurns.skip(start).join()}',
+    markdown: markdown,
     omittedMessages: omitted,
     redacted: writer.redacted,
-    byteLength: byteLength,
+    byteLength: utf8.encode(markdown).length,
   );
 }
 

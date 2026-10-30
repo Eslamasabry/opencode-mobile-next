@@ -188,7 +188,12 @@ class V2TranscriptRow extends StatelessWidget {
     this.knownSessions = const {},
     this.onOpenChild,
     this.onCompactAgain,
+    this.modelName,
   });
+
+  /// A model id's name in the catalog ("big-pickle" → "Big Pickle"); null
+  /// when it has none, and the id is shown.
+  final String? Function(String id)? modelName;
 
   /// Retries a failed compaction. Given only for the newest failure while
   /// the conversation is idle; older ones are history.
@@ -223,17 +228,28 @@ class V2TranscriptRow extends StatelessWidget {
     switch (part.type) {
       case 'v2:switch':
         final (icon, prefix) = switch (kind) {
-          'model' => (AppIconography.processor, strings.chatUiModel),
+          'model' => (AppIconography.model, strings.chatUiModel),
           'agent' => (AppIconography.support, strings.chatUiAgent),
           _ => (AppIconography.folderOpen, strings.chatUiMoved),
         };
+        var target = part.text;
+        if (kind == 'model') {
+          // "id · variant": the id becomes the model's name.
+          final at = target.indexOf(' · ');
+          final id = at < 0 ? target : target.substring(0, at);
+          final name = modelName?.call(id);
+          if (name != null && name.trim().isNotEmpty) {
+            target = at < 0 ? name : '$name${target.substring(at)}';
+          }
+        }
         return TranscriptMarker(
           key: ValueKey('transcript-marker-$kind-switched-$messageId'),
           icon: icon,
-          label: '$prefix → ${part.text}',
+          label: '$prefix → $target',
         );
       case 'v2:compaction':
         return switch (kind) {
+          compactionPassed => const SizedBox.shrink(), // settleStaleLive
           'running' => KitMessage.marker(
             key: ValueKey('compaction-running-$messageId'),
             text: part.text.isEmpty
@@ -360,7 +376,17 @@ class _WorkGroup extends StatefulWidget {
     required this.buildRun,
     this.waitingForYou = false,
     this.stopped = false,
+    this.hideWhileRunning = false,
+    this.openWhileRunning = false,
   });
+
+  /// The person tapped the live line to see the steps: while this work
+  /// runs it is drawn opened.
+  final bool openWhileRunning;
+
+  /// The turn's live line names the running step: while this work is still
+  /// running it draws nothing, and it folds into its one line after.
+  final bool hideWhileRunning;
 
   final List<_AssistantPartRun> runs;
   final Map<String, bool> expansionStore;
@@ -381,10 +407,7 @@ class _WorkGroupState extends State<_WorkGroup> {
       .expand((run) => run.parts)
       .where((part) => part.type == 'tool');
 
-  String get _storeKey {
-    final first = widget.runs.first.parts.first;
-    return 'work:${first.id ?? first.callID ?? first.messageID}';
-  }
+  String get _storeKey => _workStoreKey(widget.runs);
 
   /// Whether the work ended on a failure. Agents fail and retry all the
   /// time (a patch that did not apply, then one that did); a failure they got
@@ -392,7 +415,13 @@ class _WorkGroupState extends State<_WorkGroup> {
   bool get _endedFailed =>
       _tools.isNotEmpty &&
       _tools.last.toolState.status == 'error' &&
-      !_tools.last.toolState.declined;
+      !_tools.last.toolState.declined &&
+      !toolStepCutOff(_tools.last.toolState);
+
+  /// The last step was cut off with its turn: the line says Stopped, as the
+  /// step's own row does.
+  bool get _endedCutOff =>
+      _tools.isNotEmpty && toolStepCutOff(_tools.last.toolState);
 
   @override
   Widget build(BuildContext context) {
@@ -418,7 +447,7 @@ class _WorkGroupState extends State<_WorkGroup> {
               : KitWorkState.running)
         : _endedFailed
         ? KitWorkState.endedFailed
-        : widget.stopped
+        : widget.stopped || _endedCutOff
         ? KitWorkState.stopped
         : KitWorkState.done;
     final now = state == KitWorkState.running
@@ -429,27 +458,39 @@ class _WorkGroupState extends State<_WorkGroup> {
                 l10n: strings,
               )
         : null;
+    // While the live line names the running step the work draws nothing;
+    // once it ends the work line unfolds in where the steps were (and folds
+    // away again if more work starts in the same stretch).
+    final hidden = state == KitWorkState.running && widget.hideWhileRunning;
     // Only an unrecovered failure or a produced file is worth opening
     // unasked; progress is already named on the closed line.
     final opensByDefault =
         KitWorkLine.opensByDefault(state) ||
         _tools.any((part) => part.toolState.outputFiles.isNotEmpty);
-    return KeyedSubtree(
-      key: const Key('work-group'),
-      child: KitWorkLine(
-        counts: _workCounts(_tools, steps: widget.runs.length),
-        state: state,
-        now: now,
-        expanded: widget.expansionStore[_storeKey] ?? opensByDefault,
-        onExpansionChanged: (open) =>
-            setState(() => widget.expansionStore[_storeKey] = open),
-        lineKey: const Key('work-group-header'),
-        stepsKey: const Key('work-group-steps'),
-        // A long running turn keeps its newest steps in view; the finished
-        // ones fold behind "Show N earlier steps".
-        tail: state == KitWorkState.running ? 3 : null,
-        steps: [for (final run in widget.runs) ...widget.buildRun(run)],
-      ),
+    return KitReveal(
+      key: const Key('work-group-reveal'),
+      child: hidden
+          ? null
+          : KeyedSubtree(
+              key: const Key('work-group'),
+              child: KitWorkLine(
+                counts: _workCounts(_tools, steps: widget.runs.length),
+                state: state,
+                now: now,
+                expanded:
+                    state == KitWorkState.running && widget.openWhileRunning
+                    ? true
+                    : widget.expansionStore[_storeKey] ?? opensByDefault,
+                onExpansionChanged: (open) =>
+                    setState(() => widget.expansionStore[_storeKey] = open),
+                lineKey: const Key('work-group-header'),
+                stepsKey: const Key('work-group-steps'),
+                // A long running turn keeps its newest steps in view; the finished
+                // ones fold behind "Show N earlier steps".
+                tail: state == KitWorkState.running ? 3 : null,
+                steps: [for (final run in widget.runs) ...widget.buildRun(run)],
+              ),
+            ),
     );
   }
 }
@@ -506,6 +547,9 @@ class _AssistantMessagePart extends StatelessWidget {
                 part.text,
                 selectable: !desktopInteractions,
                 onChoice: (option) => _insertChoice(context, option),
+                // The caret after the words still being written; gone the
+                // moment the server says this part is done.
+                streaming: streaming && !part.ended,
               ),
             ),
           ),
@@ -530,7 +574,7 @@ class _AssistantMessagePart extends StatelessWidget {
         if (raw != null) shellID = raw.toString();
       }
       final chat = context.findAncestorStateOfType<_ChatScreenState>();
-      return ToolCard(
+      final card = ToolCard(
         key: shellID != null
             ? ValueKey('shell-card-$shellID')
             : ValueKey(part.id ?? part.callID),
@@ -552,6 +596,7 @@ class _AssistantMessagePart extends StatelessWidget {
         onRerunCommand: chat?._rerunShellCommand,
         onEnableConnectorCatalogue: chat?._enableConnectorCatalogue,
       );
+      return _markedStep(chat, part, card);
     }
     if (part.type == 'file') {
       return Align(

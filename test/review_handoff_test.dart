@@ -254,25 +254,11 @@ void main() {
       await tester.pumpAndSettle();
     }
 
+    // The file's menu is a long press on its row.
     Future<void> openFileMenu(WidgetTester tester) async {
-      final header = find.byKey(
-        const ValueKey('review-file-header-lib/client.dart'),
+      await tester.longPress(
+        find.byKey(const ValueKey('review-fold-header-lib/client.dart')),
       );
-      final more = find.descendant(
-        of: header,
-        matching: find.byTooltip('More'),
-      );
-      // One change has no More button: its menu is a long press.
-      if (more.evaluate().isNotEmpty) {
-        await tester.tap(more);
-      } else {
-        await tester.longPress(
-          find.descendant(
-            of: header,
-            matching: find.byKey(const ValueKey('review-file-header-menu')),
-          ),
-        );
-      }
       await tester.pumpAndSettle();
     }
 

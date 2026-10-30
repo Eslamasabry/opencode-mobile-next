@@ -531,7 +531,7 @@ void main() {
   );
 
   group('KitBrandMark', () {
-    testWidgets('renders at the tile size (KitTokens.iconTileSize, 30)', (
+    testWidgets('renders at the tile size (KitTokens.iconTileSize, 28)', (
       tester,
     ) async {
       final theme = AppTheme.dark();
@@ -543,7 +543,7 @@ void main() {
       );
       final picture = tester.widget<SvgPicture>(find.byType(SvgPicture));
       final tokens = KitTokens.fallback(theme);
-      expect(tokens.iconTileSize, 30);
+      expect(tokens.iconTileSize, 28);
       expect(tokens.markSize, 44);
       expect(picture.width, tokens.iconTileSize);
     });

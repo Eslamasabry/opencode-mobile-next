@@ -30,6 +30,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
 import '../support/complete_message_history.dart';
 import '../support/stash_memory_vault.dart';
+import '../support/composer_tools.dart';
 
 const _phone = Size(412, 915);
 const _wide = Size(1280, 800);
@@ -103,7 +104,7 @@ Future<void> _frames(WidgetTester tester) async {
 }
 
 Future<void> _openSaved(WidgetTester tester) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('composer-tools-prompts')));
   await tester.pumpAndSettle();

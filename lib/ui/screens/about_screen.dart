@@ -100,6 +100,7 @@ class _AboutScreenState extends State<AboutScreen> {
   /// no way to take the reset back, so no Undo bar (KIT-34).
   Future<void> _showTipsAgain(ConnectionController controller) async {
     await controller.nudges.reset();
+    await controller.tips.reset();
     if (mounted) setState(() => _tipsReset = true);
   }
 

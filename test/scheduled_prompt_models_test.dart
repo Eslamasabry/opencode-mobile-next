@@ -117,6 +117,18 @@ void main() {
     );
   });
 
+  test('every day runs on the weekend too and round-trips its rule', () {
+    const recurrence = ScheduleRecurrence.daily(hour: 9);
+    final friday = DateTime(2026, 10, 16, 9);
+    expect(
+      nextScheduledOccurrence(recurrence, friday),
+      DateTime(2026, 10, 17, 9).toUtc(),
+    );
+    final back = ScheduleRecurrence.fromJson(recurrence.toJson());
+    expect(back.kind, ScheduleRecurrenceKind.daily);
+    expect((back.hour, back.minute), (9, 0));
+  });
+
   test('catch-up collapses missed runs and marks only beyond grace late', () {
     final schedule = _schedule();
     final due = scheduledPromptDue(

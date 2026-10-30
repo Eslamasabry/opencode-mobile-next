@@ -174,7 +174,7 @@ void main() {
       expect(result.message, unsupportedOpenCode1Message);
       expect(
         openCode2UpgradeCommand,
-        'npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.0.29',
+        'npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.1.1',
       );
     },
   );

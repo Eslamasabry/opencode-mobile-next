@@ -291,3 +291,22 @@ In `test/kit/kit_diff_view_test.dart` (and the wrapper's own `test/diff_view_tes
 
 - `inline: true` (the conversation's step, which already says "Edit checkout_test.dart +3 −1"): one file shows **no file header**; the lines and the fold rows have **no fill** (transparent over the page). Several files keep a header so each is named. The wrap toggle is the host's: it passes `wrap` and puts "Wrap lines" on the step's long-press menu. Diff line colours are unchanged.
 - The pinned file header (the full diff page, the review screen) is the page's ground with a hairline under it, not a `surface1` card.
+
+## Markdown drawn as Markdown (2026-10-27)
+
+A file ending in `.md`, `.markdown` or `.mdx` shows its changes formatted by
+default, everywhere the part is used (a chat step's preview and its "Open
+all" page, the permission sheet, the review workspace). Each run of added,
+removed or unchanged lines is cut into blocks (a heading, a paragraph, one
+list item with its wrapped lines, a quote, a table, a blank line) and each
+block is drawn with `KitMarkdown` (secondary size, primary tone, links only
+through `openExternalLink`). The gutter keeps the block's first line
+numbers and its `+` / `−`, the row keeps its tint, and a screen reader hears
+"Lines 6–8 added: …". Code fences (and a fence cut by the change) stay
+written lines. Drawn Markdown is one column and always wraps; "Source" (in
+the header, or beside "Showing N of M lines" when inline) shows the written
+lines with the usual split and wrap, "Formatted" draws them again, the new
+form fading in over `KitMotion.quick`. The preview's cap still counts
+written lines (a block across the cut keeps the lines before it), and
+selecting a block's number selects all its lines, so Copy lines copies what
+is written. Other files are unchanged.

@@ -9,10 +9,136 @@
       "widget": "ServerPageScreen",
       "presentedBy": [],
       "line": 1,
-      "purpose": "One saved server's own page: Connection, In this app and On this server, each saying who a change affects; a server that is not connected offers one Connect row.",
+      "purpose": "One saved server's own page: Connection, In this app and On this server, each saying who a change affects; a server that is not connected offers one Connect row. Also carries the health check, server and host update, host service commands and AI setup, so the same server looks the same from Settings, Servers, search and /status.",
       "reachedFrom": [],
       "gates": [],
-      "elements": []
+      "elements": [
+        {
+          "id": "server-settings-check-health",
+          "type": "icon-button",
+          "label": "Check server health",
+          "key": null,
+          "line": 208,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "_checkHealth(): controller.prepareActionTransport() then api.health(); updates the health row (server-health-checking / server-health-result).",
+          "gates": [
+            "disabled while _checking"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "server-settings-host-management",
+          "type": "list-tile",
+          "label": "Set up OpenCode 2",
+          "key": "host-management-entry",
+          "line": 274,
+          "action": "navigate",
+          "target": "host-management",
+          "targetWidget": "HostManagementScreen",
+          "effect": "Pushes HostManagementScreen(controller).",
+          "gates": [
+            "!managedLocally (not platformCapabilities.supportsTermux && TermuxBridge.managesServerUrl(profile.baseUrl))"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "server-settings-updates-gated",
+          "type": "list-tile",
+          "label": "Server updates — Upgrade from the machine running the server",
+          "key": null,
+          "line": 289,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "GatedRowTile(feature: 'remote-upgrade'): explains that the capability is unavailable (behaviour defined in GatedRowTile, not in this file).",
+          "gates": [
+            "!managedLocally && !controller.capabilities.remoteUpgrade"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "server-settings-updates-managed",
+          "type": "list-tile",
+          "label": "Update managed OpenCode",
+          "key": "server-updates-tile",
+          "line": 296,
+          "action": "navigate",
+          "target": "termux-setup-installed",
+          "targetWidget": "openThisPhone",
+          "effect": "openThisPhone(context, kind: termux): update and switch live on This phone.",
+          "gates": [
+            "managedLocally"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "server-settings-updates-restart",
+          "type": "list-tile",
+          "label": "Restart OpenCode to use {version}",
+          "key": "server-updates-tile",
+          "line": 296,
+          "action": "open-dialog",
+          "target": "server-settings-restart-dialog",
+          "targetWidget": "_showRemoteRestartNotice",
+          "effect": "_showRemoteRestartNotice(installedVersion).",
+          "gates": [
+            "!managedLocally && controller.capabilities.remoteUpgrade",
+            "controller.installedServerVersion != null",
+            "disabled while _upgradingServer"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "server-settings-updates-upgrade",
+          "type": "list-tile",
+          "label": "Update OpenCode to {version}",
+          "key": "server-updates-tile",
+          "line": 296,
+          "action": "open-sheet",
+          "target": "server-settings-upgrade-sheet",
+          "targetWidget": "showConfirmSheet",
+          "effect": "_upgradeRemoteServer(availableVersion): opens the upgrade confirm sheet.",
+          "gates": [
+            "!managedLocally && controller.capabilities.remoteUpgrade",
+            "installedServerVersion == null && controller.availableServerVersion != null",
+            "disabled while _upgradingServer"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "server-settings-updates-copy",
+          "type": "list-tile",
+          "label": "Server updates are managed externally",
+          "key": "server-updates-tile",
+          "line": 296,
+          "action": "copy",
+          "target": null,
+          "targetWidget": null,
+          "effect": "_copyRemoteUpdateCommands(): copies 'opencode upgrade\\nopencode models --refresh' and shows a snackbar.",
+          "gates": [
+            "!managedLocally && controller.capabilities.remoteUpgrade",
+            "no installed or available server version"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "server-settings-ai-setup",
+          "type": "list-tile",
+          "label": "AI setup",
+          "key": "ai-setup-entry",
+          "line": 362,
+          "action": "navigate",
+          "target": "ai-setup",
+          "targetWidget": "AiSetupScreen",
+          "effect": "pushKitPage(AiSetupScreen(controller, serverName)).",
+          "gates": [
+            "profile != null && controller.capabilities.setupConfigRead"
+          ],
+          "destructive": false
+        }
+      ]
     },
     {
       "id": "usage-plans",
@@ -199,6 +325,10 @@
     {
       "file": "lib/ui/screens/usage/usage_text.dart",
       "reason": "No surface: the app's words for subscriptions, connections and times."
+    },
+    {
+      "file": "lib/ui/screens/settings/glass_choice_control.dart",
+      "reason": "Not a page: the Glass choice (Off, Weak, Balanced, Strong) placed on Settings › Appearance."
     }
   ],
   "notes": [

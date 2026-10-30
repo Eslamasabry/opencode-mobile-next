@@ -1,0 +1,36 @@
+before-Solid-conv: frames=127 mean=16.9ms p90=17.4ms worst=32.7ms janky(>25ms)=1%
+  cpu over 4.1s: opencode_mobile=2010ms, 1.raster=1060ms, ANGLE-Submit=100ms, HeapTaskDaemon=40ms, DartWorker=30ms, binder:22083_2=20ms
+before-Solid-chat: frames=127 mean=27.4ms p90=19.0ms worst=367.2ms janky(>25ms)=3%
+  cpu over 4.3s: opencode_mobile=1650ms, 1.raster=490ms, HeapTaskDaemon=40ms, ANGLE-Submit=40ms
+before-Solid-settings: frames=127 mean=16.7ms p90=19.1ms worst=21.9ms janky(>25ms)=0%
+  cpu over 4.2s: opencode_mobile=1670ms, 1.raster=990ms, ANGLE-Submit=100ms, HeapTaskDaemon=30ms, binder:23850_1=20ms, Thread-4=20ms
+before-Glass-conv: frames=85 mean=46.6ms p90=54.7ms worst=72.2ms janky(>25ms)=100%
+  cpu over 4.1s: 1.raster=4280ms, opencode_mobile=1830ms, ANGLE-Submit=550ms, HeapTaskDaemon=50ms, Thread-4=30ms, binder:25194_2=10ms
+before-Glass-chat: frames=127 mean=27.4ms p90=18.3ms worst=371.4ms janky(>25ms)=4%
+  cpu over 4.3s: opencode_mobile=1650ms, 1.raster=950ms, ANGLE-Submit=50ms, HeapTaskDaemon=30ms, binder:26095_3=10ms, Thread-4=10ms
+before-Glass-settings: frames=127 mean=16.7ms p90=18.2ms worst=31.6ms janky(>25ms)=0%
+  cpu over 4.2s: opencode_mobile=1720ms, 1.raster=1500ms, ANGLE-Submit=90ms, HeapTaskDaemon=40ms, Thread-4=30ms, binder:27070_5=20ms
+before-Crystal-conv: frames=86 mean=46.5ms p90=56.9ms worst=76.3ms janky(>25ms)=100%
+  cpu over 4.1s: 1.raster=4310ms, opencode_mobile=1830ms, ANGLE-Submit=540ms, HeapTaskDaemon=40ms, Thread-4=30ms, binder:28398_3=10ms
+before-Crystal-chat: frames=127 mean=27.2ms p90=17.8ms worst=384.1ms janky(>25ms)=3%
+  cpu over 4.3s: opencode_mobile=1710ms, 1.raster=1000ms, HeapTaskDaemon=40ms, ANGLE-Submit=40ms, DartWorker=10ms
+before-Crystal-settings: frames=127 mean=16.8ms p90=17.8ms worst=37.6ms janky(>25ms)=0%
+  cpu over 4.3s: opencode_mobile=1720ms, 1.raster=1200ms, ANGLE-Submit=80ms, HeapTaskDaemon=50ms, DartWorker=40ms, binder:30321_4=20ms
+v2-Solid-conv: frames=127 mean=16.8ms p90=17.2ms worst=31.6ms janky(>25ms)=0%
+  cpu over 4.2s: opencode_mobile=1970ms, 1.raster=1050ms, ANGLE-Submit=90ms, HeapTaskDaemon=50ms, binder:18347_3=30ms, Thread-4=30ms
+v2-Solid-chat: frames=127 mean=27.2ms p90=18.9ms worst=351.4ms janky(>25ms)=3%
+  cpu over 4.3s: opencode_mobile=1640ms, 1.raster=540ms, ANGLE-Submit=40ms, HeapTaskDaemon=30ms, binder:19249_4=10ms, binder:19249_3=10ms
+v2-Solid-settings: frames=127 mean=16.8ms p90=19.6ms worst=28.6ms janky(>25ms)=1%
+  cpu over 4.3s: opencode_mobile=1670ms, 1.raster=1110ms, ANGLE-Submit=100ms, Thread-4=30ms, HeapTaskDaemon=30ms, binder:20153_1=20ms
+v2-Glass-conv: frames=127 mean=17.2ms p90=18.4ms worst=55.3ms janky(>25ms)=2%
+  cpu over 4.2s: 1.raster=2480ms, opencode_mobile=2070ms, ANGLE-Submit=160ms, binder:21524_5=30ms, HeapTaskDaemon=30ms, Jit_thread_pool=10ms
+v2-Glass-chat: frames=127 mean=27.5ms p90=19.9ms worst=378.1ms janky(>25ms)=3%
+  cpu over 4.3s: opencode_mobile=1670ms, 1.raster=990ms, ANGLE-Submit=50ms, HeapTaskDaemon=30ms, dart:io_EventHa=10ms
+v2-Glass-settings: frames=127 mean=16.7ms p90=17.7ms worst=25.2ms janky(>25ms)=0%
+  cpu over 4.2s: opencode_mobile=1730ms, 1.raster=1460ms, ANGLE-Submit=90ms, DartWorker=50ms, HeapTaskDaemon=40ms, binder:23277_4=10ms
+v2-Crystal-conv: frames=127 mean=17.1ms p90=18.4ms worst=56.5ms janky(>25ms)=3%
+  cpu over 4.2s: 1.raster=2360ms, opencode_mobile=2120ms, ANGLE-Submit=130ms, HeapTaskDaemon=40ms, DartWorker=40ms, Thread-4=30ms
+v2-Crystal-chat: frames=127 mean=27.1ms p90=18.8ms worst=363.5ms janky(>25ms)=3%
+  cpu over 4.3s: opencode_mobile=1710ms, 1.raster=1050ms, ANGLE-Submit=60ms, HeapTaskDaemon=50ms, binder:25493_3=10ms
+v2-Crystal-settings: frames=127 mean=16.8ms p90=18.0ms worst=39.0ms janky(>25ms)=0%
+  cpu over 4.3s: opencode_mobile=1670ms, 1.raster=1110ms, DartWorker=80ms, ANGLE-Submit=80ms, HeapTaskDaemon=30ms, binder:26501_4=20ms

@@ -193,51 +193,106 @@ internal class StatusThrottle(private val minGapMs: Long = 2_000L) {
 internal data class AlertButton(
     val decision: String,
     val label: Label,
-    /** The answer an option button sends; null for the other buttons. */
-    val optionText: String? = null,
     /** Android asks for the unlocked phone before it runs. */
     val authRequired: Boolean = false,
 ) {
-    enum class Label { ALLOW_ONCE, DENY, REPLY, OPTION }
+    enum class Label { ALLOW_ONCE, REJECT, OPEN }
 }
 
 /**
- * Which buttons an alert carries. Safe by construction: a permission offers
- * exactly Allow once (phone unlocked) and Reject; "Always allow" is never
- * offered from a notification. A question offers its options as buttons only
- * when there are few and they are short.
+ * Which buttons an alert carries: at most two. A permission the shade can
+ * show (its command or file is in the body) offers exactly Allow once (phone
+ * unlocked) and Reject; "Always allow" is never offered from a notification.
+ * Every other ask opens the chat: a question, a form, or a permission whose
+ * exact command the shade cannot show (never allow what you cannot read).
  */
 internal object AlertButtons {
-    const val MAX_OPTIONS = 3
-    const val MAX_OPTION_LENGTH = 24
-    private const val MAX_ACTIONS = 3
-
-    /** All-or-nothing: three or fewer options, each short; otherwise none. */
-    fun shortOptions(raw: List<String>): List<String> {
-        val options = raw.map { it.trim() }
-        if (options.isEmpty() || options.size > MAX_OPTIONS) return emptyList()
-        val invalidText = options.any { it.isEmpty() || it.length > MAX_OPTION_LENGTH }
-        return if (invalidText || options.toSet().size != options.size) emptyList() else options
-    }
-
-    fun plan(kind: String, quickReply: Boolean, options: List<String>): List<AlertButton> = when (kind) {
-        "permission" -> listOf(
+    fun plan(kind: String, answerable: Boolean): List<AlertButton> = when (kind) {
+        "permission" -> if (answerable) listOf(
             AlertButton("allow", AlertButton.Label.ALLOW_ONCE, authRequired = true),
-            AlertButton("deny", AlertButton.Label.DENY),
-        )
-        "question" -> {
-            val shown = shortOptions(options).take(MAX_ACTIONS - if (quickReply) 1 else 0)
-            val reply = if (quickReply) listOf(AlertButton("reply", AlertButton.Label.REPLY)) else emptyList()
-            reply + shown.mapIndexed { index, text ->
-                AlertButton("option$index", AlertButton.Label.OPTION, optionText = text)
-            }
-        }
+            AlertButton("deny", AlertButton.Label.REJECT),
+        ) else listOf(AlertButton("open", AlertButton.Label.OPEN))
+        "question" -> listOf(AlertButton("open", AlertButton.Label.OPEN))
         else -> emptyList()
     }
 }
 
-/** Which title a permission alert takes: a shell command asks "Run this command?". */
-internal object AlertTitles {
-    fun usesCommandTitle(kind: String, shellCommand: Boolean): Boolean =
-        kind == "permission" && shellCommand
+/**
+ * The words of a request or a finished conversation, before localization:
+ * the title reads as the question ("Run npm install?") or the plain result
+ * ("Finished: Add combo counter"), the body carries the exact thing. Text from
+ * Dart is already masked; here it is only trimmed and capped.
+ */
+internal object AlertCopy {
+    const val MAX_TARGET = 40
+    const val MAX_QUESTION = 80
+    const val MAX_LINE = 140
+    const val MAX_OPTIONS = 3
+    private const val MAX_OPTION_LENGTH = 24
+
+    enum class Title {
+        /** The ask's own words ([Copy.titleArg] is the whole title). */
+        LITERAL,
+        RUN, EDIT, READ, FOLDER,
+        /** A permission without a readable target: "Allow OpenCode to continue?". */
+        ASK,
+        /** A question without words (a form): "OpenCode has a question for you". */
+        QUESTION,
+        FINISHED,
+        FINISHED_ANY,
+        STOPPED,
+        STOPPED_ANY,
+    }
+
+    data class Copy(val title: Title, val titleArg: String = "", val body: String = "")
+
+    /** Whether Allow once / Reject may show: the body carries what is allowed. */
+    fun answerable(kind: String, allowActions: Boolean, detail: String): Boolean =
+        kind == "permission" && allowActions && detail.isNotBlank()
+
+    /** The body line for a question: its few short choices, else nothing. */
+    fun choices(raw: List<String>): String {
+        val options = raw.map { it.trim() }
+        val valid = options.isNotEmpty() && options.size <= MAX_OPTIONS &&
+            options.none { it.isEmpty() || it.length > MAX_OPTION_LENGTH } &&
+            options.toSet().size == options.size
+        return if (valid) options.joinToString(" · ") else ""
+    }
+
+    fun of(request: CodingAlertRequest): Copy? = with(request) {
+        val line = cap(detail, MAX_LINE)
+        val chat = cap(chatTitle, MAX_QUESTION)
+        when (kind) {
+            "permission" -> permission(askAction, cap(askTarget, MAX_TARGET), line)
+            "question" -> {
+                val question = cap(detail, MAX_QUESTION)
+                if (question.isEmpty()) Copy(Title.QUESTION)
+                else Copy(Title.LITERAL, question, choices(options))
+            }
+            "complete" -> if (chat.isEmpty()) Copy(Title.FINISHED_ANY, body = line)
+                else Copy(Title.FINISHED, chat, line)
+            "error" -> if (chat.isEmpty()) Copy(Title.STOPPED_ANY) else Copy(Title.STOPPED, chat)
+            else -> null
+        }
+    }
+
+    private fun permission(action: String, target: String, line: String): Copy {
+        val title = if (target.isEmpty() || line.isEmpty()) Title.ASK else when (action) {
+            "run" -> Title.RUN
+            "edit" -> Title.EDIT
+            "read" -> Title.READ
+            "folder" -> Title.FOLDER
+            else -> Title.ASK
+        }
+        return Copy(title, if (title == Title.ASK) "" else target, line)
+    }
+
+    /** The line a group summary lists for one alert: the conversation, or the question. */
+    fun summaryLine(request: CodingAlertRequest, title: String): String =
+        if (request.kind == "complete") cap(request.chatTitle, MAX_QUESTION).ifEmpty { title } else title
+
+    private fun cap(value: String, max: Int): String {
+        val text = value.replace(Regex("\\s+"), " ").trim()
+        return if (text.length <= max) text else text.take(max - 1).trimEnd() + "…"
+    }
 }

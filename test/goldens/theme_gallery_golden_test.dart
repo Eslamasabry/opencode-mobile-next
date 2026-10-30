@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 import 'package:opencode_mobile/ui/theme_packs.dart';
 
 /// Screenshot tests for the component system across every theme pack and
@@ -148,7 +149,7 @@ class _Gallery extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: scheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(AppTheme.radiusControl),
+              borderRadius: BorderRadius.circular(KitTokens.fieldRadius),
               border: Border.all(color: AppTheme.hairline(theme)),
             ),
             child: Text(
@@ -165,7 +166,9 @@ class _Gallery extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: scheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+              borderRadius: BorderRadius.circular(
+                theme.extension<KitTokens>()!.panelCornerRadius,
+              ),
               border: Border.all(color: AppTheme.hairline(theme)),
             ),
             child: Row(
@@ -178,24 +181,8 @@ class _Gallery extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(AppIconography.workspace),
-            label: 'Workspace',
-          ),
-          NavigationDestination(
-            icon: Icon(AppIconography.files),
-            label: 'Files',
-          ),
-          NavigationDestination(
-            icon: Icon(AppIconography.activity),
-            label: 'Activity',
-          ),
-          NavigationDestination(icon: Icon(AppIconography.more), label: 'More'),
-        ],
-      ),
+      // No navigation bar: the app has none to theme since 2026-10-20 (the
+      // kit draws the rail itself, and a phone has no bar).
     );
   }
 }

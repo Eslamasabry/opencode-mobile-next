@@ -245,18 +245,23 @@ KitStatus? connectionKitStatus(
       : serverOnThisPhone
       ? onRestartServer
       : null;
+  // Named for what it restarts: a bare "Restart" beside "Reconnect to …"
+  // didn't say, and for an agent it starts the agent's helper.
+  final restartLabel = agentRoute
+      ? l10n.connectionRestartAgent
+      : l10n.connectionRestartPhoneServer;
   final restartAction =
       restart == null || snapshot.retrying || snapshot.waiting || busy
       ? null
       : agentRoute
       ? KitAction(
           key: const ValueKey('connection-banner-restart'),
-          label: l10n.workServerRestart,
+          label: restartLabel,
           onPressed: () => unawaited(restart()),
         )
       : KitAction(
           key: const ValueKey('connection-banner-restart'),
-          label: l10n.workServerRestart,
+          label: restartLabel,
           onPressed: () => unawaited(() async {
             final current = target();
             if (current == null ||
@@ -270,10 +275,77 @@ KitStatus? connectionKitStatus(
             await restart();
           }()),
         );
-  final supporting = [
-    if (snapshot.usesToken) l10n.codexDraftReconnectNotice,
-    if (note != null && note.isNotEmpty) note,
-  ];
+  // No standing promise about drafts here (owner, 2026-10-27): the line
+  // is about the link. A draft stays in its composer, which says what
+  // happens to it when Send is pressed while the link is down.
+  final supporting = [if (note != null && note.isNotEmpty) note];
+  // The link retries by itself on a real timer (vision 2026-10-20, "Both,
+  // toned down"): say when, offer Try now, and stay muted, since nobody has
+  // to act. Restart and the rest wait in More. Without a schedule (the
+  // person turned automatic reconnects off, a first connection failed)
+  // nothing promises a retry.
+  final next = snapshot.nextAttemptAt;
+  if (next != null && !snapshot.retrying && !busy) {
+    Future<void> restartNow() async {
+      if (restart == null) return;
+      if (!agentRoute) {
+        final current = target();
+        if (current == null ||
+            !current.mounted ||
+            !await confirmPhoneServerRestart(
+              current,
+              commandRunning: controller.hasRunningTool,
+            )) {
+          return;
+        }
+      }
+      await restart();
+    }
+
+    // One quiet caption line, like every other note (owner, 2026-10-20):
+    // "Laptop isn't answering · trying again in 12 s · Try now". No More and
+    // no divider: the words open Details (Try again, Switch server and, for
+    // this phone's server or an agent's helper, Restart); the server sheet
+    // keeps the rest.
+    return KitStatus(
+      kind: KitStatusKind.connection,
+      id: 'connection:${snapshot.profileId}',
+      key: const ValueKey('connection-status-banner'),
+      icon: snapshot.waiting ? AppIconography.sync : AppIconography.cloudOff,
+      message: message,
+      quiet: true,
+      semanticsLabel: message,
+      countdownTo: next,
+      countdownLine: (left) {
+        final seconds = (left.inMilliseconds / 1000).ceil();
+        return [
+          seconds <= 0
+              ? l10n.connectionTryingAgainNow
+              : l10n.connectionTryingAgainIn(seconds),
+          ...supporting,
+        ].join(' ');
+      },
+      action: KitAction(
+        key: const ValueKey('connection-banner-retry'),
+        label: l10n.connectionTryNow,
+        onPressed: () => unawaited(controller.retryConnection()),
+      ),
+      onOpen: () {
+        final current = target();
+        if (current != null && current.mounted) {
+          unawaited(
+            showConnectionDetailsSheet(
+              current,
+              controller,
+              showChangeServer: showChangeServer,
+              onRestart: restart == null ? null : restartNow,
+              restartLabel: restartLabel,
+            ),
+          );
+        }
+      },
+    );
+  }
   return KitStatus(
     kind: KitStatusKind.connection,
     id: 'connection:${snapshot.profileId}',
@@ -377,6 +449,8 @@ Future<void> showConnectionDetailsSheet(
   BuildContext context,
   ConnectionController controller, {
   bool showChangeServer = true,
+  Future<void> Function()? onRestart,
+  String? restartLabel,
 }) async {
   final revision = controller.connectionRevision;
   final helper = await controller.readConnectionHelperExit();
@@ -435,6 +509,15 @@ Future<void> showConnectionDetailsSheet(
             },
           ),
     tertiary: [
+      if (onRestart != null && !manualRetry)
+        KitAction(
+          key: const ValueKey('connection-details-restart'),
+          label: restartLabel ?? l10n.connectionRestartPhoneServer,
+          onPressed: () {
+            navigator.pop();
+            unawaited(onRestart());
+          },
+        ),
       if (showChangeServer && !manualRetry)
         KitAction(
           label: l10n.productStatesSwitchServer,

@@ -583,11 +583,24 @@ class BuiltinLinux {
 
   final MethodChannel _channel;
 
-  Future<BuiltinLinuxStatus> status() async {
-    if (!supported) return const BuiltinLinuxStatus.absent();
-    final raw = await _invoke<Map<Object?, Object?>>('status');
-    return BuiltinLinuxStatus.fromMap(raw ?? const {});
+  /// Callers that ask while a read is in flight share it (startup asked five
+  /// times a second); after any other request on the channel, a fresh read.
+  Future<BuiltinLinuxStatus> status() {
+    if (!supported) return Future.value(const BuiltinLinuxStatus.absent());
+    final shared = _statusReads[_channel];
+    if (shared != null && shared.$1 == _requests) return shared.$2;
+    final read = _invoke<Map<Object?, Object?>>(
+      'status',
+    ).then((raw) => BuiltinLinuxStatus.fromMap(raw ?? const {}));
+    _statusReads[_channel] = (_requests, read);
+    read.whenComplete(() {
+      if (_statusReads[_channel]?.$2 == read) _statusReads[_channel] = null;
+    }).ignore();
+    return read;
   }
+
+  static final _statusReads = Expando<(int, Future<BuiltinLinuxStatus>)>();
+  static var _requests = 0;
 
   /// Saves the authored idle policy on an APK supporting the full contract.
   Future<BuiltinLinuxStatus> setPhoneServerIdlePolicy({
@@ -820,6 +833,11 @@ class BuiltinLinux {
 
   Future<Map<Object?, Object?>> confirmManualServerStart(String profileId) =>
       _recoveryMap('confirmManualServerStart', {'profileId': profileId});
+
+  /// The app is open and the server answered its health check: native
+  /// starts the automatic restore count again, unless a restore is in flight.
+  Future<Map<Object?, Object?>> confirmServerPresence(String profileId) =>
+      _recoveryMap('confirmServerPresence', {'profileId': profileId});
 
   Future<void> unbindServerRecovery(String profileId, {bool delete = false}) =>
       _invokeRecovery(
@@ -1174,6 +1192,7 @@ class BuiltinLinux {
   // carries a label from its script (see [scriptLabel]). The status reads
   // that setup polls twice a second reach the device log only when slow.
   Future<T?> _invoke<T>(String method, [Object? arguments]) {
+    if (method != 'status') _requests++;
     final script = arguments is Map ? arguments['script'] : null;
     return PerfTrace.span(
       'linux.$method',

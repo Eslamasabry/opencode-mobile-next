@@ -215,6 +215,25 @@ void main() {
     ]);
   });
 
+  test('a refresh never turns a filter with no matches into loading', () async {
+    // Running on, nothing running: the agents' poll refreshes every few
+    // seconds, and each read flashed placeholders over "Nothing running".
+    first.snapshot = ChatFeedSnapshot(items: [_row('idle')]);
+    final pending = Completer<void>();
+    second.refresh = () => pending.future;
+    const running = ChatFeedFilter(running: true);
+    final read = merged.refreshChatFeed();
+    expect(merged.chatFeed(running).items, isEmpty);
+    expect(merged.chatFeed(running).loading, isFalse);
+    second.snapshot = const ChatFeedSnapshot(items: [], loading: true);
+    expect(merged.chatFeed(running).loading, isFalse);
+    pending.complete();
+    await read;
+    // Nothing known anywhere yet: that is still a first load.
+    first.snapshot = const ChatFeedSnapshot(items: [], loading: true);
+    expect(merged.chatFeed(running).loading, isTrue);
+  });
+
   test(
     'coalesced refresh isolates a failed child and recovers on next read',
     () async {

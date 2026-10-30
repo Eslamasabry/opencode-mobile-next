@@ -19,8 +19,7 @@ import '../support/fake_event_channel.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/ui/kit/kit_top_bar.dart';
-import 'package:opencode_mobile/ui/screens/files_screen.dart';
+import 'package:opencode_mobile/ui/screens/project_hub_screen.dart';
 import 'package:opencode_mobile/ui/screens/review_workspace.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -144,16 +143,6 @@ Future<void> _shot(
   }
 }
 
-Widget _files(ConnectionController controller) => FilesScreen(
-  controller: controller,
-  onAttachFile: (_, _) async {},
-  topBar: (folder) => KitTopBar(
-    title: folder ?? 'Files',
-    exit: KitTopBarExit.back,
-    onExit: () {},
-  ),
-);
-
 Widget _diffPage(ConnectionController _) => DiffPage(diffs: sampleDiffs());
 
 void main() {
@@ -173,9 +162,14 @@ void main() {
           'files_changes',
           light: light,
           size: size,
-          home: _files,
-          then: () =>
-              tester.tap(find.byKey(const ValueKey('files-changes-card'))),
+          // Changes is the first item of the Files page's ⋯ (vision
+          // 2026-10-20); the changed file shows on its own name.
+          home: (controller) => ProjectHub(controller: controller),
+          then: () async {
+            await tester.tap(find.byKey(const ValueKey('project-hub-menu')));
+            await tester.pumpAndSettle();
+            await tester.tap(find.byKey(const ValueKey('project-hub-changes')));
+          },
         );
       });
       testWidgets('diff page · $at · $mode', (tester) async {

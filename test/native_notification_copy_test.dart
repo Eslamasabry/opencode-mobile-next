@@ -86,11 +86,9 @@ void main() {
       for (final name in [
         'SessionsWidgetProvider.kt',
         'SessionWidgetRenderer.kt',
-        'SessionWidgetRow.kt',
         'SessionWidgetRowEnv.kt',
         'SessionWidgetStripBinder.kt',
-        'SessionWidgetPageBinder.kt',
-        'SessionWidgetListBinder.kt',
+        'SessionWidgetCardBinder.kt',
         'WidgetCopy.kt',
       ])
         File('$_kotlin$name').readAsStringSync(),
@@ -102,9 +100,9 @@ void main() {
       'widget_v2_empty',
       'widget_v2_offline_seen',
       'widget_v2_ago_min',
-      'widget_v2_ask_followup',
+      'widget_v2_steer_hint',
       'widget_v2_new_in',
-      'widget_v2_count_working',
+      'widget_v2_open_chat',
       'widget_v2_voice',
     ]) {
       expect(widget, contains('R.string.$resource'), reason: resource);

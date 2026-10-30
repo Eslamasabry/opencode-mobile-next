@@ -263,7 +263,7 @@ void main() {
           ),
         ),
       );
-      api.healthGate.complete(Health(healthy: true, version: '2.0.29'));
+      api.healthGate.complete(Health(healthy: true, version: '2.1.1'));
       await connecting;
     },
   );
@@ -317,7 +317,7 @@ void main() {
       );
       expect(bridge.calls, ['stop:alias', 'stop:alias']);
       await controller.disconnect();
-      api.healthGate.complete(Health(healthy: true, version: '2.0.29'));
+      api.healthGate.complete(Health(healthy: true, version: '2.1.1'));
       await connecting;
     },
   );

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../../app_iconography.dart';
 import '../kit_buttons.dart';
 import '../kit_icon.dart';
-import '../kit_text.dart';
+import '../kit_max_width.dart';
 import '../kit_tappable.dart';
+import '../kit_text.dart';
 import '../kit_tokens.dart';
 import 'kit_team_data.dart';
 import 'team_parts.dart';
@@ -42,7 +43,10 @@ class KitPlanCard extends StatelessWidget {
   final KitAction? secondary;
   final List<KitAction> actions;
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final t = KitTokens.of(context);
     return teamCard(
       context,

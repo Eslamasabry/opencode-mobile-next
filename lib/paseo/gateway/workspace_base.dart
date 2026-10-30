@@ -69,4 +69,6 @@ abstract class _PaseoWorkspace = Object
         _PaseoFilesApi,
         _PaseoChangesApi,
         _PaseoWorktreesApi,
-        _PaseoTerminalsApi;
+        _PaseoTerminalsApi,
+        _PaseoIdleGuardApi,
+        _PaseoBackgroundTasksApi;

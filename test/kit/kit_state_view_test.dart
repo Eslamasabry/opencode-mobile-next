@@ -427,4 +427,96 @@ void main() {
     expect(tester.hasRunningAnimations, isFalse);
     expect(tester.binding.hasScheduledFrame, isFalse);
   });
+
+  group('calm (vision 2026-10-20)', () {
+    testWidgets('the words in the middle, the main action at the bottom, no '
+        'icon tile', (tester) async {
+      var started = 0;
+      var shown = 0;
+      await _pump(
+        tester,
+        KitStateView.calm(
+          title: 'Nothing running',
+          body: 'Start a conversation, or open one.',
+          primary: KitAction(
+            label: 'New conversation',
+            onPressed: () => started++,
+          ),
+          tertiary: [
+            KitAction(
+              label: 'Show all conversations',
+              onPressed: () => shown++,
+            ),
+          ],
+        ),
+      );
+      expect(find.text('Nothing running'), findsOneWidget);
+      expect(find.text('Start a conversation, or open one.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('kit-state-icon')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('kit-state-illustration')),
+        findsNothing,
+      );
+      final words = tester.getCenter(find.text('Nothing running'));
+      final main = tester.getRect(find.text('New conversation'));
+      // The main action sits low, in thumb reach; the words above the middle
+      // of the room left over.
+      expect(main.top, greaterThan(915 * .75));
+      expect(words.dy, lessThan(main.top / 2 + 40));
+      expect(words.dx, closeTo(412 / 2, 2));
+      await tester.tap(find.text('New conversation'));
+      await tester.tap(find.text('Show all conversations'));
+      expect((started, shown), (1, 1));
+    });
+
+    testWidgets('inline: centred, the first quiet action under the words', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        ListView(
+          children: [
+            KitStateView.calm(
+              title: 'No projects opened',
+              body: 'Projects you open appear here.',
+              size: KitStateSize.inline,
+              tertiary: [KitAction(label: 'Try again', onPressed: () {})],
+            ),
+          ],
+        ),
+      );
+      expect(find.text('No projects opened'), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Try again')).dy,
+        greaterThan(tester.getBottomLeft(find.text('No projects opened')).dy),
+      );
+    });
+
+    testWidgets('large text on a narrow phone never breaks a word', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 693);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(
+            size: Size(320, 693),
+            textScaler: TextScaler.linear(2),
+          ),
+          child: _app(const KitStateView.calm(title: 'No conversations yet')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final text = tester.widget<Text>(find.text('No conversations yet'));
+      final box = tester.getSize(find.text('No conversations yet'));
+      final painter = TextPainter(
+        text: TextSpan(text: 'conversations', style: text.style),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      expect(box.width, greaterThanOrEqualTo(painter.width - .5));
+      painter.dispose();
+    });
+  });
 }

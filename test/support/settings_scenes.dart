@@ -14,12 +14,17 @@ import 'package:opencode_mobile/domain/server_probe.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/kit/kit.dart' show KitPageRoute;
+import 'package:opencode_mobile/ui/theme_packs.dart';
 import 'package:opencode_mobile/ui/screens/about_screen.dart';
 import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 
 import '../../tool/capture/fixtures.dart';
+// AUDIT TOOLING (audit/style-coherence): no-op unless AUDIT_STYLE is set.
+import '../../tool/capture/audit/audit_env.dart';
 import 'server_editor.dart';
 import 'setup_capture_preferences.dart';
 
@@ -171,6 +176,8 @@ Future<_SettingsController> _controller(
     ..status = StreamStatus.connected
     ..directory = projectDirectory
     ..version = '1.18.25';
+  // AUDIT TOOLING (audit/style-coherence): the stored Style, as main.dart has it.
+  if (AuditEnv.on) controller.effects.value = AuditEnv.effects;
   controller.catalog = sampleCatalog();
   final model = controller.catalog!.models.first;
   controller.selectedModel = ModelRef(
@@ -210,9 +217,16 @@ Future<Future<void> Function()> mountSettingsScene(
   SettingsScene scene, {
   required bool light,
   required GlobalKey boundary,
+  Size size = const Size(412, 915),
+  void Function(dynamic controller)? configure,
+  // The theme the app would build from the controller's pack, Accent and
+  // light, dark or Saver (main.dart), instead of the plain capture theme.
+  bool followAppearance = false,
+  // Opened from a page below it, as the app opens it, so its Back shows.
+  bool pushed = false,
 }) async {
   _mockPlatform(tester);
-  tester.view.physicalSize = const Size(412, 915);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final previousProbe = serverProbe;
@@ -228,6 +242,7 @@ Future<Future<void> Function()> mountSettingsScene(
   controller.appearance.value = light
       ? AppAppearance.light
       : AppAppearance.dark;
+  configure?.call(controller);
   // The hub shows them as the badge on Report a problem (P8.2).
   if (scene == SettingsScene.diagnostics || scene == SettingsScene.hub) {
     final base = DateTime(2026, 9, 24, 9, 41, 7);
@@ -247,7 +262,10 @@ Future<Future<void> Function()> mountSettingsScene(
   }
   final home = switch (scene) {
     SettingsScene.hub => SettingsScreen(controller: controller),
-    SettingsScene.server => ServerSettingsScreen(controller: controller),
+    SettingsScene.server => ServerPageScreen(
+      controller: controller,
+      profileId: controller.profile!.id,
+    ),
     SettingsScene.notifications => NotificationsSettingsScreen(
       controller: controller,
     ),
@@ -266,9 +284,23 @@ Future<Future<void> Function()> mountSettingsScene(
     SettingsScene.addServer ||
     SettingsScene.addServerFailed => const ServersScreen(),
   };
+  ThemeData? theme;
+  if (followAppearance) {
+    final pack = effectiveThemePack(controller.themePack.value);
+    final accent = appearanceAccentById(controller.appearanceAccent.value);
+    theme = switch (controller.appearance.value) {
+      AppAppearance.light => AppTheme.light(pack, accent?.light),
+      AppAppearance.saver => AppTheme.saver(pack, accent?.dark),
+      _ => AppTheme.dark(pack, accent?.dark),
+    }.copyWith(platform: TargetPlatform.android);
+    theme = AppTheme.forLocale(theme, tester.platformDispatcher.locales.first);
+  } else {
+    theme = null;
+  }
   await tester.pumpWidget(
     captureApp(
-      home: home,
+      home: pushed ? _PushHost(page: home) : home,
+      theme: theme,
       boundaryKey: boundary,
       controller: controller,
       light: light,
@@ -281,6 +313,11 @@ Future<Future<void> Function()> mountSettingsScene(
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 500));
+  if (pushed) {
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+  }
   if (scene == SettingsScene.about) {
     // The documents come from the asset bundle, off the fake clock.
     await tester.runAsync(
@@ -319,4 +356,31 @@ Future<Future<void> Function()> mountSettingsScene(
     controller.dispose();
     await tester.pump();
   };
+}
+
+/// A blank first page that opens [page] on top of itself, so the page has a
+/// way back as it does in the app.
+class _PushHost extends StatefulWidget {
+  const _PushHost({required this.page});
+
+  final Widget page;
+
+  @override
+  State<_PushHost> createState() => _PushHostState();
+}
+
+class _PushHostState extends State<_PushHost> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(
+        context,
+      ).push(KitPageRoute<void>(builder: (_) => widget.page));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.expand();
 }

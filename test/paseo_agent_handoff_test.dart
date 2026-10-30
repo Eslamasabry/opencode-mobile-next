@@ -177,11 +177,84 @@ void main() {
       expect((request['config'] as Map)['cwd'], _directory);
       expect(gateway.handoffSessionId(draft.id), 'durable-agent');
       expect(gateway.handoffSessionId('durable-agent'), 'durable-agent');
-      expect(gateway.handoffNavigationSessionId('durable-agent'), draft.id);
-      expect(gateway.handoffNavigationSessionId(draft.id), draft.id);
+      // The conversation opens on the agent backend's own gateway, which
+      // knows only the daemon's id (owner's phone 2026-10-26: the draft id
+      // there was "Couldn't open this conversation").
+      expect(
+        gateway.handoffNavigationSessionId('durable-agent'),
+        'durable-agent',
+      );
+      expect(gateway.handoffNavigationSessionId(draft.id), 'durable-agent');
       expect(
         gateway.handoffNavigationSessionId('unseen-durable-id'),
         'unseen-durable-id',
+      );
+    },
+  );
+
+  test(
+    'the continued conversation opens on another gateway of the same daemon',
+    () async {
+      prepareAgentCreation();
+      final draft = await gateway.createSession();
+      await gateway.promptAgentHandoff(
+        draft.id,
+        text: 'Read the handoff file and continue.',
+        model: ModelRef(providerID: 'claude', modelID: 'opus'),
+        beforeSend: () {},
+      );
+      // What AgentHandoffController.send returns for the sheet to open.
+      final open = gateway.handoffNavigationSessionId(
+        gateway.handoffSessionId(draft.id),
+      );
+      // The chat's own gateway (the agent backend) is a fresh one: the
+      // daemon knows only its own id and answers others with `agent: null`.
+      daemon.handlers['fetch_agent_request'] = (request) => (
+        'fetch_agent_response',
+        {
+          'agent': request['agentId'] == 'durable-agent'
+              ? agentJson('durable-agent')
+              : null,
+          'project': null,
+          'error': request['agentId'] == 'durable-agent'
+              ? null
+              : 'Agent not found: ${request['agentId']}',
+        },
+      );
+      daemon.handlers['fetch_agent_timeline_request'] = (request) => (
+        'fetch_agent_timeline_response',
+        {
+          'agentId': request['agentId'],
+          'epoch': 'epoch-1',
+          'endCursor': {'epoch': 'epoch-1', 'seq': 1},
+          'entries': [
+            {
+              'provider': 'claude',
+              'item': {
+                'type': 'user_message',
+                'text': 'Read the handoff file and continue.',
+                'messageId': 'u1',
+              },
+              'timestamp': '2026-10-26T03:35:27.922Z',
+              'seqStart': 1,
+            },
+          ],
+        },
+      );
+      // Its own link to the same daemon.
+      final link = FakeDaemon()..handlers.addAll(daemon.handlers);
+      final chat = PaseoGateway(
+        transport: PaseoTransport(
+          endpoint: 'ws://127.0.0.1:6767',
+          socketFactory: (_, _) async => link,
+        ),
+        directory: _directory,
+      );
+      addTearDown(chat.close);
+      final messages = await chat.messages(open);
+      expect(
+        messages.map((m) => m.parts.map((p) => p.text).join()),
+        contains('Read the handoff file and continue.'),
       );
     },
   );

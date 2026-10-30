@@ -249,11 +249,11 @@ void main() {
     final preferred = catalog.agents.first;
     expect(preferred.id, 'opencode2');
     expect(preferred.route, AgentRoute.opencode2);
-    expect(preferred.recipe!.version, '2.0.29');
+    expect(preferred.recipe!.version, '2.1.1');
     for (final architecture in AgentArchitecture.values) {
       expect(
         preferred.artifactFor(architecture)!.url.path,
-        endsWith('-2.0.29.tgz'),
+        endsWith('-2.1.1.tgz'),
       );
     }
     expect(catalog.byId('opencode'), isNull);

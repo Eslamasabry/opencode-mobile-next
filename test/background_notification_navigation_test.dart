@@ -16,6 +16,7 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/update/shorebird_update_notice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/plain_text_finder.dart';
 
 class _MemoryProfileStore extends ProfileStore {
   _MemoryProfileStore({required super.prefs, required this.savedProfile});
@@ -225,7 +226,7 @@ void main() {
 
     final chat = tester.widget<ChatScreen>(find.byType(ChatScreen));
     expect(chat.sessionID, 'session-1');
-    expect(find.text('Edit this file?'), findsOneWidget);
+    expect(findPlainText('Edit main.dart?'), findsOneWidget);
     // The card answers in place (chat-5); Details opens the exact request.
     expect(find.byKey(const Key('permission-card-allow')), findsOneWidget);
     expect(find.byKey(const Key('permission-sheet')), findsNothing);

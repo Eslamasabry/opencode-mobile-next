@@ -189,12 +189,18 @@ class IntegrationMethodInfo {
   final List<Map<String, dynamic>> prompts;
   final List<String> environmentNames;
 
+  /// Answers the server fixed itself (OpenCode 2 hidden form fields with a
+  /// default, such as the Console address); sent with every start, never
+  /// asked.
+  final Map<String, String> presetAnswers;
+
   const IntegrationMethodInfo({
     required this.type,
     this.id,
     required this.label,
     this.prompts = const [],
     this.environmentNames = const [],
+    this.presetAnswers = const {},
   });
 }
 

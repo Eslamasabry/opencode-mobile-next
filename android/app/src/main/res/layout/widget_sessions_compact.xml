@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 2x1: a status dot and the title in whole lines. -->
+<!-- 2x1: the card at its smallest. A state dot (amber when it needs you) and the one thing
+     that matters now in up to two whole lines; a tap opens it. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/background" android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="horizontal" android:gravity="center_vertical" android:layoutDirection="locale"
-    android:background="@drawable/widget_card_bg" android:paddingStart="14dp" android:paddingEnd="10dp">
+    android:background="@drawable/widget_card_dark" android:paddingStart="14dp" android:paddingEnd="12dp">
     <ImageView android:id="@+id/wc_dot" android:layout_width="8dp" android:layout_height="8dp"
         android:layout_marginEnd="10dp" android:src="@drawable/widget_dot" android:importantForAccessibility="no" />
     <TextView android:id="@+id/wc_title" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
         android:textSize="15sp" android:textStyle="bold" android:lineHeight="19sp" android:maxLines="2" android:ellipsize="end"
-        android:textDirection="firstStrong" android:gravity="start" android:textColor="@color/widgetText" />
+        android:textDirection="firstStrong" android:gravity="start" android:textColor="#FFF3F3F1" />
 </LinearLayout>

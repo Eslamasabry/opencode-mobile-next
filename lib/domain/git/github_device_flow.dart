@@ -55,6 +55,23 @@ class GitHubDeviceCode {
 }
 
 /// A token GitHub issued, with the account it belongs to once known.
+/// Who a GitHub sign-in belongs to.
+class GitHubProfile {
+  const GitHubProfile({required this.login, this.id, this.name});
+
+  final String login;
+  final int? id;
+  final String? name;
+
+  /// The name a commit made by this person carries.
+  String get commitName => name ?? login;
+
+  /// GitHub's private address for the account (id, a plus, the login, then
+  /// users.noreply.github.com): a push keeps the real email out of history.
+  String? get commitEmail =>
+      id == null ? null : '$id+$login@users.noreply.github.com';
+}
+
 class GitHubCredential {
   const GitHubCredential({
     required this.accessToken,
@@ -316,7 +333,11 @@ class GitHubDeviceFlow {
   }
 
   /// The account name the token belongs to (`GET /user`).
-  Future<String> fetchLogin(String token) async {
+  Future<String> fetchLogin(String token) async =>
+      (await fetchProfile(token)).login;
+
+  /// The account's login, numeric id and display name (`GET /user`).
+  Future<GitHubProfile> fetchProfile(String token) async {
     final Response<Object?> response;
     try {
       response = await _dio.get<Object?>(
@@ -346,7 +367,13 @@ class GitHubDeviceFlow {
         details: 'GET /user answered ${response.statusCode}',
       );
     }
-    return login;
+    final id = (data as Map)['id'];
+    final name = data['name'];
+    return GitHubProfile(
+      login: login,
+      id: id is int ? id : null,
+      name: name is String && name.trim().isNotEmpty ? name.trim() : null,
+    );
   }
 
   GitHubCredential _credential(Map<String, Object?> body) {

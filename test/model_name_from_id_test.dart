@@ -10,6 +10,7 @@ import 'package:opencode_mobile/ui/screens/library_screen.dart'
 
 import '../tool/capture/fixtures.dart';
 import 'support/setup_capture_preferences.dart';
+import 'support/composer_tools.dart';
 
 class _PagedApi extends CaptureApi {
   @override
@@ -126,10 +127,13 @@ void main() {
     for (var frame = 0; frame < 8; frame++) {
       await tester.pump(const Duration(milliseconds: 120));
     }
-    final chip = find.byKey(const Key('composer-model-context'));
-    expect(chip, findsOneWidget);
+    // The model is a row of the composer's + sheet, not a chip over it.
+    await openComposerTools(tester);
+    await tester.pumpAndSettle();
+    final row = find.byKey(const Key('composer-setting-model'));
+    expect(row, findsOneWidget);
     expect(
-      find.descendant(of: chip, matching: find.textContaining('Sonnet 5')),
+      find.descendant(of: row, matching: find.textContaining('Sonnet 5')),
       findsOneWidget,
     );
     expect(find.textContaining('claude-sonnet-5'), findsNothing);

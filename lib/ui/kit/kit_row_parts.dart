@@ -4,14 +4,19 @@ import 'package:flutter/services.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import 'kit_buttons.dart';
-import 'kit_icon_button.dart';
 import 'kit_icon.dart';
+import 'kit_icon_button.dart';
+import 'kit_max_width.dart';
 import 'kit_menu.dart';
+import 'kit_motion.dart';
+import 'kit_optical.dart';
 import 'kit_row.dart';
 import 'kit_status_line.dart';
 import 'kit_status_slot.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
+import 'motion/kit_haptics.dart';
 import 'motion/kit_motion_parts.dart';
 import 'motion/kit_reveal.dart';
 
@@ -47,6 +52,19 @@ class KitRowIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!current) return KitRow.icon(context, icon, color: color, mark: mark);
     final tokens = KitTokens.of(context);
+    // Flat lists (Solid): the one in use is the icon in the accent, with no
+    // tile; the row's "Connected · " says it in words.
+    if (KitSurfaceLook.flatLists(context)) {
+      return KeyedSubtree(
+        key: const ValueKey('kit-row-current-mark'),
+        child: KitRow.icon(
+          context,
+          icon,
+          color: tokens.roles.accent,
+          mark: mark,
+        ),
+      );
+    }
     return Container(
       key: const ValueKey('kit-row-current-mark'),
       width: tokens.iconTileSize,
@@ -154,13 +172,34 @@ class KitChevron extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
+    final size = tokens.iconSize(context, tokens.smallIconSize);
+    final glyph = Icon(
+      AppIconography.chevronRight,
+      size: size,
+      color: tokens.roles.text3,
+    );
+    // In a row, the caret's ink ends on the row's end rail (the gutter on
+    // a page), not 6 dp short of it inside a centred target (impeccable
+    // layout pass, 2026-10-28). Elsewhere it stays centred.
+    final rail = KitRow.trailingRailOf(context);
     return SizedBox.square(
       dimension: tokens.minTarget,
-      child: Icon(
-        AppIconography.chevronRight,
-        size: tokens.iconSize(context, tokens.smallIconSize),
-        color: tokens.roles.text3,
-      ),
+      child: rail == null
+          ? Center(child: glyph)
+          : Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: Padding(
+                padding: EdgeInsetsDirectional.only(
+                  end: KitOptical.endPad(
+                    context,
+                    AppIconography.chevronRight,
+                    size,
+                    rail,
+                  ),
+                ),
+                child: glyph,
+              ),
+            ),
     );
   }
 }
@@ -222,6 +261,12 @@ class KitRisk {
 /// what it does in the supporting line (two lines allowed), and the switch
 /// at the end. The whole row toggles.
 ///
+/// - [onOpen]: the row is a thing that can be switched on and off (a
+///   scheduled prompt): a tap on the row opens it, only the switch toggles,
+///   and the two are separate targets for screen readers (the switch keeps
+///   the title as its name). The title and the supporting line stay one
+///   line each, so a list of them keeps one height.
+///
 /// - A null [onChanged] disables it: [disabledReason] becomes the visible
 ///   supporting line and the hint (STATE-8); nothing is dimmed.
 /// - [risk]: turning it on first unfolds a step under the row that states
@@ -245,7 +290,10 @@ class KitSwitchRow extends StatelessWidget {
     this.risk,
     this.locked,
     this.disabledReason,
+    this.onOpen,
+    this.openLabel,
   }) : assert(locked == null || risk == null),
+       assert(onOpen == null || (risk == null && locked == null)),
        assert(locked == null || value, 'locked means always on');
 
   final String title;
@@ -272,8 +320,17 @@ class KitSwitchRow extends StatelessWidget {
   /// null.
   final String? disabledReason;
 
+  /// A tap on the row opens what it stands for; only the switch toggles.
+  final VoidCallback? onOpen;
+
+  /// What opening does ("Edit schedule"), read as the row's hint.
+  final String? openLabel;
+
   @override
-  Widget build(BuildContext context) => _KitSwitchRowBody(row: this);
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) => _KitSwitchRowBody(row: this);
 }
 
 class _KitSwitchRowBody extends StatefulWidget {
@@ -333,6 +390,7 @@ class _KitSwitchRowBodyState extends State<_KitSwitchRowBody> {
       }
       return;
     }
+    KitHaptics.select(context);
     onChanged(!row.value);
   }
 
@@ -360,7 +418,7 @@ class _KitSwitchRowBodyState extends State<_KitSwitchRowBody> {
       child: Semantics(
         toggled: true,
         enabled: false,
-        hint: row.locked,
+        // The word is on screen at the row's end, so it is in the label.
         child: KitRow(
           title: row.title,
           leading: row.leading,
@@ -444,6 +502,39 @@ class _KitSwitchRowBodyState extends State<_KitSwitchRowBody> {
     final onChanged = row.onChanged;
     final supporting = _supporting(context);
     final disabledHint = onChanged == null ? row.disabledReason : null;
+    final onOpen = row.onOpen;
+    if (onOpen != null) {
+      return Semantics(
+        hint: row.openLabel,
+        child: KitRow(
+          title: row.title,
+          leading: row.leading,
+          supporting: supporting == null ? null : TextSpan(text: supporting),
+          below: row.below,
+          onTap: onOpen,
+          trailing: Padding(
+            padding: EdgeInsetsDirectional.only(end: tokens.space2),
+            child: Semantics(
+              label: row.title,
+              hint: disabledHint,
+              // Quiet: a row of these is a list, not a row of buttons; the
+              // screen's one solid accent stays its main action.
+              child: _KitSwitch(
+                switchKey: row.switchKey,
+                value: row.value,
+                onChanged: onChanged == null
+                    ? null
+                    : (value) {
+                        KitHaptics.select(context);
+                        onChanged(value);
+                      },
+                quiet: true,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     Widget switchRow = MergeSemantics(
       child: Semantics(
         hint: disabledHint,
@@ -457,8 +548,8 @@ class _KitSwitchRowBodyState extends State<_KitSwitchRowBody> {
           onTap: onChanged == null ? null : _toggle,
           trailing: Padding(
             padding: EdgeInsetsDirectional.only(end: tokens.space2),
-            child: Switch.adaptive(
-              key: row.switchKey,
+            child: _KitSwitch(
+              switchKey: row.switchKey,
               value: row.value,
               onChanged: onChanged == null ? null : (_) => _toggle(),
             ),
@@ -497,6 +588,271 @@ class _KitSwitchRowBodyState extends State<_KitSwitchRowBody> {
   }
 }
 
+/// The switch at the end of a [KitSwitchRow]. Where the style answers the
+/// switch with its own look (Solid, at its defaults and under every
+/// Fine-tune knob, none of which names a switch) it keeps the platform
+/// switch, exactly as it always was; any other look draws the same switch
+/// from the style resolver: the track is a `toggle` surface (on: [value],
+/// with the on fill) and the thumb a round `control`
+/// (docs/design/design-schools/briefs/README.md, "How a part asks for the
+/// style").
+///
+/// [quiet] is the switch of a row that opens on a tap: an accent thumb on a
+/// faint accent track, so a list of them stays a list, not a row of main
+/// actions.
+class _KitSwitch extends StatelessWidget {
+  const _KitSwitch({
+    required this.value,
+    required this.onChanged,
+    this.switchKey,
+    this.quiet = false,
+  });
+
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+  final Key? switchKey;
+  final bool quiet;
+
+  @override
+  Widget build(BuildContext context) {
+    final roles = KitTokens.of(context).roles;
+    final looks = _kitSwitchLooks(
+      context,
+      on: value,
+      enabled: onChanged != null,
+      quiet: quiet,
+    );
+    if (looks.own) {
+      return Switch.adaptive(
+        key: switchKey,
+        value: value,
+        onChanged: onChanged,
+        activeThumbColor: quiet ? roles.accent : null,
+        activeTrackColor: quiet ? roles.accent.withValues(alpha: 0.24) : null,
+        trackOutlineColor: quiet
+            ? WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.selected)
+                    ? roles.accent.withValues(alpha: 0.5)
+                    : null,
+              )
+            : null,
+      );
+    }
+    return _KitStyledSwitch(
+      key: switchKey,
+      value: value,
+      onChanged: onChanged,
+      quiet: quiet,
+    );
+  }
+}
+
+/// The styled switch's track and thumb here, and whether the style
+/// answered both with the part's own look ([own]: keep the platform
+/// switch). The fills are those the platform switch takes from the theme
+/// (app_theme.dart switchTheme), or the quiet accent pair: what Solid
+/// paints, and the part's own colours the styles keep.
+({Decoration track, Decoration thumb, bool own}) _kitSwitchLooks(
+  BuildContext context, {
+  required bool on,
+  required bool enabled,
+  required bool quiet,
+}) {
+  final roles = KitTokens.of(context).roles;
+  final Color onFill = !enabled
+      ? roles.text3.withValues(alpha: .35)
+      : quiet
+      ? Color.alphaBlend(roles.accent.withValues(alpha: .24), roles.surface1)
+      : roles.accent;
+  final trackColor = on ? onFill : roles.surface3;
+  final Color thumbColor = !enabled
+      ? (on ? roles.text2 : roles.text3)
+      : on
+      ? (quiet ? roles.accent : roles.onAccent)
+      : roles.text2;
+  final outline = on
+      ? (quiet ? roles.accent.withValues(alpha: .5) : Colors.transparent)
+      : roles.hairline;
+  final trackOwn = KitSurfaceDecoration(
+    borderRadius: KitSurfaceLook.stadium,
+    fill: trackColor,
+    edgeStart: outline,
+    edgeEnd: outline,
+    edgeWidth: outline.a > 0 ? 2 : 0,
+  );
+  final track = KitSurfaceLook.decorate(
+    context,
+    solid: trackOwn,
+    role: KitSurfaceRole.toggle,
+    level: KitSurfaceLevel.surface3,
+    borderRadius: KitSurfaceLook.stadium,
+    selected: on,
+    color: on ? onFill : null,
+  );
+  // The thumb is a round control that keeps its own colour (it is what
+  // says on or off); the style gives it its edge and depth.
+  final thumbOwn = KitSurfaceDecoration(circle: true, fill: thumbColor);
+  final thumb = KitSurfaceLook.decorate(
+    context,
+    solid: thumbOwn,
+    role: KitSurfaceRole.control,
+    level: KitSurfaceLevel.surface2,
+    circle: true,
+    color: thumbColor,
+  );
+  return (
+    track: track,
+    thumb: thumb,
+    own: identical(track, trackOwn) && identical(thumb, thumbOwn),
+  );
+}
+
+/// [_KitSwitch] drawn by the style: the platform switch's size (60 × 48,
+/// a 52 × 32 track) so a row never reflows between styles, a 24 dp thumb
+/// that slides over [KitMotion.quick] (at once under reduced motion), and
+/// the same semantics, focus and keyboard toggle.
+class _KitStyledSwitch extends StatefulWidget {
+  const _KitStyledSwitch({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    required this.quiet,
+  });
+
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+  final bool quiet;
+
+  static const size = Size(60, 48);
+  static const track = Size(52, 32);
+  static const thumb = 24.0;
+
+  @override
+  State<_KitStyledSwitch> createState() => _KitStyledSwitchState();
+}
+
+class _KitStyledSwitchState extends State<_KitStyledSwitch> {
+  bool _focused = false;
+
+  void _toggle() => widget.onChanged?.call(!widget.value);
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    final roles = tokens.roles;
+    final on = widget.value;
+    final enabled = widget.onChanged != null;
+    final style = KitSurfaceLook.styleOf(context);
+    final looks = _kitSwitchLooks(
+      context,
+      on: on,
+      enabled: enabled,
+      quiet: widget.quiet,
+    );
+    final trackLook = looks.track;
+    final thumbLook = looks.thumb;
+    final still = KitMotion.reduced(context);
+    final radius = KitSurfaceDecoration.radiusOf(trackLook)?.topLeft.x ?? 0;
+    final inset = (_KitStyledSwitch.track.height - _KitStyledSwitch.thumb) / 2;
+    final Widget drawn = SizedBox.fromSize(
+      size: _KitStyledSwitch.size,
+      child: Center(
+        child: CustomPaint(
+          foregroundPainter: _focused
+              ? _KitSwitchFocusPainter(
+                  color: roles.accent,
+                  width: KitTokens.focusRingWidth(context),
+                  radius: radius,
+                )
+              : null,
+          child: SizedBox.fromSize(
+            size: _KitStyledSwitch.track,
+            child: kitSurfaceBox(
+              style: style,
+              decoration: trackLook,
+              child: Padding(
+                padding: EdgeInsets.all(inset),
+                child: AnimatedAlign(
+                  duration: still ? Duration.zero : KitMotion.quick,
+                  curve: KitMotion.enter,
+                  alignment: on
+                      ? AlignmentDirectional.centerEnd
+                      : AlignmentDirectional.centerStart,
+                  child: SizedBox.square(
+                    dimension: _KitStyledSwitch.thumb,
+                    child: kitSurfaceBox(
+                      style: style,
+                      decoration: thumbLook,
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    return Semantics(
+      toggled: on,
+      enabled: enabled,
+      onTap: enabled ? _toggle : null,
+      child: FocusableActionDetector(
+        enabled: enabled,
+        mouseCursor: enabled ? SystemMouseCursors.click : MouseCursor.defer,
+        onShowFocusHighlight: (value) {
+          if (value != _focused) setState(() => _focused = value);
+        },
+        actions: <Type, Action<Intent>>{
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (_) {
+              _toggle();
+              return null;
+            },
+          ),
+        },
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          onTap: enabled ? _toggle : null,
+          child: drawn,
+        ),
+      ),
+    );
+  }
+}
+
+/// The keyboard focus ring just outside a styled switch's track, in its
+/// corners (LOOK-21).
+class _KitSwitchFocusPainter extends CustomPainter {
+  _KitSwitchFocusPainter({
+    required this.color,
+    required this.width,
+    required this.radius,
+  });
+
+  final Color color;
+  final double width;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = (Offset.zero & size).inflate(width / 2 + 1);
+    final r = radius.clamp(0, rect.shortestSide / 2).toDouble();
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, Radius.circular(r == 0 ? 0 : r + 1)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width
+        ..color = color,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_KitSwitchFocusPainter old) =>
+      old.color != color || old.width != width || old.radius != radius;
+}
+
 /// A row that unfolds what it stands for in place (§6): a group of rows
 /// (the built-in plugins) or a rare choice (other OpenCode versions). Its
 /// chevron points down when folded and turns up when open, while the rows
@@ -521,6 +877,7 @@ class KitExpandRow extends StatefulWidget {
     this.supportingMaxLines = 1,
     this.maintainState = false,
     this.titleMaxLines = 1,
+    this.menu = const [],
   }) : assert(
          expanded == null || !initiallyExpanded,
          'controlled rows take expanded, not initiallyExpanded',
@@ -553,6 +910,10 @@ class KitExpandRow extends StatefulWidget {
   /// the children stay mounted, only hidden.
   final bool maintainState;
 
+  /// The header's long-press menu ([KitRow.menu]): actions on what the row
+  /// stands for (a diff's file: Comment, Add to prompt, Copy).
+  final List<KitMenuItem> menu;
+
   @override
   State<KitExpandRow> createState() => _KitExpandRowState();
 }
@@ -569,7 +930,10 @@ class _KitExpandRowState extends State<KitExpandRow> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final open = _open;
     final rtl = Directionality.of(context) == TextDirection.rtl;
@@ -601,9 +965,26 @@ class _KitExpandRowState extends State<KitExpandRow> {
               supportingMaxLines: widget.supportingMaxLines,
               titleMaxLines: widget.titleMaxLines,
               onTap: () => _set(!open),
+              menu: widget.menu,
+              // The caret's ink on the row's end rail, like KitChevron's.
               trailing: SizedBox.square(
                 dimension: tokens.minTarget,
-                child: Center(child: KitSpin.chevron(expanded: open)),
+                child: Builder(
+                  builder: (context) => Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: Padding(
+                      padding: EdgeInsetsDirectional.only(
+                        end: KitOptical.endPad(
+                          context,
+                          AppIconography.chevronDown,
+                          tokens.smallIconSize,
+                          KitRow.trailingRailOf(context) ?? tokens.space3,
+                        ),
+                      ),
+                      child: KitSpin.chevron(expanded: open),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

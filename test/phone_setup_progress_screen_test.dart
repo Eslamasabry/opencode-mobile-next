@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
+import 'package:opencode_mobile/platform/network.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_progress_screen.dart';
 import 'package:opencode_mobile/ui/widgets/setup_progress_view.dart';
 
@@ -68,6 +70,7 @@ Future<_Harness> _pump(
   bool pushReady = true,
   bool firstSetup = true,
   Future<bool> Function()? askNotifications,
+  NetworkTransport transport = NetworkTransport.unknown,
 }) async {
   PhoneSetupProgressScreen.resetNotificationAnswer();
   final h = _Harness();
@@ -100,6 +103,7 @@ Future<_Harness> _pump(
         engine: h.engine,
         firstSetup: firstSetup,
         askNotifications: askNotifications ?? () async => true,
+        readNetwork: () async => NetworkReading(transport: transport),
         openReady: (context) async {
           h.readyOpened++;
           if (!pushReady) return;
@@ -116,8 +120,7 @@ Future<_Harness> _pump(
   return h;
 }
 
-/// The page is one scrolling state (design standard §3): its actions sit
-/// under the checklist, below the fold of the 800x600 test surface.
+/// The page scrolls at large text; a control may sit below the fold.
 Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
   await tester.ensureVisible(finder);
   await tester.pump();
@@ -132,11 +135,48 @@ Future<void> _settle(WidgetTester tester) async {
   }
 }
 
-double? _barValue(WidgetTester tester) => tester
-    .widget<LinearProgressIndicator>(
-      find.byKey(const Key('setup-progress-overall')),
-    )
-    .value;
+/// "18 of 30 MB", its figures isolated left to right.
+final _bytes = '${KitBidi.ltr('18')} of ${KitBidi.ltr('30 MB')}';
+
+KitProgressRing _ring(WidgetTester tester) =>
+    tester.widget<KitProgressRing>(find.byType(KitProgressRing));
+
+/// Opens Details: the job's every step and its log, in a sheet.
+Future<void> _openDetails(WidgetTester tester) async {
+  await _tapVisible(tester, find.byKey(const Key('setup-progress-details')));
+  await _settle(tester);
+}
+
+/// The full view, as the Termux host shows it; its rows are also what the
+/// Details sheet lists.
+Future<void> _pumpView(
+  WidgetTester tester,
+  SetupProgress progress, {
+  bool rtl = false,
+}) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: AppTheme.light(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Directionality(
+        textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+        child: Scaffold(
+          body: ListView(
+            children: [
+              SetupProgressView(
+                progress: progress,
+                components: FakeSetupEngine.fakeRegistry,
+                checklistOnly: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+  await _settle(tester);
+}
 
 void main() {
   test('ownership recovery ignores running jobs and untrusted log lines', () {
@@ -201,19 +241,29 @@ void main() {
     },
   );
 
-  group('rows show only real numbers', () {
-    testWidgets('bytes as "18 of 30 MB" with the stage', (tester) async {
+  group('the ring shows only real figures', () {
+    testWidgets('a measured download: its share, its bytes, the step', (
+      tester,
+    ) async {
       await _pump(
         tester,
-        initial: _job(done: {'linux', 'essentials'}, current: _nodeDownloading),
+        initial: _job(
+          overall: .9,
+          done: {'linux', 'essentials'},
+          current: _nodeDownloading,
+        ),
       );
-      expect(find.text('Downloading · 18 of 30 MB'), findsOneWidget);
-      // One bar on the screen (design standard §4): the overall one.
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      // The step's own measured share, not the engine's weighted blend.
+      expect(_ring(tester).fraction, closeTo(.6, 1e-9));
+      expect(find.text(_bytes), findsOneWidget);
+      expect(find.text('Downloading Node.js'), findsOneWidget);
+      expect(find.textContaining('90'), findsNothing);
+      // No spinner and no bar: the ring is the one measure.
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byType(LinearProgressIndicator), findsNothing);
     });
 
-    testWidgets('percent as "62%"', (tester) async {
+    testWidgets('a reported percent, floored', (tester) async {
       await _pump(
         tester,
         initial: _job(
@@ -226,16 +276,22 @@ void main() {
           ),
         ),
       );
-      // Rounded down: never more than the tool reported.
-      expect(find.text('Installing packages · 62%'), findsOneWidget);
+      final semantics = tester.ensureSemantics();
+      expect(
+        tester.getSemantics(find.byKey(const Key('setup-progress-overall'))),
+        isSemantics(label: 'Setup progress', value: '62%'),
+      );
+      semantics.dispose();
+      expect(find.text('Installing Git and SSH'), findsOneWidget);
     });
 
-    testWidgets('a stage alone shows its label and no second bar', (
+    testWidgets('a step with no amount shows steps done, never a percent', (
       tester,
     ) async {
       await _pump(
         tester,
         initial: _job(
+          overall: .8,
           done: {'linux', 'essentials', 'python', 'node'},
           current: const ComponentProgress(
             id: 'opencode',
@@ -244,47 +300,153 @@ void main() {
           ),
         ),
       );
+      expect(_ring(tester).done, 4);
+      expect(_ring(tester).of, 5);
+      expect(find.text('steps done'), findsOneWidget);
       expect(find.text('Installing OpenCode'), findsOneWidget);
-      // The design standard (§4) keeps one bar per screen: the row says the
-      // stage and its mark spins; no indeterminate line of its own.
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
-      // No invented figure anywhere in the rows.
       expect(find.textContaining('%'), findsNothing);
       expect(find.textContaining(' MB'), findsNothing);
     });
 
-    testWidgets('a done row shows its version muted with a check', (
+    testWidgets('within a stage it never goes back; a new stage starts over', (
+      tester,
+    ) async {
+      final h = await _pump(tester, initial: _job(current: _nodeDownloading));
+      expect(_ring(tester).fraction, closeTo(.6, 1e-9));
+      ComponentProgress node(String stage, int done) => ComponentProgress(
+        id: 'node',
+        state: ComponentState.running,
+        stage: stage,
+        bytesDone: done,
+        bytesTotal: 30000000,
+      );
+      h.engine.emit(_job(current: node('Downloading', 15000000)));
+      await _settle(tester);
+      expect(_ring(tester).fraction, closeTo(.6, 1e-9));
+      h.engine.emit(_job(current: node('Unpacking Node.js', 3000000)));
+      await _settle(tester);
+      expect(_ring(tester).fraction, closeTo(.1, 1e-9));
+      expect(find.text('Unpacking Node.js'), findsOneWidget);
+    });
+
+    testWidgets('checking first, then getting started', (tester) async {
+      final h = await _pump(
+        tester,
+        initial: SetupProgress(
+          state: SetupState.running,
+          overall: 0,
+          components: [
+            for (final id in _ids)
+              ComponentProgress(id: id, state: ComponentState.checking),
+          ],
+        ),
+      );
+      expect(find.text('Checking this phone'), findsOneWidget);
+      expect(_ring(tester).done, 0);
+      h.engine.emit(_job());
+      await _settle(tester);
+      expect(find.text('Getting started…'), findsOneWidget);
+    });
+
+    testWidgets('done: a full ring', (tester) async {
+      await _pump(
+        tester,
+        initial: _job(state: SetupState.done, overall: 1, done: _ids.toSet()),
+        pushReady: false,
+      );
+      expect(_ring(tester).fraction, 1);
+      expect(find.text('All set'), findsOneWidget);
+      expect(find.byKey(const Key('setup-progress-cancel')), findsNothing);
+    });
+  });
+
+  group('cost line', () {
+    testWidgets('time left only when the engine gives one', (tester) async {
+      final h = await _pump(tester, initial: _job(current: _nodeDownloading));
+      expect(find.byKey(const Key('phone-setup-progress-cost')), findsNothing);
+
+      const before = {'linux', 'essentials', 'python'};
+      h.engine.emit(_job(eta: 130, done: before, current: _nodeDownloading));
+      await tester.pump();
+      expect(find.text('About 2 min left'), findsOneWidget);
+    });
+
+    testWidgets('names Wi-Fi or mobile data, nothing when unknown', (
       tester,
     ) async {
       await _pump(
         tester,
-        initial: _job(done: {'linux'}, current: _nodeDownloading),
+        initial: _job(eta: 130, current: _nodeDownloading),
+        transport: NetworkTransport.mobile,
       );
-      final version = tester.widget<Text>(find.text('24.04.5'));
-      final theme = Theme.of(tester.element(find.text('24.04.5')));
-      expect(version.style?.color, AppTheme.mutedOf(theme));
-      expect(find.text('Linux base'), findsOneWidget);
-      expect(find.text('Git and SSH'), findsOneWidget);
+      expect(find.text('About 3 min left · Mobile data'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await _pump(
+        tester,
+        initial: _job(eta: 130, current: _nodeDownloading),
+        transport: NetworkTransport.wifi,
+      );
+      expect(find.text('About 3 min left · Wi-Fi'), findsOneWidget);
     });
 
-    testWidgets('byte formatting rounds done down and keeps the unit', (
+    // Emulator QA F11: "Less than a minute" at 30 %, then "~5 min left".
+    testWidgets('never under a minute before the last step, and never up', (
       tester,
     ) async {
-      expect(SetupProgressView.formatBytePair(18999999, 30000000), (
-        '18',
-        '30 MB',
-      ));
-      expect(SetupProgressView.formatBytePair(950000, 2500000), (
-        '0.9',
-        '2.5 MB',
-      ));
-      expect(SetupProgressView.formatBytePair(500, 800), ('500', '800 B'));
-      expect(SetupProgressView.formatBytePair(40, 20), ('20', '20 B'));
+      final h = await _pump(tester, initial: _job(current: _nodeDownloading));
+      const before = {'linux', 'essentials', 'python'};
+      // A fast download: the engine's pace says 40 s, but OpenCode (90 s)
+      // has not started, so the line says what is still to come.
+      h.engine.emit(_job(eta: 40, done: before, current: _nodeDownloading));
+      await tester.pump();
+      expect(find.text('Less than a minute left'), findsNothing);
+      expect(find.text('About 2 min left'), findsOneWidget);
+
+      // The pace slows and the engine now says 5 min: the line holds.
+      h.engine.emit(_job(eta: 300, done: before, current: _nodeDownloading));
+      await tester.pump();
+      expect(find.text('About 5 min left'), findsNothing);
+      expect(find.text('About 2 min left'), findsOneWidget);
+
+      // The last step: now it may say less than a minute.
+      h.engine.emit(
+        _job(
+          eta: 40,
+          done: {...before, 'node'},
+          current: const ComponentProgress(
+            id: 'opencode',
+            state: ComponentState.running,
+            stage: 'Installing',
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Less than a minute left'), findsOneWidget);
+    });
+
+    testWidgets('a short estimate before the last step reads 1 min', (
+      tester,
+    ) async {
+      const linux = ComponentProgress(
+        id: 'linux',
+        state: ComponentState.running,
+        stage: 'Downloading',
+      );
+      final h = await _pump(
+        tester,
+        initial: _job(ids: const ['linux', 'essentials'], current: linux),
+      );
+      h.engine.emit(
+        _job(eta: 10, ids: const ['linux', 'essentials'], current: linux),
+      );
+      await tester.pump();
+      expect(find.text('Less than a minute left'), findsNothing);
+      expect(find.text('About 1 min left'), findsOneWidget);
     });
   });
 
   group('failure', () {
-    testWidgets('Python repair says why and keeps Details reachable', (
+    testWidgets('Python repair says why and keeps the log under Details', (
       tester,
     ) async {
       final en = lookupAppLocalizations(const Locale('en'));
@@ -305,13 +467,14 @@ void main() {
       );
       expect(find.text(en.phoneSetupErrorPackageRepair), findsOneWidget);
       expect(find.textContaining(detail), findsNothing);
-      await _tapVisible(tester, find.text('Details'));
+      await _openDetails(tester);
+      await _tapVisible(tester, find.text('Details').last);
       await _settle(tester);
       expect(find.textContaining(detail), findsWidgets);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('says the stage and the reason, red bar, Continue setup', (
+    testWidgets('says the stage in words, a neutral ring, Continue setup', (
       tester,
     ) async {
       final h = await _pump(
@@ -338,15 +501,11 @@ void main() {
       );
       expect(find.textContaining('The file was damaged'), findsNothing);
       expect(find.text("Setup didn't finish"), findsOneWidget);
-      final bar = tester.widget<LinearProgressIndicator>(
-        find.byKey(const Key('setup-progress-overall')),
-      );
-      final theme = Theme.of(tester.element(find.text('Node.js')));
-      // KitProgress's failure tone: the bar stops in text1, and the failed
-      // row says why in words (TEST-19: was the red status colour).
-      expect(bar.color, AppTheme.rolesOf(theme).text1);
+      // Never red: a halted ring is neutral, and shows steps done.
+      expect(_ring(tester).halted, isTrue);
+      expect(_ring(tester).done, 3);
       expect(find.byKey(const Key('setup-progress-cancel')), findsNothing);
-      expect(find.text('Details'), findsOneWidget);
+      expect(find.byKey(const Key('setup-progress-details')), findsOneWidget);
 
       await _tapVisible(tester, find.text('Continue setup'));
       await tester.pump();
@@ -393,184 +552,68 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('OpenCode did not start'), findsNothing);
-      await _tapVisible(tester, find.text('Details'));
+      await _openDetails(tester);
+      await _tapVisible(tester, find.text('Details').last);
       await _settle(tester);
       expect(find.textContaining('OpenCode did not start'), findsOneWidget);
-      expect(find.text('Continue setup'), findsOneWidget);
     });
 
-    testWidgets('interrupted and cancelled jobs offer Continue setup', (
+    testWidgets('interrupted and paused jobs offer Continue setup', (
       tester,
     ) async {
       final h = await _pump(
         tester,
         initial: _job(state: SetupState.interrupted, done: {'linux'}),
       );
-      expect(
-        find.text("Setup was interrupted. What's finished is kept."),
-        findsOneWidget,
-      );
+      expect(find.text('Setup was interrupted'), findsOneWidget);
+      const kept =
+          'Finished steps stay, and downloads pick up where they left off.';
+      expect(find.text(kept), findsOneWidget);
       h.engine.emit(_job(state: SetupState.cancelled, done: {'linux'}));
       await _settle(tester);
-      expect(
-        find.text("Setup stopped. What's finished stays installed."),
-        findsOneWidget,
-      );
+      expect(find.text('Setup is paused'), findsOneWidget);
+      expect(find.text(kept), findsOneWidget);
       await _tapVisible(tester, find.text('Continue setup'));
       await tester.pump();
       expect(h.engine.runs.single, _ids.toSet());
     });
   });
 
-  group('overall bar', () {
-    testWidgets('eases and never goes backwards within a job', (tester) async {
-      final h = await _pump(
-        tester,
-        initial: _job(overall: .5, current: _nodeDownloading),
-      );
-      expect(_barValue(tester), closeTo(.5, 1e-9));
-
-      h.engine.emit(_job(overall: .8, current: _nodeDownloading));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      // Mid-ease: moving, not jumped.
-      expect(_barValue(tester), inExclusiveRange(.5, .8));
-      await _settle(tester);
-      expect(_barValue(tester), closeTo(.8, 1e-9));
-
-      h.engine.emit(_job(overall: .6, current: _nodeDownloading));
-      await _settle(tester);
-      expect(_barValue(tester), closeTo(.8, 1e-9));
-
-      // A different job (only Python, from "Add tools") starts over.
-      h.engine.emit(
-        _job(
-          overall: .1,
-          ids: const ['python'],
-          current: const ComponentProgress(
-            id: 'python',
-            state: ComponentState.running,
-            stage: 'Installing packages',
-          ),
-        ),
-      );
-      await tester.pump();
-      expect(_barValue(tester), closeTo(.1, 1e-9));
-    });
-
-    testWidgets('a re-run after done starts over', (tester) async {
-      final h = await _pump(
-        tester,
-        initial: _job(overall: .9, current: _nodeDownloading),
-        pushReady: false,
-      );
-      h.engine.emit(
-        _job(state: SetupState.done, overall: 1, done: _ids.toSet()),
-      );
-      await _settle(tester);
-      expect(_barValue(tester), closeTo(1, 1e-9));
-      h.engine.emit(_job(overall: .2, current: _nodeDownloading));
-      await tester.pump();
-      expect(_barValue(tester), closeTo(.2, 1e-9));
-    });
-  });
-
-  group('time left', () {
-    testWidgets('only when the engine gives one', (tester) async {
-      final h = await _pump(tester, initial: _job(current: _nodeDownloading));
-      expect(find.text('Getting started…'), findsOneWidget);
-      expect(find.textContaining('min left'), findsNothing);
-
-      const before = {'linux', 'essentials', 'python'};
-      h.engine.emit(_job(eta: 130, done: before, current: _nodeDownloading));
-      await tester.pump();
-      expect(find.text('~2 min left'), findsOneWidget);
-    });
-
-    // Emulator QA F11: "Less than a minute" at 30 %, then "~5 min left".
-    testWidgets('never under a minute before the last step, and never up', (
-      tester,
-    ) async {
-      final h = await _pump(tester, initial: _job(current: _nodeDownloading));
-      const before = {'linux', 'essentials', 'python'};
-      // A fast download: the engine's pace says 40 s, but OpenCode (90 s)
-      // has not started, so the line says what is still to come.
-      h.engine.emit(_job(eta: 40, done: before, current: _nodeDownloading));
-      await tester.pump();
-      expect(find.text('Less than a minute'), findsNothing);
-      expect(find.text('~2 min left'), findsOneWidget);
-
-      // The pace slows and the engine now says 5 min: the line holds.
-      h.engine.emit(_job(eta: 300, done: before, current: _nodeDownloading));
-      await tester.pump();
-      expect(find.text('~5 min left'), findsNothing);
-      expect(find.text('~2 min left'), findsOneWidget);
-
-      // The last step: now it may say less than a minute.
-      h.engine.emit(
-        _job(
-          eta: 40,
-          done: {...before, 'node'},
-          current: const ComponentProgress(
-            id: 'opencode',
-            state: ComponentState.running,
-            stage: 'Installing',
-          ),
-        ),
-      );
-      await tester.pump();
-      expect(find.text('Less than a minute'), findsOneWidget);
-    });
-
-    testWidgets('a short estimate before the last step reads ~1 min', (
-      tester,
-    ) async {
-      final h = await _pump(
-        tester,
-        initial: _job(
-          ids: const ['linux', 'essentials'],
-          current: const ComponentProgress(
-            id: 'linux',
-            state: ComponentState.running,
-            stage: 'Downloading',
-          ),
-        ),
-      );
-      h.engine.emit(
-        _job(
-          eta: 10,
-          ids: const ['linux', 'essentials'],
-          current: const ComponentProgress(
-            id: 'linux',
-            state: ComponentState.running,
-            stage: 'Downloading',
-          ),
-        ),
-      );
-      await tester.pump();
-      expect(find.text('Less than a minute'), findsNothing);
-      expect(find.text('~1 min left'), findsOneWidget);
-    });
-  });
-
   group('screen', () {
-    testWidgets('restores on open and shows the title and note', (
+    testWidgets('restores on open; the bar names the place, with Back', (
       tester,
     ) async {
       final h = await _pump(tester, initial: _job(current: _nodeDownloading));
       expect(h.engine.restores, 1);
-      expect(find.text('Setting up OpenCode on this phone'), findsOneWidget);
-      // The bar names the place, as the start screen does, with Back.
       expect(find.text('On this phone'), findsOneWidget);
       expect(find.byTooltip('Back'), findsOneWidget);
-      // FB2: a first setup says where it sits in the whole journey.
       expect(
-        find.text(
-          'Step 1 of 3: install. Then name a project and start a conversation. You can leave '
-          "the app. We'll notify you when it's ready.",
-        ),
+        find.text("Safe to leave. We'll let you know when it's ready."),
         findsOneWidget,
       );
+    });
+
+    testWidgets('an Add tools job names what it adds in the bar', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        initial: SetupProgress(
+          state: SetupState.running,
+          overall: .2,
+          adding: const ['python'],
+          components: const [
+            ComponentProgress(
+              id: 'python',
+              state: ComponentState.running,
+              stage: 'Installing packages',
+              percent: 20,
+            ),
+          ],
+        ),
+        firstSetup: false,
+      );
+      expect(find.text('Adding Python'), findsOneWidget);
     });
 
     testWidgets('asks Android for notifications when setup starts, once', (
@@ -595,64 +638,20 @@ void main() {
         initial: _job(current: _nodeDownloading),
         askNotifications: () async => false,
       );
-      expect(find.textContaining("We'll notify you"), findsNothing);
+      expect(find.textContaining('let you know'), findsNothing);
       expect(
-        find.text(
-          'Step 1 of 3: install. Then name a project and start a conversation. '
-          'You can leave the app. Setup keeps going. Open OpenCode again to '
-          'see how far it got.',
-        ),
-        findsOneWidget,
-      );
-      expect(find.byKey(const Key('setup-progress-checklist')), findsOneWidget);
-    });
-
-    testWidgets('an update or added tools keep the plain leave note', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        initial: _job(current: _nodeDownloading),
-        firstSetup: false,
-      );
-      // Nothing to name or chat after an update: no step line.
-      expect(find.textContaining('Step 1 of 3'), findsNothing);
-      expect(
-        find.text("You can leave the app. We'll notify you when it's ready."),
+        find.text('Safe to leave. Setup keeps going in the background.'),
         findsOneWidget,
       );
     });
 
-    testWidgets('Cancel confirms before stopping', (tester) async {
+    testWidgets('Pause setup pauses at once: nothing is lost', (tester) async {
       final h = await _pump(tester, initial: _job(current: _nodeDownloading));
+      expect(find.text('Pause setup'), findsOneWidget);
       await _tapVisible(tester, find.byKey(const Key('setup-progress-cancel')));
-      await _settle(tester);
-      expect(find.text('Stop setup?'), findsOneWidget);
-      expect(find.text("What's finished stays installed."), findsOneWidget);
-      // Where to pick it up again (map infoMissing on the stop sheet).
-      expect(
-        find.text('Continue any time from On this phone.'),
-        findsOneWidget,
-      );
-      // The page's own action and the sheet's confirm say the same act.
-      expect(
-        find.descendant(
-          of: find.byKey(const Key('phone-setup-progress-stop-confirm')),
-          matching: find.text('Stop setup'),
-        ),
-        findsOneWidget,
-      );
-      await tester.tap(find.text('Keep going'));
-      await _settle(tester);
-      expect(h.engine.cancels, 0);
-
-      await _tapVisible(tester, find.byKey(const Key('setup-progress-cancel')));
-      await _settle(tester);
-      await tester.tap(
-        find.byKey(const Key('phone-setup-progress-stop-confirm')),
-      );
       await _settle(tester);
       expect(h.engine.cancels, 1);
+      expect(find.text('Stop setup?'), findsNothing);
     });
 
     testWidgets('done hands over to screen C, replacing this screen', (
@@ -693,7 +692,7 @@ void main() {
         _job(state: SetupState.done, overall: 1, done: _ids.toSet()),
       );
       await _settle(tester);
-      // The finished list stays for a moment, never screen C.
+      // The finished ring stays for a moment, never screen C.
       expect(h.readyOpened, 0);
       expect(find.byType(PhoneSetupProgressScreen), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 1300));
@@ -702,7 +701,7 @@ void main() {
       expect(find.byType(PhoneSetupProgressScreen), findsNothing);
     });
 
-    testWidgets('Back while running just leaves; setup is not cancelled', (
+    testWidgets('Back while running just leaves; setup is not paused', (
       tester,
     ) async {
       final h = await _pump(tester, initial: _job(current: _nodeDownloading));
@@ -713,7 +712,7 @@ void main() {
     });
   });
 
-  testWidgets('Show details opens the log and follows it', (tester) async {
+  testWidgets('Details lists every step and follows the log', (tester) async {
     final h = await _pump(
       tester,
       initial: _job(
@@ -722,11 +721,14 @@ void main() {
       ),
     );
     const log = Key('setup-progress-log');
+    expect(find.byKey(const Key('setup-progress-checklist')), findsNothing);
+    await _openDetails(tester);
+    expect(find.text('Setup details'), findsOneWidget);
+    expect(find.byKey(const Key('setup-progress-checklist')), findsOneWidget);
+    expect(find.text('Downloading · 18 of 30 MB'), findsOneWidget);
     expect(find.byKey(log), findsNothing);
-    // The kit's collapsed Details row (standard §3).
-    await _tapVisible(tester, find.text('Details'));
+    await _tapVisible(tester, find.text('Details').last);
     await _settle(tester);
-    // KitLogPanel (TEST-19: was TerminalView).
     expect(find.byKey(log), findsOneWidget);
     expect(find.textContaining('noble InRelease'), findsOneWidget);
 
@@ -736,12 +738,124 @@ void main() {
     // Tail-first: the newest line is on screen, the oldest folded away.
     expect(find.textContaining('line 79'), findsOneWidget);
     expect(find.textContaining('line 0\n'), findsNothing);
+  });
 
-    // The fold's toggle keeps its words and folds back (TEST-19: its
-    // visible label was "Hide details").
-    await _tapVisible(tester, find.byKey(const Key('setup-progress-details')));
-    await _settle(tester);
-    expect(find.byKey(log), findsNothing);
+  group('the steps under Details (SetupProgressView)', () {
+    testWidgets('bytes as "18 of 30 MB" with the stage', (tester) async {
+      await _pumpView(
+        tester,
+        _job(done: {'linux', 'essentials'}, current: _nodeDownloading),
+      );
+      expect(find.text('Downloading · 18 of 30 MB'), findsOneWidget);
+    });
+
+    testWidgets('percent as "62%"', (tester) async {
+      await _pumpView(
+        tester,
+        _job(
+          done: {'linux'},
+          current: const ComponentProgress(
+            id: 'essentials',
+            state: ComponentState.running,
+            stage: 'Installing packages',
+            percent: 62.7,
+          ),
+        ),
+      );
+      // Rounded down: never more than the tool reported.
+      expect(find.text('Installing packages · 62%'), findsOneWidget);
+    });
+
+    testWidgets('a stage alone shows its label and no figure', (tester) async {
+      await _pumpView(
+        tester,
+        _job(
+          done: {'linux', 'essentials', 'python', 'node'},
+          current: const ComponentProgress(
+            id: 'opencode',
+            state: ComponentState.running,
+            stage: 'Installing OpenCode',
+          ),
+        ),
+      );
+      expect(find.text('Installing OpenCode'), findsOneWidget);
+      expect(find.textContaining('%'), findsNothing);
+      expect(find.textContaining(' MB'), findsNothing);
+    });
+
+    testWidgets('a done row shows its version muted with a check', (
+      tester,
+    ) async {
+      await _pumpView(tester, _job(done: {'linux'}, current: _nodeDownloading));
+      final version = tester.widget<Text>(find.text('24.04.5'));
+      final theme = Theme.of(tester.element(find.text('24.04.5')));
+      expect(version.style?.color, AppTheme.mutedOf(theme));
+      expect(find.text('Linux base'), findsOneWidget);
+      expect(find.text('Git and SSH'), findsOneWidget);
+    });
+
+    test('byte formatting rounds done down and keeps the unit', () {
+      expect(SetupProgressView.formatBytePair(18999999, 30000000), (
+        '18',
+        '30 MB',
+      ));
+      expect(SetupProgressView.formatBytePair(950000, 2500000), (
+        '0.9',
+        '2.5 MB',
+      ));
+      expect(SetupProgressView.formatBytePair(500, 800), ('500', '800 B'));
+      expect(SetupProgressView.formatBytePair(40, 20), ('20', '20 B'));
+    });
+
+    // KitChecklist rows (TEST-19): the detail is the supporting line under
+    // the title, from the start side, in both directions.
+    for (final rtl in [false, true]) {
+      testWidgets('the detail sits under the title (${rtl ? 'RTL' : 'LTR'})', (
+        tester,
+      ) async {
+        await _pumpView(tester, _job(current: _nodeDownloading), rtl: rtl);
+        final title = tester.getRect(find.text('Node.js'));
+        final detail = tester.getRect(find.text('Downloading · 18 of 30 MB'));
+        expect(detail.top, greaterThanOrEqualTo(title.bottom));
+        if (rtl) {
+          expect(detail.right, closeTo(title.right, 1));
+        } else {
+          expect(detail.left, closeTo(title.left, 1));
+        }
+      });
+    }
+
+    // KitChecklist (A11Y-3, TEST-19): each row is one node read as "Step n
+    // of N, title, state, detail"; the job's summary is the live region,
+    // not the rows, so a byte tick is never announced.
+    testWidgets('each row is one node; the job summary is the live region', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await _pumpView(tester, _job(current: _nodeDownloading));
+      expect(
+        tester.getSemantics(
+          find.byKey(const ValueKey('setup-progress-row-node')),
+        ),
+        isSemantics(
+          label: 'Step 4 of 5, Node.js, Working, Downloading · 18 of 30 MB',
+          isLiveRegion: false,
+        ),
+      );
+      expect(
+        tester.getSemantics(
+          find.byKey(const ValueKey('setup-progress-row-linux')),
+        ),
+        isSemantics(label: 'Step 1 of 5, Linux base, Waiting'),
+      );
+      expect(
+        tester.getSemantics(
+          find.byKey(const ValueKey('kit-checklist-summary')),
+        ),
+        isSemantics(label: 'Step 4 of 5, Node.js, Working', isLiveRegion: true),
+      );
+      semantics.dispose();
+    });
   });
 
   group('layout', () {
@@ -757,21 +871,19 @@ void main() {
           textScale: 2.5,
           rtl: rtl,
           initial: _job(
+            eta: 200,
             done: {'linux', 'essentials'},
             current: _nodeDownloading,
           ),
+          transport: NetworkTransport.wifi,
         );
         expect(tester.takeException(), isNull);
-        final cancel = find.byKey(const Key('setup-progress-cancel'));
-        await tester.ensureVisible(cancel);
+        final pause = find.byKey(const Key('setup-progress-cancel'));
+        expect(tester.getSize(pause).height, greaterThanOrEqualTo(48));
+        final details = find.byKey(const Key('setup-progress-details'));
+        await tester.ensureVisible(details);
         await _settle(tester);
-        expect(tester.getSize(cancel).height, greaterThanOrEqualTo(48));
-        expect(
-          tester
-              .getSize(find.byKey(const Key('setup-progress-details')))
-              .height,
-          greaterThanOrEqualTo(48),
-        );
+        expect(tester.getSize(details).height, greaterThanOrEqualTo(48));
 
         h.engine.emit(
           _job(
@@ -787,42 +899,16 @@ void main() {
           ),
         );
         await _settle(tester);
-        final details = find.byKey(const Key('setup-progress-details'));
-        await tester.ensureVisible(details);
-        await _settle(tester);
-        await tester.tap(details);
-        await _settle(tester);
+        await _openDetails(tester);
         expect(tester.takeException(), isNull);
-        final cont = find.text('Continue setup');
-        await tester.ensureVisible(cont);
+        await tester.tapAt(const Offset(10, 10));
+        await _settle(tester);
         expect(
           tester
               .getSize(find.byKey(const Key('setup-progress-continue')))
               .height,
           greaterThanOrEqualTo(48),
         );
-      });
-    }
-
-    // KitChecklist rows (TEST-19): the detail is the supporting line under
-    // the title, from the start side, in both directions.
-    for (final rtl in [false, true]) {
-      testWidgets('the detail sits under the title (${rtl ? 'RTL' : 'LTR'})', (
-        tester,
-      ) async {
-        await _pump(
-          tester,
-          rtl: rtl,
-          initial: _job(current: _nodeDownloading),
-        );
-        final title = tester.getRect(find.text('Node.js'));
-        final detail = tester.getRect(find.text('Downloading · 18 of 30 MB'));
-        expect(detail.top, greaterThanOrEqualTo(title.bottom));
-        if (rtl) {
-          expect(detail.right, closeTo(title.right, 1));
-        } else {
-          expect(detail.left, closeTo(title.left, 1));
-        }
       });
     }
 
@@ -837,27 +923,37 @@ void main() {
         initial: _job(eta: 200, done: {'linux'}, current: _nodeDownloading),
       );
       expect(tester.takeException(), isNull);
-      expect(find.text('جارٍ إعداد OpenCode على هذا الهاتف'), findsOneWidget);
-      expect(find.text('Downloading · 18 من 30 MB'), findsOneWidget);
+      expect(find.text('جارٍ تنزيل Node.js'), findsOneWidget);
+      // The figures keep their order inside the right-to-left line.
+      expect(
+        find.text('${KitBidi.ltr('18')} من ${KitBidi.ltr('30 MB')}'),
+        findsOneWidget,
+      );
     });
   });
 
-  testWidgets('reduce motion changes instantly and draws no spinners', (
-    tester,
-  ) async {
+  testWidgets('reduce motion changes instantly and settles', (tester) async {
     final h = await _pump(
       tester,
       reduceMotion: true,
-      initial: _job(overall: .3, current: _nodeDownloading),
+      initial: _job(current: _nodeDownloading),
     );
     expect(find.byType(CircularProgressIndicator), findsNothing);
-    h.engine.emit(_job(overall: .7, current: _nodeDownloading));
-    await tester.pump();
-    expect(_barValue(tester), closeTo(.7, 1e-9));
-
     h.engine.emit(
       _job(
-        overall: .8,
+        current: const ComponentProgress(
+          id: 'node',
+          state: ComponentState.running,
+          stage: 'Downloading',
+          bytesDone: 27000000,
+          bytesTotal: 30000000,
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(_ring(tester).fraction, closeTo(.9, 1e-9));
+    h.engine.emit(
+      _job(
         done: {'linux', 'essentials', 'python', 'node'},
         current: const ComponentProgress(
           id: 'opencode',
@@ -869,35 +965,22 @@ void main() {
     // Everything settles: no looping animation is left running.
     await tester.pumpAndSettle();
     expect(find.text('Installing OpenCode'), findsOneWidget);
-    expect(find.byType(LinearProgressIndicator), findsOneWidget);
   });
 
-  // KitChecklist (A11Y-3, TEST-19): each row is one node read as "Step n of
-  // N, title, state, detail"; the job's summary is the live region, not the
-  // rows, so a byte tick is never announced.
-  testWidgets('each row is one node; the job summary is the live region', (
+  testWidgets('the ring is one node; the sentence is the live region', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
     await _pump(tester, initial: _job(current: _nodeDownloading));
     expect(
-      tester.getSemantics(
-        find.byKey(const ValueKey('setup-progress-row-node')),
-      ),
-      isSemantics(
-        label: 'Step 4 of 5, Node.js, Working, Downloading · 18 of 30 MB',
-        isLiveRegion: false,
-      ),
+      tester.getSemantics(find.byKey(const Key('setup-progress-overall'))),
+      isSemantics(label: 'Setup progress', value: '60%, $_bytes'),
     );
     expect(
-      tester.getSemantics(
-        find.byKey(const ValueKey('setup-progress-row-linux')),
+      find.byWidgetPredicate(
+        (w) => w is Semantics && (w.properties.liveRegion ?? false),
       ),
-      isSemantics(label: 'Step 1 of 5, Linux base, Waiting'),
-    );
-    expect(
-      tester.getSemantics(find.byKey(const ValueKey('kit-checklist-summary'))),
-      isSemantics(label: 'Step 4 of 5, Node.js, Working', isLiveRegion: true),
+      findsWidgets,
     );
     semantics.dispose();
   });

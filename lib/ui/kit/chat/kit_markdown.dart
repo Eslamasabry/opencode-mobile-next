@@ -12,6 +12,9 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart' show SpringSimulation;
+import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/services.dart';
 
 import '../../../l10n/app_localizations.dart';
@@ -23,13 +26,19 @@ import '../kit_chip.dart';
 import '../kit_code_block.dart';
 import '../kit_divider.dart';
 import '../kit_image.dart';
-import '../kit_link_scope.dart';
 import '../kit_layout.dart';
+import '../kit_link_scope.dart';
+import '../kit_max_width.dart';
+import '../kit_motion.dart';
+import '../kit_surface_look.dart';
 import '../kit_tappable.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
+import 'kit_stream_caret.dart';
 
+part 'kit_markdown_fresh.dart';
 part 'kit_markdown_image.dart';
+part 'kit_markdown_table.dart';
 
 /// Builds a fenced block whose info string the host claims (```choices```,
 /// ```checklist```, ```command```: AgentBlockKinds). Returns null to let
@@ -70,8 +79,9 @@ class KitMarkdownFileLinks {
 /// (STANDARDS STATE-16, KIT-41): this part is the prose of a reply or a
 /// thought; it never draws a turn's controls.
 ///
-/// States: default, streaming (an unclosed fence stays unhighlighted),
-/// non-interactive, empty (renders nothing). No loading, error or disabled:
+/// States: default, streaming (an unclosed fence stays unhighlighted; with
+/// [streaming] a [KitStreamCaret] follows the last words), non-interactive,
+/// empty (renders nothing). No loading, error or disabled:
 /// the text is given (KIT-12).
 class KitMarkdown extends StatefulWidget {
   const KitMarkdown(
@@ -88,6 +98,7 @@ class KitMarkdown extends StatefulWidget {
     this.onCodeWrapChanged,
     this.onOpenCode,
     this.codeLanguage,
+    this.streaming = false,
   }) : assert(
          role == KitTextRole.body || role == KitTextRole.secondary,
          'KitMarkdown runs in body or secondary only',
@@ -121,6 +132,11 @@ class KitMarkdown extends StatefulWidget {
 
   /// Non-null: all of [data] is one code block in this language.
   final String? codeLanguage;
+
+  /// The words are still being written: a [KitStreamCaret] sits after the
+  /// last of them, on their own line. A reply that ends in code, a table or
+  /// pictures shows none (the caret never makes a line of its own).
+  final bool streaming;
 
   /// Conservative path test, moved from markdown.dart: multi-segment, no
   /// spaces, no scheme, anchored (/, ~/, ./) or ending in an extension.
@@ -275,8 +291,17 @@ class _KitMdScope extends InheritedWidget {
     required this.codeWrap,
     required this.onCodeWrapChanged,
     required this.onOpenCode,
+    this.live = false,
+    this.fadeNew = false,
     required super.child,
   });
+
+  /// The reply is being written: words added to a block fade in.
+  final bool live;
+
+  /// Blocks that begin now fade in whole (the reply was already on screen
+  /// when they began; a reply opened mid-stream shows what it has at once).
+  final bool fadeNew;
 
   final KitTextRole role;
   final KitTextTone? tone;
@@ -301,8 +326,60 @@ class _KitMdScope extends InheritedWidget {
       fileLinks != old.fileLinks ||
       codeWrap != old.codeWrap ||
       onCodeWrapChanged != old.onCodeWrapChanged ||
-      onOpenCode != old.onOpenCode;
+      onOpenCode != old.onOpenCode ||
+      live != old.live ||
+      fadeNew != old.fadeNew;
 }
+
+// Compiled once: a streaming reply re-splits its blocks on every flush.
+final _mdCommentStart = RegExp(r'^ {0,3}<!--');
+
+/// [source] with its HTML comment blocks (a line that starts with `<!--`,
+/// through the line that closes it with `-->`, as CommonMark reads them)
+/// emptied out, outside code fences. Line breaks stay, so the line count and
+/// the fences after the comment do not move; a block still open at the end
+/// (a reply that is streaming) is hidden too. A comment inside a line is
+/// left as it is: in a coding chat it is usually words about HTML, often in
+/// backticks.
+String kitMarkdownBlankComments(String source) {
+  if (!source.contains('<!--')) return source;
+  final lines = source.split('\n');
+  String? fence;
+  var inComment = false;
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    if (inComment) {
+      if (line.contains('-->')) inComment = false;
+      lines[i] = '';
+      continue;
+    }
+    final m = _mdFence.firstMatch(line);
+    if (fence != null) {
+      if (m != null &&
+          m.group(2)!.startsWith(fence[0]) &&
+          m.group(2)!.length >= fence.length &&
+          m.group(3)!.trim().isEmpty) {
+        fence = null;
+      }
+    } else if (m != null) {
+      fence = m.group(2);
+    } else if (_mdCommentStart.hasMatch(line)) {
+      inComment = !line.substring(line.indexOf('<!--') + 4).contains('-->');
+      lines[i] = '';
+    }
+  }
+  return lines.join('\n');
+}
+
+final _mdFence = RegExp(r'^( {0,3})(`{3,}|~{3,})(.*)$');
+final _mdHeading = RegExp(r'^(#{1,6})\s+(.*)$');
+final _mdRule = RegExp(r'^\s*(-{3,}|\*{3,}|_{3,})\s*$');
+final _mdBullet = RegExp(r'^(\s*)[-*+]\s+');
+final _mdOrdered = RegExp(r'^(\s*)(\d{1,9})[.)]\s+');
+final _mdSpace = RegExp(r'\s+');
+final _mdQuote = RegExp(r'^\s*>\s?');
+
+int _leadingSpaces(String line) => line.length - line.trimLeft().length;
 
 class _KitMarkdownState extends State<KitMarkdown> {
   /// Parsed block widgets, reused verbatim while [KitMarkdown.data] is
@@ -316,6 +393,20 @@ class _KitMarkdownState extends State<KitMarkdown> {
   /// comes back as the very same widget instance and Flutter skips
   /// rebuilding it on each delta flush.
   Map<String, Widget> _blocksBySource = const {};
+
+  /// This reply has been on screen before this build: blocks that begin
+  /// while it streams fade in ([_KitMdScope.fadeNew]).
+  bool _shown = false;
+
+  /// The reply stopped streaming in this very update: its last words still
+  /// fade in like the ones before them.
+  bool _justEnded = false;
+
+  @override
+  void didUpdateWidget(KitMarkdown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _justEnded = oldWidget.streaming && !widget.streaming;
+  }
 
   List<Widget> _blocksFor(BuildContext context) {
     final cached = _blocks;
@@ -347,7 +438,9 @@ class _KitMarkdownState extends State<KitMarkdown> {
     final originalLines = src.split('\n');
     final previous = _blocksBySource;
     final current = <String, Widget>{};
-    final lines = src.replaceAll('\r\n', '\n').split('\n');
+    final lines = kitMarkdownBlankComments(
+      src.replaceAll('\r\n', '\n'),
+    ).split('\n');
     var i = 0;
     final paragraph = <String>[];
 
@@ -362,11 +455,11 @@ class _KitMarkdownState extends State<KitMarkdown> {
       paragraph.clear();
     }
 
-    final fencePattern = RegExp(r'^( {0,3})(`{3,}|~{3,})(.*)$');
-    final heading = RegExp(r'^(#{1,6})\s+(.*)$');
-    final rule = RegExp(r'^\s*(-{3,}|\*{3,}|_{3,})\s*$');
-    final bullet = RegExp(r'^(\s*)[-*+]\s+');
-    final ordered = RegExp(r'^(\s*)(\d{1,9})[.)]\s+');
+    final fencePattern = _mdFence;
+    final heading = _mdHeading;
+    final rule = _mdRule;
+    final bullet = _mdBullet;
+    final ordered = _mdOrdered;
 
     while (i < lines.length) {
       final line = lines[i];
@@ -379,7 +472,7 @@ class _KitMarkdownState extends State<KitMarkdown> {
         final marker = fence.group(2)!;
         final indent = fence.group(1)!.length;
         final info = fence.group(3)!.trim();
-        final lang = info.isEmpty ? null : info.split(RegExp(r'\s+')).first;
+        final lang = info.isEmpty ? null : info.split(_mdSpace).first;
         final closing = RegExp(
           '^ {0,3}${RegExp.escape(marker[0])}{${marker.length},}[ \\t]*\$',
         );
@@ -481,7 +574,7 @@ class _KitMarkdownState extends State<KitMarkdown> {
         flushParagraph();
         final quote = <String>[];
         while (i < lines.length && lines[i].trimLeft().startsWith('>')) {
-          quote.add(lines[i].replaceFirst(RegExp(r'^\s*>\s?'), ''));
+          quote.add(lines[i].replaceFirst(_mdQuote, ''));
           i++;
         }
         final text = quote.join('\n');
@@ -497,20 +590,31 @@ class _KitMarkdownState extends State<KitMarkdown> {
       if (listMarker != null) {
         flushParagraph();
         final items = <_KitMdListItem>[];
-        while (i < lines.length && listMarker.hasMatch(lines[i])) {
-          final m = listMarker.firstMatch(lines[i])!;
-          items.add((
-            indent: m.group(1)!.length,
-            text: lines[i].substring(m.end),
-          ));
-          i++;
-        }
-        final isOrdered = identical(listMarker, ordered);
         // CommonMark: an ordered list starts at its first item's number, so
         // "2." after a code block that split a list reads 2, not 1 again.
-        final start = isOrdered
-            ? int.parse(ordered.firstMatch(lines[i - items.length])!.group(2)!)
+        final first = identical(listMarker, ordered)
+            ? int.parse(ordered.firstMatch(line)!.group(2)!)
             : 1;
+        while (i < lines.length && listMarker.hasMatch(lines[i])) {
+          final m = listMarker.firstMatch(lines[i])!;
+          final indent = m.group(1)!.length;
+          var text = lines[i].substring(m.end);
+          i++;
+          // A wrapped item: the lines indented under it are its own words
+          // (CommonMark continuation), not a paragraph of their own.
+          while (i < lines.length &&
+              lines[i].trim().isNotEmpty &&
+              !bullet.hasMatch(lines[i]) &&
+              !ordered.hasMatch(lines[i]) &&
+              !_mdFence.hasMatch(lines[i].trimLeft()) &&
+              _leadingSpaces(lines[i]) >= math.max(2, indent + 1)) {
+            text = '$text\n${lines[i].trim()}';
+            i++;
+          }
+          items.add((indent: indent, text: text));
+        }
+        final isOrdered = identical(listMarker, ordered);
+        final start = isOrdered ? first : 1;
         add(
           '${isOrdered ? 'o$start' : 'u'}\u0000${items.join('\n')}',
           () => _KitMdList(items: items, ordered: isOrdered, start: start),
@@ -543,9 +647,20 @@ class _KitMarkdownState extends State<KitMarkdown> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     if (widget.data.trim().isEmpty) return const SizedBox.shrink();
-    final blocks = _blocksFor(context);
+    final parsed = _blocksFor(context);
+    // The caret rides on a copy of the tail block; the parsed (cached)
+    // blocks stay as they are, so the caret never forces a re-parse.
+    final tail = widget.streaming && parsed.isNotEmpty
+        ? _withCaret(parsed.last)
+        : null;
+    final blocks = tail == null
+        ? parsed
+        : [...parsed.sublist(0, parsed.length - 1), tail];
     final gap = KitTokens.of(context).space3;
     // Its own semantics boundary, each block still its own node for a
     // screen reader. Without it a long streamed reply's blocks are
@@ -565,7 +680,21 @@ class _KitMarkdownState extends State<KitMarkdown> {
         ],
       ),
     );
+    final live = widget.streaming || _justEnded;
+    // A reply that begins while the conversation is on screen arrives:
+    // its first words fade in and its box grows in from nothing. One drawn
+    // on opening the page (still moving in), or a long one rebuilt as the
+    // list scrolls back to it, shows what it has at once.
+    final fadeNew =
+        live &&
+        (_shown ||
+            (widget.data.length <= _arrivalReach &&
+                (ModalRoute.of(context)?.animation?.isCompleted ?? true)));
+    _shown = true;
+    _justEnded = false;
     final scoped = _KitMdScope(
+      live: live,
+      fadeNew: fadeNew,
       role: widget.role,
       tone: widget.tone,
       selectable: widget.selectable,
@@ -578,351 +707,70 @@ class _KitMarkdownState extends State<KitMarkdown> {
       child: widget.selectable ? KitSelectable(child: content) : content,
     );
     // An isolated preview is looked at, not used: nothing in it takes a
-    // tap or a focus (the old MarkdownInteractionScope contract).
-    return IgnorePointer(
-      ignoring: !widget.interactive,
-      child: ExcludeFocus(excluding: !widget.interactive, child: scoped),
+    // tap or a focus (the old MarkdownInteractionScope contract). While the
+    // reply streams its box grows to each new line smoothly (_KitMdGrow).
+    return _KitMdGrow(
+      enabled: live,
+      fromZero: fadeNew,
+      child: IgnorePointer(
+        ignoring: !widget.interactive,
+        child: ExcludeFocus(excluding: !widget.interactive, child: scoped),
+      ),
     );
   }
+
+  /// The longest reply that still counts as just begun when first drawn.
+  static const _arrivalReach = 280;
 }
 
-// ---------------------------------------------------------------------------
-// Tables.
-
-List<String> _tableCells(String line) {
-  final trimmed = line.trim();
-  if (!trimmed.contains('|')) return const [];
-  final cells = <String>[];
-  var cell = StringBuffer();
-  var start = trimmed.startsWith('|') ? 1 : 0;
-  var endedWithSeparator = false;
-  while (start < trimmed.length) {
-    final char = trimmed[start];
-    if (char == r'\' && start + 1 < trimmed.length) {
-      final next = trimmed[start + 1];
-      if (next == '|') {
-        cell.write('|');
-        start += 2;
-        endedWithSeparator = false;
-        continue;
-      }
-      if (next == r'\') {
-        cell.write(r'\\');
-        start += 2;
-        endedWithSeparator = false;
-        continue;
-      }
-    }
-    if (char == '|') {
-      cells.add(cell.toString().trim());
-      cell = StringBuffer();
-      endedWithSeparator = true;
-    } else {
-      cell.write(char);
-      endedWithSeparator = false;
-    }
-    start++;
-  }
-  if (!endedWithSeparator) cells.add(cell.toString().trim());
-  return cells;
-}
-
-bool _isTableDelimiter(String line) {
-  final cells = _tableCells(line);
-  return cells.length >= 2 &&
-      cells.every((cell) => RegExp(r'^:?-{3,}:?$').hasMatch(cell));
-}
-
-/// A cell that is one inline code span and nothing else: it never breaks
-/// mid-token.
-bool _isMonoCell(String cell) => RegExp(r'^`[^`\n]+`$').hasMatch(cell.trim());
-
-/// A cell's words as they are drawn (markup dropped), for measuring.
-String _plainOf(String source) =>
-    KitMarkdownImage.withAltText(source).replaceAllMapped(
-      _renderPattern,
-      (m) =>
-          m.group(7) ??
-          m.group(6) ??
-          m.group(1) ??
-          m.group(2) ??
-          m.group(3) ??
-          m.group(4) ??
-          m.group(5) ??
-          m.group(9) ??
-          '',
-    );
-
-class _KitMdTable extends StatefulWidget {
-  const _KitMdTable({
-    required this.headers,
-    required this.delimiter,
-    required this.rows,
-  });
-
-  final List<String> headers;
-  final List<String> delimiter;
-  final List<List<String>> rows;
-
-  @override
-  State<_KitMdTable> createState() => _KitMdTableState();
-}
-
-class _KitMdTableState extends State<_KitMdTable> {
-  final _controller = ScrollController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  String _cellAt(List<String> cells, int index) =>
-      index < cells.length ? cells[index] : '';
-
-  TextAlign _alignmentAt(int index) {
-    final delimiter = widget.delimiter;
-    final value = index < delimiter.length ? delimiter[index].trim() : '';
-    if (value.startsWith(':') && value.endsWith(':')) return TextAlign.center;
-    return value.endsWith(':') ? TextAlign.end : TextAlign.start;
-  }
-
-  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
-    if (event is KeyUpEvent || !_controller.hasClients) {
-      return KeyEventResult.ignored;
-    }
-    final step = KitTokens.of(context).minTarget;
-    final double delta;
-    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-      delta = step;
-    } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-      delta = -step;
-    } else {
-      return KeyEventResult.ignored;
-    }
-    final position = _controller.position;
-    _controller.jumpTo(
-      (_controller.offset + delta).clamp(0.0, position.maxScrollExtent),
-    );
-    return KeyEventResult.handled;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = KitTokens.of(context);
-    final roles = tokens.roles;
-    final scope = _KitMdScope.of(context);
-    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
-    final hairline = BorderSide(
-      color: roles.hairline,
-      width: KitTokens.hairlineWidth(context),
-    );
-    final columns = widget.headers.length;
-    final allRows = [widget.headers, ...widget.rows];
-    final allMono = allRows.every(
-      (row) => [
-        for (var c = 0; c < columns; c++) _cellAt(row, c),
-      ].every((cell) => cell.isEmpty || _isMonoCell(cell)),
-    );
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final available = constraints.hasBoundedWidth
-            ? constraints.maxWidth
-            : MediaQuery.sizeOf(context).width;
-        final widths = _columnWidths(context, scope, allRows, available);
-        // One widget row per Markdown row, each merged for the screen reader
-        // so the table reads row by row; cells line up on their first
-        // baseline (a mono address beside body text).
-        Widget rowOf(int r) => MergeSemantics(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: r == 0 ? roles.surface1 : null,
-              border: r == 0 ? null : Border(top: hairline),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                for (var c = 0; c < columns; c++)
-                  SizedBox(
-                    width: widths.cells[c],
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: tokens.space3,
-                        vertical: tokens.space2,
-                      ),
-                      child: _KitMdText(
-                        source: _cellAt(allRows[r], c),
-                        role: scope.role,
-                        tone: scope.tone,
-                        header: r == 0,
-                        textAlign: _alignmentAt(c),
-                        detectDirection: false,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-        final table = DecoratedBox(
-          decoration: BoxDecoration(border: Border.fromBorderSide(hairline)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [for (var r = 0; r < allRows.length; r++) rowOf(r)],
-          ),
-        );
-        Widget body = table;
-        if (!widths.fits) {
-          // A table wider than its box scrolls inside it, never the page,
-          // with a visible bar on a fine pointer (KIT-6). Tab reaches it and
-          // the arrow keys scroll it.
-          body = Focus(
-            onKeyEvent: _onKey,
-            child: Scrollbar(
-              controller: _controller,
-              thumbVisibility: KitLayout.finePointer(context),
-              child: SingleChildScrollView(
-                controller: _controller,
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.only(bottom: tokens.space2),
-                child: table,
-              ),
-            ),
-          );
-        } else {
-          body = Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: body,
-          );
-        }
-        if (allMono) {
-          body = Directionality(textDirection: TextDirection.ltr, child: body);
-        }
-        return Semantics(
-          container: true,
-          label: l10n.kitMarkdownTable(widget.rows.length),
-          child: body,
-        );
-      },
-    );
-  }
-
-  /// Natural widths when the table fits; otherwise every column keeps at
-  /// least its longest word (a mono cell its whole token) and the rest is
-  /// shared out. When even the longest words do not fit, the table scrolls.
-  ({List<double> cells, bool fits}) _columnWidths(
-    BuildContext context,
-    _KitMdScope scope,
-    List<List<String>> rows,
-    double available,
-  ) {
-    final tokens = KitTokens.of(context);
-    final pad = tokens.space3 * 2;
-    final scaler = MediaQuery.textScalerOf(context);
-    final body = KitText.styleOf(context, scope.role, tone: scope.tone);
-    final header = body.copyWith(fontWeight: FontWeight.w600);
-    final mono = KitText.styleOf(context, KitTextRole.mono);
-    double measure(String text, TextStyle style) {
-      if (text.isEmpty) return 0;
-      final painter = TextPainter(
-        text: TextSpan(text: text, style: style),
-        textDirection: TextDirection.ltr,
-        textScaler: scaler,
-      )..layout();
-      final width = painter.width.ceilToDouble();
-      painter.dispose();
-      return width;
-    }
-
-    final columns = widget.headers.length;
-    final natural = List<double>.filled(columns, 0);
-    final minimum = List<double>.filled(columns, 0);
-    for (var r = 0; r < rows.length; r++) {
-      for (var c = 0; c < columns; c++) {
-        final cell = _cellAt(rows[r], c);
-        final monoCell = _isMonoCell(cell);
-        final style = monoCell ? mono : (r == 0 ? header : body);
-        final plain = _plainOf(cell);
-        final full = measure(plain, style);
-        natural[c] = math.max(natural[c], full);
-        final longestWord = monoCell
-            ? full
-            : plain
-                  .split(RegExp(r'\s+'))
-                  .map((word) => measure(word, style))
-                  .fold<double>(0, math.max);
-        minimum[c] = math.max(minimum[c], longestWord);
-      }
-    }
-    // Hairlines add a little to the table; keep one logical pixel spare.
-    final room = available - columns * pad - 1;
-    final naturalSum = natural.fold<double>(0, (a, b) => a + b);
-    if (naturalSum <= room) {
-      return (cells: [for (final w in natural) w + pad], fits: true);
-    }
-    final minimumSum = minimum.fold<double>(0, (a, b) => a + b);
-    if (minimumSum > room) {
-      // Scrolls: each column wraps at a readable measure.
-      final cap = tokens.minTarget * 6;
-      return (
-        cells: [
-          for (var c = 0; c < columns; c++)
-            math.max(minimum[c], math.min(natural[c], cap)) + pad,
-        ],
-        fits: false,
-      );
-    }
-    // Fits once wide columns wrap: find the cap that fills the room.
-    var low = 0.0;
-    var high = natural.fold<double>(0, math.max);
-    double sumAt(double cap) {
-      var sum = 0.0;
-      for (var c = 0; c < columns; c++) {
-        sum += math.max(minimum[c], math.min(natural[c], cap));
-      }
-      return sum;
-    }
-
-    for (var step = 0; step < 24; step++) {
-      final mid = (low + high) / 2;
-      if (sumAt(mid) <= room) {
-        low = mid;
-      } else {
-        high = mid;
-      }
-    }
-    return (
-      cells: [
-        for (var c = 0; c < columns; c++)
-          math.max(minimum[c], math.min(natural[c], low)).floorToDouble() + pad,
-      ],
-      fits: true,
-    );
-  }
-}
+/// [block] with the streaming caret after its last words, or null when the
+/// block has no words to end on (code, a table, pictures, a rule).
+Widget? _withCaret(Widget block) => switch (block) {
+  _KitMdParagraph(:final text) => _KitMdParagraph(text: text, caret: true),
+  _KitMdHeading(:final level, :final text) => _KitMdHeading(
+    level: level,
+    text: text,
+    caret: true,
+  ),
+  _KitMdQuote(:final text) => _KitMdQuote(text: text, caret: true),
+  _KitMdList(:final items, :final ordered, :final start) => _KitMdList(
+    items: items,
+    ordered: ordered,
+    start: start,
+    caret: true,
+  ),
+  _ => null,
+};
 
 // ---------------------------------------------------------------------------
 // Blocks.
 
 class _KitMdParagraph extends StatelessWidget {
-  const _KitMdParagraph({required this.text});
+  const _KitMdParagraph({required this.text, this.caret = false});
   final String text;
+  final bool caret;
 
   @override
   Widget build(BuildContext context) {
     final scope = _KitMdScope.of(context);
-    return _KitMdText(source: text, role: scope.role, tone: scope.tone);
+    return _KitMdText(
+      source: text,
+      role: scope.role,
+      tone: scope.tone,
+      caret: caret,
+    );
   }
 }
 
 class _KitMdHeading extends StatelessWidget {
-  const _KitMdHeading({required this.level, required this.text});
+  const _KitMdHeading({
+    required this.level,
+    required this.text,
+    this.caret = false,
+  });
   final int level;
   final String text;
+  final bool caret;
 
   @override
   Widget build(BuildContext context) {
@@ -933,6 +781,7 @@ class _KitMdHeading extends StatelessWidget {
         source: text,
         role: level <= 2 ? KitTextRole.headline : KitTextRole.rowTitle,
         tone: scope.tone,
+        caret: caret,
       ),
     );
   }
@@ -949,19 +798,26 @@ class _KitMdRule extends StatelessWidget {
 }
 
 class _KitMdQuote extends StatelessWidget {
-  const _KitMdQuote({required this.text});
+  const _KitMdQuote({required this.text, this.caret = false});
   final String text;
+  final bool caret;
 
   @override
   Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
     final scope = _KitMdScope.of(context);
+    final bar = KitSurfaceLook.divider(
+      context,
+      color: tokens.roles.text3.withValues(alpha: 0.45),
+      width: KitTokens.focusRingWidth(context),
+    );
     return DecoratedBox(
       decoration: BoxDecoration(
         border: BorderDirectional(
-          start: BorderSide(
-            color: tokens.roles.text3.withValues(alpha: 0.45),
-            width: KitTokens.focusRingWidth(context),
+          start: BorderSide.none.copyWith(
+            style: BorderStyle.solid,
+            color: bar.color,
+            width: bar.width,
           ),
         ),
       ),
@@ -971,6 +827,7 @@ class _KitMdQuote extends StatelessWidget {
           source: text,
           role: scope.role,
           tone: KitTextTone.secondary,
+          caret: caret,
         ),
       ),
     );
@@ -986,9 +843,13 @@ class _KitMdList extends StatelessWidget {
     required this.items,
     required this.ordered,
     this.start = 1,
+    this.caret = false,
   });
   final List<_KitMdListItem> items;
   final bool ordered;
+
+  /// The streaming caret after the last item's words.
+  final bool caret;
 
   /// The first top-level item's number (CommonMark list start).
   final int start;
@@ -1063,6 +924,7 @@ class _KitMdList extends StatelessWidget {
                       source: items[i].text,
                       role: scope.role,
                       tone: scope.tone,
+                      caret: caret && i == items.length - 1,
                     ),
                   ),
                 ],
@@ -1140,11 +1002,15 @@ class _KitMdText extends StatefulWidget {
     this.header = false,
     this.textAlign,
     this.detectDirection = true,
+    this.caret = false,
   });
 
   final String source;
   final KitTextRole role;
   final KitTextTone? tone;
+
+  /// A [KitStreamCaret] after the last word (a reply still being written).
+  final bool caret;
 
   /// A table's header cell: header semantics and the heavier weight.
   final bool header;
@@ -1194,11 +1060,22 @@ class _KitMdTextState extends State<_KitMdText> {
     }
     // Selection is the whole reply's (KitSelectable around KitMarkdown), so
     // a drag runs across paragraphs and no paragraph is its own text field.
-    Widget text = KitText.rich(
-      span,
+    // The words arriving while the reply streams fade in (_KitMdFresh).
+    Widget text = _KitMdFresh(
+      span: span,
+      // Zero wide and no taller than the line: no word moves and no line
+      // grows when it comes or goes. A mark, not words: no semantics.
+      trailing: widget.caret
+          ? const WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: ExcludeSemantics(child: KitStreamCaret()),
+            )
+          : null,
       role: widget.role,
       tone: widget.tone,
       textAlign: widget.textAlign,
+      live: scope.live,
+      fadeIn: scope.fadeNew,
     );
     if (widget.detectDirection) {
       final direction = _directionOf(widget.source);
@@ -1312,10 +1189,11 @@ class _KitMdTextState extends State<_KitMdText> {
     _recognizers.add(recognizer);
     return TextSpan(
       text: label,
+      // Links are in the Accent (ThemeRoles.partner), which reads as text.
       style: TextStyle(
-        color: roles.accent,
+        color: roles.partner,
         decoration: TextDecoration.underline,
-        decorationColor: roles.accent,
+        decorationColor: roles.partner,
       ),
       recognizer: recognizer,
       mouseCursor: SystemMouseCursors.click,

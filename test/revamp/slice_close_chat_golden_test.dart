@@ -28,6 +28,7 @@ import 'package:shared_preferences_platform_interface/shared_preferences_platfor
 
 import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
 import 'chat_3_support.dart';
+import '../support/composer_tools.dart';
 
 /// Refuses the session-draft write, so leaving asks about the draft.
 class _RefusingDrafts extends InMemorySharedPreferencesStore {
@@ -242,7 +243,7 @@ final Map<String, _Scene> _scenes = {
     pushed: false,
     refuseDrafts: false,
     act: (tester, conn) async {
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
       await tester.pump(const Duration(milliseconds: 600));
       await tester.tap(find.byKey(const Key('composer-tool-commands')));
       await tester.pump(const Duration(milliseconds: 600));

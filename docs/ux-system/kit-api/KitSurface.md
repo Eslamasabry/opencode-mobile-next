@@ -243,3 +243,5 @@ class KitPanel extends StatelessWidget {
 ## Open questions
 
 None. The shared enums `KitSurfaceLevel` and `KitShape`, with `KitTokens.fillOf` and `shapeOf`, are pre-wave seams in `kit_tokens.dart` (KitTappable, KitImage, KitMotionParts, KitChip, KitJumpPill and the chat parts name them), listed with every other new token in `_new-tokens.md`; `kit_tokens.dart` is in no wave-1 unit's write set, so the coordinator adds them before wave 1. If that does not happen, the enums move into `kit_surface.dart`, and kit-KitTappable, kit-KitImage and kit-KitMotionParts gain `after: kit-KitSurface` (kit-KitImage and kit-KitMotionParts move to tier 1b). The other pre-wave tokens then become PROC-20 contract problems for their parts.
+
+- **`flatInLists` (2026-10-26, flat polish):** a box that holds a page's leading group (Report a problem's summary) sits on the page itself, with no fill, edge or padding, where the style sets its lists flat (Solid); every other style draws it as given. Default constructor only.

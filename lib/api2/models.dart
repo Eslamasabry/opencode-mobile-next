@@ -12,6 +12,13 @@ part 'models/models_catalog.dart';
 int? _asInt(dynamic v) => v is num ? v.toInt() : null;
 double? _asDouble(dynamic v) => v is num ? v.toDouble() : null;
 String? _asString(dynamic v) => v is String ? v : null;
+
+/// [v] trimmed, or null when it is not a string or holds only whitespace.
+String? _nonBlank(dynamic v) {
+  final text = v is String ? v.trim() : null;
+  return text == null || text.isEmpty ? null : text;
+}
+
 bool? _asBool(dynamic v) => v is bool ? v : null;
 
 Map<String, dynamic>? _asMap(dynamic v) =>
@@ -169,9 +176,12 @@ class Api2StructuredError {
   static Api2StructuredError? fromJson(dynamic v) {
     final j = _asMap(v);
     if (j == null) return null;
+    // A blank message or type is no message at all: servers send "" for
+    // some provider failures, and an empty string would pass every `??`
+    // fallback and leave the chat's Error details empty.
     return Api2StructuredError(
-      type: _asString(j['type']) ?? _asString(j['name']),
-      message: _asString(j['message']),
+      type: _nonBlank(j['type']) ?? _nonBlank(j['name']),
+      message: _nonBlank(j['message']),
       status: _asInt(j['status']),
       raw: j,
     );

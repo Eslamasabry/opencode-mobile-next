@@ -893,6 +893,10 @@
   ],
   "notPages": [
     {
+      "file": "lib/ui/screens/widgets/widget_project_screen.dart",
+      "reason": "WidgetProjectScreen is the home-screen Conversations widget's Edit picker, shown only in the separate widget overlay window (route /widgets/project in lib/widgets_overlay/widget_overlay_app.dart), not in the app navigation; one tap saves the project through WidgetOverlayApi and closes the window."
+    },
+    {
       "file": "lib/ui/widgets/provider_logo.dart",
       "reason": "ProviderLogo / ProviderMonogram / BrandTile pure rendering; no tap handlers or tooltips"
     },

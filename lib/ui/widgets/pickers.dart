@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit_chip.dart';
+import 'package:opencode_mobile/ui/kit/kit_choice_list.dart' show KitChoice;
+import 'package:opencode_mobile/ui/kit/kit_choice_tiles.dart';
 import 'package:opencode_mobile/ui/kit/kit_icon_button.dart';
 import 'package:opencode_mobile/ui/kit/kit_menu.dart';
 import 'package:opencode_mobile/ui/kit/kit_motion.dart';
@@ -22,6 +24,7 @@ import 'package:opencode_mobile/ui/kit/kit_text.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 
 import '../../domain/models.dart';
+import '../../domain/model_recommendations.dart';
 import '../../domain/provider_presentation.dart';
 import '../../domain/product_repository.dart';
 import '../../state/connection.dart';
@@ -39,6 +42,7 @@ import '../screens/library_screen.dart'
 part 'pickers_catalog_sections.dart';
 part 'pickers_catalog_footer.dart';
 part 'pickers_catalog_models.dart';
+part 'pickers_choices.dart';
 
 AppLocalizations _pickerStrings(BuildContext context) =>
     Localizations.of<AppLocalizations>(context, AppLocalizations) ??
@@ -86,12 +90,19 @@ String _applyLabel(AppLocalizations strings, ModelPickerApplyScope scope) =>
     };
 
 /// Opens the one model sheet, from every door (the composer chip, `/model`,
-/// a chat error, Settings › Model, search): every model to pick from, with
-/// the thinking level and the agent pinned in its footer beside "Use for
-/// this conversation" (or the scope's wording). With [sessionID] and
-/// [ModelPickerApplyScope.session] the choice applies to that session only;
-/// otherwise it becomes the default for new conversations (Settings).
-/// [focusAgent] opens the sheet with the agent menu open.
+/// a chat error, Settings › Model, search).
+///
+/// It opens on a few plain choices that lead with the reason (Default,
+/// Recently used, Cheapest; docs/qa/vision-model-picker-2026-10-20): a tap
+/// chooses and closes, with no Apply. "All models (N)" under them swaps
+/// the sheet, in place, to every model with search, favourites, the
+/// thinking level and the agent pinned beside "Use for this conversation"
+/// (or the scope's wording). When nothing honest is left to recommend, or
+/// [focusAgent] asks for the agent menu, it opens on that full list.
+///
+/// With [sessionID] and [ModelPickerApplyScope.session] the choice applies
+/// to that session only; otherwise it becomes the default for new
+/// conversations (Settings).
 Future<void> showModelPicker(
   BuildContext context, {
   ModelPickerApplyScope applyScope = ModelPickerApplyScope.classic,
@@ -118,16 +129,37 @@ Future<void> showModelPicker(
     applyScope = ModelPickerApplyScope.newSessions;
   }
   final strings = _pickerStrings(context);
-  final apply = _SheetApply();
   final scope = applyScope;
+  final scopedSession = scope == ModelPickerApplyScope.session
+      ? sessionID
+      : null;
+  final apply = _SheetApply(
+    choicesTitle: title ?? strings.modelPickerSheetTitle,
+    allTitle: title ?? strings.modelChooseTitle,
+    backLabel: strings.kitTopBarBack,
+    wantsChoices: !focusAgent,
+  );
+  // The first step is known before the sheet builds, so the frame never
+  // swaps on its first frame.
+  final opensOnChoices =
+      apply.wantsChoices &&
+      modelChoicesFor(
+            controller,
+            controller.catalogForSession(scopedSession),
+            sessionID: scopedSession,
+          ) !=
+          null;
+  apply.step.value = apply.stepFor(choices: opensOnChoices);
   return showKitSheet<void>(
     context,
-    title: title ?? strings.modelChooseTitle,
-    subtitle: scope == ModelPickerApplyScope.session
-        ? strings.modelSessionScopeNote
-        : null,
-    icon: AppIconography.model,
-    height: KitSheetHeight.full,
+    title: apply.allTitle,
+    subtitle: switch (scope) {
+      ModelPickerApplyScope.session => strings.modelPickerScopeSession,
+      ModelPickerApplyScope.newSessions => strings.modelPickerScopeNewSessions,
+      ModelPickerApplyScope.classic => null,
+    },
+    height: opensOnChoices ? KitSheetHeight.content : KitSheetHeight.full,
+    stepListenable: apply.step,
     loading: apply.applying,
     footer: (_) => ValueListenableBuilder<int>(
       valueListenable: apply.footerTick,
@@ -135,9 +167,10 @@ Future<void> showModelPicker(
           apply.footer?.call(footerContext) ?? const SizedBox.shrink(),
     ),
     // Until the view has built: the scope's wording, or nothing to apply
-    // while there is no catalog to choose from.
+    // while there is no catalog to choose from (or a tap on a choice is
+    // the apply).
     primaryListenable: apply.primary
-      ..value = controller.catalog?.models.isNotEmpty == true
+      ..value = !opensOnChoices && controller.catalog?.models.isNotEmpty == true
           ? KitAction(
               key: const Key('model-picker-apply'),
               label: _applyLabel(strings, scope),
@@ -166,7 +199,81 @@ Future<void> showModelPicker(
 /// reports its in-flight save back as the sheet's loading bar, and draws
 /// the pinned footer (thinking level, agent) through [footer].
 class _SheetApply {
+  _SheetApply({
+    this.choicesTitle = '',
+    this.allTitle = '',
+    this.backLabel = '',
+    this.wantsChoices = false,
+  });
+
   final applying = ValueNotifier<bool>(false);
+
+  /// The sheet's step: the plain choices, or every model. It lives here,
+  /// not in the view: a new step cross-fades a new frame, and so a new view.
+  final step = ValueNotifier<KitSheetStep?>(null);
+  final String choicesTitle;
+  final String allTitle;
+  final String backLabel;
+
+  /// The sheet opens on the plain choices whenever there are honest ones.
+  bool wantsChoices;
+
+  /// All models was opened from the choices: its header goes back to them.
+  bool cameFromChoices = false;
+
+  KitSheetStep stepFor({required bool choices}) => choices
+      ? KitSheetStep(
+          id: 'model-choices',
+          title: choicesTitle,
+          height: KitSheetHeight.content,
+          showClose: false,
+        )
+      : KitSheetStep(
+          id: 'model-all',
+          title: allTitle,
+          back: cameFromChoices
+              ? KitAction(
+                  key: const Key('model-picker-back'),
+                  label: backLabel,
+                  onPressed: backToChoices,
+                )
+              : null,
+          height: KitSheetHeight.full,
+        );
+
+  /// "All models (N)": every model, in the same sheet.
+  void openAll() {
+    if (_disposed) return;
+    wantsChoices = false;
+    cameFromChoices = true;
+    primary.value = null;
+    step.value = stepFor(choices: false);
+  }
+
+  /// The header's back chevron, or the system back, from All models.
+  void backToChoices() {
+    if (_disposed) return;
+    wantsChoices = true;
+    cameFromChoices = false;
+    primary.value = null;
+    footer = null;
+    step.value = stepFor(choices: true);
+  }
+
+  /// Sets the step after the frame (called from the view's build) when the
+  /// catalog decided otherwise: no honest choices left once it loaded.
+  void offerStep({required bool choices}) {
+    final next = stepFor(choices: choices);
+    if (next == step.value) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_disposed || next == step.value) return;
+      // Decided once: a catalog that later grows does not swap it back.
+      wantsChoices = choices;
+      step.value = next;
+    });
+  }
+
+  static const choicesStep = 'model-choices';
 
   /// The sheet's pinned primary; its label names what it applies ("Use
   /// Claude Opus 5.5 · Build"), so the view renames it as the draft changes.
@@ -222,6 +329,7 @@ class _SheetApply {
   void dispose() {
     _disposed = true;
     applying.dispose();
+    step.dispose();
     primary.dispose();
     footerTick.dispose();
   }
@@ -326,11 +434,21 @@ class _ModelCatalogViewState extends State<ModelCatalogView>
   String _draftAgent = '';
   String _observedAgent = '';
 
+  /// The sheet step this view was built for ([_SheetApply.step]); a new
+  /// step builds a new view, and the old one fades out as it was.
+  Object? _stepID;
+
+  /// The choice being applied from the plain choices.
+  ModelRef? _choosing;
+
   /// [ModelCatalogView.focusAgent]: the agent menu opens once, as soon as
   /// the catalog has agents to offer.
   late bool _agentPending = widget.focusAgent;
   String? _scopeProfile;
   int _scopeLocation = 0;
+
+  /// This build shows the plain choices (no footer, no pinned primary).
+  bool _inChoices = false;
 
   bool get _sameScope =>
       widget.controller.profile?.id == _scopeProfile &&
@@ -351,6 +469,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView>
     super.initState();
     _scopeProfile = widget.controller.profile?.id;
     _scopeLocation = widget.controller.locationRevision;
+    _stepID = widget._apply?.step.value?.id;
     _syncDraft();
     _observedModel = _currentModel;
     _observedVariant = _currentVariant;
@@ -498,26 +617,61 @@ class _ModelCatalogViewState extends State<ModelCatalogView>
         final tokens = KitTokens.of(context);
         final catalog = _catalog;
         final drafted = catalog == null ? null : _draftedModel(catalog);
-        final items = _items(context, catalog, drafted);
-        final inSheet = widget._apply != null;
-        widget._apply
-          ?..offerPrimary(
-            catalog == null || catalog.models.isEmpty
-                ? null
-                : _applyText(drafted),
-            blockedBy: _applying ? null : _applyBlockedBy(drafted),
-          )
-          ..footerChanged();
+        final sheet = widget._apply;
+        final inSheet = sheet != null;
+        // Only the view of the sheet's current step speaks for the sheet;
+        // the one fading out keeps showing what it showed.
+        final current = sheet != null && sheet.step.value?.id == _stepID;
+        final choices = _stepID == _SheetApply.choicesStep
+            ? modelChoicesFor(
+                widget.controller,
+                catalog,
+                sessionID: _scopedSessionID,
+              )
+            : null;
+        _inChoices = choices != null;
+        final items = choices != null
+            ? _choiceItems(context, catalog, choices)
+            : _items(context, catalog, drafted);
+        if (sheet != null && current) {
+          if (_stepID == _SheetApply.choicesStep && choices == null) {
+            // Nothing honest to recommend: every model, in place.
+            sheet.offerStep(choices: false);
+          }
+          sheet
+            ..offerPrimary(
+              choices != null || catalog == null || catalog.models.isEmpty
+                  ? null
+                  : _applyText(drafted),
+              blockedBy: _applying ? null : _applyBlockedBy(drafted),
+            )
+            ..footerChanged();
+        }
         final apply = inSheet ? null : _applyBlock(context, drafted);
         if (!constraints.hasBoundedHeight) {
           // Inside a scrolling host (the sheet): the host scrolls.
-          return Column(
+          final body = Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final item in items) item,
               if (apply != null) ...[SizedBox(height: tokens.space3), apply],
             ],
+          );
+          // All models opened from the choices: back returns to them (a
+          // typed search clears first, in the search field's own scope).
+          final backs =
+              sheet != null &&
+              current &&
+              _stepID != _SheetApply.choicesStep &&
+              sheet.cameFromChoices &&
+              _query.trim().isEmpty;
+          return PopScope<Object?>(
+            canPop: !backs,
+            onPopInvokedWithResult: (didPop, _) {
+              if (!didPop && backs) sheet.backToChoices();
+            },
+            child: body,
           );
         }
         return Column(

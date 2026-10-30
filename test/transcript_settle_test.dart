@@ -64,6 +64,13 @@ void main() {
       expect(_hasRunningCompaction(messages), isTrue);
       final settled = settleStaleLive(messages, busy: true);
       expect(_hasRunningCompaction(settled), isFalse);
+      // One message per message: the transcript reads rows, parts and turn
+      // owners by the same index.
+      expect(settled, hasLength(messages.length));
+      expect(
+        settled.any((m) => m.parts.any((p) => p.toolName == compactionPassed)),
+        isTrue,
+      );
       expect(
         settled.any((m) => m.parts.any((p) => p.toolName == 'completed')),
         isTrue,

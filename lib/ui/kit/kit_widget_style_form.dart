@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import 'kit_max_width.dart';
 import 'kit_section_label.dart';
 import 'kit_segmented.dart';
 import 'kit_swatch.dart';
@@ -48,7 +49,10 @@ class KitWidgetStyleForm extends StatelessWidget {
   final bool locked;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tokens = KitTokens.of(context);
     return Column(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'kit_buttons.dart';
+import 'kit_max_width.dart';
 import 'kit_tokens.dart';
 
 /// A disabled action's reason (STATE-8, KitAction.md): one muted line,
@@ -44,7 +45,10 @@ class KitActionStack extends StatelessWidget {
   final List<KitAction> tertiary;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final gap = SizedBox(height: tokens.space2);
     final children = <Widget>[];

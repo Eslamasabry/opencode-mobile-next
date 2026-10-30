@@ -71,6 +71,9 @@ android {
     // Shorebird's pinned embedding ships release engine jars. This runner is
     // test-only; the stable journey additionally requires explicit runtime opt-in.
     testBuildType = "release"
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 
     signingConfigs {
         create("release") {
@@ -147,10 +150,20 @@ androidComponents.onVariants(androidComponents.selector().withBuildType("release
     }
 }
 
+// The widget render test reads Android resources (unitTests.isIncludeAndroidResources), so its
+// packaging reads the merged assets Flutter copies in: declare that order for Gradle.
+tasks.matching { it.name.startsWith("package") && it.name.endsWith("UnitTestForUnitTest") }.configureEach {
+    val variant = name.removePrefix("package").removeSuffix("UnitTestForUnitTest")
+    dependsOn(tasks.matching { it.name == "copyFlutterAssets$variant" })
+}
+
 dependencies {
     implementation("androidx.work:work-runtime:2.10.5")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20180813")
+    // Renders the home-screen widget's real RemoteViews layouts to images on the JVM
+    // (WidgetCardRenderTest): the picker previews and the QA renders come from the card itself.
+    testImplementation("org.robolectric:robolectric:4.17")
     // Flutter 3.47 excludes dev plugins from release configurations. The
     // explicit AOT smoke needs the native result bridge in this test build.
     // Runtime QA also retains the generated integration-test plugin registrant.

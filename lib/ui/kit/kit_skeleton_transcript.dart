@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'kit_layout.dart';
+import 'kit_surface_look.dart';
 import 'kit_tokens.dart';
 
 /// Placeholder turns while a conversation loads (design standard §4, the
@@ -8,7 +9,9 @@ import 'kit_tokens.dart';
 /// a prompt and a few lines of reply per turn, with no words and no motion,
 /// hidden from screen readers (the screen's loading bar says it is
 /// loading). It sits at the bottom, where the newest turn will appear, so
-/// the first real message lands where the placeholder was.
+/// the first real message lands where the placeholder was. The prompt's
+/// block is a `content` surface in the style, as the prompt bubble is; the
+/// reply's bars stand for words and keep their quiet fill in every style.
 ///
 /// States: loading (decorative).
 class KitSkeletonTranscript extends StatelessWidget {
@@ -54,11 +57,19 @@ class KitSkeletonTranscript extends StatelessWidget {
             for (var turn = 0; turn < turns; turn++) ...[
               if (turn > 0) SizedBox(height: tokens.space4 + tokens.space3),
               // The prompt: one wide block, as prompts are drawn.
-              Container(
+              SizedBox(
                 height: promptHeight,
-                decoration: ShapeDecoration(
-                  color: roles.surface3,
-                  shape: promptShape,
+                child: kitSurfaceBox(
+                  style: KitSurfaceLook.styleOf(context),
+                  decoration: KitSurfaceLook.decorate(
+                    context,
+                    solid: ShapeDecoration(
+                      color: roles.surface3,
+                      shape: promptShape,
+                    ),
+                    level: KitSurfaceLevel.surface3,
+                  ),
+                  child: const SizedBox.expand(),
                 ),
               ),
               SizedBox(height: tokens.space4),

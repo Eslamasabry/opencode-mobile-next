@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import 'kit_icon.dart';
+import 'kit_max_width.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -31,7 +32,10 @@ class KitContinuedLine extends StatelessWidget {
   final bool gone;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final l10n = _l10n(context);
     final tokens = KitTokens.of(context);
     final rtl = Directionality.of(context) == TextDirection.rtl;

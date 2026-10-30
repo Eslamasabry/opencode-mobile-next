@@ -1,5 +1,7 @@
 # Kit v2 (2026-09-26)
 
+> **2026-10-26 (owner): "Yes, max Android native animation and support."** On Android the app moves and answers like a native Android app. (1) Press feedback is the platform's Material ripple (`InkSparkle`, Flutter's Material 3 default on Android) on every tappable kit part — rows, buttons, icon buttons, chips, menu items, folds, cards and tiles, list choices, sheet rows — in the theme's ink (`text1`, or the part's own foreground, at 12 %), bounded to the part's shape, drawn over the part's face by `KitInkLayer` and driven by `KitPressTracker` (`lib/ui/kit/kit_ink.dart`). The flat pressed fill it replaces stays on other platforms and under reduced motion; hover and focus are unchanged. (2) Pages use Flutter's `PredictiveBackPageTransitionsBuilder` (`KitAndroidPageTransitionsBuilder`): the system back gesture previews the page underneath; a pushed page and a Back button play the Android fade-forwards slide; under reduced motion pages change at once and the back gesture pops without a preview. Flutter 3.47 has no predictive back for modal bottom sheets, so sheets keep their own drag and back behaviour. (3) Scrolling keeps the Android stretch overscroll and the platform physics (`KitScrollBehavior` extends `MaterialScrollBehavior` and overrides neither). (4) `KitHaptics.longPress` (the platform long-press tick) when a long-press opens a menu or starts a selection, and `KitHaptics.select` (a selection click) when a switch flips, a segment is chosen or a picker wheel passes a value; taps, scrolling and failures stay silent. (5) Every `KitScreen` page sets the status and navigation bars from the theme (`KitSystemBars`). Where this document, the visual language (§7) or a part spec says "no ripple", "a pressed fill replaces the ripple" or "no long-press haptic", read this rule. Terminal key caps keep their flat pressed fill, as a keyboard's keys do.
+
 > **2026-10-16 (owner, absolute): no red anywhere in the app.** There is no `danger` or `dangerFill` role, no error colour and no red tone on any text, icon, tile, chip, button, meter, diff line or terminal. Where this document or a part spec says red, danger, `dangerFill` or the error colour, read the neutral ink (`text1`; `text2` for a removed diff line). Amber (`attention`) means "needs you" and nothing else. A destructive act is made safe by its confirmation (and a typed name where one exists), never by a colour; the confirmed primary button inside a confirmation is the strong neutral fill (`text1` fill, `ground` words). `test/no_red_scan_test.dart` fails on any use of a danger or error colour, `Colors.red*` or a red-hued literal in `lib/ui`.
 
 > **2026-10-02 (owner, final):** liquid and frosted glass are removed. Wherever this document or a part spec says glass, read a plain solid surface: opaque `surface2`, hairline, token radius, at most the one elevation shadow. `KitGlass` keeps its name as that thin solid part (`docs/ux-system/kit-api/KitGlass.md`).
@@ -1105,7 +1107,7 @@ Every value the app did not write (paths, commands, hosts, ids, code) is rendere
 
 ### 4.11 Motion and haptics
 
-Only the `KitMotion` durations and curves are used, and nothing moves under `KitMotion.reduced`. There is no `AnimatedSize` or layout animation in scrolling lists. Haptics are only `send` (words leave), `done` (a waited-for finish) and `commit` (a confirmed destructive act), all through `KitHaptics`.
+Only the `KitMotion` durations and curves are used, and nothing moves under `KitMotion.reduced`. There is no `AnimatedSize` or layout animation in scrolling lists, and nothing scales, except the owner-approved chat motion of 2026-10-27 (STANDARDS MOT-2, MOT-5): the growing reply, the work-line fold, the step arrival, the sent bubble's lift from 0.92 scale and the chat-from-row transform. Haptics are only `send` (words leave), `done` (a waited-for finish) and `commit` (a confirmed destructive act), all through `KitHaptics`.
 
 ### 4.12 Entry rule
 
@@ -1245,6 +1247,76 @@ class KitLayout {
 ### 8.5 Order within P9
 
 Step A (P9.1) ships with `KitLayout`, and the sheet and confirmation adapt from the start. P9.2 moves the shell's rail and the Work/Inbox/Settings lists onto `KitScreen.twoPane`. Every later step's part meets §8.2 in the same commit as the part itself.
+
+### 8.6 Capacity and maximum widths (owner, 2026-10-28)
+
+> "Check what is the maximum the component can grow… It can expand vertically, no problem, but horizontally it needs a maximum." "Tomorrow no agent can by mistake add more than the component can carry, regardless of its type."
+
+A part rendered with tidy sample copy proves nothing: an empty row does not stretch, but the same row with 1,000 characters does. So every part declares its **capacity** and is checked with **extreme content**, the way i18n teams check with pseudo-localization.
+
+**The contract** lives in one machine-readable file, `test/kit/kit_capacity.json`, with one entry per exported part:
+
+- **Maximum width.** The part's role sets its cap (table below); a part may name its own token instead. A part never paints wider than its cap, whatever its caller gives it. It grows downwards, not sideways.
+- **Each text slot's overflow rule.** One of `wrap` (as many lines as the words need), `ellipsis:N` or `fade:N` (at most N lines, the cut shown) or `scroll` (one line in a sideways scroller). `clip:N` and `visible:N` are recorded when a slot is set up that way, but they are violations: words disappear without a sign. Slots are keyed by their words in the gallery scene, numbers folded to `#`; a slot whose part sets it up differently in different states lists each rule (`"ellipsis:1, wrap"`).
+- **Each list-like slot's rule beyond what fits.** Every `List`/`Iterable`/`Set` field of a part declares `beyond`: `grows` (all items, the page scrolls), `wraps`, `scroll` (inside its own box), `more` (as many as fit, at most `shows` when set, then an "N more" control), `page` (`shows` per page), `fixed` (the part asserts a count, `shows`), or `not-items` (data drawn as one mark). `unknown` is a gap, allowlisted until someone declares it.
+- **Minimum touch target:** 48 dp for every part (§8.3), checked with Flutter's own `androidTapTargetGuideline`.
+
+**Width caps by role.** The `KitLayout.*` values are the kit's tokens, `controlMaxWidth`, `chipMaxWidth` and `glyphMaxWidth` among them (added 2026-10-29).
+
+| Role | Cap | Token | Why | Parts (examples) |
+|---|---|---|---|---|
+| conversation | 700 | `KitLayout.paneDetailMaxWidth` | The conversation column (LAY-5): about 70 characters at body size, the prose measure | KitMessage, KitMarkdown, KitTurn, KitToolRow, KitWorkLine, KitComposer and its chip rows, KitRequestCard, KitSteerBox |
+| reading | 720 | `KitLayout.readingWidth` | Prose, cards, notices and forms: the 65–75 character measure | KitNotice, KitSurface, KitReceipt, KitField, KitSegmented, KitChecklist, KitActionBlock, cards, charts |
+| list | 960 | `KitLayout.listWidth` | Rows, lists, tables, code and logs: a value at the far edge stays within one eye movement | KitRow, KitRowGroup, KitChoiceList, KitMiniTable, KitCodeBlock, KitLogPanel, KitSearchField |
+| sheet | 640 | `KitLayout.sheetMaxWidth` | Material 3 bottom sheet maximum; on a wide window it becomes a 560 dp panel or a ≤480 dp side sheet, both inside | KitSheet, every `showKit…Sheet`, pickers |
+| confirm | 560 | `KitLayout.confirmMediumWidth` | §8.2: 560 dp on a medium window, a 480 dp dialog wider up | KitConfirmSheet, showKitConfirm, KitFloatingPanel |
+| dialog | 480 | `KitLayout.confirmDialogWidth` | §8.2 dialogs; inside Material 3's 560 dp dialog maximum | showKitAlert, showKitInputDialog |
+| popover | 320 | `KitLayout.popoverMaxWidth` | Menus and bubbles (Material 3 menus are 112–280 dp; KitMenu.md D2 allows 200–320) | KitMenuPanel, showKitMenu, showKitTerm, KitTip |
+| toast | 480 | `KitLayout.undoMaxWidth` | The undo bar from a medium window up (KitUndo.md); Material 3 snackbars stop at 600 | showKitUndo |
+| state | 440 | `KitLayout.stateMaxWidth` | A page state is a short centred column | KitStateView, KitSearchNoMatch, KitErrorFallback |
+| lane | 400 | `KitLayout.laneMaxWidth` | A board lane and its cards (LAY-2) | KitBoardLane, KitTaskCard, KitServerLane |
+| control | 400 | `KitLayout.controlMaxWidth` | One button or compact control hugs its label; a primary action on a PC is never a 1,500 dp bar | KitButton, KitOneTimeCode, KitQr, KitWheel |
+| chip | 320 | `KitLayout.chipMaxWidth` | Chips, pills, tags and inline values hug their words, then ellipsize | KitChip, KitFilterChip, KitStatusTag, KitTaskChip, KitJumpPill, KitRowValue, KitTerm |
+| glyph | 96 | `KitLayout.glyphMaxWidth` | Icons, marks, rings, avatars: fixed and small (a 56 dp FAB, a 64 dp ring) | KitIcon, KitIconButton, KitStatusMark, KitContextRing, KitAvatar, KitFloatingAction |
+| fill | — | — | Fills the region its caller gives it by design; that region carries the cap | KitScreen, KitTopBar, KitNav, KitTabStrip, KitDivider, full-screen viewers, layers |
+| wrapper | — | — | Takes its child's size; the child's cap applies | KitTappable, motion and scroll wrappers, KitGlass, KitInset |
+| scope | — | — | Draws nothing | KitEffectsScope, KitStatusScope, KitLinkScope |
+
+**How a part holds its cap (2026-10-29).** `KitMaxWidth` (`lib/ui/kit/kit_max_width.dart`) is the one place a part gets its cap: a part builds what it draws inside `KitMaxWidth.<role>(child: …)` (or `KitMaxWidth.sliver` for a sliver), so a caller can never give it more. Where the box is no wider than the cap the child is laid out as before, so a phone (every cap but `glyph` is wider than a phone's content) is untouched. Where the box is wider, the child gets at most the cap and sits at the start edge (the end edge for a value that ends its row, the middle for a page state, a sheet or a confirmation), so the conversation's messages, turns, tool rows and composer share one 700 dp column and one start edge. `KitLayout.controlMaxWidth` (400), `chipMaxWidth` (320) and `glyphMaxWidth` (96) are the three tokens the table first proposed. Some parts are held to a different cap than their role for what they are: `KitSurface` is a container and the shell's ground, so it is a *wrapper* (the words and cards on it hold the cap); `KitSwatch` is a picker tile, so it holds the chip cap; `KitProgressRing` and `KitContextRing` carry words, so they hold the reading cap; `KitErrorFallback` and `KitFloatingPanel` are full-window overlays (a page ground, a scrim), so they are *fill* parts: the words and the card on them hold the cap. `KitTurn` still paints 717 dp: its copy and more buttons reach 17 dp past its edge on purpose, so their ink ends on the turn's edge like the prompt bubble's.
+
+Every exported part, its role and what it paints with extreme content in a 1,600 dp window (measured 2026-10-29 on `fix/kit-width-caps`, the widest of its gallery scenes; "—" is a part that draws nothing measurable on its own, or one that is not in a scene at that width). The source of truth is the `parts` map of `test/kit/kit_capacity.json`; each over-cap scene is a `width` entry in `test/kit/kit_capacity_allowlist.json`. A part measured in a list host is given the full width by its ListView, as a stretched Column would give it, so the number is what the part does when a caller does not centre it: the cap must hold inside the part. For a glyph drawn by a painter the number is the box the painter is handed, which may be wider than its ink.
+
+| Role (cap) | Part: painted width at a 1,600 dp window (**bold** = over its cap) |
+|---|---|
+| conversation (700) | KitAgentLine 684, KitAgentStrip 668, KitAskField 700, KitAskLine 676, KitBackgroundWorkLine 700, KitComposer 700, KitComposerChips 700, KitComposerStatusStrip 684, KitContinuedLine 684, KitHandoffRecord 700, KitMarkdown 700, KitMessage 700, KitPhraseChips 684, KitPlanBlock 668, KitQueuedMessage 595, KitRequestCard 696, KitSenseAsk 700, KitSkeletonTranscript 668, KitStartBox 700, KitStatusAnswer 636, KitSteerBox 700, KitStepTimeline 700, KitToolRow 700, KitTranscriptExcerpt 700, **KitTurn 717**, KitWorkLine 700 |
+| reading (720) | KitAccentRow 415, KitActionBlock 710, KitActionStack 408, KitAgentCard 696, KitAgentChoice 720, KitAgentGrid 720, KitCapabilityExplainer 720, KitCarousel 704, KitChart 720, KitChecklist 720, KitChipWrap 690, KitChoiceCards 720, KitChoiceTiles 684, KitConsequences 720, KitContextChart 640, KitDetailsFold 720, KitDigest 720, KitField 720, KitFilterChips 704, KitFindingsCard 720, KitFineTunePanel 720, KitGroupNote 688, KitHeroQuestion 720, KitIllustration 160, KitImage 120, KitKeyValue 720, KitLevelMeter 720, KitLiveLookPreview 720, KitMergeQueue 720, KitNotice 720, KitOptionCard 720, KitPageHeading 688, KitPanel 720, KitPhaseCard 720, KitPlanCard 720, KitProgressRow 720, KitProgressView 720, KitPromoteCard 720, KitReceipt 720, KitSegmented 720, KitSpecBlock 720, KitStatusLine 720, KitStepSlider 720, KitSwatchGrid 620, KitText 720, KitThemePreview 720, KitTimelineDay 720, KitWebPreview 408, KitWidgetPreview 320, KitWidgetStyleForm 720, KitWordText 720 |
+| list (960) | KitBreadcrumb 944, KitChoiceList 960, KitChoiceRow 928, KitCodeBlock 960, KitDateTimeRow 940, KitExpandRow 936, KitFactRow 928, KitFeedItem 720, KitLastKnown 960, KitLogPanel 960, KitMilestoneRow 956, KitMiniTable 960, KitPickerRow 940, KitProjectFileList 960, KitProjectRow 956, KitRow 940, KitRowGroup 960, KitSearchField 960, KitSectionLabel 928, KitSkeletonRows 674, KitSliverRowGroup 960, KitSwitchRow 932, KitWindowRow 960 |
+| sheet (640) | KitContextSheet 640, KitServerTrustBody 488, KitSheet 617, showKitChoiceSheet 560, showKitDatePicker 560, showKitDateTimePicker 560, showKitFramedSheet 640, showKitProjectFileSheet 480, showKitRequestSheet 560, showKitServerTrust 560, showKitSheet 560, showKitTaskSheet 560, showKitTechnicalDetails 560, showKitTerminalLinkSheet 560, showKitTimePicker 560 |
+| confirm (560) | KitConfirmSheet 520, showKitConfirm 480 |
+| dialog (480) | showKitAlert 480, showKitInputDialog 480 |
+| popover (320) | KitMenuPanel 320, KitTip 0, KitTipBubble 280, showKitMenu 320, showKitTerm 320 |
+| toast (480) | showKitUndo 0 |
+| state (440) | KitSearchNoMatch 408, KitStateView 408 |
+| lane (400) | KitBoardLane 400, KitServerLane 400, KitTaskCard 400 |
+| control (400) | KitButton 400, KitOneTimeCode 400, KitQr 400, KitWheel 400 |
+| chip (320) | KitChip 320, KitFilterChip 320, KitJumpPill 320, KitRowValue 316, KitStatusTag 320, KitTaskChip 206, KitTerm 140 |
+| glyph (96) | KitAvatar 28, KitBrandMark 0, KitChevron 30, KitContextRing 262 (cap 720), KitFloatingAction 56, KitIcon 24, KitIconButton 48, KitPriorityGlyph 96, KitProgressRing 720 (cap 720), KitRowIcon 36, KitRowMenu 48, KitStatusMark 30, KitStreamCaret 4, KitSwatch 304 (cap 320), KitTaskMark 30 |
+| fill (none) | KitBoardLanes 1600, KitDiffView 1600, KitDivider 0, KitErrorFallback 1568, KitFloatingPanel 1568, KitGuide 1584, KitImageGallery 1584, KitImageMarkup 1584, KitJumpPillLayer 960, KitLiveBackground 1568, KitLoadingBar 1568, KitNav 400, KitNavRail 400, KitScanner 1600, KitScreen 1600, KitSessionTabs 1552, KitShellControls 1568, KitStatusLineSlot 944, KitTabStrip 1568, KitTabSwitcher 936, KitTerminalView 1568, KitTopBar 1600, KitViewer 1600, KitWorkGraph 956, KitZoom 280, showKitDiff 1600, showKitImageGallery 1584, showKitImageMarkup 1584, showKitViewer 1600 |
+| wrapper (none) | KitAnimatedBox 1568, KitAnimatedRows 936, KitAnimatedValue 952, KitArrival 1568, KitBottomInset 936, KitContextRegion 936, KitDim 24, KitEntrance 936, KitGlass 1568, KitInkLayer 720, KitInset 1568, KitLeadColumn 720, KitLtr 720, KitOwnScrollbar 928, KitPresence 720, KitReach 720, KitRefresh 936, KitReveal 936, KitScrollArea 928, KitScrollFade 648, KitScrollbar 928, KitSelectable 720, KitSince 720, KitSpin 24, KitSurface 1568, KitSwap 936, KitTappable 752, KitTextHalo 720 |
+| scope (none) | KitAgentGridSpan 720, KitArrivalScope 1568, KitEffectsScope 936, KitLinkScope 720, KitStatusContribution 928, KitStatusScope 944 |
+
+**The extreme content** (`test/support/stress_content.dart`): about 1,000 characters of prose (Arabic in right to left), one unbroken 300-character token (a URL with a path and a hash), CJK with no spaces, emoji ZWJ sequences, flags and keycaps, huge numbers, the empty string, and pseudo-localization (letters accented, every string ~40% longer, in brackets). The prose, token, CJK, emoji, numbers and empty fixtures replace every string the gallery scene passes; pseudo-localization also rewrites, in place, the words the part writes itself (its labels from the app's localizations). Every list-like slot that draws items is filled with 50 items (or exactly `shows` for a slot the part caps with an assert) by a run in `test/kit/kit_capacity_lists.dart`.
+
+**The gate** (`test/kit/kit_capacity_test.dart` and the shards `test/kit/kit_capacity_shard_<n>_test.dart`) pumps every G6 overflow scene and every list run (637 cases today) at text 1.0 and 2.0: at 280 dp with every fixture, left to right and right to left (where content breaks a part); at 412 dp as written, pseudo-localized and with prose, both directions (the census phone; text slots and tap targets are read here, as written at 1.0); and at 1,600 dp, left to right, as written and with prose, the token, numbers and pseudo-localization (what makes a part widest, for the caps). 54 pumps per case; the eight shards take about 22 minutes on the build server at three jobs. It fails on:
+
+- any FlutterError or exception (a RenderFlex overflow, an assert on empty text);
+- a text slot that loses words without an ellipsis, a fade or a scroller (its own box is smaller than its words, or a clipping ancestor cuts it);
+- a painted width over the cap at 1,600 dp (ink only: a 720 dp card centred in a 1,600 dp box measures 720; ink a clip or a scroller cuts off, a glyph's turn, and a scrim over the whole window are read for what they paint);
+- a tap target under 48 dp at 412 dp, text 1.0;
+- a text slot set up to clip, a list slot that draws more items than its `shows`;
+- an exported part with no contract entry, a text slot or list field with none, or a list slot that draws items with no run.
+
+What breaks the contract today is in `test/kit/kit_capacity_allowlist.json` with its measured numbers; like the other kit ratchets it only shrinks (a new violation or a worse number fails; a better or fixed one fails until the file is tightened with `KIT_CAPACITY_WRITE=1`, which never adds an entry). A new part or slot passes only by declaring its capacity and meeting it.
 
 ---
 

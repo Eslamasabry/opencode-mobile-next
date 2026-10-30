@@ -1,0 +1,99 @@
+== removed ops
+== added ops
+  ('PATCH', '/api/permission/saved/{id}') permission.saved.update
+  ('POST', '/api/experimental/voice/session') experimental.voice.session
+== changed ops
+  ('GET', '/api/session') ['parameters']
+    params - set() + {('query', 'archived')}
+  ('GET', '/api/session/{sessionID}/message') ['parameters']
+    params - set() + set()
+  ('PATCH', '/api/session/{sessionID}') ['requestBody']
+  ('POST', '/api/experimental/session/import') ['description', 'requestBody']
+== removed schemas ['Form.Answer_1', 'Session.Message.ProviderState', 'Session.Message.ProviderState_1', 'Session.Message.ProviderState_2', 'Session.Message.ProviderState_3', 'Session.Message.ProviderState_4', 'Session.Message.ProviderState_5', 'Session.ProviderContext', 'Session.ProviderContext.Provenance']
+== added schemas ['Config.Model.Reasoning', 'PermissionSavedNotFoundErrorEncoded', 'Session.Message.Native', 'Session.Message.Native_1', 'Session.Message.Native_2', 'Session.Message.Native_3', 'Session.Message.Native_4', 'VoiceSessionResponse', 'VoiceTransport', 'VoiceTransportInput', 'VoiceWebRTCTransport', 'VoiceWebRTCTransportInput', 'VoiceWebSocketTransport', 'VoiceWebSocketTransportInput']
+== changed schemas
+  Config.InfoEncoded
+      experimental 
+        old: {"additionalProperties": false, "properties": {"policies": {"items": {"additionalProperties": false, "properties": {"action": {"enum": ["provider.use", "tool.use", "integration.use"], "type": "string"}, "effect": {"enum": ["allow", "deny"], "type": "string"}, "resource": {"type": "string"}}, "requir 
+        new: {"additionalProperties": false, "properties": {"policies": {"items": {"additionalProperties": false, "properties": {"action": {"enum": ["provider.use", "tool.use", "integration.use"], "type": "string"}, "effect": {"enum": ["allow", "deny"], "type": "string"}, "resource": {"type": "string"}}, "requir
+  Config.Model.Capabilities
+      reasoning 
+        old: - 
+        new: {"$ref": "#/components/schemas/Config.Model.Reasoning"}
+      temperature 
+        old: - 
+        new: {"type": "boolean"}
+  Config.ModelEncoded
+      releaseDate 
+        old: - 
+        new: {"description": "Release date as YYYY-MM-DD or YYYY-MM", "pattern": "^\\d{4}-\\d{2}(-\\d{2})?$", "type": "string"}
+  Credential.Key
+      configuration 
+        old: {"$ref": "#/components/schemas/Form.Answer_1"} 
+        new: -
+  Model.Capabilities
+      temperature 
+        old: - 
+        new: {"type": "boolean"}
+  Model.Compatibility
+      streamUsage 
+        old: - 
+        new: {"type": "boolean"}
+  Provider.Compatibility
+      streamUsage 
+        old: - 
+        new: {"type": "boolean"}
+  Session.Message.Assistant
+      native 
+        old: - 
+        new: {"$ref": "#/components/schemas/Session.Message.Native_3"}
+      providerState 
+        old: {"$ref": "#/components/schemas/Session.Message.ProviderState_4"} 
+        new: -
+  Session.Message.Assistant.Reasoning
+      native 
+        old: - 
+        new: {"$ref": "#/components/schemas/Session.Message.Native_1"}
+      state 
+        old: {"$ref": "#/components/schemas/Session.Message.ProviderState_1"} 
+        new: -
+  Session.Message.Assistant.Text
+      native 
+        old: - 
+        new: {"$ref": "#/components/schemas/Session.Message.Native"}
+      state 
+        old: {"$ref": "#/components/schemas/Session.Message.ProviderState"} 
+        new: -
+  Session.Message.Assistant.Tool
+      native 
+        old: - 
+        new: {"$ref": "#/components/schemas/Session.Message.Native_2"}
+      providerResultState 
+        old: {"$ref": "#/components/schemas/Session.Message.ProviderState_3"} 
+        new: -
+      providerState 
+        old: {"$ref": "#/components/schemas/Session.Message.ProviderState_2"} 
+        new: -
+  Session.Message.Compaction.Completed
+      @required 
+        old: ["id", "reason", "recent", "status", "summary", "time", "type"] 
+        new: ["id", "reason", "status", "summary", "time", "type"]
+      native 
+        old: - 
+        new: {"$ref": "#/components/schemas/Session.Message.Native_4"}
+      providerContext 
+        old: {"$ref": "#/components/schemas/Session.ProviderContext"} 
+        new: -
+      providerState 
+        old: {"$ref": "#/components/schemas/Session.Message.ProviderState_5"} 
+        new: -
+      recent 
+        old: {"type": "string"} 
+        new: -
+  Session.Message.Compaction.Running
+      @required 
+        old: ["id", "reason", "recent", "status", "summary", "time", "type"] 
+        new: ["id", "reason", "status", "summary", "time", "type"]
+      recent 
+        old: {"type": "string"} 
+        new: -

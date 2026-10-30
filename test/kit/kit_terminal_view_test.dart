@@ -1085,4 +1085,93 @@ void main() {
       ),
     },
   );
+
+  group('calm (the Terminal screen)', () {
+    _test('one key row of eleven caps fills a phone; the rest slide', (
+      tester,
+    ) async {
+      final terminal = xterm.Terminal();
+      final keys = TerminalKeyBarController();
+      addTearDown(keys.dispose);
+      await _pump(
+        tester,
+        KitTerminalView.live(
+          terminal: terminal,
+          semanticsLabel: 'Terminal',
+          keys: keys,
+          calm: true,
+        ),
+      );
+      Rect at(String name) =>
+          tester.getRect(find.byKey(ValueKey('terminal-key-$name')));
+      expect(at('esc').top, at('slash').top, reason: 'one row');
+      expect(at('slash').right, lessThanOrEqualTo(412));
+      expect(at('esc').height, greaterThanOrEqualTo(48));
+      expect(at('esc').width, greaterThanOrEqualTo(34));
+      // No Ctrl-C row: Ctrl then c does it.
+      expect(
+        find.byKey(const ValueKey('terminal-key-interrupt')),
+        findsNothing,
+      );
+      // Home, End and the page keys wait past the end of the row.
+      expect(at('pageDown').left, greaterThan(412));
+    });
+
+    _test('every key fits a wide window, centred', (tester) async {
+      final keys = TerminalKeyBarController();
+      addTearDown(keys.dispose);
+      await _pump(
+        tester,
+        KitTerminalView.live(
+          terminal: xterm.Terminal(),
+          semanticsLabel: 'Terminal',
+          keys: keys,
+          calm: true,
+        ),
+        size: const Size(1280, 800),
+      );
+      final last = tester.getRect(
+        find.byKey(const ValueKey('terminal-key-pageDown')),
+      );
+      final first = tester.getRect(
+        find.byKey(const ValueKey('terminal-key-esc')),
+      );
+      expect(last.right, lessThanOrEqualTo(1280));
+      expect((first.left - (1280 - last.right)).abs(), lessThan(2));
+    });
+
+    _test('Ctrl latches from the one row and reaches the shell', (
+      tester,
+    ) async {
+      final sent = <String>[];
+      final terminal = xterm.Terminal(onOutput: sent.add);
+      final keys = TerminalKeyBarController();
+      addTearDown(keys.dispose);
+      await _pump(
+        tester,
+        KitTerminalView.live(
+          terminal: terminal,
+          semanticsLabel: 'Terminal',
+          keys: keys,
+          calm: true,
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('terminal-key-ctrl')));
+      await tester.pump();
+      expect(keys.ctrl, isTrue);
+      expect(keys.apply('c'), '\x03');
+      await tester.tap(find.byKey(const ValueKey('terminal-key-up')));
+      await tester.pump();
+      expect(sent.join(), contains('\x1b[A'));
+    });
+
+    test('the calm theme lets the ground show through', () {
+      final roles = ThemeRoles.resolve(AppTheme.dark());
+      expect(KitTerminalView.calmThemeOf(roles).background.a, 0);
+      expect(
+        KitTerminalView.calmThemeOf(roles).cursor,
+        KitTerminalView.themeOf(roles).cursor,
+      );
+    });
+  });
 }

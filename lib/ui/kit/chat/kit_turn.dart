@@ -4,6 +4,8 @@
 // order, with exactly one footer (Copy and More) once the turn has ended and
 // none while it runs. The host groups messages into turns and derives the
 // phase; the turn only lays them out.
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
@@ -14,11 +16,19 @@ import '../kit_buttons.dart';
 import '../kit_copy.dart';
 import '../kit_effects.dart';
 import '../kit_icon_button.dart';
+import '../kit_lead_column.dart';
+import '../kit_max_width.dart';
 import '../kit_menu.dart';
 import '../kit_motion.dart';
+import '../kit_optical.dart';
 import '../kit_since.dart';
+import '../kit_tappable.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
+import '../kit_word_text.dart';
+import '../motion/kit_reveal.dart';
+import '../style/kit_signal.dart'
+    show KitSignalAspect, KitTrack, kitSegmentTimer, kitSignalHead;
 import 'kit_message.dart';
 
 /// At this text scale and above the footer's meta words move above the
@@ -108,9 +118,52 @@ class KitTurnLive {
     this.since,
     this.teamAlsoWorking = false,
     this.note,
+    this.detail,
+    this.step,
+    this.onTap,
+    this.tapLabel,
+    this.actions = const [],
+    this.pending,
+    this.pendingAction,
+    this.stuck,
+    this.stuckCommand,
   });
 
   final KitTurnActivity activity;
+
+  /// The host's words when the step in hand has run far longer than such a
+  /// step can ("Still running after 2 h 29 min. It may be stuck."): they
+  /// replace the line's words and clock, in the attention tone and without
+  /// the sweep. Stop is the composer strip's, not the line's.
+  final String? stuck;
+
+  /// With [stuck]: the command that runs, cut short, drawn in mono before
+  /// [stuck] ("git add -A · 2 h 29 min · may be stuck").
+  final String? stuckCommand;
+
+  /// Non-null: the line is a button that opens the turn's steps (the host's
+  /// steps view); [tapLabel] says what a tap does ("Show steps").
+  final VoidCallback? onTap;
+  final String? tapLabel;
+
+  /// Tertiary words under the line ("Stop after this step"), at most two.
+  final List<KitAction> actions;
+
+  /// The host's words in place of what the turn is doing, without the time
+  /// ("Stopping after this step"): a choice made about this turn waits.
+  final String? pending;
+
+  /// With [pending]: one action after the words ("Undo").
+  final KitAction? pendingAction;
+
+  /// With [KitTurnActivity.working]: the step in hand in the host's words
+  /// ("Write · index.html"); it replaces the general "Working", so the turn
+  /// has one line for what is happening and no folded step line beside it.
+  final String? detail;
+
+  /// The agent's own plan, when it wrote one: "Step 3 of 5", muted under
+  /// the live line (owner decision 8, 20 Oct 2026). Null: nothing is drawn.
+  final String? step;
 
   /// When the turn began, on this phone's clock. The line shows the time
   /// since then after [showElapsedAfter], and the waits turn slow after
@@ -192,7 +245,13 @@ class KitTurnFooter {
     this.menu = const <KitMenuItem>[],
     this.onMore,
     this.copyLabel,
+    this.canCopy = true,
   });
+
+  /// Whether the turn has any reply words to copy. A turn that only ran
+  /// commands has none: its footer then draws no Copy button (a lone copy
+  /// icon on an empty line copied nothing) and its menu no Copy item.
+  final bool canCopy;
 
   /// The whole turn's reply prose, read at tap time (KIT-23). Never tool
   /// output or hidden text. It is copied verbatim (SEC-13): it is the
@@ -246,6 +305,8 @@ class KitTurn extends StatelessWidget {
     this.latest = false,
     this.highlighted = false,
     this.interruptedAction,
+    this.stoppedNote,
+    this.stoppedAction,
     this.reconnecting = false,
     this.live,
     this.stall,
@@ -282,6 +343,15 @@ class KitTurn extends StatelessWidget {
   /// [KitTurnPhase.interrupted].
   final KitAction? interruptedAction;
 
+  /// With [KitTurnPhase.stopped]: who or what stopped the turn, in place of
+  /// "You stopped this reply." (the server stopped it, or another device
+  /// did). Null keeps the person's own stop.
+  final String? stoppedNote;
+
+  /// With [KitTurnPhase.stopped]: the way on under the stopped line (Continue
+  /// after the server paused the reply).
+  final KitAction? stoppedAction;
+
   /// With [KitTurnPhase.interrupted]: the connection is coming back, so the
   /// reply may still finish; the line says so and offers nothing to resend.
   final bool reconnecting;
@@ -306,7 +376,10 @@ class KitTurn extends StatelessWidget {
   final Key? turnKey, footerKey, copyKey, moreKey;
 
   @override
-  Widget build(BuildContext context) => _TurnFrame(turn: this);
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) => _TurnFrame(turn: this);
 }
 
 bool _ended(KitTurnPhase phase) => switch (phase) {
@@ -348,11 +421,12 @@ class _TurnFrameState extends State<_TurnFrame> {
     final footer = _footer;
     if (footer == null) return const <KitMenuItem>[];
     return <KitMenuItem>[
-      KitMenuItem(
-        label: footer.copyLabel ?? _l10n.kitTurnCopy,
-        icon: AppIconography.copy,
-        onSelected: _copyReply,
-      ),
+      if (footer.canCopy)
+        KitMenuItem(
+          label: footer.copyLabel ?? _l10n.kitTurnCopy,
+          icon: AppIconography.copy,
+          onSelected: _copyReply,
+        ),
       ...footer.menu,
     ];
   }
@@ -445,22 +519,50 @@ class _TurnFrameState extends State<_TurnFrame> {
     final ends =
         turn.segment == KitTurnSegment.whole ||
         turn.segment == KitTurnSegment.last;
+    final footer = turn.footer;
+    // A footer with nothing to put in it (no reply words to copy, no menu,
+    // no model line to show) is not drawn at all.
+    final footerHasContent =
+        footer != null &&
+        (footer.canCopy ||
+            footer.menu.isNotEmpty ||
+            footer.onMore != null ||
+            (turn.latest && (footer.meta?.isNotEmpty ?? false)));
+    final footed =
+        footer != null && footerHasContent && ends && _ended(turn.phase);
+    // A stopped turn's note leads its footer's line: Copy and More sit at
+    // its end, never on a line of their own under it (owner, 2026-10-22).
+    // From 1.3x text the footer stacks as usual, under the note.
+    final noteInFooter =
+        footed &&
+        turn.live == null &&
+        turn.phase == KitTurnPhase.stopped &&
+        turn.stoppedAction == null &&
+        MediaQuery.textScalerOf(context).scale(1) < _kWrapTextScale;
     final phaseLine = turn.live != null
         ? _KitTurnLiveLine(live: turn.live!)
-        : ends
+        : ends && !noteInFooter
         ? _phaseLine(context, turn, l10n)
         : null;
-    if (phaseLine != null) {
-      add(phaseLine, turn.blocks.isEmpty ? tokens.space4 : tokens.space3);
-    }
+    final noteGap = turn.blocks.isEmpty ? tokens.space4 : tokens.space3;
+    if (phaseLine != null) add(phaseLine, noteGap);
 
     if (turn.live != null && turn.stall != null) {
       add(_KitTurnStallLine(stall: turn.stall!), tokens.space2);
     }
 
-    final footer = turn.footer;
-    if (footer != null && ends && _ended(turn.phase)) {
-      add(_footerRow(context, turn, footer, tokens, l10n), tokens.space1);
+    if (footed) {
+      add(
+        _footerRow(
+          context,
+          turn,
+          footer,
+          tokens,
+          l10n,
+          note: noteInFooter ? turn.stoppedNote ?? l10n.kitTurnStopped : null,
+        ),
+        noteInFooter ? noteGap - tokens.space2 : tokens.space1,
+      );
     }
 
     Widget body = Column(
@@ -470,6 +572,10 @@ class _TurnFrameState extends State<_TurnFrame> {
     );
 
     body = _HighlightBand(highlighted: turn.highlighted, child: body);
+
+    // The transcript's compact leading column: a notice in the turn starts
+    // its words on the steps' 48 dp rail, not a list's 56.
+    body = KitLeadColumn.compact(child: body);
 
     body = Focus(
       canRequestFocus: false,
@@ -525,7 +631,20 @@ class _TurnFrameState extends State<_TurnFrame> {
               : l10n.kitTurnStarting,
         ),
       ),
-      KitTurnPhase.stopped => line(l10n.kitTurnStopped),
+      KitTurnPhase.stopped when turn.stoppedAction != null => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          line(turn.stoppedNote ?? l10n.kitTurnStopped),
+          Align(
+            alignment: AlignmentDirectional.topStart,
+            child: KitButton.fromAction(
+              turn.stoppedAction!,
+              role: KitButtonRole.tertiary,
+            ),
+          ),
+        ],
+      ),
+      KitTurnPhase.stopped => line(turn.stoppedNote ?? l10n.kitTurnStopped),
       KitTurnPhase.interrupted => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -550,32 +669,52 @@ class _TurnFrameState extends State<_TurnFrame> {
     KitTurn turn,
     KitTurnFooter footer,
     KitTokens tokens,
-    AppLocalizations l10n,
-  ) {
+    AppLocalizations l10n, {
+    String? note,
+  }) {
     final meta = turn.latest ? footer.meta : null;
-    final buttons = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        KitIconButton(
-          key: turn.copyKey,
-          icon: AppIconography.copy,
-          tooltip: footer.copyLabel ?? l10n.kitTurnCopy,
-          onPressed: _copyReply,
-        ),
-        if (footer.menu.isNotEmpty || footer.onMore != null) ...[
-          SizedBox(width: tokens.space2),
-          Builder(
-            builder: (anchor) => KitIconButton(
-              key: turn.moreKey,
-              icon: AppIconography.more,
-              tooltip: l10n.kitTurnMore,
-              onPressed:
-                  footer.onMore ??
-                  () => _openMenu(items: footer.menu, anchor: anchor),
+    final more = footer.menu.isNotEmpty || footer.onMore != null;
+    // The last glyph's ink ends on the turn's edge, where the prompt
+    // bubble's does, not 15 dp inside it in its 48 dp target (impeccable
+    // layout pass, 2026-10-28). Painted and hit-tested there; the line's
+    // layout keeps its width.
+    final reach =
+        (tokens.minTarget - AppIconography.actionSize) / 2 +
+        KitOptical.endInset(
+          context,
+          more ? AppIconography.more : AppIconography.copy,
+          AppIconography.actionSize,
+        );
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final buttons = Transform.translate(
+      offset: Offset(rtl ? -reach : reach, 0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (footer.canCopy)
+            KitIconButton(
+              key: turn.copyKey,
+              icon: AppIconography.copy,
+              tooltip: footer.copyLabel ?? l10n.kitTurnCopy,
+              onPressed: _copyReply,
+              quiet: true,
             ),
-          ),
+          if (more) ...[
+            if (footer.canCopy) SizedBox(width: tokens.space2),
+            Builder(
+              builder: (anchor) => KitIconButton(
+                key: turn.moreKey,
+                icon: AppIconography.more,
+                quiet: true,
+                tooltip: l10n.kitTurnMore,
+                onPressed:
+                    footer.onMore ??
+                    () => _openMenu(items: footer.menu, anchor: anchor),
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
     final metaText = meta == null || meta.isEmpty
         ? null
@@ -584,7 +723,29 @@ class _TurnFrameState extends State<_TurnFrame> {
         MediaQuery.textScalerOf(context).scale(1) >= _kWrapTextScale;
 
     final Widget row;
-    if (metaText == null) {
+    if (note != null) {
+      // The stopped note, the meta under it, the actions at the line's end.
+      row = Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                KitText(
+                  note,
+                  role: KitTextRole.secondary,
+                  tone: KitTextTone.secondary,
+                ),
+                ?metaText,
+              ],
+            ),
+          ),
+          SizedBox(width: tokens.space2),
+          buttons,
+        ],
+      );
+    } else if (metaText == null) {
       row = Align(alignment: AlignmentDirectional.centerEnd, child: buttons);
     } else if (stacked) {
       row = Column(
@@ -711,6 +872,9 @@ class _KitTurnStallLine extends StatelessWidget {
 class _KitTurnLiveLine extends StatelessWidget {
   const _KitTurnLiveLine({required this.live});
 
+  /// Signal's head on the live line: a step shorter than a row's.
+  static const double _signalHead = 20;
+
   final KitTurnLive live;
 
   @override
@@ -724,12 +888,15 @@ class _KitTurnLiveLine extends StatelessWidget {
       ticks: KitSinceTicks.seconds,
       builder: (context, status) {
         final slow = status.elapsed >= KitTurnLive.slowAfter;
-        final words = switch (activity) {
+        var words = switch (activity) {
           KitTurnActivity.waitingForServer when slow =>
             l10n.kitComposerPillNoAnswer,
           KitTurnActivity.waitingForServer => l10n.kitTurnLiveThinking,
           KitTurnActivity.waitingForModel when !slow =>
             l10n.kitTurnLiveThinking,
+          KitTurnActivity.working
+              when live.detail != null && live.detail!.isNotEmpty =>
+            live.detail!,
           _ => KitTurnLive.wordsFor(
             l10n,
             activity,
@@ -744,32 +911,233 @@ class _KitTurnLiveLine extends StatelessWidget {
             ? l10n.kitTurnLiveNow(words)
             : l10n.kitTurnLiveFor(
                 words,
-                KitTurnLive.elapsedText(l10n, status.elapsed),
+                // "12 s" never breaks between the number and its unit.
+                KitTurnLive.elapsedText(
+                  l10n,
+                  status.elapsed,
+                ).replaceAll(' ', '\u00a0'),
               );
+        final pending = live.pending;
+        if (pending != null && pending.isNotEmpty) {
+          words = pending;
+          line = pending;
+        }
+        final stuckWords = live.stuck;
+        final stuck =
+            stuckWords != null &&
+            stuckWords.isNotEmpty &&
+            (pending == null || pending.isEmpty);
+        if (stuck) {
+          words = stuckWords;
+          line = stuckWords;
+        }
         final note = live.note;
-        if (note != null && note.isNotEmpty) line = '$line · $note';
-        return Row(
+        if (note != null && note.isNotEmpty && !stuck) {
+          line = '$line · $note';
+        }
+        final step = live.step;
+        final tokens = KitTokens.of(context);
+        final roles = tokens.roles;
+        // A dot and the words (concept C): mint while the agent works, amber
+        // while it waits for the person, muted while nothing answers.
+        final quiet =
+            slow &&
+            (activity == KitTurnActivity.waitingForServer ||
+                activity == KitTurnActivity.waitingForModel);
+        final tone = waiting || stuck
+            ? KitTextTone.attention
+            : quiet
+            ? KitTextTone.secondary
+            : KitTextTone.accent;
+        final dotColor = waiting || stuck
+            ? roles.attention
+            : quiet
+            ? roles.text3
+            : roles.accent;
+        final dot = KitTokens.liveDot;
+        // The dot sits on the first line's middle when the words wrap.
+        final firstLine = MediaQuery.textScalerOf(context).scale(
+          KitText.styleOf(context, KitTextRole.secondary).fontSize! *
+              (KitText.styleOf(context, KitTextRole.secondary).height ?? 1),
+        );
+        final dotTop = math.max(0.0, (firstLine - dot) / 2);
+        final signalTop = math.max(0.0, (firstLine - _signalHead) / 2);
+        // "· Undo" is a full-height target: the line centres on it.
+        final trailing = pending != null && pending.isNotEmpty
+            ? live.pendingAction
+            : null;
+        final undo = trailing != null;
+        final stuckCommand = stuck ? live.stuckCommand : null;
+        // Signal (concept CD): while it works the line is a green signal,
+        // the words in ink, and the time as the segment timer at the end.
+        final signal =
+            KitTrack.on(context) &&
+            !waiting &&
+            !stuck &&
+            !undo &&
+            (pending == null || pending.isEmpty);
+        if (signal) line = l10n.kitTurnLiveNow(words);
+        if (signal && note != null && note.isNotEmpty) line = '$line · $note';
+        final lineText =
+            stuck && stuckCommand != null && stuckCommand.isNotEmpty
+            ? KitText.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: stuckCommand,
+                      style: KitText.styleOf(
+                        context,
+                        KitTextRole.mono,
+                        tone: KitTextTone.attention,
+                      ),
+                    ),
+                    TextSpan(text: ' · $line'),
+                  ],
+                ),
+                role: KitTextRole.secondary,
+                tone: tone,
+              )
+            : KitText(
+                line,
+                role: KitTextRole.secondary,
+                // Signal: the lamp carries the colour; the words are ink.
+                tone: signal ? KitTextTone.primary : tone,
+                tabular: true,
+              );
+        final ease = KitMotion.reduced(context)
+            ? Duration.zero
+            : KitMotion.quick;
+        final lineRow = Row(
           key: const ValueKey('kit-turn-live-line'),
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: signal ? MainAxisSize.max : MainAxisSize.min,
+          crossAxisAlignment: undo
+              ? CrossAxisAlignment.center
+              : CrossAxisAlignment.start,
           children: [
+            AnimatedPadding(
+              duration: ease,
+              curve: KitMotion.enter,
+              padding: undo
+                  ? EdgeInsets.zero
+                  : EdgeInsets.only(top: signal ? signalTop : dotTop),
+              child: ExcludeSemantics(
+                child: signal
+                    ? kitSignalHead(
+                        key: const ValueKey('kit-turn-live-signal'),
+                        aspect: KitSignalAspect.go,
+                        breathing: true,
+                        height: _signalHead,
+                      )
+                    : SizedBox.square(
+                        key: const ValueKey('kit-turn-live-dot'),
+                        dimension: dot,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: dotColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            SizedBox(width: tokens.space2),
             Flexible(
+              fit: signal ? FlexFit.tight : FlexFit.loose,
               // A live region, read as the phase; the seconds are not
               // announced every time they change.
-              child: Semantics(
-                liveRegion: true,
-                label: note == null || note.isEmpty ? words : '$words. $note',
-                child: ExcludeSemantics(
-                  child: _LiveSweep(
-                    still: waiting,
-                    child: KitText(
-                      line,
-                      role: KitTextRole.secondary,
-                      tone: KitTextTone.secondary,
-                      tabular: true,
+              child: AnimatedPadding(
+                duration: ease,
+                curve: KitMotion.enter,
+                padding: EdgeInsets.zero,
+                child: Semantics(
+                  liveRegion: true,
+                  label: stuck
+                      ? (stuckCommand == null ? words : '$stuckCommand, $words')
+                      : note == null || note.isEmpty
+                      ? words
+                      : '$words. $note',
+                  child: ExcludeSemantics(
+                    // Signal: the breathing lamp is the line's motion; a
+                    // sweep would paint the ink words grey between passes.
+                    child: _LiveSweep(
+                      still: waiting || stuck || signal,
+                      child: lineText,
                     ),
                   ),
                 ),
               ),
+            ),
+            if (signal) ...[
+              SizedBox(width: tokens.space3),
+              kitSegmentTimer(
+                KitTurnLive.elapsedText(l10n, status.elapsed),
+                key: const ValueKey('kit-turn-live-timer'),
+                size: 13,
+              ),
+            ],
+            if (trailing case final action?)
+              // "· Undo" on the line itself, as the composer's "· Retry".
+              KitTappable(
+                tappableKey: action.key,
+                label: action.label,
+                shape: KitShape.button,
+                onTap: action.working ? null : action.onPressed,
+                disabledReason: action.working ? l10n.kitWorking : null,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: tokens.space2),
+                  child: KitText(
+                    '· ${action.label}',
+                    role: KitTextRole.secondary,
+                    tone: KitTextTone.primary,
+                  ),
+                ),
+              ),
+          ],
+        );
+        final onTap = live.onTap;
+        final shown = onTap == null
+            ? lineRow
+            : KitTappable(
+                tappableKey: const ValueKey('kit-turn-live-tap'),
+                tooltip: live.tapLabel,
+                shape: KitShape.button,
+                onTap: onTap,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: tokens.space1),
+                  child: lineRow,
+                ),
+              );
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            shown,
+            if (live.actions.isNotEmpty)
+              Wrap(
+                key: const ValueKey('kit-turn-live-actions'),
+                spacing: tokens.space2,
+                children: [
+                  for (final action in live.actions.take(2))
+                    KitButton.fromAction(action, role: KitButtonRole.tertiary),
+                ],
+              ),
+            KitReveal(
+              child: step == null || step.isEmpty
+                  ? null
+                  : Padding(
+                      // Under the words, not under the dot.
+                      padding: EdgeInsetsDirectional.only(
+                        start: dot + tokens.space2,
+                      ),
+                      // Cut at a whole word, never mid-word.
+                      child: KitWordText(
+                        step,
+                        key: const ValueKey('kit-turn-live-step'),
+                        maxLines: 2,
+                        role: KitTextRole.secondary,
+                        tone: KitTextTone.secondary,
+                      ),
+                    ),
             ),
           ],
         );

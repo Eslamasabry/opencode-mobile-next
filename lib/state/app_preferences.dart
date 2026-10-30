@@ -17,6 +17,7 @@ class AppPreferencesSnapshot {
     required this.locale,
     required this.effects,
     this.textSize = KitTextSize.normal,
+    this.accent,
     required this.reasoningExpanded,
     required this.timestampsVisible,
   });
@@ -26,6 +27,10 @@ class AppPreferencesSnapshot {
   final Locale? locale;
   final KitEffects effects;
   final KitTextSize textSize;
+
+  /// The Accent swatch chosen in Settings > Appearance (an id from
+  /// `appearanceAccents` in lib/ui/theme_roles.dart); null matches the theme.
+  final String? accent;
   final bool reasoningExpanded;
   final bool timestampsVisible;
 
@@ -37,6 +42,7 @@ class AppPreferencesSnapshot {
       locale == other.locale &&
       effects == other.effects &&
       textSize == other.textSize &&
+      accent == other.accent &&
       reasoningExpanded == other.reasoningExpanded &&
       timestampsVisible == other.timestampsVisible;
 
@@ -47,6 +53,7 @@ class AppPreferencesSnapshot {
     locale,
     effects,
     textSize,
+    accent,
     reasoningExpanded,
     timestampsVisible,
   );
@@ -72,12 +79,22 @@ class AppPreferencesStore extends ChangeNotifier {
   static const _reasoning = 'oc.transcript.reasoningExpanded';
   static const _timestamps = 'oc.transcript.timestampsVisible';
   static const _textSize = 'oc.textSize';
+  static const _accent = 'oc.appearanceAccent';
   static const _motion = 'oc.effectsMotion';
   static const _celebrations = 'oc.effectsCelebrations';
   static const _glow = 'oc.effectsActivityGlow';
-  static const _liveBackground = 'oc.effectsLiveBackground';
+  // A new name (2026-10-26): the background went off by default, and a
+  // choice stored under the old one ('oc.effectsLiveBackground', retired in
+  // ProfileStore.retiredPreferenceKeys) was made while it was on.
+  static const _liveBackground = 'oc.effectsBackgroundOn';
+  static const _liveHeldByStyle = 'oc.effectsLiveHeldByStyle';
   static const _liveStyle = 'oc.effectsLiveStyle';
   static const _liveIntensity = 'oc.effectsLiveIntensity';
+  static const _surfaceStyle = 'oc.effectsSurfaceStyle';
+  static const _corners = 'oc.effectsCorners';
+  static const _depth = 'oc.effectsDepth';
+  static const _density = 'oc.effectsDensity';
+  static const _edges = 'oc.effectsEdges';
   static const _glowStyle = 'oc.effectsGlowStyle';
   static const _glowColours = 'oc.effectsGlowColours';
   static const _glowSpeed = 'oc.effectsGlowSpeed';
@@ -110,6 +127,12 @@ class AppPreferencesStore extends ChangeNotifier {
         fallback;
   }
 
+  /// A Fine-tune knob: null (the style's default) when absent or unknown.
+  T? _knob<T extends Enum>(String key, List<T> options) {
+    final raw = _stored(key);
+    return options.where((option) => option.name == raw).firstOrNull;
+  }
+
   bool _bool(String key, bool fallback) {
     final raw = _stored(key);
     return raw is bool ? raw : fallback;
@@ -133,7 +156,8 @@ class AppPreferencesStore extends ChangeNotifier {
         motion: motion,
         celebrations: motion == KitMotionLevel.full,
         activityGlow: _bool(_glow, true),
-        liveBackground: _bool(_liveBackground, true),
+        liveBackground: _bool(_liveBackground, false),
+        liveHeldByStyle: _bool(_liveHeldByStyle, false),
         liveStyle: _stored(_liveStyle) is String
             ? _stored(_liveStyle)! as String
             : 'aurora',
@@ -142,15 +166,26 @@ class AppPreferencesStore extends ChangeNotifier {
           KitLiveIntensity.values,
           KitLiveIntensity.normal,
         ),
-        glowStyle: _enum(_glowStyle, KitGlowStyle.values, KitGlowStyle.classic),
-        glowColours: _enum(
-          _glowColours,
-          KitGlowColours.values,
-          KitGlowColours.one,
+        surfaceStyle: _enum(
+          _surfaceStyle,
+          KitSurfaceStyle.values,
+          KitSurfaceStyle.solid,
         ),
-        glowSpeed: _enum(_glowSpeed, KitGlowSpeed.values, KitGlowSpeed.normal),
+        // Appearance asks only Corners and Spacing: each style keeps its
+        // own depth and edges, whatever an earlier version stored.
+        fineTune: KitFineTune(
+          corners: _knob(_corners, KitCorners.values),
+          density: _knob(_density, KitDensity.values),
+        ),
+        // The reply glow is one choice (Off, Classic, Soft ring): its
+        // colours and speed are the app's own.
+        glowStyle: _enum(_glowStyle, KitGlowStyle.values, KitGlowStyle.classic),
       ),
       textSize: _enum(_textSize, KitTextSize.values, KitTextSize.normal),
+      accent: switch (_stored(_accent)) {
+        final String id when id.isNotEmpty => id,
+        _ => null,
+      },
       reasoningExpanded: _bool(_reasoning, false),
       timestampsVisible: _bool(_timestamps, false),
     );
@@ -264,6 +299,11 @@ class AppPreferencesStore extends ChangeNotifier {
   Future<void> setTextSize(KitTextSize value) =>
       _enqueue(() => _commit({_textSize: value.name}));
 
+  /// The Accent swatch's id; null goes back to the theme's own partner
+  /// colour (the key is removed).
+  Future<void> setAccent(String? value) =>
+      _enqueue(() => _commit({_accent: value}));
+
   Future<void> setEffects(KitEffects value) => _enqueue(() {
     final before = _value.effects;
     return _commit({
@@ -271,9 +311,29 @@ class AppPreferencesStore extends ChangeNotifier {
       if (before.activityGlow != value.activityGlow) _glow: value.activityGlow,
       if (before.liveBackground != value.liveBackground)
         _liveBackground: value.liveBackground,
+      if (before.liveHeldByStyle != value.liveHeldByStyle)
+        _liveHeldByStyle: value.liveHeldByStyle ? true : null,
       if (before.liveStyle != value.liveStyle) _liveStyle: value.liveStyle,
       if (before.liveIntensity != value.liveIntensity)
         _liveIntensity: value.liveIntensity.name,
+      if (before.surfaceStyle != value.surfaceStyle)
+        _surfaceStyle: value.surfaceStyle.name,
+      // A new style starts at its own Fine-tune defaults.
+      if (before.surfaceStyle != value.surfaceStyle) ...{
+        _corners: null,
+        _depth: null,
+        _density: null,
+        _edges: null,
+      } else ...{
+        if (before.fineTune.corners != value.fineTune.corners)
+          _corners: value.fineTune.corners?.name,
+        if (before.fineTune.depth != value.fineTune.depth)
+          _depth: value.fineTune.depth?.name,
+        if (before.fineTune.density != value.fineTune.density)
+          _density: value.fineTune.density?.name,
+        if (before.fineTune.edges != value.fineTune.edges)
+          _edges: value.fineTune.edges?.name,
+      },
       if (before.glowStyle != value.glowStyle) _glowStyle: value.glowStyle.name,
       if (before.glowColours != value.glowColours)
         _glowColours: value.glowColours.name,

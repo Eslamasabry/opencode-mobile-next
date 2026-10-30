@@ -36,12 +36,20 @@ String bugReportPlatformLabel() {
 }
 
 /// "1.0.44+50", or "unknown+0" when the plugin fails or never answers: a
-/// report must never hang on it, so it gives up after two seconds.
-Future<String> problemReportAppVersion({PackageInfo? info}) async {
+/// report must never hang on it, so it gives up after [timeout] (two
+/// seconds). A caller that already shows "unknown+0" until the answer comes
+/// passes a null [timeout] and waits without a timer.
+Future<String> problemReportAppVersion({
+  PackageInfo? info,
+  Duration? timeout = const Duration(seconds: 2),
+}) async {
   try {
     final package =
         info ??
-        await PackageInfo.fromPlatform().timeout(const Duration(seconds: 2));
+        await switch (timeout) {
+          null => PackageInfo.fromPlatform(),
+          final limit => PackageInfo.fromPlatform().timeout(limit),
+        };
     return '${package.version}+${package.buildNumber}';
   } on Object {
     return 'unknown+0';
@@ -180,12 +188,17 @@ class ProblemReport {
   });
 
   /// Builds the report. [events] are newest first; errors keep their
-  /// stack's first lines, timings only the newest few.
+  /// stack's first lines, timings only the newest few. [connection] is the
+  /// connection in use in words with no address or name ("OpenCode 2.0.28
+  /// · on this phone · connected"); [fallbackTitle] titles a report with
+  /// no attached error and no description (the newest error kept).
   factory ProblemReport.build({
     required String description,
     required String version,
     required String platform,
     KitReport? error,
+    String? connection,
+    String? fallbackTitle,
     List<ProblemReportEvent> events = const [],
     int maxErrors = 10,
     int maxTimings = 10,
@@ -199,6 +212,8 @@ class ProblemReport {
           ? errorTitle
           : firstLine.isNotEmpty
           ? firstLine
+          : (fallbackTitle?.trim().isNotEmpty ?? false)
+          ? problemReportScrub(fallbackTitle!.trim())
           : 'Problem report',
       80,
     );
@@ -221,6 +236,9 @@ class ProblemReport {
       ..write('\n\nEnvironment\n')
       ..write('App: $version\n')
       ..write('Platform: $platform');
+    if (connection case final connection? when connection.trim().isNotEmpty) {
+      what.write('\nConnection: ${problemReportScrub(connection.trim())}');
+    }
 
     final lines = <String>[];
     // A failed job's log (P8.4) leads the diagnostics: it is part of the

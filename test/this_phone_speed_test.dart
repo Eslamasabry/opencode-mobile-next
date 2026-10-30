@@ -135,6 +135,8 @@ void main() {
     );
     await _settle(tester);
     expect(find.text(_l10n.freeModelNotice), findsOneWidget);
+    await tester.ensureVisible(find.text(_l10n.freeModelSignIn));
+    await tester.pump();
     await tester.tap(find.text(_l10n.freeModelSignIn));
     await _settle(tester);
     // The server's provider sign-ins, the same page Settings opens.

@@ -237,10 +237,10 @@ typedef OpenCodeAsset = ({String url, String sha256, String member});
 /// unpacked or run. No npm: its wrapper package and install scripts are what
 /// failed on the owner's ARM64 phone (build 2062, npm 11.19 `allowScripts`).
 ///
-/// - OpenCode 2 (`@opencode/cli` 2.0.29) has no GitHub release. Its official
+/// - OpenCode 2 (`@opencode/cli` 2.1.1) has no GitHub release. Its official
 ///   per-platform npm packages hold only the program and a package.json,
 ///   with no install script; their tarballs' SHA-512 matched the registry's
-///   published `integrity` on 2026-10-14, and these are those files'
+///   published `integrity` on 2026-10-21, and these are those files'
 ///   SHA-256s.
 ///
 /// Moving to a newer OpenCode means new pins here, next to
@@ -249,15 +249,15 @@ abstract final class OpenCodePins {
   static const v2Arm64 = (
     url:
         'https://registry.npmjs.org/@opencode/cli-linux-arm64/-/'
-        'cli-linux-arm64-2.0.29.tgz',
-    sha256: '0af39e75dbdfacc20f8f531ef35fb4dcc0b44c08084203518614272f232283ae',
+        'cli-linux-arm64-2.1.1.tgz',
+    sha256: 'cfa3ae6363fc3082f03072297069d81f53559a761371fdb4b56fe6bfa01ca066',
     member: 'package/bin/opencode',
   );
   static const v2X64 = (
     url:
         'https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/'
-        'cli-linux-x64-baseline-2.0.29.tgz',
-    sha256: '152c42ff57b15728f39e1d7b68a9c13b0635fe1c5e6dcccdc8b710955e4cef0b',
+        'cli-linux-x64-baseline-2.1.1.tgz',
+    sha256: '216d3861d0a167adad5850282439bae13483203f4b110f0510f260118bba2858',
     member: 'package/bin/opencode',
   );
 

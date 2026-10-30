@@ -7,6 +7,7 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 
 import '../tool/capture/fixtures.dart';
 import 'support/setup_capture_preferences.dart';
+import 'support/composer_tools.dart';
 
 class _CalmApi extends CaptureApi {
   @override
@@ -49,6 +50,8 @@ void main() {
       await _pump(tester);
       expect(find.byKey(const Key('running-work-indicator')), findsNothing);
       expect(find.byKey(const Key('prompt-editor-button')), findsNothing);
+      // Idle, the model chip sits over the composer (chat fidelity, 20 Oct
+      // 2026); it is a real choice, not empty chrome.
       expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
       // The title is the bar's (KitTopBar): a header naming the route.
       expect(
@@ -75,13 +78,17 @@ void main() {
     await _pump(tester);
     await tester.enterText(
       find.byKey(const Key('chat-composer-field')),
-      'Keep my draft',
+      // Past one line: the full-screen editor's corner shows.
+      'Keep my draft\nand this line',
     );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('prompt-editor-button')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('composer-tools-button')));
+    // "+" opens its tray in place; File is there, the rest behind More.
+    await openComposerTray(tester);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('composer-tool-attach')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('composer-tray-more')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('composer-tool-commands')), findsOneWidget);
     // Voice conversation waits under Advanced (the Context capsule is gone,
     // slice-P3.3).
@@ -89,6 +96,7 @@ void main() {
     expect(find.byKey(const Key('composer-tool-clear')), findsNothing);
     final advanced = find.byKey(const Key('composer-tools-advanced'));
     await tester.ensureVisible(advanced);
+    await tester.pumpAndSettle();
     await tester.tap(advanced);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('composer-tool-conversation')), findsOneWidget);
@@ -116,7 +124,8 @@ void main() {
           )
           .controller
           .text,
-      'Keep my draft',
+      // Past one line: the full-screen editor's corner shows.
+      'Keep my draft\nand this line',
     );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());

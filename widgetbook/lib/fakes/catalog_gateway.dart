@@ -4,8 +4,9 @@ import 'package:opencode_mobile/domain/server_gateway.dart';
 /// Explicit supported-server fixture; no protocol client or network is created.
 const ServerCapabilities catalogServerCapabilities = ServerCapabilities(
   promptSteering: true,
-  // Stable 2.0.29 permission contract; the native engine independently probes
-  // the running version, operations and effective policy before execution.
+  // Stable 2.0.29/2.1.1 permission contract (unchanged between the two); the
+  // native engine independently probes the running version, operations and
+  // effective policy before execution.
   phoneTeamExecution: true,
   projectsAreGitRepositories: false,
   commandReceipts: true,
@@ -76,7 +77,7 @@ class CatalogFakeGateway implements ServerGateway {
   void close() => isClosed = true;
 
   @override
-  Future<Health> health() async => Health(healthy: true, version: '2.0.29');
+  Future<Health> health() async => Health(healthy: true, version: '2.1.1');
 
   @override
   Future<List<Session>> sessions() async => const [];

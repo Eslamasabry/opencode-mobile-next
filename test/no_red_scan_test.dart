@@ -13,6 +13,10 @@ const _allowed = <String, String>{
   'lib/ui/theme_roles.dart':
       'MarkupInk.red: the red pen of the picture markup tool is the person\'s '
       'own drawing ink on their photo, not interface colour',
+  'lib/ui/theme_packs_signal.dart':
+      'the Signal style\'s railway lamps and Stop key (owner-approved '
+      'concept CD, 2026-10-30): red means "needs you" there, in that one '
+      'chosen style only; every other style stays without red',
 };
 
 final _banned = <String, RegExp>{

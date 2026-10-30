@@ -152,8 +152,6 @@ void main() {
         celebrations: false,
         activityGlow: false,
         glowStyle: KitGlowStyle.softRing,
-        glowColours: KitGlowColours.two,
-        glowSpeed: KitGlowSpeed.slow,
       );
       await isolated.setEffects(chosen);
 

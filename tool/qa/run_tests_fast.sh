@@ -19,6 +19,9 @@
 # build/traycer/fast-<UTC time>). Ctrl-C stops every shard and the Flutter
 # processes it started (by captured process group, never by name).
 set -euo pipefail
+# Goldens print clock times from UTC fixtures in the local zone; CI runs in
+# UTC, so every machine does.
+export TZ=UTC
 
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 shards="${OC_FAST_SHARDS:-4}"

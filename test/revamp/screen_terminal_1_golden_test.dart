@@ -1,8 +1,9 @@
-// Golden renders of screen-terminal-1's pages (wave 2b), rebuilt from kit
-// parts: the server's terminal list (loaded, empty, a row's menu, the stop
-// question, the rename dialog), the explained gate on a server without
-// terminals, the terminal page (connected, closed, its menu), this phone's
-// terminal before Linux is set up, and the default shell sheet.
+// Golden renders of the Terminal page (vision 2026-10-20, terminal first):
+// the server's terminal open with its tabs (and wide), the one the page
+// starts when none runs, a tab's menu, the stop question, the rename dialog,
+// the explained gate on a server without terminals, this phone's terminal
+// before Linux is set up; the standalone terminal surface (connected,
+// closed, its menu); and the default shell sheet.
 // Phone 412x915 and one wide window (1280x800), dark and light (owner
 // decision 2026-09-27: no Arabic), with the app's real fonts at DPR 1.
 //
@@ -117,6 +118,12 @@ Future<void> _shot(
   }
 }
 
+/// A terminal's tab on the page (its name carries bidi marks).
+Finder _tab(String title) => find.descendant(
+  of: find.byKey(const ValueKey('terminal-tabs')),
+  matching: find.textContaining(title),
+);
+
 Widget _list(ConnectionController controller, TerminalServer _) =>
     TerminalPage(controller: controller, localSupported: false);
 
@@ -147,13 +154,13 @@ void main() {
     final mode = light ? 'light' : 'dark';
 
     testWidgets('list · $mode', (tester) async {
-      await _shot(tester, 'terminal_list_loaded', light: light, home: _list);
+      await _shot(tester, 'terminal_page_tabs', light: light, home: _list);
     });
 
     testWidgets('list wide · $mode', (tester) async {
       await _shot(
         tester,
-        'terminal_list_loaded',
+        'terminal_page_tabs',
         light: light,
         size: _wide,
         home: _list,
@@ -163,7 +170,7 @@ void main() {
     testWidgets('list empty · $mode', (tester) async {
       await _shot(
         tester,
-        'terminal_list_empty',
+        'terminal_page_started',
         light: light,
         server: TerminalServer(processes: []),
         home: _list,
@@ -173,10 +180,10 @@ void main() {
     testWidgets('list row menu · $mode', (tester) async {
       await _shot(
         tester,
-        'terminal_row_menu',
+        'terminal_tab_menu',
         light: light,
         home: _list,
-        then: () => tester.longPress(find.text('build-server')),
+        then: () => tester.longPress(_tab('build-server')),
       );
     });
 
@@ -187,7 +194,7 @@ void main() {
         light: light,
         home: _list,
         then: () async {
-          await tester.longPress(find.text('build-server'));
+          await tester.longPress(_tab('build-server'));
           await tester.pumpAndSettle();
           await tester.tap(find.text('Stop build-server'));
         },
@@ -201,7 +208,7 @@ void main() {
         light: light,
         home: _list,
         then: () async {
-          await tester.longPress(find.text('tests'));
+          await tester.longPress(_tab('tests'));
           await tester.pumpAndSettle();
           await tester.tap(find.text('Rename tests'));
         },

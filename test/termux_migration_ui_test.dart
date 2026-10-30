@@ -129,6 +129,7 @@ void main() {
 
   Future<void> tapKey(WidgetTester tester, String key) async {
     await tester.ensureVisible(_key(key));
+    await tester.pump();
     await tester.tap(_key(key));
     await _frames(tester);
   }

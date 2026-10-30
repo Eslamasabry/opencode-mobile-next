@@ -1,6 +1,7 @@
 // The Work tab's new parts (work-tab cleanup and design standard,
 // 2026-09-24): the one status line and its priorities, the kit's loading bar,
 // skeletons and button block. Old-code comparisons are in work_tab_cleanup_test.dart.
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
@@ -120,6 +121,14 @@ void main() {
       try {
         await tester.pump(const Duration(seconds: 9));
         await _settle(tester);
+        // It says what it restarts, not a bare "Restart".
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('connection-banner-restart')),
+            matching: find.text('Restart OpenCode'),
+          ),
+          findsOneWidget,
+        );
         await tester.tap(
           find.byKey(const ValueKey('connection-banner-restart')),
         );
@@ -241,7 +250,8 @@ void main() {
           expect(retry.top, lessThan(change.top));
           expect(
             tester.getSize(find.widgetWithText(FilledButton, 'Start')).width,
-            width,
+            // A button fills its row up to the control cap (kit-v2 §8.6).
+            math.min(width, KitLayout.controlMaxWidth),
           );
         } else {
           expect(start.left, greaterThan(retry.left));

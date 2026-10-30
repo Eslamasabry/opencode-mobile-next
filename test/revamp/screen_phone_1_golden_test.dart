@@ -25,11 +25,11 @@ import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_customize_sheet.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_ready_screen.dart';
-import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_welcome_entry.dart';
 import 'package:opencode_mobile/ui/screens/termux_storage_screen.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 
 import '../../tool/capture/fixtures.dart' show loadCaptureFonts;
+import '../support/phone_setup_scenes.dart' show WelcomePhoneCardScene;
 import 'screen_phone_1_fixtures.dart';
 
 String _name(String shot, Size size, bool light) => [
@@ -226,7 +226,7 @@ void main() {
           child: SafeArea(
             child: Padding(
               padding: EdgeInsets.all(24),
-              child: PhoneSetupWelcomeEntry(restoreTimeout: Duration.zero),
+              child: WelcomePhoneCardScene(),
             ),
           ),
         ),

@@ -180,9 +180,9 @@ class UiNavigationTest(unittest.TestCase):
 
     def test_switcher_title_line_selects_clickable_ancestor(self):
         raw = '<?xml version="1.0"?><hierarchy><node clickable="true" enabled="true" bounds="[0,0][200,70]">' \
-              '<node text="In-app Ubuntu&#10;Connected"/></node></hierarchy>'
+              '<node text="On this phone&#10;Connected"/></node></hierarchy>'
         nodes = B.ui_nodes(raw)
-        self.assertEqual(B.ui_target(nodes, {'In-app Ubuntu'}, title=True), (100, 35))
+        self.assertEqual(B.ui_target(nodes, {'On this phone'}, title=True), (100, 35))
         self.assertIsNone(B.ui_target(nodes, {'Stop'}))
 
     def test_duplicate_or_invalid_action_targets_refuse(self):
@@ -213,8 +213,8 @@ class RealStartJourneyTest(unittest.TestCase):
         external = xml('Cancel', (5, 5)).replace('</hierarchy>',
             '<node text="Open link" clickable="true" enabled="true" bounds="[1,80][20,90]"/>'
             '<node text="Copy link" clickable="true" enabled="true" bounds="[30,80][40,90]"/></hierarchy>')
-        screens = [external, xml('In-app Ubuntu&#10;Connected', (10, 10)), xml('Manage servers', (20, 20)),
-                   xml('More', (30, 30)).replace('<node clickable=', '<node content-desc="In-app Ubuntu" clickable="true" enabled="true" bounds="[0,0][100,100]"><node clickable=').replace('</hierarchy>', '</node></hierarchy>'), xml('Stop OpenCode on this phone', (40, 40)),
+        screens = [external, xml('On this phone&#10;Connected', (10, 10)), xml('Manage servers', (20, 20)),
+                   xml('More', (30, 30)).replace('<node clickable=', '<node content-desc="On this phone" clickable="true" enabled="true" bounds="[0,0][100,100]"><node clickable=').replace('</hierarchy>', '</node></hierarchy>'), xml('Stop OpenCode on this phone', (40, 40)),
                    xml('Start', (50, 50)), xml('Start', (50, 50)), xml('Connected', (60, 60))]
         class Device:
             index = -1
@@ -242,22 +242,22 @@ class ScopedCardTargetTest(unittest.TestCase):
     def tree(self, own_actions='<node text="More" clickable="true" enabled="true" bounds="[220,100][260,140]"/>'):
         return B.ui_nodes('<?xml version="1.0"?><hierarchy><node bounds="[0,0][300,800]">'
             '<node text="More" clickable="true" enabled="true" bounds="[220,10][260,50]"/>'
-            '<node content-desc="In-app Ubuntu&#10;Connected · OpenCode 2 · Running" selected="true" '
+            '<node content-desc="On this phone&#10;Connected · OpenCode 2 · Running" selected="true" '
             'clickable="true" enabled="true" bounds="[0,80][280,160]">' + own_actions + '</node>'
             '<node content-desc="Other server" clickable="true" enabled="true" bounds="[0,200][280,280]">'
             '<node text="More" clickable="true" enabled="true" bounds="[220,220][260,260]"/>'
             '</node></node></hierarchy>')
 
     def test_two_cards_more_is_scoped_to_exact_in_app_card(self):
-        self.assertEqual(B.ui_card_target(self.tree(), {'In-app Ubuntu'}, {'More'}), (240, 120))
+        self.assertEqual(B.ui_card_target(self.tree(), {'On this phone'}, {'More'}), (240, 120))
 
     def test_missing_action_cannot_fall_back_to_other_card(self):
-        self.assertIsNone(B.ui_card_target(self.tree(''), {'In-app Ubuntu'}, {'More'}))
+        self.assertIsNone(B.ui_card_target(self.tree(''), {'On this phone'}, {'More'}))
 
     def test_duplicate_action_inside_exact_card_refuses(self):
         actions = '<node text="More" clickable="true" enabled="true" bounds="[220,100][260,140]"/>'*2
         with self.assertRaises(B.H.Q.Refused):
-            B.ui_card_target(self.tree(actions), {'In-app Ubuntu'}, {'More'})
+            B.ui_card_target(self.tree(actions), {'On this phone'}, {'More'})
 
     def test_unknown_card_never_returns_another_card_action(self):
         self.assertIsNone(B.ui_card_target(self.tree(), {'Missing owner'}, {'More'}))
@@ -271,8 +271,8 @@ class DelayedStopJourneyTest(unittest.TestCase):
             return '<?xml version="1.0"?><hierarchy><node text="' + label + \
                 '" clickable="true" enabled="true" bounds="[' + str(x-1) + ',0][' + str(x+1) + ',2]"/></hierarchy>'
         def card(label, x):
-            return xml(label, x).replace('<hierarchy>', '<hierarchy><node content-desc="In-app Ubuntu" clickable="true" enabled="true">').replace('</hierarchy>', '</node></hierarchy>')
-        screens = [xml('In-app Ubuntu', 10), xml('Manage servers', 20), card('More', 30),
+            return xml(label, x).replace('<hierarchy>', '<hierarchy><node content-desc="On this phone" clickable="true" enabled="true">').replace('</hierarchy>', '</node></hierarchy>')
+        screens = [xml('On this phone', 10), xml('Manage servers', 20), card('More', 30),
                    xml('Stop OpenCode on this phone', 40), card('More', 30),
                    card('Start', 50), card('Start', 50), xml('Connected', 60)]
         class Device:
@@ -297,23 +297,23 @@ class DelayedStopJourneyTest(unittest.TestCase):
 
 class AuthoredRuntimeTitleTest(unittest.TestCase):
     def locales(self):
-        return [{'phoneServerCardTitle': 'In-app Ubuntu', 'phoneSetupOpenPhoneRuntime': '{name} · {runtime}',
+        return [{'phoneServerCardTitle': 'On this phone', 'phoneSetupOpenPhoneRuntime': '{name} · {runtime}',
                  'setupRuntimeOne': 'OpenCode 1', 'setupRuntimeTwo': 'OpenCode 2'}]
 
     def test_real_combined_title_scopes_more_to_canonical_runtime(self):
         nodes = ScopedCardTargetTest().tree()
         own = [node for node in nodes if node.get('selected') == 'true'][0]
-        own.set('content-desc', 'In-app Ubuntu · OpenCode 2\nConnected · Running')
+        own.set('content-desc', 'On this phone · OpenCode 2\nConnected · Running')
         titles = B.phone_card_titles(self.locales(), 'openCode2')
         self.assertEqual(B.ui_card_target(nodes, titles, {'More'}), (240, 120))
-        self.assertNotIn('In-app Ubuntu · OpenCode 1', titles)
-        self.assertNotIn('Copied In-app Ubuntu · OpenCode 2 elsewhere', titles)
+        self.assertNotIn('On this phone · OpenCode 1', titles)
+        self.assertNotIn('Copied On this phone · OpenCode 2 elsewhere', titles)
 
     def test_both_runtime_titles_are_generated_only_from_authored_copy(self):
         self.assertEqual(B.phone_card_titles(self.locales(), 'openCode1'),
-                         {'In-app Ubuntu', 'In-app Ubuntu · OpenCode 1'})
+                         {'On this phone', 'On this phone · OpenCode 1'})
         self.assertEqual(B.phone_card_titles(self.locales(), 'openCode2'),
-                         {'In-app Ubuntu', 'In-app Ubuntu · OpenCode 2'})
+                         {'On this phone', 'On this phone · OpenCode 2'})
 
 
 class RebootTransportTest(unittest.TestCase):

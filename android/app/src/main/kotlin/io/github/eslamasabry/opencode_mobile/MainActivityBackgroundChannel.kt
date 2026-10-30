@@ -103,7 +103,6 @@ internal class MainActivityBackgroundChannel(
         kind = call.argument<String>("kind").orEmpty(),
         sessionID = call.argument<String>("sessionID").orEmpty(),
         key = call.argument<String>("key").orEmpty(),
-        quickReply = call.argument<Boolean>("quickReply") ?: false,
         requestID = call.argument<String>("requestID").orEmpty(),
         profileID = call.argument<String>("profileID").orEmpty(),
         allowActions = call.argument<Boolean>("allowActions") ?: true,
@@ -117,6 +116,7 @@ internal class MainActivityBackgroundChannel(
         reason = call.argument<String>("reason").orEmpty(),
         options = call.argument<List<*>>("options")?.filterIsInstance<String>().orEmpty(),
         silent = call.argument<Boolean>("silent") ?: false,
-        shellCommand = call.argument<Boolean>("shellCommand") ?: false,
+        askAction = call.argument<String>("askAction").orEmpty(),
+        askTarget = call.argument<String>("askTarget").orEmpty(),
     )
 }

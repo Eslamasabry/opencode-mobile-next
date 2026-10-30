@@ -955,6 +955,17 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
         bottom: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Stop sits above the field, as in the chat (the strip's Stop).
+            KitComposerStatusStrip(
+              chips: const [],
+              stop: running && !c.busy
+                  ? KitComposerStop(
+                      label: l.kitTurnLiveStopShort,
+                      spoken: l.teamProjectTaskStop,
+                      onPressed: () => _stop(p),
+                    )
+                  : null,
+            ),
             KitComposer(
               controller: _message,
               focusNode: _focus,
@@ -964,7 +975,6 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
               busy: running,
               sending: c.busy,
               canSendWhileBusy: true,
-              onStop: running && !c.busy ? () => _stop(p) : null,
             ),
           ],
         ),

@@ -24,11 +24,16 @@ import '../widgets/request_routes.dart';
 import 'kit_buttons.dart';
 import 'kit_icon_button.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_menu.dart';
 import 'kit_motion.dart';
 import 'kit_notice.dart';
 import 'kit_one_time_code.dart';
+import 'kit_optical.dart';
 import 'kit_progress.dart';
+import 'kit_reach.dart';
+import 'kit_surface.dart';
+import 'kit_surface_look.dart';
 import 'kit_technical_value.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -54,6 +59,55 @@ enum KitSheetHeight {
 
   /// Nearly the whole window; an end-side sheet on a wide window (§8.2).
   full,
+}
+
+/// One step of a [showKitSheet] that shows its content in steps, given
+/// through `stepListenable`: a second view replaces the first inside the
+/// one sheet (§4.7, never a sheet on a sheet), the frame cross-fades in
+/// place and takes the step's height (the model sheet's three choices,
+/// then All models).
+@immutable
+class KitSheetStep {
+  const KitSheetStep({
+    required this.id,
+    this.title,
+    this.back,
+    this.height,
+    this.showClose = true,
+  });
+
+  /// Names the step; a change cross-fades the frame.
+  final Object id;
+
+  /// The header's title in this step; null keeps the sheet's own.
+  final String? title;
+
+  /// A back chevron at the header's start that returns to the step before
+  /// (it replaces the close button). The body handles the system back.
+  final KitAction? back;
+
+  /// How tall the sheet is in this step; null keeps the sheet's own. The
+  /// frame's cross-fade carries the change.
+  final KitSheetHeight? height;
+
+  /// False leaves out the header's close button on a bottom sheet, whose
+  /// handle, swipe, back and scrim already close it (a short choice sheet
+  /// with nothing else in its header). Panels keep it.
+  final bool showClose;
+
+  @override
+  bool operator ==(Object other) =>
+      other is KitSheetStep &&
+      other.id == id &&
+      other.title == title &&
+      other.back?.label == back?.label &&
+      (other.back == null) == (back == null) &&
+      other.height == height &&
+      other.showClose == showClose;
+
+  @override
+  int get hashCode =>
+      Object.hash(id, title, back?.label, back == null, height, showClose);
 }
 
 /// The tone of a [showKitSheet] header's icon tile (§5 Sheets). [attention]
@@ -187,6 +241,10 @@ class KitDraft {
 /// the frame builds only the rows in view (a virtualised list), where a
 /// [body] is laid out whole inside the frame's scroll view. Pass exactly
 /// one of [body] and [itemBuilder].
+///
+/// A sheet whose content comes in steps passes [stepListenable]: each
+/// [KitSheetStep] can rename the header, add a back chevron and change the
+/// height, and the frame cross-fades between steps in place.
 Future<T?> showKitSheet<T>(
   BuildContext context, {
   required String title,
@@ -210,6 +268,7 @@ Future<T?> showKitSheet<T>(
   RequestRoutes? routes,
   bool dismissible = true,
   Key? sheetKey,
+  ValueListenable<KitSheetStep?>? stepListenable,
 }) async {
   assert(
     (body == null) != (itemBuilder == null),
@@ -261,6 +320,7 @@ Future<T?> showKitSheet<T>(
         loading: loading,
         dismissible: dismissible,
         sheetKey: sheetKey,
+        stepListenable: stepListenable,
       );
     },
   );
@@ -276,7 +336,10 @@ Future<T?> showKitSheet<T>(
 /// The route is the theme's bottom sheet (`bottomSheetTheme`: `surface2`,
 /// the sheet radius, the scrim and the drag handle the frame leaves out),
 /// scroll-controlled so the body sets its own height, and capped at
-/// [maxWidth] when given. [useSafeArea] keeps it below the status bar.
+/// [maxWidth] when given. Away from Solid at its defaults
+/// ([KitSurfaceLook.isPlain]) the route's Material turns clear and the
+/// style paints the sheet (the `sheet` role) with the same handle on it.
+/// [useSafeArea] keeps it below the status bar.
 /// [sheetKey] keys the body. It returns what the body pops with, or null
 /// when dismissed; `Navigator.pop(context, result)` from the caller's
 /// context or [KitSheet.close] from inside the body closes it.
@@ -290,21 +353,72 @@ Future<T?> showKitFramedSheet<T>(
   double? maxWidth,
   bool useSafeArea = false,
   Key? sheetKey,
-}) => showModalBottomSheet<T>(
-  context: context,
-  isScrollControlled: true,
-  useSafeArea: useSafeArea,
-  // The frame is drawn with `handle: false`: the route draws the one
-  // handle, as the theme does.
-  showDragHandle: true,
-  // Reduced motion (MOT-7): no slide; otherwise the route's own.
-  sheetAnimationStyle: KitMotion.reduced(context)
-      ? AnimationStyle.noAnimation
-      : null,
-  constraints: maxWidth == null ? null : BoxConstraints(maxWidth: maxWidth),
-  builder: (sheetContext) =>
-      KeyedSubtree(key: sheetKey, child: builder(sheetContext)),
-);
+}) {
+  final plain = KitSurfaceLook.isPlain(context);
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: useSafeArea,
+    // The frame is drawn with `handle: false`: the route draws the one
+    // handle, as the theme does ([_KitFramedSurface] draws it otherwise).
+    showDragHandle: plain,
+    backgroundColor: plain ? null : Colors.transparent,
+    // The style's scrim (hook H6), as every kit modal has:
+    // the theme's own barrier keeps the scrim from before the style.
+    barrierColor: KitTokens.of(context).scrim,
+    // Reduced motion (MOT-7): no slide; otherwise the route's own.
+    sheetAnimationStyle: KitMotion.reduced(context)
+        ? AnimationStyle.noAnimation
+        : null,
+    // Never wider than a sheet may be (kit-v2 §8.6), whatever a caller asks.
+    constraints: BoxConstraints(
+      maxWidth: math.min(
+        maxWidth ?? KitLayout.sheetMaxWidth,
+        KitLayout.sheetMaxWidth,
+      ),
+    ),
+    builder: (sheetContext) {
+      final body = KeyedSubtree(key: sheetKey, child: builder(sheetContext));
+      return plain ? body : _KitFramedSurface(child: body);
+    },
+  );
+}
+
+/// Kit-internal (screens open sheets through the kit): [child] on the
+/// style's `sheet` surface in [radius]. What a modal
+/// route holds once its own Material is clear, away from Solid at its
+/// defaults ([KitSurfaceLook.isPlain]); the viewer sheet uses it.
+Widget kitSheetSurface({required BorderRadius radius, required Widget child}) =>
+    _KitModalSurface(radius: radius, child: child);
+
+/// A framed sheet's surface away from Solid at its defaults: the style's
+/// `sheet`, with the theme's handle laid out as the route lays it out (a
+/// 48 dp band above the body).
+class _KitFramedSurface extends StatelessWidget {
+  const _KitFramedSurface({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => _KitModalSurface(
+    radius: BorderRadius.vertical(
+      top: Radius.circular(KitTokens.of(context).sheetRadius),
+    ),
+    child: Stack(
+      alignment: Alignment.topCenter,
+      children: [
+        SizedBox(
+          height: kMinInteractiveDimension,
+          child: _KitHandle(onDismiss: () => Navigator.of(context).maybePop()),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: kMinInteractiveDimension),
+          child: child,
+        ),
+      ],
+    ),
+  );
+}
 
 /// The one sheet frame (§1.1), drawn by [showKitSheet]; also used on its
 /// own for goldens and for a full-screen variant on tablets.
@@ -459,7 +573,10 @@ class KitSheet extends StatelessWidget {
       Navigator.of(context).pop(result);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.sheet(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final frame = _buildFrame(context);
     if (step == null) return frame;
     return AnimatedSwitcher(
@@ -490,6 +607,25 @@ class KitSheet extends StatelessWidget {
     );
   }
 
+  /// The room after the header's last button: the ⋯'s or the close's ink
+  /// ends on the sheet's rail, where its title and rows start and the rows'
+  /// checks end (impeccable layout pass, 2026-10-28); space2 otherwise.
+  double _headerEnd(BuildContext context, KitTokens tokens) {
+    final last = menu.isNotEmpty
+        ? AppIconography.more
+        : onClose != null && showClose && leading == null
+        ? AppIconography.close
+        : null;
+    if (last == null) return tokens.space2;
+    const glyph = AppIconography.actionSize;
+    return KitOptical.endPad(
+      context,
+      last,
+      glyph,
+      tokens.rail - (tokens.minTarget - glyph) / 2,
+    );
+  }
+
   Widget _buildFrame(BuildContext context) {
     final tokens = KitTokens.of(context);
     final l10n = _l10n(context);
@@ -510,7 +646,7 @@ class KitSheet extends StatelessWidget {
           padding: EdgeInsetsDirectional.only(
             start: leading != null ? tokens.space1 : tokens.rail,
             top: handle ? EdgeInsets.zero.top : tokens.space3,
-            end: tokens.space2,
+            end: _headerEnd(context, tokens),
             bottom: tokens.space1,
           ),
           child: Column(
@@ -639,17 +775,25 @@ class KitSheet extends StatelessWidget {
           : null,
       slivers: [
         const _KitHeaderSpacer(),
+        // A flat list in the body may run its rows out over the rails
+        // (KitReach), so its words start on the title's line.
         if (itemBuilder != null)
           SliverPadding(
             padding: bodyPadding,
-            sliver: SliverList.builder(
-              itemCount: itemCount,
-              itemBuilder: itemBuilder,
+            sliver: KitReach(
+              reach: tokens.rail,
+              child: SliverList.builder(
+                itemCount: itemCount,
+                itemBuilder: itemBuilder,
+              ),
             ),
           )
         else
           SliverToBoxAdapter(
-            child: Padding(padding: bodyPadding, child: child),
+            child: Padding(
+              padding: bodyPadding,
+              child: KitReach(reach: tokens.rail, child: child),
+            ),
           ),
       ],
     );

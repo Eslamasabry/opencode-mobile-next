@@ -3,6 +3,7 @@
 // groups follow the spec's "Tests required".
 import 'dart:convert';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -184,7 +185,10 @@ void main() {
           );
           final decoration = box.decoration as BoxDecoration;
           expect(decoration.color, kitPromptBubbleFill(_roles(tester)));
-          expect(decoration.border, isNull);
+          // A plain hairline edge: no second hue in the chrome (unslop
+          // fix 1, a33e6394a).
+          final edge = (decoration.border! as Border).top;
+          expect(edge.color, _roles(tester).hairline);
           expect(decoration.boxShadow, isNull);
           final radius = decoration.borderRadius!.resolve(direction);
           const tail = Radius.circular(6);
@@ -782,6 +786,89 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  group('12. a note under the prompt', () {
+    KitMessage noted({String? note, KitAction? action, DateTime? since}) =>
+        KitMessage.prompt(
+          body: const KitMarkdown('Just install it.', selectable: false),
+          bubbleKey: _bubbleKey,
+          note: note,
+          noteAction: action,
+          noteSince: since,
+        );
+
+    testWidgets('shows its words at the end edge, under the bubble', (
+      tester,
+    ) async {
+      await _pump(tester, noted(note: 'Claude Code reads this later'));
+      final words = find.text('Claude Code reads this later');
+      expect(words, findsOneWidget);
+      final bubble = tester.getRect(find.byKey(_bubbleKey));
+      final line = tester.getRect(words);
+      expect(line.top, greaterThanOrEqualTo(bubble.bottom));
+      expect(line.right, closeTo(bubble.right, 16));
+    });
+
+    testWidgets('its action waits for a slow wait, then calls back once', (
+      tester,
+    ) async {
+      var stops = 0;
+      await _pump(
+        tester,
+        noted(
+          note: 'Claude Code reads this later',
+          action: KitAction(
+            label: 'Stop the command',
+            onPressed: () => stops++,
+          ),
+          since: clock.now(),
+        ),
+      );
+      expect(find.text('Stop the command'), findsNothing);
+      await tester.pump(const Duration(seconds: 9));
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.tap(find.text('Stop the command'));
+      expect(stops, 1);
+    });
+
+    testWidgets('it fades out over a quick beat when the note goes', (
+      tester,
+    ) async {
+      await _pump(tester, noted(note: 'Claude Code reads this later'));
+      await _pump(tester, noted());
+      expect(find.text('Claude Code reads this later'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(find.text('Claude Code reads this later'), findsNothing);
+    });
+
+    testWidgets('under reduced motion it comes and goes in one pump', (
+      tester,
+    ) async {
+      // Each pump here builds a new theme, which MaterialApp animates on
+      // its own; the note's own fade is what is read.
+      double opacity() => tester
+          .widget<FadeTransition>(
+            find
+                .ancestor(
+                  of: find.text('Claude Code reads this later'),
+                  matching: find.byType(FadeTransition),
+                )
+                .first,
+          )
+          .opacity
+          .value;
+      await _pump(tester, noted(), reduced: true);
+      await _pump(
+        tester,
+        noted(note: 'Claude Code reads this later'),
+        reduced: true,
+      );
+      expect(opacity(), 1);
+      expect(find.byType(AnimatedSize), findsNothing);
+      await _pump(tester, noted(), reduced: true);
+      expect(find.text('Claude Code reads this later'), findsNothing);
+    });
+  });
 
   test('the prompt bubble is visible on the page in light and dark', () {
     for (final roles in [graphiteLight, graphiteDark]) {

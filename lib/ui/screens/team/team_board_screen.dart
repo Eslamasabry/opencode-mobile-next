@@ -119,7 +119,7 @@ class _TeamBoardScreenState extends State<TeamBoardScreen> {
   final _pendingTimers = <String, Timer>{};
 
   /// A move the host refused: the card's title and the host's words.
-  (String, String?)? _failure;
+  _BoardFailure? _failure;
 
   DateTime get _now => (widget.now ?? DateTime.now)();
 
@@ -290,6 +290,16 @@ class _TeamBoardScreenState extends State<TeamBoardScreen> {
       final sure = await confirmTeamBoardCancel(context, card.item.title);
       if (!sure || !mounted) return;
     }
+    await _runMove(move, card, priority: priority);
+  }
+
+  /// Asks the host for [move]; Try again on a refusal comes straight here,
+  /// the person has already chosen and confirmed.
+  Future<void> _runMove(
+    TeamBoardMove move,
+    TeamBoardCard card, {
+    WorkPriority? priority,
+  }) async {
     final target = teamBoardMoveTarget(move);
     setState(() {
       _failure = null;
@@ -305,7 +315,11 @@ class _TeamBoardScreenState extends State<TeamBoardScreen> {
       _busy--;
       if (!result.ok) {
         _dropPending(card.id);
-        _failure = (card.item.title, result.message);
+        _failure = _BoardFailure(
+          card.item.title,
+          result.message,
+          () => unawaited(_runMove(move, card, priority: priority)),
+        );
       } else if (target != null && _pending.containsKey(card.id)) {
         // The host took it; if it has not shown it yet, wait a while
         // for it, then trust what it says.
@@ -415,17 +429,36 @@ class _TeamBoardScreenState extends State<TeamBoardScreen> {
                         end: tokens.gutter,
                         bottom: tokens.space2,
                       ),
-                      child: KitNotice(
-                        key: const ValueKey('team-board-failure'),
-                        tone: AppStatusTone.failure,
-                        title: l10n.teamBoardMoveFailedTitle(failure.$1),
-                        message: l10n.teamBoardMoveFailedBody,
-                        notes: [
-                          if (failure.$2?.trim() case final m?
-                              when m.isNotEmpty)
-                            m,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          KitNotice(
+                            key: const ValueKey('team-board-failure'),
+                            tone: AppStatusTone.failure,
+                            title: l10n.teamBoardMoveFailedTitle(failure.title),
+                            message: l10n.teamBoardMoveFailedBody,
+                            actions: [
+                              KitAction(
+                                key: const ValueKey('team-board-failure-retry'),
+                                label: l10n.teamUiCardRetry,
+                                icon: AppIcons.retry,
+                                onPressed: failure.retry,
+                              ),
+                            ],
+                            onDismiss: () => setState(() => _failure = null),
+                          ),
+                          // The host's own words: technical, under Details.
+                          if (failure.hostWords?.trim() case final words?
+                              when words.isNotEmpty)
+                            KitDetailsFold(
+                              label: l10n.teamUiTechnicalDetails,
+                              foldKey: const ValueKey(
+                                'team-board-failure-details',
+                              ),
+                              notes: [l10n.teamDispatchHostWords],
+                              text: words,
+                            ),
                         ],
-                        onDismiss: () => setState(() => _failure = null),
                       ),
                     ),
             ),
@@ -599,4 +632,14 @@ class _TeamBoardScreenState extends State<TeamBoardScreen> {
       ],
     );
   }
+}
+
+/// A move the host refused: the card's title, the host's words (for the
+/// Details fold only) and what Try again does.
+class _BoardFailure {
+  const _BoardFailure(this.title, this.hostWords, this.retry);
+
+  final String title;
+  final String? hostWords;
+  final VoidCallback retry;
 }

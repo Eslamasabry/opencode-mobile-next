@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
+import 'package:opencode_mobile/paseo/transport.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
@@ -312,6 +313,58 @@ void main() {
     await _frames(tester);
     expect(error, findsNothing);
     expect(find.text('The checkout test is fixed.'), findsOneWidget);
+  });
+
+  Future<void> agentOpenFails(
+    WidgetTester tester,
+    PaseoFailure failure,
+    String words,
+  ) async {
+    final api = _Api()..busy = {};
+    api.messagesHandler = (_) async => throw failure;
+    await _chat(tester, api, agentBackend: true);
+    final error = find.byKey(const ValueKey('chat-load-error'));
+    expect(error, findsOneWidget);
+    // The agent's name sits in bidi isolates (KitBidi.auto).
+    expect(
+      find.descendant(of: error, matching: find.textContaining(words)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: error, matching: find.textContaining('Claude Code')),
+      findsOneWidget,
+    );
+    expect(find.textContaining("isn't answering"), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('kit-state-details')));
+    await _frames(tester);
+    expect(find.textContaining(failure.reason!), findsOneWidget);
+  }
+
+  testWidgets('a Claude reply the app cannot read says it answered, and '
+      'Details name the reply', (tester) async {
+    await agentOpenFails(
+      tester,
+      PaseoFailure(
+        PaseoFailureKind.invalidResponse,
+        reason: 'fetch_agent_timeline_response',
+      ),
+      " on this phone answered, but this app couldn't read the reply. Try "
+      'again, or report a problem.',
+    );
+  });
+
+  testWidgets('a Claude conversation the helper does not have says so', (
+    tester,
+  ) async {
+    await agentOpenFails(
+      tester,
+      PaseoFailure(
+        PaseoFailureKind.notFound,
+        reason: 'fetch_agent_request: no such agent',
+      ),
+      " on this phone doesn't have this conversation. Go back and open it "
+      'from your conversations.',
+    );
   });
 
   testWidgets('an uncertain send stays in review until an explicit resend', (

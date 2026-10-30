@@ -21,6 +21,7 @@ import '../app_theme.dart';
 import '../desktop/shortcuts.dart';
 import '../kit/kit_motion.dart';
 import '../kit/kit_buttons.dart';
+import '../kit/kit_dialog.dart' show showKitAlert;
 import '../kit/kit_nav.dart';
 import '../kit/kit_page_route.dart';
 import '../kit/kit_row.dart';
@@ -37,7 +38,10 @@ import '../widgets/phone_server_card.dart';
 import '../widgets/runtime_switch_status.dart';
 import '../widgets/server_switcher_sheet.dart';
 import 'chats/chats_home_screen.dart';
+import 'chats/chats_host.dart' show chatsHostProvider;
+import 'home_opening.dart';
 import 'servers_screen.dart' show ServersRouteRequest;
+import 'inbox/inbox_screen.dart' show openInbox;
 import 'project_hub_screen.dart';
 import 'settings_screen.dart';
 import 'terminal_screen.dart';
@@ -45,21 +49,35 @@ import 'this_phone_screen.dart' show openThisPhone;
 
 /// Main mobile product shell for a connected OpenCode server.
 ///
-/// Built from kit parts only (kit-v2 §9): [KitNav] draws the destinations
-/// as the floating dock (compact), the rail (medium) or the PC
-/// sidebar (expanded and large), switching at the KitLayout window classes;
-/// the content is one [KitScreen] whose bar is the [KitShellControls]
-/// (server pill with its status word, and search) on compact and medium.
+/// Built from kit parts only (kit-v2 §9). On a phone (compact) there is no
+/// navigation bar (owner, 2026-10-20): Conversations is the only home, the
+/// top bar's gear opens Settings as a page, and a project's Files open from
+/// its conversations (the project chip) or from Search, also as a page. From
+/// medium [KitNav] draws Conversations, Files and Settings as the rail or the
+/// PC sidebar, switching at the KitLayout window classes. The content is one
+/// [KitScreen] whose bar is the [KitShellControls] (server pill with its
+/// status word, search and, on a phone, the gear) on compact and medium.
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key, this.initialTab, this.initialChatFilter});
+  const HomeScreen({
+    super.key,
+    this.initialTab,
+    this.initialChatFilter,
+    this.opening,
+  });
 
-  /// The destination to open on, by visible position (0 Chats, 1 Files, 2
-  /// Settings). Null is a cold start, which opens on Chats.
+  /// The rail destination to open on, by visible position (0 Chats, 1
+  /// Files, 2 Settings). Null is a cold start, which opens on Chats. A phone
+  /// has no destinations: it always opens on Chats.
   final int? initialTab;
 
   /// The Chats filter to open on ("Needs you" or "Running"), for what used
   /// to open the Inbox. Null is the plain list.
   final ChatFeedFilter? initialChatFilter;
+
+  /// Set while the saved server is still starting or connecting on a cold
+  /// start (the app root builds this same screen before and after): the
+  /// pill says where it is, last time's titles stand in, read-only.
+  final HomeOpening? opening;
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -109,8 +127,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     final conn = ref.read(connProvider);
-    _chatsFilter = widget.initialChatFilter;
+    // "Needs you" is the Inbox now: the home opens on the plain list with
+    // the Inbox over it.
+    final initialFilter = widget.initialChatFilter;
+    _chatsFilter = initialFilter?.needsYou ?? false ? null : initialFilter;
+    if (initialFilter?.needsYou ?? false) _openInboxAfterFrame();
     _tab = _safeTab(widget.initialTab ?? _chatsTab, conn.capabilities);
+    conn.addListener(_onConnChanged);
+    _starter = ref.read(builtinServerStarterProvider)
+      ..addListener(_onStarterChanged);
+    if (widget.opening == null) _answered(conn);
+  }
+
+  @override
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The server answered under the opening: the same screen carries on.
+    if (oldWidget.opening != null && widget.opening == null) {
+      _answered(ref.read(connProvider));
+    }
+  }
+
+  /// What the home does once its server has answered (at once, or when the
+  /// opening ends).
+  void _answered(ConnectionController conn) {
     final firstRun = FirstRun(conn.store.prefs);
     if (widget.initialTab == null &&
         !conn.isIsolated &&
@@ -120,9 +160,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     } else {
       unawaited(firstRun.markReturning());
     }
-    conn.addListener(_onConnChanged);
-    _starter = ref.read(builtinServerStarterProvider)
-      ..addListener(_onStarterChanged);
     // If the SSE stream cannot connect at all, fall back to polling.
     if (conn.status == StreamStatus.disconnected) {
       conn.enablePollingFallback();
@@ -138,21 +175,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   bool onAppShortcut(Intent intent) {
     final capabilities = ref.read(connProvider).capabilities;
+    final phone = _phone(context);
     switch (intent) {
       case SelectDestinationIntent(:final index) when index >= 0 && index <= 2:
         if (index == _filesTab && !ProjectHub.isAvailable(capabilities)) {
           unawaited(_explainProjectUnavailable());
           return true;
         }
+        if (phone) {
+          // No destinations on a phone: Files and Settings are pages over
+          // the home, and Conversations is the home itself.
+          if (index == _filesTab) unawaited(_openFilesPage());
+          if (index == _settingsTab) unawaited(_openSettingsPage());
+          if (index == _chatsTab) _openChats(null);
+          return true;
+        }
         _selectTab(_safeTab(index, capabilities));
         return true;
-      // Everything that used to open the Inbox: Chats, with the filter.
-      case OpenChatsIntent(:final needsYou, :final running):
-        _openChats(
-          needsYou || running
-              ? ChatFeedFilter(needsYou: needsYou, running: running)
-              : null,
-        );
+      // Needs you (a notification, the Quick Settings tile, a widget, a
+      // team gate link, Search's Go to): Conversations with the Inbox open
+      // over it, so Back lands on the list.
+      case OpenChatsIntent(needsYou: true):
+        _openChats(null);
+        _openInboxAfterFrame();
+        return true;
+      case OpenChatsIntent(:final running):
+        _openChats(running ? const ChatFeedFilter(running: true) : null);
         return true;
       case FindInSurfaceIntent()
           when _tab == _filesTab && capabilities.fileBrowsing:
@@ -164,6 +212,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           when tool == ProjectTool.files || tool == ProjectTool.search:
         if (!capabilities.fileBrowsing) {
           unawaited(_explainProjectUnavailable());
+          return true;
+        }
+        if (phone) {
+          unawaited(
+            _openFilesPage(
+              openFiles: tool == ProjectTool.files,
+              focusSearch: tool == ProjectTool.search,
+            ),
+          );
           return true;
         }
         _signalProject(tool == ProjectTool.files ? _openFiles : _findInFiles);
@@ -182,6 +239,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       default:
         return false;
     }
+  }
+
+  /// No navigation bar: a phone-sized window (KitNav draws nothing).
+  static bool _phone(BuildContext context) =>
+      KitNav.layoutOf(context) == KitNavLayout.none;
+
+  /// The gear: Settings as a page over the home, so Back (and predictive
+  /// back) returns here.
+  Future<void> _openSettingsPage() {
+    _clearBackExit();
+    return pushKitPage<void>(
+      context,
+      (_) => SettingsScreen(controller: ref.read(connProvider)),
+    );
+  }
+
+  /// A project's Files as a page over the home (Search, Ctrl/Cmd+2).
+  Future<void> _openFilesPage({
+    bool openFiles = false,
+    bool focusSearch = false,
+  }) {
+    _clearBackExit();
+    return openProjectFiles(
+      context,
+      ref.read(connProvider),
+      openFiles: openFiles,
+      focusSearch: focusSearch,
+    );
+  }
+
+  /// Opens the Inbox once the frame that selects Conversations is built.
+  void _openInboxAfterFrame() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(openInbox(context, ref.read(connProvider)));
+    });
   }
 
   /// Selects Chats, on [filter] when one is asked for. Asking while Chats
@@ -279,7 +372,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     final conn = ref.watch(connProvider);
     final l10n = _l10n(context);
-    final activeTab = _safeTab(_tab, conn.capabilities);
+    final phone = _phone(context);
+    // A phone always shows Chats: a window that shrinks from a rail keeps
+    // the destination for when the rail comes back.
+    final activeTab = phone ? _chatsTab : _safeTab(_tab, conn.capabilities);
     final sidebar = KitNav.layoutOf(context) == KitNavLayout.sidebar;
 
     // Chats first, project as a setting: Chats, Files, Settings. Chats
@@ -292,8 +388,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ChatsHomeScreen(
         key: ValueKey('home-shell-chats-$_chatsRequest'),
         initialFilter: _chatsFilter,
+        opening: widget.opening,
       ),
-      if (hasProjectTools)
+      if (hasProjectTools && !phone)
         ProjectHub(
           controller: conn,
           focusSearchSignal: _findInFiles,
@@ -340,14 +437,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // as progress, never the version being left as offline.
     final switchingTo = phoneRuntimeSwitchTarget(conn, _starter);
     final phase = conn.connectionStatus.phase;
-    final (statusWord, statusTone) = switchingTo != null
+    final opening = widget.opening;
+    final (statusWord, statusTone) = opening != null
+        ? (opening.status, opening.tone)
+        : switchingTo != null
         ? (l10n.shellServerSwitching, AppStatusTone.progress)
         : _serverStatus(phase, l10n);
     // One indicator (owner, 2026-10-08): while the pill already shows
     // progress (a switch, connecting, reconnecting), the status line under
     // it would say the same thing with a second spinner. The line comes back
     // for what needs the person: not answering, a refused password.
+    // While it opens, the pill (or the server's card) says it.
     final pillSaysConnection =
+        opening != null ||
         switchingTo != null ||
         phase == ConnectionStatusPhase.connecting ||
         phase == ConnectionStatusPhase.reconnecting;
@@ -355,11 +457,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       server: _serverName(conn, switchingTo: switchingTo),
       serverStatus: statusWord,
       serverTone: statusTone,
-      onServer: () => unawaited(_openServerSwitcher(conn)),
+      onServer: opening?.onServer ?? () => unawaited(_openServerSwitcher(conn)),
       // The same launcher as Ctrl/Cmd+K (commands and settings search).
       onSearch: perform == null
           ? null
           : () => perform(const OpenCommandPaletteIntent()),
+      // The one door to Settings on a phone; the rail names it elsewhere.
+      onSettings: phone ? () => unawaited(_openSettingsPage()) : null,
       // Settings has no current server (SC3): its tab shows search only.
       showServer: activeTab != _settingsTab,
       layout: sidebar
@@ -367,11 +471,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           : KitShellControlsLayout.bar,
       serverKey: const ValueKey('server-switcher-button'),
       searchKey: const ValueKey('home-shell-search'),
+      settingsKey: const ValueKey('home-shell-settings'),
     );
 
     final content = KitScreen(
-      // Compact and medium: the top controls; the dock or rail names
-      // the tab. The PC sidebar holds the controls and highlights the
+      // Compact and medium: the top controls; the rail names the
+      // destination. The PC sidebar holds the controls and highlights the
       // destination, so the pane has no bar at all: it starts with the
       // destination's own header (Chats' title, visual language
       // Desktop.png), never a title repeating the sidebar (slice-R14).
@@ -390,7 +495,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
       header: [
         KitReveal(
-          child: _projectWentAway && !hasProjectTools
+          // A phone has no Files destination to go away.
+          child: !phone && _projectWentAway && !hasProjectTools
               ? KitRowGroup(
                   key: const ValueKey('home-shell-project-unavailable'),
                   children: [_projectUnavailableRow(conn)],
@@ -509,6 +615,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         unawaited(navigator.pushNamed('/servers', arguments: request));
       case ServerSwitcherOpenPhoneSetup():
         unawaited(openThisPhone(context, kind: PhoneHostKind.termux));
+      case ServerSwitcherOpenChat(:final item):
+        // The conversation where it waits, opened the way its list row
+        // opens it (on another server's own connection when it runs there).
+        final problem = await ref
+            .read(chatsHostProvider)
+            .openChat(context, item);
+        if (problem != null && mounted) {
+          await showKitAlert(
+            context,
+            title: _l10n(context).chatLoadFailedTitle,
+            body: problem,
+          );
+        }
       case ServerSwitcherPhoneAction(
         :final action,
         :final profileID,
@@ -548,15 +667,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (mounted) setState(() {});
   }
 
-  /// Files first unwinds its browser and returns to its hub, then
-  /// destinations return home. Only Chats uses the double-back exit guard.
+  /// With a rail, Files first unwinds its browser and returns to its hub,
+  /// then destinations return home. A phone has only the home (Files and
+  /// Settings are pages, which Back pops on its own). Only Chats uses the
+  /// double-back exit guard.
   void _onRootPop(bool didPop, Object? result) {
     if (didPop) return;
-    if (_tab == _filesTab && _projectBack.handleBack()) {
+    final phone = _phone(context);
+    if (!phone && _tab == _filesTab && _projectBack.handleBack()) {
       _clearBackExit();
       return;
     }
-    if (_tab != _chatsTab) {
+    if (!phone && _tab != _chatsTab) {
       _selectTab(_chatsTab);
       return;
     }

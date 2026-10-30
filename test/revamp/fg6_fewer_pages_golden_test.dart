@@ -204,7 +204,6 @@ void main() {
         'settings_hub_$mode',
         light: light,
         home: (c) => SettingsScreen(controller: c),
-        size: const Size(412, 2300),
       );
     });
     testWidgets('Tools, MCP tab · $mode', (tester) async {

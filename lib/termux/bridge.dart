@@ -58,7 +58,7 @@ class TermuxBridge {
   /// Fresh-install pin; existing runtime records retain their own selection.
   /// Keep this in step with [TermuxRuntime.defaultForNewInstall] and the
   /// corresponding runtime-specific manager pin.
-  static const defaultOpenCodeVersion = '2.0.29';
+  static const defaultOpenCodeVersion = '2.1.1';
 
   /// The npm dist-tag, available only when a caller passes it to
   /// [installAndServeScript] on purpose. Nothing in the app does today: it

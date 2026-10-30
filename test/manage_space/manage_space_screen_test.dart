@@ -139,7 +139,7 @@ void main() {
       find.text('Anything you pushed to git'),
       200,
     );
-    expect(find.text('The in-app server'), findsOneWidget);
+    expect(find.text('On this phone'), findsOneWidget);
     expect(find.text('900.0 MB'), findsOneWidget);
     expect(find.text('shop'), findsOneWidget);
     expect(find.text('2.0 MB'), findsOneWidget);
@@ -240,10 +240,7 @@ void main() {
     expect(find.text('Delete everything?'), findsOneWidget);
     expect(find.text('2 projects (3.0 MB)'), findsOneWidget);
     expect(find.text('2 saved servers and all settings'), findsOneWidget);
-    expect(
-      find.text('The in-app server and its conversations'),
-      findsOneWidget,
-    );
+    expect(find.text('On this phone and its conversations'), findsOneWidget);
     expect(platform.calls, isEmpty);
     await tapText(tester, 'Cancel');
     expect(platform.calls, isEmpty);

@@ -1,10 +1,526 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../theme_roles.dart';
 import '../kit_motion.dart';
+import '../kit_tokens.dart';
 
-/// The app's one page transition (design standard §10): Material 3's shared
-/// axis along x, timed by [KitMotion].
+/// Android's own page transition (owner rule 2026-10-26, kit-v2 §7.1: "max
+/// Android native animation"): Flutter's [PredictiveBackPageTransitionsBuilder].
+/// The system back gesture previews the page underneath as the finger moves
+/// (Android 14+, and 13 with the developer option) and can be dragged back
+/// to cancel; a Back button, a pushed page and a programmatic pop play the
+/// Android 16 fade-forwards slide ([FadeForwardsPageTransitionsBuilder]),
+/// over the page background ([ThemeRoles.ground]).
+///
+/// Under reduced motion it is [KitPageTransitionsBuilder] instead, which
+/// shows a new page at once and only fades a closing one. The page keeps
+/// its state across the switch: a route's page sits under the route's own
+/// global key, so a different transition wrapper reparents it.
+class KitAndroidPageTransitionsBuilder extends PageTransitionsBuilder {
+  const KitAndroidPageTransitionsBuilder();
+
+  /// Whether pages here move the Android way: an Android build, not the
+  /// browser.
+  static bool appliesTo(BuildContext context) =>
+      !kIsWeb && Theme.of(context).platform == TargetPlatform.android;
+
+  static const _still = KitPageTransitionsBuilder();
+
+  @override
+  Duration get transitionDuration => const Duration(
+    milliseconds: FadeForwardsPageTransitionsBuilder.kTransitionMilliseconds,
+  );
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (KitMotion.reduced(context)) {
+      return _still.buildTransitions<T>(
+        route,
+        context,
+        animation,
+        secondaryAnimation,
+        child,
+      );
+    }
+    final predictive = PredictiveBackPageTransitionsBuilder(
+      fallbackColor: ThemeRoles.of(context).ground,
+    );
+    // Under a page that grows out of one of this page's rows, this page
+    // stays still: the row is where the page above comes from and goes
+    // back to.
+    final secondary = KitPageOrigin.covers(route)
+        ? kAlwaysDismissedAnimation
+        : secondaryAnimation;
+    final origin = KitPageOrigin._originOf(route);
+    // A page opened from a row grows out of it, and a Back button or a
+    // programmatic pop shrinks it back in. The system back gesture keeps
+    // Android's own predictive preview (the page follows the finger and
+    // can be dragged back): Flutter's builder takes over for as long as
+    // the gesture runs, as it does for its own fallback.
+    if (origin != null && !route.popGestureInProgress) {
+      return predictive.buildTransitions<T>(
+        route,
+        context,
+        kAlwaysCompleteAnimation,
+        secondary,
+        _GrowFromRow(animation: animation, origin: origin, child: child),
+      );
+    }
+    return predictive.buildTransitions<T>(
+      route,
+      context,
+      animation,
+      secondary,
+      child,
+    );
+  }
+}
+
+/// Where a page opens from (owner request, 2026-10-27): the conversation
+/// row the person tapped. The next page pushed above that row's page grows
+/// out of the row's box into the full screen, its contents fading in as it
+/// grows (Material's container transform), and closing it with Back
+/// shrinks it into the row again. The page under it stays still. The
+/// system back gesture keeps Android's predictive back preview. Under
+/// reduced motion pages open as they always do.
+///
+/// Call [mark] with the row's context just before the push; a mark no page
+/// claims within [claimWithin] (the push failed) is dropped, and [forget]
+/// drops it at once.
+abstract final class KitPageOrigin {
+  /// How long a mark waits for its page (reopening an old agent's
+  /// conversation can take a few seconds before the push).
+  static const claimWithin = Duration(seconds: 10);
+
+  static _KitOrigin? _pending;
+  static final List<_KitOrigin> _active = [];
+  static final Expando<_KitOrigin> _claimed = Expando('kit-page-origin');
+
+  static final ValueNotifier<int> _changes = ValueNotifier(0);
+
+  /// Notifies when a row is marked, a mark is dropped, or a page that grew
+  /// out of a row has closed: when [covers] may have changed. Never during
+  /// a build.
+  static Listenable get changes => _changes;
+
+  /// The next page pushed above [context]'s page grows out of [context]'s
+  /// box (a row of a list). Does nothing when [context] has no laid-out box
+  /// or no page.
+  static void mark(BuildContext context) {
+    final box = context.findRenderObject();
+    final source = ModalRoute.of(context);
+    if (box is! RenderBox || !box.hasSize || source == null) {
+      _pending = null;
+      return;
+    }
+    _pending = _KitOrigin(
+      source: source,
+      context: context,
+      rect: box.localToGlobal(Offset.zero) & box.size,
+      marked: DateTime.now(),
+    );
+    _changes.value++;
+  }
+
+  /// Drops a mark no page has claimed (the page did not open).
+  static void forget() {
+    if (_pending == null) return;
+    _pending = null;
+    _changes.value++;
+  }
+
+  /// Whether [route] grew out of a marked row (it closes back into it).
+  static bool grewFromRow(Route<Object?> route) =>
+      route is PageRoute<Object?> && _claimed[route] != null;
+
+  /// [route]'s origin: claimed by the first page pushed above the marked
+  /// row's page.
+  static _KitOrigin? _originOf(PageRoute<Object?> route) {
+    final claimed = _claimed[route];
+    if (claimed != null) return claimed;
+    final pending = _pending;
+    if (pending == null) return null;
+    if (DateTime.now().difference(pending.marked) > claimWithin ||
+        !pending.source.isActive) {
+      _pending = null;
+      return null;
+    }
+    if (identical(pending.source, route) ||
+        pending.source.isCurrent ||
+        route.animation?.status != AnimationStatus.forward) {
+      return null;
+    }
+    _pending = null;
+    _claimed[route] = pending;
+    pending.page = route;
+    _active.add(pending);
+    final animation = route.animation!;
+    void ended(AnimationStatus status) {
+      if (status != AnimationStatus.dismissed) return;
+      animation.removeStatusListener(ended);
+      _active.remove(pending);
+      _changes.value++;
+    }
+
+    animation.addStatusListener(ended);
+    return pending;
+  }
+
+  /// A page above [route] grows out of one of its rows (or is about to,
+  /// once marked), and has not closed yet: it is opening, open or
+  /// shrinking back. A list holds its rows still while this is true, so the
+  /// page lands in the row it came from; [changes] tells it when to look
+  /// again.
+  static bool covers(ModalRoute<Object?> route) {
+    // A page replaced or removed without closing never reports its end. A
+    // page shrinking back is no longer active either (it is popping): it
+    // stays until it has landed, when its end drops it.
+    _active.removeWhere((origin) {
+      final page = origin.page;
+      if (page == null) return true;
+      return !page.isActive && !(page.animation?.isAnimating ?? false);
+    });
+    return identical(_pending?.source, route) ||
+        _active.any((origin) => identical(origin.source, route));
+  }
+}
+
+/// A marked row: its page, and where it is.
+class _KitOrigin {
+  _KitOrigin({
+    required this.source,
+    required this.context,
+    required this.rect,
+    required this.marked,
+  });
+
+  final ModalRoute<Object?> source;
+  final BuildContext context;
+  final DateTime marked;
+
+  /// The page that grew out of the row, once it claimed the mark.
+  PageRoute<Object?>? page;
+
+  /// Where the row was when marked, global.
+  Rect rect;
+
+  /// Where the row is now, global: measured again while it is on screen
+  /// (the list may have moved under the page), else where it was.
+  Rect get where {
+    if (context.mounted) {
+      final box = context.findRenderObject();
+      if (box is RenderBox && box.attached && box.hasSize) {
+        rect = box.localToGlobal(Offset.zero) & box.size;
+      }
+    }
+    return rect;
+  }
+}
+
+/// A page growing out of its [origin] row while [animation] runs
+/// (Material's container transform): the box grows from the row's box to
+/// the whole page on [KitMotion.emphasized] in the first 80 % of the
+/// transition, its corners from the row's to square. The page underneath
+/// dims to 32 % black over the first 20 %, the box's ground fills in over
+/// the row in the same time, and the page rides the box's top-left corner
+/// (clipped to the box), its contents fading in between 20 % and 60 %.
+///
+/// Back shrinks it into the row again over [KitMotion.rowReturn] (300 ms)
+/// on the mirrored path ([KitMotion.rowReturnPath]), so it starts moving at
+/// once: its contents leave in the first 40 %, the row shows again in the
+/// last 20 %, the dim fades throughout. A Back during the opening turns
+/// back from where the page is (each part keeps its opening curve until it
+/// has stopped).
+class _GrowFromRow extends SingleChildRenderObjectWidget {
+  const _GrowFromRow({
+    required this.animation,
+    required this.origin,
+    required super.child,
+  });
+
+  final Animation<double> animation;
+  final _KitOrigin origin;
+
+  @override
+  _RenderGrowFromRow createRenderObject(BuildContext context) =>
+      _RenderGrowFromRow(
+        animation: animation,
+        origin: origin,
+        ground: ThemeRoles.of(context).ground,
+        scrim: ThemeRoles.of(context).scrim,
+        corner: KitTokens.of(context).bubbleCorner,
+      );
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderGrowFromRow box) {
+    box
+      ..animation = animation
+      ..origin = origin
+      ..ground = ThemeRoles.of(context).ground
+      ..scrim = ThemeRoles.of(context).scrim
+      ..corner = KitTokens.of(context).bubbleCorner;
+  }
+}
+
+class _RenderGrowFromRow extends RenderProxyBox {
+  _RenderGrowFromRow({
+    required Animation<double> animation,
+    required this.origin,
+    required this.ground,
+    required this.scrim,
+    required this.corner,
+  }) : _animation = animation {
+    _curve();
+  }
+
+  static const _bounds = Interval(0, .8, curve: KitMotion.emphasized);
+  static const _contents = Interval(.2, .6, curve: KitMotion.enter);
+
+  /// The row under the box fades as the box's ground fills in (Material's
+  /// fade through: the closed content leaves in the first 20 %).
+  static const _handOff = Interval(0, .2, curve: KitMotion.enter);
+
+  /// The page underneath dims while the box grows, so the box reads
+  /// against it (Material's container transform scrim).
+  static const _dim = Interval(0, .2, curve: KitMotion.enter);
+
+  /// The dim's strength at most: Android's container transform, 32 % black.
+  static const dimMost = .32;
+
+  // Going back: the contents leave in the first 40 % of the close, the row
+  // shows through again in its last 20 %.
+  static const _contentsBack = Interval(.6, 1, curve: KitMotion.exit);
+  static const _handBack = Interval(0, .2, curve: KitMotion.exit);
+
+  /// Whether the page is also scaled to the box's width while it grows
+  /// (Material's fit-width `OpenContainer`, about 0.92 to 1 for a row with
+  /// 16 dp gutters). Off: pages never scale (MOT-2), the page only rides
+  /// the box. Kept so the two can be compared side by side.
+  static const _scalesWithBox = false;
+
+  Animation<double> _animation;
+  set animation(Animation<double> value) {
+    if (identical(value, _animation)) return;
+    if (attached) _animation.removeListener(_changed);
+    _animation = value;
+    _uncurve();
+    _curve();
+    if (attached) _animation.addListener(_changed);
+    _changed();
+  }
+
+  // Each part on its own curve for each way (a curved animation keeps the
+  // way it started until it stops, so a Back mid-way never jumps).
+  late CurvedAnimation _grow;
+  late CurvedAnimation _show;
+  late CurvedAnimation _fill;
+  late CurvedAnimation _shade;
+
+  void _curve() {
+    _grow = CurvedAnimation(
+      parent: _animation,
+      curve: _bounds,
+      reverseCurve: KitMotion.rowReturnPath,
+    );
+    _show = CurvedAnimation(
+      parent: _animation,
+      curve: _contents,
+      reverseCurve: _contentsBack,
+    );
+    _fill = CurvedAnimation(
+      parent: _animation,
+      curve: _handOff,
+      reverseCurve: _handBack,
+    );
+    _shade = CurvedAnimation(
+      parent: _animation,
+      curve: _dim,
+      reverseCurve: KitMotion.steady,
+    );
+  }
+
+  void _uncurve() {
+    _grow.dispose();
+    _show.dispose();
+    _fill.dispose();
+    _shade.dispose();
+  }
+
+  _KitOrigin origin;
+  Color ground;
+  Color scrim;
+  double corner;
+
+  final LayerHandle<ClipRRectLayer> _clip = LayerHandle<ClipRRectLayer>();
+  final LayerHandle<TransformLayer> _transform = LayerHandle<TransformLayer>();
+  final LayerHandle<OpacityLayer> _fade = LayerHandle<OpacityLayer>();
+
+  bool get _moving => _animation.value < 1;
+
+  @override
+  bool get alwaysNeedsCompositing => child != null && _moving;
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _wasMoving = _moving;
+    _animation.addListener(_changed);
+  }
+
+  @override
+  void detach() {
+    _animation.removeListener(_changed);
+    super.detach();
+  }
+
+  bool _wasMoving = false;
+
+  void _changed() {
+    if (_moving != _wasMoving) markNeedsCompositingBitsUpdate();
+    _wasMoving = _moving;
+    markNeedsPaint();
+  }
+
+  @override
+  void dispose() {
+    _uncurve();
+    _clip.layer = null;
+    _transform.layer = null;
+    _fade.layer = null;
+    super.dispose();
+  }
+
+  /// The box the page grows in now, and where the page's top-left corner
+  /// sits inside it (and how much it is scaled, with [_scalesWithBox]);
+  /// null once the page has grown.
+  ({RRect box, Offset shift, double scale})? _now() {
+    final t = _animation.value;
+    if (t >= 1 || !hasSize) return null;
+    final global = origin.where;
+    final from = globalToLocal(global.topLeft) & global.size;
+    final grown = _grow.value;
+    final rect = Rect.lerp(from, Offset.zero & size, grown)!;
+    return (
+      box: RRect.fromRectAndRadius(rect, Radius.circular(corner * (1 - grown))),
+      shift: rect.topLeft,
+      scale: _scalesWithBox && size.width > 0 ? rect.width / size.width : 1.0,
+    );
+  }
+
+  /// How the page is drawn into the box: moved to its top-left corner (and
+  /// scaled with it, with [_scalesWithBox]).
+  static Matrix4 _carry(({RRect box, Offset shift, double scale}) now) {
+    final matrix = Matrix4.translationValues(now.shift.dx, now.shift.dy, 0);
+    if (now.scale != 1) {
+      matrix.multiply(Matrix4.diagonal3Values(now.scale, now.scale, 1));
+    }
+    return matrix;
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null) return;
+    final now = _now();
+    if (now == null) {
+      _clip.layer = null;
+      _transform.layer = null;
+      _fade.layer = null;
+      context.paintChild(child, offset);
+      return;
+    }
+    final page = Offset.zero & size;
+    final dim = math.min(scrim.a, dimMost) * _shade.value;
+    if (dim > 0) {
+      context.canvas.drawRect(
+        page.shift(offset),
+        Paint()..color = scrim.withValues(alpha: dim),
+      );
+    }
+    final fill = _fill.value;
+    final alpha = (255 * _show.value).round();
+    // Nothing of the page shows yet: it is not drawn at all (an opacity
+    // layer at 0 would still draw the whole page offscreen every frame).
+    void contents(PaintingContext context, Offset at) {
+      if (alpha <= 0) {
+        _fade.layer = null;
+      } else if (alpha >= 255) {
+        _fade.layer = null;
+        context.paintChild(child, at);
+      } else {
+        _fade.layer = context.pushOpacity(
+          at,
+          alpha,
+          (context, offset) => context.paintChild(child, offset),
+          oldLayer: _fade.layer,
+        );
+      }
+    }
+
+    _clip.layer = context.pushClipRRect(
+      needsCompositing,
+      offset,
+      page,
+      now.box,
+      (context, offset) {
+        if (fill > 0) {
+          context.canvas.drawRect(
+            offset & size,
+            Paint()..color = ground.withValues(alpha: ground.a * fill),
+          );
+        }
+        if (now.scale == 1) {
+          _transform.layer = null;
+          contents(context, offset + now.shift);
+          return;
+        }
+        _transform.layer = context.pushTransform(
+          needsCompositing,
+          offset,
+          _carry(now),
+          contents,
+          oldLayer: _transform.layer,
+        );
+      },
+      oldLayer: _clip.layer,
+    );
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    final now = _now();
+    if (now != null) transform.multiply(_carry(now));
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final now = _now();
+    if (now == null) {
+      return super.hitTestChildren(result, position: position);
+    }
+    if (!now.box.contains(position)) return false;
+    return result.addWithPaintTransform(
+      transform: _carry(now),
+      position: position,
+      hitTest: (result, position) =>
+          super.hitTestChildren(result, position: position),
+    );
+  }
+}
+
+/// The app's page transition off Android (design standard §10; Android
+/// uses [KitAndroidPageTransitionsBuilder] since 2026-10-26): Material 3's
+/// shared axis along x, timed by [KitMotion].
 ///
 /// Opening a page: the page underneath fades out in the first 30 % of
 /// [KitMotion.standard] while it drifts [travel] dp back, then the new page
@@ -40,7 +556,15 @@ class KitPageTransitionsBuilder extends PageTransitionsBuilder {
     Animation<double> secondaryAnimation,
     bool allowSnapshotting,
     Widget? child,
-  ) => _KitCoveredPage(secondaryAnimation: secondaryAnimation, child: child);
+  ) {
+    // Under a page that grows out of one of its rows the page stays still.
+    final route = ModalRoute.of(context);
+    if (route != null && KitPageOrigin.covers(route)) return child;
+    return _KitCoveredPage(
+      secondaryAnimation: secondaryAnimation,
+      child: child,
+    );
+  }
 
   @override
   Widget buildTransitions<T>(
@@ -49,11 +573,22 @@ class KitPageTransitionsBuilder extends PageTransitionsBuilder {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child,
-  ) => _KitSharedAxisPage(
-    animation: animation,
-    secondaryAnimation: secondaryAnimation,
-    child: child,
-  );
+  ) {
+    // A page opened from a row grows out of it ([KitPageOrigin]).
+    final origin = KitMotion.reduced(context)
+        ? null
+        : KitPageOrigin._originOf(route);
+    final secondary = KitPageOrigin.covers(route)
+        ? kAlwaysDismissedAnimation
+        : secondaryAnimation;
+    return _KitSharedAxisPage(
+      animation: origin == null ? animation : kAlwaysCompleteAnimation,
+      secondaryAnimation: secondary,
+      child: origin == null
+          ? child
+          : _GrowFromRow(animation: animation, origin: origin, child: child),
+    );
+  }
 }
 
 double _share(double t, double begin, double end, Curve curve) {

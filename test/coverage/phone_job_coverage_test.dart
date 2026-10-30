@@ -79,11 +79,17 @@ void main() {
       await frames(tester, 14);
       final seen = <String>[screenText(tester).join('\n')];
       await writeCasePng(tester, boundary, 'phone_$id');
-      final details = find.text('Details');
+      // Details opens the sheet with every step; its own fold holds the log.
+      final details = find.byKey(const Key('setup-progress-details'));
       if (details.evaluate().isNotEmpty) {
-        await tester.ensureVisible(details.last);
-        await tester.tap(details.last, warnIfMissed: false);
+        await tester.ensureVisible(details);
+        await tester.tap(details, warnIfMissed: false);
         await frames(tester, 10);
+        final log = find.text('Details');
+        if (log.evaluate().isNotEmpty) {
+          await tester.tap(log.last, warnIfMissed: false);
+          await frames(tester, 10);
+        }
         seen.add(screenText(tester).join('\n'));
         await writeCasePng(tester, boundary, 'phone_${id}_details');
       }

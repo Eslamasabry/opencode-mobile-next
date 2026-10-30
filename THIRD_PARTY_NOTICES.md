@@ -55,7 +55,10 @@ The single-colour logos in `assets/marks/` (agents such as Claude, Codex and
 Gemini, and about 100 model-provider ids such as Anthropic, OpenAI and Mistral) are the
 monochrome SVGs of lobe-icons by LobeHub, MIT licensed, Copyright (c) 2023
 LobeHub. The licence is bundled at `LICENSES/MIT-lobe-icons.txt`; each file is
-unchanged apart from removing its `<title>` element. The app draws them in the
+unchanged apart from removing its `<title>` element. (`opencode.svg` once also
+carried the lighter lower block of OpenCode's two-tone mark at 40% of the same
+colour; at 16 to 24 dp that block filled the opening and the mark read as a
+solid box, so it is back to the plain single-colour frame.) The app draws them in the
 current text colour and the logos remain trademarks of their owners; they are
 shown only to name the agent or provider. A provider without a bundled mark
 still falls back to its models.dev logo, downloaded by provider name.

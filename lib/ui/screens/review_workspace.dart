@@ -9,7 +9,7 @@ import '../../state/review_handoff.dart';
 import '../app_iconography.dart';
 import '../app_theme.dart' show AppStatusTone;
 import '../kit/kit_bidi.dart';
-import '../kit/kit_buttons.dart' show KitAction;
+import '../kit/kit_buttons.dart' show KitAction, KitActionBlock;
 import '../kit/kit_choice_list.dart';
 import '../kit/kit_code_block.dart';
 import '../kit/kit_copy.dart';
@@ -52,9 +52,9 @@ bool _sameReviewDiff(FileDiff? a, FileDiff? b) =>
     a.status == b.status;
 
 /// Review changes (map page `review-workspace`, proposal fix): one
-/// [KitDiffView] with its sticky file header and one "Change 1 of N"
-/// navigator across files, the view picker ([KitSegmented]) when the server
-/// offers more than one, and the comment sheet (`review-comment-sheet`),
+/// [KitDiffView] with each file a folded row and the first open (no hunk
+/// navigator, vision gaps 2026-10-21), the view picker ([KitSegmented])
+/// when the server offers more than one, and the comment sheet (`review-comment-sheet`),
 /// whose text is kept while the person types, swipes it away and opens it
 /// again (DATA-1, the draft carry of P7.1).
 class ReviewWorkspace extends StatefulWidget {
@@ -68,6 +68,8 @@ class ReviewWorkspace extends StatefulWidget {
     this.handoff,
     this.cacheKey,
     this.profileId,
+    this.onUndoAll,
+    this.summary,
   }) : assert(
          loadDiffs != null ||
              loadWorkingTreeDiffs != null ||
@@ -103,6 +105,17 @@ class ReviewWorkspace extends StatefulWidget {
   /// is deleted) and survives the app closing; without it the comment is
   /// kept in memory until the app closes.
   final String? profileId;
+
+  /// Goes back to before the agent's changes, when the caller can do it
+  /// (a staged revert of this conversation on a server that has one). Null
+  /// keeps "Undo all" off the screen: it is never offered where nothing
+  /// would happen. The screen confirms first, naming the files.
+  final Future<void> Function()? onUndoAll;
+
+  /// One plain sentence on what changed, first on the screen: the agent's
+  /// own words for its last turn, or the conversation's title. Null: the
+  /// counts line alone ("3 files · +42 −8").
+  final String? summary;
 
   /// Recent results by [cacheKey] and view. Small, in memory only: the
   /// fresh read always follows, so a stale entry is only ever a head start.
@@ -165,6 +178,11 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   int _loadGeneration = 0;
   bool _refreshing = false;
   DateTime? _loadStarted;
+
+  /// Lines are selected in the diff, so its action bar holds the screen's
+  /// one primary and the question steps aside.
+  bool _selecting = false;
+  final _diffHostKey = GlobalKey();
 
   /// A staging result that has no Undo (already there, prompt full).
   String? _notice;
@@ -423,8 +441,6 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
         diffs != null && diffs.isNotEmpty && viewed == diffs.length;
     final subtitle = [
       if (staged > 0) l10n.readerUiOnPrompt(staged),
-      if (diffs != null && diffs.isNotEmpty)
-        l10n.readerUiViewedCount(viewed, diffs.length),
     ].join(' · ');
     Widget onRails(Widget child) => Padding(
       padding: EdgeInsetsDirectional.only(
@@ -455,6 +471,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
         ],
       ),
       header: [
+        if (diffs != null && diffs.isNotEmpty) _summary(diffs, tokens, l10n),
         if (_availableScopes.length > 1)
           _ReviewScopePicker(
             scopes: _availableScopes,
@@ -510,8 +527,122 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       ],
       loading: _refreshing && diffs != null,
       loadingLabel: l10n.readerUiRefreshChanges,
+      bottom: diffs == null || diffs.isEmpty || _selecting
+          ? null
+          : _question(l10n, staged),
       body: _body(context, l10n),
     );
+  }
+
+  /// One sentence on top, and the honest fact that the changes are already
+  /// in the project.
+  Widget _summary(
+    List<FileDiff> diffs,
+    KitTokens tokens,
+    AppLocalizations l10n,
+  ) {
+    // At large text the room goes to the changes and the answers; the top
+    // bar and the file header still say what changed.
+    if (MediaQuery.textScalerOf(context).scale(10) >= 15) {
+      return const SizedBox.shrink(key: Key('review-summary'));
+    }
+    var added = 0, removed = 0;
+    for (final diff in diffs) {
+      final file = _kitFileOf(diff);
+      added += file.added;
+      removed += file.removed;
+    }
+    final sentence = widget.summary?.trim();
+    final counts = l10n.reviewSummary(diffs.length, added, removed);
+    return Padding(
+      key: const Key('review-summary'),
+      padding: EdgeInsetsDirectional.only(
+        start: tokens.gutter,
+        top: tokens.space2,
+        end: tokens.gutter,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // The plain sentence first, the counts under it; with no sentence
+          // the counts lead.
+          if (sentence != null && sentence.isNotEmpty) ...[
+            KitText(
+              KitBidi.auto(sentence),
+              key: const Key('review-summary-sentence'),
+              role: KitTextRole.headline,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            KitText(counts, role: KitTextRole.secondary),
+          ] else
+            KitText(counts, role: KitTextRole.headline),
+          KitText(l10n.reviewAlreadyApplied, role: KitTextRole.secondary),
+        ],
+      ),
+    );
+  }
+
+  /// "Looks good" or "Undo all"; "Send back" is a note in the chat's box.
+  Widget _question(AppLocalizations l10n, int staged) {
+    final sendBack = KitAction(
+      key: const Key('review-send-back'),
+      label: l10n.reviewSendBackWithNote,
+      onPressed: _sendBack,
+    );
+    return KitActionBlock(
+      key: const Key('review-question'),
+      primary: KitAction(
+        key: const Key('review-looks-good'),
+        label: l10n.reviewLooksGood,
+        onPressed: () => Navigator.of(context).maybePop(),
+      ),
+      // Send back is a full-width button of its own; with a revert to offer,
+      // Undo all takes that place and Send back follows as a text action.
+      secondary: widget.onUndoAll == null
+          ? sendBack
+          : KitAction(
+              key: const Key('review-undo-all'),
+              label: l10n.reviewUndoAll,
+              onPressed: _undoAll,
+            ),
+      tertiary: [if (widget.onUndoAll != null) sendBack],
+    );
+  }
+
+  Future<void> _undoAll() async {
+    final undo = widget.onUndoAll;
+    final l10n = _l10n;
+    if (undo == null) return;
+    final count = _diffs?.length ?? 0;
+    final confirmed = await showKitConfirm(
+      context,
+      sheetKey: const Key('review-undo-confirm'),
+      title: l10n.reviewUndoTitle(count),
+      body: l10n.reviewUndoBody,
+      confirmLabel: l10n.reviewUndoAll,
+      action: undo,
+    );
+    if (!mounted || !confirmed) return;
+    await Navigator.of(context).maybePop();
+  }
+
+  /// Notes already on the prompt go back with the person; otherwise the
+  /// note is written here, for the file on screen, and lands in the chat's
+  /// box with the change referenced.
+  Future<void> _sendBack() async {
+    if (widget.handoff != null && widget.handoff!.references.isNotEmpty) {
+      await Navigator.of(context).maybePop();
+      return;
+    }
+    final diffs = _diffs;
+    if (diffs == null || diffs.isEmpty) return;
+    final shown = diffs.firstWhere(
+      (diff) => diff.file == _shownPath,
+      orElse: () => diffs.first,
+    );
+    final staged = await _openCommentComposer(_kitFileOf(shown), null);
+    if (staged && mounted) await Navigator.of(context).maybePop();
   }
 
   Widget _body(BuildContext context, AppLocalizations l10n) {
@@ -577,31 +708,45 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
         ? 0
         : diffs.indexWhere((diff) => diff.file == _shownPath);
     final preferences = ReaderPreferencesScope.maybeOf(context);
-    return KitRefresh(
-      onRefresh: _load,
-      notificationPredicate: (notification) =>
-          notification.metrics.axis == Axis.vertical,
-      child: KitDiffView(
-        // A different set or order of files starts the diff again on the
-        // file being read; the same files keep its place, gaps and
-        // selection across a refresh.
-        key: ValueKey(
-          'review-diff|${_scope.name}|'
-          '${[for (final diff in diffs) diff.file].join('\n')}',
+    // The question below steps aside while lines are selected, which changes
+    // the screen's layout wrapper above the body; the global key carries the
+    // diff (and the selection it holds) across that change.
+    return KeyedSubtree(
+      key: _diffHostKey,
+      child: KitRefresh(
+        onRefresh: _load,
+        notificationPredicate: (notification) =>
+            notification.metrics.axis == Axis.vertical,
+        child: KitDiffView(
+          // A different set or order of files starts the diff again on the
+          // file being read; the same files keep its place, gaps and
+          // selection across a refresh.
+          key: ValueKey(
+            'review-diff|${_scope.name}|'
+            '${[for (final diff in diffs) diff.file].join('\n')}',
+          ),
+          keyPrefix: 'review',
+          files: [for (final diff in diffs) _kitFileOf(diff)],
+          // Folded rows, the first open; no hunk navigator, no viewed ticks.
+          folded: true,
+          initialFile: shown < 0 ? 0 : shown,
+          readOnly: false,
+          onFileChanged: (index) => _observeShown(diffs[index]),
+          // The diff's own bar has the primary while lines are selected.
+          onSelectingChanged: (selecting) {
+            if (mounted && _selecting != selecting) {
+              setState(() => _selecting = selecting);
+            }
+          },
+          onComment: (selection) =>
+              _openCommentComposer(selection.file, selection),
+          onAddToPrompt: widget.handoff == null ? null : _stageSelection,
+          fileActions: _fileActions,
+          wrap: preferences?.value.wrapCode,
+          onWrapChanged: preferences == null
+              ? null
+              : (wrap) => saveReaderPreferences(context, wrapCode: wrap),
         ),
-        keyPrefix: 'review',
-        files: [for (final diff in diffs) _kitFileOf(diff)],
-        initialFile: shown < 0 ? 0 : shown,
-        readOnly: false,
-        onFileChanged: (index) => _observeShown(diffs[index]),
-        onComment: (selection) =>
-            _openCommentComposer(selection.file, selection),
-        onAddToPrompt: widget.handoff == null ? null : _stageSelection,
-        fileActions: _fileActions,
-        wrap: preferences?.value.wrapCode,
-        onWrapChanged: preferences == null
-            ? null
-            : (wrap) => saveReaderPreferences(context, wrapCode: wrap),
       ),
     );
   }
@@ -648,7 +793,9 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
     });
   }
 
-  Future<void> _openCommentComposer(
+  /// True when the note went onto the chat's prompt (a handoff); false
+  /// when it was dropped, or returned to the caller by popping this page.
+  Future<bool> _openCommentComposer(
     KitDiffFile file,
     KitDiffSelection? selection,
   ) async {
@@ -696,7 +843,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
           _ReviewCommentBody(controller: controller, quote: selection?.text),
     );
     controller.removeListener(sync);
-    if (!mounted || comment == null || comment.trim().isEmpty) return;
+    if (!mounted || comment == null || comment.trim().isEmpty) return false;
     // Used: nothing typed needs keeping any more.
     controller.clear();
     unawaited(draft?.clear());
@@ -721,7 +868,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
           status: diff?.status,
         ),
       );
-      return;
+      return true;
     }
 
     final prompt = _reviewPrompt(
@@ -732,6 +879,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       selectionLabel: wholeFile ? null : selectionLabel,
     );
     navigator.pop(prompt);
+    return false;
   }
 
   ReviewReferenceScope get _referenceScope => switch (_scope) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +7,10 @@ import 'support/fake_server_gateway.dart';
 import 'package:opencode_mobile/domain/product_repository.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/background/live_background.dart';
+import 'package:opencode_mobile/builtin/builtin_linux.dart';
+import 'package:opencode_mobile/builtin/builtin_server.dart';
+import 'package:opencode_mobile/builtin/builtin_server_recovery.dart';
+import 'package:opencode_mobile/builtin/phone_server_healing.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/main.dart';
 import 'package:opencode_mobile/state/connection.dart';
@@ -28,6 +34,31 @@ class _LifecycleConnection extends ConnectionController {
   Future<void> resumeFromLifecycle() async {
     resumes++;
   }
+}
+
+class _PhoneConnection extends _LifecycleConnection {
+  _PhoneConnection(super.store, this.phone);
+  final ServerProfile phone;
+
+  @override
+  ServerProfile? get profile => phone;
+}
+
+class _SlowHealing extends PhoneServerHealing {
+  _SlowHealing({required super.connection, required super.starter})
+    : super(
+        createRecovery: (record) => BuiltinServerRecovery(
+          store: connection.store,
+          linux: BuiltinLinux(),
+          starter: starter,
+          onRestart: record,
+        ),
+      );
+
+  final gate = Completer<void>();
+
+  @override
+  Future<void> check(ServerProfile profile) => gate.future;
 }
 
 class _HomeRepository implements ProductRepository {
@@ -76,6 +107,43 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump();
     expect(connection.resumes, 1);
+  });
+
+  testWidgets('resume reconnects a live phone server while healing still '
+      'checks', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final store = ProfileStore(prefs: await SharedPreferences.getInstance());
+    final phone = ServerProfile(
+      id: 'phone',
+      name: 'This phone',
+      baseUrl: BuiltinLinux.serverUrl,
+      username: BuiltinLinux.serverUsername,
+    );
+    final connection = _PhoneConnection(store, phone);
+    final starter = BuiltinServerStarter(linux: BuiltinLinux());
+    final healing = _SlowHealing(connection: connection, starter: starter);
+    addTearDown(() {
+      starter.dispose();
+      connection.dispose();
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          bootstrapProvider.overrideWithValue(AppBootstrap(store)),
+          connProvider.overrideWithValue(connection),
+          phoneServerHealingProvider.overrideWithValue(healing),
+        ],
+        child: const OcApp(),
+      ),
+    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    // The healing check is still pending, yet the transport already resumes.
+    expect(connection.resumes, 1);
+    healing.dispose();
   });
 
   testWidgets('app restores and applies appearance without a restart', (

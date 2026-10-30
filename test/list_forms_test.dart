@@ -124,9 +124,11 @@ void main() {
             child: Column(
               children: [
                 for (final directory in directories)
-                  Builder(
+                  // The list rebuilds its request cards with the host.
+                  ListenableBuilder(
                     key: ValueKey(directory),
-                    builder: (context) =>
+                    listenable: host.listenable!,
+                    builder: (context, _) =>
                         host.listRequest(context, _row(directory))!,
                   ),
               ],

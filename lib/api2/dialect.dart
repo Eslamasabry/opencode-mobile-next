@@ -10,13 +10,18 @@
 ///
 /// Derived from the two servers' own `/openapi.json` on 2026-09-20; see
 /// `docs/research/opencode2-stable-2.0-2026-09-20.md`.
+///
+/// 2.1 (checked against 2.1.1's `/openapi.json` on 2026-10-21) moved and
+/// removed no operation, so [Api2Dialect.stable] covers 2.0.x and 2.1.x alike;
+/// see `docs/qa/opencode-2.1-2026-10-21/README.md`.
 library;
 
 enum Api2Dialect {
   /// `0.0.0-beta-*` under `@opencode-ai/cli`: health at `/api/health`.
   beta,
 
-  /// 2.0.4 and later under `@opencode/cli`: server facts at `/api/info`.
+  /// 2.0.4 and later (2.1.x included) under `@opencode/cli`: server facts at
+  /// `/api/info`.
   stable,
 }
 

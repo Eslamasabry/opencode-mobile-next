@@ -63,19 +63,20 @@ Future<void> _golden(
         // The app's status slot as main.dart hosts it above every page:
         // since the one controller-owned connection status (3d64653c) the
         // shell's connection line comes from here, not from the page.
-        home: AppConnectionStatusScope(
+        aboveNavigator: (child) => AppConnectionStatusScope(
           controller: controller,
           navigatorKey: navigatorKey,
-          child: AppShortcuts(
-            navigatorKey: navigatorKey,
-            signals: AppShortcutSignals(),
-            handlers: AppShortcutHandlers(
-              onNewSession: () {},
-              onOpenSettings: () {},
-              paletteCommands: (_) => _commands(),
-            ),
-            child: home,
+          child: child,
+        ),
+        home: AppShortcuts(
+          navigatorKey: navigatorKey,
+          signals: AppShortcutSignals(),
+          handlers: AppShortcutHandlers(
+            onNewSession: () {},
+            onOpenSettings: () {},
+            paletteCommands: (_) => _commands(),
           ),
+          child: home,
         ),
         boundaryKey: boundary,
         controller: controller,
@@ -183,7 +184,11 @@ void main() {
         'shell_reconnecting',
         light: light,
         controller: controller,
-        home: const HomeScreen(initialTab: 2),
+        // A phone opens Settings from the gear, as a page.
+        then: (tester) async {
+          await tester.tap(find.byKey(const ValueKey('home-shell-settings')));
+          await tester.pumpAndSettle();
+        },
         // Settings' drawing finishes its entrance.
         settle: KitMotion.entrance,
       );
@@ -211,6 +216,8 @@ void main() {
         light: light,
         controller: controller,
         home: const HomeScreen(initialTab: 1),
+        // The rail's Files destination: a phone has no tab to go away.
+        size: const Size(800, 1280),
         then: (tester) async {
           controller.api = _NoProjectApi();
           controller.notifyListeners();

@@ -170,6 +170,7 @@ extension _ChatApprovalModeMenu on _ChatScreenState {
         choice,
       );
       if (!changed || !mounted) return;
+      if (choice != _ApprovalChoice.ask) _rearmAutoApproveNote();
       _showComposerNote(switch (choice) {
         _ApprovalChoice.ask => strings.approvalModeNowAsk,
         _ApprovalChoice.auto => strings.approvalModeNowAuto,

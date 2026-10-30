@@ -24,13 +24,15 @@ void validateGenUiHistoryRequest(String id, String? cursor, int limit) {
 
 /// Streams through the byte budget before JSON decoding, including error bodies.
 /// The deadline cancels the actual request, not merely the caller's Future.
-Future<({dynamic json, Headers headers})> readGenUiHistoryJson(
+Future<({dynamic json, Headers headers, int bytes})> readGenUiHistoryJson(
   Dio dio,
   String path, {
   required Map<String, dynamic> query,
+  int byteLimit = genUiHistoryByteLimit,
+  Duration timeout = genUiHistoryTimeout,
 }) async {
   final cancel = CancelToken();
-  final timer = Timer(genUiHistoryTimeout, () => cancel.cancel());
+  final timer = Timer(timeout, () => cancel.cancel());
   try {
     final response = await dio.get<ResponseBody>(
       path,
@@ -38,7 +40,7 @@ Future<({dynamic json, Headers headers})> readGenUiHistoryJson(
       cancelToken: cancel,
       options: Options(
         responseType: ResponseType.stream,
-        receiveTimeout: genUiHistoryTimeout,
+        receiveTimeout: timeout,
         followRedirects: false,
         validateStatus: (_) => true,
       ),
@@ -51,21 +53,23 @@ Future<({dynamic json, Headers headers})> readGenUiHistoryJson(
     final declared = int.tryParse(
       response.headers.value(Headers.contentLengthHeader) ?? '',
     );
-    if (declared != null && declared > genUiHistoryByteLimit) {
+    if (declared != null && declared > byteLimit) {
       cancel.cancel();
       throw genUiHistoryFailure;
     }
     final bytes = BytesBuilder(copy: false);
     await for (final chunk in body.stream) {
-      if (bytes.length + chunk.length > genUiHistoryByteLimit) {
+      if (bytes.length + chunk.length > byteLimit) {
         cancel.cancel();
         throw genUiHistoryFailure;
       }
       bytes.add(chunk);
     }
+    final size = bytes.length;
     return (
       json: jsonDecode(utf8.decode(bytes.takeBytes())),
       headers: response.headers,
+      bytes: size,
     );
   } catch (_) {
     throw genUiHistoryFailure;

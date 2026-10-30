@@ -31,6 +31,7 @@ class _Controller extends ConnectionController {
     ConnectionStatusPhase phase, {
     bool token = false,
     bool retrying = false,
+    DateTime? nextAttemptAt,
   }) {
     snapshot = ConnectionStatusSnapshot(
       phase: phase,
@@ -38,6 +39,7 @@ class _Controller extends ConnectionController {
       serverName: 'Laptop',
       usesToken: token,
       retrying: retrying,
+      nextAttemptAt: nextAttemptAt,
     );
     notifyListeners();
   }
@@ -45,7 +47,8 @@ class _Controller extends ConnectionController {
 
 Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 350));
+  // Longer than a page transition: Android's own is 450 ms (2026-10-26).
+  await tester.pump(const Duration(milliseconds: 500));
   await tester.pump();
 }
 
@@ -398,5 +401,111 @@ void main() {
     expect(restored, 1);
     expect(dismissed, 1);
     await tester.pumpWidget(const SizedBox());
+  });
+
+  group('the link retries on its own timer (vision 2026-10-20)', () {
+    Future<KitStatus?> statusFor(WidgetTester tester, _Controller c) async {
+      KitStatus? status;
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) {
+              status = connectionKitStatus(context, c);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+      return status;
+    }
+
+    testWidgets('a scheduled try: muted, counts down, Try now first', (
+      tester,
+    ) async {
+      final c = await controller();
+      c.show(
+        ConnectionStatusPhase.notAnswering,
+        nextAttemptAt: DateTime.now().add(const Duration(seconds: 12)),
+      );
+      final status = (await statusFor(tester, c))!;
+      expect(status.message, "Laptop isn't answering");
+      // Nobody has to act: the neutral tone, never the failure glyph.
+      expect(status.tone, AppStatusTone.neutral);
+      expect(status.countdownTo, c.snapshot.nextAttemptAt);
+      expect(
+        status.countdownLine!(const Duration(milliseconds: 11200)),
+        'trying again in 12 s',
+      );
+      expect(status.countdownLine!(Duration.zero), 'trying again now…');
+      expect(status.quiet, isTrue);
+      expect(status.action?.label, 'Try now');
+      status.action!.onPressed!();
+      expect(c.retries, 1);
+      // No More: the words open Details.
+      expect(status.more, isEmpty);
+      expect(status.onOpen, isNotNull);
+    });
+
+    testWidgets('the countdown ticks on the line itself', (tester) async {
+      final c = await controller();
+      c.show(
+        ConnectionStatusPhase.notAnswering,
+        nextAttemptAt: DateTime.now().add(const Duration(seconds: 5)),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) =>
+                  KitStatusLine.of(connectionKitStatus(context, c)!),
+            ),
+          ),
+        ),
+      );
+      final line = find.textContaining(
+        "Laptop isn't answering · trying again in ",
+      );
+      expect(line, findsOneWidget);
+      final before = tester.widget<Text>(line).data;
+      expect(find.text('Try now'), findsOneWidget);
+      // One caption line: no More.
+      expect(find.byKey(const ValueKey('kit-status-more')), findsNothing);
+      await tester.pump(const Duration(seconds: 1));
+      expect(tester.widget<Text>(line).data, isNot(before));
+      // The words open Details.
+      await tester.tap(find.byKey(const ValueKey('kit-status-open')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('connection-banner-details-sheet')),
+        findsOneWidget,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('nothing scheduled: no countdown, the old Reconnect', (
+      tester,
+    ) async {
+      final c = await controller();
+      c.show(ConnectionStatusPhase.notAnswering);
+      final status = (await statusFor(tester, c))!;
+      expect(status.countdownTo, isNull);
+      expect(status.action?.label, isNot('Try now'));
+    });
+
+    testWidgets('a Try now in flight wins over the schedule', (tester) async {
+      final c = await controller();
+      c.show(
+        ConnectionStatusPhase.notAnswering,
+        retrying: true,
+        nextAttemptAt: DateTime.now().add(const Duration(seconds: 8)),
+      );
+      final status = (await statusFor(tester, c))!;
+      expect(status.countdownTo, isNull);
+    });
   });
 }

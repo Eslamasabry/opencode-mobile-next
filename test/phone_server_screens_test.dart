@@ -140,14 +140,15 @@ void main() {
       tester,
     ) async {
       final done = await mount(tester, PhoneServerScene.phoneRunning);
-      // P1.5 replaced the old Termux screen with This phone: runtime is
-      // the title, the version/host are its detail, and state has one word.
-      // The page is named like the Settings row that opens it.
+      // This phone opens on one plain answer (vision 2026-10-20); the
+      // server row names the runtime and where it runs, and the version
+      // lives under Details. The page is named like the Settings row that
+      // opens it.
       expect(find.text('This phone'), findsOneWidget);
+      expect(find.text('Everything is running'), findsOneWidget);
       expect(find.text('OpenCode 2'), findsOneWidget);
-      expect(find.text('Running'), findsOneWidget);
       expect(
-        find.textContaining('2.0.29 · In Termux', findRichText: true),
+        find.textContaining('Connected · In Termux', findRichText: true),
         findsOneWidget,
       );
       final management = find.byKey(const ValueKey('this-phone-list'));
@@ -160,6 +161,9 @@ void main() {
         greaterThanOrEqualTo(tester.getBottomLeft(stop).dy),
       );
 
+      // The answer takes the top of the page: the row is under it.
+      await tester.ensureVisible(stop);
+      await tester.pumpAndSettle();
       await tester.tap(stop);
       await tester.pumpAndSettle();
       expect(
@@ -168,7 +172,7 @@ void main() {
       );
       await tester.tap(find.text('Keep running'));
       await tester.pumpAndSettle();
-      expect(find.text('Running'), findsOneWidget);
+      expect(find.text('Everything is running'), findsOneWidget);
       expect(stop, findsOneWidget);
       await done();
     });
@@ -181,7 +185,8 @@ void main() {
       await tester.scrollUntilVisible(recovery, 200);
       expect(recovery, findsOneWidget);
       final claude = find.byKey(const ValueKey('local-agent-row'));
-      await tester.scrollUntilVisible(claude, 200);
+      await tester.ensureVisible(claude);
+      await tester.pumpAndSettle();
       expect(
         find.descendant(of: claude, matching: find.text('Optional')),
         findsOneWidget,
@@ -192,16 +197,20 @@ void main() {
       await done();
     });
 
-    testWidgets('stopped, the same place offers Start first', (tester) async {
+    testWidgets('stopped, Start is the one action at the thumb', (
+      tester,
+    ) async {
       final done = await mount(tester, PhoneServerScene.phoneStopped);
-      expect(find.text('Stopped'), findsOneWidget);
+      expect(find.text('The server is off'), findsOneWidget);
       final start = find.byKey(const ValueKey('this-phone-start'));
       final management = find.byKey(const ValueKey('this-phone-list'));
       expect(start, findsOneWidget);
       expect(find.byKey(const ValueKey('this-phone-update')), findsNothing);
+      // One mint Start at the thumb, under the answer and the rows
+      // (vision 2026-10-20).
       expect(
-        tester.getTopLeft(management).dy,
-        greaterThan(tester.getBottomLeft(start).dy),
+        tester.getTopLeft(start).dy,
+        greaterThan(tester.getTopLeft(management).dy),
       );
       expect(find.byKey(const ValueKey('this-phone-stop')), findsNothing);
       await done();

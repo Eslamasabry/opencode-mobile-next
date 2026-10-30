@@ -13,9 +13,9 @@ extension _IndexInsidePages on _IndexBuild {
         title: l10n.e7SettingsUi8,
         parent: l10n.settingsV3Servers,
         keywords: l10n.settingsHubSearchDisconnectAliases,
-        pages: const ['server-settings'],
+        pages: const ['server-page'],
         target: const SettingsSearchTarget(
-          pageId: 'server-settings',
+          pageId: 'server-page',
           sectionId: 'disconnect',
         ),
         gate: (scope) => scope.controller.profile != null,
@@ -38,7 +38,7 @@ extension _IndexInsidePages on _IndexBuild {
         title: l10n.aiSetupTitle,
         parent: l10n.settingsV3Servers,
         keywords: l10n.aiSetupEntryDetail,
-        pages: const ['server-settings', 'ai-setup'],
+        pages: const ['server-page', 'ai-setup'],
         gate: (scope) =>
             scope.controller.profile != null &&
             scope.capabilities.setupConfigRead,
@@ -203,6 +203,8 @@ extension _IndexInsidePages on _IndexBuild {
         ),
       ),
       // Settings › Appearance › Effects, one result per row.
+      row('inside-appearance-text', AppIconography.textSize),
+      row('inside-appearance-live-background', AppIconography.image),
       row('inside-appearance-motion', AppIconography.playCircle),
       row('inside-appearance-glow', AppIconography.sparkle),
       // Keep running's rows: the battery exemption, and the heat pause only
@@ -364,13 +366,14 @@ extension _IndexInsidePages on _IndexBuild {
         parent: onThisPhone,
         keywords: l10n.discoverRunningNowAliases,
         pages: const ['termux-processes'],
-        gate: (scope) => scope.platform.supportsTermux,
+        // The in-app Linux has its own Running on this phone (same title).
+        gate: (scope) => scope.platform.supportsTermux && !_inAppLinux(scope),
         open: _screen((_) => const TermuxProcessesScreen()),
       ),
       SearchEntry(
         id: 'inside-phone-storage',
         kind: SearchEntryKind.insideSettings,
-        icon: AppIconography.database,
+        icon: AppIconography.storage,
         title: l10n.termuxStorageTitle,
         parent: onThisPhone,
         keywords: l10n.discoverStorageAliases,
@@ -383,7 +386,7 @@ extension _IndexInsidePages on _IndexBuild {
       SearchEntry(
         id: 'inside-phone-linux',
         kind: SearchEntryKind.insideSettings,
-        icon: AppIconography.processor,
+        icon: AppIconography.terminal,
         title: l10n.linuxMgrTitle,
         parent: onThisPhone,
         keywords: 'linux ubuntu ${l10n.linuxMgrRowDetail}',
@@ -396,9 +399,21 @@ extension _IndexInsidePages on _IndexBuild {
         ),
       ),
       SearchEntry(
+        id: 'inside-phone-running',
+        kind: SearchEntryKind.insideSettings,
+        icon: AppIconography.heartbeat,
+        title: l10n.runningPhoneTitle,
+        parent: onThisPhone,
+        keywords:
+            'processes running memory hot heat battery stuck stop left behind',
+        pages: const ['running-on-phone'],
+        gate: _inAppLinux,
+        open: _screen((_) => const RunningOnPhoneScreen()),
+      ),
+      SearchEntry(
         id: 'inside-linux-running',
         kind: SearchEntryKind.insideSettings,
-        icon: AppIconography.processor,
+        icon: AppIconography.heartbeat,
         title: l10n.linuxMgrProcTitle,
         parent: l10n.linuxMgrTitle,
         keywords: 'linux processes programs memory stop',
@@ -420,7 +435,7 @@ extension _IndexInsidePages on _IndexBuild {
       SearchEntry(
         id: 'inside-linux-storage',
         kind: SearchEntryKind.insideSettings,
-        icon: AppIconography.database,
+        icon: AppIconography.storage,
         title: l10n.linuxMgrStorageTitle,
         parent: l10n.linuxMgrTitle,
         keywords: 'linux disk space size folders clean',

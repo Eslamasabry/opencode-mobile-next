@@ -9,7 +9,7 @@
       "widget": "SettingsScreen",
       "presentedBy": [],
       "line": 61,
-      "purpose": "The one Settings hub (root tab 4 of the shell, also pushed by Ctrl/Cmd+,): a search field, then five groups of at most five rows (target-ia §1.3, slice-P3.10): the server under its own name (This server, Saved servers, On this phone), Agent (Model, Providers and accounts, Tools, AI Team), Conversations (Always allowed actions, Show reasoning, Show timestamps and usage, Default shell, Voice), This app (Notifications, Keep running, Appearance, Privacy and data, Usage) and an unlabelled Help panel (Setup guide, Report a problem, Available on this server, About). Row titles, keywords, gates and tap actions come from the app-wide search index (lib/ui/search/search_index.dart); the hub decides order, the live values and the two switches. Rows the connected server cannot serve are absent and each group says how many in one muted line with a Why (KitGroupNote) that opens Available on this server. Typing also lists what sits inside second-level screens ('Inside settings') and places outside Settings ('Go to').",
+      "purpose": "The one Settings hub (root tab 4 of the shell, also pushed by Ctrl/Cmd+,): a search field, then five groups of at most five rows (target-ia \u00a71.3, slice-P3.10): the server under its own name (This server, Saved servers, On this phone), Agent (Model, Providers and accounts, Tools, AI Team), Conversations (Always allowed actions, Show reasoning, Show timestamps and usage, Default shell, Voice), This app (Notifications, Keep running, Appearance, Privacy and data, Usage) and an unlabelled Help panel (Setup guide, Report a problem, Available on this server, About). Row titles, keywords, gates and tap actions come from the app-wide search index (lib/ui/search/search_index.dart); the hub decides order, the live values and the two switches. Rows the connected server cannot serve are absent and each group says how many in one muted line with a Why (KitGroupNote) that opens Available on this server. Typing also lists what sits inside second-level screens ('Inside settings') and places outside Settings ('Go to').",
       "reachedFrom": [
         {
           "page": "home-shell",
@@ -39,9 +39,9 @@
           "key": "settings-category-server",
           "line": 286,
           "action": "navigate",
-          "target": "server-settings",
-          "targetWidget": "ServerSettingsScreen",
-          "effect": "Pushes ServerSettingsScreen(controller) via _open. Subtitle \"<server name> · <health line>\" from _checkHealth (runs on open); wrapped in KeyedSubtree settings-connection-summary.",
+          "target": "server-page",
+          "targetWidget": "ServerPageScreen",
+          "effect": "Pushes ServerPageScreen(controller) via _open. Subtitle \"<server name> \u00b7 <health line>\" from _checkHealth (runs on open); wrapped in KeyedSubtree settings-connection-summary.",
           "gates": [
             "row hidden when it does not match the search query (_HubRow.matches(_query))"
           ],
@@ -102,7 +102,7 @@
           "action": "open-sheet",
           "target": "model-picker-sheet",
           "targetWidget": "showModelPicker",
-          "effect": "showModelPicker(context). Subtitle \"<model> · <variant> · <agent>\" from _modelAndModeSummary.",
+          "effect": "showModelPicker(context). Subtitle \"<model> \u00b7 <variant> \u00b7 <agent>\" from _modelAndModeSummary.",
           "gates": [
             "row hidden when it does not match the search query (_HubRow.matches(_query))"
           ],
@@ -132,7 +132,7 @@
           "action": "navigate",
           "target": "capabilities",
           "targetWidget": null,
-          "effect": "Opens Settings › Tools: one page with MCP, Commands, Tools, Skills, References and External agents tabs.",
+          "effect": "Opens Settings \u203a Tools: one page with MCP, Commands, Tools, Skills, References and External agents tabs.",
           "gates": [],
           "destructive": false
         },
@@ -145,7 +145,7 @@
           "action": "navigate",
           "target": "team-intro",
           "targetWidget": "TeamPage",
-          "effect": "The search index entry 'settings-ai-team': openTeamPage, the one AI Team page on or off (P3.4). Subtitle from teamStateLine, the same words as the Plugins row: 'Turning on…' while this phone installs it (PhoneSetup.engine), 'On · This phone', or 'Off · A team of agents for bigger jobs'.",
+          "effect": "The search index entry 'settings-ai-team': openTeamPage, the one AI Team page on or off (P3.4). Subtitle from teamStateLine, the same words as the Plugins row: 'Turning on\u2026' while this phone installs it (PhoneSetup.engine), 'On \u00b7 This phone', or 'Off \u00b7 A team of agents for bigger jobs'.",
           "gates": [
             "controller.profile != null"
           ],
@@ -182,13 +182,13 @@
           "type": "list-tile",
           "label": "Default shell",
           "key": "default-shell-settings-entry",
-          "line": 323,
+          "line": 214,
           "action": "open-sheet",
           "target": "coding-settings-shell-sheet",
           "targetWidget": "_chooseShell",
           "effect": "DefaultShellRow: loads repository.loadTerminalShellSettings() on first build and on resume; tap opens the shell sheet (_chooseShell) or retries a failed load (_loadShellSettings).",
           "gates": [
-            "controller.capabilities.shellSettings (search index gate; the row is absent otherwise — UX plan rule 7; Help → 'Available on this server' lists it as not available)"
+            "controller.capabilities.shellSettings (search index gate; the row is absent otherwise \u2014 UX plan rule 7; Help \u2192 'Available on this server' lists it as not available)"
           ],
           "destructive": false,
           "file": "lib/ui/screens/settings/default_shell_row.dart"
@@ -233,7 +233,7 @@
           "action": "navigate",
           "target": "appearance-settings",
           "targetWidget": "AppearanceSettingsScreen",
-          "effect": "Pushes AppearanceSettingsScreen(controller) via _open. Subtitle \"<appearance label> · <theme pack label>\".",
+          "effect": "Pushes AppearanceSettingsScreen(controller) via _open. Subtitle \"<appearance label> \u00b7 <theme pack label>\".",
           "gates": [
             "row hidden when it does not match the search query (_HubRow.matches(_query))"
           ],
@@ -261,7 +261,7 @@
           "action": "navigate",
           "target": "usage-hub",
           "targetWidget": "UsageHubScreen",
-          "effect": "Pushes UsageHubScreen(controller) via _open. Subtitle names the sections that apply (\"Spent · Remaining\").",
+          "effect": "Pushes UsageHubScreen(controller) via _open. Subtitle names the sections that apply (\"Spent \u00b7 Remaining\").",
           "gates": [
             "UsageHubScreen.sectionsFor(controller).isNotEmpty (supportsUsageStatistics || profile != null)",
             "row hidden when it does not match the search query (_HubRow.matches(_query))"
@@ -339,6 +339,20 @@
           "gates": [
             "a hub row of the group is hidden by the connected server"
           ],
+          "destructive": false
+        },
+        {
+          "id": "settings-group-door",
+          "type": "list-tile",
+          "label": "{group word}",
+          "key": "settings-group-{slug}",
+          "file": "lib/ui/screens/settings/settings_group_page.dart",
+          "line": 391,
+          "action": "navigate",
+          "target": "settings-group",
+          "targetWidget": null,
+          "effect": "Opens the group's page.",
+          "gates": [],
           "destructive": false
         }
       ]
@@ -455,7 +469,7 @@
         {
           "id": "notifications-settings-check-in-after",
           "type": "dropdown",
-          "label": "Check in after — {minutes} minutes (ProfileNotifyRules.checkInChoices)",
+          "label": "Check in after \u2014 {minutes} minutes (ProfileNotifyRules.checkInChoices)",
           "key": "notify-check-in-after",
           "line": 158,
           "action": "toggle-setting",
@@ -491,7 +505,7 @@
           "action": "toggle-setting",
           "target": null,
           "targetWidget": null,
-          "effect": "controller.updateSharedNotifyRules: sets 22:00–08:00 or clears the ONE quiet-hours pair (oc.notify.quietStart/End) read by ProfileMonitor.rulesFor, ProviderQuotaMonitor.quietFor and the connected server's coding alerts.",
+          "effect": "controller.updateSharedNotifyRules: sets 22:00\u201308:00 or clears the ONE quiet-hours pair (oc.notify.quietStart/End) read by ProfileMonitor.rulesFor, ProviderQuotaMonitor.quietFor and the connected server's coding alerts.",
           "gates": [
             "platformCapabilities.supportsNotifications"
           ],
@@ -564,7 +578,7 @@
         {
           "id": "background-settings-status-row",
           "type": "list-tile",
-          "label": "Stopped by Android — tap to restart / Running now / Starting… / Off",
+          "label": "Stopped by Android \u2014 tap to restart / Running now / Starting\u2026 / Off",
           "key": "background-status-row",
           "line": 502,
           "action": "toggle-setting",
@@ -580,7 +594,7 @@
         {
           "id": "notifications-settings-monitor-server",
           "type": "toggle",
-          "label": "<server name> — Monitor this server",
+          "label": "<server name> \u2014 Monitor this server",
           "key": "monitor-enabled-<profile id>",
           "line": 437,
           "action": "toggle-setting",
@@ -800,11 +814,11 @@
       "id": "appearance-settings",
       "title": "Appearance",
       "kind": "screen",
-      "file": "lib/ui/screens/settings/personal_settings_screens.dart",
+      "file": "lib/ui/screens/settings/appearance_screen.dart",
       "widget": "AppearanceSettingsScreen",
       "presentedBy": [],
-      "line": 5,
-      "purpose": "Appearance: light/dark mode, app language, and theme-pack list with swatches.",
+      "line": 24,
+      "purpose": "Appearance. A first visit (or Guide me again) is guided, one decision at a time (KitGuide): four chips (Colours, Style, Background, Text & motion) showing their values, each opening its questions, with a Next bar. A returning visit is one scrolling page with every question and its control in place under the four headings (two columns on wide windows), then Guide me again and Reset to defaults.",
       "reachedFrom": [
         {
           "page": "settings",
@@ -814,18 +828,62 @@
       "gates": [],
       "elements": [
         {
+          "id": "appearance-settings-group",
+          "type": "chip",
+          "label": "Colours | Style | Background | Text & motion",
+          "key": "appearance-group-<colours|style|background|comfort>",
+          "line": 335,
+          "action": "other",
+          "target": null,
+          "targetWidget": "KitGuide",
+          "effect": "Guided visit: opens the group's questions with its first question open; after Finish, opens the one page at that section. Style and Background read Off in Saver. On the one page the same keys are the section headings (the tour's anchors).",
+          "gates": [],
+          "destructive": false,
+          "file": "lib/ui/screens/settings/appearance_screen.dart"
+        },
+        {
+          "id": "appearance-settings-question",
+          "type": "chip",
+          "label": "Mode | Theme | Accent | Style | Shape | Look | Strength | Text size | Motion | Reply glow",
+          "key": "appearance-question-<id>",
+          "line": 343,
+          "action": "other",
+          "target": null,
+          "targetWidget": "KitGuide",
+          "effect": "Guided visit: opens that one question.",
+          "gates": [],
+          "destructive": false,
+          "file": "lib/ui/screens/settings/appearance_screen.dart"
+        },
+        {
+          "id": "appearance-settings-one-page",
+          "type": "card",
+          "label": "Colours \u00b7 Style \u00b7 Background \u00b7 Text & motion, every question in place",
+          "key": "appearance-one-page",
+          "line": 59,
+          "action": "toggle-setting",
+          "target": null,
+          "targetWidget": "KitSectionLabel",
+          "effect": "Returning visit: each question's control (segments, theme and look cards, accent swatches, style tiles, text-size slider, glow cards) changes its choice with one tap; Strength shows only while a look is on; Saver explains per section why Style and Background wait.",
+          "gates": [
+            "returning visit (oc.appearanceGuide done)"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/settings/appearance_one_page.dart"
+        },
+        {
           "id": "appearance-settings-mode",
           "type": "toggle",
-          "label": "Light or dark (Auto · Light · Dark)",
+          "label": "Light or dark (Auto \u00b7 Light \u00b7 Dark \u00b7 Saver)",
           "key": "appearance-settings-entry",
-          "line": 99,
+          "line": 859,
           "action": "toggle-setting",
           "target": null,
           "targetWidget": "KitSegmented",
-          "effect": "Inline segments; a tap calls controller.setAppearance(value) at once. The separate light-or-dark sheet (appearance-picker-sheet) was removed by slice-P3.1.",
+          "effect": "Inline segments; a tap calls controller.setAppearance(value) at once.",
           "gates": [],
           "destructive": false,
-          "file": "lib/ui/screens/settings/personal_settings_screens.dart"
+          "file": "lib/ui/screens/settings/appearance_screen.dart"
         },
         {
           "id": "appearance-settings-language",
@@ -837,40 +895,73 @@
           "action": "open-sheet",
           "target": "language-sheet",
           "targetWidget": "_LanguageSheet",
-          "effect": "LanguageSettingsTile: showModalBottomSheet(_LanguageSheet) — the sheet writes controller.setAppLocale(locale). Subtitle is System / English / Arabic.",
+          "effect": "LanguageSettingsTile: showModalBottomSheet(_LanguageSheet) \u2014 the sheet writes controller.setAppLocale(locale). Subtitle is System / English / Arabic.",
           "gates": [],
           "destructive": false
         },
         {
           "id": "appearance-settings-theme-pack",
-          "type": "list-tile",
-          "label": "<theme pack name> (opencode, catppuccin, gruvbox, solarized, dynamic)",
+          "type": "card",
+          "label": "<theme pack name>: eight picks, then See all 31 themes",
           "key": "theme-pack-<id.name>",
-          "line": 93,
-          "action": "open-sheet",
-          "target": "theme-pack-preview-sheet",
-          "targetWidget": "showThemePackPreview",
-          "effect": "_ThemePackTile (one per ThemePackId.values): onSelect -> showThemePackPreview(context, controller:, pack: id); the sheet writes controller.setThemePack(pack). Selected pack shows a check.",
+          "line": 0,
+          "action": "toggle-setting",
+          "target": null,
+          "targetWidget": "KitOptionCard.theme",
+          "effect": "controller.setThemePack(id) at once.",
           "gates": [
-            "dynamic pack disabled unless harvestedDynamicPack.value != null (subtitle \"Material You colors are not available on this device.\")"
+            "dynamic pack disabled unless harvestedDynamicPack.value != null"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/settings/appearance_screen.dart"
         },
         {
           "id": "appearance-settings-live-style",
-          "type": "list-tile",
-          "label": "Look (Live background)",
-          "key": "effects-live-style",
-          "file": "lib/ui/screens/settings/personal_settings_screens.dart",
-          "line": 468,
-          "action": "navigate",
-          "target": "live-style-picker",
-          "targetWidget": "LiveStylePickerScreen",
-          "effect": "Pushes LiveStylePickerScreen(controller); the supporting line names the chosen look.",
+          "type": "card",
+          "label": "Look: Off, eight looks, then See all 21 looks",
+          "key": "live-style-<id>",
+          "line": 0,
+          "action": "toggle-setting",
+          "target": null,
+          "targetWidget": "KitOptionCard.look",
+          "effect": "Off stores liveBackground=false and keeps the look; a look turns the background on with it.",
           "gates": [
-            "row shown only while the Live background switch (effects-live-background) is on"
+            "held by Saver"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/settings/appearance_screen.dart"
+        },
+        {
+          "id": "appearance-settings-next",
+          "type": "button",
+          "label": "Start with Colours | Next: <question or chip> | Finish",
+          "key": "appearance-guide-next",
+          "line": 584,
+          "action": "other",
+          "target": null,
+          "targetWidget": "KitGuide",
+          "effect": "Guided visit only: opens the next question, skipping those Saver holds; Finish ends the guide (oc.appearanceGuide).",
+          "gates": [
+            "first visit or Guide me again"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/settings/appearance_screen.dart"
+        },
+        {
+          "id": "appearance-settings-reset",
+          "type": "button",
+          "label": "Reset to defaults",
+          "key": "appearance-reset",
+          "line": 713,
+          "action": "other",
+          "target": null,
+          "targetWidget": "KitNotice",
+          "effect": "Asks in the page, naming what resets; Reset puts light or dark, theme, accent, style, background, text size, motion and the glow back.",
+          "gates": [
+            "returning visit"
+          ],
+          "destructive": true,
+          "file": "lib/ui/screens/settings/appearance_screen.dart"
         }
       ]
     },
@@ -902,14 +993,14 @@
           "action": "other",
           "target": null,
           "targetWidget": null,
-          "effect": "ChoiceChips set the local preview brightness (_appearance); not persisted — the note \"Your light or dark setting stays {mode}.\" says the saved mode stays.",
+          "effect": "ChoiceChips set the local preview brightness (_appearance); not persisted \u2014 the note \"Your light or dark setting stays {mode}.\" says the saved mode stays.",
           "gates": [],
           "destructive": false
         },
         {
           "id": "theme-pack-preview-sheet-apply",
           "type": "button",
-          "label": "Apply / Current appearance / Saving…",
+          "label": "Apply / Current appearance / Saving\u2026",
           "key": null,
           "line": 207,
           "action": "toggle-setting",
@@ -972,7 +1063,7 @@
         {
           "id": "language-sheet-option",
           "type": "list-tile",
-          "label": "Use system language | English | العربية",
+          "label": "Use system language | English | \u0627\u0644\u0639\u0631\u0628\u064a\u0629",
           "key": null,
           "line": 109,
           "action": "toggle-setting",
@@ -1036,7 +1127,7 @@
           "type": "list-tile",
           "label": "Clear drafts",
           "key": "clear-session-drafts",
-          "line": 309,
+          "line": 228,
           "action": "open-sheet",
           "target": "privacy-settings-clear-drafts-sheet",
           "targetWidget": "showConfirmSheet",
@@ -1051,7 +1142,7 @@
           "type": "list-tile",
           "label": "Privacy policy",
           "key": "privacy-policy",
-          "line": 767,
+          "line": 256,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -1206,7 +1297,7 @@
           "action": "mutate",
           "target": null,
           "targetWidget": null,
-          "effect": "controller.nudges.reset(): every one-time tip fires again at its moment; the row then says so.",
+          "effect": "controller.nudges.reset() and controller.tips.reset(): every one-time card, tip and mini tutorial shows again at its moment; the row then says so.",
           "gates": [
             "a ConnectionController is passed"
           ],
@@ -1230,7 +1321,7 @@
         {
           "id": "about-voice-licence-row",
           "type": "list-tile",
-          "label": "<voice component name> / <maker · license>",
+          "label": "<voice component name> / <maker \u00b7 license>",
           "key": "voice-notice-<id>",
           "line": 304,
           "action": "open-sheet",
@@ -1249,9 +1340,9 @@
       "title": "Open source",
       "kind": "tab",
       "file": "lib/ui/screens/about_screen.dart",
-      "widget": "_DocumentView",
+      "widget": "_openLicences",
       "presentedBy": [],
-      "line": 183,
+      "line": 185,
       "purpose": "About's Open source section: all package licences in the viewer, the voice models' licences on Android, and the third-party notices markdown.",
       "reachedFrom": [
         {
@@ -1272,7 +1363,8 @@
           "targetWidget": "openBugReport",
           "effect": "_BuildProvenanceNotice button: openBugReport(context).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/about_screen.dart"
         }
       ],
       "instantiatedAtLine": 112
@@ -1433,7 +1525,7 @@
         {
           "id": "app-diagnostics-send",
           "type": "button",
-          "label": "Send / Sending…",
+          "label": "Send / Sending\u2026",
           "key": "send-app-diagnostics",
           "line": 125,
           "action": "submit",
@@ -1519,6 +1611,20 @@
             "disabled when PerfTrace.recent(...) is empty"
           ],
           "destructive": true
+        },
+        {
+          "id": "app-diagnostics-kept",
+          "type": "link",
+          "label": "App diagnostics",
+          "key": "report-problem-kept",
+          "file": "lib/ui/screens/app_diagnostics_screen.dart",
+          "line": 351,
+          "action": "navigate",
+          "target": "app-diagnostics-kept",
+          "targetWidget": null,
+          "effect": "Opens what this phone kept (errors, crash reports, exits, timings).",
+          "gates": [],
+          "destructive": false
         }
       ]
     },
@@ -1943,7 +2049,7 @@
         "showModelPicker"
       ],
       "line": 71,
-      "purpose": "The one model sheet (slice-P3.3): every door opens it through showModelPicker (composer model chip, '/model', a chat error's Choose model, Settings › Model and search; the catalog screen is gone). Settings opens it for new conversations (classic scope, promoted to newSessions on a server that owns selection); the chat opens it for this conversation (session scope, subtitle 'Applies to this conversation's next turns.'). Body: notices, a 'Reload providers' row when signed-in providers are not loaded, search with its filter menu, All/Favorites/Recent, the models (the chosen one checked, its details under it). Pinned footer: 'Thinking: <level>' and 'Agent: <agent>' chips that open KitMenus; the apply action under them. No dialog opens over the sheet. On open it calls controller.refreshCatalog().",
+      "purpose": "The one model sheet (slice-P3.3): every door opens it through showModelPicker (composer model chip, '/model', a chat error's Choose model, Settings \u203a Model and search; the catalog screen is gone). Settings opens it for new conversations (classic scope, promoted to newSessions on a server that owns selection); the chat opens it for this conversation (session scope, subtitle 'Applies to this conversation's next turns.'). Body: notices, a 'Reload providers' row when signed-in providers are not loaded, search with its filter menu, All/Favorites/Recent, the models (the chosen one checked, its details under it). Pinned footer: 'Thinking: <level>' and 'Agent: <agent>' chips that open KitMenus; the apply action under them. No dialog opens over the sheet. On open it calls controller.refreshCatalog().",
       "reachedFrom": [
         {
           "page": "?",
@@ -2113,7 +2219,7 @@
           "type": "chip",
           "label": "Any capability | Fast modes | Reasoning | Largest context",
           "key": null,
-          "line": 845,
+          "line": 61,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -2121,7 +2227,8 @@
           "gates": [
             "_showFilters"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/widgets/pickers_catalog_models.dart"
         },
         {
           "id": "model-picker-sheet-clear-filters",
@@ -2143,13 +2250,14 @@
           "type": "list-tile",
           "label": "<model name>",
           "key": "model-option-<providerID>-<modelID>",
-          "line": 875,
+          "line": 338,
           "action": "other",
           "target": null,
           "targetWidget": null,
           "effect": "_draft(reference): stages _draftModel (variant reset unless it is the current model); nothing saved until the apply button. Disabled when !model.enabled.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/widgets/pickers_catalog_models.dart"
         },
         {
           "id": "model-picker-sheet-model-favorite",
@@ -2169,9 +2277,9 @@
         {
           "id": "model-picker-sheet-apply",
           "type": "button",
-          "label": "Use <model> · <agent> | Use for this conversation | Use for new conversations",
+          "label": "Use <model> \u00b7 <agent> | Use for this conversation | Use for new conversations",
           "key": "model-picker-apply",
-          "line": 1042,
+          "line": 175,
           "action": "toggle-setting",
           "target": null,
           "targetWidget": null,
@@ -2244,83 +2352,142 @@
       "elements": []
     },
     {
-      "id": "live-style-picker",
-      "title": "Look",
+      "id": "app-diagnostics-kept",
+      "title": "App diagnostics",
       "kind": "screen",
-      "file": "lib/ui/screens/settings/live_background_screens.dart",
-      "widget": "LiveStylePickerScreen",
+      "file": "lib/ui/screens/app_diagnostics_kept_screen.dart",
+      "widget": "AppDiagnosticsKeptScreen",
       "presentedBy": [],
-      "line": 9,
-      "purpose": "Settings > Appearance > Live background > Look: a grid of the live looks, the chosen one marked; a tap opens that look in a full-screen preview.",
+      "line": 36,
+      "purpose": "Everything this phone kept, one tap under Report a problem's Details: the kept errors (with Clear), saved crash reports, recent app exits and the Performance timings.",
       "reachedFrom": [
         {
-          "page": "appearance-settings",
-          "element": "appearance-settings-live-style"
+          "page": "app-diagnostics",
+          "element": "app-diagnostics-kept"
         }
       ],
       "gates": [],
       "elements": [
         {
-          "id": "live-style-picker-tile",
-          "type": "card",
-          "label": "<look name>",
-          "key": "live-style-<id>",
-          "file": "lib/ui/screens/settings/live_background_screens.dart",
-          "line": 23,
-          "action": "navigate",
-          "target": "live-style-preview",
-          "targetWidget": "LiveStylePreviewScreen",
-          "effect": "Pushes LiveStylePreviewScreen(controller, style). Nothing is changed until Use this.",
+          "id": "app-diagnostics-kept-clear",
+          "type": "button",
+          "label": "Clear",
+          "key": "clear-app-diagnostics",
+          "file": "lib/ui/screens/app_diagnostics_kept_screen.dart",
+          "line": 243,
+          "action": "open-dialog",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Asks \"Clear N errors?\" in place, then empties this run's list and the saved report.",
+          "gates": [],
+          "destructive": true
+        },
+        {
+          "id": "app-diagnostics-kept-entry",
+          "type": "list-tile",
+          "label": "{error in plain words}",
+          "key": "diagnostic-entry-{id}",
+          "file": "lib/ui/screens/app_diagnostics_kept_screen.dart",
+          "line": 252,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Opens the entry's Details with Copy all (masked).",
           "gates": [],
           "destructive": false
         }
       ]
     },
     {
-      "id": "live-style-preview",
-      "title": "<look name>",
+      "id": "settings-group",
+      "title": "{Connections | AI | Chat | This app | Help}",
       "kind": "screen",
-      "file": "lib/ui/screens/settings/live_background_screens.dart",
-      "widget": "LiveStylePreviewScreen",
+      "file": "lib/ui/screens/settings/settings_group_page.dart",
+      "widget": "SettingsGroupScreen",
       "presentedBy": [],
-      "line": 34,
-      "purpose": "One live look full screen behind a mock chat, with a Reply running switch to see it brighten and a Use this button.",
+      "line": 70,
+      "purpose": "One of the Settings hub's five words: the rows that group holds (settingsGroupRowIds), each opening its own page; a row the server hides says why.",
       "reachedFrom": [
         {
-          "page": "live-style-picker",
-          "element": "live-style-picker-tile"
+          "page": "settings",
+          "element": "settings-group-door"
+        }
+      ],
+      "gates": [
+        "a group with no row left has no door on the hub"
+      ],
+      "elements": [
+        {
+          "id": "settings-group-row",
+          "type": "list-tile",
+          "label": "{row title}",
+          "key": "{row id}",
+          "file": "lib/ui/screens/settings/settings_group_page.dart",
+          "line": 391,
+          "action": "navigate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Opens the row's page (the hub's index entry).",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "settings-group-unavailable-why",
+          "type": "link",
+          "label": "Why?",
+          "key": "settings-unavailable-why",
+          "file": "lib/ui/screens/settings/settings_group_page.dart",
+          "line": 354,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Says which rows the connected server hides.",
+          "gates": [],
+          "destructive": false
+        }
+      ]
+    },
+    {
+      "id": "tips-page",
+      "title": "Tips",
+      "kind": "screen",
+      "file": "lib/ui/screens/settings/tips_screen.dart",
+      "widget": "TipsScreen",
+      "presentedBy": [],
+      "line": 17,
+      "purpose": "Help \u203a Tips (teaching system, docs/ux-system/teaching.md): every registered tip and mini tutorial with Show me (a tip replays in place on its row; a tutorial opens its screen and runs there), and Show tips again.",
+      "reachedFrom": [
+        {
+          "page": "settings",
+          "element": "settings-tips"
         }
       ],
       "gates": [],
       "elements": [
         {
-          "id": "live-style-preview-running",
-          "type": "toggle",
-          "label": "Reply running",
-          "key": "live-style-running",
-          "file": "lib/ui/kit/kit_live_style_preview.dart",
-          "line": 58,
-          "action": "other",
+          "id": "tips-show-me",
+          "type": "button",
+          "label": "Show me",
+          "key": "tips-show-me-<id>",
+          "line": 52,
+          "action": "mutate",
           "target": null,
-          "targetWidget": "KitSwitchRow",
-          "effect": "Local view state: makes the preview behave as if a reply were running. Not stored.",
+          "targetWidget": null,
+          "effect": "A tip: controller.tips.replay(id) shows its KitTip on the row, counting nothing. A tutorial: replayTour opens its screen (Appearance) and runs KitTour there.",
           "gates": [],
           "destructive": false
         },
         {
-          "id": "live-style-preview-use",
-          "type": "button",
-          "label": "Use this",
-          "key": "live-style-use",
-          "file": "lib/ui/kit/kit_live_style_preview.dart",
-          "line": 70,
-          "action": "toggle-setting",
-          "target": "appearance-settings",
-          "targetWidget": "KitButton",
-          "effect": "controller.setEffects(effects.copyWith(liveStyle: style.id)) (oc.effectsLiveStyle), then pops back to the picker. Disabled for the look already in use.",
-          "gates": [
-            "disabled while the look is the one in use"
-          ],
+          "id": "tips-show-again",
+          "type": "list-tile",
+          "label": "Show tips again",
+          "key": "tips-show-again",
+          "line": 120,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "controller.nudges.reset() and controller.tips.reset(); the row then says so.",
+          "gates": [],
           "destructive": false
         }
       ]
@@ -2357,7 +2524,7 @@
     },
     {
       "file": "lib/ui/screens/settings/server_plugins_section.dart",
-      "reason": "ServerPluginsSection is the 'Plugins on this server' section of the This server page (server-settings); its elements keep their plugins-* ids on that page's host."
+      "reason": "ServerPluginsSection is the 'Plugins on this server' section of the This server page (server-page); its elements keep their plugins-* ids on that page's host."
     },
     {
       "file": "lib/ui/screens/crash_reports_section.dart",
@@ -2379,7 +2546,7 @@
   "notes": [
     "pickers.dart contains a single picker, showModelPicker (pickers.dart:34) / ModelCatalogView; there are no other show* pickers in the file. The agent picker and variant selector are inline parts of it.",
     "ModelCatalogView is also embedded by CatalogScreen (lib/ui/screens/library/catalog_screen.dart:108, another area); elements are recorded once on model-picker-sheet with embeddedAlsoIn rather than duplicated as an embedded-* overlay.",
-    "ServerSettingsScreen (lib/ui/screens/settings/server_settings_screen.dart, part of settings_screen.dart) is not in this area's assignment; only the inbound edge settings-category-server is recorded.",
+    "ServerPageScreen (lib/ui/screens/settings/server_page.dart, part of settings_screen.dart) is not in this area's assignment; only the inbound edge settings-category-server is recorded.",
     "Targets defined elsewhere and resolved by naming rule only: termux-setup, catalog, integrations (two tiles with different IntegrationsMode), capabilities, terminal (TerminalPage), session-import, shortcuts-help-dialog (showShortcutsHelp), server-settings, usage, provider-quota, voice-notices (showVoiceNotices -> VoiceNoticesPage), connection-help, team-host-sheet, team-host-guide-sheet, team-turn-off-sheet, run-command-dialog.",
     "plugins_screen.dart:466: after showRunCommandDialog returns a session id the screen does Navigator.pushNamed('/chat/$sessionID'); recorded in the effect of plugins-review-command.",
     "GuideScreen Cmd copy buttons share one definition (guide_screen.dart:335); three elements are recorded, one per instantiated command (lines 49, 119, 148).",
@@ -2387,6 +2554,6 @@
     "bug_report.dart:114 snackbar text is hard-coded English.",
     "UX phase 2: LibraryScreen (More) and the old SettingsScreen are one page, \"settings\" (kind tab; also pushed over other screens by Ctrl/Cmd+,). CodingSettingsScreen, DiagnosticsSettingsScreen and AboutSettingsScreen no longer exist; their rows are hub rows. lib/ui/screens/library_screen.dart now only hosts the library part files.",
     "UX phase 2: one Plugins page, \"plugins-settings\". The former PluginsScreen is ServerPluginsSection (lib/ui/screens/settings/server_plugins_section.dart), embedded as the \"On the server\" section; its elements keep their plugins-* ids.",
-    "The Default shell hub row stays visible but disabled (GatedRowTile gated-shell-settings) when capabilities.shellSettings is false, per the OpenCode 2 port rule §7 row 22; every other hub row the server cannot serve is absent."
+    "The Default shell hub row stays visible but disabled (GatedRowTile gated-shell-settings) when capabilities.shellSettings is false, per the OpenCode 2 port rule \u00a77 row 22; every other hub row the server cannot serve is absent."
   ]
 }

@@ -6,7 +6,15 @@ class _ListCardGateway extends PaseoGateway {
 
   final _HostState state;
   int listReads = 0;
+  int historyReads = 0;
   Completer<void>? pauseList;
+
+  /// Whether the daemon already holds the agents in memory. A stored idle
+  /// agent is asleep and background recovery must not read (wake) it; these
+  /// tests mostly exercise the recovery itself, so the agents default to awake.
+  bool awake = true;
+  @override
+  bool genUiMayLoad(String sessionID) => awake || super.genUiMayLoad(sessionID);
   @override
   Future<ServerPage<Session>> sessionPage({
     String? cursor,
@@ -51,10 +59,13 @@ class _ListCardGateway extends PaseoGateway {
     String sessionID, {
     String? cursor,
     int limit = 50,
-  }) async => GenUiHistoryPage(
-    items: sessionID == 'c1' ? List.of(history) : [],
-    hasMore: false,
-  );
+  }) async {
+    historyReads++;
+    return GenUiHistoryPage(
+      items: sessionID == 'c1' ? List.of(history) : [],
+      hasMore: false,
+    );
+  }
 
   @override
   Future<void> promptWithMessageID(
@@ -81,7 +92,16 @@ class _ListCardGateway extends PaseoGateway {
     state.agents = [
       for (final a in state.agents)
         if (a['id'] == sessionID)
-          {...a, 'updatedAt': '2026-10-07T10:00:00Z', 'status': 'running'}
+          {
+            ...a,
+            'updatedAt': '2026-10-07T10:00:00Z',
+            'status': 'running',
+            // The daemon holds the agent and names its turn: live.
+            'activeTurn': {
+              'turnId': 'turn-answer',
+              'startedAt': '2026-10-07T10:00:00Z',
+            },
+          }
         else
           a,
     ];

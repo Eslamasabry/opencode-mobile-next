@@ -77,10 +77,8 @@ const _app = [
   'app report.clear-errors',
   'app report.copy',
   'app report.copy-details',
+  'app report.details',
   'app report.github',
-  'app report.include',
-  'app report.review',
-  'app report.share',
 ];
 
 final _paths = <String, Future<void> Function(WidgetTester)>{};

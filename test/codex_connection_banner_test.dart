@@ -104,7 +104,11 @@ void main() {
     }
   });
 
-  testWidgets('Codex reconnect keeps the review draft without auto-resend', (
+  // Owner, 2026-10-27: the connection line is about the link. A standing
+  // promise about drafts ("Review draft stays here; nothing is sent
+  // automatically") showed on every agent reconnect; the draft stays in its
+  // composer, which says what happens to it when Send is pressed.
+  testWidgets('a reconnect line is about the link, with no draft promise', (
     tester,
   ) async {
     final controller = await _controller(codex: true);
@@ -113,10 +117,11 @@ void main() {
         ..status = StreamStatus.reconnecting
         ..notifyListeners();
       await tester.pumpWidget(_app(controller));
-      expect(find.textContaining('Review draft stays here'), findsOneWidget);
+      expect(find.byKey(const ValueKey('connection-status-banner')), findsOne);
+      expect(find.textContaining('Review draft stays here'), findsNothing);
       expect(
         find.textContaining('nothing is sent automatically'),
-        findsOneWidget,
+        findsNothing,
       );
       expect(find.textContaining('Reconnect to '), findsNothing);
     } finally {

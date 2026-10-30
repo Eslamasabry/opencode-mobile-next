@@ -121,10 +121,11 @@ void main() {
 
     await tester.tap(find.byKey(always));
     await tester.pumpAndSettle();
-    // The command is bidi-isolated, so match the words around it.
+    // It names what the grant saves ("git *" reads "git"), bidi-isolated,
+    // so match the words around it.
     expect(
       find.textContaining(
-        RegExp(r'^Always allow .*git status.* in this project\?$'),
+        RegExp(r'^Always allow \u2066git\u2069 in this project\?$'),
       ),
       findsOneWidget,
     );

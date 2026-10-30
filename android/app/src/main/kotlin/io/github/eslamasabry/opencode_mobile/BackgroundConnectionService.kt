@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.RemoteInput
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -175,7 +174,6 @@ class BackgroundConnectionService : Service() {
         private const val FINISHED_SUMMARY_ID = 5999
         private const val MAX_SUMMARY_LINES = 5
         private const val MAX_ALERT_TITLE = 80
-        private const val MAX_ALERT_DETAIL = 140
 
         // A finished reply clears itself after an hour.
         private const val FINISHED_TIMEOUT_MS = 60L * 60L * 1000L
@@ -353,32 +351,36 @@ class BackgroundConnectionService : Service() {
                         category = Notification.CATEGORY_STATUS,
                         priority = Notification.PRIORITY_DEFAULT
                     )
-                    "permission" -> CodingAlertContent(
+                    // The lock screen's words: fixed, count-free and nameless.
+                    // The shade's own words come from AlertCopy below.
+                    "permission", "question" -> CodingAlertContent(
                         channelID = ACTION_CHANNEL_ID,
-                        title = NativeStrings.get(context, R.string.native_alert_permission_title, agent),
-                        text = NativeStrings.get(context, R.string.native_alert_permission_body),
-                        category = Notification.CATEGORY_RECOMMENDATION,
-                        priority = Notification.PRIORITY_HIGH
-                    )
-                    "question" -> CodingAlertContent(
-                        channelID = ACTION_CHANNEL_ID,
-                        title = NativeStrings.get(context, R.string.native_alert_question_title, agent),
-                        text = NativeStrings.get(context, R.string.native_alert_question_body),
+                        title = NativeStrings.get(context, R.string.native_public_needs_you),
+                        text = "",
                         category = Notification.CATEGORY_RECOMMENDATION,
                         priority = Notification.PRIORITY_HIGH
                     )
                     "complete" -> CodingAlertContent(
                         channelID = STATUS_CHANNEL_ID,
-                        title = NativeStrings.get(context, R.string.native_alert_complete_title, agent),
-                        text = NativeStrings.get(context, R.string.native_alert_complete_body),
+                        title = NativeStrings.get(context, R.string.native_public_finished),
+                        text = "",
                         category = Notification.CATEGORY_STATUS,
                         priority = Notification.PRIORITY_DEFAULT
                     )
                     "error" -> CodingAlertContent(
                         channelID = ACTION_CHANNEL_ID,
-                        title = NativeStrings.get(context, R.string.native_alert_error_title, agent),
-                        text = NativeStrings.get(context, R.string.native_alert_error_body),
+                        title = NativeStrings.get(context, R.string.native_status_public_stopped),
+                        text = "",
                         category = Notification.CATEGORY_ERROR,
+                        priority = Notification.PRIORITY_HIGH
+                    )
+                    // "Send a test notification": the requests channel, so it
+                    // proves the loud one gets through; says what it is.
+                    "test" -> CodingAlertContent(
+                        channelID = ACTION_CHANNEL_ID,
+                        title = NativeStrings.get(context, R.string.native_test_title),
+                        text = NativeStrings.get(context, R.string.native_test_body),
+                        category = Notification.CATEGORY_STATUS,
                         priority = Notification.PRIORITY_HIGH
                     )
                     else -> teamCodingAlertContent(context, request)
@@ -451,32 +453,38 @@ class BackgroundConnectionService : Service() {
             context: Context,
             request: CodingAlertRequest,
             baseContent: CodingAlertContent,
-        ): CodingAlertContent = with(request) {
-            val agent = agentName.takeIf { it.matches(Regex("^[A-Za-z0-9 .-]{1,32}$")) } ?: "OpenCode"
+        ): CodingAlertContent {
+            val agent = request.agentName.takeIf { it.matches(Regex("^[A-Za-z0-9 .-]{1,32}$")) } ?: "OpenCode"
             // The words the person chose (chat title, the first line of a
-            // reply) appear in the shade; the lock screen gets the public
-            // version below. Raw errors never travel: only a reason token.
-            val chat = chatTitle.trim().take(MAX_ALERT_TITLE)
-            val summaryLine = detail.trim().take(MAX_ALERT_DETAIL)
-            when (kind) {
-                "permission", "question" -> baseContent.copy(
-                    title = if (AlertTitles.usesCommandTitle(kind, shellCommand)) {
-                        NativeStrings.get(context, R.string.native_alert_permission_command_title)
-                    } else baseContent.title,
-                    text = summaryLine.ifEmpty { baseContent.text }
-                )
-                "complete" -> if (chat.isEmpty()) baseContent else baseContent.copy(
-                    title = NativeStrings.get(context, R.string.native_alert_complete_title, chat),
-                    text = summaryLine.ifEmpty { baseContent.text }
-                )
-                "error" -> baseContent.copy(
-                    title = NativeStrings.get(
-                        context, R.string.native_alert_stopped_title, chat.ifEmpty { agent }
-                    ),
-                    text = NativeStrings.get(context, alertReasonText(reason))
-                )
-                else -> baseContent
+            // reply, the masked command) appear in the shade; the lock screen
+            // gets the public version. Raw errors never travel: only a reason
+            // token.
+            val copy = AlertCopy.of(request) ?: return baseContent
+            val title = when (copy.title) {
+                AlertCopy.Title.LITERAL -> copy.titleArg
+                AlertCopy.Title.ASK, AlertCopy.Title.QUESTION ->
+                    NativeStrings.get(context, alertTitleRes(copy.title), agent)
+                AlertCopy.Title.FINISHED_ANY, AlertCopy.Title.STOPPED_ANY ->
+                    NativeStrings.get(context, alertTitleRes(copy.title))
+                else -> NativeStrings.get(context, alertTitleRes(copy.title), copy.titleArg)
             }
+            val text = if (request.kind == "error") {
+                NativeStrings.get(context, alertReasonText(request.reason))
+            } else copy.body
+            return baseContent.copy(title = title, text = text)
+        }
+
+        private fun alertTitleRes(title: AlertCopy.Title): Int = when (title) {
+            AlertCopy.Title.RUN -> R.string.native_ask_run
+            AlertCopy.Title.EDIT -> R.string.native_ask_edit
+            AlertCopy.Title.READ -> R.string.native_ask_read
+            AlertCopy.Title.FOLDER -> R.string.native_ask_folder
+            AlertCopy.Title.ASK -> R.string.native_alert_permission_title
+            AlertCopy.Title.QUESTION -> R.string.native_alert_question_title
+            AlertCopy.Title.FINISHED -> R.string.native_alert_complete_title
+            AlertCopy.Title.FINISHED_ANY -> R.string.native_public_finished
+            AlertCopy.Title.STOPPED -> R.string.native_alert_error_title
+            AlertCopy.Title.STOPPED_ANY, AlertCopy.Title.LITERAL -> R.string.native_alert_stopped_any
         }
 
         private fun postCodingAlert(
@@ -486,9 +494,6 @@ class BackgroundConnectionService : Service() {
             baseContent: CodingAlertContent,
         ): Boolean = with(request) {
             val content = privateCodingAlertContent(context, request, baseContent)
-            val publicContent = if (kind == "error") baseContent.copy(
-                title = NativeStrings.get(context, R.string.native_status_public_stopped), text = ""
-            ) else baseContent
             // Quiet requests use a low-importance channel, without sound or heads-up.
             val channelID = if (silent && content.channelID == ACTION_CHANNEL_ID) {
                 ACTION_QUIET_CHANNEL_ID
@@ -502,16 +507,14 @@ class BackgroundConnectionService : Service() {
             if (kind == "team_progress") {
                 configureTeamProgress(context, builder)
             } else {
-                configureCodingAlertPrivacy(context, request, builder, publicContent, channelID)
+                configureCodingAlertPrivacy(context, request, builder, baseContent, channelID)
             }
-            // The chat's name rides beside the app name, not in the title.
-            val chat = chatTitle.trim().take(MAX_ALERT_TITLE)
-            val sub = subtext.ifBlank { if (kind == "permission" || kind == "question") chat else "" }
-            if (sub.isNotBlank()) builder.setSubText(sub)
-            val buttons = AlertButtons.plan(kind, quickReply, options)
-            for (action in if (allowActions) codingAlertActions(
-                context, request, buttons, notificationID
-            ) else emptyList()) {
+            // Server · project rides beside the app name: one subtitle.
+            if (subtext.isNotBlank()) builder.setSubText(subtext.trim().take(MAX_ALERT_TITLE))
+            if (content.text.isNotEmpty()) builder.setStyle(Notification.BigTextStyle().bigText(content.text))
+            builder.extras.putString(EXTRA_SUMMARY_LINE, AlertCopy.summaryLine(request, content.title))
+            val buttons = AlertButtons.plan(kind, AlertCopy.answerable(kind, allowActions, detail))
+            for (action in codingAlertActions(context, request, buttons, notificationID)) {
                 builder.addAction(action)
             }
             manager.notify(notificationID, builder.build())
@@ -525,20 +528,7 @@ class BackgroundConnectionService : Service() {
             content: CodingAlertContent,
             channelID: String,
         ): Notification.Builder = with(request) {
-            val notificationID = codingAlertNotificationID(key)
-            val openApp = Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                putExtra(EXTRA_CODING_ALERT_KIND, kind)
-                putExtra(EXTRA_CODING_ALERT_SESSION_ID, sessionID)
-                putExtra(EXTRA_CODING_ALERT_PROFILE_ID, profileID)
-                putExtra(EXTRA_MONITOR_TOKEN, monitorToken)
-            }
-            val pendingIntent = PendingIntent.getActivity(
-                context,
-                notificationID,
-                openApp,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
+            val pendingIntent = openCodingAlertIntent(context, request)
             val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Notification.Builder(context, channelID)
             } else {
@@ -556,6 +546,24 @@ class BackgroundConnectionService : Service() {
                 .setCategory(content.category)
                 .setVisibility(Notification.VISIBILITY_PRIVATE)
         }
+
+        /** Opens the app at the exact request or chat: the body tap and the Open button. */
+        private fun openCodingAlertIntent(context: Context, request: CodingAlertRequest): PendingIntent =
+            with(request) {
+                val openApp = Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra(EXTRA_CODING_ALERT_KIND, kind)
+                    putExtra(EXTRA_CODING_ALERT_SESSION_ID, sessionID)
+                    putExtra(EXTRA_CODING_ALERT_PROFILE_ID, profileID)
+                    putExtra(EXTRA_MONITOR_TOKEN, monitorToken)
+                }
+                PendingIntent.getActivity(
+                    context,
+                    codingAlertNotificationID(key),
+                    openApp,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+            }
 
         private fun configureTeamProgress(context: Context, builder: Notification.Builder) {
             builder.setOngoing(true).setShowWhen(false)
@@ -615,9 +623,10 @@ class BackgroundConnectionService : Service() {
         }
 
         /**
-         * One summary per group ("3 need you", "3 replies finished") while two
-         * or more of its alerts show; none for a single alert. The summary's
-         * lines come from the children's own titles, never from Dart.
+         * One summary per group ("3 need you", "3 conversations finished")
+         * while two or more of its alerts show; none for a single alert. Its
+         * lines are the children's own: each question, or each conversation's
+         * name.
          */
         private fun refreshGroupSummary(context: Context, manager: NotificationManager, group: String) {
             try {
@@ -659,7 +668,7 @@ class BackgroundConnectionService : Service() {
                     .setGroupSummary(true)
                     .setVisibility(Notification.VISIBILITY_PRIVATE)
                     .setStyle(
-                        groupSummaryStyle(children, title, needs)
+                        groupSummaryStyle(children, title)
                     )
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     builder.setGroupAlertBehavior(Notification.GROUP_ALERT_CHILDREN)
@@ -677,17 +686,14 @@ class BackgroundConnectionService : Service() {
         private fun groupSummaryStyle(
             children: List<android.service.notification.StatusBarNotification>,
             title: String,
-            needs: Boolean,
         ): Notification.InboxStyle =
             Notification.InboxStyle().also { inbox ->
                 inbox.setBigContentTitle(title)
                 children.take(MAX_SUMMARY_LINES).forEach { child ->
+                    // Each conversation once, by name; a question by its words.
                     val extras = child.notification.extras
-                    val line = listOfNotNull(
-                        extras.getCharSequence(Notification.EXTRA_TITLE)?.toString(),
-                        extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
-                            ?.takeIf { !needs }
-                    ).joinToString(" · ")
+                    val line = extras.getString(EXTRA_SUMMARY_LINE)
+                        ?: extras.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
                     if (line.isNotBlank()) inbox.addLine(line)
                 }
             }
@@ -716,31 +722,19 @@ class BackgroundConnectionService : Service() {
 
             val icon = Icon.createWithResource(context, R.mipmap.ic_launcher)
             buttons.mapIndexed { index, button ->
-                val label = codingAlertButtonLabel(context, button)
-                val intent = actionIntent(button.decision).apply {
-                    button.optionText?.let { putExtra(EXTRA_CODING_ALERT_OPTION_TEXT, it) }
-                }
-                val reply = button.label == AlertButton.Label.REPLY
-                val pending = PendingIntent.getBroadcast(
+                val pending = if (button.label == AlertButton.Label.OPEN) {
+                    openCodingAlertIntent(context, request)
+                } else PendingIntent.getBroadcast(
                     context,
                     notificationID * 4 + index + 1,
-                    intent,
-                    // RemoteInput requires a mutable PendingIntent.
-                    PendingIntent.FLAG_UPDATE_CURRENT or
-                        if (reply) PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_IMMUTABLE
+                    actionIntent(button.decision),
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
-                Notification.Action.Builder(icon, label, pending).apply {
+                Notification.Action.Builder(icon, codingAlertButtonLabel(context, button), pending).apply {
                     // A lock-screen tap can authorize code execution on the
                     // server host. Android 12+ must authenticate the user.
                     if (button.authRequired && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         setAuthenticationRequired(true)
-                    }
-                    if (reply) {
-                        addRemoteInput(
-                            RemoteInput.Builder(REMOTE_INPUT_REPLY)
-                                .setLabel(NativeStrings.get(context, R.string.native_reply))
-                                .build()
-                        )
                     }
                 }.build()
             }
@@ -749,9 +743,8 @@ class BackgroundConnectionService : Service() {
         private fun codingAlertButtonLabel(context: Context, button: AlertButton): String =
             when (button.label) {
                 AlertButton.Label.ALLOW_ONCE -> NativeStrings.get(context, R.string.native_allow_once)
-                AlertButton.Label.DENY -> NativeStrings.get(context, R.string.native_deny)
-                AlertButton.Label.REPLY -> NativeStrings.get(context, R.string.native_reply)
-                AlertButton.Label.OPTION -> button.optionText.orEmpty()
+                AlertButton.Label.REJECT -> NativeStrings.get(context, R.string.native_reject)
+                AlertButton.Label.OPEN -> NativeStrings.get(context, R.string.native_open)
             }
 
         fun dismissCodingAlert(context: Context, key: String): Boolean {
@@ -803,6 +796,16 @@ class BackgroundConnectionService : Service() {
             manager.createNotificationChannels(listOf(action, status, teamProgress, quiet))
         }
 
+        /** Whether the alert for [key] is still in the shade. */
+        internal fun isCodingAlertShowing(context: Context, key: String): Boolean = try {
+            val id = codingAlertNotificationID(key)
+            context.getSystemService(NotificationManager::class.java).activeNotifications.any {
+                it.id == id && it.packageName == context.packageName
+            }
+        } catch (_: Throwable) {
+            false
+        }
+
         private fun codingAlertNotificationID(key: String): Int =
             CODING_ALERT_ID_BASE + (key.hashCode() and 0x0fffffff)
 
@@ -832,5 +835,6 @@ class BackgroundConnectionService : Service() {
         const val ACTION_CODING_ALERT =
             "io.github.eslamasabry.opencode_mobile.action.CODING_ALERT"
         const val REMOTE_INPUT_REPLY = "oc.codingAlertReply"
+        private const val EXTRA_SUMMARY_LINE = "oc.codingAlertSummaryLine"
     }
 }

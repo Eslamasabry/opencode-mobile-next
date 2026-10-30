@@ -280,6 +280,8 @@ void main() {
         "printf 'protocol=https\\nhost=$host\\n\\n' | git "
             '${shCommand(gitHubCredentialOptions())} credential fill',
       ],
+      // Not the checkout: a stray or broken .git there must not matter.
+      workingDirectory: _tmp.path,
       environment: {
         ..._env,
         gitTokenFileVariable: tokenFile.path,
@@ -287,7 +289,7 @@ void main() {
       },
     );
     final github = await fill('github.com');
-    expect(github.exitCode, 0);
+    expect(github.exitCode, 0, reason: '${github.stderr}');
     expect(github.stdout, contains('username=x-access-token'));
     expect(
       (github.stdout as String).contains('password=$fakeGitHubToken'),

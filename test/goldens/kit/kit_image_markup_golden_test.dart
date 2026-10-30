@@ -40,6 +40,19 @@ Future<void> _decoded(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 300));
 }
 
+/// Waits, on the real clock, until the editor has decoded the picture and
+/// drawn its canvas. A fixed pause in [_decoded] is only a guess at how long
+/// the engine takes; a busy machine can need longer.
+Future<void> _waitFor(WidgetTester tester, Finder finder) async {
+  for (var i = 0; i < 100 && finder.evaluate().isEmpty; i++) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await tester.pump();
+  }
+  await tester.pump(const Duration(milliseconds: 300));
+}
+
 void main() {
   late Uint8List picture;
   setUpAll(() async {
@@ -67,6 +80,10 @@ void main() {
         (c) => open(c, picture),
         (tester) async {
           await _decoded(tester);
+          await _waitFor(
+            tester,
+            find.byKey(const ValueKey('kit-markup-canvas')),
+          );
           final canvas = tester.getCenter(
             find.byKey(const ValueKey('kit-markup-canvas')),
           );

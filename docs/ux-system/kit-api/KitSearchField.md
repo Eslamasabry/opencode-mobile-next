@@ -65,6 +65,7 @@ class KitSearchNoMatch extends StatelessWidget {
     this.what,                         // "models": Nothing in models matches "opus"
     this.action,                       // one more way forward, e.g. "Search all projects"
     this.titleKey,
+    this.calm = false,                 // KitStateView.calm inline: centred words, Clear search as text
   });
 }
 ```

@@ -147,26 +147,32 @@ extension _ChatCommandActions on _ChatScreenState {
         }
         return;
       case _ChatCommandAction.workspaces:
-        if (mounted) {
-          await Navigator.of(context).push(
-            KitPageRoute<void>(builder: (_) => const HomeScreen(initialTab: 0)),
-          );
+        // The one home, never a second shell pushed over the chat.
+        if (!mounted) return;
+        final navigator = Navigator.of(context);
+        final signals = AppShortcutScope.read(context);
+        if (signals == null) {
+          navigator.popUntil((route) => route.isFirst);
+        } else {
+          dispatchAtShellRoot(navigator, signals, const OpenChatsIntent());
         }
         return;
       case _ChatCommandAction.files:
+        // The project's Files page with the browser open, as the project
+        // chip opens it (attach and review prompts come back here).
+        final directory =
+            _conn.sessionsById[widget.sessionID]?.directory ?? _conn.directory;
         if (mounted) {
-          await Navigator.of(context).push(
-            KitPageRoute<void>(
-              builder: (_) => KitScreen(
-                topBar: KitTopBar(title: strings.chatUiProjectFiles),
-                body: FilesScreen(
-                  controller: _conn,
-                  onAttachFile: _attachProjectFile,
-                  onReviewPrompt: _addReviewPrompt,
-                  handoff: _handoff, // UX-103 review handoff
-                ),
-              ),
-            ),
+          await openProjectFiles(
+            context,
+            _conn,
+            directory: isTemporaryProjectDirectory(directory)
+                ? null
+                : directory,
+            openFiles: true,
+            onAttachFile: _attachProjectFile,
+            onReviewPrompt: _addReviewPrompt,
+            handoff: _handoff, // UX-103 review handoff
           );
         }
         return;
@@ -305,13 +311,10 @@ extension _ChatCommandActions on _ChatScreenState {
         return;
       case _ChatCommandAction.status:
         // "/status" means this server's health, not all of Settings: open
-        // the hub's Connection › This server screen.
-        if (mounted) {
-          await Navigator.of(context).push(
-            KitPageRoute<void>(
-              builder: (_) => ServerSettingsScreen(controller: _conn),
-            ),
-          );
+        // the one page of this server.
+        final profileId = _conn.profile?.id;
+        if (mounted && profileId != null) {
+          await openServerPage(context, _conn, profileId);
         }
         return;
       case _ChatCommandAction.diagnostics:
@@ -431,7 +434,20 @@ extension _ChatCommandActions on _ChatScreenState {
               return model.name.trim();
             }
           }
-          return part;
+          // Not in the catalog (not read yet): the name this server gave it
+          // before, else a readable name made from the id. Never the raw
+          // "provider/model" id.
+          final alias = part.lastIndexOf(' \u00b7 ');
+          final slash = part.indexOf('/');
+          final modelID = alias >= 0
+              ? part.substring(alias + 3)
+              : slash >= 0
+              ? part.substring(slash + 1)
+              : part;
+          final known = slash >= 0 && alias < 0
+              ? _conn.knownModelName(part.substring(0, slash), modelID)
+              : null;
+          return known ?? modelNameFromId(modelID);
         })
         .join(' → ');
   }
@@ -440,8 +456,14 @@ extension _ChatCommandActions on _ChatScreenState {
     final model = _conn.displayModelForSession(widget.sessionID);
     if (model == null) return null;
     for (final candidate in _conn.catalog?.models ?? const <CatalogModel>[]) {
-      if (candidate.id == model.modelID &&
-          candidate.providerID == model.providerID &&
+      // The same match the picker uses for "In use": a runtime that reports
+      // its model as "kilo/google/x" is the list's "google/x".
+      if (candidate.providerID == model.providerID &&
+          ModelRef(
+                providerID: candidate.providerID,
+                modelID: candidate.id,
+              ).normalized.modelID ==
+              model.normalized.modelID &&
           candidate.name.trim().isNotEmpty) {
         _conn.rememberModelName(
           model.providerID,

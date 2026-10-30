@@ -117,7 +117,7 @@ void main() {
               if (family.ledger[field['key']] == 'shown')
                 'probes': [
                   for (final probe in (field['probes'] as List).cast<String>())
-                    if (onScreen.contains(flat(probe))) probe,
+                    if (probeShows(onScreen, flat(probe))) probe,
                 ],
             },
         ],

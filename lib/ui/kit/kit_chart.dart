@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme_roles.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -153,7 +154,10 @@ class KitChart extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     assert(
       series.length <= maxSeries && _pointsOf(labels, series) <= maxPoints,
       'KitChart draws at most $maxSeries series of $maxPoints points '

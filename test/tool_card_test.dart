@@ -10,7 +10,9 @@ import 'package:opencode_mobile/domain/models.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_tool_row.dart';
+import 'package:opencode_mobile/ui/kit/kit_details_fold.dart';
 import 'package:opencode_mobile/ui/kit/kit_diff_view.dart';
+import 'package:opencode_mobile/ui/kit/kit_key_value.dart';
 import 'package:opencode_mobile/ui/kit/kit_status_mark.dart';
 import 'package:opencode_mobile/ui/widgets/tool_card.dart';
 
@@ -56,6 +58,17 @@ Future<void> _pumpTool(
 
 Finder _text(String value) => find.textContaining(value, findRichText: true);
 
+/// [value] in a line whose name the app isolated for right-to-left text
+/// (the U+2066..U+2069 marks around "researcher" in "Message to …").
+Finder _named(String value) => find.byWidgetPredicate(
+  (widget) =>
+      widget is RichText &&
+      widget.text
+          .toPlainText()
+          .replaceAll(RegExp('[\u2066-\u2069]'), '')
+          .contains(value),
+);
+
 ToolState _shell({
   String status = 'completed',
   int? exit = 0,
@@ -73,6 +86,79 @@ void main() {
   _stateTests();
   _editAndTodoTests();
   _taskTests();
+  _agentMessageTests();
+}
+
+// Owner phone, 2026-10-27: Claude Code's SendMessage drew the generic table,
+// To, Summary, Message, Type, Recipient and Content, the recipient and the
+// text each twice and the text right-aligned in the value column.
+void _agentMessageTests() {
+  const text =
+      'Start on task #1: read the Browse suites, then tell me which tests '
+      'still fail after the last edit.';
+  ToolState message(String to) => ToolState.fromJson({
+    'status': 'completed',
+    'input': {'to': to, 'summary': 'assign task 1', 'message': text},
+    'output': {'type': 'message', 'recipient': to, 'content': text},
+    'metadata': <String, Object?>{},
+  }, toolName: 'sendmessage');
+
+  testWidgets('a message to an agent says who, and its text once', (
+    tester,
+  ) async {
+    await _pumpTool(tester, name: 'sendmessage', state: message('researcher'));
+    expect(_named('Message to researcher'), findsOneWidget);
+    expect(_text('assign task 1'), findsOneWidget);
+    await tester.tap(_named('Message to researcher'));
+    await tester.pumpAndSettle();
+    expect(_text('Start on task #1'), findsOneWidget);
+    for (final label in ['To', 'Recipient', 'Content', 'Message', 'Type']) {
+      expect(find.text(label), findsNothing, reason: label);
+    }
+    expect(find.byType(KitKeyValue), findsNothing);
+    // Readable prose, from the start of the line.
+    final left = tester.getTopLeft(_text('Start on task #1').first).dx;
+    expect(left, lessThan(100));
+  });
+
+  testWidgets('a recipient that is an id is never the title', (tester) async {
+    await _pumpTool(
+      tester,
+      name: 'sendmessage',
+      state: message('a1b2c3d4e5f60718'),
+    );
+    expect(_text('assign task 1'), findsOneWidget);
+    expect(_text('a1b2c3d4e5f60718'), findsNothing);
+    await tester.tap(find.textContaining('assign task 1'));
+    await tester.pumpAndSettle();
+    expect(_text('Start on task #1'), findsOneWidget);
+    expect(find.byType(KitDetailsFold), findsOneWidget);
+  });
+
+  testWidgets('a background agent writing back names the main conversation', (
+    tester,
+  ) async {
+    await _pumpTool(tester, name: 'sendmessage', state: message('main'));
+    expect(_named('Message to the main conversation'), findsOneWidget);
+  });
+
+  testWidgets('any tool: a value the call repeats shows once', (tester) async {
+    await _pumpTool(
+      tester,
+      name: 'mcp__team__notify',
+      state: ToolState.fromJson({
+        'status': 'completed',
+        'input': {'to': 'reviewer', 'recipient': 'reviewer', 'note': 'Ship it'},
+        'output': {'recipient': 'reviewer', 'state': 'queued'},
+        'metadata': <String, Object?>{},
+      }, toolName: 'mcp__team__notify'),
+    );
+    await tester.tap(find.textContaining('notify'));
+    await tester.pumpAndSettle();
+    expect(find.text('reviewer'), findsOneWidget);
+    expect(find.text('Recipient'), findsNothing);
+    expect(find.text('queued'), findsOneWidget);
+  });
 }
 
 void _shellTests() {
@@ -136,8 +222,9 @@ void _shellTests() {
   }
 
   // Owner phone, 2026-10-11: a task cut off with its session read
-  // "Background task finished" and said its one sentence three times.
-  testWidgets('a notice without a status says ended, and its sentence once', (
+  // "Background task finished" and said its one sentence three times; on
+  // 2026-10-27 it still said it twice under "Background task ended".
+  testWidgets('a task cut off with its session says so once, as stopped', (
     tester,
   ) async {
     const sentence =
@@ -153,12 +240,62 @@ void _shellTests() {
         'metadata': <String, Object?>{},
       }, toolName: 'task_notification'),
     );
-    expect(_text('Background task ended'), findsOneWidget);
+    expect(
+      _text('Background task stopped when the last conversation ended'),
+      findsOneWidget,
+    );
     expect(_text('Background task finished'), findsNothing);
-    await tester.tap(find.text('Background task ended'));
+    expect(_text(sentence), findsNothing);
+    expect(find.text('Stopped'), findsOneWidget);
+    await tester.tap(find.textContaining('Background task stopped'));
     await tester.pump();
-    expect(_text(sentence), findsNWidgets(2)); // the line and the body, once
+    expect(_text(sentence), findsNothing);
     expect(find.text('Name'), findsNothing);
+  });
+
+  testWidgets('a named background agent reads its name and its end once', (
+    tester,
+  ) async {
+    const sentence =
+        'Background agent "Fix login" didn\'t finish before the previous '
+        'session ended';
+    await _pumpTool(
+      tester,
+      name: 'task_notification',
+      state: ToolState.fromJson(const {
+        'status': 'completed',
+        'input': {'summary': sentence, 'status': 'stopped'},
+        'output': '',
+        'metadata': <String, Object?>{},
+      }, toolName: 'task_notification'),
+    );
+    expect(
+      _named('Fix login stopped when the last conversation ended'),
+      findsOneWidget,
+    );
+    expect(_text('Background task'), findsNothing);
+    expect(_text(sentence), findsNothing);
+    expect(find.text('Stopped'), findsOneWidget);
+  });
+
+  testWidgets('a named task that finished reads "<name> finished"', (
+    tester,
+  ) async {
+    await _pumpTool(
+      tester,
+      name: 'task_notification',
+      state: ToolState.fromJson(const {
+        'status': 'completed',
+        'input': {'summary': 'Agent "Review" completed', 'status': 'completed'},
+        'output': 'Two findings, both fixed.',
+        'metadata': <String, Object?>{},
+      }, toolName: 'task_notification'),
+    );
+    expect(_named('Review finished'), findsOneWidget);
+    await tester.tap(_named('Review finished'));
+    await tester.pump();
+    expect(_text('Agent "Review" completed'), findsNothing);
+    expect(_text('Two findings, both fixed.'), findsOneWidget);
   });
 
   testWidgets('an unknown tool id reads as words, not snake_case', (
@@ -739,6 +876,13 @@ void _taskTests() {
     );
     expect(find.text('Failed'), findsOneWidget);
     expect(find.text('Prompt from parent agent'), findsOneWidget);
+    // The server's own words sit under Details (no raw errors as copy).
+    final error = find.byKey(const Key('standalone-tool-error-output'));
+    expect(error, findsOneWidget);
+    await tester.tap(
+      find.descendant(of: error, matching: find.text('Details')),
+    );
+    await tester.pumpAndSettle();
     expect(_text('Agent not found'), findsWidgets);
     expect(_text('task_error'), findsNothing);
   });

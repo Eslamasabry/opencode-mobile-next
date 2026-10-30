@@ -1,0 +1,297 @@
+diff --git a/lib/ui/screens/chat/team_conversation_actions.dart b/lib/ui/screens/chat/team_conversation_actions.dart
+index 30c04adc4..118ce7036 100644
+--- a/lib/ui/screens/chat/team_conversation_actions.dart
++++ b/lib/ui/screens/chat/team_conversation_actions.dart
+@@ -621,6 +621,7 @@ extension _TeamConversationActions on _TeamConversationScreenState {
+                 KitArrival(
+                   id: chatRequestArrivalId(gate.id),
+                   child: TeamNeedsYouCard(
++                    look: KitRequestLook.question,
+                     keyPrefix: 'team-conversation-gate-${gate.id}',
+                     controller: _team,
+                     gate: gate,
+diff --git a/lib/ui/screens/chat/team_conversation_parts.dart b/lib/ui/screens/chat/team_conversation_parts.dart
+index c1027c840..8e3ded199 100644
+--- a/lib/ui/screens/chat/team_conversation_parts.dart
++++ b/lib/ui/screens/chat/team_conversation_parts.dart
+@@ -242,6 +242,9 @@ class _TeamNowLine extends StatelessWidget {
+                           KitSince.durationWords(l10n, quiet),
+                         ),
+                   explains: quiet == null,
++                  // The calm line is the header's; this one only when
++                  // something is wrong and has a way out.
++                  calmInHeader: true,
+                 ),
+         );
+       },
+diff --git a/lib/ui/screens/chat/team_conversation_view.dart b/lib/ui/screens/chat/team_conversation_view.dart
+index dce4a8f5c..8cb77a132 100644
+--- a/lib/ui/screens/chat/team_conversation_view.dart
++++ b/lib/ui/screens/chat/team_conversation_view.dart
+@@ -250,6 +250,61 @@ class _TeamConversationScreenState extends State<TeamConversationScreen> {
+             TeamNowKind.review => true,
+             _ => false,
+           };
++      // The Now line is the header's second line (vision 2026-10-20): what
++      // the team does, since when, what next. A host condition (paused, not
++      // answering) keeps the host words; a question keeps them too, under
++      // the header's needs-you mark, since its card is the question.
++      final mergeWaits = run != null && teamMergeWaitsOnYou(_team, run);
++      final hostWords = l10n.teamChatSubtitle(
++        teamHostPhrase(l10n, _team, working: working, startingWorker: starting),
++      );
++      final hostCondition = teamHostCondition(
++        l10n,
++        _team,
++        working: working,
++        startingWorker: starting,
++      );
++      final nowInput = gone
++          ? null
++          : _nowInput(
++              run: run,
++              work: work,
++              gates: gates,
++              pendingRecord: pendingRecord,
++              connected: true,
++            );
++      // Who is on the step the Now line speaks of: the same fact, never
++      // a worker busy with another step.
++      final step = now?.workTitle;
++      final stepId = work
++          .where((item) => item.title == step)
++          .map((item) => item.id)
++          .firstOrNull;
++      final worker = agents
++          .where(
++            (agent) =>
++                (now?.agentId != null && agent.id == now?.agentId) ||
++                (stepId != null && agent.currentWorkId == stepId),
++          )
++          .firstOrNull;
++      final headerLine = hostCondition != null || nowInput == null
++          ? null
++          : teamTaskHeaderLine(
++              l10n,
++              nowInput,
++              now: _clock(),
++              who: worker == null
++                  ? null
++                  : _teamAgentTitle(
++                      l10n,
++                      worker,
++                      agents,
++                      _roleName(l10n, run, work),
++                    ),
++              step: step == null || _sameTaskText(step, title) ? null : step,
++              mergeNext: teamMergeGateOnHost(_team),
++              mergeWaits: mergeWaits,
++            );
+       return KitScreen(
+         key: const ValueKey('team-conversation'),
+         width: KitScreenWidth.reading,
+@@ -260,15 +315,9 @@ class _TeamConversationScreenState extends State<TeamConversationScreen> {
+           titleKey: const ValueKey('team-conversation-title'),
+           // Never "Paused" while this task's worker starts or works: the
+           // task's own state and its agents' sessions say so.
+-          subtitle: l10n.teamChatSubtitle(
+-            teamHostPhrase(
+-              l10n,
+-              _team,
+-              working: working,
+-              startingWorker: starting,
+-            ),
+-          ),
+-          needsYou: gates.length,
++          subtitle: headerLine?.line ?? hostWords,
++          subtitleTail: headerLine?.next,
++          needsYou: gates.length + (mergeWaits ? 1 : 0),
+           actions: [
+             KitAction(
+               key: const ValueKey('team-conversation-team-page'),
+diff --git a/lib/ui/screens/chat_screen.dart b/lib/ui/screens/chat_screen.dart
+index e740c45dd..a084e9678 100644
+--- a/lib/ui/screens/chat_screen.dart
++++ b/lib/ui/screens/chat_screen.dart
+@@ -147,7 +147,8 @@ import '../widgets/team_role_copy.dart';
+ import '../widgets/team_vocabulary.dart';
+ import 'team/agent_screen.dart' show AgentScreen;
+ import 'team/gate_sheet.dart' show showGateSheet;
+-import 'team/merge_section.dart' show TeamMergeSection;
++import 'team/merge_section.dart'
++    show TeamMergeSection, teamMergeGateOnHost, teamMergeWaitsOnYou;
+ import 'team/task_details_sheet.dart' show showTeamTaskDetails;
+ import 'team/team_home_screen.dart' show TeamHomeScreen;
+ import 'team/team_page.dart' show openTeamPage;
+diff --git a/test/revamp/slice_p3_5_test.dart b/test/revamp/slice_p3_5_test.dart
+index e0b4c214c..8ea234287 100644
+--- a/test/revamp/slice_p3_5_test.dart
++++ b/test/revamp/slice_p3_5_test.dart
+@@ -21,6 +21,7 @@ import 'package:opencode_mobile/domain/orchestration_gateway.dart';
+ import 'package:opencode_mobile/domain/server_gateway.dart';
+ import 'package:opencode_mobile/l10n/app_localizations_en.dart';
+ import 'package:opencode_mobile/state/orchestration.dart';
++import 'package:opencode_mobile/ui/kit/kit_top_bar.dart';
+ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
+ import 'package:opencode_mobile/ui/screens/team/team_board_screen.dart';
+ 
+@@ -264,7 +265,13 @@ void main() {
+     _test('a task that moves says nothing of the kind', (tester) async {
+       await pump(tester);
+       expect(_key('team-conversation-no-progress'), findsNothing);
+-      expect(nowLine(tester), isNot(contains('No progress')));
++      // Calm: the Now line is the header's (vision 2026-10-20); no line of
++      // its own under it.
++      expect(_key('team-conversation-now'), findsNothing);
++      expect(
++        tester.widget<KitTopBar>(find.byType(KitTopBar)).subtitle,
++        isNot(contains('No progress')),
++      );
+     });
+   });
+ 
+@@ -330,14 +337,14 @@ void main() {
+   });
+ 
+   group('nothing covers the transcript', () {
+-    _test('no chip row sits between the Now line and the prompt', (
++    _test('no chip row sits between the header and the prompt', (
+       tester,
+     ) async {
+       await pump(tester);
+       expect(_key('team-conversation-family'), findsNothing);
+-      final now = tester.getRect(_key('team-conversation-now'));
++      final bar = tester.getRect(find.byType(KitTopBar));
+       final list = tester.getRect(_key('team-conversation-list'));
+-      expect(now.bottom, lessThanOrEqualTo(list.top));
++      expect(bar.bottom, lessThanOrEqualTo(list.top));
+       final prompt = tester.getRect(_key('team-conversation-prompt'));
+       expect(prompt.top, greaterThanOrEqualTo(list.top));
+     });
+diff --git a/test/revamp/slice_p5_1_test.dart b/test/revamp/slice_p5_1_test.dart
+index 5fe868e90..f45a55228 100644
+--- a/test/revamp/slice_p5_1_test.dart
++++ b/test/revamp/slice_p5_1_test.dart
+@@ -290,11 +290,12 @@ void main() {
+         ),
+       );
+       await tester.pumpAndSettle();
+-      final said = _words(tester, _key('team-conversation-now-text'));
+-      // The worker's name is its own line's, below; the Now line is the
+-      // stage.
++      // The Now line is the header's second line (vision 2026-10-20): the
++      // stage, the worker named the way its own line names it, never the
++      // host's generated name.
++      final said = tester.widget<KitTopBar>(find.byType(KitTopBar)).subtitle!;
+       expect(said, isNot(contains('furiosa')));
+-      expect(said, startsWith('Starting a worker'));
++      expect(said, allOf(startsWith('Now: '), contains('starting')));
+       // The retired strip and its How sheet are gone for good.
+       expect(_key('team-cycle-strip'), findsNothing);
+       expect(find.text('How the host dispatches'), findsNothing);
+@@ -355,8 +356,8 @@ void main() {
+       await tester.pumpAndSettle();
+       expect(find.byType(TeamConversationScreen), findsOneWidget);
+       expect(
+-        _words(tester, _key('team-conversation-now-text')),
+-        'Waiting for a plan',
++        tester.widget<KitTopBar>(find.byType(KitTopBar)).subtitle,
++        startsWith('Now: planning the steps'),
+       );
+       await tester.pumpWidget(const SizedBox.shrink());
+       // The sent message's receipt timer runs out.
+diff --git a/test/team_controls_start_run_test.dart b/test/team_controls_start_run_test.dart
+index 256d27f90..244f5188b 100644
+--- a/test/team_controls_start_run_test.dart
++++ b/test/team_controls_start_run_test.dart
+@@ -162,11 +162,12 @@ void main() {
+         await tester.tap(key('team-home-planning-key-1'));
+         await tester.pumpAndSettle();
+         expect(find.byType(TeamConversationScreen), findsOneWidget);
+-        // Eight seconds with no plan: the line says why, and its Why
+-        // unfolds the ways out in place. The page reads the pinned clock,
+-        // so the clock moves with the pump.
+-        clock = clock.add(const Duration(seconds: 9));
+-        await tester.pump(const Duration(seconds: 9));
++        // Planning past its usual time: the line under the header says
++        // why, and its Why unfolds the ways out in place (before that the
++        // header's own Now words say "planning", vision 2026-10-20). The
++        // page reads the pinned clock, so the clock moves with the pump.
++        clock = clock.add(const Duration(minutes: 6));
++        await tester.pump(const Duration(minutes: 6));
+         await tester.pumpAndSettle();
+         await tester.tap(key('team-conversation-now-why'));
+         await tester.pumpAndSettle();
+diff --git a/test/team_conversation_screen_test.dart b/test/team_conversation_screen_test.dart
+index ef8f67463..540a71537 100644
+--- a/test/team_conversation_screen_test.dart
++++ b/test/team_conversation_screen_test.dart
+@@ -19,6 +19,10 @@ import 'support/team_chat_fixture.dart';
+ 
+ Finder _key(String value) => find.byKey(ValueKey(value));
+ 
++/// The page's header (vision 2026-10-20: the Now line is its second line).
++KitTopBar _bar(WidgetTester tester) =>
++    tester.widget<KitTopBar>(find.byType(KitTopBar));
++
+ /// Every word drawn under [finder] (the finder itself included), as the
+ /// person reads it.
+ String _words(WidgetTester tester, Finder finder) => tester
+@@ -159,18 +163,12 @@ void main() {
+     // furiosa: the session runs, whatever /agents said.
+     final agentLine = _key('team-conversation-agent-my-app/gastown.furiosa');
+     expect(_words(tester, agentLine), contains('Worker · Running'));
+-    // The one Now line (slice-P5.1): what happens, for how long, what
+-    // comes next and how long that usually takes; the worker's name is its
+-    // own line's, not said again.
+-    expect(
+-      _words(tester, _key('team-conversation-now-text')),
+-      'Starting a worker · 3 min',
+-    );
+-    expect(
+-      _words(tester, _key('team-conversation-now-next')),
+-      // No start measured on this phone yet: no time is promised.
+-      'Next: the worker begins the task',
+-    );
++    // The one Now line (slice-P5.1), folded into the header's second line
++    // (vision 2026-10-20): what happens, for how long, what comes next. A
++    // calm stage draws no line of its own under the header.
++    expect(_bar(tester).subtitle, 'Now: Worker is starting · 3 min');
++    expect(_bar(tester).subtitleTail, 'Next: the worker begins');
++    expect(_key('team-conversation-now-calm'), findsOneWidget);
+     // One live status: the Now line. No chip row, no second spinner, and
+     // no generated agent name in the page's copy.
+     expect(find.byType(KitAgentStrip), findsNothing);
+@@ -262,18 +260,10 @@ void main() {
+         ),
+       ],
+     );
+-    expect(
+-      _words(tester, _key('team-conversation-now-text')),
+-      'Waiting for your answer',
+-    );
+-    // The question itself is its card's, not the Now line's.
+-    expect(
+-      find.descendant(
+-        of: _key('team-conversation-now'),
+-        matching: find.textContaining('Which default?', findRichText: true),
+-      ),
+-      findsNothing,
+-    );
++    // The question is its card's: the header keeps its host words under
++    // the one needs-you marker, and no Now line repeats the wait.
++    expect(_key('team-conversation-now'), findsNothing);
++    expect(_bar(tester).needsYou, 1);
+     // The header counts it with the one needs-you marker.
+     expect(
+       find.textContaining('Needs you · AI Team', findRichText: true),
+@@ -534,7 +524,8 @@ void main() {
+           ),
+         ],
+       );
+-      expect(find.text('AI Team · On this phone'), findsOneWidget);
++      // The header says what the worker does now, never "Paused".
++      expect(_bar(tester).subtitle, startsWith('Now: '));
+       expect(find.textContaining('Paused'), findsNothing);
+     });
+   });

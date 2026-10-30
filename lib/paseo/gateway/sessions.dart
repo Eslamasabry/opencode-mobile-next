@@ -19,16 +19,22 @@ extension _PaseoSessions on PaseoGateway {
         known is String &&
         known.trim().isNotEmpty) {
       agent = {...agent, 'title': known};
+    } else if (title is! String || title.trim().isEmpty) {
+      // A record that never had a title (a copy the runtime made on a
+      // resume) takes the one saved for its conversation, not a stand-in.
+      final saved = _rememberedTitle(agent);
+      if (saved != null) agent = {...agent, 'title': saved};
     }
     final canonical = _canonicalModelId(agent['provider'], agent['model']);
     if (canonical != null && canonical != agent['model']) {
       agent = {...agent, 'model': canonical};
     }
-    final session = paseoSession(agent);
+    final session = _guardedSession(agent);
     if (session.directory != _directory || agent['archivedAt'] is String) {
       return null;
     }
     _agents[session.id] = agent;
+    _noteAgentProcess(session.id, agent);
     _sessions.remove(session.id);
     _sessions[session.id] = session;
     final status = agent['status'];
@@ -40,11 +46,22 @@ extension _PaseoSessions on PaseoGateway {
     }
     if (reconcileStatus) {
       // Snapshot reads are authoritative too: the controller may still hold
-      // idle from before this read (or before a transport reconnect).
-      final next =
-          _awaitingTurn.contains(session.id) || _turnActive.contains(session.id)
-          ? 'busy'
-          : paseoSessionStatus(agent);
+      // idle from before this read (or before a transport reconnect). A
+      // running status from a saved record is not: no live agent backs it
+      // (see [paseoRecordBusyFreshFor]).
+      final now = DateTime.now();
+      final turn =
+          _awaitingTurn.contains(session.id) ||
+          _turnActive.contains(session.id);
+      final next = turn ? 'busy' : paseoSessionStatus(agent, now: now);
+      _recordBusyExpiry.remove(session.id)?.cancel();
+      final until = turn ? null : paseoRecordBusyUntil(agent);
+      if (next == 'busy' && until != null) {
+        _recordBusyExpiry[session.id] = Timer(
+          until.difference(now),
+          () => _recordBusyExpired(session.id),
+        );
+      }
       final previous = _statuses[session.id];
       _emitStatus(session.id, next);
       if (previous != next && next == 'idle') {
@@ -58,6 +75,30 @@ extension _PaseoSessions on PaseoGateway {
       _forget(_sessions.keys.first);
     }
     return session;
+  }
+
+  /// A record's running status outlived its bound with no newer snapshot and
+  /// no turn seen on the stream: the session reads idle, and the turn-end
+  /// event asks the list to read it again (reconcile by reading).
+  ///
+  /// A newer snapshot cancels the timer, so one that fires is the latest word.
+  void _recordBusyExpired(String id) {
+    _recordBusyExpiry.remove(id);
+    if (_closed ||
+        _awaitingTurn.contains(id) ||
+        _turnActive.contains(id) ||
+        _statuses[id] != 'busy') {
+      return;
+    }
+    _emitStatus(id, 'idle');
+    _emit('session.idle', {'sessionID': id});
+  }
+
+  void _cancelRecordBusyExpiry() {
+    for (final timer in _recordBusyExpiry.values) {
+      timer.cancel();
+    }
+    _recordBusyExpiry.clear();
   }
 
   /// The id the model list knows a running agent's model by: the daemon
@@ -80,6 +121,12 @@ extension _PaseoSessions on PaseoGateway {
           return item['id'] as String;
         }
       }
+      // Some runtimes (Kilo) report the model under their own name as well:
+      // "kilo/google/x" for the list's "google/x".
+      final own = '$provider/';
+      if (model.startsWith(own) && model.length > own.length) {
+        return _canonicalModelId(provider, model.substring(own.length));
+      }
     }
     return null;
   }
@@ -91,6 +138,7 @@ extension _PaseoSessions on PaseoGateway {
     _agents.remove(id);
     _sessions.remove(id);
     _statuses.remove(id);
+    _recordBusyExpiry.remove(id)?.cancel();
     _drafts.remove(id);
     _draftProviders.remove(id);
     _draftModels.remove(id);
@@ -125,10 +173,24 @@ extension _PaseoSessions on PaseoGateway {
       'agentId': _real(paseoString(id, max: 256)),
     });
     _checkLocation(scope, epoch);
-    final agent = paseoObject(result['agent']);
+    // An id the daemon doesn't know is answered with `agent: null` and an
+    // error: a missing conversation, not a reply the app can't read.
+    if (result['agent'] == null) {
+      throw PaseoFailure(
+        PaseoFailureKind.notFound,
+        reason: 'fetch_agent_request: no such agent',
+      );
+    }
+    final agent = paseoReply(
+      'fetch_agent_response',
+      () => paseoObject(result['agent']),
+    );
     if (agent['id'] != _real(id)) {
       if (_trackLocalWork) _localWork.malformed();
-      throw PaseoFailure(PaseoFailureKind.invalidResponse);
+      throw PaseoFailure(
+        PaseoFailureKind.invalidResponse,
+        reason: 'fetch_agent_response: another agent',
+      );
     }
     if (_trackLocalWork) {
       _localWork.startEpoch(transport.epoch);
@@ -143,4 +205,15 @@ extension _PaseoSessions on PaseoGateway {
     }
     return agent;
   }
+}
+
+/// A random (version 4) UUID for a new conversation or message id.
+String _paseoUuid() {
+  final random = Random.secure();
+  final b = List<int>.generate(16, (_) => random.nextInt(256));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  final h = b.map((v) => v.toRadixString(16).padLeft(2, '0')).join();
+  return '${h.substring(0, 8)}-${h.substring(8, 12)}-${h.substring(12, 16)}-'
+      '${h.substring(16, 20)}-${h.substring(20)}';
 }

@@ -658,6 +658,189 @@ void _composerAndErrorTests() {
     },
   );
 
+  group('a composer note', () {
+    const note =
+        'It may already have reached OpenCode. Sending again can duplicate it.';
+
+    // An uncertain send at text size 2 on a 412 dp phone: the note says the
+    // prompt may have gone through already.
+    Future<void> showNote(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final prompt = Completer<void>();
+      final api = _FakeOpenCodeApi()..promptCompleter = prompt;
+      await _pumpChat(tester, api, textScale: 2);
+      await tester.enterText(find.byType(TextField), 'try once');
+      await tester.pump();
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pump();
+      prompt.completeError(StateError('network failed'));
+      await tester.pumpAndSettle();
+      expect(find.text(note), findsOneWidget);
+    }
+
+    testWidgets('wraps whole at text size 2 and stays until the next words', (
+      tester,
+    ) async {
+      await showNote(tester);
+      final words = tester.renderObject<RenderParagraph>(
+        find.descendant(of: find.text(note), matching: find.byType(RichText)),
+      );
+      expect(words.didExceedMaxLines, isFalse);
+      // Long past the old three seconds, still there to read.
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pumpAndSettle();
+      expect(find.text(note), findsOneWidget);
+      // The next words in the box are the next change: it goes.
+      await tester.enterText(find.byType(TextField), 'try again');
+      await tester.pumpAndSettle();
+      expect(find.text(note), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('goes when tapped, and says so to a screen reader', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await showNote(tester);
+      expect(
+        tester.getSemantics(find.text(note)),
+        matchesSemantics(
+          label: note,
+          isLiveRegion: true,
+          hasTapAction: true,
+          onTapHint: 'Dismiss note',
+        ),
+      );
+      await tester.tap(find.text(note));
+      await tester.pumpAndSettle();
+      expect(find.text(note), findsNothing);
+      semantics.dispose();
+    });
+  });
+
+  group('a screen reader hears how a turn ends', () {
+    // TalkBack on; a prompt sent and the turn running.
+    Future<ConnectionController> running(WidgetTester tester) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(accessibleNavigation: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      final controller = await _pumpChat(tester, _FakeOpenCodeApi());
+      await tester.enterText(find.byType(TextField), 'hello');
+      await tester.pump();
+      await tester.tap(find.byTooltip('Send'));
+      await _pumpEvent(tester);
+      controller.handleEventForTesting(
+        _event('session.status', {
+          'sessionID': 'session-1',
+          'status': {'type': 'busy'},
+        }),
+      );
+      await _pumpEvent(tester);
+      tester.takeAnnouncements();
+      return controller;
+    }
+
+    List<String> heard(WidgetTester tester) => [
+      for (final announcement in tester.takeAnnouncements())
+        announcement.message,
+    ];
+
+    void reply(ConnectionController controller, String text) {
+      controller.handleEventForTesting(
+        _event('message.part.updated', {
+          'sessionID': 'session-1',
+          'part': _partJson(
+            id: 'reply-part',
+            messageID: 'reply',
+            type: 'text',
+            text: text,
+          ),
+        }),
+      );
+    }
+
+    testWidgets('"Reply finished" once at the end, never while it streams', (
+      tester,
+    ) async {
+      final controller = await running(tester);
+      controller.handleEventForTesting(
+        _event('message.updated', {
+          'info': {
+            'id': 'reply',
+            'sessionID': 'session-1',
+            'role': 'assistant',
+            'time': {'created': DateTime.now().millisecondsSinceEpoch},
+          },
+        }),
+      );
+      for (final words in ['Here', 'Here is', 'Here is the plan']) {
+        reply(controller, words);
+        await _pumpEvent(tester);
+      }
+      expect(heard(tester), isEmpty);
+      controller.handleEventForTesting(
+        _event('session.idle', {'sessionID': 'session-1'}),
+      );
+      await tester.pumpAndSettle();
+      expect(heard(tester), ['Reply finished']);
+      // Nothing more on later frames.
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      expect(heard(tester), isEmpty);
+    });
+
+    testWidgets('a failed turn says why, in plain words, once', (tester) async {
+      final controller = await running(tester);
+      controller.handleEventForTesting(
+        _event('session.error', {
+          'sessionID': 'session-1',
+          'error': {
+            'name': 'ProviderError',
+            'data': {'message': 'Sign in to the selected model provider.'},
+          },
+        }),
+      );
+      controller.handleEventForTesting(
+        _event('session.idle', {'sessionID': 'session-1'}),
+      );
+      await tester.pumpAndSettle();
+      final headline = tester.widget<Text>(
+        find.descendant(
+          of: find.byKey(const ValueKey('prompt-error-headline')),
+          matching: find.byType(Text),
+          matchRoot: true,
+        ),
+      );
+      expect(heard(tester), [headline.data]);
+      expect(heard(tester), isEmpty);
+    });
+
+    testWidgets('a request that waits on the person is said once', (
+      tester,
+    ) async {
+      final controller = await running(tester);
+      controller.handleEventForTesting(
+        _event('permission.asked', {
+          'id': 'request-1',
+          'sessionID': 'session-1',
+          'permission': 'bash',
+          'patterns': ['npm test'],
+          'metadata': <String, Object?>{},
+          'always': <String>[],
+        }),
+      );
+      await tester.pumpAndSettle();
+      expect(heard(tester), ['The agent needs you']);
+      reply(controller, 'Still waiting');
+      await _pumpEvent(tester);
+      expect(heard(tester), isEmpty);
+    });
+  });
+
   testWidgets('session errors stop thinking and remain visible in chat', (
     tester,
   ) async {

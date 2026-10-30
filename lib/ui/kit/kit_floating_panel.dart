@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import 'kit_motion.dart';
+import 'kit_surface.dart' show kitSurfaceMaterial;
+import 'kit_surface_look.dart';
 import 'kit_tokens.dart';
 
 /// A small panel that floats over whatever is behind a transparent window
@@ -35,6 +37,7 @@ class KitFloatingPanel extends StatelessWidget {
     final roles = tokens.roles;
     final reduced = KitMotion.reduced(context);
     final duration = reduced ? Duration.zero : KitMotion.standard;
+    final solid = KitSurfaceLook.isPlain(context);
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: reduced ? 1 : 0, end: 1),
@@ -78,14 +81,32 @@ class KitFloatingPanel extends StatelessWidget {
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: _maxWidth),
-        child: Material(
-          color: roles.surface2,
-          elevation: tokens.sheetElevation,
-          shadowColor: roles.elevationShadow,
-          borderRadius: BorderRadius.circular(tokens.sheetRadius),
-          clipBehavior: Clip.antiAlias,
-          child: Padding(padding: EdgeInsets.all(tokens.space4), child: child),
-        ),
+        child: solid
+            ? Material(
+                color: roles.surface2,
+                elevation: tokens.sheetElevation,
+                shadowColor: roles.elevationShadow,
+                borderRadius: BorderRadius.circular(tokens.sheetRadius),
+                clipBehavior: Clip.antiAlias,
+                child: Padding(
+                  padding: EdgeInsets.all(tokens.space4),
+                  child: child,
+                ),
+              )
+            // Any style but Solid at its defaults (Settings › Appearance).
+            : kitSurfaceMaterial(
+                context,
+                level: KitSurfaceLevel.surface2,
+                fill: roles.surface2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(tokens.sheetRadius),
+                ),
+                role: KitSurfaceRole.floating,
+                child: Padding(
+                  padding: EdgeInsets.all(tokens.space4),
+                  child: child,
+                ),
+              ),
       ),
     );
   }

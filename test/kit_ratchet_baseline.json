@@ -5,6 +5,279 @@
   "G17": {},
   "G21": {},
   "G48": {},
+  "G49": {
+    "lib/ui/kit/chat/kit_agent_strip.dart": {
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/chat/kit_composer_caption.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/chat/kit_composer_chips.dart": {
+      "BoxDecoration(": 2,
+      "ShapeDecoration(": 3
+    },
+    "lib/ui/kit/chat/kit_composer_classic.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/chat/kit_composer_edge.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/chat/kit_composer_layer.dart": {
+      "ColoredBox(": 2
+    },
+    "lib/ui/kit/chat/kit_composer_tray.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/chat/kit_markdown.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/chat/kit_markdown_table.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/chat/kit_message.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/chat/kit_step_node.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/chat/kit_step_timeline.dart": {
+      "ColoredBox(": 1
+    },
+    "lib/ui/kit/chat/kit_turn.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/diff/kit_diff_chrome.dart": {
+      "BoxDecoration(": 4
+    },
+    "lib/ui/kit/diff/kit_diff_rows.dart": {
+      "BoxDecoration(": 1,
+      "ColoredBox(": 2
+    },
+    "lib/ui/kit/glass/kit_glass.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_agent_choice.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/kit_ask_field.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_board_lane.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/kit_buttons.dart": {
+      "ShapeDecoration(": 2
+    },
+    "lib/ui/kit/kit_chip.dart": {
+      "ShapeDecoration(": 2
+    },
+    "lib/ui/kit/kit_choice_cards.dart": {
+      "BoxDecoration(": 3
+    },
+    "lib/ui/kit/kit_choice_list.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/kit_choice_tiles.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/kit_code_block_parts.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_code_surface.dart": {
+      "BoxDecoration(": 1,
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/kit_consequences.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_context_region.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_details_fold.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_dialog.dart": {
+      "BoxDecoration(": 2,
+      "Material(color:": 1
+    },
+    "lib/ui/kit/kit_fact_row.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_field.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_floating_action.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_floating_panel.dart": {
+      "ColoredBox(": 1,
+      "Material(color:": 1
+    },
+    "lib/ui/kit/kit_icon_button.dart": {
+      "BoxDecoration(": 3
+    },
+    "lib/ui/kit/kit_image.dart": {
+      "BoxDecoration(": 1,
+      "ColoredBox(": 2,
+      "ShapeDecoration(": 2
+    },
+    "lib/ui/kit/kit_jump_pill.dart": {
+      "ShapeDecoration(": 2
+    },
+    "lib/ui/kit/kit_live_look_preview.dart": {
+      "BoxDecoration(": 4,
+      "ColoredBox(": 1
+    },
+    "lib/ui/kit/kit_log_panel.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/kit_menu.dart": {
+      "BoxDecoration(": 3,
+      "ColoredBox(": 1
+    },
+    "lib/ui/kit/kit_mini_table.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_nav.dart": {
+      "BoxDecoration(": 1,
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/kit_notice.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_option_card.dart": {
+      "BoxDecoration(": 15,
+      "ColoredBox(": 1
+    },
+    "lib/ui/kit/kit_progress_row.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/kit_receipt.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/kit_request_question.dart": {
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/kit_request_row.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_request_shape.dart": {
+      "BoxDecoration(": 1,
+      "ColoredBox(": 1,
+      "ShapeDecoration(": 4
+    },
+    "lib/ui/kit/kit_row.dart": {
+      "BoxDecoration(": 5
+    },
+    "lib/ui/kit/kit_row_parts.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_row_value.dart": {
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/kit_screen.dart": {
+      "ColoredBox(": 1,
+      "Material(color:": 1
+    },
+    "lib/ui/kit/kit_segmented.dart": {
+      "BoxDecoration(": 5
+    },
+    "lib/ui/kit/kit_session_tabs.dart": {
+      "BoxDecoration(": 1,
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/kit_sheet_modal.dart": {
+      "BoxDecoration(": 1,
+      "Material(color:": 1
+    },
+    "lib/ui/kit/kit_sheet_parts.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_skeleton_transcript.dart": {
+      "ShapeDecoration(": 2
+    },
+    "lib/ui/kit/kit_sliver_row_group.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_start_box.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_status_answer.dart": {
+      "BoxDecoration(": 3
+    },
+    "lib/ui/kit/kit_status_line.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_status_mark.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_status_tag.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_step_slider.dart": {
+      "BoxDecoration(": 4
+    },
+    "lib/ui/kit/kit_tappable.dart": {
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/kit_term.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_terminal_view.dart": {
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/kit_text_halo.dart": {
+      "BoxDecoration(": 1,
+      "ColoredBox(": 1,
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/kit_tip.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_top_bar_pill.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_top_bar_scope.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_vector_logo.dart": {
+      "ColoredBox(": 1
+    },
+    "lib/ui/kit/kit_viewer.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_viewer_bodies.dart": {
+      "BoxDecoration(": 1
+    },
+    "lib/ui/kit/kit_web_preview.dart": {
+      "ColoredBox(": 1
+    },
+    "lib/ui/kit/kit_wheel.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/kit_widget_preview.dart": {
+      "BoxDecoration(": 4,
+      "ColoredBox(": 2
+    },
+    "lib/ui/kit/kit_work_graph.dart": {
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/live_background/live_mock_chat.dart": {
+      "BoxDecoration(": 2
+    },
+    "lib/ui/kit/motion/kit_motion_parts.dart": {
+      "ShapeDecoration(": 2
+    },
+    "lib/ui/kit/motion/kit_tab_switcher.dart": {
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/team/team_parts.dart": {
+      "ShapeDecoration(": 1
+    },
+    "lib/ui/kit/terminal_key_bar.dart": {
+      "BoxDecoration(": 3
+    }
+  },
   "allow": {
     "G1/G15/G16": {
       "_allowed": []
@@ -57,9 +330,7 @@
         "lib/ui/kit/chat/kit_composer.dart",
         "lib/ui/kit/glass/",
         "lib/ui/kit/kit_nav.dart",
-        "lib/ui/kit/kit_top_bar.dart",
-        "lib/ui/screens/home_screen.dart",
-        "lib/ui/widgets/glass_surface.dart"
+        "lib/ui/kit/kit_top_bar.dart"
       ],
       "Radius.circular(<n>": [
         "lib/ui/kit/kit_text.dart",
@@ -94,6 +365,96 @@
         "lib/ui/kit/kit_diff_view.dart",
         "lib/ui/kit/kit_log_panel.dart",
         "lib/ui/kit/kit_technical_value.dart"
+      ]
+    },
+    "G49": {
+      "BoxDecoration(": [
+        "lib/ui/kit/kit_arrival.dart",
+        "lib/ui/kit/kit_carousel.dart",
+        "lib/ui/kit/kit_chart.dart",
+        "lib/ui/kit/kit_date_time_picker.dart",
+        "lib/ui/kit/kit_illustration.dart",
+        "lib/ui/kit/kit_image_markup.dart",
+        "lib/ui/kit/kit_live_background.dart",
+        "lib/ui/kit/kit_needs_you.dart",
+        "lib/ui/kit/kit_progress.dart",
+        "lib/ui/kit/kit_progress_ring.dart",
+        "lib/ui/kit/kit_qr.dart",
+        "lib/ui/kit/kit_scanner.dart",
+        "lib/ui/kit/kit_surface.dart",
+        "lib/ui/kit/kit_surface_look.dart",
+        "lib/ui/kit/kit_swatch.dart",
+        "lib/ui/kit/kit_viewer_build.dart",
+        "lib/ui/kit/kit_window_row.dart",
+        "lib/ui/kit/motion/kit_page_transitions.dart",
+        "lib/ui/kit/scenes/",
+        "lib/ui/kit/style/"
+      ],
+      "ShapeDecoration(": [
+        "lib/ui/kit/kit_arrival.dart",
+        "lib/ui/kit/kit_carousel.dart",
+        "lib/ui/kit/kit_chart.dart",
+        "lib/ui/kit/kit_date_time_picker.dart",
+        "lib/ui/kit/kit_illustration.dart",
+        "lib/ui/kit/kit_image_markup.dart",
+        "lib/ui/kit/kit_live_background.dart",
+        "lib/ui/kit/kit_needs_you.dart",
+        "lib/ui/kit/kit_progress.dart",
+        "lib/ui/kit/kit_progress_ring.dart",
+        "lib/ui/kit/kit_qr.dart",
+        "lib/ui/kit/kit_scanner.dart",
+        "lib/ui/kit/kit_surface.dart",
+        "lib/ui/kit/kit_surface_look.dart",
+        "lib/ui/kit/kit_swatch.dart",
+        "lib/ui/kit/kit_viewer_build.dart",
+        "lib/ui/kit/kit_window_row.dart",
+        "lib/ui/kit/motion/kit_page_transitions.dart",
+        "lib/ui/kit/scenes/",
+        "lib/ui/kit/style/"
+      ],
+      "ColoredBox(": [
+        "lib/ui/kit/kit_arrival.dart",
+        "lib/ui/kit/kit_carousel.dart",
+        "lib/ui/kit/kit_chart.dart",
+        "lib/ui/kit/kit_date_time_picker.dart",
+        "lib/ui/kit/kit_illustration.dart",
+        "lib/ui/kit/kit_image_markup.dart",
+        "lib/ui/kit/kit_live_background.dart",
+        "lib/ui/kit/kit_needs_you.dart",
+        "lib/ui/kit/kit_progress.dart",
+        "lib/ui/kit/kit_progress_ring.dart",
+        "lib/ui/kit/kit_qr.dart",
+        "lib/ui/kit/kit_scanner.dart",
+        "lib/ui/kit/kit_surface.dart",
+        "lib/ui/kit/kit_surface_look.dart",
+        "lib/ui/kit/kit_swatch.dart",
+        "lib/ui/kit/kit_viewer_build.dart",
+        "lib/ui/kit/kit_window_row.dart",
+        "lib/ui/kit/motion/kit_page_transitions.dart",
+        "lib/ui/kit/scenes/",
+        "lib/ui/kit/style/"
+      ],
+      "Material(color:": [
+        "lib/ui/kit/kit_arrival.dart",
+        "lib/ui/kit/kit_carousel.dart",
+        "lib/ui/kit/kit_chart.dart",
+        "lib/ui/kit/kit_date_time_picker.dart",
+        "lib/ui/kit/kit_illustration.dart",
+        "lib/ui/kit/kit_image_markup.dart",
+        "lib/ui/kit/kit_live_background.dart",
+        "lib/ui/kit/kit_needs_you.dart",
+        "lib/ui/kit/kit_progress.dart",
+        "lib/ui/kit/kit_progress_ring.dart",
+        "lib/ui/kit/kit_qr.dart",
+        "lib/ui/kit/kit_scanner.dart",
+        "lib/ui/kit/kit_surface.dart",
+        "lib/ui/kit/kit_surface_look.dart",
+        "lib/ui/kit/kit_swatch.dart",
+        "lib/ui/kit/kit_viewer_build.dart",
+        "lib/ui/kit/kit_window_row.dart",
+        "lib/ui/kit/motion/kit_page_transitions.dart",
+        "lib/ui/kit/scenes/",
+        "lib/ui/kit/style/"
       ]
     }
   }

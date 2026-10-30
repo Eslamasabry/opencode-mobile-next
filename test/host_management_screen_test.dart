@@ -68,10 +68,6 @@ Future<void> _openServerCategory(WidgetTester tester) async {
     ),
   );
   await tester.pumpAndSettle();
-  final row = find.byKey(const ValueKey('server-row-status'));
-  await tester.ensureVisible(row);
-  await tester.tap(row);
-  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -100,7 +96,11 @@ void main() {
       240,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.byKey(const Key('host-management-entry')));
+    final entry = find.byKey(const Key('host-management-entry'));
+    await tester.ensureVisible(entry);
+    await tester.pump();
+    await tester.ensureVisible(entry);
+    await tester.tap(entry);
     await tester.pumpAndSettle();
 
     expect(find.byType(HostManagementScreen), findsOneWidget);
@@ -168,10 +168,12 @@ void main() {
         const ValueKey('copy-host-command-Install and start OpenCode 2'),
       );
       await tester.ensureVisible(copy);
+      await tester.pump();
+      await tester.ensureVisible(copy);
       await tester.tap(copy);
       await tester.pumpAndSettle();
       expect(copiedText, HostScripts.install(4747));
-      expect(copiedText, contains('@opencode/cli@2.0.29'));
+      expect(copiedText, contains('@opencode/cli@2.1.1'));
       expect(
         copiedText,
         contains('opencode2 serve --hostname 127.0.0.1 --port 4747'),

@@ -159,7 +159,7 @@ class MainActivity : FlutterFragmentActivity() {
                         } else if (call.method in setOf("restartServer", "stageServerRecovery", "bindServerRecovery",
                             "serverRecoveryBudget", "serverRecoveryReceipts", "ackServerRecoveryReceipt",
                             "updateServerRecoveryReceipt", "confirmManualServerStart", "unbindServerRecovery",
-                            "deleteServerRecovery")) {
+                            "deleteServerRecovery", "confirmServerPresence")) {
                             result.error("recovery_unavailable", "The phone server could not restart.",
                                 if (call.method == "restartServer") serverStartDetail(error) else null)
                         } else if (error is SetupPersistenceException) {
@@ -374,6 +374,9 @@ class MainActivity : FlutterFragmentActivity() {
             "confirmManualServerStart" -> inBackground {
                 linux.confirmManualServerStart(call.argument<String>("profileId") ?: error("recovery_unavailable"))
             }
+            "confirmServerPresence" -> inBackground {
+                linux.confirmServerPresence(call.argument<String>("profileId") ?: error("recovery_unavailable"))
+            }
             "unbindServerRecovery", "deleteServerRecovery" -> {
                 val profile = call.argument<String>("profileId") ?: ""
                 linux.unbindServerRecovery(profile)
@@ -429,6 +432,12 @@ class MainActivity : FlutterFragmentActivity() {
                 inBackground { linux.setPhoneAgentChatWorkLease(profile, leaseId, on, forMs) }
             }
             "performance" -> inBackground { linux.performance() }
+            // "What's running on this phone" (NativeProcessList has the contract).
+            "processes" -> inBackground { linux.processTable() }
+            "stopProcesses" -> {
+                val pids = call.argument<List<*>>("pids").orEmpty().mapNotNull { (it as? Number)?.toInt() }
+                inBackground { linux.stopProcesses(pids) }
+            }
             // Named long-running services beside the OpenCode server (the AI
             // Team supervisor); the server itself is the service "server".
             "startService" -> {

@@ -225,7 +225,10 @@ void main() {
             boundary,
             settingsStore,
             connection,
-            home: ServerSettingsScreen(controller: connection),
+            home: ServerPageScreen(
+              controller: connection,
+              profileId: connection.profile!.id,
+            ),
           ),
         );
         await frames(tester, 10);

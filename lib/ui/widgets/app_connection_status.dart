@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -58,8 +59,6 @@ class AppConnectionStatusScope extends ConsumerWidget {
           final serverBack =
               controller.isConnected &&
               looksLikeInAppServer(controller.profile);
-          // Starts a timer only; never notifies during build.
-          if (serverBack) recovery.noteServerBack();
           final phone = phoneServerRestartFor(
             connection: controller,
             builtin: builtin,
@@ -115,12 +114,90 @@ class AppConnectionStatusScope extends ConsumerWidget {
               ),
               thermalKitStatus(context, guard),
             ],
-            child: child,
+            child: AppExitFoldOnPageChange(
+              recovery: recovery,
+              serverBack: serverBack,
+              child: child,
+            ),
           );
         },
       ),
     );
   }
+}
+
+/// Ticks each time a page opens or closes on the app's navigator (bumped by
+/// the shell's route tracker, lib/main_parts/root.dart).
+final ValueNotifier<int> appPageChanges = ValueNotifier<int>(0);
+
+/// Folds the "Restarted after the app closed" line away once the phone's
+/// OpenCode is back, at the next moment the screen changes anyway: a page
+/// opening or closing, or the app leaving the screen. It used to fold on a
+/// 15-second clock while the person read the page, and the whole page slid
+/// up under it (jitter J5, 2026-10-28). It still never follows them from
+/// page to page (owner report, 2026-10-07).
+class AppExitFoldOnPageChange extends StatefulWidget {
+  const AppExitFoldOnPageChange({
+    super.key,
+    required this.recovery,
+    required this.serverBack,
+    required this.child,
+  });
+
+  final AppExitRecovery recovery;
+
+  /// The phone's OpenCode is connected again.
+  final bool serverBack;
+  final Widget child;
+
+  @override
+  State<AppExitFoldOnPageChange> createState() =>
+      _AppExitFoldOnPageChangeState();
+}
+
+class _AppExitFoldOnPageChangeState extends State<AppExitFoldOnPageChange>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    appPageChanges.addListener(_fold);
+    // An observer, not an AppLifecycleListener: the listener asserts on a
+    // jump from paused straight to resumed, which tests drive.
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    appPageChanges.removeListener(_fold);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      _fold();
+    }
+  }
+
+  void _fold() {
+    if (!widget.serverBack || widget.recovery.notice == null) return;
+    // A page can open while the tree builds: fold right after that build,
+    // before the new page's first frame is drawn.
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    if (phase == SchedulerPhase.persistentCallbacks ||
+        phase == SchedulerPhase.midFrameMicrotasks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.serverBack) widget.recovery.dismiss();
+      });
+      return;
+    }
+    widget.recovery.dismiss();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// The two "Android stopped it" lines, in the order the status slot weighs
@@ -131,7 +208,7 @@ class AppConnectionStatusScope extends ConsumerWidget {
 /// The app exit leads while the phone's server is still down ([serverBack]
 /// false): it is the bigger event, usually the cause of the pause, and it
 /// says what is being restarted. Once that server is back the exit line is
-/// only a recap (it folds away by itself shortly after), while the paused
+/// only a recap (it folds away at the next page change), while the paused
 /// background connection still needs a tap, so the pause goes first.
 List<KitStatus?> appStoppedLines({
   required KitStatus? exit,

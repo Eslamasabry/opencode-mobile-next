@@ -170,9 +170,8 @@ void main() {
               data: MediaQuery.of(context).copyWith(disableAnimations: true),
               child: child!,
             ),
-            home: AppDiagnosticsScreen(
+            home: AppDiagnosticsKeptScreen(
               diagnostics: diagnostics,
-              version: () async => '1.2.0+2171',
               crash: crash,
               diagnosticsGateway: gateway,
               clock: () => DateTime(2026, 10, 8, 9),

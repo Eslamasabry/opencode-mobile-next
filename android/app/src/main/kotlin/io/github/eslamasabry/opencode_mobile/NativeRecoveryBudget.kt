@@ -16,6 +16,15 @@ internal data class NativeRecoveryBudget(
             recoveryGeneration = generation, confirmedAt = null, nextAt = null,
             revision = revision + 1)
     }
+    /**
+     * A boot or an app update is a new start, not another lap of a crash
+     * loop: a settled count starts over, so updates that each spent a restore
+     * cannot leave the server off. An attempt still in flight is kept.
+     */
+    fun afterSystemEvent(): NativeRecoveryBudget =
+        if (pending || (attempts == 0 && nextAt == null)) this
+        else NativeRecoveryBudget(revision = revision + 1)
+
     fun map(): Map<String, Any?> = mapOf("version" to 1, "attempts" to attempts,
         "nextAt" to nextAt, "pending" to pending, "eventId" to eventId,
         "recoveryGeneration" to recoveryGeneration, "confirmedAt" to confirmedAt,
@@ -64,6 +73,9 @@ internal data class NativeRecoveryBudget(
             resumed && wanted && !userStopped && boundProfile == requestedProfile &&
             manualGeneration == currentGeneration && running && !nativeOwned
 
+        /** See [PresenceReset]. */
+        fun presenceResetAllowed(facts: PresenceReset): Boolean = facts.allowed
+
         fun shouldRemoveBeforeLaunch(nativeOwned: Boolean, tracked: Boolean): Boolean = !nativeOwned || tracked
 
         fun keepsForeground(running: Boolean, scheduled: Boolean, admitted: Boolean,
@@ -86,4 +98,25 @@ internal data class NativeRecoveryBudget(
             }
         }
     }
+}
+
+/**
+ * The person has the app open and the server it supervises is up (the app
+ * checked its health): the automatic restores that brought it back worked, so
+ * their count starts again. Without this only a manual start reset it, and a
+ * server an update or boot restored never needed one, so every fourth restore
+ * was refused. Never while a restore is reserved or not yet confirmed.
+ */
+internal data class PresenceReset(
+    val resumed: Boolean,
+    val wanted: Boolean,
+    val userStopped: Boolean,
+    val boundProfile: String?,
+    val requestedProfile: String,
+    val running: Boolean,
+    val pending: Boolean,
+    val restoreInFlight: Boolean,
+) {
+    val allowed: Boolean get() = resumed && wanted && !userStopped &&
+        boundProfile == requestedProfile && running && !pending && !restoreInFlight
 }

@@ -1437,7 +1437,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -1873,7 +1873,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -2199,7 +2199,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -2587,7 +2587,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -2902,7 +2902,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -3238,7 +3238,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -3564,7 +3564,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -3879,7 +3879,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -4233,7 +4233,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -4564,7 +4564,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -4818,7 +4818,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -5139,7 +5139,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -5312,7 +5312,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -5483,7 +5483,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },
@@ -5638,7 +5638,7 @@
           "path": "model.id",
           "kind": "string",
           "probes": [
-            "claude-opus-5-5"
+            "Opus 5.5"
           ],
           "primary": false
         },

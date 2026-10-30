@@ -54,8 +54,38 @@ Widget _part() => KitRowGroup(
   ],
 );
 
+Widget _disabled() => KitRowGroup(
+  leadingIcons: false,
+  children: const [
+    KitFeedItem(
+      project: 'alpha',
+      title: 'Fix the login bug',
+      state: 'Working',
+      stateTone: KitFeedStateTone.running,
+      time: '2 h ago',
+      onTap: null,
+    ),
+  ],
+);
+
 void main() {
   setUpAll(loadKitGalleryFonts);
+
+  // Disabled: no tap handler (read-only).
+  for (final light in [false, true]) {
+    final mode = light ? 'light' : 'dark';
+    for (final size in kitGalleryScaledSizes) {
+      testWidgets('disabled · ${kitGallerySize(size)} · $mode', (tester) async {
+        await kitGalleryPart(
+          tester,
+          name: kitGalleryName('kit_feed_item_disabled', size, light: light),
+          size: size,
+          light: light,
+          child: _disabled(),
+        );
+      });
+    }
+  }
 
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';

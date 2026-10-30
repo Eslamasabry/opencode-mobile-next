@@ -111,6 +111,11 @@ abstract final class WidgetOverlayPort {
     });
   }
 
+  static Future<void> saveProject(String project) async {
+    if (project.length > 200) throw ArgumentError('Invalid project');
+    await channel.invokeMethod<void>('saveProject', {'project': project});
+  }
+
   static Future<Map<String, dynamic>> submitAction(String text) async {
     if (text.trim().isEmpty || text.length > 8000) {
       throw ArgumentError('Invalid message');

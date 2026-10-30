@@ -72,6 +72,14 @@ flutter test --concurrency=1    # serial in the phone-hosted container; a workst
   A missing part is added to the kit, even if only one screen uses it; never
   hand-build it on the screen. `test/kit_ratchet_test.dart` (G16) keeps the count
   per file going down only.
+- **Teach what is hidden (owner rule, 2026-10-21):** any gesture or feature a person
+  can't see on screen (long-press, swipe, hold, a power-user path, a new capability)
+  ships with a built-in tip from the teaching system (`docs/ux-system/teaching.md`):
+  a short contextual tip shown at the moment it becomes useful, at most twice, one
+  at a time, never blocking. A feature bigger than one gesture gets a mini tutorial
+  (2–4 steps). Every tip and tutorial is listed in Help › Tips so it can be replayed,
+  and "Show tips again" resets them. A hidden path is never the only path: there is
+  always a visible way too.
 - UI talks to the domain gateway only — never `api/` or `api2/` directly.
   Gate features on `ServerCapabilities` flags, never on the flavor enum.
 - Treat as single-owner units (one editor at a time): `lib/state/connection.dart` **plus every `connection/*.dart` part file**,

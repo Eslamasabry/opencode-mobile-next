@@ -70,9 +70,10 @@ void main() {
     return flat(screenText(tester).join('\n'));
   }
 
-  testWidgets('no terminals yet', (tester) async {
+  testWidgets('no terminals yet: the page starts one', (tester) async {
     final text = await scene(tester, 'none');
-    expect(text, contains('New terminal'));
+    expect(text, contains('Terminal'));
+    expect(text, isNot(contains('No terminals yet')));
   });
 
   testWidgets('a server without terminals explains', (tester) async {

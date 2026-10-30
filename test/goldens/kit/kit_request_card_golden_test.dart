@@ -221,6 +221,34 @@ Map<String, Widget Function()> _states() => {
     ),
   ),
   'expired': () => _permission(phase: KitRequestPhase.expired),
+  // The Inbox's row (asRow with place and onOpen): a permission answered in
+  // place, then a question that opens its conversation.
+  'inbox_row': () => Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _permission().asRow(
+          place: 'laptop · shopfront · Fix the flaky test',
+          onOpen: () {},
+          openLabel: 'Open Fix the flaky test',
+        ),
+        const SizedBox(height: 24),
+        KitRequestCard.ask(
+          kind: KitRequestKind.question,
+          title: 'Which branch should I use?',
+          who: 'fox',
+          reason: KitNeedsYouReason.decision,
+          ifIgnored: _ifIgnored,
+          announcement: 'Which branch should I use?',
+        ).asRow(
+          place: 'laptop · shopfront · Add dark mode',
+          onOpen: () {},
+          openLabel: 'Open Add dark mode',
+        ),
+      ],
+    ),
+  ),
 };
 
 void main() {

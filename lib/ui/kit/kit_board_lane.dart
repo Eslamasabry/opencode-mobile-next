@@ -10,8 +10,10 @@ import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
 import 'kit_progress.dart';
+import 'kit_surface_look.dart';
 import 'kit_tokens.dart';
 import 'motion/kit_animated_rows.dart';
 import 'motion/kit_refresh.dart';
@@ -607,7 +609,10 @@ class KitBoardLane extends StatelessWidget {
   static const skeletonCards = 4;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.lane(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     assert(
       isLoading || cards.isNotEmpty || empty != null,
       'KitBoardLane: a lane with no cards needs its empty state.',
@@ -628,10 +633,15 @@ class KitBoardLane extends StatelessWidget {
           for (var i = 0; i < skeletonCards; i++)
             Padding(
               padding: EdgeInsetsDirectional.only(bottom: tokens.space2),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: roles.surface1,
-                  borderRadius: BorderRadius.circular(tokens.cardRadius),
+              // A skeleton card: a content card in the style.
+              child: kitSurfaceBox(
+                style: KitSurfaceLook.styleOf(context),
+                decoration: KitSurfaceLook.decorate(
+                  context,
+                  solid: BoxDecoration(
+                    color: roles.surface1,
+                    borderRadius: BorderRadius.circular(tokens.cardRadius),
+                  ),
                 ),
                 child: Padding(
                   padding: EdgeInsetsDirectional.symmetric(
@@ -672,15 +682,23 @@ class KitBoardLane extends StatelessWidget {
           ? list
           : KitRefresh(onRefresh: refresh, child: list);
     }
-    return DecoratedBox(
+    // The lane is the bed its cards sit in: a track in the style (a well
+    // under Soft, an ink box under Brutal and Paper).
+    return kitSurfaceBox(
       key: laneKey,
-      decoration: BoxDecoration(
-        color: roles.ground,
-        borderRadius: radius,
-        border: Border.all(
-          color: roles.hairline,
-          width: KitTokens.hairlineWidth(context),
+      style: KitSurfaceLook.styleOf(context),
+      decoration: KitSurfaceLook.decorate(
+        context,
+        solid: BoxDecoration(
+          color: roles.ground,
+          borderRadius: radius,
+          border: Border.all(
+            color: roles.hairline,
+            width: KitTokens.hairlineWidth(context),
+          ),
         ),
+        role: KitSurfaceRole.track,
+        borderRadius: radius,
       ),
       child: ClipRRect(borderRadius: radius, child: body),
     );

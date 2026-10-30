@@ -127,15 +127,11 @@ void main() {
       ], created: now - 4000),
     ], busy: true);
 
-    // Before the request: the live step's words and a working mark.
+    // Before the request: the turn's one live line names the step in hand;
+    // the folded work line waits until the turn is done.
     expect(find.text('Waiting for you'), findsNothing);
-    expect(
-      find.descendant(
-        of: find.byKey(const Key('work-group')),
-        matching: find.byKey(const ValueKey('kit-step-light')),
-      ),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('kit-turn-live-line')), findsOneWidget);
+    expect(find.byKey(const Key('work-group')), findsNothing);
 
     controller.handleEventForTesting(
       EventEnvelope(
@@ -156,9 +152,25 @@ void main() {
     // above it, and nothing claims that tools are running meanwhile.
     expect(find.byKey(const Key('permission-card-allow')), findsOneWidget);
     expect(find.text('Running tools'), findsNothing);
-    expect(find.text('Waiting for you'), findsNothing);
+    // Only the composer says it waits (vision 2026-10-20), no step line.
+    expect(find.text('Waiting for you'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('chat-composer-surface')),
+        matching: find.text('Waiting for you'),
+      ),
+      findsOneWidget,
+    );
     expect(find.byType(ToolCard), findsOneWidget, reason: 'only the read');
-    expect(find.textContaining('flutter test'), findsOneWidget);
+    // The command shows only on the card: its question and its block.
+    expect(find.textContaining('flutter test'), findsNWidgets(2));
+    expect(
+      find.descendant(
+        of: find.byType(KitRequestCard),
+        matching: find.textContaining('flutter test'),
+      ),
+      findsNWidgets(2),
+    );
   });
 
   testWidgets('P8.3: a chat error opens its server words, and they copy', (

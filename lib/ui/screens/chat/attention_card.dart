@@ -30,6 +30,22 @@ String _requestWho(BuildContext context, {String? agentLabel}) {
 String? _feedAgent(ChatFeedItem? item) =>
     item == null ? null : item.agentLabel ?? 'OpenCode';
 
+/// The folder the chat works in and its name, for a request's question
+/// ("Run npm install in neon-breaker?"); nulls outside a chat or in a
+/// temporary folder.
+(String?, String?) _requestProject(BuildContext context) {
+  final chat = context.findAncestorStateOfType<_ChatScreenState>();
+  if (chat == null) return (null, null);
+  final directory =
+      chat._conn.sessionsById[chat.widget.sessionID]?.directory ??
+      chat._conn.directory;
+  if (directory == null || isTemporaryProjectDirectory(directory)) {
+    return (null, null);
+  }
+  final parts = directory.split('/').where((part) => part.isNotEmpty);
+  return (directory, parts.isEmpty ? null : parts.last);
+}
+
 /// The chat screen's controller for a card inside it; null outside a chat
 /// (a gallery), where the card cannot answer and says why.
 ConnectionController? _requestConnection(BuildContext context) =>
@@ -126,12 +142,16 @@ class _PermissionAttentionCardState extends State<_PermissionAttentionCard> {
     final detail = widget.autoApprovalFailed
         ? l10n.approvalsUiFailedDetail
         : null;
+    final (directory, project) = _requestProject(context);
     if (conn == null) {
       return permissionRequestCard(
         context,
         permission: permission,
         who: _requestWho(context),
         since: _seen,
+        project: project,
+        directory: directory,
+        look: KitRequestLook.question,
         detail: detail,
         toolName: widget.toolName,
         target: widget.target,
@@ -156,7 +176,12 @@ class _PermissionAttentionCardState extends State<_PermissionAttentionCard> {
           context,
           permission: permission,
           who: _requestWho(context),
-          since: _seen,
+          // Since this phone first showed it: reopening the chat keeps
+          // counting.
+          since: requestFirstSeen(conn, permission.id),
+          project: project,
+          directory: directory,
+          look: KitRequestLook.question,
           detail: detail,
           toolName: widget.toolName,
           target: widget.target,
@@ -388,7 +413,13 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
       reason: KitNeedsYouReason.decision,
       ifIgnored: _requestIfIgnored(context, 0),
       announcement: l10n.chatUiQuestionLabel(title),
-      since: _seen,
+      since: switch (_conn(context)) {
+        final conn? when !widget.inList => requestFirstSeen(
+          conn,
+          widget.question.id,
+        ),
+        _ => _seen,
+      },
       detailMarkdown:
           !widget.inList && count == 1 && (first?.markdown ?? false),
       detail: first == null || first.question.trim().isEmpty
@@ -418,6 +449,8 @@ class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
       onDetails: onDetails,
       detailsKey: const Key('question-card-more'),
       inList: widget.inList,
+      // In the conversation: the question look, as a permission's.
+      look: widget.inList ? KitRequestLook.standard : KitRequestLook.question,
     );
   }
 
@@ -714,38 +747,7 @@ class _FormRequestCardState extends State<_FormRequestCard> {
       who: _requestWho(context),
       since: _seen,
       onAnswer: widget.onAnswer,
-    );
-  }
-}
-
-/// A single-line, self-hiding note above the composer for composer-local
-/// outcomes (queued, staged, already present). It replaces snackbars that
-/// used to cover the field the user is typing into.
-class _ComposerNote extends StatelessWidget {
-  const _ComposerNote({super.key, required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = KitTokens.of(context);
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: KitLayout.readingWidth),
-        child: Padding(
-          padding: EdgeInsetsDirectional.symmetric(horizontal: tokens.gutter),
-          child: Semantics(
-            liveRegion: true,
-            child: KitText(
-              text,
-              role: KitTextRole.caption,
-              tone: KitTextTone.secondary,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-      ),
+      look: KitRequestLook.question,
     );
   }
 }

@@ -79,6 +79,76 @@ final class _AgentFeedCache {
     }
   }
 
+  static String _signedOutKey(String profileID) =>
+      'oc.agentSignedOut.$profileID';
+
+  /// The agents the last read found signed out, by id with their names: the
+  /// list says so from its first paint instead of a notice arriving above
+  /// the rows once the helper has started (jitter J4, 2026-10-28).
+  Map<String, String> readSignedOut(String profileID) {
+    try {
+      final raw = _prefs.getString(_signedOutKey(profileID));
+      if (raw == null) return const {};
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return const {};
+      return Map.unmodifiable({
+        for (final entry in decoded.entries)
+          if (entry.key is String && entry.value is String)
+            entry.key as String: entry.value as String,
+      });
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<void> writeSignedOut(
+    String profileID,
+    Map<String, String> agents,
+  ) async {
+    try {
+      if (agents.isEmpty) {
+        if (_prefs.containsKey(_signedOutKey(profileID))) {
+          await _prefs.remove(_signedOutKey(profileID));
+        }
+        return;
+      }
+      final encoded = jsonEncode(agents);
+      if (_prefs.getString(_signedOutKey(profileID)) == encoded) return;
+      await _prefs.setString(_signedOutKey(profileID), encoded);
+    } catch (_) {
+      // The next read saves again.
+    }
+  }
+
+  static String _mainKey(String profileID) => 'oc.mainFeed.$profileID';
+
+  /// The connected server's own rows from the last time its list was read
+  /// in full, shown while its first read of this start is on the way (see
+  /// [_PhoneAgentSavedRows._paMainSavedRows]). Saved under [mainSourceId].
+  List<ChatFeedItem> readMain(String profileID) {
+    try {
+      final raw = _prefs.getString(_mainKey(profileID));
+      if (raw == null) return const [];
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return List.unmodifiable([
+        for (final entry in decoded)
+          ?_decode(entry, prefix: mainSourceId)?.item,
+      ]);
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> writeMain(String profileID, Iterable<ChatFeedItem> items) =>
+      _writeTo(_mainKey(profileID), [
+        for (final item in items) (item: item, canReopen: true),
+      ]);
+
+  /// The source id main rows are saved under (live ones carry null, or
+  /// `opencode` beside the agents).
+  static const mainSourceId = _openCodeSourceId;
+
   static String _sideKey(String profileID) => 'oc.sideFeed.$profileID';
 
   /// Another server's rows from the last time the list read them, shown at

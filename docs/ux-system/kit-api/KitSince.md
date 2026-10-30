@@ -180,3 +180,11 @@ KitSince draws nothing. The G4 manifest still needs a gallery for every public w
 ## Open questions
 
 - **`clock` as a direct dependency in `pubspec.yaml` (coordinator).** It is already in `pubspec.lock` as a transitive dependency of `flutter_test`/`fake_async`, so nothing is downloaded. `pubspec.yaml` is in no wave-1 write set, and without the direct entry the analyzer's `depend_on_referenced_packages` fails. Does the coordinator add it before wave 1? If not, the fallback is a `@visibleForTesting static DateTime Function() now = DateTime.now;` seam on `KitSince`. Tests would then set it and advance it alongside `tester.pump`. That is weaker: two clocks to keep in step.
+
+## Seconds, then minutes (2026-10-20)
+
+`ticks: KitSinceTicks.secondsThenMinutes` rebuilds every whole second for
+the first minute and once per whole minute after it, for a line that counts
+a wait the person should act on ("Needs you · 20 s", then "· 4 min").
+`KitSince.shortAge(context, elapsed)` words it: "{seconds} s" under a minute
+(`kitTurnLiveSeconds`), then `ageLabel`.

@@ -75,7 +75,15 @@ KitStatus? thermalKitStatus(BuildContext context, ThermalGuard? guard) {
     tone: notice.kind == ThermalNoticeKind.resumed
         ? AppStatusTone.ok
         : AppStatusTone.neutral,
-    message: thermalNoticeText(l10n, notice.kind),
+    // Nothing to do: it resumes by itself. One quiet line, the full
+    // sentence for a screen reader.
+    message: switch (notice.kind) {
+      ThermalNoticeKind.paused => l10n.thermalQuietPaused,
+      ThermalNoticeKind.stopped => l10n.thermalQuietStopped,
+      ThermalNoticeKind.resumed => l10n.thermalQuietResumed,
+    },
+    semanticsLabel: thermalNoticeText(l10n, notice.kind),
     onDismiss: guard!.dismiss,
+    quiet: true,
   );
 }

@@ -36,6 +36,7 @@ class KitPageRoute<T> extends PageRoute<T> {
 
   // Fixed by the kit, not parameters:
   // transitionDuration / reverseTransitionDuration = KitMotion.standard
+  // (a page grown from a marked row closes in at most KitMotion.rowReturn)
   // opaque = true, barrierColor = null, barrierDismissible = false
   // buildTransitions → const KitPageTransitionsBuilder().buildTransitions(...)
   // delegatedTransition → KitPageTransitionsBuilder's covered-page transition
@@ -65,6 +66,8 @@ Kept unchanged (in `kit_page_transitions.dart`): `KitPageTransitionsBuilder` (`t
 `pushNamed` routes: `onGenerateRoute`/`routes` in `main.dart` return `KitPageRoute`s (coord-main); screens keep calling `Navigator.pushNamed`.
 
 ## States
+
+A page pushed right after `KitPageOrigin.mark(rowContext)` (a conversation opened from its row; owner request 2026-10-27) grows out of the row's box into the page (container transform: bounds on `emphasized` over the first 80 %, contents fading in between 20 % and 60 %; the page underneath dims to 32 % black over the first 20 %, the box's ground fills in over the row in the same time, and the page rides the box's top-left corner, clipped to the box, translated and never scaled, MOT-2) and Back shrinks it into the row again over `KitMotion.rowReturn` (300 ms, shorter than the opening) on the mirrored path (`KitMotion.rowReturnPath`): it starts moving at once, its contents leave in the first 40 %, the row shows again in the last 20 %, and the dim fades throughout; a Back during the opening turns back from where the page is. The page under it stays still. `KitPageOrigin.covers(route)` is true from the mark until that page has shrunk back (it is popping, but still counts), and `KitPageOrigin.changes` notifies when it may have changed: a list holds its rows still meanwhile (the Conversations list does), so the page lands in the row it came from and the list re-sorts after. On Android the system back gesture keeps Flutter's predictive back preview for as long as it runs. Reduced motion: the plain transition.
 
 None of the KIT-12 set: a route draws the transition only. Declared frames for galleries: mid-forward (a page opening) and mid-reverse (going back).
 

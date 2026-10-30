@@ -39,7 +39,10 @@ void main() {
     },
   );
 
-  testWidgets('floats its words over the child and taps once', (tester) async {
+  testWidgets('floats a round plus over the child and taps once', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
     var taps = 0;
     await tester.pumpWidget(
       _host(
@@ -51,9 +54,14 @@ void main() {
         scroll: false,
       ),
     );
-    expect(find.text('New conversation'), findsOneWidget);
-    await tester.tap(find.text('New conversation'));
+    expect(find.byIcon(AppIconography.add), findsOneWidget);
+    expect(find.text('New conversation'), findsNothing);
+    final size = tester.getSize(find.byIcon(AppIconography.add));
+    expect(size.width, lessThan(KitFloatingAction.size));
+    await tester.tap(find.byIcon(AppIconography.add));
     expect(taps, 1);
+    expect(find.bySemanticsLabel('New conversation'), findsOneWidget);
+    handle.dispose();
   });
 
   testWidgets('clears what is published at the bottom', (tester) async {
@@ -70,7 +78,7 @@ void main() {
         scroll: false,
       ),
     );
-    final bottom = tester.getBottomLeft(find.byType(KitButton)).dy;
+    final bottom = tester.getBottomLeft(find.byIcon(AppIconography.add)).dy;
     expect(bottom, lessThanOrEqualTo(600 - 100));
   });
 }

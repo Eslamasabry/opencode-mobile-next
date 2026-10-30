@@ -35,6 +35,12 @@ const _excluded = <String, String>{
   'agents-sign-in-terminal':
       "an agent's own sign-in, opened from the agent sheet's Sign in step",
   'root-connecting': 'shown automatically while a saved server connects',
+  'inbox':
+      "found as the Go-to menu's Inbox command, which carries the waiting count",
+  'settings-group':
+      "the Settings hub's five group rows; every setting in a group is indexed",
+  'app-diagnostics-kept':
+      'opened from Report a problem > Details, which search finds',
   'bootstrap-gate': 'startup failure screen; nothing is connected yet',
   'servers-welcome': 'first run only, before any server exists',
   'manage-space':
@@ -61,8 +67,6 @@ const _excluded = <String, String>{
   // Need something picked first.
   'scheduled-prompts':
       'needs a saved agent and selected project; opened from its project or conversation menu',
-  'scheduled-prompt-editor':
-      'needs a schedule target; opened from Scheduled prompts',
   'projects': 'a picker that returns the chosen project to Files',
   'shell-output': 'the output of one command that was just run',
   'terminal-surface': 'one terminal process; opened from Terminal',
@@ -121,7 +125,6 @@ const _excluded = <String, String>{
   'factsbook-thing': 'behind the FactsBook developer flag; opened from Memory',
   'factsbook-triggers':
       'behind the FactsBook developer flag; opened from Memory',
-  'server-page': "one saved server's own page; opened from Servers",
   'by-server':
       'settings listed per server; appears once more than one server '
       'is saved',
@@ -129,8 +132,6 @@ const _excluded = <String, String>{
   'usage-add': 'a step of adding a subscription; opened from Usage',
   'usage-read-from': 'a step of adding a subscription',
   'usage-subscription': 'one plan; opened from Plans',
-  'live-style-picker': 'opened from Appearance › Live background',
-  'live-style-preview': 'one look; opened from the look picker',
   'phone-setup-ready':
       'a step of phone setup; shown automatically when a '
       'first setup finishes',
@@ -172,6 +173,7 @@ class _Repository
 
 Future<ConnectionController> _controller({
   ServerCapabilities capabilities = testServerCapabilities,
+  String baseUrl = 'http://localhost:4096',
 }) async {
   SharedPreferences.setMockInitialValues({
     'oc.profiles': jsonEncode([
@@ -179,7 +181,7 @@ Future<ConnectionController> _controller({
         'id': 'profile-1',
         'name': 'Workstation',
         'flavor': 'v2',
-        'baseUrl': 'http://localhost:4096',
+        'baseUrl': baseUrl,
         'username': '',
       },
     ]),
@@ -386,6 +388,22 @@ void main() {
       hasShell: hasShell,
       hasTeam: hasTeam,
       desktop: desktop,
+    );
+
+    test(
+      'the in-app Linux offers one Running on this phone, its own',
+      () async {
+        debugPlatformCapabilities = const PlatformCapabilities.android();
+        addTearDown(() => debugPlatformCapabilities = null);
+        final controller = await _controller(baseUrl: 'http://127.0.0.1:4097');
+        addTearDown(controller.dispose);
+        final entries = searchIndex(_en, scope(controller));
+        final running = [
+          for (final entry in entries)
+            if (entry.title == _en.runningPhoneTitle) entry.id,
+        ];
+        expect(running, ['inside-phone-running']);
+      },
     );
 
     test(

@@ -274,7 +274,8 @@ class ByServerScreen extends StatelessWidget {
         case ByServerKind.model:
           await showModelPicker(
             context,
-            title: copy.settingsV3ModelNewOn(
+            title: newConversationsTitle(
+              copy,
               serverDisplayName(p, l10n, among: servers),
             ),
           );

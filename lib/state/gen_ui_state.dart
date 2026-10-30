@@ -9,6 +9,7 @@ import '../domain/genui/gen_ui_history.dart';
 import '../domain/server_gateway.dart';
 import 'delayed_answers.dart';
 import 'gen_ui_journal.dart';
+import 'gen_ui_coverage.dart';
 
 String genUiScopeKey(GenUiScope scope) => jsonEncode([
   scope.profileID,
@@ -52,8 +53,10 @@ final class _View {
 /// Shared by the chat controller and its phone/list sources. No UI or host IO.
 final class GenUiStateController extends ChangeNotifier {
   GenUiStateController(SharedPreferences prefs, {required this.delayedAnswers})
-    : journal = GenUiJournal(prefs);
+    : journal = GenUiJournal(prefs),
+      _covered = GenUiCoverage(prefs);
   final GenUiJournal journal;
+  final GenUiCoverage _covered;
   final DelayedAnswers delayedAnswers;
   final _sources = <String, _Source>{};
   final _views = <String, _View>{};
@@ -109,7 +112,16 @@ final class GenUiStateController extends ChangeNotifier {
       ready,
       beforeSend,
     );
-    if (ready) recoveryIncomplete = true;
+    if (ready) {
+      recoveryIncomplete = true;
+      // Nothing may read this source again soon (a phone agent's chat
+      // connects a new gateway while its event channel stays open): read it
+      // now, or the conversations list says "couldn't load" until a refresh.
+      _recoveryFollowup ??= Timer(const Duration(milliseconds: 350), () {
+        _recoveryFollowup = null;
+        if (!_disposed) unawaited(recover(const []));
+      });
+    }
   }
 
   bool available(GenUiScope scope) {
@@ -550,16 +562,29 @@ final class GenUiStateController extends ChangeNotifier {
     if (gateway is! GenUiHistoryGateway) {
       throw const ProductException('Card history is unavailable.');
     }
-    final key = _sessionKey(scope, sid),
-        revision = _revisions[_sessionKey(scope, sid)] ?? 0;
+    final key = _sessionKey(scope, sid);
+    final revision = _revisions[key] ?? 0;
     final deadline = DateTime.now().add(const Duration(seconds: 10));
-    bool current() =>
+    final before = _recoverySnapshot(source, sid);
+    // Loading a Paseo agent to read its history makes the helper send session
+    // events, which bump the revision on every read. The agent staying idle on
+    // the same prompt means no turn ran, so the read itself is still whole;
+    // only publishing the view keeps the strict revision fence.
+    bool settled() {
+      final now = _recoverySnapshot(source, sid);
+      return before?.idle == true &&
+          before?.promptStamp != null &&
+          now?.idle == true &&
+          now?.promptStamp == before?.promptStamp;
+    }
+
+    bool live() =>
         wanted() &&
         available(scope) &&
         !_deletedSessions.contains(key) &&
         identical(_sources[genUiScopeKey(scope)], source) &&
-        (_revisions[key] ?? 0) == revision &&
         DateTime.now().isBefore(deadline);
+    bool current() => live() && (_revisions[key] ?? 0) == revision;
     final messages = <MessageWithParts>[];
     String? cursor;
     var more = false;
@@ -569,7 +594,7 @@ final class GenUiStateController extends ChangeNotifier {
         cursor: cursor,
         limit: 50,
       );
-      if (!current()) return;
+      if (!current() && !(live() && settled())) return;
       messages.insertAll(0, result.items);
       more = result.hasMore;
       if (!more) break;
@@ -588,7 +613,6 @@ final class GenUiStateController extends ChangeNotifier {
           );
       if (!missing && messages.any((m) => m.info.role == 'user')) break;
     }
-    if (!current()) return;
     final missing = journal
         .read(scope.profileID)
         .any(
@@ -598,7 +622,41 @@ final class GenUiStateController extends ChangeNotifier {
               r.endpoint == source.endpoint &&
               !messages.any((m) => m.info.id == r.messageID),
         );
-    if (missing || (more && !messages.any((m) => m.info.role == 'user'))) {
+    final readComplete =
+        !missing && !(more && !messages.any((m) => m.info.role == 'user'));
+    // Coverage only for a read with no card in it at all: then nothing can
+    // wait, nothing needs the journal, and skipping later reads hides nothing.
+    // A chat that ever showed a card in its recent history is always re-read.
+    // Any card tool counts, whatever its state: a running or half-written
+    // one may complete after this read without a new prompt.
+    final cardFree = !messages.any(
+      (m) => m.parts.any(
+        (part) =>
+            part.type == 'tool' &&
+            AgentToolAdapters.cardShowNames.contains(part.toolName),
+      ),
+    );
+    Future<void> cover() async {
+      final stamp = before?.promptStamp;
+      if (!readComplete || !cardFree || !live() || stamp == null) return;
+      if (!settled()) return;
+      await _covered.remember(
+        scope.profileID,
+        _coverageIdentity(source, sid),
+        stamp,
+      );
+    }
+
+    if (!current()) {
+      // A newer view may exist; never publish over it. A whole, card-free read
+      // of an agent that ran no turn still settles this session.
+      if (live() && settled() && readComplete && cardFree) {
+        _coveragePending.remove(key);
+        await cover();
+      }
+      return;
+    }
+    if (!readComplete) {
       recoveryIncomplete = true;
       _trackCoverage(key);
     } else {
@@ -606,6 +664,63 @@ final class GenUiStateController extends ChangeNotifier {
     }
     observe(scope, sid, messages, tailComplete: true);
     await journal.drained;
+    // Explicit recoverOne calls stay unconditional (answer reconciliation);
+    // coverage never covers a running turn, a truncated tail, a superseded
+    // source, a changed prompt or a read that held a card.
+    await cover();
+  }
+
+  ({String? promptStamp, bool idle})? _recoverySnapshot(
+    _Source source,
+    String sid,
+  ) {
+    final gateway = source.gateway;
+    if (!source.scope.sourceId.startsWith('paseo:') ||
+        gateway is! GenUiRecoverySnapshotGateway) {
+      return null;
+    }
+    return (gateway as GenUiRecoverySnapshotGateway).genUiRecoverySnapshot(sid);
+  }
+
+  String _coverageIdentity(_Source source, String sid) =>
+      jsonEncode([source.endpoint, genUiScopeKey(source.scope), sid]);
+
+  /// False when reading [target]'s history would wake a stored agent.
+  /// Background recovery skips those; answering a card still reads them.
+  bool _mayRead(GenUiTarget target) {
+    final gateway = _sources[genUiScopeKey(target.scope)]?.gateway;
+    return gateway is! GenUiLoadGuardGateway ||
+        (gateway as GenUiLoadGuardGateway).genUiMayLoad(target.sessionID);
+  }
+
+  bool _needsRecovery(GenUiTarget target) {
+    final source = _sources[genUiScopeKey(target.scope)];
+    if (source == null) return true;
+    if (!_mayRead(target)) return false;
+    final snapshot = _recoverySnapshot(source, target.sessionID);
+    final stamp = snapshot?.promptStamp;
+    if (snapshot?.idle != true || stamp == null) return true;
+    // Journaled cards and uncertain answers must always be reconciled, even
+    // when their turn's prompt was previously covered.
+    try {
+      if (journal
+          .read(target.scope.profileID)
+          .any(
+            (entry) =>
+                entry.scope == target.scope &&
+                entry.sessionID == target.sessionID &&
+                entry.endpoint == source.endpoint,
+          )) {
+        return true;
+      }
+    } catch (_) {
+      return true;
+    }
+    return !_covered.contains(
+      target.scope.profileID,
+      _coverageIdentity(source, target.sessionID),
+      stamp,
+    );
   }
 
   void _trackCoverage(String key) {
@@ -619,6 +734,10 @@ final class GenUiStateController extends ChangeNotifier {
   Future<void> recover(Iterable<GenUiTarget> recent) {
     for (final target in recent) {
       if (!available(target.scope)) continue;
+      if (!_needsRecovery(target)) {
+        _coveragePending.remove(_sessionKey(target.scope, target.sessionID));
+        continue;
+      }
       _trackCoverage(_sessionKey(target.scope, target.sessionID));
       if (_queuedRecovery.length >= 100) {
         recoveryIncomplete = true;
@@ -654,6 +773,7 @@ final class GenUiStateController extends ChangeNotifier {
 
   Future<void> _recoverPass(Iterable<GenUiTarget> recent) async {
     final targets = <String, GenUiTarget>{};
+    final unread = <GenUiTarget>[];
     var failed = false;
     for (final source in _sources.values.toList()) {
       if (!available(source.scope)) continue;
@@ -662,6 +782,7 @@ final class GenUiStateController extends ChangeNotifier {
           if (entry.scope == source.scope &&
               entry.endpoint == source.endpoint) {
             final t = GenUiTarget(entry.scope, entry.sessionID);
+            if (!_mayRead(t)) continue;
             targets[_sessionKey(t.scope, t.sessionID)] = t;
           }
         }
@@ -671,6 +792,10 @@ final class GenUiStateController extends ChangeNotifier {
       }
     }
     for (final t in recent) {
+      if (!_needsRecovery(t)) {
+        _coveragePending.remove(_sessionKey(t.scope, t.sessionID));
+        continue;
+      }
       targets.putIfAbsent(_sessionKey(t.scope, t.sessionID), () => t);
     }
     for (final key in targets.keys) {
@@ -688,11 +813,32 @@ final class GenUiStateController extends ChangeNotifier {
       } catch (_) {
         failed = true;
         recoveryIncomplete = true;
+        unread.add(target);
       }
     }
     recoveryIncomplete =
         failed || _coverageOverflow || _coveragePending.isNotEmpty;
+    _retryUnread(unread);
     _notify();
+  }
+
+  /// Reads that failed in a row; each retry waits a little longer.
+  int _failedPasses = 0;
+
+  /// Reads [unread] again a little later. A conversation the agent has just
+  /// started has no history to read for its first seconds, and a quiet one
+  /// sends no event that would ask again.
+  void _retryUnread(List<GenUiTarget> unread) {
+    if (unread.isEmpty) {
+      _failedPasses = 0;
+      return;
+    }
+    if (_disposed || ++_failedPasses > 5) return;
+    _recoveryFollowup?.cancel();
+    _recoveryFollowup = Timer(Duration(seconds: 2 * _failedPasses), () {
+      _recoveryFollowup = null;
+      if (!_disposed) unawaited(recover(unread));
+    });
   }
 
   Future<void> answer(
@@ -947,12 +1093,16 @@ final class GenUiStateController extends ChangeNotifier {
     _delivery.removeWhere(
       (identity, _) => (jsonDecode(identity) as List).first == profile,
     );
-    await journal.closeProfile(profile);
+    await Future.wait([
+      journal.closeProfile(profile),
+      _covered.closeProfile(profile),
+    ]);
   }
 
   void reopenProfile(String profile) {
     _closedProfiles.remove(profile);
     journal.reopenProfile(profile);
+    _covered.reopenProfile(profile);
   }
 
   @override

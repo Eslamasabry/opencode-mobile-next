@@ -1,8 +1,8 @@
-// Golden renders of the composer's approval chip on the design kit
-// (docs/ux-system/kit-api/KitComposerChips.md): the real ChatScreen at
-// 412x915, dark and light, with the app's real fonts and no server. The chip
-// in each mode, the open mode menu, and the confirm step before a more
-// permissive mode.
+// Golden renders of how approvals show in the chat, now that the chips row is
+// gone (vision slice, 2026-10-20): the real ChatScreen at 412x915, dark and
+// light, with the app's real fonts and no server. The one muted line under
+// the header while Auto-approve is on, the composer's + sheet with its
+// Auto-approve switch, and the confirm step before a more permissive mode.
 //
 // Regenerate deliberately:
 //   flutter test --update-goldens test/goldens/chat_approval_chip_golden_test.dart
@@ -17,6 +17,7 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../tool/capture/fixtures.dart';
+import '../support/composer_tools.dart';
 
 /// One page of history.
 class _Api extends CaptureApi {
@@ -117,8 +118,8 @@ void main() {
 
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';
-    Future<void> openMenu(WidgetTester tester) async {
-      await tester.tap(find.byKey(const Key('auto-approval-indicator')));
+    Future<void> openPlus(WidgetTester tester) async {
+      await openComposerTools(tester);
       await tester.pumpAndSettle();
     }
 
@@ -147,12 +148,16 @@ void main() {
       );
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
-    testWidgets('chat · approval menu · $mode', (tester) async {
+    testWidgets('chat · approval plus · $mode', (tester) async {
       await _golden(
         tester,
-        'chat_approval_menu',
+        'chat_approval_plus',
         light: light,
-        open: () => openMenu(tester),
+        prepare: (controller) => controller.setSessionAutoApproval(
+          checkoutSessionID,
+          const SessionAutoApproval(mode: AutoApprovalMode.autoOnce),
+        ),
+        open: () => openPlus(tester),
       );
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
@@ -162,16 +167,22 @@ void main() {
         'chat_approval_confirm',
         light: light,
         open: () async {
-          await openMenu(tester);
-          await tester.tap(find.byKey(const Key('approval-mode-everything')));
+          await openPlus(tester);
+          await tester.tap(
+            find.byKey(const Key('composer-setting-approval-settings')),
+          );
+          await tester.pumpAndSettle();
+          await tester.tap(find.byKey(const Key('approvals-mode-everything')));
           await tester.pumpAndSettle();
         },
       );
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
     Future<void> openSheet(WidgetTester tester) async {
-      await openMenu(tester);
-      await tester.tap(find.byKey(const Key('approval-mode-settings')));
+      await openPlus(tester);
+      await tester.tap(
+        find.byKey(const Key('composer-setting-approval-settings')),
+      );
       await tester.pumpAndSettle();
     }
 

@@ -183,13 +183,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get modelThinkingMode => 'Thinking mode';
 
   @override
-  String get modelSessionScopeNote =>
-      'Vale para as próximas rodadas desta conversa.';
-
-  @override
-  String get modelSelectionLoading => 'Loading conversation selection…';
-
-  @override
   String get modelServerDefault => 'Padrão do servidor';
 
   @override
@@ -241,9 +234,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get workNoFinalOutput => 'This command produced no output.';
-
-  @override
-  String get workCopied => 'Output copied';
 
   @override
   String get workMoreOutput => 'Load more output';
@@ -434,19 +424,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get refreshRetry => 'Tentar novamente';
 
   @override
-  String get filesProjectRoot => 'Project root';
-
-  @override
   String get globalSessionsLoadMore => 'Load more conversations';
 
   @override
   String get globalSessionsRefreshFailed => 'Could not refresh conversations.';
-
-  @override
-  String get workspaceSearchAllSessions => 'Search all conversations';
-
-  @override
-  String get workspaceProjectListUnavailable => 'Project list unavailable';
 
   @override
   String get workspaceRetryProjects => 'Try again';
@@ -460,10 +441,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get historyCursorExpired =>
       'Older history changed or expired. Refresh recent history to continue.';
-
-  @override
-  String get historyRefreshed =>
-      'History refreshed. Older messages remain available above.';
 
   @override
   String get historyLoadedOnly =>
@@ -484,10 +461,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get historyServerTotalsNote =>
       'Rows marked reported by server cover the conversation. Message counts and other estimates cover loaded history.';
-
-  @override
-  String get sessionsDetailsUnavailable =>
-      'Conversation details could not be loaded. Try again.';
 
   @override
   String get sessionsReload => 'Refresh recent conversations';
@@ -850,14 +823,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get shareSessionViewsTitle => 'Sync read state';
 
   @override
-  String get shareSessionViewsOn =>
-      'Let your other OpenCode clients know which completed results you have viewed.';
-
-  @override
-  String get shareSessionViewsOff =>
-      'Reading stays private to this device. Unread results use local read history.';
-
-  @override
   String get shareSessionViewsSaveError =>
       'Could not save this preference. Read-state sharing is off on this device for now.';
 
@@ -1022,16 +987,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Import could not be confirmed. Check All conversations before retrying: the server may have received it. Your source file is unchanged.';
 
   @override
-  String get sessionPin => 'Pin on this device';
-
-  @override
-  String get sessionUnpin => 'Unpin';
-
-  @override
-  String get sessionPinFailed =>
-      'Could not save this pin. Check device storage and that the conversation’s project has not changed, then try again.';
-
-  @override
   String get sessionPinsLoadFailed =>
       'Some pinned conversations could not be loaded. Refresh to try again.';
 
@@ -1118,210 +1073,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'User-provided text, not verified page content.';
 
   @override
-  String get digestStatusUnverified =>
-      'Server reported idle. Success or failure is not verified.';
-
-  @override
-  String get digestChangedFilesUnknown => 'Changed files: unknown.';
-
-  @override
-  String digestChangedFiles(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          '$count changed files in the conversation total; this run is unknown.',
-      one: '1 changed file in the conversation total; this run is unknown.',
-      zero: 'No changed files in the conversation total; this run is unknown.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get digestPendingDecisionsUnknown => 'Pending decisions: unknown.';
-
-  @override
-  String digestPendingDecisions(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count pending decisions in the current cache.',
-      one: '1 pending decision in the current cache.',
-      zero: 'No pending decisions in the current cache.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get digestOutcomesUnknown =>
-      'Tool outcomes and remaining tasks: unknown.';
-
-  @override
-  String get digestProvenance =>
-      'Cached server metadata only. No AI summary or model call. Open the conversation to verify results and review changes or tasks.';
-
-  @override
   String get digestOpenConversation => 'Open conversation';
 
   @override
-  String get digestReview => 'Review next actions';
-
-  @override
-  String get digestCopy => 'Copy digest';
-
-  @override
-  String get digestCopySucceeded => 'Digest copied';
-
-  @override
-  String get digestCopyFailed => 'Could not copy digest';
-
-  @override
-  String get digestDismiss => 'Dismiss';
-
-  @override
-  String get digestRunResults => 'Run results';
-
-  @override
-  String get runResultsScopeChanged =>
-      'The server or project changed. Close this view and reopen Run results from the intended project.';
-
-  @override
-  String get runResultsTitle => 'Run results';
-
-  @override
-  String get runResultsEmpty =>
-      'The latest turn has no assistant step yet, so there is nothing to show.';
-
-  @override
-  String runResultsStarted(String time) {
-    return 'Started $time';
-  }
-
-  @override
-  String get runResultsStartedUnknown => 'Start time not recorded';
-
-  @override
-  String runResultsFinished(String time) {
-    return 'Finished $time';
-  }
-
-  @override
-  String get runResultsFinishedUnknown => 'Finish time not recorded';
-
-  @override
-  String get runResultsPartialHistory =>
-      'The message that started this run was not found in the loaded history. Counts here are lower bounds and the run id is only the oldest loaded step.';
-
-  @override
-  String get runResultsOutcomeCompleted => 'Completed';
-
-  @override
-  String get runResultsOutcomeCutOff => 'Cut off by the provider';
-
-  @override
-  String get runResultsOutcomeFailed => 'Failed';
-
-  @override
-  String get runResultsOutcomeAborted => 'Aborted';
-
-  @override
-  String get runResultsOutcomeRunning => 'Still running';
-
-  @override
-  String get runResultsOutcomeNotReported => 'Outcome not reported';
-
-  @override
-  String runResultsFinishReason(String finish) {
-    return 'Provider finish reason: $finish';
-  }
-
-  @override
-  String get runResultsFinishReasonMissing =>
-      'The provider gave no finish reason.';
-
-  @override
-  String runResultsEarlierErrors(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          '$count earlier steps reported errors; the newest step decides the outcome.',
-      one:
-          'An earlier step reported an error; the newest step decides the outcome.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get runResultsObservedLive =>
-      'This phone received the completion of the newest step live.';
-
-  @override
-  String get runResultsFromHistory =>
-      'Recovered from server history. This phone did not observe the newest step complete.';
-
-  @override
-  String get runResultsNoToolEvidence =>
-      'This run recorded no tool calls, so there is no file or command evidence. That is not the same as no changes.';
-
-  @override
-  String get runResultsChangedFilesTitle => 'Changed files';
-
-  @override
-  String get runResultsChangedFilesSource =>
-      'From completed edit, write and patch tools in this run. Not a verified diff of the working tree.';
-
-  @override
-  String get runResultsNoChangedFiles =>
-      'No completed file-changing tool in this run.';
-
-  @override
-  String get runResultsChangeEdited => 'Edited';
-
-  @override
-  String get runResultsChangeWritten => 'Written';
-
-  @override
-  String get runResultsChangePatched => 'Patched';
-
-  @override
   String get runResultsCommandsTitle => 'Commands';
-
-  @override
-  String get runResultsCommandsSource =>
-      'From bash and shell tools in this run. Exit codes appear only when the server recorded them.';
-
-  @override
-  String get runResultsNoCommands => 'No commands were run in this run.';
-
-  @override
-  String get runResultsCommandEmpty => '(command text not recorded)';
-
-  @override
-  String get runResultsOutputPruned => 'Output pruned by the server';
-
-  @override
-  String runResultsPrunedTools(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          '$count tool outputs were pruned by the server and cannot be opened.',
-      one: '1 tool output was pruned by the server and cannot be opened.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get runResultsTruncated =>
-      'Lists are capped at 50 entries. Open the conversation for the rest.';
-
-  @override
-  String get runResultsSourceNote =>
-      'Everything here is copied from the server\'s message and tool records. Nothing is summarised by a model.';
-
-  @override
-  String get runResultsOpenConversation => 'Open conversation';
 
   @override
   String get sessionOpenRelated => 'Open related';
@@ -1930,99 +1685,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Remove an attachment first. A draft holds up to 5 files and 20 MB in total.';
 
   @override
-  String get quotaTitle => 'Remaining usage';
-
-  @override
-  String quotaSourceTitle(String profile, String provider) {
-    return '$profile · $provider';
-  }
-
-  @override
-  String get quotaUnknownSource => 'No saved server';
-
-  @override
-  String get quotaSourceChanged =>
-      'The server or project changed, or its local data is being removed. Reopen Remaining usage to review the source again.';
-
-  @override
-  String get quotaSetupDescription =>
-      'Once it’s installed, confirm you trust it, then read. Provider tokens stay on the server.';
-
-  @override
-  String get quotaSetupNeeded =>
-      'Use a saved server with a password and HTTPS, or phone loopback. Update its connection settings before checking the collector.';
-
-  @override
-  String get quotaConsent =>
-      'I installed and trust this collector on this server.';
-
-  @override
-  String get quotaRead => 'Read remaining usage';
-
-  @override
-  String get quotaRefresh => 'Refresh remaining usage';
-
-  @override
-  String get quotaLoading => 'Reading remaining usage';
-
-  @override
-  String get quotaCollectorAuth =>
-      'The collector route did not accept this server sign-in. Ask the server operator to check its authentication setup.';
-
-  @override
-  String get quotaUnavailable =>
-      'Remaining usage could not be refreshed. Check the connection and collector, then retry.';
-
-  @override
-  String get quotaInvalidResponse =>
-      'The collector returned an unsupported or invalid snapshot. No new allowance is shown.';
-
-  @override
-  String get quotaUnconfigured =>
-      'The collector has no authorized account source configured. Ask its operator to finish setup.';
-
-  @override
-  String get quotaProviderUnsupported =>
-      'The selected OAuth login or provider usage route is not supported by this collector.';
-
-  @override
-  String get quotaProviderAuth =>
-      'Sign in again using the provider\'s existing login tool on the server. This app does not read or refresh that login.';
-
-  @override
-  String get quotaRateLimited =>
-      'The provider limited quota checks. Wait before refreshing; this does not prove your coding allowance is exhausted.';
-
-  @override
-  String get quotaAccountUnverified =>
-      'The collector could not verify the selected account. No allowance is shown. Check the login source on the server.';
-
-  @override
-  String get quotaStale =>
-      'This is the last reading. Refresh to see the latest.';
-
-  @override
-  String get quotaUseBlocked =>
-      'The provider reports that ordinary Codex use is currently blocked. Window percentages alone do not determine access.';
-
-  @override
-  String quotaUsed(String percent) {
-    return '$percent used';
-  }
-
-  @override
-  String get quotaSourceDisclosure =>
-      'Read-only snapshot from the optional collector using an internal provider endpoint. Other product allowances, model-specific limits, credits and eligibility are not included. Missing data is unknown, not unlimited.';
-
-  @override
   String get quotaCodex => 'Codex';
 
   @override
   String get quotaClaude => 'Claude';
-
-  @override
-  String get quotaClaudeUnavailable =>
-      'Claude plan usage comes from Claude Code, not OpenCode. To show it, open Usage widget settings below and turn on the server or phone that runs Claude Code.';
 
   @override
   String get iosRemoteSummary =>
@@ -2035,10 +1701,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get platformSecureStorageGuide =>
       'Server passwords use this platform\'s secure credential storage. They are not stored in plain app preferences.';
-
-  @override
-  String get quotaSourceBound =>
-      'Tied to the collector\'s configured Claude login. The usage response does not independently identify the account.';
 
   @override
   String get usageProviders => 'Providers';
@@ -2092,9 +1754,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pluginsLoadFailed => 'Could not load plugins. Try again.';
 
   @override
-  String get pluginsRefresh => 'Refresh plugins';
-
-  @override
   String get pluginsRetry => 'Try again';
 
   @override
@@ -2141,20 +1800,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get quotaMiniMax => 'MiniMax';
 
   @override
-  String get quotaMiniMaxSourceBound =>
-      'Tied to the collector\'s configured MiniMax Subscription Key. The quota response does not independently identify the account. Only reported general-pool percentages are shown; other limits may apply.';
-
-  @override
   String get managedHealthLifetime =>
       'Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight.';
 
   @override
   String get quotaBudgetOff => 'Off';
-
-  @override
-  String quotaBudgetPercent(String percent) {
-    return '$percent% used';
-  }
 
   @override
   String get quotaBudgetSaveFailed =>
@@ -2226,8 +1876,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get monitorNotifications => 'Notify when attention is needed';
 
   @override
-  String get monitorWifiDetail =>
-      'Checks pause unless Android reports an active Wi-Fi network. VPN or unavailable network information may pause checks.';
+  String get monitorWifiDetail => 'Checks pause without Wi-Fi.';
 
   @override
   String get monitorQuiet => 'Quiet hours';
@@ -2250,15 +1899,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get monitorSession => 'Conversation';
 
   @override
-  String get monitorPermission => 'Permission needed';
-
-  @override
-  String get monitorQuestion => 'Answer needed';
-
-  @override
-  String get monitorForm => 'Form response needed';
-
-  @override
   String get monitorUnknown => 'Unknown';
 
   @override
@@ -2275,15 +1915,14 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get monitorCheckIn => 'Check in on long runs';
+  String get monitorCheckIn => 'Check in on long work';
 
   @override
-  String get monitorCheckInDetail =>
-      'Remind me when a run has been busy this long.';
+  String get monitorCheckInDetail => 'A reminder after the time you set.';
 
   @override
   String get monitorCheckInDetailForeground =>
-      'Show a reminder row when a run has been busy this long.';
+      'A reminder row after the time you set.';
 
   @override
   String get monitorCheckInAfter => 'Check in after';
@@ -2301,9 +1940,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get monitorCheckInDue => 'Time to check in';
-
-  @override
-  String get quotaBudgetClearAll => 'Clear saved provider thresholds';
 
   @override
   String managedRecoveryAttempts(int attempts) {
@@ -2400,13 +2036,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mobileTaskPriorityLow => 'Low priority';
 
   @override
-  String get quotaMonitorTitle => 'Quota monitoring';
-
-  @override
-  String get quotaMonitorRuntime =>
-      'Sources are checked in rotation, at most three per cycle; larger lists take several cycles. Background reads require the existing live service to be active; Android may stop it. Displayed readings expire when the collector says they do. Device alerts record past threshold readings, not current remaining allowance. This page never switches your active server.';
-
-  @override
   String get usageWidgetTitle => 'Usage widget';
 
   @override
@@ -2417,61 +2046,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get usageWidgetPhoneTitle => 'This phone';
 
   @override
-  String get usageWidgetPhoneSupporting =>
-      'Claude and other agents on this phone, via Paseo. Read only while they are running.';
-
-  @override
-  String get usageWidgetOpenRemaining => 'Open Remaining usage';
-
-  @override
-  String get usageWidgetCollectorNote =>
-      'Codex, MiniMax and GLM come from Remaining usage. Set them up there, then turn on their alerts.';
-
-  @override
-  String get usageWidgetSettingsRow => 'Usage widget settings';
-
-  @override
   String get usageWidgetSearchAliases =>
       'usage widget home screen claude codex plan limit remaining paseo';
 
   @override
-  String get paseoUsageTitle => 'Show on the widget';
-
-  @override
-  String get paseoUsageSupporting =>
-      'Show what is left on this server\'s plans, such as Claude, on the Usage widget. Checked while the app runs.';
-
-  @override
-  String get paseoUsageSaveFailed => 'Could not save that change. Try again.';
-
-  @override
-  String get quotaMonitorDisabled => 'Monitoring is off.';
-
-  @override
-  String get quotaMonitorWaiting => 'Waiting for a fresh reading.';
-
-  @override
-  String get quotaMonitorChecking => 'Checking now…';
-
-  @override
-  String get quotaMonitorPaused =>
-      'Paused. Checks start again when the app is open or Stay connected in the background is on.';
-
-  @override
-  String get quotaMonitorWifiRequired => 'Waiting for Wi-Fi to check again.';
-
-  @override
   String get quotaMonitorSourceChanged =>
       'The account on this server changed, so checks stopped. Open Remaining usage on that server and read it again.';
-
-  @override
-  String get quotaMonitorSaveFailed =>
-      'Could not save quota monitoring. A failed disable stays paused in this app; retry before closing the app.';
-
-  @override
-  String quotaMonitorDisable(String provider, String server) {
-    return 'Stop monitoring $provider on $server';
-  }
 
   @override
   String get webSearchDisclosure =>
@@ -2540,10 +2120,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'After reconnecting, review any pending approvals on your computer.';
 
   @override
-  String get connectionTokenRejected =>
-      'The connection token was rejected. Update it to reconnect.';
-
-  @override
   String connectionPasswordUnreadable(String server) {
     return 'Can\'t read the saved password for $server';
   }
@@ -2569,10 +2145,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get updateConnectionToken => 'Update token';
-
-  @override
-  String get codexDraftReconnectNotice =>
-      'Review draft stays here; nothing is sent automatically.';
 
   @override
   String get codexTextOnlyPrompt =>
@@ -2803,12 +2375,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get isolatedTaskClose => 'Close';
-
-  @override
-  String get returnBriefStatusUnknown => 'Review status unknown';
-
-  @override
-  String get returnBriefReview => 'Review results';
 
   @override
   String get returnBriefContinue => 'Continue';
@@ -3252,17 +2818,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get agentAccountResetUnknown => 'Reset time unavailable';
 
   @override
-  String get projectFolderChooserTitle => 'Choose a project folder';
-
-  @override
   String get projectFolderCreate => 'Create a new folder';
 
   @override
   String get projectFolderOpen => 'Open a project folder';
-
-  @override
-  String get projectFolderNoCreateHint =>
-      'This server cannot create folders from the app. Create the folder on that machine, then open it here by its path.';
 
   @override
   String get projectFolderNameLabel => 'Folder name';
@@ -3355,25 +2914,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get workspaceDismissNotice => 'Fechar';
 
   @override
-  String get workspaceManageProjectHint =>
-      'Switch project, where it runs, and its folder';
-
-  @override
   String get reviewCopyFile => 'Copy updated file';
 
   @override
   String get reviewCopyPatch => 'Copy patch';
-
-  @override
-  String get onboardingValueTitle => 'Mantenha seu trabalho andando.';
-
-  @override
-  String get onboardingValueBody =>
-      'Peça uma alteração ao seu agente de programação, revise o resultado e continue de onde parou.';
-
-  @override
-  String get onboardingDemoNote =>
-      'Uma conversa simulada. Não precisa de servidor.';
 
   @override
   String get onboardingPrivateNetwork =>
@@ -3390,19 +2934,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingTermuxSetup => 'Neste celular';
-
-  @override
-  String get activityClearHere => 'All clear here';
-
-  @override
-  String get activityStatusIncomplete => 'Status incomplete';
-
-  @override
-  String get activityUnknownStatusDetail =>
-      'No requests loaded. Some server activity is still unknown.';
-
-  @override
-  String get activityCheckAgain => 'Try again';
 
   @override
   String get activitySavedServers => 'Saved servers';
@@ -3656,25 +3187,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7GlossaryGotIt => 'Got it';
 
   @override
-  String get e7BannerReconnectPassword =>
-      'Server password changed — reconnect.';
-
-  @override
   String get e7BannerUpdatePassword => 'Update password';
 
   @override
   String get e7BannerLost => 'Connection lost';
 
   @override
-  String get e7BannerRetrying => 'Retrying';
-
-  @override
   String get e7BannerDetails => 'Details';
-
-  @override
-  String e7BannerReconnectPasswordNote(String note) {
-    return 'Server password changed — reconnect.\n$note';
-  }
 
   @override
   String e7BannerReconnectingServer(String server) {
@@ -4142,9 +3661,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7LocaleUiWorkspaceHint => 'Every conversation, across projects';
 
   @override
-  String get e7LocaleUiFiles => 'Files';
-
-  @override
   String get e7LocaleUiFilesHint =>
       'Files, changes, terminal and other project tools';
 
@@ -4488,25 +4004,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7SettingsUi94 => 'Voice licenses and provenance';
 
   @override
-  String get e7SettingsUi95 =>
-      'Whisper models, sherpa-onnx, ONNX Runtime, and record';
-
-  @override
   String get e7SettingsUi96 => 'About and open source notices';
 
   @override
   String e7SettingsDisconnectTitle(String server) {
     return 'Disconnect from $server?';
-  }
-
-  @override
-  String e7SettingsHealthError(String error) {
-    return 'Health unavailable — $error';
-  }
-
-  @override
-  String e7SettingsHealthVersion(String version) {
-    return 'Server healthy · $version';
   }
 
   @override
@@ -4555,22 +4057,51 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String e7SettingsQueueDeleteSummary(int count) {
-    return 'Deletes all $count unsent prompts and their attachments, for every server';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Deletes all $count unsent prompts and their attachments, for every server',
+      one: 'Deletes the unsent prompt and its attachments, for every server',
+    );
+    return '$_temp0';
   }
 
   @override
   String e7SettingsQueueDeleteBody(int count) {
-    return 'This deletes $count unsent prompts and their attachments, for every server. They will never be sent. Nothing on the server is affected.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'This deletes $count unsent prompts and their attachments, for every server. They will never be sent. Nothing on the server is affected.',
+      one:
+          'This deletes the unsent prompt and its attachments, for every server. It will never be sent. Nothing on the server is affected.',
+    );
+    return '$_temp0';
   }
 
   @override
   String e7SettingsDraftDeleteSummary(int count) {
-    return 'Deletes composer text saved for $count conversations';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Deletes composer text saved for $count conversations',
+      one: 'Deletes composer text saved for 1 conversation',
+    );
+    return '$_temp0';
   }
 
   @override
   String e7SettingsDraftDeleteBody(int count) {
-    return 'This deletes the composer text saved for $count conversations. Nothing on the server is affected.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'This deletes the composer text saved for $count conversations. Nothing on the server is affected.',
+      one:
+          'This deletes the composer text saved for 1 conversation. Nothing on the server is affected.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4620,7 +4151,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7SettingsDetailUi23 => 'A desktop client for an OpenCode server.';
 
   @override
-  String get e7SettingsDetailUi25 => 'Tools';
+  String get e7SettingsDetailUi25 => 'Built-in';
 
   @override
   String get e7SettingsDetailUi26 => 'Skills';
@@ -4758,9 +4289,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get readerUiAttachPrompt => 'Attach to prompt';
-
-  @override
-  String get readerUiAddReference => 'Add as reference';
 
   @override
   String get readerUiOpenReview => 'Open in Review';
@@ -4915,11 +4443,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String readerUiViewedCount(int viewed, int files) {
-    return '$viewed of $files viewed';
-  }
-
-  @override
   String readerUiSaved(String name) {
     return '$name saved.';
   }
@@ -5018,70 +4541,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7WorkspaceDisconnected => 'The server is not connected.';
 
   @override
-  String get e7WorkspaceNoFolder => 'No project folder chosen';
-
-  @override
-  String get e7WorkspaceNoProjects => 'No projects opened';
-
-  @override
-  String get e7WorkspaceServerNoProjects => 'The server returned no projects.';
-
-  @override
-  String get e7WorkspaceChooseProject => 'Choose a project';
-
-  @override
   String get e7WorkspaceNeedsYou => 'Needs you';
-
-  @override
-  String get e7WorkspaceNoRecent => 'No recent conversations';
-
-  @override
-  String get e7WorkspaceChooseFolderToStart =>
-      'Choose a project folder to start a conversation.';
-
-  @override
-  String get e7WorkspaceStartInWorkspace =>
-      'Start a conversation in the selected project.';
-
-  @override
-  String get e7WorkspaceNoProjectSelected => 'No project selected';
-
-  @override
-  String get e7WorkspaceSwitchProject => 'Switch project';
-
-  @override
-  String get e7WorkspaceThisComputer => 'This computer';
-
-  @override
-  String get e7WorkspaceNoShareLink => 'No share link was returned.';
-
-  @override
-  String get e7WorkspaceShareCopied => 'Share link copied';
-
-  @override
-  String get e7WorkspaceReconnectingShortly =>
-      'OpenCode is reconnecting. Try again shortly.';
-
-  @override
-  String get e7WorkspaceRenameSession => 'Rename conversation';
-
-  @override
-  String get e7WorkspaceTitle => 'Title';
-
-  @override
-  String get e7WorkspaceShareConfirm => 'Share this conversation?';
-
-  @override
-  String get e7WorkspaceDeleteConfirm => 'Delete conversation?';
-
-  @override
-  String get e7WorkspaceArchive => 'Archive';
-
-  @override
-  String get e7WorkspaceShareSession => 'Share conversation';
-
-  @override
-  String get e7WorkspaceCompacting => 'Compacting…';
 
   @override
   String get e7WorkspaceStopSharing => 'Stop sharing';
@@ -5104,21 +4564,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get e7WorkspaceReconnectingAgain =>
       'OpenCode is reconnecting. Try again.';
-
-  @override
-  String get e7WorkspaceRefreshFailed => 'Could not refresh';
-
-  @override
-  String get e7WorkspacePermissionRequired => 'Permission required';
-
-  @override
-  String get e7WorkspaceAssistantQuestion => 'Assistant question';
-
-  @override
-  String get e7WorkspaceInputRequested => 'Input requested';
-
-  @override
-  String get e7WorkspaceMcpAsked => 'Asked by an MCP server';
 
   @override
   String get e7WorkspaceDismissRequest => 'Dispensar esta solicitação?';
@@ -5161,73 +4606,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get e7WorkspacePaginationStuck =>
       'Conversation pagination could not advance. Refresh the list to continue.';
-
-  @override
-  String e7WorkspaceCreateFailed(String error) {
-    return 'Could not create a conversation: $error';
-  }
-
-  @override
-  String get e7WorkspaceNoProjectsSearch =>
-      'The server returned no projects. Search all conversations to find previous work.';
-
-  @override
-  String e7WorkspaceActiveDirectory(String directory) {
-    return 'A conversation is running in this folder · $directory';
-  }
-
-  @override
-  String e7WorkspaceOpenProjectCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count open on this server',
-      one: '1 open on this server',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String e7WorkspaceArchivedToast(String title) {
-    return 'Archived “$title”';
-  }
-
-  @override
-  String e7WorkspaceDeleteDetail(String title) {
-    return '“$title” and its history will be permanently removed.';
-  }
-
-  @override
-  String e7WorkspaceShareDetail(String title) {
-    return 'Anyone with the link can view “$title”, including its conversation and shared context. Do not share secrets, credentials, or private files.';
-  }
-
-  @override
-  String e7WorkspaceRequestFor(String title) {
-    return 'for $title';
-  }
-
-  @override
-  String e7WorkspaceQuestionCount(int count, String title) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count questions · $title',
-      one: '1 question · $title',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String e7WorkspaceSubagentCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count subagents',
-      one: '1 subagent',
-    );
-    return '$_temp0';
-  }
 
   @override
   String e7WorkspaceSessionId(String id) {
@@ -5289,9 +4667,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatUiAgent => 'Agente';
-
-  @override
-  String get chatUiAllowOnce => 'Allow once';
 
   @override
   String get chatUiAlreadyAnsweredElsewhere => 'Already answered elsewhere';
@@ -5796,9 +5171,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get chatUiReferencesKeptForYourNextPromptCommands =>
       'References kept for your next prompt — commands do not carry them.';
-
-  @override
-  String get chatUiReject => 'Reject';
 
   @override
   String get chatUiReloadMessages => 'Refresh messages';
@@ -6329,11 +5701,6 @@ class AppLocalizationsPt extends AppLocalizations {
       one: '1 result',
     );
     return '$_temp0';
-  }
-
-  @override
-  String chatUiCompletedCount(Object done, Object total) {
-    return '$done/$total completed';
   }
 
   @override
@@ -7213,9 +6580,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get e7SetupUpdateHost => 'Update OpenCode on the host';
-
-  @override
-  String get e7SetupServiceStatus => 'Service status';
 
   @override
   String get e7SetupKeepAfterLogout => 'Keep it running after logout';
@@ -8657,38 +8021,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get approvalsUiMenu => 'Aprovações';
 
   @override
-  String get approvalsUiTitle => 'Approvals for this conversation';
-
-  @override
-  String get approvalsUiAskDetail => 'Every permission request waits for you.';
-
-  @override
-  String get approvalsUiAutoTitle => 'Approve automatically while connected';
-
-  @override
-  String get approvalsUiAutoDetail =>
-      'This phone answers each permission request with “Allow once” as it arrives. Nothing is saved as always allowed.';
-
-  @override
-  String get approvalsUiInheritTitle => 'Subagents inherit this';
-
-  @override
-  String get approvalsUiInheritDetail =>
-      'Subagent conversations started by this one follow the same choice unless they have their own.';
-
-  @override
-  String get approvalsUiInheritUnavailable =>
-      'Available once automatic approval is on.';
-
-  @override
   String get approvalsUiInheritedFrom => 'Herdado da conversa principal';
-
-  @override
-  String get approvalsUiInheritedDetail =>
-      'This conversation follows its parent’s approvals. Override it to choose for this conversation only.';
-
-  @override
-  String get approvalsUiOverride => 'Override for this conversation';
 
   @override
   String get approvalsUiFollowParent => 'Voltar a seguir a conversa principal';
@@ -8711,22 +8044,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get approvalsUiOpenSettings => 'Open approval settings';
-
-  @override
   String get approvalsUiIndicatorPaused => 'Aprovação automática pausada';
-
-  @override
-  String approvalsUiRecordTitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count requests approved automatically on this server',
-      one: '1 request approved automatically on this server',
-      zero: 'Nothing approved automatically on this server yet',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get handoffUiComputerTitle => 'Continue on computer';
@@ -8902,9 +8220,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get teamUiLearnHow => 'Learn how';
-
-  @override
-  String get teamUiNoServer => 'Connect to a server to use plugins.';
 
   @override
   String get teamUiPluginsTitle => 'Plugins';
@@ -9666,9 +8981,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'This is no longer waiting on you; it was answered or closed on the host.';
 
   @override
-  String get teamUiGateKindAgentBlocked => 'Agent blocked';
-
-  @override
   String get teamUiGateLabelKind => 'Provider kind';
 
   @override
@@ -9933,18 +9245,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get teamUiStartRunDirectSend => 'Send to an agent';
 
   @override
-  String teamUiStartRunRefused(String reason) {
-    return 'The host refused the objective: $reason';
-  }
-
-  @override
-  String get teamUiMergeTitleReady => 'Ready to merge';
+  String get teamUiStartRunRefused => 'The host did not accept this task.';
 
   @override
   String get teamUiMergeTitleNotReady => 'Not ready to merge';
-
-  @override
-  String get teamUiMergeTitleMerged => 'Merged';
 
   @override
   String teamUiMergeRequest(String id) {
@@ -9996,15 +9300,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get teamUiMergeMerge => 'Merge';
 
   @override
-  String teamUiMergeConfirmTitle(String branch) {
-    return 'Merge into $branch?';
-  }
-
-  @override
-  String get teamUiMergeConfirmMessage =>
-      'This cannot be undone from the phone';
-
-  @override
   String teamUiMergeConfirmAction(String branch) {
     return 'Merge into $branch';
   }
@@ -10020,9 +9315,8 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String teamUiMergeRefused(String text) {
-    return 'The host refused: $text';
-  }
+  String get teamUiMergeRefused =>
+      'The host did not accept this, so nothing was merged.';
 
   @override
   String teamUiMergeMerged(String branch, String commit) {
@@ -10771,51 +10065,44 @@ class AppLocalizationsPt extends AppLocalizations {
       'about version licenses open source notices privacy data';
 
   @override
-  String get pluginsSectionInApp => 'In this app';
-
-  @override
   String get pluginsSectionOnServer => 'Plugins on this server';
 
   @override
   String get notifySectionWhat => 'What notifies me';
 
   @override
-  String get notifyFinishedRuns => 'Finished runs';
+  String get notifyFinishedRuns => 'Finished work';
 
   @override
-  String get notifyFinishedRunsDetail =>
-      'When a run on the connected server finishes or fails.';
+  String get notifyFinishedRunsDetail => 'Several arrive as one notification.';
 
   @override
-  String get notifyRequests => 'Approvals and questions';
+  String get notifyRequests => 'Questions for you';
 
   @override
-  String get notifyRequestsDetail =>
-      'When the agent is waiting for your answer, on any monitored server.';
+  String get notifyRequestsDetail => 'Answer them from the notification.';
 
   @override
   String get notifyQuotaAlerts => 'Usage alerts';
 
   @override
-  String get notifyQuotaAlertsDetail =>
-      'Which plans to watch, and at what level. Set in Usage › Alerts.';
+  String get notifyQuotaAlertsDetail => 'Set in Usage › Alerts.';
 
   @override
   String get notifyBlockedTitle => 'Notifications are off for this app';
 
   @override
   String get notifyBlockedMessage =>
-      'Android is not letting OpenCode notify you, so finished runs, approvals and quota alerts cannot arrive until this is fixed.';
+      'Android is not letting OpenCode notify you, so questions and finished conversations cannot reach you.';
 
   @override
   String get notifySendTest => 'Send a test notification';
 
   @override
-  String get notifySendTestDetail =>
-      'Confirms whether Android is actually delivering this app\'s notifications right now.';
+  String get notifySendTestDetail => 'See if Android lets them through.';
 
   @override
-  String get notifyQuietDetail => 'Silence notifications during these hours.';
+  String get notifyQuietDetail => 'Silent during the hours you choose.';
 
   @override
   String get notifySectionBackground => 'Background';
@@ -10824,21 +10111,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notifySectionServers => 'Saved servers';
 
   @override
-  String get notifyWifiOnly => 'Check in the background on Wi-Fi only';
-
-  @override
-  String notifyHubBackgroundSummary(String state) {
-    return 'Background: $state';
-  }
+  String get notifyWifiOnly => 'Check servers on Wi-Fi only';
 
   @override
   String get usageSectionSpent => 'Spent';
 
   @override
   String get usageSectionRemaining => 'Remaining';
-
-  @override
-  String get shellTabInbox => 'Inbox';
 
   @override
   String get serverSwitcherManage => 'Manage servers';
@@ -10976,17 +10255,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get gestureEquivShortcutPromptHistory =>
       'Earlier / later prompt, with the cursor at the start or end of the message box';
-
-  @override
-  String get emptyTeachInboxMessage =>
-      'Nothing needs you. Approvals and questions from running work appear here.';
-
-  @override
-  String get emptyTeachWorkTitle => 'No conversations yet';
-
-  @override
-  String get emptyTeachWorkMessage =>
-      'Conversations you start in this project are listed here, with the ones that need you first. Start one with New conversation.';
 
   @override
   String get emptyTeachChangesTitle => 'No changes yet';
@@ -11265,24 +10533,13 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get nudgePin =>
-      'Pin conversations you return to from their menu; they stay at the top of Work.';
-
-  @override
   String get nudgeDismiss => 'Hide tip';
 
   @override
-  String get firstRunWhereQuestion => 'Onde o seu agente de programação roda?';
+  String get firstRunWhereQuestion => 'Onde o seu agente deve trabalhar?';
 
   @override
   String get firstRunOnComputer => 'No meu computador';
-
-  @override
-  String get firstRunOnComputerDetail => 'Conecte-se a um agente que roda lá.';
-
-  @override
-  String get firstRunOnPhoneDetail =>
-      'Configure um aqui. Não precisa de computador.';
 
   @override
   String get firstRunJustShowMe => 'Só quero ver';
@@ -11357,14 +10614,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get localAgentNeedsUbuntuBody =>
-      'Claude Code runs inside the Ubuntu this app sets up. Finish the On this phone setup first, then come back here.';
+      'Claude Code runs in On this phone. Finish the On this phone setup first, then come back here.';
 
   @override
   String get localAgentOpenSetup => 'Open phone setup';
 
   @override
   String get localAgentNeedsTermuxBody =>
-      'Claude Code needs Termux for now; the in-app Linux does not run it yet. Set up Termux to use it here.';
+      'Claude Code needs Termux for now; On this phone does not run it yet. Set up Termux to use it here.';
 
   @override
   String get localAgentSetUpWithTermux => 'Set up with Termux';
@@ -11478,7 +10735,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get localAgentProjectBody =>
-      'Claude Code works inside one folder of the Ubuntu on this phone.';
+      'Claude Code works inside one project folder on this phone.';
 
   @override
   String get localAgentProjectPathLabel => 'Or type a path inside Ubuntu';
@@ -11533,25 +10790,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get firstRunPaseoTitle => 'Agents through Paseo';
-
-  @override
-  String get approvalsUiEverythingTitle => 'Approve everything on this server';
-
-  @override
-  String get approvalsUiEverythingDetail =>
-      'Dangerous. Every conversation on this server, new ones and subagents included, is approved automatically while this app is connected. A conversation set to “Ask each time” still asks.';
-
-  @override
-  String get approvalsUiEverythingConfirmBody =>
-      'Agents on this server will run commands and change files without asking you, in every conversation. Turn this on only for a server and projects you can afford to break.';
-
-  @override
-  String get approvalsUiEverythingActive =>
-      'Following “Approve everything on this server”';
-
-  @override
-  String get approvalsUiServerRulesNoteEverything =>
-      'The server’s own deny rules still apply, and automatic approval stops whenever this app disconnects.';
 
   @override
   String get agentErrorConnectionDropped =>
@@ -11609,6 +10847,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Top up the account, or switch to another provider or model.';
 
   @override
+  String get agentErrorUsageLimit =>
+      'This model\'s usage limit is reached for now.';
+
+  @override
+  String get agentErrorUsageLimitHint =>
+      'Choose another model to keep going, or continue after the limit resets.';
+
+  @override
   String get agentErrorServerDiskFull =>
       'The computer running OpenCode is out of disk space.';
 
@@ -11643,10 +10889,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatStripAutoApprove => 'Aprovação automática';
 
   @override
-  String get chatStripAutoApprovePaused => 'Aprovação automática pausada';
+  String get chatChipAutoApproveOn => 'Auto-approve on';
 
   @override
-  String get chatStripApprovalAsk => 'Pergunta primeiro';
+  String get chatStripAutoApprovePaused => 'Aprovação automática pausada';
 
   @override
   String get approvalModeMenuLabel => 'Modo de aprovação';
@@ -11739,12 +10985,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get otherProjectsForget => 'Remove from recent projects';
-
-  @override
-  String get otherProjectsUntitled => 'Untitled conversation';
-
-  @override
   String get localAgentUpdate => 'Update Claude Code';
 
   @override
@@ -11791,9 +11031,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get phoneServerStartAndConnect => 'Start and connect';
-
-  @override
-  String get otherServersTitle => 'On your other servers';
 
   @override
   String otherServerWorking(int count) {
@@ -11914,22 +11151,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get phoneSetupProgressTitle => 'Configurando o OpenCode neste celular';
-
-  @override
-  String get phoneSetupProgressLeaveHint =>
-      'Você pode sair do app; avisaremos quando estiver pronto.';
-
-  @override
-  String get phoneSetupProgressFirstSetupNote =>
-      'Etapa 1 de 3: instalar. Depois, dê um nome a um projeto e comece uma conversa. Você pode sair do app; avisaremos quando estiver pronto.';
-
-  @override
-  String get phoneSetupProgressLeaveHintQuiet =>
-      'You can leave the app. Setup keeps going. Open OpenCode again to see how far it got.';
-
-  @override
-  String get phoneSetupProgressFirstSetupNoteQuiet =>
-      'Step 1 of 3: install. Then name a project and start a conversation. You can leave the app. Setup keeps going. Open OpenCode again to see how far it got.';
 
   @override
   String get phoneSetupProgressStopTitle => 'Parar a configuração?';
@@ -12069,11 +11290,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String phoneSetupErrorStart(String reason) {
-    return 'Could not start OpenCode: $reason';
-  }
-
-  @override
   String get phoneSetupErrorCannotStart =>
       'OpenCode is installed but is not answering. Continue setup to try again. Details show what stopped it.';
 
@@ -12122,7 +11338,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get phoneServerCardTitle => 'In-app Ubuntu';
+  String get phoneServerCardTitle => 'On this phone';
 
   @override
   String get phoneServerCardRunning => 'Running';
@@ -12172,11 +11388,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get phoneServerCardMore => 'More';
 
   @override
-  String phoneServerCardSwitchTo(String runtime) {
-    return 'Switch to $runtime';
-  }
-
-  @override
   String get phoneServerCardAddTools => 'Add tools (Python, AI Team…)';
 
   @override
@@ -12187,11 +11398,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get phoneServerCardRemoveTitle => 'Remove OpenCode from this phone?';
-
-  @override
-  String phoneServerCardActionFailed(String reason) {
-    return 'That did not work: $reason';
-  }
 
   @override
   String get serverEditorMoreOptions => 'More options';
@@ -12229,18 +11435,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get inAppServerOpenSetup => 'Open setup';
 
   @override
-  String get projectFolderInAppTitle => 'Open a project';
-
-  @override
   String get projectFolderNewProject => 'New project';
 
   @override
   String get projectFolderProjectNameLabel => 'Project name';
-
-  @override
-  String projectFolderNewProjectHelp(String directory) {
-    return 'The app makes the folder in $directory and opens it.';
-  }
 
   @override
   String get projectFolderEnterPath => 'Enter a path';
@@ -12311,7 +11509,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get folderBrowserErrorNotInstalled =>
-      'Ubuntu isn’t installed in the app yet.';
+      'On this phone isn\'t set up yet.';
 
   @override
   String get folderBrowserErrorMissing => 'It isn’t there any more.';
@@ -12543,24 +11741,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Abrir as configurações de armazenamento';
 
   @override
-  String phoneSetupOpenWelcomeRunning(int percent) {
-    return 'Configurando o OpenCode neste celular · $percent%';
-  }
-
-  @override
-  String phoneSetupOpenWelcomeStopped(int percent) {
-    return 'A configuração neste celular está $percent% concluída';
-  }
-
-  @override
-  String get phoneSetupOpenWelcomeStoppedDetail =>
-      'Ao continuar, ela retoma de onde parou.';
-
-  @override
   String get phoneSetupOpenWelcomeShowProgress => 'Ver progresso';
-
-  @override
-  String get phoneSetupOpenWelcomeContinue => 'Continuar';
 
   @override
   String phoneSetupOpenPhoneRuntime(String name, String runtime) {
@@ -12808,35 +11989,8 @@ class AppLocalizationsPt extends AppLocalizations {
       'Android stops an app\'s extra programs when it runs many at once, and a team runs several. If the team stops while it works, turn on Developer options › Disable child process restrictions.';
 
   @override
-  String get workUnreviewed => 'Unreviewed';
-
-  @override
-  String get workMarkReviewed => 'Mark as reviewed';
-
-  @override
-  String get workMarkReviewedFailed =>
-      'Couldn\'t mark it as reviewed. Try again.';
-
-  @override
-  String get workOtherProjects => 'Other projects';
-
-  @override
-  String get workAllProjects => 'All projects';
-
-  @override
   String workOpenLiveConversation(String title) {
     return 'Open “$title”';
-  }
-
-  @override
-  String workRunningCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Running · $count',
-      one: 'Running',
-    );
-    return '$_temp0';
   }
 
   @override
@@ -12863,14 +12017,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get workServerRestart => 'Restart';
 
   @override
+  String get connectionRestartAgent => 'Restart Claude Code';
+
+  @override
+  String get connectionRestartPhoneServer => 'Restart OpenCode';
+
+  @override
   String get workServerRestartTitle => 'Restart OpenCode on this phone?';
 
   @override
   String get workServerRestartBody =>
       'A running agent turn will stop. Your conversations are kept.';
-
-  @override
-  String get workStale => 'This may be out of date';
 
   @override
   String workRunaway(String duration) {
@@ -12975,9 +12132,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get teamUiHomeNeedsYouAnswer => 'Answer';
 
   @override
-  String get teamUiHomeNeedsYouFallbackTitle => 'The team has a question';
-
-  @override
   String teamUiHomeNeedsYouAnnouncement(String question) {
     return 'Needs you: $question';
   }
@@ -13057,9 +12211,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Up to 3 tries, only while this app is open. It never installs or updates.';
 
   @override
-  String get pluginsTeamRowTitle => 'AI Team';
-
-  @override
   String pluginsTeamRowFound(String server) {
     return 'Found on $server';
   }
@@ -13095,11 +12246,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String localTerminalShellName(int number) {
     return 'Shell $number';
-  }
-
-  @override
-  String localTerminalShellEnded(String name) {
-    return '$name · ended';
   }
 
   @override
@@ -13181,13 +12327,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get phoneServerTermuxTitle => 'Termux';
 
   @override
-  String get workNotAnsweringListTitle => 'Your conversations will be back';
-
-  @override
-  String get workNotAnsweringListBody =>
-      'They show here again as soon as the server answers.';
-
-  @override
   String get globalSessionsLoadFailedTitle => 'Couldn\'t load conversations';
 
   @override
@@ -13248,9 +12387,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get addServerSaveAnyway => 'Save anyway';
 
   @override
-  String get appearanceDisplaySection => 'Display';
-
-  @override
   String get effectsSection => 'Effects';
 
   @override
@@ -13282,10 +12418,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get effectsActivityGlow => 'Glowing border while replying';
-
-  @override
-  String get effectsActivityGlowHint =>
-      'A glowing border circles the message box while a reply is written';
 
   @override
   String get effectsSaveFailed =>
@@ -13401,13 +12533,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get teamDiscoverTurningOn => 'Turning on…';
 
   @override
-  String get teamDiscoverComputerChoiceTitle => 'A team on a computer';
-
-  @override
-  String get teamDiscoverComputerChoiceBody =>
-      'Use Gas City on a computer instead';
-
-  @override
   String get teamNowChecksEveryMinute => 'the team checks every minute';
 
   @override
@@ -13466,28 +12591,11 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get teamNewModeSolo => 'Solo';
-
-  @override
-  String get teamNewModeTeam => 'Team';
-
-  @override
-  String get teamNewTask => 'New team task';
-
-  @override
-  String get teamTaskMark => 'Team';
-
-  @override
   String get chatWatchEmptyTitle => 'Nothing here yet';
 
   @override
   String get chatWatchEmptyBody =>
       'This conversation fills in as the agent works.';
-
-  @override
-  String teamWatchBanner(String name, String role, String state) {
-    return 'Watching $name · $role · $state';
-  }
 
   @override
   String teamWatchBannerRole(String role, String state) {
@@ -14016,9 +13124,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'If Android still closes the app, it starts your phone\'s OpenCode again the next time you open it.';
 
   @override
-  String get keepRunningThisPhone => 'phone';
-
-  @override
   String teamAgentLastStep(String step) {
     return 'Last step: $step';
   }
@@ -14038,6 +13143,23 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get appExitQuietRestarted => 'Restarted after the app closed';
+
+  @override
+  String get appExitQuietRestarting => 'Restarting after the app closed';
+
+  @override
+  String get thermalQuietPaused =>
+      'Phone is hot · AI Team paused until it cools';
+
+  @override
+  String get thermalQuietStopped =>
+      'Phone is very hot · AI Team stopped until it cools';
+
+  @override
+  String get thermalQuietResumed => 'Phone cooled down · AI Team resumed';
 
   @override
   String get thermalPausedNotice =>
@@ -14663,14 +13785,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get kitModelContextFull => 'Context almost full';
-
-  @override
-  String kitModelContextLabel(String percent) {
-    return 'Context $percent % full';
-  }
-
-  @override
   String kitAttachmentOpen(String label) {
     return 'Visualizar $label';
   }
@@ -14864,10 +13978,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Você poderá enviar quando esta resposta terminar';
 
   @override
-  String get kitComposerOffline =>
-      'Offline · envia quando você voltar a ficar on-line';
-
-  @override
   String get kitComposerTools => 'Anexar e mais';
 
   @override
@@ -14969,6 +14079,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get kitTopBarBack => 'Voltar';
+
+  @override
+  String get kitErrorFallbackMessage =>
+      'This part of OpenCode hit an error. Go back and try again, or open App diagnostics for details.';
 
   @override
   String get kitTopBarClose => 'Fechar';
@@ -15238,12 +14352,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get quotaMonitorThreshold => 'Alert when used reaches';
-
-  @override
-  String get quotaMonitorSaving => 'Saving…';
-
-  @override
   String get folderBrowserSlowTitle => 'Still reading this folder';
 
   @override
@@ -15356,28 +14464,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String kitDiffShowUnchanged(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Show $count unchanged lines',
-      one: 'Show 1 unchanged line',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get kitDiffHideUnchanged => 'Hide unchanged lines';
-
-  @override
-  String kitDiffUnchangedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count unchanged lines',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get kitDiffNoChanges => 'No changes';
@@ -15420,6 +14507,22 @@ class AppLocalizationsPt extends AppLocalizations {
   String kitDiffLineRemoved(int number) {
     return 'Line $number removed';
   }
+
+  @override
+  String kitDiffLinesAdded(int start, int end) {
+    return 'Lines $start–$end added';
+  }
+
+  @override
+  String kitDiffLinesRemoved(int start, int end) {
+    return 'Lines $start–$end removed';
+  }
+
+  @override
+  String get kitDiffShowSource => 'Source';
+
+  @override
+  String get kitDiffShowFormatted => 'Formatted';
 
   @override
   String get kitDiffComment => 'Comment';
@@ -16081,44 +15184,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get searchClaudeCodeGateServers => 'Open servers';
 
   @override
-  String get activityDigestHidden => 'Digest hidden';
-
-  @override
-  String get activityOpenFailedTitle => 'Couldn\'t open conversation';
-
-  @override
-  String get activityLoading => 'Loading the Inbox';
-
-  @override
-  String get activityPickRequest => 'Pick a request';
-
-  @override
-  String get activityPickRequestDetail =>
-      'Choose one from the list to answer it here.';
-
-  @override
-  String activityAllowOnceFailed(String reason) {
-    return 'Not sent: $reason';
-  }
-
-  @override
   String get activitySendOffline => 'Reconecte-se ao servidor para responder.';
-
-  @override
-  String get activityLastSeenRunning => 'Last seen running';
-
-  @override
-  String get activityIfIgnored => 'The agent waits; nothing is lost.';
-
-  @override
-  String activityPermissionAnnouncement(String title) {
-    return 'Permission needed: $title';
-  }
-
-  @override
-  String activityFormAnnouncement(String title) {
-    return 'Input requested: $title';
-  }
 
   @override
   String get activityAnswerEveryQuestion =>
@@ -16140,7 +15206,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get activityOwnAnswer => 'Ou escreva sua própria resposta';
 
   @override
-  String get shortcutsPaletteSearch => 'Search commands and settings';
+  String get shortcutsPaletteSearch => 'Search or go to…';
 
   @override
   String get shortcutsHelpAnywhere => 'Anywhere';
@@ -16162,56 +15228,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get workspaceDetailEmptyTitle => 'Choose a conversation';
-
-  @override
-  String get workspaceDetailEmptyBody =>
-      'Open a conversation from the list to read and reply here.';
-
-  @override
-  String workspaceContextOn(String server) {
-    return 'On $server';
-  }
-
-  @override
-  String get workspaceContextCurrent => 'In use';
-
-  @override
-  String get workspaceContextNewProject => 'New project';
-
-  @override
-  String get workspaceContextRunsOn => 'Runs on';
-
-  @override
   String get workspaceContextFolder => 'Folder';
 
   @override
   String get workspaceSessionSharedLink => 'Shared link';
-
-  @override
-  String workspaceArchiveFailed(String title) {
-    return 'Couldn\'t archive “$title”. It is back in the list.';
-  }
-
-  @override
-  String get workspaceShareCopiesLink =>
-      'The link is copied once sharing starts.';
-
-  @override
-  String get workspaceDeleteSharedLink => 'Its shared link stops working.';
-
-  @override
-  String get workspaceChooserEnterPath => 'Enter a folder path';
-
-  @override
-  String get workspaceChooserRecentProjects => 'Open a project you used before';
-
-  @override
-  String get workspaceChooserLoadFailedTitle => 'Couldn\'t load your projects';
-
-  @override
-  String get workspaceChooserLoadFailedBody =>
-      'You can still open a folder by its path.';
 
   @override
   String get managedWorkspacesRefresh => 'Refresh';
@@ -16488,9 +15508,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notifyRestartBackground => 'Restart the live connection';
 
   @override
-  String get appearanceModeSystem => 'System';
-
-  @override
   String get privacySharedSection => 'Shared with your server';
 
   @override
@@ -16622,10 +15639,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get profileMonitorIfIgnored => 'The agent waits until you answer';
 
   @override
-  String get serverSettingsRestartCommandLabel =>
-      'Start OpenCode 2 on this computer';
-
-  @override
   String get serverSettingsRestartedIt => 'I restarted it';
 
   @override
@@ -16705,13 +15718,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get teamDiscoveryCardTurnOnFailed =>
-      'Could not turn the AI team on. Nothing changed. Try again.';
-
-  @override
-  String get teamDiscoveryCardTurningOn => 'Turning the AI team on…';
-
-  @override
   String get serverSwitcherTitle => 'Servers';
 
   @override
@@ -16733,9 +15739,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get formRendererFinishLater => 'Finish later';
-
-  @override
   String get formRendererSending => 'Sending your answers…';
 
   @override
@@ -16754,9 +15757,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get formRendererUseDate => 'Use date';
-
-  @override
-  String get formRendererUseTime => 'Use time';
 
   @override
   String get filePreviewPdfIsolated =>
@@ -16804,11 +15804,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String serverSettingsDisconnectTitle(String serverName) {
     return 'Disconnect from $serverName';
-  }
-
-  @override
-  String serverSettingsDisconnectDetail(String serverName) {
-    return 'Stops live updates from $serverName. Conversations stay on $serverName; unsent messages stay on this phone until you reconnect.';
   }
 
   @override
@@ -16989,11 +15984,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get importNoDestinationsTitle => 'Nowhere to import';
 
   @override
-  String importOnServer(String server) {
-    return 'On $server';
-  }
-
-  @override
   String get importChangeDestinationShort => 'Change';
 
   @override
@@ -17082,11 +16072,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get phoneSetupProgressStopContinueLater =>
       'Você pode continuar quando quiser em “Neste celular”.';
-
-  @override
-  String teamMergeConfirmTask(String title) {
-    return 'Task: $title';
-  }
 
   @override
   String get teamMergeFailedNext =>
@@ -17965,36 +16950,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messageViewContinueReply => 'Continue this reply';
 
   @override
-  String get reviewRunResultsLoadingTitle => 'Loading run results';
-
-  @override
-  String get reviewRunResultsErrorTitle => 'Couldn\'t load run results';
-
-  @override
-  String get reviewRunResultsErrorBody =>
-      'The server didn\'t send this run\'s history.';
-
-  @override
-  String get reviewRunResultsEmptyTitle => 'Nothing to show yet';
-
-  @override
-  String get reviewRunResultsScopeChangedTitle => 'The project changed';
-
-  @override
-  String get reviewRunResultsCloseAction => 'Close run results';
-
-  @override
-  String get reviewRunResultsRunningNotice =>
-      'Still running. This shows what it has done so far; pull down for the latest.';
-
-  @override
-  String get reviewRunResultsRefreshFailed =>
-      'Couldn\'t refresh. This is what was loaded before.';
-
-  @override
-  String get reviewRunResultsReviewChanges => 'Review changed files';
-
-  @override
   String get reviewRevertSheetTitle => 'Undo from this prompt?';
 
   @override
@@ -18249,12 +17204,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get aboutPackageId => 'Package id';
-
-  @override
-  String get providerQuotaProviderLabel => 'Provider';
-
-  @override
-  String get providerQuotaRouteLabel => 'Collector route';
 
   @override
   String get usageHubUnavailableTitle => 'No usage to show';
@@ -19492,26 +18441,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get teamChatGoneOpenTeam => 'Open AI Team page';
 
   @override
-  String activityFinishedRow(String when) {
-    return 'Finished · $when';
-  }
-
-  @override
-  String get activityOfflineRequests =>
-      'Requests can\'t load while you\'re offline.';
-
-  @override
   String connectionReconnectTo(String server) {
     return 'Reconnect to $server';
   }
-
-  @override
-  String get workspaceIsolatedTaskRowDetail =>
-      'Works on a separate copy so your main folder stays untouched.';
-
-  @override
-  String get workspaceSearchAllDetail =>
-      'Every project on this server, archived ones too';
 
   @override
   String serverDisconnectFrom(String server) {
@@ -19569,66 +18501,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get libraryImportAConversation => 'Import a conversation';
-
-  @override
-  String runResultsStepsShort(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count steps',
-      one: '1 step',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String runResultsStepsShortAtLeast(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'At least $count steps',
-      one: 'At least 1 step',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get runResultsUnderAMinute => 'under a minute';
-
-  @override
-  String runResultsMinutes(int minutes) {
-    return '$minutes min';
-  }
-
-  @override
-  String runResultsHoursMinutes(int hours, int minutes) {
-    return '$hours h $minutes min';
-  }
-
-  @override
-  String get runResultsHowMade => 'How this was put together';
-
-  @override
-  String get runResultsRunIdLabel => 'Run id';
-
-  @override
-  String get runResultsAgentLabel => 'Agent';
-
-  @override
-  String runResultsCommandFailedExit(int code) {
-    return 'Failed · exit $code';
-  }
-
-  @override
-  String runResultsCommandPassedExit(int code) {
-    return 'Passed · exit $code';
-  }
-
-  @override
-  String get runResultsCommandFailedNoExit => 'Failed · exit not recorded';
-
-  @override
-  String get runResultsExitNotRecorded => 'Exit not recorded';
 
   @override
   String get projectHubHealthSubtitle =>
@@ -19731,16 +18603,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get usageRefreshSpending => 'Refresh spending';
 
   @override
-  String get quotaSetupTrustNote =>
-      'Your server operator must install and protect this route at the same origin as OpenCode. Reading it uses this saved server\'s sign-in. Confirm only if you installed or trust that deployment.';
-
-  @override
-  String get quotaAlertsRowTitle => 'Quota alerts';
-
-  @override
-  String get quotaAlertsRowSupporting => 'Sound, Wi-Fi only and quiet hours';
-
-  @override
   String modelPickerUseModel(String model) {
     return 'Usar $model';
   }
@@ -19786,9 +18648,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get thisPhoneHostTermux => 'In Termux';
 
   @override
-  String get thisPhoneNeedsAttention => 'Needs you';
-
-  @override
   String get thisPhoneSetUp => 'Set up OpenCode';
 
   @override
@@ -19816,9 +18675,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get thisPhoneStorage => 'Storage';
-
-  @override
-  String get thisPhoneConnect => 'Connect';
 
   @override
   String get thisPhoneRemove => 'Remove OpenCode';
@@ -19993,7 +18849,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get teamUiPhoneProjectLabel => 'Project folder';
 
   @override
-  String get phoneServerNameInSentence => 'the in-app Ubuntu';
+  String get phoneServerNameInSentence => 'this phone';
 
   @override
   String get teamAgentWorkUnblockedShort => 'nothing blocking it';
@@ -20041,11 +18897,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsTryDemo => 'Try the demo';
-
-  @override
-  String quotaMonitorCheckNow(String provider, String server) {
-    return 'Check $provider on $server now';
-  }
 
   @override
   String get searchArchivedConversations => 'Archived conversations';
@@ -20157,43 +19008,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get newConversationLastUsed => 'Last used';
-
-  @override
-  String get newConversationSoloDetail => 'You and the assistant';
-
-  @override
-  String newConversationSoloDetailIn(String project) {
-    return 'You and the assistant, in $project';
-  }
-
-  @override
-  String get newConversationTeamDetail =>
-      'The AI Team plans the work and shares it out';
-
-  @override
-  String get newConversationTeamOffDetail =>
-      'Off on this server · opens the AI Team to set it up';
-
-  @override
-  String newConversationCopyTitle(String project) {
-    return 'Separate copy of $project';
-  }
-
-  @override
-  String newConversationCloudTitle(String machine) {
-    return 'On $machine';
-  }
-
-  @override
-  String get newConversationCloudDetail => 'A cloud machine for this project';
-
-  @override
   String get chatDraftCopy => 'Copiar rascunho';
-
-  @override
-  String get reportProblemIntro =>
-      'Say what went wrong. You see the whole report before anything leaves this phone.';
 
   @override
   String get reportProblemDescribeLabel => 'What happened?';
@@ -20204,32 +19019,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get reportProblemDescribeFirst => 'Say what happened first';
-
-  @override
-  String reportProblemAttached(String title) {
-    return 'Attached: $title';
-  }
-
-  @override
-  String get reportProblemIncludeDiagnostics => 'Include recent diagnostics';
-
-  @override
-  String reportProblemIncludeDiagnosticsBody(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count events from this phone',
-      one: '1 event from this phone',
-    );
-    return '$_temp0, with keys, passwords and server addresses removed';
-  }
-
-  @override
-  String get reportProblemReview => 'Review report';
-
-  @override
-  String get reportProblemReviewHint =>
-      'Then open it on GitHub, copy it or share it. Screenshots can be added on the GitHub form.';
 
   @override
   String reportProblemErrorsLabel(int count) {
@@ -20247,16 +19036,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Couldn\'t clear the saved report. Try again.';
 
   @override
-  String get reportProblemPreviewSubtitle => 'This is exactly what is sent';
-
-  @override
-  String get reportProblemPublicNotice =>
-      'GitHub issues are public. Nothing is filed until you submit the form there.';
-
-  @override
-  String get reportProblemOpenGitHub => 'Open GitHub form';
-
-  @override
   String get reportProblemLinkCopiesDiagnostics =>
       'The diagnostics are too long for the link. Opening the form copies them, so paste them into its Diagnostics field.';
 
@@ -20265,21 +19044,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'The report is too long for the link. Opening the form copies it, so paste it into the form.';
 
   @override
-  String get reportProblemCopy => 'Copy report';
-
-  @override
   String get reportProblemCopied => 'Report copied';
 
   @override
   String get reportProblemDiagnosticsCopied =>
       'Diagnostics copied: paste them into the form';
-
-  @override
-  String get reportProblemShare => 'Share report';
-
-  @override
-  String get reportProblemShareFallback =>
-      'Sharing didn\'t open, so the report is copied';
 
   @override
   String reportProblemErrorBadge(int count) {
@@ -20376,10 +19145,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get addServerCheckCancel => 'Stop checking';
 
   @override
-  String get addServerRemoteHttpAdvice =>
-      'Remote HTTP needs your explicit permission. Prefer HTTPS or a private Tailscale connection.';
-
-  @override
   String get addServerUseTailscale => 'Use Tailscale';
 
   @override
@@ -20427,13 +19192,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get failedJobReport => 'Report this failure';
 
   @override
-  String get reportProblemJobLog => 'Log of the failed job';
-
-  @override
-  String get reportProblemJobLogNone =>
-      'No log was kept for this job, so none is attached.';
-
-  @override
   String get sessionsOlderLoadFailed => 'Could not load older conversations.';
 
   @override
@@ -20472,21 +19230,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String quotaMonitorOffer(String provider, String server) {
-    return 'Alert me about $provider on $server';
-  }
-
-  @override
-  String quotaMonitorOfferDetail(String percent) {
-    return 'Keeps checking in the background, including after a restart, and alerts when use reaches $percent. You can change the percentage once it’s on.';
-  }
-
-  @override
-  String workspaceChooserBody(String server) {
-    return 'Conversations run inside a folder on $server.';
-  }
-
-  @override
   String get discoverServicesAliases =>
       'services dev server preview logs run commands processes';
 
@@ -20508,169 +19251,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Older drafts are waiting to move here. Delete saved prompts to make room.';
 
   @override
-  String quotaAnswerLeft(String percent) {
-    return 'About $percent left';
-  }
-
-  @override
-  String quotaAnswerLeftWeek(String percent) {
-    return 'About $percent left this week';
-  }
-
-  @override
-  String quotaAnswerLeftDays(String percent, int days) {
-    return 'About $percent left in this $days-day window';
-  }
-
-  @override
-  String quotaAnswerLeftHours(String percent, int hours) {
-    return 'About $percent left in this $hours-hour window';
-  }
-
-  @override
-  String quotaAnswerResetsAt(String time) {
-    return 'resets at $time';
-  }
-
-  @override
-  String quotaAnswerResetsOn(String day) {
-    return 'resets $day';
-  }
-
-  @override
-  String get quotaAnswerResetPassed => 'reset time passed, refresh to check';
-
-  @override
-  String quotaAnswerFromCodex(String server) {
-    return 'From your Codex account on $server';
-  }
-
-  @override
-  String get quotaAnswerAgeNow => 'Last known reading, from just now';
-
-  @override
-  String quotaAnswerAgeMinutes(int minutes) {
-    return 'Last known reading, from $minutes min ago';
-  }
-
-  @override
-  String quotaAnswerAgeHours(int hours) {
-    return 'Last known reading, from $hours h ago';
-  }
-
-  @override
-  String quotaAnswerAgeDays(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'Last known reading, from $days days ago',
-      one: 'Last known reading, from yesterday',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String quotaAnswerAlert(String percent) {
-    return 'Alert me at $percent used';
-  }
-
-  @override
-  String get quotaAnswerAlertDetail =>
-      'Says so here when a fresh reading reaches it.';
-
-  @override
-  String get quotaAnswerAlertSaveFailed =>
-      'Couldn’t save this. The alert stays as it was.';
-
-  @override
-  String quotaAnswerAttention(String percent) {
-    return 'You’ve used $percent or more of a Codex limit.';
-  }
-
-  @override
-  String quotaAnswerNotConnected(String server) {
-    return 'Connect to $server to see what’s left on its Codex account.';
-  }
-
-  @override
-  String quotaAnswerSignIn(String server) {
-    return 'Sign in to Codex on $server';
-  }
-
-  @override
-  String get quotaAnswerSignInDetail =>
-      'What’s left shows here once you’re signed in with ChatGPT.';
-
-  @override
-  String get quotaAnswerUnsupported =>
-      'This Codex sign-in has no plan limits to show. They show for ChatGPT sign-ins, not API keys.';
-
-  @override
-  String get quotaAnswerUnavailable =>
-      'Couldn’t read the Codex limits. Check the connection, then refresh.';
-
-  @override
-  String get quotaAnswerInvalid =>
-      'Codex sent limits this app can’t read. Nothing new is shown.';
-
-  @override
-  String get quotaAnswerNoWindows =>
-      'Codex reported no limits for this account.';
-
-  @override
-  String get quotaAnswerCodexNote =>
-      'Read from the Codex account on this server. Other limits, credits and model-specific caps are not included. Missing data is unknown, not unlimited.';
-
-  @override
-  String quotaNeedsCollector(String server) {
-    return 'Needs the quota collector on $server';
-  }
-
-  @override
-  String get quotaCollectorHowTo => 'How to get it';
-
-  @override
-  String quotaCollectorStepInstall(String server) {
-    return 'Ask whoever runs $server to install the quota collector. It needs Node 20 or later.';
-  }
-
-  @override
-  String get quotaCollectorStepRoute =>
-      'They keep the provider sign-in on the server and put the collector behind the same HTTPS address and password as OpenCode.';
-
-  @override
-  String get quotaCollectorStepRetry => 'Then come back here and read again.';
-
-  @override
   String get quotaCollectorGuide => 'Open the collector guide';
-
-  @override
-  String quotaCollectorFrom(String provider, String server) {
-    return '$provider, from the quota collector on $server';
-  }
-
-  @override
-  String quotaCollectorNoWindows(String provider, String server) {
-    return 'The quota collector on $server reported no limits for $provider.';
-  }
-
-  @override
-  String quotaStopCollector(String server) {
-    return 'Stop using the quota collector on $server';
-  }
-
-  @override
-  String get quotaStopCollectorDetail =>
-      'The reading goes away, and Remaining asks you again before the next read.';
-
-  @override
-  String get quotaCollectorAddressLabel => 'Collector address';
-
-  @override
-  String get quotaPlanLabel => 'Plan';
-
-  @override
-  String get quotaReadAtLabel => 'Read at';
 
   @override
   String get usageSpentToday => 'Spent today';
@@ -20800,9 +19381,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get pluginsTeamOpenPage => 'See the team’s tasks';
-
-  @override
   String get chatErrorModelNotFound => 'O servidor não tem este modelo.';
 
   @override
@@ -20913,17 +19491,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsHubUnavailableWhy => 'Why';
 
   @override
-  String get toolsHubMcpSubtitle => 'Servers that give the agent more tools';
-
-  @override
-  String get toolsHubCatalogSubtitle =>
-      'Slash commands, skills, the model\'s tools and references';
-
-  @override
-  String get toolsHubExternalAgentsSubtitle =>
-      'Agents on other services you can hand work to';
-
-  @override
   String get privacyPolicyTitle => 'Privacy policy';
 
   @override
@@ -20932,68 +19499,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsHubSearchToolsAliases =>
       'tools mcp integrations commands skills references slash capabilities plugins external agents a2a';
-
-  @override
-  String get whileAwayActReconnected => 'Reconnected by itself';
-
-  @override
-  String get whileAwayActRestarted => 'Restarted by itself';
-
-  @override
-  String get whileAwayActHeatPaused => 'AI Team paused while the phone was hot';
-
-  @override
-  String get whileAwayActHeatStopped =>
-      'AI Team stopped while the phone was hot';
-
-  @override
-  String get whileAwayActHeatResumed => 'AI Team resumed once the phone cooled';
-
-  @override
-  String get whileAwayActUpdated => 'Update downloaded by itself';
-
-  @override
-  String get whileAwayActAllowed => 'Allowed a request by itself';
-
-  @override
-  String get whileAwayActQueuedSent => 'Sent your queued message by itself';
-
-  @override
-  String get whileAwayActOther => 'Done automatically';
-
-  @override
-  String whileAwayUndoFailed(String act) {
-    return '$act · Undo didn\'t go through';
-  }
-
-  @override
-  String get whileAwayDismiss => 'Dismiss';
-
-  @override
-  String get whileAwayHistoryUnreadable =>
-      'The list of what ran by itself couldn\'t be read, so earlier automatic actions aren\'t shown.';
-
-  @override
-  String get whileAwayHistoryUnsaved =>
-      'An automatic action couldn\'t be saved to this list. It happened, but it may not be listed.';
-
-  @override
-  String whileAwayActUndone(String act) {
-    return '$act · Undone';
-  }
-
-  @override
-  String whileAwayUndoUnconfirmed(String act) {
-    return '$act · Undo not confirmed';
-  }
-
-  @override
-  String whileAwayDismissed(String what) {
-    return 'Dismissed “$what”';
-  }
-
-  @override
-  String get whileAwayMark => 'Done by itself';
 
   @override
   String get aiteamComponentTurnOff => 'Turn off AI Team';
@@ -21189,19 +19694,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsBackgroundOffFailed =>
       'Android did not turn background mode off.';
-
-  @override
-  String defaultProjectOnlyNotice(String project) {
-    return 'Opened $project, the only project on this server.';
-  }
-
-  @override
-  String defaultProjectLastUsedNotice(String project) {
-    return 'Opened $project, the project worked on most recently.';
-  }
-
-  @override
-  String get defaultProjectChange => 'Choose another project';
 
   @override
   String defaultReviewScopeNotice(String scope) {
@@ -21841,17 +20333,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String teamWatchComposerHint(String name) {
     return 'Message $name…';
-  }
-
-  @override
-  String get teamWatchComposerHintWorker => 'Message the worker…';
-
-  @override
-  String get teamWatchComposerHintAgent => 'Message this agent…';
-
-  @override
-  String teamWatchAbout(String name) {
-    return 'About $name';
   }
 
   @override
@@ -22501,52 +20982,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String workStalledSince(String time) {
-    return 'Stalled since $time';
-  }
-
-  @override
-  String attentionOnServer(String server) {
-    return 'on $server';
-  }
-
-  @override
-  String get attentionTeamTask => 'Team task';
-
-  @override
-  String attentionChecksOff(String servers) {
-    return 'Not checking $servers';
-  }
-
-  @override
-  String get attentionChecksOffDetail =>
-      'Their requests don\'t show here. Turn on checks in Notifications.';
-
-  @override
-  String attentionUnchecked(String server) {
-    return 'Couldn\'t check $server';
-  }
-
-  @override
-  String get attentionUncheckedDetail =>
-      'Requests waiting there may be missing here.';
-
-  @override
-  String attentionUncheckedSince(String time) {
-    return 'Last checked $time. Requests waiting there may be missing here.';
-  }
-
-  @override
-  String attentionWaitsForWifi(String server) {
-    return '$server is checked on Wi-Fi only';
-  }
-
-  @override
-  String attentionChecksPaused(String server) {
-    return 'Checks on $server are paused';
-  }
-
-  @override
   String get sessionAddressInclude => 'Include this server’s address';
 
   @override
@@ -22891,36 +21326,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get teamUiHostGuideOpen => 'Open the full guide';
-
-  @override
-  String hostServiceInstallChecked(String release) {
-    return 'Downloads the script from release $release and checks its SHA-256 checksum first. If the file was changed, nothing runs.';
-  }
-
-  @override
-  String get hostServiceWhatThisDoes => 'What this does';
-
-  @override
-  String get hostServiceWhatLinux =>
-      'Needs Linux with systemd, such as Ubuntu. It does not run on macOS or Windows.';
-
-  @override
-  String get hostServiceWhatInstall =>
-      'Installs OpenCode with its official installer if it is not there yet.';
-
-  @override
-  String get hostServiceWhatService =>
-      'Adds a service for your account that keeps OpenCode running after reboots and closed terminals. It listens on that computer only.';
-
-  @override
-  String get hostServiceWhatPassword =>
-      'Makes a password for the server and keeps it in a file only your account can read.';
-
-  @override
-  String get hostServicePinnedCommit => 'Script version';
-
-  @override
-  String get hostServiceChecksum => 'SHA-256 checksum';
 
   @override
   String get mcpAddBrowseTitle => 'Browse the catalogue';
@@ -23273,11 +21678,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'A reply is still being written. Stop it or let it finish, then update.';
 
   @override
-  String thisPhoneStartFailed(String runtime) {
-    return '$runtime didn\'t start. Start it again; Details below says what went wrong.';
-  }
-
-  @override
   String get thisPhoneStartAgain => 'Start again';
 
   @override
@@ -23324,9 +21724,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String serverRowDetailsTitle(String name) {
     return '$name details';
   }
-
-  @override
-  String get pluginsTeamRowTurnOn => 'Turn on';
 
   @override
   String get teamUiHostGuideEnterAddress => 'Enter the address';
@@ -23434,7 +21831,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get migrationItemProjectsWhat =>
-      'Into a new folder on the in-app server. Nothing there is overwritten.';
+      'Into a new folder in On this phone. Nothing there is overwritten.';
 
   @override
   String get migrationItemConfigWhat =>
@@ -23472,7 +21869,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get migrationExportsNote =>
-      'Private copies stay on this phone inside the in-app Linux. Nothing in them runs or turns on by itself.';
+      'Private copies stay in On this phone. Nothing in them runs or turns on by itself.';
 
   @override
   String get migrationNotMovedSignIn =>
@@ -23499,7 +21896,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Keep the app open while copying. Android stops it when you leave the app, and it picks up from here when you resume.';
 
   @override
-  String get migrationStart => 'Copy to the in-app server';
+  String get migrationStart => 'Copy to On this phone';
 
   @override
   String get migrationChooseOne => 'Choose at least one item to copy.';
@@ -23517,10 +21914,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get migrationVerifying => 'Checking the copied files…';
 
   @override
-  String get migrationSwitching => 'Connecting to the in-app server…';
+  String get migrationSwitching => 'Connecting to On this phone…';
 
   @override
-  String get migrationStepConnect => 'Connect to the in-app server';
+  String get migrationStepConnect => 'Connect to On this phone';
 
   @override
   String get migrationStop => 'Stop copying';
@@ -23568,7 +21965,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get migrationChooseFewer => 'Choose fewer items';
 
   @override
-  String get migrationNeedsBuiltin => 'Set up the in-app server first.';
+  String get migrationNeedsBuiltin => 'Set up On this phone first.';
 
   @override
   String migrationNeedsBuiltinBody(String runtime) {
@@ -23576,7 +21973,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get migrationSetUpBuiltin => 'Set up the in-app server';
+  String get migrationSetUpBuiltin => 'Set up On this phone';
 
   @override
   String get migrationSetupFailed =>
@@ -23636,7 +22033,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get migrationDestinationChangedFix =>
-      'The files on the in-app server stay as you left them.';
+      'The files in On this phone stay as you left them.';
 
   @override
   String get migrationStorageFailed =>
@@ -23652,7 +22049,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get migrationConnectionFailed =>
-      'Files are copied, but the in-app server could not connect.';
+      'Files are copied, but On this phone could not connect.';
 
   @override
   String get migrationFailureCode => 'Reason';
@@ -23687,7 +22084,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String migrationProjectsWhereBody(String folder) {
-    return 'In the folder $folder on the in-app server';
+    return 'In the folder $folder in On this phone';
   }
 
   @override
@@ -23695,7 +22092,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String migrationExportsWhereBody(String items) {
-    return '$items: saved inside the in-app Linux, not turned on';
+    return '$items: saved in On this phone, not turned on';
   }
 
   @override
@@ -23707,7 +22104,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Nothing is removed for you. Until then it keeps working, and you can switch back to it on Servers.';
 
   @override
-  String get migrationOpenBuiltin => 'Open the in-app server';
+  String get migrationOpenBuiltin => 'Open On this phone';
 
   @override
   String get migrationDetailProjects => 'Projects folder';
@@ -23731,17 +22128,17 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get migrationRowBody =>
-      'Copy your projects into the in-app server. Termux stays as it is.';
+      'Copy your projects to the server on this phone. Termux stays as it is.';
 
   @override
-  String get migrationRowResume => 'Resume moving to the in-app server';
+  String get migrationRowResume => 'Resume moving to On this phone';
 
   @override
   String get migrationRowResumeBody =>
       'Stopped before it finished. What was copied is kept.';
 
   @override
-  String get migrationRowRunning => 'Moving to the in-app server';
+  String get migrationRowRunning => 'Moving to On this phone';
 
   @override
   String get migrationRowDoneBody =>
@@ -23839,7 +22236,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get termuxProblemNotInstalled =>
-      'Termux isn\'t on this phone. Install it again, or set up the in-app server instead.';
+      'Termux isn\'t on this phone. Install it again, or set up On this phone instead.';
 
   @override
   String get termuxProblemOutdated =>
@@ -23975,7 +22372,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'OpenCode Mobile then starts again as if it were new. This cannot be undone.';
 
   @override
-  String get manageSpaceLostServer => 'The in-app server and its conversations';
+  String get manageSpaceLostServer => 'On this phone and its conversations';
 
   @override
   String manageSpaceLostProjects(int count, String size) {
@@ -24011,7 +22408,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get manageSpaceDeletedLabel => 'Clearing deletes';
 
   @override
-  String get manageSpaceServer => 'The in-app server';
+  String get manageSpaceServer => 'On this phone';
 
   @override
   String get manageSpaceServerDetail =>
@@ -24056,7 +22453,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get projectExportNoProjects => 'No projects on the in-app server yet';
+  String get projectExportNoProjects => 'No projects in On this phone yet';
 
   @override
   String get projectExportSave => 'Save as a zip file';
@@ -24167,6 +22564,12 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get freeModelNotice =>
       'Você está usando o modelo gratuito do OpenCode, que é mais lento. Adicione uma chave de API do seu provedor para usar o seu.';
+
+  @override
+  String get chatFreeModelNote => 'Free model, slower';
+
+  @override
+  String get chatFreeModelAddKey => 'Add your key';
 
   @override
   String get freeModelSignIn => 'Adicionar uma chave de API';
@@ -24375,9 +22778,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get kitTurnLiveStop => 'Stop reply';
 
   @override
-  String get kitTurnLiveStopping => 'Stopping…';
-
-  @override
   String kitTurnLiveNow(String status) {
     return '$status…';
   }
@@ -24405,22 +22805,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get e7WorkspaceYesterday => 'Yesterday';
-
-  @override
-  String get teamStripTitle => 'AI Team';
-
-  @override
-  String get teamStripIdle => 'AI Team · nothing running';
-
-  @override
-  String teamStripWorking(int count) {
-    return '$count working';
-  }
-
-  @override
-  String teamStripNeedsYou(int count) {
-    return '$count needs you';
-  }
 
   @override
   String teamProgressOne(String title) {
@@ -24490,9 +22874,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get teamRolesNew => 'New role';
-
-  @override
-  String get teamRolesEmpty => 'No roles yet';
 
   @override
   String teamRoleWorkingOn(String task, String age) {
@@ -24851,9 +23232,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get teamProjectMilestones => 'Milestones';
 
   @override
-  String get teamProjectLanes => 'Lanes';
-
-  @override
   String get teamProjectMerge => 'Merge queue';
 
   @override
@@ -25019,16 +23397,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String teamProjectLaneCount(int busy, int total) {
     return '$busy of $total lanes busy';
-  }
-
-  @override
-  String teamProjectSpend(
-    String today,
-    String daily,
-    String spent,
-    String total,
-  ) {
-    return 'Today: $today / $daily. Total: $spent / $total.';
   }
 
   @override
@@ -25239,9 +23607,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get teamProjectEditorRemoveTask => 'Remove task';
 
   @override
-  String get teamProjectEditorRemoteModel => 'The computer\'s model';
-
-  @override
   String get teamProjectEditorAddRole => 'Add role';
 
   @override
@@ -25303,9 +23668,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'This project changed while you were editing. Close this sheet and review the latest project before approving changes.';
 
   @override
-  String get teamProjectConversation => 'Task conversation';
-
-  @override
   String get teamProjectTaskMissing => 'This task is no longer available';
 
   @override
@@ -25320,9 +23682,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get teamProjectTaskInstructions => 'Instructions from the team';
-
-  @override
-  String get teamProjectTaskPlan => 'Plan';
 
   @override
   String get teamProjectTaskApprovePlan => 'Approve and start';
@@ -25380,9 +23739,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get teamProjectTaskPromoteBody =>
       'This updates protected main to the dev commit you reviewed. The engine will check both commits again before changing main.';
-
-  @override
-  String get teamProjectTaskPromotion => 'Protected branch';
 
   @override
   String get teamProjectTaskDiff => 'View changes';
@@ -25451,9 +23807,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'The demo could not be opened. Your saved project data has been kept.';
 
   @override
-  String get teamProjectInboxOpen => 'Review project decision';
-
-  @override
   String get teamProjectDemoDisclosure =>
       'Simulated projects. No agents run and no repositories change.';
 
@@ -25515,9 +23868,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get teamProjectEditorChangeRequired =>
       'Add a goal and describe the change you want.';
-
-  @override
-  String get teamProjectTaskApprovedPlan => 'Approved plan';
 
   @override
   String get teamProjectTaskCriteria => 'Acceptance criteria';
@@ -25772,9 +24122,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get teamProjectCostNoLimit => 'No limit set';
-
-  @override
   String get teamProjectCostNotReported => 'Not reported yet';
 
   @override
@@ -25902,11 +24249,6 @@ class AppLocalizationsPt extends AppLocalizations {
       one: '1 criterion',
     );
     return '$_temp0';
-  }
-
-  @override
-  String teamProjectPlanWho(String role, String server) {
-    return '$role · $server';
   }
 
   @override
@@ -26210,9 +24552,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'The team\'s engine answered but said it cannot run work yet.';
 
   @override
-  String get phoneTeamDetails => 'Details';
-
-  @override
   String get phoneTeamOffTitle => 'AI Team is off';
 
   @override
@@ -26231,9 +24570,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get phoneTeamStripReview => 'Open the check to choose when';
-
-  @override
-  String get phoneTeamStripFailed => 'AI Team couldn\'t turn on';
 
   @override
   String phoneTeamStripStep(int step, int total) {
@@ -26767,17 +25103,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get folderBrowserEmptyPhoneBody => 'Open it, or go up one level.';
 
   @override
-  String get remoteFolderRecent => 'Recent folders';
-
-  @override
-  String get remoteFolderProjects => 'Projects on this server';
-
-  @override
-  String folderBrowserNewProjectIn(String name) {
-    return 'In $name';
-  }
-
-  @override
   String folderBrowserNewProjectCreates(String path) {
     return 'Creates $path';
   }
@@ -26793,24 +25118,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Phone storage is off. Allow access to look here.';
 
   @override
-  String get folderBrowserFindProjects => 'Find projects';
-
-  @override
   String get phoneScanTitle => 'Projects on this phone';
-
-  @override
-  String get phoneScanLooking => 'Looking…';
-
-  @override
-  String phoneScanFound(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count found',
-      one: '1 found',
-    );
-    return '$_temp0';
-  }
 
   @override
   String phoneScanStopped(int seconds, int count) {
@@ -26927,22 +25235,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get effectsGlowColours => 'Colours';
 
   @override
-  String get effectsGlowColoursOne => 'One colour';
-
-  @override
-  String get effectsGlowColoursTwo => 'Two colours';
-
-  @override
   String get effectsGlowSpeed => 'Speed';
-
-  @override
-  String get effectsGlowSpeedSlow => 'Slow';
-
-  @override
-  String get effectsGlowSpeedNormal => 'Normal';
-
-  @override
-  String get effectsGlowSpeedFast => 'Fast';
 
   @override
   String get approvalModeAskDetail => 'Você responde a cada solicitação.';
@@ -26979,15 +25272,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatsHomeNeedsYou => 'Precisa de você';
 
   @override
-  String chatsHomeNeedsYouCount(int count) {
-    return 'Precisa de você · $count';
-  }
-
-  @override
   String get chatsHomeRunning => 'Em andamento';
 
   @override
   String get chatsHomeRowWorking => 'Working';
+
+  @override
+  String get chatsHomeStopped => 'Stopped';
 
   @override
   String get chatsHomeDone => 'Concluída';
@@ -27009,6 +25300,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get chatsHomeIncomplete =>
       'Algumas conversas não puderam ser carregadas';
+
+  @override
+  String chatsHomeIncompleteNamed(String servers) {
+    return '$servers couldn\'t load';
+  }
 
   @override
   String shellServerPlusOthers(String name, int count) {
@@ -27065,12 +25361,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatsHomeEmptyTitle => 'Ainda não há conversas';
 
   @override
-  String get chatsHomeEmptyBody => 'Inicie uma conversa e ela aparecerá aqui.';
-
-  @override
-  String get chatsHomeStartChat => 'Iniciar uma conversa';
-
-  @override
   String get chatsHomeNoMatchTitle => 'Nenhuma conversa corresponde';
 
   @override
@@ -27125,6 +25415,90 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatsNewSeparateCopy => 'In a separate copy';
 
   @override
+  String get agentPersonaClaudeCodeStrength => 'Careful with big changes';
+
+  @override
+  String get agentPersonaClaudeCodeAbout =>
+      'Plans before it edits; good for larger changes across files.';
+
+  @override
+  String get agentPersonaClaudeCodeNeeds => 'A Claude plan or an Anthropic key';
+
+  @override
+  String get agentPersonaCodexStrength => 'Fast edits and reviews';
+
+  @override
+  String get agentPersonaCodexAbout =>
+      'Quick at focused fixes and reviewing changes.';
+
+  @override
+  String get agentPersonaCodexNeeds => 'A ChatGPT plan or an OpenAI key';
+
+  @override
+  String get agentPersonaGeminiStrength => 'Reads a lot at once';
+
+  @override
+  String get agentPersonaGeminiAbout =>
+      'Handles long files and wide questions well.';
+
+  @override
+  String get agentPersonaGeminiNeeds => 'A Google account or a Gemini key';
+
+  @override
+  String get agentPersonaKiloStrength => 'Your choice of provider';
+
+  @override
+  String get agentPersonaKiloAbout =>
+      'One agent that works with many model providers.';
+
+  @override
+  String get agentPersonaKiloNeeds => 'A key from any supported provider';
+
+  @override
+  String get agentPersonaClineStrength => 'Step by step, asks first';
+
+  @override
+  String get agentPersonaClineAbout =>
+      'Works in small steps and checks in with you.';
+
+  @override
+  String get agentPersonaClineNeeds => 'A key from any supported provider';
+
+  @override
+  String get agentPersonaOpenCodeStrength => 'Any model, free ones too';
+
+  @override
+  String get agentPersonaOpenCodeAbout =>
+      'Works with any provider, and has free models to start.';
+
+  @override
+  String get agentPersonaOpenCodeNeeds =>
+      'Nothing to start; add a key for more models';
+
+  @override
+  String get agentPersonaOtherName => 'Another agent';
+
+  @override
+  String get agentMakerAnthropic => 'by Anthropic';
+
+  @override
+  String get agentMakerOpenAI => 'by OpenAI';
+
+  @override
+  String get agentMakerGoogle => 'by Google';
+
+  @override
+  String get agentMakerOpenSource => 'open source';
+
+  @override
+  String chatsNewStartWith(String agent) {
+    return 'Start with $agent';
+  }
+
+  @override
+  String get chatsNewSetUp => 'Set up';
+
+  @override
   String get chatsNewPrompt => 'No que vamos trabalhar?';
 
   @override
@@ -27170,11 +25544,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get agentsChooseTitle => 'Escolher um agente';
-
-  @override
-  String agentsChipSemantics(String agent) {
-    return 'Agent $agent. Change agent';
-  }
 
   @override
   String get agentsStateReady => 'Pronto';
@@ -27242,9 +25611,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get agentsPreparing => 'Preparing the agent connection…';
-
-  @override
   String get agentsSetupInterrupted =>
       'Setup stopped before it finished. Install again to continue.';
 
@@ -27289,7 +25655,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get agentsFailUnavailable =>
-      'This phone can\'t run this agent yet. Check again, or open Details to see why.';
+      'This phone can\'t run this agent yet. Open Details to see why.';
 
   @override
   String agentsResumeFailed(String agent) {
@@ -27897,6 +26263,11 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String cardsProblemRuntimeMissingFor(String agents) {
+    return 'Install $agents on this phone first.';
+  }
+
+  @override
   String cardsProblemRegistrationFailedFor(String agents) {
     return '$agents couldn\'t be told about cards.';
   }
@@ -28073,6 +26444,52 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatUiToolBackgroundTaskStopped => 'Background task stopped';
 
   @override
+  String chatUiToolMessageTo(String name) {
+    return 'Message to $name';
+  }
+
+  @override
+  String get chatUiToolMessageToMain => 'Message to the main conversation';
+
+  @override
+  String get chatUiToolMessageToEveryone => 'Message to the whole team';
+
+  @override
+  String get chatUiToolMessageToAgent => 'Message to an agent';
+
+  @override
+  String get toolCardMessageRecipientId => 'Recipient id';
+
+  @override
+  String chatUiToolBackgroundNamedFinished(String name) {
+    return '$name finished';
+  }
+
+  @override
+  String chatUiToolBackgroundNamedFailed(String name) {
+    return '$name failed';
+  }
+
+  @override
+  String chatUiToolBackgroundNamedStopped(String name) {
+    return '$name stopped';
+  }
+
+  @override
+  String chatUiToolBackgroundNamedEnded(String name) {
+    return '$name ended';
+  }
+
+  @override
+  String chatUiToolBackgroundNamedCutOff(String name) {
+    return '$name stopped when the last conversation ended';
+  }
+
+  @override
+  String get chatUiToolBackgroundTaskCutOff =>
+      'Background task stopped when the last conversation ended';
+
+  @override
   String get chatUiToolShowCard => 'Show card';
 
   @override
@@ -28096,9 +26513,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get chatStallConnectionUnchecked =>
       'Nothing has come back for a while and the connection could not be checked. Wait, or stop the reply and try again.';
-
-  @override
-  String get kitWorkHideSteps => 'Ocultar etapas';
 
   @override
   String connectionSwitchingTo(String target) {
@@ -28527,10 +26941,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Connector search is unavailable. Try again from Tools.';
 
   @override
-  String get chatUiConnectorSearchInvalid =>
-      'Invalid connector search request.';
-
-  @override
   String get chatUiConnectorSearchNotConnected => 'Not connected';
 
   @override
@@ -28729,10 +27139,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String serverSettingsRemoveTitle(String server) {
     return 'Remove $server';
   }
-
-  @override
-  String get serverSettingsRemoveDetail =>
-      'Forget it on this phone. Its conversations stay on the server.';
 
   @override
   String get serverSettingsRecheckAgents => 'Check for agents again';
@@ -29472,9 +27878,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get phraseChipsHide => 'Hide';
 
   @override
-  String get phraseChipsWorkingStarter => 'What\'s the update?';
-
-  @override
   String get settingsPhraseChipsTitle => 'Phrase suggestions';
 
   @override
@@ -29611,9 +28014,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fbMemoryFromFactsBookNone => 'All clear';
 
   @override
-  String get fbMemoryQuiet => 'Nothing in memory needs you.';
-
-  @override
   String fbMemoryReview(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -29642,9 +28042,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fbMemoryReviewDetail => 'Needs your OK';
 
   @override
-  String get fbMemoryRecoveryKit => 'Save your recovery kit';
-
-  @override
   String get fbMemoryRecent => 'Recently added to memory';
 
   @override
@@ -29661,20 +28058,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fbMemoryAddSomethingDetail => 'A note or pasted text';
 
   @override
-  String get fbMemoryUnreachable => 'Memory could not be reached right now.';
-
-  @override
-  String fbAddedLine(String when) {
-    return 'Added $when';
-  }
-
-  @override
   String get fbAboutYouTitle => 'About you';
-
-  @override
-  String fbStatusLastSaved(String when) {
-    return 'Last saved $when';
-  }
 
   @override
   String get fbStatusStale => 'Showing what was last saved';
@@ -29782,22 +28166,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fbThingNoFacts => 'No facts yet.';
 
   @override
-  String get fbThingLinks => 'Linked to';
-
-  @override
   String get fbThingLocked => 'Locked folder';
-
-  @override
-  String get fbKeepIt => 'Yes, keep it';
-
-  @override
-  String get fbNotRight => 'Not right';
-
-  @override
-  String get fbDecisionKept => 'Kept.';
-
-  @override
-  String get fbDecisionRemoved => 'Removed from memory.';
 
   @override
   String get fbCaptureTitle => 'Add something';
@@ -29930,12 +28299,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Questions, changes to review and notes not saved yet show up here.';
 
   @override
-  String get fbNeedsYouSeeWhy => 'See why';
-
-  @override
-  String get fbNeedsYouAnswered => 'Thanks. That is answered.';
-
-  @override
   String get fbNotSavedTitle => 'Not saved yet';
 
   @override
@@ -30005,11 +28368,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fbReasonUnreachable => 'Memory could not be reached.';
 
   @override
-  String fbReasonWaitingFor(String device) {
-    return 'Waiting for $device.';
-  }
-
-  @override
   String get fbReasonStorageFull =>
       'This phone is full. Free some space, then try again.';
 
@@ -30020,9 +28378,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get fbReasonKeyLocked =>
       'The locked folder is locked. Unlock it, then try again.';
-
-  @override
-  String get fbReasonTooLarge => 'It is too large to save.';
 
   @override
   String get fbReasonRejected => 'Memory could not accept it.';
@@ -30123,13 +28478,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fbCareApprove => 'Approve';
 
   @override
-  String get fbCareEdit => 'Edit';
-
-  @override
   String get fbCareReject => 'Reject';
-
-  @override
-  String get fbCareSkip => 'Skip';
 
   @override
   String get fbCareApproved => 'Approved.';
@@ -30362,9 +28711,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fbReasonParserError => 'Memory could not read it. Try again.';
 
   @override
-  String get fbReminderAdjusted => 'Memory adjusted the time';
-
-  @override
   String get fbReminderMismatch =>
       'Memory read this differently. Check the date, time and zone, then try again.';
 
@@ -30451,21 +28797,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String fbWhenDaily(String time) {
     return 'Every day at $time';
-  }
-
-  @override
-  String fbWhenWeekly(String time) {
-    return 'Every week at $time';
-  }
-
-  @override
-  String fbWhenMonthly(String time) {
-    return 'Every month at $time';
-  }
-
-  @override
-  String fbWhenYearly(String time) {
-    return 'Every year at $time';
   }
 
   @override
@@ -30650,18 +28981,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get fbStatusUnknown => 'Not known';
-
-  @override
-  String get fbStatusCloudCopy => 'Cloud copy';
-
-  @override
-  String get fbStatusCloudUnknown =>
-      'Not known yet. No cloud copy has been checked.';
-
-  @override
-  String fbStatusCloudAge(String age) {
-    return '$age old';
-  }
 
   @override
   String get fbStatusHistory => 'Signed history';
@@ -31026,14 +29345,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fbRuleTestAgain => 'Test again';
 
   @override
-  String get fbRuleTestNeedsSave =>
-      'Save the rule first, then test it. A test saves nothing.';
-
-  @override
-  String get fbRuleTestDirty =>
-      'Save your changes first, so the test uses them.';
-
-  @override
   String fbRuleTestMatch(String summary, String when) {
     return 'It matches. Found: $summary, $when.';
   }
@@ -31201,9 +29512,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Memory could not confirm the conversation started, so nothing was opened. It will not try again by itself.';
 
   @override
-  String get fbOfferDismissed => 'Offer dismissed.';
-
-  @override
   String get fbErrorBusy => 'Memory is busy for a moment. Try again.';
 
   @override
@@ -31218,21 +29526,21 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get fbNodeRowDetail =>
-      'Keep your memory inside the built-in Linux on this phone. Nothing leaves the phone.';
+      'Keep your memory on this phone. Nothing leaves the phone.';
 
   @override
   String get fbNodeUnsupportedTitle => 'Not available here';
 
   @override
   String get fbNodeUnsupportedBody =>
-      'Memory on this phone needs the built-in Linux, which only Android phones have.';
+      'Memory on this phone needs On this phone, which only Android phones have.';
 
   @override
   String get fbNodeLinuxTitle => 'Set up phone first';
 
   @override
   String get fbNodeLinuxBody =>
-      'Memory runs inside the built-in Linux. Set that up first, then come back.';
+      'Memory runs in On this phone. Set that up first, then come back.';
 
   @override
   String get fbNodeLinuxAction => 'Set up this phone';
@@ -31242,14 +29550,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get fbNodeNoBuildBody =>
-      'This version of the app has no memory program to install for this phone.';
+      'This version of the app cannot install Memory on this phone. Update the app to a newer version, or connect to a server of your own below.';
 
   @override
   String get fbNodeNotInstalledTitle => 'Memory not installed yet';
 
   @override
   String get fbNodeNotInstalledBody =>
-      'The app installs Memory inside the built-in Linux, starts it and connects to it by itself. It listens only inside this phone.';
+      'The app installs Memory in On this phone, starts it and connects to it by itself. It listens only inside this phone.';
 
   @override
   String get fbNodeRun => 'Set up memory on this phone';
@@ -31271,7 +29579,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get fbNodeRunningBody =>
-      'Memory runs inside the built-in Linux and is connected to this app. It listens only inside this phone.';
+      'Memory runs in On this phone and is connected to this app. It listens only inside this phone.';
 
   @override
   String get fbNodeStoppedTitle => 'Memory is stopped';
@@ -31320,10 +29628,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get fbNodeRemoveLoses2 => 'The connection and approval key link to it';
-
-  @override
-  String get fbNodeRemoveKeeps =>
-      'Notes still waiting on this phone stay until you send or discard them.';
 
   @override
   String get fbNodeRemoved => 'Memory removed from this phone.';
@@ -31384,21 +29688,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fbCaptureRulesLook => 'Let my rules read this';
 
   @override
-  String get fbCaptureRulesLookDetail =>
-      'Saves it where your rules can see it. Approving this signs that the text is ordinary.';
-
-  @override
   String get fbAuthReasonRules => 'Let your rules read this text';
-
-  @override
-  String get fbOfferPendingNote => 'Waiting for you to send the first message.';
 
   @override
   String get fbNodeWhatTitle => 'What is this?';
 
   @override
   String get fbNodeWhatBody =>
-      'Memory keeps your notes, reminders and facts on this phone, private to you. It runs inside the phone\'s built-in Linux and never leaves the phone.';
+      'Memory keeps your notes, reminders and facts on this phone, private to you. It runs on this phone and never leaves it.';
 
   @override
   String get fbNodeOwnServer => 'Connect to my own server';
@@ -31616,18 +29913,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fbThingExplainWaiting => 'It is waiting for your OK in Needs you.';
 
   @override
-  String get settingsV3GroupConnections => 'Connections';
-
-  @override
-  String get settingsV3GroupAi => 'AI';
-
-  @override
-  String get settingsV3GroupChat => 'Conversations';
-
-  @override
-  String get settingsV3GroupHelp => 'Help and about';
-
-  @override
   String get settingsV3Servers => 'Servers';
 
   @override
@@ -31732,9 +30017,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsV3UseMyDefault => 'Use my default';
-
-  @override
-  String get settingsV3AgentsTeam => 'AI Team';
 
   @override
   String get settingsV3AgentsPhone => 'On this phone';
@@ -31844,13 +30126,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'This phone can\'t ring reminders yet. It\'s saved and shows in Reminders.';
 
   @override
-  String get quotaAlertsSwitchTitle => 'Low quota alerts';
-
-  @override
-  String get quotaAlertsSwitchSupporting =>
-      'When a monitored provider passes the threshold you set for it. Applies to every server on this phone.';
-
-  @override
   String settingsV3ReconnectTo(String name) {
     return 'Reconnect to $name';
   }
@@ -31887,37 +30162,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get usageWidgetStatusPaused =>
-      'Paused while the app is in the background.';
-
-  @override
-  String get usageWidgetStatusChecking => 'Checking…';
-
-  @override
-  String get usageWidgetStatusPhoneStopped =>
-      'Claude Code isn\'t running on this phone. The widget updates once it runs.';
-
-  @override
-  String get usageWidgetStatusFailed =>
-      'Couldn\'t read usage. It tries again in a few minutes.';
-
-  @override
-  String get usageWidgetStatusNothingPhone =>
-      'No plan numbers yet. Sign in to Claude Code on this phone to see them.';
-
-  @override
-  String get usageWidgetStatusNothingServer =>
-      'This server reported no plan numbers.';
-
-  @override
-  String usageWidgetStatusUpdated(String time) {
-    return 'Updated $time';
-  }
-
-  @override
-  String get projectHubBrowseFiles => 'Browse files';
-
-  @override
   String settingsV3NotConnectedVersion(String version) {
     return 'Not connected · last seen $version';
   }
@@ -31925,21 +30169,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsV3ConnectToChange =>
       'Connect to see and change its providers, tools and permissions.';
-
-  @override
-  String quotaInAppTitle(String server) {
-    return 'Show usage from $server';
-  }
-
-  @override
-  String quotaInAppDescription(String server) {
-    return 'Reads what is left on Codex, GLM and MiniMax from the sign-ins OpenCode already has here. The app starts a small helper inside $server. Nothing leaves this phone except the usage questions to each provider.';
-  }
-
-  @override
-  String quotaInAppSetUp(String server) {
-    return 'Set up usage on $server';
-  }
 
   @override
   String quotaInAppStepChecking(String server) {
@@ -31959,47 +30188,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get quotaInAppStepReading => 'Reading what is left';
 
   @override
-  String quotaInAppTurnOff(String server) {
-    return 'Turn off usage on $server';
-  }
-
-  @override
-  String get quotaInAppTurnOffDetail =>
-      'Stops the helper and removes its files and key from this phone. Your sign-ins stay as they are.';
-
-  @override
-  String quotaInAppCheckAgain(String server) {
-    return 'Check sign-ins on $server again';
-  }
-
-  @override
-  String quotaInAppNotSignedIn(String provider, String server) {
-    return 'Not signed in to $provider in OpenCode on $server. Sign in there, then check again.';
-  }
-
-  @override
-  String quotaInAppSignInExpired(String provider, String server) {
-    return 'The $provider sign-in in OpenCode on $server has run out. Sign in again there, then check again.';
-  }
-
-  @override
-  String quotaInAppNotAnswering(String server) {
-    return 'Usage on $server is not answering. Set it up again to start it.';
-  }
-
-  @override
   String quotaInAppFailLinux(String server) {
-    return '$server is not ready yet. Finish setting up In-app Ubuntu, then try again.';
+    return '$server is not ready yet. Finish setting up On this phone, then try again.';
   }
 
   @override
   String quotaInAppFailNoNode(String server) {
-    return '$server has no Node yet, which usage needs. Run the In-app Ubuntu setup again to add it, then try again.';
+    return '$server has no Node yet, which usage needs. Run the On this phone setup again to add it, then try again.';
   }
 
   @override
   String quotaInAppFailNodeOld(String server) {
-    return 'Node on $server is older than version 20. Run the In-app Ubuntu setup again to update it, then try again.';
+    return 'Node on $server is older than version 20. Run the On this phone setup again to update it, then try again.';
   }
 
   @override
@@ -32071,11 +30271,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String usageUsedLeft(int used, int left) {
-    return '$used% used · $left% left';
-  }
-
-  @override
   String get usageWindowFiveHour => '5 hours';
 
   @override
@@ -32102,52 +30297,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get usageAlertsTitle => 'Alerts';
 
   @override
-  String usageAlertsSummaryOn(int percent) {
-    final intl.NumberFormat percentNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String percentString = percentNumberFormat.format(percent);
-
-    return 'On · at $percentString% used';
-  }
-
-  @override
   String get usageAlertsSummaryOff => 'Off';
 
   @override
   String get usageWidgetRow => 'Home screen widget';
 
   @override
-  String usageWidgetSubs(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString subscriptions',
-      one: '1 subscription',
-      zero: 'No subscriptions',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String usageApiKeyOnly(String provider, String connection) {
     return '$provider API key on $connection · pay as you go, no plan limits';
   }
-
-  @override
-  String usagePillPast(int percent) {
-    final intl.NumberFormat percentNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String percentString = percentNumberFormat.format(percent);
-
-    return 'Past $percentString%';
-  }
-
-  @override
-  String get usagePillOut => 'Limit reached';
 
   @override
   String get usagePillSignInRanOut => 'Sign-in ran out';
@@ -32159,13 +30317,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get usagePillCantRead => 'Can’t read yet';
 
   @override
-  String get usagePillNotSignedIn => 'Not signed in';
-
-  @override
   String get usagePillOffline => 'Offline';
-
-  @override
-  String get usagePillNoLimits => 'No limits';
 
   @override
   String usageCantReadBody(String connection) {
@@ -32284,9 +30436,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get usageReadUsageFromHere => 'Read usage from here';
-
-  @override
   String get usageSignIn => 'Sign in';
 
   @override
@@ -32333,7 +30482,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get usageAddNoneBody =>
-      'Save a server, or set up In-app Ubuntu, and it will appear here.';
+      'Save a server, or set up On this phone, and it will appear here.';
 
   @override
   String get usageReadFromTitleHere => 'Read usage';
@@ -32351,7 +30500,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get usageReadFromBodyInApp =>
-      'To show their limits, the app starts a small reader inside In-app Ubuntu. It only reads how much is left, never your conversations or keys.';
+      'To show their limits, the app starts a small reader in On this phone. It only reads how much is left, never your conversations or keys.';
 
   @override
   String get usageReadFromSetUpInApp => 'Set up usage';
@@ -32399,9 +30548,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get usageAlertAtDefault => 'Default for every plan';
-
-  @override
   String get usageAlertAtSame => 'Same as your other plans';
 
   @override
@@ -32421,9 +30567,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'A message when a limit that ran out comes back.';
 
   @override
-  String get usageNotifyResetAll => 'Tell me when a limit resets';
-
-  @override
   String get usageSaveFailed => 'Couldn’t save this. It stays as it was.';
 
   @override
@@ -32431,9 +30574,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get usageDetailReader => 'Reader';
-
-  @override
-  String get usageDetailNone => 'None';
 
   @override
   String get usageDetailRead => 'Read';
@@ -32457,10 +30597,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get usageAlertsSwitch => 'Usage alerts';
 
   @override
-  String get usageAlertsSwitchHelp =>
-      'Watches every subscription the app can read';
-
-  @override
   String get usageAlertsDifferent => 'Different from default';
 
   @override
@@ -32468,12 +30604,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get usageAlertOverrideResetOff => 'no reset message';
-
-  @override
-  String get usageAlertsWhen => 'When';
-
-  @override
-  String get usageQuietShared => 'Shared with your other alerts';
 
   @override
   String get usageAlertsNothingToWatch =>
@@ -32522,9 +30652,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get usageReadUsage => 'Read usage';
-
-  @override
-  String get usageWifiOnlyHelp => 'Pauses checks when not on Wi-Fi';
 
   @override
   String usageSetupSignedInOn(String connection) {
@@ -33029,23 +31156,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get liveStyleBokeh => 'Bokeh';
 
   @override
-  String get liveStylePickerTitle => 'Look';
-
-  @override
-  String get liveStyleUse => 'Use this';
-
-  @override
-  String get liveStyleReplyRunning => 'Reply running';
-
-  @override
-  String liveStyleSelected(String name) {
-    return '$name, selected';
-  }
-
-  @override
-  String get liveIntensityTitle => 'Intensity';
-
-  @override
   String get liveIntensitySubtle => 'Subtle';
 
   @override
@@ -33056,10 +31166,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get effectsLiveBackground => 'Live background';
-
-  @override
-  String get effectsLiveBackgroundHint =>
-      'A slow, soft drift of colour behind every page';
 
   @override
   String get continueWithMenu => 'Continue with…';
@@ -33274,6 +31380,19 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String continuedFromShort(String title) {
+    return 'from $title';
+  }
+
+  @override
+  String continuedInShort(String agent) {
+    return 'continued in $agent';
+  }
+
+  @override
+  String get continuedGoneShort => 'other conversation gone';
+
+  @override
   String get continuedGone => 'This conversation is no longer available.';
 
   @override
@@ -33429,6 +31548,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get widgetV2ConfigureTitle => 'Widget style';
 
   @override
+  String get widgetProjectTitle => 'Show conversations from';
+
+  @override
+  String get widgetProjectUnavailable =>
+      'Couldn’t save this choice. Try again.';
+
+  @override
   String get widgetV2BackgroundLabel => 'Background';
 
   @override
@@ -33469,13 +31595,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get widgetV2AfterReplyTitle => 'Send after this reply';
-
-  @override
-  String get widgetV2RestartTitle => 'Stop and send';
-
-  @override
-  String get widgetV2RestartHelp =>
-      'Stops the current reply and starts again with your message.';
 
   @override
   String get widgetV2VoiceTitle => 'New message';
@@ -33820,10 +31939,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get openCode2UpgradeTitle => 'Updating to OpenCode 2';
 
   @override
-  String get openCode2UpgradeProgress =>
-      'Updating this phone’s server and bringing your conversations with you. Keep the app open.';
-
-  @override
   String get openCode2UpgradeFailed =>
       'The update could not finish safely. Your OpenCode 1 conversations and files are still on this phone, untouched. Try again when the server is idle and there is enough free space.';
 
@@ -33864,15 +31979,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get scheduleNewConversation => 'New conversation each run';
 
   @override
-  String get scheduleAgent => 'Agent';
-
-  @override
-  String get scheduleWeekdays => 'Every weekday';
-
-  @override
-  String get scheduleEveryHours => 'Every N hours';
-
-  @override
   String get scheduleOnce => 'Once';
 
   @override
@@ -33882,42 +31988,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get scheduleTime => 'Time';
 
   @override
-  String get scheduleHours => 'Hours between runs';
-
-  @override
-  String scheduleNextRun(String time) {
-    return 'Next: $time';
-  }
-
-  @override
-  String get scheduleSave => 'Save schedule';
-
-  @override
-  String get schedulePause => 'Pause';
-
-  @override
-  String get scheduleResume => 'Resume';
-
-  @override
   String get scheduleDelete => 'Delete schedule';
-
-  @override
-  String get scheduleHistory => 'Run history';
-
-  @override
-  String get scheduleStarted => 'Started';
-
-  @override
-  String get scheduleRunning => 'Running';
-
-  @override
-  String get scheduleFailed => 'Failed';
-
-  @override
-  String get scheduleSkipped => 'Skipped';
-
-  @override
-  String get scheduleLate => 'Late';
 
   @override
   String get schedulePaused => 'Paused';
@@ -33926,37 +31997,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get scheduleFinished => 'No more runs';
 
   @override
-  String get scheduleMissedRuns => 'If a run is missed';
-
-  @override
-  String get scheduleCatchUp => 'Run once when available';
-
-  @override
-  String get scheduleSkipMissed => 'Skip the missed run';
-
-  @override
-  String get scheduleTimingNotice =>
-      'Android may delay runs. Exact alarm access improves timing; a network connection is still needed. Force-stopping the app pauses schedules until you open it again.';
-
-  @override
-  String get scheduleExactAccess => 'Allow exact alarms';
-
-  @override
-  String get scheduleBatteryNotice =>
-      'Battery restrictions may delay schedules. Each run has a time limit; you don\'t need to keep the app open.';
-
-  @override
   String get scheduleDigest => 'Morning summary';
 
   @override
-  String get scheduleDigestDescription =>
-      'A notification each morning with counts of scheduled runs since the last summary.';
-
-  @override
   String get scheduleEmpty => 'No scheduled prompts yet';
-
-  @override
-  String get scheduleNoHistory => 'No runs yet';
 
   @override
   String get scheduleUnsupported =>
@@ -34015,42 +32059,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get scheduleMissed => 'Skipped according to your missed-run choice.';
 
   @override
-  String get scheduleInvalid =>
-      'Enter a prompt and a future time, or an interval from 1 to 168 hours.';
-
-  @override
-  String get scheduleOptions => 'Timing and delivery';
-
-  @override
-  String get scheduleNotificationsOff =>
-      'Notifications are off. Results remain in run history.';
-
-  @override
   String get scheduleDeleteBody =>
       'Future runs and this schedule’s history will be removed. Prompts already sent stay in their conversations.';
-
-  @override
-  String get scheduleNotificationTitle => 'Scheduled prompt started';
-
-  @override
-  String get scheduleNotificationBody => 'Tap to open the conversation';
-
-  @override
-  String get scheduleDigestTitle => 'Your scheduled runs';
-
-  @override
-  String scheduleDigestBody(int started, int failed, int skipped) {
-    return '$started started · $failed failed · $skipped skipped';
-  }
-
-  @override
-  String get scheduleDefaultAgent => 'Saved agent';
-
-  @override
-  String get scheduleProject => 'Project';
-
-  @override
-  String get scheduleDeleteTitle => 'Delete this schedule?';
 
   @override
   String scheduleToday(String time) {
@@ -34065,11 +32075,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String scheduleInMinutes(String minutes) {
     return 'in $minutes min';
-  }
-
-  @override
-  String scheduleEveryNHours(String hours) {
-    return 'Every $hours h';
   }
 
   @override
@@ -34775,10 +32780,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'This program was not started from this app, so its output is not kept where the app can read it. Choose Save as command on its row, stop this one, then start the saved command here to see its logs.';
 
   @override
-  String get servicesStopFailed =>
-      'It did not stop. Try again, or stop it from the Terminal.';
-
-  @override
   String devPreviewRunningNow(String name) {
     return 'Running now: $name';
   }
@@ -34928,7 +32929,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get gitRepairNotRepositoryBody =>
-      'Only Git projects in the in-app Linux\'s projects folder can be repaired here.';
+      'Only Git projects in On this phone\'s projects folder can be repaired here.';
 
   @override
   String get gitRepairClose => 'Close';
@@ -35016,11 +33017,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'The remote repository wasn’t found, or your account can’t see it.';
 
   @override
-  String get gitProblemNothingSelected => 'Choose at least one file to commit.';
+  String get gitProblemNothingSelected => 'Tick at least one file.';
 
   @override
-  String get gitProblemEmptyMessage =>
-      'Write a message that describes the commit.';
+  String get gitProblemEmptyMessage => 'Describe what changed first.';
 
   @override
   String get gitProblemNothingToCommit =>
@@ -35084,16 +33084,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gitNotRepositoryBody => 'This project folder doesn’t use Git yet.';
 
   @override
-  String get gitCleanTitle => 'No changes';
-
-  @override
   String get gitCleanBody => 'Everything is committed.';
 
   @override
   String get gitDetachedHead => 'Not on a branch';
-
-  @override
-  String get gitNotPushedYet => 'Not pushed yet';
 
   @override
   String get gitNoCommitsYet => 'No commits yet';
@@ -35105,17 +33099,6 @@ class AppLocalizationsPt extends AppLocalizations {
       locale: localeName,
       other: '$count commits to push',
       one: '1 commit to push',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String gitBehind(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count commits to pull',
-      one: '1 commit to pull',
     );
     return '$_temp0';
   }
@@ -35134,7 +33117,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get gitUsesOwnSignIn =>
-      'Push and pull use the Git sign-in already set up where this project lives.';
+      'Sending and getting latest use the Git sign-in already set up where this project lives.';
 
   @override
   String get gitChangeAdded => 'Added';
@@ -35185,13 +33168,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gitActionSaveIdentity => 'Save name and email';
 
   @override
-  String get gitBusyPull => 'Pulling…';
+  String get gitBusyPull => 'Getting the latest…';
 
   @override
-  String get gitBusyPush => 'Pushing…';
+  String get gitBusyPush => 'Sending…';
 
   @override
-  String get gitBusyCommit => 'Committing…';
+  String get gitBusyCommit => 'Saving…';
 
   @override
   String get gitBusySwitchBranch => 'Switching branch…';
@@ -35212,19 +33195,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gitDoneUpToDate => 'Already up to date.';
 
   @override
-  String get gitDonePulled => 'Pulled the latest commits.';
+  String get gitDonePulled => 'Got the latest changes.';
 
   @override
-  String get gitDonePushed => 'Pushed.';
-
-  @override
-  String get gitDonePushedTracking =>
-      'Pushed. This branch now follows the one on the remote.';
-
-  @override
-  String gitDoneCommitted(String commit) {
-    return 'Committed $commit.';
-  }
+  String get gitDonePushed => 'Sent.';
 
   @override
   String get gitDoneSwitched => 'Switched branch.';
@@ -35240,16 +33214,29 @@ class AppLocalizationsPt extends AppLocalizations {
       'Saved your name and email for this repository.';
 
   @override
-  String gitDiscardConfirmTitle(String file) {
-    return 'Discard changes to $file?';
+  String get gitCommitMessageHint => 'Describe what changed';
+
+  @override
+  String get gitWriteItForMe => 'Write it for me';
+
+  @override
+  String get gitAskAgentFixConflicts => 'Ask the agent to fix conflicts';
+
+  @override
+  String gitConflictCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files have conflicts',
+      one: '1 file has conflicts',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get gitDiscardConfirmBody =>
-      'Its changes are deleted from this device. This can’t be undone.';
-
-  @override
-  String get gitCommitMessageHint => 'Describe what changed';
+  String gitAskAgentFixConflictsPrompt(String files) {
+    return 'Please resolve the merge conflicts in $files. Keep what both sides meant, then tell me what you chose.';
+  }
 
   @override
   String get gitBranchNameHint => 'Branch name';
@@ -35265,6 +33252,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get gitHubSignOut => 'Sign out of GitHub';
+
+  @override
+  String get gitHubSignOutTitle => 'Sign out of GitHub?';
 
   @override
   String gitHubSignedInAs(String login) {
@@ -35326,4 +33316,2543 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get gitHubProblemUnexpected =>
       'GitHub sent an answer the app didn’t understand. Try again.';
+
+  @override
+  String get gitProblemInvalidRemoteName =>
+      'That isn’t a valid remote name. Use letters, numbers, dots, dashes or underscores.';
+
+  @override
+  String get gitProblemInvalidRemoteUrl =>
+      'That address doesn’t look right. Use one like https://github.com/owner/name.';
+
+  @override
+  String get gitProblemRemoteAddressHasPassword =>
+      'Take the password or token out of the address. Sign in to GitHub instead, so no secret is saved in the repository.';
+
+  @override
+  String get gitProblemRemoteExists =>
+      'A remote with that name is already set up. Choose another name.';
+
+  @override
+  String get gitProblemInvalidFolderName =>
+      'That isn’t a usable folder name. Use letters, numbers, dots, dashes or underscores.';
+
+  @override
+  String get gitProblemFolderExists =>
+      'A folder with that name is already there. Choose another name.';
+
+  @override
+  String get gitActionAddRemote => 'Add remote';
+
+  @override
+  String get gitActionClone => 'Clone';
+
+  @override
+  String get gitBusyAddRemote => 'Adding the remote…';
+
+  @override
+  String get gitBusyClone => 'Cloning…';
+
+  @override
+  String get gitDoneRemoteAdded => 'Remote added.';
+
+  @override
+  String gitDoneCloned(String path) {
+    return 'Cloned into $path. Open it from your projects.';
+  }
+
+  @override
+  String get gitSheetTitle => 'Git';
+
+  @override
+  String gitSheetChipSemantics(String branch) {
+    return 'Git, branch $branch. Opens the Git actions.';
+  }
+
+  @override
+  String get gitSheetChipSemanticsPlain => 'Git. Opens the Git actions.';
+
+  @override
+  String get gitGetLatest => 'Get latest';
+
+  @override
+  String get gitSend => 'Send';
+
+  @override
+  String get gitSaveChanges => 'Save changes';
+
+  @override
+  String gitSaveChangesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changed files',
+      one: '1 changed file',
+      zero: 'No changed files',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get gitSaveFilesLabel => 'Files to include';
+
+  @override
+  String gitSaveButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Save $count files',
+      one: 'Save 1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String gitSaveOnBranch(String branch) {
+    return 'On $branch';
+  }
+
+  @override
+  String get gitSwitchRow => 'Switch branch';
+
+  @override
+  String gitSwitchRowOn(String branch) {
+    return 'On $branch';
+  }
+
+  @override
+  String gitBranchRemoteOnly(String remote) {
+    return 'On $remote, not on this device yet';
+  }
+
+  @override
+  String get gitBranchCurrent => 'Current branch';
+
+  @override
+  String gitNewBranchFrom(String branch) {
+    return 'New branch from $branch';
+  }
+
+  @override
+  String get gitCloneRow => 'Clone a repository';
+
+  @override
+  String get gitCloneRowHint => 'Copy a repository next to this project';
+
+  @override
+  String get gitCloneAddressLabel => 'Repository address';
+
+  @override
+  String get gitCloneFolderLabel => 'Folder name';
+
+  @override
+  String gitCloneInto(String path) {
+    return 'Clones into $path';
+  }
+
+  @override
+  String get gitCloneButton => 'Clone';
+
+  @override
+  String get gitRemotesRow => 'Remotes';
+
+  @override
+  String get gitRemotesRowNone => 'None yet';
+
+  @override
+  String get gitRemotesTitle => 'Remotes';
+
+  @override
+  String get gitRemotesEmpty =>
+      'This project has no remote yet. Add one to send your work somewhere.';
+
+  @override
+  String get gitRemoteAddTitle => 'Add a remote';
+
+  @override
+  String get gitRemoteNameLabel => 'Name';
+
+  @override
+  String get gitRemoteAddressLabel => 'Address';
+
+  @override
+  String get gitIdentityTitle => 'Your name on saves';
+
+  @override
+  String get gitHubSignedOutHint =>
+      'Sign in once with a code. There is no token to paste.';
+
+  @override
+  String get gitHubSignInTitle => 'GitHub sign-in';
+
+  @override
+  String get gitHubSignInWhy =>
+      'Sending to GitHub needs your sign-in. Get a code here, enter it on GitHub, and the app stores the sign-in on this device only.';
+
+  @override
+  String get gitHubSignOutConfirm => 'Sign out';
+
+  @override
+  String gitUsesOwnSignInOn(String host) {
+    return 'Sending and getting latest use the Git sign-in set up on $host.';
+  }
+
+  @override
+  String gitDoneSaved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return 'Saved $_temp0.';
+  }
+
+  @override
+  String get gitDoneSavedPlain => 'Saved.';
+
+  @override
+  String get gitChecking => 'Checking…';
+
+  @override
+  String get gitCheckFailed => 'Couldn’t check, tap to try';
+
+  @override
+  String gitNewCount(int count) {
+    return '$count new';
+  }
+
+  @override
+  String get gitIdentityWhy =>
+      'Saves in this project carry this name and email, so your work is yours when you send it.';
+
+  @override
+  String get kitStepSliderLess => 'A';
+
+  @override
+  String get kitStepSliderMore => 'A';
+
+  @override
+  String get appearanceIntensityHelp =>
+      'Your conversation stays on top and easy to read.';
+
+  @override
+  String get appearanceTextHelp =>
+      'Applies to the whole app, on top of your phone\'s text size.';
+
+  @override
+  String kitCarouselPlace(int page, int count) {
+    return '$page of $count';
+  }
+
+  @override
+  String get gitPullNotOnRemote => 'Not on the remote yet. Send it first.';
+
+  @override
+  String get gitPullNoRemote => 'Add a remote below first.';
+
+  @override
+  String get gitSendNoRemote => 'No remote yet. Add one below.';
+
+  @override
+  String get chatSteerHint => 'Steer while it works…';
+
+  @override
+  String chatSteerReadsAfterCommand(String agent) {
+    return '$agent reads this when the command finishes';
+  }
+
+  @override
+  String chatSteerReadsAfterStep(String agent) {
+    return '$agent reads this when this step finishes';
+  }
+
+  @override
+  String get chatSteerAgentFallback => 'The agent';
+
+  @override
+  String get chatSteerStopCommand => 'Stop the command';
+
+  @override
+  String get chatSteerStopStep => 'Stop this step';
+
+  @override
+  String get chatSendLaterOrRepeat => 'Send later or repeat';
+
+  @override
+  String get chatSendLaterSaved => 'Scheduled. It is in Scheduled prompts.';
+
+  @override
+  String get composerSettingModel => 'Model';
+
+  @override
+  String get composerSettingPlan => 'Plan';
+
+  @override
+  String get composerSettingApprovalDetail =>
+      'Allow what it asks for without asking you';
+
+  @override
+  String get chatAutoApproveOn => 'Auto-approve is on';
+
+  @override
+  String get chatAutoApproveTurnOff => 'Turn off';
+
+  @override
+  String get chatNoModelSignedIn => 'No model signed in';
+
+  @override
+  String get chatNoModelSignIn => 'Sign in';
+
+  @override
+  String gitSendTo(String place, String branch) {
+    return 'Send to $place · $branch';
+  }
+
+  @override
+  String get gitPlaceGitHub => 'GitHub';
+
+  @override
+  String get gitStateUpToDate => 'Up to date';
+
+  @override
+  String get gitStateNothingToSend => 'Nothing to send';
+
+  @override
+  String get gitStateFirstSend => 'First time, links this branch';
+
+  @override
+  String get gitDetailsBranch => 'Branch';
+
+  @override
+  String get gitDetailsGetsFrom => 'Get latest from';
+
+  @override
+  String get gitDetailsSendsTo => 'Send to';
+
+  @override
+  String get gitDetailsAddress => 'Remote address';
+
+  @override
+  String gitDoneGotN(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new changes',
+      one: '1 new change',
+    );
+    return 'Got $_temp0.';
+  }
+
+  @override
+  String reviewSummary(int files, int added, int removed) {
+    String _temp0 = intl.Intl.pluralLogic(
+      files,
+      locale: localeName,
+      other: '$files files changed',
+      one: '1 file changed',
+    );
+    return '$_temp0 · +$added −$removed';
+  }
+
+  @override
+  String get reviewAlreadyApplied =>
+      'The agent already made these changes in your project.';
+
+  @override
+  String get reviewLooksGood => 'Looks good';
+
+  @override
+  String get reviewUndoAll => 'Undo all';
+
+  @override
+  String get reviewSendBackWithNote => 'Send back with a note';
+
+  @override
+  String reviewUndoTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Undo $count changed files?',
+      one: 'Undo 1 changed file?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reviewUndoBody =>
+      'Your project goes back to how it was before the agent started. The conversation stays.';
+
+  @override
+  String get chatsNewBuildPrompt => 'What would you like to build?';
+
+  @override
+  String get chatsNewProjectRow => 'Project';
+
+  @override
+  String get chatsNewModelRow => 'Model';
+
+  @override
+  String get chatsNewSeparateCopyDetail =>
+      'Works on its own copy, so your files stay as they are.';
+
+  @override
+  String get modelPickerSheetTitle => 'Model';
+
+  @override
+  String modelPickerAllModels(int count) {
+    return 'All models ($count)';
+  }
+
+  @override
+  String get modelPickerReasonDefault => 'Default';
+
+  @override
+  String get modelPickerReasonRecent => 'Recently used';
+
+  @override
+  String get modelPickerReasonCheapest => 'Cheapest';
+
+  @override
+  String get modelPickerFree => 'Free';
+
+  @override
+  String get modelPickerScopeNewSessions => 'For new conversations';
+
+  @override
+  String get modelPickerScopeSession => 'For this conversation';
+
+  @override
+  String get searchRecentTitle => 'Recent';
+
+  @override
+  String chatsHomeUnreachableShort(String servers) {
+    return '$servers isn\'t answering';
+  }
+
+  @override
+  String chatProjectChipFilesSemantics(String name) {
+    return 'Project $name. Opens its files and tools.';
+  }
+
+  @override
+  String chatProjectServerChipFilesSemantics(String name, String server) {
+    return 'Project $name on $server. Opens its files and tools.';
+  }
+
+  @override
+  String get chatTurnAllFiles => 'All files';
+
+  @override
+  String chatTurnAllFilesMore(int count) {
+    return 'All files · $count more changed';
+  }
+
+  @override
+  String chatTurnFileLinesAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines added',
+      one: '1 line added',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatTurnFileLinesRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines removed',
+      one: '1 line removed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsHubSearch => 'Search settings';
+
+  @override
+  String get settingsHubServer => 'Server';
+
+  @override
+  String get settingsHubHelp => 'Help';
+
+  @override
+  String get settingsHubServerOnPhone => 'On this phone';
+
+  @override
+  String settingsHubServerLine(String where, String state) {
+    return '$where · $state';
+  }
+
+  @override
+  String get settingsHubServerNone => 'Not set up yet';
+
+  @override
+  String gitSaveAndSendTo(int count, String place, String branch) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Save $count files and send to $place · $branch',
+      one: 'Save 1 file and send to $place · $branch',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String gitSendSavesTo(int count, String place, String branch) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Send $count saves to $place · $branch',
+      one: 'Send 1 save to $place · $branch',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get gitSaveAndSendTitle => 'Save and send';
+
+  @override
+  String get gitSaveOnly => 'Save without sending';
+
+  @override
+  String gitMessageAddOne(String file) {
+    return 'Add $file';
+  }
+
+  @override
+  String gitMessageUpdateOne(String file) {
+    return 'Update $file';
+  }
+
+  @override
+  String gitMessageUpdateTwo(String first, String second) {
+    return 'Update $first and $second';
+  }
+
+  @override
+  String gitMessageUpdateMany(String first, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Update $first and $count more files',
+      one: 'Update $first and 1 more file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String gitDoneSavedAndSent(String place, String branch) {
+    return 'Saved and sent to $place · $branch.';
+  }
+
+  @override
+  String gitSavedNotSent(String reason) {
+    return 'Saved here, not sent yet. $reason';
+  }
+
+  @override
+  String get gitMoreLabel => 'Remotes, clone and details';
+
+  @override
+  String gitBusySendingTo(String place, String branch) {
+    return 'Sending to $place · $branch…';
+  }
+
+  @override
+  String gitGetNewFrom(int count, String place, String branch) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Get $count new changes from $place · $branch',
+      one: 'Get 1 new change from $place · $branch',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String gitSavedSignInFirst(String place) {
+    return 'Saved here, not sent yet. $place needs you to sign in first.';
+  }
+
+  @override
+  String get thisPhoneAnswerRunning => 'Everything is running';
+
+  @override
+  String thisPhoneAnswerMemory(String size) {
+    return 'Uses about $size of memory';
+  }
+
+  @override
+  String thisPhoneAnswerStorage(String size) {
+    return 'Takes $size of storage';
+  }
+
+  @override
+  String get thisPhoneAnswerConnect => 'Use this phone\'s server';
+
+  @override
+  String get thisPhoneAnswerHeatPaused => 'Paused, your phone is warm';
+
+  @override
+  String get thisPhoneAnswerHeatStopped => 'Stopped, your phone is hot';
+
+  @override
+  String thisPhoneAnswerHeatResumeIn(String time) {
+    return 'The AI Team resumes by itself in $time';
+  }
+
+  @override
+  String get thisPhoneAnswerHeatResumeCool =>
+      'The AI Team resumes by itself once your phone cools';
+
+  @override
+  String get thisPhoneAnswerHeatStays =>
+      'The AI Team stays paused until you resume it';
+
+  @override
+  String get thisPhoneAnswerOff => 'The server is off';
+
+  @override
+  String get thisPhoneAnswerOffLine => 'It stays off until you start it.';
+
+  @override
+  String get thisPhoneAnswerAndroidClosed => 'Android closed the server';
+
+  @override
+  String get thisPhoneAnswerStoppedItself => 'The server stopped by itself';
+
+  @override
+  String thisPhoneAnswerRestartsIn(String time) {
+    return 'It restarts by itself in $time';
+  }
+
+  @override
+  String get thisPhoneAnswerRestartsSoon => 'It restarts by itself in a moment';
+
+  @override
+  String get thisPhoneAnswerRestarting => 'Restarting by itself';
+
+  @override
+  String get thisPhoneAnswerGaveUp =>
+      'It kept stopping, so it won\'t restart by itself.';
+
+  @override
+  String get thisPhoneAnswerRestartNow => 'Restart now';
+
+  @override
+  String get thisPhoneAnswerStartFailed => 'The server didn\'t start';
+
+  @override
+  String get thisPhoneAnswerInstallFailed => 'Setup didn\'t finish';
+
+  @override
+  String get thisPhoneAnswerCheckFailed => 'Couldn\'t check the server';
+
+  @override
+  String get thisPhoneAnswerStopFailed => 'The server didn\'t stop';
+
+  @override
+  String get thisPhoneAnswerSwitchStopped => 'The switch didn\'t finish';
+
+  @override
+  String get thisPhoneAnswerTermux => 'Can\'t reach Termux';
+
+  @override
+  String get thisPhoneAnswerRecovery => 'The server can\'t restart safely';
+
+  @override
+  String get thisPhoneAnswerNotSetUp => 'OpenCode isn\'t on this phone yet';
+
+  @override
+  String get thisPhoneAnswerSettingUp => 'Setting up the server';
+
+  @override
+  String get thisPhoneAnswerStarting => 'Starting the server';
+
+  @override
+  String get thisPhoneAnswerStopping => 'Stopping the server';
+
+  @override
+  String get thisPhoneAnswerChecking => 'Checking the server';
+
+  @override
+  String get thisPhoneAnswerRemoving => 'Removing the server';
+
+  @override
+  String get thisPhoneAnswerConnecting => 'Connecting to the server';
+
+  @override
+  String get thisPhoneRestartRow => 'Restart OpenCode on this phone';
+
+  @override
+  String get thisPhoneRestartTitle => 'Restart the server?';
+
+  @override
+  String get thisPhoneRestartBusy =>
+      'A reply is being written. Restarting stops it; your conversations are kept.';
+
+  @override
+  String thisPhoneAboutSeconds(int seconds) {
+    return 'about $seconds s';
+  }
+
+  @override
+  String thisPhoneAboutMinutes(int minutes) {
+    return 'about $minutes min';
+  }
+
+  @override
+  String get thisPhoneAnswerStartFailedLine =>
+      'Start it again; Details below says what went wrong.';
+
+  @override
+  String get serverSwitcherAddServer => 'Add a server';
+
+  @override
+  String get serverSwitcherNotAnswering => 'Isn\'t answering';
+
+  @override
+  String serverSwitcherChecksAgain(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'checks again in $count min',
+      one: 'checks again in 1 min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String serverSwitcherTryAgainLabel(String server) {
+    return 'Try $server again';
+  }
+
+  @override
+  String get serverSwitcherOpenRequest => 'Open';
+
+  @override
+  String serverSwitcherOpenRequestLabel(String target) {
+    return 'Open $target';
+  }
+
+  @override
+  String serverSwitcherAllowLabel(String command, String server) {
+    return 'Allow $command once on $server';
+  }
+
+  @override
+  String serverSwitcherUndoLabel(String server) {
+    return 'Undo the answer on $server';
+  }
+
+  @override
+  String kitRequestMoreTargets(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count more',
+      one: '+1 more',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String kitRequestChangeSize(int added, int removed) {
+    return '+$added −$removed';
+  }
+
+  @override
+  String chatRequestAskRunIn(String command, String project) {
+    return 'Run $command in $project?';
+  }
+
+  @override
+  String chatRequestAskRunNamed(String command) {
+    return 'Run $command?';
+  }
+
+  @override
+  String chatRequestAskRunAnyIn(String project) {
+    return 'Run a command in $project?';
+  }
+
+  @override
+  String chatRequestAskEditNamed(String file) {
+    return 'Edit $file?';
+  }
+
+  @override
+  String chatRequestAskEditFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Edit $count files?',
+      one: 'Edit 1 file?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatRequestAskCreateNamed(String file) {
+    return 'Create $file?';
+  }
+
+  @override
+  String chatRequestAskCreateFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Create $count files?',
+      one: 'Create 1 file?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatRequestAskDeleteNamed(String file) {
+    return 'Delete $file?';
+  }
+
+  @override
+  String chatRequestAskDeleteFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete $count files?',
+      one: 'Delete 1 file?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatRequestAskReadNamed(String file) {
+    return 'Read $file?';
+  }
+
+  @override
+  String chatRequestAlwaysAllowNamed(String what) {
+    return 'Always allow $what';
+  }
+
+  @override
+  String get chatRequestAlwaysAllowEdits => 'Always allow edits';
+
+  @override
+  String get chatRequestAlwaysAllowAnyCommand => 'Always allow every command';
+
+  @override
+  String get chatRequestAlwaysEditsWhat => 'edits';
+
+  @override
+  String get chatRequestAlwaysAnyCommandWhat => 'every command';
+
+  @override
+  String get filesAskAboutFile => 'Ask about this file';
+
+  @override
+  String filesMenuChanges(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Changes · $count files',
+      one: 'Changes · 1 file',
+      zero: 'Changes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filesProjectSwitchLabel(String name) {
+    return 'Project $name. Switch project';
+  }
+
+  @override
+  String get scheduleNew => 'New scheduled prompt';
+
+  @override
+  String get scheduleAsk => 'What should it do?';
+
+  @override
+  String get scheduleAskHint => 'Run the tests and sum up what failed';
+
+  @override
+  String get scheduleEveryDay => 'Every day';
+
+  @override
+  String get scheduleWeekdaysShort => 'Weekdays';
+
+  @override
+  String get scheduleCustom => 'Custom';
+
+  @override
+  String scheduleRuleDaily(String time) {
+    return 'Every day at $time';
+  }
+
+  @override
+  String scheduleRuleWeekdays(String time) {
+    return 'Every weekday at $time';
+  }
+
+  @override
+  String scheduleRuleHours(int hours) {
+    final intl.NumberFormat hoursNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String hoursString = hoursNumberFormat.format(hours);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: 'Every $hoursString hours',
+      one: 'Every hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scheduleForTime(String time) {
+    return 'Schedule for $time';
+  }
+
+  @override
+  String scheduleForWhen(String when) {
+    return 'Schedule for $when';
+  }
+
+  @override
+  String scheduleForHours(int hours) {
+    final intl.NumberFormat hoursNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String hoursString = hoursNumberFormat.format(hours);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: 'Schedule every $hoursString hours',
+      one: 'Schedule every hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scheduleForToday(String time) {
+    return 'Schedule for today, $time';
+  }
+
+  @override
+  String scheduleForTomorrow(String time) {
+    return 'Schedule for tomorrow, $time';
+  }
+
+  @override
+  String scheduleDayAt(String day, String time) {
+    return '$day, $time';
+  }
+
+  @override
+  String scheduleSent(String when) {
+    return 'Sent $when';
+  }
+
+  @override
+  String scheduleNotSent(String when) {
+    return 'Didn\'t go out $when';
+  }
+
+  @override
+  String scheduleSkippedWhen(String when) {
+    return 'Skipped $when';
+  }
+
+  @override
+  String get scheduleSendingNow => 'Sending now';
+
+  @override
+  String get scheduleDayToday => 'today';
+
+  @override
+  String get scheduleDayYesterday => 'yesterday';
+
+  @override
+  String get scheduleWheelToday => 'Today';
+
+  @override
+  String get scheduleWheelTomorrow => 'Tomorrow';
+
+  @override
+  String get scheduleWheelDay => 'Day';
+
+  @override
+  String get scheduleWheelHowOften => 'How often';
+
+  @override
+  String get scheduleClosedNote =>
+      'Runs even with the app closed, sometimes a little late.';
+
+  @override
+  String get scheduleNeedPrompt => 'Write what it should do first.';
+
+  @override
+  String get scheduleNeedFuture => 'Pick a time later than now.';
+
+  @override
+  String get scheduleInThisConversation => 'In this conversation';
+
+  @override
+  String get scheduleOpenRun => 'Open the conversation';
+
+  @override
+  String get scheduleDigestShort => 'A note each morning about what ran';
+
+  @override
+  String get scheduleExactNote => 'Runs may start a little late.';
+
+  @override
+  String get scheduleExactAllow => 'Allow exact timing';
+
+  @override
+  String get scheduleNotifyOff =>
+      'Notifications are off, so a run won\'t tell you it went out.';
+
+  @override
+  String get inboxTitle => 'Inbox';
+
+  @override
+  String get inboxEmptyTitle => 'Nothing waits for you';
+
+  @override
+  String get inboxFinishedLabel => 'Finished, not opened yet';
+
+  @override
+  String inboxOpenLabel(String conversation) {
+    return 'Open $conversation';
+  }
+
+  @override
+  String inboxOpenOnServer(String server) {
+    return 'Open on $server';
+  }
+
+  @override
+  String get inboxWaitingForAnswer => 'Waiting for your answer';
+
+  @override
+  String get inboxAsksPermission => 'Asks for your permission';
+
+  @override
+  String get inboxAsksQuestion => 'Asks you a question';
+
+  @override
+  String inboxUnreachable(String servers) {
+    return '$servers isn\'t answering. What waits there isn\'t shown.';
+  }
+
+  @override
+  String get kitRequestOpen => 'Open';
+
+  @override
+  String goToNeedsYouHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waiting',
+      one: '1 waiting',
+      zero: 'Nothing waits',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String inboxEmptyPartialLine(String servers) {
+    return '$servers isn\'t answering, so it may have more';
+  }
+
+  @override
+  String get kitFieldOptional => 'Optional';
+
+  @override
+  String get reportProblemAttachedLead =>
+      'The error details and app information are attached.';
+
+  @override
+  String get reportProblemJobLead =>
+      'The job\'s log, the error details and app information are attached.';
+
+  @override
+  String get reportProblemJobNoLogLead =>
+      'No log was kept for this job. The error details and app information are attached.';
+
+  @override
+  String reportProblemKeptLead(String when) {
+    return 'Noticed $when. Its details and the app information are attached.';
+  }
+
+  @override
+  String get reportProblemNothingTitle => 'No error noticed';
+
+  @override
+  String get reportProblemNothingLead =>
+      'Say what went wrong. Your words and the app information go with the report.';
+
+  @override
+  String get reportProblemPrivacy =>
+      'Passwords, keys and server addresses are taken out.';
+
+  @override
+  String get reportProblemAddLabel => 'Anything to add?';
+
+  @override
+  String get reportProblemAddHint => 'What were you doing when it happened?';
+
+  @override
+  String get reportProblemSendGitHub => 'Send as a GitHub issue';
+
+  @override
+  String get reportProblemSendHint =>
+      'Review it on GitHub before posting. It will be public.';
+
+  @override
+  String get reportProblemCopyShort => 'Copy';
+
+  @override
+  String get reportProblemKeptLink => 'Everything this phone kept';
+
+  @override
+  String welcomePhoneCost(String time, String size) {
+    return '$time · $size para baixar';
+  }
+
+  @override
+  String get welcomePhoneSetUp => 'Configurar neste celular';
+
+  @override
+  String welcomePhoneSettingUp(int percent) {
+    return 'Configurando · $percent%';
+  }
+
+  @override
+  String welcomePhoneStopped(int percent) {
+    return 'Configuração $percent% concluída';
+  }
+
+  @override
+  String get welcomePhoneContinue => 'Continuar configuração';
+
+  @override
+  String get welcomePhoneReady => 'Instalado e pronto';
+
+  @override
+  String get welcomePhoneOpen => 'Começar neste celular';
+
+  @override
+  String get welcomeComputerLine => 'Pareie com um código ou digite o endereço';
+
+  @override
+  String get welcomeComputerConnect => 'Conectar ao meu computador';
+
+  @override
+  String get welcomeMoreWays => 'Outras formas de configurar';
+
+  @override
+  String get welcomeDemoLine => 'Uma conversa simulada';
+
+  @override
+  String kitProgressRingPercent(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get kitProgressRingPercentSign => '%';
+
+  @override
+  String kitProgressRingSteps(String done, String total) {
+    return '$done of $total';
+  }
+
+  @override
+  String get kitProgressRingFinished => 'Finished';
+
+  @override
+  String phoneSetupRingDownloading(String name) {
+    return 'Downloading $name';
+  }
+
+  @override
+  String phoneSetupRingUnpacking(String name) {
+    return 'Unpacking $name';
+  }
+
+  @override
+  String phoneSetupRingInstalling(String name) {
+    return 'Installing $name';
+  }
+
+  @override
+  String get phoneSetupRingChecking => 'Checking this phone';
+
+  @override
+  String get phoneSetupRingPausedTitle => 'Setup is paused';
+
+  @override
+  String get phoneSetupRingInterruptedTitle => 'Setup was interrupted';
+
+  @override
+  String get phoneSetupRingStoppedNote =>
+      'Finished steps stay, and downloads pick up where they left off.';
+
+  @override
+  String phoneSetupRingMinutesLeft(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'About $minutes min left',
+      one: 'About 1 min left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get phoneSetupRingUnderMinute => 'Less than a minute left';
+
+  @override
+  String get phoneSetupRingWifi => 'Wi-Fi';
+
+  @override
+  String get phoneSetupRingMobileData => 'Mobile data';
+
+  @override
+  String get phoneSetupRingSafeToLeave =>
+      'Safe to leave. We\'ll let you know when it\'s ready.';
+
+  @override
+  String get phoneSetupRingSafeToLeaveQuiet =>
+      'Safe to leave. Setup keeps going in the background.';
+
+  @override
+  String get phoneSetupRingPause => 'Pause setup';
+
+  @override
+  String get phoneSetupRingDetailsTitle => 'Setup details';
+
+  @override
+  String kitProgressRingOfTotal(String total) {
+    return 'of $total';
+  }
+
+  @override
+  String get kitProgressRingStepsDone => 'steps done';
+
+  @override
+  String get devPreviewDetails => 'Preview details';
+
+  @override
+  String get devPreviewShowDetails => 'Show details';
+
+  @override
+  String get devPreviewAddress => 'Address';
+
+  @override
+  String get devPreviewAskHint => 'Ask for a change…';
+
+  @override
+  String get devPreviewAskSend => 'Send to the conversation';
+
+  @override
+  String get devPreviewAskStopAndSend => 'Stop the agent and send';
+
+  @override
+  String get devPreviewAskVoice => 'Speak your change';
+
+  @override
+  String get devPreviewAskListening => 'Listening…';
+
+  @override
+  String get devPreviewAskDoneSpeaking => 'Done speaking';
+
+  @override
+  String get devPreviewAskSent => 'Sent to the conversation';
+
+  @override
+  String get devPreviewAskSentJoins => 'Added to what the agent is doing';
+
+  @override
+  String get devPreviewAskSentAfter => 'Sent. It runs after the current reply';
+
+  @override
+  String get devPreviewAskSentRestart =>
+      'Sent. The agent started again with it';
+
+  @override
+  String get devPreviewAskNotSent => 'Didn\'t send. Your words are still here';
+
+  @override
+  String get devPreviewAskNotHeard =>
+      'Didn\'t catch that. Try again, or type it';
+
+  @override
+  String teamMergeGateQuestion(int count, String branch) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Merge $count changes into $branch?',
+      one: 'Merge 1 change into $branch?',
+      zero: 'Merge the changes into $branch?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String teamMergeGateChecksPassed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'all $count checks passed',
+      one: 'the check passed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get teamMergeGateApprove => 'Approve the merge';
+
+  @override
+  String get teamMergeGateIfIgnored =>
+      'The changes wait on their branch. Nothing is merged until you say so.';
+
+  @override
+  String teamMergeGateAnnouncement(String question) {
+    return 'Ready to merge. $question';
+  }
+
+  @override
+  String get teamMergeGateStale => 'Merge is off until the team answers again.';
+
+  @override
+  String teamTaskNowOn(String who, String step) {
+    return 'Now: $who on $step';
+  }
+
+  @override
+  String teamTaskNowWorker(String who) {
+    return 'Now: $who is working';
+  }
+
+  @override
+  String get teamTaskNowWorking => 'Now: working on your task';
+
+  @override
+  String teamTaskNowStarting(String who) {
+    return 'Now: $who is starting';
+  }
+
+  @override
+  String get teamTaskNowStartingWorker => 'Now: starting a worker';
+
+  @override
+  String get teamTaskNowWaitingWorker => 'Now: waiting for a worker';
+
+  @override
+  String get teamTaskNowPlanning => 'Now: planning the steps';
+
+  @override
+  String get teamTaskNowReviewing => 'Now: reviewing the changes';
+
+  @override
+  String get teamTaskNextReview => 'Next: review';
+
+  @override
+  String get teamTaskNextMerge => 'Next: merge';
+
+  @override
+  String get teamTaskNextWork => 'Next: the worker begins';
+
+  @override
+  String get teamTaskStepsDone => 'All steps done';
+
+  @override
+  String teamTaskFinishedAgo(String age) {
+    return 'Finished $age ago';
+  }
+
+  @override
+  String get kitComposerTrayClose => 'Close';
+
+  @override
+  String get composerTrayPhotos => 'Photos';
+
+  @override
+  String get composerTrayCamera => 'Camera';
+
+  @override
+  String get composerTrayFile => 'File';
+
+  @override
+  String get composerTrayMore => 'More';
+
+  @override
+  String chatLiveReading(String name) {
+    return 'Reading $name';
+  }
+
+  @override
+  String get chatLiveReadingAny => 'Reading a file';
+
+  @override
+  String chatLiveEditing(String name) {
+    return 'Editing $name';
+  }
+
+  @override
+  String get chatLiveEditingAny => 'Editing files';
+
+  @override
+  String chatLiveWriting(String name) {
+    return 'Writing $name';
+  }
+
+  @override
+  String get chatLiveWritingAny => 'Writing a file';
+
+  @override
+  String chatLiveRunning(String name) {
+    return 'Running $name';
+  }
+
+  @override
+  String get chatLiveRunningAny => 'Running a command';
+
+  @override
+  String chatLiveSearching(String name) {
+    return 'Searching for $name';
+  }
+
+  @override
+  String get chatLiveSearchingAny => 'Searching the project';
+
+  @override
+  String get chatLiveSearchingWeb => 'Searching the web';
+
+  @override
+  String get chatLivePlanning => 'Planning the steps';
+
+  @override
+  String get terminalSessionsLabel => 'Open terminals';
+
+  @override
+  String get terminalSessionEnded => 'ended';
+
+  @override
+  String localTerminalStopNamed(String name) {
+    return 'Stop $name';
+  }
+
+  @override
+  String localTerminalCloseNamed(String name) {
+    return 'Close $name';
+  }
+
+  @override
+  String get terminalDevServerRunning => 'Dev server running';
+
+  @override
+  String get terminalOpenPreview => 'Open preview';
+
+  @override
+  String terminalPlaceLabel(String place) {
+    return 'Runs on $place';
+  }
+
+  @override
+  String terminalPlaceSwitchLabel(String place) {
+    return 'Runs on $place, change where it runs';
+  }
+
+  @override
+  String get terminalScreenDetailState => 'State';
+
+  @override
+  String get terminalStateRunning => 'Running';
+
+  @override
+  String get terminalStateEnded => 'Ended';
+
+  @override
+  String connectionTryingAgainIn(int seconds) {
+    return 'trying again in $seconds s';
+  }
+
+  @override
+  String get connectionTryingAgainNow => 'trying again now…';
+
+  @override
+  String get chatsHomeNothingRunning => 'Nothing running';
+
+  @override
+  String get chatsHomeNothingRunningBody =>
+      'Start a conversation, or open one to pick up where you left off.';
+
+  @override
+  String get chatsHomeShowAll => 'Show all conversations';
+
+  @override
+  String get chatsHomeEmptyCalmBody =>
+      'Say what you want to build, and an agent gets to work.';
+
+  @override
+  String get chatsHomeConnectComputer => 'Connect a computer';
+
+  @override
+  String get chatsHomeProjectEmptyBody =>
+      'Ask for something in this project, and it shows up here.';
+
+  @override
+  String get scheduleEmptyBody =>
+      'Pick a time, and this phone sends the prompt for you.';
+
+  @override
+  String get projectsLoadFailedTitle => 'Projects didn\'t load';
+
+  @override
+  String get chatStopAfterStep => 'Stop after this step';
+
+  @override
+  String get chatStopAfterStepPrompt =>
+      'Please stop after the step you are on now and wait for me before doing anything else.';
+
+  @override
+  String get appearanceModeAuto => 'Auto';
+
+  @override
+  String get appearanceModeSaver => 'Saver';
+
+  @override
+  String get appearanceSaverNote =>
+      'True black, no motion. Saves battery on OLED screens.';
+
+  @override
+  String get appearanceAccentTitle => 'Accent';
+
+  @override
+  String get appearanceAccentMint => 'Mint';
+
+  @override
+  String get appearanceAccentTeal => 'Teal';
+
+  @override
+  String get appearanceAccentBlue => 'Blue';
+
+  @override
+  String get appearanceAccentViolet => 'Violet';
+
+  @override
+  String get appearanceAccentPink => 'Pink';
+
+  @override
+  String get appearanceAccentMono => 'Mono';
+
+  @override
+  String get appearanceAccentSilver => 'Silver';
+
+  @override
+  String get appearanceSurfaceSolid => 'Solid';
+
+  @override
+  String get appearanceSurfaceSoft => 'Soft';
+
+  @override
+  String get appearanceSurfaceBrutal => 'Brutal';
+
+  @override
+  String get appearanceSurfacePaper => 'Paper';
+
+  @override
+  String get signalStyleName => 'Signal';
+
+  @override
+  String get signalShow => 'Show';
+
+  @override
+  String get signalHide => 'Hide';
+
+  @override
+  String signalRowRunningCommand(String command) {
+    return 'Running $command';
+  }
+
+  @override
+  String get appearanceFineTuneCorners => 'Corners';
+
+  @override
+  String get appearanceFineTuneCornersRound => 'Round';
+
+  @override
+  String get appearanceFineTuneCornersSoft => 'Soft';
+
+  @override
+  String get appearanceFineTuneCornersSharp => 'Sharp';
+
+  @override
+  String get appearanceFineTuneDepth => 'Depth';
+
+  @override
+  String get appearanceFineTuneEdges => 'Edges';
+
+  @override
+  String appearanceFineTuneReset(String style) {
+    return 'Reset to $style defaults';
+  }
+
+  @override
+  String get kitTourNext => 'Next';
+
+  @override
+  String get kitTourSkip => 'Skip';
+
+  @override
+  String get kitTourDone => 'Done';
+
+  @override
+  String kitTourStep(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get tipStopAfterStep => 'Hold to stop after this step';
+
+  @override
+  String get tipStopAfterStepTitle => 'Stop after this step';
+
+  @override
+  String get tipSendLater => 'Hold Send to send later or repeat';
+
+  @override
+  String get tipSendLaterTitle => 'Send later or repeat';
+
+  @override
+  String get tourAppearanceStart => 'Show me how · 30 s';
+
+  @override
+  String get tourNotNow => 'Not now';
+
+  @override
+  String get tipsTitle => 'Tips';
+
+  @override
+  String get tipsHubSubtitle => 'Hidden gestures and short tours';
+
+  @override
+  String get tipsSearchAliases =>
+      'tips tutorial tour hints gestures hold long-press how to learn';
+
+  @override
+  String get tipsIntro =>
+      'Each tip shows at its moment, at most twice. Replay any of them here.';
+
+  @override
+  String get tipsShowMe => 'Show me';
+
+  @override
+  String get tipsTipsLabel => 'Tips';
+
+  @override
+  String get tipsToursLabel => 'Mini tutorials';
+
+  @override
+  String get chatStopAfterStepPending => 'Stopping after this step';
+
+  @override
+  String get chatStopAfterStepUndo => 'Undo';
+
+  @override
+  String get chatStopAfterStepUndone => 'It will carry on.';
+
+  @override
+  String get chatStopAfterStepTooLate =>
+      'Too late: the agent already has the note.';
+
+  @override
+  String get chatLiveShowSteps => 'Show steps';
+
+  @override
+  String get chatLiveHideSteps => 'Hide steps';
+
+  @override
+  String get kitComposerStopPending => 'stopping after this step';
+
+  @override
+  String get phraseChipsRetryStarter => 'Try again';
+
+  @override
+  String get tourMakeItYoursTitle => 'Make it yours';
+
+  @override
+  String get tourMakeItYoursOffer =>
+      'Make it yours: light or dark, colours and style, in four steps';
+
+  @override
+  String get tourMakeItYoursColours =>
+      'Start here: light or dark, a theme and an accent. The preview above shows every change at once.';
+
+  @override
+  String get tourMakeItYoursStyle =>
+      'Pick how cards and bars feel: Solid, Soft, Brutal or Paper.';
+
+  @override
+  String get kitGuideChanges => 'Changes';
+
+  @override
+  String get kitGuideAll => 'All';
+
+  @override
+  String get kitGuideBack => 'Back to all chips';
+
+  @override
+  String get appearanceGroupColours => 'Colours';
+
+  @override
+  String get appearanceGroupStyle => 'Style';
+
+  @override
+  String get appearanceGroupBackground => 'Background';
+
+  @override
+  String get appearanceGroupComfort => 'Text & motion';
+
+  @override
+  String appearanceGroupPair(String first, String second) {
+    return '$first, $second';
+  }
+
+  @override
+  String get appearanceChipMode => 'Mode';
+
+  @override
+  String get appearanceChipTheme => 'Theme';
+
+  @override
+  String get appearanceChipAccent => 'Accent';
+
+  @override
+  String get appearanceChipStyle => 'Style';
+
+  @override
+  String get appearanceChipShape => 'Shape';
+
+  @override
+  String get appearanceChipLook => 'Look';
+
+  @override
+  String get appearanceChipStrength => 'Strength';
+
+  @override
+  String get appearanceChipText => 'Text size';
+
+  @override
+  String get appearanceChipMotion => 'Motion';
+
+  @override
+  String get appearanceChipGlow => 'Reply glow';
+
+  @override
+  String get appearanceAskMode => 'Light or dark?';
+
+  @override
+  String get appearanceAskTheme => 'Which colours?';
+
+  @override
+  String get appearanceAskAccent => 'Which accent colour?';
+
+  @override
+  String get appearanceAskStyle => 'How should surfaces feel?';
+
+  @override
+  String get appearanceAskShape => 'Corners and spacing';
+
+  @override
+  String get appearanceAskLook => 'What moves behind your pages?';
+
+  @override
+  String get appearanceAskStrength => 'How strong?';
+
+  @override
+  String get appearanceAskText => 'How big should text be?';
+
+  @override
+  String get appearanceAskMotion => 'How much should move?';
+
+  @override
+  String get appearanceAskGlow => 'Glow while a reply is written?';
+
+  @override
+  String get appearanceChangesMode => 'Every page, light or dark';
+
+  @override
+  String get appearanceChangesTheme => 'The colours of every page';
+
+  @override
+  String get appearanceChangesAccent =>
+      'Buttons, links, the send key and the glow';
+
+  @override
+  String get appearanceChangesStyle => 'Every card, bar and message bubble';
+
+  @override
+  String get appearanceChangesShape => 'Corners and spacing of this style';
+
+  @override
+  String get appearanceChangesLook => 'The background of every page';
+
+  @override
+  String get appearanceChangesStrength =>
+      'How much of the background shows through';
+
+  @override
+  String get appearanceChangesText =>
+      'Text everywhere, on top of your phone\'s size';
+
+  @override
+  String get appearanceChangesMotion => 'Animations across the app';
+
+  @override
+  String get appearanceChangesGlow => 'The border of the message box';
+
+  @override
+  String get appearanceOffInSaver => 'Off in Saver';
+
+  @override
+  String get appearanceLookOff => 'Off';
+
+  @override
+  String get appearanceStrengthNoLook => 'No look';
+
+  @override
+  String appearanceShapeValue(String corners, String spacing) {
+    return '$corners, $spacing';
+  }
+
+  @override
+  String get appearanceShapeSpacing => 'Spacing';
+
+  @override
+  String get appearanceSpacingRoomy => 'Roomy';
+
+  @override
+  String get appearanceSpacingCompact => 'Compact';
+
+  @override
+  String appearanceShapeNote(String style, String corners, String spacing) {
+    return '$style starts at $corners and $spacing. Picking another style starts these over.';
+  }
+
+  @override
+  String get appearanceMotionPhraseFull => 'full motion';
+
+  @override
+  String get appearanceMotionPhraseCalm => 'calm motion';
+
+  @override
+  String get appearanceMotionPhraseOff => 'no motion';
+
+  @override
+  String get appearanceGlowOff => 'Off';
+
+  @override
+  String get appearanceGlowOffHint => 'A plain border';
+
+  @override
+  String get appearanceGlowClassicHint => 'A light that circles the box';
+
+  @override
+  String get appearanceGlowSoftHint => 'A ring that slowly breathes';
+
+  @override
+  String get appearanceModeAutoNote =>
+      'Follows your phone: light by day, dark at night.';
+
+  @override
+  String appearanceSeeAllThemes(int count) {
+    return 'See all $count themes';
+  }
+
+  @override
+  String appearanceSeeAllLooks(int count) {
+    return 'See all $count looks';
+  }
+
+  @override
+  String appearanceAccentMatchNote(String theme) {
+    return '“Match” uses $theme\'s own accent.';
+  }
+
+  @override
+  String get appearanceStrengthNeedsLook =>
+      'The background is off, so there is nothing to strengthen.';
+
+  @override
+  String get appearanceChooseLookFirst => 'Choose a look first';
+
+  @override
+  String get appearanceSaverHoldsStyle =>
+      'Saver keeps cards solid and the background still, to save battery on this screen. Your style comes back when Saver is off.';
+
+  @override
+  String get appearanceSaverHoldsBackground =>
+      'Saver keeps cards solid and the background still, to save battery on this screen. Your background comes back when Saver is off.';
+
+  @override
+  String get appearanceTurnOffSaver => 'Turn off Saver';
+
+  @override
+  String get appearanceSaverMotion => 'Saver keeps motion off.';
+
+  @override
+  String get appearanceGuideStart =>
+      'Start with Colours, the biggest change. Every choice saves as you go, and you can tap any row at any time.';
+
+  @override
+  String get appearanceGuideSkip => 'Skip the guide';
+
+  @override
+  String get appearanceGuideResume =>
+      'Pick up where you left off, or tap any chip.';
+
+  @override
+  String get appearanceGuideAllSetTitle => 'All set.';
+
+  @override
+  String get appearanceGuideAllSet =>
+      'Your choices are saved. Tap any chip to change one.';
+
+  @override
+  String get appearanceGuideAgain => 'Guide me again';
+
+  @override
+  String get appearanceGuideReset => 'Reset to defaults';
+
+  @override
+  String get appearanceGuideResetConfirm =>
+      'Put every Appearance choice back to the defaults? Light or dark, theme, accent, style, background, text size, motion and the reply glow all reset.';
+
+  @override
+  String get appearanceGuideResetDo => 'Reset';
+
+  @override
+  String get appearanceGuideResetKeep => 'Keep my choices';
+
+  @override
+  String appearanceGuideCountIntro(int count) {
+    return '$count quick questions, all optional';
+  }
+
+  @override
+  String appearanceGuideCountSeen(int seen, int total) {
+    return '$seen of $total seen';
+  }
+
+  @override
+  String appearanceGuideCountAt(int at, int total) {
+    return '$at of $total';
+  }
+
+  @override
+  String get appearanceGuideSavesAsYouGo => 'Everything saves as you go';
+
+  @override
+  String get appearanceGuideStartButton => 'Start with Colours';
+
+  @override
+  String appearanceGuideContinue(String group) {
+    return 'Continue: $group';
+  }
+
+  @override
+  String appearanceGuideNext(String name) {
+    return 'Next: $name';
+  }
+
+  @override
+  String get appearanceGuideFinish => 'Finish';
+
+  @override
+  String appearanceGuidePlace(
+    String label,
+    String value,
+    int at,
+    int count,
+    String group,
+  ) {
+    return '$label, $value, question $at of $count in $group';
+  }
+
+  @override
+  String get tourMakeItYoursBackground =>
+      'Pick what moves behind your pages, or turn it off.';
+
+  @override
+  String get tourMakeItYoursComfort =>
+      'Make text bigger, calm the motion and choose the glow while a reply is written.';
+
+  @override
+  String get appearanceAccentMatchShort => 'Match';
+
+  @override
+  String get chatTurnStoppedElsewhere =>
+      'This reply was stopped from another app or device.';
+
+  @override
+  String get chatTurnPausedInactive =>
+      'The server paused this reply after an hour with no new work.';
+
+  @override
+  String get chatTurnStoppedServerRestart =>
+      'The server restarted, so this reply stopped.';
+
+  @override
+  String get chatTurnSuperseded => 'A newer run took this reply\'s place.';
+
+  @override
+  String get chatTurnStoppedEarly =>
+      'This reply was stopped before it finished.';
+
+  @override
+  String get settingsV3ModelNewOnPhone => 'New conversations on this phone';
+
+  @override
+  String chatLoadAgentMissing(String agent) {
+    return '$agent on this phone doesn\'t have this conversation. Go back and open it from your conversations.';
+  }
+
+  @override
+  String chatLoadAgentUnreadable(String agent) {
+    return '$agent on this phone answered, but this app couldn\'t read the reply. Try again, or report a problem.';
+  }
+
+  @override
+  String get productErrorUnreadableReply =>
+      'It answered, but this app couldn\'t read the reply. Try again, or report a problem.';
+
+  @override
+  String get settingsV3SavedOnPhone =>
+      'Saved on this phone. Other apps using this phone\'s server get this too.';
+
+  @override
+  String settingsV3UseMyDefaultDonePhone(String what) {
+    return 'Reset on this phone to your own choices: $what.';
+  }
+
+  @override
+  String get chatStallSubagent =>
+      'This sub-agent has been quiet for a while. It stops with its main conversation: stop the reply there.';
+
+  @override
+  String get serverPageThisPhonesServer => 'this phone\'s server';
+
+  @override
+  String kitBackgroundWorkOne(String task, String time) {
+    return 'Still running in the background · $task · $time';
+  }
+
+  @override
+  String kitBackgroundWorkMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks still running in the background',
+      one: '1 task still running in the background',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String kitBackgroundWorkTask(String task, String time) {
+    return '$task · $time';
+  }
+
+  @override
+  String kitBackgroundWorkMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes min',
+      zero: 'under a minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String kitBackgroundWorkHours(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String get kitBackgroundWorkGoToStep => 'Shows the step that started it';
+
+  @override
+  String kitBackgroundWorkOneAfterStop(String task, String time) {
+    return 'Still running after the turn stopped · $task · $time';
+  }
+
+  @override
+  String kitBackgroundWorkManyAfterStop(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks still running after the turn stopped',
+      one: '1 task still running after the turn stopped',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatAgentTurnLostConnectionTo(String agent, String company) {
+    return '$agent lost its connection to $company, so the turn stopped.';
+  }
+
+  @override
+  String chatAgentTurnLostConnection(String agent) {
+    return '$agent lost its connection to its model provider, so the turn stopped.';
+  }
+
+  @override
+  String chatSendFailureLostConnectionTo(String agent, String company) {
+    return '$agent lost its connection to $company';
+  }
+
+  @override
+  String chatSendFailureLostConnection(String agent) {
+    return '$agent lost its connection to its model provider';
+  }
+
+  @override
+  String chatBackgroundWorkWaitingFor(String program) {
+    return 'Waiting for $program';
+  }
+
+  @override
+  String chatSendFailureSignIn(String agent) {
+    return '$agent needs you to sign in';
+  }
+
+  @override
+  String chatSendFailureNoCredit(String agent) {
+    return '$agent has no credits for this model';
+  }
+
+  @override
+  String get chatSendFailureModelUnavailable => 'This model isn\'t available';
+
+  @override
+  String chatSendFailureBusy(String agent) {
+    return '$agent is busy';
+  }
+
+  @override
+  String get chatSendFailureAgentFallback => 'The agent';
+
+  @override
+  String get chatSendFailureSignInAction => 'Sign in';
+
+  @override
+  String get chatSendFailureAccountAction => 'Open account';
+
+  @override
+  String get chatSendFailureDetailsAgent => 'Agent';
+
+  @override
+  String get chatSendFailureDetailsModel => 'Model';
+
+  @override
+  String get chatSendFailureDetailsCode => 'Error code';
+
+  @override
+  String get chatSendFailureNewConversation =>
+      'This agent can\'t continue this conversation';
+
+  @override
+  String chatSendFailureNeedsAccount(String agent) {
+    return 'This model needs a $agent account';
+  }
+
+  @override
+  String chatSendFailureSignInToAgent(String agent) {
+    return 'Sign in to $agent';
+  }
+
+  @override
+  String get chatComposerNoteDismiss => 'Dismiss note';
+
+  @override
+  String get chatAnnounceReplyFinished => 'Reply finished';
+
+  @override
+  String get chatAnnounceNeedsYou => 'The agent needs you';
+
+  @override
+  String get runningPhoneTitle => 'Running on this phone';
+
+  @override
+  String runningPhoneSummary(int count, String memory) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count running · $memory',
+      one: '1 running · $memory',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get runningPhoneAutoRefresh =>
+      'Checks again every 5 seconds while open';
+
+  @override
+  String get runningPhoneLimitTitle => 'Servers may be stopped';
+
+  @override
+  String runningPhoneLimitBody(int count, int limit) {
+    return '$count of $limit background processes: above $limit, Android stops this app\'s oldest processes first, and those are the servers. Stop what was left behind or isn\'t needed, or lift the limit with Developer options › Disable child process restrictions.';
+  }
+
+  @override
+  String runningPhoneGroup(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'leftBehind': 'Left behind',
+      'openCode': 'OpenCode',
+      'claudeCode': 'Claude Code',
+      'agentHelper': 'Agent helper',
+      'aiTeam': 'AI Team',
+      'terminal': 'Terminal',
+      'setup': 'Setup and checks',
+      'helpers': 'Helpers',
+      'app': 'This app',
+      'other': 'Other',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String runningPhoneGroupChat(String title) {
+    return 'Claude Code · $title';
+  }
+
+  @override
+  String runningPhoneName(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'flutterTest': 'Flutter test',
+      'command': 'Command',
+      'linux': 'Linux',
+      'openCode': 'OpenCode',
+      'claudeCode': 'Claude Code',
+      'agentHelper': 'Agent helper',
+      'signIn': 'Agent sign-in',
+      'team': 'AI Team engine',
+      'node': 'Node.js',
+      'python': 'Python',
+      'git': 'Git',
+      'npm': 'npm',
+      'dart': 'Dart',
+      'flutter': 'Flutter',
+      'gradle': 'Gradle',
+      'java': 'Java',
+      'search': 'Search',
+      'app': 'This app',
+      'other': 'Program',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String runningPhoneCpu(String level, String percent) {
+    String _temp0 = intl.Intl.selectLogic(level, {
+      'idle': 'Idle',
+      'light': 'Light',
+      'busy': 'Busy',
+      'other': 'Very busy',
+    });
+    return '$_temp0 · $percent%';
+  }
+
+  @override
+  String get runningPhoneMarkHeavy => 'Heavy';
+
+  @override
+  String get runningPhoneMarkStuck => 'May be stuck';
+
+  @override
+  String get runningPhoneMarkLeftBehind => 'Left behind';
+
+  @override
+  String runningPhoneFromChat(String title) {
+    return 'Started by Claude Code · $title';
+  }
+
+  @override
+  String get runningPhoneFromClaude => 'Started by Claude Code';
+
+  @override
+  String get runningPhoneStop => 'Stop';
+
+  @override
+  String runningPhoneStopNamed(String name) {
+    return 'Stop $name';
+  }
+
+  @override
+  String runningPhoneStopTitle(String name) {
+    return 'Stop $name?';
+  }
+
+  @override
+  String get runningPhoneStopBody =>
+      'It gets a polite stop first, then a forced one if it keeps running.';
+
+  @override
+  String runningPhoneStopAllLeftBehind(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Stop all $count left behind',
+      one: 'Stop the 1 left behind',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get runningPhoneStopAllDetail =>
+      'Nothing else stops them, and stopping them is safe.';
+
+  @override
+  String get runningPhoneStopAllTitle => 'Stop everything left behind?';
+
+  @override
+  String runningPhoneStopAllBody(String names) {
+    return '$names. Each gets a polite stop first, then a forced one if it keeps running.';
+  }
+
+  @override
+  String runningPhoneStopped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Stopped $count',
+      one: 'Stopped 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String runningPhoneAlreadyEnded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count had already ended',
+      one: '1 had already ended',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get runningPhoneNotStoppedTitle => 'Not everything stopped';
+
+  @override
+  String runningPhoneRefusedApp(String name) {
+    return '$name: this app itself can\'t be stopped here.';
+  }
+
+  @override
+  String runningPhoneRefusedServer(String name) {
+    return '$name: it runs a server. Stop the server from This phone.';
+  }
+
+  @override
+  String runningPhoneRefusedStillRunning(String name) {
+    return '$name: it kept running after a forced stop. Try again, or restart the phone.';
+  }
+
+  @override
+  String get runningPhoneStopFailed => 'Couldn\'t stop it. Try again.';
+
+  @override
+  String get runningPhoneLoadFailedTitle => 'Couldn\'t read what\'s running';
+
+  @override
+  String get runningPhoneLoadFailedBody =>
+      'The phone didn\'t answer. Try again.';
+
+  @override
+  String get runningPhoneRefreshFailed =>
+      'Couldn\'t check again, so this shows the last reading.';
+
+  @override
+  String get runningPhoneEmpty => 'Nothing else is running';
+
+  @override
+  String get runningPhoneEmptyBody =>
+      'When OpenCode, Claude Code or a terminal runs here, it shows up in this list.';
+
+  @override
+  String runningPhoneAbout(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'leftBehind':
+          'Left running after its Linux ended. Nothing is waiting on it, so stopping it is safe.',
+      'openCode': 'Part of the OpenCode server on this phone.',
+      'claudeCode': 'Part of a Claude Code conversation.',
+      'agentHelper': 'Runs Claude Code and other agents on this phone.',
+      'aiTeam': 'Part of the AI Team.',
+      'terminal': 'Runs in a terminal on this phone.',
+      'setup': 'A setup step or a check.',
+      'helpers': 'A helper service of this app.',
+      'app': 'This app itself.',
+      'other': 'Started by this app.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String runningPhoneHeavyFor(String elapsed) {
+    return 'It has used more than 80% of a processor core for $elapsed.';
+  }
+
+  @override
+  String runningPhoneStuckWhy(String elapsed) {
+    return 'It has run near 100% for $elapsed with no conversation waiting on it.';
+  }
+
+  @override
+  String get runningPhoneServerRoot =>
+      'It runs a server. Stop the server from This phone.';
+
+  @override
+  String get runningPhoneConversationId => 'Claude Code conversation ID';
+
+  @override
+  String get runningPhoneOwner => 'Belongs to';
+
+  @override
+  String runningPhoneRowNormal(int count, String memory) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count running · $memory',
+      one: '1 running · $memory',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String runningPhoneRowLeftBehind(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count left behind, still using the phone',
+      one: '1 left behind, still using the phone',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String runningPhoneRowHeavy(int count, String name, String percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count heavy, $name the most · $percent%',
+      one: '$name is heavy · $percent%',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String runningPhoneRowNearLimit(int count, int limit) {
+    return '$count of $limit: Android may stop the servers';
+  }
+
+  @override
+  String get runningPhoneRowIdle => 'See what runs and what heats the phone';
+
+  @override
+  String chatStuckCommand(String time) {
+    return '$time · may be stuck';
+  }
+
+  @override
+  String chatStuckMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String chatStuckHours(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String chatStuckUnnamed(String time) {
+    return 'Still running · $time · may be stuck';
+  }
+
+  @override
+  String chatStuckWaitsNote(String command) {
+    return 'Waits for $command to finish. Stop it to get through now.';
+  }
+
+  @override
+  String get chatStuckNeverEnds =>
+      'This reply may never end. Stop and send gets your message through now.';
+
+  @override
+  String get chatStuckThisStep => 'this step';
+
+  @override
+  String get kitComposerAddsToReply => 'Adds to this reply';
+
+  @override
+  String kitComposerCantTakeMidReply(String agent) {
+    return '$agent can\'t take a message mid-reply.';
+  }
+
+  @override
+  String get kitTurnLiveStopShort => 'Stop';
+
+  @override
+  String get frostGlassQuestion => 'Glass';
+
+  @override
+  String get frostGlassOff => 'Off';
+
+  @override
+  String get frostGlassWeak => 'Weak';
+
+  @override
+  String get frostGlassBalanced => 'Balanced';
+
+  @override
+  String get frostGlassStrong => 'Strong';
+
+  @override
+  String get frostGlassHint =>
+      'When the conversation scrolls under the message box or the header, they softly blur it. Off keeps them solid.';
+
+  @override
+  String get frostGlassHeldSaver =>
+      'Saver is on, so the message box and header stay solid.';
+
+  @override
+  String get frostGlassHeldMotion =>
+      'Reduced motion is on, so the message box and header stay solid.';
+
+  @override
+  String get frostGlassHeldContrast =>
+      'High contrast is on, so the message box and header stay solid.';
+
+  @override
+  String get frostGlassHeldStyle =>
+      'This style keeps its own look, so the message box and header stay solid.';
+
+  @override
+  String stopRowSemantics(String agent) {
+    return 'Stop $agent';
+  }
 }

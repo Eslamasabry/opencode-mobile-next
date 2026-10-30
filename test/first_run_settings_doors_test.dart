@@ -19,6 +19,7 @@ import 'package:opencode_mobile/ui/search/search_index.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/tailscale_setup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/settings_doors.dart';
 
 /// The first-run welcome stopped offering Tailscale setup, the setup guide
 /// and External agents (UX plan 5.4). They moved; they did not disappear.
@@ -152,11 +153,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    // The guide is a hub row of its own now (target-ia §1.3 row 19).
+    // The guide is a row of Help, one of the hub's five doors.
+    await openSettingsGroup(tester, SettingsGroup.help);
     await open('settings-setup-guide');
     expect(find.byType(GuideScreen), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
+    await closeSettingsGroup(tester);
 
     final scope = SearchScope.of(
       tester.element(find.byType(SettingsScreen)),

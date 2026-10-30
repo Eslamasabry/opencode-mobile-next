@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
+import 'package:opencode_mobile/ui/kit/scenes/setup_phone_scene.dart';
 
 /// Records the frames it is asked to paint.
 class _Probe extends KitScene {
@@ -233,5 +234,24 @@ void main() {
         );
       });
     }
+  });
+
+  testWidgets('a slot swaps one kind of scene for another without an error', (
+    tester,
+  ) async {
+    // The connecting card draws the phone while the phone's server starts,
+    // then the portal: one painter compared the two as the same kind and
+    // threw on every cold start (build 4071).
+    await tester.pumpWidget(
+      _host(const KitIllustration(scene: SetupPhoneScene())),
+    );
+    await tester.pumpWidget(
+      _host(const KitIllustration(scene: KitPortalScene())),
+    );
+    await tester.pumpWidget(
+      _host(const KitIllustration(scene: SetupPhoneScene())),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 }

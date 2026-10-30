@@ -52,7 +52,7 @@ void main() {
                 } else if (path == '/api/health' && !stable) {
                   body = {'healthy': true, 'version': '0.0.0-beta-18600'};
                 } else if (path == '/api/info' && stable) {
-                  body = {'version': '2.0.29'};
+                  body = {'version': '2.1.1'};
                 } else if (path == pendingPath) {
                   queries.add(request.uri.queryParameters);
                   final permissions = [
@@ -125,7 +125,7 @@ void main() {
                 baseUrl: 'http://127.0.0.1:${server.port}',
                 flavor: ServerFlavor.v2,
                 // Cached version must not substitute for a fresh negotiation.
-                serverVersion: stable ? '0.0.0-beta-18600' : '2.0.29',
+                serverVersion: stable ? '0.0.0-beta-18600' : '2.1.1',
               );
               final fingerprint = widgetProfileFingerprint(profile);
               final snapshot = <String, dynamic>{

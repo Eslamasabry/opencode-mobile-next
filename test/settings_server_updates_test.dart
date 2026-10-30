@@ -15,6 +15,7 @@ import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/saved_permissions_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/settings_doors.dart';
 
 class _HealthyApi extends FakeServerGateway {
   _HealthyApi() : super(baseUrl: 'http://127.0.0.1:4096');
@@ -163,9 +164,12 @@ Future<void> _openCategory(WidgetTester tester, String key) async {
       ),
     );
     await tester.pumpAndSettle();
-    key = 'server-row-status';
+    return;
   }
+  await revealSettingsRow(tester, key);
   final row = find.byKey(ValueKey(key));
+  await tester.ensureVisible(row);
+  await tester.pump();
   await tester.ensureVisible(row);
   await tester.pumpAndSettle();
   await tester.tap(row);
@@ -181,6 +185,8 @@ Finder get _verticalScroll => find
     .first;
 
 Future<void> _tapVisible(WidgetTester tester, Finder target) async {
+  await tester.ensureVisible(target);
+  await tester.pump();
   await tester.ensureVisible(target);
   await tester.pumpAndSettle();
   expect(target.hitTestable(), findsOneWidget);
@@ -212,6 +218,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealSettingsRow(tester, 'library-report-bug');
 
     await tester.scrollUntilVisible(
       find.byKey(const Key('library-report-bug')),
@@ -254,8 +261,7 @@ void main() {
     await _openCategory(tester, 'settings-category-server');
 
     expect(find.text('Update managed OpenCode'), findsOneWidget);
-    await tester.ensureVisible(find.byKey(const Key('server-updates-tile')));
-    await tester.tap(find.byKey(const Key('server-updates-tile')));
+    await _tapVisible(tester, find.byKey(const Key('server-updates-tile')));
     await tester.pumpAndSettle();
     expect(find.text('Managed updater'), findsOneWidget);
   });
@@ -321,7 +327,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    await tester.tap(find.byKey(const Key('server-updates-tile')));
+    await _tapVisible(tester, find.byKey(const Key('server-updates-tile')));
     await tester.pumpAndSettle();
 
     expect(find.text('Update remote OpenCode?'), findsOneWidget);
@@ -483,10 +489,18 @@ void main() {
     );
     await tester.pumpAndSettle();
     await _openCategory(tester, 'settings-category-appearance');
+    // Colours opens Light or dark straight away.
+    await tester.tap(find.byKey(const ValueKey('appearance-group-colours')));
+    await tester.pumpAndSettle();
 
     final entry = find.byKey(const ValueKey('appearance-settings-entry'));
     await tester.scrollUntilVisible(entry, 200, scrollable: _verticalScroll);
-    expect(find.text('Dark'), findsOneWidget);
+    // Auto, Light, Dark and Saver: each segment shows its word.
+    expect(
+      find.descendant(of: entry, matching: find.text('Dark')),
+      findsOneWidget,
+    );
+    expect(find.text('Saver'), findsOneWidget);
     // Light or dark is chosen inline and applies at once (the separate
     // light-or-dark sheet was removed by slice-P3.1).
     await tester.tap(find.byKey(const ValueKey('appearance-mode-system')));
@@ -513,6 +527,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await revealSettingsRow(tester, 'default-shell-settings-entry');
       final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
       await tester.scrollUntilVisible(entry, 200, scrollable: _verticalScroll);
       expect(find.text('bash'), findsOneWidget);
@@ -561,13 +576,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealSettingsRow(tester, 'default-shell-settings-entry');
     final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
     await tester.scrollUntilVisible(entry, 200, scrollable: _verticalScroll);
 
     expect(find.textContaining('Shell endpoint unavailable'), findsOneWidget);
-    // Scoped: the neighbouring default still renders.
+    // Scoped: the neighbouring row of Conversations still renders.
     expect(
-      find.byKey(const ValueKey('settings-model-and-mode')),
+      find.byKey(const ValueKey('settings-show-reasoning')),
       findsOneWidget,
     );
     repository.shellError = null;
@@ -625,6 +641,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealSettingsRow(tester, 'default-shell-settings-entry');
     final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
     await tester.scrollUntilVisible(entry, 200, scrollable: _verticalScroll);
     await _tapVisible(tester, entry);
@@ -686,6 +703,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await revealSettingsRow(tester, 'default-shell-settings-entry');
     final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
     await tester.scrollUntilVisible(entry, 200, scrollable: _verticalScroll);
     expect(tester.takeException(), isNull);
@@ -761,6 +779,7 @@ void main() {
       'settings-setup-guide',
       'settings-about-notices',
     ]) {
+      await revealSettingsRow(tester, key);
       await tester.scrollUntilVisible(
         find.byKey(ValueKey(key)),
         240,
@@ -807,6 +826,18 @@ void main() {
     expect(find.textContaining('1 queued prompt'), findsOneWidget);
     expect(find.textContaining('1 draft'), findsOneWidget);
     expect(find.textContaining('discarded after 14 days'), findsOneWidget);
+
+    // One of each reads as one, not "1 conversations" / "all 1 prompts".
+    expect(
+      find.text('Deletes composer text saved for 1 conversation'),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'Deletes the unsent prompt and its attachments, for every server',
+      ),
+      findsOneWidget,
+    );
 
     // Clearing confirms first and says what it deletes.
     await tester.tap(find.byKey(const ValueKey('clear-queued-prompts')));

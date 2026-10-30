@@ -20,6 +20,8 @@ import 'package:opencode_mobile/voice/voice_ui.dart'
     show showVoiceModelSetupSheet;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'support/composer_tools.dart';
+import 'support/part_semantics.dart';
 import 'voice_controller_test.dart';
 
 class _VoiceChatApi extends FakeServerGateway with CompleteMessageHistory {
@@ -133,7 +135,10 @@ _voice() async {
 /// finished dismissing, hence the explicit pumps rather than a settle: voice
 /// mode's level meter moves while it listens.
 Future<void> _openVoiceTool(WidgetTester tester) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
+  await tester.pumpAndSettle();
+  // The sheet leads with the conversation's own settings; scroll to the row.
+  await tester.ensureVisible(find.byKey(const Key('composer-tool-voice')));
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('composer-tool-voice')));
   await tester.pump();
@@ -308,7 +313,8 @@ void main() {
       await tester.tap(find.text('Open setup'));
       await tester.pump();
 
-      final modelNode = tester.getSemantics(
+      final modelNode = partSemantics(
+        tester,
         find.byKey(const Key('voice-model-base')),
       );
       expect(modelNode.flagsCollection.isEnabled, isNot(Tristate.none));

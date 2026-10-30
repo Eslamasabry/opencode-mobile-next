@@ -146,10 +146,20 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      // Text & motion opens Text size straight away.
+      final tab = find.byKey(const ValueKey('appearance-group-comfort'));
+      await Scrollable.ensureVisible(tester.element(tab));
+      await tester.pumpAndSettle();
+      await tester.tap(tab);
+      await tester.pumpAndSettle();
       for (final name in ['smallest', 'small', 'normal', 'large']) {
         expect(find.byKey(ValueKey('text-size-$name')), findsOneWidget);
       }
       expect(find.text('Text size'), findsOneWidget);
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('text-size-smallest')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('text-size-smallest')));
       await tester.pumpAndSettle();
       expect(controller.textSize.value, KitTextSize.smallest);

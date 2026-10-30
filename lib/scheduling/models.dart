@@ -1,6 +1,6 @@
 /// The device scheduler stores only user-authored prompts and target identifiers.
 /// Credentials are resolved from the profile immediately before each dispatch.
-enum ScheduleRecurrenceKind { once, weekdays, interval }
+enum ScheduleRecurrenceKind { once, daily, weekdays, interval }
 
 enum MissedRunPolicy { catchUp, skip }
 
@@ -11,6 +11,12 @@ class ScheduleRecurrence {
     : kind = ScheduleRecurrenceKind.once,
       hour = 8,
       minute = 0,
+      hours = 1;
+
+  /// Every day at a wall-clock time, kept across daylight-saving changes.
+  const ScheduleRecurrence.daily({this.hour = 8, this.minute = 0})
+    : kind = ScheduleRecurrenceKind.daily,
+      at = null,
       hours = 1;
 
   const ScheduleRecurrence.weekdays({this.hour = 8, this.minute = 0})
@@ -28,7 +34,8 @@ class ScheduleRecurrence {
 
   final ScheduleRecurrenceKind kind;
 
-  /// Absolute once time or interval anchor; weekdays use device local time.
+  /// Absolute once time or interval anchor; daily and weekdays use device
+  /// local time.
   final DateTime? at;
   final int hour;
   final int minute;
@@ -41,7 +48,9 @@ class ScheduleRecurrence {
         minute > 59 ||
         hours < 1 ||
         hours > 168 ||
-        (kind != ScheduleRecurrenceKind.weekdays && at == null)) {
+        ((kind == ScheduleRecurrenceKind.once ||
+                kind == ScheduleRecurrenceKind.interval) &&
+            at == null)) {
       throw const FormatException('Invalid schedule recurrence');
     }
   }
@@ -59,6 +68,10 @@ class ScheduleRecurrence {
     final at = json['at'] == null ? null : DateTime.parse(json['at'] as String);
     final value = switch (kind) {
       ScheduleRecurrenceKind.once => ScheduleRecurrence.once(at!),
+      ScheduleRecurrenceKind.daily => ScheduleRecurrence.daily(
+        hour: json['hour'] as int,
+        minute: json['minute'] as int,
+      ),
       ScheduleRecurrenceKind.weekdays => ScheduleRecurrence.weekdays(
         hour: json['hour'] as int,
         minute: json['minute'] as int,

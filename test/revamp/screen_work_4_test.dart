@@ -294,7 +294,7 @@ void main() {
         app(ProjectsScreen(controller: controller, selectedProjectID: null)),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Project refresh failed'), findsOneWidget);
+      expect(find.text("Projects didn't load"), findsOneWidget);
       repository.listError = null;
       await tester.tap(find.text('Try again'));
       await tester.pumpAndSettle();

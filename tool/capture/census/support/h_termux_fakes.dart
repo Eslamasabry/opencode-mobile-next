@@ -143,7 +143,7 @@ String managerStatus({
 
 const setupLog = '''[oc] existing Termux dependencies are healthy
 [oc] Ubuntu environment is ready
-[oc] Installing OpenCode 2.0.29
+[oc] Installing OpenCode 2.1.1
 Resolving packages…
 Downloading opencode-linux-arm64
   32 MB / 68 MB
@@ -153,7 +153,7 @@ Download resumed
   64 MB / 68 MB
   68 MB / 68 MB
 [oc] Checking the installed command
-OpenCode 2.0.29
+OpenCode 2.1.1
 [oc] Refreshing the model catalog
 Fetching available models…''';
 
@@ -167,7 +167,7 @@ Setting up proot-distro (4.18.0) ...
   41.2 MiB / 58.9 MiB''';
 
 const failedLog = '''[oc] Ubuntu environment is ready
-[oc] Installing OpenCode 2.0.29
+[oc] Installing OpenCode 2.1.1
 npm error code ECONNRESET
 npm error network aborted
 npm error network This is a problem related to network connectivity.

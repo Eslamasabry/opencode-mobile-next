@@ -28,6 +28,7 @@ Future<Session?> showIsolatedTaskSheet(
   required ConnectionController controller,
   required WorkspaceProject project,
   Duration readinessTimeout = const Duration(seconds: 45),
+  String initialTask = '',
 }) {
   final openingScope = controller.isolatedTaskScope;
   final l10n = lookupAppLocalizations(Localizations.localeOf(context));
@@ -42,6 +43,7 @@ Future<Session?> showIsolatedTaskSheet(
       project: project,
       openingScope: openingScope,
       readinessTimeout: readinessTimeout,
+      initialTask: initialTask,
     ),
   );
 }
@@ -57,8 +59,12 @@ class IsolatedTaskSheet extends StatefulWidget {
     required this.project,
     required this.openingScope,
     this.readinessTimeout = const Duration(seconds: 45),
+    this.initialTask = '',
   });
 
+  /// Words already typed (on the start screen): the task field begins with
+  /// them, unless a saved draft says otherwise.
+  final String initialTask;
   final ConnectionController controller;
   final WorkspaceProject project;
   final Object openingScope;
@@ -107,6 +113,7 @@ class _IsolatedTaskSheetState extends State<IsolatedTaskSheet> {
   void initState() {
     super.initState();
     _controller = widget.controller;
+    _task.text = widget.initialTask;
     _openingScope = widget.openingScope;
     _invalid = _openingScope != _controller.isolatedTaskScope;
     _controller.addListener(_scopeChanged);

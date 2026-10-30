@@ -1,11 +1,22 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../builtin/app_exit_recovery.dart' show appLifecycleBridgeProvider;
 import '../../builtin/builtin_linux.dart';
 import '../../builtin/builtin_server.dart';
+import '../../builtin/builtin_server_recovery.dart';
+import '../../builtin/deliberate_stop.dart';
+import '../../builtin/linux_manager/linux_manager.dart';
+import '../../builtin/phone_process_watch.dart';
+import '../../builtin/phone_server_healing.dart';
+import '../../builtin/thermal_guard.dart';
+import '../../builtin/thermal_guard_teams.dart';
+import '../../platform/platform_capabilities.dart';
+import '../../state/automation_policy.dart';
+import '../../termux/managed_server_recovery.dart';
 import '../../builtin/project_export.dart' show MethodChannelProjectExport;
 import '../../builtin/project_export_controller.dart';
 import '../../builtin/reply_watch.dart';
@@ -32,6 +43,7 @@ import '../widgets/builtin_team_section.dart' show forgetBuiltinTeam;
 import '../widgets/managed_server_recovery_option.dart';
 import '../widgets/phone_server_card.dart';
 import '../widgets/phone_server_consents.dart';
+import '../widgets/running_on_phone_row.dart';
 import '../widgets/safety_confirms.dart';
 import '../widgets/team_phone_onboarding.dart' show teamPhoneRuntime;
 import '../widgets/termux_migration_entry.dart';
@@ -46,7 +58,9 @@ import 'phone_setup/phone_setup_routes.dart';
 import 'phone_setup/phone_setup_selection.dart';
 import 'phone_setup/phone_setup_termux_job_screen.dart';
 import 'phone_setup/phone_setup_termux_screen.dart';
+import 'running_on_phone_screen.dart';
 import 'termux_processes_screen.dart';
+part 'this_phone/this_phone_answer.dart';
 part 'this_phone/this_phone_details.dart';
 
 /// Which host This phone shows when nobody said: the one in use, else the
@@ -145,6 +159,20 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
   TermuxProcessReport? _processes;
   bool _processesUnavailable = false;
 
+  /// What the app runs on the phone (in-app host), for the Running on this
+  /// phone row; null until a reading works.
+  PhoneProcessReading? _running;
+  Timer? _runningTimer;
+  static const _runningEvery = Duration(seconds: 15);
+
+  /// Resident memory of what runs in the in-app Linux (the answer's cost
+  /// line); null until read, or when it could not be.
+  int? _memoryBytes;
+
+  void _setMemory(int? bytes) {
+    if (mounted) setState(() => _memoryBytes = bytes);
+  }
+
   /// The server log under Details (P1.5): folded until someone opens it.
   final _log = KitLogBuffer();
   bool _detailsOpen = false;
@@ -228,6 +256,7 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
     _removal = widget.removal ?? _makeRemoval();
     setupToolsChanged.addListener(_onSetup);
     unawaited(_load());
+    _watchRunning();
   }
 
   /// A setup job ended (a failed Add tools still leaves its finished
@@ -295,7 +324,13 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
       if (_host.kind == PhoneHostKind.termux) _readInstalled(),
       _readRemovable(),
       _readProcesses(),
+      _readRunning(),
+      // Why a stopped in-app server stopped (Android's kill or a person's
+      // stop): the answer at the top says it.
+      if (_host.state != PhoneHostState.running) _readPerformance(),
     ]);
+    // Last, on its own: the memory figure shares the phone's task slot.
+    await _readMemory();
     unawaited(_pollHistory());
   }
 
@@ -333,9 +368,8 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
     }
   }
 
-  /// Termux's process list: only Termux's tools can list what runs there
-  /// (the in-app Linux has no process inventory yet, so its page has no
-  /// such row).
+  /// Termux's process list, read through Termux's tools (the in-app
+  /// Linux has its own row, [RunningOnPhoneRow], read natively).
   Future<void> _readProcesses() async {
     if (_host.kind != PhoneHostKind.termux) return;
     try {
@@ -352,6 +386,39 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
         _processesUnavailable = true;
       });
     }
+  }
+
+  /// Reads what the app runs on the phone (in-app host) for its row; a
+  /// reading that fails leaves the row out until one works.
+  Future<void> _readRunning() async {
+    if (_host.kind != PhoneHostKind.inApp || !BuiltinLinux.supported) return;
+    try {
+      final reading = await ref.read(phoneProcessWatchProvider).sample();
+      if (mounted) setState(() => _running = reading);
+    } catch (_) {
+      // Left out, not dead: the next reading may work.
+    }
+  }
+
+  /// Every [_runningEvery] while This phone is the page in front.
+  void _watchRunning() {
+    if (_host.kind != PhoneHostKind.inApp || !BuiltinLinux.supported) return;
+    _runningTimer = Timer.periodic(_runningEvery, (_) {
+      if (!mounted) return;
+      final state = WidgetsBinding.instance.lifecycleState;
+      final inFront = state == null || state == AppLifecycleState.resumed;
+      if (inFront && (ModalRoute.of(context)?.isCurrent ?? false)) {
+        unawaited(_readRunning());
+      }
+    });
+  }
+
+  Future<void> _openRunning() async {
+    await pushKitPage<void>(context, (_) => const RunningOnPhoneScreen());
+    if (!mounted) return;
+    setState(
+      () => _running = ref.read(phoneProcessWatchProvider).last ?? _running,
+    );
   }
 
   Future<void> _openProcesses() async {
@@ -374,6 +441,7 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
   @override
   void dispose() {
     setupToolsChanged.removeListener(_onSetup);
+    _runningTimer?.cancel();
     _lifecycle.dispose();
     _host.removeListener(_changed);
     _replies.removeListener(_changed);
@@ -382,8 +450,23 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
     super.dispose();
   }
 
+  PhoneHostState? _seenState;
+
   void _changed() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    // The server stopped or came back while the page is open: read again
+    // why it stopped, and what it uses now.
+    final state = _host.state;
+    final before = _seenState;
+    _seenState = state;
+    if (before == null || before == state || !_host.installed) return;
+    if (state == PhoneHostState.running) {
+      unawaited(_readMemory());
+    } else if (state == PhoneHostState.stopped ||
+        state == PhoneHostState.needsYou) {
+      unawaited(_readPerformance());
+    }
   }
 
   String _runtimeName(TermuxRuntime runtime) => _l10n.setupRuntimeTwo;
@@ -732,74 +815,153 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
 
   // --- The page --------------------------------------------------------------
 
+  /// Stops and starts the server while it runs (the quiet row under the
+  /// answer). Asks first only when a reply is being written.
+  Future<void> _restart() async {
+    final l10n = _l10n;
+    if (_connection.busySessions.isNotEmpty) {
+      final confirmed = await showKitConfirm(
+        context,
+        title: l10n.thisPhoneRestartTitle,
+        body: l10n.thisPhoneRestartBusy,
+        confirmLabel: l10n.thisPhoneAnswerRestartNow,
+        icon: AppIconography.restart,
+        confirmKey: const ValueKey('this-phone-restart-confirm'),
+      );
+      if (!confirmed || !mounted) return;
+    }
+    await _host.stop(l10n);
+    if (!mounted) return;
+    await _start();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = _l10n;
+    final recovery = _host.kind == PhoneHostKind.inApp
+        ? ref.watch(thisPhoneRecoveryProvider)
+        : null;
+    final termuxRecovery = _termuxRecovery;
+    final slot = ref.watch(thermalGuardSlotProvider);
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        slot,
+        ?slot.value,
+        ?recovery,
+        ?termuxRecovery,
+      ]),
+      builder: (context, _) {
+        final answer = _answerNow(
+          l10n,
+          recovery: recovery,
+          termuxRecovery: termuxRecovery,
+          guard: slot.value,
+        );
+        return _page(context, l10n, answer);
+      },
+    );
+  }
+
+  Widget _page(BuildContext context, AppLocalizations l10n, _Answer answer) {
     final tokens = KitTokens.of(context);
     final state = _host.state;
+    final primary = answer.primary;
     return KitScreen(
-      topBar: KitTopBar(title: l10n.settingsV3ThisPhone),
+      // Opened as a page (Settings › Server, Search, a row elsewhere): the
+      // bar's own Back.
+      topBar: KitTopBar(
+        title: l10n.settingsV3ThisPhone,
+        exitKey: const ValueKey('this-phone-back'),
+      ),
       width: KitScreenWidth.reading,
       loading: state == PhoneHostState.checking,
       loadingLabel: l10n.phoneServerCardChecking,
+      // The one main action, at the thumb, only when something is wrong.
+      bottom: primary == null
+          ? null
+          : KitButton.primary(
+              key: primary.key,
+              hero: true,
+              label: primary.label,
+              onPressed: primary.onPressed,
+            ),
       // One Column inside the list, so every row is laid out at once: a
       // search result that lands on a row further down ("Restart after a
       // crash", P9.4) finds it built even on a small screen at large text.
-      body: ListView(
-        key: const ValueKey('this-phone'),
-        padding: EdgeInsetsDirectional.only(
-          top: tokens.space2,
-          bottom: KitScreen.endPadding(context),
-        ),
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _status(context, l10n),
-              // Replies from OpenCode's free model are the slow ones: say
-              // so where this server is looked after, with the way out.
-              if (_connectedHere &&
-                  connectionUsesFreeModel(ref.watch(connProvider))) ...[
-                SizedBox(height: tokens.space3),
-                Padding(
-                  padding: EdgeInsetsDirectional.symmetric(
-                    horizontal: tokens.gutter,
+      body: LayoutBuilder(
+        builder: (context, constraints) => ListView(
+          key: const ValueKey('this-phone'),
+          padding: EdgeInsetsDirectional.only(
+            bottom: KitScreen.endPadding(context),
+          ),
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // The answer takes only the room it needs (status and name),
+                // so Restart, Stop and the tools are in the first view. With
+                // nothing installed it keeps the whole page, centred.
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: _host.installed ? 0 : constraints.maxHeight,
                   ),
-                  child: KitNotice(
-                    key: const ValueKey('this-phone-free-model'),
-                    icon: AppIconography.speed,
-                    message: l10n.freeModelNotice,
-                    liveRegion: false,
-                    actions: [
-                      KitAction(
-                        key: const ValueKey('this-phone-free-model-sign-in'),
-                        label: l10n.freeModelSignIn,
-                        onPressed: () => unawaited(_signInToProvider()),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsetsDirectional.symmetric(
+                        vertical: tokens.space6,
                       ),
-                    ],
+                      child: _answerView(answer),
+                    ),
                   ),
                 ),
+                if (_host.installed) ...[
+                  _server(context, l10n),
+                  // Replies from OpenCode's free model are the slow ones:
+                  // say so where this server is looked after, with the way
+                  // out.
+                  if (_connectedHere &&
+                      connectionUsesFreeModel(ref.watch(connProvider))) ...[
+                    SizedBox(height: tokens.space3),
+                    Padding(
+                      padding: EdgeInsetsDirectional.symmetric(
+                        horizontal: tokens.gutter,
+                      ),
+                      child: KitNotice(
+                        key: const ValueKey('this-phone-free-model'),
+                        icon: AppIconography.speed,
+                        message: l10n.freeModelNotice,
+                        liveRegion: false,
+                        actions: [
+                          KitAction(
+                            key: const ValueKey(
+                              'this-phone-free-model-sign-in',
+                            ),
+                            label: l10n.freeModelSignIn,
+                            onPressed: () => unawaited(_signInToProvider()),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: tokens.sectionGap),
+                  _list(context, l10n),
+                  SizedBox(height: tokens.sectionGap),
+                  _logFold(context, l10n),
+                ],
               ],
-              if (_host.installed) ...[
-                SizedBox(height: tokens.sectionGap),
-                _list(context, l10n),
-                SizedBox(height: tokens.sectionGap),
-                _logFold(context, l10n),
-              ],
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  /// OpenCode's row: what it is, where it runs, how it is, and under it the
-  /// one act it needs now.
-  Widget _status(BuildContext context, AppLocalizations l10n) {
-    final tokens = KitTokens.of(context);
+  /// The server itself, quietly: what runs and where, then Restart and
+  /// Stop while it runs (the answer above says how it is).
+  Widget _server(BuildContext context, AppLocalizations l10n) {
     final state = _host.state;
     final connected = _connectedHere;
-    final working =
+    final busy =
         _connecting ||
         _removing ||
         _removingTool != null ||
@@ -809,18 +971,6 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
           PhoneHostState.stopping,
           PhoneHostState.settingUp,
         }.contains(state);
-    final word = _removing
-        ? l10n.phoneServerCardRemoving
-        : switch (state) {
-            PhoneHostState.checking => l10n.phoneServerCardChecking,
-            PhoneHostState.notSetUp => l10n.phoneServerCardNotSetUp,
-            PhoneHostState.settingUp => l10n.phoneServerCardSettingUp,
-            PhoneHostState.needsYou => l10n.thisPhoneNeedsAttention,
-            PhoneHostState.starting => l10n.phoneServerCardStarting,
-            PhoneHostState.stopping => l10n.phoneServerCardStopping,
-            PhoneHostState.stopped => l10n.phoneServerCardStopped,
-            PhoneHostState.running => l10n.phoneServerCardRunning,
-          };
     final where = _host.kind == PhoneHostKind.termux
         ? l10n.thisPhoneHostTermux
         : l10n.thisPhoneHostInApp;
@@ -829,186 +979,60 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
     final title = _host.runtimeKnown
         ? _runtimeName(_host.runtime)
         : l10n.firstRunAgentOpenCode;
-    final reach = working ? null : _host.termuxProblem;
-    final reachWords = reach == null
-        ? null
-        : termuxProblemWords(
-            l10n,
-            reach,
-            runtime: _host.runtimeKnown ? title : null,
-          );
-    final detail = [?_host.version, where].join(' · ');
-    final switchTarget = _host.switchTarget;
-    // What went wrong, in plain words; the host's own text is under
-    // Details at the end of the page.
-    final problem = _removing || working ? null : _host.problem;
-    final runtimeName = _runtimeName(_host.runtime);
-    final String? line = switch (problem) {
-      _ when _removing || working => null,
-      _ when reachWords != null => reachWords.line,
-      PhoneHostProblem.componentRecovery =>
-        l10n.inAppServerOwnershipRecoveryBody,
-      _ when state == PhoneHostState.needsYou && switchTarget != null =>
-        l10n.thisPhoneSwitchStopped(_runtimeName(switchTarget)),
-      PhoneHostProblem.start => l10n.thisPhoneStartFailed(runtimeName),
-      PhoneHostProblem.install => l10n.thisPhoneInstallFailed(runtimeName),
-      PhoneHostProblem.stop => l10n.thisPhoneStopFailed(runtimeName),
-      PhoneHostProblem.check => l10n.thisPhoneCheckFailed(runtimeName),
-      null => historyLine(l10n, _history),
-    };
-
-    KitAction? primary;
-    KitAction? secondary;
-    if (!working && reach != null) {
-      // The cause's own fix; "Try again" only where retrying can help.
-      primary = KitAction(
-        key: const ValueKey('this-phone-termux-fix'),
-        label: reachWords!.action,
-        onPressed: () => unawaited(_fixTermux(reach)),
-      );
-    } else if (!working) {
-      switch (state) {
-        case PhoneHostState.needsYou
-            when problem == PhoneHostProblem.componentRecovery:
-          primary = KitAction(
-            key: const ValueKey('this-phone-recover-ownership'),
-            label: l10n.e7SetupOpenAppSettings,
-            onPressed: () => unawaited(TermuxBridge.openAppSettings()),
-          );
-        case PhoneHostState.notSetUp:
-          primary = KitAction(
-            key: const ValueKey('this-phone-set-up'),
-            label: l10n.thisPhoneSetUp,
-            onPressed: () => unawaited(_setUp()),
-          );
-        case PhoneHostState.needsYou when switchTarget != null:
-          primary = KitAction(
-            key: const ValueKey('this-phone-switch-retry'),
-            label: l10n.setupSwitchRetry(_runtimeName(switchTarget)),
-            onPressed: () => unawaited(
-              openPhoneSetupTermux(
-                context,
-                job: TermuxHostJob.switchRuntime,
-                target: switchTarget,
-              ),
-            ),
-          );
-        case PhoneHostState.needsYou || PhoneHostState.notSetUp
-            when problem == PhoneHostProblem.check:
-          primary = KitAction(
-            key: const ValueKey('this-phone-check-again'),
-            label: l10n.commonRetry,
-            onPressed: () => unawaited(_load()),
-          );
-        case PhoneHostState.needsYou when problem == PhoneHostProblem.install:
-          primary = KitAction(
-            key: const ValueKey('this-phone-reinstall'),
-            label: l10n.thisPhoneInstallAgain,
-            onPressed: () => unawaited(_reinstall()),
-          );
-          // The version installed before may still start.
-          secondary = KitAction(
-            key: const ValueKey('this-phone-start'),
-            label: l10n.thisPhoneStart,
-            onPressed: () => unawaited(_start()),
-          );
-        case PhoneHostState.needsYou || PhoneHostState.stopped:
-          primary = KitAction(
-            key: const ValueKey('this-phone-start'),
-            label: problem == PhoneHostProblem.start
-                ? l10n.thisPhoneStartAgain
-                : l10n.thisPhoneStart,
-            onPressed: () => unawaited(_start()),
-          );
-        case PhoneHostState.running:
-          if (!connected && _host.profile != null) {
-            primary = KitAction(
-              key: const ValueKey('this-phone-connect'),
-              label: l10n.thisPhoneConnect,
-              onPressed: () => unawaited(_connect()),
-            );
-          }
-          secondary = KitAction(
-            key: const ValueKey('this-phone-stop'),
-            // Stopping keeps everything and is undone by Start: a plain
-            // secondary button, never red (LOOK-5); it still asks first.
-            label: l10n.thisPhoneStop,
-            onPressed: () => unawaited(_stop()),
-          );
-        case PhoneHostState.checking ||
-            PhoneHostState.settingUp ||
-            PhoneHostState.starting ||
-            PhoneHostState.stopping:
-          break;
-      }
-    } else if (state == PhoneHostState.settingUp) {
-      primary = KitAction(
-        key: const ValueKey('this-phone-progress'),
-        label: l10n.phoneServerCardShowProgress,
-        onPressed: () => unawaited(_showProgress()),
-      );
-    }
-    final actions = KitActionBlock(primary: primary, secondary: secondary);
+    // Where it runs; its version is engineering copy, under Details (the
+    // log is titled with it).
+    final detail = where;
     final running = state == PhoneHostState.running;
-    // "Needs you" starts the line, inline (never a word floating at the
-    // row's end); every other state keeps its word at the end.
-    final needsYou = state == PhoneHostState.needsYou && !working;
-    return KitRowGroup(
-      key: const ValueKey('this-phone-status'),
+    final tokens = KitTokens.of(context);
+    final server = KitRowGroup(
+      key: const ValueKey('this-phone-server'),
       children: [
-        Semantics(
-          container: true,
-          liveRegion: true,
-          child: KitRow(
-            leading: working
-                ? const KitStatusMark(state: KitMarkState.working)
-                : KitRowIcon(AppIconography.phone, current: connected),
-            title: title,
-            titleKey: const ValueKey('this-phone-title'),
-            supporting: TextSpan(
-              children: [
-                if (connected) kitCurrentSpan(context, l10n.serverRowConnected),
-                if (needsYou) KitNeedsYou.span(context),
-                TextSpan(text: detail),
-              ],
-            ),
-            supportingKey: const ValueKey('this-phone-detail'),
-            supportingMaxLines: 2,
-            // The state word keeps the row's end inset (a trailing slot
-            // leaves only space1), never against the panel's edge.
-            trailing: needsYou
-                ? null
-                : Padding(
-                    padding: EdgeInsetsDirectional.only(end: tokens.space3),
-                    child: KitText(
-                      word,
-                      key: const ValueKey('this-phone-state'),
-                      role: KitTextRole.secondary,
-                      tone: running && !working
-                          ? KitTextTone.success
-                          : KitTextTone.secondary,
-                    ),
-                  ),
-            below: line == null
-                ? null
-                : KitText(
-                    line,
-                    key: const ValueKey('this-phone-failure'),
-                    role: KitTextRole.secondary,
-                    tone: KitTextTone.primary,
-                  ),
+        KitRow(
+          // The words say Connected; the tile stays plain (mint is the
+          // one main action's colour).
+          leading: KitRow.icon(context, AppIconography.phone),
+          title: title,
+          titleKey: const ValueKey('this-phone-title'),
+          supporting: TextSpan(
+            children: [
+              if (connected) kitCurrentSpan(context, l10n.serverRowConnected),
+              TextSpan(text: detail),
+            ],
           ),
+          supportingKey: const ValueKey('this-phone-detail'),
+          supportingMaxLines: 2,
         ),
-        if (!actions.isEmpty)
-          Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(
-              tokens.space4,
-              tokens.space2,
-              tokens.space4,
-              tokens.space3,
+      ],
+    );
+    if (!running || busy) return server;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        server,
+        SizedBox(height: tokens.sectionGap),
+        KitRowGroup(
+          key: const ValueKey('this-phone-server-acts'),
+          children: [
+            KitRow(
+              key: const ValueKey('this-phone-restart'),
+              leading: KitRow.icon(context, AppIconography.restart),
+              title: l10n.thisPhoneRestartRow,
+              titleMaxLines: 2,
+              // Plain words: its glyph already says it acts, and the lamp
+              // stays the page's one green.
+              onTap: () => unawaited(_restart()),
             ),
-            child: actions,
-          ),
+            KitRow(
+              key: const ValueKey('this-phone-stop'),
+              leading: KitRow.icon(context, AppIconography.stopCircle),
+              // Stopping keeps everything and is undone by Start: an
+              // ordinary act, never red (LOOK-5); it still asks first.
+              title: l10n.thisPhoneStop,
+              titleMaxLines: 2,
+              onTap: () => unawaited(_stop()),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -1112,6 +1136,14 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
             disabledReason: busyReason,
             onTap: () => unawaited(_update()),
           ),
+        // What runs here and what heats the phone; its line is the one
+        // status about it (left behind, heavy, near Android's limit).
+        if (inApp && (_running?.snapshot.processes.isNotEmpty ?? false))
+          RunningOnPhoneRow(
+            key: const ValueKey('this-phone-running'),
+            reading: _running!,
+            onTap: () => unawaited(_openRunning()),
+          ),
         if (hasEngine)
           KitRow(
             key: const ValueKey('this-phone-add-tools'),
@@ -1129,7 +1161,7 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
           leading: icon(AppIconography.agent),
           title: inApp ? l10n.settingsV3AgentsOnPhone : l10n.localAgentTitle,
           supporting: TextSpan(
-            text: inApp ? l10n.localAgentTitle : l10n.localAgentRowOptional,
+            text: inApp ? l10n.localAgentPageTitle : l10n.localAgentRowOptional,
           ),
           trailing: const KitChevron(),
           onTap: _openLocalAgent,
@@ -1138,7 +1170,7 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
         if (inApp)
           KitRow(
             key: const ValueKey('this-phone-storage'),
-            leading: icon(AppIconography.database),
+            leading: icon(AppIconography.storage),
             title: l10n.thisPhoneStorage,
             trailing: _host.bytesUsed == null
                 ? null
@@ -1152,7 +1184,7 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
         if (inApp && _host.installed)
           KitRow(
             key: const ValueKey('this-phone-linux'),
-            leading: icon(AppIconography.processor),
+            leading: icon(AppIconography.terminal),
             title: l10n.linuxMgrRow,
             supporting: TextSpan(text: l10n.linuxMgrRowDetail),
             supportingMaxLines: 2,

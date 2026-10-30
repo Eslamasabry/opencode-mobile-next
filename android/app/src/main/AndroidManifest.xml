@@ -5,6 +5,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Android 16 QPR1+ live updates: the status bar chip while chats work
+         (StatusNotificationRenderer.configurePromotion). Without it the
+         system never promotes the notification, so the chip never shows. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <!-- The OpenCode server running inside the app (BuiltinServerService). -->
@@ -280,6 +284,17 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_usage_wide_info" />
+        </receiver>
+        <receiver
+            android:name=".StatusWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_label_status">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_status_info" />
         </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

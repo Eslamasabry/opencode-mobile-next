@@ -39,7 +39,7 @@ final _termuxProfile = ServerProfile(
   name: 'This phone',
   baseUrl: TermuxBridge.managedServerUrl,
   password: 'synthetic-test-secret',
-  serverVersion: '2.0.29',
+  serverVersion: '2.1.1',
 );
 
 Future<void> _settle(WidgetTester tester, {int frames = 10}) async {
@@ -73,7 +73,7 @@ void main() {
   Future<TermuxChannelFixture> termux(
     WidgetTester tester, {
     required String status,
-    String version = '2.0.29',
+    String version = '2.1.1',
   }) async {
     final channel = TermuxChannelFixture()
       ..inventoryOutput =
@@ -182,18 +182,17 @@ void main() {
       status: termuxSnapshot(
         phase: 'failed',
         message: 'OpenCode server exited (code 137)',
-        version: '2.0.29',
+        version: '2.1.1',
         extra: 'failure_kind=crash\n',
       ),
     );
-    // "Needs you" starts the line, inline; no word floats at the row's end.
-    expect(_text(tester, 'this-phone-detail'), startsWith('Needs you · '));
-    expect(find.byKey(const ValueKey('this-phone-state')), findsNothing);
+    // One plain answer, the way forward under it; the row stays a fact.
+    expect(_text(tester, 'this-phone-state'), "The server didn't start");
     expect(
       _text(tester, 'this-phone-failure'),
-      "OpenCode 2 didn't start. Start it again; Details below says what went "
-      'wrong.',
+      'Start it again; Details below says what went wrong.',
     );
+    expect(_text(tester, 'this-phone-detail'), isNot(contains('Needs you')));
     expect(find.text('Start again'), findsOneWidget);
     expect(find.byKey(const ValueKey('this-phone-reinstall')), findsNothing);
     // The raw text is not copy: only Details holds it.
@@ -218,7 +217,7 @@ void main() {
       status: termuxSnapshot(
         phase: 'failed',
         message: 'Could not install the Termux dependencies',
-        version: '2.0.29',
+        version: '2.1.1',
       ),
     );
     expect(
@@ -276,6 +275,8 @@ void main() {
       version: '2.0.20',
       status: termuxSnapshot(phase: 'ready', version: '2.0.20'),
     );
+    await tester.ensureVisible(find.byKey(const ValueKey('this-phone-update')));
+    await tester.pump();
     await tester.tap(find.byKey(const ValueKey('this-phone-update')));
     await _settle(tester);
     expect(find.text('Update OpenCode 2?'), findsOneWidget);

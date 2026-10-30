@@ -18,7 +18,6 @@ enum ContinueWithBlock {
   /// The two conversations are not provably on the same files.
   notSameProject,
   noRecordWriter,
-  modelUnavailable,
 }
 
 /// One row of the sheet: a model of the current server (a switch) or an
@@ -97,7 +96,8 @@ abstract interface class ContinueWithHost {
 
   /// Called with the id [AgentHandoffController.send] returned, before the
   /// conversation is opened, so the app finds the right connection for it.
-  Future<void> adopt(ContinueWithChoice choice, String navigationSessionId);
+  /// Returns the id to open it by: the one the Conversations list uses.
+  Future<String> adopt(ContinueWithChoice choice, String navigationSessionId);
 }
 
 enum ContinueWithPhase {
@@ -151,6 +151,9 @@ class ContinueWithFlow extends ChangeNotifier {
   AgentHandoffDraft? draft;
   ContinueWithProblem? problem;
 
+  /// Technical words for [problem] (which check or step), for Details.
+  String? problemDetail;
+
   /// The finer phase of an attempt under way (saving, starting, linking).
   AgentHandoffPhase? attempt;
 
@@ -182,6 +185,7 @@ class ContinueWithFlow extends ChangeNotifier {
     _set(() {
       phase = ContinueWithPhase.loading;
       problem = null;
+      problemDetail = null;
       selected = null;
       draft = null;
     });
@@ -213,6 +217,7 @@ class ContinueWithFlow extends ChangeNotifier {
       selected = choice;
       draft = null;
       problem = null;
+      problemDetail = null;
       attempt = null;
       phase = choice.native
           ? ContinueWithPhase.native
@@ -242,6 +247,7 @@ class ContinueWithFlow extends ChangeNotifier {
       if (!_current(g)) return;
       _set(() {
         problem = _problemOf(error);
+        problemDetail = controller.failureDetail;
         _controller = null;
         // A stable state: the same row can be tried again.
         phase = ContinueWithPhase.choosing;
@@ -267,6 +273,7 @@ class ContinueWithFlow extends ChangeNotifier {
     _set(() {
       phase = ContinueWithPhase.switching;
       problem = null;
+      problemDetail = null;
     });
     try {
       await host.switchModel(choice);
@@ -296,11 +303,11 @@ class ContinueWithFlow extends ChangeNotifier {
     _set(() {
       phase = ContinueWithPhase.starting;
       problem = null;
+      problemDetail = null;
       attempt = AgentHandoffPhase.writingFile;
     });
     try {
-      final id = await controller.send(editedMessage);
-      await host.adopt(choice, id);
+      final id = await host.adopt(choice, await controller.send(editedMessage));
       if (_closed) return id;
       _set(() {
         openSessionId = id;
@@ -312,6 +319,7 @@ class ContinueWithFlow extends ChangeNotifier {
       final failure = controller.failure;
       _set(() {
         problem = _problemOf(failure ?? error);
+        problemDetail = controller.failureDetail;
         locked = locked || problem == ContinueWithProblem.unknown;
         openSessionId = controller.navigationSessionId;
         phase = switch (failure?.kind) {
@@ -338,11 +346,14 @@ class ContinueWithFlow extends ChangeNotifier {
     _set(() => phase = ContinueWithPhase.starting);
     try {
       await controller.retryLink();
-      final id = controller.navigationSessionId;
+      final sent = controller.navigationSessionId;
       final choice = selected;
-      if (choice != null && id != null) await host.adopt(choice, id);
+      final id = choice != null && sent != null
+          ? await host.adopt(choice, sent)
+          : sent;
       _set(() {
         problem = null;
+        problemDetail = null;
         openSessionId = id;
         phase = ContinueWithPhase.done;
       });
@@ -368,6 +379,7 @@ class ContinueWithFlow extends ChangeNotifier {
       selected = null;
       draft = null;
       problem = null;
+      problemDetail = null;
       phase = ContinueWithPhase.choosing;
     });
   }

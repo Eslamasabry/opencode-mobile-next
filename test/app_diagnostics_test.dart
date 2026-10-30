@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/diagnostics/app_diagnostics.dart';
+import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/main.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -103,6 +106,90 @@ void main() {
     expect(diagnostics.reportText(), isNot(contains('private widget detail')));
   });
 
+  testWidgets('a page that fails to build shows a themed sentence and Back, '
+      'never the bare-text fallback', (tester) async {
+    final diagnostics = AppDiagnosticsController();
+    addTearDown(diagnostics.dispose);
+    final originalFlutter = FlutterError.onError;
+    FlutterError.onError = (_) {};
+    final capture = installAppErrorCapture(diagnostics);
+    addTearDown(() {
+      capture.restore();
+      FlutterError.onError = originalFlutter;
+    });
+    final navigator = GlobalKey<NavigatorState>();
+    final theme = AppTheme.dark();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigator,
+        theme: theme,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const SizedBox(),
+      ),
+    );
+    // A pushed page whose build throws, with no Material of its own above
+    // the failure (the owner's Appearance page, 2026-10-23).
+    navigator.currentState!.push(
+      KitPageRoute<void>(builder: (_) => const _Broken()),
+    );
+    await tester.pumpAndSettle();
+    final message = find.byKey(const ValueKey('kit-error-fallback'));
+    expect(message, findsOneWidget);
+    final style = tester
+        .widget<RichText>(
+          find.descendant(of: message, matching: find.byType(RichText)),
+        )
+        .text
+        .style!;
+    final roles = ThemeRoles.resolve(theme);
+    expect(style.color, roles.text1);
+    expect(style.decoration, TextDecoration.none);
+    expect(style.fontFamily, isNot('monospace'));
+    expect(style.fontSize, isNotNull);
+    expect(
+      contrastRatio(style.color!, roles.ground),
+      greaterThanOrEqualTo(4.5),
+    );
+    // A way back to the page before.
+    await tester.tap(find.byKey(const ValueKey('kit-error-fallback-back')));
+    await tester.pumpAndSettle();
+    expect(message, findsNothing);
+    expect(diagnostics.reportText(), contains('Invalid state'));
+  });
+
+  testWidgets('the fallback draws above every theme, Directionality and '
+      'navigator', (tester) async {
+    final diagnostics = AppDiagnosticsController();
+    addTearDown(diagnostics.dispose);
+    final originalFlutter = FlutterError.onError;
+    FlutterError.onError = (_) {};
+    final capture = installAppErrorCapture(diagnostics);
+    addTearDown(() {
+      capture.restore();
+      FlutterError.onError = originalFlutter;
+    });
+    await tester.pumpWidget(const _Broken());
+    expect(tester.takeException(), isNull);
+    final style = tester
+        .widget<RichText>(
+          find.descendant(
+            of: find.byKey(const ValueKey('kit-error-fallback')),
+            matching: find.byType(RichText),
+          ),
+        )
+        .text
+        .style!;
+    final roles = ThemeRoles.resolve(ThemeData());
+    expect(style.color, roles.text1);
+    expect(
+      contrastRatio(style.color!, roles.ground),
+      greaterThanOrEqualTo(4.5),
+    );
+    expect(style.decoration, TextDecoration.none);
+    expect(find.byKey(const ValueKey('kit-error-fallback-back')), findsNothing);
+  });
+
   testWidgets('bootstrap failure is visible and can be retried', (
     tester,
   ) async {
@@ -139,4 +226,12 @@ void main() {
     expect(attempts, 2);
     expect(find.byType(ServersScreen), findsOneWidget);
   });
+}
+
+/// A page whose build fails.
+class _Broken extends StatelessWidget {
+  const _Broken();
+
+  @override
+  Widget build(BuildContext context) => throw StateError('broken page');
 }

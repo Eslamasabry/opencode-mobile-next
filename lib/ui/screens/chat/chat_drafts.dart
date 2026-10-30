@@ -19,6 +19,15 @@ mixin _ChatDraftFields {
   SessionDraftFailure? _draftSaveFailure;
   bool _allowRoutePop = false;
 
+  /// True while what the composer holds is what is saved as this
+  /// conversation's draft. Back then leaves at once, with the predictive
+  /// preview, and the draft is written again after the page has gone; until
+  /// then Back waits for the save, so a refused save can still ask.
+  final ValueNotifier<bool> _draftSettled = ValueNotifier(true);
+
+  /// The page left by a Back that popped at once ([_leftByBack]).
+  bool _leftByPop = false;
+
   /// Queue entries already taken off the queue because the transcript shows
   /// them ([_ChatQueue._waitingDrafts]).
   final Set<String> _dropQueued = {};
@@ -26,6 +35,25 @@ mixin _ChatDraftFields {
 }
 
 extension _ChatDrafts on _ChatScreenState {
+  /// Hooks the screen to the composer's text (draft saving, tips, mentions,
+  /// the note) and, with [on] false, lets go of it and of the
+  /// timer that wakes the stuck line.
+  void _listenToComposer(bool on) {
+    for (final listener in [
+      _scheduleDraftSave,
+      _offerSendTip,
+      _onMentionText,
+      _composerNoteFollowsEdits,
+    ]) {
+      if (on) {
+        _composer.addListener(listener);
+      } else {
+        _composer.removeListener(listener);
+      }
+    }
+    if (!on) _stuckTimer?.cancel();
+  }
+
   /// Saves the composer text as this session's draft (or clears the draft
   /// when the composer is empty). Runs on navigation away, app pause, and
   /// after sends so the persisted draft always mirrors the composer.
@@ -33,7 +61,10 @@ extension _ChatDrafts on _ChatScreenState {
     _draftSaveTimer?.cancel();
     // Conversation review is transient. Only an explicit Send publishes text;
     // lifecycle, debounce and route persistence must not save an utterance.
-    if (_conn.isIsolated || _voiceConversation || _watching) return true;
+    if (_conn.isIsolated || _voiceConversation || _watching) {
+      if (mounted) _draftSettled.value = true;
+      return true;
+    }
     final sessionID = widget.sessionID;
     final generation = ++_draftWriteGeneration;
     final text = _promptHistory.original?.text ?? _composer.text;
@@ -51,10 +82,15 @@ extension _ChatDrafts on _ChatScreenState {
         attachmentDirectory: _draftDirectory,
         attachmentWorkspace: _draftWorkspace,
       );
-      if (mounted &&
-          generation == _draftWriteGeneration &&
-          _draftSaveFailure != null) {
-        _setChatState(() => _draftSaveFailure = null);
+      if (mounted && generation == _draftWriteGeneration) {
+        if (_draftSaveFailure != null) {
+          _setChatState(() => _draftSaveFailure = null);
+        }
+        // Settled only when nothing changed while it was written.
+        _draftSettled.value =
+            !(_draftSaveTimer?.isActive ?? false) &&
+            (_promptHistory.original?.text ?? _composer.text) == text &&
+            listEquals(_attachments, attachments);
       }
       return true;
     } catch (error) {
@@ -177,6 +213,9 @@ extension _ChatDrafts on _ChatScreenState {
   /// the list, and nothing interrupts the person on their way out.
   Future<void> _discardUntouchedMobileSession() async {
     if (_conn.isIsolated) return;
+    // Read now: this may finish after the page has gone.
+    final conn = _conn;
+    final sessionID = widget.sessionID;
     if (!widget.discardIfUntouched ||
         _messages.isNotEmpty ||
         _pendingSends.isNotEmpty ||
@@ -187,21 +226,21 @@ extension _ChatDrafts on _ChatScreenState {
         _attachments.isNotEmpty ||
         _draftRecoveryBlocked ||
         _photoBusy ||
-        (_conn.promptPhotos.pending?.sessionID == widget.sessionID &&
-            _conn.promptPhotos.pending?.profileID == _draftProfileID) ||
-        _conn.busySessions.contains(widget.sessionID)) {
+        (conn.promptPhotos.pending?.sessionID == sessionID &&
+            conn.promptPhotos.pending?.profileID == _draftProfileID) ||
+        conn.busySessions.contains(sessionID)) {
       return;
     }
     try {
-      final api = await _conn.prepareActionTransport();
+      final api = await conn.prepareActionTransport();
       if (api == null) return;
-      final currentMessages = await api.messagePage(widget.sessionID, limit: 1);
+      final currentMessages = await api.messagePage(sessionID, limit: 1);
       if (currentMessages.items.isNotEmpty || currentMessages.hasMore) {
         return;
       }
-      await api.deleteSession(widget.sessionID);
+      await api.deleteSession(sessionID);
       try {
-        await _conn.refreshSessions();
+        await conn.refreshSessions();
       } catch (_) {
         // The exact empty session is already gone. The destination screen will
         // reconcile on its normal refresh even if this optional refresh fails.
@@ -323,8 +362,8 @@ extension _ChatDrafts on _ChatScreenState {
       return;
     }
     _leavingProvisionalSession = true;
-    await _discardUntouchedMobileSession();
-    if (!mounted) return;
+    // Checked and deleted on the way out: Back never waits on the server.
+    unawaited(_discardUntouchedMobileSession());
     _setChatState(() => _allowRoutePop = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -345,5 +384,42 @@ extension _ChatDrafts on _ChatScreenState {
       }
       unawaited(navigator.maybePop());
     });
+  }
+
+  /// Whether Back may pop the page at once: nothing typed or attached that
+  /// is not saved yet, nothing being recovered, and a page beneath to go
+  /// back to (a chat with nothing beneath leaves for home in [_leaveChat]).
+  bool _backLeavesAtOnce(BuildContext context, {required bool settled}) =>
+      settled &&
+      _draftSaveFailure == null &&
+      !_draftRecoveryBlocked &&
+      !_restoringDraftAttachments &&
+      !_leavingProvisionalSession &&
+      !(ModalRoute.of(context)?.isFirst ?? true);
+
+  /// Back popped the page at once: the draft is written and an untouched new
+  /// conversation is checked and deleted after it has gone, never before.
+  void _leftByBack() {
+    if (_allowRoutePop || _leftByPop) return;
+    _leftByPop = true;
+    unawaited(_persistDraft());
+    unawaited(_discardUntouchedMobileSession());
+  }
+
+  /// A change to the composer's draft, saved after a pause in typing.
+  void _queueDraftSave() {
+    _promptContentRevision++;
+    _lastDraftText = _composer.text;
+    _lastDraftAttachments = List.of(_attachments);
+    _draftSettled.value = false;
+    _draftSaveTimer?.cancel();
+    _draftSaveTimer = Timer(const Duration(milliseconds: 600), _persistDraft);
+  }
+
+  /// The page is going: the last save (unless Back already wrote it).
+  void _endDraftTracking() {
+    _draftTrackingEnabled = false;
+    if (!_leftByPop) _persistDraft();
+    _draftSettled.dispose();
   }
 }

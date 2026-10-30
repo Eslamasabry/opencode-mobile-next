@@ -12,6 +12,8 @@ import 'kit_buttons.dart';
 import 'kit_icon_button.dart';
 import 'kit_layout.dart';
 import 'kit_motion.dart';
+import 'kit_surface.dart' show kitSurfaceMaterial;
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
@@ -656,8 +658,12 @@ class _KitUndoBar extends StatelessWidget {
       container: true,
       liveRegion: true,
       label: message,
-      child: Material(
-        color: roles.surface3,
+      // A floating piece: the style paints it.
+      child: kitSurfaceMaterial(
+        context,
+        level: KitSurfaceLevel.surface3,
+        role: KitSurfaceRole.floating,
+        fill: roles.surface3,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
           side: BorderSide(
@@ -665,7 +671,6 @@ class _KitUndoBar extends StatelessWidget {
             width: KitTokens.hairlineWidth(context),
           ),
         ),
-        clipBehavior: Clip.antiAlias,
         child: Padding(
           padding: EdgeInsetsDirectional.symmetric(
             horizontal: tokens.space4,

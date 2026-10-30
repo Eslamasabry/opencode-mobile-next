@@ -11,6 +11,7 @@ import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit_menu.dart';
 import 'package:opencode_mobile/ui/kit/kit_motion.dart';
 import 'package:opencode_mobile/ui/kit/kit_search_field.dart';
+import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 
 const _fieldKey = ValueKey('field');
 const _clearKey = ValueKey('clear');
@@ -479,6 +480,44 @@ void main() {
         }
       }
     }
+  });
+
+  testWidgets('prominent: a pill with no hairline until it has focus', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        _page(
+          KitSearchField(
+            label: 'Search settings',
+            fieldKey: _fieldKey,
+            prominent: true,
+            onChanged: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    BoxDecoration frame() => tester
+        .widgetList<DecoratedBox>(
+          find.ancestor(
+            of: find.byKey(_fieldKey),
+            matching: find.byType(DecoratedBox),
+          ),
+        )
+        .map((box) => box.decoration)
+        .whereType<BoxDecoration>()
+        .firstWhere((d) => d.border != null);
+    final roles = KitTokens.of(tester.element(find.byKey(_fieldKey))).roles;
+    final tokens = KitTokens.of(tester.element(find.byKey(_fieldKey)));
+    expect(
+      frame().borderRadius,
+      BorderRadius.circular(tokens.buttonHeight / 2),
+    );
+    expect((frame().border! as Border).top.color, roles.surface1);
+    await tester.tap(find.byKey(_fieldKey));
+    await tester.pumpAndSettle();
+    expect((frame().border! as Border).top.color, roles.accent);
   });
 }
 

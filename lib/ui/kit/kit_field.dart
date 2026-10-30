@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,13 +12,16 @@ import '../app_iconography.dart';
 import 'kit_buttons.dart';
 import 'kit_icon_button.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
+import 'kit_redact.dart';
 import 'kit_sheet.dart' show KitDraft;
 import 'kit_since.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
-import 'kit_redact.dart';
 import 'motion/kit_reveal.dart';
+import 'style/kit_style.dart' show kitStyleBoundary, kitStyleSpec;
 
 /// What the field holds (docs/ux-system/kit-api/KitField.md). It decides the
 /// keyboard, direction, face and input rules; never the look.
@@ -45,6 +49,87 @@ enum KitFieldKind {
 
   /// Only through [KitField.secret].
   secret,
+}
+
+/// The frame the kit's fields paint as their own look (Solid's): a [fill],
+/// an [edge] inside (or, [outside], around) [radius] corners, a hairline or,
+/// [thick], the focus ring's two pixels, and any [shadows]. [KitField],
+/// [KitSearchField] and [KitAskField] pass it to the style resolver as
+/// `solid:`, so every other style turns it into its field
+/// (`KitSurfaceRole.field`). A null [edge] draws no line.
+BoxDecoration kitFieldFrame(
+  BuildContext context, {
+  Color? fill,
+  Color? edge,
+  bool thick = false,
+  required BorderRadius radius,
+  bool outside = false,
+  List<BoxShadow>? shadows,
+}) => BoxDecoration(
+  color: fill,
+  borderRadius: radius,
+  border: edge == null
+      ? null
+      : Border.all(
+          color: edge,
+          width: thick
+              ? KitTokens.focusRingWidth(context)
+              : KitTokens.hairlineWidth(context),
+          strokeAlign: outside
+              ? BorderSide.strokeAlignOutside
+              : BorderSide.strokeAlignInside,
+        ),
+  boxShadow: shadows,
+);
+
+/// [child], a kit field painted in [look], with a ring of [color] (null:
+/// none) the focus ring's width just outside it: keyboard focus, or an
+/// error. Only once the style resolver made [look] out of the field's [own]
+/// frame, which draws focus in its own edge; the ring follows [look]'s
+/// corners. The ring is always in the tree, so focusing a field never
+/// rebuilds what it holds.
+Widget kitFieldRing(
+  BuildContext context, {
+  required Decoration own,
+  required Decoration look,
+  required Color? color,
+  required Widget child,
+}) => DecoratedBox(
+  position: DecorationPosition.foreground,
+  decoration: kitFieldFrame(
+    context,
+    edge: identical(look, own) ? null : color,
+    thick: true,
+    radius: KitSurfaceDecoration.radiusOf(look) ?? BorderRadius.zero,
+    outside: true,
+  ),
+  child: child,
+);
+
+/// The halo a glowing field (the ask field, the start box) casts around
+/// its face [look]: [halo] (the field's own shadows) where the style keeps a
+/// field halo ([KitStyleTokens.fieldHalo]; by default as its glow's halo:
+/// Solid and Soft), none elsewhere (Brutal's ink, Paper's print).
+/// Outside a styled face only, so a clear face never takes its tint; a
+/// plain face takes it as a plain shadow in [radius] corners. Paint it
+/// behind the field, which paints [look] over it.
+Decoration kitFieldHalo(
+  BuildContext context, {
+  required Decoration look,
+  required BorderRadius radius,
+  required List<BoxShadow> halo,
+}) {
+  final style = KitSurfaceLook.styleOf(context);
+  final shadows = kitStyleSpec(style).tokens.fieldHaloShown
+      ? halo
+      : const <BoxShadow>[];
+  return look is KitSurfaceDecoration
+      ? KitSurfaceDecoration(
+          borderRadius: radius,
+          fill: Colors.transparent,
+          shadows: shadows,
+        )
+      : kitFieldFrame(context, radius: radius, shadows: shadows);
 }
 
 enum _KitFieldMode { plain, composer, secret }
@@ -108,6 +193,7 @@ class KitField extends StatefulWidget {
     this.selectAllOnFocus = false,
     this.fieldKey,
     this.actionKey,
+    this.optional = false,
   }) : assert(enabled || disabledReason != null),
        assert(kind != KitFieldKind.secret, 'use KitField.secret'),
        saved = false,
@@ -158,6 +244,7 @@ class KitField extends StatefulWidget {
        revealKey = null,
        pasteKey = null,
        replaceKey = null,
+       optional = false,
        _mode = _KitFieldMode.composer;
 
   /// Obscured, with a reveal toggle and a Paste button. Never prefilled:
@@ -202,6 +289,7 @@ class KitField extends StatefulWidget {
        selectAllOnFocus = false,
        contentInsertion = null,
        actionKey = null,
+       optional = false,
        _mode = _KitFieldMode.secret;
 
   /// Shown above the field; the field's semantic label.
@@ -280,6 +368,10 @@ class KitField extends StatefulWidget {
   /// On the inner editable.
   final Key? fieldKey;
   final Key? actionKey;
+
+  /// A field the person may leave empty ("Anything to add?"): a quiet
+  /// "Optional" at the end of the label's line. Only the plain field.
+  final bool optional;
   final Key? revealKey;
   final Key? pasteKey;
   final Key? replaceKey;
@@ -568,7 +660,10 @@ class _KitFieldState extends State<KitField> {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     if (widget.validator == null) {
       _formField = null;
       return _buildField(context, null);
@@ -638,6 +733,8 @@ class _KitFieldState extends State<KitField> {
         ? ((tokens.buttonHeight - tokens.minTarget) / 2).floorToDouble()
         : ((tokens.buttonHeight - fontSize * style.height!) / 2)
               .floorToDouble();
+    // The composer's one line sits centred on its row's 48 dp controls.
+    final composerPad = math.max(0.0, (tokens.minTarget - scaledLine) / 2);
     final plainWords =
         widget.kind == KitFieldKind.text ||
         widget.kind == KitFieldKind.multiline;
@@ -696,7 +793,9 @@ class _KitFieldState extends State<KitField> {
             hintText: widget.hint,
             hintStyle: hintStyle,
           ).copyWith(
-            hintMaxLines: _multiline ? 3 : 1,
+            // The composer's hint is one line beside "+" and Send: at a large
+            // text size it ends in an ellipsis instead of growing the row.
+            hintMaxLines: composer ? 1 : (_multiline ? 3 : 1),
             hintFadeDuration: KitMotion.reduced(context) ? Duration.zero : null,
             // No label is drawn inside; this keeps the decorator from running
             // its label ticker when the field turns non-empty (MOT-7).
@@ -711,8 +810,11 @@ class _KitFieldState extends State<KitField> {
             disabledBorder: InputBorder.none,
             errorBorder: InputBorder.none,
             focusedErrorBorder: InputBorder.none,
+            // The composer's field sits on one row with 48 dp controls:
+            // its one line is centred on them and the padding is part of the
+            // field's own target (LAY-9).
             contentPadding: composer
-                ? EdgeInsets.zero
+                ? EdgeInsets.symmetric(vertical: composerPad)
                 : hasTrailing
                 // The trailing buttons bring their own 48 dp padding.
                 ? EdgeInsetsDirectional.only(
@@ -769,7 +871,11 @@ class _KitFieldState extends State<KitField> {
     } else if (_hovered && widget.enabled) {
       borderColor = roles.text3;
     } else {
-      borderColor = roles.hairline;
+      // An empty field has nothing else to show where it is: its edge reads
+      // at 3:1 at rest against the page and its own fill (WCAG 1.4.11; a
+      // box of several lines since the owner's 2026-10-21 call, one line
+      // since audit P2-6, 2026-10-28).
+      borderColor = kitStyleBoundary(roles);
     }
 
     final trailing = <Widget>[
@@ -860,26 +966,51 @@ class _KitFieldState extends State<KitField> {
       );
     }
 
+    // The field's own frame is Solid's; the style resolver turns it into
+    // the style's field (a tint and rim, a well, an ink box), with a
+    // boundary that reads at 3:1 at rest and its focused answer.
+    final ownFrame = kitFieldFrame(
+      context,
+      fill: roles.surface1,
+      edge: borderColor,
+      // The 3:1 edge is two pixels wide, so it reads as a box at a glance
+      // and keeps its contrast where it falls between two pixel rows (one
+      // pixel there blurs to about 1.3:1). Focus answers in its colour.
+      thick: true,
+      radius: BorderRadius.circular(tokens.fieldCorner),
+    );
+    final look = KitSurfaceLook.decorate(
+      context,
+      solid: ownFrame,
+      role: KitSurfaceRole.field,
+      selected: focused,
+      // Solid's own frame shows hover in its edge; a style may answer it.
+      hovered: _hovered && widget.enabled && !focused,
+    );
     final frame = MouseRegion(
       cursor: widget.enabled && !_showsSaved
           ? SystemMouseCursors.text
           : MouseCursor.defer,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: roles.surface1,
-          borderRadius: BorderRadius.circular(KitTokens.fieldRadius),
-          border: Border.all(
-            color: borderColor,
-            width: focused
-                ? KitTokens.focusRingWidth(context)
-                : KitTokens.hairlineWidth(context),
+      child: kitFieldRing(
+        context,
+        own: ownFrame,
+        look: look,
+        // A style draws its own frame, so keyboard focus (and an error)
+        // also rings it outside, as the school guides ask (F6).
+        color: focused
+            ? roles.accent
+            : error != null
+            ? roles.text1
+            : null,
+        child: kitSurfaceBox(
+          style: KitSurfaceLook.styleOf(context),
+          decoration: look,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: tokens.buttonHeight),
+            child: inside,
           ),
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: tokens.buttonHeight),
-          child: inside,
         ),
       ),
     );
@@ -995,7 +1126,24 @@ class _KitFieldState extends State<KitField> {
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: widget.enabled && !_showsSaved ? _focus.requestFocus : null,
-            child: KitText(widget.label, role: KitTextRole.label),
+            child: widget.optional
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Expanded(
+                        child: KitText(widget.label, role: KitTextRole.label),
+                      ),
+                      SizedBox(width: tokens.space3),
+                      KitText(
+                        _l10n(context).kitFieldOptional,
+                        key: const ValueKey('kit-field-optional'),
+                        role: KitTextRole.secondary,
+                        tone: KitTextTone.tertiary,
+                      ),
+                    ],
+                  )
+                : KitText(widget.label, role: KitTextRole.label),
           ),
         ),
         SizedBox(height: tokens.space2),

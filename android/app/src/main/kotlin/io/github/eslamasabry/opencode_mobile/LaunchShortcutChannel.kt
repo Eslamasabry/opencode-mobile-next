@@ -101,7 +101,7 @@ internal class LaunchShortcutChannel(private val activity: Activity) {
         )
         private val LAUNCH_ACTIONS = setOf(
             "connect", "new_task", "activity", "usage", "usage_settings", "background_settings",
-            "phone_setup", "phone_setup_done",
+            "phone_setup", "phone_setup_done", "linux",
         )
     }
 }

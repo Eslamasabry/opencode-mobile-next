@@ -616,7 +616,12 @@ void main() {
       final message = find.byKey(const Key('message-stopped'));
       expect(message, findsOneWidget);
       // The turn's end line says it in words; the raw reason stays out.
-      expect(find.text('You stopped this reply.'), findsOneWidget);
+      // Nobody pressed Stop in this app, so it does not say "You".
+      expect(
+        find.text('This reply was stopped before it finished.'),
+        findsOneWidget,
+      );
+      expect(find.text('You stopped this reply.'), findsNothing);
       expect(find.text('aborted'), findsNothing);
       expect(
         find.descendant(of: message, matching: find.byType(TextButton)),

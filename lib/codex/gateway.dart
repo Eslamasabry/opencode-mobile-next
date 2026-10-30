@@ -3,6 +3,8 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
+
 import '../domain/models.dart';
 import '../domain/server_gateway.dart';
 import '../domain/agent_handoff_history.dart';
@@ -120,6 +122,9 @@ class CodexGateway
   late final StreamSubscription<int> _rpcDisconnects;
   Timer? _retry;
   int _retryAttempt = 0;
+
+  /// When [_retry] fires (see [RetryingEventChannel]).
+  final _nextAttempt = ValueNotifier<DateTime?>(null);
   int _locationEpoch = 0;
   bool _listening = false;
   bool _recoveryDegraded = false;
@@ -742,6 +747,10 @@ class CodexGateway
   }
 
   void _emitState(StreamStatus state) {
+    // Up again, or given up for good (a refused sign-in): no try is due.
+    if (state == StreamStatus.connected || state == StreamStatus.disconnected) {
+      _nextAttempt.value = null;
+    }
     if (!_closed && _listening) _streamStates.add(state);
   }
 
@@ -958,6 +967,7 @@ class CodexGateway
     if (!_listening || _closed || _retry != null || _recovering != null) return;
     final delay = Duration(seconds: 1 << _retryAttempt.clamp(0, 4));
     _retryAttempt++;
+    _nextAttempt.value = DateTime.now().add(delay);
     _retry = Timer(delay, () {
       _retry = null;
       unawaited(_recover());
@@ -1028,14 +1038,16 @@ class CodexGateway
       onError: onError ?? (Object _) {},
     );
     final states = _streamStates.stream.listen(onStatus);
-    return _CodexEventChannel(
+    return _CodexRetryingChannel(
       () async {
         await events.cancel();
         await states.cancel();
         _listening = false;
         _retry?.cancel();
         _retry = null;
+        _nextAttempt.value = null;
       },
+      nextAttempt: _nextAttempt,
       onStart: () {
         if (!_closed && _listening) {
           _emitState(StreamStatus.connecting);
@@ -1060,6 +1072,7 @@ class CodexGateway
     _locationEpoch++;
     _retry?.cancel();
     _retry = null;
+    _nextAttempt.value = null;
     _sessions.clear();
     _approvals.clear();
     _resumed.clear();
@@ -1095,4 +1108,17 @@ class _CodexEventChannel implements LiveEventChannel {
     _disposed = true;
     await disposeCallback();
   }
+}
+
+/// The conversation's channel: it retries on the gateway's schedule.
+class _CodexRetryingChannel extends _CodexEventChannel
+    implements RetryingEventChannel {
+  _CodexRetryingChannel(
+    super.disposeCallback, {
+    super.onStart,
+    required this.nextAttempt,
+  });
+
+  @override
+  final ValueListenable<DateTime?> nextAttempt;
 }

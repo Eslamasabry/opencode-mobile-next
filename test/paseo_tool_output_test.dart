@@ -166,4 +166,67 @@ void main() {
       expect(failed({'message': 'ENOSPC: disk full'}).declined, isFalse);
     });
   });
+
+  // Owner phone, 2026-10-27: Paseo keeps how a background task ended in the
+  // call's metadata, and repeats Claude's sentence as the call's text.
+  test('a background-task notice carries how it ended, its sentence once', () {
+    const sentence =
+        'Background agent "Fix login" didn\'t finish before the previous '
+        'session ended';
+    final state = paseoItemMessage(
+      'agent-1',
+      {
+        'type': 'tool_call',
+        'callId': 'task_notification_1',
+        'name': 'task_notification',
+        'status': 'completed',
+        'detail': {
+          'type': 'plain_text',
+          'label': sentence,
+          'icon': 'wrench',
+          'text': sentence,
+        },
+        'metadata': {
+          'synthetic': true,
+          'source': 'claude_task_notification',
+          'taskId': 'a1b2c3d4e5',
+          'status': 'stopped',
+        },
+      },
+      id: 'task_notification_1',
+      provider: 'claude',
+    )!.parts.single.toolState;
+    expect(state.input, {
+      'summary': sentence,
+      'status': 'stopped',
+      // Which task ended, so the chat can stop saying it still runs.
+      'taskId': 'a1b2c3d4e5',
+    });
+    expect(state.output, isEmpty);
+  });
+
+  test("a notice's raw envelope gives only a finished agent's result", () {
+    final state = paseoItemMessage(
+      'agent-1',
+      {
+        'type': 'tool_call',
+        'callId': 'task_notification_2',
+        'name': 'task_notification',
+        'status': 'completed',
+        'detail': {
+          'type': 'plain_text',
+          'label': 'Background task completed',
+          'text':
+              '<task-notification><task-id>t1</task-id>'
+              '<status>completed</status><result>All 12 suites pass.</result>'
+              '</task-notification>',
+        },
+        'metadata': {'status': 'completed'},
+      },
+      id: 'task_notification_2',
+      provider: 'claude',
+    )!.parts.single.toolState;
+    expect(state.input, {'status': 'completed'});
+    expect(state.output, 'All 12 suites pass.');
+  });
 }

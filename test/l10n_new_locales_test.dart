@@ -139,12 +139,12 @@ void main() {
     });
 
     test('a message the language does not carry reads English, not Arabic', () {
-      // A Settings string outside the first-run and chat core.
-      final arb = _arb('ja');
-      expect(arb.containsKey('servicesTitle'), isFalse);
+      // A Settings string none of the five carries yet (Chinese carries
+      // almost every message since 2.0, so the probe must be one it lacks).
       for (final code in _languages) {
+        expect(_arb(code).containsKey('settingsHubSearch'), isFalse);
         final l10n = lookupAppLocalizations(Locale(code));
-        expect(l10n.servicesTitle, english.servicesTitle, reason: code);
+        expect(l10n.settingsHubSearch, english.settingsHubSearch, reason: code);
       }
     });
 

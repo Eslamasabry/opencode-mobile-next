@@ -131,7 +131,7 @@ void main() {
         theme: AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: ServerSettingsScreen(controller: c),
+        home: ServerPageScreen(controller: c, profileId: c.profile!.id),
       ),
     );
     await tester.pump();
@@ -158,7 +158,7 @@ void main() {
         theme: AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: ServerSettingsScreen(controller: c),
+        home: ServerPageScreen(controller: c, profileId: c.profile!.id),
       ),
     );
     await tester.pumpAndSettle();

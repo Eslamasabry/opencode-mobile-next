@@ -1,6 +1,6 @@
 // Gallery (gate G4) for KitSegmented (docs/ux-system/kit-api/KitSegmented.md
 // §"Galleries required"): the default, with-counts, segment-disabled,
-// disabled and stacked scenes at 412x915, the default state at the other
+// disabled, stacked and tall scenes at 412x915, the default state at the other
 // §8.4 sizes, and the default state at text 2.0 (the stacked form, KIT-24)
 // and in Arabic (right to left), each in dark and light.
 //
@@ -9,6 +9,7 @@
 // and look at every changed image before committing it.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/ui/app_iconography.dart';
 import 'package:opencode_mobile/ui/kit/kit_segmented.dart';
 
 import 'kit_gallery.dart';
@@ -131,6 +132,21 @@ Widget _stacked(_Copy copy) => KitSegmented<String>(
   semanticsLabel: copy.permission,
 );
 
+/// The tall variant: an icon over each word (Settings › Appearance's light,
+/// dark or Saver).
+Widget _tall() => KitSegmented<String>(
+  tall: true,
+  segments: const [
+    KitSegment(value: 'auto', label: 'Auto', icon: AppIconography.systemTheme),
+    KitSegment(value: 'light', label: 'Light', icon: AppIconography.lightMode),
+    KitSegment(value: 'dark', label: 'Dark', icon: AppIconography.darkMode),
+    KitSegment(value: 'saver', label: 'Saver', icon: AppIconography.leaf),
+  ],
+  selected: 'dark',
+  onChanged: (_) {},
+  semanticsLabel: 'Light or dark',
+);
+
 Widget _counts(_Copy copy) => KitSegmented<String>(
   segments: [
     KitSegment(value: 'all', label: copy.all),
@@ -227,6 +243,20 @@ void main() {
         size: const Size(412, 915),
         light: light,
         child: _disabled(_en),
+      );
+    });
+
+    testWidgets('tall · $mode', (tester) async {
+      await kitGalleryPart(
+        tester,
+        name: kitGalleryName(
+          'kit_segmented_tall',
+          const Size(412, 915),
+          light: light,
+        ),
+        size: const Size(412, 915),
+        light: light,
+        child: _tall(),
       );
     });
 

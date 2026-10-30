@@ -154,6 +154,26 @@ Notes:
 
   It does not look anything up. The registry lives in KitCapabilityExplainer, which depends on this part (C25), so this part must not import it. This is the dependency-safe reading of C20's "KitStateView.missing looks it up by capability id".
 - **The icon slot is an icon tile** (LOOK-23: a state icon sits in an icon tile, not a tonal circle). `iconChild` and `illustration` are unchanged.
+- **`KitStateView.calm` (vision 2026-10-20, "Both, toned down").** The calm empty or offline state: no icon tile and no drawing, one big calm line (`title`, set by `KitStatusAnswer` at `KitAnswerScale.calm`, 28/34; `compact`, 24/30, inline), one plain next step (`body`), the main action at the bottom.
+
+  ```dart
+  const KitStateView.calm({
+    Key? key,
+    required String title,
+    String? body,
+    KitAction? primary,                 // page only: solid mint, full width, at the bottom
+    List<KitAction> tertiary = const [], // at most two quiet text actions, centred
+    Widget? footer,                     // one quiet line after the actions
+    Widget? header,                     // page: the screen's notes, top of the same scroll
+    KitStateSize size = KitStateSize.page,
+    Key? titleKey, Key? bodyKey,
+    DateTime? countdownTo,              // body counts down to something really scheduled
+    String Function(Duration left)? countdownLine,
+    IconData icon = AppIconography.info, // names the state for its arrival; not drawn
+  });
+  ```
+
+  Page: fills the height it is given; the words sit in the room between `header` and the actions, 10 % of that height above its middle (the optical centre); the actions end the page above the dock and the gesture bar (`KitBottomInset`). Without actions or header the words are centred. Under unbounded height (a list) it stacks. Inline: centred words with the tertiary actions under them. Never amber, never red. Used by Conversations, Files, Projects, Scheduled prompts, Search (`KitSearchNoMatch(calm: true)`) and the AI Team home.
 
 ## States
 
@@ -289,6 +309,7 @@ In `test/kit/kit_state_view_test.dart`, using KitSince's fake clock:
   - missing-explains;
   - missing-enable (with cost);
   - slow (escalated).
+- **Calm (vision 2026-10-20):** calm page (dark, light), calm inline, calm at 2.0 text.
 - **Inline size:** error-other and missing-enable.
 - **Default (empty) page** × dark and light at 360×800, 915×412, 800×1280, 1280×800 and 1600×1000.
 - **Text 2.0 and Arabic** (error-other, missing-enable) at 412×915 and 1280×800.

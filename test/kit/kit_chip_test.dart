@@ -28,14 +28,18 @@ Future<void> _pump(
   double textScale = 1,
   bool light = false,
   Size size = const Size(412, 915),
+  // A platform without the Android ripple, so a press shows the flat
+  // pressed fill (owner rule 2026-10-26: Android draws the ripple).
+  bool flat = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
+  final theme = light ? AppTheme.light() : AppTheme.dark();
   await tester.pumpWidget(
     MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: light ? AppTheme.light() : AppTheme.dark(),
+      theme: flat ? theme.copyWith(platform: TargetPlatform.fuchsia) : theme,
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -837,7 +841,9 @@ void main() {
       final icon = find.byIcon(Icons.bolt);
       double opacity(Finder glyph) => tester
           .renderObject<RenderAnimatedOpacity>(
-            find.ancestor(of: glyph, matching: find.byType(FadeTransition)),
+            find
+                .ancestor(of: glyph, matching: find.byType(FadeTransition))
+                .first,
           )
           .opacity
           .value;
@@ -943,7 +949,7 @@ void main() {
             'pill surface2 and the words stay on top', (tester) async {
           final (chip, text, ink, at) = entry.value;
           final roles = ThemeRoles.resolve(AppTheme.dark());
-          await _pump(tester, chip);
+          await _pump(tester, chip, flat: true);
           final box = tester.getRect(find.byKey(k));
           final label = tester.getRect(find.text(text));
           final pill = tester.getRect(_pillOf(find.byKey(k)));

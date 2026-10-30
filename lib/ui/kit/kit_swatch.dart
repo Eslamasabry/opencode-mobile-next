@@ -8,9 +8,11 @@ import '../app_theme.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_panel.dart';
 import 'kit_row.dart';
 import 'kit_status_mark.dart';
+import 'kit_surface_look.dart';
 import 'kit_task_mark.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -101,6 +103,9 @@ class KitSwatch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
+      KitMaxWidth.chip(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) =>
       _SwatchBody(key: swatchKey, swatch: this);
 }
 
@@ -348,14 +353,24 @@ class _SwatchTile extends StatelessWidget {
       child: DecoratedBox(
         key: const ValueKey('kit-swatch-tile'),
         // The fill and the border share one rounded shape, so the hover
-        // fill never shows square corners past the border.
-        decoration: BoxDecoration(
-          color: _fill(tokens, context, enabled),
-          border: Border.all(
-            color: borderColor,
-            width: KitTokens.hairlineWidth(context),
+        // fill never shows square corners past the border. The tile is a
+        // control in the style (chosen: its selected look); the miniature
+        // inside is the theme's own preview.
+        decoration: KitSurfaceLook.decorate(
+          context,
+          solid: BoxDecoration(
+            color: _fill(tokens, context, enabled),
+            border: Border.all(
+              color: borderColor,
+              width: KitTokens.hairlineWidth(context),
+            ),
+            borderRadius: radius,
           ),
-          borderRadius: radius,
+          role: KitSurfaceRole.control,
+          level: hovered && enabled
+              ? KitSurfaceLevel.surface2
+              : KitSurfaceLevel.surface1,
+          selected: enabled && swatch.selected,
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: tokens.minTarget),
@@ -875,7 +890,10 @@ class KitThemePreview extends StatelessWidget {
   final Key? previewKey;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final locale = Localizations.localeOf(context);
     var theme = AppTheme.forLocale(AppTheme.fromRoles(roles), locale);
     assert(() {

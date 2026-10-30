@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
@@ -5,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../domain/models.dart';
 import '../domain/agent_handoff.dart';
 import '../domain/server_gateway.dart';
+import '../paseo/transport.dart' show PaseoFailure;
 import '../ui/kit/kit_redact.dart';
 import 'agent_handoff_links.dart';
 
@@ -53,6 +55,7 @@ final class AgentHandoffController {
     required this.target,
     required this.links,
     required this.isCurrent,
+    this.staleReason,
     this.onChanged,
     String Function()? recordIdFactory,
   }) : _recordIdFactory = recordIdFactory ?? const Uuid().v4;
@@ -65,11 +68,18 @@ final class AgentHandoffController {
 
   /// Must also become false when either profile is deleting or the sheet closes.
   final bool Function() isCurrent;
+
+  /// Which part of [isCurrent] no longer holds, in a few technical words.
+  final String? Function()? staleReason;
   final void Function()? onChanged;
   final String Function() _recordIdFactory;
   AgentHandoffPhase phase = AgentHandoffPhase.idle;
   AgentHandoffDraft? draft;
   AgentHandoffFailure? failure;
+
+  /// Content-free technical words for [failure] (which check or step), for
+  /// the sheet's Details fold. Never copy and never server text.
+  String? failureDetail;
 
   /// Durable target identity for persistence and recovery.
   String? createdSessionId;
@@ -87,13 +97,21 @@ final class AgentHandoffController {
   }
 
   void _check() {
-    if (!isCurrent() ||
-        source.isClosed ||
-        target.gateway.isClosed ||
-        source.directory != sourceScope.directory ||
-        source.workspace != sourceScope.workspace ||
-        target.gateway.directory != target.scope.directory ||
-        target.gateway.workspace != target.scope.workspace) {
+    final reason = !isCurrent()
+        ? staleReason?.call() ?? 'source changed'
+        : source.isClosed
+        ? 'source connection closed'
+        : target.gateway.isClosed
+        ? 'agent connection closed'
+        : source.directory != sourceScope.directory ||
+              source.workspace != sourceScope.workspace
+        ? 'source moved to another project'
+        : target.gateway.directory != target.scope.directory ||
+              target.gateway.workspace != target.scope.workspace
+        ? 'agent connection moved to another project'
+        : null;
+    if (reason != null) {
+      failureDetail = reason;
       throw const AgentHandoffFailure(HandoffFailureKind.staleScope);
     }
     // Admission also closes synchronously during profile deletion.
@@ -214,6 +232,12 @@ final class AgentHandoffController {
       _phase(AgentHandoffPhase.ready);
       return draft!;
     } catch (error) {
+      if (error is AgentHandoffHistoryFailure) {
+        failureDetail ??= 'history ${error.kind.name}';
+      } else if (error is! AgentHandoffFailure &&
+          error is! HandoffRecordTooLarge) {
+        failureDetail ??= 'prepare: ${_errorWords(error)}';
+      }
       failure = error is AgentHandoffFailure
           ? error
           : const AgentHandoffFailure(HandoffFailureKind.preparationFailed);
@@ -309,6 +333,9 @@ final class AgentHandoffController {
       );
       return navigationSessionId!;
     } catch (error) {
+      if (error is! AgentHandoffFailure) {
+        failureDetail ??= '${phase.name}: ${_errorWords(error)}';
+      }
       final kind = switch (phase) {
         AgentHandoffPhase.sending => HandoffFailureKind.deliveryUnknown,
         AgentHandoffPhase.creating => HandoffFailureKind.creationUnknown,
@@ -330,6 +357,17 @@ final class AgentHandoffController {
       _running = false;
     }
   }
+
+  /// A failure's kind without its message: server and daemon text never
+  /// reaches the Details fold.
+  static String _errorWords(Object error) => switch (error) {
+    PaseoFailure(:final kind, :final reason) =>
+      reason == null ? 'agent ${kind.name}' : 'agent ${kind.name} · $reason',
+    ApiException(:final statusCode) =>
+      'server error ${statusCode ?? ''}'.trim(),
+    TimeoutException() => 'timed out',
+    _ => 'unexpected error',
+  };
 
   Future<void> _saveLink() async {
     _phase(AgentHandoffPhase.linking);

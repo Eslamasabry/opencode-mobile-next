@@ -175,7 +175,8 @@ void main() {
     Future<bool> Function(WidgetAction, String)? current,
     DateTime Function()? now,
     Future<ServerProfile?> Function(String)? load,
-    Duration statusSettleTimeout = const Duration(milliseconds: 100),
+    // Wide enough for three 1 ms polls on a loaded machine; polling stops at idle.
+    Duration statusSettleTimeout = const Duration(seconds: 5),
   }) => WidgetActionRunner(
     loadProfile: load ?? (_) async => profile,
     loadTarget: (_, _) async => privateTarget(),
@@ -245,7 +246,10 @@ void main() {
           final gateway = _Gateway()..settledStatuses = [status];
           final result = await runner(
             gateway,
-            statusSettleTimeout: const Duration(milliseconds: 5),
+            // Short, so a busy status ends the wait soon; wide enough that a
+            // loaded machine still reads the status once (5 ms read none in
+            // the full build-server suite, 2026-10-30).
+            statusSettleTimeout: const Duration(milliseconds: 100),
           ).execute(action(kind), snapshot()..['connected'] = true, deadline());
           expect(result['status'], 'accepted');
           final updated = result['snapshot'] as Map;

@@ -57,6 +57,8 @@ open class UsageWidgetProvider : AppWidgetProvider() {
 
         /** Redraws every placed widget; called after a snapshot write. */
         fun refreshAll(context: Context) {
+            // The Status widget shows the plan limit closest to running out from the same rows.
+            StatusWidgetProvider.refreshAll(context)
             val manager = AppWidgetManager.getInstance(context)
             // Every picker entry (2x2 and wide) is its own receiver: redraw all of them.
             val ids = WidgetProviders.usage.flatMap {

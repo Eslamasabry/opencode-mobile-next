@@ -15,7 +15,7 @@ internal class PhoneAgentAuthRequest(
             "gemini" to "gemini", "qwen" to "qwen", "kilo" to "kilo",
             "cline" to "cline", "goose" to "goose",
             "omp-acp" to "omp", "fx" to "fx")
-        private const val SCRIPT_DIGEST = "9f59cfbd265f57e7f9705fad09ef054a304873def739d21c69812bd89cb39652"
+        private const val SCRIPT_DIGEST = "d06e0af7b4992e58d93ad4869e4e1b96a39117b06197a6675f3ecfa4c002399c"
         private val fields = setOf("profileId", "agentId", "action", "script", "timeoutSeconds")
 
         private const val MAX_SCRIPT_CHARS = 16384

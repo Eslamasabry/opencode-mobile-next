@@ -102,7 +102,7 @@ void main() {
     final command = HostScripts.install(4747);
     expect(
       command,
-      'npm install -g @opencode/cli@2.0.29 &&\n'
+      'npm install -g @opencode/cli@2.1.1 &&\n'
       'opencode2 serve --hostname 127.0.0.1 --port 4747',
     );
     expect(command, isNot(contains('ubuntu-opencode.sh')));

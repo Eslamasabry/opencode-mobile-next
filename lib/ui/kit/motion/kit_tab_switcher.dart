@@ -4,11 +4,13 @@
 // ([KitTabStrip], a board that pages its own lanes) and both together
 // ([KitTabSwitcher.tabs]).
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' show NumberFormat;
 
 import '../../../l10n/app_localizations.dart';
 import '../kit_motion.dart';
+import '../kit_surface_look.dart';
 import '../kit_needs_you.dart';
 import '../kit_tappable.dart';
 import '../kit_text.dart';
@@ -67,6 +69,7 @@ class KitTabStrip extends StatefulWidget {
     required this.onSelected,
     this.semanticsLabel,
     this.stripKey,
+    this.accent = false,
   }) : assert(
          tabs.length >= 2 && tabs.length <= 8,
          'KitTabStrip takes 2 to 8 tabs',
@@ -87,6 +90,11 @@ class KitTabStrip extends StatefulWidget {
 
   /// On the strip's scroll view.
   final Key? stripKey;
+
+  /// The selected tab is filled in the accent with its words in the
+  /// on-accent colour (a studio's one strip of things to customise), not
+  /// the quiet `surface3` pill.
+  final bool accent;
 
   @override
   State<KitTabStrip> createState() => _KitTabStripState();
@@ -226,6 +234,7 @@ class _KitTabStripState extends State<KitTabStrip> {
                         key: tabs[i].key,
                         tab: tabs[i],
                         selected: i == widget.selected,
+                        accent: widget.accent,
                         focusNode: _nodes[i],
                         onTap: i == widget.selected
                             ? _none
@@ -254,10 +263,12 @@ class _KitTabView extends StatelessWidget {
     required this.selected,
     required this.focusNode,
     required this.onTap,
+    this.accent = false,
   });
 
   final KitTab tab;
   final bool selected;
+  final bool accent;
   final FocusNode focusNode;
   final VoidCallback onTap;
 
@@ -269,37 +280,75 @@ class _KitTabView extends StatelessWidget {
     final l10n = lookupAppLocalizations(locale);
     final reduced = KitMotion.reduced(context);
     final count = tab.count;
-    final tone = selected ? KitTextTone.primary : KitTextTone.secondary;
+    final filled = selected && accent;
+    final tone = filled
+        ? KitTextTone.onAccent
+        : selected
+        ? KitTextTone.primary
+        : KitTextTone.secondary;
     final spoken = count == null
         ? tab.label
         : l10n.kitTabLabel(tab.label, count);
     final icon = tab.icon;
+    // The chosen tab's words, icon and count in the colour the style gives
+    // a chosen control (hook H3: Paper inverts it).
+    final chosenInk = selected
+        ? KitSurfaceLook.wordsOn(
+            context,
+            fallback: roles.text1,
+            role: KitSurfaceRole.control,
+            color: filled ? roles.accent : null,
+            selected: true,
+          )
+        : roles.text2;
 
     Widget words = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (icon != null) ...[
-          Icon(
-            icon,
-            size: tokens.smallIconSize,
-            color: selected ? roles.text1 : roles.text2,
-          ),
+          Icon(icon, size: tokens.smallIconSize, color: chosenInk),
           SizedBox(width: tokens.space1),
         ],
-        KitText(tab.label, role: KitTextRole.label, tone: tone, maxLines: 1),
+        _tabWords(
+          context,
+          tab.label,
+          tone: tone,
+          selected: selected,
+          filled: filled,
+        ),
         if (count != null) ...[
           SizedBox(width: tokens.space1),
           KeyedSubtree(
             key: tab.countKey,
-            child: KitSwap(
-              child: KitText(
-                NumberFormat.decimalPattern(locale.toString()).format(count),
-                key: ValueKey(count),
-                role: KitTextRole.label,
-                tone: KitTextTone.primary,
-                tabular: true,
-                maxLines: 1,
-              ),
+            child: KitSwap.count(
+              count: count,
+              child: chosenInk == roles.text1 || !selected
+                  ? KitText(
+                      NumberFormat.decimalPattern(
+                        locale.toString(),
+                      ).format(count),
+                      key: ValueKey(count),
+                      role: KitTextRole.label,
+                      tone: KitTextTone.primary,
+                      tabular: true,
+                      maxLines: 1,
+                    )
+                  : Text(
+                      NumberFormat.decimalPattern(
+                        locale.toString(),
+                      ).format(count),
+                      key: ValueKey(count),
+                      maxLines: 1,
+                      style:
+                          KitText.styleOf(
+                            context,
+                            KitTextRole.label,
+                            tone: KitTextTone.primary,
+                          ).copyWith(
+                            color: chosenInk,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                    ),
             ),
           ),
         ],
@@ -315,10 +364,26 @@ class _KitTabView extends StatelessWidget {
       );
     }
 
-    final fill = ShapeDecoration(
-      color: selected ? roles.surface3 : roles.surface3.withValues(alpha: 0),
+    final own = ShapeDecoration(
+      color: filled
+          ? roles.accent
+          : selected
+          ? roles.surface3
+          : roles.surface3.withValues(alpha: 0),
       shape: tokens.shapeOf(KitShape.pill),
     );
+    // The chosen tab is a chosen control (in mint when [accent]); the
+    // others are clear in every style.
+    final fill = selected
+        ? KitSurfaceLook.decorate(
+            context,
+            solid: own,
+            role: KitSurfaceRole.control,
+            level: KitSurfaceLevel.surface3,
+            color: filled ? roles.accent : null,
+            selected: true,
+          )
+        : own;
     return MergeSemantics(
       child: AnimatedContainer(
         duration: reduced ? Duration.zero : KitMotion.quick,
@@ -375,6 +440,8 @@ class KitTabSwitcher extends StatefulWidget {
     this.reduceMotion = false,
     this.lazy = false,
     this.preload = const {},
+    this.shrinkWrap = false,
+    this.onSwipe,
   }) : _tabs = null,
        _onSelected = null,
        _semanticsLabel = null,
@@ -392,6 +459,8 @@ class KitTabSwitcher extends StatefulWidget {
     this.reduceMotion = false,
     this.lazy = false,
     this.preload = const {},
+    this.shrinkWrap = false,
+    this.onSwipe,
     String? semanticsLabel,
     Key? stripKey,
   }) : _tabs = tabs,
@@ -416,10 +485,22 @@ class KitTabSwitcher extends StatefulWidget {
   /// destination others return to), besides the selected one.
   final Set<int> preload;
 
+  /// Take the chosen destination's own height (inside a scrolling page)
+  /// instead of filling the space it is given.
+  final bool shrinkWrap;
+
+  /// A horizontal swipe across the body asks for the next (1) or the
+  /// previous (-1) destination, in reading direction, so a body can be
+  /// swiped between its destinations. Null: no swipe.
+  final ValueChanged<int>? onSwipe;
+
   final List<KitTab>? _tabs;
   final ValueChanged<int>? _onSelected;
   final String? _semanticsLabel;
   final Key? _stripKey;
+
+  /// How fast a swipe must be (dp per second) to change destination.
+  static const swipeVelocity = 300.0;
 
   /// The share of the switch the old destination takes to fade out.
   static const fadeOutShare = .35;
@@ -469,7 +550,7 @@ class _KitTabSwitcherState extends State<KitTabSwitcher>
           : KitMotion.enter.transform(((t - begin) / (1 - begin)).clamp(0, 1));
       return start + (1 - start) * p;
     }
-    final p = KitMotion.exit.transform(
+    final p = KitMotion.enter.transform(
       (t / KitTabSwitcher.fadeOutShare).clamp(0.0, 1.0),
     );
     return start * (1 - p);
@@ -505,16 +586,29 @@ class _KitTabSwitcherState extends State<KitTabSwitcher>
 
   @override
   Widget build(BuildContext context) {
-    final body = AnimatedBuilder(
+    Widget body = AnimatedBuilder(
       animation: _controller,
       builder: (context, _) => Stack(
-        fit: StackFit.expand,
+        fit: widget.shrinkWrap ? StackFit.loose : StackFit.expand,
         children: [
           for (var i = 0; i < widget.children.length; i++)
             _destination(i, _opacity(i)),
         ],
       ),
     );
+    final onSwipe = widget.onSwipe;
+    if (onSwipe != null) {
+      final rtl = Directionality.of(context) == TextDirection.rtl;
+      body = GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragEnd: (details) {
+          final velocity = details.primaryVelocity ?? 0;
+          if (velocity.abs() < KitTabSwitcher.swipeVelocity) return;
+          onSwipe((velocity < 0) != rtl ? 1 : -1);
+        },
+        child: body,
+      );
+    }
     final tabs = widget._tabs;
     final onSelected = widget._onSelected;
     if (tabs == null || onSelected == null) return body;
@@ -532,6 +626,19 @@ class _KitTabSwitcherState extends State<KitTabSwitcher>
       ],
     );
   }
+
+  /// A destination that is itself a scroll view scrolls up under what
+  /// sits above the switcher (the Appearance tab row): its top edge fades
+  /// out over a short band once it scrolls, so a line is never cut in half
+  /// there (owner, 2026-10-22). At rest it is drawn exactly as it is.
+  Widget _fading(Widget child) => !widget.shrinkWrap && child is ScrollView
+      ? _KitTopFade(
+          extent: KitTokens.of(context).space5,
+          // Only its alpha counts: the mask keeps what lies under it.
+          mask: KitTokens.of(context).roles.text1.withValues(alpha: 1),
+          child: child,
+        )
+      : child;
 
   Widget _destination(int i, double opacity) {
     final selected = i == widget.index;
@@ -552,12 +659,193 @@ class _KitTabSwitcherState extends State<KitTabSwitcher>
               child: Opacity(
                 opacity: opacity,
                 alwaysIncludeSemantics: selected,
-                child: RepaintBoundary(child: widget.children[i]),
+                child: RepaintBoundary(child: _fading(widget.children[i])),
               ),
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+/// A tab's words: [KitText] in [tone], or the colour a style asks for on a
+/// chosen tab (hook H3, [KitSurfaceLook.wordsOn]). Solid always takes the
+/// first, so its tabs are exactly as before.
+Widget _tabWords(
+  BuildContext context,
+  String label, {
+  required KitTextTone tone,
+  required bool selected,
+  required bool filled,
+}) {
+  final roles = KitTokens.of(context).roles;
+  if (!selected) {
+    return KitText(label, role: KitTextRole.label, tone: tone, maxLines: 1);
+  }
+  final own = KitText.toneColor(roles, tone);
+  final ink = KitSurfaceLook.wordsOn(
+    context,
+    fallback: own,
+    role: KitSurfaceRole.control,
+    color: filled ? roles.accent : null,
+    selected: true,
+  );
+  if (ink == own) {
+    return KitText(label, role: KitTextRole.label, tone: tone, maxLines: 1);
+  }
+  return Text(
+    label,
+    maxLines: 1,
+    style: KitText.styleOf(
+      context,
+      KitTextRole.label,
+      tone: tone,
+    ).copyWith(color: ink),
+  );
+}
+
+/// Fades the top [extent] of a vertical scroll view out as it scrolls away
+/// from its start: by as much as it has scrolled, so the band grows in with
+/// the finger and is gone at rest. Paint only; nothing is drawn over the
+/// content, so any ground (a live background under glass) shows through.
+class _KitTopFade extends StatefulWidget {
+  const _KitTopFade({
+    required this.extent,
+    required this.mask,
+    required this.child,
+  });
+
+  final double extent;
+  final Color mask;
+  final Widget child;
+
+  @override
+  State<_KitTopFade> createState() => _KitTopFadeState();
+}
+
+class _KitTopFadeState extends State<_KitTopFade> {
+  double _amount = 0;
+
+  bool _onScroll(Notification notification) {
+    final metrics = switch (notification) {
+      ScrollNotification(:final metrics, :final depth) when depth == 0 =>
+        metrics,
+      ScrollMetricsNotification(:final metrics, :final depth) when depth == 0 =>
+        metrics,
+      _ => null,
+    };
+    if (metrics == null || metrics.axis != Axis.vertical) return false;
+    final scrolled = metrics.pixels - metrics.minScrollExtent;
+    final amount = widget.extent <= 0
+        ? 0.0
+        : (scrolled / widget.extent).clamp(0.0, 1.0);
+    if (amount != _amount) setState(() => _amount = amount);
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) => NotificationListener<Notification>(
+    onNotification: _onScroll,
+    child: _TopFadeMask(
+      amount: _amount,
+      extent: widget.extent,
+      mask: widget.mask,
+      child: widget.child,
+    ),
+  );
+}
+
+class _TopFadeMask extends SingleChildRenderObjectWidget {
+  const _TopFadeMask({
+    required this.amount,
+    required this.extent,
+    required this.mask,
+    required super.child,
+  });
+
+  final double amount;
+  final double extent;
+  final Color mask;
+
+  @override
+  _RenderTopFadeMask createRenderObject(BuildContext context) =>
+      _RenderTopFadeMask(amount: amount, extent: extent, mask: mask);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderTopFadeMask renderObject,
+  ) {
+    renderObject
+      ..amount = amount
+      ..extent = extent
+      ..mask = mask;
+  }
+}
+
+/// [RenderShaderMask] that steps aside at rest ([amount] 0): no layer, no
+/// save, the child painted as it is.
+class _RenderTopFadeMask extends RenderProxyBox {
+  _RenderTopFadeMask({
+    required double amount,
+    required double extent,
+    required Color mask,
+  }) : _amount = amount,
+       _extent = extent,
+       _mask = mask;
+
+  Color _mask;
+  set mask(Color value) {
+    if (value == _mask) return;
+    _mask = value;
+    markNeedsPaint();
+  }
+
+  double _amount;
+  set amount(double value) {
+    if (value == _amount) return;
+    final was = _amount > 0;
+    _amount = value;
+    if (was != (value > 0)) markNeedsCompositingBitsUpdate();
+    markNeedsPaint();
+  }
+
+  double _extent;
+  set extent(double value) {
+    if (value == _extent) return;
+    _extent = value;
+    markNeedsPaint();
+  }
+
+  @override
+  ShaderMaskLayer? get layer => super.layer as ShaderMaskLayer?;
+
+  @override
+  bool get alwaysNeedsCompositing => child != null && _amount > 0;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (child == null || _amount <= 0 || size.height <= 0) {
+      layer = null;
+      super.paint(context, offset);
+      return;
+    }
+    final band = (_extent / size.height).clamp(0.0, 1.0);
+    final shader = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        _mask.withValues(alpha: 1 - _amount),
+        _mask,
+      ],
+      stops: [0, band],
+    ).createShader(Offset.zero & size);
+    layer ??= ShaderMaskLayer();
+    layer!
+      ..shader = shader
+      ..maskRect = offset & size
+      ..blendMode = BlendMode.dstIn;
+    context.pushLayer(layer!, super.paint, offset);
   }
 }

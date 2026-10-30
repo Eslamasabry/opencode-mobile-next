@@ -9,9 +9,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'chat_3_support.dart';
+import '../support/composer_tools.dart';
 
 Future<void> _openLauncher(WidgetTester tester) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('composer-tool-commands')));
   await tester.pumpAndSettle();

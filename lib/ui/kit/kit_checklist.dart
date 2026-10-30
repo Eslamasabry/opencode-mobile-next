@@ -12,6 +12,7 @@ import 'kit_buttons.dart';
 import 'kit_details_fold.dart';
 import 'kit_divider.dart';
 import 'kit_log_panel.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
 import 'kit_needs_you.dart';
 import 'kit_notice.dart';
@@ -240,7 +241,10 @@ class _KitChecklistState extends State<KitChecklist> {
       widget.steps.any((s) => s.state == KitMarkState.working && !s.paused);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     // Only a step that works can be slow; a stopped or finished job waits
     // for nobody.
     return KitSince(

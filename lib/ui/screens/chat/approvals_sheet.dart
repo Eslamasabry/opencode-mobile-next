@@ -245,13 +245,13 @@ class _AutoApprovalRecord extends StatelessWidget {
   }
 }
 
-/// The approval chip in the strip above the composer: always there in a
-/// conversation, and a switcher, not only a gauge. While an automatic mode
-/// is on it is an accent-tinted chip with a filled shield reading
-/// "Auto-approve" (the menu says which mode); while asking it is a quiet
-/// neutral chip with an outline shield reading "Asks first"; while
-/// automatic approval is paused (disconnected) it reads "Auto-approve
-/// paused". [onOpen] receives the chip's own context so the mode menu
+/// The approval chip in the strip above the composer, while the agent is
+/// not working (owner 20 Oct 2026: decision 4 is about the working screen;
+/// while it works the chip leaves and the line under the header says it). A
+/// switcher, not only a gauge, in the model chip's one quiet look: a filled
+/// shield reading "Auto-approve" while an automatic mode is on (the menu
+/// says which mode), an outline shield reading "Asks first" while asking,
+/// "Auto-approve paused" while disconnected. [onOpen] receives the chip's own context so the mode menu
 /// anchors to it. No count; the sheet keeps the record. The full wording
 /// (the latest approval, where the setting comes from) is its spoken label.
 class _AutoApprovalIndicator extends StatelessWidget {
@@ -286,7 +286,8 @@ class _AutoApprovalIndicator extends StatelessWidget {
     } else if (!automatic) {
       label = strings.approvalModeAskTitle;
       detail = strings.approvalModeAskDetail;
-      text = strings.chatStripApprovalAsk;
+      // The mode's own name, the one the menu ticks.
+      text = strings.approvalModeAskTitle;
     } else {
       label = strings.approvalsUiIndicatorOn;
       detail = last != null
@@ -298,7 +299,7 @@ class _AutoApprovalIndicator extends StatelessWidget {
           : effective.inherited
           ? strings.approvalsUiInheritedFrom
           : null;
-      text = strings.chatStripAutoApprove;
+      text = strings.chatChipAutoApproveOn;
     }
     // Words, not the glyph alone, carry the state (STATE-9).
     return Semantics(
@@ -314,15 +315,53 @@ class _AutoApprovalIndicator extends StatelessWidget {
         builder: (chipContext) => KitChip.action(
           key: const Key('auto-approval-indicator'),
           onPressed: () => onOpen(chipContext),
-          tone: automatic && !paused ? KitChipTone.active : KitChipTone.neutral,
-          icon: paused
-              ? AppIconography.pause
-              : automatic
-              ? AppIconography.shieldFilled
-              : AppIconography.shield,
+          // On reads at a glance: the words say "on" and the chip wears
+          // the kit's mint check (its selected look); asking is the plain
+          // shield. No fill on the pill: it stays as quiet as the model chip
+          // beside it.
+          icon: paused ? AppIconography.pause : AppIconography.shield,
+          selected: automatic && !paused ? true : null,
           label: text,
         ),
       ),
+    );
+  }
+}
+
+/// The Auto-approve row of the composer's "+" sheet: on while an automatic
+/// mode answers this conversation's requests, off while it asks first. One
+/// tap flips it (the switch never leaves the sheet stale: it listens to the
+/// connection). The whole word for the state under way, and the way back
+/// out, is the one line under the header ([_autoApproveStatus]).
+class _AutoApproveSwitchRow extends StatelessWidget {
+  const _AutoApproveSwitchRow({
+    required this.conn,
+    required this.sessionID,
+    required this.onChange,
+  });
+
+  final ConnectionController conn;
+  final String sessionID;
+  final ValueChanged<bool> onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = _chatL10n(context);
+    return ListenableBuilder(
+      listenable: conn,
+      builder: (context, _) {
+        final effective = conn.autoApprovalFor(sessionID);
+        return KitSwitchRow(
+          key: const Key('composer-setting-approval'),
+          leading: const KitRowIcon(AppIconography.shield),
+          title: strings.chatStripAutoApprove,
+          supporting: effective.serverWide
+              ? strings.approvalsSheetSetByServer
+              : strings.composerSettingApprovalDetail,
+          value: effective.automatic,
+          onChanged: onChange,
+        );
+      },
     );
   }
 }

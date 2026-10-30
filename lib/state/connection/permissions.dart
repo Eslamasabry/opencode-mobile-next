@@ -342,6 +342,9 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
     );
     if (_disposed) return;
     _sweepAutoApprovals();
+    _syncServerPermissions({
+      for (final permission in permissions.values) permission.sessionID,
+    });
     _notifyListeners();
   }
 
@@ -353,7 +356,24 @@ extension _ConnectionControllerPermissionsImpl on ConnectionController {
     await sessionAutoApproval.set(_autoApprovalProfile, sessionID, setting);
     if (_disposed) return;
     _sweepAutoApprovals();
+    _syncServerPermissions({
+      sessionID,
+      for (final session in sessionsById.values)
+        if (session.parentID == sessionID) session.id,
+    });
     _notifyListeners();
+  }
+
+  /// Hands a changed choice to an OpenCode 2 server, so a running reply
+  /// follows it: an automatic session's tools run on the server's own rules
+  /// instead of waiting for this phone. Best effort; the next message
+  /// installs the same mode before it is sent.
+  void _syncServerPermissions(Set<String> sessionIDs) {
+    final gateway = api;
+    if (gateway is! Api2Gateway || !isConnected) return;
+    for (final id in sessionIDs) {
+      unawaited(gateway.syncSessionPermissions(id).catchError((Object _) {}));
+    }
   }
 
   /// Answers a waiting request with "once" when its session runs with

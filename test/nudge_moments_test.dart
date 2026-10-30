@@ -316,6 +316,8 @@ void main() {
       }
       expect(_nudge(NudgeId.approvals), findsNothing);
       expect(controller.nudges.wasShown(NudgeId.approvals), isFalse);
+      // The feed's refresh timer from the last request event runs out.
+      await tester.pump(const Duration(seconds: 3));
     });
   });
 

@@ -39,7 +39,7 @@ void main() {
       await setup.begin(TermuxHostJob.install);
       expect(termux.launchCalls, 1);
       expect(termux.runtime, TermuxRuntime.openCode2);
-      expect(termux.lastLaunchScript, contains("setup '4096' '2.0.29'"));
+      expect(termux.lastLaunchScript, contains("setup '4096' '2.1.1'"));
       expect(store.saved.single.flavor, ServerFlavor.v2);
       expect(setup.runtime, TermuxRuntime.openCode2);
     },
@@ -110,11 +110,11 @@ void main() {
       );
       termux
         ..inventoryOutput =
-            'ubuntu=installed\nversion=2.0.29\nruntime=opencode2\n'
+            'ubuntu=installed\nversion=2.1.1\nruntime=opencode2\n'
         ..statusOutput = termuxSnapshot(
           phase: 'ready',
           runtime: TermuxRuntime.openCode2,
-          version: '2.0.29',
+          version: '2.1.1',
         )
         ..historyCheckExitCode = 74;
       await setup.begin(
@@ -164,11 +164,11 @@ void main() {
         );
         termux
           ..inventoryOutput =
-              'ubuntu=installed\nversion=2.0.29\nruntime=opencode2\n'
+              'ubuntu=installed\nversion=2.1.1\nruntime=opencode2\n'
           ..statusOutput = termuxSnapshot(
             phase: 'ready',
             runtime: TermuxRuntime.openCode2,
-            version: '2.0.29',
+            version: '2.1.1',
           );
         await setup.begin(
           TermuxHostJob.switchRuntime,

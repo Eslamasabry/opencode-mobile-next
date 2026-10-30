@@ -56,6 +56,9 @@ class _StepNode extends StatelessWidget {
       );
     } else if (mark != null) {
       node = mark!;
+    } else if (rail.signal != null) {
+      // Signal: a sentence between steps is a sleeper across the track.
+      node = _signalSleeper(rail);
     } else {
       node = SizedBox.square(
         dimension: _dot,
@@ -64,6 +67,7 @@ class _StepNode extends StatelessWidget {
         ),
       );
     }
+    if (_signalLive(state)) scope.registry.live = true;
     // Where this node's centre is, so the last slot's rail can end on it.
     scope.registry.centres[scope.index] = top + box / 2;
     final nodeTop = top + (box - rail.glyph) / 2;

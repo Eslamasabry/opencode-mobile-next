@@ -30,6 +30,7 @@ import 'package:opencode_mobile/voice/device.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/complete_message_history.dart';
+import 'support/composer_tools.dart';
 
 // Controller and isolated-screen regressions, not main()/AppBootstrap.load()
 // coverage or evidence of a working iOS runner. Remote responses stay in memory.
@@ -423,7 +424,10 @@ void main() {
       expect(find.text('Set up OpenCode 1 or 2 on this phone.'), findsNothing);
       expect(find.textContaining('Termux'), findsNothing);
 
+      // The Welcome asks once, then one button goes on (vision 2026-10-20).
       await tester.tap(find.text('On my computer'));
+      await _pumpFrames(tester);
+      await tester.tap(find.byKey(const ValueKey('welcome-primary')));
       await _pumpFrames(tester);
       await tester.tap(find.byKey(const ValueKey('server-backend-opencode')));
       await _pumpFrames(tester);
@@ -450,14 +454,17 @@ void main() {
       await _pumpFrames(tester);
       expect(find.text('Remote result is still readable.'), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      // No photos here: the "+" tray holds File and More only.
+      await openComposerTray(tester);
+      await _pumpFrames(tester);
+      expect(find.byKey(const Key('composer-tool-gallery')), findsNothing);
+      expect(find.byKey(const Key('composer-tool-camera')), findsNothing);
+      expect(find.byKey(const Key('composer-tool-attach')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('composer-tray-more')));
       await _pumpFrames(tester);
       // The door to commands reads "Commands and agents" (chat-3, e28442b0).
       expect(find.text('Commands and agents'), findsOneWidget);
-      expect(find.text('Attach file'), findsOneWidget);
       expect(find.text('Voice input'), findsNothing);
-      expect(find.byKey(const Key('composer-tool-gallery')), findsNothing);
-      expect(find.byKey(const Key('composer-tool-camera')), findsNothing);
       Navigator.of(tester.element(find.text('Commands and agents'))).pop();
       await _pumpFrames(tester);
 
@@ -489,7 +496,13 @@ void main() {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(500, 1400);
       await tester.pumpWidget(
-        _screen(state.controller, SettingsScreen(controller: state.controller)),
+        _screen(
+          state.controller,
+          SettingsScreen(
+            controller: state.controller,
+            initialGroup: SettingsGroup.thisApp,
+          ),
+        ),
       );
       await _pumpFrames(tester);
       // Notifications stays (saved-server monitoring works in the open app)

@@ -48,6 +48,9 @@ internal object ScheduledPromptRecovery {
 
     fun next(recurrence: JSONObject, now: Long, zone: ZoneId): Long? = when (recurrence.getString("kind")) {
         "once" -> null
+        "daily" -> ScheduledPromptPolicy.nextDaily(
+            recurrence.getInt("hour"), recurrence.getInt("minute"), now, zone,
+        )
         "weekdays" -> ScheduledPromptPolicy.nextWeekday(
             recurrence.getInt("hour"), recurrence.getInt("minute"), now, zone,
         )

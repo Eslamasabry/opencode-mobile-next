@@ -160,6 +160,29 @@ void main() {
       expect(find.textContaining('Paste pairing code'), findsNothing);
     });
 
+    // Sweep 3680: the heading said "Three steps" but the steps were not
+    // numbered, and their icons floated in the middle of tall rows.
+    testWidgets('the steps are numbered 1, 2, 3 and the number sits by the '
+        'title, not mid-row', (tester) async {
+      tester.view.physicalSize = const Size(412, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      debugPlatformCapabilities = const PlatformCapabilities.android();
+      await tester.pumpWidget(_app(const GuideScreen()));
+      await tester.pumpAndSettle();
+      for (final n in ['1', '2', '3']) {
+        expect(find.text(n), findsOneWidget);
+      }
+      final title = find.text('On your computer, run one command');
+      final number = find.text('1');
+      // The first step is tall (a command under its words): its number is
+      // level with the title's first line.
+      expect(
+        (tester.getCenter(number).dy - tester.getCenter(title).dy).abs(),
+        lessThan(24),
+      );
+    });
+
     testWidgets('a phone offers the no-computer path; a desktop does not', (
       tester,
     ) async {
@@ -240,7 +263,12 @@ void main() {
         ),
       );
       await tester.pumpWidget(
-        _app(ServerSettingsScreen(controller: controller)),
+        _app(
+          ServerPageScreen(
+            controller: controller,
+            profileId: controller.profile!.id,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
       // The health row reads the probe's version, once on the page (R3);
@@ -252,7 +280,11 @@ void main() {
         ),
         findsOneWidget,
       );
-      await tester.tap(find.byKey(const Key('server-updates-tile')));
+      final tile = find.byKey(const Key('server-updates-tile'));
+      await tester.ensureVisible(tile);
+      await tester.pump();
+      await tester.ensureVisible(tile);
+      await tester.tap(tile);
       await tester.pumpAndSettle();
       expect(find.textContaining('(now 1.19.5)'), findsOneWidget);
       expect(
@@ -277,18 +309,23 @@ void main() {
         ),
       );
       await tester.pumpWidget(
-        _app(ServerSettingsScreen(controller: controller)),
+        _app(
+          ServerPageScreen(
+            controller: controller,
+            profileId: controller.profile!.id,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
       final update = find.byKey(const Key('server-updates-tile'));
-      // The leading icon is the row's only mark (download and system
-      // download share a glyph): no trailing download mark.
+      // The server's page rows carry no leading icons, and the update row
+      // no trailing download mark either.
       expect(
         find.descendant(
           of: update,
           matching: find.byIcon(AppIconography.systemDownload),
         ),
-        findsOneWidget,
+        findsNothing,
       );
       expect(
         find.text('Keep OpenCode running after you close the terminal.'),
@@ -319,11 +356,20 @@ void main() {
       addTearDown(controller.dispose);
       controller.recordServerUpgradeInstalled('1.20.0');
       await tester.pumpWidget(
-        _app(ServerSettingsScreen(controller: controller)),
+        _app(
+          ServerPageScreen(
+            controller: controller,
+            profileId: controller.profile!.id,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
       expect(api.checks, 1);
-      await tester.tap(find.byKey(const Key('server-updates-tile')));
+      final tile = find.byKey(const Key('server-updates-tile'));
+      await tester.ensureVisible(tile);
+      await tester.pump();
+      await tester.ensureVisible(tile);
+      await tester.tap(tile);
       await tester.pumpAndSettle();
       expect(
         find.byKey(const ValueKey('server-restart-sheet')),
@@ -365,7 +411,12 @@ void main() {
       final (controller, _) = await _server();
       addTearDown(controller.dispose);
       await tester.pumpWidget(
-        _app(ServerSettingsScreen(controller: controller)),
+        _app(
+          ServerPageScreen(
+            controller: controller,
+            profileId: controller.profile!.id,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
       expect(find.text('Copy update commands for Laptop'), findsOneWidget);
@@ -374,9 +425,13 @@ void main() {
         find.byKey(const ValueKey('server-update-commands-copy')),
         findsNothing,
       );
-      await tester.tap(find.byKey(const Key('server-updates-tile')));
+      final tile = find.byKey(const Key('server-updates-tile'));
+      await tester.ensureVisible(tile);
       await tester.pump();
-      expect(copied, 'npm install -g @opencode/cli@2.0.29');
+      await tester.ensureVisible(tile);
+      await tester.tap(tile);
+      await tester.pump();
+      expect(copied, 'npm install -g @opencode/cli@2.1.1');
       expect(find.byType(SnackBar), findsNothing);
       await tester.pumpAndSettle();
       expect(
@@ -391,11 +446,20 @@ void main() {
       final (controller, _) = await _server();
       addTearDown(controller.dispose);
       await tester.pumpWidget(
-        _app(ServerSettingsScreen(controller: controller)),
+        _app(
+          ServerPageScreen(
+            controller: controller,
+            profileId: controller.profile!.id,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
       expect(find.text('http://203.0.113.10:4747'), findsNothing);
-      await tester.tap(find.byKey(const ValueKey('kit-details-toggle')));
+      final toggle = find.byKey(const ValueKey('kit-details-toggle'));
+      await tester.ensureVisible(toggle);
+      await tester.pump();
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
       await tester.pumpAndSettle();
       expect(find.textContaining('203.0.113.10:4747'), findsWidgets);
     });

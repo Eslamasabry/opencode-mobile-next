@@ -172,6 +172,107 @@ String? _nextLine(
   return [step, ?timing].join(' · ');
 }
 
+/// Whether the Now line keeps its own line under the task's header (the
+/// header then keeps its host words): something is wrong and has a way out
+/// — taking longer than expected, the team not answering, a request not
+/// confirmed or refused, a task that could not finish — or a wait
+/// (planning, a worker to come or to start) past its usual time: the known
+/// bound, else the host's documented "usually within 5 min".
+bool teamNowShowsUnderHeader(TeamNowInput input, Duration? elapsed) {
+  switch (input.activity) {
+    case TeamNowActivity.delayed ||
+        TeamNowActivity.unconfirmed ||
+        TeamNowActivity.refused ||
+        TeamNowActivity.unavailable ||
+        TeamNowActivity.failed:
+      return true;
+    case TeamNowActivity.planning ||
+        TeamNowActivity.waitingForWorker ||
+        TeamNowActivity.startingWorker:
+      final usual = input.typicalUpperBound ?? teamWorkerStartUsual;
+      return elapsed != null && elapsed >= usual;
+    default:
+      return false;
+  }
+}
+
+/// The Now line folded into the task conversation's header (vision
+/// 2026-10-20, "B's gate + A's Now line in the header"): what the team does
+/// for the task, since when, and what comes next, in the header's second
+/// line: `line` is what and since when ("Now: Worker 1 on Sync engine ·
+/// 5 min"), `next` what comes next ("Next: review"), which the header keeps
+/// only while the whole line fits ([KitTopBar.subtitleTail]). [who] is
+/// the worker on it, named the way the transcript names its sub-agents;
+/// [step] its step when that is not the task itself. [mergeNext]: a merge
+/// gate follows the review on this host. [mergeWaits]: that gate waits now
+/// (the header's needs-you mark says so; the words say where the task is).
+///
+/// Null where the header keeps its host words: a question waits (the card
+/// is the question, the header's mark says "Needs you"), or the Now line
+/// keeps its own line under the header ([teamNowShowsUnderHeader]).
+({String line, String? next})? teamTaskHeaderLine(
+  AppLocalizations l10n,
+  TeamNowInput input, {
+  required DateTime now,
+  String? who,
+  String? step,
+  bool mergeNext = false,
+  bool mergeWaits = false,
+}) {
+  final since = input.since;
+  final span = since == null ? null : now.difference(since);
+  final elapsed = span == null || span < const Duration(minutes: 1)
+      ? null
+      : KitSince.durationWords(l10n, span);
+  String doing() => who != null && step != null
+      ? l10n.teamTaskNowOn(who, step)
+      : who != null
+      ? l10n.teamTaskNowWorker(who)
+      : l10n.teamTaskNowWorking;
+  if (mergeWaits) return (line: l10n.teamTaskStepsDone, next: null);
+  // The line under the header says it, with its way out.
+  if (teamNowShowsUnderHeader(input, span)) return null;
+  final (String? what, String? next) = switch (input.activity) {
+    TeamNowActivity.planning => (l10n.teamTaskNowPlanning, null),
+    TeamNowActivity.waitingForWorker => (
+      l10n.teamTaskNowWaitingWorker,
+      l10n.teamTaskNextWork,
+    ),
+    TeamNowActivity.startingWorker => (
+      who == null
+          ? l10n.teamTaskNowStartingWorker
+          : l10n.teamTaskNowStarting(who),
+      l10n.teamTaskNextWork,
+    ),
+    TeamNowActivity.working => (doing(), l10n.teamTaskNextReview),
+    TeamNowActivity.reviewing => (
+      l10n.teamTaskNowReviewing,
+      mergeNext ? l10n.teamTaskNextMerge : null,
+    ),
+    TeamNowActivity.completed => (
+      span == null || span < const Duration(minutes: 1)
+          ? l10n.teamNowActivityCompleted
+          : l10n.teamTaskFinishedAgo(KitSince.durationWords(l10n, span)),
+      null,
+    ),
+    TeamNowActivity.failed => (l10n.teamNowActivityFailed, null),
+    TeamNowActivity.cancelled => (l10n.teamNowActivityCancelled, null),
+    TeamNowActivity.needsYou ||
+    TeamNowActivity.delayed ||
+    TeamNowActivity.unconfirmed ||
+    TeamNowActivity.refused ||
+    TeamNowActivity.unavailable => (null, null),
+  };
+  if (what == null) return null;
+  final timed = switch (input.activity) {
+    TeamNowActivity.completed ||
+    TeamNowActivity.failed ||
+    TeamNowActivity.cancelled => false,
+    _ => true,
+  };
+  return (line: [what, if (timed) ?elapsed].join(' · '), next: next);
+}
+
 /// The team's one Now line for one task or step. Owns its
 /// [TeamNowLineController]; the page passes the current facts as [input]
 /// on every build and says which ways out it offers through [wayOut].
@@ -186,7 +287,15 @@ class TeamNowLineView extends StatefulWidget {
     this.keyPrefix = 'team-now-line',
     this.watchCycles,
     this.watchWorkId,
+    this.calmInHeader = false,
   });
+
+  /// The page's header carries the calm line ([teamTaskHeaderLine]): this
+  /// line shows only when something is wrong and it has a way out — taking
+  /// longer than expected, the team not answering, a request not confirmed
+  /// or refused, a task that could not finish, a wait past its usual time
+  /// — or the page's own [message].
+  final bool calmInHeader;
 
   /// A team whose dispatch cycles this line keeps fresh while it shows
   /// (a sheet over a page that does not already watch them).
@@ -273,9 +382,6 @@ class _TeamNowLineViewState extends State<TeamNowLineView> {
   );
 
   Widget _build(BuildContext context, TeamNowLineState state) {
-    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
-    final tokens = KitTokens.of(context);
-    final prefix = widget.keyPrefix;
     final since = state.since;
     final elapsed = since == null
         ? null
@@ -283,6 +389,14 @@ class _TeamNowLineViewState extends State<TeamNowLineView> {
             final span = _now().difference(since);
             return span.isNegative ? Duration.zero : span;
           }();
+    if (widget.calmInHeader &&
+        widget.message == null &&
+        !teamNowShowsUnderHeader(state.input, elapsed)) {
+      return SizedBox.shrink(key: ValueKey('${widget.keyPrefix}-now-calm'));
+    }
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final tokens = KitTokens.of(context);
+    final prefix = widget.keyPrefix;
     final activity = state.activity;
     final (icon, tone) = switch (activity) {
       TeamNowActivity.completed => (AppIconography.check, AppStatusTone.ok),

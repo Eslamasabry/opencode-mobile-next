@@ -178,4 +178,65 @@ void main() {
       expect(notificationOptionsOf(_question([])), isEmpty);
     });
   });
+
+  group('permissionAskOf', () {
+    PermissionRequest ask(
+      String permission, {
+      Map<String, dynamic> metadata = const {},
+      List<String> patterns = const [],
+    }) => PermissionRequest(
+      id: 'p',
+      sessionID: 's',
+      permission: permission,
+      metadata: metadata,
+      patterns: patterns,
+    );
+
+    test('a command asks to run its program and sub-command', () {
+      expect(
+        permissionAskOf(
+          ask('bash', metadata: {'command': 'npm install --save left-pad'}),
+        ),
+        (action: 'run', target: 'npm install'),
+      );
+      expect(commandHead('git push origin main'), 'git push');
+      expect(commandHead('/usr/bin/pytest -q'), 'pytest');
+      expect(commandHead('rm -rf build'), 'rm');
+      expect(commandHead('CI=1 FOO=bar make test'), 'make test');
+    });
+
+    test('a secret never reaches the title', () {
+      final head = commandHead('sk-live-ABCDEFGHIJ1234 --token x');
+      expect(head, isNot(contains('sk-live')));
+    });
+
+    test('a file asks by its name, in the right verb', () {
+      expect(permissionAskOf(ask('edit', patterns: ['lib/ui/settings.dart'])), (
+        action: 'edit',
+        target: 'settings.dart',
+      ));
+      expect(permissionAskOf(ask('read', patterns: ['config/.env'])), (
+        action: 'read',
+        target: '.env',
+      ));
+      expect(
+        permissionAskOf(ask('external_directory', patterns: ['/srv/api/'])),
+        (action: 'folder', target: 'api'),
+      );
+    });
+
+    test('an ask with nothing to show has no target', () {
+      expect(permissionAskOf(ask('webfetch')), (action: '', target: ''));
+    });
+  });
+
+  test('the subtitle is server · project, either part optional', () {
+    expect(
+      notificationSubtitle('MacBook', 'api-server'),
+      'MacBook · api-server',
+    );
+    expect(notificationSubtitle('', 'api-server'), 'api-server');
+    expect(notificationSubtitle('MacBook', null), 'MacBook');
+    expect(notificationSubtitle(null, ' '), '');
+  });
 }

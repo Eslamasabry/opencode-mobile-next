@@ -65,13 +65,13 @@ void main() {
       final done = await mountFg5Welcome(tester, locale: locale, size: _phone);
       addTearDown(done);
       expect(tester.takeException(), isNull);
-      expect(find.text(l10n.onboardingValueTitle), findsOneWidget);
       expect(find.text(l10n.firstRunWhereQuestion), findsOneWidget);
       expect(find.text(l10n.firstRunOnComputer), findsOneWidget);
       expect(find.text(l10n.onboardingTermuxSetup), findsOneWidget);
+      // The demo sits under the answers, below the fold in longer words.
+      await _scrollTo(tester, l10n.firstRunJustShowMe);
       expect(find.text(l10n.firstRunJustShowMe), findsOneWidget);
       // The English words are gone where the language has its own.
-      expect(find.text(english.onboardingValueTitle), findsNothing);
       expect(find.text(english.firstRunWhereQuestion), findsNothing);
       expect(find.text(english.firstRunOnComputer), findsNothing);
       expect(find.text(english.firstRunJustShowMe), findsNothing);
@@ -87,7 +87,6 @@ void main() {
       addTearDown(done);
       expect(tester.takeException(), isNull);
       for (final text in [
-        l10n.onboardingValueTitle,
         l10n.firstRunWhereQuestion,
         l10n.firstRunOnComputer,
         l10n.firstRunJustShowMe,

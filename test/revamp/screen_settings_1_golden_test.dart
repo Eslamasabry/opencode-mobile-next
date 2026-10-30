@@ -203,6 +203,16 @@ void main() {
         'settings_hub_report_problem',
         light: light,
         then: () async {
+          // Report a problem is a row of the hub's Help page (vision
+          // 2026-10-20: five groups).
+          final help = find.byKey(const ValueKey('settings-hub-row-help'));
+          await tester.scrollUntilVisible(
+            help,
+            200,
+            scrollable: find.byType(Scrollable).first,
+          );
+          await tester.tap(help);
+          await tester.pumpAndSettle();
           await tester.ensureVisible(
             find.byKey(const ValueKey('library-report-bug')),
           );

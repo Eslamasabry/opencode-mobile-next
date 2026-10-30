@@ -51,7 +51,10 @@ String genUiProblemText(
   final count = _uniqueNames(affected).length;
   return switch (problem) {
     GenUiSetupProblem.unsupportedHost => l10n.cardsProblemUnsupportedHost,
-    GenUiSetupProblem.runtimeMissing => l10n.cardsProblemRuntimeMissing,
+    GenUiSetupProblem.runtimeMissing =>
+      names == null
+          ? l10n.cardsProblemRuntimeMissing
+          : l10n.cardsProblemRuntimeMissingFor(names),
     GenUiSetupProblem.notQualified =>
       names == null
           ? l10n.cardsProblemNotQualified

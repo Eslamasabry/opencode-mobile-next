@@ -3,7 +3,6 @@ package io.github.eslamasabry.opencode_mobile
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.w3c.dom.Element
@@ -11,12 +10,12 @@ import org.w3c.dom.Element
 /** Checks the XML used by RemoteViews without needing a launcher or emulator. */
 class WidgetSessionCardLayoutTest {
     @Test fun everyLayoutKeepsTheBackgroundIdAndReadsInTheContentDirection() {
-        for (name in listOf("widget_sessions.xml", "widget_sessions_card.xml", "widget_sessions_compact.xml",
-            "widget_sessions_strip.xml", "widget_sessions_card_single.xml")) {
+        for (name in listOf("widget_card.xml", "widget_sessions_compact.xml", "widget_sessions_strip.xml")) {
             val root = layout(name).documentElement
             assertEquals(name, "@android:id/background", root.android("id"))
             assertEquals(name, "locale", root.android("layoutDirection"))
-            assertEquals(name, "@drawable/widget_card_bg", root.android("background"))
+            // Graphite with a hairline edge; the renderer swaps in the light card.
+            assertEquals(name, "@drawable/widget_card_dark", root.android("background"))
         }
     }
 
@@ -27,57 +26,72 @@ class WidgetSessionCardLayoutTest {
         assertEquals("end", title.android("ellipsize"))
     }
 
-    @Test fun stripKeepsTitleAndStatusOnOneLineEachWithTheActionOnTheRight() {
+    @Test fun stripKeepsTitleAndStatusOnOneLineEachWithTheActionAtTheEnd() {
         val doc = layout("widget_sessions_strip.xml")
         for (id in listOf("wc_title", "wc_sub")) assertEquals(id, "1", view(doc, id).android("maxLines"))
-        val children = children(doc.documentElement)
-        assertEquals("wc_mic", children[children.size - 2].android("id").removePrefix("@+id/"))
-        assertEquals("@+id/wc_btn1", children.last().android("id"))
+        val children = children(doc.documentElement).map { it.android("id").removePrefix("@+id/") }
+        assertEquals("wc_tile", children.first())
+        assertEquals(listOf("wc_mic", "wc_allow"), children.takeLast(2))
     }
 
-    @Test fun cardPageSpendsItsHeightOnContentWithTheActionAtTheBottom() {
-        val doc = layout("widget_session_v2_row.xml")
-        val card = doc.documentElement
-        assertEquals("match_parent", card.android("layout_height"))
-        val order = children(card).map { it.android("id").removePrefix("@+id/") }
-        assertTrue(order.indexOf("wc_title") < order.indexOf("wc_sub"))
-        assertTrue(order.indexOf("wc_preview") < order.indexOf("wc_ask"))
-        assertEquals("wc_buttons", order.last())
-        assertEquals("wc_ask", order[order.size - 2])
-        // The status line: dot, status and project share one row; the project takes the slack.
-        assertEquals("1", view(doc, "wc_project").android("layout_weight"))
-        // A needs-you file path is code: left to right whatever the language.
-        assertEquals("ltr", view(doc, "wc_file").android("textDirection"))
+    @Test fun theCardIsHeaderStoryRowsAndOneBottomAction() {
+        val doc = layout("widget_card.xml")
+        val order = children(doc.documentElement).map { it.android("id").removePrefix("@+id/") }
+        assertEquals(
+            listOf(
+                "wc_header", "wc_gap", "wc_gap_rows", "wc_title", "wc_cmd", "wc_live_row", "wc_meta", "wc_rows",
+                "wc_gap_bottom",
+                "wc_buttons", "wc_field",
+            ),
+            order,
+        )
+        // Spare height is shared around the story, or goes to the rows when a tall card has them:
+        // never one band under the header or over the action.
+        assertEquals("1", view(doc, "wc_gap").android("layout_weight"))
+        assertEquals("1", view(doc, "wc_gap_bottom").android("layout_weight"))
+        assertEquals("1", view(doc, "wc_rows").android("layout_weight"))
+        // The exact command is code: left to right whatever the language.
+        assertEquals("ltr", view(doc, "wc_cmd").android("textDirection"))
+        assertEquals("monospace", view(doc, "wc_cmd").android("fontFamily"))
+        // One main action in solid mint, Open beside it as an outline.
+        assertEquals("@drawable/widget_btn_mint_dark", view(doc, "wc_allow").android("background"))
+        assertEquals("@drawable/widget_btn_outline_dark", view(doc, "wc_open").android("background"))
+        // No raw reply text and no flipper: one thing at a time.
+        val text = file("res/layout/widget_card.xml").readText()
+        assertTrue(!text.contains("wc_preview") && !text.contains("ViewFlipper"))
     }
 
-    @Test fun listRowsCarryARejectPillBeforeAllowThatStaysHiddenUntilItFits() {
-        for (name in listOf("widget_session_v2_list_row.xml", "widget_session_v2_list_row_fixed.xml")) {
-            val doc = layout(name)
-            val reject = view(doc, "wc_btn2")
-            assertEquals(name, "gone", reject.android("visibility"))
-            assertEquals(name, "1", view(doc, "wc_title").android("maxLines"))
-            val line = view(doc, "wc_btn1").parentNode.childNodes
-            val ids = (0 until line.length).map { line.item(it) }.filterIsInstance<Element>()
-                .map { it.android("id").removePrefix("@+id/") }
-            assertTrue(name, ids.indexOf("wc_btn2") in 0 until ids.indexOf("wc_btn1"))
+    @Test fun cardRowsAreQuietRowsWithoutButtons() {
+        val doc = layout("widget_card_row.xml")
+        assertEquals("1", view(doc, "wc_row_title").android("maxLines"))
+        val text = file("res/layout/widget_card_row.xml").readText()
+        assertTrue(!text.contains("wc_allow") && !text.contains("wc_btn"))
+    }
+
+    @Test fun noColourInTheWidgetDrawablesIsRed() {
+        val dir = File(resources(), "drawable")
+        for (f in dir.listFiles { f -> f.name.startsWith("widget_") }!!) {
+            for (hex in Regex("#([0-9A-Fa-f]{8})").findAll(f.readText()).map { it.groupValues[1] }) {
+                val rgb = hex.substring(2).toInt(16)
+                val r = (rgb shr 16) and 0xFF
+                val g = (rgb shr 8) and 0xFF
+                val b = rgb and 0xFF
+                // Red reads as red: the red channel well above both others, and a hue under about
+                // 25 degrees (amber, the needs-you Allow, sits near 36 and is allowed).
+                val hsv = FloatArray(3)
+                java.awt.Color.RGBtoHSB(r, g, b, hsv)
+                val hue = hsv[0] * 360f
+                assertTrue("${f.name} #$hex", !(r > 160 && r > g + 60 && r > b + 60 && (hue < 25f || hue > 335f)))
+            }
         }
     }
 
-    @Test fun listRejectNeedsTheWidthToKeepTheQuestionReadable() {
-        assertTrue(!WidgetLayoutPolicy.listShowsReject(250f))
-        assertTrue(!WidgetLayoutPolicy.listShowsReject(289f))
-        assertTrue(WidgetLayoutPolicy.listShowsReject(290f))
-        assertTrue(WidgetLayoutPolicy.listShowsReject(360f))
-    }
+    private fun resources(): File =
+        sequenceOf(File("src/main/res"), File("app/src/main/res"), File("android/app/src/main/res"))
+            .first { it.isDirectory }
 
-    @Test fun listRowsShareTheHeightSoNoGapIsLeftBelowTheLastRow() {
-        val row = layout("widget_session_v2_list_row.xml").documentElement
-        assertEquals("1", row.android("layout_weight"))
-        assertEquals("0dp", row.android("layout_height"))
-        val doc = layout("widget_sessions.xml")
-        assertEquals("1", view(doc, "wc_rows").android("layout_weight"))
-        assertEquals("1", view(layout("widget_session_v2_list_row.xml"), "wc_title").android("maxLines"))
-    }
+    private fun file(path: String): File = sequenceOf(File("src/main/$path"), File("app/src/main/$path"),
+        File("android/app/src/main/$path")).first { it.isFile }
 
     @Test fun noOldCopyOrModelIdSurvivesInTheWidgetResources() {
         val resources = sequenceOf(File("src/main/res"), File("app/src/main/res"), File("android/app/src/main/res"))
@@ -97,17 +111,16 @@ class WidgetSessionCardLayoutTest {
     private fun children(parent: Element): List<Element> =
         (0 until parent.childNodes.length).map { parent.childNodes.item(it) }.filterIsInstance<Element>()
 
-    @Test fun launcherCanResizeDefaultTwoByTwoCardDownToOneCell() {
+    @Test fun defaultTwoByTwoCardKeepsItsSize() {
         val source = sequenceOf(File("src/main/res/xml/widget_sessions_info.xml"),
             File("app/src/main/res/xml/widget_sessions_info.xml"),
             File("android/app/src/main/res/xml/widget_sessions_info.xml")).first { it.isFile }
         val provider = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
             .newDocumentBuilder().parse(source).documentElement
-        assertEquals("48dp", provider.android("minResizeWidth"))
-        assertEquals("40dp", provider.android("minResizeHeight"))
         assertEquals("2", provider.android("targetCellWidth"))
         assertEquals("2", provider.android("targetCellHeight"))
         assertEquals("horizontal|vertical", provider.android("resizeMode"))
+        assertEquals("110dp", provider.android("maxResizeWidth"))
     }
 
     @Test fun wallpaperMutedCopyFollowsSystemThemeInsteadOfCachedAppTheme() {

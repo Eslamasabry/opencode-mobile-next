@@ -6,11 +6,42 @@ import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import 'kit_bidi.dart';
 import 'kit_copy.dart';
+import 'kit_icon_button.dart';
+import 'kit_ink_layer.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
+import 'kit_menu.dart';
 import 'kit_motion.dart';
+import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
+import 'style/kit_signal.dart' show KitTrack, kitSignalColors;
+import 'style/kit_signal_slip.dart' show kitSignalInSlip;
+
+/// The waiting hero's fill (a hero [KitButton] that cannot be pressed
+/// yet): a quiet mint, the accent at 14 % over `surface1`, so the screen
+/// keeps its one accent place before the action is ready.
+Color kitHeroWaitingFill(ThemeRoles roles) =>
+    Color.alphaBlend(roles.accent.withValues(alpha: .14), roles.surface1);
+
+/// The waiting hero's words: the accent at 55 % over `surface1`, moved
+/// toward `text1` only as far as it takes to read at 4.5:1 on
+/// [kitHeroWaitingFill] (the disabled words' floor, `ThemeRoles.text3`).
+/// Muted against the ready hero's accent face and its own words, so it
+/// still reads as not ready. Memoised per role set.
+Color kitHeroWaitingWords(ThemeRoles roles) => _heroWaitingWords[roles] ??= () {
+  final under = roles.ground.withValues(alpha: 1);
+  final surface = Color.alphaBlend(roles.surface1, under);
+  return readableOn(
+    Color.alphaBlend(roles.accent.withValues(alpha: .55), surface),
+    [Color.alphaBlend(kitHeroWaitingFill(roles), under)],
+    4.6,
+    toward: roles.text1.withValues(alpha: 1),
+  );
+}();
+
+final _heroWaitingWords = Expando<Color>('kitHeroWaitingWords');
 
 /// One action a kit part can show. Its place (primary, secondary, tertiary,
 /// menu) is decided by the slot it is put in, never by the caller styling a
@@ -161,6 +192,7 @@ class KitButton extends StatelessWidget {
     this.shortcut,
   }) : copyText = null,
        calm = false,
+       hero = false,
        disabledReason = null,
        copied = false,
        redact = true,
@@ -176,6 +208,7 @@ class KitButton extends StatelessWidget {
     this.maxLines = 2,
     this.destructive = false,
     this.shortcut,
+    this.hero = false,
   }) : role = KitButtonRole.primary,
        calm = false,
        copyText = null,
@@ -196,6 +229,7 @@ class KitButton extends StatelessWidget {
     this.shortcut,
   }) : role = KitButtonRole.secondary,
        calm = false,
+       hero = false,
        copyText = null,
        disabledReason = null,
        copied = false,
@@ -212,6 +246,7 @@ class KitButton extends StatelessWidget {
     this.shortcut,
   }) : role = KitButtonRole.tertiary,
        calm = false,
+       hero = false,
        working = false,
        expand = false,
        copyText = null,
@@ -241,7 +276,7 @@ class KitButton extends StatelessWidget {
     this.redact = true,
     this.calm = false,
     this.semanticsLabel,
-  });
+  }) : hero = false;
 
   factory KitButton.fromAction(
     KitAction action, {
@@ -287,6 +322,10 @@ class KitButton extends StatelessWidget {
   /// Set only through [fromAction] from [KitAction.calm].
   final bool calm;
 
+  /// A screen's one hero action at the bottom (Start with Claude Code): a
+  /// taller full-width pill. Primary only.
+  final bool hero;
+
   /// Set only through [fromAction] from [KitAction.disabledReason].
   final String? disabledReason;
 
@@ -301,7 +340,10 @@ class KitButton extends StatelessWidget {
   final bool copied;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.control(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final copyText = this.copyText;
     if (copyText != null) {
       return _KitCopyButton(
@@ -337,11 +379,19 @@ class KitButton extends StatelessWidget {
     final roles = tokens.roles;
     final still = KitMotion.reduced(context);
     final spoken = semanticsLabel;
+    // A tertiary action's underline is the style's link underline
+    // (KitStyleTokens.linkUnderline; by default as its line is drawn):
+    // none in Solid and Soft; Brutal's 2 dp ink and Paper's rule
+    // underline the words, in the words' own colour.
+    final underline = role == KitButtonRole.tertiary && this.onPressed != null
+        ? KitSurfaceLook.linkUnderline(context)
+        : null;
     final Widget shownLabel = _KitButtonLabel(
       label: label,
       shortcut: shortcut,
       role: role,
       maxLines: maxLines,
+      underline: underline,
     );
     final Widget labelWidget = spoken == null
         ? shownLabel
@@ -402,12 +452,16 @@ class KitButton extends StatelessWidget {
         size: tokens.iconSize(context, tokens.smallIconSize),
       );
     }
-    final minimum = expand
+    final minimum = hero
+        ? Size.fromHeight(tokens.minTarget + tokens.space2)
+        : expand
         ? Size.fromHeight(tokens.buttonHeight)
         : Size(tokens.minTarget, tokens.minTarget);
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(tokens.buttonRadius),
-    );
+    final OutlinedBorder shape = hero
+        ? const StadiumBorder()
+        : RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(tokens.buttonRadius),
+          );
     // Taps never fire while the action's own tap is in flight (STATE-7):
     // an enabled callback becomes a no-op so the fill stays the enabled
     // colour (never partial opacity, C21 f) instead of reading as disabled.
@@ -422,14 +476,29 @@ class KitButton extends StatelessWidget {
             press.confirm();
             onPressed();
           };
+    final Color primaryFill = destructive
+        ? roles.text1
+        : calm && Theme.of(context).brightness == Brightness.dark
+        // Calm (dark mode): the accent eased toward the ground.
+        ? Color.lerp(roles.accent, roles.surface1, .32)!
+        : roles.accent;
+    // Hook H3: a style may say the words on its accent (Brutal: ink on
+    // mint). The strong neutral keeps its ground words.
+    final Color primaryWords = destructive
+        ? roles.ground
+        : KitSurfaceLook.wordsOn(
+            context,
+            fallback: roles.onAccent,
+            color: primaryFill,
+            pressed: press.shown,
+            action: true,
+          );
     // LOOK-21, LAY-10: keyboard focus draws a ring inside the button's own
     // shape, in a colour that reads on its fill (accent on the quiet
     // buttons; the fill's own foreground on a filled primary).
     final ringColor = role != KitButtonRole.primary
         ? roles.accent
-        : destructive
-        ? roles.ground
-        : roles.onAccent;
+        : primaryWords;
     final ring = WidgetStateProperty.resolveWith<BorderSide?>(
       (states) => states.contains(WidgetState.focused)
           ? BorderSide(
@@ -438,30 +507,129 @@ class KitButton extends StatelessWidget {
             )
           : null,
     );
-    // The pressed state layer is the button's own foreground at 16 %
-    // (Material's pressed overlay is 10 %; without its ripple on top that
-    // is too faint to read as an answer on a phone), painted under the
-    // label from the tracker; Material's splash and its delayed pressed
-    // highlight are off.
+    // Off Android (or under reduced motion) the pressed state layer is the
+    // button's own foreground at 16 % (Material's pressed overlay is 10 %;
+    // without a ripple on top that is too faint to read as an answer on a
+    // phone), painted under the label from the tracker. Material's own
+    // splash and its delayed pressed highlight stay off everywhere: the
+    // tracker's ripple layer answers on the next frame.
     final pressedLayer = switch (role) {
       KitButtonRole.primary => destructive ? roles.ground : roles.onAccent,
       KitButtonRole.secondary => roles.text1,
       KitButtonRole.tertiary => roles.text1,
     }.withValues(alpha: 0.16);
-    final showPressed = press.shown && onPressed != null && !working;
+    final enabled = onPressed != null;
+    // On Android the native ripple answers the press (KitInk), drawn over
+    // the face in the button's own foreground; the flat pressed layer is
+    // for the other platforms and reduced motion.
+    final showPressed =
+        press.shown && enabled && !working && !KitInk.on(context);
+    final Color inkColor = role == KitButtonRole.primary
+        ? primaryWords
+        : roles.text1;
+    // Solid: a hero that cannot be pressed yet is a plain disabled button
+    // (surface3, text3), so the accent appears only once it can be pressed.
+    // Every other style keeps its quiet mint wait.
+    final heroWaits =
+        hero && KitSurfaceLook.styleOf(context) != KitSurfaceStyle.solid;
+    final heroDisabledFill = kitHeroWaitingFill(roles);
+    // The style resolver (Settings › Appearance › Style): Solid at its
+    // defaults keeps the button's own Material fills, exactly as always.
+    // Any other look paints a filled button's fill as a control surface
+    // under the label (the primary keeps its own fill as the face) and the
+    // button's own fill turns clear. A tertiary button has no surface; its
+    // style is its words and their underline.
+    final surfaceStyle = KitSurfaceLook.styleOf(context);
+    final plain = KitSurfaceLook.isPlain(context);
+    final surfaced = !plain && role != KitButtonRole.tertiary;
+    final Color ownFill = !enabled
+        ? (heroWaits ? heroDisabledFill : roles.surface3)
+        : role == KitButtonRole.primary
+        ? primaryFill
+        : roles.surface3;
+    // The primary keeps its accent as the face, and the hero its quiet
+    // mint while it waits; any other button, a disabled one too, is the
+    // style's own control (its words say it is off).
+    final ownFace =
+        (enabled && role == KitButtonRole.primary) || (!enabled && heroWaits);
+    // Signal: on a printed slip the quiet answer (Reject) is a raised key
+    // too, in the slip's own key colour; elsewhere only the primary is.
+    final Color? slipKey =
+        enabled &&
+            role == KitButtonRole.secondary &&
+            KitTrack.on(context) &&
+            kitSignalInSlip(context)
+        ? kitSignalColors(context).key
+        : null;
+    final Decoration surface = surfaced
+        ? KitSurfaceLook.decorate(
+            context,
+            solid: ShapeDecoration(shape: shape, color: ownFill),
+            level: KitSurfaceLevel.surface3,
+            role: KitSurfaceRole.control,
+            color: ownFace ? ownFill : slipKey,
+            pressed: showPressed,
+            action: true,
+            // A style may draw a control that cannot be used flat, so it
+            // never reads as a secondary (its words already say it is off).
+            disabled: !enabled,
+          )
+        : const KitSurfaceDecoration(fill: Colors.transparent);
+    // Held: the style's `stateLayer`; on a face of its own (the accent)
+    // asked with that fill, which keeps the button's own layer unless the
+    // style answers it apart (KitStyleSpec.resolveFilledLayer), so the
+    // accent stays the accent. Either sits inside the surface's edge, so a
+    // press never greys an ink edge.
+    final layer = ShapeDecoration(
+      shape: shape,
+      color: showPressed ? pressedLayer : Colors.transparent,
+    );
+    final Decoration pressedLook = showPressed
+        ? KitSurfaceLook.decorate(
+            context,
+            solid: layer,
+            role: KitSurfaceRole.stateLayer,
+            color: ownFace ? ownFill : null,
+            pressed: true,
+          )
+        : layer;
+    final edge = switch (KitSurfaceDecoration.from(surface)) {
+      final KitSurfaceDecoration d when d.edgeStart.a > 0 || d.edgeEnd.a > 0 =>
+        d.edgeWidth,
+      _ => 0.0,
+    };
     ButtonStyle pressable(ButtonStyle style) => style.copyWith(
       side: ring,
+      // The words' colour eases between enabled and disabled on the kit's
+      // quick pace (at once under reduced motion), not Material's own.
+      animationDuration: still ? Duration.zero : KitMotion.quick,
       splashFactory: NoSplash.splashFactory,
       overlayColor: WidgetStateProperty.resolveWith(
         (states) =>
             states.contains(WidgetState.pressed) ? Colors.transparent : null,
       ),
-      backgroundBuilder: (context, states, child) => DecoratedBox(
-        decoration: ShapeDecoration(
-          shape: shape,
-          color: showPressed ? pressedLayer : Colors.transparent,
+      backgroundBuilder: (context, states, child) => KitInkLayer(
+        key: press.inkKey,
+        shape: shape,
+        color: inkColor,
+        child: kitSurfaceBox(
+          style: surfaceStyle,
+          decoration: surface,
+          child: edge == 0 || child == null
+              ? DecoratedBox(decoration: pressedLook, child: child)
+              : Stack(
+                  fit: StackFit.passthrough,
+                  children: [
+                    Positioned.fill(
+                      child: Padding(
+                        padding: EdgeInsets.all(edge),
+                        child: DecoratedBox(decoration: pressedLook),
+                      ),
+                    ),
+                    child,
+                  ],
+                ),
         ),
-        child: child,
       ),
     );
     Widget result;
@@ -469,43 +637,74 @@ class KitButton extends StatelessWidget {
       case KitButtonRole.primary:
         // Destructive is primary only where the whole sheet or screen is
         // that one confirmed act (design standard §2): the strong neutral fill, never red.
-        final style = pressable(
-          FilledButton.styleFrom(
-            minimumSize: minimum,
-            shape: shape,
-            elevation: 0,
-            backgroundColor: destructive
-                ? roles.text1
-                : calm && Theme.of(context).brightness == Brightness.dark
-                // Calm (dark mode): the accent eased toward the ground.
-                ? Color.lerp(roles.accent, roles.surface1, .32)
-                : roles.accent,
-            foregroundColor: destructive ? roles.ground : roles.onAccent,
-            disabledBackgroundColor: roles.surface3,
-            disabledForegroundColor: roles.text3,
-          ),
+        // The hero waits in a quiet mint of its own, so the screen keeps
+        // its one accent place before it can be pressed.
+        final disabledFill = heroWaits ? heroDisabledFill : roles.surface3;
+        Widget primary(Color? easedFill) {
+          final style = pressable(
+            FilledButton.styleFrom(
+              minimumSize: minimum,
+              shape: shape,
+              elevation: 0,
+              // Each slot keeps its own meaning; only the one in use eases.
+              backgroundColor: surfaced
+                  ? Colors.transparent
+                  : enabled
+                  ? easedFill ?? primaryFill
+                  : primaryFill,
+              foregroundColor: primaryWords,
+              disabledBackgroundColor: surfaced
+                  ? Colors.transparent
+                  : enabled
+                  ? disabledFill
+                  : easedFill ?? disabledFill,
+              disabledForegroundColor: heroWaits
+                  ? kitHeroWaitingWords(roles)
+                  : roles.text3,
+            ),
+          );
+          return leading == null
+              ? FilledButton(
+                  onPressed: effectiveOnPressed,
+                  style: style,
+                  child: child,
+                )
+              : FilledButton.icon(
+                  onPressed: effectiveOnPressed,
+                  style: style,
+                  icon: leading,
+                  label: labelWidget,
+                );
+        }
+
+        // Solid paints the fill through Material, which does not ease a
+        // colour: the fill eases here between enabled and disabled (a Save
+        // that wakes up as the form becomes valid). Other styles paint it
+        // in their surface box, which already cross-fades. Always in the
+        // tree, so a change never rebuilds the button under its focus.
+        result = TweenAnimationBuilder<Color?>(
+          tween: ColorTween(end: enabled ? primaryFill : disabledFill),
+          duration: still || surfaced ? Duration.zero : KitMotion.quick,
+          curve: KitMotion.enter,
+          builder: (context, fill, _) => primary(fill),
         );
-        result = leading == null
-            ? FilledButton(
-                onPressed: effectiveOnPressed,
-                style: style,
-                child: child,
-              )
-            : FilledButton.icon(
-                onPressed: effectiveOnPressed,
-                style: style,
-                icon: leading,
-                label: labelWidget,
-              );
       case KitButtonRole.secondary:
         final style = pressable(
           FilledButton.styleFrom(
             minimumSize: minimum,
             shape: shape,
             elevation: 0,
-            backgroundColor: roles.surface3,
-            foregroundColor: roles.text1,
-            disabledBackgroundColor: roles.surface3,
+            backgroundColor: surfaced ? Colors.transparent : roles.surface3,
+            // Hook H3: a style may say the words' colour on its surface.
+            foregroundColor: KitSurfaceLook.wordsOn(
+              context,
+              fallback: roles.text1,
+              role: KitSurfaceRole.control,
+              pressed: press.shown,
+            ),
+            disabledBackgroundColor: surfaced
+                ? Colors.transparent
+                : roles.surface3,
             disabledForegroundColor: roles.text3,
           ),
         );
@@ -583,6 +782,7 @@ class _KitButtonLabel extends StatelessWidget {
     required this.shortcut,
     required this.role,
     required this.maxLines,
+    this.underline,
   });
 
   final String label;
@@ -590,13 +790,31 @@ class _KitButtonLabel extends StatelessWidget {
   final KitButtonRole role;
   final int maxLines;
 
+  /// The underline's thickness (a multiple of the face's own), in the
+  /// words' colour; null draws none.
+  final double? underline;
+
   @override
   Widget build(BuildContext context) {
+    final underline = this.underline;
+    // A Style with type of its own keeps its keys' firm 600 words (the
+    // theme's button role is Solid's 500), and so does Arabic: the system
+    // Arabic face at 500 reads too thin on a filled button (under 4.5:1 in
+    // the contrast gate).
+    final arabic = Localizations.maybeLocaleOf(context)?.languageCode == 'ar';
+    final firm = KitText.firmType(context) || arabic ? FontWeight.w600 : null;
     final text = Text(
       label,
       maxLines: maxLines,
       overflow: TextOverflow.ellipsis,
       textAlign: TextAlign.center,
+      style: underline == null
+          ? (firm == null ? null : TextStyle(fontWeight: firm))
+          : TextStyle(
+              fontWeight: firm,
+              decoration: TextDecoration.underline,
+              decorationThickness: underline,
+            ),
     );
     final shortcut = this.shortcut;
     // Visual language §5: on a fine pointer, from expanded up.
@@ -781,11 +999,20 @@ class KitActionBlock extends StatelessWidget {
     this.secondary,
     this.tertiary = const [],
     this.menu,
+    this.pair = false,
   });
 
   final KitAction? primary;
   final KitAction? secondary;
   final List<KitAction> tertiary;
+
+  /// A primary with one short secondary beside it on a phone ("Send as a
+  /// GitHub issue" · "Copy"): one row, the primary taking the room, the
+  /// secondary its own width, while both fit at the text size; otherwise
+  /// the usual stack. Only with exactly a primary and a secondary and no
+  /// disabled reason; every other block, and every wider window, is
+  /// unchanged.
+  final bool pair;
 
   /// The caller's own overflow widget, where "More" goes.
   /// Retired by kit-KitAction-v2: pass the extra actions in [tertiary] (the
@@ -796,7 +1023,10 @@ class KitActionBlock extends StatelessWidget {
       primary == null && secondary == null && tertiary.isEmpty && menu == null;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     if (isEmpty) return const SizedBox.shrink();
     final tokens = KitTokens.of(context);
     final shown = tertiary.take(2).toList();
@@ -812,6 +1042,48 @@ class KitActionBlock extends StatelessWidget {
     final stacked =
         hasDestructiveTertiary ||
         KitLayout.windowOf(context) == KitWindow.compact;
+
+    final first = primary;
+    final second = secondary;
+    if (pair &&
+        stacked &&
+        first != null &&
+        second != null &&
+        tertiary.isEmpty &&
+        menu == null &&
+        first.disabledReason == null &&
+        second.disabledReason == null) {
+      // Large text gets the stack: two labels side by side would wrap.
+      final large = MediaQuery.textScalerOf(context).scale(16) > 16 * 1.3;
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          if (large || constraints.maxWidth < KitLayout.pairRowMinWidth) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                KitButton.fromAction(first, role: KitButtonRole.primary),
+                SizedBox(height: tokens.space2),
+                KitButton.fromAction(second, role: KitButtonRole.secondary),
+              ],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(
+                child: KitButton.fromAction(first, role: KitButtonRole.primary),
+              ),
+              SizedBox(width: tokens.space2),
+              KitButton.fromAction(
+                second,
+                role: KitButtonRole.secondary,
+                expand: false,
+              ),
+            ],
+          );
+        },
+      );
+    }
 
     if (!stacked) {
       final row = Wrap(
@@ -947,74 +1219,49 @@ class KitActionBlock extends StatelessWidget {
   }
 }
 
-/// The "More" overflow menu (kit-actions-more): a destructive action beyond
-/// the first two tertiary actions renders last, after a divider (§2.7). A
-/// copy action copies through [KitCopy]; a disabled action shows its
-/// [KitAction.disabledReason] as a second, muted line and as its hint
-/// (STATE-8).
+/// The "More" overflow menu (kit-actions-more): the actions beyond the
+/// first two tertiary ones in a [KitMenu] (`showKitMenu`), so the menu takes
+/// the person's style like every other menu. KitMenu puts a destructive
+/// action last, after a divider (§2.7); a copy action copies through
+/// [KitCopy] after the menu closes; a disabled action shows its
+/// [KitAction.disabledReason] as a second, muted line (STATE-8).
 Widget? _buildMore(
   BuildContext context,
   List<KitAction> overflow,
   KitTokens tokens,
 ) {
   if (overflow.isEmpty) return null;
-  final order = [
-    for (var i = 0; i < overflow.length; i++)
-      if (!overflow[i].destructive) i,
-    for (var i = 0; i < overflow.length; i++)
-      if (overflow[i].destructive) i,
+  final items = [
+    for (final action in overflow)
+      if (action.copyText case final copyText?)
+        KitMenuItem.copy(
+          key: action.key,
+          label: action.label,
+          text: copyText,
+          icon: action.icon,
+          redact: action.redact,
+        )
+      else
+        KitMenuItem(
+          key: action.key,
+          label: action.label,
+          icon: action.icon,
+          onSelected: action.onPressed ?? () {},
+          enabled: action.enabled,
+          disabledReason: action.enabled ? null : action.disabledReason,
+          destructive: action.destructive,
+        ),
   ];
-  final firstDestructive = order.indexWhere((i) => overflow[i].destructive);
-  return PopupMenuButton<int>(
-    key: const ValueKey('kit-actions-more'),
-    tooltip: lookupAppLocalizations(Localizations.localeOf(context)).kitMore,
-    icon: const Icon(AppIconography.more),
-    onSelected: (index) {
-      final action = overflow[index];
-      final copyText = action.copyText;
-      if (copyText != null) {
-        KitCopy.copy(context, copyText(), redact: action.redact);
-      } else {
-        action.onPressed?.call();
-      }
-    },
-    itemBuilder: (menuContext) => [
-      for (var position = 0; position < order.length; position++) ...[
-        if (position == firstDestructive) const PopupMenuDivider(),
-        _moreItem(menuContext, overflow[order[position]], order[position]),
-      ],
-    ],
-  );
-}
-
-/// One "More" item: its label in the kit's body role (neutral when
-/// destructive, `text3` when disabled) and, when disabled with a reason,
-/// that reason under it.
-PopupMenuItem<int> _moreItem(BuildContext context, KitAction action, int id) {
-  final enabled = action.enabled;
-  final reason = enabled ? null : action.disabledReason;
-  final label = Text(
-    action.label,
-    style: KitText.styleOf(
-      context,
-      KitTextRole.body,
-      tone: !enabled ? KitTextTone.tertiary : KitTextTone.primary,
+  return Builder(
+    // The button's own context, so the menu anchors to the button.
+    builder: (button) => KitIconButton(
+      key: const ValueKey('kit-actions-more'),
+      icon: AppIconography.more,
+      // The theme's own icon size, as the overflow glyph has always drawn.
+      size: 22,
+      tooltip: lookupAppLocalizations(Localizations.localeOf(context)).kitMore,
+      onPressed: () => showKitMenu(button, items: items),
     ),
-  );
-  return PopupMenuItem<int>(
-    key: action.key,
-    value: id,
-    enabled: enabled,
-    child: reason == null
-        ? label
-        : Semantics(
-            hint: reason,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [label, _KitActionReason(reason)],
-            ),
-          ),
   );
 }
 

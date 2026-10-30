@@ -387,6 +387,70 @@
      "file": "lib/ui/screens/linux_manager/linux_packages_page.dart"
     }
    ]
+  },
+  {
+   "id": "running-on-phone",
+   "title": "Running on this phone",
+   "kind": "screen",
+   "file": "lib/ui/screens/running_on_phone_screen.dart",
+   "widget": "RunningOnPhoneScreen",
+   "presentedBy": [],
+   "line": 49,
+   "purpose": "What the app runs on the phone (in-app Linux), grouped under what started it (left behind, OpenCode, each Claude Code conversation by title, agent helper, AI Team, terminal, setup, helpers, this app) as a parent-child tree, with processor use, memory and run time; heavy and may-be-stuck marks; a warning from 28 processes; a named, confirmed Stop for what is stuck, heavy or left behind. Reads every 5 seconds only while open.",
+   "reachedFrom": [
+    {
+     "page": "termux-setup-installed",
+     "element": "this-phone-running-row"
+    }
+   ],
+   "gates": [
+    "in-app host only: ThisPhoneScreen shows the row when host.kind == PhoneHostKind.inApp and a reading has processes"
+   ],
+   "elements": [
+    {
+     "id": "running-on-phone-row",
+     "type": "list-tile",
+     "label": "Process row",
+     "key": "running-proc-<pid>",
+     "line": 549,
+     "action": "open-sheet",
+     "target": null,
+     "effect": "Opens the details sheet: what it is, why it is marked, facts, and command, ids, owner and conversation id under Details; Stop {name} when it may be stopped.",
+     "gates": [],
+     "destructive": false,
+     "file": "lib/ui/screens/running_on_phone_screen.dart"
+    },
+    {
+     "id": "running-on-phone-stop",
+     "type": "chip",
+     "label": "Stop",
+     "key": "running-proc-stop-<pid>",
+     "line": 585,
+     "action": "open-dialog",
+     "target": null,
+     "effect": "Asks 'Stop {name}?', then sends exactly that pid to stopProcesses and says what stopped and why anything did not.",
+     "gates": [
+      "not a server root nor the app; left behind, stuck or heavy (otherwise in the row's menu)"
+     ],
+     "destructive": true,
+     "file": "lib/ui/screens/running_on_phone_screen.dart"
+    },
+    {
+     "id": "running-on-phone-stop-left-behind",
+     "type": "list-tile",
+     "label": "Stop all {count} left behind",
+     "key": "running-stop-left-behind",
+     "line": 500,
+     "action": "open-dialog",
+     "target": null,
+     "effect": "Asks once, naming each process left behind, then sends exactly those pids.",
+     "gates": [
+      "while something is left behind"
+     ],
+     "destructive": true,
+     "file": "lib/ui/screens/running_on_phone_screen.dart"
+    }
+   ]
   }
  ],
  "notPages": [

@@ -127,11 +127,13 @@ Route<void> chatLandingRoute({
   required String sessionID,
   String? landOnRequestID,
   bool landOnFailure = false,
+  bool focusComposer = false,
 }) {
   final page = chatLandingPage(
     sessionID: sessionID,
     landOnRequestID: landOnRequestID,
     landOnFailure: landOnFailure,
+    focusComposer: focusComposer,
   );
   return KitPageRoute<void>(
     // Named so the app can tell this chat is already showing.

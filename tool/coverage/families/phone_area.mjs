@@ -55,7 +55,7 @@ export function phoneFamilies() {
 
   const running = base('job_run', {
     state: 'running', current: 'node', logTail: 'node: fetching the package index',
-    params: { _job: { first: '1' }, opencode: { runtime: 'opencode2', version: '2.0.29' } },
+    params: { _job: { first: '1' }, opencode: { runtime: 'opencode2', version: '2.1.1' } },
     components: {
       linux: comp('done', { stage: 'Ready', version: '24.04.5', startedAt: T0, endedAt: T0 + 9000 }),
       essentials: comp('done', { startedAt: T0 + 9000, endedAt: T0 + 20000 }),
@@ -78,7 +78,7 @@ export function phoneFamilies() {
     state, current: 'opencode', logTail: '',
     components: {
       linux: comp('done'), essentials: comp('done'), python: comp('done'), node: comp('done', { version: '22.11.0' }),
-      opencode: comp(state === 'done' ? 'done' : 'pending', state === 'done' ? { version: '2.0.29' } : {}),
+      opencode: comp(state === 'done' ? 'done' : 'pending', state === 'done' ? { version: '2.1.1' } : {}),
       start: comp(state === 'done' ? 'done' : 'pending'),
     },
   });
@@ -97,7 +97,7 @@ export function phoneFamilies() {
     cases: [
       jcase('job_running_download', running, { job: { state: ['Setting up OpenCode on this phone'], logTail: ['node: fetching the package index'], 'order[]': ['Linux base', 'Node.js', 'Start OpenCode'], 'params._job.first': ['Step 1 of 3'], 'params.opencode.runtime': [], 'params.opencode.version': [] }, components: compsOf(running, runBy) }),
       jcase('job_failed_offline', failed, { job: { state: ["Setup didn't finish"], errorCode: ['Could not install OpenCode'], error: [], logTail: ['curl: (6) Could not resolve host'] }, components: compsOf(failed, failBy) }),
-      ...[['done', 'All set'], ['interrupted', "Setup was interrupted"], ['cancelled', 'Setup stopped']].map(([s, word]) => { const r = states(s); return jcase(`job_${s}`, r, { job: { state: [word] }, components: compsOf(r, s === 'done' ? { node: { version: ['22.11.0'] }, opencode: { version: ['2.0.29'] } } : {}) }); }),
+      ...[['done', 'All set'], ['interrupted', "Setup was interrupted"], ['cancelled', 'Setup stopped']].map(([s, word]) => { const r = states(s); return jcase(`job_${s}`, r, { job: { state: [word] }, components: compsOf(r, s === 'done' ? { node: { version: ['22.11.0'] }, opencode: { version: ['2.1.1'] } } : {}) }); }),
       jcase('job_on_termux', termux, { job: { state: ['Adding AI Team'], 'params._job.adding': ['Adding AI Team'] }, components: compsOf(termux, { opencode: { stage: ['Installing'], percent: ['40%'] } }) }),
     ],
   };
@@ -273,9 +273,9 @@ export function phoneFamilies() {
     schema: txSchema, excluded: {}, source: 'lib/termux/bridge_models.dart (TermuxSetupStatus, the manager status script)',
     cases: [
       tx('termux_installing', { ...txBase, phase: 'installing_opencode', message: 'Fetching the OpenCode package', version: '', started_at: 'NOW-90' }, 'x', { phase: ['Updating this phone'], message: ['Fetching the OpenCode package'], started_at: ['elapsed'] }),
-      tx('termux_starting', { ...txBase, phase: 'starting_server', message: 'Starting the server', version: '2.0.29' }, 'x', { phase: ['Updating this phone'], message: ['Starting the server'], version: ['2.0.29'] }),
+      tx('termux_starting', { ...txBase, phase: 'starting_server', message: 'Starting the server', version: '2.1.1' }, 'x', { phase: ['Updating this phone'], message: ['Starting the server'], version: ['2.1.1'] }),
       tx('termux_failed', { ...txBase, phase: 'failed', message: 'OpenCode install failed', version: '', failure_kind: 'crash', operation: 'op1', operation_result: 'failed' }, '[oc] ERROR: npm could not install', { phase: ["Setup didn't finish"], message: ['OpenCode install failed'] }, { output: ['npm could not install'] }),
-      tx('termux_ready', { ...txBase, phase: 'ready', message: 'OpenCode is ready', version: '2.0.29', operation: 'op2', operation_result: 'completed' }, '', { phase: ['All set'], version: ['2.0.29'] }),
+      tx('termux_ready', { ...txBase, phase: 'ready', message: 'OpenCode is ready', version: '2.1.1', operation: 'op2', operation_result: 'completed' }, '', { phase: ['All set'], version: ['2.1.1'] }),
       tx('termux_switch', { ...txBase, runtime: 'opencode2', phase: 'restarting', message: 'Switching to OpenCode 2', version: '2.0.10', switch_previous: 'opencode1', switch_target: 'opencode2', switch_phase: 'switching', switch_return: 'opencode1' }, 'x', { runtime: ['OpenCode 2'], message: ['Switching to OpenCode 2'], switch_target: ['OpenCode 2'] }),
     ],
   };

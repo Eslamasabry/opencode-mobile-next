@@ -9,6 +9,7 @@ import 'package:flutter/widgets.dart';
 import '../../l10n/app_localizations.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
+import 'kit_max_width.dart';
 import 'kit_notice.dart';
 import 'kit_row.dart';
 import 'kit_state_view.dart';
@@ -725,7 +726,10 @@ class KitCapabilityExplainer extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final entry = KitCapabilities._lookup(capability);
     if (entry == null) return const SizedBox.shrink();
     return _KitCapabilityExplainerBody(explainer: this);

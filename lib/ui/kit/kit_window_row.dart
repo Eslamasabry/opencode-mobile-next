@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_theme.dart';
+import 'kit_max_width.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
@@ -70,7 +71,10 @@ class KitWindowRow extends StatelessWidget {
   final String? valueSemantics;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final roles = AppTheme.rolesOf(Theme.of(context));
     final tokens = KitTokens.of(context);
     final fill = switch (tone) {

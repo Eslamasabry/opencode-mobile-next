@@ -3,7 +3,7 @@
   "pages": [
     {
       "id": "servers",
-      "title": "OpenCode — Servers",
+      "title": "OpenCode \u2014 Servers",
       "kind": "screen",
       "file": "lib/ui/screens/servers_screen.dart",
       "widget": "ServersScreen",
@@ -80,20 +80,21 @@
           "type": "icon-button",
           "label": "About and open source notices",
           "key": null,
-          "line": 415,
+          "line": 96,
           "action": "navigate",
           "target": "about",
           "targetWidget": "/about",
           "effect": "Navigator.pushNamed(context, '/about').",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/servers_state.dart"
         },
         {
           "id": "servers-guide",
           "type": "menu-item",
           "label": "Setup guide",
           "key": "servers-setup-guide",
-          "line": 422,
+          "line": 107,
           "action": "navigate",
           "target": "guide",
           "targetWidget": "GuideScreen",
@@ -101,7 +102,8 @@
           "gates": [
             "the page is the root route (no shell, so no Settings)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/servers_state.dart"
         },
         {
           "id": "servers-report-bug",
@@ -111,7 +113,7 @@
           "action": "external-link",
           "target": null,
           "targetWidget": null,
-          "effect": "Top-bar menu: openBugReport(context), the same flow as Settings › Report a bug.",
+          "effect": "Top-bar menu: openBugReport(context), the same flow as Settings \u203a Report a bug.",
           "gates": [
             "the page is the root route (no shell, so no Settings)"
           ],
@@ -122,7 +124,7 @@
           "type": "icon-button",
           "label": "Dismiss",
           "key": "server-connect-failure",
-          "line": 2622,
+          "line": 201,
           "action": "dismiss",
           "target": null,
           "targetWidget": null,
@@ -130,12 +132,13 @@
           "gates": [
             "_listFailure != null"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/servers_state.dart"
         },
         {
           "id": "servers-profile-row",
           "type": "list-tile",
-          "label": "<profile name> / <baseUrl> / OpenCode|OpenCode 1|OpenCode 2 or \"Codex · <directory>\" / \"Password re-entry required\" / \"Connection token re-entry required\"",
+          "label": "<profile name> / <baseUrl> / OpenCode|OpenCode 1|OpenCode 2 or \"Codex \u00b7 <directory>\" / \"Password re-entry required\" / \"Connection token re-entry required\"",
           "key": null,
           "line": 544,
           "action": "mutate",
@@ -167,7 +170,7 @@
           "type": "menu-item",
           "label": "Codex account",
           "key": null,
-          "line": 642,
+          "line": 124,
           "action": "navigate",
           "target": "agent-account",
           "targetWidget": "AgentAccountScreen",
@@ -175,33 +178,36 @@
           "gates": [
             "p.id == activeId && accountConnection.isConnected && accountConnection.capabilities.agentAccount"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/server_rows.dart"
         },
         {
           "id": "servers-profile-menu-connect",
           "type": "menu-item",
           "label": "Connect",
           "key": null,
-          "line": 648,
+          "line": 125,
           "action": "mutate",
           "target": "home",
           "targetWidget": "/home",
-          "effect": "_connect(p) — same as tapping the row (conn.connect(p), then '/home').",
+          "effect": "_connect(p) \u2014 same as tapping the row (conn.connect(p), then '/home').",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/server_rows.dart"
         },
         {
           "id": "servers-profile-menu-edit",
           "type": "menu-item",
           "label": "Edit",
           "key": null,
-          "line": 656,
+          "line": 139,
           "action": "navigate",
           "target": "profile-editor",
           "targetWidget": "_ProfileEditorScreen",
           "effect": "_edit(existing: p): pushes _ProfileEditorScreen for that profile (reconnectOnSave when it is the active profile; Tailscale mode when pref 'oc.tailscale.<id>' is true).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/server_rows.dart"
         },
         {
           "id": "servers-profile-menu-remove",
@@ -234,7 +240,7 @@
         {
           "id": "servers-connect-opencode2",
           "type": "list-tile",
-          "label": "Connect OpenCode 2 — Use a server that is already running.",
+          "label": "Connect OpenCode 2 \u2014 Use a server that is already running.",
           "key": "connect-existing-opencode2",
           "line": 700,
           "action": "navigate",
@@ -251,7 +257,7 @@
           "type": "button",
           "label": "Try demo",
           "key": null,
-          "line": 703,
+          "line": 552,
           "action": "navigate",
           "target": "demo",
           "targetWidget": "DemoScreen",
@@ -259,14 +265,15 @@
           "gates": [
             "disabled while _busy"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/servers_actions.dart"
         },
         {
           "id": "servers-termux-setup",
           "type": "list-tile",
           "label": "This phone (Manage on the phone server rows; the runtime-choice detour)",
           "key": null,
-          "line": 229,
+          "line": 52,
           "action": "navigate",
           "target": "termux-setup-installed",
           "targetWidget": "openThisPhone",
@@ -274,7 +281,8 @@
           "gates": [
             "platformCapabilities.supportsTermux"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/servers_actions.dart"
         },
         {
           "id": "servers-more-setup",
@@ -292,9 +300,9 @@
         {
           "id": "servers-tailscale",
           "type": "list-tile",
-          "label": "Connect with Tailscale — Reach a server over your private network",
+          "label": "Connect with Tailscale \u2014 Reach a server over your private network",
           "key": "welcome-tailscale-card",
-          "line": 936,
+          "line": 368,
           "action": "navigate",
           "target": "tailscale-setup",
           "targetWidget": "TailscaleSetupScreen",
@@ -304,14 +312,15 @@
             "inside More setup options expansion",
             "disabled while _busy"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_steps.dart"
         },
         {
           "id": "servers-setup-guide",
           "type": "list-tile",
           "label": "Setup guide",
           "key": "welcome-guide-card",
-          "line": 944,
+          "line": 108,
           "action": "navigate",
           "target": "guide",
           "targetWidget": "/guide",
@@ -320,14 +329,15 @@
             "inside More setup options expansion",
             "disabled while _busy"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/servers_state.dart"
         },
         {
           "id": "servers-external-agents",
           "type": "list-tile",
           "label": "External agents",
           "key": null,
-          "line": 951,
+          "line": 380,
           "action": "navigate",
           "target": "capabilities",
           "targetWidget": "CapabilitiesScreen",
@@ -336,7 +346,8 @@
             "inside More setup options expansion",
             "disabled while _busy"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_steps.dart"
         }
       ],
       "states": [
@@ -351,10 +362,10 @@
       "id": "servers-welcome",
       "title": "Keep your work moving.",
       "kind": "screen",
-      "file": "lib/ui/screens/servers_screen.dart",
+      "file": "lib/ui/screens/servers/server_rows.dart",
       "widget": "_WelcomeView",
       "presentedBy": [],
-      "line": 896,
+      "line": 228,
       "purpose": "First-run body of ServersScreen (UX plan 5.6 step 1): the value sentence, then one question, 'Where does your coding agent run?', with three plain choices. No product names; Tailscale, the setup guide and External agents are reached from Settings. Headed by a line drawing (motion slice B, 2026-09-25).",
       "reachedFrom": [
         {
@@ -395,20 +406,21 @@
           "type": "icon-button",
           "label": "About and open source notices",
           "key": null,
-          "line": 584,
+          "line": 96,
           "action": "navigate",
           "target": "about",
           "targetWidget": "/about",
           "effect": "Navigator.pushNamed(context, '/about').",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/servers_state.dart"
         },
         {
           "id": "servers-welcome-connect",
           "type": "card",
-          "label": "On my computer — Connect to an agent that runs there.",
+          "label": "On my computer \u2014 Connect to an agent that runs there.",
           "key": "welcome-choice-computer",
-          "line": 957,
+          "line": 347,
           "action": "navigate",
           "target": "profile-editor",
           "targetWidget": "_ProfileEditorScreen",
@@ -421,9 +433,9 @@
         {
           "id": "servers-welcome-termux-setup",
           "type": "card",
-          "label": "On this phone — Set one up here. No computer needed.",
+          "label": "On this phone \u2014 Set one up here. No computer needed.",
           "key": "welcome-choice-phone",
-          "line": 1177,
+          "line": 340,
           "action": "navigate",
           "target": "phone-setup-start",
           "targetWidget": "openPhoneSetupStart",
@@ -437,9 +449,9 @@
         {
           "id": "servers-welcome-try-demo",
           "type": "card",
-          "label": "Just show me — A simulated conversation. No server needed.",
+          "label": "Just show me \u2014 A simulated conversation. No server needed.",
           "key": "welcome-choice-demo",
-          "line": 972,
+          "line": 296,
           "action": "navigate",
           "target": "demo",
           "targetWidget": "DemoScreen",
@@ -459,12 +471,12 @@
       "id": "servers-remove-server-sheet",
       "title": "Remove {name}?",
       "kind": "sheet",
-      "file": "lib/ui/screens/servers_screen.dart",
+      "file": "lib/ui/screens/servers/servers_actions.dart",
       "widget": "_delete",
       "presentedBy": [
         "_delete"
       ],
-      "line": 302,
+      "line": 416,
       "purpose": "Confirms removing a saved server and discloses what local data (password, model/agent choice, queued prompts, drafts, widget sessions) is deleted.",
       "reachedFrom": [
         {
@@ -507,12 +519,12 @@
       "id": "profile-editor",
       "title": "Add server | Connect with Tailscale | OpenCode 2 | Edit server | Re-enter password | Re-enter connection token | OpenCode | Agents through Paseo | Codex",
       "kind": "screen",
-      "file": "lib/ui/screens/servers_screen.dart",
+      "file": "lib/ui/screens/servers/profile_editor.dart",
       "widget": "_ProfileEditorScreen",
       "presentedBy": [
         "_edit"
       ],
-      "line": 1110,
+      "line": 3,
       "purpose": "Add server in steps (P3.9: agent-choice and connection-help folded in): what runs there (three kinds, plus this phone, Tailscale and external agents), then Tailscale as a step when that is the way, then the address or pairing (the command to run, Scan code / Paste code, the address under 'Enter the address instead'), the check (its own step while it runs; Cancel after 8 s), and a ready moment ('<name> is connected', Open <name>). A 'Step n of 4' bar leads; Back walks the steps. An http:// address on the network explains itself inline and offers Tailscale. Editing a saved server, a password to re-enter and the phone's own server stay one form.",
       "reachedFrom": [
         {
@@ -561,7 +573,7 @@
           "type": "icon-button",
           "label": "Close server editor",
           "key": null,
-          "line": 1865,
+          "line": 358,
           "action": "dismiss",
           "target": "profile-editor-discard-sheet",
           "targetWidget": "showConfirmSheet",
@@ -569,14 +581,15 @@
           "gates": [
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_pairing.dart"
         },
         {
           "id": "profile-editor-save",
           "type": "button",
-          "label": "Save & connect | Save changes | Checking the connection… | Saving…",
+          "label": "Save & connect | Save changes | Checking the connection\u2026 | Saving\u2026",
           "key": "save-server-profile",
-          "line": 1880,
+          "line": 314,
           "action": "submit",
           "target": null,
           "targetWidget": null,
@@ -591,7 +604,7 @@
           "type": "button",
           "label": "Tailscale setup and recovery",
           "key": null,
-          "line": 1910,
+          "line": 151,
           "action": "navigate",
           "target": "tailscale-setup",
           "targetWidget": "TailscaleSetupScreen",
@@ -599,14 +612,15 @@
           "gates": [
             "widget.tailscale"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_steps.dart"
         },
         {
           "id": "profile-editor-backend-opencode",
           "type": "row",
-          "label": "OpenCode on a computer — Pair with a code, or enter its address",
+          "label": "OpenCode on a computer \u2014 Pair with a code, or enter its address",
           "key": "server-backend-opencode",
-          "line": 2236,
+          "line": 302,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -617,14 +631,15 @@
             "widget.presetBackend == null",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_steps.dart"
         },
         {
           "id": "profile-editor-backend-codex",
           "type": "row",
-          "label": "Codex — The Codex app-server on your computer",
+          "label": "Codex \u2014 The Codex app-server on your computer",
           "key": "server-backend-codex",
-          "line": 2248,
+          "line": 309,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -635,14 +650,15 @@
             "widget.presetBackend == null",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_steps.dart"
         },
         {
           "id": "profile-editor-codex-name",
           "type": "text-field",
-          "label": "Display name (optional) — hint \"Defaults to the server host\"",
+          "label": "Display name (optional) \u2014 hint \"Defaults to the server host\"",
           "key": "codex-server-name-field",
-          "line": 1687,
+          "line": 76,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -651,14 +667,15 @@
             "_isCodex (backend Codex)",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-codex-address",
           "type": "text-field",
-          "label": "Server address — hint \"wss://codex.example or ws://127.0.0.1:4500\"",
+          "label": "Server address \u2014 hint \"wss://codex.example or ws://127.0.0.1:4500\"",
           "key": "codex-server-address-field",
-          "line": 1701,
+          "line": 16,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -667,14 +684,15 @@
             "_isCodex (backend Codex)",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-codex-directory",
           "type": "text-field",
-          "label": "Project folder on server — hint \"/work/my-project\"",
+          "label": "Project folder on server \u2014 hint \"/work/my-project\"",
           "key": "codex-project-directory-field",
-          "line": 1722,
+          "line": 36,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -683,14 +701,15 @@
             "_isCodex (backend Codex)",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-codex-token",
           "type": "text-field",
           "label": "Connection token | Re-enter connection token",
           "key": "codex-connection-token-field",
-          "line": 1737,
+          "line": 53,
           "action": "submit",
           "target": null,
           "targetWidget": null,
@@ -699,14 +718,15 @@
             "_isCodex (backend Codex)",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-codex-token-visibility",
           "type": "icon-button",
           "label": "Show connection token | Hide connection token",
           "key": "codex-token-visibility",
-          "line": 1763,
+          "line": 54,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -714,14 +734,15 @@
           "gates": [
             "_isCodex (backend Codex)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-codex-token-paste",
           "type": "icon-button",
           "label": "Paste connection token",
           "key": "codex-token-paste",
-          "line": 1776,
+          "line": 55,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -729,14 +750,15 @@
           "gates": [
             "_isCodex (backend Codex)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-pairing-paste",
           "type": "button",
-          "label": "Paste code | Paste pairing code (no camera; editing a saved server) | Pairing…",
+          "label": "Paste code | Paste pairing code (no camera; editing a saved server) | Pairing\u2026",
           "key": "server-pairing-paste",
-          "line": 2478,
+          "line": 140,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -746,14 +768,15 @@
             "!widget.tailscale",
             "disabled while _pairing"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_widgets.dart"
         },
         {
           "id": "profile-editor-pairing-scan",
           "type": "button",
           "label": "Scan code",
           "key": "server-pairing-scan",
-          "line": 2498,
+          "line": 147,
           "action": "navigate",
           "target": "pairing-scanner",
           "targetWidget": "PairingScannerScreen",
@@ -764,14 +787,15 @@
             "platformCapabilities.supportsQrPairing",
             "disabled while _pairing"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_widgets.dart"
         },
         {
           "id": "profile-editor-manual-address",
           "type": "expand-row",
           "label": "Enter the address instead",
           "key": "server-manual-address",
-          "line": 2726,
+          "line": 299,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -783,14 +807,15 @@
             "widget.initialUrl == null",
             "!widget.focusPassword"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-url",
           "type": "text-field",
-          "label": "Server URL — hint \"https://server.example\"",
+          "label": "Server URL \u2014 hint \"https://server.example\"",
           "key": "server-url-field",
-          "line": 2045,
+          "line": 242,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -799,14 +824,15 @@
             "!_isCodex (backend OpenCode)",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-name",
           "type": "text-field",
-          "label": "Display name (optional) — hint \"Defaults to the server host\"",
+          "label": "Display name (optional) \u2014 hint \"Defaults to the server host\"",
           "key": "server-name-field",
-          "line": 2072,
+          "line": 431,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -815,14 +841,15 @@
             "!_isCodex (backend OpenCode)",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-username",
           "type": "text-field",
-          "label": "Username (optional) — hint \"opencode\"",
+          "label": "Username (optional) \u2014 hint \"opencode\"",
           "key": "server-username-field",
-          "line": 2100,
+          "line": 445,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -831,14 +858,15 @@
             "!_isCodex (backend OpenCode)",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-password",
           "type": "text-field",
           "label": "Server password | Re-enter password",
           "key": "server-password-field",
-          "line": 2117,
+          "line": 272,
           "action": "submit",
           "target": null,
           "targetWidget": null,
@@ -847,14 +875,15 @@
             "!_isCodex (backend OpenCode)",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-password-visibility",
           "type": "icon-button",
           "label": "Show server password | Hide server password",
           "key": "server-password-visibility",
-          "line": 2153,
+          "line": 273,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -862,14 +891,15 @@
           "gates": [
             "!_isCodex (backend OpenCode)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-password-paste",
           "type": "icon-button",
           "label": "Paste server password",
           "key": "server-password-paste",
-          "line": 2174,
+          "line": 274,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -877,14 +907,15 @@
           "gates": [
             "!_isCodex (backend OpenCode)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-test-connection",
           "type": "button",
-          "label": "Test connection | Testing… (tertiary text button)",
+          "label": "Test connection | Testing\u2026 (tertiary text button)",
           "key": "test-server-connection",
-          "line": 2515,
+          "line": 313,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -892,14 +923,15 @@
           "gates": [
             "disabled while _testing"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-test-guide",
           "type": "link",
           "label": "Open the setup guide",
           "key": "server-test-guide",
-          "line": 2345,
+          "line": 289,
           "action": "navigate",
           "target": "guide",
           "targetWidget": "/guide",
@@ -907,14 +939,15 @@
           "gates": [
             "_testResult != null && !result.ok && result.suggestsMissingServer"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_widgets.dart"
         },
         {
           "id": "profile-editor-team-learn",
           "type": "button",
           "label": "Learn how",
           "key": "server-editor-team-learn",
-          "line": 2393,
+          "line": 475,
           "action": "open-sheet",
           "target": "team-host-guide-sheet",
           "targetWidget": "showTeamHostGuideSheet",
@@ -923,14 +956,15 @@
             "!_isCodex (backend OpenCode)",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-team-add",
           "type": "button",
           "label": "Add manually | Change",
           "key": "server-editor-team-add",
-          "line": 2400,
+          "line": 485,
           "action": "open-sheet",
           "target": "team-host-sheet",
           "targetWidget": "showTeamHostSheet",
@@ -939,14 +973,15 @@
             "!_isCodex (backend OpenCode)",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-backend-paseo",
           "type": "row",
-          "label": "Claude Code or Pi — Through Paseo on your computer",
+          "label": "Claude Code or Pi \u2014 Through Paseo on your computer",
           "key": "server-backend-paseo",
-          "line": 2260,
+          "line": 316,
           "action": "other",
           "target": null,
           "effect": "Answers the first step: acts on tap and opens the connect step for that kind.",
@@ -956,7 +991,8 @@
             "widget.presetBackend == null",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_steps.dart"
         },
         {
           "id": "profile-editor-command-copy",
@@ -978,21 +1014,22 @@
           "type": "list-tile",
           "label": "Show the commands",
           "key": "connect-show-commands",
-          "line": 2777,
+          "line": 61,
           "action": "other",
           "target": null,
           "effect": "expands the setup guide's other commands for this agent (older opencode serve; Paseo on a private network; Codex token and adb reverse).",
           "gates": [
             "widget.presetBackend != null (first-run computer path)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_widgets.dart"
         },
         {
           "id": "profile-editor-not-same-network",
           "type": "link",
           "label": "Not on the same network?",
           "key": "connect-not-same-network",
-          "line": 1801,
+          "line": 395,
           "action": "navigate",
           "target": "tailscale-setup",
           "targetWidget": "TailscaleSetupScreen",
@@ -1002,14 +1039,15 @@
             "platformCapabilities.supportsTailscaleHandoff",
             "disabled while _submitting"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_pairing.dart"
         },
         {
           "id": "profile-editor-save-anyway",
           "type": "link",
           "label": "Save anyway",
           "key": "server-save-anyway",
-          "line": 2558,
+          "line": 114,
           "action": "submit",
           "target": null,
           "targetWidget": null,
@@ -1017,29 +1055,31 @@
           "gates": [
             "the last failed check came from Save & connect"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-link-drawing",
           "type": "illustration",
           "label": "Phone and computer linking (decorative)",
           "key": "server-link-moment",
-          "line": 2591,
+          "line": 147,
           "action": "other",
           "target": null,
           "targetWidget": null,
-          "effect": "KitIllustration(ServersLinkScene) at 240 dp with one line under it: idle (dotted gap), linking while pairing, checking or connecting (ambient: a dot travels the link; 'Checking <host>…' / 'Connecting to <host>…' / 'Pairing…'), linked with a spark when the server answered, broken when it did not. The verdicts sit under it; every check and save scrolls back to it.",
+          "effect": "KitIllustration(ServersLinkScene) at 240 dp with one line under it: idle (dotted gap), linking while pairing, checking or connecting (ambient: a dot travels the link; 'Checking <host>\u2026' / 'Connecting to <host>\u2026' / 'Pairing\u2026'), linked with a spark when the server answered, broken when it did not. The verdicts sit under it; every check and save scrolls back to it.",
           "gates": [
             "widget.existing == null"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-back",
           "type": "icon-button",
           "label": "Back",
           "key": "server-editor-back",
-          "line": 3239,
+          "line": 344,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -1052,20 +1092,21 @@
           "type": "list-tile",
           "label": "Connect with Tailscale",
           "key": "welcome-tailscale-card",
-          "line": 3668,
+          "line": 368,
           "action": "other",
           "target": null,
           "targetWidget": null,
           "effect": "First step's other way: moves to the Tailscale step (the phone's app and VPN checklist), OpenCode over the tailnet.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_steps.dart"
         },
         {
           "id": "profile-editor-tailscale-continue",
           "type": "button",
           "label": "Continue to authentication",
           "key": "server-tailscale-continue",
-          "line": 3198,
+          "line": 299,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -1078,33 +1119,35 @@
           "type": "button",
           "label": "Stop checking",
           "key": "server-check-cancel",
-          "line": 2779,
+          "line": 346,
           "action": "other",
           "target": null,
           "targetWidget": null,
           "effect": "Offered after a check or pairing has run 8 s; the late answer is ignored.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-remote-http-tailscale",
           "type": "button",
           "label": "Use Tailscale",
           "key": "server-remote-http-tailscale",
-          "line": 2650,
+          "line": 211,
           "action": "other",
           "target": null,
           "targetWidget": null,
           "effect": "Under the error for an http:// address on the network: opens the Tailscale step.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_fields.dart"
         },
         {
           "id": "profile-editor-ready-open",
           "type": "button",
           "label": "Open <name>",
           "key": "server-ready-open",
-          "line": 3204,
+          "line": 305,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -1153,12 +1196,12 @@
       "id": "profile-editor-discard-sheet",
       "title": "Discard server changes?",
       "kind": "sheet",
-      "file": "lib/ui/screens/servers_screen.dart",
+      "file": "lib/ui/screens/servers/profile_editor_pairing.dart",
       "widget": "_close",
       "presentedBy": [
         "_close"
       ],
-      "line": 1494,
+      "line": 236,
       "purpose": "Confirms leaving the server editor with unsaved edits.",
       "reachedFrom": [
         {
@@ -1180,26 +1223,28 @@
           "type": "button",
           "label": "Discard",
           "key": null,
-          "line": 1494,
+          "line": 253,
           "action": "dismiss",
           "target": null,
           "targetWidget": null,
           "effect": "Pops the sheet with true, then Navigator.pop closes the editor without saving.",
           "gates": [],
-          "destructive": true
+          "destructive": true,
+          "file": "lib/ui/screens/servers/profile_editor_pairing.dart"
         },
         {
           "id": "profile-editor-discard-sheet-cancel",
           "type": "button",
           "label": "Keep editing",
           "key": null,
-          "line": 1494,
+          "line": 254,
           "action": "dismiss",
           "target": null,
           "targetWidget": null,
           "effect": "Pops the sheet with false; the editor stays open.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/servers/profile_editor_pairing.dart"
         }
       ]
     },
@@ -1369,7 +1414,7 @@
           "action": "external-link",
           "target": "external-link-dialog",
           "targetWidget": "openExternalLink",
-          "effect": "openExternalLink(context, Play Store URL for com.tailscale.ipn) — confirmation dialog then url launcher.",
+          "effect": "openExternalLink(context, Play Store URL for com.tailscale.ipn) \u2014 confirmation dialog then url launcher.",
           "gates": [
             "_state != TailscaleAppState.installed"
           ],
@@ -1393,7 +1438,7 @@
         {
           "id": "tailscale-setup-address",
           "type": "text-field",
-          "label": "Private HTTPS server address — hint \"https://computer.tailnet-name.ts.net\"",
+          "label": "Private HTTPS server address \u2014 hint \"https://computer.tailnet-name.ts.net\"",
           "key": null,
           "line": 173,
           "action": "submit",
@@ -1472,7 +1517,7 @@
       "purpose": "Shows copyable commands to install and start the pinned OpenCode 2 server on a remote computer, with optional USB forwarding; the app never runs them.",
       "reachedFrom": [
         {
-          "page": "server-settings",
+          "page": "server-page",
           "element": "server-settings-host-management"
         }
       ],
@@ -1483,7 +1528,7 @@
           "type": "icon-button",
           "label": "Copy command: {label}",
           "key": "copy-host-command-<label>",
-          "line": 189,
+          "line": 146,
           "action": "copy",
           "target": null,
           "targetWidget": null,
@@ -1497,7 +1542,7 @@
           "type": "link",
           "label": "Full walkthrough (opens in browser)",
           "key": "host-docs-link",
-          "line": 175,
+          "line": 97,
           "action": "external-link",
           "target": null,
           "targetWidget": null,
@@ -1508,170 +1553,19 @@
       ]
     },
     {
-      "id": "server-settings",
-      "title": "Server",
-      "kind": "screen",
-      "file": "lib/ui/screens/settings/server_settings_screen.dart",
-      "widget": "ServerSettingsScreen",
-      "presentedBy": [],
-      "line": 6,
-      "purpose": "Settings category for the connected server: identity, health check, authentication summary, profile management, host service commands and the server update flow.",
-      "reachedFrom": [
-        {
-          "page": "settings",
-          "element": "settings-category-server"
-        },
-        {
-          "page": "command-launcher-sheet",
-          "element": "chat-command-status"
-        }
-      ],
-      "gates": [],
-      "elements": [
-        {
-          "id": "server-settings-check-health",
-          "type": "icon-button",
-          "label": "Check server health",
-          "key": null,
-          "line": 208,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "_checkHealth(): controller.prepareActionTransport() then api.health(); updates the health row (server-health-checking / server-health-result).",
-          "gates": [
-            "disabled while _checking"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "server-settings-host-management",
-          "type": "list-tile",
-          "label": "Set up OpenCode 2",
-          "key": "host-management-entry",
-          "line": 274,
-          "action": "navigate",
-          "target": "host-management",
-          "targetWidget": "HostManagementScreen",
-          "effect": "Pushes HostManagementScreen(controller).",
-          "gates": [
-            "!managedLocally (not platformCapabilities.supportsTermux && TermuxBridge.managesServerUrl(profile.baseUrl))"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "server-settings-updates-gated",
-          "type": "list-tile",
-          "label": "Server updates — Upgrade from the machine running the server",
-          "key": null,
-          "line": 289,
-          "action": "other",
-          "target": null,
-          "targetWidget": null,
-          "effect": "GatedRowTile(feature: 'remote-upgrade'): explains that the capability is unavailable (behaviour defined in GatedRowTile, not in this file).",
-          "gates": [
-            "!managedLocally && !controller.capabilities.remoteUpgrade"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "server-settings-updates-managed",
-          "type": "list-tile",
-          "label": "Update managed OpenCode",
-          "key": "server-updates-tile",
-          "line": 296,
-          "action": "navigate",
-          "target": "termux-setup-installed",
-          "targetWidget": "openThisPhone",
-          "effect": "openThisPhone(context, kind: termux): update and switch live on This phone.",
-          "gates": [
-            "managedLocally"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "server-settings-updates-restart",
-          "type": "list-tile",
-          "label": "Restart OpenCode to use {version}",
-          "key": "server-updates-tile",
-          "line": 296,
-          "action": "open-dialog",
-          "target": "server-settings-restart-dialog",
-          "targetWidget": "_showRemoteRestartNotice",
-          "effect": "_showRemoteRestartNotice(installedVersion).",
-          "gates": [
-            "!managedLocally && controller.capabilities.remoteUpgrade",
-            "controller.installedServerVersion != null",
-            "disabled while _upgradingServer"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "server-settings-updates-upgrade",
-          "type": "list-tile",
-          "label": "Update OpenCode to {version}",
-          "key": "server-updates-tile",
-          "line": 296,
-          "action": "open-sheet",
-          "target": "server-settings-upgrade-sheet",
-          "targetWidget": "showConfirmSheet",
-          "effect": "_upgradeRemoteServer(availableVersion): opens the upgrade confirm sheet.",
-          "gates": [
-            "!managedLocally && controller.capabilities.remoteUpgrade",
-            "installedServerVersion == null && controller.availableServerVersion != null",
-            "disabled while _upgradingServer"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "server-settings-updates-copy",
-          "type": "list-tile",
-          "label": "Server updates are managed externally",
-          "key": "server-updates-tile",
-          "line": 296,
-          "action": "copy",
-          "target": null,
-          "targetWidget": null,
-          "effect": "_copyRemoteUpdateCommands(): copies 'opencode upgrade\\nopencode models --refresh' and shows a snackbar.",
-          "gates": [
-            "!managedLocally && controller.capabilities.remoteUpgrade",
-            "no installed or available server version"
-          ],
-          "destructive": false
-        },
-        {
-          "id": "server-settings-ai-setup",
-          "type": "list-tile",
-          "label": "AI setup",
-          "key": "ai-setup-entry",
-          "line": 362,
-          "action": "navigate",
-          "target": "ai-setup",
-          "targetWidget": "AiSetupScreen",
-          "effect": "pushKitPage(AiSetupScreen(controller, serverName)).",
-          "gates": [
-            "profile != null && controller.capabilities.setupConfigRead"
-          ],
-          "destructive": false
-        }
-      ],
-      "remarks": [
-        "part of '../settings_screen.dart'"
-      ]
-    },
-    {
       "id": "server-settings-restart-dialog",
       "title": "Restart OpenCode on its host",
       "kind": "dialog",
-      "file": "lib/ui/screens/settings/server_settings_screen.dart",
-      "widget": "_showRemoteRestartNotice",
+      "file": "lib/ui/screens/settings/server_page.dart",
+      "widget": "_showRemoteRestartSheet",
       "presentedBy": [
         "_showRemoteRestartNotice"
       ],
-      "line": 66,
+      "line": 344,
       "purpose": "Tells the user the new server version is installed and the host process must be restarted manually.",
       "reachedFrom": [
         {
-          "page": "server-settings",
+          "page": "server-page",
           "element": "server-settings-updates-restart"
         }
       ],
@@ -1688,7 +1582,8 @@
           "targetWidget": null,
           "effect": "Navigator.pop.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/settings/server_page.dart"
         }
       ]
     },
@@ -1696,7 +1591,7 @@
       "id": "server-settings-upgrade-sheet",
       "title": "Update remote OpenCode?",
       "kind": "sheet",
-      "file": "lib/ui/screens/settings/server_settings_screen.dart",
+      "file": "lib/ui/screens/settings/server_page.dart",
       "widget": "_upgradeRemoteServer",
       "presentedBy": [
         "_upgradeRemoteServer"
@@ -1705,7 +1600,7 @@
       "purpose": "Confirms installing an exact OpenCode version on the remote host.",
       "reachedFrom": [
         {
-          "page": "server-settings",
+          "page": "server-page",
           "element": "server-settings-updates-upgrade"
         }
       ],
@@ -1829,7 +1724,7 @@
       "widget": "ExternalAgentsScreen",
       "presentedBy": [],
       "line": 72,
-      "purpose": "The External agents tab of Settings › Tools (FG6): lists saved A2A external agent identities and lets the user add, open or finish deleting one. Standalone only in tests; the app opens it through openExternalAgents (Tools on this tab).",
+      "purpose": "The External agents tab of Settings \u203a Tools (FG6): lists saved A2A external agent identities and lets the user add, open or finish deleting one. Standalone only in tests; the app opens it through openExternalAgents (Tools on this tab).",
       "reachedFrom": [
         {
           "page": "servers",
@@ -1953,7 +1848,7 @@
         {
           "id": "add-agent-address",
           "type": "text-field",
-          "label": "Agent address — hint \"https://agent.example\"",
+          "label": "Agent address \u2014 hint \"https://agent.example\"",
           "key": null,
           "line": 264,
           "action": "other",
@@ -2099,11 +1994,11 @@
       "title": "New task | Update credential",
       "kind": "dialog",
       "file": "lib/ui/screens/external_agents_screen.dart",
-      "widget": "_InputDialog",
+      "widget": "showKitInputDialog",
       "presentedBy": [
         "_input"
       ],
-      "line": 568,
+      "line": 701,
       "purpose": "Single-field dialog reused for composing a new task (multiline, max 16000) and for entering a new bearer credential (obscured, max 8192).",
       "reachedFrom": [
         {
@@ -2128,7 +2023,8 @@
           "targetWidget": null,
           "effect": "Free text input; obscured and single-line when secret.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/external_agents_screen.dart"
         },
         {
           "id": "external-agent-detail-input-dialog-back",
@@ -2141,7 +2037,8 @@
           "targetWidget": null,
           "effect": "Navigator.pop with null.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/external_agents_screen.dart"
         },
         {
           "id": "external-agent-detail-input-dialog-submit",
@@ -2154,7 +2051,8 @@
           "targetWidget": null,
           "effect": "Pops with the trimmed text when non-empty; the caller saves the draft task (store.saveTask) or the credential (store.updateCredential).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/external_agents_screen.dart"
         }
       ]
     },
@@ -2250,7 +2148,7 @@
           "action": "external-link",
           "target": "external-link-dialog",
           "targetWidget": "openExternalLink",
-          "effect": "openExternalLink(context, part.url) — policy check + confirmation dialog before launching.",
+          "effect": "openExternalLink(context, part.url) \u2014 policy check + confirmation dialog before launching.",
           "gates": [
             "task part has a url"
           ],
@@ -2513,7 +2411,7 @@
         {
           "id": "embedded-profile-monitor-inbox-request-row",
           "type": "list-tile",
-          "label": "<session title | Session> / {server} · Permission|Question|Form|Check-in due",
+          "label": "<session title | Session> / {server} \u00b7 Permission|Question|Form|Check-in due",
           "key": "monitor-row-<request identity>",
           "file": "lib/ui/screens/profile_monitor_screen.dart",
           "line": 226,
@@ -2596,7 +2494,7 @@
         {
           "id": "usage-scope",
           "type": "dropdown",
-          "label": "Project scope — All projects | Current project",
+          "label": "Project scope \u2014 All projects | Current project",
           "key": "usage-scope-<scope name>",
           "line": 137,
           "action": "other",
@@ -2675,7 +2573,7 @@
         {
           "id": "usage-provider-filter",
           "type": "dropdown",
-          "label": "Provider — All providers | <provider id>",
+          "label": "Provider \u2014 All providers | <provider id>",
           "key": null,
           "line": 524,
           "action": "other",
@@ -2852,7 +2750,7 @@
       "purpose": "Review only: the server's AI settings in effect (OpenCode 1) or its ordered sources (OpenCode 2), its tool servers and suggestions; all values redacted.",
       "reachedFrom": [
         {
-          "page": "server-settings",
+          "page": "server-page",
           "element": "server-settings-ai-setup"
         },
         {
@@ -2989,7 +2887,7 @@
     "lib/ui/screens/profile_monitor_screen.dart:17 openMonitoredRequest opens one of showPermissionSheet / showQuestionSheet / presentConnectionForm / ChatScreen depending on route.kind; the request-row elements record target 'permission-sheet' only as the first branch, resolve the others by name.",
     "servers-welcome is the empty-state body of ServersScreen (same Scaffold and app bar, minus the attention button); it is recorded as its own page because its controls differ. Shared private widgets _OpenCode2Entry (line 882), _TermuxEntry (899) and _SetupOptions (915) are recorded once per host page with the call-site line for the first two and the widget line for _SetupOptions rows.",
     "lib/ui/screens/servers_screen.dart:1857 the profile editor has no ValueKey-less system-back element of its own: PopScope(canPop: false) routes back to _close(), recorded on profile-editor-close.",
-    "lib/ui/screens/settings/server_settings_screen.dart:294 GatedRowTile behaviour (tap/explainer) is defined outside the assigned files.",
+    "lib/ui/screens/settings/server_page.dart:294 GatedRowTile behaviour (tap/explainer) is defined outside the assigned files.",
     "AgentAccountScreen is only reachable from the servers list overflow menu (grep found no other constructor call in lib/).",
     "UX phase 3b (2026-09-19): servers-welcome reduced to one question and three choices; agent-choice added; profile-editor gained the first-run connect screen (command, Show the commands, Not on the same network?, automatic test).",
     "slice P1.3/P1.5 (2026-09-27): every Servers door that pushed /termux-setup now opens This phone (termux-setup-installed) or phone setup start."

@@ -57,4 +57,27 @@ void main() {
     await tester.tap(find.text('Running'));
     expect(taps, 1);
   });
+
+  testWidgets('.opens is a button, never a toggle', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var taps = 0;
+    await tester.pumpWidget(
+      _host(
+        KitFilterChip.opens(
+          label: 'Needs you · 2',
+          needsYou: true,
+          onPressed: () => taps++,
+        ),
+      ),
+    );
+    await tester.tap(find.text('Needs you · 2'));
+    expect(taps, 1);
+    final data = tester
+        .getSemantics(find.text('Needs you · 2'))
+        .getSemanticsData();
+    expect(data.flagsCollection.isButton, isTrue);
+    // No selected check: it never reads as a filter that is on.
+    expect(find.byKey(const ValueKey('kit-chip-check')), findsNothing);
+    semantics.dispose();
+  });
 }

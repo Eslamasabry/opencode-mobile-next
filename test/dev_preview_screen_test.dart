@@ -64,8 +64,20 @@ void main() {
       expect(web.cacheClears, greaterThanOrEqualTo(1));
       expect(web.storageClears, greaterThanOrEqualTo(1));
       expect(platform.cookieClears, greaterThanOrEqualTo(1));
-      expect(find.text('Preview'), findsOneWidget);
-      expect(find.text('127.0.0.1:5173'), findsOneWidget);
+      // The bar says "Preview" alone; the address is under Details.
+      expect(
+        tester
+            .widget<Text>(
+              find.descendant(
+                of: find.byKey(const ValueKey('dev-preview-title')),
+                matching: find.byType(Text),
+              ),
+            )
+            .data,
+        'Preview',
+      );
+      expect(find.textContaining('localhost:5173'), findsNothing);
+      expect(find.textContaining('127.0.0.1'), findsNothing);
       expect(
         find.byKey(const ValueKey('dev-preview-remote-note')),
         findsNothing,
@@ -90,21 +102,136 @@ void main() {
 
   group('a remote server', () {
     testWidgets(
-      'loads the server host and says the dev server must listen on 0.0.0.0',
+      'loads the server host; the 0.0.0.0 note is under Details and on failure',
       (tester) async {
         await pumpScreen(tester, _remote());
         expect(
           platform.controller!.loaded.single.toString(),
           'http://100.64.1.2:5173/',
         );
+        // A page that answers needs no note.
+        expect(
+          find.byKey(const ValueKey('dev-preview-remote-note')),
+          findsNothing,
+        );
+        await tester.tap(find.byKey(const ValueKey('dev-preview-title')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('dev-preview-details')), findsOne);
+        expect(find.textContaining('0.0.0.0'), findsOneWidget);
+        expect(find.textContaining('http://100.64.1.2:5173/'), findsOneWidget);
+        await tester.tapAt(const Offset(10, 10));
+        await tester.pumpAndSettle();
+        platform.delegate!.onError!(
+          const WebResourceError(
+            errorCode: -6,
+            description: 'refused',
+            isForMainFrame: true,
+          ),
+        );
+        await tester.pumpAndSettle();
         expect(
           find.byKey(const ValueKey('dev-preview-remote-note')),
           findsOneWidget,
         );
-        expect(find.textContaining('0.0.0.0'), findsOneWidget);
-        expect(find.textContaining('100.64.1.2'), findsWidgets);
       },
     );
+  });
+
+  group('ask for a change', () {
+    Future<List<String>> pumpWithConversation(
+      WidgetTester tester, {
+      Object? fail,
+      DevPreviewDelivery delivery = DevPreviewDelivery.now,
+    }) async {
+      final sent = <String>[];
+      await tester.pumpWidget(
+        _app(
+          DevPreviewScreen(
+            target: _phone(),
+            supported: true,
+            voiceSupported: false,
+            conversation: DevPreviewConversation(
+              delivery: () => delivery,
+              send: (text) async {
+                if (fail != null) throw fail;
+                sent.add(text);
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      platform.delegate?.onFinished?.call(_phone().uri.toString());
+      await tester.pumpAndSettle();
+      return sent;
+    }
+
+    final field = find.byKey(const ValueKey('dev-preview-ask-field'));
+    final send = find.byKey(const ValueKey('dev-preview-ask-send'));
+
+    testWidgets('no conversation, no field', (tester) async {
+      await pumpScreen(tester, _phone());
+      expect(field, findsNothing);
+    });
+
+    testWidgets('sends the words into the conversation and says so', (
+      tester,
+    ) async {
+      final sent = await pumpWithConversation(tester);
+      expect(find.text('Ask for a change…'), findsOneWidget);
+      await tester.enterText(field, '  Make the ball faster  ');
+      await tester.pump();
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+      expect(sent, ['Make the ball faster']);
+      expect(find.text('Sent to the conversation'), findsOneWidget);
+      expect(find.text('Make the ball faster'), findsNothing);
+      // The line leaves by itself.
+      await tester.pump(const Duration(seconds: 6));
+      await tester.pumpAndSettle();
+      expect(find.text('Sent to the conversation'), findsNothing);
+    });
+
+    testWidgets('while the agent works it says the words joined the work', (
+      tester,
+    ) async {
+      await pumpWithConversation(
+        tester,
+        delivery: DevPreviewDelivery.joinsTurn,
+      );
+      await tester.enterText(field, 'Bigger paddle');
+      await tester.pump();
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+      expect(find.text('Added to what the agent is doing'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 6));
+    });
+
+    testWidgets('a failed send keeps the words and never shows the error', (
+      tester,
+    ) async {
+      final sent = await pumpWithConversation(
+        tester,
+        fail: StateError('HTTP 502 upstream'),
+      );
+      await tester.enterText(field, 'Bigger paddle');
+      await tester.pump();
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+      expect(sent, isEmpty);
+      expect(find.text("Didn't send. Your words are still here"), findsOne);
+      expect(find.text('Bigger paddle'), findsOneWidget);
+      expect(find.textContaining('502'), findsNothing);
+      await tester.pump(const Duration(seconds: 6));
+    });
+
+    testWidgets('Send is off until there are words', (tester) async {
+      final sent = await pumpWithConversation(tester);
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+      expect(sent, isEmpty);
+    });
   });
 
   group('staying on one origin', () {

@@ -345,6 +345,64 @@ void main() {
     });
   }
 
+  // Jitter J3 (2026-10-28): the list first painted the agents' saved rows
+  // alone and OpenCode's rows arrived 2 s later, in the middle of them. The
+  // server's own rows from its last full read are there from the start and
+  // the live rows take their places without moving anything.
+  testWidgets('the last full read stands in until the first read of a start', (
+    tester,
+  ) async {
+    final store = await _store();
+    final first = _Harness(store);
+    try {
+      first.script.global = [
+        _global('newest', '/work/one'),
+        _global('older', '/work/two'),
+      ];
+      await first.connect();
+      for (final channel in first.channels) {
+        channel.onStatus(StreamStatus.connected);
+      }
+      await tester.pump(const Duration(seconds: 2));
+      expect(first.script.globalCalls, 1);
+    } finally {
+      first.controller.dispose();
+    }
+    await tester.pump();
+
+    final next = _Harness(store);
+    try {
+      final held = Completer<ServerPage<GlobalSessionResult>>();
+      next.script.heldGlobal = held;
+      await next.connect();
+      for (final channel in next.channels) {
+        channel.onStatus(StreamStatus.connected);
+      }
+      await tester.pump();
+      final saved = next.controller.chatFeed();
+      expect(saved.loading, isFalse);
+      expect(saved.items.map((item) => item.sessionID), ['newest', 'older']);
+      await tester.pump(const Duration(seconds: 2));
+      expect(next.script.globalCalls, 1);
+      held.complete(
+        ServerPage(
+          items: [
+            _global('newest', '/work/one'),
+            _global('older', '/work/two'),
+          ],
+        ),
+      );
+      await tester.pump();
+      final live = next.controller.chatFeed();
+      expect(
+        live.items.map((item) => item.identity),
+        saved.items.map((item) => item.identity),
+      );
+    } finally {
+      next.controller.dispose();
+    }
+  });
+
   testWidgets('runtime switches do not join a retired slow fetch', (
     tester,
   ) async {

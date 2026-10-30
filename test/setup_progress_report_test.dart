@@ -36,20 +36,21 @@ Widget _app(
   ),
 );
 
-/// Every line the report page's job log panel holds.
-List<String> _panelLines(WidgetTester tester) => [
-  for (final line
-      in tester
-          .widget<KitLogPanel>(
-            find.ancestor(
-              of: _key('report-problem-job-log'),
-              matching: find.byType(KitLogPanel),
-            ),
-          )
-          .lines
-          .value)
-    line.text,
-];
+/// The job log lines the report carries, read from Details (exactly what
+/// is sent): the lines after "Failed job log (last lines)".
+Future<List<String>> _panelLines(WidgetTester tester) async {
+  if (_key('report-problem-preview-text').evaluate().isEmpty) {
+    await tester.ensureVisible(_key('report-problem-details'));
+    await tester.pumpAndSettle();
+    await tester.tap(_key('report-problem-details'));
+    await tester.pumpAndSettle();
+  }
+  final text = tester.widget<KitText>(_key('report-problem-preview-text')).text;
+  final lines = text.split('\n');
+  final start = lines.indexOf('Failed job log (last lines)');
+  if (start < 0) return const [];
+  return lines.skip(start + 1).takeWhile((line) => line.isNotEmpty).toList();
+}
 
 void main() {
   setUp(() {
@@ -151,7 +152,10 @@ void main() {
     await tester.tap(_key('setup-progress-report-python'));
     await tester.pumpAndSettle();
     expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
-    expect(_panelLines(tester).last, 'E: Unable to locate python3-venv');
+    expect(
+      (await _panelLines(tester)).last,
+      'E: Unable to locate python3-venv',
+    );
   });
 
   testWidgets('a job that failed between components reports the whole job '
@@ -182,7 +186,7 @@ void main() {
     await tester.tap(_key('setup-progress-report-job'));
     await tester.pumpAndSettle();
     expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
-    expect(_panelLines(tester).last, 'server exited 1');
+    expect((await _panelLines(tester)).last, 'server exited 1');
   });
 
   testWidgets('a running job offers no report', (tester) async {

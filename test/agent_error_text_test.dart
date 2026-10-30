@@ -28,6 +28,11 @@ void main() {
       'You exceeded your current quota, please check your plan':
           AgentErrorCause.outOfCredit,
       'ENOSPC: no space left on device, write': AgentErrorCause.serverDiskFull,
+      // OpenCode's own plan limits, seen on the owner's phone and emulator.
+      'Free usage limit reached. Subscribe to OpenCode Go to keep going: '
+              'https://opencode.ai/go':
+          AgentErrorCause.usageLimit,
+      'Go usage limit exceeded': AgentErrorCause.usageLimit,
     };
     for (final entry in cases.entries) {
       expect(classifyAgentError(entry.key), entry.value, reason: entry.key);

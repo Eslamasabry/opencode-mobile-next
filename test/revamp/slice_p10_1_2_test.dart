@@ -29,6 +29,7 @@ import 'package:opencode_mobile/ui/widgets/session_menu.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'chat_3_support.dart';
+import '../support/composer_tools.dart';
 
 class _Api extends Chat3Api {
   _Api({this.caps = testServerCapabilities, List<Session>? sessionList})
@@ -162,7 +163,7 @@ Future<void> _openMenu(WidgetTester tester) async {
 }
 
 Future<void> _openSheet(WidgetTester tester) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('composer-tool-commands')));
   await tester.pumpAndSettle();

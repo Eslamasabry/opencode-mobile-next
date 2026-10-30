@@ -841,4 +841,30 @@ void main() {
     final field = KitField(label: 'Name', controller: controller);
     expect(field.toStringDeep(), isNot(contains('private words')));
   });
+
+  testWidgets('optional says so at the end of the label line; plain fields '
+      'do not', (tester) async {
+    final controller = TextEditingController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _host(
+        KitField(
+          label: 'Anything to add?',
+          controller: controller,
+          optional: true,
+        ),
+      ),
+    );
+    expect(find.text('Optional'), findsOneWidget);
+    // On the label's line, after the label.
+    final label = tester.getRect(find.text('Anything to add?'));
+    final optional = tester.getRect(find.text('Optional'));
+    expect(optional.left, greaterThan(label.right));
+    expect((optional.center.dy - label.center.dy).abs(), lessThan(4));
+
+    await tester.pumpWidget(
+      _host(KitField(label: 'Name', controller: controller)),
+    );
+    expect(find.text('Optional'), findsNothing);
+  });
 }

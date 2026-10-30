@@ -233,18 +233,20 @@ class ProfileStore {
     }
   }
 
-  /// What the retired liquid glass crash guard left on the device: its
-  /// strike counters. Nothing reads them any more.
-  static const retiredGlassPreferenceKeys = [
+  /// Keys nothing reads any more: the retired liquid glass crash guard's
+  /// strike counters, and the live background's old on/off (it went off by
+  /// default on 2026-10-26 and moved to a new key).
+  static const retiredPreferenceKeys = [
     'oc.glassLiquidActive',
     'oc.glassLiquidStrikes',
     'oc.glassLiquidOffUntil',
+    'oc.effectsLiveBackground',
   ];
 
-  /// Drops [retiredGlassPreferenceKeys]. Runs on every load; a key the
-  /// store refuses to drop stays for the next load.
-  Future<void> _retireGlassPreferences() async {
-    for (final key in retiredGlassPreferenceKeys) {
+  /// Drops [retiredPreferenceKeys]. Runs on every load; a key the store
+  /// refuses to drop stays for the next load.
+  Future<void> _retirePreferences() async {
+    for (final key in retiredPreferenceKeys) {
       if (!prefs.containsKey(key)) continue;
       try {
         await prefs.remove(key);
@@ -276,7 +278,7 @@ class ProfileStore {
 
   Future<List<ServerProfile>> load() async {
     await _retireQuotaBudgets();
-    await _retireGlassPreferences();
+    await _retirePreferences();
     final raw = prefs.getString(_profilesKey);
     if (raw == null) {
       _cache = [];
@@ -1311,6 +1313,9 @@ class ProfileStore {
   ThemePackId get themePack => appPreferences.value.themePack;
   KitEffects get effects => appPreferences.value.effects;
   KitTextSize get textSize => appPreferences.value.textSize;
+  String? get appearanceAccent => appPreferences.value.accent;
+  Future<void> setAppearanceAccent(String? value) =>
+      appPreferences.setAccent(value);
   Future<void> setTextSize(KitTextSize value) =>
       appPreferences.setTextSize(value);
   Future<void> setAppearance(AppAppearance value) =>

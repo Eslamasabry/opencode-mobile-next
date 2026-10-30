@@ -22,8 +22,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xterm/xterm.dart';
 
 import 'support/first_run_path.dart';
-import 'support/server_editor.dart';
+import 'support/part_semantics.dart';
 import 'support/product_ui_regression_fixtures.dart';
+import 'support/server_editor.dart';
 
 class _MemoryChannel implements TerminalChannel {
   final controller = StreamController<String>();
@@ -221,7 +222,6 @@ void main() {
     await tester.pump();
 
     expect(find.text('Connecting to Saved server'), findsOneWidget);
-    expect(find.byType(KitNavBar), findsNothing);
     expect(find.byType(KitNavRail), findsNothing);
 
     ready.complete();
@@ -317,7 +317,7 @@ void main() {
     expect(find.byType(TerminalSurface), findsNothing);
     expect(newRepository.terminalLoads, 1);
     expect(
-      tester.getSemantics(find.byKey(const ValueKey('terminal-new'))),
+      partSemantics(tester, find.byKey(const ValueKey('terminal-new'))),
       isSemantics(isEnabled: true, hasTapAction: true),
     );
   });

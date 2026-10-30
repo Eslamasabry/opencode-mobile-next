@@ -75,12 +75,14 @@ void main() {
       final seen = <String>[screenText(tester).join('\n')];
       await writeCasePng(tester, boundary, 'term_$id');
       if (variant['kind'] == 'pty_list') {
-        // Open each terminal: its own page says more than its row.
+        // Show each terminal (its tab): its Details say what runs.
         for (var i = 0; i < repo.terminals.length; i++) {
-          await tester.tap(
-            find.text(repo.terminals[i].title).first,
-            warnIfMissed: false,
+          final tab = find.byKey(
+            ValueKey('terminal-session-${repo.terminals[i].id}'),
           );
+          if (tab.evaluate().isNotEmpty) {
+            await tester.tap(tab, warnIfMissed: false);
+          }
           await frames(tester, 12);
           seen.add(screenText(tester).join('\n'));
           if (i == 0) await writeCasePng(tester, boundary, 'term_${id}_open');

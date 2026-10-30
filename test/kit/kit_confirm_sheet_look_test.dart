@@ -50,20 +50,29 @@ Future<bool?> Function() _open(
   return () async => result;
 }
 
-/// The one 44 dp header tile the confirmation draws.
-BoxDecoration _tile(WidgetTester tester, KitTokens tokens) {
-  final tile = tester.widget<Container>(
-    find.descendant(
-      of: find.byType(KitConfirmSheet),
-      matching: find.byWidgetPredicate(
-        (w) =>
-            w is Container &&
-            w.constraints?.maxWidth == tokens.markSize &&
-            w.constraints?.maxHeight == tokens.markSize,
-      ),
+/// The one 44 dp header tile the confirmation draws: the fill and corners
+/// it paints (under Solid, its surface's Material).
+({Color? color, BorderRadiusGeometry? borderRadius}) _tile(
+  WidgetTester tester,
+  KitTokens tokens,
+) {
+  final square = find.descendant(
+    of: find.byType(KitConfirmSheet),
+    matching: find.byWidgetPredicate(
+      (w) =>
+          w is SizedBox &&
+          w.width == tokens.markSize &&
+          w.height == tokens.markSize,
     ),
   );
-  return tile.decoration! as BoxDecoration;
+  final tile = tester.widget<Material>(
+    find.ancestor(of: square, matching: find.byType(Material)).first,
+  );
+  final shape = tile.shape;
+  return (
+    color: tile.color,
+    borderRadius: shape is RoundedRectangleBorder ? shape.borderRadius : null,
+  );
 }
 
 Iterable<IconData?> _consequenceIcons(WidgetTester tester) => tester

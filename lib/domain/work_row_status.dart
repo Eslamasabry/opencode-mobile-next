@@ -44,6 +44,9 @@ class WorkRowFacts {
     required bool needsYou,
     RunResult? result,
     Iterable<Todo>? todos,
+    // This app stopped the latest turn: OpenCode 2 reports that as a normal
+    // finish, which is not "Done".
+    bool stoppedByPerson = false,
   }) {
     final plan = todos?.toList();
     final phase = needsYou
@@ -51,6 +54,8 @@ class WorkRowFacts {
         : busy
         ? WorkRowPhase.working
         : switch (result?.outcome.kind) {
+            RunOutcomeKind.completed when stoppedByPerson =>
+              WorkRowPhase.stopped,
             RunOutcomeKind.completed => WorkRowPhase.done,
             RunOutcomeKind.failed ||
             RunOutcomeKind.cutOff => WorkRowPhase.failed,

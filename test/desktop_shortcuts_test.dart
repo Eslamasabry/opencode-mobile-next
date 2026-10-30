@@ -327,7 +327,7 @@ void main() {
     });
 
     desktopTest('Ctrl+1..3 switch the shell destinations', (tester) async {
-      tester.view.physicalSize = const Size(390, 844);
+      tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -357,7 +357,7 @@ void main() {
     desktopTest(
       'Ctrl+1..3 and Ctrl+` return to the shell from a pushed route',
       (tester) async {
-        tester.view.physicalSize = const Size(390, 844);
+        tester.view.physicalSize = const Size(1280, 800);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
@@ -409,7 +409,7 @@ void main() {
     desktopTest('Ctrl+F focuses the Files find field, and only there', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(390, 844);
+      tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -524,7 +524,8 @@ void main() {
         findsNothing,
       );
       expect(find.text('Keyboard shortcuts'), findsNothing);
-      await tester.tap(find.byIcon(AppIconography.settings));
+      // No navigation bar on a phone: the gear opens Settings.
+      await tester.tap(find.byKey(const ValueKey('home-shell-settings')));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('settings-hub-list')), findsOneWidget);
       expect(

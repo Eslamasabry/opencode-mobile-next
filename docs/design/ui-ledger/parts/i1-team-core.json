@@ -53,8 +53,8 @@
           "type": "button",
           "label": "Try again",
           "key": null,
-          "file": "lib/ui/widgets/product_states.dart",
-          "line": 240,
+          "file": "lib/ui/screens/team/team_home_screen.dart",
+          "line": 313,
           "action": "mutate",
           "target": null,
           "effect": "ProductErrorState.onRetry -> _refresh(): controller.retry() when phase == failed, else controller.refresh().",
@@ -82,7 +82,7 @@
         {
           "id": "team-home-planning-card",
           "type": "card",
-          "label": "[Planning… (Mayor) card per pending Start-a-run request]",
+          "label": "[Planning\u2026 (Mayor) card per pending Start-a-run request]",
           "key": null,
           "file": "lib/ui/screens/team/start_run_sheet.dart",
           "line": 299,
@@ -142,7 +142,7 @@
         {
           "id": "team-home-runs-filter-menu",
           "type": "icon-button",
-          "label": "Filters · <current filter>",
+          "label": "Filters \u00b7 <current filter>",
           "key": "team-home-filter-menu",
           "line": 573,
           "action": "other",
@@ -196,7 +196,7 @@
         {
           "id": "team-home-runs-row",
           "type": "list-tile",
-          "label": "<run title> · <kind> · {done} of {total} done · <state word> [Needs you]",
+          "label": "<run title> \u00b7 <kind> \u00b7 {done} of {total} done \u00b7 <state word> [Needs you]",
           "key": "team-home-run-<run.id>",
           "line": 756,
           "action": "navigate",
@@ -209,7 +209,7 @@
         {
           "id": "team-home-needs-you-gate-row",
           "type": "list-tile",
-          "label": "<gate title> · <kind word> · <run/work link> · <age>",
+          "label": "<gate title> \u00b7 <kind word> \u00b7 <run/work link> \u00b7 <age>",
           "key": "team-home-gate-<gate.id>",
           "line": 895,
           "action": "open-sheet",
@@ -271,7 +271,7 @@
         }
       ],
       "gates": [
-        "only while the team is on; off, Settings › AI Team opens team-intro",
+        "only while the team is on; off, Settings \u203a AI Team opens team-intro",
         "Change address needs a team found at an address; phone controls only on the phone's Termux team"
       ],
       "elements": [
@@ -323,7 +323,7 @@
         {
           "id": "team-home-host-row",
           "type": "list-tile",
-          "label": "Technical details · <how fast it runs there>",
+          "label": "Technical details \u00b7 <how fast it runs there>",
           "key": "team-home-host-row",
           "line": 344,
           "action": "open-sheet",
@@ -336,7 +336,7 @@
         {
           "id": "team-home-upkeep-row",
           "type": "list-tile",
-          "label": "Team upkeep · {kind} ×{count} · {state}",
+          "label": "Team upkeep \u00b7 {kind} \u00d7{count} \u00b7 {state}",
           "key": "team-home-upkeep-row",
           "line": 309,
           "action": "other",
@@ -350,7 +350,7 @@
         {
           "id": "team-home-runs-agents-row",
           "type": "list-tile",
-          "label": "Agents · {n} roles",
+          "label": "Agents \u00b7 {n} roles",
           "key": "team-home-agents-row",
           "line": 296,
           "action": "navigate",
@@ -438,7 +438,7 @@
       "widget": "TeamAgentsScreen",
       "presentedBy": [],
       "line": 1,
-      "purpose": "The team's roles (Product, Frontend, Backend, Tester, General and the person's own), one list by urgency: a role a live worker is working for now first (\"Working on <task> · 4 min\"), then the rest (\"Uses <model> · 3 tasks\"). Live workers are not rows of their own: a worker shows as the role its task was given to, or as Worker when that is unknown. A row opens the role page; the pinned New role opens it in create mode.",
+      "purpose": "The team's roles (Product, Frontend, Backend, Tester, General and the person's own), one list by urgency: a role a live worker is working for now first (\"Working on <task> \u00b7 4 min\"), then the rest (\"Uses <model> \u00b7 3 tasks\"). Live workers are not rows of their own: a worker shows as the role its task was given to, or as Worker when that is unknown. A row opens the role page; the pinned New role opens it in create mode.",
       "reachedFrom": [
         {
           "page": "team-settings",
@@ -452,7 +452,7 @@
         {
           "id": "team-agents-role-row",
           "type": "list-tile",
-          "label": "<role> · Working on <task> · <age> / Uses <model> · <n> tasks",
+          "label": "<role> \u00b7 Working on <task> \u00b7 <age> / Uses <model> \u00b7 <n> tasks",
           "key": "team-role-<role.id>",
           "line": 1,
           "action": "navigate",
@@ -465,7 +465,7 @@
         {
           "id": "team-agents-worker-row",
           "type": "list-tile",
-          "label": "Worker · Working on <task> · <age>",
+          "label": "Worker \u00b7 Working on <task> \u00b7 <age>",
           "key": "team-role-worker-<agent.id>",
           "line": 1,
           "action": "navigate",
@@ -562,7 +562,7 @@
         {
           "id": "team-role-model",
           "type": "list-tile",
-          "label": "Model · <model or Team's model>",
+          "label": "Model \u00b7 <model or Team's model>",
           "key": "team-role-model",
           "line": 1,
           "action": "other",
@@ -678,7 +678,7 @@
     },
     {
       "id": "team-agent",
-      "title": "<agent name> (Agent · session {id})",
+      "title": "<agent name> (Agent \u00b7 session {id})",
       "kind": "screen",
       "file": "lib/ui/screens/team/agent_screen.dart",
       "widget": "AgentScreen",
@@ -734,8 +734,8 @@
           "type": "button",
           "label": "Try again",
           "key": null,
-          "file": "lib/ui/widgets/product_states.dart",
-          "line": 240,
+          "file": "lib/ui/screens/team/agent_screen.dart",
+          "line": 174,
           "action": "mutate",
           "target": null,
           "effect": "ProductErrorState.onRetry -> _refresh(): controller.retry() when phase == failed, else controller.refresh().",
@@ -1036,7 +1036,7 @@
       "title": "[Gate answer receipt chip]",
       "kind": "overlay",
       "file": "lib/ui/widgets/team_receipt.dart",
-      "widget": "teamGateRowReceipt",
+      "widget": "teamGateReceiptSpan",
       "presentedBy": [],
       "line": 86,
       "purpose": "Trailing KitReceipt on a needs-you gate row once an answer left this phone: Sending / Not confirmed yet / Not accepted (teamGateRowReceipt; the TeamReceiptChip wrapper is deleted).",
@@ -1058,7 +1058,8 @@
           "gates": [
             "`record == null || record.status == MutationStatus.confirmed` is false (teamGateMutation(team, gate))"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/widgets/team_receipt.dart"
         }
       ],
       "embeddedIn": [
@@ -1082,7 +1083,7 @@
         }
       ],
       "gates": [
-        "TeamPage while connection.profile?.orchestration == null (openTeamPage from Settings › AI Team, Plugins, search, New conversation's Team)",
+        "TeamPage while connection.profile?.orchestration == null (openTeamPage from Settings \u203a AI Team, Plugins, search, New conversation's Team)",
         "the server kind (teamServerKindOf): OpenCode inside the app, OpenCode in Termux (the phone's pre-flight decides between set-up and 'cannot run it'), or a computer (TeamDiscovery probes the host)"
       ],
       "elements": [
@@ -1187,7 +1188,7 @@
         "openTeamBoard"
       ],
       "line": 75,
-      "purpose": "The AI Team's board (docs/design/team-board-2026-09-26.md): a project's tasks in five columns (Backlog/Ready/Working/Review/Done), one page at a time; a card opens its conversation (or its Work sheet when it belongs to no task), its ⋯ or a long press opens the move sheet.",
+      "purpose": "The AI Team's board (docs/design/team-board-2026-09-26.md): a project's tasks in five columns (Backlog/Ready/Working/Review/Done), one page at a time; a card opens its conversation (or its Work sheet when it belongs to no task), its \u22ef or a long press opens the move sheet.",
       "reachedFrom": [
         {
           "page": "team-home",
@@ -1296,8 +1297,8 @@
           "type": "card",
           "label": "<task title>",
           "key": "team-board-card-<id>",
-          "file": "lib/ui/widgets/team_board_card.dart",
-          "line": 327,
+          "file": "lib/ui/screens/team/team_board_screen.dart",
+          "line": 274,
           "action": "navigate",
           "target": "team-conversation",
           "targetWidget": "TeamConversation.open",
@@ -1311,7 +1312,7 @@
           "label": "Move or change",
           "key": "team-board-card-more-<id>",
           "file": "lib/ui/widgets/team_board_card.dart",
-          "line": 299,
+          "line": 227,
           "action": "open-sheet",
           "target": "team-board-move-sheet",
           "targetWidget": "showTeamBoardMoveSheet",
@@ -1326,12 +1327,12 @@
           "type": "gesture",
           "label": "[long press on a card]",
           "key": "team-board-card-<id>",
-          "file": "lib/ui/widgets/team_board_card.dart",
-          "line": 248,
+          "file": "lib/ui/screens/team/team_board_screen.dart",
+          "line": 262,
           "action": "open-sheet",
           "target": "team-board-move-sheet",
           "targetWidget": "showTeamBoardMoveSheet",
-          "effect": "GestureDetector.onLongPress -> _showMoves(card): showTeamBoardMoveSheet (same sheet as the card's ⋯ button; unconditional, even when onMoves is hidden, in which case the sheet only offers Open conversation/details and says why there are no moves).",
+          "effect": "GestureDetector.onLongPress -> _showMoves(card): showTeamBoardMoveSheet (same sheet as the card's \u22ef button; unconditional, even when onMoves is hidden, in which case the sheet only offers Open conversation/details and says why there are no moves).",
           "gates": [],
           "destructive": false
         }
@@ -1342,11 +1343,11 @@
       "title": "<task title>",
       "kind": "sheet",
       "file": "lib/ui/widgets/team_board_move_sheet.dart",
-      "widget": "_MoveSheet",
+      "widget": "showTeamBoardMoveSheet",
       "presentedBy": [
         "showTeamBoardMoveSheet"
       ],
-      "line": 57,
+      "line": 48,
       "purpose": "The moves available for one card (start now, back to backlog, change priority, reopen, cancel) plus Open conversation/Open details; no gesture moves a card by itself.",
       "reachedFrom": [
         {
@@ -1372,7 +1373,8 @@
           "gates": [
             "moves.contains(TeamBoardMove.startNow)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/widgets/team_board_move_sheet.dart"
         },
         {
           "id": "team-board-move-backToBacklog",
@@ -1386,7 +1388,8 @@
           "gates": [
             "moves.contains(TeamBoardMove.backToBacklog)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/widgets/team_board_move_sheet.dart"
         },
         {
           "id": "team-board-move-priority",
@@ -1401,7 +1404,8 @@
           "gates": [
             "moves.contains(TeamBoardMove.priority)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/widgets/team_board_move_sheet.dart"
         },
         {
           "id": "team-board-move-reopen",
@@ -1415,7 +1419,8 @@
           "gates": [
             "moves.contains(TeamBoardMove.reopen)"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/widgets/team_board_move_sheet.dart"
         },
         {
           "id": "team-board-move-open",
@@ -1428,7 +1433,8 @@
           "targetWidget": "TeamConversation.open",
           "effect": "onTap: pops TeamBoardChoseOpen(); the board's _showMoves() then calls _open(card) -> openTeamBoardCard, same target as the card's own tap (team-board-card).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/widgets/team_board_move_sheet.dart"
         },
         {
           "id": "team-board-move-cancel",
@@ -1443,7 +1449,8 @@
           "gates": [
             "moves.contains(TeamBoardMove.cancel)"
           ],
-          "destructive": true
+          "destructive": true,
+          "file": "lib/ui/widgets/team_board_move_sheet.dart"
         }
       ]
     },
@@ -1482,7 +1489,7 @@
     },
     {
       "id": "team-board-cancel-confirm-sheet",
-      "title": "Cancel “{title}”?",
+      "title": "Cancel \u201c{title}\u201d?",
       "kind": "sheet",
       "file": "lib/ui/widgets/team_board_move_sheet.dart",
       "widget": "confirmTeamBoardCancel",
@@ -1491,7 +1498,7 @@
         "showConfirmSheet"
       ],
       "line": 206,
-      "purpose": "Confirms before cancelling a backlog/ready task (§2: destructive, confirmed).",
+      "purpose": "Confirms before cancelling a backlog/ready task (\u00a72: destructive, confirmed).",
       "reachedFrom": [
         {
           "page": "team-board-move-sheet",
@@ -1540,7 +1547,7 @@
         "TeamConversation.start"
       ],
       "line": 37,
-      "purpose": "The AI Team task as a conversation (docs/design/team-conversation-2026-09-26.md): the task's prompt, the lead's narrated reply (a step that is the task itself is 'it', never its words again), the agent strip under the header, tappable steps, gate cards, a 'No progress for …' notice with Nudge/Restart/Report when the task has stalled, the merge section, and a composer that messages the worker (or planner) through the team's own message control. Task details (menu) holds what the retired run page showed.",
+      "purpose": "The AI Team task as a conversation (docs/design/team-conversation-2026-09-26.md): the task's prompt, the lead's narrated reply (a step that is the task itself is 'it', never its words again), the agent strip under the header, tappable steps, gate cards, a 'No progress for \u2026' notice with Nudge/Restart/Report when the task has stalled, the merge section, and a composer that messages the worker (or planner) through the team's own message control. Task details (menu) holds what the retired run page showed.",
       "reachedFrom": [
         {
           "page": "team-board",
@@ -1629,7 +1636,7 @@
           "action": "open-sheet",
           "target": "team-conversation-stop-confirm-sheet",
           "targetWidget": "showConfirmSheet",
-          "effect": "_stop(run): opens the confirm sheet 'Stop this task?' (P0.4); the receipt 'Stop task · Sent / Confirmed / Refused' then shows in the conversation (key team-conversation-stop-receipt).",
+          "effect": "_stop(run): opens the confirm sheet 'Stop this task?' (P0.4); the receipt 'Stop task \u00b7 Sent / Confirmed / Refused' then shows in the conversation (key team-conversation-stop-receipt).",
           "gates": [
             "run != null",
             "team.capabilities.controlCancelRun",
@@ -1642,14 +1649,15 @@
           "type": "list-tile",
           "label": "Earlier ({count})",
           "key": "team-conversation-lead-earlier",
-          "line": 557,
+          "line": 88,
           "action": "other",
           "target": null,
           "effect": "_FoldLine.onTap: toggles expansion[_TeamLeadReply._storeKey], folding/unfolding the lead's earlier lines.",
           "gates": [
             "more than 3 lead lines"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/team_conversation_parts.dart"
         },
         {
           "id": "team-conversation-family-agent",
@@ -1684,14 +1692,15 @@
           "type": "button",
           "label": "Try again",
           "key": "team-conversation-retry",
-          "line": 664,
+          "line": 307,
           "action": "mutate",
           "target": null,
           "effect": "KitAction onPressed: team.phase == failed ? team.retry() : team.refresh().",
           "gates": [
             "the team is overdue (GraceTimer, 8 s) and not answering"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/chat_history.dart"
         },
         {
           "id": "team-conversation-merge-section",
@@ -1710,37 +1719,39 @@
         {
           "id": "team-conversation-field",
           "type": "text-field",
-          "label": "Message the team…",
+          "label": "Message the team\u2026",
           "key": "team-conversation-field",
-          "line": 1130,
+          "line": 735,
           "action": "submit",
           "target": null,
           "effect": "TeamComposerField onSend -> _send(recipient): team.messageAgent(recipient.id, text).",
           "gates": [
             "canMessage && recipient != null"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/team_conversation_actions.dart"
         },
         {
           "id": "team-conversation-send",
           "type": "button",
           "label": "Send",
           "key": "team-conversation-send",
-          "line": 1131,
+          "line": 736,
           "action": "submit",
           "target": null,
           "effect": "Same as the field's onSend: _send(recipient) -> team.messageAgent(recipient.id, text).",
           "gates": [
             "canMessage && recipient != null"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/team_conversation_actions.dart"
         },
         {
           "id": "team-conversation-step",
           "type": "list-tile",
           "label": "<step title>",
           "key": "team-conversation-step-<workId>",
-          "line": 1180,
+          "line": 613,
           "action": "open-sheet",
           "target": "work-sheet",
           "targetWidget": "showWorkSheet",
@@ -1748,14 +1759,15 @@
           "gates": [
             "work.isNotEmpty and not a sole step equal to the task"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/team_conversation_actions.dart"
         },
         {
           "id": "team-conversation-no-progress-nudge",
           "type": "button",
           "label": "Nudge <agent>",
           "key": "team-conversation-no-progress-nudge",
-          "line": 1060,
+          "line": 363,
           "action": "mutate",
           "target": null,
           "effect": "_control(agent, nudge): team.controlAgent(agent.id, nudge); the receipt shows under the notice.",
@@ -1763,14 +1775,15 @@
             "the task stalled with no progress for an hour or more",
             "team.capabilities.controlAgent"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/team_conversation_parts.dart"
         },
         {
           "id": "team-conversation-no-progress-restart",
           "type": "button",
           "label": "Restart <agent>",
           "key": "team-conversation-no-progress-restart",
-          "line": 1066,
+          "line": 372,
           "action": "mutate",
           "target": null,
           "effect": "_control(agent, restart): asks first (showKitConfirm 'Restart <agent>?', key team-conversation-restart-confirm), then team.controlAgent(agent.id, restart).",
@@ -1778,14 +1791,15 @@
             "the task stalled with no progress for an hour or more",
             "team.capabilities.controlAgent"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/team_conversation_parts.dart"
         },
         {
           "id": "team-conversation-no-progress-report",
           "type": "button",
           "label": "Report the problem",
           "key": "team-conversation-no-progress-report",
-          "line": 1072,
+          "line": 378,
           "action": "navigate",
           "target": "app-diagnostics",
           "targetWidget": "openBugReport",
@@ -1793,7 +1807,8 @@
           "gates": [
             "the task stalled with no progress for an hour or more"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/chat/team_conversation_parts.dart"
         }
       ]
     },
@@ -2282,10 +2297,10 @@
       "id": "team-project-board",
       "title": "Board and graph",
       "kind": "screen",
-      "file": "lib/ui/screens/team/projects/team_projects_screen.dart",
+      "file": "lib/ui/screens/team/projects/screen/board_timeline.dart",
       "widget": "TeamProjectBoard",
       "presentedBy": [],
-      "line": 533,
+      "line": 3,
       "purpose": "Filters task board and dependency graph by milestone, repo and server.",
       "reachedFrom": [
         {
@@ -2329,10 +2344,10 @@
       "id": "team-project-timeline",
       "title": "Timeline",
       "kind": "screen",
-      "file": "lib/ui/screens/team/projects/team_projects_screen.dart",
+      "file": "lib/ui/screens/team/projects/screen/board_timeline.dart",
       "widget": "TeamProjectTimeline",
       "presentedBy": [],
-      "line": 446,
+      "line": 180,
       "purpose": "Groups persisted project events by day with decision and merge filters.",
       "reachedFrom": [
         {
@@ -2363,10 +2378,10 @@
       "id": "team-project-servers",
       "title": "Servers and placement",
       "kind": "screen",
-      "file": "lib/ui/screens/team/projects/team_projects_screen.dart",
+      "file": "lib/ui/screens/team/projects/screen/servers_card.dart",
       "widget": "TeamProjectServers",
       "presentedBy": [],
-      "line": 453,
+      "line": 3,
       "purpose": "Shows simulated server capacity and moves eligible work with branch availability guards.",
       "reachedFrom": [
         {
@@ -2601,10 +2616,10 @@
           "label": "Switch to the new AI Team on this phone",
           "key": "team-migration-switch",
           "line": 1,
-          "action": "navigate",
-          "target": "team-phone-setup",
+          "action": "open-sheet",
+          "target": null,
           "targetWidget": null,
-          "effect": "Opens the phone's one-tap setup flow (PhoneTeamSetup.run).",
+          "effect": "Opens the phone's one-tap setup flow (PhoneTeamSetup.run) in TeamPhoneSetupScreen, a framed sheet listed under notPages.",
           "gates": [
             "an old (non-phone-engine) team is on and this phone has an in-app server"
           ],
@@ -2727,7 +2742,7 @@
     },
     {
       "file": "lib/ui/screens/team/team_states.dart",
-      "reason": "Shared helper (design standard §3, §4), not a page: teamScreenState/teamScreenLoading/teamScreenFailed/teamStatusLine render the AI Team screens' connecting/error/stale states and one status line; its retry buttons are recorded as elements of the host pages (team-home, team-run, team-agent, team-agents) with `file` set here."
+      "reason": "Shared helper (design standard \u00a73, \u00a74), not a page: teamScreenState/teamScreenLoading/teamScreenFailed/teamStatusLine render the AI Team screens' connecting/error/stale states and one status line; its retry buttons are recorded as elements of the host pages (team-home, team-run, team-agent, team-agents) with `file` set here."
     },
     {
       "file": "lib/ui/screens/team/team_needs_you.dart",
@@ -2739,7 +2754,7 @@
     },
     {
       "file": "lib/ui/kit/scenes/team_scenes.dart",
-      "reason": "Drawings (KitScene, design standard §10), not pages: the AI Team's cast (board, planning, waking, merged, nudge, rest, idle) shown on team-home (no tasks, Needs you, the planning card, the host starting), team-run-overview-tab, team-agents (no agents), embedded-team-card (Nothing running) and the in-app and Termux AI Team sections while the team starts."
+      "reason": "Drawings (KitScene, design standard \u00a710), not pages: the AI Team's cast (board, planning, waking, merged, nudge, rest, idle) shown on team-home (no tasks, Needs you, the planning card, the host starting), team-run-overview-tab, team-agents (no agents), embedded-team-card (Nothing running) and the in-app and Termux AI Team sections while the team starts."
     },
     {
       "file": "lib/ui/screens/team_conversation/team_conversation.dart",

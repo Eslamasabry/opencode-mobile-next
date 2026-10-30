@@ -30,7 +30,7 @@ DIGEST = re.compile(r"[0-9a-f]{64}")
 def load_pins(path):
     pins = json.loads(Path(path).read_text())
     if (pins.get("schemaVersion") != 1
-            or pins.get("openCodeVersion") != "2.0.29"
+            or pins.get("openCodeVersion") != "2.1.1"
             or pins.get("bundleVersion") != packager().BUNDLE_VERSION
             or set(pins.get("artifacts", {})) != {"amd64", "arm64"}):
         raise ValueError("invalidPins")
@@ -71,7 +71,7 @@ def verified_binary(data, expected_digest):
         if not 64 <= binary.size <= MAX_BINARY or metadata.size > 16384:
             raise ValueError("invalidUpstreamArchive")
         package = json.load(archive.extractfile(metadata))
-        if (package.get("version") != "2.0.29"
+        if (package.get("version") != "2.1.1"
                 or package.get("name") not in {
                     "@opencode/cli-linux-x64-baseline", "@opencode/cli-linux-arm64"}):
             raise ValueError("invalidUpstreamArchive")

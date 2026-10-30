@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import 'kit_effects.dart';
 import 'kit_live_background.dart';
+import 'kit_max_width.dart';
 import 'kit_motion.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
@@ -92,7 +93,10 @@ class _KitLiveLookPreviewState extends State<KitLiveLookPreview> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;

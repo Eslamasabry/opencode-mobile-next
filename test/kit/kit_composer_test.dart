@@ -14,6 +14,7 @@ import 'package:opencode_mobile/ui/kit/chat/kit_composer_chips.dart';
 import 'package:opencode_mobile/ui/kit/glass/kit_glass.dart';
 import 'package:opencode_mobile/ui/kit/kit_bottom_inset.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
+import 'package:opencode_mobile/ui/kit/kit_menu.dart';
 import 'package:opencode_mobile/ui/kit/kit_segmented.dart';
 import 'package:opencode_mobile/ui/kit/kit_tappable.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
@@ -33,7 +34,7 @@ class _Host {
   _Host(String text) : controller = TextEditingController(text: text);
   final TextEditingController controller;
   final FocusNode focus = FocusNode();
-  int sends = 0, stops = 0, voices = 0, tools = 0, editors = 0;
+  int sends = 0, voices = 0, tools = 0, editors = 0;
 
   void dispose() {
     controller.dispose();
@@ -50,7 +51,6 @@ _Host _host(String text) {
 KitComposer _composer(
   _Host h, {
   bool busy = false,
-  bool stop = true,
   bool sending = false,
   bool canSendWhileBusy = false,
   KitComposerDelivery delivery = KitComposerDelivery.afterThisReply,
@@ -60,13 +60,14 @@ KitComposer _composer(
   KitComposerVoice? voice,
   KitComposerChips? suggestions,
   KitComposerFailure? failure,
+  List<KitComposerTrayAction> tray = const [],
+  List<KitMenuItem> sendMenu = const [],
 }) => KitComposer(
   controller: h.controller,
   focusNode: h.focus,
   hint: 'Ask OpenCode…',
   onSend: () => h.sends++,
   busy: busy,
-  onStop: stop ? () => h.stops++ : null,
   sending: sending,
   canSendWhileBusy: canSendWhileBusy,
   delivery: delivery,
@@ -76,10 +77,11 @@ KitComposer _composer(
   voice: voice,
   suggestions: suggestions,
   onTools: () => h.tools++,
+  tray: tray,
+  sendMenu: sendMenu,
   onOpenEditor: () => h.editors++,
   fieldKey: _field,
   sendKey: _send,
-  stopKey: _stop,
   toolsKey: _tools,
   voiceButtonKey: _voice,
   editorKey: _editor,
@@ -194,61 +196,41 @@ void main() {
       semantics.dispose();
     });
 
-    testWidgets('busy, no text: Stop', (tester) async {
-      final semantics = tester.ensureSemantics();
-      final h = _host('');
-      await _pump(tester, _composer(h, busy: true));
-      expect(_label(tester, _stop), 'Stop the reply');
-      expect(find.byKey(_send), findsNothing);
-      await tester.tap(find.byKey(_stop));
-      expect(h.stops, 1);
-      semantics.dispose();
-    });
-
-    // Owner decisions 2 Oct, 11B: Stop takes Send's slot and the mic stays
-    // its own button beside it, so speaking while a reply runs still works.
-    testWidgets('busy, no text: Stop in the end slot, the mic beside it', (
+    // Stop is not in the box: it sits at the end of the chips row above it
+    // (KitComposerStatusStrip.stop), with or without text. While a reply runs
+    // the field keeps its mic, so a message can be spoken and sent after it.
+    testWidgets('busy, no text: the mic stays and the box has no Stop', (
       tester,
     ) async {
       final h = _host('');
       await _pump(tester, _composer(h, busy: true));
-      final stop = tester.getRect(find.byKey(_stop));
-      final mic = tester.getRect(find.byKey(_voice));
-      expect(find.byKey(_voice), findsOneWidget);
-      expect(mic.right, lessThanOrEqualTo(stop.left));
-      expect(mic.width, greaterThanOrEqualTo(48));
-      await tester.tap(find.byKey(_voice));
-      expect(h.voices, 1);
-      expect(h.stops, 0);
-    });
-
-    testWidgets('busy with Stop on the running turn (no onStop), no text: '
-        'the mic stays, so a message can be spoken while the reply runs', (
-      tester,
-    ) async {
-      final h = _host('');
-      await _pump(tester, _composer(h, busy: true, stop: false));
       expect(find.byKey(_stop), findsNothing);
+      expect(find.byKey(const ValueKey('kit-composer-stop')), findsNothing);
+      expect(find.byKey(_send), findsNothing);
       expect(find.byKey(_voice), findsOneWidget);
       await tester.tap(find.byKey(_voice));
       expect(h.voices, 1);
     });
 
-    testWidgets('busy, text, can send: Stop and Send', (tester) async {
+    testWidgets('busy, text, can send: Send only, no Stop beside the field', (
+      tester,
+    ) async {
       final semantics = tester.ensureSemantics();
       final h = _host('more');
       await _pump(tester, _composer(h, busy: true, canSendWhileBusy: true));
-      expect(_label(tester, _stop), 'Stop the reply');
+      expect(find.byKey(_stop), findsNothing);
       expect(_label(tester, _send), 'Send after this reply');
       await tester.tap(find.byKey(_send));
       expect(h.sends, 1);
       semantics.dispose();
     });
 
-    testWidgets('busy, text, cannot send: Stop and the reason', (tester) async {
+    testWidgets('busy, text, cannot send: no Send, no Stop, the reason', (
+      tester,
+    ) async {
       final h = _host('more');
       await _pump(tester, _composer(h, busy: true));
-      expect(find.byKey(_stop), findsOneWidget);
+      expect(find.byKey(_stop), findsNothing);
       expect(find.byKey(_send), findsNothing);
       expect(
         find.text('You can send when this reply finishes'),
@@ -257,28 +239,41 @@ void main() {
     });
   });
 
-  testWidgets('Stop and Send: 48 dp each, at least 8 dp apart', (tester) async {
+  testWidgets('words typed under a running reply: Send is 48 dp and there is '
+      'no Stop beside the field (it sits in the chips row)', (tester) async {
     final h = _host('more');
     await _pump(tester, _composer(h, busy: true, canSendWhileBusy: true));
-    final stop = tester.getRect(find.byKey(_stop));
+    expect(find.byKey(_stop), findsNothing);
     final send = tester.getRect(find.byKey(_send));
-    expect(stop.width, greaterThanOrEqualTo(48));
-    expect(stop.height, greaterThanOrEqualTo(48));
     expect(send.width, greaterThanOrEqualTo(48));
     expect(send.height, greaterThanOrEqualTo(48));
-    expect(send.left - stop.right, greaterThanOrEqualTo(8));
   });
 
   // Owner decision 2 Oct (02B): Stop is neutral, a text-colour circle with a
-  // ground square; red is for destructive actions only.
-  testWidgets('Stop is a neutral text-colour circle with a turning ring', (
-    tester,
-  ) async {
+  // ground square; red is for destructive actions only. Today that circle is
+  // the voice mode's "Stop reading" (the chat's Stop is a chip above the box).
+  testWidgets('Stop reading is a neutral text-colour circle with a turning '
+      'ring', (tester) async {
     final h = _host('');
-    await _pump(tester, _composer(h, busy: true));
+    await _pump(
+      tester,
+      _composer(
+        h,
+        voice: KitComposerVoice(
+          phase: KitVoicePhase.speakingReply,
+          onExit: () {},
+          onStopSpeaking: () {},
+        ),
+      ),
+    );
     final roles = KitTokens.of(tester.element(find.byType(KitComposer))).roles;
     final circle = tester.widget<DecoratedBox>(
-      find.byKey(const ValueKey('kit-composer-circle-stop')),
+      find
+          .descendant(
+            of: find.byKey(const ValueKey('kit-composer-circle-stop')),
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
     );
     expect((circle.decoration as BoxDecoration).color, roles.text1);
     expect(
@@ -292,6 +287,61 @@ void main() {
     final h = _host('');
     await _pump(tester, _composer(h));
     expect(find.byKey(const ValueKey('kit-composer-stop-ring')), findsNothing);
+  });
+
+  // Owner, 24 Oct 2026: "+", Stop, the editor and Send beside a growing
+  // message left it a narrow column. Once the words run past one line of
+  // that row, they take the whole width and the controls sit under them.
+  group('a long message takes the whole width', () {
+    testWidgets('busy with words typed: the field spans the composer, "+", '
+        'and Send sit in a row under it', (tester) async {
+      final h = _host('Short');
+      await _pump(
+        tester,
+        _composer(h, busy: true, canSendWhileBusy: true),
+        size: const Size(412, 915),
+      );
+      final field = find.byKey(_field);
+      // One short line: one row, the field beside Send.
+      expect(
+        tester.getCenter(find.byKey(_send)).dy,
+        moreOrLessEquals(tester.getCenter(field).dy, epsilon: 24),
+      );
+      await tester.tap(field);
+      await tester.pump();
+      final editing = tester.state<EditableTextState>(
+        find.descendant(of: field, matching: find.byType(EditableText)),
+      );
+      h.controller.text =
+          'I want one agent to super focus on the media player control and '
+          'scroll and seeking';
+      await tester.pumpAndSettle();
+      final composerWidth = 412 - 32.0;
+      expect(tester.getSize(field).width, greaterThan(composerWidth * .75));
+      for (final control in [_tools, _send]) {
+        expect(
+          tester.getTopLeft(find.byKey(control)).dy,
+          greaterThanOrEqualTo(tester.getBottomLeft(field).dy - 1),
+          reason: '$control sits under the words',
+        );
+      }
+      // The same field, still focused: the keyboard stays.
+      expect(
+        tester.state<EditableTextState>(
+          find.descendant(of: field, matching: find.byType(EditableText)),
+        ),
+        same(editing),
+      );
+      expect(h.focus.hasFocus, isTrue);
+      // Back to a few words: one row again.
+      h.controller.text = 'Short';
+      await tester.pumpAndSettle();
+      expect(
+        tester.getCenter(find.byKey(_send)).dy,
+        moreOrLessEquals(tester.getCenter(field).dy, epsilon: 24),
+      );
+      expect(h.focus.hasFocus, isTrue);
+    });
   });
 
   group('delivery', () {
@@ -315,10 +365,7 @@ void main() {
       );
       expect(find.byType(KitSegmented<KitComposerDelivery>), findsNothing);
       expect(_label(tester, _send), 'Add to this turn');
-      expect(
-        find.text('The agent will read this while it works.'),
-        findsOneWidget,
-      );
+      expect(find.text('Adds to this reply'), findsOneWidget);
       expect(find.text('Sends after this reply'), findsNothing);
       semantics.dispose();
     });
@@ -339,9 +386,11 @@ void main() {
       );
       expect(_label(tester, _send), 'Stop and send');
       expect(
-        find.text(
-          'Stops the current reply and starts again with your message.',
-        ),
+        find.textContaining("can't take a message mid-reply."),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('kit-composer-circle-stopAndSend')),
         findsOneWidget,
       );
       expect(find.text('Sends after this reply'), findsNothing);
@@ -519,7 +568,7 @@ void main() {
         platform: TargetPlatform.linux,
         isWeb: false,
       );
-      final h = _host('hello');
+      final h = _host('hello\nthere');
       await _pump(tester, _composer(h), size: const Size(1280, 800));
       await tester.tap(find.byKey(_field));
       await tester.pump();
@@ -549,7 +598,6 @@ void main() {
     final h = _host('keep me');
     await _pump(tester, _composer(h, busy: true, canSendWhileBusy: true));
     await tester.tap(find.byKey(_send));
-    await tester.tap(find.byKey(_stop));
     await tester.tap(find.byKey(_field));
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
@@ -864,12 +912,12 @@ void main() {
 
   testWidgets('every control is labelled and at least 48 dp', (tester) async {
     final semantics = tester.ensureSemantics();
-    final h = _host('more');
+    // Words past one line: the editor's corner button shows.
+    final h = _host('more\nwords');
     await _pump(tester, _composer(h, busy: true, canSendWhileBusy: true));
     for (final (key, label) in [
       (_tools, 'Attach and more'),
       (_editor, 'Open full-screen editor'),
-      (_stop, 'Stop the reply'),
       (_send, 'Send after this reply'),
     ]) {
       final size = tester.getSize(find.byKey(key));
@@ -920,7 +968,7 @@ void main() {
         platform: TargetPlatform.linux,
         isWeb: false,
       );
-      final h = _host('hello');
+      final h = _host('hello\nthere');
       await _pump(tester, _composer(h), size: const Size(1280, 800));
       await tester.tap(find.byKey(_field));
       await tester.pump();
@@ -953,11 +1001,11 @@ void main() {
     h.controller.text = 'now';
     await tester.pump();
     expect(tester.hasRunningAnimations, isFalse);
-    expect(find.byKey(_stop), findsOneWidget);
+    expect(find.byKey(_stop), findsNothing);
   });
 
-  testWidgets('200 % text at 320 dp: no overflow; Stop leads the row and '
-      'Send trails it, never side by side', (tester) async {
+  testWidgets('200 % text at 320 dp: no overflow; Send trails "+" and there '
+      'is no Stop beside them', (tester) async {
     final h = _host('a long message to the agent');
     await _pump(
       tester,
@@ -966,19 +1014,310 @@ void main() {
       textScale: 2,
     );
     expect(tester.takeException(), isNull);
-    final stop = tester.getRect(find.byKey(_stop));
+    expect(find.byKey(_stop), findsNothing);
     final send = tester.getRect(find.byKey(_send));
     final tools = tester.getRect(find.byKey(_tools));
-    // One trailing control (owner Fix): Send. Stop sits after "+".
-    expect(stop.left, greaterThanOrEqualTo(tools.right));
-    expect(send.left - stop.right, greaterThanOrEqualTo(48));
+    expect(send.left, greaterThanOrEqualTo(tools.right));
     expect(find.byKey(_tools), findsOneWidget);
+  });
+
+  group('Send\'s long-press menu ("Send later or repeat")', () {
+    testWidgets('a long-press opens it without sending; a tap still sends '
+        'once', (tester) async {
+      final h = _host('Run the tests tonight');
+      var later = 0;
+      await _pump(
+        tester,
+        _composer(
+          h,
+          sendMenu: [
+            KitMenuItem(
+              key: const Key('send-later'),
+              label: 'Send later or repeat',
+              onSelected: () => later++,
+            ),
+          ],
+        ),
+      );
+      await tester.longPress(find.byKey(_send));
+      await tester.pumpAndSettle();
+      expect(h.sends, 0);
+      expect(find.text('Send later or repeat'), findsOneWidget);
+      await tester.tap(find.text('Send later or repeat'));
+      await tester.pumpAndSettle();
+      expect(later, 1);
+      expect(h.sends, 0);
+      await tester.tap(find.byKey(_send));
+      await tester.pumpAndSettle();
+      expect(h.sends, 1);
+    });
+
+    List<KitMenuItem> laterMenu() => [
+      KitMenuItem(
+        key: const Key('send-later'),
+        label: 'Send later or repeat',
+        onSelected: () {},
+      ),
+    ];
+
+    testWidgets('with the menu a finger sends once, when it lifts', (
+      tester,
+    ) async {
+      final h = _host('Ship it');
+      await _pump(tester, _composer(h, sendMenu: laterMenu()));
+      final press = await tester.startGesture(
+        tester.getCenter(find.byKey(_send)),
+      );
+      await tester.pump(const Duration(milliseconds: 80));
+      expect(h.sends, 0);
+      await press.up();
+      await tester.pump();
+      expect(h.sends, 1);
+      await tester.pumpAndSettle();
+      expect(h.sends, 1);
+      expect(find.text('Send later or repeat'), findsNothing);
+    });
+
+    testWidgets('with the menu the lift still sends when the composer slid '
+        'down under the finger (the keyboard hiding)', (tester) async {
+      final h = _host('Ship it');
+      final keyboard = ValueNotifier<double>(300);
+      addTearDown(keyboard.dispose);
+      await _pump(
+        tester,
+        ValueListenableBuilder<double>(
+          valueListenable: keyboard,
+          builder: (context, inset, child) => Padding(
+            padding: EdgeInsets.only(bottom: inset),
+            child: child,
+          ),
+          child: _composer(h, sendMenu: laterMenu()),
+        ),
+      );
+      final at = tester.getCenter(find.byKey(_send));
+      final press = await tester.startGesture(at);
+      keyboard.value = 0;
+      await tester.pump();
+      expect(tester.getCenter(find.byKey(_send)).dy, greaterThan(at.dy + 200));
+      await press.up();
+      await tester.pump();
+      expect(h.sends, 1);
+    });
+
+    testWidgets('with the menu the lift still sends when the keyboard hides '
+        'during the press', (tester) async {
+      final h = _host('Ship it');
+      await _pump(tester, _composer(h, sendMenu: laterMenu()));
+      h.focus.requestFocus();
+      await tester.pumpAndSettle();
+      final press = await tester.startGesture(
+        tester.getCenter(find.byKey(_send)),
+      );
+      h.focus.unfocus();
+      await tester.pump(const Duration(milliseconds: 120));
+      await press.up();
+      await tester.pump();
+      expect(h.sends, 1);
+    });
+
+    testWidgets('with the menu a finger that slides off Send sends nothing', (
+      tester,
+    ) async {
+      final h = _host('Ship it');
+      await _pump(tester, _composer(h, sendMenu: laterMenu()));
+      final at = tester.getCenter(find.byKey(_send));
+      final press = await tester.startGesture(at);
+      await press.moveTo(at - const Offset(120, 0));
+      await press.up();
+      await tester.pumpAndSettle();
+      expect(h.sends, 0);
+    });
+
+    testWidgets('no menu: a finger still sends on press', (tester) async {
+      final h = _host('Now');
+      await _pump(tester, _composer(h));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byKey(_send)),
+      );
+      await tester.pump();
+      expect(h.sends, 1);
+      await gesture.up();
+      await tester.pump();
+      expect(h.sends, 1);
+    });
+  });
+
+  group('the "+" tray (plus-menu concept C)', () {
+    List<KitComposerTrayAction> trayFor(List<String> picked) => [
+      for (final (key, label) in [
+        ('photos', 'Photos'),
+        ('camera', 'Camera'),
+        ('file', 'File'),
+        ('more', 'More'),
+      ])
+        KitComposerTrayAction(
+          buttonKey: Key('tray-$key'),
+          icon: AppIconography.add,
+          label: label,
+          onTap: () => picked.add(key),
+        ),
+    ];
+    const tray = ValueKey('kit-composer-tray');
+
+    testWidgets('"+" opens the row in place instead of the sheet, turns '
+        'into ×, and closes again', (tester) async {
+      final h = _host('');
+      final picked = <String>[];
+      await _pump(tester, _composer(h, tray: trayFor(picked)));
+      expect(find.byKey(tray), findsNothing);
+      await tester.tap(find.byKey(_tools));
+      await tester.pumpAndSettle();
+      expect(h.tools, 0);
+      expect(find.byKey(tray), findsOneWidget);
+      for (final label in ['Photos', 'Camera', 'File', 'More']) {
+        expect(find.text(label), findsOneWidget);
+      }
+      // One row, above the field, inside the box.
+      final rows = {
+        for (final key in ['photos', 'camera', 'file', 'more'])
+          tester.getCenter(find.byKey(Key('tray-$key'))).dy.round(),
+      };
+      expect(rows, hasLength(1));
+      expect(
+        tester.getRect(find.byKey(tray)).bottom,
+        lessThanOrEqualTo(tester.getRect(find.byKey(_field)).top + 1),
+      );
+      expect(
+        tester
+            .widget<AnimatedRotation>(
+              find.ancestor(
+                of: find.byKey(_tools),
+                matching: find.byType(AnimatedRotation),
+              ),
+            )
+            .turns,
+        1 / 8,
+      );
+      expect(find.byTooltip('Close'), findsOneWidget);
+      await tester.tap(find.byKey(_tools));
+      await tester.pumpAndSettle();
+      expect(find.byKey(tray), findsNothing);
+      expect(picked, isEmpty);
+    });
+
+    testWidgets('a button closes the row, then runs its action', (
+      tester,
+    ) async {
+      for (final key in ['photos', 'camera', 'file', 'more']) {
+        final h = _host('');
+        final picked = <String>[];
+        await _pump(tester, _composer(h, tray: trayFor(picked)));
+        await tester.tap(find.byKey(_tools));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(Key('tray-$key')));
+        await tester.pumpAndSettle();
+        expect(picked, [key]);
+        expect(find.byKey(tray), findsNothing);
+      }
+    });
+
+    testWidgets('every button is a labelled 48 dp target; a blocked one '
+        'stays, says why and does nothing', (tester) async {
+      final semantics = tester.ensureSemantics();
+      final h = _host('');
+      final picked = <String>[];
+      await _pump(
+        tester,
+        _composer(
+          h,
+          tray: [
+            ...trayFor(picked).take(3),
+            KitComposerTrayAction(
+              buttonKey: const Key('tray-blocked'),
+              icon: AppIconography.add,
+              label: 'Blocked',
+              disabledReason: 'Available when the run finishes',
+              onTap: () => picked.add('blocked'),
+            ),
+          ],
+        ),
+      );
+      await tester.tap(find.byKey(_tools));
+      await tester.pumpAndSettle();
+      for (final key in ['photos', 'camera', 'file', 'blocked']) {
+        final size = tester.getSize(find.byKey(Key('tray-$key')));
+        expect(size.width, greaterThanOrEqualTo(48));
+        expect(size.height, greaterThanOrEqualTo(48));
+      }
+      expect(find.bySemanticsLabel(RegExp('Photos')), findsWidgets);
+      await tester.tap(find.byKey(const Key('tray-blocked')));
+      await tester.pumpAndSettle();
+      expect(picked, isEmpty);
+      semantics.dispose();
+    });
+
+    testWidgets('reduced motion: the row and the × arrive at once', (
+      tester,
+    ) async {
+      final h = _host('');
+      await _pump(
+        tester,
+        _composer(h, tray: trayFor([])),
+        disableAnimations: true,
+      );
+      await tester.tap(find.byKey(_tools));
+      await tester.pump();
+      expect(tester.hasRunningAnimations, isFalse);
+      expect(find.byKey(tray), findsOneWidget);
+    });
+
+    testWidgets('Esc closes the row first', (tester) async {
+      final h = _host('');
+      await _pump(tester, _composer(h, tray: trayFor([])));
+      await tester.tap(find.byKey(_tools));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(_field));
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.byKey(tray), findsNothing);
+      expect(h.focus.hasFocus, isTrue);
+    });
+
+    testWidgets('no tray: "+" opens the host\'s sheet as before', (
+      tester,
+    ) async {
+      final h = _host('');
+      await _pump(tester, _composer(h));
+      await tester.tap(find.byKey(_tools));
+      await tester.pumpAndSettle();
+      expect(h.tools, 1);
+      expect(find.byKey(tray), findsNothing);
+    });
+  });
+
+  // Concept C (owner 20 Oct 2026): one row, "+" at the start, the field,
+  // and the one trailing control at the end, on the same line.
+  testWidgets('one row: "+", the field and Send share a line; a one-line '
+      'message has no editor button', (tester) async {
+    final h = _host('hello');
+    await _pump(tester, _composer(h));
+    final tools = tester.getRect(find.byKey(_tools));
+    final field = tester.getRect(find.byKey(_field));
+    final send = tester.getRect(find.byKey(_send));
+    expect(field.left, greaterThanOrEqualTo(tools.right - 1));
+    expect(send.left, greaterThanOrEqualTo(field.right - 1));
+    expect((tools.center.dy - send.center.dy).abs(), lessThan(1));
+    expect((field.center.dy - send.center.dy).abs(), lessThan(1));
+    expect(field.height, greaterThanOrEqualTo(48));
+    expect(find.byKey(_editor), findsNothing);
   });
 
   testWidgets('the full-screen editor opens from the field\'s top corner', (
     tester,
   ) async {
-    final h = _host('hello');
+    // Three lines: the field is taller than its one-line row.
+    final h = _host('hello\nthere\nfriend');
     await _pump(tester, _composer(h));
     final editor = tester.getRect(find.byKey(_editor));
     final field = tester.getRect(find.byKey(_field));

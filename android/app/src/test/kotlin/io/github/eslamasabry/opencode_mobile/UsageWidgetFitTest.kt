@@ -68,7 +68,7 @@ class UsageWidgetFitTest {
         assertEquals(listOf(0), UsageWidgetFit.columnIndices(listOf(62), 180))
     }
 
-    @Test fun launcherMetadataAllowsTwoByTwoPlacementAndResize() {
+    @Test fun launcherMetadataPlacesAFixedTwoByTwo() {
         val root = generateSequence(File(requireNotNull(System.getProperty("user.dir")))) { it.parentFile }
             .first { File(it, "android/app/src/main/res/xml/widget_usage_info.xml").isFile }
         val factory = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
@@ -79,8 +79,7 @@ class UsageWidgetFitTest {
         assertEquals("2", attr("targetCellWidth"))
         assertEquals("2", attr("targetCellHeight"))
         assertEquals("${UsageWidgetFit.MIN_WIDTH_DP}dp", attr("minWidth"))
-        assertEquals("${UsageWidgetFit.MIN_WIDTH_DP}dp", attr("minResizeWidth"))
-        assertEquals("110dp", attr("minResizeHeight"))
+        assertEquals("${UsageWidgetFit.MIN_WIDTH_DP}dp", attr("maxResizeWidth"))
         // Usage shares the already qualified Sessions placement / Save / Cancel host.
         val sessions = factory.newDocumentBuilder().parse(
             File(root, "android/app/src/main/res/xml/widget_sessions_info.xml")

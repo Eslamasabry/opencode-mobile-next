@@ -425,7 +425,7 @@ final j1SettingsMoreArea = CensusArea(
         boundary: kit.boundaryKey,
       );
       kit.onDispose(done);
-      kit.expectVisible(find.byKey(const ValueKey('report-problem-review')));
+      kit.expectVisible(find.byKey(const ValueKey('report-problem-send')));
     }),
     CensusShot('app-diagnostics', state: 'empty', (kit) async {
       final done = await mountSettingsScene(
@@ -435,7 +435,7 @@ final j1SettingsMoreArea = CensusArea(
         boundary: kit.boundaryKey,
       );
       kit.onDispose(done);
-      kit.expectVisible(find.byKey(const ValueKey('report-problem-review')));
+      kit.expectVisible(find.byKey(const ValueKey('report-problem-send')));
     }),
     CensusShot('app-diagnostics-clear-sheet', (kit) async {
       final done = await mountSettingsScene(
@@ -445,6 +445,9 @@ final j1SettingsMoreArea = CensusArea(
         boundary: kit.boundaryKey,
       );
       kit.onDispose(done);
+      // Everything this phone kept is one tap under Details.
+      await kit.tapKey('report-problem-details');
+      await kit.tapKey('report-problem-kept');
       await kit.tapKey('clear-app-diagnostics');
       kit.expectText('Clear');
     }),

@@ -82,7 +82,6 @@ import '../../../state/team_overview.dart';
 import '../../../termux/team_runtime.dart';
 import '../../app_theme.dart';
 import '../../kit/kit.dart';
-import '../../kit/scenes/team_scenes.dart';
 import '../../widgets/relative_time.dart';
 import '../../widgets/team_now.dart';
 import '../../widgets/team_now_line_view.dart'
@@ -803,16 +802,12 @@ class _TeamHomeScreenState extends State<TeamHomeScreen> {
       SizedBox(height: tokens.space3),
       // The tasks: one panel, most urgent first, what finished last.
       if (runs.isEmpty && planning.isEmpty && loose.isEmpty)
-        KitStateView(
+        // Calm (vision 2026-10-20): the big line and one sentence that
+        // teaches, no drawing.
+        KitStateView.calm(
           key: const ValueKey('team-home-runs-empty'),
           size: KitStateSize.inline,
-          liveRegion: false,
           icon: AppIconography.checklist,
-          // The team gathered at an empty board, its one slot waiting.
-          illustration: const TeamBoardScene(),
-          // Room for the board and its three agents to read (88 dp, the
-          // inline default, cramped them).
-          illustrationWidth: 168,
           title: l10n.teamUiCardEmptyTitle,
           // One sentence that teaches; the pinned button is the action, so
           // the state never repeats it.
@@ -823,10 +818,9 @@ class _TeamHomeScreenState extends State<TeamHomeScreen> {
       // A task still being planned is a row of its own: the list is not
       // empty, so no "No tasks match" over it.
       else if (visible.isEmpty && planned.isEmpty && loose.isEmpty)
-        KitStateView(
+        KitStateView.calm(
           key: const ValueKey('team-home-runs-empty-filtered'),
           size: KitStateSize.inline,
-          liveRegion: false,
           icon: AppIconography.filterOff,
           title: l10n.teamUiHomeRunsEmptyFiltered,
           body: l10n.teamUiHomeRunsEmptyHint,

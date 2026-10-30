@@ -20,6 +20,15 @@ class _PaseoLive {
   /// Each tool call as reported so far, by call id, so a later report of
   /// the same call is merged into it ([paseoMergeToolCall]).
   final tools = <String, Map<String, dynamic>>{};
+
+  /// The turn in progress already showed the agent's own error (a reply
+  /// that is an error row): its failure needs no second notice.
+  bool turnErrorShown = false;
+
+  /// The saved record said its last turn failed (status "error") before the
+  /// helper loaded it; the loaded agent reads idle (agent-loading.js), so
+  /// this is the one sign left until a new turn starts.
+  bool failedBeforeLoad = false;
 }
 
 extension _PaseoEvents on PaseoGateway {
@@ -50,6 +59,10 @@ extension _PaseoEvents on PaseoGateway {
   }
 
   void _emitState(StreamStatus state) {
+    // Up again, or given up for good (a refused sign-in): no try is due.
+    if (state == StreamStatus.connected || state == StreamStatus.disconnected) {
+      _nextAttempt.value = null;
+    }
     if (!_closed && _listening) _streamStates.add(state);
   }
 
@@ -163,6 +176,8 @@ extension _PaseoEvents on PaseoGateway {
     switch (event['type']) {
       case 'turn_started':
         live.runID = null;
+        live.turnErrorShown = false;
+        live.failedBeforeLoad = false;
         _awaitingTurn.remove(id);
         _turnActive.add(id);
         _emitStatus(id, 'busy');
@@ -181,16 +196,17 @@ extension _PaseoEvents on PaseoGateway {
         _turnActive.remove(id);
         _finishOpen(live);
         _emitStatus(id, 'idle');
-        _emit('session.error', {
-          'sessionID': id,
-          'error': {
-            'name': 'PaseoTurnFailed',
-            'data': {
-              'message':
-                  'The agent could not finish this reply. Check it on your computer.',
+        // The agent may run on this phone or a computer: no "where".
+        if (!live.turnErrorShown) {
+          _emit('session.error', {
+            'sessionID': id,
+            'error': {
+              'name': 'PaseoTurnFailed',
+              'data': {'message': 'The agent could not finish this reply.'},
             },
-          },
-        });
+          });
+        }
+        live.turnErrorShown = false;
         _emit('session.idle', {'sessionID': id});
       case 'permission_requested':
         final request = event['request'];
@@ -271,6 +287,8 @@ extension _PaseoEvents on PaseoGateway {
       completed: type == 'user_message' ? at : null,
     );
     if (message == null) return;
+    _noteStreamed(id, message);
+    if (message.info.errorText != null) live.turnErrorShown = true;
     if (text == null) {
       live.announced[messageID] = StringBuffer(
         streamed ? paseoText(item['text']) : '',

@@ -1,35 +1,40 @@
-/// The run Overview's Merge section (TEAM-205, 02-ux-flows-and-screens
-/// §8a): present only once every work item of the run is done or
-/// review-ready and the host has merge roles
-/// ([OrchestrationCapabilities.mergeReadiness] with an adapter that
-/// implements [OrchestrationMergeGateway]).
+/// The task's merge gate (TEAM-205, 02-ux-flows-and-screens §8a; vision
+/// 2026-10-20, docs/qa/vision-team-task-2026-10-20/README.md): present only
+/// once every work item of the run is done or review-ready and the host has
+/// merge roles ([OrchestrationCapabilities.mergeReadiness] with an adapter
+/// that implements [OrchestrationMergeGateway], the host front). A team on
+/// this phone merges by itself; there is no gate there.
+///
+/// Ready, it is the conversation's one question card ([KitRequestCard.ask],
+/// the question look, the same as the chat's permission card):
 ///
 /// ```
-/// Ready to merge
-/// merge request gc-mr-14
-/// ✓ Work items · 18/18   ✓ Tests   ✓ Build   ✓ Review   ✓ No conflicts
-/// ✓ Acceptance criteria
-/// 14 files · +841 / −203
-/// [ Approve request ]  (then)  [ Merge ]
-/// Review changes
+/// ● Needs you · 6 min
+/// Merge 6 changes into main?
+/// 6 files · +312 / −87 · all 5 checks passed
+/// [        Review changes        ]
+/// [ ⑂      Merge into main        ]
 /// ```
 ///
-/// Once merged (the host reports the merge commit, or the merge was
-/// confirmed) the section says only where it landed, "Merged into main ·
-/// 4f9c2a1", with Review changes: no checks, and no Merge that can no
-/// longer do anything.
+/// The question names the act, the count and the branch from the host's
+/// readiness document, so one tap on **Merge into main** merges (the card is
+/// the confirmation; there is no second sheet saying the same). While the
+/// merge request waits for an approval the same card answers **Approve the
+/// merge** first (reversible on the host); then Merge. A boundary that
+/// blocks ("Never merge without approval") or a team that isn't answering
+/// turns Merge off with its reason. A refused merge stays on the card with
+/// the host's reason and Try again. **Review changes** opens the checks,
+/// the changed files with their counts and the task's steps; there is no
+/// diff to open (the readiness carries no patch).
 ///
-/// The readiness lines come from the front's `/merge-readiness` as one
-/// [KitChecklist]; any missing line disables Merge and says why. The next
-/// step is the one primary: **Approve request** while the request waits
-/// for an approval (approving is reversible on the host, so it goes at
-/// once and its receipt shows under the buttons), then **Merge**, which
-/// asks once ([showKitConfirm], destructive) naming the task, the files
-/// and the branch. A refused merge says why with its next step (Try again,
-/// Review changes). The host's boundaries ("Never merge without approval")
-/// are shown when they block, never silently applied. Force-merge, branch
-/// reset and worktree deletion do not exist here, on the host front, or
-/// anywhere on the phone.
+/// Not ready (a check failing or still running, readiness unavailable), the
+/// section is a calm panel that says why Merge is off: nobody can act yet,
+/// so it is never amber. Merged, it says only where it landed, "Merged into
+/// main · 4f9c2a1", with Review changes.
+///
+/// A task's own cost is not reported by any host (slice-P5.2), so the card
+/// shows none. Force-merge, branch reset and worktree deletion do not exist
+/// here, on the host front, or anywhere on the phone.
 library;
 
 import 'dart:async';
@@ -106,12 +111,38 @@ bool teamMergeEligible(
   OrchestrationController controller,
   OrchestrationRun run,
 ) {
-  if (!controller.capabilities.mergeReadiness) return false;
-  if (controller.gateway is! OrchestrationMergeGateway) return false;
+  if (!teamMergeGateOnHost(controller)) return false;
   return teamMergeWorkDone(run, controller.snapshot.work);
 }
 
-/// The Merge section, appended at the end of the run Overview.
+/// This host asks the person to merge (the host front's merge roles); a
+/// team without them merges by itself. The header says "Next: merge" only
+/// here.
+bool teamMergeGateOnHost(OrchestrationController controller) =>
+    controller.capabilities.mergeReadiness &&
+    controller.gateway is OrchestrationMergeGateway;
+
+/// The merge gate waits on the person: eligible, the host says ready, and
+/// it is not merged yet. The page's header counts it as one thing that
+/// needs you (the gate card is the question).
+bool teamMergeWaitsOnYou(
+  OrchestrationController controller,
+  OrchestrationRun run,
+) {
+  if (!teamMergeEligible(controller, run)) return false;
+  final readiness = controller.mergeReadinessFor(run.id);
+  if (readiness == null || !readiness.ready || readiness.alreadyMerged) {
+    return false;
+  }
+  final merge = controller.latestMutation(
+    kind: MutationKind.merge,
+    targetId: run.id,
+  );
+  return merge?.status != MutationStatus.confirmed;
+}
+
+/// The merge gate (or its calm panel), at the end of the task's
+/// conversation.
 class TeamMergeSection extends StatefulWidget {
   const TeamMergeSection({
     super.key,
@@ -164,31 +195,9 @@ class _TeamMergeSectionState extends State<TeamMergeSection> {
   Future<void> _approve(MergeRequestInfo request) =>
       _controller.approveMergeRequest(request.id, runId: _run.id);
 
-  /// The only merge confirmation: what is merged, into which branch.
-  Future<void> _onMergeTap(MergeReadiness readiness) async {
-    final l10n = _copy(context);
-    final branch = readiness.targetBranch ?? 'main';
-    final confirmed = await showKitConfirm(
-      context,
-      kind: KitConfirmKind.destructive,
-      icon: AppIconography.branch,
-      title: l10n.teamUiMergeConfirmTitle(branch),
-      body: l10n.teamUiMergeConfirmMessage,
-      confirmLabel: l10n.teamUiMergeConfirmAction(branch),
-      consequences: [
-        l10n.teamMergeConfirmTask(_run.title),
-        l10n.teamUiMergeFiles(
-          readiness.files,
-          readiness.additions,
-          readiness.deletions,
-        ),
-      ],
-      sheetKey: const ValueKey('team-merge-confirm-sheet'),
-      confirmKey: const ValueKey('team-merge-confirm'),
-    );
-    if (!confirmed || !mounted) return;
-    await _controller.mergeRun(_run.id);
-  }
+  /// Merges: the gate card asked the question ("Merge 6 changes into
+  /// main?"), so the tap is the answer.
+  Future<void> _merge() => _controller.mergeRun(_run.id);
 
   void _openChanges(MergeReadiness? readiness) {
     final l10n = _copy(context);
@@ -267,11 +276,9 @@ class _TeamMergeSectionState extends State<TeamMergeSection> {
           !stale;
       final canApprove =
           request != null && !approved && !approveBusy && !stale && !merged;
-      final title = merged
-          ? l10n.teamUiMergeTitleMerged
-          : readiness?.ready == true
-          ? l10n.teamUiMergeTitleReady
-          : l10n.teamUiMergeTitleNotReady;
+      // The panel is only for a task not ready yet (or readiness unknown):
+      // ready is the gate card, merged its one line.
+      final title = l10n.teamUiMergeTitleNotReady;
       final requestLabel = request == null
           ? null
           : l10n.teamUiMergeRequest(request.id);
@@ -281,7 +288,7 @@ class _TeamMergeSectionState extends State<TeamMergeSection> {
         label: l10n.teamUiMergeMerge,
         icon: AppIconography.branch,
         working: mergeBusy,
-        onPressed: canMerge ? () => unawaited(_onMergeTap(readiness)) : null,
+        onPressed: canMerge ? () => unawaited(_merge()) : null,
       );
       final approve = request == null
           ? null
@@ -301,30 +308,50 @@ class _TeamMergeSectionState extends State<TeamMergeSection> {
         onPressed: () => _openChanges(readiness),
       );
       if (merged) {
-        // Merged: only where it landed and the way to look at it. The
-        // checks, the request and a Merge that can no longer do anything
-        // are behind it now.
+        // Merged: one quiet line in the transcript, where it landed, that
+        // opens what was merged. The checks, the request and a Merge that
+        // can no longer do anything are behind it now; the lead's reply
+        // already says it is merged, so no second heading says it again.
         return Padding(
-          padding: EdgeInsetsDirectional.only(top: tokens.space5),
-          child: KitPanel(
+          padding: EdgeInsetsDirectional.only(top: tokens.space2),
+          child: KeyedSubtree(
             key: const ValueKey('team-merge-section'),
-            tone: tone,
-            icon: AppIconography.branch,
-            title: title,
-            titleKey: const ValueKey('team-merge-title'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                KitText(
-                  _mergedLine(l10n, readiness, mergeRecord),
-                  key: const ValueKey('team-merge-receipt'),
-                  role: KitTextRole.secondary,
+            child: KitEntrance(
+              child: KitRow(
+                key: const ValueKey('team-merge-review'),
+                padding: EdgeInsetsDirectional.symmetric(
+                  vertical: tokens.space2,
+                ),
+                leading: const KitIcon(
+                  AppIconography.branch,
                   tone: KitTextTone.success,
                 ),
-                SizedBox(height: tokens.space4),
-                KitActionBlock(secondary: review),
-              ],
+                title: _mergedLine(l10n, readiness, mergeRecord),
+                titleKey: const ValueKey('team-merge-receipt'),
+                supporting: TextSpan(text: l10n.teamUiMergeReviewChanges),
+                trailing: const KitChevron(),
+                onTap: () => _openChanges(readiness),
+              ),
             ),
+          ),
+        );
+      }
+
+      // Ready: the one question card. The host decides "ready"; a boundary
+      // or a stale view only turns Merge off, with its reason.
+      if (readiness != null && readiness.ready) {
+        return Padding(
+          padding: EdgeInsetsDirectional.only(top: tokens.space2),
+          child: _gate(
+            context,
+            readiness: readiness,
+            approveFirst: approveFirst,
+            canApprove: canApprove,
+            canMerge: canMerge,
+            stale: stale,
+            mergeRecord: mergeRecord,
+            approveRecord: approveRecord,
+            review: review,
           ),
         );
       }
@@ -402,6 +429,157 @@ class _TeamMergeSectionState extends State<TeamMergeSection> {
       );
     },
   );
+
+  /// The merge gate as the conversation's question card: "Merge 6 changes
+  /// into main?", the files and the checks in one line, Review changes,
+  /// and the next step as the primary (Approve the merge while the request
+  /// waits for it, then Merge into main).
+  Widget _gate(
+    BuildContext context, {
+    required MergeReadiness readiness,
+    required bool approveFirst,
+    required bool canApprove,
+    required bool canMerge,
+    required bool stale,
+    required MutationRecord? mergeRecord,
+    required MutationRecord? approveRecord,
+    required KitAction review,
+  }) {
+    final l10n = _copy(context);
+    final branch = readiness.targetBranch ?? 'main';
+    final question = l10n.teamMergeGateQuestion(readiness.files, branch);
+    final checks = readiness.lines.length;
+    final detail = [
+      if (readiness.files > 0)
+        l10n.teamUiMergeFiles(
+          readiness.files,
+          readiness.additions,
+          readiness.deletions,
+        ),
+      if (checks > 0) l10n.teamMergeGateChecksPassed(checks),
+    ].join(' · ');
+    // The answer in flight, refused or unconfirmed: the newest of the
+    // step this card is on.
+    final record = approveFirst ? approveRecord : mergeRecord;
+    final answer = approveFirst
+        ? l10n.teamMergeGateApprove
+        : l10n.teamUiMergeConfirmAction(branch);
+    final boundary = record == null ? null : _boundaryOf(record);
+    final (phase, receipt) = switch (record?.status) {
+      null || MutationStatus.confirmed => (KitRequestPhase.waiting, null),
+      MutationStatus.sent => (
+        KitRequestPhase.sending,
+        KitReceipt(
+          key: const ValueKey('team-merge-receipt'),
+          state: KitReceiptState.sending,
+          since: record!.createdAt,
+        ),
+      ),
+      MutationStatus.unconfirmed => (
+        KitRequestPhase.sending,
+        KitReceipt(
+          key: const ValueKey('team-merge-receipt'),
+          state: KitReceiptState.notConfirmed,
+          since: record!.createdAt,
+          reason: l10n.teamUiReceiptUnconfirmed,
+        ),
+      ),
+      MutationStatus.rejected => (
+        KitRequestPhase.waiting,
+        KitReceipt(
+          key: const ValueKey('team-merge-receipt'),
+          state: KitReceiptState.refused,
+          reason: boundary != null
+              ? l10n.teamUiMergeBoundary(boundary)
+              : l10n.teamUiMergeRefused,
+        ),
+      ),
+    };
+    final blocking = readiness.firstBlocking;
+    // Why the act is off (STATE-8). While it is sent the card shows the
+    // answer line instead, so a busy button never needs words of its own.
+    final String? offReason;
+    if (approveFirst ? canApprove : canMerge) {
+      offReason = null;
+    } else if (!approveFirst && !stale && blocking != null) {
+      offReason = l10n.teamUiMergeBoundary(blocking.text);
+    } else {
+      offReason = l10n.teamMergeGateStale;
+    }
+    final request = readiness.mergeRequest;
+    final go = approveFirst
+        ? KitRequestGo(
+            goKey: const ValueKey('team-merge-approve'),
+            label: l10n.teamMergeGateApprove,
+            icon: AppIconography.check,
+            look: review,
+            onGo: canApprove && request != null
+                ? () => unawaited(_approve(request))
+                : null,
+            disabledReason: offReason,
+          )
+        : KitRequestGo(
+            goKey: const ValueKey('team-merge-merge'),
+            label: l10n.teamUiMergeConfirmAction(branch),
+            icon: AppIconography.branch,
+            look: review,
+            onGo: canMerge ? () => unawaited(_merge()) : null,
+            disabledReason: offReason,
+          );
+    // The host's own words are technical: a Details fold under the card,
+    // never the card's copy (a boundary is already words).
+    final hostWords =
+        record?.status == MutationStatus.rejected && boundary == null
+        ? record?.receipt?.message?.trim() ?? ''
+        : '';
+    // Placed by the transcript's gutter; it rises in like the chat's.
+    final card = KitEntrance(
+      child: KitRequestCard.ask(
+        key: const ValueKey('team-merge-section'),
+        inList: true,
+        look: KitRequestLook.question,
+        kind: KitRequestKind.gate,
+        icon: AppIconography.branch,
+        title: question,
+        titleKey: const ValueKey('team-merge-title'),
+        who: l10n.teamChatLeadName,
+        reason: KitNeedsYouReason.decision,
+        ifIgnored: l10n.teamMergeGateIfIgnored,
+        announcement: l10n.teamMergeGateAnnouncement(question),
+        detail: detail.isEmpty ? null : detail,
+        since: _readySince(),
+        phase: phase,
+        receipt: receipt,
+        answer: phase == KitRequestPhase.sending ? answer : null,
+        answers: go,
+      ),
+    );
+    if (hostWords.isEmpty) return card;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        card,
+        KitDetailsFold(
+          label: l10n.teamUiTechnicalDetails,
+          foldKey: const ValueKey('team-merge-receipt-details'),
+          notes: [l10n.teamDispatchHostWords],
+          text: hostWords,
+        ),
+      ],
+    );
+  }
+
+  /// When the task's last step finished (host time): how long the merge
+  /// has waited for the person. Null when no step dates it.
+  DateTime? _readySince() {
+    DateTime? latest;
+    for (final item in _controller.snapshot.work) {
+      if (item.runId != _run.id) continue;
+      final at = item.updatedAt;
+      if (at != null && (latest == null || at.isAfter(latest))) latest = at;
+    }
+    return latest;
+  }
 
   /// Where a merged task landed: "Merged into main · 4f9c2a1", from the
   /// merge's own answer first, else the host's readiness; "Already on
@@ -483,9 +661,7 @@ class _TeamMergeSectionState extends State<TeamMergeSection> {
       final text = switch (approveRecord.status) {
         MutationStatus.sent => l10n.teamUiMergeSent,
         MutationStatus.confirmed => l10n.teamUiMergeApproveConfirmed,
-        MutationStatus.rejected => l10n.teamUiMergeRefused(
-          approveRecord.receipt?.message ?? '',
-        ),
+        MutationStatus.rejected => l10n.teamUiMergeRefused,
         MutationStatus.unconfirmed => l10n.teamUiReceiptUnconfirmed,
       };
       note(
@@ -512,7 +688,7 @@ class _TeamMergeSectionState extends State<TeamMergeSection> {
               icon: AppIconography.error,
               title: boundary != null
                   ? l10n.teamUiMergeBoundary(boundary)
-                  : l10n.teamUiMergeRefused(mergeRecord.receipt?.message ?? ''),
+                  : l10n.teamUiMergeRefused,
               message: l10n.teamMergeFailedNext,
               actions: [
                 if (readiness != null && readiness.canMerge)
@@ -520,12 +696,25 @@ class _TeamMergeSectionState extends State<TeamMergeSection> {
                     key: const ValueKey('team-merge-retry'),
                     label: l10n.teamUiCardRetry,
                     icon: AppIcons.retry,
-                    onPressed: () => unawaited(_onMergeTap(readiness)),
+                    onPressed: () => unawaited(_merge()),
                   ),
               ],
             ),
           ),
         );
+        // The host's own words (not a boundary, which is already words):
+        // technical, under Details.
+        final hostWords = mergeRecord.receipt?.message?.trim() ?? '';
+        if (boundary == null && hostWords.isNotEmpty) {
+          notes.add(
+            KitDetailsFold(
+              label: l10n.teamUiTechnicalDetails,
+              foldKey: const ValueKey('team-merge-receipt-details'),
+              notes: [l10n.teamDispatchHostWords],
+              text: hostWords,
+            ),
+          );
+        }
         return notes;
       }
       final text = switch (mergeRecord.status) {
@@ -660,9 +849,15 @@ class _Changes extends StatelessWidget {
       KitTextRole.secondary,
       tone: KitTextTone.primary,
     );
+    final lines = readiness?.lines ?? const <MergeReadinessLine>[];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // The checks the host ran, first: what "all checks passed" means.
+        if (lines.isNotEmpty) ...[
+          _Lines(readiness: readiness!),
+          SizedBox(height: tokens.sectionGap),
+        ],
         if (changes.isEmpty)
           KitText(
             l10n.teamUiMergeChangesEmpty,

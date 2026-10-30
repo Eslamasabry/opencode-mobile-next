@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -14,12 +15,18 @@ import 'kit_icon_button.dart';
 import 'kit_layout.dart';
 import 'kit_menu.dart';
 import 'kit_motion.dart';
+import 'kit_optical.dart';
 import 'kit_needs_you.dart';
 import 'kit_presence.dart';
 import 'kit_status_mark.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
+
+part 'kit_top_bar_centred.dart';
+part 'kit_top_bar_pill.dart';
+part 'kit_top_bar_scope.dart';
+part 'kit_top_bar_tail.dart';
 
 /// How the bar leaves the page. Back sits at the start, Close at the end
 /// (LAY-8, Appendix A #77).
@@ -42,12 +49,38 @@ class KitTopBarScope {
   const KitTopBarScope({
     required this.label,
     required this.semanticsLabel,
-    required this.items,
+    this.items = const [],
+    this.onTap,
     this.icon,
     this.chipKey,
     this.menuLabel,
     this.suffix,
+    this.branch,
+    this.link,
+    this.origin,
   });
+
+  /// Where this page's work came from or went ("from Design review"), on
+  /// the same line, before the branch: its own quiet target that opens the
+  /// other page. It takes the room the line has left and is cut first; it never
+  /// adds a row of its own.
+  final KitTopBarOrigin? origin;
+
+  /// A live thing the page knows about, said at the end of the same line
+  /// with its one act ("Dev server running · Open preview"). Its own
+  /// target; it drops under the name when the line has no room. With an
+  /// empty [label] the line is the link alone (the host says the name
+  /// elsewhere).
+  final KitTopBarLink? link;
+
+  /// Whether the name opens anything. A scope with no [items] and no
+  /// [onTap] is a plain line: no target.
+  bool get opens => onTap != null || items.isNotEmpty;
+
+  /// A second, separate chip at the end of the same line: the Git branch of
+  /// the project. It is its own target and opens the host's Git sheet, so
+  /// it adds no row to the bar.
+  final KitTopBarBranch? branch;
 
   /// The name shown on the chip; wrap a name the person or server chose
   /// with `KitBidi.auto`.
@@ -56,8 +89,12 @@ class KitTopBarScope {
   /// What a screen reader says: "Project IPTV_King, opens a menu".
   final String semanticsLabel;
 
-  /// The menu the chip opens; at least one entry.
+  /// The menu the chip opens, when it opens one ([onTap] is null).
   final List<KitMenuItem> items;
+
+  /// The chip goes straight to a page instead of a menu (the conversation's
+  /// project chip opens the project's Files). Wins over [items].
+  final VoidCallback? onTap;
   final IconData? icon;
   final Key? chipKey;
 
@@ -67,6 +104,48 @@ class KitTopBarScope {
   /// A second name on the same line, after " · " (the server, when more than
   /// one is connected).
   final String? suffix;
+}
+
+/// The live line of a [KitTopBarScope]: a mint mark, what is running in
+/// muted words, then the act in accent ("Dev server running · Open
+/// preview"). The whole line is one target at least `minTarget` tall.
+/// Shown only from a real signal; the host never guesses it.
+class KitTopBarLink {
+  const KitTopBarLink({
+    required this.label,
+    required this.action,
+    required this.onTap,
+    this.linkKey,
+  });
+
+  /// What is running: "Dev server running".
+  final String label;
+
+  /// The act, naming its target: "Open preview".
+  final String action;
+  final VoidCallback onTap;
+  final Key? linkKey;
+}
+
+/// The branch chip of a [KitTopBarScope]: the branch's name (or "Git" when
+/// there is none to name) and one tap that opens the Git sheet.
+class KitTopBarBranch {
+  const KitTopBarBranch({
+    required this.label,
+    required this.semanticsLabel,
+    required this.onTap,
+    this.chipKey,
+    this.icon,
+  });
+
+  /// The branch name; wrap a name the person chose with `KitBidi.auto`.
+  final String label;
+
+  /// What a screen reader says: "Git, branch main. Opens the Git actions."
+  final String semanticsLabel;
+  final VoidCallback onTap;
+  final Key? chipKey;
+  final IconData? icon;
 }
 
 bool _actionsHaveIcons(List<KitAction> actions) {
@@ -100,6 +179,7 @@ class KitTopBar extends StatelessWidget {
     super.key,
     required this.title,
     this.subtitle,
+    this.subtitleTail,
     this.subtitleTone = AppStatusTone.neutral,
     this.needsYou = 0,
     this.onTitleTap,
@@ -116,6 +196,7 @@ class KitTopBar extends StatelessWidget {
     this.menuKey,
     this.menuLabel,
     this.scope,
+    this.centred = false,
   }) : controls = null,
        assert(
          onTitleTap == null || (titleTapLabel ?? '') != '',
@@ -139,6 +220,7 @@ class KitTopBar extends StatelessWidget {
     this.menuLabel,
   }) : title = '',
        subtitle = null,
+       subtitleTail = null,
        subtitleTone = AppStatusTone.neutral,
        needsYou = 0,
        onTitleTap = null,
@@ -150,7 +232,13 @@ class KitTopBar extends StatelessWidget {
        exitKey = null,
        accessory = null,
        accessoryShown = true,
-       scope = null;
+       scope = null,
+       centred = false;
+
+  /// A sheet-like header for a page that makes one new thing (New
+  /// conversation): the title centred in title size between its exit and
+  /// the same room on the other side. No actions, menu or scope.
+  final bool centred;
 
   /// Non-null only for [KitTopBar.shell].
   final KitShellControls? controls;
@@ -161,6 +249,10 @@ class KitTopBar extends StatelessWidget {
   /// One line of state: "Working · 2 min", the server. Words from the one
   /// status source for the entity, never hand-built.
   final String? subtitle;
+
+  /// The subtitle's last words ("Next: review"), drawn only while the whole
+  /// line fits (the state is never cut for them); always read aloud.
+  final String? subtitleTail;
   final AppStatusTone subtitleTone;
 
   /// Greater than 0: the subtitle starts with [KitNeedsYou.span]; a
@@ -253,10 +345,13 @@ class KitTopBar extends StatelessWidget {
         menuLabel: menuLabel,
         reserved: 0,
       );
+      // The concepts' room under the status bar: space4 above the pill.
       return Padding(
-        padding: EdgeInsetsDirectional.symmetric(
-          horizontal: tokens.gutter,
-          vertical: tokens.space1,
+        padding: EdgeInsetsDirectional.only(
+          start: tokens.gutter,
+          end: tokens.gutter,
+          top: tokens.space4,
+          bottom: tokens.space1,
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: tokens.minTarget),
@@ -291,9 +386,46 @@ class KitTopBar extends StatelessWidget {
       onPressed: leave,
     );
 
+    if (centred) {
+      assert(
+        actions.isEmpty &&
+            menu.isEmpty &&
+            accessory == null &&
+            scope == null &&
+            onTitleTap == null &&
+            !brand,
+        'KitTopBar: a centred title stands alone beside its exit',
+      );
+      return _KitCentredBar(
+        title: title,
+        titleKey: titleKey,
+        back: resolved == KitTopBarExit.back
+            ? exitButton(AppIconography.back, l10n.kitTopBarBack)
+            : null,
+        close: resolved == KitTopBarExit.close
+            ? exitButton(AppIconography.close, l10n.kitTopBarClose)
+            : null,
+      );
+    }
+
     final toolbar =
         window == KitWindow.large ||
         (window == KitWindow.expanded && KitLayout.finePointer(context));
+    // The back arrow, the title's first line and the actions share one
+    // centre (owner, 2026-10-27: "Why aren't these aligned to the middle of
+    // each other?"): the title's line, not the title block with the lines
+    // under it. A line shorter than a touch target moves down to the
+    // buttons' centre; a taller one (large text) moves the buttons down.
+    final titleLine = brand ? null : _KitTopBarTitle.lineCentre(context, title);
+    final lift = titleLine == null ? 0.0 : tokens.minTarget / 2 - titleLine;
+    final titleTop = lift > 0 ? lift : 0.0;
+    final controlsTop = lift < 0 ? -lift : 0.0;
+    Widget control(Widget child) => controlsTop == 0
+        ? child
+        : Padding(
+            padding: EdgeInsetsDirectional.only(top: controlsTop),
+            child: child,
+          );
     final bar = LayoutBuilder(
       builder: (context, constraints) {
         // The buttons sit on the title's first line. A tall title block
@@ -303,8 +435,18 @@ class KitTopBar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (resolved == KitTopBarExit.back) ...[
-              exitButton(AppIconography.back, l10n.kitTopBarBack),
-              SizedBox(width: tokens.space1),
+              control(exitButton(AppIconography.back, l10n.kitTopBarBack)),
+              // The title's words start on the page's text rail (56 dp,
+              // KitTokens.textRail), where the rows' words below it do; a
+              // switcher's tappable pads its words by space2 itself.
+              SizedBox(
+                width: math.max(
+                  0.0,
+                  tokens.textRail -
+                      tokens.minTarget -
+                      (onTitleTap == null ? 0 : tokens.space2),
+                ),
+              ),
             ] else
               // No exit: the title starts on the gutter, like the page's
               // first content row. A switcher's tappable pads its words by
@@ -320,6 +462,7 @@ class KitTopBar extends StatelessWidget {
                 child: _KitTopBarTitle(
                   title: title,
                   subtitle: subtitle,
+                  subtitleTail: subtitleTail,
                   subtitleTone: subtitleTone,
                   needsYou: needsYou,
                   onTitleTap: onTitleTap,
@@ -327,29 +470,32 @@ class KitTopBar extends StatelessWidget {
                   brand: brand,
                   titleKey: titleKey,
                   scope: scope,
+                  lineTop: titleLine == null ? null : titleTop,
                 ),
               ),
             ),
             if (actions.isNotEmpty || menu.isNotEmpty || accessory != null) ...[
               SizedBox(width: tokens.space2),
-              _KitTopBarActions(
-                actions: actions,
-                accessory: accessory,
-                accessoryShown: accessoryShown,
-                menu: menu,
-                window: window,
-                menuKey: menuKey,
-                menuLabel: menuLabel,
-                // The title keeps at least half the bar (KitTopBar.md).
-                reserved: constraints.maxWidth / 2,
-                maxWidth: constraints.maxWidth,
+              control(
+                _KitTopBarActions(
+                  actions: actions,
+                  accessory: accessory,
+                  accessoryShown: accessoryShown,
+                  menu: menu,
+                  window: window,
+                  menuKey: menuKey,
+                  menuLabel: menuLabel,
+                  // The title keeps at least half the bar (KitTopBar.md).
+                  reserved: constraints.maxWidth / 2,
+                  maxWidth: constraints.maxWidth,
+                ),
               ),
             ],
             if (resolved == KitTopBarExit.close) ...[
               SizedBox(width: tokens.space1),
-              exitButton(AppIconography.close, l10n.kitTopBarClose),
+              control(exitButton(AppIconography.close, l10n.kitTopBarClose)),
             ],
-            SizedBox(width: tokens.space1),
+            SizedBox(width: _endRoom(context, tokens, resolved, window)),
           ],
         );
         return ConstrainedBox(
@@ -375,6 +521,42 @@ class KitTopBar extends StatelessWidget {
     // live background behind it), so a strong look runs up under the title.
     return bar;
   }
+
+  /// The room after the bar's last button: enough for the ink of its glyph
+  /// (the ⋯ or the close) to end on the gutter, the page's right rail,
+  /// rather than 4 dp inside it (impeccable layout pass, 2026-10-28).
+  /// Another last action keeps space1.
+  double _endRoom(
+    BuildContext context,
+    KitTokens tokens,
+    KitTopBarExit resolved,
+    KitWindow window,
+  ) {
+    // The ⋯ ends the bar when there is a menu, a parked action, or more
+    // ready actions than the window shows (_KitTopBarActions' rule).
+    final ready = actions.where((a) => a.enabled && a.visible).length;
+    final overflow =
+        menu.isNotEmpty ||
+        actions.any((a) => !a.enabled && a.visible) ||
+        switch (window) {
+          KitWindow.compact => ready > 1,
+          KitWindow.medium => ready > 3,
+          _ => false,
+        };
+    final last = resolved == KitTopBarExit.close
+        ? AppIconography.close
+        : overflow
+        ? AppIconography.more
+        : null;
+    if (last == null) return tokens.space1;
+    const glyph = AppIconography.actionSize;
+    return KitOptical.endPad(
+      context,
+      last,
+      glyph,
+      tokens.gutter - (tokens.minTarget - glyph) / 2,
+    );
+  }
 }
 
 /// The title block: header semantics naming the route, the title (up to two
@@ -384,6 +566,7 @@ class _KitTopBarTitle extends StatelessWidget {
   const _KitTopBarTitle({
     required this.title,
     required this.subtitle,
+    required this.subtitleTail,
     required this.subtitleTone,
     required this.needsYou,
     required this.onTitleTap,
@@ -391,10 +574,43 @@ class _KitTopBarTitle extends StatelessWidget {
     required this.brand,
     required this.titleKey,
     required this.scope,
+    this.lineTop,
   });
+
+  /// Room above the title's first line, so its centre is the buttons'
+  /// centre (KitTopBar.build). Null: the brand title, centred as a block.
+  final double? lineTop;
+
+  /// Where the title's first line looks centred, from the line's top: the
+  /// middle of its letters (the font's ascent to descent), which sits a
+  /// little below the middle of a line with extra leading.
+  static double lineCentre(BuildContext context, String title) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: title.isEmpty ? ' ' : title,
+        style: KitText.styleOf(context, KitTextRole.headline, pageTitle: true),
+      ),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      locale: Localizations.maybeLocaleOf(context),
+      maxLines: 1,
+      ellipsis: '\u2026',
+    )..layout();
+    final text = title.isEmpty ? ' ' : title;
+    final first = text.characters.first.length;
+    final boxes = painter.getBoxesForSelection(
+      TextSelection(baseOffset: 0, extentOffset: first),
+    );
+    final centre = boxes.isEmpty
+        ? painter.height / 2
+        : (boxes.first.top + boxes.first.bottom) / 2;
+    painter.dispose();
+    return centre;
+  }
 
   final String title;
   final String? subtitle;
+  final String? subtitleTail;
   final AppStatusTone subtitleTone;
   final int needsYou;
   final VoidCallback? onTitleTap;
@@ -431,6 +647,7 @@ class _KitTopBarTitle extends StatelessWidget {
         title,
         key: ValueKey(title),
         role: KitTextRole.headline,
+        pageTitle: true,
         maxLines: oneLine ? 1 : 2,
         overflow: TextOverflow.ellipsis,
       ),
@@ -459,10 +676,12 @@ class _KitTopBarTitle extends StatelessWidget {
     final needsYouWords = needsYou > 0 && !switcher
         ? l10n.kitNeedsYouSpan(needsYou).replaceFirst(RegExp(r'\s*·\s*$'), '')
         : null;
+    final tail = subtitleTail;
     final label = [
       title,
       ?needsYouWords,
       if (subtitle != null && subtitle.isNotEmpty) subtitle,
+      if (tail != null && tail.isNotEmpty) tail,
       if (switcher) titleTapLabel!,
     ].join(', ');
 
@@ -470,12 +689,14 @@ class _KitTopBarTitle extends StatelessWidget {
         ? Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const KitBrandMark(size: KitBrandMarkSize.mark),
+              // A small mark beside the name: the wordmark leads, quietly.
+              const KitBrandMark(),
               SizedBox(width: tokens.space2),
               Flexible(
                 child: KitText(
                   title,
                   role: KitTextRole.headline,
+                  pageTitle: true,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -493,34 +714,31 @@ class _KitTopBarTitle extends StatelessWidget {
               alignment: AlignmentDirectional.centerStart,
               children: [...previous, ?current],
             ),
-            child: KitText.rich(
-              key: ValueKey('${needsYou > 0 && !switcher}|$subtitle'),
-              TextSpan(
-                children: [
-                  if (needsYou > 0 && !switcher)
-                    KitNeedsYou.span(context, count: needsYou),
-                  if (subtitle != null && subtitle.isNotEmpty)
-                    TextSpan(
-                      text: subtitle,
-                      style: KitText.styleOf(
-                        context,
-                        KitTextRole.secondary,
-                        tone: _tone(subtitleTone),
-                      ),
-                    ),
-                ],
+            child: _KitTopBarTailLine(
+              key: ValueKey('${needsYou > 0 && !switcher}|$subtitle|$tail'),
+              subtitle: subtitle ?? '',
+              tail: tail,
+              needsYou: switcher ? 0 : needsYou,
+              style: KitText.styleOf(
+                context,
+                KitTextRole.secondary,
+                tone: _tone(subtitleTone),
               ),
-              role: KitTextRole.secondary,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           )
         : null;
 
+    final lineTop = this.lineTop;
+    // The block starts at the top, its first line lowered onto the buttons'
+    // centre; only the brand title is centred as a whole.
+    final blockAlignment = lineTop == null
+        ? AlignmentDirectional.centerStart
+        : AlignmentDirectional.topStart;
     Widget block = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (lineTop != null && lineTop > 0) SizedBox(height: lineTop),
         if (switcher)
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -549,10 +767,7 @@ class _KitTopBarTitle extends StatelessWidget {
         namesRoute: true,
         label: label,
         child: ExcludeSemantics(
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: block,
-          ),
+          child: Align(alignment: blockAlignment, child: block),
         ),
       );
       if (scope == null) return titleBlock;
@@ -560,20 +775,28 @@ class _KitTopBarTitle extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // The title sits where the other pages' titles do (centred in a
-          // touch target's height): a little room under the status bar.
-          Padding(
-            padding: EdgeInsetsDirectional.only(top: tokens.space2),
-            child: titleBlock,
-          ),
+          // The title sits where the other pages' titles do: its line on
+          // the buttons' centre.
+          if (lineTop == null)
+            Padding(
+              padding: EdgeInsetsDirectional.only(top: tokens.space2),
+              child: titleBlock,
+            )
+          else
+            titleBlock,
           _KitTopBarScopeLine(scope: scope),
         ],
       );
     }
+    // A switcher pads its words inside its own target; the lowered first
+    // line already leaves the room above it.
+    final switcherTop = lineTop == null ? tokens.space1 : 0.0;
     block = Padding(
-      padding: EdgeInsetsDirectional.symmetric(
-        horizontal: tokens.space2,
-        vertical: tokens.space1,
+      padding: EdgeInsetsDirectional.only(
+        start: tokens.space2,
+        end: tokens.space2,
+        top: switcherTop,
+        bottom: tokens.space1,
       ),
       child: ExcludeSemantics(child: block),
     );
@@ -592,138 +815,13 @@ class _KitTopBarTitle extends StatelessWidget {
             surface: KitSurfaceLevel.ground,
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: tokens.minTarget),
-              child: block,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The quiet line under the title: folder glyph, the name, an optional
-/// second name, and a small chevron that turns over while its menu is open.
-/// The whole line is one target at least `minTarget` tall; at large text it
-/// wraps instead of growing sideways. The second name (the server) joins the
-/// line with a short fade and slide.
-class _KitTopBarScopeLine extends StatefulWidget {
-  const _KitTopBarScopeLine({required this.scope});
-
-  final KitTopBarScope scope;
-
-  @override
-  State<_KitTopBarScopeLine> createState() => _KitTopBarScopeLineState();
-}
-
-class _KitTopBarScopeLineState extends State<_KitTopBarScopeLine> {
-  bool _open = false;
-
-  Future<void> _openMenu(BuildContext anchor) async {
-    setState(() => _open = true);
-    try {
-      await showKitMenu(
-        anchor,
-        items: widget.scope.items,
-        semanticsLabel: widget.scope.menuLabel,
-      );
-    } finally {
-      if (mounted) setState(() => _open = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scope = widget.scope;
-    final tokens = KitTokens.of(context);
-    final reduced = KitMotion.reduced(context);
-    final suffix = scope.suffix;
-    final hasSuffix = suffix != null && suffix.isNotEmpty;
-    final icon = scope.icon;
-    final small = tokens.iconSize(context, tokens.smallIconSize);
-    return Builder(
-      builder: (anchor) => Semantics(
-        container: true,
-        label: scope.semanticsLabel,
-        button: true,
-        excludeSemantics: true,
-        onTap: () => unawaited(_openMenu(anchor)),
-        child: Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: KitTappable(
-            tappableKey: scope.chipKey,
-            onTap: () => unawaited(_openMenu(anchor)),
-            shape: KitShape.button,
-            surface: KitSurfaceLevel.ground,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: tokens.minTarget),
-              child: Padding(
-                // No padding at the start: the folder glyph begins on the
-                // title's own edge.
-                padding: EdgeInsetsDirectional.only(end: tokens.space1),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (icon != null) ...[
-                      Icon(icon, size: small, color: tokens.roles.text2),
-                      SizedBox(width: tokens.space1),
-                    ],
-                    Flexible(
-                      // The server follows the project on the same line, and
-                      // drops under it where the words are too large to share.
-                      child: Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          KitText(
-                            scope.label,
-                            role: KitTextRole.secondary,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          KitPresence(
-                            show: hasSuffix,
-                            child: TweenAnimationBuilder<double>(
-                              tween: Tween<double>(end: hasSuffix ? 0 : 1),
-                              duration: reduced
-                                  ? Duration.zero
-                                  : KitMotion.quick,
-                              curve: KitMotion.enter,
-                              builder: (context, slide, child) =>
-                                  Transform.translate(
-                                    offset: Offset(
-                                      (Directionality.of(context) ==
-                                                  TextDirection.rtl
-                                              ? -1
-                                              : 1) *
-                                          slide *
-                                          tokens.space2,
-                                      0,
-                                    ),
-                                    child: child,
-                                  ),
-                              child: KitText(
-                                ' \u00b7 ${suffix ?? ''}',
-                                role: KitTextRole.secondary,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: tokens.space1),
-                    AnimatedRotation(
-                      turns: _open ? 0.5 : 0,
-                      duration: reduced ? Duration.zero : KitMotion.quick,
-                      curve: KitMotion.enter,
-                      child: Icon(
-                        AppIconography.chevronDown,
-                        size: small,
-                        color: tokens.roles.text2,
-                      ),
-                    ),
-                  ],
-                ),
+              // The title's line sits on the line of the back button and
+              // the actions.
+              child: Align(
+                alignment: blockAlignment,
+                widthFactor: 1,
+                heightFactor: 1,
+                child: block,
               ),
             ),
           ),
@@ -937,7 +1035,8 @@ class _KitTopBarActions extends StatelessWidget {
 }
 
 enum KitShellControlsLayout {
-  /// One row: server pill at the start, search button at the end.
+  /// One row: server pill at the start; search and, on a phone, the
+  /// Settings gear at the end.
   bar,
 
   /// The PC sidebar header: server pill, then the project switcher, then a
@@ -945,12 +1044,12 @@ enum KitShellControlsLayout {
   sidebar,
 }
 
-/// The glass top controls (VL §6): the server pill and search, dim glass
-/// (they hold words) sharing one BackdropGroup provided by the shell. Each
-/// gives under a finger (fluid glass). In the bar, pill and search are one
-/// [KitGlass.pair]: while the page is scrolled ([KitGlass.scrolledOf]) search
-/// slides up to the pill, one small gap from it; back at the top they pull
-/// apart.
+/// The shell's top controls (VL §6): the server pill, search and, on a phone
+/// (no navigation bar, owner 2026-10-20), the Settings gear.
+///
+/// In the bar the pill is one line at the start ("name · state", owner
+/// concepts 2026-10-22; two lines only when the word cannot share the line);
+/// search and the gear are round icon buttons at the end.
 ///
 /// States: connected, reconnecting (word + working mark), not answering,
 /// needs-you badge. In the bar the status word is always visible (STATE-9).
@@ -967,11 +1066,13 @@ class KitShellControls extends StatelessWidget {
     this.project,
     this.onProject,
     this.onSearch,
+    this.onSettings,
     this.showServer = true,
     this.layout = KitShellControlsLayout.bar,
     this.serverKey,
     this.projectKey,
     this.searchKey,
+    this.settingsKey,
   });
 
   /// The server's display name.
@@ -995,6 +1096,10 @@ class KitShellControls extends StatelessWidget {
   /// Null hides search.
   final VoidCallback? onSearch;
 
+  /// Bar layout only: opens Settings. Null hides the gear (a window with a
+  /// rail or sidebar names Settings there).
+  final VoidCallback? onSettings;
+
   /// False leaves the server pill out of the bar layout, for a destination
   /// that has no current server (Settings, SC3). The sidebar keeps it.
   final bool showServer;
@@ -1002,6 +1107,7 @@ class KitShellControls extends StatelessWidget {
   final Key? serverKey;
   final Key? projectKey;
   final Key? searchKey;
+  final Key? settingsKey;
 
   @override
   Widget build(BuildContext context) {
@@ -1010,6 +1116,7 @@ class KitShellControls extends StatelessWidget {
     final sidebar = layout == KitShellControlsLayout.sidebar;
     final radius = BorderRadius.circular(tokens.navRadius);
     final onSearch = this.onSearch;
+    final onSettings = this.onSettings;
     final project = this.project;
     final onProject = this.onProject;
 
@@ -1024,11 +1131,17 @@ class KitShellControls extends StatelessWidget {
       shape: KitShape.pill,
       surface: KitSurfaceLevel.surface2,
       child: ExcludeSemantics(
-        child: _KitServerPillContent(
-          server: server,
-          status: serverStatus,
-          tone: serverTone,
-          expand: sidebar,
+        // In the bar the pill's words stop growing past 1.5x (like a page
+        // title), so at 2x on a narrow phone the name is read beside the
+        // gear instead of being cut to "Lap…".
+        child: KitText.capScale(
+          max: sidebar ? double.infinity : 1.5,
+          child: _KitServerPillContent(
+            server: server,
+            status: serverStatus,
+            tone: serverTone,
+            expand: sidebar,
+          ),
         ),
       ),
     );
@@ -1037,36 +1150,52 @@ class KitShellControls extends StatelessWidget {
       child: KitGlass(borderRadius: radius, child: pillButton),
     );
 
-    if (!sidebar && !showServer) {
-      if (onSearch == null) return const SizedBox.shrink();
-      return Align(
-        alignment: AlignmentDirectional.centerEnd,
-        child: KitGlass(
-          borderRadius: radius,
-          child: KitIconButton(
+    if (!sidebar) {
+      // The end: search, then the gear, each on a circle of its own the
+      // pill's height, one gap apart (the owner's concepts, 2026-10-22).
+      final tools = [
+        if (onSearch != null)
+          KitIconButton(
             key: searchKey,
             icon: AppIconography.search,
             tooltip: l10n.kitTopBarSearch,
+            // Optically level with the gear beside it: the gear's teeth
+            // read smaller than the lens at the same size.
+            size: onSettings != null ? 22 : 24,
+            round: true,
             onPressed: onSearch,
           ),
-        ),
-      );
-    }
-
-    if (!sidebar) {
-      if (onSearch == null) {
-        return Align(alignment: AlignmentDirectional.centerStart, child: pill);
-      }
-      return KitGlass.pair(
-        joined: KitGlass.scrolledOf(context),
-        borderRadius: radius,
-        leading: KitNeedsYou.badge(count: needsYou, child: pillButton),
-        trailing: KitIconButton(
-          key: searchKey,
-          icon: AppIconography.search,
-          tooltip: l10n.kitTopBarSearch,
-          onPressed: onSearch,
-        ),
+        if (onSettings != null)
+          KitIconButton(
+            key: settingsKey,
+            icon: AppIconography.settingsGear,
+            tooltip: l10n.librarySettingsTitle,
+            size: 24,
+            round: true,
+            motion: KitIconMotion.turn,
+            onPressed: onSettings,
+          ),
+      ];
+      return Row(
+        children: [
+          if (showServer)
+            Flexible(
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: pill,
+              ),
+            )
+          else
+            const Spacer(),
+          if (tools.isNotEmpty) ...[
+            SizedBox(width: tokens.space2),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: tokens.space4,
+              children: tools,
+            ),
+          ],
+        ],
       );
     }
 
@@ -1159,230 +1288,6 @@ class KitShellControls extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-/// The tail of a server name that tells servers on one host apart: the
-/// ":port" and whatever follows it ("(secure)", " +2").
-final _kitServerNameTail = RegExp(r':\d+(?:\s.*)?$');
-
-/// The server's name on one line. When it is too long the host is cut with an
-/// ellipsis, never the port: "Computer at 10.0…:4443 (secure)".
-Widget _kitServerNameLine(String server) {
-  final match = _kitServerNameTail.firstMatch(server);
-  if (match == null || match.start == 0) {
-    return KitText(
-      KitBidi.auto(server),
-      role: KitTextRole.rowTitle,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
-  return Row(
-    key: const ValueKey('kit-shell-server-name'),
-    mainAxisSize: MainAxisSize.min,
-    textDirection: TextDirection.ltr,
-    children: [
-      Flexible(
-        child: KitText(
-          server.substring(0, match.start),
-          role: KitTextRole.rowTitle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-      KitText(
-        match.group(0)!,
-        role: KitTextRole.rowTitle,
-        maxLines: 1,
-        softWrap: false,
-      ),
-    ],
-  );
-}
-
-/// The pill's look: the state mark, the server's name, its status word and
-/// the switcher chevron (which never mirrors: it points down).
-class _KitServerPillContent extends StatelessWidget {
-  const _KitServerPillContent({
-    required this.server,
-    required this.status,
-    required this.tone,
-    required this.expand,
-  });
-
-  final String server;
-  final String status;
-  final AppStatusTone tone;
-  final bool expand;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = KitTokens.of(context);
-    final roles = tokens.roles;
-    final dotColor = switch (tone) {
-      AppStatusTone.neutral => roles.text3,
-      AppStatusTone.progress => roles.accent,
-      AppStatusTone.ok => roles.success,
-      AppStatusTone.attention => roles.attention,
-      AppStatusTone.failure => roles.text1,
-    };
-    final Widget mark = tone == AppStatusTone.progress
-        ? KitStatusMark(state: KitMarkState.working, label: status)
-        : SizedBox.square(
-            dimension: tokens.iconSize(context, tokens.smallIconSize),
-            child: Center(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: dotColor,
-                  shape: BoxShape.circle,
-                ),
-                child: SizedBox.square(dimension: tokens.space2),
-              ),
-            ),
-          );
-    // The PC sidebar (296 dp) never cuts the name: it wraps, and the status
-    // takes a second line. "Connected" is left to the green dot there (the
-    // pill's label still says it); Offline and Reconnecting keep the word.
-    if (expand) {
-      final word = tone == AppStatusTone.ok ? null : status;
-      return ConstrainedBox(
-        constraints: BoxConstraints(minHeight: tokens.minTarget),
-        child: Padding(
-          padding: EdgeInsetsDirectional.only(
-            start: tokens.space3,
-            end: tokens.space2,
-            top: tokens.space1,
-            bottom: tokens.space1,
-          ),
-          child: Row(
-            children: [
-              mark,
-              SizedBox(width: tokens.space2),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    KitText(KitBidi.auto(server), role: KitTextRole.rowTitle),
-                    if (word != null)
-                      KitText(
-                        word,
-                        role: KitTextRole.caption,
-                        tone: KitTextTone.secondary,
-                      ),
-                  ],
-                ),
-              ),
-              SizedBox(width: tokens.space1),
-              Icon(
-                AppIconography.chevronDown,
-                size: tokens.iconSize(context, tokens.smallIconSize),
-                color: roles.text2,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    // Keep the status in full (STATE-9). At large text it may be wider
-    // than the whole pill, so let it wrap below the name instead; and at
-    // large text the name never gives way to the status word ("127.…" at
-    // 2.0, emulator QA F8): when the two do not fit on one line the status
-    // goes under the name, which may take two lines.
-    final label = LayoutBuilder(
-      builder: (context, constraints) {
-        final statusText = ' · $status';
-        final scaler = MediaQuery.textScalerOf(context);
-        final direction = Directionality.of(context);
-        double widthOf(String text, KitTextRole role) {
-          final painter = TextPainter(
-            text: TextSpan(text: text, style: KitText.styleOf(context, role)),
-            textDirection: direction,
-            textScaler: scaler,
-            maxLines: 1,
-          )..layout();
-          final width = painter.width;
-          painter.dispose();
-          return width;
-        }
-
-        final statusWidth = widthOf(statusText, KitTextRole.caption);
-        final largeText = scaler.scale(1) >= 1.3;
-        // The port is never what gives way: when the status word and the
-        // name's port tail do not fit together, the status goes below.
-        final tail = _kitServerNameTail.firstMatch(server)?.group(0);
-        final tailWidth = tail == null
-            ? 0.0
-            : widthOf(tail, KitTextRole.rowTitle) + tokens.space3;
-        final stack =
-            statusWidth + tokens.minTarget > constraints.maxWidth ||
-            (tail != null && statusWidth + tailWidth > constraints.maxWidth) ||
-            (largeText &&
-                statusWidth +
-                        widthOf(KitBidi.auto(server), KitTextRole.rowTitle) >
-                    constraints.maxWidth);
-        final name = _kitServerNameLine(server);
-        if (stack && tone == AppStatusTone.ok) {
-          // Connected is left to the green dot (the pill's semantics still
-          // say it): one line, the name cut with an ellipsis.
-          return name;
-        }
-        if (stack) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              name,
-              KitText(
-                status,
-                role: KitTextRole.caption,
-                tone: KitTextTone.secondary,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          );
-        }
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(child: name),
-            KitText(
-              statusText,
-              role: KitTextRole.caption,
-              tone: KitTextTone.secondary,
-              maxLines: 1,
-            ),
-          ],
-        );
-      },
-    );
-    return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: tokens.minTarget),
-      child: Padding(
-        padding: EdgeInsetsDirectional.only(
-          start: tokens.space3,
-          end: tokens.space2,
-          top: tokens.space1,
-          bottom: tokens.space1,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            mark,
-            SizedBox(width: tokens.space2),
-            Flexible(child: label),
-            SizedBox(width: tokens.space1),
-            Icon(
-              AppIconography.chevronDown,
-              size: tokens.iconSize(context, tokens.smallIconSize),
-              color: roles.text2,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

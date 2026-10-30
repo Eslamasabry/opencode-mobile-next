@@ -95,8 +95,8 @@
           "type": "button",
           "label": "Try again",
           "key": null,
-          "file": "lib/ui/widgets/product_states.dart",
-          "line": 241,
+          "file": "lib/ui/screens/library/commands_screen.dart",
+          "line": 38,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -210,8 +210,8 @@
           "type": "button",
           "label": "Try again",
           "key": null,
-          "file": "lib/ui/widgets/product_states.dart",
-          "line": 241,
+          "file": "lib/ui/screens/library/skills_screen.dart",
+          "line": 150,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -244,9 +244,9 @@
       "title": "<skill name>",
       "kind": "sheet",
       "file": "lib/ui/screens/library/skill_activation.dart",
-      "widget": "_SkillActivationSheet",
+      "widget": "_showSkillSheet",
       "presentedBy": [],
-      "line": 3,
+      "line": 19,
       "purpose": "Previews a skill and adds it to the current conversation, optionally resuming the agent right away.",
       "reachedFrom": [
         {
@@ -270,7 +270,8 @@
           "targetWidget": null,
           "effect": "Navigator.pop(context); disabled while _sending (PopScope canPop: !_sending).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/skill_activation.dart"
         },
         {
           "id": "skill-activation-sheet-run-now",
@@ -283,7 +284,8 @@
           "targetWidget": null,
           "effect": "CheckboxListTile; setState(_resume). Disabled while sending, after an uncertain result, or when applied elsewhere.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/skill_activation.dart"
         },
         {
           "id": "skill-activation-sheet-activate",
@@ -296,7 +298,8 @@
           "targetWidget": null,
           "effect": "_activate(): controller.activateSessionSkill(sessionID, skill.id ?? skill.name, resume: _resume, expectedLocation); pops with true on success, else shows the SessionSkillFailure message inline.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/skill_activation.dart"
         }
       ]
     },
@@ -376,8 +379,8 @@
           "type": "button",
           "label": "Try again",
           "key": null,
-          "file": "lib/ui/widgets/product_states.dart",
-          "line": 241,
+          "file": "lib/ui/screens/library/references_screen.dart",
+          "line": 159,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -564,8 +567,8 @@
           "type": "button",
           "label": "Try again",
           "key": null,
-          "file": "lib/ui/widgets/product_states.dart",
-          "line": 241,
+          "file": "lib/ui/screens/tools_screen.dart",
+          "line": 262,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -677,7 +680,7 @@
           "type": "icon-button",
           "label": "Add MCP server",
           "key": "add-mcp-server",
-          "line": 681,
+          "line": 41,
           "action": "open-sheet",
           "target": "mcp-add-sheet",
           "targetWidget": "showMcpAddSheet",
@@ -685,7 +688,8 @@
           "gates": [
             "_showMcp && _catalogAvailable"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_page.dart"
         },
         {
           "id": "integrations-pull-refresh",
@@ -756,8 +760,8 @@
           "type": "button",
           "label": "Enter code",
           "key": null,
-          "file": "lib/ui/screens/library/pending_auth_recovery.dart",
-          "line": 145,
+          "file": "lib/ui/screens/library/integration_tiles.dart",
+          "line": 244,
           "action": "open-dialog",
           "target": "integrations-oauth-code-dialog",
           "targetWidget": "_OAuthCodeDialog",
@@ -774,8 +778,8 @@
           "type": "button",
           "label": "Cancel sign-in",
           "key": null,
-          "file": "lib/ui/screens/library/pending_auth_recovery.dart",
-          "line": 151,
+          "file": "lib/ui/screens/library/command_auth_sheet.dart",
+          "line": 274,
           "action": "mutate",
           "target": null,
           "targetWidget": null,
@@ -877,7 +881,7 @@
           "type": "button",
           "label": "Refresh",
           "key": null,
-          "line": 737,
+          "line": 245,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -886,14 +890,15 @@
             "_showProviders (widget.mode != IntegrationsMode.mcp)",
             "integrations.isEmpty"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_page.dart"
         },
         {
           "id": "integrations-provider-search",
           "type": "text-field",
           "label": "Search providers or models",
           "key": "providers-search",
-          "line": 855,
+          "line": 255,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -902,14 +907,15 @@
             "_showProviders (widget.mode != IntegrationsMode.mcp)",
             "integrations loaded and non-empty"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_page.dart"
         },
         {
           "id": "integrations-provider-search-clear",
           "type": "icon-button",
           "label": "Clear provider search",
           "key": "providers-search-clear",
-          "line": 868,
+          "line": 256,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -918,14 +924,15 @@
             "_showProviders (widget.mode != IntegrationsMode.mcp)",
             "_providerQuery.isNotEmpty"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_page.dart"
         },
         {
           "id": "integrations-provider-search-empty-clear",
           "type": "button",
           "label": "Clear search",
           "key": null,
-          "line": 760,
+          "line": 540,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -934,7 +941,8 @@
             "_showProviders (widget.mode != IntegrationsMode.mcp)",
             "matching.isEmpty"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_signin.dart"
         },
         {
           "id": "integrations-provider-connect",
@@ -977,7 +985,7 @@
           "type": "button",
           "label": "Server sign-in",
           "key": null,
-          "line": 784,
+          "line": 150,
           "action": "open-sheet",
           "target": "integrations-connect-method-sheet",
           "targetWidget": "_connectIntegration",
@@ -994,7 +1002,7 @@
           "type": "button",
           "label": "Manage accounts",
           "key": null,
-          "line": 806,
+          "line": 292,
           "action": "open-sheet",
           "target": "credential-management-sheet",
           "targetWidget": "_CredentialManagementSheet",
@@ -1003,7 +1011,8 @@
             "_showProviders (widget.mode != IntegrationsMode.mcp)",
             "controller.capabilities.integrationCredentials && controller.repository is IntegrationCredentialGateway"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_page.dart"
         },
         {
           "id": "integrations-mcp-load-retry",
@@ -1027,7 +1036,7 @@
           "type": "button",
           "label": "Add an MCP server",
           "key": "mcp-empty-add",
-          "line": 1427,
+          "line": 383,
           "action": "open-sheet",
           "target": "mcp-add-sheet",
           "targetWidget": "showMcpAddSheet",
@@ -1036,7 +1045,8 @@
             "_showMcp (widget.mode != IntegrationsMode.providers)",
             "servers.isEmpty"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_page.dart"
         },
         {
           "id": "integrations-mcp-server-action",
@@ -1077,7 +1087,7 @@
           "type": "button",
           "label": "Remove",
           "key": null,
-          "line": 974,
+          "line": 411,
           "action": "open-sheet",
           "target": "integrations-remove-mcp-sheet",
           "targetWidget": "showConfirmSheet",
@@ -1086,7 +1096,8 @@
             "_showMcp (widget.mode != IntegrationsMode.providers)",
             "_canRemoveMcp: capabilities.mcpRuntimeRemovals && repository is McpRemovalGateway && profile readable && inventory from current location/repository"
           ],
-          "destructive": true
+          "destructive": true,
+          "file": "lib/ui/screens/library/integrations_page.dart"
         },
         {
           "id": "integrations-mcp-pending-enter-code",
@@ -1160,7 +1171,7 @@
           "type": "button",
           "label": "Add an MCP server",
           "key": null,
-          "line": 1039,
+          "line": 384,
           "action": "navigate",
           "target": "mcp-setup",
           "targetWidget": "McpSetupScreen",
@@ -1169,7 +1180,8 @@
             "_showMcp (widget.mode != IntegrationsMode.providers)",
             "resources.isEmpty && _servers?.isEmpty == true"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_page.dart"
         }
       ],
       "variants": [
@@ -1185,7 +1197,7 @@
       "file": "lib/ui/screens/library/integrations_screen.dart",
       "widget": "_connectIntegration",
       "presentedBy": [],
-      "line": 1333,
+      "line": 150,
       "purpose": "Picker shown when a provider offers more than one usable connect method.",
       "reachedFrom": [
         {
@@ -1270,13 +1282,14 @@
           "type": "button",
           "label": "Connect",
           "key": null,
-          "line": 1414,
+          "line": 214,
           "action": "submit",
           "target": null,
           "targetWidget": null,
           "effect": "Pops with the trimmed key; caller runs repository.connectIntegrationKey(integration.id, value), then _load() and controller.refreshCatalog(). Empty value is ignored.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_connect.dart"
         }
       ]
     },
@@ -1285,11 +1298,11 @@
       "title": "<method label>",
       "kind": "dialog",
       "file": "lib/ui/screens/library/integration_tiles.dart",
-      "widget": "_OAuthInputsDialog",
+      "widget": "_showOAuthInputsSheet",
       "presentedBy": [
         "_oauthInputs"
       ],
-      "line": 716,
+      "line": 692,
       "purpose": "Server-defined OAuth prompt form (text and select prompts with conditional visibility) collected before starting provider OAuth.",
       "reachedFrom": [
         {
@@ -1316,7 +1329,8 @@
           "targetWidget": null,
           "effect": "DropdownButtonFormField per 'select' prompt; setState(_values[key]); required unless prompt.required == false.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integration_tiles.dart"
         },
         {
           "id": "integrations-oauth-inputs-dialog-text",
@@ -1366,10 +1380,10 @@
       "id": "integrations-authorization-launch-dialog",
       "title": "Open authorization page?",
       "kind": "dialog",
-      "file": "lib/ui/screens/library/integrations_screen.dart",
+      "file": "lib/ui/screens/library/integrations_connect.dart",
       "widget": "_confirmAuthorizationLaunch",
       "presentedBy": [],
-      "line": 1118,
+      "line": 9,
       "purpose": "Leaving-the-app confirmation showing the destination host and any OpenCode instructions (may contain a device code) before opening the browser for provider or MCP OAuth.",
       "reachedFrom": [
         {
@@ -1409,13 +1423,14 @@
           "type": "button",
           "label": "Open browser",
           "key": null,
-          "line": 1169,
+          "line": 35,
           "action": "external-link",
           "target": null,
           "targetWidget": null,
           "effect": "Pops true; caller runs _openAuthorization(destination): parseAuthorizationUrl (https only, no userinfo) then openExternalLink with launchUrl(mode: externalApplication) (line 1674) or the injected authorizationLauncher.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_connect.dart"
         }
       ]
     },
@@ -1423,10 +1438,10 @@
       "id": "integrations-oauth-code-dialog",
       "title": "Finish {provider}",
       "kind": "dialog",
-      "file": "lib/ui/screens/library/integration_tiles.dart",
-      "widget": "_OAuthCodeDialog",
+      "file": "lib/ui/screens/library/integrations_connect.dart",
+      "widget": "_enterOAuthCode",
       "presentedBy": [],
-      "line": 618,
+      "line": 409,
       "purpose": "Paste the provider authorization code (or callback URL) to finish a code-mode OAuth attempt.",
       "reachedFrom": [
         {
@@ -1451,7 +1466,8 @@
           "targetWidget": null,
           "effect": "onSubmitted -> _complete(): pops the trimmed non-empty value.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integration_tiles.dart"
         },
         {
           "id": "integrations-oauth-code-dialog-not-yet",
@@ -1464,7 +1480,8 @@
           "targetWidget": null,
           "effect": "Navigator.pop(context).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integration_tiles.dart"
         },
         {
           "id": "integrations-oauth-code-dialog-complete",
@@ -1477,7 +1494,8 @@
           "targetWidget": null,
           "effect": "_complete(); caller sends providerOAuthCompletionCode(code) via repository.completeIntegrationOAuth (legacy) or controller.recoverIntegrationAuth(entry, code) (recovery tile).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integration_tiles.dart"
         }
       ]
     },
@@ -1485,10 +1503,10 @@
       "id": "integrations-mcp-oauth-code-dialog",
       "title": "Complete MCP authorization",
       "kind": "dialog",
-      "file": "lib/ui/screens/library/integration_tiles.dart",
-      "widget": "_McpOAuthCodeDialog",
+      "file": "lib/ui/screens/library/integrations_mcp.dart",
+      "widget": "_enterMcpAuthorizationCode",
       "presentedBy": [],
-      "line": 206,
+      "line": 235,
       "purpose": "Manual fallback for MCP OAuth: paste the callback URL or code; validated against the expected OAuth state.",
       "reachedFrom": [
         {
@@ -1509,7 +1527,8 @@
           "targetWidget": null,
           "effect": "onSubmitted -> _submit(): parseMcpAuthorizationCode(text, expectedState); pops the code or shows errorText.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integration_tiles.dart"
         },
         {
           "id": "integrations-mcp-oauth-code-dialog-back",
@@ -1522,7 +1541,8 @@
           "targetWidget": null,
           "effect": "Navigator.pop(context).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integration_tiles.dart"
         },
         {
           "id": "integrations-mcp-oauth-code-dialog-complete",
@@ -1535,7 +1555,8 @@
           "targetWidget": null,
           "effect": "_submit(); caller runs _completeMcpAuthentication -> repository.completeMcpAuthentication(server, code), reloads servers/resources, snackbar.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/integration_tiles.dart"
         }
       ]
     },
@@ -1543,12 +1564,12 @@
       "id": "integrations-disconnect-provider-sheet",
       "title": "Disconnect {provider}?",
       "kind": "sheet",
-      "file": "lib/ui/screens/library/integrations_screen.dart",
+      "file": "lib/ui/screens/library/integrations_connect.dart",
       "widget": "_disconnectIntegration",
       "presentedBy": [
         "showConfirmSheet"
       ],
-      "line": 1265,
+      "line": 42,
       "purpose": "Confirms removing a provider's stored credential (notes when a server environment connection remains).",
       "reachedFrom": [
         {
@@ -1643,12 +1664,12 @@
       "id": "integrations-forget-pending-auth-sheet",
       "title": "Forget on this device",
       "kind": "sheet",
-      "file": "lib/ui/screens/library/integrations_screen.dart",
-      "widget": "_PendingAuthRecoveryTileState._act",
+      "file": "lib/ui/screens/library/integrations_signin.dart",
+      "widget": "_confirmForgetSignIn",
       "presentedBy": [
         "showConfirmSheet"
       ],
-      "line": 1238,
+      "line": 483,
       "purpose": "The one forget-sign-in question, for a saved sign-in and for a start the server never confirmed (the uncertain start's own sheet merged here, slice-P3.11a).",
       "reachedFrom": [
         {
@@ -1849,9 +1870,9 @@
       "title": "Rename account",
       "kind": "dialog",
       "file": "lib/ui/screens/library/credential_sheet.dart",
-      "widget": "_CredentialLabelDialog",
+      "widget": "showKitInputDialog",
       "presentedBy": [],
-      "line": 390,
+      "line": 178,
       "purpose": "Edits an account label (1-128 chars, no control characters).",
       "reachedFrom": [
         {
@@ -1872,7 +1893,8 @@
           "targetWidget": null,
           "effect": "onChanged revalidates; onSubmitted pops the trimmed label when valid.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/credential_sheet.dart"
         },
         {
           "id": "credential-management-sheet-rename-dialog-cancel",
@@ -1885,7 +1907,8 @@
           "targetWidget": null,
           "effect": "Navigator.pop(context).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/credential_sheet.dart"
         },
         {
           "id": "credential-management-sheet-rename-dialog-save",
@@ -1898,7 +1921,8 @@
           "targetWidget": null,
           "effect": "Pops the label; caller runs controller.renameIntegrationCredential(integrationID, id, label, locationRevision). Disabled when invalid.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/library/credential_sheet.dart"
         }
       ]
     },
@@ -2197,7 +2221,7 @@
         "showKitChoiceSheet"
       ],
       "line": 36,
-      "purpose": "MCP › Add: choose the public catalogue or the manual form.",
+      "purpose": "MCP \u203a Add: choose the public catalogue or the manual form.",
       "reachedFrom": [
         {
           "page": "integrations",

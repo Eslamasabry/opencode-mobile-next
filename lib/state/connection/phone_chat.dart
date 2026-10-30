@@ -49,6 +49,20 @@ mixin _ConnectionControllerPhoneChat on ChangeNotifier {
   bool _turnStallTestClock = false;
   bool? _turnStallTransportConnected;
 
+  /// Watchdog ticks since the waiting requests were last re-read for an
+  /// open turn (see `_turnStallRereadRequests`).
+  int _turnStallRereadTicks = 0;
+
+  /// The last finished read of the waiting permissions or questions failed,
+  /// so an ask the stream missed cannot be found (see `_syncTurnStalls`).
+  bool _turnStallAsksUnreadable = false;
+
+  int _turnStallSyncs = 0;
+
+  /// How many times the stall watch was brought up to date.
+  @visibleForTesting
+  int get turnStallSyncsForTesting => _turnStallSyncs;
+
   TurnStallDiagnosis? turnStallFor(String sessionId) =>
       _turnStalls.diagnosisFor(sessionId);
 
@@ -57,7 +71,7 @@ mixin _ConnectionControllerPhoneChat on ChangeNotifier {
     required Duration Function() elapsed,
     required Future<TurnStallEvidence> Function() probe,
   }) {
-    _self._resetTurnStalls();
+    _self._forgetTurnStalls();
     _turnStalls = TurnStallTracker(elapsed: elapsed);
     _turnStallProbe = probe;
     _turnStallTestClock = true;

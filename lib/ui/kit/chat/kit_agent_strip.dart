@@ -7,8 +7,10 @@ import '../../../l10n/app_localizations.dart';
 import '../kit_bidi.dart';
 import '../kit_chip.dart';
 import '../kit_layout.dart';
+import '../kit_max_width.dart';
 import '../kit_motion.dart';
 import '../kit_needs_you.dart';
+import '../kit_surface_look.dart';
 import '../kit_tappable.dart';
 import '../kit_task_mark.dart';
 import '../kit_text.dart';
@@ -90,7 +92,10 @@ class _KitAgentStripState extends State<KitAgentStrip> {
   late final Set<Object> _initial = {for (final a in widget.agents) a.id};
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.conversation(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     if (widget.agents.isEmpty) return const SizedBox.shrink();
     final tokens = KitTokens.of(context);
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
@@ -236,10 +241,18 @@ class _KitAgentChip extends StatelessWidget {
         ),
       );
     }
-    final filled = DecoratedBox(
-      decoration: ShapeDecoration(
-        color: tokens.fillOf(KitSurfaceLevel.surface3),
-        shape: tokens.shapeOf(KitShape.pill),
+    // A chip in the style's look, asked the way KitChip asks: a control
+    // pill on `surface3`.
+    final filled = kitSurfaceBox(
+      style: KitSurfaceLook.styleOf(context),
+      decoration: KitSurfaceLook.decorate(
+        context,
+        solid: ShapeDecoration(
+          color: tokens.fillOf(KitSurfaceLevel.surface3),
+          shape: tokens.shapeOf(KitShape.pill),
+        ),
+        role: KitSurfaceRole.control,
+        level: KitSurfaceLevel.surface3,
       ),
       child: chip,
     );

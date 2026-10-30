@@ -130,6 +130,9 @@ extension _PaseoPermissions on PaseoGateway {
         'callID': permission.tool!.callID,
       },
     if (permission.message != null) 'message': permission.message,
+    // The chat reads the request from this event: without it every card
+    // offered "Always allow", which the daemon then refused (issue #95).
+    if (!permission.canAlwaysAllow) 'canAlwaysAllow': false,
   };
 
   Object? _canonicalPermissionValue(Object? value) {

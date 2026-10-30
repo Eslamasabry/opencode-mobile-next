@@ -7,9 +7,12 @@
 library;
 
 import 'dart:convert';
+import 'dart:isolate';
 
+import '../domain/background_tasks.dart' show backgroundTaskMetadataKey;
 import '../domain/models.dart';
 import '../domain/server_gateway.dart' show ProductException;
+import '../domain/tool_label.dart' show isBackgroundTaskNotice;
 import 'transport.dart';
 
 /// The prompt's pictures as Paseo's `images` (base64 data and its type).
@@ -88,6 +91,21 @@ String? _sniffImageType(String base64Data) {
     return 'image/webp';
   }
   return null;
+}
+
+/// Reads the daemon's [reply] with [read], naming the reply in the failure's
+/// reason when a part of it has a shape the app doesn't read, so Details say
+/// which message it was (never its content).
+T paseoReply<T>(String reply, T Function() read) {
+  try {
+    return read();
+  } on PaseoFailure catch (error) {
+    if (error.kind != PaseoFailureKind.invalidResponse ||
+        error.reason != null) {
+      rethrow;
+    }
+    throw PaseoFailure(PaseoFailureKind.invalidResponse, reason: reply);
+  }
 }
 
 Map<String, dynamic> paseoObject(Object? value) {
@@ -230,12 +248,56 @@ Map<String, dynamic> paseoSessionJson(Session session) {
   };
 }
 
+/// How long a running status read from an agent *record* is believed.
+///
+/// The daemon answers for agents it has not loaded (every one, after its
+/// helper restarts) from their saved record, whose status is the one saved
+/// last (`lastStatus`). An agent whose helper was stopped mid-turn (Android
+/// stopping it with the app, a phone restart) keeps `running` there for good:
+/// nothing runs it, and nothing rewrites the record until it is opened. Only
+/// a loaded agent's snapshot carries `activeTurn` (its turn, or null), so a
+/// running status without it is believed for this long after the record's
+/// last change, then reads idle. The same bound as a sent prompt's
+/// "turn about to start" grace: a lost turn end cannot hold Working forever.
+const paseoRecordBusyFreshFor = Duration(minutes: 3);
+
 /// `busy` while the agent is starting or running a turn, otherwise `idle`.
-String paseoSessionStatus(Map<String, dynamic> agent) =>
-    switch (agent['status']) {
-      'initializing' || 'running' => 'busy',
-      _ => 'idle',
-    };
+///
+/// Busy needs live evidence: a loaded agent (its snapshot names
+/// `activeTurn`, a turn or null), or a record that changed within
+/// [paseoRecordBusyFreshFor] of [now]. See [paseoRecordBusyUntil].
+String paseoSessionStatus(Map<String, dynamic> agent, {DateTime? now}) {
+  if (!_paseoBusyWord(agent['status'])) return 'idle';
+  // A loaded agent "initializing" with no turn is the daemon loading it
+  // (the person opened its chat), not a run: no Working, and no Done when
+  // the load ends (jitter J10, 2026-10-28).
+  if (agent['status'] == 'initializing' &&
+      agent.containsKey('activeTurn') &&
+      agent['activeTurn'] == null) {
+    return 'idle';
+  }
+  final until = paseoRecordBusyUntil(agent);
+  if (until == null) return 'busy';
+  return (now ?? DateTime.now()).isBefore(until) ? 'busy' : 'idle';
+}
+
+/// When a running status from [agent]'s saved record stops counting; null
+/// when the status is not running or the snapshot is a loaded agent's (it is
+/// live and needs no bound). A record without a readable `updatedAt` has
+/// already expired.
+DateTime? paseoRecordBusyUntil(Map<String, dynamic> agent) {
+  if (!_paseoBusyWord(agent['status']) || agent.containsKey('activeTurn')) {
+    return null;
+  }
+  final updated = paseoMillis(agent['updatedAt']);
+  if (updated == null) return DateTime.fromMillisecondsSinceEpoch(0);
+  return DateTime.fromMillisecondsSinceEpoch(
+    updated,
+  ).add(paseoRecordBusyFreshFor);
+}
+
+bool _paseoBusyWord(Object? status) =>
+    status == 'initializing' || status == 'running';
 
 /// The OpenCode tool vocabulary the chat UI already renders well.
 String paseoToolName(String name, Map<String, dynamic> detail) =>
@@ -431,6 +493,89 @@ Object _toolInput(Map<String, dynamic> detail) {
   };
 }
 
+/// A background task's notice (Paseo's synthetic `task_notification` call)
+/// as the card reads it: Claude's sentence about the task, and how the task
+/// ended. Paseo keeps that end in the call's metadata (`stopped`, `killed`);
+/// the call itself reads completed for any end but failed or canceled, so
+/// without it every stopped task said only "ended".
+Map<String, dynamic> _taskNoticeInput(
+  Map<String, dynamic> item,
+  Map<String, dynamic> detail,
+) {
+  final meta = item['metadata'];
+  final status = meta is Map ? meta['status'] : null;
+  final label = paseoText(detail['label'], max: 2000).trim();
+  String? id(String key) {
+    final value = meta is Map ? meta[key] : null;
+    return value is String && value.trim().isNotEmpty && value.length <= 256
+        ? value.trim()
+        : null;
+  }
+
+  return {
+    // Paseo's own stand-in when Claude gave no summary is not a summary.
+    if (label.isNotEmpty && !_paseoNoticeLabel.hasMatch(label))
+      'summary': label,
+    if (status is String && status.trim().isNotEmpty)
+      'status': paseoText(status, max: 64),
+    // Which work ended: the call that started it (Claude's tool use id, the
+    // same as that step's call id) and Claude's own task id.
+    'toolUseId': ?id('toolUseId'),
+    'taskId': ?id('taskId'),
+  };
+}
+
+/// Claude Code's answer to a command it ran with "run in the background"
+/// (Paseo 0.9.2 and 0.11.2 pass it through as the shell step's output): the
+/// command goes on after the step ends, and a `task_notification` says when
+/// it stops.
+final _backgroundCommandReply = RegExp(
+  r'Command running in background with ID:\s*([A-Za-z0-9_-]+)',
+);
+
+/// The step's metadata with the background marker
+/// ([backgroundTaskMetadataKey]) when [toolName]'s finished step started
+/// work that goes on in the background.
+Map<String, dynamic>? _withBackgroundTask(
+  Map<String, dynamic>? meta, {
+  required String toolName,
+  required String status,
+  required Map<String, dynamic> detail,
+}) {
+  if (toolName != 'bash' || status != 'completed') return meta;
+  final output = detail['output'];
+  if (output is! String) return meta;
+  final match = _backgroundCommandReply.firstMatch(output);
+  if (match == null) return meta;
+  // Claude's Bash call carries a one-line `description` of the command
+  // ("Wait for the build to finish"). Paseo 0.9.1's shell detail does not
+  // pass it on (command, cwd, output, exitCode only); read it if one does.
+  final description = detail['description'];
+  return {
+    ...?meta,
+    backgroundTaskMetadataKey: {
+      'id': match.group(1),
+      if (description is String && description.trim().isNotEmpty)
+        'label': description.trim(),
+    },
+  };
+}
+
+final _paseoNoticeLabel = RegExp(r'^Background task (notification|\w+)$');
+
+/// What a notice says beyond its sentence: Paseo repeats the sentence as the
+/// call's text, or hands over Claude's raw `<task-notification>` envelope,
+/// whose only words for a person are a finished agent's `<result>`.
+String _taskNoticeOutput(Map<String, dynamic> detail) {
+  final text = paseoText(detail['text']).trim();
+  if (text.isEmpty || text == paseoText(detail['label']).trim()) return '';
+  if (!text.contains('<task-notification>')) return text;
+  final result = RegExp(
+    r'<result>\s*([\s\S]*?)\s*</result>',
+  ).firstMatch(text)?.group(1);
+  return result ?? '';
+}
+
 /// What the card reads beside the input and output: exit code, counts,
 /// the diff, a sub-agent's actions, a worktree setup's steps.
 Map<String, dynamic>? _toolMetadata(Map<String, dynamic> detail) {
@@ -567,6 +712,24 @@ final paseoSignInFailure = RegExp(
   caseSensitive: false,
 );
 
+/// How Paseo's ACP bridge words an agent's RPC failure in the reply text
+/// ("[System Error] Internal error: … code: -32603 …"): an error, never prose.
+bool _paseoSystemError(String text) =>
+    text.trimLeft().startsWith('[System Error]');
+
+final _signInAsk = RegExp(r'\b(sign|log) ?in\b', caseSensitive: false);
+
+/// Claude Code's own line when a call to Anthropic failed and the turn
+/// stopped, which Paseo forwards as the reply's text: "API Error: Can't reach
+/// the API server — check your internet or DNS (EAI_AGAIN)", "API Error: 529
+/// {…overloaded_error…}", "API Error: Request timed out.", "Claude AI usage
+/// limit reached|1761836400", "Credit balance is too low". A failed turn,
+/// never prose; the line goes to the error row's Details.
+final _claudeTurnFailure = RegExp(
+  r'^\s*(?:API Error\b|Claude AI usage limit reached\b'
+  r'|Credit balance is too low\b)',
+);
+
 /// A stable message id for a timeline item, or null when it has none of its
 /// own and the caller must derive one from its position ([fallbackSeq]).
 String paseoItemID(Map<String, dynamic> item, {required int? fallbackSeq}) {
@@ -603,20 +766,30 @@ MessageWithParts? paseoItemMessage(
   // An agent that can't sign in answers with its own error text ("Failed to
   // authenticate: OAuth session expired…"): a sign-in failure, said in the
   // app's words with the way to sign in again; the text goes to Details.
-  if (type == 'assistant_message' &&
-      paseoSignInFailure.hasMatch(paseoText(item['text']))) {
-    return MessageWithParts(
-      info: MessageInfo(
-        id: id,
-        sessionID: agentID,
-        role: 'assistant',
-        providerID: provider,
-        time: MsgTime(created: created, completed: completed ?? created),
-        errorText: paseoText(item['text'], max: 2000),
-        errorKind: MessageErrorKind.providerAuth,
-      ),
-      parts: const [],
-    );
+  // Other failures the bridge or Claude Code write as reply text are error
+  // rows too.
+  if (type == 'assistant_message') {
+    final text = paseoText(item['text']);
+    final system = _paseoSystemError(text);
+    // Inside the bridge's error report, any ask to sign in is one ("You need
+    // to sign in to use this model."); in a reply it could be advice.
+    final signIn =
+        paseoSignInFailure.hasMatch(text) ||
+        (system && _signInAsk.hasMatch(text));
+    if (signIn || system || _claudeTurnFailure.hasMatch(text)) {
+      return MessageWithParts(
+        info: MessageInfo(
+          id: id,
+          sessionID: agentID,
+          role: 'assistant',
+          providerID: provider,
+          time: MsgTime(created: created, completed: completed ?? created),
+          errorText: paseoText(item['text'], max: 2000),
+          errorKind: signIn ? MessageErrorKind.providerAuth : null,
+        ),
+        parts: const [],
+      );
+    }
   }
   switch (type) {
     case 'user_message':
@@ -645,24 +818,37 @@ MessageWithParts? paseoItemMessage(
       final detail = item['detail'] is Map<String, dynamic>
           ? item['detail'] as Map<String, dynamic>
           : const <String, dynamic>{};
+      final toolName = paseoToolName(paseoText(item['name'], max: 256), detail);
+      final notice = isBackgroundTaskNotice(toolName);
       parts.add(
         Part(
           id: '$id:0',
           messageID: id,
           callID: id,
           type: 'tool',
-          toolName: paseoToolName(paseoText(item['name'], max: 256), detail),
+          toolName: toolName,
           toolState: ToolState.fromJson({
             'status': status,
-            'input': _toolInput(detail),
-            'output': status == 'cancelled' ? '' : _toolOutput(item, detail),
+            'input': notice
+                ? _taskNoticeInput(item, detail)
+                : _toolInput(detail),
+            'output': status == 'cancelled'
+                ? ''
+                : notice
+                ? _taskNoticeOutput(detail)
+                : _toolOutput(item, detail),
             // A failed step reads its words from `error`.
             if (status == 'error')
               'error': paseoDeclinedToolCall(item)
                   // The card reads this as the person's choice, not a failure.
                   ? 'The user declined this tool call'
                   : _toolOutput(item, detail),
-            'metadata': _toolMetadata(detail),
+            'metadata': _withBackgroundTask(
+              _toolMetadata(detail),
+              toolName: toolName,
+              status: status,
+              detail: detail,
+            ),
           }),
         ),
       );
@@ -835,6 +1021,59 @@ List<MessageWithParts> paseoTimelineMessages(
   return result.values.toList();
 }
 
+/// Timelines with this many entries or more are mapped on a background
+/// isolate: a whole history has thousands, which takes a phone hundreds of
+/// milliseconds; a short one maps faster than the isolate hop
+/// (docs/qa/json-decode-2026-10-28).
+const paseoBackgroundTimelineEntries = 100;
+
+/// [paseoTimelineMessages] for a `fetch_agent_timeline_response`, with each
+/// tool call's merged item by id. A long timeline maps off the UI isolate;
+/// a payload that does not map is read again here, so it fails exactly as
+/// [paseoReply] reports it.
+Future<(List<MessageWithParts>, Map<String, Map<String, dynamic>>)>
+paseoTimelineReply(
+  String agentID,
+  Map<String, dynamic> payload, {
+  required bool busy,
+}) async {
+  final entries = payload['entries'];
+  if (entries is List && entries.length >= paseoBackgroundTimelineEntries) {
+    try {
+      final mapped = await _timelineInBackground(agentID, payload, busy);
+      if (mapped != null) return mapped;
+    } catch (_) {
+      // No isolate could run: map here.
+    }
+  }
+  final tools = <String, Map<String, dynamic>>{};
+  final messages = paseoReply(
+    'fetch_agent_timeline_response',
+    () => paseoTimelineMessages(agentID, payload, busy: busy, toolCalls: tools),
+  );
+  return (messages, tools);
+}
+
+Future<(List<MessageWithParts>, Map<String, Map<String, dynamic>>)?>
+_timelineInBackground(
+  String agentID,
+  Map<String, dynamic> payload,
+  bool busy,
+) => Isolate.run(() {
+  try {
+    final tools = <String, Map<String, dynamic>>{};
+    final messages = paseoTimelineMessages(
+      agentID,
+      payload,
+      busy: busy,
+      toolCalls: tools,
+    );
+    return (messages, tools);
+  } catch (_) {
+    return null;
+  }
+});
+
 Map<String, dynamic> paseoMessageJson(MessageInfo info) => {
   'id': info.id,
   'sessionID': info.sessionID,
@@ -842,7 +1081,23 @@ Map<String, dynamic> paseoMessageJson(MessageInfo info) => {
   'providerID': info.providerID,
   'time': {'created': info.time?.created, 'completed': info.time?.completed},
   if (info.finish != null) 'finish': info.finish,
-  if (info.errorText != null) 'error': {'message': info.errorText},
+  if (info.errorText != null)
+    'error': {
+      // The kind, in a name MessageErrorKind.fromName reads back: without it
+      // a live sign-in failure arrived as an unknown error.
+      'name': ?_paseoErrorName(info.errorKind),
+      'message': info.errorText,
+    },
+};
+
+String? _paseoErrorName(MessageErrorKind? kind) => switch (kind) {
+  MessageErrorKind.providerAuth => 'ProviderAuthError',
+  MessageErrorKind.contextOverflow => 'ContextOverflowError',
+  MessageErrorKind.outputLength => 'OutputLengthError',
+  MessageErrorKind.contentFilter => 'ContentFilterError',
+  MessageErrorKind.aborted => 'AbortedError',
+  MessageErrorKind.modelNotFound => 'ModelNotFoundError',
+  MessageErrorKind.unknown || null => null,
 };
 
 Map<String, dynamic> paseoPartJson(Part part) => {

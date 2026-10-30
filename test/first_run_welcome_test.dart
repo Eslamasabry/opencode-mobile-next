@@ -118,48 +118,54 @@ void main() {
     expect(normalizeServerProfileUrl(''), '');
   });
 
-  testWidgets('first run asks one question with exactly three choices', (
+  testWidgets('first run asks one question with two answers and one button', (
     tester,
   ) async {
     final (store, controller) = await _state();
     addTearDown(controller.dispose);
+    await tester.binding.setSurfaceSize(const Size(412, 915));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(_app(store, controller));
+    await tester.pumpAndSettle();
 
     final welcome = find.byKey(const ValueKey('first-run-welcome'));
     expect(welcome, findsOneWidget);
-    expect(find.text('Keep your work moving.'), findsOneWidget);
-    expect(find.text('Where does your coding agent run?'), findsOneWidget);
+    expect(find.text('Where should your agent run?'), findsOneWidget);
+    // Two answers and the quiet demo; no value paragraph, no step dots.
     expect(
       find.descendant(of: welcome, matching: _welcomeChoice),
       findsNWidgets(3),
     );
-    expect(find.text('On my computer'), findsOneWidget);
+    expect(find.text('Keep your work moving.'), findsNothing);
     expect(find.text('On this phone'), findsOneWidget);
+    expect(find.text('On my computer'), findsOneWidget);
     expect(find.text('Just show me'), findsOneWidget);
-    // The value sentence leads, the question follows, then one clear
-    // default (FB3): the phone, which needs nothing else, says it is the
-    // recommended way, and the computer and the demo follow under "Other
-    // ways".
     double top(String text) => tester.getTopLeft(find.text(text)).dy;
-    expect(top('Keep your work moving.'), lessThan(top('On this phone')));
-    expect(
-      top('Where does your coding agent run?'),
-      lessThan(top('On this phone')),
-    );
-    expect(top('On this phone'), lessThan(top('Other ways')));
-    expect(top('Other ways'), lessThan(top('On my computer')));
+    expect(top('Where should your agent run?'), lessThan(top('On this phone')));
+    expect(top('On this phone'), lessThan(top('On my computer')));
     expect(top('On my computer'), lessThan(top('Just show me')));
-    String supporting(String key) => tester
-        .widget<KitRow>(find.byKey(ValueKey('welcome-choice-$key')))
-        .supporting!
-        .toPlainText();
-    expect(
-      supporting('phone'),
-      'Recommended · Set one up here. No computer needed.',
+    // The phone is chosen to begin with, and the button names it.
+    final cards = tester.widget<KitChoiceCards<Object?>>(
+      find.byWidgetPredicate((w) => w is KitChoiceCards),
     );
-    // Only one choice is recommended: the word means "if unsure, this one".
-    expect(supporting('computer'), isNot(contains('Recommended')));
-    expect(supporting('demo'), isNot(contains('Recommended')));
+    expect(
+      tester.getSemantics(find.byKey(const ValueKey('welcome-choice-phone'))),
+      isSemantics(isSelected: true, isInMutuallyExclusiveGroup: true),
+      reason: cards.choices.first.title,
+    );
+    expect(find.text('Set up on this phone'), findsOneWidget);
+    // The cost comes from the setup engine; the computer card says how.
+    expect(cards.choices.first.supporting, startsWith('About '));
+    expect(
+      cards.choices.last.supporting,
+      'Pair with a code, or type its address',
+    );
+    // Choosing the computer renames the one button; it goes nowhere yet.
+    await tester.tap(find.byKey(const ValueKey('welcome-choice-computer')));
+    await tester.pumpAndSettle();
+    expect(find.text('Connect to my computer'), findsOneWidget);
+    expect(find.text('Set up on this phone'), findsNothing);
+    expect(find.byKey(const ValueKey('server-profile-editor')), findsNothing);
     // No product names before the person has chosen a path.
     for (final name in ['OpenCode 2', 'Termux', 'Tailscale', 'Codex']) {
       expect(
@@ -170,7 +176,7 @@ void main() {
     }
   });
 
-  testWidgets('a platform without the phone path offers two choices', (
+  testWidgets('a platform without the phone path offers the computer alone', (
     tester,
   ) async {
     debugPlatformCapabilities = const PlatformCapabilities.linuxDesktop();
@@ -178,14 +184,14 @@ void main() {
     final (store, controller) = await _state();
     addTearDown(controller.dispose);
     await tester.pumpWidget(_app(store, controller));
+    await tester.pumpAndSettle();
 
     expect(_welcomeChoice, findsNWidgets(2));
     expect(find.text('On my computer'), findsOneWidget);
     expect(find.text('Just show me'), findsOneWidget);
+    expect(find.text('Connect to my computer'), findsOneWidget);
     expect(find.text('On this phone'), findsNothing);
-    // Nothing to recommend over the computer when the phone path is absent.
-    expect(find.text('Other ways'), findsNothing);
-    expect(find.textContaining('Recommended'), findsNothing);
+    expect(find.text('More ways to set up'), findsNothing);
   });
 
   testWidgets('the doors that left the welcome are gone from it', (
@@ -194,8 +200,10 @@ void main() {
     final (store, controller) = await _state();
     addTearDown(controller.dispose);
     await tester.pumpWidget(_app(store, controller));
+    await tester.pumpAndSettle();
 
     expect(find.text('More setup options'), findsNothing);
+    expect(find.byKey(const ValueKey('servers-welcome-hero')), findsNothing);
     expect(find.byKey(const ValueKey('welcome-tailscale-card')), findsNothing);
     expect(find.byKey(const ValueKey('welcome-guide-card')), findsNothing);
     expect(
@@ -204,11 +212,14 @@ void main() {
     );
     expect(find.text('External agents'), findsNothing);
     expect(find.byTooltip('Setup guide'), findsNothing);
-    // About stays: notices must be readable before any connection exists.
-    expect(find.byTooltip('About and open source notices'), findsOneWidget);
+    // About stays one tap into the bar's menu: notices must be readable
+    // before any connection exists.
+    await tester.tap(find.byKey(const ValueKey('servers-menu')));
+    await tester.pumpAndSettle();
+    expect(find.text('About and open source notices'), findsOneWidget);
   });
 
-  testWidgets('the phone choice and the demo open their destinations', (
+  testWidgets('More ways to set up and the demo open their destinations', (
     tester,
   ) async {
     final (store, controller) = await _state();
@@ -221,39 +232,27 @@ void main() {
       PhoneSetup.engine = previousEngine;
       PhoneSetup.termux = previousTermux;
     });
-    // "On this phone" opens phone setup, whose pre-flight reads the device.
+    // Phone setup's own page reads the device for its pre-flight.
     answerVoiceDeviceProbe();
-    await tester.pumpWidget(
-      _app(
-        store,
-        controller,
-        routes: {
-          '/this-phone': (_) => Scaffold(
-            appBar: AppBar(title: const Text('Termux')),
-            body: const Text('termux-route'),
-          ),
-        },
-      ),
-    );
-
-    // Phone setup v2: "On this phone" opens its own screen (A), where the
-    // in-app setup leads; Termux moved behind it, under Other ways.
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('welcome-choice-phone')),
-    );
+    await tester.binding.setSurfaceSize(const Size(412, 915));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(_app(store, controller));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('welcome-choice-phone')));
+
+    // Termux and what gets installed live on phone setup's own page.
+    final moreWays = find.byKey(const ValueKey('welcome-more-ways'));
+    await tester.ensureVisible(moreWays);
+    await tester.pumpAndSettle();
+    await tester.tap(moreWays);
     await tester.pumpAndSettle();
     expect(find.byType(PhoneSetupStartScreen), findsOneWidget);
-    expect(find.text('termux-route'), findsNothing);
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('welcome-choice-demo')),
-    );
+    final demo = find.byKey(const ValueKey('welcome-choice-demo'));
+    await tester.ensureVisible(demo);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('welcome-choice-demo')));
+    await tester.tap(demo);
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
@@ -378,9 +377,6 @@ void main() {
 
       const height = 2400 / 2.625;
       const gestureBar = 63 / 2.625;
-      // The picture steps aside for large text: the choices are what the
-      // person came for.
-      expect(find.byKey(const ValueKey('servers-welcome-hero')), findsNothing);
 
       final list = find.byType(Scrollable).first;
       final position = tester.state<ScrollableState>(list).position;
@@ -406,6 +402,8 @@ void main() {
           reason: key,
         );
 
+        // The demo is a quiet text action, with no icon of its own.
+        if (key == 'demo') continue;
         final icon = tester.getRect(
           find.descendant(of: choice, matching: find.byType(Icon)).first,
         );
@@ -454,7 +452,7 @@ void main() {
     final probed = <String>[];
     serverProbe = ({required baseUrl, username, password}) async {
       probed.add(baseUrl);
-      return const ServerProbeResult.success('2.0.29');
+      return const ServerProbeResult.success('2.1.1');
     };
 
     final (store, controller) = await _state();
@@ -485,7 +483,7 @@ void main() {
 
     expect(probed, ['https://box.example:4096']);
     expect(find.byKey(const ValueKey('server-test-success')), findsOneWidget);
-    expect(find.text('OpenCode 2 · 2.0.29'), findsOneWidget);
+    expect(find.text('OpenCode 2 · 2.1.1'), findsOneWidget);
     expect(find.text('Connected — save to finish.'), findsOneWidget);
   });
 

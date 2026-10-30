@@ -61,8 +61,8 @@ void main() {
         .setMockMethodCallHandler(secure, null),
   );
 
-  testWidgets('as the root page, the menu holds Report a problem and the Setup '
-      'guide; the guide opens', (tester) async {
+  testWidgets('as the root page, the menu holds About, Report a problem and '
+      'the Setup guide; the guide opens', (tester) async {
     final controller = await _controller();
     await tester.pumpWidget(_app(controller, const ServersScreen()));
     await tester.pump();
@@ -70,7 +70,10 @@ void main() {
     await tester.tap(_key('servers-menu'));
     await tester.pumpAndSettle();
     final panel = tester.widget<KitMenuPanel>(find.byType(KitMenuPanel));
+    // The Welcome keeps its first page to the wordmark and the question:
+    // About waits here (vision 2026-10-20).
     expect(panel.items.map((item) => item.label), [
+      _en.e7SetupAboutNotices,
       _en.e7LibraryReportABug,
       _en.onboardingSetupGuide,
     ]);

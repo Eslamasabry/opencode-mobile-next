@@ -9,6 +9,8 @@ import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
+import 'kit_max_width.dart';
+import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -152,7 +154,10 @@ class KitFactRow extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
     final rtl = Directionality.of(context) == TextDirection.rtl;
@@ -180,76 +185,86 @@ class KitFactRow extends StatelessWidget {
     final heading = title;
     final words = semanticsLabel ?? [?heading, text, word, line].join('. ');
     final radius = tokens.panelCornerRadius;
+    final surfaces = KitSurfaceLook.styleOf(context);
     final border = switch (provenance) {
       KitProvenance.told => _Border.solid(roles.accent, 1.5),
       KitProvenance.guessed => _Border.dashed(roles.text2, 1.5),
-      KitProvenance.seen ||
-      KitProvenance.calculated => _Border.solid(roles.hairline, 1),
+      // A style draws its own edge: the plain hairline goes.
+      KitProvenance.seen || KitProvenance.calculated => _Border.solid(
+        KitSurfaceLook.isPlain(context) ? roles.hairline : Colors.transparent,
+        1,
+      ),
     };
     final card = CustomPaint(
       foregroundPainter: _FactBorderPainter(border, radius),
-      child: Container(
-        decoration: BoxDecoration(
-          color: tokens.fillOf(KitSurfaceLevel.surface1),
-          borderRadius: BorderRadius.circular(radius),
+      child: kitSurfaceBox(
+        style: surfaces,
+        decoration: KitSurfaceLook.decorate(
+          context,
+          solid: BoxDecoration(
+            color: tokens.fillOf(KitSurfaceLevel.surface1),
+            borderRadius: BorderRadius.circular(radius),
+          ),
         ),
-        padding: EdgeInsetsDirectional.fromSTEB(
-          tokens.space4,
-          tokens.space3,
-          tokens.space4,
-          tokens.space3,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          spacing: tokens.space1,
-          children: [
-            if (heading != null)
-              KitText(
-                _named(context, heading),
-                role: KitTextRole.rowTitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+        child: Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(
+            tokens.space4,
+            tokens.space3,
+            tokens.space4,
+            tokens.space3,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            spacing: tokens.space1,
+            children: [
+              if (heading != null)
+                KitText(
+                  _named(context, heading),
+                  role: KitTextRole.rowTitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              KitText(shown, role: KitTextRole.body),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: tokens.space2,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.zero,
+                    child: Icon(
+                      icon,
+                      size: tokens.smallIconSize,
+                      color: roles.text2,
+                    ),
+                  ),
+                  Expanded(
+                    child: KitText(
+                      line,
+                      role: KitTextRole.caption,
+                      tone: KitTextTone.secondary,
+                    ),
+                  ),
+                ],
               ),
-            KitText(shown, role: KitTextRole.body),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: tokens.space2,
-              children: [
+              if (answers.isNotEmpty)
                 Padding(
-                  padding: EdgeInsets.zero,
-                  child: Icon(
-                    icon,
-                    size: tokens.smallIconSize,
-                    color: roles.text2,
+                  padding: EdgeInsets.only(top: tokens.space2),
+                  child: Wrap(
+                    spacing: tokens.space2,
+                    runSpacing: tokens.space2,
+                    children: [
+                      for (final answer in answers.take(2))
+                        KitButton.fromAction(
+                          answer,
+                          role: KitButtonRole.secondary,
+                          expand: false,
+                        ),
+                    ],
                   ),
                 ),
-                Expanded(
-                  child: KitText(
-                    line,
-                    role: KitTextRole.caption,
-                    tone: KitTextTone.secondary,
-                  ),
-                ),
-              ],
-            ),
-            if (answers.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.only(top: tokens.space2),
-                child: Wrap(
-                  spacing: tokens.space2,
-                  runSpacing: tokens.space2,
-                  children: [
-                    for (final answer in answers.take(2))
-                      KitButton.fromAction(
-                        answer,
-                        role: KitButtonRole.secondary,
-                        expand: false,
-                      ),
-                  ],
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

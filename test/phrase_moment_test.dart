@@ -159,6 +159,37 @@ void main() {
     );
   });
 
+  test('an error notice hides the row; a stop or a length cut does not', () {
+    // Unslop 2026-10-30: the notice holds the way on (another model, Send
+    // again); a row of retry chips under it only crowds it.
+    expect(
+      _derive([
+        _user('u1'),
+        _assistant(
+          'a1',
+          error: "This model's usage limit reached",
+          kind: MessageErrorKind.unknown,
+        ),
+      ]).errorShown,
+      isTrue,
+    );
+    expect(
+      _derive([
+        _user('u1'),
+        _assistant('a1', error: 'aborted', kind: MessageErrorKind.aborted),
+      ]).errorShown,
+      isFalse,
+    );
+    expect(
+      _derive([
+        _user('u1'),
+        _assistant('a1', error: 'x', kind: MessageErrorKind.outputLength),
+      ]).errorShown,
+      isFalse,
+    );
+    expect(_derive([_user('u1'), _assistant('a1')]).errorShown, isFalse);
+  });
+
   test('a just-started reply that is not busy yet is not interrupted', () {
     expect(
       derivePhraseMoment(

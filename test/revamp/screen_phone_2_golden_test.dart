@@ -286,16 +286,16 @@ void main() {
         size: _wide,
       );
     });
-    testWidgets('setup progress stop sheet · $mode', (tester) async {
+    testWidgets('setup progress details sheet · $mode', (tester) async {
       await _progress(
         tester,
-        'phone_setup_progress_stop_sheet',
+        'phone_setup_progress_details_sheet',
         light: light,
         then: () async {
-          final cancel = find.byKey(const Key('setup-progress-cancel'));
-          await tester.ensureVisible(cancel);
+          final details = find.byKey(const Key('setup-progress-details'));
+          await tester.ensureVisible(details);
           await tester.pump();
-          await tester.tap(cancel);
+          await tester.tap(details);
           for (var i = 0; i < 8; i++) {
             await tester.pump(const Duration(milliseconds: 100));
           }

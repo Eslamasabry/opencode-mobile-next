@@ -23,6 +23,10 @@ abstract final class KitMotion {
   /// A part appearing or changing size: a notice, a section unfolding.
   static const standard = Duration(milliseconds: 250);
 
+  /// A page that grew out of a row closing back into it: shorter than its
+  /// opening (Material's container transform returns in 300 ms).
+  static const rowReturn = Duration(milliseconds: 300);
+
   /// An illustration drawing itself in. Long enough to be seen, short
   /// enough that nobody waits for it.
   static const entrance = Duration(milliseconds: 900);
@@ -98,6 +102,15 @@ abstract final class KitMotion {
     damping: 20,
   );
 
+  /// A streaming reply's box growing to its next height (KitMarkdown): a
+  /// critically damped spring (no overshoot) that settles on a new line in
+  /// about 210 ms, and carries its speed when another line lands mid-way.
+  static const replyGrow = SpringDescription(
+    mass: 1,
+    stiffness: 700,
+    damping: 53,
+  );
+
   /// The most the composer's glowing border (and anything else that
   /// travels a ring) may turn: one lap in 6 s.
   static const double edgeLightMaxLapsPerSecond = 1 / 6;
@@ -149,13 +162,34 @@ abstract final class KitMotion {
   static const Curve stepEase = Curves.easeInOutQuad;
   static const Curve stepOut = Curves.easeOutQuad;
 
+  /// Something arriving, or any change whose progress runs forward in time
+  /// (0 → 1), including a part leaving that way: starts fast, settles.
   static const Curve enter = Curves.easeOutCubic;
+
+  /// A part leaving, for a reverse slot only (`reverseCurve:`,
+  /// `switchOutCurve:`), where the value runs from 1 to 0: there this
+  /// curve leaves at once and settles. Never `.flipped` (that holds, then
+  /// accelerates away), and never `.transform(t)` on forward progress
+  /// (use [enter]).
   static const Curve exit = Curves.easeInCubic;
   static const Curve emphasized = Curves.easeInOutCubicEmphasized;
 
-  /// A drawing's part landing with a small overshoot: a mark popping in, a
-  /// card settling on a lane (the KitScene arrivals, MOT-1).
+  /// A page that grew out of a row going back into it (KitPageOrigin): the
+  /// opening's path mirrored, so it starts moving at once and lands softly
+  /// in the row. For a reverse slot (`reverseCurve`), where the value runs
+  /// from 1 to 0.
+  static const Curve rowReturnPath = FlippedCurve(
+    Curves.easeInOutCubicEmphasized,
+  );
+
+  /// A drawing's part landing with a small overshoot (KitScene arrivals
+  /// only, MOT-1). Not for marks or controls: they never bounce.
   static const Curve land = Curves.easeOutBack;
+
+  /// How small a mark (a chosen card's check, a guide's dot, a done tick)
+  /// is as it appears or leaves: never from nothing (it fades in from
+  /// here, on [enter]).
+  static const double markFrom = .9;
 
   /// The soft in-and-out of a pulse (the working dot).
   static const Curve pulse = Curves.easeInOut;
@@ -171,6 +205,13 @@ abstract final class KitMotion {
   static bool reduced(BuildContext context) =>
       (MediaQuery.maybeDisableAnimationsOf(context) ?? false) ||
       KitEffects.of(context).motion == KitMotionLevel.off;
+
+  /// Whether a small change may travel as well as fade (Animations: Full
+  /// only): a count rolling to its next number, a menu dropping a few dp from
+  /// what opened it. Under Calm the same change only cross-fades, and under
+  /// Off (or the system's remove animations) it is instant.
+  static bool travels(BuildContext context) =>
+      !reduced(context) && KitEffects.of(context).motion == KitMotionLevel.full;
 
   /// Whether an ambient loop may run here (Animations: Full only).
   static bool loopsIn(BuildContext context) =>

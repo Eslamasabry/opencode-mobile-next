@@ -21,6 +21,7 @@ import 'chat/kit_markdown.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
 import 'kit_code_block.dart';
+import 'kit_code_surface.dart';
 import 'kit_copy.dart';
 import 'kit_divider.dart';
 import 'kit_icon_button.dart';
@@ -33,7 +34,9 @@ import 'kit_page_route.dart';
 import 'kit_progress.dart';
 import 'kit_redact.dart';
 import 'kit_search_field.dart';
+import 'kit_sheet.dart' show kitSheetSurface;
 import 'kit_state_view.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 import 'motion/kit_reveal.dart';
@@ -74,6 +77,7 @@ Future<void> showKitViewer(
   bool? showSource,
   ValueChanged<bool>? onShowSourceChanged,
   Key? viewerKey,
+  bool reader = false,
 }) {
   final page = asPage ?? KitLayout.windowOf(context).isWide;
   Widget viewer(BuildContext routeContext) => _KitViewerRouteScope(
@@ -91,6 +95,7 @@ Future<void> showKitViewer(
       showSource: showSource,
       onShowSourceChanged: onShowSourceChanged,
       viewerKey: viewerKey,
+      reader: reader,
     ),
   );
   if (page) {
@@ -106,6 +111,9 @@ Future<void> showKitViewer(
   }
   final tokens = KitTokens.of(context);
   final reduced = KitMotion.reduced(context);
+  // Away from Solid at its defaults the route's Material turns clear and
+  // the style paints the sheet (`kitSheetSurface`, the `sheet` role).
+  final plain = KitSurfaceLook.isPlain(context);
   // The same bottom modal `showKitSheet` presents (kit_sheet.dart), holding
   // the viewer's own frame: the sheet frame's header has no slot for the
   // action and More, and its body is a scroll view, which cannot hold a
@@ -115,9 +123,9 @@ Future<void> showKitViewer(
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: false,
-    backgroundColor: tokens.sheetSurface,
+    backgroundColor: plain ? tokens.sheetSurface : Colors.transparent,
     barrierColor: tokens.scrim,
-    elevation: tokens.sheetElevation,
+    elevation: plain ? tokens.sheetElevation : 0,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(tokens.sheetRadius),
@@ -132,7 +140,17 @@ Future<void> showKitViewer(
             curve: KitMotion.enter,
             reverseCurve: KitMotion.exit,
           ),
-    builder: (sheetContext) => _KitViewerSheet(child: viewer(sheetContext)),
+    builder: (sheetContext) {
+      final sheet = _KitViewerSheet(child: viewer(sheetContext));
+      return plain
+          ? sheet
+          : kitSheetSurface(
+              radius: BorderRadius.vertical(
+                top: Radius.circular(KitTokens.of(sheetContext).sheetRadius),
+              ),
+              child: sheet,
+            );
+    },
   );
 }
 
@@ -206,7 +224,16 @@ class KitViewer extends StatefulWidget {
     this.onShowSourceChanged,
     this.showHeader = true,
     this.viewerKey,
+    this.reader = false,
   });
+
+  /// The reader layout (a project file opened from Files, vision
+  /// 2026-10-20): [primary] moves out of the header into a bar pinned at
+  /// the bottom, as the one solid main action, with Copy beside it when the
+  /// content is text; Wrap is a quiet toggle in the header; code wraps by
+  /// default on a compact window, so no line is cut. Every other viewer
+  /// keeps the header action.
+  final bool reader;
 
   /// "README.md": the title.
   final String name;
@@ -447,7 +474,11 @@ class _KitViewerState extends State<KitViewer> {
   }
 
   bool _effectiveWrap(BuildContext context) =>
-      _wrap ?? widget.wrap ?? kitViewerDefaultWrap(context, _content?.kind);
+      _wrap ??
+      widget.wrap ??
+      (widget.reader && KitLayout.windowOf(context) == KitWindow.compact
+          ? true
+          : kitViewerDefaultWrap(context, _content?.kind));
 
   void _toggleWrap() {
     final next = !_effectiveWrap(context);
@@ -605,7 +636,7 @@ class _KitViewerState extends State<KitViewer> {
             }
           },
         ),
-      if (_codeText != null && !_isEmpty)
+      if (_codeText != null && !_isEmpty && !widget.reader)
         KitMenuItem(
           key: const ValueKey('kit-viewer-menu-wrap'),
           label: l10n.kitWrapLines,
@@ -689,6 +720,7 @@ class _KitViewerState extends State<KitViewer> {
           // must stay in view while the person types.
           KitReveal(child: _findOpen ? _findBar(tokens, l10n) : null),
           Expanded(child: body),
+          if (widget.reader) ?_readerBar(context, tokens, l10n),
         ],
       ),
     );

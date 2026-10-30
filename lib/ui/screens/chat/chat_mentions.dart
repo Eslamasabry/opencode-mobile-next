@@ -20,6 +20,42 @@ const _fileSearchSettle = Duration(milliseconds: 150);
 const _fileSearchLimit = 20;
 
 extension _ChatMentions on _ChatScreenState {
+  void _insertAgentMention(CatalogAgent agent) {
+    if (!_supportsPromptAgentMentions) return;
+    _insertMentionText(agent.id);
+  }
+
+  /// Writes `@name ` over the `@word` being typed, or at the caret.
+  void _insertMentionText(String name) {
+    final current = _composer.value;
+    final query = _activeAgentQuery(current);
+    final selection = current.selection;
+    final fallback = selection.isValid
+        ? selection.start.clamp(0, current.text.length)
+        : current.text.length;
+    final start = query?.start ?? fallback;
+    final end =
+        query?.end ??
+        (selection.isValid
+            ? selection.end.clamp(start, current.text.length)
+            : start);
+    final needsLeadingSpace =
+        query == null &&
+        start > 0 &&
+        !RegExp(r'\s').hasMatch(current.text.substring(start - 1, start));
+    final needsTrailingSpace =
+        end == current.text.length ||
+        !RegExp(r'\s').hasMatch(current.text.substring(end, end + 1));
+    final replacement =
+        '${needsLeadingSpace ? ' ' : ''}@$name${needsTrailingSpace ? ' ' : ''}';
+    final nextText = current.text.replaceRange(start, end, replacement);
+    _composer.value = TextEditingValue(
+      text: nextText,
+      selection: TextSelection.collapsed(offset: start + replacement.length),
+    );
+    _focus.requestFocus();
+  }
+
   /// Project files can be searched and pointed at from this conversation.
   bool get _canMentionFiles =>
       !_conn.isIsolated && !_watching && _conn.capabilities.fileBrowsing;

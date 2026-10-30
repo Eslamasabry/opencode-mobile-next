@@ -17,6 +17,7 @@ import 'package:opencode_mobile/voice/read_aloud.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/complete_message_history.dart';
+import 'support/composer_tools.dart';
 import 'voice_controller_test.dart'
     show FakeVoiceRecorder, FakeVoiceRecognizer, readyVoiceModelManager;
 
@@ -28,6 +29,7 @@ const _transcript = 'A synthetic private utterance';
 class _Api extends FakeServerGateway with CompleteMessageHistory {
   _Api() : super(baseUrl: 'http://localhost');
   final prompts = <String>[];
+  String replyText = _reply;
 
   @override
   Future<Session> session(String id) async => Session(id: id);
@@ -36,7 +38,7 @@ class _Api extends FakeServerGateway with CompleteMessageHistory {
   Future<List<MessageWithParts>> messages(String id) async => [
     MessageWithParts(
       info: MessageInfo(id: 'reply', sessionID: id, role: 'assistant'),
-      parts: [Part(type: 'text', text: _reply)],
+      parts: [Part(type: 'text', text: replyText)],
     ),
   ];
 
@@ -281,6 +283,15 @@ void main() {
     },
   );
 
+  testWidgets('a reply with only code does not offer Read reply prose', (
+    tester,
+  ) async {
+    await _pumpChat(tester, _Api()..replyText = '```\nuptime\n```');
+    await tester.tap(find.byKey(const ValueKey('message-actions-reply')));
+    await tester.pumpAndSettle();
+    expect(find.text('Read reply prose'), findsNothing);
+  });
+
   testWidgets(
     'reply reading asks consent before engine access and stops on leaving chat',
     (tester) async {
@@ -365,7 +376,7 @@ void main() {
       addTearDown(voice.dispose);
       final api = _Api();
       await _pumpChat(tester, api, voice: voice);
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
       await tester.pumpAndSettle();
       await tester.ensureVisible(
         find.byKey(const Key('composer-tools-advanced')),

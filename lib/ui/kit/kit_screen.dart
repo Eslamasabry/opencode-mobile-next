@@ -3,10 +3,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 
 import 'kit_bottom_inset.dart';
 import 'kit_buttons.dart';
 import 'kit_details_fold.dart';
+import 'kit_frost_header.dart';
 import 'kit_jump_pill.dart';
 import 'kit_live_background.dart';
 import 'kit_layout.dart';
@@ -16,6 +18,7 @@ import 'kit_progress.dart';
 import 'kit_search_field.dart';
 import 'kit_status_line.dart';
 import 'kit_status_slot.dart';
+import 'kit_system_bars.dart';
 import 'kit_tokens.dart';
 import 'kit_top_bar.dart';
 import 'motion/kit_motion_parts.dart';
@@ -303,7 +306,11 @@ class KitScreen extends StatelessWidget {
     if (!isPage) {
       framed = slotted;
     } else {
-      framed = _PageFrame(topBar: panes ? null : topBar, child: slotted);
+      framed = _PageFrame(
+        topBar: panes ? null : topBar,
+        loading: loading,
+        child: slotted,
+      );
     }
     // A page with no Scaffold above it hosts one, so the screens that still
     // call ScaffoldMessenger.showSnackBar (until they move to KitUndo) show
@@ -477,39 +484,71 @@ class _Pane extends StatelessWidget {
 }
 
 /// A page: the ground, the bar in the top safe area, and the content
-/// resized above the keyboard.
-class _PageFrame extends StatelessWidget {
-  const _PageFrame({required this.topBar, required this.child});
+/// resized above the keyboard. The bar is painted over the content
+/// ([KitFrostHeader.frame]), so a chat's transcript can run up under it and
+/// frost it while scrolled there.
+class _PageFrame extends StatefulWidget {
+  const _PageFrame({
+    required this.topBar,
+    required this.child,
+    this.loading = false,
+  });
 
   final KitTopBar? topBar;
   final Widget child;
 
+  /// The page's loading bar runs: the bar stays solid.
+  final bool loading;
+
+  @override
+  State<_PageFrame> createState() => _PageFrameState();
+}
+
+class _PageFrameState extends State<_PageFrame> {
+  final KitFrostHeaderHost _frost = KitFrostHeaderHost();
+
+  @override
+  void dispose() {
+    _frost.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    final topBar = this.topBar;
+    final topBar = widget.topBar;
+    final child = widget.child;
+    _frost.loading = widget.loading;
+    // The status bar above the bar: the header's glass runs up through it.
+    final statusBar = MediaQuery.paddingOf(context).top;
     // One flat ground on every page, root tabs included (critique §4).
     // The ground is [KitLiveBackground]: flat, with a calm drift of colour
-    // on it that cards, rows and sheets cover solidly.
-    return KitLiveBackground(
-      child: Material(
-        color: Colors.transparent,
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: EdgeInsetsDirectional.only(bottom: keyboard),
-            child: MediaQuery.removeViewInsets(
-              context: context,
-              removeBottom: true,
-              child: topBar == null
-                  ? child
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        topBar,
-                        Expanded(child: child),
-                      ],
-                    ),
+    // on it that cards, rows and sheets cover solidly. The phone's status
+    // and navigation bars follow the theme over it (KitSystemBars).
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: KitSystemBars.of(context),
+      child: KitLiveBackground(
+        child: Material(
+          color: Colors.transparent,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: EdgeInsetsDirectional.only(bottom: keyboard),
+              child: MediaQuery.removeViewInsets(
+                context: context,
+                removeBottom: true,
+                child: topBar == null
+                    ? child
+                    // The header and the composer read one backdrop.
+                    : BackdropGroup(
+                        child: KitFrostHeader.frame(
+                          host: _frost,
+                          bar: topBar,
+                          extendTop: statusBar,
+                          child: child,
+                        ),
+                      ),
+              ),
             ),
           ),
         ),

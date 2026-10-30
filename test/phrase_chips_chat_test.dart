@@ -14,7 +14,8 @@ import 'package:opencode_mobile/state/phrase_chips.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/review_handoff.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
-import 'package:opencode_mobile/ui/kit/kit.dart' show KitPhraseChips;
+import 'package:opencode_mobile/ui/kit/kit.dart'
+    show KitButton, KitButtonRole, KitPhraseChips;
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -197,15 +198,16 @@ void main() {
     expect(_chip('Continue'), findsNothing);
   });
 
-  testWidgets('working: the starter shows, and a tap sends it', (tester) async {
+  // Concept C (chat fidelity, 20 Oct 2026): while the agent works the
+  // screen is the conversation, the live line and the glowing composer.
+  // The live line already answers "What's the update?".
+  testWidgets('working: no phrase row over the composer', (tester) async {
     final api = _Api()..messagesResult = [_user('u1')];
     final controller = await _pump(tester, api);
     _busy(controller);
     await tester.pumpAndSettle();
-    expect(_chip("What's the update?"), findsOneWidget);
-    await tester.tap(_chip("What's the update?"));
-    await tester.pumpAndSettle();
-    expect(api.prompts, ["What's the update?"]);
+    expect(_chip("What's the update?"), findsNothing);
+    expect(find.byType(KitPhraseChips), findsNothing);
   });
 
   testWidgets('a turn stopped partway offers Continue', (tester) async {
@@ -224,6 +226,69 @@ void main() {
     await tester.tap(_chip('Continue'));
     await tester.pumpAndSettle();
     expect(api.prompts, ['Continue']);
+  });
+
+  // Owner, 2026-10-22: a bare "Try" chip read as unclear. After a stop the
+  // row says "Try again" in full, next to Continue.
+  testWidgets('a turn stopped partway offers Try again in full', (
+    tester,
+  ) async {
+    final api = _Api()
+      ..messagesResult = [
+        _user('u1'),
+        _assistant(
+          'a1',
+          errorText: 'aborted',
+          errorKind: MessageErrorKind.aborted,
+        ),
+      ];
+    await _pump(tester, api);
+    expect(_chip('Try again'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
+    expect(find.bySemanticsLabel('Send: Try again'), findsOneWidget);
+    // Both chips whole on the screen, nowhere near the row's fading end.
+    final width = tester.view.physicalSize.width / tester.view.devicePixelRatio;
+    expect(tester.getRect(_chip('Try again')).right, lessThan(width / 2));
+    await tester.tap(_chip('Try again'));
+    await tester.pumpAndSettle();
+    expect(api.prompts, ['Try again']);
+  });
+
+  // Unslop 2026-10-30: a model's usage limit offers another model as its
+  // one fix, Details as a quiet link, and no row of retry chips under it.
+  testWidgets('a usage-limit error: Choose another model, a Details link, '
+      'no phrase row', (tester) async {
+    final api = _Api()
+      ..messagesResult = [
+        _user('u1'),
+        _assistant(
+          'a1',
+          errorText: 'Free usage limit reached for this model.',
+          errorKind: MessageErrorKind.unknown,
+        ),
+      ];
+    await _pump(tester, api);
+    expect(find.byKey(const Key('error-action-choose-model')), findsOneWidget);
+    expect(find.text('Choose another model'), findsOneWidget);
+    expect(find.byKey(const Key('error-action-resend')), findsNothing);
+    final details = find.byKey(const Key('error-action-details'));
+    expect(details, findsOneWidget);
+    expect(find.text('Details'), findsOneWidget);
+    expect(find.text('Error details'), findsNothing);
+    expect(
+      tester.widget<KitButton>(details).role,
+      KitButtonRole.tertiary,
+      reason: 'Details is a link, not a second button beside the fix',
+    );
+    expect(
+      tester
+          .widget<KitButton>(find.byKey(const Key('error-action-choose-model')))
+          .role,
+      KitButtonRole.secondary,
+    );
+    expect(find.byType(KitPhraseChips), findsNothing);
+    expect(_chip('Continue'), findsNothing);
+    expect(_chip('Try again'), findsNothing);
   });
 
   testWidgets('no second Continue beside the transcript\'s own button', (

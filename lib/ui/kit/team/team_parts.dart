@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../kit_buttons.dart';
+import '../kit_surface_look.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
 import '../kit_tappable.dart';
@@ -45,10 +46,17 @@ Widget teamRow(
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // The leading column: the glyph centred in a tile-wide slot, so the
+        // words start on the list's text rail (KitTokens.leadColumn).
         ExcludeSemantics(
-          child: Icon(teamIcon(state), size: t.smallIconSize, color: color),
+          child: SizedBox(
+            width: t.iconTileSize,
+            child: Center(
+              child: Icon(teamIcon(state), size: t.smallIconSize, color: color),
+            ),
+          ),
         ),
-        SizedBox(width: t.space2),
+        SizedBox(width: t.space3),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,23 +212,46 @@ Widget teamCard(
       child: column,
     );
   }
-  return DecoratedBox(
-    decoration: ShapeDecoration(
-      color: attention
-          ? Color.alphaBlend(
-              t.roles.attention.withValues(alpha: .09),
-              t.roles.surface1,
-            )
-          : t.roles.surface1,
-      shape: (t.shapeOf(KitShape.card) as RoundedRectangleBorder).copyWith(
-        side: attention
-            ? BorderSide(
-                color: t.roles.attention.withValues(alpha: .30),
-                width: KitTokens.hairlineWidth(context),
-              )
-            : BorderSide.none,
-      ),
-    ),
-    child: Padding(padding: EdgeInsets.all(t.space4), child: column),
+  final side = attention
+      ? BorderSide(
+          color: t.roles.attention.withValues(alpha: .30),
+          width: KitTokens.hairlineWidth(context),
+        )
+      : BorderSide.none;
+  final shape = (t.shapeOf(KitShape.card) as RoundedRectangleBorder).copyWith(
+    side: side,
+  );
+  final own = ShapeDecoration(
+    color: attention
+        ? Color.alphaBlend(
+            t.roles.attention.withValues(alpha: .09),
+            t.roles.surface1,
+          )
+        : t.roles.surface1,
+    shape: shape,
+  );
+  // A content card in the style. The amber tint is Solid's own: the other
+  // styles keep their plain card (no amber fill, contract F2), and the
+  // attention line says "needs you" over its face.
+  final face = KitSurfaceLook.decorate(context, solid: own);
+  final padded = Padding(padding: EdgeInsets.all(t.space4), child: column);
+  return kitSurfaceBox(
+    style: KitSurfaceLook.styleOf(context),
+    decoration: face,
+    child: attention && !identical(face, own)
+        ? DecoratedBox(
+            position: DecorationPosition.foreground,
+            decoration: KitSurfaceDecoration(
+              borderRadius: shape.borderRadius.resolve(
+                Directionality.of(context),
+              ),
+              fill: side.color.withValues(alpha: 0),
+              edgeStart: side.color,
+              edgeEnd: side.color,
+              edgeWidth: side.width,
+            ),
+            child: padded,
+          )
+        : padded,
   );
 }

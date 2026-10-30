@@ -184,9 +184,9 @@
       "title": "Rename project",
       "kind": "dialog",
       "file": "lib/ui/screens/projects_screen.dart",
-      "widget": "_RenameProjectDialog",
+      "widget": "_rename",
       "presentedBy": [],
-      "line": 433,
+      "line": 237,
       "purpose": "Rename a project's display name on the server.",
       "reachedFrom": [
         {
@@ -245,11 +245,11 @@
       "title": "Create a new folder",
       "kind": "dialog",
       "file": "lib/ui/screens/project_folder_actions.dart",
-      "widget": "_NewFolderDialog",
+      "widget": "createFolder",
       "presentedBy": [
         "ProjectFolderActions.createFolder"
       ],
-      "line": 292,
+      "line": 92,
       "purpose": "Ask for a folder name to create under the managed projects directory on the app-managed Termux server.",
       "reachedFrom": [
         {
@@ -272,7 +272,8 @@
           "targetWidget": null,
           "effect": "onChanged clears the validation problem; onSubmitted -> _submit().",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/project_folder_actions.dart"
         },
         {
           "id": "project-folder-new-dialog-cancel",
@@ -285,7 +286,8 @@
           "targetWidget": null,
           "effect": "Navigator.pop().",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/project_folder_actions.dart"
         },
         {
           "id": "project-folder-new-dialog-create",
@@ -298,7 +300,8 @@
           "targetWidget": null,
           "effect": "_submit(): validates with projectFolderNameProblem, pops with the name; createFolder() then runs TermuxBridge.createProjectFolder(name) and controller.selectLocation(directory: path).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/project_folder_actions.dart"
         }
       ]
     },
@@ -306,12 +309,12 @@
       "id": "project-folder-open-dialog",
       "title": "Open a project folder",
       "kind": "dialog",
-      "file": "lib/ui/screens/project_folder_actions.dart",
-      "widget": "_OpenFolderDialog",
+      "file": "lib/ui/widgets/remote_folder_picker.dart",
+      "widget": "RemoteFolderSheet",
       "presentedBy": [
         "ProjectFolderActions.openFolder"
       ],
-      "line": 362,
+      "line": 21,
       "purpose": "Ask for an absolute server path, check it (inside the app's Ubuntu for OpenCode inside the app, on the server otherwise) and open it as the active project folder. From the folder browser the path starts at the folder it showed, and a missing folder can be created.",
       "reachedFrom": [
         {
@@ -385,7 +388,7 @@
         "ProjectFolderActions.openFolder"
       ],
       "line": 131,
-      "purpose": "A server on this phone: OpenCode inside the app (folders read from the built-in Ubuntu's files, so it works with the server stopped) or the OpenCode server this app runs in Termux (a short read-only script run inside Termux's Ubuntu through TermuxBridge.run, the path passed base64-encoded, bounded to 15 s in Termux and 25 s in the app). Browses from /root/projects up to /. A project (git repository, a project OpenCode knows, or any folder straight in /root/projects) opens with a tap; other folders are gone into. One primary opens the folder shown (never the home folder, / or the projects folder itself); New project makes a folder inside the folder shown (the app's Ubuntu: mkdir + git init; Termux: mkdir -p); Enter a path opens the path dialog. Remote servers, and Termux when it cannot run the app's commands, skip this sheet and go straight to the path dialog. Layout (2026-10-03, owner review): the sheet opens on a start page, title Open a project with Close in the header and no place line, menu or folder list: 1. New project (prominent; the name step swaps in place with \"Creates <folder>/<name>\", Create and open and a quiet Change folder that picks the parent in the browser and comes back; default folder is the host’s project space, else Projects on the phone’s storage), 2. Search this phone (phone-hosted servers only; the All files access consent first; a calm search step with a timer, a bar against the 10 s cap, folders checked and projects found, results as they come, Stop; then \"<m> found in 0:09\", Look deeper after the cap, an empty state with a way forward; back cancels), 3. Opened before (the recent folders with a Git badge when they hold .git, checked after and kept for the sheet; a tap opens; hidden when there are none). A quiet Choose a folder at the bottom opens the browser (one header row with back, the folder name and a more menu with Show hidden folders and Enter a path; the place menu when both places exist; one panel of folder rows; the pinned Open <folder>). A remote server keeps its own path sheet and has no search row because OpenCode lists files only inside a project.",
+      "purpose": "A server on this phone: OpenCode inside the app (folders read from the built-in Ubuntu's files, so it works with the server stopped) or the OpenCode server this app runs in Termux (a short read-only script run inside Termux's Ubuntu through TermuxBridge.run, the path passed base64-encoded, bounded to 15 s in Termux and 25 s in the app). Browses from /root/projects up to /. A project (git repository, a project OpenCode knows, or any folder straight in /root/projects) opens with a tap; other folders are gone into. One primary opens the folder shown (never the home folder, / or the projects folder itself); New project makes a folder inside the folder shown (the app's Ubuntu: mkdir + git init; Termux: mkdir -p); Enter a path opens the path dialog. Remote servers, and Termux when it cannot run the app's commands, skip this sheet and go straight to the path dialog. Layout (2026-10-03, owner review): the sheet opens on a start page, title Open a project with Close in the header and no place line, menu or folder list: 1. New project (prominent; the name step swaps in place with \"Creates <folder>/<name>\", Create and open and a quiet Change folder that picks the parent in the browser and comes back; default folder is the host\u2019s project space, else Projects on the phone\u2019s storage), 2. Search this phone (phone-hosted servers only; the All files access consent first; a calm search step with a timer, a bar against the 10 s cap, folders checked and projects found, results as they come, Stop; then \"<m> found in 0:09\", Look deeper after the cap, an empty state with a way forward; back cancels), 3. Opened before (the recent folders with a Git badge when they hold .git, checked after and kept for the sheet; a tap opens; hidden when there are none). A quiet Choose a folder at the bottom opens the browser (one header row with back, the folder name and a more menu with Show hidden folders and Enter a path; the place menu when both places exist; one panel of folder rows; the pinned Open <folder>). A remote server keeps its own path sheet and has no search row because OpenCode lists files only inside a project.",
       "reachedFrom": [
         {
           "page": "projects",
@@ -488,7 +491,7 @@
         {
           "id": "project-folder-browser-change",
           "type": "link",
-          "label": "Change (inline link after \"In <folder> ·\")",
+          "label": "Change (inline link after \"In <folder> \u00b7\")",
           "key": "phone-new-folder-change",
           "file": "lib/ui/widgets/folder_browser.dart",
           "line": 577,
@@ -509,7 +512,7 @@
           "action": "other",
           "target": null,
           "targetWidget": null,
-          "effect": "Browser while picking a parent: sets the new project’s folder and returns to the name step.",
+          "effect": "Browser while picking a parent: sets the new project\u2019s folder and returns to the name step.",
           "gates": [
             "browser opened from Change folder"
           ],
@@ -525,7 +528,7 @@
           "action": "other",
           "target": null,
           "targetWidget": null,
-          "effect": "Header leading control at the place’s first folder: back to the start page (or the name step when picking a parent).",
+          "effect": "Header leading control at the place\u2019s first folder: back to the start page (or the name step when picking a parent).",
           "gates": [],
           "destructive": false
         },
@@ -581,7 +584,7 @@
           "action": "other",
           "target": null,
           "targetWidget": null,
-          "effect": "After \"This folder can’t be shown\": lists the folder again.",
+          "effect": "After \"This folder can\u2019t be shown\": lists the folder again.",
           "gates": [],
           "destructive": false
         },
@@ -648,7 +651,7 @@
         {
           "id": "project-folder-browser-find-found",
           "type": "list-tile",
-          "label": "<project name> / <kind> · <folder> / Git",
+          "label": "<project name> / <kind> \u00b7 <folder> / Git",
           "key": "phone-scan-<path>",
           "file": "lib/ui/widgets/folder_browser.dart",
           "line": 833,
@@ -944,7 +947,7 @@
         {
           "id": "managed-workspaces-tile",
           "type": "list-tile",
-          "label": "<workspace name> / <branch · type · status · directory>",
+          "label": "<workspace name> / <branch \u00b7 type \u00b7 status \u00b7 directory>",
           "key": "managed-workspace-<workspace.id>",
           "line": 524,
           "action": "mutate",
@@ -1066,9 +1069,9 @@
       "title": "New managed workspace",
       "kind": "dialog",
       "file": "lib/ui/screens/managed_workspaces_screen.dart",
-      "widget": "_CreateWorkspaceDialog",
+      "widget": "_CreateWorkspaceBody",
       "presentedBy": [],
-      "line": 566,
+      "line": 654,
       "purpose": "Pick an adapter and optional branch for a new managed workspace.",
       "reachedFrom": [
         {
@@ -1089,7 +1092,8 @@
           "targetWidget": null,
           "effect": "setState(_type = value).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/managed_workspaces_screen.dart"
         },
         {
           "id": "managed-workspaces-create-dialog-branch",
@@ -1102,7 +1106,8 @@
           "targetWidget": null,
           "effect": "Optional branch name.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/managed_workspaces_screen.dart"
         },
         {
           "id": "managed-workspaces-create-dialog-cancel",
@@ -1115,7 +1120,8 @@
           "targetWidget": null,
           "effect": "Navigator.pop().",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/managed_workspaces_screen.dart"
         },
         {
           "id": "managed-workspaces-create-dialog-confirm",
@@ -1128,7 +1134,8 @@
           "targetWidget": null,
           "effect": "Pops a _WorkspaceDraft; _create calls repository.createManagedWorkspace(projectDirectory, type, branch), controller.selectLocation(...) and pops the screen with true.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/managed_workspaces_screen.dart"
         }
       ]
     },
@@ -1137,9 +1144,9 @@
       "title": "Remove {name}?",
       "kind": "dialog",
       "file": "lib/ui/screens/managed_workspaces_screen.dart",
-      "widget": "_RemoveWorkspaceDialog",
+      "widget": "_remove",
       "presentedBy": [],
-      "line": 679,
+      "line": 260,
       "purpose": "Type-to-confirm permanent removal of a managed workspace.",
       "reachedFrom": [
         {
@@ -1164,7 +1171,8 @@
           "targetWidget": null,
           "effect": "setState to enable the confirm button when the text equals workspace.name.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/managed_workspaces_screen.dart"
         },
         {
           "id": "managed-workspaces-remove-dialog-cancel",
@@ -1276,7 +1284,7 @@
         {
           "id": "worktrees-primary-tile",
           "type": "list-tile",
-          "label": "<project folder> / Default project · {directory}",
+          "label": "<project folder> / Default project \u00b7 {directory}",
           "key": "primary-worktree",
           "line": 596,
           "action": "mutate",
@@ -1321,7 +1329,7 @@
         {
           "id": "worktrees-tile",
           "type": "list-tile",
-          "label": "<worktree name> / <branch | directory | Preparing… | Setup failed>",
+          "label": "<worktree name> / <branch | directory | Preparing\u2026 | Setup failed>",
           "key": "worktree-<worktree.directory>",
           "line": 697,
           "action": "mutate",
@@ -1792,7 +1800,7 @@
         {
           "id": "global-sessions-row",
           "type": "list-tile",
-          "label": "<session title> / Working · <relative time> · <path>",
+          "label": "<session title> / Working \u00b7 <relative time> \u00b7 <path>",
           "key": "global-session-<session.id>",
           "line": 988,
           "action": "navigate",
@@ -2074,8 +2082,8 @@
           "type": "button",
           "label": "Try again",
           "key": null,
-          "file": "lib/ui/widgets/product_states.dart",
-          "line": 428,
+          "file": "lib/ui/screens/session_destination_sheet.dart",
+          "line": 276,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -2088,7 +2096,7 @@
         {
           "id": "session-destination-sheet-destination",
           "type": "list-tile",
-          "label": "<destination title> / <directory or type · status>",
+          "label": "<destination title> / <directory or type \u00b7 status>",
           "key": "move-destination-<directory> | warp-destination-<workspaceID or directory>",
           "line": 481,
           "action": "open-dialog",
@@ -2107,9 +2115,9 @@
       "title": "Move session?",
       "kind": "dialog",
       "file": "lib/ui/screens/session_destination_sheet.dart",
-      "widget": "_confirmTransfer",
+      "widget": "perform",
       "presentedBy": [],
-      "line": 313,
+      "line": 88,
       "purpose": "Confirm the move and whether uncommitted working changes travel with the session.",
       "reachedFrom": [
         {
@@ -2130,7 +2138,8 @@
           "targetWidget": null,
           "effect": "Navigator.pop() (null = abort).",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/session_destination_sheet.dart"
         },
         {
           "id": "session-destination-confirm-dialog-without-changes",
@@ -2145,7 +2154,8 @@
           "gates": [
             "_changes.isNotEmpty"
           ],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/session_destination_sheet.dart"
         },
         {
           "id": "session-destination-confirm-dialog-confirm",
@@ -2158,7 +2168,8 @@
           "targetWidget": null,
           "effect": "Pops (hasChanges && !unknownChanges); _select runs controller.moveSessionToDirectory(sessionID, directory, moveChanges) in move mode or controller.warpSessionToWorkspace(sessionID, directory, workspaceID, copyChanges) in warp mode.",
           "gates": [],
-          "destructive": false
+          "destructive": false,
+          "file": "lib/ui/screens/session_destination_sheet.dart"
         }
       ]
     },
@@ -2204,8 +2215,8 @@
           "type": "button",
           "label": "Try again",
           "key": null,
-          "file": "lib/ui/widgets/product_states.dart",
-          "line": 615,
+          "file": "lib/ui/screens/session_destination_sheet.dart",
+          "line": 611,
           "action": "other",
           "target": null,
           "targetWidget": null,
@@ -2486,7 +2497,7 @@
         {
           "id": "running-work-sheet-run-in-background",
           "type": "button",
-          "label": "Run in background | Requesting background work…",
+          "label": "Run in background | Requesting background work\u2026",
           "key": null,
           "line": 309,
           "action": "mutate",
@@ -2532,7 +2543,7 @@
         {
           "id": "running-work-sheet-shell",
           "type": "list-tile",
-          "label": "<command> / <status> · <elapsed>",
+          "label": "<command> / <status> \u00b7 <elapsed>",
           "key": "work-shell-<shell.id>",
           "line": 428,
           "action": "navigate",

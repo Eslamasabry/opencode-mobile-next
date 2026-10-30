@@ -87,7 +87,7 @@ None of its own (`States: none`): it lays out the line and the steps it is given
 
 ## Motion
 
-None of its own. The host may pass `fade` (the opened steps' paint-only fade, MOT-5). The live mark is `KitStatusMark`'s (a still dot under reduced motion). No shimmer: the turn's live line keeps the chat's one moving light.
+Opening and shutting fold the steps in and out like `KitReveal` (size and fade, clipped only while moving so the lights are never cut; in on `KitMotion.standard`, out on `KitMotion.quick`; owner request 2026-10-27, which lifts MOT-5 here). A step that arrives while the timeline is open unfolds, fades and rises 6 dp into place (under Calm it unfolds and fades without rising); steps shown when it opened do not. Reduced motion: all instant. The host may still pass `fade` (then the reveal does not fade). The live mark is `KitStatusMark`'s (a still dot under reduced motion). No shimmer: the turn's live line keeps the chat's one moving light.
 
 ## RTL
 

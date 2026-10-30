@@ -126,6 +126,8 @@ export function oc2EventsFamily() {
     send('session.text.ended', { sessionID: SES, assistantMessageID: A1, ordinal: 0, text: 'I added a Retry button next to every failed upload.', state: { itemId: 'msg_item', phase: 'final_answer' } }, { 'data.state': [] });
     send('session.step.streamed', { sessionID: SES, assistantMessageID: A1 });
     send('session.step.ended', { sessionID: SES, assistantMessageID: A1, finish: 'stop', rawFinish: 'end_turn', providerState: { responseId: 'resp_1' }, cost: 0.0421, tokens: { input: 9100, output: 1210, reasoning: 400, cache: { read: 4000, write: 500 } }, snapshot: 'snap_d4e5f6', files: ['lib/upload/upload_screen.dart'] }, { 'data.finish': [], 'data.rawFinish': [], 'data.providerState': [], 'data.cost': [], 'data.tokens': [], 'data.snapshot': [], 'data.files': [] });
+    // A finished step is not a finished turn: the run ends here, right after.
+    send('session.execution.succeeded', { sessionID: SES });
   });
   kase('live_streaming', (send) => {
     send('session.execution.started', { sessionID: SES });

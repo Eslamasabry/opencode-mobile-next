@@ -581,8 +581,8 @@ proot-distro() {
 printf opencode2 > "$RUNTIME_FILE"
 [ "$(runtime_version)" = 0.0.0-beta-18600 ] || exit 86
 # The stable line names itself `opencode`, not `opencode2`.
-MOCK_OC2_VERSION='opencode v2.0.29'
-[ "$(runtime_version)" = 2.0.29 ] || exit 89
+MOCK_OC2_VERSION='opencode v2.1.1'
+[ "$(runtime_version)" = 2.1.1 ] || exit 89
 printf unsupported > "$RUNTIME_FILE"
 if runtime_version; then exit 87; fi
 if write_state preparing bad 4096; then exit 88; fi
@@ -599,7 +599,7 @@ if write_state preparing bad 4096; then exit 88; fi
       script.indexOf('\nold_runtime='),
       script.indexOf('\npassword_tmp='),
     );
-    expect(script, contains("setup '4096' '2.0.29'"));
+    expect(script, contains("setup '4096' '2.1.1'"));
     expect(script, contains("\"\$self_start\" 'opencode2'"));
     expect(
       script.indexOf(guard),

@@ -1,1078 +1,1091 @@
 {
- "area": "b1-chat-screen",
- "pages": [
-  {
-   "id": "chat",
-   "title": "[Conversation: <session title>]",
-   "kind": "screen",
-   "file": "lib/ui/screens/chat_screen.dart",
-   "widget": "ChatScreen",
-   "presentedBy": [],
-   "line": 204,
-   "purpose": "The conversation with one session: streaming transcript, composer with attachments/commands/voice, pending sends, attention requests and all session actions.",
-   "reachedFrom": [
+  "area": "b1-chat-screen",
+  "pages": [
     {
-     "page": "system",
-     "element": null,
-     "trigger": "named route '/chat/<sessionID>' resolved in onGenerateRoute (lib/main.dart:1247); ChatRouteArguments.discardIfUntouched marks a newly created session"
+      "id": "chat",
+      "title": "[Conversation: <session title>]",
+      "kind": "screen",
+      "file": "lib/ui/screens/chat_screen.dart",
+      "widget": "ChatScreen",
+      "presentedBy": [],
+      "line": 204,
+      "purpose": "The conversation with one session: streaming transcript, composer with attachments/commands/voice, pending sends, attention requests and all session actions.",
+      "reachedFrom": [
+        {
+          "page": "system",
+          "element": null,
+          "trigger": "named route '/chat/<sessionID>' resolved in onGenerateRoute (lib/main.dart:1247); ChatRouteArguments.discardIfUntouched marks a newly created session"
+        },
+        {
+          "page": "system",
+          "element": null,
+          "trigger": "incoming share: _OcAppState._scheduleShareRoute pushes ChatScreen(sessionID, initialText) (lib/main.dart:414)"
+        },
+        {
+          "page": "system",
+          "element": null,
+          "trigger": "new-task launch: _OcAppState._openNewTaskForLaunch pushes '/chat/<id>' (lib/main.dart:588)"
+        },
+        {
+          "page": "system",
+          "element": null,
+          "trigger": "session launch (SessionLaunch, e.g. notification tap): _OcAppState._openSessionForLaunch pushes '/chat/<id>' (lib/main.dart:635)"
+        },
+        {
+          "page": "system",
+          "element": null,
+          "trigger": "deep link to a session: _OcAppState._openSessionForLink pushNamed '/chat/<id>' (lib/main.dart:783, 796)"
+        },
+        {
+          "page": "system",
+          "element": null,
+          "trigger": "coding alert route: _OcAppState._scheduleCodingAlertRoute pushes ChatScreen (lib/main.dart:1046)"
+        },
+        {
+          "page": "system",
+          "element": null,
+          "trigger": "new-session app shortcut / home onNewSession: _OcAppState._startNewSession pushes '/chat/<id>' (lib/main.dart:1062, invoked at 1099 and 1202)"
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "openMonitoredRequest",
+          "file": "lib/ui/screens/profile_monitor_screen.dart",
+          "line": 76
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_SessionImportScreenState._open",
+          "file": "lib/ui/screens/session_import_screen.dart",
+          "line": 376
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_DemoScreenState.build (embedded ChatScreen)",
+          "file": "lib/ui/screens/demo_screen.dart",
+          "line": 147
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_ServerPluginsSectionState (after showRunCommandDialog returns a session id)",
+          "file": "lib/ui/screens/settings/server_plugins_section.dart",
+          "line": 484
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_CommandsScreenState._run",
+          "file": "lib/ui/screens/library/commands_screen.dart",
+          "line": 158
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_GlobalSessionsScreenState._open",
+          "file": "lib/ui/screens/global_sessions_screen.dart",
+          "line": 432
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_GlobalSessionsScreenState._steal",
+          "file": "lib/ui/screens/global_sessions_screen.dart",
+          "line": 495
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_ChatScreenState._fork (pushReplacementNamed to the forked session)",
+          "file": "lib/ui/screens/chat_screen.dart",
+          "line": 3480
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_ChatScreenState._forkFromMessage",
+          "file": "lib/ui/screens/chat_screen.dart",
+          "line": 4112
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_ChatScreenState._executeMobileCommand (new session command)",
+          "file": "lib/ui/screens/chat_screen.dart",
+          "line": 5111
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_ChatScreenState._openRelatedSession (pushReplacementNamed)",
+          "file": "lib/ui/screens/chat_screen.dart",
+          "line": 5792
+        },
+        {
+          "page": "system",
+          "element": null,
+          "trigger": "first run: HomeScreen._openFirstConversation pushes '/chat/<id>' with ChatRouteArguments.firstRun() after the first connect of a new device (lib/ui/screens/home_screen.dart:173); focusComposer opens the keyboard"
+        }
+      ],
+      "gates": [
+        "no capability gate on the screen itself; reached by route '/chat/<id>' or a direct ChatScreen(...) push",
+        "widget.showAppBar (default true): an embedding experience (demo) can hide the app bar",
+        "most authoring features are disabled when _conn.isIsolated"
+      ],
+      "elements": [
+        {
+          "id": "chat-draft-cleared-undo",
+          "type": "button",
+          "label": "Undo",
+          "key": null,
+          "line": 171,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "SnackBarAction on the 'Draft text cleared' snackbar shown by _clearDraftText(): restores the cleared composer text (prepending it to anything typed since), calls _persistDraft() and refocuses the composer.",
+          "gates": [
+            "shown only after _clearDraftText() ran (composer onClearText, wired at line 7209)",
+            "_clearDraftText is a no-op while _promptShelfBusy"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/chat/chat_stop_after_step.dart"
+        },
+        {
+          "id": "chat-load-older",
+          "type": "button",
+          "label": "Load older messages | Retry | Reload recent history",
+          "key": "chat-load-older",
+          "line": 300,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Calls _loadOlder(): fetches the previous history page using _olderCursor (or reloads recent history when _olderNeedsReload) and merges it while keeping the scroll anchor. Label is 'Reload recent history' when _olderNeedsReload, 'Retry' when _olderError != null, else 'Load older messages'.",
+          "gates": [
+            "row (_olderHistoryRow, key 'chat-older-history') is returned from the transcript item builder at line 6689",
+            "disabled while _loading || _loadingOlder (a spinner overlays the label)"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/chat/chat_history.dart"
+        },
+        {
+          "id": "chat-prompt-history-keys",
+          "type": "gesture",
+          "label": "Arrow Up / Arrow Down in composer",
+          "key": null,
+          "line": 970,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "_focus.onKeyEvent -> _navigatePromptHistory (line 893): with the caret at the start (Up) or end (Down), replaces the composer value with the previous/next entry of _recentPrompts via PromptHistoryNavigation.move, retaining the original draft for restore.",
+          "gates": [
+            "!_conn.isIsolated",
+            "!_sending && !_promptShelfBusy",
+            "isPromptHistoryKey(...): no slash-command or @agent suggestions open, collapsed selection, no IME composing, no Ctrl/Alt/Meta/Shift held"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/chat_screen.dart"
+        },
+        {
+          "id": "chat-watching-composer",
+          "type": "text-field",
+          "label": "Message <name>… | Message the worker… | Message this agent…",
+          "key": "chat-watching-message-field",
+          "file": "lib/ui/screens/chat/watching.dart",
+          "line": 274,
+          "action": "submit",
+          "target": null,
+          "targetWidget": null,
+          "effect": "_WatchComposer (KitComposer, composer key chat-watching-composer): the person's words for the watched AI Team agent. Send (chat-watching-message-send) -> ChatWatch.onSend (teamAgentWatch: OrchestrationController.messageAgent(agentId, text)); the field and its draft (oc.draft.team-message.<agentId>.<profileId>) clear only when the team took it. Never typed into the watched session. Note 'Goes to <name> through the AI Team'; read-only with 'This team can't be messaged from here.' without the message control.",
+          "gates": [
+            "widget.watch != null (watching mode)",
+            "typing only when ChatWatch.onSend != null (team.capabilities.controlMessage)"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "chat-watching-message-send",
+          "type": "icon-button",
+          "label": "[Send]",
+          "key": "chat-watching-message-send",
+          "file": "lib/ui/screens/chat/watching.dart",
+          "line": 275,
+          "action": "submit",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Same as the composer's onSend: _WatchComposerState._send(); the message's receipt (chat-watching-message-receipt, Sent then Confirmed or the host's reason, with Try again) shows above the composer.",
+          "gates": [
+            "widget.watch != null",
+            "ChatWatch.onSend != null",
+            "non-empty text"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "chat-watching-message-receipt-retry",
+          "type": "button",
+          "label": "Try again",
+          "key": "chat-watching-message-receipt-retry",
+          "file": "lib/ui/screens/chat/chat_history.dart",
+          "line": 307,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "The receipt above the watching composer (newest message sent to this agent since the page opened): team.retryMutation(record.key).",
+          "gates": [
+            "the record may be retried (teamControlReceipt)"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "chat-watching-details",
+          "type": "icon-button",
+          "label": "About <name> | About the <role>",
+          "key": "chat-watching-details",
+          "file": "lib/ui/screens/chat/watching.dart",
+          "line": 131,
+          "action": "navigate",
+          "target": "team-agent",
+          "targetWidget": "AgentScreen",
+          "effect": "Top-bar action while watching: ChatWatch.onDetails pushes AgentScreen(controller: team, agentId) — the agent's state, controls (nudge, pause, restart, stop) and technical details.",
+          "gates": [
+            "widget.watch != null",
+            "ChatWatch.onDetails != null: not when opened from the agent's own page (details: false)"
+          ],
+          "destructive": false
+        }
+      ]
     },
     {
-     "page": "system",
-     "element": null,
-     "trigger": "incoming share: _OcAppState._scheduleShareRoute pushes ChatScreen(sessionID, initialText) (lib/main.dart:414)"
+      "id": "chat-draft-attachment-recovery-sheet",
+      "title": "Some attachments need attention",
+      "kind": "sheet",
+      "file": "lib/ui/screens/chat_screen.dart",
+      "widget": "_recoverDraftAttachments",
+      "presentedBy": [
+        "_recoverDraftAttachments"
+      ],
+      "line": 724,
+      "purpose": "Asks whether to continue with only the recoverable saved draft attachments when some are missing, unreadable or belong to another project.",
+      "reachedFrom": [
+        {
+          "page": "system",
+          "element": null,
+          "trigger": "automatic from initState (line 570) when the saved session draft has attachments and _conn.restoreDraftAttachments reports unavailable files; re-run by _retryDraftPersistence (draft-failure retry callback wired at line 7111)"
+        }
+      ],
+      "gates": [
+        "!_conn.isIsolated",
+        "recovered.unavailable.isNotEmpty",
+        "_draftLocation == _conn.locationRevision"
+      ],
+      "elements": [
+        {
+          "id": "chat-draft-attachment-recovery-sheet-confirm",
+          "type": "button",
+          "label": "Use available attachments",
+          "key": null,
+          "line": 730,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Replaces _attachments with recovered.attachments, clears _draftRecoveryBlocked and _draftSaveFailure and schedules _persistDraft(), which drops the unavailable attachments from the saved draft (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
+          "gates": [],
+          "destructive": true
+        },
+        {
+          "id": "chat-draft-attachment-recovery-sheet-cancel",
+          "type": "button",
+          "label": "Keep saved draft",
+          "key": null,
+          "line": 731,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Keeps the stored draft snapshot untouched; _draftRecoveryBlocked stays true and _draftSaveFailure becomes SessionDraftFailure.attachments (cancel button of showConfirmSheet; pops false).",
+          "gates": [],
+          "destructive": false
+        }
+      ]
     },
     {
-     "page": "system",
-     "element": null,
-     "trigger": "new-task launch: _OcAppState._openNewTaskForLaunch pushes '/chat/<id>' (lib/main.dart:588)"
+      "id": "chat-stash-attachments-unavailable-sheet",
+      "title": "Some attachments cannot be restored",
+      "kind": "sheet",
+      "file": "lib/ui/screens/chat/prompt_stash.dart",
+      "widget": "_openPromptStash",
+      "presentedBy": [
+        "_openPromptStash"
+      ],
+      "line": 401,
+      "purpose": "Warns that some attachments of the chosen stashed prompt are missing before restoring the rest.",
+      "reachedFrom": [
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_PromptStashSheet (entry selected, popped with a StashedPrompt)",
+          "file": "lib/ui/screens/chat/prompt_stash.dart",
+          "line": 3
+        }
+      ],
+      "gates": [
+        "_conn.canUsePromptShelf",
+        "_conn.restorePromptStashAttachments(...).unavailable.isNotEmpty",
+        "composer unchanged since the stash sheet opened"
+      ],
+      "elements": [
+        {
+          "id": "chat-stash-attachments-unavailable-sheet-confirm",
+          "type": "button",
+          "label": "Restore available content",
+          "key": null,
+          "line": 401,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Continues _openPromptStash(): after the optional restore confirmation, puts the stashed text, recovered attachments and references into the composer and keeps the stash copy (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chat-stash-attachments-unavailable-sheet-cancel",
+          "type": "button",
+          "label": "Cancel",
+          "key": null,
+          "line": 1077,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Aborts the restore; composer and stash unchanged (cancel button of showConfirmSheet; pops false).",
+          "gates": [],
+          "destructive": false
+        }
+      ]
     },
     {
-     "page": "system",
-     "element": null,
-     "trigger": "session launch (SessionLaunch, e.g. notification tap): _OcAppState._openSessionForLaunch pushes '/chat/<id>' (lib/main.dart:635)"
+      "id": "chat-stash-restore-confirm-sheet",
+      "title": "Restore saved prompt?",
+      "kind": "sheet",
+      "file": "lib/ui/screens/chat/prompt_stash.dart",
+      "widget": "_openPromptStash",
+      "presentedBy": [
+        "_openPromptStash"
+      ],
+      "line": 401,
+      "purpose": "Confirms replacing a non-empty composer with a stashed prompt; the current prompt is stashed first.",
+      "reachedFrom": [
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_PromptStashSheet (entry selected, popped with a StashedPrompt)",
+          "file": "lib/ui/screens/chat/prompt_stash.dart",
+          "line": 3
+        },
+        {
+          "page": "chat-stash-attachments-unavailable-sheet",
+          "element": "chat-stash-attachments-unavailable-sheet-confirm"
+        }
+      ],
+      "gates": [
+        "_conn.canUsePromptShelf",
+        "current composer snapshot is not empty (!current.isEmpty)"
+      ],
+      "elements": [
+        {
+          "id": "chat-stash-restore-confirm-sheet-confirm",
+          "type": "button",
+          "label": "Restore",
+          "key": null,
+          "line": 557,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Saves the current prompt with _conn.savePromptStash(current) (refused with a 'stash full' note at PromptShelfStore.capacity), replaces composer text, attachments and staged references with the selected entry, _persistDraft(), then _conn.removePromptStash(selected.id) unless a copy must be kept (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chat-stash-restore-confirm-sheet-cancel",
+          "type": "button",
+          "label": "Cancel",
+          "key": null,
+          "line": 1088,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Aborts the restore; composer and stash unchanged (cancel button of showConfirmSheet; pops false).",
+          "gates": [],
+          "destructive": false
+        }
+      ]
     },
     {
-     "page": "system",
-     "element": null,
-     "trigger": "deep link to a session: _OcAppState._openSessionForLink pushNamed '/chat/<id>' (lib/main.dart:783, 796)"
+      "id": "chat-discard-queued-draft-sheet",
+      "title": "Discard queued draft?",
+      "kind": "sheet",
+      "file": "lib/ui/screens/chat/chat_queue.dart",
+      "widget": "_confirmDiscardQueuedPrompt",
+      "presentedBy": [
+        "_confirmDiscardQueuedPrompt"
+      ],
+      "line": 196,
+      "purpose": "Confirms discarding an offline-queued prompt; wording changes when the draft's earlier send was never confirmed.",
+      "reachedFrom": [
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_PendingSendsStrip.onDiscard -> _discardQueuedPrompt (wired at chat_screen.dart:7003)",
+          "file": "lib/ui/screens/chat/message_view.dart",
+          "line": 2401
+        }
+      ],
+      "gates": [
+        "queued drafts exist for this session (_conn.capabilities.offlinePromptQueue)",
+        "asked a second time when the draft got dispatched while the first sheet was open (line 2302)"
+      ],
+      "elements": [
+        {
+          "id": "chat-discard-queued-draft-sheet-confirm",
+          "type": "button",
+          "label": "Discard draft",
+          "key": null,
+          "line": 206,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "_discardQueuedPrompt() re-reads the live entry and calls _removeQueuedDraft(id) -> _conn.removeQueuedPrompt(id) (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
+          "gates": [],
+          "destructive": true
+        },
+        {
+          "id": "chat-discard-queued-draft-sheet-cancel",
+          "type": "button",
+          "label": "Keep it queued | Keep for review (when asked.dispatched)",
+          "key": null,
+          "line": 209,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Keeps the queued draft (cancel button of showConfirmSheet; pops false).",
+          "gates": [],
+          "destructive": false,
+          "file": "lib/ui/screens/chat/chat_queue.dart"
+        }
+      ]
     },
     {
-     "page": "system",
-     "element": null,
-     "trigger": "coding alert route: _OcAppState._scheduleCodingAlertRoute pushes ChatScreen (lib/main.dart:1046)"
+      "id": "chat-resend-queued-draft-sheet",
+      "title": "Send this draft again?",
+      "kind": "sheet",
+      "file": "lib/ui/screens/chat/chat_queue.dart",
+      "widget": "_resendQueuedPrompt",
+      "presentedBy": [
+        "_resendQueuedPrompt"
+      ],
+      "line": 218,
+      "purpose": "Confirms resending a queued draft whose earlier send was never confirmed (it may duplicate).",
+      "reachedFrom": [
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_PendingSendsStrip.onResend -> _resendQueuedPrompt (wired at chat_screen.dart:7002)",
+          "file": "lib/ui/screens/chat/message_view.dart",
+          "line": 2401
+        }
+      ],
+      "gates": [
+        "queued draft is in review (dispatched but unconfirmed)"
+      ],
+      "elements": [
+        {
+          "id": "chat-resend-queued-draft-sheet-confirm",
+          "type": "button",
+          "label": "Send again",
+          "key": null,
+          "line": 225,
+          "action": "submit",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Calls _conn.resendQueuedPrompt(entry.id), clearing the dispatch marker so the draft is sent again; a storage failure shows queueSaveFailed (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chat-resend-queued-draft-sheet-cancel",
+          "type": "button",
+          "label": "Keep for review",
+          "key": null,
+          "line": 2342,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Keeps the draft in review (cancel button of showConfirmSheet; pops false).",
+          "gates": [],
+          "destructive": false
+        }
+      ]
     },
     {
-     "page": "system",
-     "element": null,
-     "trigger": "new-session app shortcut / home onNewSession: _OcAppState._startNewSession pushes '/chat/<id>' (lib/main.dart:1062, invoked at 1099 and 1202)"
+      "id": "chat-cancel-inbox-send-sheet",
+      "title": "Cancel this pending message?",
+      "kind": "sheet",
+      "file": "lib/ui/screens/chat/chat_queue.dart",
+      "widget": "_cancelInboxSend",
+      "presentedBy": [
+        "_cancelInboxSend"
+      ],
+      "line": 255,
+      "purpose": "Confirms cancelling a pending server-side inbox message; its text returns to the composer.",
+      "reachedFrom": [
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_PendingSendsStrip.onCancelInbox -> _cancelInboxSend (wired at chat_screen.dart:7004)",
+          "file": "lib/ui/screens/chat/message_view.dart",
+          "line": 2401
+        }
+      ],
+      "gates": [
+        "a pending Api2InboxItem exists for the session (_conn.supportsInbox)"
+      ],
+      "elements": [
+        {
+          "id": "chat-cancel-inbox-send-sheet-confirm",
+          "type": "button",
+          "label": "Cancel message",
+          "key": null,
+          "line": 265,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Calls _conn.cancelInboxItem(sessionID, item.id); the returned text is prepended to the composer and focused; HTTP 409 shows the 'already delivered' snackbar (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
+          "gates": [],
+          "destructive": true
+        },
+        {
+          "id": "chat-cancel-inbox-send-sheet-cancel",
+          "type": "button",
+          "label": "Keep it pending",
+          "key": null,
+          "line": 266,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Keeps the pending message (cancel button of showConfirmSheet; pops false).",
+          "gates": [],
+          "destructive": false
+        }
+      ]
     },
     {
-     "page": "?",
-     "element": null,
-     "widget": "openMonitoredRequest",
-     "file": "lib/ui/screens/profile_monitor_screen.dart",
-     "line": 76
+      "id": "chat-pending-photo-sheet",
+      "title": "Pending photo",
+      "kind": "sheet",
+      "file": "lib/ui/screens/chat/chat_attachments.dart",
+      "widget": "_pickPhoto",
+      "presentedBy": [
+        "_pickPhoto"
+      ],
+      "line": 153,
+      "purpose": "Shown before picking a new photo when another photo is still pending in its original conversation.",
+      "reachedFrom": [
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_ChatComposer.onPhotoLibrary / onCamera -> _pickPhoto (wired at chat_screen.dart:7278-7281)",
+          "file": "lib/ui/screens/chat/composer.dart",
+          "line": null
+        }
+      ],
+      "gates": [
+        "!_conn.isIsolated && _conn.capabilities.promptAttachments",
+        "platformCapabilities.supportsPromptPhotos",
+        "_conn.promptPhotos.pending != null",
+        "attachment count (5) and aggregate size (20 MB) limits not reached"
+      ],
+      "elements": [
+        {
+          "id": "chat-pending-photo-sheet-confirm",
+          "type": "button",
+          "label": "Discard pending photo",
+          "key": null,
+          "line": 405,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Calls _conn.promptPhotos.discard(pending.id), then persists the draft and continues to _conn.promptPhotos.pick(source: gallery|camera) and _applyPendingPhoto() (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
+          "gates": [],
+          "destructive": true,
+          "file": "lib/ui/screens/chat/chat_composer_region.dart"
+        },
+        {
+          "id": "chat-pending-photo-sheet-cancel",
+          "type": "button",
+          "label": "Keep editing",
+          "key": null,
+          "line": 102,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Keeps the pending photo and aborts picking (cancel button of showConfirmSheet; pops false).",
+          "gates": [],
+          "destructive": false,
+          "file": "lib/ui/screens/chat/prompt_editor.dart"
+        }
+      ]
     },
     {
-     "page": "?",
-     "element": null,
-     "widget": "_SessionImportScreenState._open",
-     "file": "lib/ui/screens/session_import_screen.dart",
-     "line": 376
+      "id": "chat-share-confirm-sheet",
+      "title": "Share this session?",
+      "kind": "sheet",
+      "file": "lib/ui/screens/chat_screen.dart",
+      "widget": "_share",
+      "presentedBy": [
+        "_share"
+      ],
+      "line": 3415,
+      "purpose": "Warns that anyone with the link can view the session before creating a public share link.",
+      "reachedFrom": [
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_ChatScreenState._executeMobileCommand (share command, when _shareUrl == null)",
+          "file": "lib/ui/screens/chat_screen.dart",
+          "line": 5298
+        },
+        {
+          "page": "?",
+          "element": null,
+          "widget": "_ChatScreenState._openSessionMenu ('share' menu result)",
+          "file": "lib/ui/screens/chat_screen.dart",
+          "line": 5606
+        }
+      ],
+      "gates": [
+        "_shareUrl == null at the command entry point (otherwise it calls _stopSharing)"
+      ],
+      "elements": [
+        {
+          "id": "chat-share-confirm-sheet-confirm",
+          "type": "button",
+          "label": "Share session",
+          "key": null,
+          "line": 3420,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Calls repository.shareSession(sessionID) via _requireActionRepository(), stores _localShareUrl, _conn.refreshSessions(), copies the URL with Clipboard.setData and shows a 'share link copied' snackbar (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chat-share-confirm-sheet-cancel",
+          "type": "button",
+          "label": "Cancel",
+          "key": null,
+          "line": 3415,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Closes without sharing (cancel button of showConfirmSheet; pops false).",
+          "gates": [],
+          "destructive": false
+        }
+      ]
     },
     {
-     "page": "?",
-     "element": null,
-     "widget": "_DemoScreenState.build (embedded ChatScreen)",
-     "file": "lib/ui/screens/demo_screen.dart",
-     "line": 147
+      "id": "chat-watching-live",
+      "title": "<task the agent works on> | Live output",
+      "kind": "screen",
+      "file": "lib/ui/screens/chat/team_watch_live.dart",
+      "widget": "TeamWatchLiveScreen",
+      "presentedBy": [
+        "openTeamAgentConversation",
+        "openTeamAgentConversationById"
+      ],
+      "line": 29,
+      "purpose": "The chat's watching mode for an AI Team agent whose OpenCode session the connected server cannot read (a team on another computer, a worker still starting): the transcript is the team's live output drawn with the chat's parts (TeamAgentTranscript), with the same status line (chat-watching-banner: who and its state from its session, or connecting/starting/not running/ended), the same composer addressed to the agent through the team, and the agent's page as the top-bar action. Replaces team-agent-output (slice-P3.6).",
+      "reachedFrom": [
+        {
+          "page": "team-agent",
+          "element": "team-agent-open-conversation"
+        },
+        {
+          "page": "team-agents",
+          "element": "team-agents-row"
+        },
+        {
+          "page": "team-conversation",
+          "element": "team-conversation-family-agent"
+        },
+        {
+          "page": "gate-sheet",
+          "element": "gate-sheet-run-logs"
+        }
+      ],
+      "gates": [
+        "team.on",
+        "the agent's session was not found on the connected server (TeamAgentConversationMiss), or the agent is opened by id and not listed"
+      ],
+      "elements": [
+        {
+          "id": "chat-watching-live-copy",
+          "type": "icon-button",
+          "label": "Copy output",
+          "key": "chat-watching-live-copy",
+          "line": 222,
+          "action": "copy",
+          "target": null,
+          "targetWidget": null,
+          "effect": "KitAction.copy: copies the live output text (redacted by the kit).",
+          "gates": [
+            "the output is not empty"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "chat-watching-live-details",
+          "type": "icon-button",
+          "label": "About <name>",
+          "key": "chat-watching-details",
+          "line": 228,
+          "action": "navigate",
+          "target": "team-agent",
+          "targetWidget": "AgentScreen",
+          "effect": "watch.onDetails: pushes AgentScreen for the agent.",
+          "gates": [
+            "details: true and the agent is listed"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "chat-watching-live-wake",
+          "type": "button",
+          "label": "Start it | Why?",
+          "key": "chat-watching-live-wake",
+          "line": 167,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Status-line action while the agent is not running: teamUnstickAction wakes it (controlAgent) or explains why (host details sheet, key chat-watching-live-why).",
+          "gates": [
+            "the agent is listed and not live, nothing received yet"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "chat-watching-live-scroll",
+          "type": "gesture",
+          "label": "[drag the output away from the end]",
+          "key": "chat-watching-live-list",
+          "line": 289,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "A drag that leaves more than 24 px above the end stops follow-latest; the Jump to latest pill resumes it.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "chat-watching-live-jump",
+          "type": "button",
+          "label": "Jump to latest",
+          "key": "chat-watching-live-jump",
+          "line": 278,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "_setFollow(true): follows the newest output again and jumps to the end.",
+          "gates": [
+            "not following, output available and not ended"
+          ],
+          "destructive": false
+        },
+        {
+          "id": "chat-watching-live-composer",
+          "type": "text-field",
+          "label": "Message <name>…",
+          "key": "chat-watching-message-field",
+          "line": 263,
+          "action": "submit",
+          "target": null,
+          "targetWidget": null,
+          "effect": "The same watching composer as on chat (_WatchComposer): sends through the team's message control, receipt above it.",
+          "gates": [
+            "ChatWatch.onSend != null"
+          ],
+          "destructive": false
+        }
+      ]
     },
     {
-     "page": "?",
-     "element": null,
-     "widget": "_ServerPluginsSectionState (after showRunCommandDialog returns a session id)",
-     "file": "lib/ui/screens/settings/server_plugins_section.dart",
-     "line": 484
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_CommandsScreenState._run",
-     "file": "lib/ui/screens/library/commands_screen.dart",
-     "line": 158
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_GlobalSessionsScreenState._open",
-     "file": "lib/ui/screens/global_sessions_screen.dart",
-     "line": 432
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_GlobalSessionsScreenState._steal",
-     "file": "lib/ui/screens/global_sessions_screen.dart",
-     "line": 495
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_ChatScreenState._fork (pushReplacementNamed to the forked session)",
-     "file": "lib/ui/screens/chat_screen.dart",
-     "line": 3480
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_ChatScreenState._forkFromMessage",
-     "file": "lib/ui/screens/chat_screen.dart",
-     "line": 4112
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_ChatScreenState._executeMobileCommand (new session command)",
-     "file": "lib/ui/screens/chat_screen.dart",
-     "line": 5111
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_ChatScreenState._openRelatedSession (pushReplacementNamed)",
-     "file": "lib/ui/screens/chat_screen.dart",
-     "line": 5792
-    },
-    {
-     "page": "system",
-     "element": null,
-     "trigger": "first run: HomeScreen._openFirstConversation pushes '/chat/<id>' with ChatRouteArguments.firstRun() after the first connect of a new device (lib/ui/screens/home_screen.dart:173); focusComposer opens the keyboard"
+      "id": "dev-preview",
+      "title": "Preview",
+      "kind": "screen",
+      "file": "lib/ui/screens/dev_preview_screen.dart",
+      "widget": "DevPreviewScreen",
+      "presentedBy": [
+        "openDevPreview"
+      ],
+      "line": 74,
+      "purpose": "Shows a dev server's page (the one a conversation linked as localhost:PORT) inside the app: the phone's own loopback, or the connected server's host with the same port. One origin only; other addresses leave through openExternalLink.",
+      "reachedFrom": [
+        {
+          "page": "chat",
+          "element": null,
+          "trigger": "tapping a localhost, 127.0.0.1, 0.0.0.0 or [::1] link with a port in a message (KitLinkScope claim), or choosing a port under \"Preview a running app\" in the conversation menu"
+        }
+      ],
+      "gates": [
+        "the link parses as a local dev-server link (DevPreviewLink.parse)",
+        "a saved server with a host is connected, else a plain alert explains",
+        "a web view exists on the platform (Android, iOS); elsewhere the screen offers the browser"
+      ],
+      "elements": [
+        {
+          "id": "dev-preview-reload",
+          "type": "icon-button",
+          "label": "Refresh page",
+          "key": "dev-preview-reload",
+          "line": 118,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Reloads the page in the web view.",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "dev-preview-browser",
+          "type": "icon-button",
+          "label": "Open in browser",
+          "key": "dev-preview-browser",
+          "line": 125,
+          "action": "external-link",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Hands the page's current address to openExternalLink (confirmation first).",
+          "gates": [],
+          "destructive": false
+        },
+        {
+          "id": "dev-preview-copy",
+          "type": "icon-button",
+          "label": "Copy address",
+          "key": "dev-preview-copy",
+          "line": 127,
+          "action": "copy",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Copies the page's current address.",
+          "gates": [],
+          "destructive": false
+        }
+      ]
     }
-   ],
-   "gates": [
-    "no capability gate on the screen itself; reached by route '/chat/<id>' or a direct ChatScreen(...) push",
-    "widget.showAppBar (default true): an embedding experience (demo) can hide the app bar",
-    "most authoring features are disabled when _conn.isIsolated"
-   ],
-   "elements": [
+  ],
+  "notPages": [
     {
-     "id": "chat-draft-cleared-undo",
-     "type": "button",
-     "label": "Undo",
-     "key": null,
-     "line": 1172,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "SnackBarAction on the 'Draft text cleared' snackbar shown by _clearDraftText(): restores the cleared composer text (prepending it to anything typed since), calls _persistDraft() and refocuses the composer.",
-     "gates": [
-      "shown only after _clearDraftText() ran (composer onClearText, wired at line 7209)",
-      "_clearDraftText is a no-op while _promptShelfBusy"
-     ],
-     "destructive": false
+      "file": "lib/ui/screens/chat/chat_gallery.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): opens a tapped transcript picture as the swipeable KitImageGallery with Edit and Send; its elements are listed under that screen's ledger entries; no separate surface."
     },
     {
-     "id": "chat-load-older",
-     "type": "button",
-     "label": "Load older messages | Retry | Reload recent history",
-     "key": "chat-load-older",
-     "line": 2014,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Calls _loadOlder(): fetches the previous history page using _olderCursor (or reloads recent history when _olderNeedsReload) and merges it while keeping the scroll anchor. Label is 'Reload recent history' when _olderNeedsReload, 'Retry' when _olderError != null, else 'Load older messages'.",
-     "gates": [
-      "row (_olderHistoryRow, key 'chat-older-history') is returned from the transcript item builder at line 6689",
-      "disabled while _loading || _loadingOlder (a spinner overlays the label)"
-     ],
-     "destructive": false
+      "file": "lib/ui/screens/chat/agent_cards.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): hands the transcript's tool parts to the agent-card surface and draws the card in the reply; no separate surface."
     },
     {
-     "id": "chat-prompt-history-keys",
-     "type": "gesture",
-     "label": "Arrow Up / Arrow Down in composer",
-     "key": null,
-     "line": 970,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_focus.onKeyEvent -> _navigatePromptHistory (line 893): with the caret at the start (Up) or end (Down), replaces the composer value with the previous/next entry of _recentPrompts via PromptHistoryNavigation.move, retaining the original draft for restore.",
-     "gates": [
-      "!_conn.isIsolated",
-      "!_sending && !_promptShelfBusy",
-      "isPromptHistoryKey(...): no slash-command or @agent suggestions open, collapsed selection, no IME composing, no Ctrl/Alt/Meta/Shift held"
-     ],
-     "destructive": false,
-     "file": "lib/ui/screens/chat_screen.dart"
+      "file": "lib/ui/screens/chat/assistant_error_row.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): the assistant error row moved out of message_view.dart for the 800-line chat budget; its elements stay under that screen's ledger entries. No separate surface."
     },
     {
-     "id": "chat-watching-composer",
-     "type": "text-field",
-     "label": "Message <name>… | Message the worker… | Message this agent…",
-     "key": "chat-watching-message-field",
-     "file": "lib/ui/screens/chat/watching.dart",
-     "line": 274,
-     "action": "submit",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_WatchComposer (KitComposer, composer key chat-watching-composer): the person's words for the watched AI Team agent. Send (chat-watching-message-send) -> ChatWatch.onSend (teamAgentWatch: OrchestrationController.messageAgent(agentId, text)); the field and its draft (oc.draft.team-message.<agentId>.<profileId>) clear only when the team took it. Never typed into the watched session. Note 'Goes to <name> through the AI Team'; read-only with 'This team can't be messaged from here.' without the message control.",
-     "gates": [
-      "widget.watch != null (watching mode)",
-      "typing only when ChatWatch.onSend != null (team.capabilities.controlMessage)"
-     ],
-     "destructive": false
+      "file": "lib/ui/screens/chat/chat_attachments.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
     },
     {
-     "id": "chat-watching-message-send",
-     "type": "icon-button",
-     "label": "[Send]",
-     "key": "chat-watching-message-send",
-     "file": "lib/ui/screens/chat/watching.dart",
-     "line": 275,
-     "action": "submit",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Same as the composer's onSend: _WatchComposerState._send(); the message's receipt (chat-watching-message-receipt, Sent then Confirmed or the host's reason, with Try again) shows above the composer.",
-     "gates": [
-      "widget.watch != null",
-      "ChatWatch.onSend != null",
-      "non-empty text"
-     ],
-     "destructive": false
+      "file": "lib/ui/screens/chat/chat_body.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
     },
     {
-     "id": "chat-watching-message-receipt-retry",
-     "type": "button",
-     "label": "Try again",
-     "key": "chat-watching-message-receipt-retry",
-     "file": "lib/ui/screens/chat/team_conversation_view.dart",
-     "line": 1648,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "The receipt above the watching composer (newest message sent to this agent since the page opened): team.retryMutation(record.key).",
-     "gates": [
-      "the record may be retried (teamControlReceipt)"
-     ],
-     "destructive": false
+      "file": "lib/ui/screens/chat/chat_command_actions.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
     },
     {
-     "id": "chat-watching-details",
-     "type": "icon-button",
-     "label": "About <name> | About the <role>",
-     "key": "chat-watching-details",
-     "file": "lib/ui/screens/chat/watching.dart",
-     "line": 131,
-     "action": "navigate",
-     "target": "team-agent",
-     "targetWidget": "AgentScreen",
-     "effect": "Top-bar action while watching: ChatWatch.onDetails pushes AgentScreen(controller: team, agentId) — the agent's state, controls (nudge, pause, restart, stop) and technical details.",
-     "gates": [
-      "widget.watch != null",
-      "ChatWatch.onDetails != null: not when opened from the agent's own page (details: false)"
-     ],
-     "destructive": false
+      "file": "lib/ui/screens/chat/chat_commands.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_composer_region.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_drafts.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_files.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_history.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_message_actions.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_notices.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/no_reply_reason.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_page.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_queue.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_requests.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_page_cache.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): what one build of the page reads, kept between builds; draws nothing, no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_running_work.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_scroll.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_send.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_session_actions.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_session_menu.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_start.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_states.dart",
+      "reason": "part of chat_screen.dart (design standard §9 step 5): the chat page's own loading/error states and its one status line, not a surface of their own; shown inline on the chat page."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_status_line.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_stream.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_top_bar.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_transcript.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_voice.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/composer_tools.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/empty_chat.dart",
+      "reason": "part of chat_screen.dart: ChatStartFacts plus the empty-conversation starters/body shown inline on the chat page before the first message, not a surface of their own."
+    },
+    {
+      "file": "lib/ui/screens/chat/pending_sends_strip.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/receipt_check.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/sent_photos.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): turns a sent prompt's photos into thumbnails in the prompt bubble (FC4); the full view is the existing image viewer. No separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/team_agent_conversation.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/team_conversation_actions.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/team_conversation_parts.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/transcript_rows.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/transcript_turns.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/watching.dart",
+      "reason": "part of chat_screen.dart (design standard §9 step 5): how the chat page shows a conversation someone else drives (an AI Team worker's own OpenCode session) — the same 'chat' page and route, not a surface of its own. Its status banner and empty state are read-only; its composer (chat-watching-composer), send, receipt and the About <name> action are recorded on the chat page. _openWatchedChild (a child session delegated to, watched the same way) is wired from chat_screen.dart."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_handoff_link.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): the quiet \"Continue with…\" link line in the conversation and its open and forget actions; a row of the chat page, and the sheet it comes from is a separate surface."
+    },
+    {
+      "file": "lib/ui/screens/chat/chat_dev_preview.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): finds the local ports a conversation named, claims a tapped local link and lists the ports under \"Preview a running app\"; the preview itself is the dev-preview page."
+    },
+    {
+      "file": "lib/ui/screens/chat/stuck_command.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): when a foreground command has run far past an agent's cap, the live line says so with Stop and a typed message is offered as Stop and send; its elements are listed under that screen's ledger entries; no separate surface."
     }
-   ]
-  },
-  {
-   "id": "chat-draft-attachment-recovery-sheet",
-   "title": "Some attachments need attention",
-   "kind": "sheet",
-   "file": "lib/ui/screens/chat_screen.dart",
-   "widget": "_recoverDraftAttachments",
-   "presentedBy": [
-    "_recoverDraftAttachments"
-   ],
-   "line": 724,
-   "purpose": "Asks whether to continue with only the recoverable saved draft attachments when some are missing, unreadable or belong to another project.",
-   "reachedFrom": [
-    {
-     "page": "system",
-     "element": null,
-     "trigger": "automatic from initState (line 570) when the saved session draft has attachments and _conn.restoreDraftAttachments reports unavailable files; re-run by _retryDraftPersistence (draft-failure retry callback wired at line 7111)"
-    }
-   ],
-   "gates": [
-    "!_conn.isIsolated",
-    "recovered.unavailable.isNotEmpty",
-    "_draftLocation == _conn.locationRevision"
-   ],
-   "elements": [
-    {
-     "id": "chat-draft-attachment-recovery-sheet-confirm",
-     "type": "button",
-     "label": "Use available attachments",
-     "key": null,
-     "line": 730,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Replaces _attachments with recovered.attachments, clears _draftRecoveryBlocked and _draftSaveFailure and schedules _persistDraft(), which drops the unavailable attachments from the saved draft (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "chat-draft-attachment-recovery-sheet-cancel",
-     "type": "button",
-     "label": "Keep saved draft",
-     "key": null,
-     "line": 731,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Keeps the stored draft snapshot untouched; _draftRecoveryBlocked stays true and _draftSaveFailure becomes SessionDraftFailure.attachments (cancel button of showConfirmSheet; pops false).",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "chat-stash-attachments-unavailable-sheet",
-   "title": "Some attachments cannot be restored",
-   "kind": "sheet",
-   "file": "lib/ui/screens/chat_screen.dart",
-   "widget": "_openPromptStash",
-   "presentedBy": [
-    "_openPromptStash"
-   ],
-   "line": 1069,
-   "purpose": "Warns that some attachments of the chosen stashed prompt are missing before restoring the rest.",
-   "reachedFrom": [
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_PromptStashSheet (entry selected, popped with a StashedPrompt)",
-     "file": "lib/ui/screens/chat/prompt_stash.dart",
-     "line": 3
-    }
-   ],
-   "gates": [
-    "_conn.canUsePromptShelf",
-    "_conn.restorePromptStashAttachments(...).unavailable.isNotEmpty",
-    "composer unchanged since the stash sheet opened"
-   ],
-   "elements": [
-    {
-     "id": "chat-stash-attachments-unavailable-sheet-confirm",
-     "type": "button",
-     "label": "Restore available content",
-     "key": null,
-     "line": 1076,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Continues _openPromptStash(): after the optional restore confirmation, puts the stashed text, recovered attachments and references into the composer and keeps the stash copy (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "chat-stash-attachments-unavailable-sheet-cancel",
-     "type": "button",
-     "label": "Cancel",
-     "key": null,
-     "line": 1077,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Aborts the restore; composer and stash unchanged (cancel button of showConfirmSheet; pops false).",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "chat-stash-restore-confirm-sheet",
-   "title": "Restore saved prompt?",
-   "kind": "sheet",
-   "file": "lib/ui/screens/chat_screen.dart",
-   "widget": "_openPromptStash",
-   "presentedBy": [
-    "_openPromptStash"
-   ],
-   "line": 1082,
-   "purpose": "Confirms replacing a non-empty composer with a stashed prompt; the current prompt is stashed first.",
-   "reachedFrom": [
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_PromptStashSheet (entry selected, popped with a StashedPrompt)",
-     "file": "lib/ui/screens/chat/prompt_stash.dart",
-     "line": 3
-    },
-    {
-     "page": "chat-stash-attachments-unavailable-sheet",
-     "element": "chat-stash-attachments-unavailable-sheet-confirm"
-    }
-   ],
-   "gates": [
-    "_conn.canUsePromptShelf",
-    "current composer snapshot is not empty (!current.isEmpty)"
-   ],
-   "elements": [
-    {
-     "id": "chat-stash-restore-confirm-sheet-confirm",
-     "type": "button",
-     "label": "Restore",
-     "key": null,
-     "line": 1087,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Saves the current prompt with _conn.savePromptStash(current) (refused with a 'stash full' note at PromptShelfStore.capacity), replaces composer text, attachments and staged references with the selected entry, _persistDraft(), then _conn.removePromptStash(selected.id) unless a copy must be kept (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "chat-stash-restore-confirm-sheet-cancel",
-     "type": "button",
-     "label": "Cancel",
-     "key": null,
-     "line": 1088,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Aborts the restore; composer and stash unchanged (cancel button of showConfirmSheet; pops false).",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "chat-discard-queued-draft-sheet",
-   "title": "Discard queued draft?",
-   "kind": "sheet",
-   "file": "lib/ui/screens/chat_screen.dart",
-   "widget": "_confirmDiscardQueuedPrompt",
-   "presentedBy": [
-    "_confirmDiscardQueuedPrompt"
-   ],
-   "line": 2314,
-   "purpose": "Confirms discarding an offline-queued prompt; wording changes when the draft's earlier send was never confirmed.",
-   "reachedFrom": [
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_PendingSendsStrip.onDiscard -> _discardQueuedPrompt (wired at chat_screen.dart:7003)",
-     "file": "lib/ui/screens/chat/message_view.dart",
-     "line": 2401
-    }
-   ],
-   "gates": [
-    "queued drafts exist for this session (_conn.capabilities.offlinePromptQueue)",
-    "asked a second time when the draft got dispatched while the first sheet was open (line 2302)"
-   ],
-   "elements": [
-    {
-     "id": "chat-discard-queued-draft-sheet-confirm",
-     "type": "button",
-     "label": "Discard draft",
-     "key": null,
-     "line": 2321,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_discardQueuedPrompt() re-reads the live entry and calls _removeQueuedDraft(id) -> _conn.removeQueuedPrompt(id) (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "chat-discard-queued-draft-sheet-cancel",
-     "type": "button",
-     "label": "Keep it queued | Keep for review (when asked.dispatched)",
-     "key": null,
-     "line": 2322,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Keeps the queued draft (cancel button of showConfirmSheet; pops false).",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "chat-resend-queued-draft-sheet",
-   "title": "Send this draft again?",
-   "kind": "sheet",
-   "file": "lib/ui/screens/chat_screen.dart",
-   "widget": "_resendQueuedPrompt",
-   "presentedBy": [
-    "_resendQueuedPrompt"
-   ],
-   "line": 2336,
-   "purpose": "Confirms resending a queued draft whose earlier send was never confirmed (it may duplicate).",
-   "reachedFrom": [
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_PendingSendsStrip.onResend -> _resendQueuedPrompt (wired at chat_screen.dart:7002)",
-     "file": "lib/ui/screens/chat/message_view.dart",
-     "line": 2401
-    }
-   ],
-   "gates": [
-    "queued draft is in review (dispatched but unconfirmed)"
-   ],
-   "elements": [
-    {
-     "id": "chat-resend-queued-draft-sheet-confirm",
-     "type": "button",
-     "label": "Send again",
-     "key": null,
-     "line": 2341,
-     "action": "submit",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Calls _conn.resendQueuedPrompt(entry.id), clearing the dispatch marker so the draft is sent again; a storage failure shows queueSaveFailed (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "chat-resend-queued-draft-sheet-cancel",
-     "type": "button",
-     "label": "Keep for review",
-     "key": null,
-     "line": 2342,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Keeps the draft in review (cancel button of showConfirmSheet; pops false).",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "chat-cancel-inbox-send-sheet",
-   "title": "Cancel this pending message?",
-   "kind": "sheet",
-   "file": "lib/ui/screens/chat_screen.dart",
-   "widget": "_cancelInboxSend",
-   "presentedBy": [
-    "_cancelInboxSend"
-   ],
-   "line": 2355,
-   "purpose": "Confirms cancelling a pending server-side inbox message; its text returns to the composer.",
-   "reachedFrom": [
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_PendingSendsStrip.onCancelInbox -> _cancelInboxSend (wired at chat_screen.dart:7004)",
-     "file": "lib/ui/screens/chat/message_view.dart",
-     "line": 2401
-    }
-   ],
-   "gates": [
-    "a pending Api2InboxItem exists for the session (_conn.supportsInbox)"
-   ],
-   "elements": [
-    {
-     "id": "chat-cancel-inbox-send-sheet-confirm",
-     "type": "button",
-     "label": "Cancel message",
-     "key": null,
-     "line": 2360,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Calls _conn.cancelInboxItem(sessionID, item.id); the returned text is prepended to the composer and focused; HTTP 409 shows the 'already delivered' snackbar (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "chat-cancel-inbox-send-sheet-cancel",
-     "type": "button",
-     "label": "Keep it pending",
-     "key": null,
-     "line": 2361,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Keeps the pending message (cancel button of showConfirmSheet; pops false).",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "chat-pending-photo-sheet",
-   "title": "Pending photo",
-   "kind": "sheet",
-   "file": "lib/ui/screens/chat_screen.dart",
-   "widget": "_pickPhoto",
-   "presentedBy": [
-    "_pickPhoto"
-   ],
-   "line": 3111,
-   "purpose": "Shown before picking a new photo when another photo is still pending in its original conversation.",
-   "reachedFrom": [
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_ChatComposer.onPhotoLibrary / onCamera -> _pickPhoto (wired at chat_screen.dart:7278-7281)",
-     "file": "lib/ui/screens/chat/composer.dart",
-     "line": null
-    }
-   ],
-   "gates": [
-    "!_conn.isIsolated && _conn.capabilities.promptAttachments",
-    "platformCapabilities.supportsPromptPhotos",
-    "_conn.promptPhotos.pending != null",
-    "attachment count (5) and aggregate size (20 MB) limits not reached"
-   ],
-   "elements": [
-    {
-     "id": "chat-pending-photo-sheet-confirm",
-     "type": "button",
-     "label": "Discard pending photo",
-     "key": null,
-     "line": 3115,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Calls _conn.promptPhotos.discard(pending.id), then persists the draft and continues to _conn.promptPhotos.pick(source: gallery|camera) and _applyPendingPhoto() (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "chat-pending-photo-sheet-cancel",
-     "type": "button",
-     "label": "Keep editing",
-     "key": null,
-     "line": 3116,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Keeps the pending photo and aborts picking (cancel button of showConfirmSheet; pops false).",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "chat-share-confirm-sheet",
-   "title": "Share this session?",
-   "kind": "sheet",
-   "file": "lib/ui/screens/chat_screen.dart",
-   "widget": "_share",
-   "presentedBy": [
-    "_share"
-   ],
-   "line": 3415,
-   "purpose": "Warns that anyone with the link can view the session before creating a public share link.",
-   "reachedFrom": [
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_ChatScreenState._executeMobileCommand (share command, when _shareUrl == null)",
-     "file": "lib/ui/screens/chat_screen.dart",
-     "line": 5298
-    },
-    {
-     "page": "?",
-     "element": null,
-     "widget": "_ChatScreenState._openSessionMenu ('share' menu result)",
-     "file": "lib/ui/screens/chat_screen.dart",
-     "line": 5606
-    }
-   ],
-   "gates": [
-    "_shareUrl == null at the command entry point (otherwise it calls _stopSharing)"
-   ],
-   "elements": [
-    {
-     "id": "chat-share-confirm-sheet-confirm",
-     "type": "button",
-     "label": "Share session",
-     "key": null,
-     "line": 3420,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Calls repository.shareSession(sessionID) via _requireActionRepository(), stores _localShareUrl, _conn.refreshSessions(), copies the URL with Clipboard.setData and shows a 'share link copied' snackbar (FilledButton rendered by showConfirmSheet in lib/ui/widgets/confirm_sheet.dart; pops true).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "chat-share-confirm-sheet-cancel",
-     "type": "button",
-     "label": "Cancel",
-     "key": null,
-     "line": 3415,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Closes without sharing (cancel button of showConfirmSheet; pops false).",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "chat-watching-live",
-   "title": "<task the agent works on> | Live output",
-   "kind": "screen",
-   "file": "lib/ui/screens/chat/team_watch_live.dart",
-   "widget": "TeamWatchLiveScreen",
-   "presentedBy": [
-    "openTeamAgentConversation",
-    "openTeamAgentConversationById"
-   ],
-   "line": 29,
-   "purpose": "The chat's watching mode for an AI Team agent whose OpenCode session the connected server cannot read (a team on another computer, a worker still starting): the transcript is the team's live output drawn with the chat's parts (TeamAgentTranscript), with the same status line (chat-watching-banner: who and its state from its session, or connecting/starting/not running/ended), the same composer addressed to the agent through the team, and the agent's page as the top-bar action. Replaces team-agent-output (slice-P3.6).",
-   "reachedFrom": [
-    {
-     "page": "team-agent",
-     "element": "team-agent-open-conversation"
-    },
-    {
-     "page": "team-agents",
-     "element": "team-agents-row"
-    },
-    {
-     "page": "team-conversation",
-     "element": "team-conversation-family-agent"
-    },
-    {
-     "page": "gate-sheet",
-     "element": "gate-sheet-run-logs"
-    },
-    {
-     "page": "embedded-team-planning-card",
-     "element": "embedded-team-planning-card-output"
-    }
-   ],
-   "gates": [
-    "team.on",
-    "the agent's session was not found on the connected server (TeamAgentConversationMiss), or the agent is opened by id and not listed"
-   ],
-   "elements": [
-    {
-     "id": "chat-watching-live-copy",
-     "type": "icon-button",
-     "label": "Copy output",
-     "key": "chat-watching-live-copy",
-     "line": 222,
-     "action": "copy",
-     "target": null,
-     "targetWidget": null,
-     "effect": "KitAction.copy: copies the live output text (redacted by the kit).",
-     "gates": [
-      "the output is not empty"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "chat-watching-live-details",
-     "type": "icon-button",
-     "label": "About <name>",
-     "key": "chat-watching-details",
-     "line": 228,
-     "action": "navigate",
-     "target": "team-agent",
-     "targetWidget": "AgentScreen",
-     "effect": "watch.onDetails: pushes AgentScreen for the agent.",
-     "gates": [
-      "details: true and the agent is listed"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "chat-watching-live-wake",
-     "type": "button",
-     "label": "Start it | Why?",
-     "key": "chat-watching-live-wake",
-     "line": 167,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Status-line action while the agent is not running: teamUnstickAction wakes it (controlAgent) or explains why (host details sheet, key chat-watching-live-why).",
-     "gates": [
-      "the agent is listed and not live, nothing received yet"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "chat-watching-live-scroll",
-     "type": "gesture",
-     "label": "[drag the output away from the end]",
-     "key": "chat-watching-live-list",
-     "line": 289,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "A drag that leaves more than 24 px above the end stops follow-latest; the Jump to latest pill resumes it.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "chat-watching-live-jump",
-     "type": "button",
-     "label": "Jump to latest",
-     "key": "chat-watching-live-jump",
-     "line": 278,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_setFollow(true): follows the newest output again and jumps to the end.",
-     "gates": [
-      "not following, output available and not ended"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "chat-watching-live-composer",
-     "type": "text-field",
-     "label": "Message <name>…",
-     "key": "chat-watching-message-field",
-     "line": 263,
-     "action": "submit",
-     "target": null,
-     "targetWidget": null,
-     "effect": "The same watching composer as on chat (_WatchComposer): sends through the team's message control, receipt above it.",
-     "gates": [
-      "ChatWatch.onSend != null"
-     ],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "dev-preview",
-   "title": "Preview",
-   "kind": "screen",
-   "file": "lib/ui/screens/dev_preview_screen.dart",
-   "widget": "DevPreviewScreen",
-   "presentedBy": [
-    "openDevPreview"
-   ],
-   "line": 74,
-   "purpose": "Shows a dev server's page (the one a conversation linked as localhost:PORT) inside the app: the phone's own loopback, or the connected server's host with the same port. One origin only; other addresses leave through openExternalLink.",
-   "reachedFrom": [
-    {
-     "page": "chat",
-     "element": null,
-     "trigger": "tapping a localhost, 127.0.0.1, 0.0.0.0 or [::1] link with a port in a message (KitLinkScope claim), or choosing a port under \"Preview a running app\" in the conversation menu"
-    }
-   ],
-   "gates": [
-    "the link parses as a local dev-server link (DevPreviewLink.parse)",
-    "a saved server with a host is connected, else a plain alert explains",
-    "a web view exists on the platform (Android, iOS); elsewhere the screen offers the browser"
-   ],
-   "elements": [
-    {
-     "id": "dev-preview-reload",
-     "type": "icon-button",
-     "label": "Refresh page",
-     "key": "dev-preview-reload",
-     "line": 118,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Reloads the page in the web view.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "dev-preview-browser",
-     "type": "icon-button",
-     "label": "Open in browser",
-     "key": "dev-preview-browser",
-     "line": 125,
-     "action": "external-link",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Hands the page's current address to openExternalLink (confirmation first).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "dev-preview-copy",
-     "type": "icon-button",
-     "label": "Copy address",
-     "key": "dev-preview-copy",
-     "line": 127,
-     "action": "copy",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Copies the page's current address.",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  }
- ],
- "notPages": [
-  {
-   "file": "lib/ui/screens/chat/chat_gallery.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): opens a tapped transcript picture as the swipeable KitImageGallery with Edit and Send; its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/agent_cards.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): hands the transcript's tool parts to the agent-card surface and draws the card in the reply; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/assistant_error_row.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): the assistant error row moved out of message_view.dart for the 800-line chat budget; its elements stay under that screen's ledger entries. No separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_attachments.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_body.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_command_actions.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_commands.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_composer_region.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_drafts.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_files.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_history.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_message_actions.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_notices.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_page.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_queue.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_requests.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_running_work.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_scroll.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_send.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_session_actions.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_session_menu.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_start.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_states.dart",
-   "reason": "part of chat_screen.dart (design standard §9 step 5): the chat page's own loading/error states and its one status line, not a surface of their own; shown inline on the chat page."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_status_line.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_stream.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_top_bar.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_transcript.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_voice.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/composer_tools.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/empty_chat.dart",
-   "reason": "part of chat_screen.dart: ChatStartFacts plus the empty-conversation starters/body shown inline on the chat page before the first message, not a surface of their own."
-  },
-  {
-   "file": "lib/ui/screens/chat/pending_sends_strip.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/receipt_check.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/sent_photos.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): turns a sent prompt's photos into thumbnails in the prompt bubble (FC4); the full view is the existing image viewer. No separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/team_agent_conversation.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/team_conversation_actions.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/team_conversation_parts.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/transcript_rows.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/transcript_turns.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/watching.dart",
-   "reason": "part of chat_screen.dart (design standard §9 step 5): how the chat page shows a conversation someone else drives (an AI Team worker's own OpenCode session) — the same 'chat' page and route, not a surface of its own. Its status banner and empty state are read-only; its composer (chat-watching-composer), send, receipt and the About <name> action are recorded on the chat page. _openWatchedChild (a child session delegated to, watched the same way) is wired from chat_screen.dart."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_handoff_link.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): the quiet \"Continue with…\" link line in the conversation and its open and forget actions; a row of the chat page, and the sheet it comes from is a separate surface."
-  },
-  {
-   "file": "lib/ui/screens/chat/chat_dev_preview.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): finds the local ports a conversation named, claims a tapped local link and lists the ports under \"Preview a running app\"; the preview itself is the dev-preview page."
-  }
- ],
- "notes": [
-  "Scope: lines 1-3800 of lib/ui/screens/chat_screen.dart are almost entirely state and handlers; only three interactive declarations live here (snackbar Undo 1172, load-older button 2014, composer key handler 573). All other chat elements are declared in build() after line 3800 (agent b2) or in lib/ui/screens/chat/*.dart.",
-  "Handler -> surface map for handlers defined in this range (their openers are declared elsewhere; use as targetWidget evidence):",
-  "_openRunningWork (834) -> showRunningWorkSheet line 839 (lib/ui/screens/running_work_sheet.dart); gate _conn.capabilities.projectManagement; a returned session id continues to _openSubagentSession. Callers: chat_screen.dart:5578, 6477, 6489 (key 'running-work-indicator').",
-  "_reusePrompt (875) -> showModalBottomSheet(_PromptHistorySheet) line 876 (lib/ui/screens/chat/prompt_history.dart:5); the chosen text is appended to the composer. Caller: _ChatComposer callback at 7208.",
-  "_stashCurrentPrompt (953) -> no surface; _conn.savePromptStash(snapshot) then clears composer, attachments and staged references. Gate _conn.canUsePromptShelf. Caller: 7214.",
-  "_openPromptStash (1005) -> showModalBottomSheet(_PromptStashSheet) line 1038 (lib/ui/screens/chat/prompt_stash.dart:3), then the two stash confirm sheets above. Gate _conn.canUsePromptShelf. Caller: 7225.",
-  "_clearDraftText (1164) -> clears the composer and shows the snackbar with Undo. Caller: _ChatComposer.onClearText at 7209.",
-  "_editQueuedPrompt (2267) -> no surface; _conn.removeQueuedPrompt then moves text/attachments into the composer. _flipInboxDelivery (2392) -> _conn.setInboxDelivery(steer<->queue). Callers: _PendingSendsStrip wiring at 7001 / 7005.",
-  "_send (2425) -> no surface; submits through the action transport, or queues offline with _conn.queuePrompt when _conn.capabilities.offlinePromptQueue; a typed '/command' goes to _submitTypedCommand (2738) -> actionApi.slashCommand or _runMobileCommand.",
-  "_openVoice (2801) -> showVoiceModelSetupSheet line 2836 when !voice.models.isReady, then showVoiceComposerResultSheet line 2844 (lib/voice/voice_ui.dart). Gates: !_conn.isIsolated, platformCapabilities.supportsVoice. Callers: composer onVoice 7285, chat/voice_conversation.dart:107 and 495.",
-  "_addWebSources (2878) -> Navigator.push(WebSourcesScreen) line 2888; gates _conn.capabilities.webSearch, !_voiceConversation. Caller: composer onWebSources 7287.",
-  "_pickAttachment (3013) / _chooseAttachment (3261) -> OS file picker FilePicker.pickFile(dialogTitle 'Attach to prompt') line 3282, not an app page; limits 5 files, 10 MB each, 20 MB total; gate _conn.capabilities.promptAttachments.",
-  "_recoverLegacyDraft (3034) -> Navigator.push(LegacyDraftsScreen) line 3040. Caller: composer callback 7220.",
-  "_reviewPendingPhoto (3197) -> showFilePreviewSheet line 3208 (lib/ui/widgets/file_preview.dart). Caller: TextButton near chat_screen.dart:7020 (b2).",
-  "_openPromptEditor (3319) -> Navigator.push(fullscreenDialog _PromptEditorScreen) line 3323 (lib/ui/screens/chat/prompt_editor.dart:13). Callers: 5193, composer onOpenEditor 7205.",
-  "_abort (3383) -> actionApi.abort(sessionID): stops the running turn with no confirmation (destructive).",
-  "_stopSharing (3455) -> repository.unshareSession(sessionID) with NO confirmation (destructive). Callers 5309, 5608 and _SharedSessionBanner.onStop at 6562.",
-  "_fork (3474) -> repository.forkSession then pushReplacementNamed('/chat/<newId>') line 3480; gate _conn.capabilities.sessionFork.",
-  "_openTimeline (3496) -> showModalBottomSheet(_TimelineSheet) line 3499 (lib/ui/screens/chat/timeline_sheet.dart:34); the result forks (_forkFromMessage), opens find (_openFind) or jumps to the message. Callers: 5315, 5318 (forkMode), 5580, 6881.",
-  "_toggleReasoningDisplay (3647) -> _conn.setTranscriptReasoningExpanded (persisted) + snackbar; _toggleTimestampDisplay (3672) -> _conn.setTranscriptTimestampsVisible (persisted) + snackbar. Find handlers _openFind/_changeFind/_navigateFind/_closeFind/_searchAllHistory (3539-3645) only change local view state; their widgets are in chat/transcript_find.dart.",
-  "Unresolved: reachedFrom of the confirm sheets points at callback wiring in the second half (b2) or chat/*.dart whose element ids are unknown to this agent; recorded with page '?'.",
-  "Unresolved: line of onPhotoLibrary/onCamera inside lib/ui/screens/chat/composer.dart (c-chat-compose) left null.",
-  "Unresolved: exact external trigger semantics of lib/main.dart:414/588/635/1046 were inferred from method names (_scheduleShareRoute, _openNewTaskForLaunch, _openSessionForLaunch, _scheduleCodingAlertRoute); agent a-shell owns main.dart."
- ]
+  ],
+  "notes": [
+    "Scope: lines 1-3800 of lib/ui/screens/chat_screen.dart are almost entirely state and handlers; only three interactive declarations live here (snackbar Undo 1172, load-older button 2014, composer key handler 573). All other chat elements are declared in build() after line 3800 (agent b2) or in lib/ui/screens/chat/*.dart.",
+    "Handler -> surface map for handlers defined in this range (their openers are declared elsewhere; use as targetWidget evidence):",
+    "_openRunningWork (834) -> showRunningWorkSheet line 839 (lib/ui/screens/running_work_sheet.dart); gate _conn.capabilities.projectManagement; a returned session id continues to _openSubagentSession. Callers: chat_screen.dart:5578, 6477, 6489 (key 'running-work-indicator').",
+    "_reusePrompt (875) -> showModalBottomSheet(_PromptHistorySheet) line 876 (lib/ui/screens/chat/prompt_history.dart:5); the chosen text is appended to the composer. Caller: _ChatComposer callback at 7208.",
+    "_stashCurrentPrompt (953) -> no surface; _conn.savePromptStash(snapshot) then clears composer, attachments and staged references. Gate _conn.canUsePromptShelf. Caller: 7214.",
+    "_openPromptStash (1005) -> showModalBottomSheet(_PromptStashSheet) line 1038 (lib/ui/screens/chat/prompt_stash.dart:3), then the two stash confirm sheets above. Gate _conn.canUsePromptShelf. Caller: 7225.",
+    "_clearDraftText (1164) -> clears the composer and shows the snackbar with Undo. Caller: _ChatComposer.onClearText at 7209.",
+    "_editQueuedPrompt (2267) -> no surface; _conn.removeQueuedPrompt then moves text/attachments into the composer. _flipInboxDelivery (2392) -> _conn.setInboxDelivery(steer<->queue). Callers: _PendingSendsStrip wiring at 7001 / 7005.",
+    "_send (2425) -> no surface; submits through the action transport, or queues offline with _conn.queuePrompt when _conn.capabilities.offlinePromptQueue; a typed '/command' goes to _submitTypedCommand (2738) -> actionApi.slashCommand or _runMobileCommand.",
+    "_openVoice (2801) -> showVoiceModelSetupSheet line 2836 when !voice.models.isReady, then showVoiceComposerResultSheet line 2844 (lib/voice/voice_ui.dart). Gates: !_conn.isIsolated, platformCapabilities.supportsVoice. Callers: composer onVoice 7285, chat/voice_conversation.dart:107 and 495.",
+    "_addWebSources (2878) -> Navigator.push(WebSourcesScreen) line 2888; gates _conn.capabilities.webSearch, !_voiceConversation. Caller: composer onWebSources 7287.",
+    "_pickAttachment (3013) / _chooseAttachment (3261) -> OS file picker FilePicker.pickFile(dialogTitle 'Attach to prompt') line 3282, not an app page; limits 5 files, 10 MB each, 20 MB total; gate _conn.capabilities.promptAttachments.",
+    "_recoverLegacyDraft (3034) -> Navigator.push(LegacyDraftsScreen) line 3040. Caller: composer callback 7220.",
+    "_reviewPendingPhoto (3197) -> showFilePreviewSheet line 3208 (lib/ui/widgets/file_preview.dart). Caller: TextButton near chat_screen.dart:7020 (b2).",
+    "_openPromptEditor (3319) -> Navigator.push(fullscreenDialog _PromptEditorScreen) line 3323 (lib/ui/screens/chat/prompt_editor.dart:13). Callers: 5193, composer onOpenEditor 7205.",
+    "_abort (3383) -> actionApi.abort(sessionID): stops the running turn with no confirmation (destructive).",
+    "_stopSharing (3455) -> repository.unshareSession(sessionID) with NO confirmation (destructive). Callers 5309, 5608 and _SharedSessionBanner.onStop at 6562.",
+    "_fork (3474) -> repository.forkSession then pushReplacementNamed('/chat/<newId>') line 3480; gate _conn.capabilities.sessionFork.",
+    "_openTimeline (3496) -> showModalBottomSheet(_TimelineSheet) line 3499 (lib/ui/screens/chat/timeline_sheet.dart:34); the result forks (_forkFromMessage), opens find (_openFind) or jumps to the message. Callers: 5315, 5318 (forkMode), 5580, 6881.",
+    "_toggleReasoningDisplay (3647) -> _conn.setTranscriptReasoningExpanded (persisted) + snackbar; _toggleTimestampDisplay (3672) -> _conn.setTranscriptTimestampsVisible (persisted) + snackbar. Find handlers _openFind/_changeFind/_navigateFind/_closeFind/_searchAllHistory (3539-3645) only change local view state; their widgets are in chat/transcript_find.dart.",
+    "Unresolved: reachedFrom of the confirm sheets points at callback wiring in the second half (b2) or chat/*.dart whose element ids are unknown to this agent; recorded with page '?'.",
+    "Unresolved: line of onPhotoLibrary/onCamera inside lib/ui/screens/chat/composer.dart (c-chat-compose) left null.",
+    "Unresolved: exact external trigger semantics of lib/main.dart:414/588/635/1046 were inferred from method names (_scheduleShareRoute, _openNewTaskForLaunch, _openSessionForLaunch, _scheduleCodingAlertRoute); agent a-shell owns main.dart."
+  ]
 }

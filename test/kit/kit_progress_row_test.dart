@@ -12,6 +12,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_progress_row.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
+import '../support/part_semantics.dart';
 
 const _rowKey = ValueKey('row-under-test');
 
@@ -61,7 +62,7 @@ PaintPattern _paintsRect(Color color, bool Function(Rect rect) where) =>
     });
 
 SemanticsData _rowSemantics(WidgetTester tester, [Key key = _rowKey]) =>
-    tester.getSemantics(find.byKey(key)).getSemanticsData();
+    partSemantics(tester, find.byKey(key)).getSemanticsData();
 
 void main() {
   kitMotionStillTests(

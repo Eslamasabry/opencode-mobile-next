@@ -335,7 +335,6 @@ English text beside each key, grouped as above.
 - `chatsHomeEmptyTitle` — No conversations yet
 - `chatsHomeIncomplete` — Some conversations couldn't load
 - `chatsHomeNeedsYou` — Needs you
-- `chatsHomeNeedsYouCount` — Needs you · {count}
 - `chatsHomeNewChat` — New conversation
 - `chatsHomeNoMatchBody` — Nothing fits the filters you chose.
 - `chatsHomeNoMatchTitle` — No matching conversations

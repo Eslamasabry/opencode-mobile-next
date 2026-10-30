@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -11,11 +12,14 @@ import '../app_iconography.dart';
 import 'kit_bidi.dart';
 import 'kit_buttons.dart';
 import 'kit_chip.dart';
+import 'kit_field.dart' show kitFieldFrame, kitFieldRing;
 import 'kit_icon_button.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_menu.dart';
 import 'kit_motion.dart';
 import 'kit_state_view.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 import 'motion/kit_reveal.dart';
@@ -61,6 +65,7 @@ class KitSearchField extends StatefulWidget {
     this.fieldKey,
     this.clearKey,
     this.filterKey,
+    this.prominent = false,
   }) : assert(
          activeFilter == null || onClearFilter != null,
          'an active filter needs onClearFilter (honest filters)',
@@ -98,6 +103,12 @@ class KitSearchField extends StatefulWidget {
   final Key? fieldKey;
   final Key? clearKey;
   final Key? filterKey;
+
+  /// The page's own search, at the top of a short index (the Settings
+  /// hub): a pill on `surface1` with no hairline until it has focus, so it
+  /// reads as the way in rather than a form field. Lists and sheets keep
+  /// the plain field.
+  final bool prominent;
 
   /// A search earns its place when the list can pass about 8 items
   /// (kit-v2.md §1.5); hosts ask this instead of comparing to a literal.
@@ -257,7 +268,10 @@ class _KitSearchFieldState extends State<KitSearchField> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final roles = tokens.roles;
     final l10n = _kitSearchWords(context);
@@ -431,27 +445,51 @@ class _KitSearchFieldState extends State<KitSearchField> {
       ],
     );
 
+    // The prominent field is a pill: a stadium, or the style's square once
+    // Corners › Sharp squares the pills (hook H4).
+    final radius = BorderRadius.circular(
+      widget.prominent
+          ? math.min(tokens.pillRadius, tokens.buttonHeight / 2)
+          : tokens.fieldCorner,
+    );
+    final own = kitFieldFrame(
+      context,
+      fill: roles.surface1,
+      edge: focused
+          ? roles.accent
+          : _hovered && widget.enabled
+          ? roles.text3
+          : widget.prominent
+          ? roles.surface1
+          : roles.hairline,
+      thick: focused,
+      radius: radius,
+    );
+    // Solid's frame is the field's own; every other style makes it that
+    // style's field (a tint and rim, a well, an ink box) with a boundary
+    // that reads at 3:1 at rest, and rings it outside while focused.
+    final look = KitSurfaceLook.decorate(
+      context,
+      solid: own,
+      role: KitSurfaceRole.field,
+      borderRadius: radius,
+      selected: focused,
+    );
     final frame = MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: roles.surface1,
-          borderRadius: BorderRadius.circular(KitTokens.fieldRadius),
-          border: Border.all(
-            color: focused
-                ? roles.accent
-                : _hovered && widget.enabled
-                ? roles.text3
-                : roles.hairline,
-            width: focused
-                ? KitTokens.focusRingWidth(context)
-                : KitTokens.hairlineWidth(context),
+      child: kitFieldRing(
+        context,
+        own: own,
+        look: look,
+        color: focused ? roles.accent : null,
+        child: kitSurfaceBox(
+          style: KitSurfaceLook.styleOf(context),
+          decoration: look,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: tokens.buttonHeight),
+            child: row,
           ),
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: tokens.buttonHeight),
-          child: row,
         ),
       ),
     );
@@ -533,7 +571,14 @@ class KitSearchNoMatch extends StatelessWidget {
     this.what,
     this.action,
     this.titleKey,
+    this.calm = false,
   });
+
+  /// The calm form (vision 2026-10-20): the words centred, larger, with no
+  /// icon tile, and Clear search as one quiet text action under them
+  /// ([KitStateView.calm] inline). [action] then waits as a second text
+  /// action. For a screen whose other empty states are calm.
+  final bool calm;
 
   /// Shown isolated: Nothing matches "opus".
   final String query;
@@ -549,18 +594,34 @@ class KitSearchNoMatch extends StatelessWidget {
   final Key? titleKey;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => KitMaxWidth.cap(
+    maxWidth: KitLayout.stateMaxWidth,
+    alignment: AlignmentDirectional.centerStart,
+    child: _buildContent(context),
+  );
+
+  Widget _buildContent(BuildContext context) {
     final l10n = _kitSearchWords(context);
     final quoted = '“${KitBidi.auto(query)}”';
     final title = what == null
         ? l10n.kitSearchNoMatch(quoted)
         : l10n.kitSearchNoMatchIn(KitBidi.auto(what!), quoted);
+    final clear = KitAction(label: l10n.kitSearchClear, onPressed: onClear);
+    if (calm) {
+      return KitStateView.calm(
+        icon: AppIconography.search,
+        title: title,
+        size: KitStateSize.inline,
+        titleKey: titleKey,
+        tertiary: [clear, ?action],
+      );
+    }
     return KitStateView(
       icon: AppIconography.search,
       title: title,
       size: KitStateSize.inline,
       titleKey: titleKey,
-      primary: KitAction(label: l10n.kitSearchClear, onPressed: onClear),
+      primary: clear,
       secondary: action,
     );
   }

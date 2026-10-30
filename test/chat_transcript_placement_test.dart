@@ -104,7 +104,8 @@ void main() {
       ),
       findsOneWidget,
     );
-    // 11B: the composer's Send is Stop; there is no second one in the turn.
+    // The one Stop is at the end of the chips row above the composer; there
+    // is none in the turn.
     final stop = find.byKey(const Key('chat-stop-button'));
     expect(stop, findsOneWidget);
     expect(
@@ -119,11 +120,17 @@ void main() {
         of: find.byKey(const Key('chat-composer-surface')),
         matching: stop,
       ),
-      findsOneWidget,
+      findsNothing,
+    );
+    expect(
+      tester.getRect(stop).bottom,
+      lessThanOrEqualTo(
+        tester.getRect(find.byKey(const Key('chat-composer-surface'))).top + 1,
+      ),
     );
     expect(find.text('Stop reply'), findsNothing);
     // A screen reader reaches Stop as its own button.
-    expect(find.bySemanticsLabel(RegExp('Stop the reply')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('^Stop .*OpenCode')), findsOneWidget);
     semantics.dispose();
   });
 
@@ -135,7 +142,7 @@ void main() {
     ]);
     expect(find.byKey(const ValueKey('typing-indicator')), findsNothing);
     expect(find.byKey(const Key('chat-stop-button')), findsNothing);
-    expect(find.bySemanticsLabel(RegExp('Stop the reply')), findsNothing);
+    expect(find.bySemanticsLabel(RegExp('^Stop ')), findsNothing);
     semantics.dispose();
   });
 

@@ -5,6 +5,7 @@ library;
 
 import '../../../l10n/app_localizations.dart';
 import '../../../state/orchestration.dart';
+import '../../../state/team_project_demo.dart' show teamProjectDemoConfig;
 import '../../../state/profiles.dart';
 import '../../../termux/bridge.dart';
 import '../../../builtin/builtin_server.dart' show looksLikeInAppServer;
@@ -54,6 +55,12 @@ String teamRowSubtitle(
     final found = discovery?.result;
     if (found != null) return l10n.pluginsTeamRowFound(server);
     return l10n.teamUiRowOff;
+  }
+  // The simulator Try the demo attaches: simulated projects, not a team
+  // that is on.
+  if (config.provider == teamProjectDemoConfig.provider &&
+      config.url == teamProjectDemoConfig.url) {
+    return l10n.teamProjectDemo;
   }
   final c = orchestration;
   if (c == null || c.profileId != profile.id) {

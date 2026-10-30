@@ -469,7 +469,12 @@ void main() {
     (tester) async {
       final h = await harness();
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(controller: h.connection)),
+        MaterialApp(
+          home: SettingsScreen(
+            controller: h.connection,
+            initialGroup: SettingsGroup.ai,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
       expect(
@@ -479,7 +484,12 @@ void main() {
       h.repository.supported = false;
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(controller: h.connection)),
+        MaterialApp(
+          home: SettingsScreen(
+            controller: h.connection,
+            initialGroup: SettingsGroup.ai,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
       expect(
@@ -489,7 +499,12 @@ void main() {
       h.connection.repository = _Legacy();
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(controller: h.connection)),
+        MaterialApp(
+          home: SettingsScreen(
+            controller: h.connection,
+            initialGroup: SettingsGroup.ai,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
       expect(

@@ -5,7 +5,7 @@ import 'scripts/script_support.dart' show termuxManagedServerPort;
 enum TermuxRuntime {
   // Detection only: an old installation must migrate before it can start.
   openCode1('opencode1', ''),
-  openCode2('opencode2', '2.0.29');
+  openCode2('opencode2', '2.1.1');
 
   const TermuxRuntime(this.wireName, this.pinnedVersion);
   final String wireName;

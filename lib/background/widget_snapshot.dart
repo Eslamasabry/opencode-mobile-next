@@ -61,8 +61,15 @@ class WidgetSessionSnapshot {
         await prefs.setString(key, encoded);
   }
 
-  /// At most this many sessions are ever written.
-  static const maxSessions = 6;
+  /// At most this many sessions are ever written: enough that a
+  /// Conversations widget scoped to one project still has rows.
+  static const maxSessions = 12;
+
+  /// At most this many projects are offered when a widget is edited.
+  static const maxProjects = 12;
+
+  /// At most this many servers are listed for the Status widget.
+  static const maxServers = 6;
 
   static const _channel = MethodChannel('oc/background');
 
@@ -121,6 +128,9 @@ class WidgetSessionSnapshot {
     Map<String, int> appTheme = const {},
     Map<String, Object?>? onDemand,
     bool preserveForOnDemand = false,
+    String server = '',
+    List<Map<String, Object?>> servers = const [],
+    List<String> projects = const [],
   }) async {
     if (!_isAndroid) return;
     // The widget has no widget tree: its caller supplies the app language.
@@ -153,6 +163,8 @@ class WidgetSessionSnapshot {
             ),
             'busy': busySessions.contains(session.id),
             'updatedAt': session.time?.updated ?? session.time?.created ?? 0,
+            if (safeWidgetTitle(server) case final name when name.isNotEmpty)
+              'server': name,
             ..._safeWidgetDetails(details[session.id]),
           },
         ),
@@ -172,6 +184,12 @@ class WidgetSessionSnapshot {
             ),
             'busy': other.busy,
             'updatedAt': other.updatedAt,
+            if (safeWidgetTitle(other.server) case final name
+                when name.isNotEmpty)
+              'server': name,
+            // Waiting on the person, answerable only in the app: no request
+            // identity crosses from another connection.
+            if (other.needsYou) 'needsYou': true,
             ..._safeWidgetDetails({'project': other.project}),
           },
         ),
@@ -198,6 +216,26 @@ class WidgetSessionSnapshot {
       'pendingCount': pendingCount + otherNeedsYou,
       'connected': connected,
       'profileID': profileID,
+      // The Status widget's server lines: a name, its state and since when.
+      'servers': [
+        for (final row in servers.take(maxServers))
+          {
+            'name': safeWidgetTitle(row['name'] as String? ?? ''),
+            'state': switch (row['state']) {
+              'online' => 'online',
+              'connecting' => 'connecting',
+              _ => 'offline',
+            },
+            if (row['since'] case final int since when since > 0)
+              'since': since,
+            if (row['phone'] == true) 'phone': true,
+          },
+      ],
+      // The projects a Conversations widget can be scoped to (its Edit).
+      'projects': [
+        for (final name in projects.map(safeWidgetProject).toSet())
+          if (name.isNotEmpty) name,
+      ].take(maxProjects).toList(),
       'sessions': [
         ...entries.take(maxSessions - teamRows.length.clamp(0, 1)),
         ...teamRows.take(1),
@@ -336,8 +374,11 @@ class WidgetOtherConversation {
     required this.updatedAt,
     required this.busy,
     required this.needsYou,
+    this.server = '',
   });
 
+  /// The connection's display name ("MacBook"), never its address.
+  final String server;
   final String id, title, project;
   final int updatedAt;
   final bool busy, needsYou;
@@ -369,6 +410,9 @@ Map<String, Object?> _safeWidgetDetails(Map<String, Object?>? details) {
         when value.isNotEmpty && value.length <= 512)
       'requestID': value,
     if (details['ask'] case final Map ask) 'ask': _safeWidgetAsk(ask),
+    // A question or form waits on the person; the app answers it, not the
+    // widget, so it carries no request identity.
+    if (details['needsYou'] == true) 'needsYou': true,
     'steerMode':
         const {
           'steer',

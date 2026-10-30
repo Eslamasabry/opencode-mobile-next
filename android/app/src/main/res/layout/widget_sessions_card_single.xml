@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- 2x2 and 4x2 with one conversation: the card itself, with no flipper to slide on every refresh. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@android:id/background" android:layout_width="match_parent" android:layout_height="match_parent"
-    android:layoutDirection="locale" android:background="@drawable/widget_card_bg">
-    <include layout="@layout/widget_session_v2_row" />
-</FrameLayout>

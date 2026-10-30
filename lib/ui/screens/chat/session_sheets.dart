@@ -33,20 +33,28 @@ extension _ChatPlan on _ChatScreenState {
     return view == null || view.trackedCount == 0 ? null : view;
   }
 
-  /// The tasks chip in the line above the field, while the list has
-  /// unfinished tasks (it comes and goes by itself, see [KitTaskChip]).
-  Widget? _taskChip() {
+  /// "Step 3 of 5" under the running turn's live line, only when the agent
+  /// wrote a todo list that still has unfinished tasks (owner decision 8).
+  String? _planStep(BuildContext context) {
+    final view = _latestTasks;
+    if (view == null || view.completedCount >= view.trackedCount) return null;
+    return _chatL10n(
+      context,
+    ).kitProgressStep(view.completedCount + 1, view.trackedCount);
+  }
+
+  /// The "Plan" row of the composer's + sheet: how far the agent's task list
+  /// is, and what opens it. Null when the agent wrote none.
+  ({String progress, String? current, VoidCallback open})? get _planRow {
     final view = _latestTasks;
     if (view == null) return null;
     final working = view.tasks
         .where((task) => task.status == MobileTaskStatus.inProgress)
         .firstOrNull;
-    return KitTaskChip(
-      key: const ValueKey('task-chip-slot'),
-      done: view.completedCount,
-      total: view.trackedCount,
+    return (
+      progress: '${view.completedCount}/${view.trackedCount}',
       current: working?.text,
-      onPressed: _openPlan,
+      open: _openPlan,
     );
   }
 

@@ -293,6 +293,20 @@ String _subtitle(
           disabledReason: onReject == null && onAllow != null ? reason : null,
         ),
       );
+    case KitRequestGo():
+      final onGo = answers.onGo;
+      return (
+        KitAction(
+          key: answers.goKey,
+          label: answers.label,
+          icon: answers.icon,
+          shortcut: 'A',
+          working: answers.working,
+          onPressed: onGo == null ? null : () => session.answer(onGo),
+          disabledReason: onGo == null ? answers.disabledReason : null,
+        ),
+        answers.look,
+      );
     case KitRequestChooseMany():
       return (
         _KitLiveAction(
@@ -582,6 +596,12 @@ class _KitRequestSheetBodyState extends State<_KitRequestSheetBody> {
           : null;
       if (act == null) return false;
       session.answer(act);
+      return true;
+    }
+    if (answers is KitRequestGo) {
+      final go = answers.onGo;
+      if (key != PhysicalKeyboardKey.keyA || go == null) return false;
+      session.answer(go);
       return true;
     }
     if (answers is KitRequestChoose) {

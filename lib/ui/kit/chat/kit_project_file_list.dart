@@ -9,6 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app_iconography.dart';
 import '../kit_bidi.dart';
 import '../kit_buttons.dart';
+import '../kit_max_width.dart';
 import '../kit_notice.dart';
 import '../kit_row.dart';
 import '../kit_search_field.dart';
@@ -96,7 +97,10 @@ class _KitProjectFileListState extends State<KitProjectFileList> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.list(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final tokens = KitTokens.of(context);
     final Widget results;

@@ -7,12 +7,17 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
+import 'kit_bottom_inset.dart';
 import 'kit_buttons.dart';
 import 'kit_illustration.dart';
 import 'kit_layout.dart';
+import 'kit_max_width.dart';
 import 'kit_notice.dart';
 import 'kit_progress.dart';
 import 'kit_since.dart';
+import 'kit_status_answer.dart';
+import 'kit_surface.dart';
+import 'kit_surface_look.dart';
 import 'kit_technical_value.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
@@ -29,7 +34,7 @@ enum KitStateSize {
 }
 
 /// Which constructor built a [KitStateView].
-enum _Form { plain, missing, error }
+enum _Form { plain, missing, error, calm }
 
 /// Every "not the normal content" moment (design standard §3): loading a
 /// whole screen, empty, error, stopped or offline, blocked, a missing
@@ -115,6 +120,9 @@ class KitStateView extends StatefulWidget {
        enableKey = null,
        copyDetailsKey = null,
        reportKey = null,
+       countdownTo = null,
+       countdownLine = null,
+       header = null,
        _cost = const [],
        _form = _Form.plain;
 
@@ -172,6 +180,9 @@ class KitStateView extends StatefulWidget {
        reportSource = null,
        copyDetailsKey = null,
        reportKey = null,
+       countdownTo = null,
+       countdownLine = null,
+       header = null,
        _form = _Form.missing;
 
   /// An error with the kit's defaults (STATE-3, C26). [error] is only
@@ -224,12 +235,99 @@ class KitStateView extends StatefulWidget {
        capability = null,
        prerequisite = false,
        enableKey = null,
+       countdownTo = null,
+       countdownLine = null,
+       header = null,
        _cost = const [],
        _form = _Form.error;
 
+  /// The calm empty or offline state (vision 2026-10-20, "Both, toned
+  /// down"): no icon tile and no drawing, one big calm line ([title], set
+  /// as [KitStatusAnswer] at [KitAnswerScale.calm]), one plain next step
+  /// ([body]) under it, and the main action at the bottom within thumb
+  /// reach. Nothing in it is amber or red: an empty list and a link that
+  /// retries by itself need nobody.
+  ///
+  /// - page (the default): fills the height it is given. The words sit
+  ///   centred in the room above the actions; [primary] (solid mint, full
+  ///   width) and at most two [tertiary] text actions, centred, end the
+  ///   page above the dock and the gesture bar; [footer] (one quiet line)
+  ///   goes last. Without actions the words are centred. With unbounded
+  ///   height (inside a list) it stacks with the state's vertical padding.
+  /// - inline: inside a list (a search with no result), centred, with the
+  ///   first [tertiary] as one quiet text action under the words and no
+  ///   primary.
+  ///
+  /// [countdownTo] and [countdownLine] make [body] a live countdown to
+  /// something the app really scheduled ("Trying again in 12 s").
+  ///
+  /// Motion: the words arrive with the state's fade and rise and
+  /// cross-fade when they change ([KitStatusAnswer]); instant under reduced
+  /// motion.
+  const KitStateView.calm({
+    super.key,
+    required this.title,
+    this.body,
+    this.primary,
+    this.tertiary = const [],
+    this.footer,
+    this.size = KitStateSize.page,
+    this.titleKey,
+    this.bodyKey,
+    this.countdownTo,
+    this.countdownLine,
+    this.header,
+    this.icon = AppIconography.info,
+  }) : assert(
+         countdownTo == null || countdownLine != null,
+         'KitStateView.calm: a countdown needs countdownLine',
+       ),
+       tone = AppStatusTone.neutral,
+       progress = null,
+       secondary = null,
+       details = null,
+       detailNotes = const [],
+       liveRegion = true,
+       iconChild = null,
+       content = null,
+       detailsChild = null,
+       padding = null,
+       illustration = null,
+       illustrationAmbient = false,
+       illustrationWidth = null,
+       detailValues = const [],
+       since = null,
+       onSlow = const [],
+       detailsKey = null,
+       capability = null,
+       prerequisite = false,
+       error = null,
+       errorKind = null,
+       retry = null,
+       switchServer = null,
+       reportSource = null,
+       enableKey = null,
+       copyDetailsKey = null,
+       reportKey = null,
+       _cost = const [],
+       _form = _Form.calm;
+
+  /// What the state is about, for its key and its arrival (a calm state
+  /// draws no icon).
   final IconData icon;
   final AppStatusTone tone;
   final String title;
+
+  /// [KitStateView.calm]: the body counts down to this moment.
+  final DateTime? countdownTo;
+
+  /// [KitStateView.calm]: the body's words for the time left.
+  final String Function(Duration left)? countdownLine;
+
+  /// [KitStateView.calm] page: what the screen says above the state (its
+  /// quiet notes), at the top of the same scroll, full width; the words
+  /// are centred in the room left between it and the actions.
+  final Widget? header;
 
   /// Words, not exception text (see the class notes): the raw failure goes
   /// to [details], folded and redacted.
@@ -335,6 +433,10 @@ class KitStateView extends StatefulWidget {
   State<KitStateView> createState() => _KitStateViewState();
 }
 
+/// How far above the middle of its room a calm page sets its words, as a
+/// share of the height it is given.
+const double _calmLift = .1;
+
 class _KitStateViewState extends State<KitStateView> {
   @override
   void initState() {
@@ -372,7 +474,7 @@ class _KitStateViewState extends State<KitStateView> {
   (KitAction?, KitAction?, List<KitAction>) _actions(AppLocalizations l10n) {
     final w = widget;
     switch (w._form) {
-      case _Form.plain:
+      case _Form.plain || _Form.calm:
         return (w.primary, w.secondary, w.tertiary);
       case _Form.missing:
         final enable = w.primary;
@@ -436,12 +538,151 @@ class _KitStateViewState extends State<KitStateView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => KitMaxWidth.cap(
+    maxWidth: KitLayout.stateMaxWidth,
+    // A page's state sits in the middle; an inline one starts at the
+    // gutter, where the words around it do.
+    alignment: widget.size == KitStateSize.page
+        ? AlignmentDirectional.center
+        : AlignmentDirectional.centerStart,
+    child: _buildContent(context),
+  );
+
+  Widget _buildContent(BuildContext context) {
+    if (widget._form == _Form.calm) return _buildCalm(context);
     final since = widget.since;
     if (since == null) return _build(context, slow: false);
     return KitSince(
       since: since,
       builder: (context, status) => _build(context, slow: status.isSlow),
+    );
+  }
+
+  Widget _buildCalm(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    final w = widget;
+    final page = w.size == KitStateSize.page;
+    final tertiary = w.tertiary.take(2).toList();
+    final answer = KitStatusAnswer(
+      answer: w.title,
+      scale: page ? KitAnswerScale.calm : KitAnswerScale.compact,
+      line: w.body,
+      countdownTo: w.countdownTo,
+      countdownLine: w.countdownLine,
+      answerKey: w.titleKey,
+      lineKey: w.bodyKey,
+    );
+    Widget quiet() => Wrap(
+      alignment: WrapAlignment.center,
+      spacing: tokens.space2,
+      children: [
+        for (final action in tertiary)
+          KitButton.fromAction(
+            action,
+            role: KitButtonRole.tertiary,
+            expand: false,
+          ),
+      ],
+    );
+    if (!page) {
+      return Padding(
+        padding: EdgeInsetsDirectional.symmetric(vertical: tokens.space6),
+        child: KitEntrance(
+          trigger: w.icon,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              answer,
+              if (tertiary.isNotEmpty) ...[
+                SizedBox(height: tokens.space3),
+                quiet(),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+    final primary = w.primary;
+    final footer = w.footer;
+    final hasBottom = primary != null || tertiary.isNotEmpty || footer != null;
+    final bottom = !hasBottom
+        ? null
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (primary != null)
+                KitButton.fromAction(primary, role: KitButtonRole.primary),
+              if (tertiary.isNotEmpty) ...[
+                if (primary != null) SizedBox(height: tokens.space2),
+                quiet(),
+              ],
+              if (footer != null) ...[SizedBox(height: tokens.space2), footer],
+            ],
+          );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bounded = constraints.hasBoundedHeight;
+        // The words in the middle of the room above the actions, the
+        // actions at the bottom: spaceBetween over the height the state is
+        // given (a minimum, so large text still scrolls).
+        final width = constraints.maxWidth;
+        final side = width.isFinite
+            ? ((width - KitLayout.stateMaxWidth) / 2).clamp(
+                tokens.gutter,
+                double.infinity,
+              )
+            : tokens.gutter;
+        Widget railed(Widget child) => Padding(
+          padding: EdgeInsetsDirectional.symmetric(horizontal: side),
+          child: child,
+        );
+        final header = w.header;
+        final spread = bounded && (bottom != null || header != null);
+        // Optical centre: a little above the middle of the room, where the
+        // eye expects the middle to be.
+        final lift = spread ? constraints.maxHeight * _calmLift : 0.0;
+        // Above the dock and the gesture bar, like a list's end.
+        final end =
+            tokens.space4 + (bounded ? KitBottomInset.of(context).bottom : 0.0);
+        // The words in the middle of the room between the screen's notes
+        // and the actions, the actions at the bottom: spaceBetween over the
+        // height the state is given (a minimum, so large text still
+        // scrolls).
+        final column = Column(
+          mainAxisAlignment: spread
+              ? MainAxisAlignment.spaceBetween
+              : MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (header != null) header else if (spread) const SizedBox.shrink(),
+            Padding(
+              padding: EdgeInsetsDirectional.only(
+                top: tokens.space5,
+                bottom: tokens.space5 + lift,
+              ),
+              child: railed(KitEntrance(trigger: w.icon, child: answer)),
+            ),
+            if (bottom != null)
+              railed(KitEntrance(trigger: w.icon, child: bottom))
+            else if (spread)
+              const SizedBox.shrink(),
+          ],
+        );
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: bounded ? constraints.maxHeight : 0,
+            ),
+            child: Padding(
+              padding: EdgeInsetsDirectional.only(bottom: end),
+              child: column,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -492,24 +733,34 @@ class _KitStateViewState extends State<KitStateView> {
                   width: widget.illustrationWidth ?? (page ? 140 : 88),
                   ambient: widget.illustrationAmbient,
                 )
-              : Container(
-                  key: const ValueKey('kit-state-icon'),
-                  width: tile,
-                  height: tile,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: roles.surface3,
+              // The tile is made for the person's Style like every other
+              // tile (KitSurface.tile's control surface).
+              : kitSurfaceMaterial(
+                  context,
+                  level: KitSurfaceLevel.surface3,
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(
                       page ? tokens.markRadius : tokens.iconTileRadius,
                     ),
                   ),
-                  child:
-                      widget.iconChild ??
-                      Icon(
-                        widget.icon,
-                        size: page ? tokens.markIconSize : tokens.smallIconSize,
-                        color: tint,
-                      ),
+                  fill: roles.surface3,
+                  role: KitSurfaceRole.control,
+                  clip: false,
+                  child: SizedBox.square(
+                    key: const ValueKey('kit-state-icon'),
+                    dimension: tile,
+                    child: Center(
+                      child:
+                          widget.iconChild ??
+                          Icon(
+                            widget.icon,
+                            size: page
+                                ? tokens.markIconSize
+                                : tokens.smallIconSize,
+                            color: tint,
+                          ),
+                    ),
+                  ),
                 ),
         ),
         SizedBox(height: gap),

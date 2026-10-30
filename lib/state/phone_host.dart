@@ -158,10 +158,17 @@ class InAppPhoneHost extends PhoneHost {
     required this.connection,
     this.engine,
     this.pollInterval = const Duration(seconds: 5),
+    this.followEngine = true,
   }) {
     starter.addListener(_starterChanged);
-    engine?.progress.addListener(notifyListeners);
+    if (followEngine) engine?.progress.addListener(notifyListeners);
   }
+
+  /// Whether this host re-notifies on every [engine] change. A listener is a
+  /// watching page to the engine, which then reads setup status while the
+  /// app is open; an owner that only reads [state] when it decides passes
+  /// false.
+  final bool followEngine;
 
   final BuiltinLinux linux;
   final BuiltinServerStarter starter;
@@ -187,7 +194,7 @@ class InAppPhoneHost extends PhoneHost {
     _disposed = true;
     _poll?.cancel();
     starter.removeListener(_starterChanged);
-    engine?.progress.removeListener(notifyListeners);
+    if (followEngine) engine?.progress.removeListener(notifyListeners);
     super.dispose();
   }
 

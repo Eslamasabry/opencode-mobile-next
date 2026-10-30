@@ -15,6 +15,10 @@ import '../../permission_presentation.dart';
 import '../../widgets/product_states.dart' show productErrorText;
 import '../../widgets/request_routes.dart';
 import '../../widgets/tool_card.dart' show toolLabel;
+import 'permission_ask.dart';
+
+export 'permission_ask.dart'
+    show PermissionAsk, permissionAsk, permissionSummary;
 
 AppLocalizations _l10n(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -22,7 +26,7 @@ AppLocalizations _l10n(BuildContext context) =>
 /// The glyph identifies the requested action rather than a generic admin role.
 IconData permissionActionIcon(String permission) =>
     switch (permission.toLowerCase()) {
-      'bash' => AppIconography.terminal,
+      'bash' || 'shell' => AppIconography.terminal,
       'edit' || 'write' || 'multiedit' || 'patch' => AppIconography.editNote,
       'read' => AppIconography.fileText,
       'webfetch' || 'websearch' => AppIconography.globe,
@@ -33,6 +37,26 @@ IconData permissionActionIcon(String permission) =>
 /// When a request card first saw its request: the start of its age words
 /// ("waiting 4 min"). Read from the app's clock so tests can pin it.
 DateTime requestSeenNow() => clock.now();
+
+final _firstSeen = Expando<Map<String, DateTime>>('request-first-seen');
+
+/// When this phone first showed [requestID] (a permission or a question)
+/// of [controller]: no request
+/// carries the time it was asked (OpenCode 2's `Permission.Request` has
+/// none), so the card's "Needs you · 20 s" counts from here, and reopening
+/// the chat does not start it again.
+DateTime requestFirstSeen(ConnectionController controller, String requestID) {
+  final seen = _firstSeen[controller] ??= {};
+  // Requests long answered leave the ledger with their connection.
+  if (seen.length > 64) {
+    seen.removeWhere(
+      (id, _) =>
+          !controller.permissions.containsKey(id) &&
+          !controller.questions.containsKey(id),
+    );
+  }
+  return seen[requestID] ??= requestSeenNow();
+}
 
 /// One answer this phone sent for a permission request and has not yet
 /// seen land (STATE-10: "Sent" is never "Done").
@@ -178,13 +202,6 @@ Future<void> _sendPermissionAnswer(
   }
 }
 
-/// The request's command, file or patterns in one line for the card: the
-/// full value lives in the details sheet.
-String? permissionSummary(PermissionRequest permission) =>
-    permission.commandPreview ??
-    permission.filePath ??
-    (permission.patterns.isEmpty ? null : permission.patterns.join(' · '));
-
 String _answerWords(AppLocalizations l10n, String reply) => switch (reply) {
   'reject' => l10n.kitRequestReject,
   'always' => l10n.chatUiAlwaysAllow,
@@ -206,7 +223,10 @@ KitRequestAlwaysAllowStep? permissionAlwaysStep(
   final broader = permission.always.isNotEmpty
       ? permission.always
       : permission.patterns;
+  // Named after what the grant saves ("Always allow npm install").
+  final ask = permissionAsk(permission, l10n: l10n, fallback: '');
   final what =
+      ask.alwaysWhat ??
       permission.commandPreview ??
       permission.filePath ??
       (permission.permission.isEmpty
@@ -215,9 +235,7 @@ KitRequestAlwaysAllowStep? permissionAlwaysStep(
   return KitRequestAlwaysAllowStep(
     what: what,
     covers: broader.isEmpty ? null : broader.join(', '),
-    label: permission.permission == 'bash'
-        ? l10n.chatRequestAlwaysAllowCommands
-        : null,
+    label: ask.alwaysLabel,
     onConfirmed: onConfirmed,
     buttonKey: const Key('permission-card-always'),
     confirmKey: const Key('permission-card-always-confirm'),
@@ -251,18 +269,39 @@ KitRequestCard permissionRequestCard(
   Key? key,
   Key? detailsKey,
   bool inList = false,
+  String? project,
+  String? directory,
+  KitRequestLook look = KitRequestLook.standard,
 }) {
   final l10n = _l10n(context);
-  // The ask is one question; the statement ("Run a shell command") is what
-  // the rest of the app calls this kind of request, and a screen reader
-  // still hears it.
+  // The ask is one question naming the action and its target; the
+  // statement ("Run a shell command") is what the rest of the app calls
+  // this kind of request, and a screen reader still hears it.
   final statement = permissionRequestTitle(permission.permission, l10n: l10n);
-  final title = permissionRequestQuestion(
+  final question = permissionRequestQuestion(
     permission.permission,
     l10n: l10n,
     fallback: statement,
     toolName: toolName,
   );
+  // A call that reaches outside the project keeps its own words.
+  final ask = permission.permission == 'external_directory'
+      ? PermissionAsk(title: question)
+      : permissionAsk(
+          permission,
+          l10n: l10n,
+          fallback: question,
+          // From 1.3 text the card has little room and the header already
+          // names the project: the ask keeps to the action and its target.
+          project: MediaQuery.textScalerOf(context).scale(10) >= 13
+              ? null
+              : project,
+          directory: directory,
+          // The standard look (lists, Inbox, sheets) puts the exact command
+          // in a mono line right under the title: it reads once.
+          wholeCommandInTitle: look == KitRequestLook.question,
+        );
+  final title = ask.title;
   final held = heldLabel != null && onUndo != null;
   final sending = !held && answered != null && !answered.failed;
   return KitRequestCard.ask(
@@ -279,6 +318,9 @@ KitRequestCard permissionRequestCard(
     detail:
         detail ?? permission.message ?? _metaText(permission, 'description'),
     summary: target ?? permissionSummary(permission),
+    // The question look lists what it will run or touch (B's list).
+    targets: target == null ? ask.targets : const [],
+    look: look,
     since: since,
     phase: held
         ? KitRequestPhase.answered

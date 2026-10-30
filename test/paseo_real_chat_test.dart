@@ -16,6 +16,7 @@ import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'paseo_gateway_test.dart' show FakeDaemon, agentJson;
+import 'support/composer_tools.dart';
 
 const _dir = '/work/app';
 
@@ -85,6 +86,8 @@ Future<(PaseoGateway, ConnectionController)> _open(
                 'label': 'Pi',
                 'models': [
                   {'id': 'pi-1', 'label': 'Pi One'},
+                  // A list that names a model under its runtime's own prefix.
+                  {'id': 'pi/pi-2', 'label': 'Pi Two'},
                 ],
               },
             ],
@@ -170,13 +173,26 @@ void main() {
     );
     expect(_hint(tester), contains('Claude Code'));
     expect(_hint(tester), isNot(contains('OpenCode')));
+    // The model is a row of the composer's +, not a chip over it.
+    await openComposerTools(tester);
+    await tester.pumpAndSettle();
     expect(find.text('Opus'), findsWidgets);
     expect(find.text('Server default'), findsNothing);
-    await tester.tap(find.text('Opus').first);
+    await tester.tap(find.byKey(const Key('composer-setting-model')));
     await tester.pumpAndSettle();
     expect(find.text('Choose a model'), findsOneWidget);
     expect(find.text('Connect a provider'), findsNothing);
     expect(find.text('Choose a model first.'), findsNothing);
+    await close(tester, c);
+  });
+
+  testWidgets('a model the list names with its runtime prefix shows its '
+      'name, not provider/model', (tester) async {
+    final (_, c) = await _open(tester, provider: 'pi', model: 'pi-2');
+    await openComposerTools(tester);
+    await tester.pumpAndSettle();
+    expect(find.text('Pi Two'), findsWidgets);
+    expect(find.text('pi/pi-2'), findsNothing);
     await close(tester, c);
   });
 

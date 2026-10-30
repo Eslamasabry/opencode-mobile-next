@@ -13,7 +13,8 @@ import '../kit_motion.dart';
 ///
 /// For a list built all at once (a Column, `ListView(children: …)`), up to
 /// a few dozen rows. A leaving row ignores touches and screen readers skip
-/// it, so a tap never lands on something that is going away.
+/// it, so a tap never lands on something that is going away; its own
+/// tickers stop (TickerMode), so it no longer counts as shown.
 class KitAnimatedRows extends StatefulWidget {
   const KitAnimatedRows({
     super.key,
@@ -121,6 +122,7 @@ class _KitAnimatedRowsState extends State<KitAnimatedRows>
       AnimationController(
         vsync: this,
         duration: KitMotion.standard,
+        reverseDuration: KitMotion.quick,
         value: value,
       );
 
@@ -198,7 +200,7 @@ class _KitRowMotionState extends State<_KitRowMotion> {
   static CurvedAnimation _curve(Animation<double> parent) => CurvedAnimation(
     parent: parent,
     curve: KitMotion.enter,
-    reverseCurve: KitMotion.exit.flipped,
+    reverseCurve: KitMotion.exit,
   );
 
   @override
@@ -233,7 +235,10 @@ class _KitRowMotionState extends State<_KitRowMotion> {
               offset: Offset(0, 6 * (1 - _size.value)),
               child: child,
             ),
-            child: widget.child,
+            // A leaving row is on its way off the page: its own motion
+            // stops, and the screen's checks (one primary per screen) no
+            // longer count what it shows.
+            child: TickerMode(enabled: !widget.leaving, child: widget.child),
           ),
         ),
       ),

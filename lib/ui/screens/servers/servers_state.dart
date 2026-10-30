@@ -20,6 +20,10 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   /// that leads the page, and the welcome steps back.
   bool _termuxFound = false;
 
+  /// The welcome's chosen answer: this phone until the person picks the
+  /// computer (off the phone path the computer is the only one).
+  _WelcomeChoice _welcomeChoice = _WelcomeChoice.phone;
+
   @override
   void initState() {
     super.initState();
@@ -79,21 +83,20 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     final isRoot = !(ModalRoute.of(context)?.canPop ?? false);
     final topBar = KitTopBar(
       // Opened from Settings this is the Servers page, named so; as the whole
-      // app (no shell yet) it carries the product mark and About.
+      // app (no shell yet) it carries the product mark alone, and About
+      // waits in its menu so the first page is the wordmark and the
+      // question.
       title: isRoot ? copy.openCodeConnectionLabel : copy.settingsV3Servers,
       brand: isRoot,
-      actions: [
-        if (isRoot)
-          KitAction(
-            key: const ValueKey('servers-about'),
-            label: copy.e7SetupAboutNotices,
-            icon: AppIconography.info,
-            onPressed: () => Navigator.pushNamed(context, '/about'),
-          ),
-      ],
       menuKey: const ValueKey('servers-menu'),
       menu: [
         if (isRoot) ...[
+          KitMenuItem(
+            key: const ValueKey('servers-about'),
+            label: copy.e7SetupAboutNotices,
+            icon: AppIconography.info,
+            onSelected: () => Navigator.pushNamed(context, '/about'),
+          ),
           KitMenuItem(
             key: const ValueKey('servers-report-bug'),
             label: copy.e7LibraryReportABug,
@@ -115,22 +118,28 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       ],
     );
     if (!hasServers) {
-      return KitScreen(
+      Widget welcome(PhoneWelcomeOffer? phone) => _WelcomeView(
         topBar: topBar,
-        width: KitScreenWidth.reading,
-        body: _WelcomeView(
-          busy: _busy,
-          found: _termuxFound,
-          runningServer: _runningServerEntry(
-            store.profiles,
-            accountConnection,
-            lead: true,
-          ),
-          phoneSetup: PhoneSetupWelcomeEntry(revision: _termuxRevision),
-          onComputer: () => unawaited(_edit()),
-          onPhone: _openPhoneSetup,
-          onDemo: _demo,
+        busy: _busy,
+        found: _termuxFound,
+        runningServer: _runningServerEntry(
+          store.profiles,
+          accountConnection,
+          lead: true,
         ),
+        phone: phone,
+        choice: _welcomeChoice,
+        onChoice: (choice) => setState(() => _welcomeChoice = choice),
+        onComputer: () => unawaited(_edit()),
+        onPhoneSetup: _openPhoneSetup,
+        onDemo: _demo,
+      );
+      // The phone path exists only where this app can set a phone up.
+      if (!platformCapabilities.supportsTermux) return welcome(null);
+      return PhoneSetupWelcomeEntry(
+        revision: _termuxRevision,
+        openStart: (_) => _openPhoneSetup(),
+        builder: (context, phone) => welcome(phone),
       );
     }
     final activeId = store.activeId;
@@ -224,107 +233,125 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
               ], accountConnection);
               return KitRowGroup(
                 key: const ValueKey('servers-list'),
+                // One child: the phone's own servers draw their own hairline
+                // above them, so an empty entry never adds a rule.
                 children: [
-                  KitAnimatedRows(
-                    key: const ValueKey('saved-server-rows'),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      for (final (i, p) in ordered.indexed)
-                        KeyedSubtree(
-                          key: ValueKey('saved-server-${p.id}'),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              if (i > 0)
-                                const KitDivider(inset: KitDividerInset.text),
-                              if (p == phoneServer)
-                                PhoneServerCard.row(
-                                  key: ValueKey('phone-server-card-${p.id}'),
-                                  connection: accountConnection,
-                                  profile: p,
-                                  connected:
-                                      accountConnection.api != null &&
-                                      accountConnection.profile?.id == p.id,
-                                  onOpen: _busy ? null : () => _connect(p),
-                                  onOpenPage: () => unawaited(
-                                    openServerPage(
-                                      context,
-                                      accountConnection,
-                                      p.id,
+                      KitAnimatedRows(
+                        key: const ValueKey('saved-server-rows'),
+                        children: [
+                          for (final (i, p) in ordered.indexed)
+                            KeyedSubtree(
+                              key: ValueKey('saved-server-${p.id}'),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (i > 0)
+                                    const KitDivider(
+                                      inset: KitDividerInset.text,
                                     ),
-                                  ),
-                                  onDisconnect: () async {
-                                    if (!await confirmDisconnectServer(
-                                      context,
-                                      accountConnection,
-                                    )) {
-                                      return;
-                                    }
-                                    await accountConnection.disconnect(
-                                      keepActive: true,
-                                    );
-                                  },
-                                  onRemoved: () {
-                                    if (mounted) setState(() {});
-                                  },
-                                )
-                              else
-                                _ServerRow(
-                                  profile: p,
-                                  name: serverDisplayName(
-                                    p,
-                                    copy,
-                                    among: store.profiles,
-                                  ),
-                                  connected:
-                                      accountConnection.api != null &&
-                                      accountConnection.profile?.id == p.id,
-                                  snapshot: _snapshotFor(p, accountConnection),
-                                  working:
-                                      accountConnection.api != null &&
-                                          accountConnection.profile?.id == p.id
-                                      ? accountConnection.busySessions.length
-                                      : null,
-                                  busy: _busy,
-                                  showAccount:
-                                      p.id == activeId &&
-                                      accountConnection.isConnected &&
-                                      accountConnection
-                                          .capabilities
-                                          .agentAccount,
-                                  queued: _waitingFor(p, accountConnection),
-                                  moveDestination: _moveDestinationName(
-                                    p,
-                                    accountConnection,
-                                    copy,
-                                  ),
-                                  onMoveQueued: () => _moveQueued(p),
-                                  onConnect: () => _connect(p),
-                                  onEdit: () => _edit(existing: p),
-                                  onSettings: () => unawaited(
-                                    openServerPage(
-                                      context,
-                                      accountConnection,
-                                      p.id,
-                                    ),
-                                  ),
-                                  onRemove: () => _delete(p),
-                                  onAccount: () => pushKitPage<void>(
-                                    context,
-                                    (_) => AgentAccountScreen(
+                                  if (p == phoneServer)
+                                    PhoneServerCard.row(
+                                      key: ValueKey(
+                                        'phone-server-card-${p.id}',
+                                      ),
                                       connection: accountConnection,
+                                      profile: p,
+                                      connected:
+                                          accountConnection.api != null &&
+                                          accountConnection.profile?.id == p.id,
+                                      onOpen: _busy ? null : () => _connect(p),
+                                      onOpenPage: () => unawaited(
+                                        openServerPage(
+                                          context,
+                                          accountConnection,
+                                          p.id,
+                                        ),
+                                      ),
+                                      onDisconnect: () async {
+                                        if (!await confirmDisconnectServer(
+                                          context,
+                                          accountConnection,
+                                        )) {
+                                          return;
+                                        }
+                                        await accountConnection.disconnect(
+                                          keepActive: true,
+                                        );
+                                      },
+                                      onRemoved: () {
+                                        if (mounted) setState(() {});
+                                      },
+                                    )
+                                  else
+                                    _ServerRow(
+                                      profile: p,
+                                      name: serverDisplayName(
+                                        p,
+                                        copy,
+                                        among: store.profiles,
+                                      ),
+                                      connected:
+                                          accountConnection.api != null &&
+                                          accountConnection.profile?.id == p.id,
+                                      snapshot: _snapshotFor(
+                                        p,
+                                        accountConnection,
+                                      ),
+                                      working:
+                                          accountConnection.api != null &&
+                                              accountConnection.profile?.id ==
+                                                  p.id
+                                          ? accountConnection
+                                                .busySessions
+                                                .length
+                                          : null,
+                                      busy: _busy,
+                                      showAccount:
+                                          p.id == activeId &&
+                                          accountConnection.isConnected &&
+                                          accountConnection
+                                              .capabilities
+                                              .agentAccount,
+                                      queued: _waitingFor(p, accountConnection),
+                                      moveDestination: _moveDestinationName(
+                                        p,
+                                        accountConnection,
+                                        copy,
+                                      ),
+                                      onMoveQueued: () => _moveQueued(p),
+                                      onConnect: () => _connect(p),
+                                      onEdit: () => _edit(existing: p),
+                                      onSettings: () => unawaited(
+                                        openServerPage(
+                                          context,
+                                          accountConnection,
+                                          p.id,
+                                        ),
+                                      ),
+                                      onRemove: () => _delete(p),
+                                      onAccount: () => pushKitPage<void>(
+                                        context,
+                                        (_) => AgentAccountScreen(
+                                          connection: accountConnection,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                      // The phone's own servers close the list, a row each.
+                      _runningServerEntry(
+                        store.profiles,
+                        accountConnection,
+                        dividerAbove: ordered.isNotEmpty,
+                      ),
                     ],
-                  ),
-                  // The phone's own servers close the list, a row each.
-                  _runningServerEntry(
-                    store.profiles,
-                    accountConnection,
-                    dividerAbove: ordered.isNotEmpty,
                   ),
                 ],
               );

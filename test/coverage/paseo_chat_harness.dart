@@ -129,8 +129,25 @@ Future<void> openFolds(WidgetTester tester, {bool rows = true}) async {
 
   await tapOnce(find.byKey(const Key('work-group-header')));
   // Commands run on their own (no prompt before them) fold under one line.
-  await tapOnce(find.textContaining(RegExp(r'^Ran \d+ commands?')));
+  // When that line is the work line just opened above, its chip keeps the
+  // same words: a second tap would fold it again.
+  if (find.byKey(const Key('work-group-steps')).evaluate().isEmpty) {
+    await tapOnce(find.textContaining(RegExp(r'^Ran \d+ commands?')));
+  }
   if (rows) await tapEach(find.byType(KitToolRow));
+  // A failed step keeps the tool's own words one tap under Details.
+  await tapEach(
+    find.descendant(
+      of: find.byKey(const Key('standalone-tool-error-output')),
+      matching: find.byKey(const ValueKey('kit-details-toggle')),
+    ),
+  );
+  await tapEach(
+    find.descendant(
+      of: find.byKey(const Key('embedded-tool-error-output')),
+      matching: find.byKey(const ValueKey('kit-details-toggle')),
+    ),
+  );
   await tapOnce(find.byKey(const Key('reasoning-toggle')));
   await tapOnce(find.byKey(const Key('error-action-details')));
   // Notices that start shut (an open one would close if tapped).

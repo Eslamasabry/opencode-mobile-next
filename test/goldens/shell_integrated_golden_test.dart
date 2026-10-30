@@ -7,6 +7,9 @@
 // Regenerate deliberately:
 //   flutter test --update-goldens test/goldens/shell_integrated_golden_test.dart
 // and look at every changed image before committing it.
+import 'dart:async';
+import 'package:opencode_mobile/ui/screens/project_hub_screen.dart'
+    show openProjectFiles;
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -167,12 +170,22 @@ void main() {
                   supportedLocales: AppLocalizations.supportedLocales,
                   localizationsDelegates:
                       AppLocalizations.localizationsDelegates,
-                  home: HomeScreen(initialTab: tab),
+                  home: const HomeScreen(),
                 ),
               ),
             ),
           );
           await tester.pump(const Duration(milliseconds: 600));
+          // A phone has no Files tab: the project's Files are a page.
+          if (tab == 1) {
+            unawaited(
+              openProjectFiles(
+                tester.element(find.byType(HomeScreen)),
+                controller,
+              ),
+            );
+            await tester.pumpAndSettle();
+          }
           if (then != null) {
             await tester.tap(find.byKey(ValueKey(then)));
           }

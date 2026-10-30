@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,6 +44,7 @@ import 'package:opencode_mobile/ui/widgets/connection_status_banner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:opencode_mobile/state/prompt_photos.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'support/composer_tools.dart';
 
 part 'chat_live_events/history_navigation_tests.dart';
 part 'chat_live_events/transport_tools_tests.dart';
@@ -595,6 +597,7 @@ Future<ConnectionController> _pumpChat(
   ConnectionController? controller,
   ReviewHandoffStore? handoffStore,
   bool reduceMotion = false,
+  double textScale = 1,
 }) async {
   final activeController = controller ?? await _controller(api);
   final navigatorKey = GlobalKey<NavigatorState>();
@@ -620,9 +623,10 @@ Future<ConnectionController> _pumpChat(
               ),
             ],
             child: MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(disableAnimations: reduceMotion),
+              data: MediaQuery.of(context).copyWith(
+                disableAnimations: reduceMotion,
+                textScaler: TextScaler.linear(textScale),
+              ),
               child: child!,
             ),
           ),
@@ -700,7 +704,12 @@ Future<void> _pumpEvent(WidgetTester tester) async {
 /// tools button, so tests reach them through the tools sheet instead of
 /// tapping three separate composer icons.
 Future<void> _useComposerTool(WidgetTester tester, String tool) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  // Photos, Camera and File sit in the "+" tray; the rest behind its More.
+  if (const {'attach', 'gallery', 'camera'}.contains(tool)) {
+    await openComposerTray(tester);
+  } else {
+    await openComposerTools(tester);
+  }
   await tester.pumpAndSettle();
   await tester.ensureVisible(find.byKey(Key('composer-tool-$tool')));
   await tester.pumpAndSettle();

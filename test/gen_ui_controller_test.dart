@@ -753,7 +753,7 @@ class _EngineBridge implements PhoneProjectEngineBridge {
 
 class _SideApi extends _Api {
   @override
-  Future<Health> health() async => Health(healthy: true, version: '2.0.29');
+  Future<Health> health() async => Health(healthy: true, version: '2.1.1');
   @override
   Future<List<Session>> sessions() async => const [];
   @override

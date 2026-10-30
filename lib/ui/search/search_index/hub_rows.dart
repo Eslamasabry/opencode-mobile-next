@@ -16,10 +16,12 @@ extension _IndexHubRows on _IndexBuild {
         keywords:
             '${l10n.settingsHubSearchServerAliases} ${l10n.e7SettingsUi1} '
             '${l10n.e7SettingsUi65} ${l10n.settingsHubThisServer}',
-        pages: const ['server-settings', 'host-management'],
+        pages: const ['server-page', 'host-management'],
         gate: (scope) => scope.controller.profile != null,
-        open: _screen(
-          (scope) => ServerSettingsScreen(controller: scope.controller),
+        open: (context, scope) => openServerPage(
+          context,
+          scope.controller,
+          scope.controller.profile!.id,
         ),
       ),
       SearchEntry(
@@ -433,6 +435,16 @@ extension _IndexHubRows on _IndexBuild {
         ),
       ),
       SearchEntry(
+        id: 'settings-tips',
+        kind: SearchEntryKind.hubRow,
+        group: SettingsGroup.help,
+        icon: AppIconography.idea,
+        title: l10n.tipsTitle,
+        keywords: '${l10n.tipsSearchAliases} ${l10n.tipsHubSubtitle}',
+        pages: const ['tips-page'],
+        open: _screen((scope) => TipsScreen(controller: scope.controller)),
+      ),
+      SearchEntry(
         id: 'settings-about-notices',
         kind: SearchEntryKind.hubRow,
         group: SettingsGroup.help,
@@ -538,15 +550,15 @@ extension _IndexHubRows on _IndexBuild {
         title: l10n.pluginsSectionOnServer,
         keywords:
             '${l10n.settingsHubSearchPluginsAliases} ${l10n.teamUiPluginsTitle}',
-        pages: const ['server-settings'],
+        pages: const ['server-page'],
         gate: (scope) =>
             scope.controller.profile != null &&
             scope.capabilities.pluginInventory,
-        open: _screen(
-          (scope) => KitArrivalScope(
-            rowId: 'settings-server-plugins',
-            child: ServerSettingsScreen(controller: scope.controller),
-          ),
+        open: (context, scope) => openServerPage(
+          context,
+          scope.controller,
+          scope.controller.profile!.id,
+          arrive: 'settings-server-plugins',
         ),
       ),
       SearchEntry(

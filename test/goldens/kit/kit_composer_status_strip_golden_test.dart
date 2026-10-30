@@ -12,7 +12,8 @@ import 'package:opencode_mobile/ui/kit/kit.dart';
 
 import 'kit_gallery.dart';
 
-Widget _strip() => KitComposerStatusStrip(
+Widget _strip({KitComposerStop? stop}) => KitComposerStatusStrip(
+  stop: stop,
   chips: const [
     KitChip(icon: AppIconography.pause, label: 'Auto-approve paused'),
   ],
@@ -47,5 +48,37 @@ void main() {
         );
       },
     );
+  }
+
+  // Stop at the trailing end (owner, 30 Oct 2026): at rest, and amber when
+  // the step looks stuck; 360 dp at 2.0 text, English and Arabic.
+  for (final stuck in [false, true]) {
+    for (final ar in [false, true]) {
+      testWidgets('stop · ${stuck ? 'stuck' : 'running'} · 360 dp · 2.0 text · '
+          '${ar ? 'ar' : 'en'} · dark', (tester) async {
+        await kitGalleryPart(
+          tester,
+          name: kitGalleryName(
+            'kit_composerstatusstrip_stop${stuck ? '_stuck' : ''}',
+            size,
+            light: false,
+            ar: ar,
+            text2: true,
+          ),
+          size: size,
+          light: false,
+          textScale: 2,
+          locale: Locale(ar ? 'ar' : 'en'),
+          child: _strip(
+            stop: KitComposerStop(
+              label: ar ? 'إيقاف' : 'Stop',
+              spoken: ar ? 'إيقاف Claude Code' : 'Stop Claude Code',
+              stuck: stuck,
+              onPressed: () {},
+            ),
+          ),
+        );
+      });
+    }
   }
 }

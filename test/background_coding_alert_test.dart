@@ -96,13 +96,12 @@ void main() {
         'kind': 'permission',
         'sessionID': 'session-1',
         'key': 'input:session-1',
-        // A v2 permission alert carries the RemoteInput Reply action: its
-        // text maps to reject-with-message (steering by rejection).
-        'quickReply': true,
         'requestID': 'permission-1',
-        // The file the request names, shown in the shade (the lock screen
-        // gets only the count).
+        // The file the request names, shown in the shade under "Edit
+        // main.dart?" (the lock screen gets fixed words only).
         'detail': 'lib/main.dart',
+        'askAction': 'edit',
+        'askTarget': 'main.dart',
       });
 
       harness.controller.handleEventForTesting(
@@ -127,7 +126,6 @@ void main() {
         'kind': 'question',
         'sessionID': 'session-1',
         'key': 'input:session-1',
-        'quickReply': true,
         'requestID': 'question-1',
         'detail': 'Continue?',
       });
@@ -174,7 +172,6 @@ void main() {
         'sessionID': 'session-1',
         'key': 'input:session-1',
         // No prompts means no single custom prompt to quick-reply to.
-        'quickReply': false,
         'requestID': 'question-1',
       });
     },
@@ -187,6 +184,16 @@ void main() {
       addTearDown(harness.controller.dispose);
       harness.controller.sessionsById['session-1'] = Session(id: 'session-1');
 
+      // OpenCode 2 says a step started (busy) before its message.
+      harness.controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'session.status',
+          properties: const {
+            'sessionID': 'session-1',
+            'status': {'type': 'busy'},
+          },
+        ),
+      );
       harness.controller.handleEventForTesting(
         EventEnvelope(
           type: 'message.updated',
@@ -213,7 +220,8 @@ void main() {
           },
         ),
       );
-      expect(harness.controller.busySessions, isEmpty);
+      // A finished step is not the end of the run; the server's idle is.
+      expect(harness.controller.busySessions, contains('session-1'));
 
       final idle = EventEnvelope(
         type: 'session.idle',
@@ -231,7 +239,6 @@ void main() {
         'kind': 'complete',
         'sessionID': 'session-1',
         'key': 'status:session-1',
-        'quickReply': false,
         'requestID': '',
       });
     },
@@ -283,7 +290,6 @@ void main() {
         'kind': 'error',
         'sessionID': 'session-1',
         'key': 'status:session-1',
-        'quickReply': false,
         'requestID': '',
         // A plain reason token, never the server's own words.
         'reason': 'other',

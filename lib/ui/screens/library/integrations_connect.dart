@@ -562,12 +562,14 @@ extension _IntegrationsConnect on _IntegrationsScreenState {
     IntegrationMethodInfo method,
     String providerName,
   ) async {
-    if (method.prompts.isEmpty) return const {};
-    return _showOAuthInputsSheet(
+    final presets = method.presetAnswers;
+    if (method.prompts.isEmpty) return presets;
+    final answers = await _showOAuthInputsSheet(
       context,
       method: method,
       providerName: providerName,
     );
+    return answers == null ? null : {...presets, ...answers};
   }
 
   Future<void> _runIntegrationAction(

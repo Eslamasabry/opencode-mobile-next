@@ -357,10 +357,19 @@ List<GitRemote> parseGitRemotes(String output) {
     if (!key.startsWith('remote.') || !key.endsWith('.url')) continue;
     final name = key.substring('remote.'.length, key.length - '.url'.length);
     if (name.isEmpty || remotes.containsKey(name)) continue;
-    remotes[name] = GitRemote(name: name, kind: gitRemoteKind(url));
+    remotes[name] = GitRemote(
+      name: name,
+      kind: gitRemoteKind(url),
+      address: url.isEmpty ? null : stripGitUserInfo(url),
+    );
   }
   return List.unmodifiable(remotes.values);
 }
+
+/// [url] without the user info of a `scheme://user:secret@host` address.
+/// An scp-style `git@host:path` keeps its user name: it is not a secret.
+String stripGitUserInfo(String url) =>
+    url.replaceFirst(RegExp(r'://[^/@\s]*@'), '://');
 
 GitRemoteKind gitRemoteKind(String url) {
   final value = url.trim().toLowerCase();
@@ -376,4 +385,13 @@ GitRemoteKind gitRemoteKind(String url) {
     return GitRemoteKind.gitHubHttps;
   }
   return GitRemoteKind.other;
+}
+
+/// The two lines `printf '%s\n%s\n' name email` printed.
+GitIdentity parseGitIdentity(String output) {
+  final lines = output.split('\n');
+  return GitIdentity(
+    name: lines.isNotEmpty ? lines[0].trim() : '',
+    email: lines.length > 1 ? lines[1].trim() : '',
+  );
 }

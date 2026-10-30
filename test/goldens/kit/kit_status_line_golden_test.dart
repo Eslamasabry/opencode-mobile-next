@@ -119,6 +119,21 @@ Map<String, KitStatusLine Function()> _states() => {
       more: [_act('Details')],
     ),
   ),
+  // The link's own retry timer (vision 2026-10-20): muted, the countdown
+  // as the second line, Try now as the action.
+  'countdown': () => KitStatusLine.of(
+    KitStatus(
+      kind: KitStatusKind.connection,
+      id: 'connection:laptop',
+      icon: AppIconography.cloudOff,
+      message: 'Laptop isn’t answering',
+      countdownTo: _now().add(const Duration(milliseconds: 12400)),
+      countdownLine: (left) =>
+          'Trying again in ${(left.inMilliseconds / 1000).ceil()} s',
+      action: _act('Try now'),
+      more: [_act('Details')],
+    ),
+  ),
   'stacked': () => KitStatusLine(
     icon: AppIconography.cloudOff,
     message:
@@ -166,7 +181,7 @@ void main() {
       );
     });
 
-    for (final state in ['connection', 'now']) {
+    for (final state in ['connection', 'now', 'countdown']) {
       for (final size in [_phone, _wide]) {
         testWidgets('$state · text 2.0 · ${kitGallerySize(size)} · $mode', (
           tester,

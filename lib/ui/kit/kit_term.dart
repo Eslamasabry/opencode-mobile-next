@@ -19,6 +19,8 @@ import 'kit_buttons.dart';
 import 'kit_layout.dart';
 import 'kit_motion.dart';
 import 'kit_sheet.dart';
+import 'kit_surface.dart' show kitSurfaceMaterial;
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
@@ -321,53 +323,60 @@ class _KitTermPanel extends StatelessWidget {
       },
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: KitLayout.popoverMaxWidth),
-        child: Material(
+        // A floating piece: the style paints it.
+        child: KeyedSubtree(
           key: const ValueKey('kit-term-bubble'),
-          color: roles.surface2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(KitTokens.popoverRadius),
-            side: BorderSide(
-              color: roles.hairline,
-              width: KitTokens.hairlineWidth(context),
+          child: kitSurfaceMaterial(
+            context,
+            level: KitSurfaceLevel.surface2,
+            role: KitSurfaceRole.floating,
+            fill: roles.surface2,
+            clip: false,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(tokens.popoverCorner),
+              side: BorderSide(
+                color: roles.hairline,
+                width: KitTokens.hairlineWidth(context),
+              ),
             ),
-          ),
-          child: Padding(
-            padding: EdgeInsetsDirectional.symmetric(
-              horizontal: tokens.space3,
-              vertical: tokens.space2,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // The bubble's title is text1 (KitTerm.md Tokens), not the
-                // label role's own secondary tone.
-                KitText(
-                  term,
-                  role: KitTextRole.label,
-                  tone: KitTextTone.primary,
-                ),
-                SizedBox(height: tokens.space1),
-                KitText(explanation, role: KitTextRole.secondary),
-                if (learnMore case final action?) ...[
-                  SizedBox(height: tokens.space2),
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Focus(
-                      focusNode: learnMoreFocusNode,
-                      child: KitButton.fromAction(
-                        KitAction(
-                          key: const ValueKey('kit-term-learn-more'),
-                          label: action.label,
-                          icon: action.icon,
-                          onPressed: onLearnMore,
+            child: Padding(
+              padding: EdgeInsetsDirectional.symmetric(
+                horizontal: tokens.space3,
+                vertical: tokens.space2,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // The bubble's title is text1 (KitTerm.md Tokens), not the
+                  // label role's own secondary tone.
+                  KitText(
+                    term,
+                    role: KitTextRole.label,
+                    tone: KitTextTone.primary,
+                  ),
+                  SizedBox(height: tokens.space1),
+                  KitText(explanation, role: KitTextRole.secondary),
+                  if (learnMore case final action?) ...[
+                    SizedBox(height: tokens.space2),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Focus(
+                        focusNode: learnMoreFocusNode,
+                        child: KitButton.fromAction(
+                          KitAction(
+                            key: const ValueKey('kit-term-learn-more'),
+                            label: action.label,
+                            icon: action.icon,
+                            onPressed: onLearnMore,
+                          ),
+                          role: KitButtonRole.tertiary,
                         ),
-                        role: KitButtonRole.tertiary,
                       ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

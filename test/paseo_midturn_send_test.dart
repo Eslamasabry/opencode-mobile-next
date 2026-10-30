@@ -141,6 +141,9 @@ Future<(FakeDaemon, ConnectionController)> _open(
       ],
     },
   );
+  // The daemon numbers every timeline item once: a second steer (the words
+  // sent again after Stop) lands after the stop's own items.
+  var steers = 0;
   daemon.handlers['send_agent_message_request'] = (m) {
     final id = m['messageId'] as String;
     final user = {
@@ -152,7 +155,13 @@ Future<(FakeDaemon, ConnectionController)> _open(
     if (daemonSteers && m['activeTurnBehavior'] == 'steer') {
       // Claude takes the message into the running turn (priority "next"):
       // the daemon records it in that turn and the step keeps running.
-      daemon.push('agent_stream', _stream(_timeline(user, 'turn-1'), seq: 4));
+      daemon.push(
+        'agent_stream',
+        _stream(
+          _timeline(user, 'turn-1'),
+          seq: steers++ == 0 ? 4 : 20 + steers,
+        ),
+      );
     } else {
       // "interrupt" (the daemon default), or a provider that cannot steer.
       daemon
@@ -289,10 +298,7 @@ void main() {
       'the running step keeps going', (tester) async {
     final (daemon, c) = await _open(tester, daemonSteers: true);
     // Never "Send after this reply": Claude reads it in this turn.
-    await _sendMidTurn(
-      tester,
-      says: 'The agent will read this while it works.',
-    );
+    await _sendMidTurn(tester, says: 'Adds to this reply');
 
     final sent = daemon.of('send_agent_message_request').single;
     expect(sent['activeTurnBehavior'], 'steer');
@@ -306,6 +312,143 @@ void main() {
     // The step above the new message is still the running turn's work.
     await tester.pump(const Duration(seconds: 30));
     expect(_screenText(tester), isNot(contains('connection dropped')));
+    await close(tester, c);
+  });
+
+  // Owner report 2026-10-28: a steer sent during a 12-minute test suite
+  // read "Waiting for the model's first word · 1 min 9 s" while Claude's
+  // Bash call still ran. Claude Code reads a steer at the next tool
+  // boundary; the turn is the one it joined, doing what it was doing.
+  testWidgets('a steer sent during a command keeps the live line on the '
+      'command, says when the agent reads it, and the note clears once the '
+      'agent answers', (tester) async {
+    final (daemon, c) = await _open(tester, daemonSteers: true);
+    final running = RegExp('Running .*du -sh');
+    expect(_screenText(tester), matches(running));
+    await _sendMidTurn(tester);
+    await tester.pump(const Duration(seconds: 70));
+    await _frames(tester, 5);
+
+    var text = _screenText(tester);
+    expect(text, isNot(contains("Waiting for the model's first word")));
+    expect(text, matches(running));
+    expect(text, contains('Claude Code'));
+    expect(text, contains('reads this when the command finishes'));
+    expect(find.text('Stop the command'), findsOneWidget);
+
+    // The command ends and Claude answers the steer: the note goes.
+    daemon
+      ..push(
+        'agent_stream',
+        _stream(_timeline(_bash('completed'), 'turn-1'), seq: 5),
+      )
+      ..push(
+        'agent_stream',
+        _stream(
+          _timeline({
+            'type': 'assistant_message',
+            'text': 'Leaving the box alone.',
+            'messageId': 'msg_2',
+          }, 'turn-1'),
+          seq: 6,
+        ),
+      );
+    await _frames(tester);
+    text = _screenText(tester);
+    expect(text, contains('Leaving the box alone.'));
+    expect(text, isNot(contains('reads this when the command finishes')));
+    expect(find.text('Stop the command'), findsNothing);
+    expect(text, isNot(contains("Waiting for the model's first word")));
+    await close(tester, c);
+  });
+
+  testWidgets('Stop the command stops the turn and sends the steer again, '
+      'because the daemon withdraws a steer Claude has not read', (
+    tester,
+  ) async {
+    final (daemon, c) = await _open(tester, daemonSteers: true);
+    daemon.handlers['cancel_agent_request'] = (_) {
+      daemon
+        ..push(
+          'agent_stream',
+          _stream(_timeline(_bash('canceled'), 'turn-1'), seq: 5),
+        )
+        ..push(
+          'agent_stream',
+          _stream({
+            'type': 'turn_canceled',
+            'provider': 'claude',
+            'reason': 'Interrupted',
+            'turnId': 'turn-1',
+          }),
+        );
+      return ('cancel_agent_response', {'agentId': 'a1', 'error': null});
+    };
+    await _sendMidTurn(tester);
+    // A short command needs no way out: the action waits a moment.
+    expect(find.text('Stop the command'), findsNothing);
+    await tester.pump(const Duration(seconds: 10));
+    await _frames(tester, 5);
+    await tester.tap(find.text('Stop the command'));
+    await _frames(tester);
+
+    expect(daemon.of('cancel_agent_request'), hasLength(1));
+    final sends = daemon.of('send_agent_message_request');
+    expect(sends, hasLength(2));
+    expect(sends.last['text'], 'And leave the box now as it is being used.');
+    // The daemon keeps the withdrawn copy in its record: the words show
+    // once, on the copy Claude reads.
+    const words = 'And leave the box now as it is being used.';
+    int shown() => words.allMatches(_screenText(tester)).length;
+    expect(shown(), 1);
+
+    // Opened again, the record holds both copies; still once.
+    final ids = [for (final send in sends) send['messageId'] as String];
+    daemon.handlers['fetch_agent_timeline_request'] = (_) => (
+      'fetch_agent_timeline_response',
+      {
+        'agentId': 'a1',
+        'epoch': 'e1',
+        'endCursor': {'epoch': 'e1', 'seq': 6},
+        'hasOlder': false,
+        'hasNewer': false,
+        'entries': [
+          _entry({
+            'type': 'user_message',
+            'text': 'Tidy the box',
+            'messageId': 'u1',
+          }, 1),
+          _entry({
+            'type': 'assistant_message',
+            'text': 'Checking the box first.',
+            'messageId': 'msg_1',
+          }, 2),
+          _entry(_bash('canceled'), 3),
+          for (final (i, id) in ids.indexed)
+            _entry({
+              'type': 'user_message',
+              'text': words,
+              'messageId': id,
+            }, 4 + i),
+        ],
+      },
+    );
+    await tester.pumpWidget(const SizedBox());
+    await _frames(tester, 5);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(c)],
+        child: const MaterialApp(
+          debugShowCheckedModeBanner: false,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ChatScreen(sessionID: 'a1'),
+        ),
+      ),
+    );
+    await _frames(tester);
+    expect(_screenText(tester), contains('Tidy the box'));
+    expect(shown(), 1);
     await close(tester, c);
   });
 
@@ -341,7 +484,7 @@ void main() {
     await tester.pump();
     expect(find.byTooltip('Stop and send'), findsOneWidget);
     expect(
-      find.text('Stops the current reply and starts again with your message.'),
+      find.textContaining("can't take a message mid-reply."),
       findsOneWidget,
     );
     expect(find.text('Sends after this reply'), findsNothing);

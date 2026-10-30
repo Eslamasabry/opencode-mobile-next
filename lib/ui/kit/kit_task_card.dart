@@ -7,6 +7,7 @@ import '../app_iconography.dart';
 import 'kit_buttons.dart';
 import 'kit_icon.dart';
 import 'kit_icon_button.dart';
+import 'kit_max_width.dart';
 import 'kit_menu.dart';
 import 'kit_needs_you.dart';
 import 'kit_receipt.dart';
@@ -162,7 +163,10 @@ class KitTaskCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.lane(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final word = KitTaskMark.wordFor(context, mark, paused: paused);
     final scale = MediaQuery.textScalerOf(context).scale(1);
@@ -456,7 +460,10 @@ class KitPriorityGlyph extends StatelessWidget {
   final KitPriority priority;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.glyph(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final roles = KitTokens.of(context).roles;
     return ExcludeSemantics(
       child: CustomPaint(

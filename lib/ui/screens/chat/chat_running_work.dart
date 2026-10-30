@@ -188,3 +188,140 @@ extension _ChatRunningWork on _ChatScreenState {
     return null;
   }
 }
+
+extension _ChatBackgroundWorkLine on _ChatScreenState {
+  /// [row] (row [i]); the newest one carries the line saying what the agent
+  /// left running in the background once its turn ended
+  /// (lib/domain/background_tasks.dart has the rule). A tap on a task's row
+  /// goes to the step that started it: its folded work opens and the step
+  /// is marked for a moment.
+  Widget _withBackgroundWork(int i, Widget row) {
+    if (i != 0 || _conn.isIsolated || _watching) return row;
+    final tasks = _live != null
+        ? const <BackgroundTask>[]
+        : runningBackgroundTasks(
+            _messages,
+            now: DateTime.now(),
+            runtimeGapAt: switch (_conn.api) {
+              final BackgroundTaskGateway api => api.agentRuntimeGapAt(
+                widget.sessionID,
+              ),
+              _ => null,
+            },
+          );
+    final strings = _chatL10n(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        row,
+        KitBackgroundWorkLine(
+          lineKey: const ValueKey('chat-background-work'),
+          // Under a failed turn the agent has stopped; only its work runs.
+          afterStop: tasks.isNotEmpty && lastTurnFailedIn(_messages),
+          tasks: [
+            for (final task in tasks)
+              KitBackgroundTask(
+                name: task.waiting
+                    ? strings.chatBackgroundWorkWaitingFor(task.name)
+                    : task.name,
+                since: task.since,
+                command: task.command,
+              ),
+          ],
+          onOpenTask: (index) => _jumpToMessage(
+            tasks[index].messageID,
+            stepID: tasks[index].callID,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The expansion-store key of the work line that holds [runs].
+String _workStoreKey(List<_AssistantPartRun> runs) {
+  final first = runs.first.parts.first;
+  return 'work:${first.id ?? first.callID ?? first.messageID}';
+}
+
+/// The steps of a reply's work lines, and the step a jump asked to show
+/// ([_ChatScrollFields._highlightedStepID]): its work line opens and the
+/// step is marked for a moment.
+extension _MessageViewSteps on _MessageView {
+  /// [expansionStore], with the work line of [stretch] opened when it holds
+  /// the step a jump asked to show (it stays open after the mark fades).
+  Map<String, bool> _openedForStep(
+    List<_AssistantPartRun> stretch,
+    _ChatScreenState? chat,
+  ) {
+    final step = chat?._highlightedStepID;
+    if (step != null &&
+        stretch.any(
+          (run) => run.parts.any((part) => (part.callID ?? part.id) == step),
+        )) {
+      expansionStore[_workStoreKey(stretch)] = true;
+    }
+    return expansionStore;
+  }
+
+  /// A run inside a work line: a run of tool calls is one step per call (the
+  /// agent's heading and note on the first), anything else is its own step.
+  List<Widget> _stepWidgets(
+    _AssistantPartRun run,
+    List<_AssistantPartRun> all,
+    bool streaming,
+    _ChatScreenState? chat,
+  ) {
+    if (!run.grouped) return [_runWidget(run, all, streaming, chat)];
+    return [
+      for (final (index, part) in run.parts.indexed)
+        _markedStep(
+          chat,
+          part,
+          ToolCard(
+            key: ValueKey(part.id ?? part.callID),
+            toolName: part.toolName ?? 'tool',
+            state: part.toolState,
+            embedded: true,
+            heading: index == 0 ? run.heading : null,
+            note: index == 0 ? run.note : null,
+            expansionStore: expansionStore,
+            expansionKey: 'tool:${part.id ?? part.callID}',
+            filePreviewLoader: filePreviewLoader,
+            onAttachFile: onAttachFile,
+            onDownloadFile: onDownloadFile,
+            onOpenImage: chat == null
+                ? null
+                : (file) => unawaited(
+                    chat._openPictureGallery('tool:${file.identity}'),
+                  ),
+            onOpenSession: onOpenSession,
+            waitingForYou: chat?._toolWaitsForYou(part) ?? false,
+            onRerunCommand: chat?._rerunShellCommand,
+            onEnableConnectorCatalogue: chat?._enableConnectorCatalogue,
+          ),
+        ),
+    ];
+  }
+}
+
+/// [step], the row [part] draws, on the band that marks the step a jump
+/// asked to show ([_ChatScrollFields._highlightedStepID]): a surface fill
+/// that fades in and out on [KitPace.quick] (at once under reduced motion).
+/// The jump's last scroll settles on where it was drawn.
+Widget _markedStep(_ChatScreenState? chat, Part part, Widget step) {
+  final shown = chat?._highlightedStepID;
+  final marked = shown != null && (part.callID ?? part.id) == shown;
+  return KitAnimatedBox(
+    key: ValueKey('step:${part.id ?? part.callID}'),
+    level: marked ? KitSurfaceLevel.surface2 : null,
+    shape: KitShape.tile,
+    child: Builder(
+      builder: (context) {
+        if (marked) chat?._stepRevealContext = context;
+        return step;
+      },
+    ),
+  );
+}

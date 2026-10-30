@@ -5,8 +5,10 @@ import 'package:xterm/core.dart' as xterm;
 
 import '../../l10n/app_localizations.dart';
 import 'kit_layout.dart';
+import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
+import 'kit_text_halo.dart';
 import 'kit_tokens.dart';
 
 /// The keys a phone keyboard lacks, for a terminal
@@ -50,6 +52,31 @@ enum TerminalBarKey {
   /// The keys a bar with `interruptKeys` leads with, on a row of their own
   /// above [rows].
   static const extraRow = [interrupt, endOfInput];
+
+  /// The one-row bar (`TerminalKeyBar.singleRow`): the keys a phone keyboard
+  /// lacks most, in the order a hand reaches for them. The first
+  /// [singleRowShown] fill the width; the rest wait past the end of the row.
+  static const singleRowKeys = [
+    esc,
+    tab,
+    ctrl,
+    alt,
+    left,
+    up,
+    down,
+    right,
+    pipe,
+    tilde,
+    slash,
+    dash,
+    home,
+    end,
+    pageUp,
+    pageDown,
+  ];
+
+  /// How many of [singleRowKeys] share the width of a phone.
+  static const singleRowShown = 11;
 
   bool get isModifier => this == ctrl || this == alt;
 
@@ -207,7 +234,9 @@ class TerminalKeyBar extends StatelessWidget {
     this.enabled = true,
     this.compact = false,
     this.interruptKeys = false,
+    this.singleRow = false,
     this.disabledReason,
+    this.safeArea = false,
   });
 
   final TerminalKeyBarController controller;
@@ -227,9 +256,28 @@ class TerminalKeyBar extends StatelessWidget {
   /// server terminal's keys.
   final bool interruptKeys;
 
+  /// One row of keys instead of two, sharing the width the way a phone
+  /// keyboard's keys do ([TerminalBarKey.singleRowKeys]): the first eleven
+  /// fill the row, the rest follow when it slides. Each key's target is its
+  /// whole slot, the full bar height and at least [singleRowMinWidth] wide,
+  /// with the cap drawn inside it. Where eleven keys would be narrower than
+  /// that (a narrow window) the row keeps that width and slides. The caps
+  /// sit on the screen's own ground, without a panel behind them.
+  final bool singleRow;
+
+  /// The least width of a key in the one-row bar. A phone keyboard's own
+  /// letter keys are this narrow; the target is the full 48 dp tall.
+  static const singleRowMinWidth = 34.0;
+
   /// What each key's hint says while the bar is disabled; by default
   /// "Unavailable while the terminal is disconnected".
   final String? disabledReason;
+
+  /// Keeps the keys out of the system insets below and beside the bar
+  /// (a [SafeArea] without its top) inside the bar's own band, so the band
+  /// reaches the screen's edge as one surface. Not for [singleRow], which
+  /// has no band.
+  final bool safeArea;
 
   /// A key's height, and the least width of a key: `KitTokens.minTarget`.
   static const keyHeight = 48.0;
@@ -301,7 +349,7 @@ class TerminalKeyBar extends StatelessWidget {
       if (interruptKeys) ...TerminalBarKey.extraRow,
       ..._compactOrder,
     ];
-    Widget keyOf(TerminalBarKey key) => _Key(
+    Widget keyOf(TerminalBarKey key, {bool calm = false}) => _Key(
       key: ValueKey('terminal-key-${key.name}'),
       face: key.face,
       label: _label(l10n, key),
@@ -312,120 +360,275 @@ class TerminalKeyBar extends StatelessWidget {
       },
       onTap: enabled ? () => _tap(key) : null,
       disabledReason: reason,
+      calm: calm,
+    );
+    if (singleRow && !compact) {
+      return Semantics(
+        container: true,
+        label: l10n.localTerminalKeysLabel,
+        child: ListenableBuilder(
+          listenable: controller,
+          builder: (context, _) => Directionality(
+            textDirection: TextDirection.ltr,
+            child: _SingleRow(
+              keys: [
+                for (final key in TerminalBarKey.singleRowKeys)
+                  keyOf(key, calm: true),
+              ],
+              height: side,
+              inset: tokens.space1,
+            ),
+          ),
+        ),
+      );
+    }
+    // The band the keys sit in: a track in the style's look, Solid's
+    // `surface2` under a hairline as it always was.
+    final band = KitSurfaceLook.decorate(
+      context,
+      solid: BoxDecoration(
+        color: roles.surface2,
+        border: Border(
+          top: BorderSide(
+            color: roles.hairline,
+            width: KitTokens.hairlineWidth(context),
+          ),
+        ),
+      ),
+      role: KitSurfaceRole.track,
+      level: KitSurfaceLevel.surface2,
+      borderRadius: BorderRadius.zero,
     );
     return Semantics(
       container: true,
       label: l10n.localTerminalKeysLabel,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: roles.surface2,
-          border: Border(
-            top: BorderSide(
-              color: roles.hairline,
-              width: KitTokens.hairlineWidth(context),
-            ),
-          ),
-        ),
-        child: ListenableBuilder(
-          listenable: controller,
-          builder: (context, _) => Directionality(
-            // Keys sit where a keyboard has them in every language.
-            textDirection: TextDirection.ltr,
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: gap),
-              child: compact
-                  ? SizedBox(
-                      height: side,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        // Modifiers and arrows first: what a short screen
-                        // needs most.
-                        itemCount: compactKeys.length,
-                        separatorBuilder: (_, _) => SizedBox(width: gap),
-                        itemBuilder: (_, i) => SizedBox(
-                          width: math.max(compactKeyWidth, side),
-                          child: keyOf(compactKeys[i]),
+      child: kitSurfaceBox(
+        style: KitSurfaceLook.styleOf(context),
+        decoration: band,
+        child: SafeArea(
+          top: false,
+          left: safeArea,
+          right: safeArea,
+          bottom: safeArea,
+          child: ListenableBuilder(
+            listenable: controller,
+            builder: (context, _) => Directionality(
+              // Keys sit where a keyboard has them in every language.
+              textDirection: TextDirection.ltr,
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: gap),
+                child: compact
+                    ? SizedBox(
+                        height: side,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          // Modifiers and arrows first: what a short screen
+                          // needs most.
+                          itemCount: compactKeys.length,
+                          separatorBuilder: (_, _) => SizedBox(width: gap),
+                          itemBuilder: (_, i) => SizedBox(
+                            width: math.max(compactKeyWidth, side),
+                            child: keyOf(compactKeys[i]),
+                          ),
                         ),
-                      ),
-                    )
-                  : LayoutBuilder(
-                      builder: (context, constraints) {
-                        final columns = TerminalBarKey.rows.first.length;
-                        final room = constraints.hasBoundedWidth
-                            ? math.min(
-                                constraints.maxWidth,
-                                KitLayout.readingWidth,
-                              )
-                            : KitLayout.readingWidth;
-                        final needed = side * columns + gap * (columns - 1);
-                        final fits = needed <= room;
-                        // Whole physical pixels: a fractional width puts
-                        // every other cap edge on a half pixel, and it
-                        // blurs (LOOK-21).
-                        final dpr = MediaQuery.devicePixelRatioOf(context);
-                        final width = fits
-                            ? ((room - gap * (columns - 1)) / columns * dpr)
-                                      .floorToDouble() /
-                                  dpr
-                            : side;
-                        final span = fits
-                            ? width * columns + gap * (columns - 1)
-                            : needed;
-                        Widget row(List<TerminalBarKey> keys) => Row(
-                          mainAxisSize: MainAxisSize.min,
-                          spacing: gap,
-                          children: [
-                            for (final key in keys)
-                              SizedBox(
-                                width: width,
-                                height: side,
-                                child: keyOf(key),
-                              ),
-                          ],
-                        );
-                        final Widget grid = SizedBox(
-                          width: span,
-                          child: Column(
+                      )
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          final columns = TerminalBarKey.rows.first.length;
+                          final room = constraints.hasBoundedWidth
+                              ? math.min(
+                                  constraints.maxWidth,
+                                  KitLayout.readingWidth,
+                                )
+                              : KitLayout.readingWidth;
+                          final needed = side * columns + gap * (columns - 1);
+                          final fits = needed <= room;
+                          // Whole physical pixels: a fractional width puts
+                          // every other cap edge on a half pixel, and it
+                          // blurs (LOOK-21).
+                          final dpr = MediaQuery.devicePixelRatioOf(context);
+                          final width = fits
+                              ? ((room - gap * (columns - 1)) / columns * dpr)
+                                        .floorToDouble() /
+                                    dpr
+                              : side;
+                          final span = fits
+                              ? width * columns + gap * (columns - 1)
+                              : needed;
+                          Widget row(List<TerminalBarKey> keys) => Row(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             spacing: gap,
                             children: [
-                              if (interruptKeys) row(TerminalBarKey.extraRow),
-                              for (final keys in TerminalBarKey.rows) row(keys),
+                              for (final key in keys)
+                                SizedBox(
+                                  width: width,
+                                  height: side,
+                                  child: keyOf(key),
+                                ),
                             ],
-                          ),
-                        );
-                        if (!fits) {
-                          // Too narrow for eight 48 dp keys: the rows scroll
-                          // together rather than shrink the keys.
-                          return SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: grid,
                           );
-                        }
-                        // Centred, with the lead snapped to a pixel so the
-                        // grid starts on a pixel boundary.
-                        final outer = constraints.hasBoundedWidth
-                            ? constraints.maxWidth
-                            : span;
-                        final lead =
-                            ((outer - span) / 2 * dpr).floorToDouble() / dpr;
-                        return Align(
-                          alignment: AlignmentDirectional.topStart,
-                          heightFactor: 1,
-                          child: Padding(
-                            padding: outer > span
-                                ? EdgeInsetsDirectional.only(start: lead)
-                                : EdgeInsets.zero,
-                            child: grid,
-                          ),
-                        );
-                      },
-                    ),
+                          final Widget grid = SizedBox(
+                            width: span,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              spacing: gap,
+                              children: [
+                                if (interruptKeys) row(TerminalBarKey.extraRow),
+                                for (final keys in TerminalBarKey.rows)
+                                  row(keys),
+                              ],
+                            ),
+                          );
+                          if (!fits) {
+                            // Too narrow for eight 48 dp keys: the rows scroll
+                            // together rather than shrink the keys.
+                            return SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: grid,
+                            );
+                          }
+                          // Centred, with the lead snapped to a pixel so the
+                          // grid starts on a pixel boundary.
+                          final outer = constraints.hasBoundedWidth
+                              ? constraints.maxWidth
+                              : span;
+                          final lead =
+                              ((outer - span) / 2 * dpr).floorToDouble() / dpr;
+                          return Align(
+                            alignment: AlignmentDirectional.topStart,
+                            heightFactor: 1,
+                            child: Padding(
+                              padding: outer > span
+                                  ? EdgeInsetsDirectional.only(start: lead)
+                                  : EdgeInsets.zero,
+                              child: grid,
+                            ),
+                          );
+                        },
+                      ),
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The one-row bar's layout: [TerminalBarKey.singleRowShown] slots share the
+/// width (each at least [TerminalKeyBar.singleRowMinWidth]), whole physical
+/// pixels wide; the rest follow and the row slides. The end fades while
+/// more keys wait past it.
+class _SingleRow extends StatefulWidget {
+  const _SingleRow({
+    required this.keys,
+    required this.height,
+    required this.inset,
+  });
+
+  final List<Widget> keys;
+  final double height;
+  final double inset;
+
+  @override
+  State<_SingleRow> createState() => _SingleRowState();
+}
+
+class _SingleRowState extends State<_SingleRow> {
+  final _scroll = ScrollController();
+  bool _more = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_moved);
+  }
+
+  void _moved() {
+    final more =
+        !_scroll.hasClients ||
+        _scroll.position.pixels < _scroll.position.maxScrollExtent - 1;
+    if (more != _more) setState(() => _more = more);
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final dpr = MediaQuery.devicePixelRatioOf(context);
+        final full = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : KitLayout.readingWidth;
+        // A key grows with the window up to a target and a half wide; where
+        // every key then fits (a tablet, a PC window) none waits off the
+        // end, and the row centres without sliding.
+        final widest = tokens.minTarget * 1.5;
+        final share = (full - widget.inset * 2) / TerminalBarKey.singleRowShown;
+        final width =
+            (math.max(
+                      TerminalKeyBar.singleRowMinWidth,
+                      math.min(share, widest),
+                    ) *
+                    dpr)
+                .floorToDouble() /
+            dpr;
+        final all = width * widget.keys.length + widget.inset * 2;
+        if (all <= full) {
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: widget.inset),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final key in widget.keys)
+                    SizedBox(width: width, height: widget.height, child: key),
+                ],
+              ),
+            ),
+          );
+        }
+        final outer = full;
+        final row = SingleChildScrollView(
+          controller: _scroll,
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.symmetric(horizontal: widget.inset),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final key in widget.keys)
+                SizedBox(width: width, height: widget.height, child: key),
+            ],
+          ),
+        );
+        // A mask: only the alpha counts, so any opaque role works.
+        final solid = tokens.roles.ground.withValues(alpha: 1);
+        final edge = outer <= 0 ? 0.0 : (tokens.gutter / outer).clamp(0.0, .5);
+        return Center(
+          child: SizedBox(
+            width: outer,
+            child: ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (bounds) => LinearGradient(
+                colors: [
+                  solid,
+                  solid,
+                  _more ? solid.withValues(alpha: 0) : solid,
+                ],
+                stops: [0, 1 - edge, 1],
+              ).createShader(bounds),
+              child: row,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -441,7 +644,12 @@ class _Key extends StatefulWidget {
     required this.latched,
     required this.onTap,
     required this.disabledReason,
+    this.calm = false,
   });
+
+  /// The one-row bar's cap: a `surface2` cap with a hairline edge, drawn
+  /// inside its slot (the slot is the target), the face in the sans face.
+  final bool calm;
 
   final String face;
   final String label;
@@ -491,6 +699,109 @@ class _KeyState extends State<_Key> {
         : on
         ? KitTextTone.onAccent
         : KitTextTone.primary;
+    // Hook H3: a latched cap's face takes the colour the style says reads
+    // on it, so a style that sets a latched key in reverse keeps it
+    // legible; every other cap keeps its own tone. Resolved inside the
+    // cap, so the face keeps its plate (hook H10).
+    Widget label(KitTextRole role) => on
+        ? Builder(
+            builder: (context) {
+              final own = KitText.styleOf(context, role, tone: tone);
+              final ink = KitSurfaceLook.wordsOn(
+                context,
+                fallback: own.color!,
+                role: KitSurfaceRole.control,
+                level: widget.calm
+                    ? KitSurfaceLevel.surface2
+                    : KitSurfaceLevel.surface3,
+                color: roles.accent,
+                selected: true,
+                pressed: enabled && _press.shown,
+              );
+              return Text(
+                widget.face,
+                style: own.copyWith(color: ink),
+                maxLines: 1,
+              );
+            },
+          )
+        : KitText(widget.face, role: role, tone: tone, maxLines: 1);
+
+    // The calm cap sits inside its slot by half a step on each side (so a
+    // step between caps), its face kept off the cap's edge the same way.
+    final half = tokens.space1 / 2;
+    final capInset = EdgeInsetsDirectional.symmetric(
+      horizontal: half,
+      vertical: tokens.space1,
+    );
+    final faceInset = EdgeInsetsDirectional.symmetric(horizontal: half);
+    // Caps stop growing at 1.3x so "PgDn" fits its key; the key's full name
+    // is in its semantics (A11Y-8).
+    Widget face(KitTextRole role) => MediaQuery.withClampedTextScaling(
+      maxScaleFactor: KitTokens.terminalKeyMaxTextScale,
+      child: Padding(
+        padding: widget.calm ? faceInset : EdgeInsets.zero,
+        child: FittedBox(fit: BoxFit.scaleDown, child: label(role)),
+      ),
+    );
+    // The cap is a control in the style's look; Solid keeps its own: the
+    // calm cap a `surface2` key under a hairline, the full cap [fill].
+    final ring = _focused && enabled;
+    final radius = BorderRadius.circular(
+      widget.calm ? tokens.buttonRadius * .72 : tokens.buttonRadius,
+    );
+    final ringSide = BorderSide(
+      color: roles.accent,
+      width: KitTokens.focusRingWidth(context),
+    );
+    final solid = BoxDecoration(
+      color: !widget.calm
+          ? fill
+          : on
+          ? roles.accent
+          : _hovered || _press.shown
+          ? roles.surface3
+          : roles.surface2,
+      borderRadius: radius,
+      // Drawn inside the cap, so no parent clip cuts it (LOOK-21).
+      border: ring
+          ? Border.fromBorderSide(ringSide)
+          : widget.calm
+          ? Border.all(
+              color: on ? roles.accent : roles.hairline,
+              width: KitTokens.hairlineWidth(context),
+            )
+          : null,
+    );
+    final look = KitSurfaceLook.decorate(
+      context,
+      solid: solid,
+      role: KitSurfaceRole.control,
+      level: widget.calm ? KitSurfaceLevel.surface2 : KitSurfaceLevel.surface3,
+      borderRadius: radius,
+      color: on ? roles.accent : null,
+      selected: on,
+      pressed: enabled && _press.shown,
+    );
+    // A style's own face has no focus border: the ring is drawn over it.
+    // Always the same wrapper, so focus never rebuilds the cap.
+    Widget cap(Widget child) => DecoratedBox(
+      position: DecorationPosition.foreground,
+      decoration: ring && !identical(look, solid)
+          ? solid.copyWith(
+              color: Colors.transparent,
+              border: Border.fromBorderSide(ringSide),
+            )
+          : const BoxDecoration(),
+      child: kitSurfaceBox(
+        style: KitSurfaceLook.styleOf(context),
+        decoration: look,
+        // A latched cap's words sit on its own opaque accent: no plate
+        // from the band around it (KitTextHalo does not yet read a styled
+        // surface's fill as covering).
+        child: on ? KitTextHalo(ground: null, child: child) : child,
+      ),
+    );
     return Semantics(
       button: true,
       toggled: widget.latched,
@@ -526,35 +837,24 @@ class _KeyState extends State<_Key> {
                     onTap();
                   },
             onTapCancel: enabled ? _press.cancel : null,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: fill,
-                borderRadius: BorderRadius.circular(tokens.buttonRadius),
-                // Drawn inside the cap, so no parent clip cuts it (LOOK-21).
-                border: _focused && enabled
-                    ? Border.all(
-                        color: roles.accent,
-                        width: KitTokens.focusRingWidth(context),
-                      )
-                    : null,
-              ),
-              child: Center(
-                // Caps stop growing at 1.3x so "PgDn" fits a 48 dp key; the
-                // key's full name is in its semantics (A11Y-8).
-                child: MediaQuery.withClampedTextScaling(
-                  maxScaleFactor: KitTokens.terminalKeyMaxTextScale,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: KitText(
-                      widget.face,
-                      role: KitTextRole.mono,
-                      tone: tone,
-                      maxLines: 1,
+            child: widget.calm
+                ? Padding(
+                    // The slot is the target; the cap sits inside it with
+                    // room on every side, as a keyboard draws its keys.
+                    padding: capInset,
+                    // Named keys in the sans face; arrows and symbols in
+                    // mono, whose glyphs exist in every language's theme.
+                    child: cap(
+                      Center(
+                        child: face(
+                          RegExp('[A-Za-z]').hasMatch(widget.face)
+                              ? KitTextRole.secondary
+                              : KitTextRole.mono,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ),
+                  )
+                : cap(Center(child: face(KitTextRole.mono))),
           ),
         ),
       ),

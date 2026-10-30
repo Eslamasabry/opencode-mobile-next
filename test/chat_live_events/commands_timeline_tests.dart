@@ -30,7 +30,7 @@ void _commandAndTimelineTests() {
 
     expect(find.byKey(const Key('review-workspace')), findsOneWidget);
     expect(find.text('\u2066chat.dart\u2069'), findsOneWidget);
-    expect(find.text('+7 −2'), findsOneWidget);
+    expect(find.text('1 file changed · +7 −2'), findsOneWidget);
   });
 
   testWidgets('command launcher maps context to the native usage surface', (
@@ -92,9 +92,7 @@ void _commandAndTimelineTests() {
     expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
     expect(find.text('Report a problem'), findsOneWidget);
     expect(
-      find.text(
-        'Say what went wrong. You see the whole report before anything leaves this phone.',
-      ),
+      find.text('Passwords, keys and server addresses are taken out.'),
       findsOneWidget,
     );
   });
@@ -137,7 +135,7 @@ void _commandAndTimelineTests() {
   // Navigation commands land on the same screens as the Settings hub rows,
   // so a typed alias and the hub never disagree about where a thing lives.
   for (final entry in <String, (Type, bool Function(Widget))>{
-    'status': (ServerSettingsScreen, (_) => true),
+    'status': (ServerPageScreen, (_) => true),
     'connect': (
       IntegrationsScreen,
       (widget) =>
@@ -199,7 +197,9 @@ void _commandAndTimelineTests() {
 
     expect(find.byType(AppearanceSettingsScreen), findsOneWidget);
     // Light or dark is chosen inline and applies at once (the separate
-    // light-or-dark sheet was removed by slice-P3.1).
+    // light-or-dark sheet was removed by slice-P3.1): Colours opens it.
+    await tester.tap(find.byKey(const ValueKey('appearance-group-colours')));
+    await tester.pumpAndSettle();
     final light = find.byKey(const ValueKey('appearance-mode-light'));
     await tester.ensureVisible(light);
     await tester.pumpAndSettle();
@@ -227,7 +227,7 @@ void _commandAndTimelineTests() {
     {'content': 'Run the whole suite', 'status': 'in_progress'},
   ];
 
-  testWidgets('a task list is the chip beside the model, not a card', (
+  testWidgets('a task list is a row of the composer plus, not a card', (
     tester,
   ) async {
     final api = _FakeOpenCodeApi()
@@ -246,9 +246,15 @@ void _commandAndTimelineTests() {
     await _pumpChat(tester, api);
     await tester.pumpAndSettle();
 
-    // "1/2" rides in the line above the field; no list in the transcript.
-    expect(find.byKey(const Key('task-chip')), findsOneWidget);
-    expect(find.text('1/2'), findsOneWidget);
+    // No chip over the field and no list in the transcript: "1/2 · …" is
+    // the Plan row behind the composer's +.
+    expect(find.byKey(const Key('task-chip')), findsNothing);
+    expect(find.text('1/2'), findsNothing);
+    await openComposerTools(tester);
+    await tester.pumpAndSettle();
+    expect(find.text('1/2 · Run the whole suite'), findsOneWidget);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
     expect(find.text('Run the whole suite'), findsNothing);
     expect(find.text('Fix the flaky test'), findsNothing);
     // The call itself is a one-line step that does not open.
@@ -256,7 +262,7 @@ void _commandAndTimelineTests() {
     expect(find.text('Tasks'), findsNothing);
   });
 
-  testWidgets('the tasks chip opens the whole list in a Tasks sheet', (
+  testWidgets('the plan row opens the whole list in a Tasks sheet', (
     tester,
   ) async {
     final api = _FakeOpenCodeApi()
@@ -266,7 +272,9 @@ void _commandAndTimelineTests() {
 
     await _pumpChat(tester, api);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('task-chip')));
+    await openComposerTools(tester);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('composer-setting-plan')));
     // The task in progress has a spinner: it never settles.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
@@ -297,10 +305,12 @@ void _commandAndTimelineTests() {
     expect(find.text('Run the whole suite'), findsOneWidget);
   });
 
-  testWidgets('no task list, no tasks chip', (tester) async {
+  testWidgets('no task list, no plan row', (tester) async {
     await _pumpChat(tester, _FakeOpenCodeApi());
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('task-chip')), findsNothing);
+    await openComposerTools(tester);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('composer-setting-plan')), findsNothing);
   });
 
   testWidgets('no plan in the transcript, no Tasks entry in the menu', (
@@ -402,8 +412,12 @@ void _commandAndTimelineTests() {
 
     // Attaching closes the viewer and returns to the file tree.
     expect(find.byKey(const ValueKey('files-viewer')), findsNothing);
+    // /files opens the project's Files page, which is the files themselves
+    // (vision 2026-10-20): one Back returns to the conversation.
+    expect(find.byKey(const ValueKey('project-files-page')), findsOneWidget);
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('project-files-page')), findsNothing);
     expect(find.bySemanticsLabel('Remove review.md'), findsOneWidget);
   });
 
@@ -571,7 +585,8 @@ void _commandAndTimelineTests() {
         .widget<TextField>(_textField(composerFinder))
         .controller!;
     composer.value = const TextEditingValue(
-      text: 'Original prompt draft',
+      // Past one line, so the editor's corner button shows.
+      text: 'Original prompt draft\nwith a second line',
       selection: TextSelection(baseOffset: 2, extentOffset: 10),
     );
     await tester.pump();
@@ -593,7 +608,7 @@ void _commandAndTimelineTests() {
           _textField(find.byKey(const Key('prompt-editor-field'))),
         )
         .controller!;
-    expect(editor.text, 'Original prompt draft');
+    expect(editor.text, 'Original prompt draft\nwith a second line');
     expect(
       editor.selection,
       const TextSelection(baseOffset: 2, extentOffset: 10),
@@ -631,7 +646,7 @@ void _commandAndTimelineTests() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Discard changes'));
     await tester.pumpAndSettle();
-    expect(composer.text, 'Original prompt draft');
+    expect(composer.text, 'Original prompt draft\nwith a second line');
     expect(find.bySemanticsLabel('Remove notes.txt'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('prompt-editor-button')));

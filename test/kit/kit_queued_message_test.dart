@@ -166,12 +166,12 @@ void main() {
 
     final roles = KitTokens.of(tester.element(find.byKey(_bubbleKey))).roles;
     final box = tester.widget<DecoratedBox>(find.byKey(_bubbleKey));
-    final decoration = box.decoration as ShapeDecoration;
+    final decoration = box.decoration as BoxDecoration;
     expect(decoration.color, kitPromptBubbleFill(roles));
-    final shape = decoration.shape as RoundedRectangleBorder;
-    expect(shape.side, BorderSide.none);
+    // The prompt bubble's own look with no Accent edge (Solid).
+    expect(decoration.border, isNull);
     expect(
-      shape.borderRadius,
+      decoration.borderRadius,
       const BorderRadiusDirectional.only(
         topStart: Radius.circular(20),
         topEnd: Radius.circular(20),

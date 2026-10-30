@@ -126,10 +126,10 @@ Known limits:
 - **Snackbar actions** are recorded where the extractor saw them (for example
   Undo after archive or after clearing a draft), but plain informational
   snackbars are not pages.
-- **`ProductErrorState` / `ProductEmptyState` / confirm-sheet buttons** live in
-  shared widgets. They are recorded on `embedded-product-states` and
+- **Confirm-sheet buttons** live in a shared widget. They are recorded on
   `confirm-sheet`, and again on hosts only where the host passes a specific
-  callback. `confirm-sheet` is the generic template; concrete confirmations
+  callback. (The old `ProductErrorState` / `ProductEmptyState` widgets and the
+  `embedded-product-states` page are gone; states are kit parts.) `confirm-sheet` is the generic template; concrete confirmations
   are their own pages and do not link to it.
 - **Synthesized `system` elements** (those whose id starts with `system-` and
   ends with `-to-<page>`) are built from another page's non-UI trigger text.
@@ -155,6 +155,7 @@ Files with no surface of their own and no interactive element (also in
 - `lib/ui/screens/chat/form_flow.dart`: `presentConnectionForm` is glue that calls `presentForm` from `lib/ui/widgets/form_renderer.dart` (page `form-sheet`) and routes submit/cancel.
 - `lib/ui/screens/usage_refresh_slot.dart`: a nonvisual ChangeNotifier holding Usage refresh callbacks.
 - `lib/ui/screens/library/pending_auth_recovery.dart`: `_authSourceFor` is a nonvisual equality identity for authentication actions; the sign-in confirmation lives in `integrations_screen.dart`.
+- `lib/ui/screens/dev_preview_conversation.dart`: no surface; where the preview's Ask for a change field sends (the conversation behind the chat's context, through the gateway).
 - `lib/ui/screens/chats/chats_host.dart`: no surface; the one seam between the Chats screens and the connection (feed source, server pill, opening a conversation, model chip).
 - `lib/ui/screens/agents/agent_error_notice.dart`: no surface of its own; a failed agent step in plain words with a Details fold.
 - `lib/ui/screens/agents/agents_text.dart`: no surface; the words and glyphs of the agent surfaces.
@@ -249,6 +250,49 @@ Files with no surface of their own and no interactive element (also in
 - `lib/ui/screens/team/team_needs_you.dart`: Embedded blocks, not pages of their own: TeamNeedsYouCard (one question as a request block) is shown on team-home, where it is also its task's row, and on team-run-overview-tab (run_screen.dart:780); TeamGateRow (a question whose task is not listed) is a row of team-home's one list. Both open the Gate sheet.
 - `lib/ui/screens/team/team_states.dart`: Shared helper (design standard §3, §4), not a page: teamScreenState/teamScreenLoading/teamScreenFailed/teamStatusLine render the AI Team screens' connecting/error/stale states and one status line; its retry buttons are recorded as elements of the host pages (team-home, team-run, team-agent, team-agents) with `file` set here.
 - `lib/ui/screens/team_conversation/team_conversation.dart`: The routing API for the task conversation, not a page of its own: TeamConversation.open/start push TeamConversationScreen (team-conversation, chat/team_conversation_view.dart). TeamTaskConversationRow (the Overview's 'Open conversation' row) is recorded as team-run-overview-open-conversation on team-run-overview-tab; TeamAgentTranscript and TeamOpenConversationRow are re-exports of chat/team_conversation_view.dart (see team-conversation's own elements and team-agent-output).
+- `lib/ui/screens/agents/cards_from_agents_row.dart`: No surface of its own: the Cards from agents switch row and its plain status line, drawn inside Settings > Agents.
+- `lib/ui/screens/chat/agent_cards.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): hands the transcript's tool parts to the agent-card surface and draws the card in the reply; no separate surface.
+- `lib/ui/screens/chat/assistant_error_row.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): the assistant error row moved out of message_view.dart for the 800-line chat budget; its elements stay under that screen's ledger entries. No separate surface.
+- `lib/ui/screens/chat/chat_dev_preview.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): finds the local ports a conversation named, claims a tapped local link and lists the ports under "Preview a running app"; the preview itself is the dev-preview page.
+- `lib/ui/screens/chat/chat_gallery.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): opens a tapped transcript picture as the swipeable KitImageGallery with Edit and Send; its elements are listed under that screen's ledger entries; no separate surface.
+- `lib/ui/screens/chat/chat_handoff_link.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): the quiet "Continue with…" link line in the conversation and its open and forget actions; a row of the chat page, and the sheet it comes from is a separate surface.
+- `lib/ui/screens/chat/chat_mentions.dart`: Not a page: the chat's @-mention search state and helpers, drawn in the composer.
+- `lib/ui/screens/chat/chat_page_cache.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): what one build of the page reads, kept between builds; draws nothing, no separate surface.
+- `lib/ui/screens/chat/permission_ask.dart`: Words only: permissionAsk() builds a permission card's question, targets and grant name from the request; drawn by the request cards (permission_sheet.dart).
+- `lib/ui/screens/chat/phrase_chips.dart`: Not a page: the row of the person's own phrases above the message box (KitPhraseChips).
+- `lib/ui/screens/chat/sent_photos.dart`: Part file of lib/ui/screens/chat_screen.dart (same screen, same library): turns a sent prompt's photos into thumbnails in the prompt bubble (FC4); the full view is the existing image viewer. No separate surface.
+- `lib/ui/screens/chats/new_chat_screen.dart`: showNewChat(): STUB in the shell branch (feat/chats-first-home owns the real sheet and its ledger pages).
+- `lib/ui/screens/crash_report_share.dart`: Preview sheet opened from the Crash reports block of App diagnostics showing exactly what Share sends; part of the app-diagnostics page flow, no route of its own.
+- `lib/ui/screens/crash_reports_section.dart`: CrashReportsSection is the 'Crash reports' opt-in block of App diagnostics (host page app-diagnostics), not a surface of its own; its switch, Share and Delete actions belong to that page.
+- `lib/ui/screens/dev_server_logs.dart`: the body of the logs sheet for a dev server found running (opened from development-services and dev-preview): one showKitSheet around a searchable KitLogPanel; no screen of its own.
+- `lib/ui/screens/exit_history_section.dart`: ExitHistorySection is the 'Recent app exits' block of App diagnostics (host page app-diagnostics), not a surface of its own.
+- `lib/ui/screens/factsbook/factsbook_routes.dart`: No surface: the push helpers of the FactsBook pages.
+- `lib/ui/screens/factsbook/factsbook_text.dart`: No surface: the app's words for FactsBook values.
+- `lib/ui/screens/factsbook/memory_section.dart`: Not a page: the Inbox's Memory section, drawn inside Chats home while the developer flag is on (rows open About you, Add something, Memory care, Not saved yet, a thing, and Set up FactsBook before pairing).
+- `lib/ui/screens/factsbook/offer_card.dart`: Not a page: the 'Talk about this with your agent?' card drawn in Needs you and Triggers.
+- `lib/ui/screens/factsbook/trigger_text.dart`: No surface: the app's words for trigger values.
+- `lib/ui/screens/inbox/inbox_items.dart`: Data only: the InboxEntry kinds the Inbox page (lib/ui/screens/inbox/inbox_screen.dart, page inbox) lists; no surface or control of its own.
+- `lib/ui/screens/library/integrations_autowait.dart`: Not a page: the wait on an automatic sign-in, part of the Integrations screen.
+- `lib/ui/screens/linux_manager/linux_manager_common.dart`: shared helpers and the package job panel (LinuxJobPanel) shown on the hub and Packages; its Stop is listed on the hub page
+- `lib/ui/screens/linux_manager/linux_reset.dart`: the Reset Linux question and flow, listed as the Reset row on the hub page
+- `lib/ui/screens/recent_error_words.dart`: Pure helpers that turn recorded error categories into plain words for App diagnostics; no visual surface or gestures.
+- `lib/ui/screens/scheduling/schedule_copy.dart`: Localized fixed error-code mapping, with no independent surface.
+- `lib/ui/screens/scheduling/schedule_routes.dart`: Capability-gated navigation and revalidated conversation routing; the destination screens are registered above.
+- `lib/ui/screens/settings/phrase_chips_row.dart`: Not a page: one settings row (the phrase suggestions switch) inside Conversations settings.
+- `lib/ui/screens/settings/server_host_update.dart`: No page of its own: the "Update agents on <computer>" row and its confirmation on the server settings page.
+- `lib/ui/screens/team/project_destination.dart`: teamProjectDestination(): picks the AI Team project page for a link; no surface of its own
+- `lib/ui/screens/team/projects/team_digest.dart`: Pure function (teamDigestEvents) choosing which timeline rows 'Since you were away' lists; no surface and no interactive element.
+- `lib/ui/screens/team/projects/team_execution_gate.dart`: Helper, not a page: TeamExecutionGate decides whether a project action may start work and shows the one-line blocked state with its fix; it is embedded in the project pages that use it.
+- `lib/ui/screens/team/projects/team_merge_flow.dart`: Helper, not a page: confirmAndMergeToDev and confirmAndPromote open the kit confirm sheet (with progress) and write the receipt row on the project overview and task page that call them.
+- `lib/ui/screens/team/projects/team_project_editors_roles.dart`: Part file of team_project_editors.dart (same library, same sheets): the per-role model rows, the roles list and plan recovery split out of the editor for size; recorded on the Team editor sheets, not a surface of its own.
+- `lib/ui/screens/team/projects/team_refusal.dart`: Pure mapping from a refused project command's code to plain words, a way forward and Details text; no surface and no interactive element.
+- `lib/ui/screens/team/projects/team_status_words.dart`: Pure functions (teamProgressWords, teamPlanningMinutes) turning project task counts and planner timestamps into the Tasks line and the slow-planning threshold; no surface and no interactive element.
+- `lib/ui/screens/team/team_phone_setup_screen.dart`: The turn-on flow is a framed sheet opened from the AI Team page, Team settings and the Work strip (target team-phone-setup); its steps and Details are not a separate destination.
+- `lib/ui/screens/this_phone/this_phone_answer.dart`: No surface: what This phone says the app does by itself about a stopped server (the crash recovery owner's state), read by the This phone page.
+- `lib/ui/screens/this_phone/this_phone_details.dart`: Part file of this_phone_screen.dart (same library, same page): the log fold, reply speed, performance values and installed list split out for size; recorded on the This phone page, not a surface of its own.
+- `lib/ui/screens/usage/usage_actions.dart`: No surface: launches a connection's sign-in for the add flow.
+- `lib/ui/screens/usage/usage_plan_card.dart`: Not a page: one plan block of the Plans page.
+- `lib/ui/screens/usage/usage_text.dart`: No surface: the app's words for subscriptions, connections and times.
 
 Outside `lib/ui/screens/`:
 
@@ -286,6 +330,10 @@ resolved target.
   `--stats` prints element density, fan-in per page, orphans, depth and label
   statistics (the raw numbers behind `findings.md`); `--verbose` prints
   unresolved references.
+- Stale `line` anchors after files were split or shortened: run
+  `python3 docs/design/ui-ledger/reanchor.py` (dry run; `--write` to apply, then
+  rebuild). It matches by key, ARB label, widget or call site and lists what is
+  ambiguous or not found instead of guessing.
 - A new source file: add it to `parts/_assignments.json` and to a part (as a
   page, as an element `file`, or under `notPages`).
 - A cross-area target that does not resolve: either give the target page a

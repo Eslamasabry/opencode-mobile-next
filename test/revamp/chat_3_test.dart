@@ -12,6 +12,7 @@ import 'package:opencode_mobile/ui/kit/kit_search_field.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 
 import 'chat_3_support.dart';
+import '../support/composer_tools.dart';
 
 Finder _inner(Finder field) =>
     find.descendant(of: field, matching: find.byType(TextField));
@@ -22,7 +23,7 @@ String _composerText(WidgetTester tester) => tester
     .text;
 
 Future<void> _openPromptTool(WidgetTester tester, String key) async {
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await tester.pumpAndSettle();
   await Scrollable.ensureVisible(
     tester.element(find.byKey(const Key('composer-tools-prompts'))),
@@ -123,21 +124,67 @@ void main() {
     expect(sends, 1);
   });
 
-  testWidgets('with no model signed in the chip says so before the first '
+  testWidgets('with no model signed in the Model row says so before the first '
       'send, and never asks to choose while a model answers', (tester) async {
     final conn = await chat3Controller();
     addTearDown(conn.dispose);
     conn.catalog = const CatalogSnapshot(providers: [], models: [], agents: []);
     await pumpChat3(tester, conn);
-    expect(find.text('Sign in to a model'), findsOneWidget);
-    expect(find.textContaining('Choose'), findsNothing);
+
+    Future<Finder> modelRow() async {
+      await openComposerTools(tester);
+      await tester.pumpAndSettle();
+      return find.byKey(const Key('composer-setting-model'));
+    }
+
+    // The quiet line under the header says why a send cannot work yet, with
+    // a way in; the Model row of the + sheet keeps saying it too.
+    expect(find.text('No model signed in'), findsOneWidget);
+    expect(find.byKey(const ValueKey('chat-no-model-sign-in')), findsOneWidget);
+    var row = await modelRow();
+    expect(
+      find.descendant(
+        of: row,
+        matching: find.textContaining('Sign in to a model', findRichText: true),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: row,
+        matching: find.textContaining('Choose', findRichText: true),
+      ),
+      findsNothing,
+    );
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
 
     conn.busySessions.add('session-1');
     conn.notifyListeners();
     await tester.pumpAndSettle();
-    expect(find.text('Sign in to a model'), findsNothing);
-    expect(find.text('Server default'), findsOneWidget);
-    expect(find.textContaining('Choose'), findsNothing);
+    expect(find.text('No model signed in'), findsNothing);
+    row = await modelRow();
+    expect(
+      find.descendant(
+        of: row,
+        matching: find.textContaining('Sign in to a model', findRichText: true),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: row,
+        matching: find.textContaining('Server default', findRichText: true),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: row,
+        matching: find.textContaining('Choose', findRichText: true),
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('offline, Send says it will send when back online', (
@@ -197,9 +244,10 @@ void main() {
     final conn = await chat3Controller();
     addTearDown(conn.dispose);
     await pumpChat3(tester, conn);
+    // Past one line: the full-screen editor's corner button shows.
     await tester.enterText(
       find.byKey(const Key('chat-composer-field')),
-      'first',
+      'first\nsecond',
     );
     await tester.pump();
     await tester.tap(find.byKey(const Key('prompt-editor-button')));
@@ -232,7 +280,7 @@ void main() {
     final conn = await chat3Controller();
     addTearDown(conn.dispose);
     await pumpChat3(tester, conn);
-    await tester.tap(find.byKey(const Key('composer-tools-button')));
+    await openComposerTray(tester);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('composer-tool-attach')), findsOneWidget);
     expect(find.text('This server takes text only'), findsNothing);

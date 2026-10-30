@@ -1,5 +1,13 @@
 # KitNav — frozen API (wave 0, 2026-09-26)
 
+> **Amended 2026-10-20 (owner: no bottom bar on phones, concepts 1 + 9).**
+> Compact windows draw no navigation at all (`KitNavLayout.none`, was
+> `dock`): Conversations is the phone's only home, the shell's top bar
+> carries Search and a Settings gear, and a project's Files open as a page
+> from its conversations. `KitNavBar` and the dock metrics are removed; the
+> rail (medium) and the sidebar (expanded, large) are unchanged. The dock
+> sections below are history. Record: `docs/qa/no-bottom-nav-2026-10-20/`.
+
 Group: screen. Unit `kit-KitNav` (wave 1, tier 1c; replaces the planned kit-KitNavRail, cut review C08). Write set: `lib/ui/kit/kit_nav.dart`, `test/kit/kit_nav_test.dart`, and `lib/ui/widgets/glass_surface.dart` (becomes a forwarding wrapper). Spec: kit-v2.md §8.1 (rail from medium, extended from expanded), §8.2 (badge on the rail destination), §9.2 (`KitNavRail`); VL §4 (floating 60 dp bar, radius 22, surface2 at 82 %), §5 (PC panes), §6 (glass tab bar with lens; PC sidebar header); Desktop canvas render (`docs/design/visual-language-2026-09-26/Desktop.png`); STANDARDS LAY-1, LAY-5, LAY-15, LOOK-27, LOOK-33, LOOK-34, A11Y-8, KIT-43.
 
 ## Purpose

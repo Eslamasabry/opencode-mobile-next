@@ -110,4 +110,44 @@ void main() {
     expect(tester.getRect(find.text('Running', skipOffstage: false)).top, top);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('a line that runs past the edge fades there, never a hard cut '
+      'mid-word; scrolled to the end the fade moves to the start; a line '
+      'that fits fades nowhere', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        KitFilterChips(
+          chips: [
+            for (var i = 0; i < 12; i++)
+              KitFilterChip(
+                label: 'Filter number $i',
+                selected: false,
+                onPressed: () {},
+              ),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+    ({bool start, bool end}) fades() =>
+        KitFilterChips.fadesOf(tester.element(find.byType(KitFilterChips)));
+    expect(fades(), (start: false, end: true));
+    await tester.drag(find.byType(KitFilterChips), const Offset(-4000, 0));
+    await tester.pumpAndSettle();
+    expect(fades(), (start: true, end: false));
+
+    await tester.pumpWidget(
+      _host(
+        KitFilterChips(
+          key: const ValueKey('fits'),
+          chips: [
+            KitFilterChip(label: 'Running', selected: false, onPressed: () {}),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(fades(), (start: false, end: false));
+    expect(tester.takeException(), isNull);
+  });
 }

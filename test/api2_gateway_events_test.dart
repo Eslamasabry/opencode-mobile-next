@@ -246,6 +246,87 @@ void main() {
     expect(interrupted.single.type, 'session.idle');
   });
 
+  test('an interrupted run carries the server\'s reason to its idle event', () {
+    final adapter = Api2EventAdapter();
+    for (final reason in ['user', 'inactivity', 'shutdown', 'superseded']) {
+      final out = adaptApi2EventJson(adapter, {
+        'type': 'session.execution.interrupted',
+        'data': {'sessionID': 'ses_x', 'reason': reason},
+      });
+      expect(out.single.type, 'session.idle');
+      expect(out.single.properties['interruptReason'], reason);
+    }
+    // A run that simply finished is not an interrupted one.
+    final done = adaptApi2EventJson(adapter, {
+      'type': 'session.execution.succeeded',
+      'data': {'sessionID': 'ses_x'},
+    });
+    expect(done.single.properties.containsKey('interruptReason'), isFalse);
+    // An interrupt without a reason still says it was interrupted.
+    final bare = adaptApi2EventJson(adapter, {
+      'type': 'session.execution.interrupted',
+      'data': {'sessionID': 'ses_x'},
+    });
+    expect(bare.single.properties['interruptReason'], 'unknown');
+  });
+
+  test('a failed step with a blank message still has words for Details', () {
+    final adapter = Api2EventAdapter();
+    Map<String, dynamic> v2(String type, Map<String, dynamic> data) =>
+        adaptApi2EventJson(adapter, {
+          'type': type,
+          'data': {'sessionID': 'ses_x', ...data},
+        }).last.properties;
+    v2('session.step.started', {
+      'assistantMessageID': 'msg_a1',
+      'agent': 'build',
+    });
+    for (final error in [
+      {'message': ''},
+      {'message': '   ', 'type': ''},
+      {'message': ' ', 'type': 'provider.error'},
+      <String, dynamic>{},
+    ]) {
+      final out = adaptApi2EventJson(adapter, {
+        'type': 'session.step.failed',
+        'data': {
+          'sessionID': 'ses_x',
+          'assistantMessageID': 'msg_a1',
+          'error': error,
+        },
+      });
+      final info = out.last.properties['info'] as Map;
+      final message = (info['error'] as Map)['message'] as String;
+      expect(message.trim(), isNotEmpty, reason: '$error');
+    }
+  });
+
+  test('a stored message whose error words are blank still has some', () {
+    for (final error in [
+      {'message': '', 'name': 'UnknownError'},
+      {
+        'message': '  ',
+        'data': {'message': ''},
+      },
+      {'message': '', 'name': ''},
+    ]) {
+      final info = MessageInfo.fromJson({
+        'id': 'msg_a1',
+        'sessionID': 'ses_x',
+        'role': 'assistant',
+        'error': error,
+      });
+      expect(info.errorText?.trim(), isNotEmpty, reason: '$error');
+    }
+    // No error at all stays no error.
+    final clean = MessageInfo.fromJson({
+      'id': 'msg_a2',
+      'sessionID': 'ses_x',
+      'role': 'assistant',
+    });
+    expect(clean.errorText, isNull);
+  });
+
   test('permission.asked maps to the v2-shaped v1 envelope', () {
     final adapter = Api2EventAdapter();
     final out = adaptApi2EventJson(adapter, {
@@ -358,5 +439,151 @@ void main() {
       }),
       isEmpty,
     );
+  });
+
+  group('a tool whose result the stream lost', () {
+    // Live 2.0.28 order (2026-10-19): tool.called × 2, tool.success × 2,
+    // step.ended, then the next step.started. Here both successes are lost.
+    List<EventEnvelope> v2(
+      Api2EventAdapter adapter,
+      String type,
+      Map<String, dynamic> data,
+    ) => adaptApi2EventJson(adapter, {
+      'type': type,
+      'data': {'sessionID': 'ses_x', ...data},
+    });
+
+    void twoSearches(Api2EventAdapter adapter) {
+      v2(adapter, 'session.step.started', {
+        'assistantMessageID': 'msg_a1',
+        'agent': 'build',
+      });
+      for (final (id, pattern) in [
+        ('call_1', 'Released|released'),
+        ('call_2', 'focusFill|focusRing|focusSurface'),
+      ]) {
+        v2(adapter, 'session.tool.input.started', {
+          'assistantMessageID': 'msg_a1',
+          'id': id,
+          'name': 'grep',
+        });
+        v2(adapter, 'session.tool.called', {
+          'assistantMessageID': 'msg_a1',
+          'id': id,
+          'input': {'pattern': pattern},
+          'executed': false,
+        });
+      }
+    }
+
+    Map<String, String> settled(List<EventEnvelope> out) => {
+      for (final event in out)
+        if (event.type == 'message.part.updated')
+          (event.properties['part'] as Map)['id'] as String:
+              ((event.properties['part'] as Map)['state'] as Map)['status']
+                  as String,
+    };
+
+    test('is settled when its step ends, and the chat rereads', () {
+      final adapter = Api2EventAdapter();
+      twoSearches(adapter);
+      final out = v2(adapter, 'session.step.ended', {
+        'assistantMessageID': 'msg_a1',
+        'finish': 'tool-calls',
+      });
+      expect(settled(out), {'call_1': 'completed', 'call_2': 'completed'});
+      final part = out.first.properties['part'] as Map;
+      expect(part['tool'], 'grep');
+      expect((part['state'] as Map)['input'], {'pattern': 'Released|released'});
+      expect(out.map((e) => e.type), contains('session.transcript.stale'));
+    });
+
+    test('a result for a call it never saw makes the chat reread', () {
+      // After a reconnect the adapter is new: the call's start (its name and
+      // input) was before it. Seen on 2.1.1 after a permission was answered
+      // with the app reopened: the row said only "Tool".
+      final adapter = Api2EventAdapter();
+      final out = v2(adapter, 'session.tool.success', {
+        'assistantMessageID': 'msg_a1',
+        'id': 'call_9',
+        'content': [
+          {'type': 'text', 'text': 'hello.txt'},
+        ],
+        'executed': true,
+      });
+      expect(out.map((e) => e.type), contains('session.transcript.stale'));
+    });
+
+    test('a result for a call it saw does not reread', () {
+      final adapter = Api2EventAdapter();
+      twoSearches(adapter);
+      final out = v2(adapter, 'session.tool.success', {
+        'assistantMessageID': 'msg_a1',
+        'id': 'call_1',
+        'content': [
+          {'type': 'text', 'text': 'found'},
+        ],
+        'executed': true,
+      });
+      expect(
+        out.map((e) => e.type),
+        isNot(contains('session.transcript.stale')),
+      );
+    });
+
+    test('is settled when the next step starts, even with its end lost', () {
+      final adapter = Api2EventAdapter();
+      twoSearches(adapter);
+      final out = v2(adapter, 'session.step.started', {
+        'assistantMessageID': 'msg_a2',
+        'agent': 'build',
+      });
+      expect(settled(out), {'call_1': 'completed', 'call_2': 'completed'});
+      expect(out.map((e) => e.type), contains('session.transcript.stale'));
+    });
+
+    test('is settled as failed when the run is interrupted', () {
+      final adapter = Api2EventAdapter();
+      twoSearches(adapter);
+      final out = v2(adapter, 'session.execution.interrupted', {
+        'reason': 'user',
+      });
+      expect(settled(out), {'call_1': 'error', 'call_2': 'error'});
+      expect(out.last.type, 'session.idle');
+    });
+
+    test('a result that arrived leaves nothing to settle', () {
+      final adapter = Api2EventAdapter();
+      twoSearches(adapter);
+      for (final id in ['call_1', 'call_2']) {
+        v2(adapter, 'session.tool.success', {
+          'assistantMessageID': 'msg_a1',
+          'id': id,
+          'content': [
+            {'type': 'text', 'text': 'Found 1 matches'},
+          ],
+          'executed': false,
+        });
+      }
+      final out = v2(adapter, 'session.step.ended', {
+        'assistantMessageID': 'msg_a1',
+        'finish': 'tool-calls',
+      });
+      expect(out.map((e) => e.type), ['message.updated']);
+    });
+
+    test('another conversation\'s tools are left alone', () {
+      final adapter = Api2EventAdapter();
+      twoSearches(adapter);
+      final out = adaptApi2EventJson(adapter, {
+        'type': 'session.step.started',
+        'data': {
+          'sessionID': 'ses_other',
+          'assistantMessageID': 'msg_b1',
+          'agent': 'build',
+        },
+      });
+      expect(settled(out), isEmpty);
+    });
   });
 }

@@ -8,8 +8,10 @@ import android.os.Build
 import android.widget.RemoteViews
 import org.json.JSONObject
 
-/** The conversations widget's colours: the app's Graphite palette, dark or light.
- * Green is working and the mic, amber is needs-you, red is never used. */
+/** The conversations widget's colours: the app's Graphite roles (lib/ui/theme_roles.dart), dark
+ * or light. Mint is the one main action and a working turn, amber is needs-you; red ([bad]) is used
+ * only by the Status widget, for a server that is offline or a plan that is used up.
+ * The drawables carry the hairline edges a tint would flatten. */
 internal data class WidgetGraphite(
     val dark: Boolean,
     val card: Int,
@@ -25,14 +27,54 @@ internal data class WidgetGraphite(
     val primary: Int,
     val onPrimary: Int,
     val onGreen: Int,
+    val cardBg: Int,
+    val tileBg: Int,
+    val mintBg: Int,
+    val outlineBg: Int,
+    val fieldBg: Int,
+    /** Something is wrong (a server offline, a plan used up): the Status widget only. */
+    val bad: Int = 0,
+    val amberBg: Int = 0,
+    val onAmber: Int = 0,
+    val pillBg: Int = 0,
+    val codeBg: Int = 0,
 ) {
+    /** The card's ground for the widget's saved style: the Graphite card with its hairline, a
+     * faint mint tint, or nothing (the wallpaper shows through). */
+    fun paintGround(views: RemoteViews, mode: String) {
+        when (mode) {
+            "transparent" -> views.setInt(android.R.id.background, "setBackgroundResource", 0)
+            "tinted" -> {
+                views.setInt(android.R.id.background, "setBackgroundResource", cardBg)
+                tint(views, android.R.id.background, Color.rgb(
+                    mix(Color.red(card), Color.red(green)), mix(Color.green(card), Color.green(green)),
+                    mix(Color.blue(card), Color.blue(green))))
+            }
+            else -> views.setInt(android.R.id.background, "setBackgroundResource", cardBg)
+        }
+    }
+
+    private fun mix(a: Int, b: Int): Int = (a + (b - a) * TINT_BLEND).toInt()
+
     companion object {
-        private val DARK = WidgetGraphite(true, 0xFF141518.toInt(), 0xFF22242A.toInt(), 0xFFF3F3F1.toInt(),
-            0xFF8C8D89.toInt(), 0xFFC8C9C5.toInt(), 0xFFA9AAA6.toInt(), 0xFF3DDC8A.toInt(), 0xFFF5B544.toInt(),
-            0xFF666764.toInt(), 0xFF22242A.toInt(), 0xFFF3F3F1.toInt(), 0xFF0B0C0E.toInt(), 0xFF03140B.toInt())
-        private val LIGHT = WidgetGraphite(false, 0xFFFAFAF8.toInt(), 0xFFECECE6.toInt(), 0xFF1A1B1E.toInt(),
-            0xFF6F706B.toInt(), 0xFF3F403D.toInt(), 0xFF55564F.toInt(), 0xFF087F43.toInt(), 0xFF8F5B00.toInt(),
-            0xFFA3A49F.toInt(), 0xFFE3E3DD.toInt(), 0xFF1A1B1E.toInt(), 0xFFFAFAF8.toInt(), 0xFFFFFFFF.toInt())
+        private const val TINT_BLEND = 0.08f
+
+        // surface1, surface3, text1, text3, text2, text2, accent, attention, text3, hairline,
+        // accent (Allow once), onAccent, onAccent.
+        private val DARK = WidgetGraphite(true, 0xFF141518.toInt(), 0xFF26282D.toInt(), 0xFFF3F3F1.toInt(),
+            0xFF8C8F96.toInt(), 0xFFA3A5AB.toInt(), 0xFFA3A5AB.toInt(), 0xFF3DDC8A.toInt(), 0xFFFFB547.toInt(),
+            0xFF8C8F96.toInt(), 0x1AFFFFFF, 0xFF3DDC8A.toInt(), 0xFF03140B.toInt(), 0xFF03140B.toInt(),
+            R.drawable.widget_card_dark, R.drawable.widget_tile_dark, R.drawable.widget_btn_mint_dark,
+            R.drawable.widget_btn_outline_dark, R.drawable.widget_field_dark,
+            0xFFFF7A6B.toInt(), R.drawable.widget_btn_amber_dark, 0xFF1A1300.toInt(),
+            R.drawable.widget_pill_dark, R.drawable.widget_code_dark)
+        private val LIGHT = WidgetGraphite(false, 0xFFFFFFFF.toInt(), 0xFFE9E9E6.toInt(), 0xFF111214.toInt(),
+            0xFF62656C.toInt(), 0xFF50535A.toInt(), 0xFF50535A.toInt(), 0xFF087F43.toInt(), 0xFF9A5700.toInt(),
+            0xFF62656C.toInt(), 0x14000000, 0xFF087F43.toInt(), 0xFFFFFFFF.toInt(), 0xFFFFFFFF.toInt(),
+            R.drawable.widget_card_light, R.drawable.widget_tile_light, R.drawable.widget_btn_mint_light,
+            R.drawable.widget_btn_outline_light, R.drawable.widget_field_light,
+            0xFFC0392B.toInt(), R.drawable.widget_btn_amber_light, 0xFF1A1300.toInt(),
+            R.drawable.widget_pill_light, R.drawable.widget_code_light)
 
         /** The app's own appearance when it published one, else the system's. */
         fun of(context: Context, snapshot: JSONObject?): WidgetGraphite {

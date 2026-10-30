@@ -25,7 +25,7 @@ def fixture(architecture, filename="package/bin/opencode", extra=False):
         info = tarfile.TarInfo(filename)
         info.size = len(data)
         archive.addfile(info, io.BytesIO(data))
-        metadata = json.dumps({"name": "@opencode/cli-linux-" + ("x64-baseline" if architecture == "amd64" else "arm64"), "version": "2.0.29"}).encode()
+        metadata = json.dumps({"name": "@opencode/cli-linux-" + ("x64-baseline" if architecture == "amd64" else "arm64"), "version": "2.1.1"}).encode()
         info = tarfile.TarInfo("package/package.json")
         info.size = len(metadata)
         archive.addfile(info, io.BytesIO(metadata))
@@ -66,7 +66,7 @@ class ReleasePipelineTest(unittest.TestCase):
 
     def test_default_pins_use_reviewed_oc2_npm_archives(self):
         pins = RELEASE.load_pins(ROOT / "scripts/byo-host/release-pins.json")
-        self.assertEqual(pins["openCodeVersion"], "2.0.29")
+        self.assertEqual(pins["openCodeVersion"], "2.1.1")
         self.assertEqual(pins["bundleVersion"], "2.0.0")
         self.assertEqual(pins["appVersions"], {})
         self.assertNotIn("legacyBundles", pins)

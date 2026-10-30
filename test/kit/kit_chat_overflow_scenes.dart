@@ -501,7 +501,6 @@ class _ComposerSceneState extends State<_ComposerScene> {
     focusNode: _focus,
     hint: widget.copy.t('Ask OpenCode…', 'اسأل OpenCode…'),
     onSend: _noop,
-    onStop: _noop,
     busy: widget.state == 'busy',
     sending: widget.state == 'sending',
     offline: widget.state == 'offline',

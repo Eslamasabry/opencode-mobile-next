@@ -22,17 +22,12 @@ extension _KitDiffChrome on _KitDiffViewState {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
+          _kitDiffBand(
+            context,
+            fill: tokens.roles.surface1,
+            level: KitSurfaceLevel.surface1,
+            rule: _KitDiffRule.bottom,
             height: tokens.rowHeight,
-            decoration: BoxDecoration(
-              color: tokens.roles.surface1,
-              border: Border(
-                bottom: BorderSide(
-                  color: tokens.roles.hairline,
-                  width: KitTokens.hairlineWidth(context),
-                ),
-              ),
-            ),
           ),
           if (rows > 0) KitSkeletonRows(count: rows),
         ],
@@ -119,11 +114,16 @@ extension _KitDiffChrome on _KitDiffViewState {
         ],
       ),
     );
-    return DecoratedBox(
+    // A content panel in the style.
+    return kitSurfaceBox(
       key: ValueKey('${widget.keyPrefix}-file-list'),
-      decoration: BoxDecoration(
-        color: roles.surface1,
-        borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
+      style: KitSurfaceLook.styleOf(context),
+      decoration: KitSurfaceLook.decorate(
+        context,
+        solid: BoxDecoration(
+          color: roles.surface1,
+          borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(tokens.panelCornerRadius),
@@ -189,9 +189,13 @@ extension _KitDiffChrome on _KitDiffViewState {
         bounded: bounded,
       );
       body = lines;
-      if (capped != null) {
-        footer = _tooBig(tokens, l10n, capped.$1, capped.$2);
-      }
+      footer = _footer(
+        tokens,
+        l10n,
+        file,
+        capped,
+        switchHere: widget.inline && widget.files.length == 1,
+      );
     }
     final selection = _selecting ? _selectionBar(tokens, l10n) : null;
     Widget linesColumnBody({double? selectionMaxHeight}) => Column(
@@ -255,6 +259,9 @@ extension _KitDiffChrome on _KitDiffViewState {
     final roles = tokens.roles;
     final status = _statusLine(file, l10n);
     final multi = widget.files.length > 1;
+    // A Markdown file's drawn / written switch; drawn lines always wrap.
+    final markdown = !file.binary && _isMarkdownPath(file.path);
+    final rendered = _renderedFor(file);
     final counts = Semantics(
       label: l10n.kitDiffCounts(file.added, file.removed),
       excludeSemantics: true,
@@ -381,7 +388,8 @@ extension _KitDiffChrome on _KitDiffViewState {
               ],
             ),
           ),
-          if (!file.binary)
+          if (markdown) _sourceSwitch(l10n),
+          if (!file.binary && !rendered)
             KitIconButton(
               icon: AppIconography.wrapText,
               tooltip: l10n.kitWrapLines,
@@ -462,7 +470,8 @@ extension _KitDiffChrome on _KitDiffViewState {
             ),
           ] else
             const Spacer(),
-          if (!file.binary)
+          if (markdown) _sourceSwitch(l10n),
+          if (!file.binary && !rendered)
             KitIconButton(
               icon: AppIconography.wrapText,
               tooltip: l10n.kitWrapLines,
@@ -482,18 +491,13 @@ extension _KitDiffChrome on _KitDiffViewState {
       ),
     );
 
-    return Container(
+    // The page's own ground with a hairline under it, not a card.
+    return _kitDiffBand(
+      context,
       key: ValueKey('${widget.keyPrefix}-file-header-${file.path}'),
-      decoration: BoxDecoration(
-        // The page's own ground with a hairline under it, not a card.
-        color: roles.ground,
-        border: Border(
-          bottom: BorderSide(
-            color: roles.hairline,
-            width: KitTokens.hairlineWidth(context),
-          ),
-        ),
-      ),
+      fill: roles.ground,
+      level: KitSurfaceLevel.ground,
+      rule: _KitDiffRule.bottom,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -502,12 +506,149 @@ extension _KitDiffChrome on _KitDiffViewState {
     );
   }
 
+  /// [KitDiffView.folded]: one folded row per file, the open one's lines
+  /// under it, and the selection's bar pinned under the list. A long file
+  /// keeps its lines in a box of their own that scrolls and builds only
+  /// what is on screen; a short one lies in the list.
+  Widget _foldedFiles(
+    BuildContext context,
+    KitTokens tokens,
+    AppLocalizations l10n, {
+    required double width,
+    required bool split,
+    required bool wrap,
+    required double? height,
+  }) {
+    final bounded = height != null;
+    // Every style but Solid sets an open file's code frame in the gutter,
+    // a box under its row like the page's other boxes; Solid's lines run
+    // the full width as they always have.
+    final inset = KitSurfaceLook.styleOf(context) == KitSurfaceStyle.solid
+        ? 0.0
+        : tokens.gutter;
+    Widget row(int i) {
+      final file = widget.files[i];
+      final directory = _directory(file.path);
+      final open = _unfolded && i == _file;
+      Widget lines() {
+        if (file.binary) {
+          return Padding(
+            padding: EdgeInsets.all(tokens.gutter),
+            child: KitText(
+              l10n.kitDiffBinary,
+              role: KitTextRole.secondary,
+              tone: KitTextTone.secondary,
+            ),
+          );
+        }
+        final long =
+            bounded &&
+            _currentItems(split: split).length > _KitDiffFold.longItems;
+        final (view, capped) = _linesView(
+          context,
+          tokens,
+          file: file,
+          width: width - 2 * inset,
+          split: split,
+          wrap: wrap,
+          bounded: long,
+        );
+        final framed = inset == 0
+            ? view
+            : Padding(
+                padding: EdgeInsets.symmetric(horizontal: inset),
+                child: view,
+              );
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (long)
+              SizedBox(height: height * _KitDiffFold.longShare, child: framed)
+            else
+              framed,
+            ?_footer(tokens, l10n, file, capped, switchHere: true),
+          ],
+        );
+      }
+
+      final more = widget.fileActions?.call(file) ?? const <KitMenuItem>[];
+      return KitExpandRow(
+        key: ValueKey('${widget.keyPrefix}-fold-${file.path}'),
+        headerKey: ValueKey('${widget.keyPrefix}-fold-header-${file.path}'),
+        title: KitBidi.ltr(_baseName(file.path)),
+        supporting: TextSpan(
+          text: [
+            if (directory.isNotEmpty) KitBidi.ltr(directory),
+            _fileSupporting(file, l10n),
+          ].join(' · '),
+        ),
+        expanded: open,
+        onExpansionChanged: (unfold) {
+          if (unfold && i != _file) _openFile(i);
+          _update(() => _unfolded = unfold);
+        },
+        menu: more,
+        children: [if (open) lines()],
+      );
+    }
+
+    final rows = [for (var i = 0; i < widget.files.length; i++) row(i)];
+    final selection = _selecting ? _selectionBar(tokens, l10n) : null;
+    if (!bounded) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [...rows, ?selection],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: ListView(
+            key: ValueKey('${widget.keyPrefix}-folded'),
+            padding: EdgeInsets.only(bottom: tokens.space4),
+            children: rows,
+          ),
+        ),
+        if (selection != null)
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: height / 2),
+            child: SingleChildScrollView(child: selection),
+          ),
+      ],
+    );
+  }
+
+  /// Under the lines: "Showing 12 of 22 lines · Open all" when cut short,
+  /// and a Markdown file's "Source" switch where no header carries it. Null
+  /// when there is nothing to say.
+  Widget? _footer(
+    KitTokens tokens,
+    AppLocalizations l10n,
+    KitDiffFile file,
+    (int, int)? capped, {
+    required bool switchHere,
+  }) {
+    final markdown = switchHere && !file.binary && _isMarkdownPath(file.path);
+    if (capped == null && !markdown) return null;
+    return _tooBig(
+      tokens,
+      l10n,
+      capped?.$1,
+      capped?.$2,
+      sourceSwitch: markdown,
+    );
+  }
+
   Widget _tooBig(
     KitTokens tokens,
     AppLocalizations l10n,
-    int shown,
-    int total,
-  ) => Padding(
+    int? shown,
+    int? total, {
+    bool sourceSwitch = false,
+  }) => Padding(
     padding: EdgeInsetsDirectional.fromSTEB(
       tokens.gutter,
       tokens.space2,
@@ -519,13 +660,19 @@ extension _KitDiffChrome on _KitDiffViewState {
       spacing: tokens.space3,
       runSpacing: tokens.space1,
       children: [
-        KitText(l10n.kitDiffTooBig(shown, total), role: KitTextRole.secondary),
-        if (widget.onOpenAll != null)
-          KitButton.tertiary(
-            key: ValueKey('${widget.keyPrefix}-open-all'),
-            label: l10n.kitDiffOpenAll,
-            onPressed: widget.onOpenAll,
+        if (shown != null && total != null) ...[
+          KitText(
+            l10n.kitDiffTooBig(shown, total),
+            role: KitTextRole.secondary,
           ),
+          if (widget.onOpenAll != null)
+            KitButton.tertiary(
+              key: ValueKey('${widget.keyPrefix}-open-all'),
+              label: l10n.kitDiffOpenAll,
+              onPressed: widget.onOpenAll,
+            ),
+        ],
+        if (sourceSwitch) _sourceSwitch(l10n),
       ],
     ),
   );
@@ -589,17 +736,12 @@ extension _KitDiffChrome on _KitDiffViewState {
               clear,
             ],
           );
-    return Container(
+    return _kitDiffBand(
+      context,
       key: ValueKey('${widget.keyPrefix}-selection-bar'),
-      decoration: BoxDecoration(
-        color: roles.surface1,
-        border: Border(
-          top: BorderSide(
-            color: roles.hairline,
-            width: KitTokens.hairlineWidth(context),
-          ),
-        ),
-      ),
+      fill: roles.surface1,
+      level: KitSurfaceLevel.surface1,
+      rule: _KitDiffRule.top,
       padding: EdgeInsetsDirectional.fromSTEB(
         tokens.gutter,
         tokens.space1,
@@ -621,6 +763,12 @@ extension _KitDiffChrome on _KitDiffViewState {
     required bool wrap,
     required bool bounded,
   }) {
+    // Drawn Markdown reads as one document: one column, wrapped.
+    final rendered = _renderedFor(file);
+    if (rendered) {
+      split = false;
+      wrap = true;
+    }
     final index = _FileIndex.of(file);
     final mono = KitText.styleOf(context, KitTextRole.mono);
     final scaler = MediaQuery.textScalerOf(context);
@@ -679,15 +827,27 @@ extension _KitDiffChrome on _KitDiffViewState {
     if (maxLines != null) {
       var rows = 0;
       var cut = items.length;
+      _Item? partial;
       for (var i = 0; i < items.length; i++) {
-        if (items[i] is _LineItem || items[i] is _PairItem) rows++;
-        if (rows > maxLines) {
+        final item = items[i];
+        final n = switch (item) {
+          _LineItem() || _PairItem() => 1,
+          _MdItem(:final unit) => unit.lines.length,
+          _ => 0,
+        };
+        if (rows + n > maxLines) {
+          // A drawn block across the cut keeps the lines before it.
+          final room = maxLines - rows;
+          if (item is _MdItem && room > 0) {
+            partial = _MdItem(item.seg, item.unit.take(room));
+          }
           cut = i;
           break;
         }
+        rows += n;
       }
       if (cut < items.length) {
-        items = items.sublist(0, cut);
+        items = [...items.sublist(0, cut), ?partial];
         capped = (maxLines, index.total);
       }
     }
@@ -736,17 +896,151 @@ extension _KitDiffChrome on _KitDiffViewState {
         child: SizedBox(width: contentWidth, child: list),
       );
     }
+    if (_isMarkdownPath(file.path) && !file.binary) {
+      // Switching between drawn and written fades the new form in (150 ms;
+      // none when the person asked for less motion). The height snaps:
+      // layout motion is KitReveal's alone (MOT-5).
+      final reduced = KitMotion.reduced(context);
+      list = TweenAnimationBuilder<double>(
+        key: ValueKey('${widget.keyPrefix}-md-$rendered'),
+        tween: Tween(begin: _sourceSwitched && !reduced ? 0 : 1, end: 1),
+        duration: reduced ? Duration.zero : KitMotion.quick,
+        curve: KitMotion.emphasized,
+        builder: (context, value, child) =>
+            Opacity(opacity: value, child: child),
+        child: list,
+      );
+    }
     final view = Focus(
       focusNode: _bodyFocus,
       onKeyEvent: _onKey,
       child: Directionality(
         textDirection: TextDirection.ltr,
-        child: ColoredBox(
-          color: widget.inline ? Colors.transparent : tokens.detailsSurface,
-          child: list,
-        ),
+        // The lines are code: an opaque fill in every style, the edge and
+        // depth the style's. Inline, they sit on the page.
+        child: widget.inline ? list : _codeFrame(context, tokens, list),
       ),
     );
     return (view, capped);
   }
+}
+
+/// The code frame around a file's lines and its gap bars: an opaque fill
+/// in every style, the edge and depth the style's. The lines sit inside
+/// its edge, so a full-width band (a gap bar) never covers the frame.
+Widget _codeFrame(BuildContext context, KitTokens tokens, Widget lines) {
+  final face = KitSurfaceLook.decorate(
+    context,
+    solid: BoxDecoration(color: tokens.detailsSurface),
+    role: KitSurfaceRole.code,
+    color: tokens.detailsSurface,
+  );
+  final edge = face is KitSurfaceDecoration ? face.edgeWidth : 0.0;
+  return kitSurfaceBox(
+    style: KitSurfaceLook.styleOf(context),
+    decoration: face,
+    child: edge > 0
+        ? Padding(padding: EdgeInsets.all(edge), child: lines)
+        : lines,
+  );
+}
+
+/// [KitDiffView.folded]'s limits.
+abstract final class _KitDiffFold {
+  /// Past this many rows a file's lines scroll in a box of their own.
+  static const longItems = 300;
+
+  /// The share of the view that box takes.
+  static const longShare = 0.75;
+}
+
+/// Which edge of a diff band carries its rule.
+enum _KitDiffRule { none, top, bottom }
+
+/// A band of the diff's frame (the header, a file's header, the selection
+/// bar, a gap bar): a content surface at [level] in the style (the page
+/// itself at the ground step), its fill alone, parted from the lines by
+/// the style's divider colour on its [rule] edge. A band inside the code
+/// frame ([inCode]: a gap bar) is the code's own face instead, so the
+/// frame holds the bar and the lines as one listing, parted from them by
+/// the style's divider on its [rule] edge. Solid at its defaults
+/// paints [fill] with the hairline, as it always has; so does a band that
+/// is not [styled] (an inline diff's, which has no surface of its own).
+Widget _kitDiffBand(
+  BuildContext context, {
+  Key? key,
+  required Color fill,
+  required KitSurfaceLevel level,
+  _KitDiffRule rule = _KitDiffRule.none,
+  double? height,
+  EdgeInsetsGeometry? padding,
+  bool styled = true,
+  bool inCode = false,
+  Widget? child,
+}) {
+  final roles = KitTokens.of(context).roles;
+  Border? edge(Color color) {
+    final side = BorderSide(
+      color: color,
+      width: KitTokens.hairlineWidth(context),
+    );
+    return switch (rule) {
+      _KitDiffRule.none => null,
+      _KitDiffRule.top => Border(top: side),
+      _KitDiffRule.bottom => Border(bottom: side),
+    };
+  }
+
+  // A band in the code frame parts itself from the lines only in a style
+  // that draws the frame; Solid's gap bar has never had a rule.
+  final own = BoxDecoration(
+    color: fill,
+    border: inCode ? null : edge(roles.hairline),
+  );
+  final face = !styled
+      ? own
+      : inCode
+      ? KitSurfaceLook.decorate(
+          context,
+          solid: own,
+          level: level,
+          role: KitSurfaceRole.code,
+          color: KitTokens.of(context).detailsSurface,
+        )
+      : KitSurfaceLook.decorate(
+          context,
+          solid: own,
+          level: level,
+          role: level == KitSurfaceLevel.ground
+              ? KitSurfaceRole.ground
+              : KitSurfaceRole.content,
+        );
+  if (identical(face, own)) {
+    return Container(
+      key: key,
+      height: height,
+      padding: padding,
+      decoration: own,
+      child: child,
+    );
+  }
+  // A band runs edge to edge through the listing: it takes the style's
+  // fill alone, never a box or a shadow of its own; its rule parts it.
+  final band = face is KitSurfaceDecoration ? face.fillOnly : face;
+  final line = KitSurfaceLook.divider(
+    context,
+    color: roles.hairline,
+    width: KitTokens.hairlineWidth(context),
+  );
+  return Container(
+    key: key,
+    height: height,
+    padding: padding,
+    decoration: band,
+    // The rule in the style's divider colour, at the hairline.
+    foregroundDecoration: rule == _KitDiffRule.none
+        ? null
+        : BoxDecoration(border: edge(line.color)),
+    child: child,
+  );
 }

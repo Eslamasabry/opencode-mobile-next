@@ -10,6 +10,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'support/plain_text_finder.dart';
 
 class _FakeOpenCodeApi extends FakeServerGateway with CompleteMessageHistory {
   _FakeOpenCodeApi() : super(baseUrl: 'http://localhost');
@@ -83,10 +84,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   // A phone on its side (2480x1116 at 2.75x): the request card must show its
-  // question from the top and scroll, never start cut off; and the approval
-  // chip stays beside the other chips.
-  testWidgets('landscape phone: the request starts at its question and the '
-      'approval chip shows', (tester) async {
+  // question from the top and scroll, never start cut off; and no chips row
+  // sits over the composer.
+  testWidgets('landscape phone: the request starts at its question, with no '
+      'chips row', (tester) async {
     tester.view.physicalSize = const Size(2480, 1116);
     tester.view.devicePixelRatio = 2.75;
     addTearDown(tester.view.reset);
@@ -108,26 +109,30 @@ void main() {
     await tester.pumpAndSettle();
 
     final view = tester.view.physicalSize / tester.view.devicePixelRatio;
-    final question = tester.getRect(find.text('Edit this file?'));
+    final question = tester.getRect(findPlainText('Edit index.html?'));
     // The question is on screen, below the bar, and not under another part.
     expect(question.top, greaterThan(40));
     expect(question.bottom, lessThan(view.height));
-    expect(find.text('Asks first'), findsOneWidget);
+    // No chips row: the approval mode is a row behind the composer's +.
+    expect(find.text('Asks first'), findsNothing);
     // One scroller holds the card (nested ones cut the question off the top),
     // and scrolling it brings the last row, Details, fully into view.
     expect(
       find.ancestor(
-        of: find.text('Edit this file?'),
+        of: findPlainText('Edit index.html?'),
         matching: find.byType(Scrollable),
       ),
       findsOneWidget,
     );
-    await tester.drag(find.text('Edit this file?'), const Offset(0, -300));
+    await tester.drag(findPlainText('Edit index.html?'), const Offset(0, -300));
     await tester.pumpAndSettle();
     final last = tester.getRect(find.text('Always allow requests like this'));
     expect(last.bottom, lessThanOrEqualTo(view.height));
     await tester.drag(find.text('Reject'), const Offset(0, 300));
     await tester.pumpAndSettle();
-    expect(tester.getRect(find.text('Edit this file?')).top, greaterThan(40));
+    expect(
+      tester.getRect(findPlainText('Edit index.html?')).top,
+      greaterThan(40),
+    );
   });
 }

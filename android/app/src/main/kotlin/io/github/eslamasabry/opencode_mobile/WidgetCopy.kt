@@ -23,22 +23,19 @@ internal class WidgetCopy(private val context: Context, private val now: Long = 
     fun offline(lastSeenMs: Long): String =
         if (lastSeenMs > 0) s(R.string.widget_v2_offline_seen, ago(lastSeenMs)) else s(R.string.widget_v2_offline_plain)
 
-    fun inDir(dir: String): String = if (dir.isBlank()) "" else s(R.string.widget_v2_in_dir, dir)
-    fun fromTitle(title: String): String = if (title.isBlank()) "" else s(R.string.widget_v2_from_title, title)
     fun join(vararg parts: String): String = WidgetLayoutPolicy.join(*parts)
 
-    /** "Write outside-test.txt?" when the call is known, else the full question. */
-    fun shortAsk(ask: JSONObject?, fallback: String): String {
+    private fun template(kind: String?): String? = when (kind) {
+        "write" -> s(R.string.widget_v2_short_write, "%s")
+        "read" -> s(R.string.widget_v2_short_read, "%s")
+        "run" -> s(R.string.widget_v2_short_run, "%s")
+        else -> null
+    }
+
+    /** The card's question and the exact command under it: see [WidgetLayoutPolicy.ask]. */
+    fun ask(ask: JSONObject?, fallback: String): WidgetLayoutPolicy.Ask {
         val question = ask?.optString("q").orEmpty().ifBlank { fallback }
-        val file = ask?.optString("file").orEmpty()
-        val template = when (ask?.optString("kind")) {
-            "write" -> s(R.string.widget_v2_short_write, "%s")
-            "read" -> s(R.string.widget_v2_short_read, "%s")
-            "run" -> s(R.string.widget_v2_short_run, "%s")
-            else -> null
-        }
-        return if (template == null || file.isBlank()) question
-        else WidgetLayoutPolicy.shortAsk(file, template, question)
+        return WidgetLayoutPolicy.ask(ask?.optString("file").orEmpty(), template(ask?.optString("kind")), question)
     }
 
     fun working() = s(R.string.widget_v2_working_now)

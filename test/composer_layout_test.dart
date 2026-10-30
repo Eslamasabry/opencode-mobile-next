@@ -20,6 +20,8 @@ import 'package:opencode_mobile/state/prompt_photos.dart';
 import 'package:opencode_mobile/ui/app_iconography.dart';
 import 'package:opencode_mobile/ui/kit/kit_row.dart';
 import 'package:opencode_mobile/ui/kit/kit_tappable.dart';
+import 'support/composer_tools.dart';
+import 'support/part_semantics.dart';
 
 /// Audit UX-P0-03: the composer used to ring the prompt field with five
 /// equal-weight controls, so the field was the least stable element on a
@@ -194,35 +196,22 @@ Future<void> _pumpChat(
 }
 
 /// The prompt field's width as a fraction of the composer surface it sits in.
-double _fieldShare(WidgetTester tester) {
-  final field = tester.getSize(find.byKey(const Key('chat-composer-field')));
-  final surface = tester.getSize(
-    find.byKey(const Key('chat-composer-surface')),
-  );
-  return field.width / surface.width;
+/// What the one row leaves beside the field (concept C, 20 Oct 2026): "+"
+/// at the start and the one trailing control at the end, 48 dp each, and
+/// the box's own padding. Nothing else shares the row.
+double _roomBesideField(WidgetTester tester, {bool editable = false}) {
+  final field = editable
+      ? find.descendant(
+          of: find.byKey(const Key('chat-composer-field')),
+          matching: find.byType(EditableText),
+        )
+      : find.byKey(const Key('chat-composer-field'));
+  return tester.getSize(find.byKey(const Key('chat-composer-surface'))).width -
+      tester.getSize(field).width;
 }
 
-/// The words' column with the editor button in its top corner, which sits
-/// beside the words while there is text (owner Fix "editor in the field
-/// corner", 23f2d0ce): together they still own the row.
-double _wordsColumnShare(WidgetTester tester) {
-  final editable = find.descendant(
-    of: find.byKey(const Key('chat-composer-field')),
-    matching: find.byType(EditableText),
-  );
-  final corner = tester.getSize(find.byKey(const Key('prompt-editor-button')));
-  return (tester.getSize(editable).width + corner.width) /
-      tester.getSize(find.byKey(const Key('chat-composer-surface'))).width;
-}
-
-double _editingShare(WidgetTester tester) {
-  final editable = find.descendant(
-    of: find.byKey(const Key('chat-composer-field')),
-    matching: find.byType(EditableText),
-  );
-  return tester.getSize(editable).width /
-      tester.getSize(find.byKey(const Key('chat-composer-surface'))).width;
-}
+/// "+" and the trailing control, 48 dp each, and at most 24 dp of padding.
+const double _rowControls = 2 * 48 + 24;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -357,7 +346,7 @@ void main() {
       );
       final field = find.byKey(const Key('chat-composer-field'));
       await tester.enterText(field, 'Original draft');
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
       await tester.pumpAndSettle();
       await tester.ensureVisible(
         find.byKey(const Key('composer-tools-prompts')),
@@ -402,12 +391,20 @@ void main() {
       await _pumpChat(tester, conn, size: const Size(390, 844), textScale: 1);
       final field = find.byKey(const Key('chat-composer-field'));
       await tester.enterText(field, 'Keep this');
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
       await tester.pumpAndSettle();
-      await tester.ensureVisible(
-        find.byKey(const Key('composer-tools-prompts')),
+      // The settings rows push the folded ones down: centre each first.
+      await Scrollable.ensureVisible(
+        tester.element(find.byKey(const Key('composer-tools-prompts'))),
+        alignment: .5,
       );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('composer-tools-prompts')));
+      await tester.pumpAndSettle();
+      await Scrollable.ensureVisible(
+        tester.element(find.byKey(const Key('composer-tool-history'))),
+        alignment: .5,
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('composer-tool-history')));
       await tester.pumpAndSettle();
@@ -474,7 +471,7 @@ void main() {
         textScale: 2.5,
         keyboardInset: 300,
       );
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await openComposerTools(tester);
       await tester.pumpAndSettle();
       // At 2.5x the sheet scrolls under its header: centre each row first.
       await Scrollable.ensureVisible(
@@ -536,19 +533,31 @@ void main() {
       settle: false,
     );
     await tester.pump();
+    // Sending the work to the background is a row of the composer's +.
+    expect(find.byKey(const Key('background-running-work')), findsNothing);
+    await openComposerTools(tester);
+    await tester.pumpAndSettle();
     expect(find.text('Background'), findsOneWidget);
     expect(repository.capabilityReads, 1);
     expect(
-      tester.getSize(find.byKey(const Key('background-running-work'))).height,
+      tester
+          .getSize(find.byKey(const Key('composer-setting-background')))
+          .height,
       greaterThanOrEqualTo(48),
     );
+    await tester.tapAt(const Offset(180, 20));
+    await tester.pumpAndSettle();
     repository.support = BackgroundWorkSupport.unavailable;
     conn.dataRefreshRevision++;
     conn.notifyListeners();
     await tester.pump();
     await tester.pump();
     expect(repository.capabilityReads, 2);
-    expect(find.byKey(const Key('background-running-work')), findsNothing);
+    await openComposerTools(tester);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('composer-setting-background')), findsNothing);
+    await tester.tapAt(const Offset(180, 20));
+    await tester.pumpAndSettle();
     conn.busySessions.clear();
     conn.notifyListeners();
     await tester.pumpWidget(const SizedBox());
@@ -572,13 +581,11 @@ void main() {
         settle: false,
       );
       await tester.pump();
-      // The approval chip now shares the sideways-scrolling strip.
-      await tester.ensureVisible(
-        find.byKey(const Key('background-running-work')),
-      );
+      await openComposerTools(tester);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('composer-setting-background')));
       await tester.pump();
-      await tester.tap(find.byKey(const Key('background-running-work')));
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
       await tester.pump(const Duration(milliseconds: 300));
       expect(repository.promotions, 1);
       expect(
@@ -599,10 +606,17 @@ void main() {
     addTearDown(controller.dispose);
     await _pumpChat(tester, controller, size: const Size(360, 760));
 
-    // Only "+", the model chip and the one trailing control (the mic while
-    // the field is empty) surround the field; Attach lives in "+".
+    // Only "+" and the one trailing control (the mic while the field is
+    // empty) surround the field; Attach lives in "+", and the model chip
+    // sits over the box, never in it.
     expect(find.byKey(const Key('composer-tools-button')), findsOneWidget);
-    expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('chat-composer-surface')),
+        matching: find.byKey(const Key('composer-model-context')),
+      ),
+      findsNothing,
+    );
     expect(
       find.byKey(const Key('composer-voice-button')).evaluate().length +
           find.byKey(const Key('chat-send-button')).evaluate().length,
@@ -610,10 +624,13 @@ void main() {
     );
     expect(find.byIcon(AppIconography.attach), findsNothing);
 
-    expect(_fieldShare(tester), greaterThanOrEqualTo(0.9));
+    expect(_roomBesideField(tester), lessThanOrEqualTo(_rowControls));
     // Measure the actual typing area, not the decoration that used to
     // include an expand button and make the field look wider than it was.
-    expect(_editingShare(tester), greaterThanOrEqualTo(0.85));
+    expect(
+      _roomBesideField(tester, editable: true),
+      lessThanOrEqualTo(_rowControls),
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -627,10 +644,13 @@ void main() {
 
     expect(find.byKey(const Key('composer-tools-button')), findsOneWidget);
     expect(find.byIcon(AppIconography.attach), findsNothing);
-    expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
+    expect(find.byKey(const Key('composer-model-context')), findsNothing);
 
-    expect(_fieldShare(tester), greaterThanOrEqualTo(0.9));
-    expect(_editingShare(tester), greaterThanOrEqualTo(0.85));
+    expect(_roomBesideField(tester), lessThanOrEqualTo(_rowControls));
+    expect(
+      _roomBesideField(tester, editable: true),
+      lessThanOrEqualTo(_rowControls),
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -694,7 +714,7 @@ void main() {
       matching: find.byType(EditableText),
     );
     await tester.tap(fieldFinder);
-    await tester.enterText(fieldFinder, 'Review this draft');
+    await tester.enterText(fieldFinder, 'Review it');
     final field = tester.widget<TextField>(_inner(fieldFinder));
     field.controller!.selection = const TextSelection.collapsed(offset: 7);
     await tester.pump();
@@ -707,21 +727,54 @@ void main() {
     expect(tester.state<EditableTextState>(editorFinder), same(editor));
     expect(field.focusNode!.hasFocus, isTrue);
     expect(tester.testTextInput.hasAnyClients, isTrue);
-    expect(field.controller!.text, 'Review this draft');
+    expect(field.controller!.text, 'Review it');
     expect(field.controller!.selection.baseOffset, 7);
-    // With text the editor button takes the field's top corner (23f2d0ce);
-    // the words and their corner still own the row.
-    expect(_wordsColumnShare(tester), greaterThanOrEqualTo(0.85));
+    // One line of words: no editor corner; the words own the row between
+    // "+" and Send, which sits beside them on the same line.
     expect(
-      tester.getTopLeft(find.byKey(const Key('chat-send-button'))).dy,
-      greaterThanOrEqualTo(tester.getBottomLeft(fieldFinder).dy),
+      _roomBesideField(tester, editable: true),
+      lessThanOrEqualTo(_rowControls),
+    );
+    expect(
+      tester.getTopLeft(find.byKey(const Key('chat-send-button'))).dx,
+      greaterThanOrEqualTo(tester.getTopRight(fieldFinder).dx - 1),
     );
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('every collapsed tool stays reachable from the tools sheet', (
+  // Plus-menu concept C (owner 20 Oct 2026): "+" opens a tray of four round
+  // buttons attached to the box; the rest of the old sheet is one tap behind
+  // its More.
+  testWidgets('"+" opens its tray in place, turns into ×, and closes again', (
     tester,
   ) async {
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await _pumpChat(tester, controller, size: const Size(360, 760));
+    final plus = find.byKey(const Key('composer-tools-button'));
+    final tray = find.byKey(const ValueKey('kit-composer-tray'));
+    expect(tray, findsNothing);
+    await openComposerTray(tester);
+    await tester.pumpAndSettle();
+    expect(tray, findsOneWidget);
+    expect(find.byKey(const Key('composer-tools-sheet')), findsNothing);
+    expect(find.byTooltip('Close'), findsOneWidget);
+    // The tray sits on the box, above the field.
+    expect(
+      tester.getRect(tray).bottom,
+      lessThanOrEqualTo(
+        tester.getRect(find.byKey(const Key('chat-composer-field'))).top + 1,
+      ),
+    );
+    await tester.tap(plus);
+    await tester.pumpAndSettle();
+    expect(tray, findsNothing);
+    expect(find.byTooltip('Attach and more'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('every tool stays reachable: Photos, Camera, File and More in '
+      'the tray, the rest one tap behind More', (tester) async {
     final controller = await _controller();
     addTearDown(controller.dispose);
     await _pumpChat(
@@ -731,25 +784,43 @@ void main() {
       textScale: 1,
     );
 
-    await tester.tap(find.byKey(const Key('composer-tools-button')));
+    await openComposerTray(tester);
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('composer-tools-sheet')), findsOneWidget);
-    final tools = [
-      const Key('composer-tool-commands'),
-      const Key('composer-tool-attach'),
-      const Key('composer-tool-gallery'),
-      const Key('composer-tool-camera'),
-      const Key('composer-tool-voice'),
-    ];
-    for (final tool in tools) {
-      final finder = find.byKey(tool);
-      expect(finder, findsOneWidget);
-      // Every entry keeps the Android minimum target it had as a button.
+    for (final (key, label) in [
+      ('composer-tool-gallery', 'Photos'),
+      ('composer-tool-camera', 'Camera'),
+      ('composer-tool-attach', 'File'),
+      ('composer-tray-more', 'More'),
+    ]) {
+      final finder = find.byKey(Key(key));
+      expect(finder, findsOneWidget, reason: key);
       expect(tester.getSize(finder).height, greaterThanOrEqualTo(48));
-      final node = tester.getSemantics(finder);
-      expect(node.label, isNotEmpty);
+      expect(tester.getSize(finder).width, greaterThanOrEqualTo(48));
+      expect(find.text(label), findsOneWidget);
     }
 
+    await tester.tap(find.byKey(const Key('composer-tray-more')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('composer-tools-sheet')), findsOneWidget);
+    // The tray closed behind the sheet, and the sheet does not repeat it.
+    expect(find.byKey(const ValueKey('kit-composer-tray')), findsNothing);
+    expect(find.byKey(const Key('composer-tool-gallery')), findsNothing);
+    expect(find.byKey(const Key('composer-tool-camera')), findsNothing);
+    expect(find.byKey(const Key('composer-tool-attach')), findsNothing);
+    for (final tool in [
+      const Key('composer-tool-commands'),
+      const Key('composer-tool-voice'),
+      const Key('composer-setting-model'),
+      const Key('composer-tools-advanced'),
+    ]) {
+      final finder = find.byKey(tool);
+      expect(finder, findsOneWidget, reason: '$tool');
+      expect(tester.getSize(finder).height, greaterThanOrEqualTo(48));
+      expect(partSemantics(tester, finder).label, isNotEmpty);
+    }
+
+    await tester.ensureVisible(find.byKey(const Key('composer-tool-commands')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('composer-tool-commands')));
     await tester.pumpAndSettle();
     await tester.pumpAndSettle();
@@ -779,13 +850,10 @@ void main() {
         ('camera', ImageSource.camera),
         ('gallery', ImageSource.gallery),
       ]) {
-        await tester.tap(find.byKey(const Key('composer-tools-button')));
+        // Photos and Camera are round buttons of the "+" tray.
+        await openComposerTray(tester);
         await tester.pumpAndSettle();
         final choice = find.byKey(Key('composer-tool-$name'));
-        await tester.ensureVisible(choice);
-        // The sheet has one more row (the project file) and, at 1.7x text on
-        // a 320 dp phone, scrolls: lay out the scrolled sheet before tapping.
-        await tester.pumpAndSettle();
         await tester.tap(choice);
         await tester.pumpAndSettle();
         await tester.pumpAndSettle();
@@ -816,17 +884,20 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
-      await tester.tap(find.byKey(const Key('composer-tools-button')));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
       // A send made mid-turn is queued (v1) or steered/queued (v2), and can
-      // carry attachments like any other send.
+      // carry attachments like any other send: File in the tray stays live.
+      await openComposerTray(tester);
       expect(
         tester
-            .widget<KitRow>(find.byKey(const Key('composer-tool-attach')))
-            .enabled,
-        isTrue,
+            .widget<GestureDetector>(
+              find.byKey(const Key('composer-tool-attach')),
+            )
+            .onTapUp,
+        isNotNull,
       );
+      await tester.tap(find.byKey(const Key('composer-tray-more')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
       // Dictation only fills the draft, so a run does not block it (the
       // owner: Stop must never cost the person their voice).
       expect(
@@ -863,11 +934,11 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    // The turn says what the run is doing (01B); the composer's Send became
-    // Stop (11B), the only one.
+    // The turn says what the run is doing (01B); Stop is the one in the chips
+    // row above the field, and the field has none.
     expect(find.text('Thinking…'), findsOneWidget);
     expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
-    expect(find.byKey(const ValueKey('kit-composer-stop')), findsOneWidget);
+    expect(find.byKey(const ValueKey('kit-composer-stop')), findsNothing);
     expect(find.text('Stop reply'), findsNothing);
     expect(find.byKey(const ValueKey('composer-activity')), findsNothing);
     expect(find.byKey(const ValueKey('typing-indicator')), findsNothing);

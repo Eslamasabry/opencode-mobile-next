@@ -52,11 +52,29 @@ class KitSwap extends StatelessWidget {
     required this.child,
     this.pace = KitPace.quick,
     this.alignment = AlignmentDirectional.center,
-  });
+  }) : count = null;
+
+  /// A count that changes in place (a badge's number, a tab's or a
+  /// segment's count): the new number rolls in from below as the old one
+  /// rolls out above, both fading, on [KitMotion.quick]; a number that goes
+  /// down rolls the other way. Under Animations: Calm it only cross-fades,
+  /// and under Off or the system's remove animations it changes at once
+  /// ([KitMotion.travels], [KitMotion.reduced]). [child] draws [count]; it
+  /// needs no key of its own. The roll is clipped to the number's own box
+  /// while it runs, and the first build shows [count] at once.
+  const KitSwap.count({
+    super.key,
+    required int this.count,
+    required this.child,
+    this.alignment = AlignmentDirectional.center,
+  }) : pace = KitPace.quick;
 
   final Widget child;
   final KitPace pace;
   final AlignmentDirectional alignment;
+
+  /// The number [child] draws, for [KitSwap.count]; null for a cross-fade.
+  final int? count;
 
   // A static tear-off is one identical function on every build, so
   // AnimatedSwitcher never rebuilds the leaving children's transitions.
@@ -73,18 +91,92 @@ class KitSwap extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => AnimatedSwitcher(
+  Widget build(BuildContext context) {
+    final count = this.count;
+    if (count != null) {
+      return _KitCountRoll(count: count, alignment: alignment, child: child);
+    }
+    return _crossFade(context);
+  }
+
+  Widget _crossFade(BuildContext context) => AnimatedSwitcher(
     duration: _durationOf(context, pace),
     switchInCurve: KitMotion.enter,
-    // The switcher runs a leaving child's animation in reverse (1 to 0), so
-    // the flipped exit curve fades it out on KitMotion.exit, as KitReveal
-    // does.
-    switchOutCurve: KitMotion.exit.flipped,
+    // The switcher runs a leaving child's animation in reverse (1 to 0);
+    // KitMotion.exit in that slot fades it out at once and settles.
+    switchOutCurve: KitMotion.exit,
     transitionBuilder: _layer,
     layoutBuilder: (current, previous) =>
         Stack(alignment: alignment, children: [...previous, ?current]),
     child: child,
   );
+}
+
+/// [KitSwap.count]'s roll. It remembers which way the count went, so a
+/// rising number comes up from below and a falling one comes down from
+/// above.
+class _KitCountRoll extends StatefulWidget {
+  const _KitCountRoll({
+    required this.count,
+    required this.alignment,
+    required this.child,
+  });
+
+  final int count;
+  final AlignmentDirectional alignment;
+  final Widget child;
+
+  @override
+  State<_KitCountRoll> createState() => _KitCountRollState();
+}
+
+class _KitCountRollState extends State<_KitCountRoll> {
+  /// How far a number travels, as a share of its own height.
+  static const double _travel = .6;
+
+  bool _rising = true;
+
+  @override
+  void didUpdateWidget(covariant _KitCountRoll old) {
+    super.didUpdateWidget(old);
+    if (widget.count != old.count) _rising = widget.count > old.count;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final travels = KitMotion.travels(context);
+    final current = ValueKey<int>(widget.count);
+    // The arriving number comes from the side the count moved towards; the
+    // leaving one goes out the other side. Calm: no travel, a cross-fade.
+    final double from = travels ? (_rising ? _travel : -_travel) : 0;
+    return AnimatedSwitcher(
+      duration: _durationOf(context, KitPace.quick),
+      switchInCurve: KitMotion.enter,
+      switchOutCurve: KitMotion.exit,
+      transitionBuilder: (child, animation) => _KitSwapLayer(
+        animation: animation,
+        child: SlideTransition(
+          position: animation.drive(
+            Tween<Offset>(
+              begin: Offset(0, child.key == current ? from : -from),
+              end: Offset.zero,
+            ),
+          ),
+          child: child,
+        ),
+      ),
+      layoutBuilder: (shown, leaving) => ClipRect(
+        // Clipped only while a number leaves, so a settled count never
+        // loses a glyph's overhang.
+        clipBehavior: leaving.isEmpty ? Clip.none : Clip.hardEdge,
+        child: Stack(
+          alignment: widget.alignment,
+          children: [...leaving, ?shown],
+        ),
+      ),
+      child: KeyedSubtree(key: current, child: widget.child),
+    );
+  }
 }
 
 /// One child of [KitSwap]. Its structure never changes when the child starts

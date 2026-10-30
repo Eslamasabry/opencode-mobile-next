@@ -29,7 +29,13 @@ class _ActivityGlow extends StatefulWidget {
     required this.primary,
     required this.partner,
     required this.lapsPerSecond,
+    this.wash = true,
+    this.ringWidth,
   });
+
+  /// The soft wash under the line, and the line's width (hook H8).
+  final bool wash;
+  final double? ringWidth;
 
   final bool active;
   final _GlowMode mode;
@@ -145,6 +151,8 @@ class _ActivityGlowState extends State<_ActivityGlow>
               radius: widget.radius,
               primary: widget.primary,
               partner: widget.partner,
+              wash: widget.wash,
+              lineWidth: widget.ringWidth ?? _ActivityGlow.lineWidth,
               repaint: _repaint,
             ),
           ),
@@ -164,8 +172,13 @@ class _GlowPainter extends CustomPainter {
     required this.radius,
     required this.primary,
     required this.partner,
+    required this.wash,
+    required this.lineWidth,
     required super.repaint,
   });
+
+  final bool wash;
+  final double lineWidth;
 
   final double Function() strength;
   final double Function() phase;
@@ -193,8 +206,8 @@ class _GlowPainter extends CustomPainter {
       stops: const [0, .3, .55, .8, 1],
       transform: GradientRotation(2 * math.pi * (phase() - .25)),
     ).createShader(Offset.zero & size);
-    canvas
-      ..drawPath(
+    if (wash) {
+      canvas.drawPath(
         outline,
         Paint()
           ..style = PaintingStyle.stroke
@@ -204,20 +217,25 @@ class _GlowPainter extends CustomPainter {
             _ActivityGlow.washBlur,
           )
           ..shader = shader(_ActivityGlow.washPeak / peak),
-      )
-      ..drawPath(
-        outline,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = _ActivityGlow.lineWidth
-          ..strokeCap = StrokeCap.round
-          ..shader = shader(1),
       );
+    }
+    canvas.drawPath(
+      outline,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = lineWidth
+        ..strokeCap = StrokeCap.round
+        ..shader = shader(1),
+    );
   }
 
   @override
   bool shouldRepaint(_GlowPainter old) =>
-      old.radius != radius || old.primary != primary || old.partner != partner;
+      old.radius != radius ||
+      old.primary != primary ||
+      old.partner != partner ||
+      old.wash != wash ||
+      old.lineWidth != lineWidth;
 }
 
 extension on KitGlowSpeed {

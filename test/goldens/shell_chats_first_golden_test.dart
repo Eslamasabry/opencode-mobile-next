@@ -1,11 +1,14 @@
-// Golden renders of the chats-first shell: the Files tab (title, the chip
-// naming the project, the project tools) and the menu the conversation's
-// project chip opens (Files, Terminal, Changes). 412x915, dark and light,
+// Golden renders of the chats-first shell: the Files page (the large title,
+// the project under it, the project's files; the tools in the bar) and the
+// same page opened from the conversation's project chip. 412x915, dark and light,
 // with the app's real fonts and no server.
 //
 // Regenerate deliberately:
 //   flutter test --update-goldens test/goldens/shell_chats_first_golden_test.dart
 // and look at every changed image before committing it.
+import 'dart:async';
+import 'package:opencode_mobile/ui/screens/project_hub_screen.dart'
+    show openProjectFiles;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -80,7 +83,7 @@ void main() {
   for (final light in [false, true]) {
     final mode = light ? 'light' : 'dark';
 
-    testWidgets('shell · Files tab · $mode', (tester) async {
+    testWidgets('shell · Files page · $mode', (tester) async {
       _mockSecureStorage(tester);
       tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1;
@@ -90,18 +93,23 @@ void main() {
       try {
         await tester.pumpWidget(
           captureApp(
-            home: const HomeScreen(initialTab: 1),
+            home: const HomeScreen(),
             boundaryKey: boundary,
             controller: controller,
             light: light,
           ),
         );
         await tester.pump();
+        // A phone has no Files tab: the project's Files are a page.
+        unawaited(
+          openProjectFiles(tester.element(find.byType(HomeScreen)), controller),
+        );
+        await tester.pump();
         await tester.pump(const Duration(milliseconds: 600));
         expect(tester.takeException(), isNull);
         await expectLater(
           find.byKey(boundary),
-          matchesGoldenFile('shell_files_tab_$mode.png'),
+          matchesGoldenFile('shell_files_page_$mode.png'),
         );
       } finally {
         await tester.pumpWidget(const SizedBox.shrink());
@@ -110,7 +118,9 @@ void main() {
       }
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
-    testWidgets('chat · project chip menu · $mode', (tester) async {
+    testWidgets('chat · project chip opens the Files page · $mode', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
@@ -138,7 +148,7 @@ void main() {
         expect(tester.takeException(), isNull);
         await expectLater(
           find.byKey(boundary),
-          matchesGoldenFile('chat_project_menu_$mode.png'),
+          matchesGoldenFile('chat_project_files_page_$mode.png'),
         );
       } finally {
         await tester.pumpWidget(const SizedBox.shrink());

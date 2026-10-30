@@ -66,9 +66,8 @@ void main() {
 
   testWidgets('after: This phone, in Termux', (tester) async {
     TermuxChannelFixture()
-      ..inventoryOutput =
-          'ubuntu=installed\nversion=2.0.29\nruntime=opencode2\n'
-      ..statusOutput = termuxSnapshot(phase: 'ready', version: '2.0.29')
+      ..inventoryOutput = 'ubuntu=installed\nversion=2.1.1\nruntime=opencode2\n'
+      ..statusOutput = termuxSnapshot(phase: 'ready', version: '2.1.1')
       ..install();
     final boundary = GlobalKey();
     await pumpPhone(
@@ -80,7 +79,7 @@ void main() {
           name: 'This phone',
           baseUrl: TermuxBridge.managedServerUrl,
           password: 'synthetic-test-secret',
-          serverVersion: '2.0.29',
+          serverVersion: '2.1.1',
         ),
       ],
       boundary: boundary,

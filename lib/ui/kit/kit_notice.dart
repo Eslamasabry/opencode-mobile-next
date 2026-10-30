@@ -8,7 +8,11 @@ import '../app_theme.dart';
 import 'kit_buttons.dart';
 import 'kit_copy.dart';
 import 'kit_icon_button.dart';
+import 'kit_lead_column.dart';
+import 'kit_max_width.dart';
 import 'kit_redact.dart';
+import 'kit_surface.dart';
+import 'kit_surface_look.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 import 'motion/kit_reveal.dart';
@@ -23,7 +27,8 @@ enum _Form { plain, card, cost, offer, error }
 /// the cost of an install.
 ///
 /// A tinted icon, an optional [title], the [message], optional [notes],
-/// and up to two tertiary [actions] (§2) under the words. It sits on the
+/// and up to two [actions] under the words, as small tonal buttons (flat
+/// polish 2026-10-26: bare words read as a caption). It sits on the
 /// host's rails with no filled block and no card around it (§3: "never a
 /// solid red block"; cards are for content, not for wrapping a message). It
 /// is one live region, so a new verdict is read out once.
@@ -52,6 +57,7 @@ class KitNotice extends StatelessWidget {
     this.icon,
     this.notes = const [],
     this.actions = const [],
+    this.link,
     this.onDismiss,
     this.messageKey,
     this.liveRegion = true,
@@ -110,6 +116,7 @@ class KitNotice extends StatelessWidget {
        copyDetailsKey = null,
        reportKey = null,
        _offer = null,
+       link = null,
        _form = _Form.card;
 
   /// The cost of an install or a turn-on, stated before its primary
@@ -146,6 +153,7 @@ class KitNotice extends StatelessWidget {
        copyDetailsKey = null,
        reportKey = null,
        _offer = null,
+       link = null,
        _form = _Form.cost;
 
   /// One sentence, one action, one close: a one-time tip or a turn-on offer
@@ -182,6 +190,7 @@ class KitNotice extends StatelessWidget {
        reportSource = null,
        copyDetailsKey = null,
        reportKey = null,
+       link = null,
        _form = _Form.offer;
 
   /// A failure about one part (STATE-20: "a sheet that fetches: an inline
@@ -221,6 +230,7 @@ class KitNotice extends StatelessWidget {
        secondary = null,
        costItems = null,
        _offer = null,
+       link = null,
        _form = _Form.error;
 
   /// Drawn as the needs-you card ([KitNotice.card]).
@@ -253,6 +263,10 @@ class KitNotice extends StatelessWidget {
 
   /// Tertiary, start-aligned, at most two shown.
   final List<KitAction> actions;
+
+  /// One quiet text link after [actions] ("Details"): a way to look, never
+  /// the fix, so it does not stand beside the fix as a second button.
+  final KitAction? link;
 
   /// Only when dismissing changes nothing real.
   final VoidCallback? onDismiss;
@@ -310,7 +324,10 @@ class KitNotice extends StatelessWidget {
   };
 
   @override
-  Widget build(BuildContext context) => switch (_form) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) => switch (_form) {
     _Form.card => _buildCard(context),
     _Form.cost => _buildCost(context),
     _Form.plain || _Form.offer || _Form.error => _buildNotice(context),
@@ -353,7 +370,32 @@ class KitNotice extends StatelessWidget {
     );
   }
 
-  /// The words shown as tertiary buttons: the caller's, the offer's one,
+  /// A notice's acts under its words: small tonal buttons (the platform's
+  /// filled-tonal button), each a visible button rather than bare words that
+  /// read as a caption, neutral so green stays the page's one main act and
+  /// every theme keeps their words legible. Their edge starts where the
+  /// words do.
+  static Widget _actionsRow(
+    KitTokens tokens,
+    List<KitAction> shown, {
+    KitAction? link,
+  }) => Wrap(
+    spacing: tokens.space2,
+    runSpacing: tokens.space2,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      for (final action in shown)
+        KitButton.fromAction(
+          action,
+          role: KitButtonRole.secondary,
+          expand: false,
+        ),
+      if (link != null)
+        KitButton.fromAction(link, role: KitButtonRole.tertiary),
+    ],
+  );
+
+  /// The words shown as the notice's buttons: the caller's, the offer's one,
   /// or the error defaults.
   List<KitAction> _shownActions(BuildContext context, AppLocalizations l10n) {
     final offer = _offer;
@@ -433,8 +475,11 @@ class KitNotice extends StatelessWidget {
       context,
       title == null ? messageRole : KitTextRole.rowTitle,
     );
+    // The leading column (KitLeadColumn): the icon centred in a tile-wide
+    // slot, so the words start on a list row's text rail; in the
+    // conversation, the bare glyph's width (its compact rail).
     final mark = SizedBox(
-      width: iconSize,
+      width: math.max(iconSize, KitLeadColumn.slotOf(context)),
       height: math.max(firstLine, iconSize),
       child: Center(
         child: Icon(glyph, size: iconSize, color: tint),
@@ -477,20 +522,10 @@ class KitNotice extends StatelessWidget {
                   SizedBox(height: tokens.space1),
                   KitText(note, role: KitTextRole.secondary),
                 ],
-                if (shown.isNotEmpty) SizedBox(height: tokens.space2),
-                if (shown.isNotEmpty)
-                  KitInset(
-                    child: Wrap(
-                      spacing: tokens.space1,
-                      children: [
-                        for (final action in shown)
-                          KitButton.fromAction(
-                            action,
-                            role: KitButtonRole.tertiary,
-                          ),
-                      ],
-                    ),
-                  ),
+                if (shown.isNotEmpty || link != null)
+                  SizedBox(height: tokens.space2),
+                if (shown.isNotEmpty || link != null)
+                  _actionsRow(tokens, shown, link: link),
               ],
             ),
           ),
@@ -531,7 +566,10 @@ class KitNotice extends StatelessWidget {
     }
 
     final fixedWidth =
-        tokens.iconSize(context, tokens.smallIconSize) +
+        math.max(
+          tokens.iconSize(context, tokens.smallIconSize),
+          KitLeadColumn.slotOf(context),
+        ) +
         tokens.space3 +
         (onDismiss == null ? 0 : tokens.minTarget);
     final actionWidth = math.max(
@@ -625,14 +663,20 @@ class KitNotice extends StatelessWidget {
       child: Semantics(
         container: true,
         liveRegion: liveRegion,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Color.alphaBlend(surface, roles.surface1),
-            borderRadius: BorderRadius.circular(tokens.cardRadius),
-            border: Border.all(
-              color: line,
-              width: KitTokens.hairlineWidth(context),
+        child: kitSurfaceBox(
+          style: KitSurfaceLook.styleOf(context),
+          // The tone's tint stays the card's colour in every style.
+          decoration: KitSurfaceLook.decorate(
+            context,
+            solid: BoxDecoration(
+              color: Color.alphaBlend(surface, roles.surface1),
+              borderRadius: BorderRadius.circular(tokens.cardRadius),
+              border: Border.all(
+                color: line,
+                width: KitTokens.hairlineWidth(context),
+              ),
             ),
+            color: Color.alphaBlend(surface, roles.surface1),
           ),
           child: Padding(
             padding: EdgeInsets.all(tokens.space4),
@@ -643,15 +687,22 @@ class KitNotice extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox.square(
-                      dimension: tileSize,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: tint.withValues(alpha: .16),
-                          borderRadius: BorderRadius.circular(
-                            tokens.markRadius - 2,
-                          ),
+                    // The tone's tile, made for the person's Style like
+                    // every other tile; its tint stays its own fill.
+                    kitSurfaceMaterial(
+                      context,
+                      level: KitSurfaceLevel.surface3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          tokens.markRadius - 2,
                         ),
+                      ),
+                      fill: tint.withValues(alpha: .16),
+                      role: KitSurfaceRole.control,
+                      color: tint.withValues(alpha: .16),
+                      clip: false,
+                      child: SizedBox.square(
+                        dimension: tileSize,
                         child: Center(
                           child: Icon(
                             icon ?? _iconFor(tone),
@@ -689,19 +740,10 @@ class KitNotice extends StatelessWidget {
                             SizedBox(height: tokens.space1),
                             Text(note, style: tokens.rowSupporting),
                           ],
-                          if (shown.isNotEmpty)
-                            KitInset(
-                              child: Wrap(
-                                spacing: tokens.space1,
-                                children: [
-                                  for (final action in shown)
-                                    KitButton.fromAction(
-                                      action,
-                                      role: KitButtonRole.tertiary,
-                                    ),
-                                ],
-                              ),
-                            ),
+                          if (shown.isNotEmpty) ...[
+                            SizedBox(height: tokens.space2),
+                            _actionsRow(tokens, shown),
+                          ],
                         ],
                       ),
                     ),

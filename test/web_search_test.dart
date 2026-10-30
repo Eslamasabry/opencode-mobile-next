@@ -19,6 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api2_client_test.dart' show withServer, writeJson;
 import 'support/complete_message_history.dart';
+import 'support/composer_tools.dart';
 
 class _Store extends ProfileStore {
   _Store(SharedPreferences prefs) : super(prefs: prefs);
@@ -127,7 +128,7 @@ Future<void> _openSearchFromChat(
     'Check these sources',
   );
   await _chatFrames(tester);
-  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await openComposerTools(tester);
   await _chatFrames(tester);
   await tester.ensureVisible(find.byKey(const Key('composer-tools-advanced')));
   // The sheet has one more row (the project file): lay out the scrolled sheet.

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
 
+import '../../domain/connection_status.dart';
 import '../../domain/models.dart';
 import '../../domain/product_repository.dart';
 import '../../domain/provider_presentation.dart';
@@ -16,6 +17,7 @@ import '../../diagnostics/report_problem_startup.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/app_locale.dart' show AppLocaleStore;
+import '../../state/appearance_guide.dart';
 import '../../state/connection.dart';
 import '../../state/external_agents.dart';
 import '../../state/offline_queue.dart';
@@ -33,11 +35,18 @@ import '../theme_packs.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/language_picker.dart'
     show languageChoiceLabel, languageChoiceNote;
-import '../widgets/phone_server_card.dart' show serverDisplayName;
+import '../widgets/phone_server_card.dart'
+    show
+        newConversationsTitle,
+        savedOnNote,
+        sectionOnTitle,
+        serverDisplayName,
+        useMyDefaultDoneNote;
 import '../widgets/product_states.dart';
 import '../widgets/safety_confirms.dart';
 import 'app_diagnostics_screen.dart' show reportProblemErrorCount;
 import 'settings/ai_setup_screen.dart';
+import 'settings/glass_choice_control.dart';
 import 'settings/server_plugins_section.dart';
 import 'automation_settings_screen.dart' show AutomationSettingsSection;
 import 'keep_running_screen.dart' show KeepRunningSection;
@@ -51,17 +60,19 @@ import 'server_capabilities_screen.dart';
 import 'this_phone_screen.dart' show openThisPhone;
 import '../widgets/team_discover.dart';
 import '../search/search_index.dart';
+import '../teaching/teaching.dart' show offerMakeItYours;
 
-import 'settings/live_background_screens.dart';
-part 'settings/server_settings_screen.dart';
 part 'settings/server_host_update.dart';
 part 'settings/default_shell_row.dart';
 part 'settings/phrase_chips_row.dart';
 part 'settings/notifications_settings_screen.dart';
+part 'settings/appearance_screen.dart';
+part 'settings/appearance_one_page.dart';
 part 'settings/personal_settings_screens.dart';
 part 'settings/hub_servers.dart';
 part 'settings/server_page.dart';
 part 'settings/agents_permissions_screens.dart';
+part 'settings/settings_group_page.dart';
 
 AppLocalizations _settingsCopy(BuildContext context) =>
     Localizations.of<AppLocalizations>(context, AppLocalizations) ??
@@ -93,18 +104,21 @@ enum SettingsGroup {
   final String slug;
 }
 
-/// The one Settings hub: five groups of rows. Search is the header's
-/// command launcher, which reads the same index. It is the
-/// fourth tab of the shell ([embedded]) and the screen every other entry
-/// point pushes, so a setting has exactly one home. Rows the connected server
-/// cannot serve are absent, and the group says how many under its panel in
-/// one muted line with a Why (target-ia §1.3); a group with no rows is
-/// absent.
+/// The one Settings hub (vision 2026-10-20, concept C plus one value line):
+/// a search field and five one-word rows, Server, Agent, Conversations,
+/// This app and Help. Only Server says more, where the server in use runs
+/// and how it is connected, because that is a state people check. Each row
+/// opens its group's page ([SettingsGroupScreen]) with every row that group
+/// held before; the search finds any setting in the same index the
+/// header's search reads, so the hub needs no section headers, sub-rows or
+/// summaries.
 ///
-/// Kit only (screen-settings-1): a [KitScreen] with one [KitRowGroup] panel
-/// per group. From expanded it
-/// is [KitScreen.twoPane]: the groups are the list pane and the chosen
-/// group's rows fill the detail pane; a row still opens its page.
+/// It is the last tab of the shell ([embedded]) and the screen every other
+/// entry point pushes, so a setting has exactly one home. With
+/// [initialGroup] (a search result that acts in place, like a switch) it is
+/// that group's page. From expanded it is [KitScreen.twoPane]: the search
+/// and the five rows are the list pane and the chosen group's rows fill
+/// the detail pane.
 /// Test seam: builds of the Settings hub.
 @visibleForTesting
 int settingsBuildCount = 0;
@@ -115,7 +129,8 @@ class SettingsScreen extends StatefulWidget {
   /// True inside the shell's tab view, which already supplies the app bar.
   final bool embedded;
 
-  /// A group to scroll to on open, for entry points that mean one area.
+  /// The group to open on, for entry points that mean one area: its page on
+  /// a phone, its rows in the detail pane on a wide window.
   final SettingsGroup? initialGroup;
 
   const SettingsScreen({
@@ -130,16 +145,15 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _groupKeys = {
-    for (final group in SettingsGroup.values)
-      group: GlobalKey(debugLabel: 'settings-group-${group.slug}'),
-  };
-
   /// The tab is offstage (TickerMode off); notifications only mark it stale.
   bool _visible = true;
 
   /// The group in the detail pane (expanded and wider).
   SettingsGroup? _selected;
+
+  /// The settled search; empty shows the five rows.
+  String _query = '';
+  final _search = TextEditingController();
 
   PerfSpanHandle? _openSpan;
 
@@ -150,13 +164,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _openSpan = PerfTrace.begin('settings.open');
     widget.controller.addListener(_connectionChanged);
     widget.controller.profileMonitor.addListener(_connectionChanged);
-    final initial = widget.initialGroup;
-    if (initial != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final target = _groupKeys[initial]?.currentContext;
-        if (mounted && target != null) Scrollable.ensureVisible(target);
-      });
-    }
   }
 
   void _connectionChanged() {
@@ -177,33 +184,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     widget.controller.removeListener(_connectionChanged);
     widget.controller.profileMonitor.removeListener(_connectionChanged);
+    _search.dispose();
     _openSpan?.finish(attrs: {'outcome': 'closed'});
     super.dispose();
-  }
-
-  /// The Model row's value: the default model's name (the picker also
-  /// sets its variant and agent). A model the person never chose is the
-  /// server's own pick, and only then does the row say so.
-  String _modelSummary(ConnectionController controller) {
-    final copy = _settingsCopy(context);
-    final selected = controller.selectedModel;
-    if (selected == null) return copy.modelServerDefault;
-    return controller.catalog?.models
-            .where(
-              (model) =>
-                  model.providerID == selected.providerID &&
-                  model.id == selected.modelID,
-            )
-            .firstOrNull
-            ?.name ??
-        readableModelLabel(selected.providerID, selected.modelID);
-  }
-
-  /// Runs an index entry, then redraws: most of them change something a row's
-  /// value shows.
-  Future<void> _openEntry(SearchEntry entry, SearchScope scope) async {
-    await entry.open(context, scope);
-    if (mounted) setState(() {});
   }
 
   Future<void> _open(Widget screen) async {
@@ -211,247 +194,167 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) setState(() {});
   }
 
-  /// The hub's layout: which index entries are rows, in which order, and what
-  /// each shows beside its title. Titles, keywords, gates and what a tap does
-  /// come from the search index, so the hub, its search and every other
-  /// search surface cannot disagree. A row whose entry is gated out is absent.
-  ///
-  /// Rows are one line (Settings Standard D1): the name at the start, its
-  /// state at the end. With several saved servers the server-owned rows say
-  /// "By server" and open a page that lists each one (SC4).
-  List<_HubGroup> _groups(
-    ConnectionController controller,
-    Map<String, SearchEntry> entries,
-    SearchScope scope,
-  ) {
-    final copy = _settingsCopy(context);
-    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
-    final several = hasSeveralServers(controller);
-    _HubRow? row(
-      String id, {
-      String? value,
-      WidgetBuilder? builder,
-      VoidCallback? onTap,
-    }) {
-      final entry = entries[id];
-      if (entry == null) return null;
-      return _HubRow(
-        entry: entry,
-        value: value,
-        builder: builder,
-        onTap: onTap ?? () => _openEntry(entry, scope),
-      );
-    }
-
-    /// A server-owned row: "By server" once there are several, which opens
-    /// the page that lists each server with its own answer.
-    _HubRow? byServerRow(
-      String id,
-      ByServerKind kind, {
-      String? single,
-      VoidCallback? onTapSingle,
-    }) => several
-        ? row(
-            id,
-            value: copy.settingsV3ByServer,
-            onTap: () =>
-                _open(ByServerScreen(controller: controller, kind: kind)),
-          )
-        : row(id, value: single, onTap: onTapSingle);
-
-    final profile = controller.profile;
-    final titles = {
-      SettingsGroup.connections: copy.settingsV3GroupConnections,
-      SettingsGroup.ai: copy.settingsV3GroupAi,
-      SettingsGroup.chat: copy.settingsV3GroupChat,
-      SettingsGroup.thisApp: copy.settingsHubGroupThisApp,
-      SettingsGroup.help: copy.settingsV3GroupHelp,
-    };
-    final serverName = profile == null
-        ? null
-        : serverDisplayName(profile, l10n, among: controller.store.profiles);
-    final rows = <SettingsGroup, List<_HubRow?>>{
-      SettingsGroup.connections: [
-        row('settings-saved-servers', value: serversRowValue(controller, l10n)),
-        row('settings-this-phone', value: phoneRowValue(controller, copy)),
-      ],
-      SettingsGroup.ai: [
-        // The model new chats start with: its name, or "By server".
-        byServerRow(
-          'settings-model-and-mode',
-          ByServerKind.model,
-          single: profile == null ? null : _modelSummary(controller),
-          onTapSingle: () => unawaited(
-            showModelPicker(
-              context,
-              title: serverName == null
-                  ? null
-                  : copy.settingsV3ModelNewOn(serverName),
-            ),
-          ),
-        ),
-        byServerRow('settings-providers', ByServerKind.providers),
-        row('settings-category-usage'),
-        byServerRow('settings-tools', ByServerKind.tools),
-        row('settings-agents'),
-      ],
-      SettingsGroup.chat: [
-        // Two switches: the same stored values the conversation menu flips,
-        // for every conversation on this device.
-        row(
-          'settings-show-reasoning',
-          builder: (context) => KitSwitchRow(
-            key: const ValueKey('settings-show-reasoning'),
-            leading: KitRow.icon(context, AppIconography.idea),
-            title: copy.settingsHubShowReasoning,
-            value: controller.transcriptReasoningExpanded,
-            onChanged: (value) =>
-                unawaited(controller.setTranscriptReasoningExpanded(value)),
-          ),
-        ),
-        row(
-          'settings-show-timestamps',
-          builder: (context) => KitSwitchRow(
-            key: const ValueKey('settings-show-timestamps'),
-            leading: KitRow.icon(context, AppIconography.clock),
-            title: copy.settingsHubShowTimestamps,
-            value: controller.transcriptTimestampsVisible,
-            onChanged: (value) =>
-                unawaited(controller.setTranscriptTimestampsVisible(value)),
-          ),
-        ),
-        row(
-          'settings-phrase-chips',
-          builder: (_) => PhraseChipsSettingsRow(controller: controller),
-        ),
-        several
-            ? byServerRow('default-shell-settings-entry', ByServerKind.shell)
-            : row(
-                'default-shell-settings-entry',
-                builder: (_) => DefaultShellRow(controller: controller),
-              ),
-        row('settings-voice'),
-        row('settings-automation'),
-      ],
-      SettingsGroup.thisApp: [
-        row(
-          'settings-category-notifications',
-          value: notificationsRowValue(controller, copy),
-        ),
-        row(
-          'settings-category-background',
-          value: platformCapabilities.supportsBackgroundService
-              ? _backgroundSummary(controller)
-              : null,
-        ),
-        row(
-          'settings-category-appearance',
-          value: appearanceLabel(controller.appearance.value, context),
-        ),
-        row(
-          'settings-category-language',
-          builder: (_) => LanguageSettingsRow(controller: controller),
-        ),
-        row('settings-category-privacy'),
-      ],
-      SettingsGroup.help: [
-        row('settings-setup-guide'),
-        // Report a problem: every failure state offers it too; this row is
-        // the deliberate path, with the count of errors kept (P8.2).
-        row(
-          'library-report-bug',
-          builder: (context) => _ReportProblemRow(
-            entry: entries['library-report-bug']!,
-            controller: controller,
-            onTap: () => _openEntry(entries['library-report-bug']!, scope),
-          ),
-        ),
-        row('settings-about-notices'),
-      ],
-    };
-    return [
-      for (final group in SettingsGroup.values)
-        _HubGroup(group, titles[group]!, rows[group]!.nonNulls.toList()),
-    ];
-  }
-
-  /// The background state at a glance, so the hub says whether runs keep
-  /// updating after the app closes without opening the page.
-  String _backgroundSummary(ConnectionController controller) {
-    final copy = _settingsCopy(context);
-    final live = controller.backgroundLive;
-    if (live.stoppedByAndroidTimeout) return copy.e7SettingsUi12;
-    if (!controller.keepLiveInBackground) return copy.quotaBudgetOff;
-    return live.active ? copy.e7SettingsUi14 : copy.e7SettingsUi15;
+  /// A result opens what the header's search opens for it, then redraws:
+  /// the Server line may have changed.
+  Future<void> _openResult(SearchEntry entry, SearchScope scope) async {
+    await entry.open(context, scope);
+    if (mounted) setState(() {});
   }
 
   static IconData _groupIcon(SettingsGroup group) => switch (group) {
     SettingsGroup.connections => AppIconography.server,
-    SettingsGroup.ai => AppIconography.model,
+    SettingsGroup.ai => AppIconography.agent,
     SettingsGroup.chat => AppIconography.chat,
     SettingsGroup.thisApp => AppIconography.phone,
-    SettingsGroup.help => AppIconography.support,
+    SettingsGroup.help => AppIconography.question,
   };
 
-  /// The one line under the groups for every row the connected server
-  /// hides, with a Why that opens What this server supports (N6): rows never
-  /// move, so how many are missing is said once, here.
-  Widget? _unavailableNote(int hidden) {
-    if (hidden == 0) return null;
+  /// The Server row's second line: where the server in use runs and how it
+  /// is connected, in the server switcher's words. Nothing saved: not set
+  /// up yet. Saved but none in use: only how many.
+  String _serverLine(ConnectionController controller) {
     final copy = _settingsCopy(context);
-    return KitGroupNote(
-      key: const ValueKey('settings-unavailable'),
-      message: copy.settingsHubUnavailableCount(hidden),
-      action: KitAction(
-        key: const ValueKey('settings-unavailable-why'),
-        label: copy.settingsHubUnavailableWhy,
-        onPressed: () => unawaited(
-          _open(ServerCapabilitiesScreen(controller: widget.controller)),
-        ),
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final servers = settingsServers(controller);
+    if (servers.isEmpty) return copy.settingsHubServerNone;
+    final profile = controller.profile;
+    if (profile == null) return l10n.settingsV3ServersCount(servers.length);
+    final where = isPhoneOwnServer(profile)
+        ? copy.settingsHubServerOnPhone
+        : KitBidi.auto(serverDisplayName(profile, l10n, among: servers));
+    final state = switch (controller.connectionStatus.phase) {
+      ConnectionStatusPhase.hidden => null,
+      ConnectionStatusPhase.connected => copy.e7WorkspaceConnected,
+      ConnectionStatusPhase.connecting => copy.e7WorkspaceConnecting,
+      ConnectionStatusPhase.reconnecting => copy.mcpReconnecting,
+      _ => copy.e7WorkspaceOffline,
+    };
+    return state == null ? where : copy.settingsHubServerLine(where, state);
+  }
+
+  /// The settings a query finds: rows and what sits inside their pages,
+  /// not the app's places (the header's search has those).
+  List<SearchEntry> _results(SearchScope scope) {
+    if (_query.isEmpty) return const [];
+    return [
+      for (final entry in searchEntries(_settingsCopy(context), scope, _query))
+        if (entry.kind != SearchEntryKind.destination) entry,
+    ];
+  }
+
+  /// Where a result lives, under its name: the group's word for a row of
+  /// the hub, the page's title for a setting inside one.
+  String? _resultPlace(SearchEntry entry) {
+    final group = entry.group;
+    if (entry.kind == SearchEntryKind.hubRow && group != null) {
+      return settingsGroupTitle(_settingsCopy(context), group);
+    }
+    return entry.parent;
+  }
+
+  Widget _searchField({required int? resultCount}) {
+    final tokens = KitTokens.of(context);
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: tokens.gutter),
+      child: KitSearchField(
+        key: const ValueKey('settings-hub-search'),
+        fieldKey: const ValueKey('settings-hub-search-field'),
+        label: _settingsCopy(context).settingsHubSearch,
+        controller: _search,
+        prominent: true,
+        resultCount: resultCount,
+        onChanged: (query) => setState(() => _query = query.trim()),
+        onSubmitted: (_) {
+          final first = _results(
+            SearchScope.of(context, widget.controller),
+          ).firstOrNull;
+          if (first != null) {
+            unawaited(
+              _openResult(first, SearchScope.of(context, widget.controller)),
+            );
+          }
+        },
       ),
     );
   }
 
-  /// How many hub rows the connected server hides. Without a connection
-  /// there is no server to blame.
-  int _hiddenCount(ConnectionController controller, SearchScope scope) {
-    if (!controller.isConnected) return 0;
-    final copy = _settingsCopy(context);
-    var hidden = 0;
-    for (final entry in allSearchEntries(copy)) {
-      if (entry.kind == SearchEntryKind.hubRow &&
-          entry.group != null &&
-          entry.hiddenByServer(scope)) {
-        hidden++;
-      }
-    }
-    return hidden;
-  }
-
-  /// One group: its rows on a panel under the group's name.
-  Widget _groupView(
-    ({_HubGroup group, List<_HubRow> rows}) entry, {
-    required bool scrollTarget,
+  /// The five rows, or the results while there is a query.
+  Widget _body({
+    required List<SettingsGroup> groups,
+    required List<SearchEntry> results,
+    required SearchScope scope,
+    required bool wide,
+    required SettingsGroup? selected,
   }) {
-    // Groups without a row are dropped before they get here.
-    final panel = KitRowGroup(
-      key: ValueKey('settings-group-${entry.group.group.slug}'),
-      label: entry.group.title,
-      children: [for (final row in entry.rows) row.build(context)],
-    );
-    return scrollTarget
-        ? KeyedSubtree(key: _groupKeys[entry.group.group], child: panel)
-        : panel;
-  }
-
-  /// "You can change some of these for one server": the saved servers, each
-  /// opening its own page. Only once there are several (SC4); with one the
-  /// server-owned rows open straight to it.
-  Widget? _serversBlock(ConnectionController controller) {
-    if (!hasSeveralServers(controller)) return null;
-    return SettingsServersBlock(
-      key: const ValueKey('settings-servers-block'),
-      controller: controller,
+    final copy = _settingsCopy(context);
+    final large = MediaQuery.textScalerOf(context).scale(10) >= 18;
+    final Widget child;
+    if (_query.isNotEmpty && results.isEmpty) {
+      child = KitSearchNoMatch(
+        key: const ValueKey('settings-hub-no-match'),
+        query: _query,
+        onClear: _search.clear,
+      );
+    } else if (_query.isNotEmpty) {
+      child = KitRowGroup(
+        key: const ValueKey('settings-hub-results'),
+        children: [
+          for (final entry in results)
+            KitRow(
+              key: ValueKey('settings-hub-result-${entry.id}'),
+              leading: KitRow.glyph(context, entry.icon),
+              title: entry.title,
+              supporting: switch (_resultPlace(entry)) {
+                final place? => TextSpan(text: place),
+                null => null,
+              },
+              trailing: const KitChevron(),
+              onTap: () => unawaited(_openResult(entry, scope)),
+            ),
+        ],
+      );
+    } else {
+      child = KitRowGroup(
+        key: const ValueKey('settings-hub-rows'),
+        leadingIcons: !large,
+        children: [
+          for (final group in groups)
+            KitRow(
+              key: ValueKey('settings-hub-row-${group.slug}'),
+              roomy: true,
+              // From 2x text the words need the row: a glyph or a chevron
+              // would break "Conversations" mid-word at 320 dp.
+              leading: large ? null : KitRow.glyph(context, _groupIcon(group)),
+              title: settingsGroupTitle(copy, group),
+              supporting: group == SettingsGroup.connections
+                  ? TextSpan(text: _serverLine(widget.controller))
+                  : null,
+              supportingKey: group == SettingsGroup.connections
+                  ? const ValueKey('settings-hub-server-line')
+                  : null,
+              // The whole row is the door; at 2x text the chevron's room
+              // goes to the word.
+              trailing: large ? null : const KitChevron(),
+              selected: wide && group == selected,
+              onTap: wide
+                  ? () => setState(() => _selected = group)
+                  : () => unawaited(
+                      _open(
+                        SettingsGroupScreen(
+                          controller: widget.controller,
+                          group: group,
+                        ),
+                      ),
+                    ),
+            ),
+        ],
+      );
+    }
+    // The rows and the results cross-fade (KitMotion.quick) instead of
+    // popping; instant under reduced motion.
+    return KitSwap(
+      alignment: AlignmentDirectional.topStart,
+      child: KeyedSubtree(key: ValueKey<bool>(_query.isEmpty), child: child),
     );
   }
 
@@ -468,18 +371,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final copy = _settingsCopy(context);
     final tokens = KitTokens.of(context);
-    final scope = SearchScope.of(context, controller);
-    final entries = {
-      for (final entry in searchIndex(copy, scope)) entry.id: entry,
-    };
-    final allGroups = [
-      for (final group in _groups(controller, entries, scope))
-        (group: group, rows: group.rows),
-    ].where((entry) => entry.rows.isNotEmpty).toList();
-    final groups = allGroups;
     final wide = KitScreen.showsDetail(context);
-    final note = _unavailableNote(_hiddenCount(controller, scope));
-    final serversBlock = _serversBlock(controller);
+    final initial = widget.initialGroup;
+
+    // A phone opened at one group (a search result that acts in place) is
+    // that group's page.
+    if (!wide && !widget.embedded && initial != null) {
+      return SettingsGroupScreen(controller: controller, group: initial);
+    }
+
+    final scope = SearchScope.of(context, controller);
+    final present = {for (final entry in searchIndex(copy, scope)) entry.id};
+    final groups = [
+      for (final group in SettingsGroup.values)
+        if (settingsGroupRowIds[group]!.any(present.contains)) group,
+    ];
+    final results = _results(scope);
+    final selected = groups.contains(_selected)
+        ? _selected
+        : groups.firstOrNull;
 
     // As a tab of the shell the page has no top bar, so it starts with its
     // own large title like Chats and Files do.
@@ -489,7 +399,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               tokens.gutter,
               tokens.space2,
               tokens.gutter,
-              tokens.space2,
+              tokens.space4,
             ),
             child: Semantics(
               header: true,
@@ -504,10 +414,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           )
         : null;
 
-    // Not a lazy list: every group must exist for an entry point to scroll
-    // to it, and the hub is a few dozen plain rows. One Column child keeps
-    // them all laid out inside the scroll view.
-    Widget hubList({required bool scrollTargets}) => KitScrollArea(
+    final hub = KitScrollArea(
       builder: (scrollController) => ListView(
         key: const ValueKey('settings-hub-list'),
         controller: scrollController,
@@ -517,19 +424,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         children: [
           ?tabTitle,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final (index, entry) in groups.indexed) ...[
-                if (index > 0) SizedBox(height: tokens.sectionGap),
-                _groupView(entry, scrollTarget: scrollTargets),
-              ],
-              ?note,
-              if (serversBlock != null) ...[
-                SizedBox(height: tokens.sectionGap),
-                serversBlock,
-              ],
-            ],
+          // No count line over "Nothing matches": the same fact twice.
+          _searchField(
+            resultCount: _query.isEmpty || results.isEmpty
+                ? null
+                : results.length,
+          ),
+          SizedBox(height: tokens.space4),
+          _body(
+            groups: groups,
+            results: results,
+            scope: scope,
+            wide: wide,
+            selected: selected,
           ),
         ],
       ),
@@ -543,59 +450,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return KitScreen(
         topBar: topBar,
         width: KitScreenWidth.reading,
-        body: hubList(scrollTargets: true),
+        body: hub,
       );
     }
 
-    // Expanded and wider: the groups are the list, the chosen group fills
-    // the detail pane.
-    final selected =
-        allGroups
-            .where((entry) => entry.group.group == _selected)
-            .firstOrNull ??
-        allGroups.firstOrNull;
-    final index = ListView(
-      key: const ValueKey('settings-group-index'),
-      padding: EdgeInsetsDirectional.only(
-        top: tokens.space2,
-        bottom: KitScreen.endPadding(context),
-      ),
-      children: [
-        ?tabTitle,
-        KitRowGroup(
-          children: [
-            for (final entry in allGroups)
-              KitRow(
-                key: ValueKey('settings-index-${entry.group.group.slug}'),
-                leading: KitRow.icon(context, _groupIcon(entry.group.group)),
-                // Titles only, so they fit the index pane (R5).
-                title: entry.group.title,
-                selected: identical(entry, selected),
-                trailing: const KitChevron(),
-                onTap: () => setState(() => _selected = entry.group.group),
-              ),
-          ],
-        ),
-        if (serversBlock != null) ...[
-          SizedBox(height: tokens.sectionGap),
-          serversBlock,
-        ],
-      ],
-    );
+    // Expanded and wider: the search and the five rows are the list, the
+    // chosen group's rows fill the detail pane.
     return KitScreen.twoPane(
       topBar: topBar,
       listPaneKey: const ValueKey('settings-list-pane'),
       detailPaneKey: const ValueKey('settings-detail-pane'),
-      list: index,
+      list: hub,
       detail: selected == null
           ? null
-          : ListView(
-              key: ValueKey('settings-detail-${selected.group.group.slug}'),
-              padding: EdgeInsetsDirectional.only(
-                top: tokens.space5,
-                bottom: KitScreen.endPadding(context),
-              ),
-              children: [_groupView(selected, scrollTarget: false), ?note],
+          : _SettingsGroupBody(
+              key: ValueKey('settings-detail-body-${selected.slug}'),
+              controller: controller,
+              group: selected,
+              detailPane: true,
             ),
       emptyDetail: KitStateView(
         key: const ValueKey('settings-detail-empty'),
@@ -604,51 +476,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-}
-
-class _HubGroup {
-  final SettingsGroup group;
-  final String title;
-  final List<_HubRow> rows;
-
-  const _HubGroup(this.group, this.title, this.rows);
-}
-
-/// One hub row: a search-index entry plus what only the hub shows beside
-/// it (a live subtitle, or a row that draws itself).
-class _HubRow {
-  final SearchEntry entry;
-
-  /// What the row is set to now, at its end ("Claude Sonnet 4").
-  final String? value;
-  final VoidCallback onTap;
-
-  /// A row that draws itself (live status or its own loading state) but is
-  /// searched like any other.
-  final WidgetBuilder? builder;
-
-  const _HubRow({
-    required this.entry,
-    required this.onTap,
-    this.value,
-    this.builder,
-  });
-
-  /// The row, marked as the place a search result arrives at (KitArrival):
-  /// the switches and the shell choice act here, so their results open the
-  /// hub at them.
-  Widget build(BuildContext context) => KitArrival(
-    id: entry.id,
-    child:
-        builder?.call(context) ??
-        _CategoryRow(
-          rowKey: entry.id,
-          icon: entry.icon,
-          title: entry.title,
-          value: value,
-          onTap: onTap,
-        ),
-  );
 }
 
 /// One settings row on the kit (design standard §6): an icon, the title, an

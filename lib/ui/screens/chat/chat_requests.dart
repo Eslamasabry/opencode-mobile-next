@@ -92,6 +92,14 @@ extension _ChatRequests on _ChatScreenState {
   /// Whether a pending permission request is for this tool call: its step
   /// then says "Waiting for you", never "Running" (AUTO-15).
   bool _toolWaitsForYou(Part part) {
+    // OpenCode's question tool runs while its question waits: the card is
+    // that step (the question carries no call id to match).
+    final status = part.toolState.status;
+    if (part.toolName == 'question' &&
+        (status == 'running' || status == 'pending') &&
+        _conn.questionForSession(widget.sessionID) != null) {
+      return true;
+    }
     final callID = part.callID;
     if (callID == null || callID.isEmpty) return false;
     return _conn.permissionsForSession(widget.sessionID).any((request) {
@@ -99,7 +107,6 @@ extension _ChatRequests on _ChatScreenState {
       if (tool != null) return tool.callID == callID;
       // A server that does not say which step asks: the step still running
       // the very command the request names.
-      final status = part.toolState.status;
       final command = request.commandPreview;
       return command != null &&
           (status == 'running' || status == 'pending') &&
@@ -184,7 +191,20 @@ extension _ChatRequests on _ChatScreenState {
     );
   }
 
+  /// The agent of this conversation waits on the person: a permission, a
+  /// question or a form of its own. The composer then says so.
+  /// A permission answered here and held for its Undo window no longer
+  /// waits on the person.
+  bool get _waitsForYou =>
+      _conn
+          .permissionsForSession(widget.sessionID)
+          .any((permission) => !_conn.delayedAnswers.isHeld(permission.id)) ||
+      _conn.questionForSession(widget.sessionID) != null ||
+      (_conn.capabilities.forms &&
+          _conn.formForSession(widget.sessionID) != null);
+
   /// Whether the request slot over the composer has something in it.
+
   bool _attentionPending(List<PermissionRequest> pendingPermissions) =>
       pendingPermissions.isNotEmpty ||
       _conn.questionForSession(widget.sessionID) != null ||

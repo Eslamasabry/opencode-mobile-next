@@ -25,6 +25,43 @@ AppLocalizations _copy(BuildContext context) =>
     Localizations.of<AppLocalizations>(context, AppLocalizations) ??
     lookupAppLocalizations(Localizations.localeOf(context));
 
+/// The words of the running app's locale, kept for [productErrorText] when a
+/// caller has no [AppLocalizations] to hand (most of them). Set by
+/// [ProductErrorLocale] near the root, so an Arabic app says its errors in
+/// Arabic without every call site passing the locale.
+AppLocalizations? _ambientCopy;
+
+/// Keeps [productErrorText]'s default words in the app's locale. Put it once
+/// below the app's `Localizations` (the `MaterialApp.builder`).
+class ProductErrorLocale extends StatefulWidget {
+  const ProductErrorLocale({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<ProductErrorLocale> createState() => _ProductErrorLocaleState();
+}
+
+class _ProductErrorLocaleState extends State<ProductErrorLocale> {
+  AppLocalizations? _mine;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _mine = Localizations.of<AppLocalizations>(context, AppLocalizations);
+    _ambientCopy = _mine;
+  }
+
+  @override
+  void dispose() {
+    if (identical(_ambientCopy, _mine)) _ambientCopy = null;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 /// The connection's last failure in words: mapped from the failure itself
 /// when it kept one (never its raw text), else its app-authored line.
 String? connectionErrorText(ConnectionController c, {AppLocalizations? l10n}) {
@@ -37,7 +74,8 @@ String? connectionErrorText(ConnectionController c, {AppLocalizations? l10n}) {
 /// Localized words for a domain-owned failure category. Server messages never
 /// enter the body; their redacted technical reason is available only in Details.
 String productErrorText(Object error, {AppLocalizations? l10n}) {
-  final copy = l10n ?? lookupAppLocalizations(const Locale('en'));
+  final copy =
+      l10n ?? _ambientCopy ?? lookupAppLocalizations(const Locale('en'));
   final failure = ProductFailure.from(error);
   return switch (failure.category) {
     ProductFailureCategory.words =>
@@ -55,6 +93,7 @@ String productErrorText(Object error, {AppLocalizations? l10n}) {
     ProductFailureCategory.notFound => copy.productErrorNotFound,
     ProductFailureCategory.conflict => copy.productErrorConflict,
     ProductFailureCategory.computer => copy.productErrorComputer,
+    ProductFailureCategory.unreadableReply => copy.productErrorUnreadableReply,
     ProductFailureCategory.busy => copy.productErrorBusy,
     ProductFailureCategory.server => copy.productErrorServer(
       failure.statusCode ?? 500,

@@ -17,7 +17,7 @@ import sys
 import tarfile
 
 BUNDLE_VERSION = "2.0.0"
-OPENCODE_VERSION = "2.0.29"
+OPENCODE_VERSION = "2.1.1"
 
 
 def package(binary, expected_digest, architecture, output):

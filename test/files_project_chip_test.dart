@@ -134,7 +134,9 @@ void main() {
   });
 
   Future<void> openFiles(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(412, 915);
+    // A tablet: Files is a rail destination there (a phone opens the same
+    // hub as a page).
+    tester.view.physicalSize = const Size(800, 1280);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(

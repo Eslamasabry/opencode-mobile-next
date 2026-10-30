@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'kit_divider.dart';
+import 'kit_max_width.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 
@@ -21,6 +22,9 @@ class KitKeyValueRow {
 /// follows in primary text with tabular figures so numbers line up down the
 /// column. Long values wrap, and from a large text size (or a narrow
 /// window) each row stacks its value under its label so neither is cut.
+/// A value that reads as prose (a sentence or more, or several lines)
+/// always stacks under its label and starts where the label starts: right-
+/// aligned in the value column, a paragraph reads ragged at its start.
 /// At most [maxRows] rows are drawn; the caller keeps to the same bound.
 ///
 /// States: none — it draws the rows it is given (an empty list draws
@@ -34,7 +38,10 @@ class KitKeyValue extends StatelessWidget {
   final List<KitKeyValueRow> rows;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     assert(
       rows.length <= maxRows,
       'KitKeyValue draws at most $maxRows rows (agent-card contract)',
@@ -55,7 +62,7 @@ class KitKeyValue extends StatelessWidget {
             Padding(
               padding: EdgeInsetsDirectional.symmetric(vertical: tokens.space2),
               child: MergeSemantics(
-                child: narrow
+                child: narrow || isProse(shown[i].value)
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -81,6 +88,11 @@ class KitKeyValue extends StatelessWidget {
       ),
     );
   }
+
+  /// Whether [value] reads as prose rather than a fact: several lines, or
+  /// a long run of words.
+  static bool isProse(String value) =>
+      value.contains('\n') || (value.length > 48 && value.contains(' '));
 
   Widget _label(KitKeyValueRow row) => KitText(
     row.label,

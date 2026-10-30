@@ -176,7 +176,7 @@ Only names that exist on `feat/visual-language-v1`, except where flagged:
 
 ## Motion and haptics
 
-- The glyph and the check (copy), and the glyph and the spinner (working), cross-fade on `KitMotion.quick` with `enter`/`exit`. The swap is instant under `KitMotion.reduced(context)`.
+- The glyph and the check (copy), and the glyph and the spinner (working), cross-fade on `KitMotion.quick` with `enter`/`exit`, and so does a change of glyph or of its colour (show and hide, play and pause, selected, enabled; micro-motion audit 2026-10-27). The swap is instant under `KitMotion.reduced(context)`.
 - The copied hold is a state timer (`KitMotion.copiedHold`), not an animation, so under reduced motion the check still shows for the hold.
 - There is no scale or fade-scale (MOT-2).
 - **Haptics:** none. MOT-11 names copy and icon taps as silent.

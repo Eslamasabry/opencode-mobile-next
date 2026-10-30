@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_theme.dart';
+import 'kit_max_width.dart';
 import 'kit_surface.dart';
 import 'kit_tokens.dart';
 
@@ -64,7 +65,10 @@ class KitPanel extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => tone == AppStatusTone.neutral
+  Widget build(BuildContext context) =>
+      KitMaxWidth.reading(child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) => tone == AppStatusTone.neutral
       ? _buildNeutral(context)
       : _buildRetired(context);
 
@@ -155,13 +159,17 @@ class KitPanel extends StatelessWidget {
               ],
             ),
     );
-    return Material(
-      color: Color.alphaBlend(
-        attention ? roles.attentionSurface : tint.withValues(alpha: .06),
-        roles.surface1,
-      ),
+    final fill = Color.alphaBlend(
+      attention ? roles.attentionSurface : tint.withValues(alpha: .06),
+      roles.surface1,
+    );
+    return kitSurfaceMaterial(
+      context,
+      level: KitSurfaceLevel.surface1,
+      fill: fill,
+      // The tone's wash stays under every style.
+      color: fill,
       shape: shape,
-      clipBehavior: Clip.antiAlias,
       child: onTap == null ? content : InkWell(onTap: onTap, child: content),
     );
   }

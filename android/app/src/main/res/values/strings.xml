@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_new_session">+ New</string>
-    <string name="widget_label">Conversations</string>
-    <string name="widget_preview_title_1">Release notes</string>
-    <string name="widget_preview_step_1">Working · 2m</string>
-    <string name="widget_preview_title_2">Fix login</string>
-    <string name="widget_preview_step_2">Reply drafted</string>
-    <string name="widget_description">Your newest OpenCode conversations, one tap away.</string>
+    <string name="widget_label">Conversation</string>
+    <string name="widget_description">The one thing that matters now: what needs you, what is working, or your last conversation.</string>
     <!-- Static launcher shortcuts (res/xml/shortcuts.xml). Short labels
          must fit a launcher tile: keep them to two words. -->
     <string name="shortcut_connect_short">Connect</string>
@@ -48,16 +44,21 @@
     <string name="native_alert_quota_reset_title">%1$s is back</string>
     <string name="native_alert_quota_reset_generic_title">A usage limit reset</string>
     <string name="native_alert_quota_reset_body">Open to see how much is left.</string>
-    <string name="native_alert_permission_title">%1$s needs permission</string>
-    <string name="native_alert_permission_body">Tap to review the pending request.</string>
-    <string name="native_alert_question_title">%1$s needs your input</string>
-    <string name="native_alert_question_body">Tap to answer the pending question.</string>
-    <string name="native_alert_complete_title">%1$s finished</string>
-    <string name="native_alert_complete_body">Tap to review the latest result.</string>
-    <string name="native_alert_error_title">%1$s session needs attention</string>
-    <string name="native_alert_error_body">Tap to review the session error.</string>
+    <string name="native_alert_permission_title">Allow %1$s to continue?</string>
+    <string name="native_alert_question_title">%1$s has a question for you</string>
+    <string name="native_alert_complete_title">Finished: %1$s</string>
+    <string name="native_alert_error_title">Stopped: %1$s</string>
+    <string name="native_alert_stopped_any">A conversation stopped</string>
+    <string name="native_ask_run">Run %1$s?</string>
+    <string name="native_ask_edit">Edit %1$s?</string>
+    <string name="native_ask_read">Read %1$s?</string>
+    <string name="native_ask_folder">Work in %1$s?</string>
+    <string name="native_public_needs_you">A request needs you</string>
+    <string name="native_public_finished">A conversation finished</string>
+    <string name="native_test_title">Notifications are on</string>
+    <string name="native_test_body">Questions and finished work will arrive like this.</string>
     <string name="native_alert_checkin_title">%1$s is still working</string>
-    <string name="native_alert_checkin_body">Tap to check in on the session.</string>
+    <string name="native_alert_checkin_body">Open the conversation to check in.</string>
     <string name="native_team_decision_title">AI Team needs a decision</string>
     <string name="native_team_decision_body">Tap to answer it in the app.</string>
     <string name="native_team_failed_title">A run failed</string>
@@ -69,8 +70,8 @@
     <string name="native_team_title">AI Team</string>
     <string name="native_team_working">Working</string>
     <string name="native_allow_once">Allow once</string>
-    <string name="native_deny">Deny</string>
-    <string name="native_reply">Reply</string>
+    <string name="native_reject">Reject</string>
+    <string name="native_open">Open</string>
     <string name="native_coding_requests_channel">Coding requests</string>
     <string name="native_coding_requests_description">Alerts when OpenCode needs permission or input</string>
     <string name="native_coding_status_channel">Coding session updates</string>
@@ -148,30 +149,30 @@
     <string name="native_status_public_paused">OpenCode · paused</string>
     <string name="native_status_public_stopped">OpenCode · a chat stopped</string>
     <!-- Moments: summaries, plain reasons, quiet hours -->
-    <string name="native_alert_stopped_title">%1$s stopped</string>
-    <string name="native_alert_reason_auth">The provider rejected the key. Tap to sign in again.</string>
-    <string name="native_alert_reason_context">The chat is too long for the model. Tap to review.</string>
-    <string name="native_alert_reason_length">The reply hit its length limit. Tap to review.</string>
-    <string name="native_alert_reason_filter">The provider blocked the reply. Tap to review.</string>
-    <string name="native_alert_reason_model">That model is not available. Tap to choose another.</string>
-    <string name="native_alert_reason_other">Something went wrong. Tap to review.</string>
+    <string name="native_alert_reason_auth">The provider rejected the key. Sign in again to continue.</string>
+    <string name="native_alert_reason_context">The conversation is too long for the model.</string>
+    <string name="native_alert_reason_length">The reply hit its length limit.</string>
+    <string name="native_alert_reason_filter">The provider blocked the reply.</string>
+    <string name="native_alert_reason_model">That model is not available. Choose another to continue.</string>
+    <string name="native_alert_reason_other">Something went wrong.</string>
     <plurals name="native_group_need_you">
         <item quantity="one">%d needs you</item>
         <item quantity="other">%d need you</item>
     </plurals>
     <plurals name="native_group_finished">
-        <item quantity="one">%d reply finished</item>
-        <item quantity="other">%d replies finished</item>
+        <item quantity="one">%d conversation finished</item>
+        <item quantity="other">%d conversations finished</item>
     </plurals>
     <string name="native_coding_requests_quiet_channel">Coding requests (quiet hours)</string>
     <string name="native_coding_requests_quiet_description">Requests that arrive during quiet hours, with no sound</string>
-    <string name="native_alert_permission_command_title">Run this command?</string>
-    <string name="widget_label_wide">Conversation, wide</string>
+    <string name="widget_label_wide">Conversations</string>
     <string name="widget_label_list">Conversations list</string>
     <string name="widget_label_strip">Conversation strip</string>
-    <string name="widget_description_wide">One conversation with its latest reply, a wide card.</string>
-    <string name="widget_description_list">Your conversations in a list, with what needs you first.</string>
-    <string name="widget_description_strip">One conversation on a single line, with a mic.</string>
+    <string name="widget_description_wide">What needs you or is working now, and your next conversations.</string>
+    <string name="widget_description_list">The one thing that matters now, and your other conversations under it.</string>
+    <string name="widget_description_strip">The one thing that matters now, on one line.</string>
     <string name="usage_widget_title_wide">Usage, wide</string>
     <string name="usage_widget_description_wide">What is left on each plan limit, two columns wide.</string>
+    <string name="widget_label_status">Status</string>
+    <string name="widget_description_status">Your servers, this phone\'s Linux, running tasks and the plan limit closest to running out.</string>
 </resources>

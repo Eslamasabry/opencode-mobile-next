@@ -90,7 +90,7 @@ Future<void> _shot(
   }
 }
 
-/// Types [description] and opens report-problem-preview-sheet.
+/// Types [description] and opens Details, which holds exactly what is sent.
 Future<void> _review(WidgetTester tester, String description) async {
   await tester.enterText(
     find.descendant(
@@ -100,11 +100,13 @@ Future<void> _review(WidgetTester tester, String description) async {
     description,
   );
   await tester.pumpAndSettle();
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pumpAndSettle();
   await tester.ensureVisible(
-    find.byKey(const ValueKey('report-problem-review')),
+    find.byKey(const ValueKey('report-problem-details')),
   );
   await tester.pumpAndSettle();
-  await tester.tap(find.byKey(const ValueKey('report-problem-review')));
+  await tester.tap(find.byKey(const ValueKey('report-problem-details')));
   // The version resolves on a real future.
   for (var i = 0; i < 3; i++) {
     await tester.runAsync(
@@ -191,7 +193,7 @@ void main() {
         tester,
         'system_app_diagnostics',
         light: light,
-        home: AppDiagnosticsScreen(controller: controller),
+        home: AppDiagnosticsKeptScreen(controller: controller),
       );
     });
 
@@ -203,7 +205,7 @@ void main() {
         tester,
         'system_app_diagnostics_clear_sheet',
         light: light,
-        home: AppDiagnosticsScreen(controller: controller),
+        home: AppDiagnosticsKeptScreen(controller: controller),
         then: () async {
           await tester.ensureVisible(
             find.byKey(const ValueKey('clear-app-diagnostics')),
@@ -305,7 +307,7 @@ void main() {
       'system_app_diagnostics',
       light: false,
       size: _wide,
-      home: AppDiagnosticsScreen(controller: controller),
+      home: AppDiagnosticsKeptScreen(controller: controller),
     );
   });
 
