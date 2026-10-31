@@ -1,0 +1,5 @@
+• Two home-screen widgets, Conversations and Status, that put what needs you first.
+• Git in the chat: tap the branch to save the files you ticked and send them to GitHub.
+• Inbox lists everything that waits on you, with one Stop always in the same place while a reply runs.
+• A new Appearance with five styles, one question at a time; you start on Solid with the background off.
+• Simplified Chinese now covers about 92 % of the app (thanks @Azx8788, #107).

@@ -5,7 +5,7 @@
 # OpenCode Mobile
 
 **Coding agents on your Android phone.**
-Claude Code, Codex, Gemini, Kilo, Cline and OpenCode, in a Linux the app installs itself.
+Ten agents, including Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose and OpenCode, in a Linux the app installs itself.
 No computer, no Termux. Or connect to the agent on your computer.
 
 [![Latest release](https://img.shields.io/github/v/release/Eslamasabry/opencode-mobile-next?label=release&color=55D187)](https://github.com/Eslamasabry/opencode-mobile-next/releases/latest)
@@ -30,7 +30,7 @@ No computer, no Termux. Or connect to the agent on your computer.
 
 ## Highlights
 
-- **Six agents, one app.** Pick Claude Code, Codex, Gemini, Kilo, Cline or OpenCode for each conversation. OpenCode's free models work without an API key.
+- **Ten agents, one app.** Pick Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx or OpenCode for each conversation. Claude Code and OpenCode are the best proven on a phone; the others are newer. OpenCode's free models work without an API key.
 - **Real Linux on the phone.** The app installs its own Ubuntu with Git and Node, runs the agent there, and keeps your projects inside the app. A full terminal is built in.
 - **Approve from anywhere.** Allow or reject a command from the notification, the home-screen widget or the chat, or turn on auto-approve and let it run.
 - **Steer mid-task.** Send a new instruction while the agent works, instead of waiting for it to finish.
@@ -71,7 +71,7 @@ Coming from Termux? **Move from Termux** copies your projects into the app. More
 | --- | --- |
 | Android | 8 or newer; on-phone agents need a 64-bit phone |
 | OpenCode | OpenCode 2 only; OpenCode 1 is no longer supported |
-| Claude Code, Codex, Gemini, Kilo, Cline | On the phone, in the built-in Linux |
+| Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx | On the phone, in the built-in Linux (newer ones are less tested on real phones) |
 | Agents on your computer | OpenCode 2, Codex directly, or Claude Code through [Paseo](https://github.com/getpaseo/paseo) |
 | Languages | English and Arabic, with partial Spanish, Japanese, Portuguese, Russian and Chinese |
 | Linux and Windows desktop | Experimental builds |

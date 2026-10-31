@@ -6,12 +6,12 @@
     <meta name="theme-color" content="#E7EAEF">
     <meta name="color-scheme" content="light">
     <title>OpenCode Mobile 2.1: coding agents on your Android phone</title>
-    <meta name="description" content="Build a game from your phone. OpenCode Mobile 2.1 runs Claude Code, Codex, Gemini, Kilo, Cline and OpenCode on Android in its own built-in Linux. No computer, no Termux. Free, open source, MIT.">
+    <meta name="description" content="Build a game from your phone. OpenCode Mobile 2.1 runs ten coding agents, including Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose and OpenCode, on Android in its own built-in Linux. No computer, no Termux. Free, open source, MIT.">
     <link rel="canonical" href="https://eslamasabry.github.io/opencode-mobile-next/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="OpenCode Mobile">
     <meta property="og:title" content="Build a game. From your phone. OpenCode Mobile 2.1">
-    <meta property="og:description" content="Six coding agents on Android, in the app's own built-in Linux. No computer, no Termux. Free and open source.">
+    <meta property="og:description" content="Ten coding agents on Android, in the app's own built-in Linux. No computer, no Termux. Free and open source.">
     <meta property="og:url" content="https://eslamasabry.github.io/opencode-mobile-next/">
     <meta property="og:image" content="https://eslamasabry.github.io/opencode-mobile-next/assets/og-image.jpg">
     <meta property="og:image:width" content="1200">
@@ -19,7 +19,7 @@
     <meta property="og:image:alt" content="OpenCode Mobile: Your agent keeps working. Your phone tells you when it needs you. A notification asks to run npm install in neon-breaker, beside the conversation on a phone.">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Build a game. From your phone. OpenCode Mobile 2.1">
-    <meta name="twitter:description" content="Six coding agents on Android, in the app's own built-in Linux. Free and open source.">
+    <meta name="twitter:description" content="Ten coding agents on Android, in the app's own built-in Linux. Free and open source.">
     <meta name="twitter:image" content="https://eslamasabry.github.io/opencode-mobile-next/assets/og-image.jpg">
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
@@ -27,7 +27,7 @@
     <link rel="stylesheet" href="site.css">
     <script>document.documentElement.classList.add("js")</script>
   <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"OpenCode Mobile","applicationCategory":"DeveloperApplication","operatingSystem":"Android 8.0 or newer","description":"Android app that runs Claude Code, Codex, Gemini, Kilo, Cline and OpenCode on the phone in its own built-in Linux, or connects to an agent on your computer. Independent community project.","url":"https://eslamasabry.github.io/opencode-mobile-next/","downloadUrl":"https://github.com/Eslamasabry/opencode-mobile-next/releases/latest","softwareVersion":"2.1.0","license":"https://github.com/Eslamasabry/opencode-mobile-next/blob/master/LICENSE","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"image":"https://eslamasabry.github.io/opencode-mobile-next/assets/og-image.jpg","codeRepository":"https://github.com/Eslamasabry/opencode-mobile-next"}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"OpenCode Mobile","applicationCategory":"DeveloperApplication","operatingSystem":"Android 8.0 or newer","description":"Android app that runs ten coding agents, including Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose and OpenCode, on the phone in its own built-in Linux, or connects to an agent on your computer. Independent community project.","url":"https://eslamasabry.github.io/opencode-mobile-next/","downloadUrl":"https://github.com/Eslamasabry/opencode-mobile-next/releases/latest","softwareVersion":"2.1.0","license":"https://github.com/Eslamasabry/opencode-mobile-next/blob/master/LICENSE","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"image":"https://eslamasabry.github.io/opencode-mobile-next/assets/og-image.jpg","codeRepository":"https://github.com/Eslamasabry/opencode-mobile-next"}
     </script>
   </head>
   <body>
@@ -55,7 +55,7 @@
       <section class="hero wrap" id="top" aria-labelledby="hero-title">
         <div class="hero-copy">
           <h1 id="hero-title">Your agent keeps working. Your phone tells you when it needs you.</h1>
-          <p class="lede">One prompt, and a neon brick-breaker is running in the app's own preview. Approve what the agent wants to do from a notification, send it a screenshot, ask for power-ups. Six coding agents, in a Linux the app installs itself. No computer, no Termux.</p>
+          <p class="lede">One prompt, and a neon brick-breaker is running in the app's own preview. Approve what the agent wants to do from a notification, send it a screenshot, ask for power-ups. Ten coding agents, in a Linux the app installs itself. No computer, no Termux.</p>
           <div class="actions">
             <a class="button" href="https://github.com/Eslamasabry/opencode-mobile-next/releases/latest">Download for Android</a>
           </div>
@@ -188,14 +188,18 @@
       </section>
 
       <section class="agents wrap" id="agents" aria-labelledby="agents-title">
-        <h2 id="agents-title">Six agents. Pick one per conversation.</h2>
+        <h2 id="agents-title">Ten agents. Pick one per conversation.</h2>
         <p class="agents-lede">Switch agents without leaving the app. Each conversation keeps its own agent, model and history.</p>
         <ul class="agent-row">
           <li><strong>Claude Code</strong><span>Anthropic's coding agent</span></li>
           <li><strong>Codex</strong><span>OpenAI's coding agent</span></li>
-          <li><strong>Gemini</strong><span>Google's coding agent</span></li>
+          <li><strong>Gemini CLI</strong><span>Google's coding agent</span></li>
+          <li><strong>Qwen Code</strong><span>Alibaba's coding agent</span></li>
           <li><strong>Kilo</strong><span>Kilo Code agent</span></li>
           <li><strong>Cline</strong><span>The Cline agent</span></li>
+          <li><strong>Goose</strong><span>The Goose agent</span></li>
+          <li><strong>Oh My Pi</strong><span>The Pi coding agent</span></li>
+          <li><strong>fx</strong><span>Vercel Labs' agent</span></li>
           <li><strong>OpenCode</strong><span>Free models, no API key</span></li>
         </ul>
         <p class="note">Models run at the provider you choose. OpenCode's free models, such as GLM-5.3-Flash Free, need no API key. The others need that provider's sign-in or key.</p>
@@ -261,7 +265,7 @@
         </details>
         <details>
           <summary>Which agents work?</summary>
-          <p>Claude Code, Codex, Gemini, Kilo, Cline and OpenCode. You pick one per conversation. OpenCode's free models need no API key; the other agents need that provider's sign-in or key.</p>
+          <p>Ten: Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx and OpenCode. Claude Code and OpenCode are the best proven on phones; the rest are newer. You pick one per conversation. OpenCode's free models need no API key; the other agents need that provider's sign-in or key.</p>
         </details>
         <details>
           <summary>Can I schedule a prompt?</summary>

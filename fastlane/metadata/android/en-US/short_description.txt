@@ -1,1 +1,1 @@
-Claude Code and OpenCode on your phone. No computer, no Termux.
+Unofficial: ten coding agents on your phone, in its own Linux. No computer.

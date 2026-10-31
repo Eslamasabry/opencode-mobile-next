@@ -173,7 +173,7 @@ p { color: var(--quiet); max-inline-size: 62ch; }
 /* Agents */
 .agents { padding-block: 3rem 5rem; }
 .agents-lede { margin-block-start: 1rem; }
-.agent-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; background: var(--line); border-radius: 20px; overflow: hidden; margin-block-start: 2rem; }
+.agent-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background: var(--line); border-radius: 20px; overflow: hidden; margin-block-start: 2rem; }
 .agent-row li { background: var(--card); padding: 1.3rem 1.1rem; display: grid; gap: .2rem; align-content: start; }
 .agent-row strong { font-size: 1.3rem; font-stretch: 115%; font-weight: 760; }
 .agent-row span { color: var(--quiet); font-size: .9rem; }
@@ -253,7 +253,7 @@ details p { padding-inline: 1.3rem; padding-block-end: 1.3rem; }
   .demo-grid, .home-grid, .start-grid, .arabic-content { grid-template-columns: minmax(0, 1fr); }
   .demo-head { position: static; }
   .home-copy h2, .home-copy p, .home-copy p:first-of-type { grid-column: 1; grid-row: auto; }
-  .agent-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .agent-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .feature-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {

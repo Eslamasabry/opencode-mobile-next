@@ -1,34 +1,34 @@
-Run a coding agent on your Android phone, or follow the one on your computer.
+OpenCode Mobile is an unofficial, independent community app. It is not affiliated with or endorsed by the OpenCode team, Anthropic, OpenAI or Google. It is free, open source (MIT), and written by one developer with substantial AI assistance.
 
-Ask an agent for a change, watch it work, approve what it wants to do, and review the result. OpenCode Mobile installs its own Ubuntu inside the app and runs OpenCode and Claude Code there. No computer, no Termux. If your agent already runs on a computer, the app connects to it instead.
+Run a coding agent on your Android phone, or follow the one on your computer. Ask for a change, watch it work, approve what it wants to do, and review the result.
 
 <b>On this phone</b>
-• Guided setup installs Ubuntu, Git, Python, Node.js and OpenCode inside the app, about 4 minutes and ~210 MB the first time. It checks each step, can stop, and resumes where it left off.
-• Claude Code runs beside OpenCode, with its own models, commands and sign-in. Codex, Gemini CLI, Qwen Code, Goose and Pi use the same path; they are newer and not yet checked on a physical phone.
+• The app installs its own Ubuntu with Git, Python and Node.js. No computer, no Termux. The first setup downloads about 210 MB (about 4 minutes), checks each step, and resumes where it left off.
+• Ten agents, picked per conversation: Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx and OpenCode. Claude Code and OpenCode are the best proven on phones; the others are newer and less tested. Each agent needs its own provider sign-in or key. OpenCode's free models need none.
 • Needs a 64-bit phone. Phones with about 2 GB of memory work, slowly.
+• See what is making the phone hot, and stop programs left behind.
 
 <b>On your computer</b>
-• Connect to OpenCode 1 or 2 by QR code or address. Tailscale lets you reach it from anywhere.
-• Claude Code, Codex and Pi through a Paseo helper on your own network.
+• Connect to OpenCode 2 by QR code or address. Tailscale lets you reach it from anywhere.
+• Claude Code and Codex also work through a Paseo helper on your own network.
 
 <b>Chat that keeps up</b>
-• Replies stream as they are written. One live line says what the agent is doing, with Stop right there.
-• The agent's reads, edits and commands fold into one line you can open.
+• Replies stream as they are written. One live line says what the agent is doing, with one Stop always in the same place.
+• Reads, edits and commands fold into one line you can open.
 • Approve or reject each request before it acts. Diffs fit the phone's width.
+• Git in the chat: tap the branch, tick files, save and send to GitHub.
 • Talk instead of type: voice is transcribed on the phone and never leaves it.
 
-<b>New in 1.4.0</b>
-• Home-screen widgets: Allow, Reject, Stop, Steer or start a reply by voice without opening the app.
-• Continue with…: hand a conversation to another agent, for example from Codex to Claude Code.
-• A live background in 20 looks, an app-only Text size setting and a one-line chat header.
-• Sending while an agent works steers it where the agent supports that.
+<b>Away from the app</b>
+• Two home-screen widgets, Conversations and Status, put what needs you first.
+• Inbox: everything that waits on you across servers, in one list.
+• Allow or reject from a notification.
 
-<b>More</b>
-• Inbox across servers: everything that needs you, in one list, and what happened while you were away.
-• AI Team: give a goal and milestones; a planner, workers and a checker build it and merge to dev with receipts. Nothing reaches main until you confirm. Runs on OpenCode 2, which new phones start on. Proven on emulators.
-• English and Arabic, light and dark, large text up to 200%.
+<b>Make it yours</b>
+• Appearance asks one question at a time: light or dark, colours, one of five styles, text size. You start on Solid with the moving background off.
+• English and Arabic, with partial Chinese, Spanish, Japanese, Portuguese and Russian. Large text up to 200%.
 
 <b>Your data</b>
-The app talks only to the servers you choose. Passwords stay in Android's keystore. No ads, no analytics, no automatic crash upload: a report is sent only when you send one, with secrets removed. You bring your own model provider (an API key, or OpenCode's free model to try it).
+The app talks only to the servers you choose. Passwords stay in Android's keystore. No ads, no analytics, no automatic crash upload: a report is sent only when you send one, with secrets removed. You bring your own model provider.
 
-OpenCode Mobile is an independent community project. It is not affiliated with or endorsed by the OpenCode team or Anthropic. It is built with substantial AI assistance. Source code (MIT): https://github.com/Eslamasabry/opencode-mobile-next
+Source code (MIT): https://github.com/Eslamasabry/opencode-mobile-next
