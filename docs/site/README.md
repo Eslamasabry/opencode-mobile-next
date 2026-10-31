@@ -33,12 +33,16 @@ with keyboard navigation and reduced motion, before claiming those results.
   ffmpeg to 720x1280, H.264 High, yuv420p, `+faststart`, CRF 23 capped at 1 Mbit/s,
   AAC 128k (about 4.9 MB). `poster.jpg` is the frame at 31 s. The video never
   autoplays; it has controls and plays with sound only when pressed.
-- `assets/screens/*.webp`: raw emulator captures from `launch-footage/emu-shots/`
-  (status bar cropped off, resized to 480 px wide): `build-chat` (r10), `approve`
-  (cl3), `preview` (pz3), `diff` (x6), `terminal` (xg4), `models` (k1). The three
-  `widget-*` images are crops of the home-screen widget from `wv89` and `wv1011`.
-  All use demo data from the synthetic `neon-game` and `settings-demo` projects;
-  no account values, errors or status bars are shown.
+- `assets/screens/*.webp` (2.1.0, 2026-10-31), 480x1010 unless noted:
+  `build-chat`, `approve`, `preview`, `diff` and `terminal` are the real screens,
+  dark, rendered with demo data by the `tool/capture` harness at 412x915 dp, 2x
+  (`build-chat` by a one-off scene with the same fixtures),
+  scaled to 1010 px high and padded at the sides with the app's background;
+  `models` is a dark emulator capture of 2.1.0 (status bar cropped off). The three
+  `widget-*` images are rounded crops of the 2.1.0 home-screen widgets (light) on
+  the emulator (`widget-list` 480x296, `widget-small` 346x447, `widget-ready`
+  560x346). All use demo data from the synthetic `neon-breaker` and
+  `weather-app` projects; no account values, errors or status bars are shown.
 - `assets/og-image.jpg` is composed from the preview capture, the logo and the
   bundled Geist font.
 - The site uses the project's own logo; the bundled font license accompanies the
