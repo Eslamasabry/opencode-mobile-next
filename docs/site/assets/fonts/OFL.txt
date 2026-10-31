@@ -1,6 +1,10 @@
-Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font)
+Roboto Flex (assets/fonts/RobotoFlex-latin.woff2, Latin subset as served by Google Fonts, version 3.200):
+Copyright 2017 The Roboto Flex Project Authors (https://github.com/TypeNetwork/Roboto-Flex)
 
-This Font Software is licensed under the SIL Open Font License, Version 1.1.
+Noto Sans Arabic (assets/fonts/NotoSansArabic-arabic.woff2, Arabic subset as served by Google Fonts, version 2.012):
+Copyright 2022 The Noto Project Authors (https://github.com/notofonts/arabic)
+
+Both fonts are licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:
 https://openfontlicense.org
 

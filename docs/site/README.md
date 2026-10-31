@@ -1,7 +1,7 @@
 # Static product page
 
 `index.html` is a standalone page with local styles, fonts, logo and screenshots.
-It works without JavaScript (one tiny inline script only adds scroll-reveal animation, content is visible by default; a second inline script sends a cookie-free visit count to GoatCounter at `opencode-mobile.goatcounter.com`, only on the published `github.io` host and never with Do Not Track) and needs no package install or build step. Open `index.html` directly
+It works without JavaScript (one small inline script makes the hero notification answerable: Allow once and Reject switch the notification and the phone screen; without it the request and its result simply show one after the other; a second inline script sends a cookie-free visit count to GoatCounter at `opencode-mobile.goatcounter.com`, only on the published `github.io` host and never with Do Not Track) and needs no package install or build step. Open `index.html` directly
 with a `file://` URL for an offline preview, or serve this directory locally:
 
 ```bash
@@ -43,10 +43,35 @@ with keyboard navigation and reduced motion, before claiming those results.
   the emulator (`widget-list` 480x296, `widget-small` 346x447, `widget-ready`
   560x346). All use demo data from the synthetic `neon-breaker` and
   `weather-app` projects; no account values, errors or status bars are shown.
-- `assets/og-image.jpg` is composed from the preview capture, the logo and the
-  bundled Geist font.
-- The site uses the project's own logo; the bundled font license accompanies the
-  local font assets.
+- `assets/og-image.jpg` (1200x630) is rendered in headless Chromium from the
+  page's own look: the logo, the hero headline, the `npm install` notification
+  and the top of the `approve` capture, in the bundled Roboto Flex.
+- The site uses the project's own logo. Fonts are self-hosted, so the page makes
+  no font requests: `assets/fonts/RobotoFlex-latin.woff2` (Roboto Flex 3.200,
+  Latin subset) and `assets/fonts/NotoSansArabic-arabic.woff2` (Noto Sans
+  Arabic 2.012, Arabic subset), both the Google Fonts woff2 files, SIL OFL 1.1;
+  copyrights and the license are in `assets/fonts/OFL.txt`. Commands use the
+  system monospace font.
+
+## Design (direction A, "Needs you", 2026-10-31)
+
+The page is built around what makes the app different: the phone tells you
+when the agent needs you, and you answer there. It uses the light grey of
+Android's notification shade (`#E7EAEF`), white cards, the app's own "Allow
+once" green (`#167A46`) and an amber dot only where something waits. Type is
+Roboto Flex, wide and heavy for headlines and normal width for text, and
+Noto Sans Arabic for the Arabic section.
+
+The one memorable element is the hero notification, "Run npm install in
+neon-breaker?". Allow once turns it into "Ready" and the phone beside it
+switches from the conversation to the game in the preview. On wide screens the
+card sits over the empty part of the chat, never over its title or messages;
+the hero phone is cropped above the chat's own request card and chips. The
+`approve` and `preview` captures are used there, so the demo section shows the
+other four screens. Everything else stays quiet: a plain feature list instead
+of cards, no stats strip, no eyebrows, and no scroll-reveal animation. The
+design record and renders are kept outside the repository
+(`/home/eslam/Storage2/wt/site-redesign-2026-10-31/`).
 
 Deployment: `.github/workflows/pages.yml` publishes `docs/site` to GitHub Pages
 on pushes to `master` that touch `docs/site/**`, or by manual dispatch. The site

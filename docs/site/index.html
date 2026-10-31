@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0c120f">
-    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#E7EAEF">
+    <meta name="color-scheme" content="light">
     <title>OpenCode Mobile 2.1: coding agents on your Android phone</title>
     <meta name="description" content="Build a game from your phone. OpenCode Mobile 2.1 runs Claude Code, Codex, Gemini, Kilo, Cline and OpenCode on Android in its own built-in Linux. No computer, no Termux. Free, open source, MIT.">
     <link rel="canonical" href="https://eslamasabry.github.io/opencode-mobile-next/">
@@ -16,7 +16,7 @@
     <meta property="og:image" content="https://eslamasabry.github.io/opencode-mobile-next/assets/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="OpenCode Mobile 2.1: Build a game. From your phone. A neon brick-breaker running in the in-app preview.">
+    <meta property="og:image:alt" content="OpenCode Mobile: Your agent keeps working. Your phone tells you when it needs you. A notification asks to run npm install in neon-breaker, beside the conversation on a phone.">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Build a game. From your phone. OpenCode Mobile 2.1">
     <meta name="twitter:description" content="Six coding agents on Android, in the app's own built-in Linux. Free and open source.">
@@ -30,178 +30,194 @@
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"OpenCode Mobile","applicationCategory":"DeveloperApplication","operatingSystem":"Android 8.0 or newer","description":"Android app that runs Claude Code, Codex, Gemini, Kilo, Cline and OpenCode on the phone in its own built-in Linux, or connects to an agent on your computer. Independent community project.","url":"https://eslamasabry.github.io/opencode-mobile-next/","downloadUrl":"https://github.com/Eslamasabry/opencode-mobile-next/releases/latest","softwareVersion":"2.1.0","license":"https://github.com/Eslamasabry/opencode-mobile-next/blob/master/LICENSE","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"image":"https://eslamasabry.github.io/opencode-mobile-next/assets/og-image.jpg","codeRepository":"https://github.com/Eslamasabry/opencode-mobile-next"}
     </script>
   </head>
-    <body>
+  <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header">
       <div class="wrap header-row">
         <a class="brand" href="#top" aria-label="OpenCode Mobile home">
-          <img src="assets/logo.png" width="40" height="40" alt="">
-          <span>OpenCode <span class="brand-detail">Mobile</span></span>
+          <img src="assets/logo.png" width="36" height="36" alt="">
+          <span>OpenCode Mobile</span>
         </a>
-        <nav aria-label="Main navigation">
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="#story">The demo</a>
           <a href="#features">Features</a>
           <a href="#agents">Agents</a>
           <a href="#get-started">Get started</a>
           <a href="#faq">FAQ</a>
           <a href="#arabic" lang="ar" dir="rtl">العربية</a>
-          <a class="nav-source" href="https://github.com/Eslamasabry/opencode-mobile-next">GitHub</a>
+          <a href="https://github.com/Eslamasabry/opencode-mobile-next">GitHub</a>
         </nav>
-        <a class="button button-small header-cta" href="https://github.com/Eslamasabry/opencode-mobile-next/releases/latest">Download</a>
+        <a class="button button-small" href="https://github.com/Eslamasabry/opencode-mobile-next/releases/latest">Download</a>
       </div>
     </header>
 
     <main id="main">
       <section class="hero wrap" id="top" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow"><span class="pill">2.1</span> Android &middot; open source</p>
-          <h1 id="hero-title">Build a game.<br><span class="accent">From your phone.</span></h1>
-          <p class="hero-description">One prompt, and a neon brick-breaker is running in the app's own preview. Approve what the agent wants to do from a notification, send it a screenshot, ask for power-ups. Six coding agents, in a Linux the app installs itself. No computer, no Termux.</p>
-          <div class="hero-actions">
+          <h1 id="hero-title">Your agent keeps working. Your phone tells you when it needs you.</h1>
+          <p class="lede">One prompt, and a neon brick-breaker is running in the app's own preview. Approve what the agent wants to do from a notification, send it a screenshot, ask for power-ups. Six coding agents, in a Linux the app installs itself. No computer, no Termux.</p>
+          <div class="actions">
             <a class="button" href="https://github.com/Eslamasabry/opencode-mobile-next/releases/latest">Download for Android</a>
-            <a class="button button-secondary" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/Eslamasabry/opencode-mobile-next">Get it on Obtainium</a>
           </div>
-          <p class="requirements">Version 2.1.0 (build 57). Free, MIT. Android 8 or newer; the built-in Linux needs a 64-bit phone. OpenCode's free models need no API key.</p>
+          <p class="fine">Version 2.1.0 (build 57). Free, MIT. Android 8 or newer; the built-in Linux needs a 64-bit phone. OpenCode's free models need no API key. Or <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/Eslamasabry/opencode-mobile-next">get it on Obtainium</a>, which keeps it updated.</p>
         </div>
-        <figure class="hero-video">
-          <div class="video-frame">
-            <video controls playsinline preload="metadata" poster="assets/video/poster.jpg" width="720" height="1280" aria-describedby="video-caption">
-              <source src="assets/video/launch-720.mp4" type="video/mp4">
-              <p>Your browser can't play this video. <a href="assets/video/launch-720.mp4">Download the demo video</a>.</p>
-            </video>
+
+        <div class="hero-stage">
+          <div class="phone phone-hero">
+            <img class="screen screen-ask" src="assets/screens/approve.webp" width="480" height="1010" alt="The Neon brick breaker conversation in the neon-breaker project. Asked to make the game feel smoother, the agent says it first needs to install the game's dependencies.">
+            <img class="screen screen-done" src="assets/screens/preview.webp" width="480" height="1010" alt="The in-app preview filling the screen with the neon brick breaker running, a slim Preview bar on top and an Ask for a change field at the bottom.">
           </div>
-          <figcaption id="video-caption">About a minute, recorded in the app: one prompt, a playable game, a screenshot, power-ups, a reviewed diff and a git commit. Press play for sound.</figcaption>
-        </figure>
+          <div class="heads-up" aria-live="polite">
+            <div class="notif notif-ask" data-state="ask">
+              <p class="notif-head"><img src="assets/logo.png" width="18" height="18" alt=""> OpenCode · neon-breaker · now</p>
+              <p class="notif-title"><span class="dot dot-wait" aria-hidden="true"></span>Run npm install in neon-breaker?</p>
+              <p class="notif-cmd"><code>npm install</code></p>
+              <div class="notif-actions" hidden>
+                <button type="button" class="chip" data-answer="reject">Reject</button>
+                <button type="button" class="chip chip-allow" data-answer="allow">Allow once</button>
+              </div>
+            </div>
+            <div class="notif notif-done" data-state="done">
+              <p class="notif-head"><img src="assets/logo.png" width="18" height="18" alt=""> OpenCode · neon-breaker · 2 min later</p>
+              <p class="notif-title"><span class="dot dot-ready" aria-hidden="true"></span>Ready: your game is running</p>
+              <p class="notif-body">Dependencies installed and the dev server is up. Tap to play it in the app.</p>
+              <button type="button" class="text-button notif-reset" hidden>Show the request again</button>
+            </div>
+            <div class="notif notif-no" data-state="no">
+              <p class="notif-head"><img src="assets/logo.png" width="18" height="18" alt=""> OpenCode · neon-breaker · now</p>
+              <p class="notif-title">You said no</p>
+              <p class="notif-body">The agent doesn't run it and asks what to do instead.</p>
+              <button type="button" class="text-button notif-reset" hidden>Show the request again</button>
+            </div>
+            <p class="try" hidden>Try it: answer the notification.</p>
+          </div>
+        </div>
       </section>
 
-      <section class="trust wrap" aria-label="At a glance">
-        <ul class="glance">
-          <li><strong>6</strong> agents</li>
-          <li><strong>0</strong> computers needed</li>
-          <li><strong>0</strong> API keys for free models</li>
-          <li><strong>MIT</strong> open source</li>
-        </ul>
-      </section>
-
-      <section class="story" id="story" aria-labelledby="story-title">
-        <div class="wrap">
-          <div class="section-heading reveal">
-            <h2 id="story-title">From one prompt<br>to a game you can play.</h2>
-            <p>This is the demo, screen by screen. Every image is the app itself: real screens, from the emulator or rendered with demo data.</p>
+      <section class="demo" id="story" aria-labelledby="story-title">
+        <div class="wrap demo-grid">
+          <div class="demo-head">
+            <div>
+              <h2 id="story-title">From one prompt to a game you can play</h2>
+              <p>This is the demo, screen by screen. Every image is the app itself: real screens, from the emulator or rendered with demo data.</p>
+            </div>
+            <figure class="video">
+              <video controls playsinline preload="metadata" poster="assets/video/poster.jpg" width="720" height="1280" aria-describedby="video-caption">
+                <source src="assets/video/launch-720.mp4" type="video/mp4">
+                <p>Your browser can't play this video. <a href="assets/video/launch-720.mp4">Download the demo video</a>.</p>
+              </video>
+              <figcaption id="video-caption">About a minute, recorded in the app: one prompt, a playable game, a screenshot, power-ups, a reviewed diff and a git commit. Press play for sound.</figcaption>
+            </figure>
           </div>
-          <ol class="steps-rail">
-            <li class="step reveal">
-              <div class="phone-frame"><img src="assets/screens/build-chat.webp" width="480" height="1010" loading="lazy" alt="A neon-breaker conversation where the user asks for a neon brick breaker game and the agent plans it and writes index.html, with the live line Writing index.html, Auto-approve on and a Stop button."></div>
-              <h3><span class="num">1</span> Say what you want</h3>
-              <p>Describe the game in plain words. A free OpenCode model builds it, no API key needed.</p>
+          <ol class="stream" tabindex="0" aria-label="The demo, screen by screen">
+            <li>
+              <div class="step-text">
+                <h3>Pick the model</h3>
+                <p>Free models to start. Add your own provider key when you want something bigger.</p>
+              </div>
+              <div class="phone phone-sm"><img class="screen" src="assets/screens/models.webp" width="480" height="1010" loading="lazy" alt="The Choose a model sheet in dark: a note that only OpenCode's free models are available, Add an API key and Connect a provider buttons, and the free models with GLM-5.3-Flash Free in use, then Beam Free, Big Pickle, DeepSeek V4.1 Flash Free and more."></div>
             </li>
-            <li class="step reveal">
-              <div class="phone-frame"><img src="assets/screens/approve.webp" width="480" height="1010" loading="lazy" alt="A neon-breaker conversation asking Run npm install in neon-breaker? with the command, Reject and Allow once buttons, and Always allow npm install."></div>
-              <h3><span class="num">2</span> Approve, or let it run</h3>
-              <p>Allow a command from the notification, the home-screen widget or here. Or turn on auto-approve.</p>
+            <li>
+              <div class="step-text">
+                <h3>Say what you want</h3>
+                <p>Describe the game in plain words. A free OpenCode model builds it, no API key needed.</p>
+              </div>
+              <div class="phone phone-sm"><img class="screen" src="assets/screens/build-chat.webp" width="480" height="1010" loading="lazy" alt="A neon-breaker conversation where the user asks for a neon brick breaker game and the agent plans it and writes index.html, with the live line Writing index.html, Auto-approve on and a Stop button."></div>
             </li>
-            <li class="step reveal">
-              <div class="phone-frame"><img src="assets/screens/preview.webp" width="480" height="1010" loading="lazy" alt="The in-app preview filling the screen with the neon brick breaker running, a slim Preview bar on top and an Ask for a change field at the bottom."></div>
-              <h3><span class="num">3</span> Play it right here</h3>
-              <p>Open the dev server in the in-app preview. Type a change under the game and it goes back to the conversation.</p>
+            <li>
+              <div class="step-text">
+                <h3>Review every line</h3>
+                <p>Step through the whole diff, change by change, before anything is committed.</p>
+              </div>
+              <div class="phone phone-sm"><img class="screen" src="assets/screens/diff.webp" width="480" height="1010" loading="lazy" alt="Review changes opening on one sentence, Added a combo counter and a screen shake, 3 files changed, with the first file's diff open, added lines in green, and Looks good and Undo all buttons."></div>
             </li>
-            <li class="step reveal">
-              <div class="phone-frame"><img src="assets/screens/diff.webp" width="480" height="1010" loading="lazy" alt="Review changes opening on one sentence, Added a combo counter and a screen shake, 3 files changed, with the first file's diff open, added lines in green, and Looks good and Undo all buttons."></div>
-              <h3><span class="num">4</span> Review every line</h3>
-              <p>Step through the whole diff, change by change, before anything is committed.</p>
-            </li>
-            <li class="step reveal">
-              <div class="phone-frame"><img src="assets/screens/terminal.webp" width="480" height="1010" loading="lazy" alt="The Terminal in the neon-breaker project showing git status and a Vite dev server starting, a Dev server running, Open preview line on top and a key row with Esc, Tab, Ctrl, Alt and arrows."></div>
-              <h3><span class="num">5</span> Real Linux, real git</h3>
-              <p>A full terminal in the app's own Ubuntu. Commit, branch and run what you like.</p>
-            </li>
-            <li class="step reveal">
-              <div class="phone-frame"><img src="assets/screens/models.webp" width="480" height="1010" loading="lazy" alt="The Choose a model sheet in dark: a note that only OpenCode's free models are available, Add an API key and Connect a provider buttons, and the free models with GLM-5.3-Flash Free in use, then Beam Free, Big Pickle, DeepSeek V4.1 Flash Free and more."></div>
-              <h3><span class="num">6</span> Pick the model</h3>
-              <p>Free models to start. Add your own provider key when you want something bigger.</p>
+            <li>
+              <div class="step-text">
+                <h3>Real Linux, real git</h3>
+                <p>A full terminal in the app's own Ubuntu. Commit, branch and run what you like.</p>
+              </div>
+              <div class="phone phone-sm"><img class="screen" src="assets/screens/terminal.webp" width="480" height="1010" loading="lazy" alt="The Terminal in the neon-breaker project showing git status and a Vite dev server starting, a Dev server running, Open preview line on top and a key row with Esc, Tab, Ctrl, Alt and arrows."></div>
             </li>
           </ol>
         </div>
       </section>
 
-      <section class="agents wrap" id="agents" aria-labelledby="agents-title">
-        <div class="section-heading reveal">
-          <h2 id="agents-title">Six agents.<br>Pick one per conversation.</h2>
-          <p>Switch agents without leaving the app. Each conversation keeps its own agent, model and history.</p>
-        </div>
-        <ul class="agent-list">
-          <li class="reveal" style="--i:0"><strong>Claude Code</strong><span>Anthropic's coding agent</span></li>
-          <li class="reveal" style="--i:1"><strong>Codex</strong><span>OpenAI's coding agent</span></li>
-          <li class="reveal" style="--i:2"><strong>Gemini</strong><span>Google's coding agent</span></li>
-          <li class="reveal" style="--i:3"><strong>Kilo</strong><span>Kilo Code agent</span></li>
-          <li class="reveal" style="--i:4"><strong>Cline</strong><span>The Cline agent</span></li>
-          <li class="reveal" style="--i:5"><strong>OpenCode</strong><span>Free models, no API key</span></li>
-        </ul>
-        <p class="note">Models run at the provider you choose. OpenCode's free models, such as GLM-5.3-Flash Free, need no API key. The others need that provider's sign-in or key.</p>
-      </section>
-
-      <section class="widgets" id="widgets" aria-labelledby="widgets-title">
-        <div class="wrap widgets-grid">
-          <div class="widgets-copy reveal">
-            <h2 id="widgets-title">Act from your<br>home screen.</h2>
+      <section class="home" id="widgets" aria-labelledby="widgets-title">
+        <div class="wrap home-grid">
+          <div class="home-copy">
+            <h2 id="widgets-title">Act from your home screen</h2>
             <p>Two widgets. Conversations leads with what needs you: Allow, Reply or Open without opening the app, then your next conversations. Status shows your servers, the phone's Linux, running tasks and the plan limit closest to running out.</p>
             <p>To allow with the app closed, turn on "Stay connected in the background". Android limits background work, so the app explains the battery setting that matters.</p>
           </div>
-          <ul class="widget-shots">
-            <li class="reveal wide" style="--i:0"><img src="assets/screens/widget-list.webp" width="480" height="296" loading="lazy" alt="The Conversations widget for weather-app leading with Needs you, the curl command waiting for an answer, and Allow, Reply and Open buttons."><span>What needs you comes first</span></li>
-            <li class="reveal small" style="--i:1"><img src="assets/screens/widget-small.webp" width="346" height="447" loading="lazy" alt="The Status widget listing This phone online, Linux running and Tasks none."><span>Status at a glance</span></li>
-            <li class="reveal wide" style="--i:2"><img src="assets/screens/widget-ready.webp" width="560" height="346" loading="lazy" alt="The Conversations widget when nothing waits: the latest conversation, Hourly forecast under 3-day cards, then two more weather-app conversations with their times."><span>Your next conversations</span></li>
+          <ul class="widgets">
+            <li class="w-list"><img src="assets/screens/widget-list.webp" width="480" height="296" loading="lazy" alt="The Conversations widget for weather-app leading with Needs you, the curl command waiting for an answer, and Allow, Reply and Open buttons."><span>What needs you comes first</span></li>
+            <li class="w-ready"><img src="assets/screens/widget-ready.webp" width="560" height="346" loading="lazy" alt="The Conversations widget when nothing waits: the latest conversation, Hourly forecast under 3-day cards, then two more weather-app conversations with their times."><span>Your next conversations</span></li>
+            <li class="w-small"><img src="assets/screens/widget-small.webp" width="346" height="447" loading="lazy" alt="The Status widget listing This phone online, Linux running and Tasks none."><span>Status at a glance</span></li>
           </ul>
         </div>
       </section>
 
-      <section class="features wrap" id="features" aria-labelledby="features-title">
-        <div class="section-heading reveal">
-          <h2 id="features-title">Everything you'd want<br>from a desk, in a pocket.</h2>
-          <p>Built for steering an agent from a small screen, and for leaving it alone when you want to.</p>
-        </div>
-        <div class="feature-grid">
-          <article class="card reveal" style="--i:0"><h3>Approve from anywhere</h3><p>Allow or reject a request from the notification or the widget. See exactly what the command is first.</p></article>
-          <article class="card reveal" style="--i:1"><h3>Auto-approve</h3><p>Let a conversation run on its own when you trust the task. Turn it off again any time.</p></article>
-          <article class="card reveal" style="--i:2"><h3>Steer mid-task</h3><p>Send a new instruction while the agent is working, instead of waiting for it to finish.</p></article>
-          <article class="card reveal" style="--i:3"><h3>Review every line</h3><p>A full diff view with change-by-change navigation. Nothing is committed behind your back.</p></article>
-          <article class="card reveal" style="--i:4"><h3>In-app preview</h3><p>Tap a localhost link and your dev server opens inside the app, with reload and open in browser.</p></article>
-          <article class="card reveal" style="--i:5"><h3>Show it your screen</h3><p>Send a screenshot or a photo into the chat so the agent sees what you see.</p></article>
-          <article class="card reveal" style="--i:6"><h3>Scheduled prompts</h3><p>Run a prompt at a time you choose, once or repeating, with the app closed. Each schedule keeps a history of its runs.</p></article>
-          <article class="card reveal" style="--i:7"><h3>Built-in Linux</h3><p>The app installs its own Ubuntu. Or connect to an agent already running on your computer.</p></article>
-          <article class="card reveal" style="--i:8"><h3>Real git and terminal</h3><p>Branches, commits and a full shell, in the same place as the conversation.</p></article>
-        </div>
+      <section class="more wrap" id="features" aria-labelledby="features-title">
+        <h2 id="features-title">Built for steering from a small screen</h2>
+        <p class="features-lede">And for leaving the agent alone when you want to.</p>
+        <dl class="feature-list">
+          <div><dt>Approve from anywhere</dt><dd>Allow or reject a request from the notification or the widget. See exactly what the command is first.</dd></div>
+          <div><dt>Auto-approve</dt><dd>Let a conversation run on its own when you trust the task. Turn it off again any time.</dd></div>
+          <div><dt>Steer mid-task</dt><dd>Send a new instruction while the agent is working, instead of waiting for it to finish.</dd></div>
+          <div><dt>Review every line</dt><dd>A full diff view with change-by-change navigation. Nothing is committed behind your back.</dd></div>
+          <div><dt>In-app preview</dt><dd>Tap a localhost link and your dev server opens inside the app, with reload and open in browser.</dd></div>
+          <div><dt>Show it your screen</dt><dd>Send a screenshot or a photo into the chat so the agent sees what you see.</dd></div>
+          <div><dt>Scheduled prompts</dt><dd>Run a prompt at a time you choose, once or repeating, with the app closed. Each schedule keeps a history of its runs.</dd></div>
+          <div><dt>Built-in Linux</dt><dd>The app installs its own Ubuntu. Or connect to an agent already running on your computer.</dd></div>
+          <div><dt>Real git and terminal</dt><dd>Branches, commits and a full shell, in the same place as the conversation.</dd></div>
+        </dl>
+      </section>
+
+      <section class="agents wrap" id="agents" aria-labelledby="agents-title">
+        <h2 id="agents-title">Six agents. Pick one per conversation.</h2>
+        <p class="agents-lede">Switch agents without leaving the app. Each conversation keeps its own agent, model and history.</p>
+        <ul class="agent-row">
+          <li><strong>Claude Code</strong><span>Anthropic's coding agent</span></li>
+          <li><strong>Codex</strong><span>OpenAI's coding agent</span></li>
+          <li><strong>Gemini</strong><span>Google's coding agent</span></li>
+          <li><strong>Kilo</strong><span>Kilo Code agent</span></li>
+          <li><strong>Cline</strong><span>The Cline agent</span></li>
+          <li><strong>OpenCode</strong><span>Free models, no API key</span></li>
+        </ul>
+        <p class="note">Models run at the provider you choose. OpenCode's free models, such as GLM-5.3-Flash Free, need no API key. The others need that provider's sign-in or key.</p>
       </section>
 
       <section class="start" id="get-started" aria-labelledby="start-title">
         <div class="wrap start-grid">
-          <div class="start-intro reveal">
-            <h2 id="start-title">Your phone.<br>Your project.</h2>
+          <div>
+            <h2 id="start-title">Your phone. Your project.</h2>
             <p>OpenCode Mobile connects to the servers you choose. It isn't a hosted service and doesn't include a model subscription.</p>
-            <div class="hero-actions">
+            <div class="actions">
               <a class="button" href="https://github.com/Eslamasabry/opencode-mobile-next/releases/latest">Download for Android</a>
-              <a class="button button-secondary" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/Eslamasabry/opencode-mobile-next">Get it on Obtainium</a>
+              <a class="button button-quiet" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/Eslamasabry/opencode-mobile-next">Get it on Obtainium</a>
             </div>
-            <p class="requirements">Direct links for 2.1.0 (build 57): <a href="https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v2.1.0%2B57/opencode-mobile-2.1.0%2B57.apk">universal APK</a>, <a href="https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v2.1.0%2B57/opencode-mobile-2.1.0%2B57-arm64-v8a.apk">arm64-v8a</a> or <a href="https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v2.1.0%2B57/opencode-mobile-2.1.0%2B57-armeabi-v7a.apk">armeabi-v7a</a>. Most phones want arm64-v8a. Or <a href="https://github.com/Eslamasabry/opencode-mobile-next">browse the source on GitHub</a>. Obtainium checks GitHub releases and updates the app for you.</p>
+            <p class="fine">Direct links for 2.1.0 (build 57): <a href="https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v2.1.0%2B57/opencode-mobile-2.1.0%2B57.apk">universal APK</a>, <a href="https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v2.1.0%2B57/opencode-mobile-2.1.0%2B57-arm64-v8a.apk">arm64-v8a</a> or <a href="https://github.com/Eslamasabry/opencode-mobile-next/releases/download/v2.1.0%2B57/opencode-mobile-2.1.0%2B57-armeabi-v7a.apk">armeabi-v7a</a>. Most phones want arm64-v8a. Or <a href="https://github.com/Eslamasabry/opencode-mobile-next">browse the source on GitHub</a>. Obtainium checks GitHub releases and updates the app for you.</p>
           </div>
-          <ol class="steps">
-            <li class="reveal"><h3>Install the APK</h3><p>Download the latest release from GitHub. Android will ask you to allow installation from outside the Play Store.</p></li>
-            <li class="reveal"><h3>Choose where to work</h3><p>Set up the built-in Linux on your phone, or connect to an agent on your computer. Use Wi-Fi for the first on-phone download.</p></li>
-            <li class="reveal"><h3>Start a conversation</h3><p>Pick an agent and a model, and ask for a change. OpenCode's free models work with no key.</p></li>
-          </ol>
-          <aside class="compatibility" aria-label="Support">
-            <p><strong>OpenCode 2 only.</strong> The app supports OpenCode 2; OpenCode 1 is no longer supported.</p>
-            <a href="https://github.com/Eslamasabry/opencode-mobile-next/blob/master/SUPPORT.md">Read the setup and support guide</a>
-          </aside>
+          <div>
+            <ol class="steps">
+              <li><h3>Install the APK</h3><p>Download the latest release from GitHub. Android will ask you to allow installation from outside the Play Store.</p></li>
+              <li><h3>Choose where to work</h3><p>Set up the built-in Linux on your phone, or connect to an agent on your computer. Use Wi-Fi for the first on-phone download.</p></li>
+              <li><h3>Start a conversation</h3><p>Pick an agent and a model, and ask for a change. OpenCode's free models work with no key.</p></li>
+            </ol>
+            <aside class="compatibility" aria-label="Support">
+              <p><strong>OpenCode 2 only.</strong> The app supports OpenCode 2; OpenCode 1 is no longer supported. <a href="https://github.com/Eslamasabry/opencode-mobile-next/blob/master/SUPPORT.md">Read the setup and support guide</a></p>
+            </aside>
+          </div>
         </div>
       </section>
 
       <section class="compare" id="compare" aria-labelledby="compare-title">
         <div class="wrap">
-          <div class="section-heading reveal">
+          <div class="section-heading">
             <h2 id="compare-title">How it differs from the usual ways</h2>
             <p>People run coding agents from a phone in a few ways. Here is where the work happens in each.</p>
           </div>
-          <div class="table-scroll reveal">
+          <div class="table-scroll" tabindex="0" role="region" aria-label="Comparison table">
             <table>
               <caption class="sr-only">Comparing ways to use a coding agent from an Android phone</caption>
               <thead>
@@ -220,7 +236,7 @@
       </section>
 
       <section class="faq wrap" id="faq" aria-labelledby="faq-title">
-        <h2 id="faq-title" class="reveal">Questions</h2>
+        <h2 id="faq-title">Questions</h2>
         <details open>
           <summary>Is this the official OpenCode or Claude Code app?</summary>
           <p>No. OpenCode Mobile is an independent, MIT-licensed, open-source community project. It is not built, maintained or endorsed by the OpenCode team, and it is not affiliated with Anthropic, OpenAI or Google. It was built with substantial AI assistance.</p>
@@ -292,17 +308,29 @@
       <p class="community-note">An independent, open-source community project, not affiliated with the official OpenCode team, Anthropic, OpenAI or Google. Built with substantial AI assistance.</p>
     </footer>
     <script>
+      // The hero notification can be answered. Without JavaScript both states show in order.
       (function () {
-        var root = document.documentElement;
-        var items = document.querySelectorAll('.reveal');
-        var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (calm || !('IntersectionObserver' in window)) { root.classList.remove('js'); return; }
-        var io = new IntersectionObserver(function (entries) {
-          entries.forEach(function (e) {
-            if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-          });
-        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-        items.forEach(function (el) { io.observe(el); });
+        var stage = document.querySelector('.hero-stage');
+        if (!stage) return;
+        stage.classList.add('live');
+        stage.querySelector('.notif-actions').hidden = false;
+        stage.querySelector('.try').hidden = false;
+        stage.querySelectorAll('.notif-reset').forEach(function (b) { b.hidden = false; });
+        function set(state, moveFocus) {
+          stage.dataset.state = state;
+          if (!moveFocus) return;
+          var target = stage.querySelector('.notif[data-state="' + state + '"] button');
+          if (target) target.focus();
+        }
+        set('ask', false);
+        stage.addEventListener('click', function (e) {
+          var b = e.target.closest('button');
+          if (!b) return;
+          var fromKeyboard = document.activeElement === b;
+          if (b.dataset.answer === 'allow') set('done', fromKeyboard);
+          else if (b.dataset.answer === 'reject') set('no', fromKeyboard);
+          else if (b.classList.contains('notif-reset')) set('ask', fromKeyboard);
+        });
       })();
     </script>
     <script>
@@ -319,4 +347,3 @@
       })();
     </script>
   </body>
-</html>
