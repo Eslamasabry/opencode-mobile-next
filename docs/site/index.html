@@ -64,8 +64,8 @@
 
         <div class="hero-stage">
           <div class="phone phone-hero">
-            <img class="screen screen-ask" src="assets/screens/approve.webp" width="480" height="1010" alt="The Neon brick breaker conversation in the neon-breaker project. Asked to make the game feel smoother, the agent says it first needs to install the game's dependencies.">
-            <img class="screen screen-done" src="assets/screens/preview.webp" width="480" height="1010" alt="The in-app preview filling the screen with the neon brick breaker running, a slim Preview bar on top and an Ask for a change field at the bottom.">
+            <img class="screen screen-ask" src="assets/screens/hero-ask.webp" width="480" height="322" alt="The Neon brick breaker conversation in neon-breaker: asked to make the game feel smoother, the agent replies that it first needs to install the game's dependencies.">
+            <img class="screen screen-done" src="assets/screens/hero-ready.webp" width="480" height="322" alt="The in-app Preview with the neon brick breaker running: SCORE 380 above rows of glowing bricks.">
           </div>
           <div class="heads-up" aria-live="polite">
             <div class="notif notif-ask" data-state="ask">
@@ -112,17 +112,24 @@
           <ol class="stream" tabindex="0" aria-label="The demo, screen by screen">
             <li>
               <div class="step-text">
-                <h3>Pick the model</h3>
-                <p>Free models to start. Add your own provider key when you want something bigger.</p>
-              </div>
-              <div class="phone phone-sm"><img class="screen" src="assets/screens/models.webp" width="480" height="1010" loading="lazy" alt="The Choose a model sheet in dark: a note that only OpenCode's free models are available, Add an API key and Connect a provider buttons, and the free models with GLM-5.3-Flash Free in use, then Beam Free, Big Pickle, DeepSeek V4.1 Flash Free and more."></div>
-            </li>
-            <li>
-              <div class="step-text">
                 <h3>Say what you want</h3>
                 <p>Describe the game in plain words. A free OpenCode model builds it, no API key needed.</p>
               </div>
               <div class="phone phone-sm"><img class="screen" src="assets/screens/build-chat.webp" width="480" height="1010" loading="lazy" alt="A neon-breaker conversation where the user asks for a neon brick breaker game and the agent plans it and writes index.html, with the live line Writing index.html, Auto-approve on and a Stop button."></div>
+            </li>
+            <li>
+              <div class="step-text">
+                <h3>Approve, or let it run</h3>
+                <p>Allow a command from the notification, the home-screen widget or here. Or turn on auto-approve.</p>
+              </div>
+              <div class="phone phone-sm"><img class="screen" src="assets/screens/approve.webp" width="480" height="1010" loading="lazy" alt="A neon-breaker conversation asking Run npm install in neon-breaker? with the command, Reject and Allow once buttons, and Always allow npm install."></div>
+            </li>
+            <li>
+              <div class="step-text">
+                <h3>Play it right here</h3>
+                <p>Open the dev server in the in-app preview. Type a change under the game and it goes back to the conversation.</p>
+              </div>
+              <div class="phone phone-sm"><img class="screen" src="assets/screens/preview.webp" width="480" height="1010" loading="lazy" alt="The in-app preview filling the screen with the neon brick breaker running, a slim Preview bar on top and an Ask for a change field at the bottom."></div>
             </li>
             <li>
               <div class="step-text">
@@ -137,6 +144,13 @@
                 <p>A full terminal in the app's own Ubuntu. Commit, branch and run what you like.</p>
               </div>
               <div class="phone phone-sm"><img class="screen" src="assets/screens/terminal.webp" width="480" height="1010" loading="lazy" alt="The Terminal in the neon-breaker project showing git status and a Vite dev server starting, a Dev server running, Open preview line on top and a key row with Esc, Tab, Ctrl, Alt and arrows."></div>
+            </li>
+            <li>
+              <div class="step-text">
+                <h3>Pick the model</h3>
+                <p>Free models to start. Add your own provider key when you want something bigger.</p>
+              </div>
+              <div class="phone phone-sm"><img class="screen" src="assets/screens/models.webp" width="480" height="1010" loading="lazy" alt="The Choose a model sheet in dark: a note that only OpenCode's free models are available, Add an API key and Connect a provider buttons, and the free models with GLM-5.3-Flash Free in use, then Beam Free, Big Pickle, DeepSeek V4.1 Flash Free and more."></div>
             </li>
           </ol>
         </div>

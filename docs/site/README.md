@@ -43,6 +43,10 @@ with keyboard navigation and reduced motion, before claiming those results.
   the emulator (`widget-list` 480x296, `widget-small` 346x447, `widget-ready`
   560x346). All use demo data from the synthetic `neon-breaker` and
   `weather-app` projects; no account values, errors or status bars are shown.
+  `hero-ask.webp` and `hero-ready.webp` (480x322) are cut from `approve` and
+  `preview` for the hero phone: the chat header (rows 0-100) joined to its
+  latest exchange (rows 349-571), ending just above the in-chat request card;
+  and the Preview bar plus the top of the game (rows 0-80 and 108-350).
 - `assets/og-image.jpg` (1200x630) is rendered in headless Chromium from the
   page's own look: the logo, the hero headline, the `npm install` notification
   and the top of the `approve` capture, in the bundled Roboto Flex.
@@ -63,13 +67,14 @@ Roboto Flex, wide and heavy for headlines and normal width for text, and
 Noto Sans Arabic for the Arabic section.
 
 The one memorable element is the hero notification, "Run npm install in
-neon-breaker?". Allow once turns it into "Ready" and the phone beside it
-switches from the conversation to the game in the preview. On wide screens the
-card sits over the empty part of the chat, never over its title or messages;
-the hero phone is cropped above the chat's own request card and chips. The
-`approve` and `preview` captures are used there, so the demo section shows the
-other four screens. Everything else stays quiet: a plain feature list instead
-of cards, no stats strip, no eyebrows, and no scroll-reveal animation. The
+neon-breaker?". Allow once turns it into "Ready" and the phone under it
+switches from the conversation to the game in the preview. The hero phone
+shows the chat's header and latest exchange, ending where the npm install
+request would appear (`hero-ask.webp`), and after Allow once the game in the
+preview (`hero-ready.webp`). The card sits above the phone, never over it.
+The demo section shows all six screens. Everything else stays quiet: a plain
+feature list instead of cards, no stats strip, no eyebrows, and no
+scroll-reveal animation. The
 design record and renders are kept outside the repository
 (`/home/eslam/Storage2/wt/site-redesign-2026-10-31/`).
 

@@ -80,7 +80,7 @@ p { color: var(--quiet); max-inline-size: 62ch; }
 .main-nav a:hover { color: var(--ink); }
 
 /* Hero: the notification you can answer, beside a phone that rises out of the section edge */
-.hero { display: grid; grid-template-columns: minmax(0, 1fr) 690px; gap: 3rem; padding-block-start: 3.5rem; }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) 640px; gap: 3rem; padding-block-start: 3.5rem; }
 .hero-copy { align-self: center; padding-block-end: 3.5rem; }
 .hero h1 { font-size: clamp(2.4rem, 3.9vw, 3.35rem); font-stretch: 100%; max-inline-size: 17ch; }
 .lede { font-size: 1.15rem; margin-block-start: 1.6rem; color: var(--body); }
@@ -88,14 +88,14 @@ p { color: var(--quiet); max-inline-size: 62ch; }
 .phone { position: relative; border-radius: 34px; border: 7px solid var(--ink); background: var(--ink); overflow: hidden; box-shadow: var(--lift); }
 .phone .screen { inline-size: 100%; }
 .phone-sm { border-width: 5px; border-radius: 26px; }
-/* Cropped above the in-chat request and the chips: the notification asks instead. */
-.phone-hero { inline-size: 360px; margin-inline-start: auto; aspect-ratio: 480 / 560; border-block-end: 0; border-radius: 34px 34px 0 0; box-shadow: none; }
+/* hero-ask/hero-ready: the chat's header and its latest exchange, ending where the request would appear. */
+.phone-hero { inline-size: 480px; margin-inline-start: auto; margin-block-start: 1.25rem; aspect-ratio: 480 / 322; border-block-end: 0; border-radius: 34px 34px 0 0; box-shadow: none; }
 .screen-done { display: none; }
 .js .screen-done { display: block; position: absolute; inset-block-start: 0; inset-inline: 0; opacity: 0; transition: opacity 260ms var(--ease); }
 .hero-stage[data-state="done"] .screen-done { opacity: 1; }
 
-/* Beside the phone: it overlaps only the bezel, so it never covers what the screen shows, before or after Allow. */
-.heads-up { position: absolute; inset-inline-start: 0; inset-block-start: 4.5rem; inline-size: 340px; display: grid; gap: .75rem; z-index: 2; }
+/* Above and beside the phone, never over it, so it covers nothing the screen shows, before or after Allow. */
+.heads-up { order: -1; position: relative; inline-size: 360px; display: grid; gap: .75rem; z-index: 2; }
 .notif { background: var(--card); border-radius: 24px; padding: 1rem 1.15rem 1.1rem; box-shadow: var(--lift); }
 .notif-head { display: flex; align-items: center; gap: .45rem; font-size: .82rem; color: var(--quiet); }
 .notif-head img { border-radius: 5px; }
@@ -243,10 +243,11 @@ details p { padding-inline: 1.3rem; padding-block-end: 1.3rem; }
   .hero-copy, .hero-stage { display: contents; }
   .hero h1 { order: 1; }
   .heads-up { order: 2; position: static; inline-size: 100%; max-inline-size: 400px; }
-  .lede { order: 3; margin-block-start: .25rem; }
-  .hero .actions { order: 4; margin-block-start: 0; }
-  .hero .fine { order: 5; margin-block-start: -.5rem; }
-  .phone-hero { order: 6; inline-size: min(320px, 82%); margin-inline: auto; margin-block-start: 1rem; }
+  .lede { order: 4; margin-block-start: .25rem; }
+  .hero .actions { order: 5; margin-block-start: 0; }
+  .hero .fine { order: 6; margin-block-start: -.5rem; padding-block-end: 2.5rem; }
+  /* Right under the notification, so answering it visibly changes the phone */
+  .phone-hero { order: 3; inline-size: 100%; max-inline-size: 400px; margin: -.5rem 0 0; border-block-end: 7px solid var(--ink); border-radius: 30px; }
 }
 @media (max-width: 900px) {
   .demo-grid, .home-grid, .start-grid, .arabic-content { grid-template-columns: minmax(0, 1fr); }
