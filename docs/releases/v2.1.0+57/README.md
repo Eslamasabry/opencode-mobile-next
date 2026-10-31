@@ -6,7 +6,7 @@ The pictures in the release notes, one phone screen each: real screens from an A
 
 **Two new home-screen widgets: Conversations and Status**
 
-<img src="img/widgets.jpg" width="300" alt="A phone home screen with three OpenCode widgets: a small card for one conversation, the Status card listing This phone online, Linux running and Tasks, and the wide Conversations card for weather-app leading with Needs you, the command waiting for an answer, and Allow, Reply and Open.">
+<img src="img/widgets.jpg" width="300" alt="A phone home screen with three OpenCode widgets: a small card reading Needs you, Run this command?, weather-app with Open; the Status card listing This phone online, Linux running and Tasks 2 running; and the wide Conversations card for weather-app leading with Needs you, the curl command waiting for an answer, and Allow, Reply and Open.">
 
 **Git from the chat**
 
@@ -94,7 +94,7 @@ The pictures in the release notes, one phone screen each: real screens from an A
 
 **Conversation widgets are clearer**
 
-<img src="img/widget_small.jpg" width="300" alt="A phone home screen with the small Conversation card, the Status card and the wide Conversations card for weather-app.">
+<img src="img/widget_small.jpg" width="300" alt="The same home screen when nothing waits: the small card shows the latest conversation, Hourly forecast under 3-day cards, weather-app, 20 min ago, with a New conversation field; the wide Conversations card lists it first and then two more weather-app conversations with their times; Status shows This phone online, Linux running and Tasks none.">
 
 ## Notifications
 
