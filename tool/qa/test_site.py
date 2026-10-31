@@ -6,6 +6,7 @@ Only the Python standard library is required.
 from collections import Counter
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
+import json
 from pathlib import Path
 import re
 import unittest
@@ -235,6 +236,9 @@ class StaticSiteTest(unittest.TestCase):
             url = urlsplit(href)
             if url.scheme or url.netloc:
                 continue  # External navigation is allowed; it is not a render dependency.
+            if url.path.endswith('/'):  # a page folder: it must hold an index.html
+                self.assertTrue((SITE / unquote(url.path) / 'index.html').is_file(), f'Missing page: {href}')
+                continue
             target = self.index if not url.path else local_path(href, self.index)
             if url.fragment and target == self.index:
                 self.assertIn(unquote(url.fragment), ids, f'Missing anchor target: {href}')
@@ -251,6 +255,67 @@ class StaticSiteTest(unittest.TestCase):
         self.assertTrue(reduced, 'Honor the reduced-motion preference.')
         self.assertRegex(reduced, r'(?i)(?:scroll-behavior\s*:\s*auto|(?:animation|transition)(?:-duration)?\s*:\s*(?:none|0(?:s|ms)?|0\.0*1ms))',
                          'The reduced-motion stylesheet must reduce movement.')
+
+
+SEARCH_PAGES = ('claude-code-android', 'opencode-android', 'codex-on-android', 'coding-agents-on-phone')
+BASE_URL = 'https://eslamasabry.github.io/opencode-mobile-next/'
+
+
+class SearchPagesTest(unittest.TestCase):
+    def test_chinese_section_declares_language_and_content_and_is_linked(self):
+        document = Document((SITE / 'index.html').read_text(encoding='utf-8'))
+        zh = [e for e in document.elements if e.attrs.get('lang', '').lower() == 'zh-hans' and e.tag == 'section']
+        self.assertTrue(zh, 'Chinese content needs lang="zh-Hans".')
+        self.assertTrue(re.search(r'[\u4e00-\u9fff]', zh[0].content))
+        self.assertTrue(any(e.attrs.get('hreflang') == 'zh-Hans' and e.attrs.get('href') == '#' + zh[0].attrs['id']
+                            for e in document.tags('a')), 'Link to the Chinese section with hreflang.')
+
+    def test_each_search_page_is_complete_and_listed(self):
+        sitemap = (SITE / 'sitemap.xml').read_text(encoding='utf-8')
+        home = Document((SITE / 'index.html').read_text(encoding='utf-8'))
+        home_links = {e.attrs.get('href') for e in home.tags('a')}
+        for slug in SEARCH_PAGES:
+            with self.subTest(page=slug):
+                path = SITE / slug / 'index.html'
+                text = path.read_text(encoding='utf-8')
+                doc = Document(text)
+                url = f'{BASE_URL}{slug}/'
+                self.assertIn(f'<loc>{url}</loc>', sitemap)
+                self.assertIn(f'{slug}/', home_links, 'Link the page from the home page footer.')
+                self.assertEqual(len(doc.tags('h1')), 1)
+                self.assertTrue(doc.tags('h1')[0].content)
+                canon = [e.attrs['href'] for e in doc.tags('link') if e.attrs.get('rel') == 'canonical']
+                self.assertEqual(canon, [url])
+                metas = {(e.attrs.get('name') or e.attrs.get('property')): e.attrs.get('content', '')
+                         for e in doc.tags('meta')}
+                self.assertGreater(len(metas.get('description', '')), 80)
+                self.assertLess(len(metas.get('description', '')), 200)
+                for key in ('og:title', 'og:description', 'og:url', 'og:image'):
+                    self.assertTrue(metas.get(key), key)
+                self.assertEqual(metas['og:url'], url)
+                ld = [json.loads(' '.join(e.text)) for e in doc.tags('script')
+                      if e.attrs.get('type') == 'application/ld+json']
+                self.assertEqual(len(ld), 1)
+                self.assertEqual(ld[0]['@type'], 'SoftwareApplication')
+                self.assertNotIn('aggregateRating', ld[0])
+                self.assertNotIn('review', ld[0])
+                self.assertIn('unofficial', text.lower())
+                self.assertIn('not affiliated', text.lower())
+                self.assertIn('v2.1.0%2B57', text, 'Use the real 2.1.0 download links.')
+                for script in doc.tags('script'):
+                    self.assertFalse(script.attrs.get('src'))
+                images = doc.tags('img')
+                shots = [i for i in images if 'screens/' in i.attrs.get('src', '')]
+                self.assertTrue(2 <= len(shots) <= 3)
+                for image in images:
+                    self.assertIn('alt', image.attrs)
+                    local_path(image.attrs['src'], path)
+                for shot in shots:
+                    self.assertGreater(len(shot.attrs['alt'].split()), 8)
+                for link in doc.tags('link'):
+                    if link.attrs.get('href') and link.attrs.get('rel') != 'canonical':
+                        local_path(link.attrs['href'], path)
+                self.assertGreaterEqual(len(doc.tags('h2')), 4)
 
 
 if __name__ == '__main__':

@@ -18,15 +18,37 @@ No computer, no Termux. Or connect to the agent on your computer.
 &nbsp;·&nbsp; [Get it on Obtainium](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/Eslamasabry/opencode-mobile-next)
 &nbsp;·&nbsp; [What's new in 2.0](docs/releases/v2.0.0+56.md)
 
-<a href="https://eslamasabry.github.io/opencode-mobile-next/">
-  <img src="docs/site/assets/video/poster.jpg" alt="Watch the one-minute demo: a neon brick-breaker game built from one prompt, played in the app" width="300">
+<a href="https://eslamasabry.github.io/opencode-mobile-next/assets/video/launch-720.mp4">
+  <img src="docs/demo.gif" alt="Demo, first seconds: a neon brick-breaker game is built from one prompt and played in the app's preview. Select it to watch the full video." width="240">
 </a>
 
-<sub>One-minute demo on the website: one prompt builds a game, it runs in the app's preview, a screenshot goes back into the chat, and the agent adds power-ups.</sub>
+<sub>**[Watch the one-minute demo (mp4)](https://eslamasabry.github.io/opencode-mobile-next/assets/video/launch-720.mp4)**, also on the [website](https://eslamasabry.github.io/opencode-mobile-next/): one prompt builds a game, it runs in the app's preview, a screenshot goes back into the chat, and the agent adds power-ups.</sub>
 
 </div>
 
 ---
+
+## Why
+
+- Coding agents keep working while you are away from your desk, and they stop to ask. A phone is where that question reaches you.
+- Setting up a Linux and an agent by hand on a phone takes a lot of steps. The app does them for you and keeps the agent inside the app.
+- Everything stays open: MIT license, your own servers and keys, no hosted service in between.
+
+## How it compares
+
+AndCode facts come from its public README, checked 2026-10-31; the Termux column is general. They change; check the source before relying on them.
+
+| | OpenCode Mobile | Termux + an agent CLI | [AndCode](https://github.com/yuga-hashimoto/and-code) |
+| --- | --- | --- | --- |
+| What it is | Android app with chat, diff, terminal and widgets | Terminal emulator and Linux environment; the agent is a command-line tool you install | Android GUI app for coding agents |
+| Agents on the phone | Ten: Claude Code, Codex, Gemini CLI, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx, OpenCode | Whichever agent CLI you install and can run | OpenCode, Claude Code, Google Antigravity, Codex |
+| Linux setup | Guided in-app install of Ubuntu, Git and Node | By hand, in a terminal | Guided in-app install through PRoot (Alpine; Debian for Antigravity) |
+| Connect to a computer | OpenCode 2, Codex, or Claude Code through Paseo | Over SSH, by hand | Remote OpenCode |
+| Approve a command from a notification or widget | Yes | Depends on the agent CLI | Tool approvals in the app |
+| Scheduled prompts | Yes | With your own tools (such as cron) | Yes |
+| License | MIT | See the Termux repository; agent licenses vary | MIT |
+
+OpenCode Mobile is a younger project and several of its agents are less tested on real phones; see [Compatibility](#compatibility).
 
 ## Highlights
 

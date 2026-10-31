@@ -226,6 +226,37 @@ details p { padding-inline: 1.3rem; padding-block-end: 1.3rem; }
 .arabic-section p { margin-block-start: 1rem; line-height: 1.85; font-size: 1.08rem; }
 .arabic-section bdi { font-family: "Roboto Flex", sans-serif; }
 
+/* Chinese */
+.zh-section { padding-block: 4rem; background: var(--shade); font-family: "Roboto Flex", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; }
+.zh-content { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3rem; align-items: center; }
+.zh-section h2 { font-stretch: 100%; letter-spacing: 0; line-height: 1.35; font-size: clamp(1.7rem, 3vw, 2.4rem); font-weight: 700; }
+.zh-section p { margin-block-start: 1rem; line-height: 1.8; font-size: 1.08rem; }
+
+/* Search pages (claude-code-android and friends) */
+.pg-hero { padding-block: 3rem 2rem; }
+.pg-unofficial { display: inline-block; font-size: .9rem; color: var(--body); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: .35rem .9rem; margin-block-end: 1.25rem; }
+.header-row .button-small { margin-inline-start: auto; }
+.pg-hero h1 { margin-block-end: 1.1rem; font-size: clamp(2.2rem, 4.4vw, 3.4rem); font-stretch: 100%; max-inline-size: 22ch; }
+.pg-body { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 3rem; padding-block: 1.5rem 4rem; align-items: start; }
+.pg-sec { padding-block: 1.5rem; border-block-start: 1px solid var(--line); }
+.pg-sec h2 { font-size: clamp(1.5rem, 2.4vw, 1.9rem); }
+.pg-sec p, .pg-sec .plain { margin-block-start: .9rem; }
+.pg-sec .plain { color: var(--body); max-inline-size: 62ch; display: grid; gap: .55rem; padding-inline-start: 1.25rem; list-style: disc; }
+.pg-sec ol.plain { list-style: decimal; }
+.pg-download { background: var(--card); border-radius: 20px; padding: 1.5rem; border: 0; margin-block-start: 1.5rem; }
+.pg-shots { display: grid; gap: 1.25rem; position: sticky; inset-block-start: 5.5rem; }
+.pg-shots .phone-sm { inline-size: 100%; }
+@media (max-width: 900px) {
+  .pg-body { grid-template-columns: minmax(0, 1fr); }
+  .pg-shots { position: static; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+  .zh-content { grid-template-columns: minmax(0, 1fr); }
+  .site-footer nav { gap: .75rem 1.25rem; }
+}
+@media (max-width: 560px) {
+  .pg-shots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pg-shots li:nth-child(3) { display: none; }
+}
+
 /* Footer */
 .site-footer { padding-block: 3rem 4rem; display: grid; gap: 1rem; }
 .footer-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1rem 2rem; }
