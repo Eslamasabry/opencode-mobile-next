@@ -13,14 +13,14 @@ import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** Ports test/api2_gateway_events_test.dart onto the neutral GatewayEvent vocabulary (plan 04 §7.6, §11.2). */
+/** Ports test/api2_gateway_events_test.dart onto the neutral Oc2Adapted vocabulary (plan 04 §7.6, §11.2). */
 class Oc2EventAdapterTest {
     private fun adapter() = Oc2EventAdapter(nowMs = { 1_000L })
 
-    private fun Oc2EventAdapter.feed(json: String): List<GatewayEvent> =
+    private fun Oc2EventAdapter.feed(json: String): List<Oc2Adapted> =
         adapt(Oc2Envelope.decode(Oc2Wire.json.parseToJsonElement(json)))
 
-    private fun Oc2EventAdapter.v2(type: String, data: String): List<GatewayEvent> {
+    private fun Oc2EventAdapter.v2(type: String, data: String): List<Oc2Adapted> {
         val body = Oc2Wire.json.parseToJsonElement(data).jsonObject
         val merged = JsonObject(mapOf("sessionID" to JsonPrimitive("ses_x")) + body)
         return feed("""{"type":"$type","data":$merged}""")
@@ -34,21 +34,21 @@ class Oc2EventAdapterTest {
         }
     }
 
-    private fun settled(out: List<GatewayEvent>): Map<String, ToolStatus> =
-        out.filterIsInstance<GatewayEvent.PartUpserted>().mapNotNull { e -> e.part.tool?.let { e.part.partId to it.status } }
+    private fun settled(out: List<Oc2Adapted>): Map<String, Oc2ToolStatus> =
+        out.filterIsInstance<Oc2Adapted.PartUpserted>().mapNotNull { e -> e.part.tool?.let { e.part.partId to it.status } }
             .toMap()
 
     @Test
     fun `B-CHAT-005 a tool whose result was lost is settled when its step ends and the chat rereads`() {
         val adapter = adapter().apply { twoSearches() }
         val out = adapter.v2("session.step.ended", """{"assistantMessageID":"msg_a1","finish":"tool-calls"}""")
-        assertEquals(mapOf("call_1" to ToolStatus.Completed, "call_2" to ToolStatus.Completed), settled(out))
-        val first = assertIs<GatewayEvent.PartUpserted>(out.first()).part.tool!!
+        assertEquals(mapOf("call_1" to Oc2ToolStatus.Completed, "call_2" to Oc2ToolStatus.Completed), settled(out))
+        val first = assertIs<Oc2Adapted.PartUpserted>(out.first()).part.tool!!
         assertEquals("grep", first.name)
         assertEquals(buildJsonObject { put("pattern", "Released|released") }, first.input)
-        assertTrue(out.any { it is GatewayEvent.TranscriptStale })
+        assertTrue(out.any { it is Oc2Adapted.TranscriptStale })
         // The step end itself never ends the run (B-PROTO-040).
-        assertTrue(out.none { it is GatewayEvent.RunEnded })
+        assertTrue(out.none { it is Oc2Adapted.RunEnded })
     }
 
     @Test
@@ -57,14 +57,14 @@ class Oc2EventAdapterTest {
             "session.tool.success",
             """{"assistantMessageID":"msg_a1","id":"call_9","content":[{"type":"text","text":"hello.txt"}],"executed":true}""",
         )
-        assertTrue(fresh.any { it is GatewayEvent.TranscriptStale })
+        assertTrue(fresh.any { it is Oc2Adapted.TranscriptStale })
         val seen = adapter().apply { twoSearches() }.v2(
             "session.tool.success",
             """{"assistantMessageID":"msg_a1","id":"call_1","content":[{"type":"text","text":"found"}],"executed":true}""",
         )
-        assertTrue(seen.none { it is GatewayEvent.TranscriptStale })
-        val tool = assertIs<GatewayEvent.PartUpserted>(seen.single()).part.tool!!
-        assertEquals(ToolStatus.Completed, tool.status)
+        assertTrue(seen.none { it is Oc2Adapted.TranscriptStale })
+        val tool = assertIs<Oc2Adapted.PartUpserted>(seen.single()).part.tool!!
+        assertEquals(Oc2ToolStatus.Completed, tool.status)
         assertEquals("found", tool.output)
         assertEquals(true, tool.executed)
     }
@@ -72,13 +72,13 @@ class Oc2EventAdapterTest {
     @Test
     fun `B-CHAT-005 open calls settle when the next step starts and fail when the run is interrupted`() {
         val next = adapter().apply { twoSearches() }.v2("session.step.started", """{"assistantMessageID":"msg_a2","agent":"build"}""")
-        assertEquals(mapOf("call_1" to ToolStatus.Completed, "call_2" to ToolStatus.Completed), settled(next))
-        assertTrue(next.any { it is GatewayEvent.TranscriptStale })
+        assertEquals(mapOf("call_1" to Oc2ToolStatus.Completed, "call_2" to Oc2ToolStatus.Completed), settled(next))
+        assertTrue(next.any { it is Oc2Adapted.TranscriptStale })
 
         val interrupted = adapter().apply { twoSearches() }.v2("session.execution.interrupted", """{"reason":"user"}""")
-        assertEquals(mapOf("call_1" to ToolStatus.Error, "call_2" to ToolStatus.Error), settled(interrupted))
-        val ended = assertIs<GatewayEvent.RunEnded>(interrupted.last())
-        assertEquals(RunOutcome.Interrupted("user"), ended.outcome)
+        assertEquals(mapOf("call_1" to Oc2ToolStatus.Error, "call_2" to Oc2ToolStatus.Error), settled(interrupted))
+        val ended = assertIs<Oc2Adapted.RunEnded>(interrupted.last())
+        assertEquals(Oc2RunOutcome.Interrupted("user"), ended.outcome)
     }
 
     @Test
@@ -89,7 +89,7 @@ class Oc2EventAdapterTest {
         }
         val out = adapter.v2("session.step.ended", """{"assistantMessageID":"msg_a1","finish":"tool-calls"}""")
         assertEquals(1, out.size)
-        assertIs<GatewayEvent.MessageUpserted>(out.single())
+        assertIs<Oc2Adapted.MessageUpserted>(out.single())
 
         val other = adapter().apply { twoSearches() }.feed(
             """{"type":"session.step.started","data":{"sessionID":"ses_other","assistantMessageID":"msg_b1","agent":"build"}}""",
@@ -110,14 +110,14 @@ class Oc2EventAdapterTest {
     @Test
     fun `B-PROTO-015 execution failure ends the run with the type and never also emits idle`() {
         val out = adapter().v2("session.execution.failed", """{"error":{"type":"provider.auth","message":"   "}}""")
-        val ended = assertIs<GatewayEvent.RunEnded>(out.single())
-        val failed = assertIs<RunOutcome.Failed>(ended.outcome)
+        val ended = assertIs<Oc2Adapted.RunEnded>(out.single())
+        val failed = assertIs<Oc2RunOutcome.Failed>(ended.outcome)
         assertEquals("provider.auth", failed.type)
         assertNull(failed.message, "a blank message is missing; the UI words it from the type")
         val succeeded = adapter().v2("session.execution.succeeded", "{}")
-        assertEquals(RunOutcome.Succeeded, assertIs<GatewayEvent.RunEnded>(succeeded.single()).outcome)
+        assertEquals(Oc2RunOutcome.Succeeded, assertIs<Oc2Adapted.RunEnded>(succeeded.single()).outcome)
         val noReason = adapter().v2("session.execution.interrupted", """{"reason":" "}""")
-        assertEquals(RunOutcome.Interrupted("unknown"), assertIs<GatewayEvent.RunEnded>(noReason.single()).outcome)
+        assertEquals(Oc2RunOutcome.Interrupted("unknown"), assertIs<Oc2Adapted.RunEnded>(noReason.single()).outcome)
     }
 
     @Test
@@ -125,12 +125,12 @@ class Oc2EventAdapterTest {
         val adapter = adapter()
         adapter.v2("session.step.started", """{"assistantMessageID":"msg_1","agent":"build","model":{"id":"gpt","providerID":"openai"}}""")
         val out = adapter.v2("session.step.failed", """{"assistantMessageID":"msg_1","error":{"type":"api","message":"","status":529}}""")
-        val info = assertIs<GatewayEvent.MessageUpserted>(out.single()).message
+        val info = assertIs<Oc2Adapted.MessageUpserted>(out.single()).message
         assertEquals("build", info.agent)
         assertEquals("openai", info.providerId)
         assertEquals("gpt", info.modelId)
         assertEquals(1_000L, info.completedMs)
-        assertEquals(StepError(message = null, type = "api", status = 529), info.error)
+        assertEquals(Oc2StepError(message = null, type = "api", status = 529), info.error)
     }
 
     @Test
@@ -143,50 +143,50 @@ class Oc2EventAdapterTest {
             """,
         )
         assertEquals(3, enqueued.size)
-        assertIs<GatewayEvent.InboxChanged>(enqueued[0])
-        val user = assertIs<GatewayEvent.MessageUpserted>(enqueued[1]).message
+        assertIs<Oc2Adapted.InboxChanged>(enqueued[0])
+        val user = assertIs<Oc2Adapted.MessageUpserted>(enqueued[1]).message
         assertEquals("msg_in", user.id)
-        assertEquals(MessageRole.User, user.role)
+        assertEquals(Oc2MessageRole.User, user.role)
         assertEquals(5L, user.createdMs)
-        val text0 = assertIs<GatewayEvent.PartUpserted>(enqueued[2]).part
+        val text0 = assertIs<Oc2Adapted.PartUpserted>(enqueued[2]).part
         assertEquals("text-0", text0.partId)
         assertEquals("hi", text0.text)
 
         val started = adapter.v2("session.step.started", """{"assistantMessageID":"msg_a"}""")
-        assertIs<GatewayEvent.RunStarted>(started.first())
-        assertIs<GatewayEvent.MessageUpserted>(started.last())
-        val delta = assertIs<GatewayEvent.PartDelta>(
+        assertIs<Oc2Adapted.RunStarted>(started.first())
+        assertIs<Oc2Adapted.MessageUpserted>(started.last())
+        val delta = assertIs<Oc2Adapted.PartDelta>(
             adapter.v2("session.text.delta", """{"assistantMessageID":"msg_a","ordinal":1,"delta":"po"}""").single(),
         )
         assertEquals("text-1", delta.partId)
-        assertEquals(DeltaField.Text, delta.field)
-        val ended = assertIs<GatewayEvent.PartUpserted>(
+        assertEquals(Oc2DeltaField.Text, delta.field)
+        val ended = assertIs<Oc2Adapted.PartUpserted>(
             adapter.v2("session.reasoning.ended", """{"assistantMessageID":"msg_a","ordinal":0,"text":"think"}""").single(),
         )
         assertEquals("reasoning-0", ended.part.partId)
         assertEquals(1_000L, ended.part.endedAtMs)
-        val raw = assertIs<GatewayEvent.PartDelta>(
+        val raw = assertIs<Oc2Adapted.PartDelta>(
             adapter.v2("session.tool.input.delta", """{"assistantMessageID":"msg_a","id":"call_1","delta":"{\"a"}""").single(),
         )
-        assertEquals(DeltaField.ToolInputRaw, raw.field)
+        assertEquals(Oc2DeltaField.ToolInputRaw, raw.field)
         assertEquals("call_1", raw.partId)
     }
 
     @Test
     fun `B-PROTO-015 permission asked copies the source id to the call id and renames and hints map`() {
-        val asked = assertIs<GatewayEvent.PermissionAsked>(
+        val asked = assertIs<Oc2Adapted.PermissionAsked>(
             adapter().v2("permission.asked", """{"id":"per_1","action":"bash","source":{"type":"tool","messageID":"m","id":"call_1"}}""").single(),
         )
         assertEquals("call_1", asked.callId)
         assertEquals("per_1", asked.request.id)
-        val renamed = assertIs<GatewayEvent.SessionChanged>(adapter().v2("session.renamed", """{"title":"New"}""").single())
+        val renamed = assertIs<Oc2Adapted.SessionChanged>(adapter().v2("session.renamed", """{"title":"New"}""").single())
         assertEquals("New", renamed.title)
         assertEquals(false, renamed.replacesLocation)
-        val moved = assertIs<GatewayEvent.SessionChanged>(adapter().v2("session.moved", """{"location":{"directory":"/a"}}""").single())
+        val moved = assertIs<Oc2Adapted.SessionChanged>(adapter().v2("session.moved", """{"location":{"directory":"/a"}}""").single())
         assertTrue(moved.replacesLocation)
         assertNull(moved.workspaceId, "a move back to a directory clears the workspace")
         assertEquals(
-            listOf(GatewayEvent.RefreshHint(HintKind.Catalog)),
+            listOf(Oc2Adapted.RefreshHint(Oc2HintKind.Catalog)),
             adapter().feed("""{"type":"models-dev.refreshed","data":{}}"""),
         )
         assertTrue(adapter().v2("session.model.selected", "{}").isEmpty(), "empty selections are ignored")
@@ -196,20 +196,20 @@ class Oc2EventAdapterTest {
     @Test
     fun `B-PROTO-015 credential switches pass only when well formed and never carry a credential payload`() {
         val ok = adapter().feed("""{"type":"credential.switched","data":{"integrationID":"gh","credentialID":null,"secret":"x"}}""")
-        assertEquals(GatewayEvent.CredentialSwitched("gh", null), ok.first())
-        assertEquals(GatewayEvent.RefreshHint(HintKind.Integrations), ok.last())
+        assertEquals(Oc2Adapted.CredentialSwitched("gh", null), ok.first())
+        assertEquals(Oc2Adapted.RefreshHint(Oc2HintKind.Integrations), ok.last())
         val missing = adapter().feed("""{"type":"credential.switched","data":{"integrationID":"gh"}}""")
-        assertEquals(listOf<GatewayEvent>(GatewayEvent.RefreshHint(HintKind.Integrations)), missing)
+        assertEquals(listOf<Oc2Adapted>(Oc2Adapted.RefreshHint(Oc2HintKind.Integrations)), missing)
     }
 
     @Test
     fun `B-PROTO-047 installation events keep the exact available and installed versions`() {
         assertEquals(
-            listOf(GatewayEvent.Installation(InstallationKind.Available, "2.2.5-rc.1+build.7")),
+            listOf(Oc2Adapted.Installation(Oc2InstallationKind.Available, "2.2.5-rc.1+build.7")),
             adapter().feed("""{"type":"installation.update-available","data":{"version":"2.2.5-rc.1+build.7"}}"""),
         )
         assertEquals(
-            listOf(GatewayEvent.Installation(InstallationKind.Installed, "2.1.1")),
+            listOf(Oc2Adapted.Installation(Oc2InstallationKind.Installed, "2.1.1")),
             adapter().feed("""{"type":"installation.updated","data":{"version":"2.1.1"}}"""),
         )
         assertTrue(adapter().feed("""{"type":"installation.updated","data":{}}""").isEmpty())
@@ -217,17 +217,17 @@ class Oc2EventAdapterTest {
 
     @Test
     fun `B-PROTO-090 retry scheduled and retry status map to run retrying with attempt and next time`() {
-        val scheduled = assertIs<GatewayEvent.RunRetrying>(
+        val scheduled = assertIs<Oc2Adapted.RunRetrying>(
             adapter().v2("session.retry.scheduled", """{"attempt":2,"at":99,"error":{"type":"api","message":"Overloaded"}}""").single(),
         )
         assertEquals(2, scheduled.attempt)
         assertEquals(99L, scheduled.nextAtMs)
         assertEquals("Overloaded", scheduled.message)
-        val status = assertIs<GatewayEvent.RunRetrying>(
+        val status = assertIs<Oc2Adapted.RunRetrying>(
             adapter().v2("session.status", """{"status":{"type":"retry","attempt":3,"next":7}}""").single(),
         )
         assertEquals(3, status.attempt)
-        assertIs<GatewayEvent.RunIdle>(adapter().v2("session.idle", "{}").single())
-        assertIs<GatewayEvent.RunStarted>(adapter().v2("session.status", """{"status":{"type":"busy"}}""").single())
+        assertIs<Oc2Adapted.RunIdle>(adapter().v2("session.idle", "{}").single())
+        assertIs<Oc2Adapted.RunStarted>(adapter().v2("session.status", """{"status":{"type":"busy"}}""").single())
     }
 }
