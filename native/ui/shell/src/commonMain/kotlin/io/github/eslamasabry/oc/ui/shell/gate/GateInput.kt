@@ -7,7 +7,7 @@ package io.github.eslamasabry.oc.ui.shell.gate
  * "contract requests"). Nothing here carries a secret: a re-entry names its target and what is needed, never a value.
  */
 public sealed interface GateInput {
-    /** The app is not ready yet (bootstrap or the StartupFence). [localeKnown] is false until the locale mirror exists. */
+    /** The app is not ready (bootstrap or the StartupFence). [localeKnown] is false until the locale mirror exists. */
     public data class Closed(val localeKnown: Boolean) : GateInput
 
     /** The migrator is running [step] (S0, M1 … M6). */
@@ -36,7 +36,9 @@ public sealed interface GateInput {
 }
 
 /** Plan 05 §7.3 `BlockReason`. */
-public enum class GateBlockReason { LowSpace, PrefsUnreadable, WriteRefused, AuthorityChanged, StepCrashed, BackupInvalid }
+public enum class GateBlockReason {
+    LowSpace, PrefsUnreadable, WriteRefused, AuthorityChanged, StepCrashed, BackupInvalid,
+}
 
 /** Plan 05 §7.3 `ReentryKind`: only things the person must do; app-made secrets are renewed silently. */
 public enum class GateReentryKind { Password, Token, GitHubSignIn, ByoSetup }

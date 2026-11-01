@@ -102,19 +102,26 @@ public fun GateScreen(
     onReentryLater: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val specs = KitMotion.specs
-    AnimatedContent(
-        targetState = ui,
-        contentKey = { it::class },
-        transitionSpec = { fadeIn(specs.enter()) togetherWith fadeOut(specs.exit()) },
-    ) { state ->
+    val draw: @Composable (GateUi) -> Unit = { state ->
         when (state) {
-            is GateUi.Opening -> WaitingScreen(if (state.wordless) null else Res.string.migration_opening, state.offerRetry, onRow)
+            is GateUi.Opening ->
+                WaitingScreen(if (state.wordless) null else Res.string.migration_opening, state.offerRetry, onRow)
             is GateUi.Updating -> WaitingScreen(Res.string.migration_updating, state.offerRetry, onRow)
             is GateUi.Failed -> FailedScreen(state, onRow, onConfirm, onCancelConfirm)
             is GateUi.Open -> OpenFrame(state, onReentry, onReentryLater, content)
         }
     }
+    // Reduced motion: nothing moves (05 §8.2), so no transition container at all.
+    if (KitMotion.state.reduced) {
+        draw(ui)
+        return
+    }
+    val specs = KitMotion.specs
+    AnimatedContent(
+        targetState = ui,
+        contentKey = { it::class },
+        transitionSpec = { fadeIn(specs.enter()) togetherWith fadeOut(specs.exit()) },
+    ) { state -> draw(state) }
 }
 
 /** Opening / Updating. [title] null = the wordless mark: the ground only, so nothing reads in the wrong language. */
@@ -128,7 +135,11 @@ private fun WaitingScreen(title: StringResource?, offerRetry: Boolean, onRow: (G
                 role = TypeRole.Body,
                 tone = TextTone.Secondary,
             )
-            KitRow(title = stringResource(Res.string.migration_try_again), supporting = null, onClick = { onRow(GateRow.TryAgain) })
+            KitRow(
+                title = stringResource(Res.string.migration_try_again),
+                supporting = null,
+                onClick = { onRow(GateRow.TryAgain) },
+            )
         }
     }
 }

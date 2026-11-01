@@ -1,8 +1,9 @@
 package io.github.eslamasabry.oc.ui.shell.gate
 
-import androidx.compose.runtime.Composable
+import java.util.Locale
 
-@Composable
-public actual fun ProvideGateLocale(localeTag: String?, content: @Composable () -> Unit) {
-    content()
+public actual fun applyGateLocale(localeTag: String?): String {
+    val previous = Locale.getDefault().toLanguageTag()
+    if (localeTag != null) Locale.setDefault(Locale.forLanguageTag(localeTag))
+    return previous
 }

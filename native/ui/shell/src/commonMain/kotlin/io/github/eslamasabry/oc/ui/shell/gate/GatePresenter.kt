@@ -17,7 +17,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * Turns the gate input into what the gate draws, and the person's taps into [GateActions] calls (plan 05 §8, 01 §9.7).
+ * Turns the gate input into what the gate draws, and the person's taps into [GateActions] calls
+ * (plan 05 §8, 01 §9.7).
  *
  * - The 8 s clock runs while the app waits (Opening or Updating) and restarts only when a new wait begins, so a
  *   step change inside one run does not hide Try again.

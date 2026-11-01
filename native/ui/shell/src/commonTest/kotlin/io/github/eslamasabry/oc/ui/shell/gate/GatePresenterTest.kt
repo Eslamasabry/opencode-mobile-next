@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.shell.gate
 
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -14,6 +15,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** S2-GATEUI: the gate's states and ways out (plan 05 §8, 01 §9.7), on virtual time. */
+@OptIn(ExperimentalCoroutinesApi::class)
 class GatePresenterTest {
     private class RecordingActions : GateActions {
         val calls = mutableListOf<String>()
@@ -149,7 +151,9 @@ class GatePresenterTest {
 
     @Test
     fun `B-MIGR-011 the details line carries the step and class only, and space is said in plain units`() = runTest {
-        val h = Harness(this, GateInput.Blocked(GateBlockReason.LowSpace, neededBytes = 120L * 1024 * 1024, detail = "S0 · LowSpace"))
+        val blocked =
+            GateInput.Blocked(GateBlockReason.LowSpace, neededBytes = 120L * 1024 * 1024, detail = "S0 · LowSpace")
+        val h = Harness(this, blocked)
         runCurrent()
         val failed = assertIs<GateUi.Failed>(h.ui)
         assertEquals("S0 · LowSpace", failed.detail)
