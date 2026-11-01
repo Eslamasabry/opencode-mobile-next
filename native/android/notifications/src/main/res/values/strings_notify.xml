@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- :android:notifications copy. en and ar are copied verbatim from the Flutter app's native strings
+     (android/app/src/main/res, names native_* renamed notify_*); see docs/native/units/NOTIFY.md. -->
+<resources>
+    <string name="notify_live_channel">Live coding connection</string>
+    <string name="notify_live_description">Shown while OpenCode keeps a server session live in the background</string>
+    <string name="notify_coding_requests_channel">Coding requests</string>
+    <string name="notify_coding_requests_description">Alerts when OpenCode needs permission or input</string>
+    <string name="notify_coding_requests_quiet_channel">Coding requests (quiet hours)</string>
+    <string name="notify_coding_requests_quiet_description">Requests that arrive during quiet hours, with no sound</string>
+    <string name="notify_coding_status_channel">Coding session updates</string>
+    <string name="notify_coding_status_description">Alerts when a background OpenCode session finishes</string>
+    <string name="notify_team_progress_channel">AI Team progress</string>
+    <string name="notify_team_progress_description">A quiet line while the AI Team is working</string>
+    <string name="notify_setup_channel">Setup</string>
+    <string name="notify_phone_server_channel">OpenCode on this phone</string>
+    <string name="notify_phone_server_description">Shown while the phone server or project engine runs</string>
+    <string name="notify_schedule_channel">Scheduled prompts</string>
+    <string name="notify_voice_setup">Voice setup</string>
+    <string name="notify_alert_permission_title">Allow %1$s to continue?</string>
+    <string name="notify_alert_question_title">%1$s has a question for you</string>
+    <string name="notify_alert_complete_title">Finished: %1$s</string>
+    <string name="notify_alert_error_title">Stopped: %1$s</string>
+    <string name="notify_alert_stopped_any">A conversation stopped</string>
+    <string name="notify_ask_run">Run %1$s?</string>
+    <string name="notify_ask_edit">Edit %1$s?</string>
+    <string name="notify_ask_read">Read %1$s?</string>
+    <string name="notify_ask_folder">Work in %1$s?</string>
+    <string name="notify_public_needs_you">A request needs you</string>
+    <string name="notify_public_finished">A conversation finished</string>
+    <string name="notify_status_public_stopped">OpenCode · a chat stopped</string>
+    <string name="notify_test_title">Notifications are on</string>
+    <string name="notify_test_body">Questions and finished work will arrive like this.</string>
+    <string name="notify_alert_quota_title">Provider usage reached your threshold</string>
+    <string name="notify_alert_quota_body">Open to check current usage.</string>
+    <string name="notify_alert_quota_reset_title">%1$s is back</string>
+    <string name="notify_alert_quota_reset_generic_title">A usage limit reset</string>
+    <string name="notify_alert_quota_reset_body">Open to see how much is left.</string>
+    <string name="notify_alert_checkin_title">%1$s is still working</string>
+    <string name="notify_alert_checkin_body">Open the conversation to check in.</string>
+    <string name="notify_alert_reason_auth">The provider rejected the key. Sign in again to continue.</string>
+    <string name="notify_alert_reason_context">The conversation is too long for the model.</string>
+    <string name="notify_alert_reason_length">The reply hit its length limit.</string>
+    <string name="notify_alert_reason_filter">The provider blocked the reply.</string>
+    <string name="notify_alert_reason_model">That model is not available. Choose another to continue.</string>
+    <string name="notify_alert_reason_other">Something went wrong.</string>
+    <string name="notify_allow_once">Allow once</string>
+    <string name="notify_reject">Reject</string>
+    <string name="notify_open">Open</string>
+    <string name="notify_status_action_open">Open</string>
+    <string name="notify_status_action_stop_reply">Stop the reply</string>
+    <string name="notify_status_action_start">Start</string>
+    <string name="notify_status_action_new_chat">New chat</string>
+    <string name="notify_status_action_stop_opencode">Stop OpenCode</string>
+    <string name="notify_status_public_ready">OpenCode · ready</string>
+    <string name="notify_status_public_paused">OpenCode · paused</string>
+    <plurals name="notify_chip_running">
+        <item quantity="one">%1$d running</item>
+        <item quantity="other">%1$d running</item>
+    </plurals>
+    <plurals name="notify_chip_pending">
+        <item quantity="one">%1$d needs you</item>
+        <item quantity="other">%1$d need you</item>
+    </plurals>
+    <plurals name="notify_group_need_you">
+        <item quantity="one">%d needs you</item>
+        <item quantity="other">%d need you</item>
+    </plurals>
+    <plurals name="notify_group_finished">
+        <item quantity="one">%d conversation finished</item>
+        <item quantity="other">%d conversations finished</item>
+    </plurals>
+    <!-- Added by the native app (NOTIFY). -->
+    <string name="notify_answer_in_app">Open OpenCode to answer</string>
+    <string name="notify_reply_watch_title">Still working on your reply</string>
+    <string name="notify_status_public_working">OpenCode · working</string>
+</resources>

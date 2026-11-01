@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- :android:notifications copy, written for the native app (NOTIFY); the Flutter app had no native
+     strings in this language. To be absorbed by :ui:words strings_os (see docs/native/units/NOTIFY.md). -->
+<resources>
+    <string name="notify_live_channel">Conexión de código en directo</string>
+    <string name="notify_live_description">Se muestra mientras OpenCode mantiene activa una sesión del servidor en segundo plano</string>
+    <string name="notify_coding_requests_channel">Solicitudes de código</string>
+    <string name="notify_coding_requests_description">Avisos cuando OpenCode necesita permiso o una respuesta</string>
+    <string name="notify_coding_requests_quiet_channel">Solicitudes de código (horas de silencio)</string>
+    <string name="notify_coding_requests_quiet_description">Solicitudes que llegan en horas de silencio, sin sonido</string>
+    <string name="notify_coding_status_channel">Novedades de las sesiones</string>
+    <string name="notify_coding_status_description">Avisos cuando termina una sesión de OpenCode en segundo plano</string>
+    <string name="notify_team_progress_channel">Progreso del equipo de IA</string>
+    <string name="notify_team_progress_description">Una línea discreta mientras trabaja el equipo de IA</string>
+    <string name="notify_setup_channel">Configuración</string>
+    <string name="notify_phone_server_channel">OpenCode en este teléfono</string>
+    <string name="notify_phone_server_description">Se muestra mientras funciona el servidor del teléfono o el motor del proyecto</string>
+    <string name="notify_schedule_channel">Instrucciones programadas</string>
+    <string name="notify_voice_setup">Configuración de voz</string>
+    <string name="notify_alert_permission_title">¿Permitir que %1$s continúe?</string>
+    <string name="notify_alert_question_title">%1$s tiene una pregunta para ti</string>
+    <string name="notify_alert_complete_title">Terminado: %1$s</string>
+    <string name="notify_alert_error_title">Detenido: %1$s</string>
+    <string name="notify_alert_stopped_any">Se detuvo una conversación</string>
+    <string name="notify_ask_run">¿Ejecutar %1$s?</string>
+    <string name="notify_ask_edit">¿Editar %1$s?</string>
+    <string name="notify_ask_read">¿Leer %1$s?</string>
+    <string name="notify_ask_folder">¿Trabajar en %1$s?</string>
+    <string name="notify_public_needs_you">Una solicitud te necesita</string>
+    <string name="notify_public_finished">Terminó una conversación</string>
+    <string name="notify_status_public_stopped">OpenCode · se detuvo un chat</string>
+    <string name="notify_test_title">Las notificaciones están activadas</string>
+    <string name="notify_test_body">Las preguntas y el trabajo terminado llegarán así.</string>
+    <string name="notify_alert_quota_title">El uso del proveedor alcanzó tu límite</string>
+    <string name="notify_alert_quota_body">Abre para ver el uso actual.</string>
+    <string name="notify_alert_quota_reset_title">%1$s ha vuelto</string>
+    <string name="notify_alert_quota_reset_generic_title">Se restableció un límite de uso</string>
+    <string name="notify_alert_quota_reset_body">Abre para ver cuánto queda.</string>
+    <string name="notify_alert_checkin_title">%1$s sigue trabajando</string>
+    <string name="notify_alert_checkin_body">Abre la conversación para ver cómo va.</string>
+    <string name="notify_alert_reason_auth">El proveedor rechazó la clave. Vuelve a iniciar sesión para continuar.</string>
+    <string name="notify_alert_reason_context">La conversación es demasiado larga para el modelo.</string>
+    <string name="notify_alert_reason_length">La respuesta llegó a su límite de longitud.</string>
+    <string name="notify_alert_reason_filter">El proveedor bloqueó la respuesta.</string>
+    <string name="notify_alert_reason_model">Ese modelo no está disponible. Elige otro para continuar.</string>
+    <string name="notify_alert_reason_other">Algo salió mal.</string>
+    <string name="notify_allow_once">Permitir una vez</string>
+    <string name="notify_reject">Rechazar</string>
+    <string name="notify_open">Abrir</string>
+    <string name="notify_status_action_open">Abrir</string>
+    <string name="notify_status_action_stop_reply">Detener la respuesta</string>
+    <string name="notify_status_action_start">Iniciar</string>
+    <string name="notify_status_action_new_chat">Chat nuevo</string>
+    <string name="notify_status_action_stop_opencode">Detener OpenCode</string>
+    <string name="notify_status_public_ready">OpenCode · listo</string>
+    <string name="notify_status_public_paused">OpenCode · en pausa</string>
+    <string name="notify_answer_in_app">Abre OpenCode para responder</string>
+    <string name="notify_reply_watch_title">Sigue trabajando en tu respuesta</string>
+    <string name="notify_status_public_working">OpenCode · trabajando</string>
+    <plurals name="notify_chip_running">
+        <item quantity="one">%1$d en curso</item>
+        <item quantity="many">%1$d en curso</item>
+        <item quantity="other">%1$d en curso</item>
+    </plurals>
+    <plurals name="notify_chip_pending">
+        <item quantity="one">%1$d te necesita</item>
+        <item quantity="many">%1$d te necesitan</item>
+        <item quantity="other">%1$d te necesitan</item>
+    </plurals>
+    <plurals name="notify_group_need_you">
+        <item quantity="one">%d te necesita</item>
+        <item quantity="many">%d te necesitan</item>
+        <item quantity="other">%d te necesitan</item>
+    </plurals>
+    <plurals name="notify_group_finished">
+        <item quantity="one">%d conversación terminada</item>
+        <item quantity="many">%d conversaciones terminadas</item>
+        <item quantity="other">%d conversaciones terminadas</item>
+    </plurals>
+</resources>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- :android:notifications copy, written for the native app (NOTIFY); the Flutter app had no native
+     strings in this language. To be absorbed by :ui:words strings_os (see docs/native/units/NOTIFY.md). -->
+<resources>
+    <string name="notify_live_channel">实时编码连接</string>
+    <string name="notify_live_description">OpenCode 在后台保持服务器会话时显示</string>
+    <string name="notify_coding_requests_channel">编码请求</string>
+    <string name="notify_coding_requests_description">OpenCode 需要权限或输入时提醒</string>
+    <string name="notify_coding_requests_quiet_channel">编码请求(勿扰时段)</string>
+    <string name="notify_coding_requests_quiet_description">勿扰时段收到的请求,不发出声音</string>
+    <string name="notify_coding_status_channel">会话更新</string>
+    <string name="notify_coding_status_description">后台 OpenCode 会话完成时提醒</string>
+    <string name="notify_team_progress_channel">AI 团队进度</string>
+    <string name="notify_team_progress_description">AI 团队工作时显示的一行安静提示</string>
+    <string name="notify_setup_channel">设置</string>
+    <string name="notify_phone_server_channel">这台手机上的 OpenCode</string>
+    <string name="notify_phone_server_description">手机服务器或项目引擎运行时显示</string>
+    <string name="notify_schedule_channel">定时提示</string>
+    <string name="notify_voice_setup">语音设置</string>
+    <string name="notify_alert_permission_title">允许 %1$s 继续吗?</string>
+    <string name="notify_alert_question_title">%1$s 有问题要问你</string>
+    <string name="notify_alert_complete_title">已完成:%1$s</string>
+    <string name="notify_alert_error_title">已停止:%1$s</string>
+    <string name="notify_alert_stopped_any">一个对话已停止</string>
+    <string name="notify_ask_run">运行 %1$s?</string>
+    <string name="notify_ask_edit">编辑 %1$s?</string>
+    <string name="notify_ask_read">读取 %1$s?</string>
+    <string name="notify_ask_folder">在 %1$s 中工作?</string>
+    <string name="notify_public_needs_you">有请求需要你处理</string>
+    <string name="notify_public_finished">一个对话已完成</string>
+    <string name="notify_status_public_stopped">OpenCode · 一个聊天已停止</string>
+    <string name="notify_test_title">通知已开启</string>
+    <string name="notify_test_body">问题和完成的工作会像这样送达。</string>
+    <string name="notify_alert_quota_title">服务商用量已达到你的阈值</string>
+    <string name="notify_alert_quota_body">打开查看当前用量。</string>
+    <string name="notify_alert_quota_reset_title">%1$s 已恢复</string>
+    <string name="notify_alert_quota_reset_generic_title">一项用量限制已重置</string>
+    <string name="notify_alert_quota_reset_body">打开查看剩余额度。</string>
+    <string name="notify_alert_checkin_title">%1$s 仍在工作</string>
+    <string name="notify_alert_checkin_body">打开对话查看进展。</string>
+    <string name="notify_alert_reason_auth">服务商拒绝了密钥。请重新登录后继续。</string>
+    <string name="notify_alert_reason_context">对话对该模型来说太长了。</string>
+    <string name="notify_alert_reason_length">回复已达到长度上限。</string>
+    <string name="notify_alert_reason_filter">服务商拦截了这条回复。</string>
+    <string name="notify_alert_reason_model">该模型不可用。请选择其他模型后继续。</string>
+    <string name="notify_alert_reason_other">出了点问题。</string>
+    <string name="notify_allow_once">仅允许一次</string>
+    <string name="notify_reject">拒绝</string>
+    <string name="notify_open">打开</string>
+    <string name="notify_status_action_open">打开</string>
+    <string name="notify_status_action_stop_reply">停止回复</string>
+    <string name="notify_status_action_start">开始</string>
+    <string name="notify_status_action_new_chat">新聊天</string>
+    <string name="notify_status_action_stop_opencode">停止 OpenCode</string>
+    <string name="notify_status_public_ready">OpenCode · 就绪</string>
+    <string name="notify_status_public_paused">OpenCode · 已暂停</string>
+    <string name="notify_answer_in_app">打开 OpenCode 来回答</string>
+    <string name="notify_reply_watch_title">仍在生成你的回复</string>
+    <string name="notify_status_public_working">OpenCode · 工作中</string>
+    <plurals name="notify_chip_running">
+        <item quantity="other">%1$d 个运行中</item>
+    </plurals>
+    <plurals name="notify_chip_pending">
+        <item quantity="other">%1$d 个待处理</item>
+    </plurals>
+    <plurals name="notify_group_need_you">
+        <item quantity="other">%d 个请求等你处理</item>
+    </plurals>
+    <plurals name="notify_group_finished">
+        <item quantity="other">%d 个对话已完成</item>
+    </plurals>
+</resources>
