@@ -22,7 +22,7 @@ import org.junit.jupiter.params.provider.MethodSource
 /**
  * P-N2 on the JVM: `PinnedLeafTrustManager` + hostname verifier, TLS by Conscrypt (the Android platform provider) and,
  * for comparison, the JDK's SunJSSE. Server: okhttp-tls self-signed leaves on mockwebserver3.
- * The emulator half (API 37, 10.0.2.2) needs KVM, which this container lacks; see the report.
+ * The emulator half (API 37, server on the host) needs KVM, which this container lacks; see the report.
  */
 class PN2PinnedTlsTest {
     private val servers = mutableListOf<MockWebServer>()
