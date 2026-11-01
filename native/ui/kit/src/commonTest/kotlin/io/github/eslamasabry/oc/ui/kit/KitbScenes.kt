@@ -96,7 +96,7 @@ data class KitbWords(
 @Composable
 fun MotionPartsScene(w: KitbWords, swapped: Boolean = true, count: Int = 12, expanded: Boolean = true, value: Float = 0.8f) {
     val colors = LocalKitColors.current
-    Column(Modifier.testTag("motion").padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.testTag("motion").background(colors.ground).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         KitSwap(if (swapped) w.done else w.working) { KitText(it, role = TypeRole.RowTitle, kind = KitTextKind.Frame) }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             KitSwapCount(count) { KitText(it.toString(), role = TypeRole.Headline, kind = KitTextKind.Frame) }
@@ -122,7 +122,7 @@ fun TabsScene(w: KitbWords, index: Int = 0, onSelected: (Int) -> Unit = {}) {
         tabs = tabs,
         index = index,
         onSelected = onSelected,
-        modifier = Modifier.testTag("tabs").height(240.dp),
+        modifier = Modifier.testTag("tabs").background(LocalKitColors.current.ground).height(240.dp),
         bodies = listOf({ CounterBody(w) }, { KitText(w.waiting + " · " + w.row) }, { KitText(w.done + " · " + w.row) }),
     )
 }
@@ -136,7 +136,7 @@ private fun CounterBody(w: KitbWords) {
 /** B-KIT-030: the field in its states. */
 @Composable
 fun SearchScene(w: KitbWords, onSearch: (String) -> Unit = {}) {
-    Column(Modifier.testTag("search").padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.testTag("search").background(LocalKitColors.current.ground).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         KitSearchField(label = w.searchSettings, onSearch = onSearch)
         KitSearchField(
             label = w.searchSettings,
@@ -156,7 +156,7 @@ fun SearchScene(w: KitbWords, onSearch: (String) -> Unit = {}) {
 /** The filter line, overflowing so the end edge fades. */
 @Composable
 fun FilterChipsScene(w: KitbWords, selected: Int = 0) {
-    Column(Modifier.testTag("chips").padding(vertical = 16.dp)) {
+    Column(Modifier.testTag("chips").background(LocalKitColors.current.ground).padding(vertical = 16.dp)) {
         KitFilterChips {
             listOf(w.allProjects, w.needsYou, w.running, w.pinned, w.archived).forEachIndexed { i, label ->
                 KitChip(
@@ -187,13 +187,13 @@ fun JumpPillScene(w: KitbWords, newCount: Int = 3, visible: Boolean = true, onJu
 /** A tip bubble (its drawing; placement is a popup over the anchor). */
 @Composable
 fun TipScene(w: KitbWords) {
-    Box(Modifier.testTag("tip").padding(16.dp)) { KitTipBubble(w.tip) }
+    Box(Modifier.testTag("tip").background(LocalKitColors.current.ground).padding(16.dp)) { KitTipBubble(w.tip) }
 }
 
 /** Pull to refresh, refreshing, as a still frame. */
 @Composable
 fun RefreshScene(w: KitbWords, refreshing: Boolean = true, onRefresh: () -> Unit = {}) {
-    KitRefresh(refreshing = refreshing, onRefresh = onRefresh, modifier = Modifier.testTag("refresh").fillMaxWidth().height(240.dp)) {
+    KitRefresh(refreshing = refreshing, onRefresh = onRefresh, modifier = Modifier.testTag("refresh").background(LocalKitColors.current.ground).fillMaxWidth().height(240.dp)) {
         Column(Modifier.fillMaxSize().padding(top = 72.dp, start = 16.dp)) { repeat(3) { KitText("${w.row} ${it + 1}") } }
     }
 }
@@ -201,14 +201,14 @@ fun RefreshScene(w: KitbWords, refreshing: Boolean = true, onRefresh: () -> Unit
 /** A sheet's second view, and the end-side sheet over a page. */
 @Composable
 fun SheetStepScene(w: KitbWords, second: Boolean = true) {
-    Box(Modifier.testTag("sheet-step").padding(16.dp)) {
+    Box(Modifier.testTag("sheet-step").background(LocalKitColors.current.ground).padding(16.dp)) {
         KitSheetStep(second) { KitText(if (it) w.stepTwo else w.stepOne, role = TypeRole.Headline, kind = KitTextKind.Frame) }
     }
 }
 
 @Composable
 fun SideSheetScene(w: KitbWords, visible: Boolean = true, onDismiss: () -> Unit = {}) {
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
         Column(Modifier.padding(16.dp)) { repeat(5) { KitText("${w.row} ${it + 1}") } }
         KitSideSheet(visible = visible, onDismissRequest = onDismiss, widthDp = 300) {
             Column(Modifier.padding(16.dp)) { KitText(w.sideTitle, role = TypeRole.Headline, kind = KitTextKind.Frame) }
