@@ -1,5 +1,5 @@
 # E2E-25 Launcher shortcuts, Quick Settings tile, deep links and share-in
-# slice: 4   avd: A   fixtures: FX-OC2   snapshot: base
+# slice: 4   avd: A   fixtures: FX-OC2, FX-OC2-B   snapshot: base
 # rows: B-ANDR-030, B-ANDR-027, B-ANDR-028, B-ANDR-071, B-ANDR-073, B-NAV-064, B-NAV-061, B-NAV-062, B-ANDR-075, B-NAV-005
 # KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
 appId: ${APP_ID}

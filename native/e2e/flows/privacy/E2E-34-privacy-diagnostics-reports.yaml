@@ -1,0 +1,255 @@
+# E2E-34 Privacy: diagnostics, reports and what never leaves
+# slice: 4   avd: A   fixtures: FX-OC2   snapshot: base
+# rows: B-SEC-040, B-NAV-045, B-SEC-041, B-SEC-128, B-SEC-050, B-SEC-129, B-STATE-072
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-4, g4, privacy]
+---
+- runScript: ../../runner/out/strings.js
+
+# FX-OC2 registers the stub secret as a provider key; e2e:secret echoes it. GitHub is never reached: the link stops at
+# the app's safe-link prompt.
+- runFlow: ../_sub/connect-fx-oc2.yaml
+- evalScript: ${output.hostPattern = '(?s).*' + output.fx.serverHost.replace(/\./g, '\\.') + '.*'}
+
+# S1 Open a server's configuration screen: no password or token is displayed in the clear; change the secret: it
+#    appears masked, labelled by the name it sits under. [B-SEC-040]
+# S1 [B-SEC-040]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S1 the server page never shows its password; a changed one stays masked [B-SEC-040]"
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+# confirm: a saved server row shows its address; tapping it opens that server's settings page
+- tapOn: ${output.hostPattern}
+- extendedWaitUntil:
+    visible: ${output.s.settingsV3SignIn}
+    timeout: 15000
+- assertVisible: ${output.c.settingsV3SignInPassword}
+- assertNotVisible: ${SERVER_PASSWORD}  # literal-ok: the per-run password must never show
+# Change the secret (the same password again, so the connection stays): masked, under its own name.
+- tapOn: ${output.s.settingsV3SignIn}
+- tapOn: ${output.s.e7SetupServerPassword}
+- eraseText: 80
+- inputText: ${SERVER_PASSWORD}
+- hideKeyboard
+- assertNotVisible: ${SERVER_PASSWORD}  # literal-ok: the field obscures what was typed
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupProbeV2}
+    timeout: 30000
+- tapOn: ${output.s.e7SetupConnect}
+- extendedWaitUntil:
+    visible: ${output.c.settingsV3SignInPassword}
+    timeout: 30000
+- assertNotVisible: ${SERVER_PASSWORD}  # literal-ok: the per-run password must never show
+- back
+- back
+- back
+
+# S2 Run `e2e:secret`, cause an error: Settings > Diagnostics > "Recent errors" titles each error by source and kind in
+#    plain words. [B-NAV-045]
+# S2 [B-NAV-045]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S2 recent errors titled by source and kind in plain words [B-NAV-045]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:secret
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: drop-stream
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- back
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: diagnostics
+- tapOn: ${output.s.e7LibraryReportABug}
+- extendedWaitUntil:
+    visible: ${output.rc.reportProblemErrorsLabel}
+    timeout: 15000
+- tapOn: ${output.rc.reportProblemErrorsLabel}
+# confirm: the dropped stream is recorded as "Lost the live connection to the server"
+- extendedWaitUntil:
+    visible: ${output.s.recentErrorConnection}
+    timeout: 15000
+- assertNotVisible: ${output.fx.secretKey}
+- back
+
+# S3 Settings > Diagnostics > "Report a problem": the report preview stays off until consent; with consent it shows
+#    exactly the safe text; no fake key, bearer token, password, URL credential or server address appears in the
+#    preview, the copied text, the JSON, the failed-job report, the timing report or the device log. [B-SEC-041,
+#    B-SEC-128]
+# S3 [B-SEC-041, B-SEC-128]
+# SUSPECTED-GAP: no separate consent switch was found on Flutter R's report screen; it states
+#   reportProblemPrivacy and sends nothing until a send button is tapped. confirm on the first run.
+- assertVisible:
+    text: ${output.c.reportProblemPrivacy}
+    label: "S3 the report text is safe: no key, password or address anywhere [B-SEC-041, B-SEC-128]"
+- tapOn: ${output.s.reportProblemAddLabel}
+- inputText: report check
+- hideKeyboard
+- assertNotVisible: ${output.fx.secretKey}
+- assertNotVisible: ${SERVER_PASSWORD}  # literal-ok: the per-run password must never show
+- assertNotVisible: ${output.hostPattern}
+- assertNotVisible: ${'(?s).*Bearer .*'}  # literal-ok: bearer token marker
+# The copied text: paste it back into the description field and look.
+- tapOn: ${output.s.reportProblemCopyShort}
+- extendedWaitUntil:
+    visible: ${output.s.reportProblemCopied}
+    timeout: 15000
+- tapOn: ${output.s.reportProblemAddLabel}
+- eraseText: 40
+- pasteText
+- hideKeyboard
+- assertNotVisible: ${output.fx.secretKey}
+- assertNotVisible: ${SERVER_PASSWORD}  # literal-ok: the per-run password must never show
+- assertNotVisible: ${output.hostPattern}
+- assertNotVisible: ${'(?s).*://[^/ ]*:[^/ ]*@.*'}  # literal-ok: URL credential shape
+- tapOn: ${output.s.reportProblemAddLabel}
+- eraseText: 4000
+# The timing report too.
+- back
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: performance
+- runFlow:
+    when:
+      visible: ${output.s.perfTraceTitle}
+    commands:
+      - tapOn: ${output.s.perfTraceTitle}
+      - tapOn: ${output.s.perfTraceCopy}
+      - extendedWaitUntil:
+          visible: ${output.s.perfTraceCopied}
+          timeout: 15000
+      - assertNotVisible: ${output.hostPattern}
+      - back
+# adb: logcat-scan
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: logcat-scan
+- assertTrue: ${output.hook.found == false}
+# UNIT-ONLY: the JSON form and the failed-job report (ReportRedactor unit tests over the same canaries).
+- back
+
+# S4 Tap "Share report": the system share sheet opens with exactly the previewed text, nothing written locally; [adb]
+#    unavailable share: the user gets a fixed plain outcome. [B-SEC-050]
+# S4 [B-SEC-050]
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: crash reports
+    label: "S4 Share report opens the system sheet; no sheet gives a plain outcome [B-SEC-050]"
+- tapOn: ${output.s.e7LibraryReportABug}
+- scrollUntilVisible:
+    element: ${output.s.crashReportsSwitch}
+- runFlow:
+    when:
+      visible: ${output.s.crashReportsNone}
+    commands:
+      - tapOn: ${output.s.crashReportsSwitch}
+- scrollUntilVisible:
+    element: ${output.s.diagnosticsReportOpen}
+- tapOn: ${output.s.diagnosticsReportOpen}
+- extendedWaitUntil:
+    visible: ${output.s.diagnosticsReportTitle}
+    timeout: 15000
+- assertVisible: ${output.c.diagnosticsReportPrivacy}
+- runFlow:
+    when:
+      visible: ${output.s.diagnosticsReportEmpty}
+    commands:
+      - back
+- runFlow:
+    when:
+      visible: ${output.s.diagnosticsReportShare}
+    commands:
+      - tapOn: ${output.s.diagnosticsReportShare}
+      # retry-reason: the Android share sheet is system UI and slides in
+      - retry:
+          maxRetries: 2
+          commands:
+            - assertVisible: Share  # literal-ok: Android share sheet title
+      - back
+# UNIT-ONLY: the sheet carries exactly the previewed text and nothing is written to app storage.
+# NEEDS-HOOK: share-unavailable: disable every ACTION_SEND target so the chooser cannot open; then assert
+#   diagnosticsReportShareFailed ("Couldn't open sharing. Try again.").
+- back
+
+# S5 Tap "Report a problem" to GitHub: a short report is prefilled whole in the link, opened through the safe-link
+#    prompt; a long report goes to the clipboard and the form says to paste; a very long description copies the whole
+#    report. [B-SEC-129]
+# S5 [B-SEC-129]
+- tapOn:
+    text: ${output.s.reportProblemAddLabel}
+    label: "S5 GitHub report: short in the link via the safe prompt, long via the clipboard [B-SEC-129]"
+- inputText: short report
+- hideKeyboard
+- scrollUntilVisible:
+    element: ${output.s.reportProblemSendGitHub}
+- tapOn: ${output.s.reportProblemSendGitHub}
+- extendedWaitUntil:
+    visible: ${output.rc.externalLinkOpensHost}
+    timeout: 15000
+- assertVisible: ${'(?s).*github\.com.*'}  # literal-ok: the report form's host, shown by the safe-link prompt
+- tapOn: ${output.s.externalLinkDontOpen}
+# A very long description: the whole report goes to the clipboard and the form says to paste.
+- tapOn: ${output.s.reportProblemAddLabel}
+- eraseText: 40
+- setClipboard:
+    text: ${'long description '.repeat(400)}  # literal-ok: a very long description, built
+- pasteText
+- hideKeyboard
+- scrollUntilVisible:
+    element: ${output.s.reportProblemSendGitHub}
+- tapOn: ${output.s.reportProblemSendGitHub}
+- extendedWaitUntil:
+    visible: ${output.c.reportProblemLinkCopiesWhole}
+    timeout: 15000
+- runFlow:
+    when:
+      visible: ${output.s.externalLinkDontOpen}
+    commands:
+      - tapOn: ${output.s.externalLinkDontOpen}
+# UNIT-ONLY: "a long report (diagnostics only) goes to the clipboard" vs "the whole report" is ReportLink unit logic.
+
+# S6 Clear captured evidence: memory, the committed snapshot and any pending write are erased; restart the app; old
+#    trace evidence does not reappear. [B-STATE-072]
+# S6 [B-STATE-072]
+- tapOn:
+    text: ${output.s.reportProblemKeptLink}
+    label: "S6 cleared evidence stays gone after a restart [B-STATE-072]"
+- extendedWaitUntil:
+    visible: ${output.s.e7SettingsUi88}
+    timeout: 15000
+- tapOn: ${output.re.appDiagnosticsClearConfirm}
+- extendedWaitUntil:
+    visible: ${output.re.appDiagnosticsClearTitle}
+    timeout: 15000
+- tapOn:
+    text: ${output.re.appDiagnosticsClearConfirm}
+    below: ${output.re.appDiagnosticsClearTitle}
+- runFlow: ../_sub/restart-app.yaml
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: diagnostics
+- tapOn: ${output.s.e7LibraryReportABug}
+- extendedWaitUntil:
+    visible: ${output.s.reportProblemNothingTitle}
+    timeout: 15000
+- assertNotVisible: ${output.rc.reportProblemErrorsLabel}
+# UNIT-ONLY: the pending write is erased too (a write in flight at the moment of clearing).
