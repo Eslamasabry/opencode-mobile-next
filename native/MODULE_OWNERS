@@ -1,0 +1,17 @@
+# path	kind	owner	since   (plan 03 §2.4; ModuleOwnersTest gates it; only the coordinator edits this file)
+:core:common	S	core-owner	slice-0
+:core:security	S	core-owner	slice-0
+:core:model	S	core-owner	slice-0
+:core:domain	S	core-owner	slice-0
+:core:testing	S	core-owner	slice-0
+:engine:connection	S	backend-owner	slice-0
+:engine:transcript	S	chat-lead	slice-0
+:ui:design	S	design-authority	slice-0
+:ui:words	S	l10n-owner	slice-0
+:ui:routes	S	coordinator	slice-0
+:ui:kit	S	kit-owner	slice-0
+:ui:shell	S	coordinator	slice-0
+:feature:chats	F	(slice brief names the agent)	slice-0
+:androidApp	S	coordinator	slice-0
+:desktopApp	S	kit-owner	slice-0
+:quality	S	coordinator	slice-0
