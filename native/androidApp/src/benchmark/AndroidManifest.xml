@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- benchmark build type only (slice-0 P3 and start-up): profileable by the shell, plus the stream proof screen. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- largeHeap: building the 12 MB fixture in memory (harness only) needs more than the 192 MB default. -->
+    <application android:largeHeap="true">
+        <profileable android:shell="true" />
+        <activity
+            android:name=".proof.StreamProofActivity"
+            android:exported="true" />
+    </application>
+</manifest>

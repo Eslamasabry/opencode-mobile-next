@@ -33,6 +33,6 @@ for (layer in layerFolders) {
         .sortedBy { it.name }
         .forEach { include(":$layer:${it.name}") }
 }
-listOf("androidApp", "desktopApp", "quality")
+listOf("androidApp", "desktopApp", "quality", "benchmark")
     .filter { settingsDir.resolve("$it/build.gradle.kts").isFile }
     .forEach { include(":$it") }
