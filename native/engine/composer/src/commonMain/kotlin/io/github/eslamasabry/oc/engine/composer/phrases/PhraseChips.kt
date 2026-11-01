@@ -318,4 +318,9 @@ public class PhraseChipStores(private val prefs: ComposerPrefs, private val cloc
     public suspend fun closeProfile(profileId: String) {
         forProfile(profileId).close()
     }
+
+    /** A server added again under a removed id gets a fresh, open store (the closed one stays closed). */
+    public fun reopenProfile(profileId: String) {
+        stores.remove(profileId)
+    }
 }

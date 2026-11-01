@@ -218,5 +218,7 @@ class PhraseChipsTest {
         owner.record("Run the tests", PhraseMoment.Idle)
         owner.hide("Run the tests")
         assertFalse(prefs.contains(PhraseChipStore.keyFor("alpha")))
+        stores.reopenProfile("alpha")
+        assertTrue(stores.forProfile("alpha").record("Run the tests", PhraseMoment.Idle), "a re-added server learns again")
     }
 }

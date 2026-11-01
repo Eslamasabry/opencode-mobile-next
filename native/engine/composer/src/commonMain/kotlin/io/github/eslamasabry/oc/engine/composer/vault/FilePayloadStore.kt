@@ -13,7 +13,7 @@ import kotlinx.io.readByteArray
 /**
  * Payloads as `<root>/<ownerKey>/<id>.blob`, published through a sibling `.tmp` and an atomic rename: the exact
  * layout Flutter's `FileDraftAttachmentStorage` writes under the app-support directory, so a vault written by the
- * Flutter build reads here unchanged. [io] is the injected I/O dispatcher (no Dispatchers.* outside :core:common).
+ * Flutter build reads here unchanged. [io] is the injected I/O dispatcher (AppDispatchers.io; rule 6).
  */
 public class FilePayloadStore(
     private val root: Path,
