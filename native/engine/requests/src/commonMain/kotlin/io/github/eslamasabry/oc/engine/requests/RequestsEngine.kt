@@ -278,7 +278,7 @@ public class RequestsEngine(
         val failure = (written as Outcome.Failed).failure
         // The server timed the ask out (404 naming this request): the card leaves with no error (B-CHAT-076).
         // Anything else is checked against the server's own list: an ask resolved meanwhile shows no error (B-PROTO-048).
-        val resolved = timedOut(failure, id) || stillListed(entry) == false || phaseOf(id) == null
+        val resolved = timedOut(failure, entry) || stillListed(entry) == false || phaseOf(id) == null
         if (resolved) {
             withContext(lane) { remove(id) }
             return Unit.ok()
@@ -290,8 +290,14 @@ public class RequestsEngine(
         return written
     }
 
-    private fun timedOut(failure: Failure, id: RequestId): Boolean =
-        failure is Failure.NotFound && (failure.requestId == id || (failure.requestId == null && failure.tag?.raw in notFoundTags))
+    private fun timedOut(failure: Failure, entry: PendingRequest): Boolean {
+        val requestTag = when (entry) {
+            is PendingRequest.Permission -> "PermissionNotFoundError"
+            is PendingRequest.Question -> "QuestionNotFoundError"
+        }
+        return failure is Failure.NotFound && failure.tag?.raw == requestTag &&
+            (failure.requestId == null || failure.requestId == entry.id)
+    }
 
     /** Null when the list could not be read. */
     private suspend fun stillListed(entry: PendingRequest): Boolean? =
@@ -356,7 +362,6 @@ public class RequestsEngine(
 
         /** Dart keeps 64 first-seen times per connection. */
         const val SHOWN_KEPT = 64
-        val notFoundTags = setOf("PermissionNotFoundError", "QuestionNotFoundError", "NotFoundError")
     }
 }
 

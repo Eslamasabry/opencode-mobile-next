@@ -529,5 +529,38 @@ class RequestsEngineTest {
         }
 
     @Test
+    fun `B-CHAT-076 req-4 generic not found without an id keeps a listed request retryable`() =
+        runTest {
+            val engine = engine()
+            ask(permission("p1"))
+            val failure = Failure.NotFound(WireTag("NotFoundError"), null)
+            port.failNextReply = failure
+            assertEquals(Outcome.Failed(failure), engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)))
+            assertIs<AnswerPhase.NotAccepted>(engine.phaseOf("p1"))
+            assertEquals(Outcome.Ok(Unit), engine.retry(RequestId("p1")))
+            assertEquals(2, port.replies.size)
+        }
+
+    @Test
+    fun `B-CHAT-076 req-4 wrong request-kind and mismatched-id errors do not resolve listed permissions`() =
+        runTest {
+            val engine = engine()
+            val failures = listOf(
+                Failure.NotFound(WireTag("NotFoundError"), RequestId("p0")),
+                Failure.NotFound(WireTag("SessionNotFoundError"), RequestId("p1")),
+                Failure.NotFound(WireTag("QuestionNotFoundError"), null),
+                Failure.NotFound(WireTag("PermissionNotFoundError"), RequestId("other")),
+            )
+            failures.forEachIndexed { index, failure ->
+                val id = "p$index"
+                ask(permission(id))
+                port.failNextReply = failure
+                assertEquals(Outcome.Failed(failure), engine.answerNow(RequestId(id), RequestAnswer.Permission(PermissionReply.Once)))
+                assertIs<AnswerPhase.NotAccepted>(engine.phaseOf(id))
+            }
+            assertEquals(failures.size, port.replies.size)
+        }
+
+    @Test
     fun `PB-42 the requests timer table is valid`() = assertTimerTable(RequestsTimers.ALL)
 }
