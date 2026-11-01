@@ -17,6 +17,9 @@ public data class SseFrame(public val event: String?, public val id: String?, pu
  * 5. A blank line delivers the frame when its data is non-empty.
  * 6. A raw line longer than [maxFrameBytes], or data adding up to more, drops the whole frame up to the next blank line;
  *    the next frame parses normally. Unlike Flutter, a line exactly one byte over the cap cannot end the discard early.
+ *    The data counted is the joined data as delivered: values plus one `\n` per extra `data` line, so a run of empty
+ *    `data:` lines reaches the cap too (review w1-core-net MAJOR 5). It is held as those bytes in one buffer, never as
+ *    one object per line, so the retained memory is the counted size.
  * 7. [flush] delivers a trailing frame without its blank line; call it only when the body ended cleanly. After an IO
  *    error call [discardPartial] instead.
  * 8. Allocation-light: bytes go into one growable line buffer; only completed lines are copied out.
@@ -31,10 +34,12 @@ public class SseParser(
     private var lineLength = 0
     private var lineOverflow = false
 
-    private val data = ArrayList<String>()
+    /** The frame's joined data bytes (UTF-8, `\n` between lines); [hasData] tells "no data line" from "empty". */
+    private var data = ByteArray(256)
+    private var dataLength = 0
+    private var hasData = false
     private var event: String? = null
     private var id: String? = null
-    private var frameBytes = 0L
     private var discarding = false
 
     public fun feed(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size - offset) {
@@ -125,13 +130,14 @@ public class SseParser(
         if (valueStart < length && line[valueStart] == SPACE) valueStart += 1
         when {
             isField(DATA, fieldEnd) -> {
-                frameBytes += (length - valueStart)
-                if (frameBytes > maxFrameBytes) {
+                val separator = if (hasData) 1 else 0
+                val count = length - valueStart
+                if (dataLength.toLong() + separator + count > maxFrameBytes) {
                     discarding = true
                     resetFrame()
                     return
                 }
-                data += line.decodeToString(valueStart, length)
+                appendData(separator, valueStart, count)
             }
             isField(EVENT, fieldEnd) -> event = line.decodeToString(valueStart, length)
             isField(ID, fieldEnd) -> id = line.decodeToString(valueStart, length)
@@ -150,21 +156,35 @@ public class SseParser(
         return true
     }
 
+    private fun appendData(separator: Int, from: Int, count: Int) {
+        val needed = dataLength + separator + count
+        if (needed > data.size) {
+            data = data.copyOf(maxOf(needed, minOf(data.size.toLong() * 2, maxFrameBytes.toLong()).toInt()))
+        }
+        if (separator == 1) data[dataLength] = LF
+        line.copyInto(data, dataLength + separator, from, from + count)
+        dataLength = needed
+        hasData = true
+    }
+
     private fun dispatch() {
-        if (data.isEmpty()) {
+        if (!hasData || dataLength == 0) {
             resetFrame()
             return
         }
-        val frame = SseFrame(event, id, if (data.size == 1) data[0] else data.joinToString("\n"))
+        // Decoding the joined bytes equals decoding each line and joining with "\n": LF is never part of a UTF-8
+        // sequence, so a malformed tail of one line is replaced exactly as it would be on its own.
+        val frame = SseFrame(event, id, data.decodeToString(0, dataLength))
         resetFrame()
-        if (frame.data.isNotEmpty()) onFrame(frame)
+        onFrame(frame)
     }
 
     private fun resetFrame() {
-        data.clear()
+        dataLength = 0
+        hasData = false
+        if (data.size > SHRINK_ABOVE) data = ByteArray(256)
         event = null
         id = null
-        frameBytes = 0
     }
 
     public companion object {

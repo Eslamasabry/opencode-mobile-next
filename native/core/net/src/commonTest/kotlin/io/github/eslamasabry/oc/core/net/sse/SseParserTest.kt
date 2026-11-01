@@ -107,6 +107,20 @@ class SseParserTest {
     }
 
     @Test
+    fun `B-PROTO-033 empty data lines count toward the cap (review w1-core-net MAJOR 5)`() {
+        // Each `data:` line adds one joining newline even when its value is empty; an endless run of them must hit the
+        // cap instead of growing without bound at zero counted bytes.
+        val empties = "data:\n".repeat(200) + "\n" + "data: ok\n\n"
+        assertEquals(listOf("ok"), parse(empties, max = 64).map { it.data })
+        // Exactly at the cap with the separators counted: 13 values of 4 bytes + 12 newlines = 64.
+        val atCap = "data: aaaa\n".repeat(13) + "\n"
+        assertEquals(64, parse(atCap, max = 64).single().data.length)
+        // One more line: 56 value bytes + 13 newlines = 69 > 64, so the frame is dropped and the next one parses.
+        val over = "data: aaaa\n".repeat(14) + "\n" + "data: next\n\n"
+        assertEquals(listOf("next"), parse(over, max = 64).map { it.data })
+    }
+
+    @Test
     fun `B-PROTO-033 the 16 MiB cap holds at the real size`() {
         val big = "data: " + "a".repeat(SseParser.MAX_FRAME_BYTES + 1) + "\n\ndata: small\n\n"
         assertEquals(listOf("small"), parse(big, chunk = 16 * 1024).map { it.data })
@@ -187,7 +201,8 @@ private class FuzzStream(val bytes: ByteArray, val expected: List<SseFrame>) {
                     // Flutter rule: a raw line (CR included) longer than the cap starts discard mode for the frame.
                     if ((line + eol.dropLast(1)).encodeToByteArray().size > max) dropped = true
                 }
-                if (dataBytes > max) dropped = true
+                // The joined data, separators included, is what the cap counts (review w1-core-net MAJOR 5).
+                if (data.isNotEmpty() && dataBytes + data.size - 1 > max) dropped = true
                 lines.forEach { out.append(it).append(eol) }
                 out.append(eol)
                 val joined = data.joinToString("\n")
