@@ -32,7 +32,7 @@ catalog rows `B-ANDR-NNN`, `B-LINUX-NNN`, …; device flows `E2E-NN`; this secti
 5. iOS and Linux desktop get the same rules through one set of interfaces; things only Android can do (built-in
    Linux, widgets, tiles) simply report "not available" there instead of becoming broken buttons.
 
-Decision needed: no. The 13 owner questions in §25 have defaults and work proceeds on them.
+Decision needed: no. The 14 owner questions in §25 have defaults and work proceeds on them.
 
 ---
 
@@ -54,14 +54,14 @@ Decision needed: no. The 13 owner questions in §25 have defaults and work proce
 
 | # | Choice | Why (what it removes) |
 |---|---|---|
-| S11-1 | **Two-step move for the runtime.** Slice 1 copies every built-in Linux Kotlin file (runtime, setup, idle, agent host, terminal PTY, phone-engine seam) into **one** module `:android:linux`, unchanged, and its 30 JVM tests and 11 instrumented acceptance classes must pass with zero edits. Slice 3 splits it (§5.3) and only then carves out `:android:agenthost` (slice 3) and `:android:terminal` (slice 5). | The map's top risk is behaviour drift in ownership and drain code. A green copy first removes "did the move or the refactor break it" from every later bug. |
+| S11-1 | **Two-step move for the runtime.** Slice 1 copies every built-in Linux Kotlin file (runtime, setup, idle, agent host, terminal PTY, phone-engine seam) into **one** module `:android:linux`. The only source edits allowed are the compile seams of §4.4: one commit each, each listed in the module README. The 30 runtime JVM test classes copied with it must pass **with no test edits**. The 7 runtime acceptance classes (§4.3) run from `:androidApp` `src/androidTest` on the `qa` build type, with only the two test edits §4.3 names. Slice 3 splits the module (§5.3) and only then carves out `:android:agenthost` (slice 3) and `:android:terminal` (sign-in terminal slice 3 per W11-08a, the rest slice 5). | The map's top risk is behaviour drift in ownership and drain code. A green copy first removes "did the move or the refactor break it" from every later bug. A literal "zero edits" copy cannot compile outside the Flutter app module (§4.4), so the seams are named, small and reviewed one by one. |
 | S11-2 | **One lock family survives the split.** Every class split out of `BuiltinLinux` receives the same two monitors (`RuntimeLocks.instance` = today's `this`, `RuntimeLocks.recovery` = today's `recoveryLock`). No split class creates a new lock. | Today's correctness rests on `@Synchronized` + `recoveryLock` ordering. New locks would invent new races. |
-| S11-3 | **Shell scripts become checked-in `.sh.tmpl` files** in `:engine:runtime` (`src/commonMain/scripts/`), turned into Kotlin string constants by a build-logic generator, with a SHA-256 list test and the dash+bash script tests. Values go in through `@@NAME@@` placeholders filled by one `ShellQuote.single()`; a missing or unknown placeholder throws. | ~6,000 lines of shell embedded in Dart strings with `$` escapes cannot be reviewed or linted. Placeholders + one quoting function remove ad-hoc string building. |
-| S11-4 | **Reply watch** (ADR §9.5) is a third owner of the existing status row and the existing `BackgroundConnectionService`, not a new service class. It starts in `MainActivity.onStop` only when a run is active, an alert would be posted and live mode is off; it stops 10 s after the last run settles. | Keeps the component freeze, the one-row rule (map T11) and the pause receipts; removes the need to leave "Stay connected" on for finished-reply alerts. |
+| S11-3 | **Shell scripts move out of Dart strings in two kinds** (§5.6). (a) **Static scripts** with single values become checked-in `.sh.tmpl` files in `:engine:runtime` (`src/commonMain/scripts/`), turned into Kotlin string constants by a build-logic generator. They have two placeholder kinds: `@@Q:NAME@@`, filled through `ShellQuote.single()`, only where Dart called `_quote`, and `@@RAW:NAME@@`, checked against a declared regex (digits, an enum name, a fixed token). A missing, unknown or non-matching value throws. (b) **Builders with loops, branches or composition** (`combinedCheckScript`, the per-architecture `case` arms, `withSetupPrelude`, `signOut ? 'logout' : 'probe'`) become Kotlin builder functions over the same templates, quoting exactly where Dart quoted. Both kinds have byte-exact golden samples covering every branch and list sizes 0, 1 and n, a SHA-256 list test and the dash+bash script tests. | ~6,000 lines of shell embedded in Dart strings with `$` escapes cannot be reviewed or linted. Flat templates cannot express loops or branches, and quoting every value would change the bytes wherever Dart did not quote. Two kinds keep byte parity and still remove ad-hoc string building. |
+| S11-4 | **Reply watch** (ADR §9.5) is a third owner of the existing status row and the existing `BackgroundConnectionService`, not a new service class. It starts in `MainActivity.onStop` only when a run is active, an alert would be posted, live mode is off and none of our own system pages or pickers is covering the app. If the phone server's `specialUse` service already holds the row, reply watch joins as an owner without starting `dataSync`. It ends once no run is progressing (a needs-you alert already shown counts as done), after at most 2 h per start, when the app is visible again, or when the person dismisses the row (§9.3). | Keeps the component freeze, the one-row rule (map T11) and the pause receipts; removes the need to leave "Stay connected" on for finished-reply alerts without creating a new long lifetime. |
 | S11-5 | **Restore receivers promise the foreground service before they wait for the migration gate**, then wait inside the service (≤ 60 s). | Waiting first would lose the `MY_PACKAGE_REPLACED`/`BOOT_COMPLETED` background-start exemption on the first native launch. |
-| S11-6 | **Preview flavour gets its own loopback ports**: phone server 4197, phone engine 4198, agent host 4199, AI Team 8572 (stable keeps 4097/4098/4099/8472). Ports come from `AppBuildInfo.ports`. | Loopback ports are shared by every app on the phone; the `.native` preview's server could not bind 4097 while the Flutter app's server runs. |
-| S11-7 | Pause tile declares `android.service.quicksettings.TOGGLEABLE_TILE`; both tiles keep **non-active** mode at the switch and are poked with `TileService.requestListeningState` on change. | TalkBack reads the Pause tile as a switch; non-active mode keeps today's behaviour, so a missed poke cannot leave a stale tile. |
-| S11-8 | All Android-surface copy is read through the `:ui:words` suspend `Words` resolver with the stored app language (`oc.appLocale`) per render; XML-read strings come from the generated `strings_os` resources (ADR §7.5), which are registered on `:androidApp` **and** `:android:widgets` (the widget layouts reference `@string/`). | One string table for app and native surfaces (fixes map T16: only en/ar natively today) without moving 28 `@string/` references out of the widget layouts. |
+| S11-6 | **Preview flavour gets its own loopback ports**: phone server 4197, phone engine 4198, agent host 4199, AI Team 8572 (stable keeps 4097/4098/4099/8472). Ports come from `AppBuildInfo.ports` (CR11-13). Every literal in the copied Kotlin is replaced by seam E8 in W11-01 (§4.4), and every literal in the Dart script builders by the `@@RAW:SERVER_PORT@@` / `@@RAW:AGENT_PORT@@` placeholders of W11-02. A `:quality` grep test fails on `4097`, `4098`, `4099` or `8472` anywhere else outside `AppBuildInfo` and tests. | Loopback ports are shared by every app on the phone; the `.native` preview's server could not bind 4097 while the Flutter app's server runs, and a restore script with a fixed 4097 would start the preview's server on the Flutter app's port after a reboot. |
+| S11-7 | Pause tile declares `android.service.quicksettings.TOGGLEABLE_TILE`; both tiles keep **non-active** mode at the switch and are **not** poked: `TileService.requestListeningState` "is only applicable to tiles that have `META_DATA_ACTIVE_TILE` … and will do nothing otherwise" [V developer.android.com TileService, 2026-11-01]. A non-active tile reads `oc.attentionTile` / the pause state each time the shade binds it. | TalkBack reads the Pause tile as a switch. Non-active mode keeps today's behaviour, and there is no poke that could silently do nothing. Active mode, if ever wanted, is a deliberate later change with its own test. |
+| S11-8 | All Android-surface copy is read through the `:ui:words` suspend `Words` resolver with the stored app language (`oc.appLocale`) per render. The resolver passes an explicit resource environment or locale built from `oc.appLocale` (never the process default, never a `Context` wrapper: CMP resolves strings from its own environment, U11-14). XML-read strings come from the generated `strings_os` resources (ADR §7.5), which are registered on `:androidApp` **and** `:android:widgets` (the widget layouts reference `@string/`). | One string table for app and native surfaces (fixes map T16: only en/ar natively today) without moving 28 `@string/` references out of the widget layouts. |
 | S11-9 | Notification dismissal is respected: the status row carries a `setDeleteIntent`; a dismissed row is not promoted again for the same run. | Google's Live Update rule ("don't repost Live Updates that the user dismissed") [R android-surfaces §6]. No visible change otherwise. |
 | S11-10 | `LocalPdfService` (isolated process) builds its body directly, never through the app graph; `OcApplication.onCreate` returns at once in every process other than the main one. | An isolated process cannot read app data or prefs; a graph build there would crash or leak. |
 | S11-11 | One orchestrator for "the OS forgot us" events: `SystemEventRestorer` in `:engine:entry`, called by the restore receivers, the first-launch hook H2 (05 §7.9) and a start after a force stop. | Today the work is spread over two receivers and app start, and widgets/shortcuts are never redrawn on boot (android-surfaces §2.4). |
@@ -82,6 +82,15 @@ Decision needed: no. The 13 owner questions in §25 have defaults and work proce
 | CR11-8 | 06 §13.2 (l10n owner) | Register the `generateOsStrings` output on `:android:widgets` too (S11-8). | Move the 28 `@string/` references in widget layouts into binder code; preview layouts keep English only. |
 | CR11-9 | 03 §10.4 | Add three small interfaces to `:core:domain`: `TailscaleApp` (§14.6), `KeepAliveSettings` (§16), `OsSettingsPages` (opens a named system page; §16). | Features call `:android:platform` (forbidden by the dependency rules). |
 | CR11-10 | 03 §13.2 | The accessor comments `phoneServerServiceBody // from :android:linux` and `restoreReceiverBody` become "`:android:background` from slice 4" (S11-12). | 03 stays as the interim description. |
+| CR11-11 | ADR §5.2 (coordinator) | Start slices: `:android:platform` in slice **1** (network and crash bridges, W11-13a; ADR says 2), and `:engine:runtime` in slice **1** for the scripts, `StatusNoticeKey` and the `RuntimeHost` interfaces only (W11-01 seams, W11-02; ADR says 3). The policy port still starts in slice 3. | `:android:linux` keeps temporary local copies of the needed types until slice 3 (more seam edits to undo). |
+| CR11-12 | 12 C-06/C-11, 13 §8.5, ADR §9.9 | The switch APK keeps `libaiteam_sandbox.so`, a reduced `sandbox-manifest.json` asset in `:android:linux`, `packaging.jniLibs.keepDebugSymbols += "**/libaiteam_*.so"` in `:androidApp` and a sandbox-only `verify<Variant>SandboxApk` check, **whatever D6 decides** (D11-1). The 5.4 MB engine, the probe and `aiteam-engine-manifest.json` stay out until AI Team returns. | Built-in Linux breaks on every phone that holds a `landlock`-tier protection marker. |
+| CR11-13 | 03 §10.1 `AppBuildInfo` (ADR §5.2 `:androidApp`) | Add `ports: LoopbackPorts(phoneServer, phoneEngine, agentHost, team)` and `qaHooks: QaHooks(builtinRuntime: Boolean, …)` to `AppBuildInfo`. Add a `BuildInfoOwner` interface in `:core:common` that `OcApplication` implements, so copied Kotlin that runs outside the graph (`BuiltinLinux.get(context)`, services, receivers) can read them. When the application is not a `BuildInfoOwner` (Robolectric's default), the stable values apply, so the copied tests stay unchanged. | A `:android:linux`-local `RuntimeBuildFacts` object set by `OcApplication` (a second source of truth). |
+| CR11-14 | 03 §11.2 and §12 (`TerminalHost`/`TerminalModel`, slice-0 freeze) | `TerminalModel` gains `events: Flow<TerminalEvent>` with `TerminalEvent = Exited(code) \| OpenUrl(url)`. `OpenUrl` always goes through `ExternalLinkUriHandler` (the native `openExternalLink`). Sign-in sessions (`open(target = SignIn(profile, program))`, programs from the `signInProfile`/`signInProgram` allow-list) start only after `ForegroundWork.begin(SignIn)` succeeded (B-LINUX-094..096). Output stays inside `:android:terminal` (terminal-view draws in process; 256 KiB pending, 32 KiB chunks, 512 KiB replay). | Sign-in links open nowhere in the native app (agent sign-in breaks). |
+| CR11-15 | 16 §5.3 `AnalyticsSchema` | BASIC `phone_server_restore{event: Boot \| PackageReplaced \| Reclaim \| AppOpen, outcome: RestoreOutcome}` (`RestoreOutcome` = `Restored` + every `restoreReason` value of §5.7). DETAILED `background_refused{kind: ForegroundKind, reason: Refused \| ReceiptUnsaved \| AckTimeout \| TimeLimit}`, `agent_helper_killed{exit: Kill137 \| Other}`, `widget_action_result{status: Accepted \| Rejected \| Uncertain}`, `schedule_run_result{status: ScheduleRunCode}`. Enums only (K-SEC-11). | The switch's top silent risk (restore authority lost, §24.1 risk 2) is invisible outside the owner's phone. |
+| CR11-16 | catalog (`behaviors.jsonl`, `e2e-flows.md`) | Correct B-ANDR-038, B-AGENT-032 and B-PROTO-046 to today's behaviour (§10.4: questions list ≤ 3 options as an `a · b · c` text line with Open only; quick Reply and option buttons survive only on Flutter-era alerts, through the legacy receiver path). E2E-07 steps 3–4 become "legacy-alert receiver path", proven with a fabricated Flutter-shaped `PendingIntent`. | Builders add option buttons the shipped app removed (commit `b8c07f3e0`). |
+| CR11-17 | 16 §1.8.3, 10 C10-14 | One merged `local_file_paths.xml` (§14.3): `external-path shared_storage`, `cache-path share/`, and the camera element 10 C10-14 asks for (`files-path camera-capture-v1/`), which needs 16's security row. If 16 refuses it, camera captures use `cache-path camera-capture-v1/` and 10 accepts the cache-clearing risk. Also add 10's Photo Picker `ModuleDependencies` service to §3 as an **added** row. | 10's Share and TakePicture break on an app manifest built from 11 alone. |
+| CR11-18 | ADR §9.9, 05 J1 (coordinator) | (a) The versionCode base 10000 is **not** above every signed local build: VPS builds 900055 and 900058 exist, signed with the local key (`docs/qa/scheduled-prompts-2026-10-15/apk-build.txt`) and installed on an emulator. Raise the base to ≥ 1,000,000, or keep 10000 and require the `dumpsys` check of §22.4 before every install. **Resolved 2026-11-01 (Astra M5):** 10000 is a floor only; one allocator and ledger (05 §9.1, 15 §2.6) issues every number above the highest one hosted or installed anywhere, so a device holding 900058 gets a higher number, never an uninstall. (b) The gating upgrade baseline is `flutter-final` (the build on the owner's phone), with 2.1.0+57 as the second baseline (§6.8). | §22.4 step 2a blocks an install over a higher code; affected devices are reinstalled only with the owner's OK. |
+| CR11-19 | 05 §7.1 `MigrationFollowUpWorker` | Expedite only on API 31+, as §12.2 already does for schedules. On API 26–30, WorkManager runs expedited work as a foreground service and needs `getForegroundInfo()`, which `CoroutineWorker` does not implement, so the request fails. Below 31 it is plain one-time work. | Implement `getForegroundInfo()` on the `opencode_phone_setup` channel. |
 
 ### 0.4 What this section does not decide
 
@@ -114,9 +123,9 @@ agents, 4 surfaces, settings and schedules, 5 project, media and integrations, 6
 | 35–41 | scheduled prompts | `:engine:schedule` | `:android:schedule` | 4 |
 | 42 | network monitor | `:core:domain` `DeviceFacts` | `:android:platform` | 1 |
 | 43 | thermal monitor (+ battery, power save) | `DeviceFacts` + `:engine:runtime` (`HeatTierPolicy`) | `:android:platform` | 3 |
-| 44 | lifecycle, exit history, keep-running guidance | `:engine:diagnostics` (`ExitClassifier`), `:engine:runtime` (`AppExitRecovery`) | `:android:platform` | 3 |
-| 45 | crash capture | `:engine:diagnostics` | `:android:platform` + `:androidApp` | 0–1 |
-| 46 | shared storage access, phone folders | `:engine:project` | `:android:platform` | 5 |
+| 44 | lifecycle, exit history, keep-running guidance | `:engine:diagnostics` (`ExitClassifier`, and `ExitImport`: `REASON_CRASH_NATIVE` and `REASON_ANR` exits since consent become category-only crash records, 16 §1.10), `:engine:runtime` (`AppExitRecovery`) | `:android:platform` | 3 |
+| 45 | crash capture: JVM handler (`NativeCrashStore`), native crashes and ANRs through `ApplicationExitInfo` at the next start; tombstones and ANR traces (`getTraceInputStream`) are **never read in release** (16 §1.10) | `:engine:diagnostics` | `:android:platform` + `:androidApp` | 0–1 (JVM), 3 (native/ANR import) |
+| 46 | shared storage access, phone folders, project scan, storage pressure | `:engine:project` (`PhoneFolders`, `PhoneProjectScan`, `PhoneStorage`; §16) | `:android:platform` (`AndroidPhoneFileSystem`) | 5 |
 | 47 | camera, microphone, device facts | `:engine:media` | `:android:media` / `:android:platform` (10) | 5 |
 | 48 | network trust posture | `:core:security`, `:core:net` (04) | `:androidApp` manifest | 1 |
 | 49, 50 | local PDF, read aloud | `:engine:media` | `:android:media` (10) | 5 |
@@ -148,10 +157,10 @@ agents, 4 surfaces, settings and schedules, 5 project, media and integrations, 6
 | 40–44 | Linux manager, storage, packages, reset, This phone | `:engine:runtime` | `:android:linux` (via `GuestRunner`) | 3–5 |
 | 45–48 | services supervisor, services pages, vitals, backup (freeze-tip, switch scope 02 §3.5) | `:engine:runtime` | `:android:linux` | 5 |
 | 49 | designed, not built (S2b native vitals, S5 reboot restart of services, S6 catalog, S7 full copy) | — | — | later |
-| 50 | local terminal | `:engine:project` (`TerminalHost`) | `:android:terminal` | 5 |
+| 50 | local terminal | `:engine:project` (`TerminalHost`, CR11-14) | `:android:linux` (sign-in terminal over the copied PTY, W11-08a), then `:android:terminal` | 3 (sign-in), 5 |
 | 51 | thermal guard | `:engine:runtime` (`ThermalPolicy`, services heat hold) | `:android:platform` | 3 (AI Team part later) |
 | 52–54 | private agent processes, agent host, sign-in | `:engine:agents` | `:android:agenthost` | 3 |
-| 55, 56 | AI Team supervisor, phone engine tiers | `:engine:team` | `:android:team` (only the protection consumer at the switch, D11-1) | later |
+| 55, 56 | AI Team supervisor, phone engine tiers | `:engine:team` | `:android:team` (later); at the switch only the protection-marker consumer and `SandboxBundle` stay, in `:android:linux` (D11-1) | later |
 | 57–62 | rootfs folders, git on the phone, export, quota collector, FactsBook host, OC1→2 history copy | `:engine:project`, `:engine:integrations`, `:engine:runtime` | `:android:linux` | 3–5 (FactsBook later) |
 | 63 | move from Termux | `:engine:runtime` | `:android:termux` | 5 |
 | 64 | Termux as a host | — | — | not ported (NG7) |
@@ -164,16 +173,16 @@ agents, 4 surfaces, settings and schedules, 5 project, media and integrations, 6
 
 | Module | Plugin | Owner (ADR) | Holds | Depends on (ADR §6.1 + CR11-0) | Starts |
 |---|---|---|---|---|---|
-| `:android:linux` | `oc.android.library` | S runtime | proot launcher, installer slot, ownership proofs, recovery, restore logic, idle, work leases, service registry, process inventory + orphan reaper, setup runner, scripts host, `/proc` code, `jniLibs`, `AndroidRuntimeHost`, `AndroidPhoneServerServiceHooks` (until slice 4 also the phone-server and setup service bodies, S11-12) | `:core:*`, `:engine:runtime`, `:ui:words` | 1 |
+| `:android:linux` | `oc.android.library` | S runtime | proot launcher, installer slot, ownership proofs, recovery, restore logic, idle, work leases, service registry, process inventory + orphan reaper, setup runner, scripts host, `/proc` code, `jniLibs`, `SandboxBundle` + `sandbox-manifest.json` (D11-1), `RunningServicesRecorder` (§4.4), `AndroidRuntimeHost`, `AndroidPhoneServerServiceHooks` (until slice 4 also the phone-server and setup service bodies, S11-12, and a temporary `NativeStrings` copy with its `native_*` strings until W11-09) | `:core:*`, `:engine:runtime` (slice 1 per CR11-11), `:ui:words` | 1 |
 | `:android:agenthost` | `oc.android.library` | S runtime | `PhoneAgent*`, `PaseoStaleLock`, `NativeAgentHostAdmission`, agent process launch, sign-in pipes, auth probe; `AndroidAgentHost` | `:core:*`, `:engine:agents`, `:android:linux` (CR11-0) | 3 |
 | `:android:terminal` | `oc.android.library` | F | `LocalTerminal` session manager, `PtyAccess.java`, Termux `terminal-emulator`; `AndroidTerminalHost` | `:core:*`, `:engine:project`, `:android:linux` (CR11-0) | 5 |
-| `:android:background` | `oc.android.library` | F | channel registry, status row, alerts, receivers' bodies, live mode, reply watch, sign-in claim, pause receipts, tiles, pinned shortcuts, the phone-server and setup FGS hosts and the restore receiver body (from slice 4, S11-12), `AndroidForegroundWork`, `AndroidNotificationSurface`, `AndroidPhoneServerForeground`, `ShortcutSurface`, `TileSurface` | `:core:*`, `:engine:attention`, `:engine:settings`, `:ui:words`, `:ui:design` | 4 |
+| `:android:background` | `oc.android.library` | F | channel registry, status row, alerts, receivers' bodies, live mode, reply watch, sign-in claim, pause receipts, tiles, pinned shortcuts, the phone-server and setup FGS hosts and the restore receiver body (from slice 4, S11-12), `AndroidForegroundWork`, `AndroidNotificationSurface`, `AndroidPhoneServerForeground`, `ShortcutSurface`, `TileSurface` | `:core:*`, `:engine:attention`, `:engine:settings`, `:engine:runtime` (implements `PhoneServerForeground`, calls `PhoneServerServiceHooks`), `:engine:connection` (reply watch reads run state), `:ui:words`, `:ui:design` | 4 |
 | `:android:widgets` | `oc.android.library` | F | providers' bodies, binders, layouts, drawables, preview PNGs, size policy, widget actions (claim ledger, lease), follow-up worker body, overlay session; `AndroidWidgetSurface`, `WidgetOverlayPort` impl | `:core:*`, `:engine:attention`, `:ui:words`, `:ui:design` | 4 |
 | `:android:schedule` | `oc.android.library` | F | `AndroidScheduleHost` (AlarmManager + WorkManager), receiver and worker bodies, run notifications | `:core:*`, `:engine:schedule`, `:ui:words` | 4 |
-| `:android:platform` | `oc.android.library` | F | `EntryIntentReader`, `AndroidPermissionGate`, `AndroidActivityResults`, `AndroidDeviceFacts` (network, thermal, battery, power save, visibility), exit info, `NativeCrashStore`, storage access, `SafProjectExport`, `KeystoreByoSigner`, Tailscale, `PackageInstallerUpdater`, `AndroidShareService` (+ FileProvider grants), `AndroidLinkOpener`, `AppCompatLocaleHost`, clipboard image, AppFunctions (later) | `:core:*`, `:engine:*`, `:ui:words` | 1 (network, crash), 2 (entry, permissions, share, links), 3–5 rest |
+| `:android:platform` | `oc.android.library` | F | `EntryIntentReader`, `AndroidPermissionGate`, `AndroidActivityResults`, `AndroidDeviceFacts` (network, thermal, battery, power save, visibility), exit info, `NativeCrashStore`, storage access, `SafProjectExport`, `KeystoreByoSigner`, Tailscale, `PackageInstallerUpdater`, `AndroidShareService` (+ FileProvider grants), `AndroidLinkOpener`, `AppLocaleApplier` (06 §13.6; no AppCompat, 12 X-24), `AndroidPhoneFileSystem` (phone folders and project scan, §16), clipboard image, AppFunctions (later) | `:core:*`, `:engine:*`, `:ui:words` | 1 (network, crash; CR11-11), 2 (entry, permissions, share, links), 3–5 rest |
 | `:android:media` | `oc.android.library` | F (10) | speech, TTS, Kokoro, camera + zxing-cpp, `LocalPdfServiceBody`, Wi-Fi share, voice-download notification | 10 | 3/5 (10 C10-3) |
 | `:android:termux` | `oc.android.library` | F | migrate-out only (D7): `TermuxActivityBridge`, `…Commands`, `…Environment`, `…Permissions`, `TermuxResultService` body | `:core:*`, `:engine:runtime` | 5 |
-| `:android:team` | `oc.android.library` | S runtime | `PhoneEngineNative`, `PhoneEngineAttestation`, `NativeEngineReadiness`, `libaiteam_engine.so`, `libaiteam_boundary_probe.so` | — | later (D6) |
+| `:android:team` | `oc.android.library` | S runtime | `PhoneEngineNative`, `PhoneEngineAttestation`, `NativeEngineReadiness`, `libaiteam_engine.so`, `libaiteam_boundary_probe.so`, `aiteam-engine-manifest.json` (the sandbox and its verifier stay in `:android:linux`, D11-1) | — | later (D6) |
 | `:android:migration` | `oc.android.library` | S migration | 05 | 05 | 0, 6 |
 | `:androidApp` | `oc.android.application` | S coordinator | every OS-visible class at its frozen FQCN as a thin shell, the manifest, `strings_os` res, shortcut XML, widget provider XML, launcher icons, signing, R8 rules | everything | 0 |
 
@@ -182,8 +191,23 @@ agents, 4 surfaces, settings and schedules, 5 project, media and integrations, 6
 Every class the OS instantiates lives in `:androidApp` at today's FQCN `io.github.eslamasabry.opencode_mobile.<Name>` and
 holds no logic. It obtains a `…Body` from `context.appGraph` and forwards. Receivers and workers wait for the migration
 gate inside a coroutine (`goAsync`, `CoroutineWorker`), never on the main thread (ADR §9.7, 05 §7.1: at most 20 s, then
-an expedited `MigrationFollowUpWorker`). Exceptions to "body from the graph": `LocalPdfService` (S11-10) and the restore
-paths of S11-5, which start the foreground service before the gate.
+a `MigrationFollowUpWorker`, expedited on API 31+ only, CR11-19). Exceptions to "body from the graph": `LocalPdfService`
+(S11-10) and the restore paths of S11-5, which start the foreground service before the gate.
+
+Every broadcast this app receives is a **background** broadcast (no `PendingIntent` or sender of ours sets
+`FLAG_RECEIVER_FOREGROUND`, as today), so the 20 s gate wait sits inside the 60 s background-broadcast budget 05 §7.1
+relies on. A foreground-flagged broadcast would ANR at 10 s, and `goAsync` does not extend that. Budgets per receiver,
+checked by `ReceiverBudgetTest` (Robolectric, a gate that never opens):
+
+| Receiver (body) | Gate wait | Then | Total |
+|---|---|---|---|
+| `BuiltinIdleReceiver` (`IdleAlarmBody`) | none (Kotlin-owned state only) | re-check idle | ≤ 8 s (today) |
+| `BuiltinRestoreReceiver` (`RestoreReceiverBody`) | none before the promise (§6.5) | `startForegroundService`, return; the service waits ≤ 60 s | < 1 s in the receiver |
+| `ScheduledPromptReceiver` | ≤ 20 s | `rearmAll` or enqueue; on timeout `MigrationFollowUpWorker` | ≤ 25 s |
+| widget providers (`APPWIDGET_UPDATE`, options changed) | ≤ 20 s | draw from `WidgetSnapshotCache`; on timeout leave the last `RemoteViews` in place and enqueue a redraw follow-up | ≤ 25 s |
+| `WidgetActionReceiver` (broadcast form) | ≤ 20 s | hand to the widget-action body (§11.3); on timeout `FollowUp.WidgetAction` | ≤ 25 s |
+| `CodingActionReceiver`, `StatusActionReceiver` | ≤ 20 s | answer through the live connection or `oneShot` with a 15 s deadline (§10.6), else repost with Open; on a gate timeout `MigrationFollowUpWorker`, which does the same after the gate | ≤ 40 s |
+| `LivePauseReceiver`, `AppUpdateStatusReceiver` | ≤ 20 s | pause/resume or record the status; on timeout follow-up | ≤ 25 s |
 
 ```kotlin
 // :androidApp — io/github/eslamasabry/opencode_mobile/StatusActionReceiver.kt   (FQCN frozen)
@@ -209,13 +233,14 @@ WorkManager `Data` (never arbitrary extras; map T3).
 | Resource | Module | Rule |
 |---|---|---|
 | `AndroidManifest.xml` with every component, permission, `<queries>`, provider, intent filter | `:androidApp` | library manifests declare nothing but `<uses-permission>` and `<queries>` they need (03 §2.3) |
-| `strings_os` (app label, shortcut labels, widget descriptions, channel names, tile labels, the 148 native strings, widget/schedule/idle strings; names unchanged) | generated into `:androidApp` and `:android:widgets` (S11-8, CR11-8) | lint `MissingTranslation` on both copies; the two copies are byte-identical (a `:quality` test compares them) |
+| `strings_os` (app label, shortcut labels, widget descriptions, channel names, tile labels, the 148 native strings, widget/schedule/idle strings; names unchanged) | generated into `:androidApp` and `:android:widgets` (S11-8, CR11-8) | lint `MissingTranslation` on both copies; the two copies are byte-identical (a `:quality` test compares them). Until W11-09, `:android:linux` carries a copied `NativeStrings` and the `native_*` string and plural resources its copied notification code reads (seam E4, §4.4); they are deleted in the W11-09 merge |
 | `res/xml/shortcuts.xml` (stable) and `res/xml/shortcuts_native.xml` (preview, `android:targetPackage="io.github.eslamasabry.opencode_mobile.native"`), chosen by the manifest placeholder `${appShortcuts}` exactly as today (`shortcuts_preview.xml` is retired with the Flutter `.preview` flavour) | `:androidApp` | static shortcut XML cannot use placeholders itself, so each flavour has its own file; ids `connect`, `new_task`; the app label likewise stays the placeholder `${appLabel}` |
 | widget provider info XML (`widget_*_info.xml`), `previewImage` PNGs (`drawable-nodpi`, `drawable-night-nodpi`, 7 each) | `:androidApp` | names unchanged (placed widgets keep their provider info) |
 | widget layouts (`res/layout/widget_*.xml`, 11 files), shape drawables (13), usage bar drawables, `WidgetGraphite` colour resources (+ night) | `:android:widgets` | moved, names unchanged; `R` import changes to `io.github.eslamasabry.oc.android.widgets.R` (03 §2.3 step 2) |
 | notification small icons (`ic_status`, `ic_launcher_monochrome`), shortcut icons (`ic_shortcut_connect`, `ic_shortcut_new_task`, `ic_shortcut_session`) | `:androidApp` (icons used by the manifest and shortcut XML) and `:android:background` (icons used in code) | the code copy uses the module's `R`; the XML copy stays in the app; same drawable names |
-| `network_security_config.xml`, `backup_rules.xml`, `data_extraction_rules.xml`, `local_file_paths.xml` | `:androidApp` | unchanged (map T28; 05) |
-| `jniLibs/{arm64-v8a,x86_64}/libproot.so, libproot-loader.so, libtalloc.so, libandroid-shmem.so` (+ `libaiteam_sandbox.so` per D11-1) | `:android:linux` | packaged with `useLegacyPackaging = true` in `:androidApp`; 16 KB ELF alignment checked at every T2 (§18.3) |
+| `network_security_config.xml`, `backup_rules.xml`, `data_extraction_rules.xml` | `:androidApp` | unchanged (map T28; 05) |
+| `local_file_paths.xml` | `:androidApp` | the one merged list of §14.3 (CR11-17), checked by `FileProviderPathsTest` |
+| `jniLibs/{arm64-v8a,x86_64}/libproot.so, libproot-loader.so, libtalloc.so, libandroid-shmem.so, libaiteam_sandbox.so` (D11-1) and the asset `sandbox-manifest.json` (the sandbox entries of today's `aiteam-engine-manifest.json`, per ABI) | `:android:linux` | packaged with `useLegacyPackaging = true` and `keepDebugSymbols += "**/libaiteam_*.so"` in `:androidApp` (an AGP strip would change the hash); 16 KB ELF alignment checked at every T2 (§18.3) |
 
 ### 2.4 Rules every builder of this area follows
 
@@ -262,7 +287,7 @@ WorkManager `Data` (never arbitrary extras; map T3).
 | Obvious options as visible rows | the child-process card, exact alarms, battery exemption, the promoted-notification page (D11-6) are rows on their pages, never hidden menus |
 | No new bar or row levels | one status notification row for everything (4747, map T11); no second ongoing notification per feature |
 | Arabic RTL, text scale | widgets mirror; titles in bidi isolates; widget frame text capped at 1.3×, row text follows the system (§11.4) |
-| Teach hidden gestures | tips for the tile long-press, the launcher long-press shortcuts and the widget Edit come with the widget redesign after the switch (no such tips exist today; NG9) |
+| Teach hidden gestures | the switch adds one hidden path, the tile long-press that opens Background settings (`ACTION_QS_TILE_PREFERENCES`, §3), so it ships with one `KitTip` in the tip registry (`:engine:settings`): "Long-press the OpenCode tile to change background settings". It is shown at most twice, on the Background settings page, only after the person has added one of our tiles (`onTileAdded` writes `oc.tileAdded`), and it can be replayed in Help › Tips; the page itself stays the visible path. Tips for the launcher long-press shortcuts and the widget Edit come with the widget redesign (no such tips exist today; NG9) |
 | Reduced motion, heat | the kit's `MotionPolicy` reads the heat and power-save signals of `DeviceFacts` (§8.3) |
 
 ---
@@ -278,7 +303,7 @@ component-freeze test (`:quality`, every T2) compares the merged manifest with t
 | Component | Kind | Exported | Filters, type, attributes (unchanged unless noted) | Body (module) | Change vs Flutter |
 |---|---|---|---|---|---|
 | `.OcApplication` | Application | — | `allowBackup=false`, `supportsRtl`, `enableOnBackInvokedCallback`, `manageSpaceActivity`, `networkSecurityConfig`, `usesCleartextTraffic=false` (overridden by the config, map T28) | `:androidApp` itself; implements `GraphOwner` and `androidx.work.Configuration.Provider` (05 §7.1) | rewrite: ADR §9.7 order; returns at once outside the main process (S11-10) |
-| `.MainActivity` | Activity | yes | `MAIN/LAUNCHER`; `SEND text/plain`; `VIEW` + `BROWSABLE` `opencode-mobile://session`, `://team`; `android.app.shortcuts` meta; `singleTop`, `taskAffinity=""`, full `configChanges` list, `adjustResize`; **added** `ACTION_QS_TILE_PREFERENCES` filter (07 §7.11) | `:ui:shell` via `setContent { App(...) }`; intents through `EntryIntentReader` (`:android:platform`, 07 §7.1) | rewrite as `ComponentActivity`; `io.flutter…NormalTheme` meta removed |
+| `.MainActivity` | Activity | yes | `MAIN/LAUNCHER`; `SEND text/plain`; `VIEW` + `BROWSABLE` `opencode-mobile://session`, `://team`; `android.app.shortcuts` meta; `singleTop`, `taskAffinity=""`, full `configChanges` list, `adjustResize`; **added** `ACTION_QS_TILE_PREFERENCES` filter (07 §7.11; ships with its tip, §2.6) | `:ui:shell` via `setContent { App(...) }`; intents through `EntryIntentReader` (`:android:platform`, 07 §7.1); `onResume`/`onPause` call `RuntimeHost.setActivityResumed(true/false)` exactly where `MainActivity.kt:96/101` call `BuiltinLinux.setActivityResumed` today (§5.4) | rewrite as `ComponentActivity`; `io.flutter…NormalTheme` meta removed |
 | `.ManageSpaceActivity` | Activity | yes | system "Manage space" entry | Compose host of the Manage space page (`:feature:settings`); awaits the migration gate; never connects, never starts the server, reads no extras | rewrite (no Flutter engine) |
 | `.WidgetConfigureActivity` | Activity (subclass of `WidgetRouteActivity`) | yes | `APPWIDGET_CONFIGURE`; named in provider XML | `WidgetRouteBody` (`:android:widgets`) | shell only |
 | `.WidgetRouteActivity` | Activity | no | trampoline for steer, voice, configure; checks `WIDGET_OVERLAY_READY` and `ownsWidget` | `WidgetRouteBody` (`:android:widgets`) | shell only |
@@ -303,11 +328,12 @@ component-freeze test (`:quality`, every T2) compares the merged manifest with t
 | `.BuiltinRestoreReceiver` | Receiver | no | `BOOT_COMPLETED`, `MY_PACKAGE_REPLACED` | `RestoreReceiverBody` (`:android:background` from slice 4; `:android:linux` before) + `SystemEventRestorer` (`:engine:entry`, S11-11) | shell calls both (§15) |
 | `.BuiltinIdleReceiver` | Receiver (`internal` today, nested in `NativeIdleTimer.kt`) | no | action `…IDLE_CHECK`, request code 4095 | `IdleAlarmBody` (`:android:linux`) | moved to its own shell file, same FQCN |
 | `.AppUpdateStatusReceiver` | Receiver | no | `PackageInstaller` session status (freeze tip) | `PackageInstallerUpdater` (`:android:platform`) | shell only |
-| `androidx.core.content.FileProvider` | Provider | no | authority `${applicationId}.localfiles`, `grantUriPermissions=true`, `@xml/local_file_paths` | — | kept from the freeze tip (§14.3) |
+| `androidx.core.content.FileProvider` | Provider | no | authority `${applicationId}.localfiles`, `grantUriPermissions=true`, `@xml/local_file_paths` | — | kept from the freeze tip; the paths file is the merged list of §14.3 |
+| `com.google.android.gms.metadata.ModuleDependencies` | Service (manifest entry only, `enabled=false`) | no | `MODULE_DEPENDENCIES` filter, `photopicker_activity:0:required` meta: the Photo Picker backport on API 19–29 (10's `:androidApp` manifest block) | — | **added** (10; whether F-Droid builds keep it is 10's and 16's call, CR11-17) |
 | `androidx.startup.InitializationProvider` → `androidx.work.WorkManagerInitializer` | Provider meta | — | **removed** with `tools:node="remove"` (WorkManager on-demand init, 05 §7.1) | — | removal permitted (it is a library component) |
 | `ScheduledPromptWorker`, `WidgetStatusWorker` | Workers (WorkManager stores the class name) | — | — | `ScheduledRunWorkerBody` (`:android:schedule`), `WidgetStatusWorkerBody` (`:android:widgets`); shells become `CoroutineWorker` with the `(Context, WorkerParameters)` constructor | superclass `Worker` → `CoroutineWorker` (allowed: WorkManager instantiates by name) |
 | `MigrationFollowUpWorker` | Worker | — | — | `:android:migration` (05) | **added** |
-| `.BuiltinInstallerProducerQaService` | QA service | no | not in the shipped manifest today | moves to `:android:linux` `src/androidTest` + the `qa` build type manifest | out of `src/main` |
+| `.BuiltinInstallerProducerQaService` | QA service | no | not in the shipped manifest today | moves to `:androidApp` `src/qa` (code and manifest of the `qa` build type), beside the acceptance classes (§4.3) | out of `src/main` |
 | `.appfunctions.OcAppFunctionService` | AppFunctionService (KSP-generated) | yes | `BIND_APP_FUNCTION_SERVICE`, `tools:targetApi="36"` | §13 | **added later** (D16) |
 | Flutter plugin components (`io.flutter.plugins.imagepicker.ImagePickerFileProvider`, `mobile_scanner`/ML Kit) | — | — | — | — | **removed** (10 C10-10) |
 
@@ -335,11 +361,11 @@ the named interface; **later** = follows an ADR decision.
 | `ScheduledPromptPhoneLease` (57) | copy | `:android:linux` | the temporary phone-server lease for scheduled runs (BUILTIN-LINUX-27); reached through `PhoneServerHost.acquireScheduledServer` |
 | `AgentPriority` (102) | copy | `:android:linux` | moves the Paseo helpers' process trees to the background scheduling class; called through `ProcessHost.setAgentPriority` |
 | `PhoneAgentHost` (239), `PhoneAgentChecks` (132), `PhoneAgentPaths` (32), `PhoneAgentClaudeHome` (180), `PhoneAgentSignIn` (442), `PhoneAgentInventory` (65), `PhoneAgentCheckOutput` (7), `PhoneAgentAuth{Capture,ColdOwner,Deadline,Inventory,Json,Lock,OtherOwners,Probe,ProcessTree,Projection,Request,Runtime}` (12 files, 645), `NativeAgentHostAdmission` (62), `PaseoStaleLock` (38) | copy, then move in slice 3 | `:android:agenthost` | `TESTED_CLAUDE_VERSIONS` stays equal to the agents engine's list by a test (map T15) |
-| `LocalTerminal` (390), `java/com/termux/terminal/PtyAccess.java` | copy, then move in slice 5 | `:android:terminal` | PTY back-pressure (256 KiB pending, 32 KiB chunks, 512 KiB replay) unchanged; licence: `terminal-emulator` + `terminal-view` Apache-2.0, `termux-app`/`termux-shared` GPLv3 never used |
-| `PhoneEngineNative` (593), `PhoneEngineAttestation` (115), `NativeEngineReadiness` (71) | copy (compile only), then move | `:android:team` (later, D6) | in slice 1 they compile and stay unreachable; the split (§5.3) leaves only the protection **consumer** in `:android:linux` (D11-1) |
+| `LocalTerminal` (390), `java/com/termux/terminal/PtyAccess.java` | copy minus `register` (seam E1), sign-in terminal in slice 3 (W11-08a), then move in slice 5 | `:android:terminal` | the session manager, `hasLiveSessions()`, `list()` and the `.oc-open-url` watcher stay; PTY back-pressure (256 KiB pending, 32 KiB chunks, 512 KiB replay) unchanged; licence: `terminal-emulator` + `terminal-view` Apache-2.0, `termux-app`/`termux-shared` GPLv3 never used |
+| `PhoneEngineNative` (593), `PhoneEngineAttestation` (115), `NativeEngineReadiness` (71) | copy (compile only), then move | `:android:team` (later, D6) | the engine, probe and attestation paths compile and stay unreachable without the AI Team UI. **Not** the protected launch path: today every protected launch calls `PhoneEngineNative.verifyBundle(context, "libaiteam_sandbox.so")`, which hashes all three `BUNDLE_NAMES` whatever names it is given (`PhoneEngineNative.kt:505-570`). Seam E6 (§4.4) points `ProotLauncher.protectedCommand` and `requirePhoneBoundaryKernel` at `SandboxBundle.verify()` in `:android:linux` in slice 1, so the split leaves the protection consumer with no edge to `:android:team` (D11-1) |
 | `BuiltinServerService` (243), `SetupService` (239), `BuiltinRestoreReceiver` (22), `StatusNotification*` (copy for slice 1–3) | shell + body | `:androidApp` + `:android:linux` in slice 1; bodies move to `:android:background` in W11-09 (S11-12) | §6, §9 |
 | `MainActivityBuiltinSupport` (52), `MainActivity.handleBuiltinLinux` | delete | `RuntimeHost` (§5.4) | |
-| `BuiltinInstallerProducerQaService` (633) | move | `:android:linux` `src/androidTest` / `qa` manifest | QA hooks read `AppBuildInfo.qaHooks.builtinRuntime` instead of `BuildConfig.BUILTIN_RUNTIME_QA` |
+| `BuiltinInstallerProducerQaService` (633) | move | `:androidApp` `src/qa` (code + `qa` manifest) | QA hooks read `AppBuildInfo.qaHooks.builtinRuntime` instead of `BuildConfig.BUILTIN_RUNTIME_QA` (seam E3) |
 
 ### 4.2 Platform, background, widgets and schedules files
 
@@ -366,21 +392,52 @@ the named interface; **later** = follows an ADR decision.
 | `MainActivity` (597), `OcApplication` (11), `ManageSpaceActivity` (40), `WidgetOverlayActivity` (65), `WidgetRouteActivity` (84) | rewrite as shells | `:androidApp` |
 | `GeneratedPluginRegistrant.java` | delete | — |
 
-### 4.3 Tests that come with the files (green in slice 1 before any edit)
+### 4.3 Tests that come with the files (green in slice 1 with no test edits)
 
 - JVM (Robolectric 4.17, JUnit 4.13.2, `org.json` test dependency): the 30 runtime classes listed in builtin-linux §7
   and the 16 platform classes `StatusNotificationModelTest`, `StatusWidgetModelTest`, `TwoWidgetsRenderTest`,
   `UsageWidgetFitTest`, `UsageWidgetPlansTest`, `WidgetActionLeaseTest`, `WidgetActionPolicyTest`,
   `WidgetCardRenderTest`, `WidgetConversationPresentationTest`, `WidgetProvidersTest`, `WidgetSessionCardLayoutTest`,
   `WidgetStatusPolicyTest`, `WidgetV2PolicyTest`, `ScheduledPromptPolicyTest`, `ScheduledPromptRecoveryTest`,
-  `ScheduledPromptStoreTest` — 46 classes [V `ls android/app/src/test`]. Each moves with its subject.
-- Instrumented (T3, PC emulator): `BuiltinComponentFilesystemAcceptance`, `BuiltinComponentUpdateAcceptance`,
-  `BuiltinIdleAcceptance`, `BuiltinRestoreAcceptance`, `BuiltinRuntimeAcceptance`, `BuiltinRuntimeReclaimAcceptance`,
-  `BuiltinWorkLeaseAcceptance` (→ `:android:linux` `androidTest`); `PhoneEngineAcceptance`,
-  `PhoneEngineDeviceBoundaryRegressions`, `PhoneEngineNativeRegressions` (→ `:android:team`, later);
-  `Bb8DeviceSmoke`, `Bb8MainCallback`, `Bd9DeviceSmoke` (→ retired with the Flutter QA flavours; their checks are
-  covered by E2E-17/18). The QA switches `ocBuiltinRuntimeQa`, `ocBb8Smoke`, `ocBd9Smoke`, `ocStableEngineQa` become
-  one `qa` build type with `AppBuildInfo.qaHooks`.
+  `ScheduledPromptStoreTest` — 46 classes [V `ls android/app/src/test`]. Each moves with its subject and passes with
+  **no edits**; the source seams of §4.4 keep stable-flavour values (ports, QA off) when Robolectric's default
+  application is used (CR11-13).
+- Instrumented (T3, PC emulator): 13 classes today [V `ls android/app/src/androidTest`]. The 7 **runtime acceptance
+  classes** `BuiltinComponentFilesystemAcceptance`, `BuiltinComponentUpdateAcceptance`, `BuiltinIdleAcceptance`,
+  `BuiltinRestoreAcceptance`, `BuiltinRuntimeAcceptance`, `BuiltinRuntimeReclaimAcceptance`,
+  `BuiltinWorkLeaseAcceptance` move to **`:androidApp` `src/androidTest`**, run on the **`qa` build type** with
+  `BuiltinRuntimeAcceptance` as `testInstrumentationRunner`, as today. They cannot live in `:android:linux`'s
+  `androidTest`: they drive `MainActivity`, `BuiltinServerService` and the restore, reclaim and idle receivers, and a
+  library module's test APK has none of the app's manifest components. Exactly two test edits are permitted, each its
+  own commit: `BuildConfig.BUILTIN_RUNTIME_QA` → `AppBuildInfo.qaHooks.builtinRuntime` (with `RuntimeQaGuard` moving
+  along unchanged), and launching through the native `MainActivity` shell instead of the Flutter activity. The 3
+  phone-engine classes `PhoneEngineAcceptance`, `PhoneEngineDeviceBoundaryRegressions`, `PhoneEngineNativeRegressions`
+  go to `:android:team` later. `Bb8DeviceSmoke`, `Bb8MainCallback`, `Bd9DeviceSmoke` are retired with the Flutter QA
+  flavours; their checks are covered by E2E-17/18. The QA switches `ocBuiltinRuntimeQa`, `ocBb8Smoke`, `ocBd9Smoke`,
+  `ocStableEngineQa` become one `qa` build type with `AppBuildInfo.qaHooks`.
+- New in slice 1 (D11-1): `SandboxBundleTest` (JVM: right hash passes, a changed byte fails, a missing engine or probe
+  does not matter, a symlink fails) and `ProtectionMarkerAcceptance` (T3, `qa` build). For each marker value
+  `required-proot-v1`, `required-v1` and a corrupt marker, it writes `files/oc.teamEngine.protection-required` on the
+  emulator, starts the phone server and runs one guest command (`run uname -m`), then asserts both work and the launch
+  path is proot or the sandbox as expected.
+
+### 4.4 Compile seams (the only source edits allowed in W11-01, W11-09 and W11-10)
+
+The copied Kotlin references classes that land in other modules or disappear. Each seam is one commit, listed in the
+module README with the replaced lines; reviewers reject any other source edit in those units. Tests stay unchanged.
+
+| # | Reference today | Replacement | Lands in |
+|---|---|---|---|
+| E1 | `LocalTerminal.register(messenger)` and its `io.flutter.*` imports (channel glue; §2.4 rule 5) | deleted; the session manager, `get(context)`, `hasLiveSessions()`, `list()` and the open-URL watcher stay; the watcher emits into a `SharedFlow<TerminalEvent>` that W11-08a exposes (CR11-14) | W11-01 |
+| E2 | `AppLifecycle.recordServices(…)` (`BuiltinLinux.kt:3718`; `AppLifecycle` imports Flutter and lands in `:android:platform`) | `RunningServicesRecorder` in `:android:linux` writes the same `oc_lifecycle.running_services` key with `commit()` (H30); `:android:platform`'s exit history only reads it | W11-01 |
+| E3 | `BuildConfig.BUILTIN_RUNTIME_QA` (`BuiltinLinux.kt:2166`, `BuiltinServerService.kt:30`, the QA service) | `context.appBuildInfo.qaHooks.builtinRuntime` (CR11-13) | W11-01 |
+| E4 | `NativeStrings.get(context, R.string.native_*)`, `R.plurals.native_chip_*` in `SetupService`, `StatusNotification*`, `NativeIdleReturnNotificationHost` | a temporary copy of `NativeStrings` and of those `native_*` resources inside `:android:linux` (en + ar, as today); W11-09 switches every user to `Words`: the service bodies it moves to `:android:background`, and `NativeIdleReturnNotificationHost`, which stays in `:android:linux` and uses `:ui:words` (already a dependency). The runtime owner makes the `:android:linux` edits and deletes the copy in the same merge (S11-12, §0.1) | W11-01, removed in the W11-09 merge |
+| E5 | `MainActivity::class.java`, `MainActivity.EXTRA_LAUNCH_ACTION`, `LAUNCH_ACTIONS` | `LaunchExtras` object in `:core:common` (the frozen extra names and launch-action values, copied verbatim) and `ComponentName(context, "io.github.eslamasabry.opencode_mobile.MainActivity")` built from the frozen FQCN | W11-01 (runtime), W11-09/W11-10 (others) |
+| E6 | `PhoneEngineNative.verifyBundle(context, "libaiteam_sandbox.so")` in `protectedCommand` and `requirePhoneBoundaryKernel` | `SandboxBundle.verify(context)` (D11-1): the same `O_NOFOLLOW` + `S_ISREG` + ELF ABI + SHA-256 steps as `verifyBundle`, over `libaiteam_sandbox.so` only, against `sandbox-manifest.json` | W11-01 |
+| E7 | service-companion reads from widgets and the background (`BuiltinServerService.isForegroundRunning`, `BackgroundConnectionService.active`, `.widgetActionPending`, `.dispatchWidgetAction`, `.EXTRA_CODING_ALERT_*`) | `ForegroundWork.active` / `PhoneServerForeground.shown`; the widget-action ingress of §11.3; the coding-alert extras move to `LaunchExtras` | W11-09, W11-10 |
+| E8 | port literals: `NativeServerRecipe.kt:57` (`--port 4097` in the restore script), `BuiltinLinux.SERVER_DEFAULT_PORT`, `NativeEngineReadiness.RESERVED_SERVER_PORT`, `PhoneEngineNative` port checks and `serverBaseUrl`, `PhoneAgentHost.AGENT_PORT`, the reserved-port lists | `context.appBuildInfo.ports.*` (S11-6); the restore script stays native-authored and reads its port from there; copied tests keep asserting 4097 because Robolectric's default application gets the stable ports | W11-01, before any preview build can reach the runtime (a preview build without E8 must not arm restore) |
+| E9 | `SessionsWidgetProvider.refreshAll`, `UsageWidgetProvider.refreshAll` called from `NativeNotificationLocale` and `BackgroundConnectionService` (a background → widgets edge) | `WidgetSurface.redrawAll(reason)` | W11-09 |
+| E10 | `BuiltinLinux.serverRunningIfStarted()` read by `StatusWidgetProvider:60` for the "this phone's Linux" line | a `phoneServer` field (`Off \| Running \| Restoring`, from `PhoneServerState`) that `:engine:attention` publishes into the widget snapshot | W11-10 |
 
 ---
 
@@ -393,12 +450,12 @@ No channel survives. Each row names what replaces it; the error vocabulary survi
 | Channel / engine today | Kotlin half (today) | Replaced by (home) |
 |---|---|---|
 | `io.github.eslamasabry.opencode_mobile/builtin_linux` (~70 methods, each on a worker thread, answered on main) | `MainActivity.handleBuiltinLinux` → `BuiltinLinux` | `RuntimeHost` facets (`:engine:runtime`, §5.4), `AgentHost` (`:engine:agents`), later `TeamEngineHost` (`:engine:team`) |
-| `…/local_terminal` + `…/local_terminal/events` | `LocalTerminal.register` | `TerminalHost` (`:engine:project`); output as `Flow<TerminalChunk>` with explicit `ack()` (back-pressure kept) |
-| `oc/thermal` + `/events` (`current`, `notify`, freeze tip `battery`, `powerSave`, `agentPriority`) | `ThermalMonitor` | `DeviceFacts.thermal/thermalHeadroom/battery/powerSave` (CR11-5); heat notice through `NotificationSurface.heat()`; `ProcessHost.setAgentPriority` |
+| `…/local_terminal` + `…/local_terminal/events` | `LocalTerminal.register` | `TerminalHost.open(target): Outcome<TerminalModel>` (`:engine:project`, 03 §11.2): `TerminalModel { view: PlatformViewHandle; title; write; resize; close; events }`, where `events` carries `Exited(code)` and `OpenUrl(url)` (CR11-14). Termux terminal-view draws in process; output, back-pressure and the 512 KiB replay stay inside `:android:terminal` and never cross into common code |
+| `oc/thermal` + `/events` (`current`, `notify`, freeze tip `battery`, `powerSave`, `agentPriority`) | `ThermalMonitor` | `DeviceFacts.thermal/thermalHeadroom/battery/powerSave` (CR11-5); the heat notice is posted by `:engine:attention`, which watches `RuntimeHost.status` (services heat hold) and `ThermalPolicy` state and calls `NotificationSurface.heat()`; `:engine:runtime` never calls upward (§8.3); `ProcessHost.setAgentPriority` |
 | `oc/lifecycle` (`launchReport`, `exitHistory`, `keepAliveInfo`, `openKeepAliveSetting`) | `AppLifecycle` | `ExitHistory` (`:engine:diagnostics`), `KeepAliveSettings` (`:core:domain`, CR11-9) |
 | `oc/project_export` | `ProjectExportBridge` | `ProjectExport` (`:engine:project`), `StorageReport` (`:engine:diagnostics`: `cacheBytes`, `clearCache`, `clearAllData`) |
 | `oc/storage` | `StorageAccess` | `PermissionGate(AllFilesAccess)` (CR11-4) |
-| `oc/background` (status, enable/disable, pause, battery exemption, app settings, network policy, alerts, live status, widgets, locale, freeze-tip `childProcessLimit`, `openDeveloperOptions`) | `MainActivityBackgroundChannel`, `BackgroundConnectionService`, `WidgetV2Bridge` | `ForegroundWork`, `NotificationSurface`, `WidgetSurface`, `PermissionGate`, `DeviceFacts.network`, `ProcessHost.childProcessLimit()`, `OsSettingsPages` |
+| `oc/background` (status, enable/disable, pause, battery exemption, app settings, network policy, alerts, live status, widgets, locale, freeze-tip `childProcessLimit`, `openDeveloperOptions`) | `MainActivityBackgroundChannel`, `BackgroundConnectionService`, `WidgetV2Bridge` | `ForegroundWork`, `NotificationSurface`, `WidgetSurface`, `PermissionGate`, `DeviceFacts.network` (`monitorNetworkPolicy` → `DeviceFacts.network.onWifi`, §16), `ProcessHost.childProcessLimit()`, `OsSettingsPages` |
 | `oc/shortcut`, `oc/link`, `oc/share` | `Launch*Channel` | `EntryIntentReader` → `EntryRouter` (07 §7); `ShortcutSurface`; `ShareService` |
 | `oc/scheduled_prompts` | `ScheduledPromptChannel/Calls` | `ScheduleEngine` (`:engine:schedule`) + `ScheduleHost` (`:android:schedule`) + `PhoneServerHost.acquireScheduledServer` |
 | headless engine `widgetActionMain` + `oc/widget_action` | `WidgetActionRuntime` | `WidgetActionRunner` coroutine (`:engine:attention`) inside the same short service |
@@ -442,7 +499,7 @@ unless named.
 | `git_shell.dart`, `git_link_repair.dart` | `:engine:project` (`PhoneGitShell`, `GitLinkRepair`) | B-LINUX-072..074 |
 | `quota_collector_host.dart` | `:engine:integrations` (`QuotaCollectorHost`) | B-LINUX-176..178 |
 | `migration/*` (Termux move) | `TermuxMigration` (D7) | B-LINUX-233..238 |
-| `agents/*` | `:engine:agents` (agents section) | B-LINUX-049..053, -114..142 |
+| `agents/*` | `:engine:agents` (17 §1) | B-LINUX-049..053, -114..142 |
 | `factsbook_node_host.dart`, `team/*` | later (D6) | B-LINUX-039..048, -066..069 |
 
 ### 5.3 Splitting `BuiltinLinux.kt` (slice 3, unit W11-03, Opus)
@@ -457,7 +514,7 @@ renamed private helpers except where two classes now need one, each moved block 
 | `RuntimeInstall` | 152–206, 3922–4205 | `install`, `download` (resume, manual redirects ≤ 5, SHA-256), `unpack` (tar.gz; hard links copied last), `configure`, `installInBackground`, `uninstall`, `projectStorage`, `bytesUsed` |
 | `GuestScriptRunner` | 208–315 | `run`, `admitCheckProcess`, `start` (named so it is not confused with the `GuestRunner` interface it implements) |
 | `InstallerSlot` | 316–668 | ticket, plan, drain, `reclaimDeadInstaller`, `recoverColdComponentUpdates`, `startInstaller`, the 100 ms ownership monitor (5 strikes) |
-| `ProotLauncher` | 60–150, 669–744, 1080–1119, 1722–1730 | `prootCommand`, `prepareGuestForProot`, fake `/proc` binds, `procMaskBinds`, `prootEnvironment`, shared-storage binds, **protection-marker consumer** (`markerPresent`, `protectionTier`, `prootLaunchPath`, `protectedCommand`) |
+| `ProotLauncher` | 60–150, 669–744, 1080–1119, 1722–1730 | `prootCommand`, `prepareGuestForProot`, fake `/proc` binds, `procMaskBinds`, `prootEnvironment`, shared-storage binds, **protection-marker consumer** (`markerPresent`, `protectionTier`, `prootLaunchPath`, `protectedCommand`, calling `SandboxBundle.verify`, D11-1) |
 | `AgentProcesses` | 745–1079, 2093–2131 | agent homes, sign-in command, private agent processes, host admission tickets (moves to `:android:agenthost` behind `GuestLauncher` in the same unit, CR11-0) |
 | `PhoneEngineBridge` | 1120–1721 | boundary probes, phone engine start/stop/status, protected server (moves to `:android:team`, later) |
 | `ServiceRegistry` | 1731–1872, 3352–3363, 3494–3745 | services map, diagnostics records, `startService`/`launchService`/`monitorServiceExit`/`stopService`/`stopAllServices`, `serviceSetChanged` (+ `ServiceNoticeGate`), `recordRunning`, logs |
@@ -478,7 +535,9 @@ Recipe:
    service exit on four threads and asserts no deadlock within 10 s; it also records which methods take both monitors
    and in which order, and fails if a moved method nests them differently from the original.
 4. After the last move, run the 7 runtime acceptance classes (T3) and the restore proofs (§6.8).
-5. Only then delete `MainActivity.handleBuiltinLinux` and add `AndroidRuntimeHost` (§5.4).
+5. Only then delete `MainActivity.handleBuiltinLinux` and add `AndroidRuntimeHost` (§5.4), including
+   `setActivityResumed`, wired from the native `MainActivity` shell's `onResume`/`onPause` and proven by
+   `ActivityResumedWiringTest` (§5.4).
 
 ### 5.4 The interfaces (Kotlin, `:engine:runtime` commonMain unless named)
 
@@ -501,7 +560,21 @@ public interface RuntimeHost {
     public val processes: ProcessHost
     public val setup: SetupJobHost
     public val files: GuestFiles
+    /** Non-suspend, main-thread safe, no I/O (like requestStop). Called only by the MainActivity shell's
+     *  onResume (true) and onPause (false), exactly where MainActivity.kt:96/101 call BuiltinLinux.setActivityResumed
+     *  today; never by ProcessLifecycleOwner, whose ~700 ms delay would change the meaning. It gates idle policy
+     *  writes (idle_policy_unavailable), idle stop and resume, agent-host admission tickets (activityResumed +
+     *  activityEpoch), the manual budget reset, idle-timer scheduling, idle-return notification clearing, and the
+     *  cancelling of an unconfirmed recovery on pause (§6.3). Default false, as today (BuiltinLinux.kt:1827). */
+    public fun setActivityResumed(resumed: Boolean)
 }
+
+/** Which words the status row shows while a guest service keeps the phone server's foreground service. Today the
+ *  callers pass already-localized text (`notice:` of startService: the Linux manager's job notice, the AI Team component
+ *  notice); natively they pass a key and :engine:attention maps it to words, so no copy crosses into :engine:runtime.
+ *  Lives here because GuestServiceHost and PhoneServerForeground use it. The value list is taken from the `notice:` call
+ *  sites at the freeze tip when the contract freezes (W11-04); null = the generic server wording. */
+public enum class StatusNoticeKey { LinuxJob, TeamComponent /* later, D6 */ }
 
 public interface RuntimeInstallHost {
     public suspend fun installUbuntu(): Outcome<Unit>                         // returns at once; progress in status
@@ -609,7 +682,7 @@ public interface PhoneServerForeground {
 /** Foreground service → runtime. Impl AndroidPhoneServerServiceHooks (:android:linux). Ticket ids are opaque handles to
  *  in-memory NativeServerRestoreTicket objects; nothing is serialized or rebuilt from intent extras. */
 public interface PhoneServerServiceHooks {
-    public fun prepareEventRestore(event: RestoreEvent): RestoreTicketId?      // BOOT_COMPLETED | MY_PACKAGE_REPLACED; reads Kotlin-owned prefs only
+    public fun prepareEventRestore(event: RestoreEvent): RestoreTicketId?      // BOOT_COMPLETED | MY_PACKAGE_REPLACED; before the gate: reads builtin_server_recovery plus three adopted A-K keys (§6.5 step 3)
     public suspend fun restoreAfterEvent(ticket: RestoreTicketId)               // after startForeground and the migration gate (§6.5)
     public fun cancelEventRestore(ticket: RestoreTicketId)
     public fun onNullIntentRestart(): ReclaimDecision                           // Armed → START_STICKY path; Rejected → stop
@@ -642,8 +715,14 @@ public enum class ProcessOwner { App, OpenCode, Paseo, AgentSignIn, Engine, Help
 ```
 
 Threading of `AndroidRuntimeHost`: every blocking call runs in `withContext(runtimeIo)` where
-`runtimeIo = dispatchers.io.limitedParallelism(8)`; nothing touches the main thread except `requestStop`, which never
-does I/O. `BuiltinLinux.get(context)` stays the process-wide singleton the services and receivers also use.
+`runtimeIo = dispatchers.io.limitedParallelism(8)`; nothing touches the main thread except `requestStop` and
+`setActivityResumed`, which never do I/O. `BuiltinLinux.get(context)` stays the process-wide singleton the services and
+receivers also use.
+
+`ActivityResumedWiringTest` (Robolectric, W11-03): an `ActivityController` drives the native `MainActivity` through
+resume, pause, resume. It asserts that `setPolicy` succeeds only while resumed, that an unconfirmed automatic recovery
+is cancelled on pause while a confirmed one is not, that `activityEpoch` moves on every resume, and that an agent-host
+admission ticket taken before the pause is refused after it. Read aloud's own resume/pause hooks stay with 10.
 
 ### 5.5 Failures (CR11-1)
 
@@ -670,10 +749,11 @@ one named fix; the Flutter sentences are the source (copy parity, 02 §6.6).
 
 | Step | What | Check |
 |---|---|---|
-| 1 | `tool/native/extract_scripts.dart` (a one-off program run against the Flutter reference) calls every Dart script builder with sentinel values and writes `native/engine/runtime/src/commonMain/scripts/<group>/<name>.sh.tmpl` with `@@NAME@@` in place of each sentinel, plus `golden/<name>.sample.json` (values) and `golden/<name>.sample.sh` (Dart's rendered output). Groups: `setup/` (prelude, `oc_download`, `oc_apt_install`, component check/install/remove/presence/size), `server/` (server script, password write, OC1 history copy, phone context), `manager/` (process scan, ports, storage, packages, reset), `services/` (`oc-svd` v2, launch), `backup/`, `agents/` (agent, Paseo, removal, gen-UI install), `git/`, `quota/`, `termux/` (migrate-out). | every Dart builder has a template (a list test) |
+| 0 | **Classify every Dart builder** (a list in `scripts/BUILDERS.md`, checked by a test): **static** = one fixed text with single values spliced in; **composed** = loops over a list or map (`combinedCheckScript` iterates a `Map` and splices check scripts; `agent_scripts.dart:213` writes one `case` arm per architecture artifact), branches (`agent_scripts.dart:30` inserts `${signOut ? 'logout' : 'probe'}`) or joins other scripts (`withSetupPrelude`). | every Dart builder is classified (`ScriptCoverageTest` counts **builders**, not templates) |
+| 1 | `tool/native/extract_scripts.dart` (a one-off program run against the Flutter reference) calls every builder with sentinel values. For a static builder it writes `native/engine/runtime/src/commonMain/scripts/<group>/<name>.sh.tmpl`, replacing each sentinel that Dart passed through `_quote` with `@@Q:NAME@@` and each one inserted unquoted (`oc_arch=${entry.key.name}`, `oc_bytes=${…}`, ports) with `@@RAW:NAME@@`. Composed builders get their fixed fragments extracted the same way. For **every** builder it writes several golden samples (`golden/<name>.<case>.json` values + `golden/<name>.<case>.sh` Dart's output), covering every branch and lists or maps of size 0, 1 and n. Groups: `setup/` (prelude, `oc_download`, `oc_apt_install`, component check/install/remove/presence/size), `server/` (server script, password write, OC1 history copy, phone context), `manager/` (process scan, ports, storage, packages, reset), `services/` (`oc-svd` v2, launch), `backup/`, `agents/` (agent, Paseo, removal, gen-UI install), `git/`, `quota/`, `termux/` (migrate-out). | samples exist for every branch of every builder |
 | 2 | build-logic `OcScriptsPlugin`, task `generateRuntimeScripts`: emits `RuntimeScripts.kt` (`public object RuntimeScripts { public val setupPrelude: ScriptTemplate = … }`, raw strings with `$` escaped) and `scripts.sha256` | generated, never edited |
-| 3 | `ScriptTemplate.render(values: Map<String, String>): GuestScript`: every value through `ShellQuote.single()` (POSIX single quotes, `'` → `'\''`); a missing or unknown placeholder throws `IllegalArgumentException` | `ScriptTemplateTest` |
-| 4 | `ScriptGoldenTest` (commonTest): `render(sample.json) == sample.sh` byte for byte for every script | parity with Dart |
+| 3 | `ScriptTemplate.render(values)`: `@@Q:NAME@@` → `ShellQuote.single(value)` (POSIX single quotes, `'` → `'\''`); `@@RAW:NAME@@` → the value only if it matches the regex the template declares in its header (`# @raw NAME [0-9]{1,5}`, `# @raw ARCH (arm64\|x64)`); a missing, unknown or non-matching value throws `IllegalArgumentException`. Composed scripts are Kotlin builder functions in `:engine:runtime` (`RuntimeScriptBuilders.combinedCheck(checks)`, `agentInstall(recipe, artifacts)`, `withSetupPrelude(script)`, `authProbe(agent, recipe, signOut)`) that loop, branch and join the fixed fragments and call `ShellQuote.single` **exactly where Dart called `_quote`**, never elsewhere (no double quoting) | `ScriptTemplateTest`, `ScriptBuilderTest` |
+| 4 | `ScriptGoldenTest` (commonTest): for every sample of every builder, the Kotlin output equals Dart's `.sh` byte for byte | parity with Dart, every branch |
 | 5 | `ScriptChecksumTest`: template SHA-256 equals `scripts.sha256` (an accidental edit fails; an intended edit updates the list in the same commit) | every T1 |
 | 6 | `ScriptShellTest` (desktopTest, VPS): `dash -n` and `bash -n` on every rendered sample; the ported behaviour suites (`setup_scripts_test`, `setup_apt_repair_test`, `linux_manager_parse_test`, `linux_services_script_test`, `linux_backup_plan_test`) run the real scripts under dash and bash (map T14) | T1 on the VPS |
 
@@ -764,8 +844,9 @@ When `server` exits by itself and recovery is admitted (supervision enabled for 
 user-stopped, generation matches, migration marker valid, automation policy permits), thread `phone-native-recovery`
 waits `RestartBackoff` (1 s doubling to 60 s; a run ≥ 30 s resets it; persisted per boot), reserves attempt N of
 **3** (`oc.builtinRecoveryBudget.<p>`), and relaunches with `ServiceLaunch(nativeOwned = true)`. The foreground
-service is **kept** during the wait (re-requesting a background FGS start would lose admission, H23). A cold app
-(`setActivityResumed(false)`) cancels an unconfirmed automatic attempt, never a confirmed one. Confirmed attempts land
+service is **kept** during the wait (re-requesting a background FGS start would lose admission, H23). When the app
+leaves the screen (the `MainActivity` shell's `onPause` → `RuntimeHost.setActivityResumed(false)`, §5.4), an
+unconfirmed automatic attempt is cancelled, never a confirmed one. Confirmed attempts land
 in `oc.builtinRecoveryReceipts.<p>` (≤ 16) until the app acknowledges them as "While you were away" entries.
 
 ### 6.4 The restart-after-update rule (R1–R9)
@@ -774,13 +855,13 @@ in `oc.builtinRecoveryReceipts.<p>` (≤ 16) until the app acknowledges them as 
 |---|---|---|
 | R1 | **Who comes back:** only a server the person wanted (`wanted = true`, `userStopped = false`), whose supervision and restore owner equal the recipe's profile, whose automation policy allows it (`behaviors.restartPhoneServer && behaviors.pollRestartHealth`; absent = allowed, malformed = denied), whose recovery marker is exactly `{"version":2,"nativeAuthority":true}`, with no pending component recovery or installer ticket and at most 2 attempts after the event reset. | BUILTIN-LINUX-21, -22; 05 M4 |
 | R2 | **When:** `MY_PACKAGE_REPLACED` (app update), `BOOT_COMPLETED` (reboot, and on Android 15+ also "the person opened a stopped app"), `START_STICKY` null-intent reclaim (only while restoration is armed), app open (once), and an OpenCode component update (R7). | BUILTIN-LINUX-22, -23 |
-| R3 | **Recipe compatibility:** an update accepts `recipe.packageVersion ≤ versionCode` and rewrites it upward; a reboot requires an exact match; `rootfsGeneration` must equal `builtin_component_writer.rootfsGeneration`. The native `versionCode` base **10000** (ADR §9.9) is above every Flutter build (57 public, 4300–4511 local), so the first native update always passes R3. | BUILTIN-LINUX-22 |
+| R3 | **Recipe compatibility:** an update accepts `recipe.packageVersion ≤ versionCode` and rewrites it upward; a reboot requires an exact match; `rootfsGeneration` must equal `builtin_component_writer.rootfsGeneration`. The native `versionCode` base **10000** (ADR §9.9) is above the public builds (57) and the local phone builds (4300–4511), but **not** above every signed local build: VPS builds 900055 and 900058 carry the local key and were installed on an emulator (`docs/qa/scheduled-prompts-2026-10-15/apk-build.txt`). Android refuses an `install -r` with a lower code, and uninstalling loses the Linux. So before every native install the installed code is read (§22.4 step 2a) and must be lower than the native one; the base question goes back to ADR §9.9 (CR11-18). | BUILTIN-LINUX-22 |
 | R4 | **Budget:** a boot or update event resets a settled restore count; an open app with a healthy server resets it once per visit. Without this, every fourth update left the server off. | H7 |
 | R5 | **Drain first:** the previous boot's server is drained exactly by its receipt; after a reboot, cross-boot quiescence (every same-uid process accounted for) is required before launch. | BUILTIN-LINUX-19, -22 |
 | R6 | **Never:** a server the person stopped; an idle-stopped server (only a foreground resume brings it back); policy off; budget exhausted (until a manual start or a healthy open); ownership unknown (restore disarmed with that reason, shown on This phone). | BUILTIN-LINUX-18, -24, -25 |
 | R7 | **OpenCode component update** (in-app auto-updater, B-LINUX-078/079, freeze tip "the phone server restarts itself after an OpenCode update"): runs only when idle (no setup job, no reply, no handoff); after the journalled activation (`*.oc-pending` → committed) the server restarts once through `server.restart(…, expectedGeneration)`; a failed restart rolls the journal back to `*.oc-good` and restarts the old binary; one "Updated OpenCode to <version>" entry in While you were away. | BUILTIN-LINUX-37, 02 §3.5 |
 | R8 | **First native launch** (the first native process is usually started by `MY_PACKAGE_REPLACED` with no UI): the sequence in §6.5. | S11-5, 05 §7.1 |
-| R9 | **Force stop:** a force-stopped package gets no broadcast until it is opened (Android 15 stopped state; on the owner's Nubia a swipe from Recents counts). At the next open, `SystemEventRestorer.onAppStart(forceStopped = true)` re-arms and redraws (§15) and the normal app-open start (§6.2) brings the server back once; `AppExitRecovery` shows one notice ("Android closed OpenCode Mobile at 00:06 …"). | android-surfaces §2.4, BUILTIN-LINUX-28 |
+| R9 | **Force stop:** a force-stopped package gets no broadcast until it is opened (Android 15 stopped state; on the owner's Nubia a swipe from Recents counts). At the next open, `SystemEventRestorer.onAppStart(forceStopped = true)` re-arms and redraws (§15); `AppExitRecovery` shows one notice ("Android closed OpenCode Mobile at 00:06 …"). On API 35+ the same open also delivers `BOOT_COMPLETED` (R2), so two paths could start the server. **Rule: one start.** (a) `RestoreReceiverBody` compares `/proc/sys/kernel/random/boot_id` with the boot id saved by the last process of this app. Equal means no reboot happened; the broadcast is the unstop delivery and is treated as `AppStart` only (no event restore). (b) Different, so a real reboot happened: the event restore runs as usual. While `restorePhase ∈ {Waiting, Restoring}`, the app-open start (§6.2) does not launch; it waits for the phase to end and then only probes, adopting the restored server. (c) Either way the app-open start runs at most once per open (`allowAutoStart`). | android-surfaces §2.4, BUILTIN-LINUX-28 |
 
 ### 6.5 First native launch, step by step (S11-5)
 
@@ -788,9 +869,14 @@ in `oc.builtinRecoveryReceipts.<p>` (≤ 16) until the app acknowledges them as 
 2. `OcApplication.onCreate` runs ADR §9.7 steps 1–7 (crash handler, Redactor, crash-loop guard, S0 byte backup, graph,
    `MigrationRunner` on IO, prefs warm-up).
 3. `BuiltinRestoreReceiver` shell → `RestoreReceiverBody` → `PhoneServerServiceHooks.prepareEventRestore(event)`
-   (implemented in `:android:linux`). It reads **only** the Kotlin-owned
-   `builtin_server_recovery` file (`wanted`, `userStopped`, `restoreOwner`, `oc.builtinRuntimeRecipe.<owner>`), which
-   the migration never touches (05 §7.7), so no gate is needed. Fail → record `restoreReason`, finish. Pass →
+   (implemented in `:android:linux`). It reads the Kotlin-owned `builtin_server_recovery` file (`wanted`,
+   `userStopped`, `restoreOwner`, `oc.builtinRuntimeRecipe.<owner>`), and, before the gate, three adopted A-K keys
+   from `FlutterSharedPreferences`: `flutter.oc.builtinRecovery.<p>` (`migrationMarkerValid`),
+   `flutter.oc.automation.<p>` (`policyPermits`) and `flutter.oc.phoneAgentOwner.<p>` (`helperOwner`)
+   (`prepareServerEventRestore` → `reserveServerEvent` → `nativeAdmitted`, `BuiltinLinux.kt:3063-3095`, `:1930`).
+   No gate is needed only because 05 adopts that file in place and M1–M3 never write those keys (05 M4 proves them
+   equal). `RestoreReceiverKeysTest` fails if any M1–M3 write set includes `oc.builtinRecovery.*`,
+   `oc.automation.*` or `oc.phoneAgentOwner.*`. Fail → record `restoreReason`, finish. Pass →
    `BuiltinServerService.startForRestore(context, ticket)` at once, inside the broadcast's start exemption. The ticket
    stays in memory only (never serialized, never rebuilt from extras).
 4. `PhoneServerServiceBody.onStartCommand`: `ServiceCompat.startForeground(4747, row, FOREGROUND_SERVICE_TYPE_SPECIAL_USE)`
@@ -830,14 +916,23 @@ SIGKILL on exact identities, 5 s total). Entry points: This phone Stop, the stat
 
 ### 6.8 Proofs (T3, PC emulator `OC_API37` + an API 35 image; unit W11-14)
 
+Every proof that installs over Flutter runs from **two baselines** (CR11-18). The **gating** one is `flutter-final`:
+the exact commit installed on the owner's phone, built with the local key and its own versionCode (4500+). It carries
+the Kotlin and stored state 2.1.0+57 lacks (`ServiceNoticeGate`, `ChildProcessLimit`, `AppUpdateChannel`, the
+running-services set, backups, the lease monitor), and it is 05 J1's starting point. The **second** is 2.1.0+57, the
+public lineage. Before each install, `adb shell dumpsys package <pkg> | grep versionCode` must show a code below the
+native APK's (R3); a device holding a 9000xx build is reinstalled only with the owner's OK.
+
 | Proof | Steps | Pass |
 |---|---|---|
-| Update restore (extends memory `restore-proof-recipe`) | install the local-key Flutter 2.1.0+57 build; finish phone setup; start the server; **do not force-stop** (or run `pm unstop <pkg>` after any force stop: a stopped package never receives `MY_PACKAGE_REPLACED`); `adb install -r` the native release APK (versionCode ≥ 10000, same signer); poll `adb shell ps -A -o PID,PPID,NAME -u <app uid>` for `opencode2` every 2 s for 120 s | `opencode2` runs within 60 s; `dumpsys activity broadcasts history` shows the delivery; status shows `Running` at first open |
+| Update restore (extends memory `restore-proof-recipe`) | install the baseline (`flutter-final`, then again from 2.1.0+57); start the server; **do not force-stop** (or run `pm unstop <pkg>` after any force stop: a stopped package never receives `MY_PACKAGE_REPLACED`); `adb install -r` the native release APK (versionCode ≥ 10000, same signer); poll `adb shell ps -A -o PID,PPID,NAME -u <app uid>` for `opencode2` every 2 s for 120 s | `opencode2` runs within 60 s; `dumpsys activity broadcasts history` shows the delivery; status shows `Running` at first open |
 | Budget reset across updates | `adb root`; stop the app with `am force-stop`; edit `shared_prefs/builtin_server_recovery.xml` in place (sed to `/data/local/tmp`, `cat >` back to keep the owner) to `attempts=3`; `pm unstop`; install the next native build | server returns (R4) |
 | Reboot restore | native app with the server running; `adb reboot`; wait for `sys.boot_completed=1` | server returns; no `dataSync` start attempted from `BOOT_COMPLETED` |
 | Person stopped | Stop on This phone; install the next build; reboot | server stays stopped across both (R6) |
 | Interrupted first launch | install over Flutter, then `am kill` during the gate wait (05 §10.5 interruption matrix) | the next start completes; server restored or auto-started at open |
-| Force stop | `am force-stop`; open the app | widgets redrawn, schedules re-armed, server auto-starts once (R9) |
+| Force stop | `am force-stop`; open the app (on API 35+ this also delivers `BOOT_COMPLETED`, R2) | widgets redrawn, schedules re-armed; exactly **one** server process tree (`ps -A -o PID,PPID,NAME`), one start attempt in the diagnostics ring, no `StartProblem` (R9 rule) |
+| Preview reboot restore (S11-6) | install the `.native` preview build beside a running stable build, both with the phone server running; `adb reboot` | the preview's server comes back on **4197** and the stable one on 4097 (`ss -ltn` inside each app's uid, or the status `serverPort`); neither restore fails on a busy port |
+| Protection marker (D11-1) | `qa` build; `ProtectionMarkerAcceptance` (§4.3) for `required-proot-v1`, `required-v1` and a corrupt marker; then install the release APK over a build with a `required-v1` marker and reboot | server and a guest command start for each tier; the landlock tier launches through `libaiteam_sandbox.so`; restore after the update and reboot works with the marker present |
 
 ---
 
@@ -875,9 +970,11 @@ SIGKILL on exact identities, 5 s total). Entry points: This phone Stop, the stat
 | Services | at most 16 user services; names and ports validated (`LinuxServices`) | BUILTIN-LINUX-45 |
 
 **Preview flavour trap:** the 32 is shared by all apps, and loopback ports too (S11-6). On the owner's phone, never run
-the Flutter app's phone server and the `.native` preview's at the same time; the preview's This phone page says so in
-one line while another OpenCode package has a server running (detected with `PackageManager` + a loopback probe of
-4097).
+the Flutter app's phone server and the `.native` preview's at the same time. The preview's This phone page says so in
+one line while another OpenCode package has a server running. It detects this with `PackageManager` plus a loopback
+probe of 4097. Sharing a signer gives no package visibility, so the preview flavour's manifest declares
+`<queries><package android:name="io.github.eslamasabry.opencode_mobile"/></queries>` (§17); without it the check
+would always report "not installed".
 
 ### 7.3 Memory limiter readiness (Android 17)
 
@@ -916,7 +1013,7 @@ one line while another OpenCode package has a server running (detected with `Pac
 
 | Policy | Rule |
 |---|---|
-| `HeatTierPolicy` | tiers `normal`, `slow` (agents at lower priority), `hold` (and new heavy work waits). Thresholds: `slowHeadroom = 0.7`, `holdHeadroom = 0.9`, `slowBattery = 20`, `holdBattery = 10` (unplugged), moderate status ⇒ hold; a step is left only after **2 minutes** clear (`calmFor`); `oc.fullSpeed` ("Always full speed", Keep running) returns `normal` |
+| `HeatTierPolicy` | tiers `normal`, `slow` (agents at lower priority), `hold` (and new heavy work waits). `decide()` in order (spec: `lib/builtin/heat_tier.dart` at the freeze tip and `heat_tier_test`): `oc.fullSpeed` ("Always full speed", Keep running) ⇒ `normal`; thermal status **moderate** or worse, headroom ≥ `holdHeadroom` 0.9, or unplugged with battery ≤ `holdBattery` 10 % ⇒ `hold`; thermal status **light** or worse, headroom ≥ `slowHeadroom` 0.7, unplugged with battery ≤ `slowBattery` 20 %, **power save on**, or **app hidden** ⇒ `slow`; else `normal`. Unknown headroom counts as 0 and unknown battery does not count. A step is left only after **2 minutes** clear (`calmFor`) |
 | `ThermalPolicy` | SEVERE or headroom ≥ 0.95 → pause the AI Team; CRITICAL/EMERGENCY/SHUTDOWN → stop it (later, D6); resume only what the guard paused after ≤ MODERATE with headroom < 0.95 for 2 minutes |
 | Services heat hold | at CRITICAL or worse the `hold` file stops every Linux service (wanted choices untouched), given back after 2 cool minutes; persisted as a file so it outlives the app (BUILTIN-LINUX-46) |
 | Never | the OpenCode server is never stopped for heat |
@@ -928,7 +1025,7 @@ one line while another OpenCode package has a server running (detected with `Pac
 | `normal` | normal priority | admitted | run | Full | — |
 | `slow` | `AgentPriority.Slow` | admitted | run | Full | — |
 | `hold` | `AgentPriority.Hold` | waits (`BudgetWait.warm` / `.battery`) | run | Calm | — |
-| CRITICAL+ | hold | waits | held | Calm | one heat notice per pause and per resume, **only while the app is in the background**, on the existing channel `opencode_coding_status`, id `0x7E4A1`; nothing if that channel is silenced (ANDROID-PLATFORM-15) |
+| CRITICAL+ | hold | waits | held | Calm | one heat notice per pause and per resume, **only while the app is in the background**, on the existing channel `opencode_coding_status`, id `0x7E4A1`; nothing if that channel is silenced (ANDROID-PLATFORM-15). Posted by `:engine:attention`, which watches `RuntimeHost.status` (the services heat hold) and `ThermalPolicy` state; `:engine:runtime` has no edge to `:engine:attention` |
 
 ### 8.4 Battery exemption and keep-running advice
 
@@ -949,7 +1046,7 @@ one line while another OpenCode package has a server running (detected with `Pac
 | `ForegroundKind` | Service (FQCN frozen) | FGS type | Row | Legal start points | OS limit | Ends when |
 |---|---|---|---|---|---|---|
 | `LiveMode` ("Stay connected") | `BackgroundConnectionService` | `dataSync` | 4747, owner `live` | visible Settings toggle; Resume on the Pause tile / notification (user interaction); never from `BOOT_COMPLETED` | 6 h per 24 h in the background, shared by all `dataSync`, reset by opening the app | Pause, turn off, `onTimeout`, refused start |
-| `ReplyWatch` (S11-4) | `BackgroundConnectionService` | `dataSync` | 4747, owner `reply` | `MainActivity.onStop` (transition from a visible state) | same budget | §9.3 |
+| `ReplyWatch` (S11-4) | `BackgroundConnectionService` (or none: joins the row while the phone server's service holds it) | `dataSync` | 4747, owner `reply` | `MainActivity.onStop` (transition from a visible state), not while our own picker or system page covers the app | same budget | no run progressing, 2 h cap, app visible, row dismissed, `onTimeout` (§9.3) |
 | `SignIn` (CR11-3) | `BackgroundConnectionService` | `dataSync` | 4747, owner `signin` | visible sign-in screen; allowed during a durable pause (map T10) | same budget | sign-in ends or is cancelled; never restarted by itself |
 | `WidgetAction` | `BackgroundConnectionService` | `shortService` alone on 34+; `dataSync` on 29–33; plain service on 26–28 | 4748 (generic copy, removed at settlement) | `PendingIntent.getForegroundService` straight from the widget tap (user-interaction exemption, map T20) | ~3 min (`shortService`); our lease 30 s | settlement or the 30 s lease; never demotes a live owner |
 | `PhoneServer` | `BuiltinServerService` | `specialUse` | 4747, owner `server` | visible start (`startService`); background promise (`startForegroundService`) from `BOOT_COMPLETED`/`MY_PACKAGE_REPLACED` restore, `START_STICKY` reclaim | no platform timeout; Memory Limiter "not visible" tier (§7.3) | last guest service stops; Stop; `onTimeout` → `stopRuntime("systemTimeout")` |
@@ -1007,16 +1104,38 @@ Rules every service body keeps (H23, map T8, T9, T11):
 
 Starts, in `MainActivity.onStop` when `!isChangingConfigurations`, only if **all** hold:
 
-- some live `ConnectionGraph` has a run active or a request pending;
+- some live `ConnectionGraph` (`:engine:connection`) has a run **progressing** (a pending request whose alert has
+  already been shown does not count);
 - `NotificationPolicy.wouldAlert(connection, kinds = {FinishedReply, NeedsYou})` is true (permission granted, channel
-  not `IMPORTANCE_NONE`, the person's `oc.notify.*` rules allow it for that server);
+  not `IMPORTANCE_NONE`, the person's `oc.notify.*` rules allow it for that server). During quiet hours finished-reply
+  alerts are never posted (§10.4), so there `wouldAlert` covers `NeedsYou` only;
 - `LiveMode` is not already active;
 - no durable pause whose reason is the person's own Pause (`userPause`); other pause reasons (time limit, app updated)
-  do not block it.
+  do not block it;
+- **no request of ours is covering the app**: no `ActivityResults` request (Photo Picker, SAF, camera), `PermissionGate`
+  request, `OsSettingsPages` page (battery, All files access, exact alarms) or installer confirmation is in flight.
+  Those return to the app; if the person leaves from there, the next `onStop` without one in flight starts it. Without
+  this rule every picker would start and stop a foreground service and flash an ongoing row.
 
-Stops when no run is active and no request is pending for **10 s** (time to post the finished alert after the turn
-settles), when the app becomes visible, on `onTimeout`, or when the person taps Pause. It costs minutes of the 6 h
-budget per long turn, and every app open resets the budget. The row shows the same "working" content as live mode.
+**Joining instead of starting:** when the phone server's `specialUse` service already holds row 4747 (owner `server`),
+the process is kept alive anyway (research §3.2), so reply watch is added as the `reply` owner of the row **without** a
+`dataSync` start and spends no budget. If the server owner leaves first, reply watch ends with it: a background
+`dataSync` start would be refused.
+
+Ends, whichever comes first:
+
+- no run is progressing for **10 s** (time to post the finished alert after the turn settles). A run that is only
+  waiting for the person counts as not progressing once its needs-you alert is shown, so an unanswered permission
+  prompt cannot hold a `dataSync` service up to Android's 6 h `onTimeout`. Answering from the shade then uses the
+  one-shot path (§10.6);
+- a hard cap of **2 h** per start;
+- the app becomes visible;
+- `onTimeout`;
+- the person dismisses the row while `reply` is its only owner: the row's `setDeleteIntent` (S11-9) means "end reply
+  watch for this run". There is no Pause for reply watch; the Pause tile and receipts belong to live mode.
+
+It costs minutes of the 6 h budget per long turn, and every app open resets the budget. The row shows the same
+"working" content as live mode.
 
 ### 9.4 Tests and proofs
 
@@ -1024,8 +1143,12 @@ budget per long turn, and every app open resets the budget. The row shows the sa
   `background_pause_notice_test`, `background_signin_foreground_test`, `local_terminal_signin_foreground_test`,
   `background_work_test` → B-ANDR-001, -009, -012, -014..020, -081, -090.
 - New: `BackgroundPausePolicyTest` (the `reconcile` table: batteryRestricted, userStopped, appUpdated, deviceRestarted,
-  timeLimit, interrupted; map §13 "add one"), `ForegroundStartLegalityTest`, `ReplyWatchPolicyTest`, `BootPathTest`,
-  Robolectric `ServiceController` tests for promise-before-stop on all three services.
+  timeLimit, interrupted; map §13 "add one"), `ForegroundStartLegalityTest`, `BootPathTest`, Robolectric
+  `ServiceController` tests for promise-before-stop on all three services, and `ReplyWatchPolicyTest`. The last one
+  covers: no start while a picker, permission, settings page or installer request is in flight, then a start on the
+  next clean `onStop`; joining the server-held row with no `dataSync` start; an end 10 s after the needs-you alert is
+  shown with the request still pending; the 2 h cap; dismissal ending the watch for that run only; the quiet-hours
+  `NeedsYou`-only rule.
 - Emulator (T3): `adb shell am compat enable FGS_INTRODUCE_TIME_LIMITS <pkg>` and
   `adb shell device_config put activity_manager data_sync_fgs_timeout_duration 60000` run the 6 h path in 60 s: the
   paused row appears, the receipt reads `timeLimit`, a new start is refused without a crash, and opening the app
@@ -1108,7 +1231,8 @@ not created before D6, and an existing one is left alone); `relocalize()` rename
   `opencode://status/stop_reply`; **Stop OpenCode** is `BuiltinServerService.stopIntent` (`getService`, action
   `stop`). Every action names its target in its content description ("Stop the reply in <chat>").
 - **Lock screen**: `VISIBILITY_PRIVATE` with a count-only public version (map T3).
-- **Dismissal** (S11-9): `setDeleteIntent` → the run id is remembered; that run is not promoted again.
+- **Dismissal** (S11-9): `setDeleteIntent` → the run id is remembered; that run is not promoted again; if `reply` is
+  the row's only owner, reply watch ends for that run (§9.3).
 
 ### 10.4 Alerts ("moments", ANDROID-PLATFORM-06)
 
@@ -1116,9 +1240,9 @@ not created before D6, and an existing one is left alone); `relocalize()` rename
 |---|---|
 | Kinds | `permission, question, complete, error, quota, quota_reset, checkin, test` at the switch; `team_*` kinds later (D6) |
 | Validity | non-blank `sessionID` and `key`; quota kinds need `sessionID == "quota"`, a profile id and a 64-hex `monitorToken`; agent name only if `^[A-Za-z0-9 .-]{1,32}$`, else "OpenCode" |
-| When posted | (live mode **or** reply watch active, D11-2) ∧ app backgrounded ∧ permission granted ∧ the server's alerts on. Quiet hours do not stop requests and failures (they go to the quiet channel); finished replies wait for the morning. Finished alerts skip sub-agent sessions. A failed `shown` rolls back the dedupe so a later attempt can retry. Opening a chat or answering anywhere dismisses (B-ANDR-011, -039, -040) |
+| When posted | (live mode **or** reply watch active, D11-2) ∧ app backgrounded ∧ permission granted ∧ the server's alerts on. During quiet hours, requests and failures post silently on the quiet channel; finished-reply (`complete`) alerts are **not posted at all** and never queued for later (`alerts.dart:292`: `if (quiet && kind == complete) return`). Quota and quota-reset alerts also obey `oc.notify.wifiOnly`: posted only when `DeviceFacts.network.onWifi == true` (Wi-Fi under a VPN such as Tailscale counts; unknown never counts, §16; `usage_subscription_alerts.dart:148-152`). Finished alerts skip sub-agent sessions. A failed `shown` rolls back the dedupe so a later attempt can retry. Opening a chat or answering anywhere dismisses (B-ANDR-011, -039, -040) |
 | Copy | shade: the person's words, masked (`NotificationText` common port of `notification_text.dart`: `redactForNotification`, `commandHead`, `permissionAskOf`, `notificationOptionsOf`, `stoppedReasonToken`, `firstReplyLine`); lock screen: fixed public words. Error alerts use a reason token (`auth, context, length, filter, model, other`), never error text (B-SEC-105, -106) |
-| Buttons | at most two. **Allow once** + **Reject** only when the exact command or file is readable in the body; Allow once has `setAuthenticationRequired(true)` (API 31+, phone unlocked); **Always allow never**; everything else has **Open** only. Questions with ≤ 3 short options (≤ 24 chars, unique) show them as buttons (B-ANDR-038). Legacy RemoteInput Reply and `option*` decisions from Flutter-era alerts are still accepted (07 §7.13) |
+| Buttons | at most two, ported from today's `AlertButtons.plan` (commit `b8c07f3e0`). **Permissions:** **Allow once** + **Reject** only when the exact command or file is readable in the body; Allow once has `setAuthenticationRequired(true)` (API 31+, phone unlocked); otherwise **Open** only. **Questions:** **Open** only; ≤ 3 short options are listed as one text line `a · b · c` under the question, never as buttons. **Always allow** never. Legacy RemoteInput Reply and `option*` decisions are accepted only from Flutter-era alerts still in the shade, through the legacy receiver path (07 §7.13); no native alert offers them. The catalog rows B-ANDR-038, B-AGENT-032, B-PROTO-046 and E2E-07 steps 3–4 still describe the old alerts and are corrected by CR11-16 |
 | Groups | `opencode_needs_you` (permission, question) and `opencode_finished` (complete); summaries 5998/5999 (InboxStyle, ≤ 5 lines) only with ≥ 2 children; every kind has an explicit group key (Android 16 forced auto-grouping, android-surfaces §2.3) |
 | Timeouts | `complete` `setTimeoutAfter(1 h)`; `setOnlyAlertOnce` except quota kinds |
 | First reply line | fetched with a 2 s timeout; never ends on a colon (joins a list intro with its first item, B-ANDR-048) |
@@ -1140,6 +1264,13 @@ not created before D6, and an existing one is left alone); `relocalize()` rename
   not colorized, not a group summary, channel above `IMPORTANCE_MIN`.
 - `ProgressStyle` (segments per todo, tracker icon) and `MetricStyle` (elapsed, tasks) come after the switch (D11-5);
   until then the standard style with `setProgress` for a real fraction, exactly as today.
+- **Style:** Live Updates must be Standard, `BigTextStyle`, `CallStyle`, `ProgressStyle` or `MetricStyle`
+  [V developer.android.com Live Updates, 2026-11-01]. Today `several_working`, and `needs_you` while other chats still
+  work, use `InboxStyle` (`StatusNotificationRenderer.kt:48-52`), so they would never be promoted. When promotion is
+  requested, the renderer uses `BigTextStyle` with the lines joined by newlines (same order, same ≤ 4 lines);
+  `InboxStyle` remains only for rows that are never promoted. `PromotableStatusTest` (Robolectric SDK 36) asserts
+  `Notification.hasPromotableCharacteristics()` for every kind marked "yes" above, so a U11-2 "not promoted" on the
+  owner's phone is about the OEM, not our style.
 - `canPostPromotedNotifications() == false`: nothing is shown at the switch (parity); a visible row that opens
   `Settings.ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS` is D11-6.
 - Whether ZTE MyOS promotes at all is U11-2 (read-only adb `dumpsys notification` on the owner's phone).
@@ -1149,9 +1280,18 @@ not created before D6, and an existing one is left alone); `relocalize()` rename
 - `CodingActionReceiver` and `StatusActionReceiver` call `NotificationActionBody` directly (no Dart hop). A decision
   is bound to the **exact** `requestID`; an empty or stale id refreshes the alert instead of answering another request
   (B-AGENT-031, B-SEC-183). A permission is answered through the live connection of that profile.
-- No live connection for that profile, or the answer failed: **repost the alert if it is gone from the shade**, then
-  open the app at the exact request (`EntryRequest.AlertOpen`); parity with today. Answering from a cold process through
-  `ConnectionRegistry.oneShot` (CR11-6) is a candidate after the switch.
+- No live connection for that profile (a cold process, or the connection dropped): inside the receiver's `goAsync`
+  window (§2.2: gate ≤ 20 s, answer ≤ 15 s), answer through `ConnectionRegistry.oneShot(profile, NotificationAction)`
+  (CR11-6) with the same exact-`requestID` rules: `health()` first, then that one pending request, once/reject only.
+  On any failure, **repost the alert** in plain words ("Open OpenCode to answer") with no action buttons and a content
+  intent `PendingIntent.getActivity(…, EntryRequest.AlertOpen(exact request))`. The person's tap on the notification
+  opens the app, which Android allows.
+- **No activity starts from a receiver.** Today `CodingActionReceiver.openApp` and `StatusActionReceiver.openApp` call
+  `context.startActivity` from a broadcast fired by a notification action. That is a notification trampoline, which
+  Android 12+ blocks silently at targetSdk ≥ 31, so today's fallback already fails; it is not copied. A Konsist rule
+  bans `startActivity` in receiver bodies, and `NoTrampolineTest` (Robolectric) drives every receiver path and asserts
+  no activity was started. **Stop the reply** in `StatusActionReceiver` follows the same rule: live connection, else
+  `oneShot`, else the row stays and its tap (a content `PendingIntent.getActivity`) opens that chat.
 - A notification Allow and an in-app tap racing send exactly one reply (B-CHAT-074); answering a request the server
   already timed out dismisses quietly (B-CHAT-076).
 - Every `PendingIntent` is `FLAG_IMMUTABLE`; request codes `notificationID * 4 + index + 1`; per-decision data URIs
@@ -1218,6 +1358,22 @@ Status.
 | Overlay panels | transparent FlutterActivity | `WidgetOverlayActivity` (Compose) + `:feature:widget-panels` + `WidgetOverlayPort` | W11-11 |
 
 Where the ADR's "widget-action runner" lives: the admission, the claim ledger and the 30 s lease are in `:android:widgets`; the foreground service that hosts the work is `BackgroundConnectionService` (`:android:background`, begun through `ForegroundWork`); the server calls are in `WidgetActionRunner` (`:engine:attention`), because `:android:*` modules may not see `:protocol:*` (ADR §6.1).
+
+How a tap crosses modules without an `:android:background → :android:widgets` edge (neither ADR §6.1 nor CR11-0 allows one):
+
+1. The `:androidApp` service shell (which may see every module) reads a widget-action intent with
+   `WidgetActionExtras.read(intent)` from `:android:widgets` into a typed `WidgetActionRequest` (`:engine:attention`
+   common; frozen extras only).
+2. It hands the request to `graph.backgroundServiceBody.onWidgetAction(startId, request)` in `:android:background`,
+   which keeps the foreground promise (row 4748, `shortService`/`dataSync`, never demoting a live owner) exactly as
+   `WidgetActionFgsHost` does today.
+3. The body then calls `WidgetActionIngress.run(request)`, an interface in `:engine:attention` that
+   `WidgetActionAdmission` in `:android:widgets` implements (bound by DI). Admission, claim, lease and
+   `WidgetActionRunner` run there; the result returns as a common `WidgetActionResult`, and the body settles the row.
+
+The Status widget's "this phone's Linux" line reads a `phoneServer` field (`Off | Running | Restoring`) that
+`:engine:attention` derives from `PhoneServerState` (§6.1) and publishes into the widget snapshot. It replaces today's
+direct `BuiltinLinux.serverRunningIfStarted()` / `BuiltinServerService.isForegroundRunning` read (seam E10).
 
 Widget-action rules (ANDROID-PLATFORM-26, map T4, T5; unchanged):
 
@@ -1289,8 +1445,12 @@ public interface WidgetOverlayPort {
 - No bitmaps in RemoteViews (Android 17 at targetSdk 37 rejects more than `6 × w × h` bytes; partial updates keep old
   images alive): `WidgetBitmapBudgetTest` renders every provider at its largest declared size under Robolectric and
   asserts no `Bitmap` action is present.
-- Widget broadcast PendingIntents add `FLAG_RECEIVER_FOREGROUND`; providers use `goAsync` and finish within 10 s,
-  handing longer work to WorkManager.
+- Widget broadcast `PendingIntent`s stay **background** broadcasts (no `FLAG_RECEIVER_FOREGROUND`, parity with today):
+  a foreground broadcast ANRs at 10 s, `goAsync` does not extend that. Providers wait for the migration gate only
+  within the component budget of 05 §7.1 (until `min(onReceive + 4 s, ProcessStart + 6 s)`, `finish()` by
+  `ProcessStart + 7 s`, cold start counted; no 20 s wait anywhere). On a gate timeout
+  they leave the last `RemoteViews` in place (or draw from `WidgetSnapshotCache`) and hand the rest to
+  `MigrationFollowUpWorker`.
 - `AppWidgetManager.setWidgetPreview` (API 35+) comes with the redesign, not before (NG13).
 - Accessibility: 48 dp targets; content descriptions name the target (`widget_allow_for`, `widget_reply_for`,
   `widget_step_for`); layouts mirror for Arabic; titles wrapped in bidi isolates (map R10).
@@ -1364,6 +1524,21 @@ answer while the entry is still in the future un-claims a fresh attempt and re-a
 current occurrence gets an `interrupted` failure and a receipt); post the notification. Never `Result.retry()` after the
 claim (a transport failure can follow an accepted delivery). **Run now** (`….manual`, `Data.manual = true`): same
 worker and runner, no claim, never moves `nextRunAt`.
+
+**Android 16 job runtime quota** (all apps, not tied to targetSdk) [V developer.android.com/about/versions/16/
+behavior-changes-all, 2026-11-01]. Regular and expedited jobs now count against the runtime quota in two cases: a job
+that starts while the app is visible and keeps running after it is hidden, and a job that runs while the app has a
+foreground service. Three of ours are exposed: `ScheduledPromptWorker` (480 s worker / 420 s runner), **Run now**
+(enqueued while the Schedules page is visible) and `WidgetStatusWorker`. On the owner's phone the `specialUse` phone
+server service is usually up, so a run can be stopped after its claim. Rules:
+
+- The worker records `WorkInfo.getStopReason()` (via `stopReason` in `onStopped`/`isStopped`) into the run receipt;
+  the settled `interrupted` entry shows "Android stopped this run" instead of a generic failure. It never retries
+  after the claim (unchanged).
+- Run now stays on WorkManager at the switch (parity). If U11-16 shows quota stops in the normal flow, Run now moves
+  to an in-process run on the app scope while the Schedules page is visible, still with no claim. That is decided by
+  the proof, not before.
+- `WidgetStatusWorker` checks are 15 s reads; a stop there just skips that check (the next one runs).
 
 Phone server for a run (ANDROID-PLATFORM-40, BUILTIN-LINUX-27): when the profile's server is the managed in-app one,
 `PhoneServerHost.acquireScheduledServer(profile, password, deadline)`: requires an installed runtime, no install, no
@@ -1461,10 +1636,17 @@ captured (07 §7.1). Rows: B-ANDR-027, -028, -029, -031, -071..077, -095.
 
 - Declared once in `:androidApp`: `androidx.core.content.FileProvider`, authority `${applicationId}.localfiles` (the
   preview flavour therefore gets `…opencode_mobile.native.localfiles`), `exported=false`,
-  `grantUriPermissions=true`, paths `@xml/local_file_paths` = `<external-path name="shared_storage" path="."/>` only
-  [V freeze-tip manifest].
-- **No other root** (`files-path`, `cache-path`, `root-path`) may be added without a security review row in
-  `docs/security/`: the app's files hold the rootfs, the server password and the agents' sign-ins.
+  `grantUriPermissions=true`, paths `@xml/local_file_paths`. The freeze tip has only `<external-path
+  name="shared_storage" path="."/>` [V freeze-tip manifest].
+- **One merged paths file** for 10, 11 and 16 (CR11-17), exactly these elements:
+  1. `<external-path name="shared_storage" path="."/>`: open a phone file the Linux saved to shared storage (parity);
+  2. `<cache-path name="share" path="share/"/>`: copies for Share / Open with, emptied at start (16 §1.8.3, 10 §12);
+  3. the camera capture root of 10 C10-14, which is `<files-path name="camera" path="camera-capture-v1/"/>` once 16 adds
+     the security row 10 asks for (`docs/security/fileprovider-camera-capture.md`), else `<cache-path name="camera"
+     path="camera-capture-v1/"/>`.
+  `FileProviderPathsTest` compares the merged XML with this list. Any other root (`root-path`, `external-files-path`
+  of the whole tree, `path="/"`, more `files-path`) needs a new security row in `docs/security/`: the app's files hold
+  the rootfs, the server password and the agents' sign-ins.
 - Opening a file a chat links to (freeze tip, 10 owns the screen): the path is canonicalised with the
   `SharedStorageBinds` rules and must sit under `/storage/emulated/<n>/`; `ACTION_VIEW` with the MIME type from the
   extension through the chooser; an `.apk` opens the system installer view with `application/vnd.android.package-archive`
@@ -1484,10 +1666,12 @@ public interface ShortcutSurface {
     public suspend fun withdrawAll(): Outcome<Unit>
     public suspend fun clearProfile(profile: ProfileId): Outcome<ClearOutcome>
 }
+/** Non-active tiles (S11-7): writes only; the shade reads the state each time it binds a tile. No poke:
+ *  TileService.requestListeningState does nothing for tiles without META_DATA_ACTIVE_TILE. */
 public interface TileSurface {
-    public suspend fun publishAttention(snapshot: TileSnapshot): Outcome<PublishResult>   // writes oc.attentionTile, pokes the tile
+    public suspend fun publishAttention(snapshot: TileSnapshot): Outcome<PublishResult>   // writes oc.attentionTile
     public suspend fun clearProfile(profile: ProfileId): Outcome<ClearOutcome>
-    public fun pokeAll()                                                                   // TileService.requestListeningState for both
+    public suspend fun clear(): Outcome<Unit>   // removes oc.attentionTile; called on disconnect, like ShortcutSurface.withdrawAll()
 }
 ```
 
@@ -1502,9 +1686,11 @@ public interface TileSurface {
   `LivePauseReceiver` (a refused start re-marks paused and opens the app); not enabled in settings → `STATE_UNAVAILABLE`.
   Subtitles `pause_tile_on/paused/off`. Declares `TOGGLEABLE_TILE` (S11-7). Native-only pref `oc_background_native`
   key `pausedByUser`.
-- Both: non-active mode (bind on shade open, as today) plus `pokeAll()` after every change; labels ≤ 18 characters in
+- Both: non-active mode (bind on shade open, as today; no poke, S11-7). A disconnect calls `TileSurface.clear()`, as
+  `AttentionTileSnapshot.clear()` does today (`connection/connect.dart:806`), so a disconnected app never shows "N need
+  you" for up to 24 h (covered by the `attention_tile_snapshot_test` port). Labels ≤ 18 characters in
   every language (checked by a `strings_os` length test); icon `ic_launcher_monochrome`; long-press →
-  `ACTION_QS_TILE_PREFERENCES` on `MainActivity` (07 §7.11). An in-context "Add the Pause tile" row
+  `ACTION_QS_TILE_PREFERENCES` on `MainActivity` (07 §7.11), taught by one `KitTip` (§2.6). An in-context "Add the Pause tile" row
   (`StatusBarManager.requestAddTileService`, API 33+) is after the switch (a new row, NG9).
 
 ### 14.6 Tailscale handoff (ANDROID-PLATFORM-34)
@@ -1536,19 +1722,21 @@ public data class AppStartFacts(val forceStopped: Boolean, val firstNativeLaunch
 
 @Inject public class SystemEventRestorer(
     private val schedules: ScheduleEngine, private val widgets: WidgetSurface, private val shortcuts: ShortcutSurface,
-    private val tiles: TileSurface, private val notifications: NotificationSurface, private val live: LiveModeController,
+    private val notifications: NotificationSurface, private val live: LiveModeController,
 ) {
     public suspend fun onSystemEvent(event: SystemEvent)      // one at a time (Mutex), idempotent
     public suspend fun onAppStart(facts: AppStartFacts)
+    public suspend fun onProcessStart()                        // the locale check (table)
 }
 ```
 
 | Trigger (component) | Event | Actions, in order |
 |---|---|---|
-| `BuiltinRestoreReceiver` (after its server restore promise, §6.5) | `Boot`, `PackageReplaced` | `notifications.ensureChannels()`; `widgets.redrawAll()` (Flutter-era PendingIntents are replaced by native ones; 07 §7.10); `shortcuts` republish from `oc.pinnedShortcuts`; `tiles.pokeAll()`; `live.reconcile()` (pause receipts decide; **never** a `dataSync` start from boot) |
+| `BuiltinRestoreReceiver` (after its server restore promise, §6.5) | `Boot`, `PackageReplaced` | `notifications.ensureChannels()`; `widgets.redrawAll()` (Flutter-era PendingIntents are replaced by native ones; 07 §7.10); `shortcuts` republish from `oc.pinnedShortcuts`; `live.reconcile()` (pause receipts decide; **never** a `dataSync` start from boot). Tiles need nothing: non-active tiles read their state when the shade binds them (S11-7). On API 35+ a `Boot` whose boot id equals the last process's is the unstop delivery of a force-stopped app and is handled as `onAppStart` only (R9) |
 | `ScheduledPromptReceiver` | `Boot`, `PackageReplaced`, `ExactAlarmPermissionChanged` → `rearmAll`; `TimeChanged`, `TimezoneChanged` → `rearmAll(rebaseCalendar = true)` | schedules only (its own body; the restorer does not re-arm twice) |
-| `OcApplication`/`MainActivity` first resumed start | `onAppStart` | `forceStopped` (API 35+: `ActivityManager.getHistoricalProcessStartReasons(1)` → `wasForceStopped()`; below: the previous exit classified `forceStop` by `ExitClassifier`) → the same set as `Boot` plus `schedules.rearmAll`; `firstNativeLaunch` → 05 §7.9 H1–H3 |
-| `LocaleChanged` (system language, only while the app follows it) | `relocalize()` + `widgets.redrawAll(Locale)` | — |
+| `OcApplication`/`MainActivity` first resumed start | `onAppStart` | **always**: `schedules.rearmAll(AppStart)` (idempotent, `KEEP`, never expedited). It replaces `ScheduledPromptScheduler.restore()`, which every Flutter engine start calls today (`MainActivity.kt:53`) and which repairs a crash between the CAS envelope save and the index replace ("the envelope is authoritative even when no index has ever been written"). `forceStopped` (API 35+: `ActivityManager.getHistoricalProcessStartReasons(1)` → `wasForceStopped()`; below: the previous exit classified `forceStop` by `ExitClassifier`) → additionally the same set as `Boot`. `firstNativeLaunch` → 05 §7.9 H1–H3 |
+| every process start (`OcApplication`, after the migration gate; also when a receiver or worker started the process) | `onProcessStart` | compare the locale last rendered on OS surfaces (`oc_background_native` key `renderedLocale`, written after each relocalize) with the current effective app locale; if they differ, `notifications.relocalize()` + `widgets.redrawAll(Locale)`. Cheap when equal (one prefs read) |
+| `LocaleChanged` (system language, only while the app follows it) | no component receives `ACTION_LOCALE_CHANGED` (none is added; the §3 freeze stays). While the process lives, the configuration change reaches the app and runs `relocalize()` + `widgets.redrawAll(Locale)`; a change made while the process is dead is caught by the locale comparison at the next process start (row above) | — |
 
 What it never does: start the phone server (that is §6), resume live mode by itself, post a notification about having
 restored something. Diagnostics get one counts-only line per event. Rows: B-MIGR-013, B-ANDR-022, A11-4.
@@ -1559,7 +1747,7 @@ restored something. Diagnostics get one counts-only line per event. Rows: B-MIGR
 
 | Bridge | Interface (home) | Android impl (`:android:platform` unless named) | Rules kept (map) | Rows |
 |---|---|---|---|---|
-| Network | `DeviceFacts.network` (`:core:domain`) | `AndroidDeviceFacts` over `registerDefaultNetworkCallback` | callback arguments are authoritative (never query inside a callback); VPN or Wi-Fi+cellular → transport `Unknown`; a late `onLost` for a replaced default is ignored; no probes, no network names, nothing persisted; a no-network reading is advice and never blocks a loopback or built-in server (T26) | B-ANDR-037 |
+| Network | `DeviceFacts.network` (`:core:domain`) | `AndroidDeviceFacts` over `registerDefaultNetworkCallback` | callback arguments are authoritative (never query inside a callback); VPN or Wi-Fi+cellular → transport `Unknown`; a late `onLost` for a replaced default is ignored; no probes, no network names, nothing persisted; a no-network reading is advice and never blocks a loopback or built-in server (T26). **Separately** `network.onWifi: Boolean?`, ported verbatim from `monitorNetworkPolicy` (`MainActivityBackgroundChannel.kt:39-43`): `hasTransport(TRANSPORT_WIFI)` on the active network's capabilities, which stays true on Wi-Fi with a VPN such as Tailscale up (VPN capabilities carry the underlying transport); null when unknown, and null never counts as Wi-Fi. It feeds only `oc.notify.wifiOnly` (§10.4); `WifiOnlyUnderVpnTest` (VPN + WIFI capabilities → `onWifi = true`; VPN + CELLULAR → false; none → null) | B-ANDR-037 |
 | Thermal, battery, power save, visibility | `DeviceFacts` (CR11-5) | `AndroidDeviceFacts` | §8.1 | B-ANDR-069, -093 |
 | Exit history and launch report | `ExitHistory` (`:engine:diagnostics`) | `AndroidExitHistory` (copied `AppLifecycle` parts) | `launchReport` once per process (newest `ApplicationExitInfo` not reported before, `oc_lifecycle.seen_exit_timestamp`); `previousServices` from `oc_lifecycle.running_services` written with `commit()` on every change (a force stop runs none of our code, H30); `exitHistory(limit 1..50)` reads all records (`maxNum = 0`) then filters by process; subreason parsed from `toString()`; the description is never forwarded (T21); `MemoryLimit` kind (§7.3); API < 30 → unsupported | B-ANDR-003..006, B-NAV-012, B-SEC-059 |
 | Crash capture | `CrashStore` (`:engine:diagnostics`) | copied `NativeCrashStore`, installed by `OcApplication` step 1 before the graph | opt-in consent file `files/crash-diagnostics-consent`; whitelisted class names and fixed category messages only; atomic write (`.tmp` + `fsync` + rename, owner-only); re-checks consent before rename; rethrows a scrubbed `RuntimeException("Native application error")` with an empty stack | B-ANDR-036, B-SEC-043 |
@@ -1568,8 +1756,9 @@ restored something. Diagnostics get one counts-only line per event. Rows: B-MIGR
 | Project export and Manage space | `ProjectExport` (`:engine:project`), `StorageReport` (`:engine:diagnostics`) | `SafProjectExport`, `AndroidStorageReport` (copied `ProjectExportBridge`) | `ACTION_CREATE_DOCUMENT` zip; a plan file of `name\tsource` lines; sources must be regular files inside `filesDir` checked with `lstat` (a swapped-in link is never followed); cancel deletes the partial zip; `clearCache` never touches the running server's `proot-tmp`; `clearAllData` = `ActivityManager.clearApplicationUserData()`; `ManageSpaceActivity` never connects or starts the server | B-ANDR-035, B-LINUX-102 |
 | BYO-host SSH signer | `ByoSigner` (`:engine:integrations`) | `KeystoreByoSigner` (copied `ByoHostSigner`, `ByoHostAgentProtocol`) | EC P-256 per profile, alias `oc.byoHostSsh.<p>`, `PURPOSE_SIGN`, no user auth; private bytes never leave the Keystore; the agent is a same-uid UNIX socket under the rootfs `tmp/.oa-<16hex>/s` (dir 0700, no links, uid checked, ≤ 16 agents, 10 s); requests 11 and 13 only; the alias survives the in-place update (same package, same signer) | B-SEC-025, -027, -031, -034 |
 | System pages | `OsSettingsPages` (`:core:domain`, CR11-9) | `AndroidOsSettingsPages` | `open(page)` for `AppNotificationSettings`, `AppDetails`, `BatteryOptimization`, `ExactAlarms`, `AllFilesAccess`, `DeveloperOptions`, `InternalStorage`, `PromotedNotifications` (API 36+), each with today's fallbacks; returns false when nothing opened; never from composition | — |
-| In-app update | `UpdateInstaller` (`:engine:diagnostics`) | `PackageInstallerUpdater` (copied `AppUpdateChannel`, `AppUpdatePolicy`) + `.AppUpdateStatusReceiver` | GitHub `releases/latest`; `SHA256SUMS`; same signer as the installed app (`ownSignerSha256`); ABI choice from `supportedAbis`; `PackageInstaller` session; `STATUS_PENDING_USER_ACTION` intent started from the visible Activity (Android 17 `IntentSender` rule); never silent; the update notice keeps its lowest-priority slot (ADR §9.9, memory `app-updates-two-layers`) | B-MIGR-012, B-BUILD-010..012, B-ANDR-094 |
-| Locale | `LocaleHost` (`:engine:settings`) | `AppCompatLocaleHost` | 06 §13.6 | B-L10N-002, -013 |
+| In-app update | `UpdateInstaller` (`:engine:diagnostics`) | `PackageInstallerUpdater` (copied `AppUpdateChannel`, `AppUpdatePolicy`) + `.AppUpdateStatusReceiver` | GitHub `releases/latest`; `SHA256SUMS`; same signer as the installed app (`ownSignerSha256`); ABI choice from `supportedAbis` (a 32-bit-only phone finds no asset after the switch: D11-14 row "This phone can't run the new version", `UpdateAbiChoiceTest`); `PackageInstaller` session; `STATUS_PENDING_USER_ACTION` intent started from the visible Activity (Android 17 `IntentSender` rule); never silent; the update notice keeps its lowest-priority slot (ADR §9.9, memory `app-updates-two-layers`) | B-MIGR-012, B-BUILD-010..012, B-ANDR-094 |
+| Locale | `LocaleHost` (`:engine:settings`) | `AppLocaleApplier` (06 §13.6: `LocaleManager` on API 33+, `Locale.setDefault` below; no AppCompat, 12 X-24, where R12-3 calls it `PlatformLocaleHost`) | 06 §13.6 | B-L10N-002, -013 |
+| Phone folders, project scan, storage pressure (ANDROID-PLATFORM-46) | `PhoneFolders`, `PhoneProjectScan`, `PhoneStorage` (`:engine:project` common) over a `PhoneFileSystem` port | `AndroidPhoneFileSystem` (`java.io` + `Os.lstat`, never follows links) | ported from `lib/platform/phone_storage_folders.dart`, `phone_project_scan.dart`, `phone_storage.dart`. **Folders:** root `/storage/emulated/0`, `/sdcard` normalised to it, `..` refused, folders first, hints read from ≤ 200 entries per listing. **Scan:** breadth-first, depth ≤ 5, ≤ 20,000 visits, ≤ 200 results, 10 s time cap; `PhoneProjectKind` by marker file; skips Android, `node_modules`, hidden and build folders and never descends into a found project; in a project space every direct folder is a project; several roots are scanned in sequence with first results first; ends `completed \| timedOut \| limited \| cancelled`; an unreadable root ends quietly; `scan(roots, limits): Flow<ScanResult>`. **Storage:** "nearly full" under 1 GiB free; the built-in host's usage is measured only on request; `openStorageSettings` through `OsSettingsPages(InternalStorage)` with today's fallback | B-LINUX-148..150; `phone_project_scan_test`, `phone_project_find_test`, `phone_storage_test`, `phone_storage_folders_test`, `phone_storage_browser_test` |
 | Clipboard image, camera, microphone, TTS, PDF, Wi-Fi share | 10 | `:android:media` / `:android:platform` | 10 | — |
 
 ---
@@ -1595,10 +1784,12 @@ step, never a dialog loop.
 | `com.termux.permission.RUN_COMMAND` | Termux's | the move-from-Termux flow (D7) | removed in the release after migrate-out is dropped (D11-8) |
 | `ACCESS_LOCAL_NETWORK` | runtime (Android 17, enforced at targetSdk 37) | not at the switch (targetSdk 36 keeps an implicit grant); the targetSdk-37 slice asks in context the first time a LAN address is used (§18.2) | — |
 
-`<queries>`: `TTS_SERVICE` intent, `com.termux`, `com.tailscale.ipn`, `PROCESS_TEXT`. Never declared: `QUERY_ALL_PACKAGES`,
+`<queries>`: `TTS_SERVICE` intent, `com.termux`, `com.tailscale.ipn`, `PROCESS_TEXT`; the **preview flavour only** adds
+`<package android:name="io.github.eslamasabry.opencode_mobile"/>` for the §7.2 "another OpenCode server is running"
+check (a shared signer grants no visibility). Never declared: `QUERY_ALL_PACKAGES`,
 `SYSTEM_ALERT_WINDOW`, `USE_EXACT_ALARM`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` (D11-10), `BIND_ACCESSIBILITY_SERVICE`,
-`READ_PHONE_STATE`, any location permission. A `:quality` test compares the merged manifest's permission list with this
-table.
+`READ_PHONE_STATE`, any location permission. A `:quality` test compares each flavour's merged manifest permission list
+and `<queries>` list with this table.
 
 ---
 
@@ -1626,7 +1817,15 @@ in-place update brings no platform behaviour change of its own [R android-surfac
   `nativeLibraryDir`; the proot set ships as `libproot.so`, `libproot-loader.so`, `libtalloc.so`, `libandroid-shmem.so`
   for `arm64-v8a` and `x86_64`, fetched by `tool/builtin_linux/fetch_proot.sh` with its SHA-256 pins: proot
   5.1.107.94, libtalloc 2.4.3, libandroid-shmem 0.7). ABI splits `arm64-v8a`, `x86_64`, universal (one versionCode,
-  ADR §9.9).
+  ADR §9.9). **32-bit:** the Flutter APK ships `armeabi-v7a` too (libflutter, sherpa-onnx, the Termux PTY, …), and
+  public releases publish an `armeabi-v7a` split (`.github/workflows/android-release.yml`,
+  `scripts/verify_github_release.py`). Leaving it out drops installs on 32-bit-only phones, which needs the owner's
+  approval: D11-14 decides. Its default drops 32-bit, so the last Flutter release and the native updater must say so
+  in plain words.
+- `packaging.jniLibs.keepDebugSymbols += "**/libaiteam_*.so"` stays in `:androidApp` **whatever D6 decides** (D11-1,
+  CR11-12): `SandboxBundle.verify` hashes the packaged sandbox, and an AGP strip would change the bytes. A
+  sandbox-only `verify<Variant>SandboxApk` task (today's `verify_phone_engine_apk.py` limited to the sandbox entry of
+  `sandbox-manifest.json`) runs before every release `assemble`.
 - The `PROOT_LOADER` path changes with every install (new `nativeLibraryDir`); the reaper already accepts
   `libproot-loader*.so (deleted)` (H29), so guest programs from the previous install are still recognised.
 - **16 KB check at every T2** (`tool/native/check_16kb.sh`): for every `.so` in the release APKs,
@@ -1640,7 +1839,8 @@ in-place update brings no platform behaviour change of its own [R android-surfac
 
 ```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
-  <!-- §17 permission list, exactly; <queries>: TTS_SERVICE, com.termux, com.tailscale.ipn, PROCESS_TEXT -->
+  <!-- §17 permission list, exactly; <queries>: TTS_SERVICE, com.termux, com.tailscale.ipn, PROCESS_TEXT
+       (+ package io.github.eslamasabry.opencode_mobile in src/preview/AndroidManifest.xml only) -->
   <application android:name=".OcApplication" android:label="${appLabel}" android:icon="@mipmap/ic_launcher"
       android:roundIcon="@mipmap/ic_launcher" android:supportsRtl="true" android:allowBackup="false"
       android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="@xml/backup_rules"
@@ -1720,12 +1920,12 @@ export, ADR D13).
 | Slice | This section's work | Exit check |
 |---|---|---|
 | 0 | `:androidApp` manifest skeleton with every §3 shell compiling against stub bodies; the `quality/freeze` lists of §2.5 and §3; `PlatformCapabilities` provider; P5 identity proof with these components living in library modules (ADR §11); read-only checks U11-1, U11-12, U11-13 | component-freeze test green against the Flutter 2.1.0+57 and freeze-tip lists |
-| 1 | W11-01 move-green; W11-02 starts (script extraction); network and crash bridges (W11-13a) | 46 JVM classes + 7 runtime acceptance classes green, unchanged |
+| 1 | W11-01 move-green (with the §4.4 seams, `SandboxBundle`, the port seam); W11-02 starts (script extraction); network and crash bridges (W11-13a); `:engine:runtime` and `:android:platform` start here (CR11-11) | 46 JVM classes green with no test edits; 7 runtime acceptance classes and `ProtectionMarkerAcceptance` green on the `qa` build with only the two §4.3 test edits |
 | 2 | `EntryIntentReader`, `PermissionGate`, `ActivityResults`, `ShareService`, link opener, Tailscale (W11-13b); static shortcuts | E2E-25 entry parts on the native preview build |
-| 3 | W11-03 split; W11-04 runtime policy port + process budget + thermal; W11-05 setup engine; W11-07 agent host; `ReplyWatch` stub owner | E2E-17, E2E-18 on the preview build; §6.8 update-restore proof between two native builds |
+| 3 | W11-03 split (+ `setActivityResumed`); W11-04 runtime policy port + process budget + thermal; W11-05 setup engine; W11-07 agent host; W11-08a sign-in terminal; `ReplyWatch` stub owner | E2E-17, E2E-18, E2E-31 on the preview build; §6.8 update-restore and preview reboot-restore proofs between two native builds |
 | 4 | W11-09 background and notifications; W11-10 widgets; W11-11 overlay panels; W11-12 schedules; W11-14a `SystemEventRestorer`; W11-15 updater | E2E-07, -08, -09, -25, -26, -27 |
 | 5 | W11-06 Linux manager, services, vitals, backup; W11-08 terminal; W11-16 Termux migrate-out; export, storage access, BYO signer (W11-13c) | E2E-16, -19, -20 |
-| 6 | W11-14b upgrade-journey proofs over the Flutter build (§6.8, 05 §10.5); owner phone checks (§22.4) | E2E-39 green; A11-1..A11-12 |
+| 6 | W11-14b upgrade-journey proofs over the Flutter build, from both baselines (`flutter-final` gating, 2.1.0+57 second; §6.8, 05 §10.5); owner phone checks (§22.4) | E2E-39 green from both baselines; A11-1..A11-14 |
 | after | W11-17 targetSdk 37; W11-18 AppFunctions; widget redesign (Glance gate §11.1); D11 items the owner takes | — |
 
 ---
@@ -1739,27 +1939,29 @@ re-planned at M0 from proof P10.
 
 | Unit | What | Module(s) written | Builder | Slice | Depends | Acceptance | Focused checks |
 |---|---|---|---|---|---|---|---|
-| W11-01 | Move-green: copy every runtime Kotlin file, `PtyAccess.java`, jniLibs, the 30 runtime JVM tests and 7 acceptance classes into `:android:linux`; `R` imports fixed; nothing else | `:android:linux` | Sonnet, runtime owner reviews | 1 | P1 | all copied tests green with zero edits; `Copied from <sha>` recorded | `./gradlew :android:linux:testDebugUnitTest`; T3 acceptance on the PC emulator |
-| W11-02 | Script templates, generator, golden + checksum + shell tests (S11-3) | `:engine:runtime` (scripts), build-logic `OcScriptsPlugin` | Codex | 1–2 | — | every Dart builder has a template; `ScriptGoldenTest` byte-equal | `:engine:runtime:desktopTest --tests "*Script*"` on the VPS (dash + bash) |
-| W11-03 | Split `BuiltinLinux.kt` (§5.3), `RuntimeLocks`, `RuntimeLockOrderTest`, `AndroidRuntimeHost`, delete the channel | `:android:linux` | **Opus** | 3 | W11-01, contract `RuntimeHost` frozen | moves-only diff; all runtime tests + acceptance green after each move | T0 per move; T3 at the end; §6.8 proof |
+| W11-01 | Move-green: copy every runtime Kotlin file, `PtyAccess.java`, jniLibs (+ `libaiteam_sandbox.so`, `sandbox-manifest.json`) and the 30 runtime JVM tests into `:android:linux`; the 7 acceptance classes and the QA service into `:androidApp` `src/androidTest` / `src/qa`; `R` imports fixed; the compile seams E1–E6 and E8 of §4.4 (one commit each, listed); `SandboxBundle` + `SandboxBundleTest`; `keepDebugSymbols` and the sandbox APK check in `:androidApp`; nothing else | `:android:linux`, `:androidApp` (tests, qa) | Sonnet, runtime owner reviews | 1 | P1, CR11-11, CR11-13 | the 30 JVM classes green with no test edits; the 7 acceptance classes + `ProtectionMarkerAcceptance` green on the `qa` build with only the two §4.3 test edits; no source edit outside the seam list; the `:quality` port grep test green; `Copied from <sha>` recorded | `./gradlew :android:linux:testDebugUnitTest`; T3 `:androidApp:connectedQaAndroidTest` on the PC emulator |
+| W11-02 | Scripts in two kinds (S11-3, §5.6): static templates with `@@Q:` / `@@RAW:` placeholders (incl. `@@RAW:SERVER_PORT@@`, `@@RAW:AGENT_PORT@@`), Kotlin builder functions for the composed ones, generator, golden + checksum + shell tests | `:engine:runtime` (scripts), build-logic `OcScriptsPlugin` | Codex | 1–2 | CR11-11 | every Dart **builder** classified and covered; golden samples for every branch and list size 0/1/n; `ScriptGoldenTest` byte-equal | `:engine:runtime:desktopTest --tests "*Script*"` on the VPS (dash + bash) |
+| W11-03 | Split `BuiltinLinux.kt` (§5.3), `RuntimeLocks`, `RuntimeLockOrderTest`, `AndroidRuntimeHost` (incl. `setActivityResumed` wired from the `MainActivity` shell's `onResume`/`onPause`), delete the channel | `:android:linux`, `:androidApp` (`MainActivity` shell hook) | **Opus** | 3 | W11-01, contract `RuntimeHost` frozen | moves-only diff; all runtime tests + acceptance green after each move; `ActivityResumedWiringTest` green | T0 per move; T3 at the end; §6.8 proof |
 | W11-04 | Runtime policy port: starter, recovery consumer, healing, idle resume, deliberate stop, exit recovery, lifecycle report, `PhoneReplyWake`, process budget, heat tier, process watch, thermal policy, `ExitClassifier` (+ `MemoryLimit`) | `:engine:runtime`, `:engine:diagnostics` | Codex | 3 | W11-02, W11-03 contract | catalog rows of §5.2 green as `commonTest` | `:engine:runtime:desktopTest` |
 | W11-05 | Setup engine, component registry (pins + SHA-256), preflight, journals, removal, voice hook | `:engine:runtime` | Codex | 3 | W11-02 | B-LINUX-001, -007, -014, -157, -181..220 | `desktopTest`; E2E-17 on the emulator |
 | W11-06 | Linux manager, storage, packages, reset, services supervisor, vitals, backup (freeze tip) | `:engine:runtime` | Codex | 5 | W11-04 | B-LINUX-054..065, -082..093, -247..249 + top-up rows | `desktopTest`; E2E-19, -20 |
-| W11-07 | `:android:agenthost` carve-out behind `GuestLauncher` / `GuestProcessRegistry`; `AndroidAgentHost` | `:android:agenthost`, `:android:linux` (seams) | Opus (with the agents section) | 3 | W11-03, CR11-0 | copied agent JVM tests green; agents section's rows | T0 + T3 |
-| W11-08 | `:android:terminal` carve-out; `AndroidTerminalHost`; Termux view slot (03 S11) | `:android:terminal` | Sonnet | 5 | W11-03 | B-LINUX-097..101, -222..226; `yes`, Ctrl-C, resize, 512 KiB replay | T0; E2E-16 |
-| W11-09 | Background: `AndroidForegroundWork`, service bodies (incl. moving the phone-server, setup and restore bodies out of `:android:linux` behind `PhoneServerForeground` / `PhoneServerServiceHooks`, S11-12), status row (+ `StatusModel` port), alerts (+ `NotificationText`, `AlertCopy`, `AlertButtons`, `NotificationPolicy` ports), receivers, live mode + pause receipts, reply watch, sign-in claim, tiles, pinned shortcuts, channel registry, relocalize | `:android:background`, `:engine:attention` | Codex (engine) + Sonnet (Android) | 4 | W11-13a, CR11-2/3/5/7 | B-ANDR-001, -009, -011..020, -023..034, -038..048, -053..068, -081, -090, -096..098; §9.4 new tests | T0; E2E-07, -08, -09; FGS time-limit proof |
-| W11-10 | Widgets: snapshot builder, usage feed, action runner, status runner (common ports); providers' bodies, cache, admission, follow-up worker | `:android:widgets`, `:engine:attention` | Codex (engine) + Sonnet (Android) | 4 | W11-09, CR11-6/7/8 | B-ANDR-010, -022, -095, -099..121, B-SEC-179..183; render tests; `WidgetBitmapBudgetTest` | T0 Robolectric; E2E-26 |
+| W11-07 | `:android:agenthost` carve-out behind `GuestLauncher` / `GuestProcessRegistry`; `AndroidAgentHost` | `:android:agenthost`, `:android:linux` (seams) | Opus (with the agents design, 17 §1.2) | 3 | W11-03, CR11-0 | copied agent JVM tests green; the agenthost rows of 17 §1.14 | T0 + T3 |
+| W11-08a | Minimal sign-in terminal (15 S3-TERMMIN, C15-2): `AndroidTerminalHost.open(SignIn(profile, program))` over the PTY already in `:android:linux`, `TerminalModel.events` with `OpenUrl` routed through `ExternalLinkUriHandler` (CR11-14), start only after `ForegroundWork.begin(SignIn)` | `:android:linux` (host), `:engine:project` (contract) | Sonnet | 3 | W11-01, W11-09 sign-in claim stub, CR11-3, CR11-14 | B-LINUX-094..096; the open-URL watcher's link reaches the browser only through the link policy | T0; E2E-31 |
+| W11-08 | `:android:terminal` carve-out (moves W11-08a's host with it); `AndroidTerminalHost`; Termux view slot (03 S11) | `:android:terminal` | Sonnet | 5 | W11-03, W11-08a | B-LINUX-097..101, -222..226; `yes`, Ctrl-C, resize, 512 KiB replay | T0; E2E-16 |
+| W11-09 | Background: `AndroidForegroundWork`, service bodies (incl. moving the phone-server, setup and restore bodies out of `:android:linux` behind `PhoneServerForeground` / `PhoneServerServiceHooks`, S11-12), status row (+ `StatusModel` port), alerts (+ `NotificationText`, `AlertCopy`, `AlertButtons`, `NotificationPolicy` ports), receivers, live mode + pause receipts, reply watch, sign-in claim, tiles, pinned shortcuts, channel registry, relocalize | `:android:background`, `:engine:attention` | Codex (engine) + Sonnet (Android) | 4 | W11-13a, CR11-2/3/5/7 | B-ANDR-001, -009, -011..020, -023..034, -038..048, -053..068, -081, -090, -096..098 (B-ANDR-038 as corrected by CR11-16); §9.4 new tests; `NoTrampolineTest`, `PromotableStatusTest`, `ReceiverBudgetTest`; seam E4 removed, seams E5, E7, E9 applied | T0; E2E-07, -08, -09; FGS time-limit proof |
+| W11-10 | Widgets: snapshot builder, usage feed, action runner, status runner (common ports); providers' bodies, cache, admission, follow-up worker | `:android:widgets`, `:engine:attention` | Codex (engine) + Sonnet (Android) | 4 | W11-09, CR11-6/7/8 | B-ANDR-010, -022, -095, -099..121, B-SEC-179..183; render tests; `WidgetBitmapBudgetTest`; the widget-action ingress of §11.3 (no `:android:background → :android:widgets` edge); seams E5, E7, E10 applied | T0 Robolectric; E2E-26 |
 | W11-11 | Overlay: `WidgetOverlayActivity` Compose host, `WidgetOverlayPort`, `:feature:widget-panels` VMs | `:feature:widget-panels`, `:android:widgets` | Sonnet | 4 | W11-10, 07 M01–M03 | B-ANDR-108, -109 | E2E-26 overlay steps |
-| W11-12 | Schedules: model, recurrence, store, runner (common); `AndroidScheduleHost`, receiver and worker bodies, run notifications | `:engine:schedule`, `:android:schedule` | Codex + Sonnet | 4 | CR11-6, W11-04 (phone lease) | §12.5 rows; `RecurrenceGoldenTest` | `desktopTest`; T3 alarm + time-change runs; E2E-27 |
-| W11-13 | Platform bridges: (a) network, crash, exit history; (b) entry reader, permission gate, activity results, share, link opener, Tailscale, `OsSettingsPages`, locale host; (c) storage access, export, Manage space, BYO signer, keep-alive | `:android:platform` | Sonnet | 1, 2, 5 | CR11-4/5/9 | §16 rows | T0 Robolectric |
-| W11-14 | (a) `SystemEventRestorer` + first-launch hooks H2/H3; (b) the §6.8 proofs over a real Flutter install | `:engine:entry`, `:android:linux`, `:androidApp` shells | **Opus** (with the migration owner) | 4, 6 | W11-03, W11-09, W11-10, W11-12, 05 | §6.8 table all pass; B-MIGR-013 | T3 on the PC emulator |
+| W11-12 | Schedules: model, recurrence, store, runner (common); `AndroidScheduleHost`, receiver and worker bodies, run notifications; stop reason in receipts (§12.3) | `:engine:schedule`, `:android:schedule` | Codex + Sonnet | 4 | CR11-6, W11-04 (phone lease) | §12.5 rows; `RecurrenceGoldenTest`; `ScheduleRearmOnStartTest` (envelope written, index missing, app start → work and alarm armed); `StopReasonReceiptTest` | `desktopTest`; T3 alarm + time-change runs; U11-16 quota recipe; E2E-27 |
+| W11-13 | Platform bridges: (a) network (+ `onWifi`), crash, exit history; (b) entry reader, permission gate, activity results, share, link opener, Tailscale, `OsSettingsPages`, `AppLocaleApplier`; (c) storage access, phone folders + project scan + storage pressure (`:engine:project` common + `AndroidPhoneFileSystem`), export, Manage space, BYO signer, keep-alive | `:android:platform`, `:engine:project` (c) | Sonnet (+ Codex for the common scan port) | 1, 2, 5 | CR11-4/5/9/11 | §16 rows; (a) `WifiOnlyUnderVpnTest`; (c) B-LINUX-148..150, `phone_project_scan_test`, `phone_project_find_test`, `phone_storage_test`, `phone_storage_folders_test`, `phone_storage_browser_test` (logic parts) | T0 Robolectric; `:engine:project:desktopTest` |
+| W11-14 | (a) `SystemEventRestorer` + first-launch hooks H2/H3 (incl. the R9 one-start rule and the process-start locale check); (b) the §6.8 proofs over a real Flutter install | `:engine:entry`, `:android:linux`, `:androidApp` shells | **Opus** (with the migration owner) | 4, 6 | W11-03, W11-09, W11-10, W11-12, 05 | (a) `ScheduleRearmOnStartTest`, `RestoreReceiverKeysTest`, `ForceStopOneStartTest`; (b) §6.8 table all pass from **both** baselines, `flutter-final` (gating; the commit on the owner's phone, local key, its own versionCode) and 2.1.0+57, each after the `dumpsys` versionCode check; B-MIGR-013 | T3 on the PC emulator |
 | W11-15 | In-app updater (`PackageInstallerUpdater`, status receiver) | `:android:platform`, `:engine:diagnostics` | Sonnet (with the release section) | 4 | ADR §9.9 | B-MIGR-012, B-BUILD-010..012, B-ANDR-094 | T3 install of a newer test build signed with the same key |
 | W11-16 | Termux migrate-out bridge | `:android:termux`, `:engine:runtime` | Sonnet | 5 | W11-04 | B-LINUX-233..238 | T0 |
 | W11-17 | targetSdk 37 slice (§18.2) | several | Sonnet + Codex | after | the switch | §18.2 tests | API 37 emulator |
 | W11-18 | AppFunctions (§13) | `:android:platform`, `:engine:entry` | Sonnet | after | U11-9 | execution proven on a device | `cmd app_function` |
 
-Rough size: W11-01 0.5–1 aw; W11-02 1.5–2; W11-03 2–3; W11-04 3–4; W11-05 2–3; W11-06 3; W11-07 1.5; W11-08 1.5;
-W11-09 3–4; W11-10 3; W11-11 1; W11-12 3; W11-13 3; W11-14 1.5; W11-15 1.5; W11-16 1. About 31–37 aw before the switch.
+Rough size: W11-01 1–1.5 aw (seams and the sandbox verifier); W11-02 2–2.5 (two kinds, branch samples); W11-03 2–3;
+W11-04 3–4; W11-05 2–3; W11-06 3; W11-07 1.5; W11-08a 0.5; W11-08 1.5; W11-09 3–4; W11-10 3; W11-11 1; W11-12 3;
+W11-13 3.5; W11-14 2 (two baselines); W11-15 1.5; W11-16 1. About 34–40 aw before the switch.
 
 ---
 
@@ -1767,7 +1969,8 @@ W11-09 3–4; W11-10 3; W11-11 1; W11-12 3; W11-13 3; W11-14 1.5; W11-15 1.5; W1
 
 ### 22.1 Port first (failing tests before code; ADR §10.3 test-writer lane)
 
-1. The 46 copied JVM classes and 7 runtime acceptance classes (§4.3): green before any change (W11-01).
+1. The 46 copied JVM classes (no test edits) and the 7 runtime acceptance classes on the `qa` build (only the two §4.3
+   test edits): green before any change beyond the §4.4 seams (W11-01).
 2. The Dart logic suites of this area, translated to `commonTest` and named after catalog rows
    (`` `B-ANDR-027 pinned shortcut tap is delivered once on cold start`() ``): notifications
    (`notification_status_test`, `notification_status_controller_test`, `notification_text_test`,
@@ -1789,28 +1992,42 @@ W11-09 3–4; W11-10 3; W11-11 1; W11-12 3; W11-13 3; W11-14 1.5; W11-15 1.5; W1
    `BootPathTest`, `RuntimeLockOrderTest`, `WidgetBitmapBudgetTest`, `RecurrenceGoldenTest`, `ChildProcessLimitTest`,
    `ScriptGoldenTest`, `ScriptChecksumTest`, `EntryContractTest` (07), `ReceiverContractTest` (the receiver extras of
    §2.5 accepted from Flutter-shaped intents), `OsStringsParityTest` (the two `strings_os` copies), the manifest
-   permission-list test (§17).
+   permission and `<queries>` list test (§17), and from this revision: `SandboxBundleTest`,
+   `ProtectionMarkerAcceptance`, `ActivityResumedWiringTest`, `PreviewPortsTest` (the preview build's
+   `restorationScript()` contains 4197; `managesServerUrl` and the reserved-port lists use the build's ports), the
+   `:quality` port grep test, `ScriptBuilderTest`, `ReceiverBudgetTest`, `NoTrampolineTest`, `PromotableStatusTest`,
+   `WifiOnlyUnderVpnTest`, `ScheduleRearmOnStartTest`, `StopReasonReceiptTest`, `RestoreReceiverKeysTest`,
+   `ForceStopOneStartTest`, `FileProviderPathsTest`, `UpdateAbiChoiceTest` (D11-14), and from the gap closure (17):
+   `ExitImportTest` (native and ANR exits → category-only records, only since consent, once; 16 §1.10),
+   `NoTraceReadTest` (`:quality`), `ReplyTimingTest` (B-CHAT-092: prompt → first output → end timed by app and server; a
+   reply failing before output says so; a reply on another server is timed but not the in-app one; a user message seen
+   again does not start a new timing; `oc.replySpeed.inApp` read unchanged).
 
 The 7,967 widget tests (UI) are not ported now (owner, ADR §4 row 18; NG12). Zero-cost preparation only: test tags equal
 the Flutter `ValueKey` strings.
 
 ### 22.2 Device flows this section must turn green (Flutter first, native second; catalog `e2e-flows.md`)
 
-E2E-07 (answer from the shade), E2E-08 (needs-you, finished, status row), E2E-09 (keep running), E2E-16 (terminal),
+E2E-07 (answer from the shade; steps 3–4 as corrected by CR11-16), E2E-08 (needs-you, finished, status row), E2E-09 (keep running), E2E-16 (terminal),
 E2E-17 (Linux setup), E2E-18 (phone server lifecycle), E2E-19 (remove and reset), E2E-20 (dev servers, ports,
-processes), E2E-25 (shortcuts, tile, links, share-in), E2E-26 (widgets), E2E-27 (schedules), E2E-39 (upgrade in place).
+processes), E2E-25 (shortcuts, tile, links, share-in), E2E-26 (widgets), E2E-27 (schedules), E2E-31 (sign-in terminal,
+slice 3, W11-08a), E2E-39 (upgrade in place, from both baselines).
 E2E-28 and E2E-32 wait for D6.
 
 ### 22.3 Emulator recipes (T3; the PC has one emulator and one lock holder; midnight–2 am no emulator)
 
 | Recipe | Commands | Proves |
 |---|---|---|
-| Update restore | §6.8 (`pm unstop` before `install -r` if the app was ever force-stopped) | R1–R5, R8 |
+| Version check (before **every** install over an existing app) | `adb shell dumpsys package <pkg> \| grep versionCode`; the installed code must be below the APK's (R3); a 9000xx build on the device means a reinstall, only with the owner's OK | R3 |
+| Update restore | §6.8, from `flutter-final` (gating) and from 2.1.0+57 (`pm unstop` before `install -r` if the app was ever force-stopped) | R1–R5, R8 |
+| Protection marker | `qa` build; `ProtectionMarkerAcceptance` for `required-proot-v1`, `required-v1`, corrupt (§4.3, §6.8) | D11-1 |
+| Preview reboot restore | §6.8 row; stable and `.native` preview both running their servers | S11-6 |
 | FGS time limit | `adb shell am compat enable FGS_INTRODUCE_TIME_LIMITS <pkg>`; `adb shell device_config put activity_manager data_sync_fgs_timeout_duration 60000` | §9.2 rules 3 and 5, B-ANDR-014 |
 | Phantom limit | `adb shell device_config put activity_manager max_phantom_processes 8` [S], two agent sessions; then `device_config delete …` | §7.2 guard, kill line |
 | Memory limiter (API 37 image) | `cat /proc/<child>/cgroup`; `am memory-limiter manual <pid> 1024`; `am memory-limiter status` | U11-3, `MemoryLimit` exit |
 | Force stop | `am force-stop <pkg>`; observe greyed widgets; open the app | R9, §11.5 |
 | Schedules | `adb root`; `adb shell date <MMDDhhmmYYYY.ss>` to jump the clock; `adb shell dumpsys alarm \| grep <pkg>`; `adb shell cmd jobscheduler run -f <pkg> <jobId>` (id from `dumpsys jobscheduler`) [S]; zone changes through Settings by a Maestro flow | §12.2, T29 |
+| Job quota (Android 16+ image, U11-16) | with the phone server's service running: `adb shell am set-standby-bucket <pkg> rare`; run a schedule and a Run now (from the visible Schedules page, then leave the app); read the receipt and `dumpsys jobscheduler`. Enforcement is the default on Android 16; the control run disables it with `am compat enable OVERRIDE_QUOTA_ENFORCEMENT_TO_FGS_JOBS <pkg>` and `… OVERRIDE_QUOTA_ENFORCEMENT_TO_TOP_STARTED_JOBS <pkg>` (these flags **turn the quota off**; `am compat reset … <pkg>` afterwards) [V Android 16 behavior changes] | §12.3, U11-16 |
 | Widgets | place both widgets with a Maestro flow; Robolectric renders regenerate the preview PNGs | §11 |
 
 ### 22.4 Owner's phone (NX721J; read-only adb only when allowed, no screencaps, installs only after an emulator pass)
@@ -1819,6 +2036,10 @@ E2E-28 and E2E-32 wait for D6.
    says 16).
 2. Signer check before any install: ask the owner for the installed certificate SHA-256 and compare with
    `apksigner verify --print-certs <apk>` (AGENTS.md; local key `1DE5BF08…D60C`; never substitute).
+   2a. Version check before the first native install (read-only, with the owner's OK): `adb shell dumpsys package
+   io.github.eslamasabry.opencode_mobile | grep versionCode`. The native APK's code must be higher (R3, CR11-18); if
+   it is not, stop and ask: never uninstall (that loses the Linux). Confirm that the installed code is the
+   `flutter-final` build the §6.8 proofs used as their gating baseline.
 3. After the switch APK install: `adb shell ps -A -o PID,PPID,NAME -u <uid>` shows `opencode2` (R8); `dumpsys
    activity exit-info <pkg>` for exit reasons (logcat is silenced on that phone, memory `phone-logcat-silenced`).
 4. `adb shell dumpsys notification --noredact | grep -i promot` while a run works (U11-2).
@@ -1842,9 +2063,10 @@ E2E-28 and E2E-32 wait for D6.
 | U11-10 | Compat `setRequestPromotedOngoing` / `setShortCriticalText` on API 36.0 (before QPR1) | Robolectric SDK 36 + API 36.0 image | call unconditionally through Compat | slice 4 |
 | U11-11 | Loopback and Tailscale exempt from `ACCESS_LOCAL_NETWORK` | targetSdk-37 test build on API 37 | assume exempt (VPN documented [V], loopback [S]) | W11-17 |
 | U11-12 | `device_config … max_phantom_processes` honoured on API 35–37 emulators | run the recipe once | if not, prove the guard with 32 real processes | slice 0 |
-| U11-13 | Does the owner's phone hold `files/oc.teamEngine.protection-required`, and which tier? | This phone › Details or the problem report from the Flutter build; else ask the owner | ship `libaiteam_sandbox.so` (D11-1) | slice 0 |
-| U11-14 | CMP `getString` in a service with no Activity follows the stored app language on API 26–32 | ADR P6 includes a service-posted notification | `createConfigurationContext` wrapper per render (S11-8) | slice 0 |
+| U11-13 | Does the owner's phone hold `files/oc.teamEngine.protection-required`, and which tier (`required-proot-v1` = proot tier, needs no helper; `required-v1` or corrupt = landlock tier, needs the sandbox)? | This phone › Details or the problem report from the Flutter build; else ask the owner. Settled **before slice 1 ends**, because it decides which D11-1 branch the owner's phone exercises | ship `libaiteam_sandbox.so` + `SandboxBundle` (D11-1); both tiers proven on the emulator (`ProtectionMarkerAcceptance`) | slice 0–1 |
+| U11-14 | CMP `getString` in a service with no Activity follows the stored app language on API 26–32 | ADR P6 includes a notification posted from a service with no Activity on API 30 | the `Words` resolver passes an explicit resource environment or locale built from `oc.appLocale` (06's fallback); a `createConfigurationContext` wrapper does **not** work, because CMP resolves strings from its own environment, not from an Android `Context` (S11-8) | slice 0 |
 | U11-15 | 16 KB alignment of the Termux PTY JNI from JitPack v0.118.3 | `tool/native/check_16kb.sh` | rebuild the JNI from source with 16 KB `-Wl,-z,max-page-size=16384` if it fails | slice 1 |
+| U11-16 | Does Android 16's job runtime quota stop `ScheduledPromptWorker`, Run now or `WidgetStatusWorker` mid-run while the phone server's foreground service is up, or after a Run now started on the visible page? | §22.3 job-quota recipe on an API 36 and an API 37 image | WorkManager as today; the stop reason is recorded in the receipt ("Android stopped this run"); Run now moves in-process only if the proof shows stops (§12.3) | slice 4 |
 
 ---
 
@@ -1855,17 +2077,20 @@ E2E-28 and E2E-32 wait for D6.
 | # | Risk | Effect | Mitigation |
 |---|---|---|---|
 | 1 | A component, channel, worker, extra or `Data` key name drifts | placed widgets vanish, tiles and pinned shortcuts break, channel choices reset, queued work fails silently (map R1) | §2.5 and §3 freeze lists checked at every T2; E2E-39 with every surface placed |
-| 2 | Restore authority lost at the switch | the phone server silently stops coming back after reboots and updates (builtin-linux risk 1) | 05 M4 + §6.5 order + §6.8 proofs, including the budget-reset and interrupted-launch variants |
+| 2 | Restore authority lost at the switch | the phone server silently stops coming back after reboots and updates (builtin-linux risk 1) | 05 M4 + §6.5 order + §6.8 proofs from both baselines, including the budget-reset and interrupted-launch variants; BASIC `phone_server_restore` event so a silent failure shows outside the owner's phone (CR11-15) |
 | 3 | Behaviour drift in ownership and drain code | kills the wrong process, orphans spin, hot phone (H1–H4) | S11-1 copy first; S11-2 one lock family; moves-only split; acceptance classes on a real kernel |
 | 4 | The first native process starts from `MY_PACKAGE_REPLACED` and loses the FGS exemption while waiting for migration | server not restored on the owner's first update | S11-5 promise-before-gate; §6.8 interrupted-launch proof |
 | 5 | Headless-engine removal moves failures into the app process (map R8) | a widget or schedule crash takes the app down | `SupervisorJob` + logging handler on every runner scope; 30 s / 420 s watchdogs kept; `Outcome` everywhere; crash-loop guard |
 | 6 | Exactly-once semantics of widget actions and schedules simplified away (map R9) | double sends or lost runs | claims committed before the network; tests ported first; "never `Result.retry()` after claim" enforced by a test |
 | 7 | Fingerprint byte drift (map R2) | every schedule and widget target reads stale | byte-exact `DartJson` (05 §2.5) + vectors from the real install |
-| 8 | dataSync budget and OEM kills (map R4) | alerts stop after hours; Nubia swipe force-stops | reply watch uses minutes; honest copy; keep-running guidance; R9 restorer |
-| 9 | Phantom limit and memory limiter | agents killed mid-work | §7 guard, priority, kill line, guided card; U11-3 |
+| 8 | dataSync budget and OEM kills (map R4) | alerts stop after hours; Nubia swipe force-stops | reply watch uses minutes, ends after the alert and at 2 h, joins the server's row for free (§9.3); honest copy; keep-running guidance; R9 restorer; DETAILED `background_refused` (CR11-15) |
+| 9 | Phantom limit and memory limiter | agents killed mid-work | §7 guard, priority, kill line, guided card; U11-3; DETAILED `agent_helper_killed` (CR11-15) |
 | 10 | Preview flavour collides with the Flutter app on the owner's phone | port clash, shared phantom budget | S11-6 own ports; one-line warning (§7.2) |
 | 11 | The ZTE launcher differs from the Pixel emulator | widget looks fine in CI, broken on the owner's phone | RemoteViews kept; owner photo check before the switch (A11-8) |
 | 12 | Shorebird ends; every Linux pin bump is an APK (builtin-linux risk 7) | slower OpenCode/Paseo/Claude updates | the in-app updater ships in the switch release (W11-15); a signed remote pin manifest is a later option |
+| 13 | A phone with a `landlock`-tier protection marker (U11-13) | every Linux launch fails with `engine_bundle_invalid`; the emulator (no marker) never shows it | D11-1 by tier; `SandboxBundle` verifies the sandbox alone; `keepDebugSymbols` kept; `ProtectionMarkerAcceptance` writes each marker on the emulator (§4.3, §6.8) |
+| 14 | Android 16 job runtime quota (U11-16) | scheduled runs and Run now stopped mid-run while the phone server's service is up | stop reason recorded in the receipt; §22.3 quota recipe; Run now may move in-process |
+| 15 | Copied Kotlin reaches across modules (§4.4) | the slice-1 copy does not compile, or a builder "fixes" it with logic edits | the seam table is the only permitted source edit, one listed commit each |
 
 ### 24.2 Acceptance checks for the switch release (this section's part of the parity gate, ADR §10.1)
 
@@ -1874,7 +2099,7 @@ E2E-28 and E2E-32 wait for D6.
 | A11-1 | Every row of §1 lands in a slice or is named "later" by an ADR decision | `scope.jsonl` coverage test (02 §3.6) |
 | A11-2 | All B-ANDR and B-LINUX rows in switch scope have passing native tests | catalog ratchet (ADR §6.3) |
 | A11-3 | Merged manifest equals the §3 list (additions and removals only as marked) and the §17 permission list | component-freeze + permission tests at T2 |
-| A11-4 | After `install -r` over Flutter 2.1.0+57 on the emulator: placed widgets redraw and their taps work, both tiles work, a Flutter-pinned shortcut opens its conversation, a Flutter-posted alert's Allow reaches the exact request or opens it, schedules fire at the next due time, channel customisations survive, the phone server is back within 60 s | E2E-39 + §6.8 |
+| A11-4 | After `install -r` on the emulator over `flutter-final` (gating) **and** over 2.1.0+57, each after the versionCode check: placed widgets redraw and their taps work, both tiles work, a Flutter-pinned shortcut opens its conversation, a Flutter-posted alert's Allow reaches the exact request (through `oneShot` when cold) or the alert is reposted with an Open content intent (never a trampoline), schedules fire at the next due time, channel customisations survive, the phone server is back within 60 s | E2E-39 + §6.8 |
 | A11-5 | Reboot restores the server; a server the person stopped stays stopped | §6.8 |
 | A11-6 | The 6 h `dataSync` path ends in the paused row with the right receipt and no crash; a new start is refused cleanly | §22.3 FGS recipe |
 | A11-7 | Zero `MethodChannel`, `EventChannel` or `io.flutter` reference in `native/` | Konsist rule (§2.4 rule 5) |
@@ -1883,6 +2108,8 @@ E2E-28 and E2E-32 wait for D6.
 | A11-10 | Notification, widget, tile and shortcut copy exists in all seven languages; Arabic widgets mirror | `OsStringsParityTest`, lint `MissingTranslation`, Roborazzi of widget renders in `ar` |
 | A11-11 | The guard holds work near the limit; a 137 kill shows the plain line with Resume | §22.3 phantom recipe |
 | A11-12 | No secret, prompt, path, server error or credential in any notification, widget snapshot, shortcut label, WorkManager `Data` or log line | `RedactionSurfaceTest` (fake surfaces fed with secret-bearing fixtures), B-SEC-105, -106, -179..183 |
+| A11-13 | Built-in Linux starts on a phone with each protection-marker tier | `ProtectionMarkerAcceptance` (§4.3) on the release-equivalent `qa` build; release APK check `verify<Variant>SandboxApk` |
+| A11-14 | The preview flavour never uses a stable port and restores on its own ports after a reboot | `PreviewPortsTest`, `:quality` port grep test, §6.8 preview reboot-restore row |
 
 ---
 
@@ -1890,7 +2117,7 @@ E2E-28 and E2E-32 wait for D6.
 
 | # | Question | Recommended default |
 |---|---|---|
-| D11-1 | AI Team waits until after the switch (ADR D6), but a phone that ever turned on its protection keeps a marker that makes every Linux launch go through `libaiteam_sandbox.so`. Keep that 343 KB helper (and its manifest hash) in the switch APK? | **Yes**: keep the sandbox helper so the built-in Linux never breaks on such a phone; the 5.4 MB engine and the 1.1 MB probe stay out until AI Team returns |
+| D11-1 | AI Team waits until after the switch (ADR D6), but a phone that ever turned on its protection keeps a marker file (`files/oc.teamEngine.protection-required`) that changes how every Linux launch works. Two tiers exist. **proot tier** (`required-proot-v1`, the only tier that works on GKI kernels): launches never use the helper, only the confinement binds and `/proc` masks, which stay in the copied `ProotLauncher`; nothing more is needed. **landlock tier** (`required-v1`, or a corrupt marker): every launch goes through `libaiteam_sandbox.so`, after a hash check that today also requires the engine and the probe (`PhoneEngineNative.verifyBundle` hashes all three). Keep the 343 KB helper in the switch APK, checked by its own small verifier? | **Yes**: ship `libaiteam_sandbox.so`, a reduced `sandbox-manifest.json`, `SandboxBundle.verify()` in `:android:linux` (hashes only the sandbox; seam E6 in slice 1, not later) and `keepDebugSymbols` for `libaiteam_*.so` whatever D6 decides (CR11-12). Both tiers are proven on the emulator by writing the marker (`ProtectionMarkerAcceptance`). The 5.4 MB engine, the 1.1 MB probe and `aiteam-engine-manifest.json` stay out until AI Team returns. U11-13 says which tier the owner's phone has before slice 1 ends. |
 | D11-2 | A reply still running when you leave the app keeps a short background service until it finishes, so "reply finished" arrives without "Stay connected" on all day (ADR §9.5). This changes one old rule ("alerts only with Stay connected on", B-ANDR-013). | **Yes** |
 | D11-3 | The five hidden old widget sizes (still drawn if placed): keep them working, or retire them after a notice? The classes must stay either way. | Keep them working |
 | D11-4 | Notifications, widgets, tiles and shortcuts in all seven app languages from day 1 (today only English and Arabic). | Yes |
@@ -1903,6 +2130,7 @@ E2E-28 and E2E-32 wait for D6.
 | D11-11 | Lock-screen widgets (anyone can see them). | No |
 | D11-12 | An app lock with fingerprint or PIN. | No (no need today; the stable biometric library is from 2021) |
 | D11-13 | A small server-side push relay, so finished-reply alerts work without any background service (and on iPhone later). | Later, with the iOS decision (ADR D13) |
+| D11-14 | 32-bit phones. Today's public releases include a 32-bit (`armeabi-v7a`) APK; the native plan builds only 64-bit (ADR §9.9). A 32-bit-only phone could not install the new version and would stay on the last Flutter one. Drop 32-bit, or build it too (sherpa-onnx, zxing-cpp and the Termux PTY have 32-bit builds; the phone's own Linux would report "not available" there, as the 64-bit-only proot set means today)? | **Drop 32-bit**, said plainly: the last Flutter release and the native updater show one row on 32-bit-only phones, "This phone can't run the new version. This version keeps working." (a Flutter-side twin commit, 02 §5.6), with `UpdateAbiChoiceTest` covering the ABI choice. Keeping it means a CR to ADR §9.9 and a 32-bit build and test lane |
 
 ---
 
@@ -1927,6 +2155,23 @@ E2E-28 and E2E-32 wait for D6.
   process_budget.dart`, `heat_tier.dart`, `agents/phone_budget.dart`); branch `feat/appfunctions-2026-10-30`
   (`AppFunctionsService.kt`, manifest and Gradle diff).
 - Demo: `/home/eslam/Storage/Code/kmp-demo/androidApp/src/main/kotlin/…/ReplyService.kt` (`dataSync` reply service).
+- Checked for this revision [V], 2026-11-01: developer.android.com `TileService.requestListeningState` ("only
+  applicable to tiles that have `META_DATA_ACTIVE_TILE` … and will do nothing otherwise"); Android 16 behavior changes
+  for all apps, "JobScheduler quota optimizations" (top-started and FGS-concurrent jobs adhere to the runtime quota;
+  `OVERRIDE_QUOTA_ENFORCEMENT_TO_FGS_JOBS` / `…_TO_TOP_STARTED_JOBS` disable the enforcement for testing;
+  `WorkInfo.getStopReason()`); Live Updates requirements (Standard, `BigTextStyle`, `CallStyle`, `ProgressStyle` or
+  `MetricStyle`; `hasPromotableCharacteristics()`). Repo (`oc_app-batch1` `65e3f70a3` and `int/freeze-2026-11-01`):
+  `PhoneEngineNative.kt:505-589` (`verifyBundle`, `BUNDLE_NAMES`), `BuiltinLinux.kt` (protection tier 60-100,
+  `protectedCommand` 1100-1119, `activityResumed` uses, `SERVER_DEFAULT_PORT`, `recordServices` 3718, restore admission
+  3063-3095, 1930), `NativeServerRecipe.kt:57`, `PhoneAgentHost.kt:7`, `NativeEngineReadiness.kt:14`,
+  `LocalTerminal.kt` (Flutter imports, open-URL watcher), `MainActivity.kt:53, 96, 101`,
+  `MainActivityBackgroundChannel.kt:39-43`, `StatusNotificationModel.kt:209-216`, `StatusNotificationRenderer.kt:48-52`,
+  `CodingActionReceiver.kt:102-114`, `StatusActionReceiver.kt:48-49`, `android/app/build.gradle.kts` (`keepDebugSymbols`,
+  the phone-engine APK check), `.github/workflows/android-release.yml` and `scripts/verify_github_release.py`
+  (`armeabi-v7a`), `lib/state/connection/alerts.dart:292`, `lib/state/usage_subscription_alerts.dart:140-152`,
+  `lib/state/connection/connect.dart:805-806`, `lib/builtin/heat_tier.dart` (freeze tip), `lib/builtin/agents/
+  agent_scripts.dart:30, 213`, `lib/builtin/setup/setup_scripts.dart:319-336`, `lib/platform/phone_*.dart`,
+  `docs/qa/scheduled-prompts-2026-10-15/apk-build.txt` (900058, local key).
 - Owner memory: `zte-launcher-widget-traps`, `restore-proof-recipe`, `proot-orphans-heat`, `phantom-process-limit`,
   `appfunctions-plan`, `app-updates-two-layers`, `android-native-feel`, `phone-logcat-silenced`,
   `test-on-emulator-not-phone`, `owner-phone-debug-allowed`, `no-owner-phone-screenshots`, `inapp-server-clean-env`,
@@ -1942,3 +2187,68 @@ E2E-28 and E2E-32 wait for D6.
   `AppFunctionServiceEntryPoint(serviceName, appFunctionXmlFileName)`, `AppFunctionAccessLevel(level,
   isCompatEnforcementEnabled)`, `AppFunctionService`); Maven Central `commons-compress` latest 1.28.0 (the catalog keeps
   1.27.1, as today, until a reason to move).
+
+---
+
+## Review notes (revision of 2026-11-01)
+
+All 39 review issues were checked against `oc_app-batch1` (`65e3f70a3`), the freeze tip, sibling sections and
+developer.android.com. Every issue was real; where two reviews found the same defect they were merged. Nothing was
+rejected outright; five fixes were changed from the reviewer's proposal (last group).
+
+What changed:
+
+- **D11-1 sandbox (blocker + major):** `verifyBundle` hashes all three `BUNDLE_NAMES` whatever it is given, and only
+  the landlock tier uses the sandbox. D11-1 is rewritten by tier. New `SandboxBundle.verify()` + `sandbox-manifest.json`
+  in `:android:linux` from slice 1 (seam E6); `keepDebugSymbols` kept whatever D6 decides (§18.3, CR11-12);
+  `ProtectionMarkerAcceptance` writes each marker on the emulator (§4.3, §6.8, A11-13); §4.1 note corrected; U11-13
+  settled before slice 1 ends; risk 13.
+- **`setActivityResumed` (blocker):** added to `RuntimeHost`, called from the `MainActivity` shell's
+  `onResume`/`onPause`; `ActivityResumedWiringTest`; §3, §5.3, §6.3, W11-03.
+- **Copy does not compile (2 majors):** "zero edits" replaced by the §4.4 compile-seam table (E1–E10) as the only
+  permitted source edits; deps of `:android:background` completed; CR11-11 (start slices) and CR11-13
+  (`AppBuildInfo.ports/qaHooks`, `BuildInfoOwner`).
+- **Acceptance classes (major):** moved to `:androidApp` `androidTest` on the `qa` build with two named test edits; the
+  11-versus-7 count fixed; slice-1 exit check reworded (§0.2, §4.3, §20, §22.1).
+- **Preview ports (2 majors):** port literals replaced by seam E8 in W11-01, Dart templates use `@@RAW:SERVER_PORT@@` /
+  `@@RAW:AGENT_PORT@@`, a `:quality` grep test, `PreviewPortsTest`, a preview reboot-restore proof, A11-14.
+- **Scripts (major):** S11-3 and §5.6 split into static templates (`@@Q:` / `@@RAW:`) and Kotlin builders for loops,
+  branches and composition; samples per branch and list size; coverage counts builders.
+- **Broadcast budgets (major):** `FLAG_RECEIVER_FOREGROUND` dropped (parity); per-receiver budgets in §2.2.
+- **Baselines (major):** §6.8, A11-4 and W11-14b run from `flutter-final` (gating) and 2.1.0+57 (CR11-18).
+- **32-bit (major):** new D11-14 (default: drop with a plain row, `UpdateAbiChoiceTest`); §16, §18.3.
+- **Schedules re-arm (major):** `onAppStart` always calls `rearmAll(AppStart)`; `ScheduleRearmOnStartTest`.
+- **Trampoline (major):** no `startActivity` from receivers (Konsist + `NoTrampolineTest`); a cold answer goes through
+  `oneShot(NotificationAction)`, else a reposted alert with an Open content intent (§10.6, A11-4).
+- **Question buttons (major):** §10.4 restated to today's `AlertButtons.plan`; catalog corrections in CR11-16.
+- **FileProvider (major):** one merged paths list in §14.3 (CR11-17); `ModuleDependencies` added to §3.
+- **Wi-Fi only (major):** `DeviceFacts.network.onWifi` ported verbatim; `oc.notify.wifiOnly` named in §10.4;
+  `WifiOnlyUnderVpnTest`.
+- **Android 16 job quota (major):** §12.3 rules, stop reason in receipts, U11-16, §22.3 recipe, risk 14.
+- **Terminal and sign-in (major + minor):** aligned with 03's `TerminalModel`, plus `events` with `OpenUrl` (CR11-14);
+  new slice-3 W11-08a; E2E-31 and B-LINUX-094..096 added.
+- **Reply watch (major + minor):** new end conditions (alert shown, 2 h cap, dismissal) and a start guard for our own
+  pickers and pages; joins the server's row without `dataSync`; no Pause; `ReplyWatchPolicyTest` cases (§9.1, §9.3).
+- **Phone folders (major):** a §16 row and the `:engine:project` port with its limits; W11-13c acceptance.
+- **Minors:** tile pokes removed and `TileSurface.clear()` added; the R9 one-start rule for the unstop `BOOT_COMPLETED`;
+  heat notice owned by `:engine:attention` and `StatusNoticeKey` defined in `:engine:runtime`; the widget-action
+  ingress across modules (§11.3); U11-14's default is now an explicit resource environment; the locale check at every
+  process start (no new receiver); expedited follow-up only on API 31+ (CR11-19); the versionCode check (§6.4 R3,
+  §22.3, §22.4 step 2a); preview `<queries>`; §6.5 step 3 names the three adopted keys (`RestoreReceiverKeysTest`);
+  `BigTextStyle` for promoted rows (`PromotableStatusTest`); `AppLocaleApplier`; the quiet-hours wording;
+  analytics events (CR11-15); the tile long-press `KitTip`; every `HeatTierPolicy` branch listed.
+
+Changed from the proposed fix:
+
+- **Android 16 quota recipe:** `am compat enable OVERRIDE_QUOTA_ENFORCEMENT_TO_FGS_JOBS` / `…TOP_STARTED_JOBS`
+  *disable* enforcement (Android 16 docs). The proof runs with the default enforcement and uses the flags only as the
+  control run.
+- **Terminal contract:** the proposal was `Output(chunk) | Exit | OpenUrl` with `ack()`. It was not adopted, because
+  output would leave the in-process terminal-view and contradict 03 and ADR §7.3. Only `Exited` and `OpenUrl` events
+  were added to 03's `TerminalModel` (CR11-14).
+- **D11-1:** "ship all three libraries + the full manifest" was not taken. The sandbox-only verifier keeps 6.5 MB of
+  AI Team code out of the APK.
+- **FileProvider camera root:** 11 does not decide 10 and 16's conflict on its own. It adopts 10's `files-path` only
+  with 16's security row, else `cache-path` (CR11-17). `ModuleDependencies` is not made flavour-specific, because 10
+  §2.7 says there is one APK and no `fdroid` flavour.
+- **CR numbering:** two reviews both proposed "CR11-11"; the new change requests are CR11-11..CR11-19.

@@ -327,8 +327,17 @@ data class ScopeRow(
     val amended: String? = null,    // replacement wording the native test must assert
     @SerialName("amended_at") val amendedAt: String? = null, // ISO date; the ratchet exemption in §6.5 reads it
     @SerialName("split_from") val splitFrom: String? = null,
+    /** Astra M7: required for scope in (AFTER_SWITCH, DROPPED) when the switch release is cut. A pointer to an owner
+     *  approval record in docs/native/decisions.md (date + the owner's words), never a bare decision id. */
+    val approval: String? = null,   // "decisions.md#2026-11-14-D6" ; null = proposed default only
 )
 ```
+
+**Proposed default vs accepted decision (Astra M7).** A `decision` id says *why* a row moved; it does not say the owner
+agreed. Planning may run on proposed defaults, but **the switch release scope may not**: `ScopeFileTest` in the
+`switch` tier fails on any `after-switch` or `dropped` row whose `approval` is null or points to a record without the
+owner's words. `CatalogReport` publishes both numbers on every run: the original behaviour count (1,544 + top-up) and
+the approved switch subset, with the unapproved removals listed by decision.
 
 `ScopeFileTest` fails the build when any of these is false:
 
@@ -977,7 +986,7 @@ uncommitted diff.
 
 | Machine | Runs | Settings and limits |
 |---|---|---|
-| VPS 203.0.113.10 (8 vCPU, 23 GB + 8 GB swap, 290 GB, no KVM) | T1, T2, release builds (then re-signed on the PC), Roborazzi record/verify (**the only golden host**), the headless desktop gallery, the nightly iOS klib job | `org.gradle.jvmargs=-Xmx3g` or more. One T2 at a time: `flock ~/.oc-native-t2.lock`. Before T2: `df -h /` must show ≥ 30 GB free (it filled up on 2026-11-01). The IP stays out of git: scripts read `OC_VPS_HOST`. |
+| VPS (`$OC_VPS_HOST`; 8 vCPU, 23 GB + 8 GB swap, 290 GB, no KVM) | T1, T2, release builds (then re-signed on the PC), Roborazzi record/verify (**the only golden host**), the headless desktop gallery, the nightly iOS klib job | `org.gradle.jvmargs=-Xmx3g` or more. One T2 at a time: `flock ~/.oc-native-t2.lock`. Before T2: `df -h /` must show ≥ 30 GB free (it filled up on 2026-11-01). The IP stays out of git: scripts read `OC_VPS_HOST`. |
 | PC (8 CPU, 16 GB, one emulator) | T0, T3 (emulator, Maestro, upgrade journey), T4 (Macrobenchmark, profiles), APK re-signing, git-side checks (§7.3) | Starting values, which slice-0 proof P8 confirms or replaces when it sets the host caps: `-Xmx2g`, `org.gradle.workers.max=2`, `kotlin.compiler.execution.strategy=in-process`. **One build at a time across both apps:** native scripts take the **same build slot** that Flutter fixers use, `tool/qa/machine_lock.sh build` (the lock file `/home/eslam/Storage/tmp/oc-build.lock`), never a separate native lock. A native Gradle build and a Flutter release build running together caused the two global OOMs in `pc-capacity-ceiling`. Before any Gradle or emulator start, `free -m` must show ≥ 7 GB available. |
 
 - **Concurrency:**
@@ -1302,7 +1311,7 @@ index `docs/qa/native/README.md`, which the coordinator adds at merge. `docs/qa/
 | 7 | Maestro flows green on Flutter R | Flows lane (section 14) | 39 flows green, or `KNOWN-FLUTTER-GAPS` lines recorded |
 | 8 | Slice-0 proofs P1 to P10 recorded, with fallbacks taken where needed | Per ADR §11 | One QA record per proof |
 | 9 | Contracts frozen (ADR §10.3 list) | Coordinator | `native/contracts/s1.md` to `s3.md` marked frozen with a date |
-| 10 | Owner answers or recorded defaults for D1–D18 and S02-1 to S02-8 | Coordinator | A table in `docs/native/decisions.md` with the date and the owner's words |
+| 10 | Owner answers for D1–D18 and S02-1 to S02-8. A default may guide planning, but every decision that removes or defers a behaviour (D6, D7, D17, S02-3, S02-7, …) needs an **approval record** with the date and the owner's words before the switch candidate; "recorded default" does not count for those (Astra M7) | Coordinator | A table in `docs/native/decisions.md` with the date and the owner's words; `scope.jsonl` `approval` pointers checked by `ScopeFileTest` |
 | 11 | The Kotlin-test baseline: every Flutter-tree Kotlin test file listed in `TWINS.md` with its `@Test` count at the freeze tip | Coordinator | `parity.json` shows `kotlin_tests.total` |
 | 12 | `KnownHosts.kt` seeded from the hosts the freeze-tip code contacts on its own; `runtime-paths.txt` for S-4 | `:core:security` owner; migration owner | Both committed with a reason per entry |
 
@@ -1321,7 +1330,7 @@ Work proceeds on the default until the owner answers. The coordinator adds these
 | S02-5 | **Analytics** (G7; same question as 12 R12-1 and 16 D16-1): the core is built with BASIC always on and DETAILED opt-in, but **nothing is sent until the owner confirms the BASIC tier and names a destination** (Aptabase, PostHog, Plausible or self-hosted, each through our own HTTP sender). When BASIC sends, F-Droid shows the "Tracking" anti-feature; at the F-Droid submission the owner chooses between that label and a build whose BASIC sender is off. | Build the core; sender none until the owner answers | The owner names the destination now, or asks for BASIC to be off in the F-Droid build from the start |
 | S02-6 | **CMP 1.13.x stable is a switch precondition** (NG23, D12). The ADR pins CMP 1.13.0-beta01 for the whole UI stack; 1.13.0 stable is projected for about mid-December 2026 [U]. | The switch waits for 1.13.x stable. If it slips more than two weeks past switch-ready, the coordinator asks the owner to OK shipping the beta. | The owner OKs shipping the beta now, with the beta version recorded in the release notes |
 | S02-7 | **Saved external agents (A2A)** (NG6, B-SEC-063). A2A bearers are not profile-scoped, so the profile sweep never removes them. | The migration does not copy `oc.a2aBearer.*`, `oc.externalAgents` or `oc.a2aTasks.*` into native stores; they stay untouched until the v3 source cleanup erases them (05 §9.5, M-D5). This is recorded in `scope.jsonl`. | One visible "Remove saved external agents" row in Manage space, which erases them at once |
-| S02-8 | **"While you were away"** (`oc.automaticActivity.*`): recorded today, but no screen shows it (screens-nav risk 11) | The native app stops recording at the switch. The existing keys are kept and swept with their profile. Building the page is an after-switch feature slice. | Build the page in the switch release (a new screen, so the owner picks a concept first, NG10) |
+| S02-8 | **"While you were away"** (`oc.automaticActivity.*`): recorded today, but no screen shows it (screens-nav risk 11) | The native app stops recording at the switch. The existing keys are kept and swept with their profile. Building the page is an after-switch feature slice. **Consequences, decided once (17 N17-D4):** 04 §12.3 step 5 records nothing; the recorder rows B-STATE-006, 007, 155, B-NAV-082 and B-AGENT-030 (Undo of a recorded automatic act) are `AFTER` in `scope.jsonl` through the 15 Appendix B FORCE table, so the parity dashboard does not expect them; B-SEC-015 (redaction of stored reports) follows them; B-SEC-016 stays in S1 amended to "the sweep erases `oc.automaticActivity.*` of the profile; no recorder exists to drain". The automatic acts themselves (reconnect, retries, auto-approval) are unchanged. | Build the page in the switch release (a new screen, so the owner picks a concept first, NG10) |
 
 ---
 

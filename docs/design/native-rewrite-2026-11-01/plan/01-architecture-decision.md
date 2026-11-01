@@ -141,10 +141,10 @@ Each row is final. "Graft" names the proposal the idea came from.
 | 3 | Kit modules | C: one kit owner. A: three modules. | `:ui:design` (pure tokens and policies, no Compose) plus `:ui:kit`, `:ui:kit-chat` and `:ui:kit-content`, each with one owner under one design authority (graft A; `:ui:design` from C). |
 | 4 | Modules per feature | B and C: presentation plus UI. A: one module. | **One module per feature.** Inside it, the `presentation` package (ViewModels, `XUi`, `XActions`, reducers) must not import `androidx.compose.*` (Konsist), so a later split for a SwiftUI front end is a file move. |
 | 5 | String source of truth | A and C: generate from ARB. B and judge 2: `strings.xml`. Judge 1 called B's choice a weakness. | **One-off conversion from ARB.** After it, CMP-format XML in `:ui:words` is the only source: `composeResources/values*/strings_<feature>.xml`, one file per feature per language. Android `res` for OS surfaces is generated from `strings_os.xml`. The ARB files freeze with Flutter. Once Flutter is frozen, ARB has no tooling of its own; XML is native to both CMP and Android lint. |
-| 6 | Per-app language with CMP resources | Unverified everywhere. | Slice-0 proof. Fallback: our own `LocalResourceEnvironment` override driven by the `AppCompatDelegate` locale (§11 P6). |
+| 6 | Per-app language with CMP resources | Unverified everywhere. | No AppCompat: activities stay `ComponentActivity`. `LocaleManager` on API 33+; below 33 the stored `oc.appLocale` (mirrored in a tiny native file) applied through `attachBaseContext` + one `LocalizedContext` for every OS surface, plus a CMP `LocalResourceEnvironment` override (03 S21, §12.3; 06 §13.6). `AppCompatDelegate` does nothing on API 26–32 for a `ComponentActivity` (audit 01+03 #9). Proven by P6 on API 30 and 33+, notifications and widgets included. |
 | 7 | When the in-place switch happens | C: daily-path switch at weeks 12–15. A: at parity. | **Parity** (graft A, "nothing lost", §10). C's daily-path build ships only as the `.native` preview package. |
 | 8 | Room for big blobs | A and network-data: in the switch release. C: switch+1. Judge 2: decide on evidence. | **Default switch+1**, with a measured trigger that pulls it into the switch release (§9.8). The schema rules apply either way. |
-| 9 | Migration timing at startup | B: synchronous in `onCreate`. A and C: asynchronous gate. | B's *order* with A and C's *asynchrony*. Only step 0 (byte backup) runs synchronously, and only on the first native launch (§9.7). |
+| 9 | Migration timing at startup | B: synchronous in `onCreate`. A and C: asynchronous gate. | B's *order* with A and C's *asynchrony*. **Nothing** runs synchronously on the main thread, step 0 (byte backup) included: it runs on a `StartupFence` thread before the first load of any backed-up file (§9.7; audit 01+03 #8). |
 | 10 | JVM code shared by Android and desktop | C and B: `jvmShared`. A: convert or keep in Android. | Plain `kotlin("jvm")` modules (`oc.jvm.library`), e.g. `:core:net-okhttp`. `/proc` and process code stays in `:android:linux` until desktop work starts. |
 | 11 | Platform-difference idiom | A: `expect/actual` plus interfaces plus CompositionLocals. C: interfaces only. | **Interfaces.** Services bind through Metro. Composable seams go through one `KitPlatform` interface provided by `LocalKitPlatform`, only inside the kit. `expect/actual` is allowed only in `:core:common` (graft C). |
 | 12 | Deep links | A: Nav3 matcher. B: `EntryRouter` only. | **`EntryRouter` only** (graft B). Nav3's deep-link matcher is not used. |
@@ -207,14 +207,14 @@ dates.
 | Module | Plugin | Source sets | Responsibility | Owner | Starts |
 |---|---|---|---|---|---|
 | `build-logic` | included build | — | the convention plugins above, the dependency-rule check, per-host properties | S coordinator | 0 |
-| `:core:common` | kmp.library | c, a, d, t | `Outcome`, sealed `Failure`, `attempt {}`, `AppDispatchers`, `Clock`, ids, `AppLog` facade (Kermit), `Trace`, `WireJson` + tolerant serializers, `PlatformViewHandle`. **The only module allowed `expect/actual`.** | S core | 0 |
+| `:core:common` | kmp.library | c, a, d, t | `Outcome`, sealed `Failure`, `attempt {}`, `AppDispatchers`, `Clock`, ids, `ServerOrigin`, the `Redacted` and `ApprovedLink` **types** (constructors opt-in: only the `Redactor` / `ExternalLinkPolicy` in `:core:security` build them), `AppLog` facade (Kermit), `Trace`, `WireJson` + tolerant serializers, `PlatformViewHandle`, `Sha256` and other byte primitives. **The only module allowed `expect/actual`.** (03 S6, S7, S24, S25) | S core | 0 |
 | `:core:security` | kmp.library | c, t | the one `Redactor` + `RedactingWriter`, `Redacted`, `ExternalLinkPolicy` (decision logic), address rules (loopback, RFC1918, `100.64.0.0/10`, `.ts.net`), cleartext consent model, three-state consent reads | S core | 0 |
-| `:core:model` | kmp.library | c, t | plain data: profiles, messages/parts/tool states, cards, `FormSpec`, schedules | S core | 0 |
+| `:core:model` | kmp.library | c, t | plain data: profiles, messages/parts/tool states, cards, `FormSpec`, schedules, `StreamStatus`/`NetworkStatus` (04 §2.1), the migration-gate view types `GateState`/`MigrationStatus`/`MigrationActions` (05 §7.3) | S core | 0 |
 | `:core:domain` | kmp.library | c, t | `ServerGateway`, `ServerOperationsGateway`, `ServerCapabilities` (85 flags), `PlatformCapabilities`, interfaces shared by several engines or features, pure domain rules | S core | 0 |
 | `:core:data` | kmp.library | c, a, d, t | `KeyValueStore`, `SecretStore`, `BlobStore`, `ProfileScope` (key and table registry + sweep), `WriterLane`, `MigrationGate`. a = adopted `FlutterSharedPreferences` + Keystore AES-256-GCM. d = in-memory until the desktop phase. | S core | 1 |
-| `:core:db` | kmp.library + KSP | c, a, d, t | Room 3 `oc.db`: offline queue, drafts index, stash, receipts, first-paint caches; every table has `profile_id` | S core | switch+1, or earlier by trigger (§9.8) |
+| `:core:db` | kmp.library + KSP | c, a, d, t | Room 3 `oc.db`: offline queue, drafts index, stash, receipts, first-paint caches; every table has `profile_id`. Public API = neutral row façades + `DbTransactions` (03 §10.6); Room types never leave the module | S core | switch+1, or earlier by trigger (§9.8) |
 | `:core:net` | kmp.library | c, a, d, t | Ktor client factory, SSE parser (16 MiB cap) + `EventStream` loop, WebSockets, resumable pinned downloader, cleartext consent plugin, transport-to-`Failure` translation. a and d both call `:core:net-okhttp`. | S backend | 1 |
-| `:core:net-okhttp` | jvm.library | main, test | hardened OkHttp 5 client builder (no retry on connection failure, no redirects, `NO_PROXY`) and the leaf-DER SHA-256 pinning `TrustManager`. **No project dependencies.** | S backend | 1 |
+| `:core:net-okhttp` | jvm.library | main, test | hardened OkHttp 5 client builder (no retry on connection failure, one-shot mutation bodies, `Retry-After` stripped from 503s, HTTP/1.1, no redirects, `NO_PROXY`), the leaf-DER SHA-256 pinning `TrustManager`, and the plain-typed WebSocket upgrade (`JvmWsUpgrade`). **No project dependencies**: the `Transport` and connector adapters live in `:core:net` a/d (04 §3.3). | S backend | 1 |
 | `:core:markdown` | kmp.library | c, t | streaming Markdown → block model (`StreamingMarkdownFile`), path chips, agent blocks, `proseForSpeech` | F chat lead | 2 |
 | `:core:testing` | kmp.library (test only) | c | fakes, `TestClock`, `TestDispatchers`, `MockEngine` fixtures, catalog-row helpers | S core | 0 |
 | `:protocol:oc2` | kmp.library | c, t | OpenCode 2 client: dialect table, routes, tolerant DTOs, 91-event registry with `UnknownEvent`, pairing, forms, PTY over WebSocket, gateway. The legacy-server *recognition* only (OpenCode 1 is gone [R]). | F backend (Codex) | 1 |
@@ -223,7 +223,8 @@ dates.
 | `:protocol:a2a` | kmp.library | c, t | external agents over A2A, only if §12 D6 keeps them | F backend | later |
 | `:protocol:team` | kmp.library | c, t | Gas City supervisor + phone-engine `/v1` clients, only if AI Team is ported | F backend | later |
 | `:engine:settings` | kmp.library | c, t | preferences facade, appearance (Style, Fine-tune, Saver), consent, settings scope model, teaching/tips/nudges registry, locale, first run | F | 1 |
-| `:engine:diagnostics` | kmp.library | c, t | ring buffer, problem report, crash categories, exit classification (incl. `MemoryLimiter:AnonSwap`), `PerfTrace`, update-notice state | F | 1 |
+| `:engine:analytics` | kmp.library | c, t | the analytics core (owner, 2026-11-01): one event API, BASIC always on and DETAILED opt-in, local queue and batching, upload policy, rotating install id, privacy scrubber, "What we collect" source, pluggable sinks. Section 18. Depends only on `:core:common` | S diagnostics owner | 1 (built 2026-11-01 on `native/analytics-2026-11-01`) |
+| `:engine:diagnostics` | kmp.library | c, t | ring buffer, problem report, crash categories, exit classification (incl. `MemoryLimiter:AnonSwap`), `PerfTrace`, update-notice state; reports crash, freeze and error categories to `:engine:analytics` | F | 1 |
 | `:engine:profiles` | kmp.library | c, t | profile store, trust, pins, sign-in reset, the deletion transaction (run backwards) | S core | 1 |
 | `:engine:connection` | kmp.library | c, t | `ConnectionRegistry`, one `ConnectionGraph` per live connection, status, location, quiet reconnect, session list, selection, read state | S backend | 1 |
 | `:engine:transcript` | kmp.library | c, t | event apply, version fences, settle/fold/merge, 50 ms publish, run lifecycle, turn stall, search | S chat lead | 2 |
@@ -279,7 +280,7 @@ dates.
 | `:quality` | jvm.library (tests) | test | Konsist rules (§6.3), dependency-rule test, Metro graph smoke, catalog coverage ratchet, component-freeze list, Room `profile_id` schema test | S coordinator | 0 |
 | `:tools:strings` | jvm.library (CLI) | main, test | one-off ARB → XML converter; drift check (every key in 7 languages, matching format args and plurals) | S l10n | 1 |
 
-That is about 66 modules at the switch. Slice 0 creates about 12 of them. Kotlin packages for new code are
+That is about 67 modules at the switch. Slice 0 creates about 12 of them. Kotlin packages for new code are
 `io.github.eslamasabry.oc.<layer>.<name>`, and module namespaces derive from the path. They must differ from the
 app's namespace, an AGP 9 rule [R]. Reused Kotlin keeps its package. OS-visible classes keep
 `io.github.eslamasabry.opencode_mobile.*` and live in `:androidApp`. Kotlin packages are independent of module
@@ -318,22 +319,23 @@ namespaces, so FQCNs survive module moves [R].
 ### 6.2 Engine order (an engine may use only engines listed above it)
 
 1. `settings`
-2. `diagnostics`
-3. `profiles`
-4. `connection`
-5. `transcript`
-6. `requests`
-7. `delivery`
-8. `composer`
-9. `runtime`
-10. `agents`
-11. `attention`
-12. `schedule`
-13. `media`
-14. `project`
-15. `integrations`
-16. `entry`
-17. `team`
+2. `analytics` (added 2026-11-01, 03 S27: every engine below may emit; it uses no engine)
+3. `diagnostics`
+4. `profiles`
+5. `connection`
+6. `transcript`
+7. `requests`
+8. `delivery`
+9. `composer`
+10. `runtime`
+11. `agents`
+12. `attention`
+13. `schedule`
+14. `media`
+15. `project`
+16. `integrations`
+17. `entry`
+18. `team`
 
 A needed upward edge means the shared piece moves down: into a lower engine, or into `:core:domain` as an interface.
 Only the coordinator may change this list.
@@ -475,9 +477,9 @@ Upgrades happen only on the named trigger. Kotlin, the Compose compiler, Metro a
 | Area | Choice | Pin | Move when |
 |---|---|---|---|
 | Language | Kotlin (+ Compose compiler plugin) | **2.4.21** | 2.5.0 (planned Dec 2026), only once Metro and CMP declare support |
-| Build | AGP / Gradle / JDK | **9.3.3 / 9.7.1 / 17** (JDK 21 for the Robolectric test JVM) | AGP 9.5.x and Gradle 9.8.x together with Kotlin 2.5 |
-| SDK levels | compileSdk / targetSdk / minSdk | **37 / 36 / 26** (compileSdk 37.1 if Compose 1.13 requires it) | targetSdk 37 in its own slice after the switch |
-| UI toolkit | Compose Multiplatform (runtime, foundation, ui, animation, resources, ui-test) | **1.13.0-beta01**; fallback 1.12.2 (demo-proven) | 1.13.0 stable (projected about mid-Dec 2026 [U]) |
+| Build | AGP / Gradle / JDK | **9.3.3 / 9.7.1 / 17** for module compiles; **JDK 21** for Gradle itself, `build-logic` (Metro 1.5.1's Gradle plugin is published for JVM 21) and the Robolectric test JVM [V slice-0 P1 D1] | AGP 9.5.x and Gradle 9.8.x together with Kotlin 2.5 |
+| SDK levels | compileSdk / targetSdk / minSdk | **37.1 / 36 / 26**: API 37 minor level 1 (`platforms;android-37.1`), set with `compileSdk { version = release(37) { minorApiLevel = 1 } }` in the application, library and AGP-KMP conventions. Compose 1.13 requires it: without the minor level `checkAarMetadata` rejects the 1.13.0-beta01 AARs [V slice-0 P1; audit 01+03 #2] | targetSdk 37 in its own slice after the switch |
+| UI toolkit | Compose Multiplatform (runtime, foundation, ui, animation, resources, ui-test) | **1.13.0-beta01** for development; fallback 1.12.2 (demo-proven) **for development only**: its `material3` 1.12.0-alpha03 resolves Jetpack M3 1.5.0-alpha22, which D12 bars from a release (audit 01+03 #13) | 1.13.0 stable (projected about mid-Dec 2026 [U]). **Release admission:** the switch release needs CMP 1.13.x stable; if it is not stable at switch-ready the owner is asked (D12), and `ReleaseClasspathPolicyTest` (03 §19.6) checks the resolved release classpath, transitives included |
 | Material | CMP `material3` (= Jetpack M3 1.5.0-beta01 on Android); kit modules only | **1.13.0-beta01** | stable with Jetpack M3 1.5.0 |
 | Adaptive | CMP `material3-adaptive` + `adaptive-navigation3` | **1.3.0** | follow CMP |
 | Navigation | Navigation 3 (CMP `navigation3-ui`); `navigationevent-compose` | **1.2.0; 1.1.0** | Android may run Jetpack 1.3.x once it is stable (§7.6) |
@@ -498,7 +500,7 @@ Upgrades happen only on the named trigger. Kotlin, the Compose compiler, Metro a
 | Code highlighting | SyntaxMP behind `CodeTokenizer`; benchmark against Highlights 1.1.0 | **0.3.0** | swap if the slice benchmark fails |
 | Images | Coil 3 (`coil-compose`, `coil-svg`, `coil-gif`) | **3.6.3** | — |
 | Zoom | Telephoto `zoomable` | **0.19.0** | — |
-| QR | qrose (draw); CameraX viewfinder + zxing-cpp (scan) | **1.3.1; CameraX 1.6.2; zxing-cpp 3.1.1** | CameraX 1.7 when stable |
+| QR | qrose (draw); CameraX viewfinder + zxing-cpp (scan): Google-free, no ML Kit, F-Droid-ready (12 R-19, X-02) | **1.3.1; CameraX 1.6.2; zxing-cpp 3.1.1** | CameraX 1.7 when stable |
 | Pickers | platform contracts (Photo Picker, SAF, TakePicture) in `:android:platform`; FileKit 0.17.0 only for desktop/iOS later | activity 1.13.0 | — |
 | Speech | sherpa-onnx Kotlin API, vendored hash-pinned AAR, `-keep class com.k2fsa.sherpa.onnx.** { *; }` | **2.0.1** | — |
 | Terminal | Termux `terminal-emulator` + `terminal-view` (JitPack, Apache-2.0) | **v0.118.3** | — |
@@ -562,10 +564,13 @@ Upgrades happen only on the named trigger. Kotlin, the Compose compiler, Metro a
   `AnnotatedString` spans. The live block grows on a critically damped spring (stiffness 700). `LineBreak.Simple`.
 - `preferredFrameRate(High)` applies only while the block reveals. One `SelectionContainer` covers the transcript, with
   selection off on the live block until the Compose 1.13 fix ships.
-- Every `oc.kmp.compose` module gets `compose-stability.conf`, which marks these packages stable:
-  `io.github.eslamasabry.oc.core.model.**`, `…oc.core.domain.**`, `…oc.engine.**.state.**`, `…oc.ui.design.**` and
-  `kotlinx.collections.immutable.*`.
-- Slice-0 proof P4 counts recompositions on the chats list and on a 5,000-part transcript, with and without the config.
+- Every `oc.kmp.compose` module gets `compose-stability.conf`, which lists **audited value types only** (03 §19.2):
+  `Outcome`, `Failure`, the ids, `…oc.core.model.**`, `…oc.core.domain.capabilities.**`, `…oc.engine.**.state.**`,
+  `…oc.ui.design.**` and `kotlinx.collections.immutable.*`. Never a package of services, scopes or interfaces: the file
+  asserts immutability, it does not create it (audit 01+03 #12).
+- Large state classes put a `revision` first so `StateFlow`'s `equals` short-circuits, and reuse row instances (P3).
+- Slice-0 proof P4 measures the chats list and a 5,000-part transcript with and without the config, by **frame time,
+  `equals` cost and allocations** as well as recomposition counts.
 - Escalate (give the live part its own `StateFlow<String>`) only if Macrobenchmark shows jank.
 
 ### 9.4 Navigation and motion
@@ -612,10 +617,15 @@ Upgrades happen only on the named trigger. Kotlin, the Compose compiler, Metro a
 
 - **Each engine and per-profile store is confined to one serial dispatcher**
   (`dispatchers.default.limitedParallelism(1)`, injected). Heavy pure work goes to `default` and comes back as a value.
-- **`WriterLane`**: an admission flag plus a fair `Mutex`, so "drain" means every admitted write finished. Writes use
+- **A serial dispatcher is not a mutex.** `limitedParallelism(1)` serializes only between suspension points; an
+  operation that suspends in the middle (send, steer, selection change, queue flush) also takes the engine's `Mutex`.
+- **`WriterLane`**: an in-flight count taken **before** the admission check, plus a fair `Mutex`, so "drain" means every
+  admitted write finished, including one paused between the check and the lock (03 §17.3; audit 01+03 #1). Writes use
   `commit()`, never `apply()`.
-- **Scopes replace generation counters.** Each connection generation is a child scope, and cancelling it ends stale
-  work.
+- **Generations: scopes plus identity checks.** Each connection generation is a child scope. Connection-scoped commands
+  run **inside** the generation through `GenerationRunner.command` (03 §11.1), not in the caller's `viewModelScope`;
+  each mutation checks `isCurrent()` right before dispatch and before publishing; a replacement waits for
+  `cancelAndJoin()` of the old generation (audit 01+03 #6).
 - **Flows:**
   - Durable events are never dropped; volatile deltas may be coalesced.
   - Reconnect reconciles by refetch, never by replay.
@@ -642,35 +652,50 @@ Upgrades happen only on the named trigger. Kotlin, the Compose compiler, Metro a
   - every root scope has a `SupervisorJob` plus a logging handler;
   - the crash-loop guard (§9.7) opens safe mode.
 - **Provider credentials** never reach logs, diagnostics, notifications or test output.
-- **Nothing phones home.** PRIVACY.md is rewritten before the switch.
+- **Nothing phones home except the analytics core, under its own rules** (owner, 2026-11-01; section 18): BASIC
+  (anonymous, minimal, always on, disclosed on a "What we collect" page) and DETAILED (opt-in). Never content, file
+  paths, addresses or credentials. Nothing is sent until the owner picks a destination (16 D16-1). PRIVACY.md is
+  rewritten before the switch.
 
 ### 9.7 Startup order and the Flutter migration
 
-**`OcApplication.onCreate`** runs on the main thread, under 50 ms on the fast path:
+**`OcApplication.onCreate`** runs on the main thread, under 50 ms on **every** path, the first native launch included.
+**Hard rule: nothing in the first-launch path may block the main thread long enough to cause an ANR.** It copies,
+renames, hashes and parses no backed-up file; the only file it reads is the ≤ 4 KiB crash-loop record.
 
 1. Install the uncaught-exception handler. It writes the category-only crash record (`NativeCrashStore`, consent epoch
    kept).
 2. Initialize the `Redactor`.
 3. Run the crash-loop guard. Three consecutive launches that crash within 10 s of start turn on safe mode (Report a
    problem, Settings, Start fresh), recorded in `files/native/crashloop.json`.
-4. **Step 0, only on the first native launch** (no `backup=done` in `files/native/migration.json`): byte-copy
-   `shared_prefs/FlutterSharedPreferences.xml`, `FlutterSecureStorage.xml`, `FlutterSecureKeyStorage.xml` and
-   `FlutterSecureStorageConfiguration*.xml` to `files/migration/flutter-v57/`, then mark it done. This is the only
-   synchronous migration work. Its duration is measured in slice 0.
-5. Build `AndroidAppGraph`. Stores are lazy and await `MigrationGate`.
-6. Start `MigrationRunner` on IO. If `native.migration.v1` is complete, the gate opens at once.
-7. Warm the prefs file on IO.
+4. Build `AndroidAppGraph`. Stores are lazy; every store that opens a backed-up file waits for the `StartupFence`, and
+   reads and writes wait for `MigrationGate`.
+5. Start the **`StartupFence`** on one IO thread (05 §7.1): (a) finish any interrupted data restore, (b) **step 0, only
+   on the first native launch**: a crash-safe byte copy of `shared_prefs/FlutterSharedPreferences.xml`,
+   `FlutterSecureStorage.xml`, `FlutterSecureKeyStorage.xml`, `FlutterSecureStorageConfiguration*.xml` and
+   `flutter_image_picker_shared_preference.xml` (each with its `.bak` twin) to `files/migration/flutter-v57/`, published
+   by an atomic rename and adopted after verification if a crash came before the journal entry, (c) write the tiny
+   app-locale mirror, (d) start `MigrationRunner`. If `native.migration.v1` is complete, the gate opens at once. A
+   step-0 failure becomes `Blocked(LowSpace | BackupInvalid)` with the recovery screen, never a crash.
+6. Warm the prefs file on IO, after the fence.
+7. WorkManager initializes on demand after `onCreate` (`Configuration.Provider`; the default initializer is removed
+   from the manifest, 03 S20), so no worker runs before the graph and the fence exist.
 
 **After `onCreate`:**
 
-- `MainActivity` draws the kit "Updating your app…" or "Opening…" state on the first frame. After 8 s it offers Try
+- `MainActivity` draws the kit "Updating your app…" or "Opening…" state on the first frame, built without reading any
+  preference (the locale comes from the mirror file; before it exists, a wordless mark). After 8 s it offers Try
   again; on failure it offers Report a problem and Start fresh.
 - `EntryRouter` holds every launch intent until the gate opens.
-- Receivers, workers, widget providers, tiles and services await the gate inside their own coroutines
-  (`goAsync`, `CoroutineWorker`), never on the main thread.
+- Receivers, workers, widget providers, tiles and services wait inside their own coroutines (`goAsync`,
+  `CoroutineWorker`), never on the main thread, and only within a **component-specific budget counted from process
+  start** (05 §7.1 table: receivers persist the follow-up and `finish()` by process start + 7 s; anything that may start
+  a foreground service never waits for the gate; tiles never wait; workers retry or record and return).
 
-**`MigrationRunner` steps** run asynchronously. Each step writes its own idempotent marker, and source files are never
-deleted:
+**`MigrationRunner` steps** run asynchronously. Each step writes its own idempotent marker (journal `running →
+committed → verified`), and source files are never deleted. Every migration and backup step is a crash-safe
+transaction: journaled, resumable, verified, and proven by killing the process at every filesystem operation (05 §7.10,
+J2):
 
 1. Count stray DataStore and default-prefs files (count only).
 2. Decrypt the `flutter_secure_storage` v11 entries natively: the AES-128 key is unwrapped with RSA-OAEP (MGF1-SHA1)
@@ -706,7 +731,11 @@ once.
     - every table has `profile_id`;
     - the per-table `ProfileScope` registry extends today's `oc.<what>.<profileId>` sweep;
     - the import records counts and a SHA-256 per blob inside one transaction;
-    - source keys stay for one release.
+    - the moved data stays recoverable for one release: at switch+1 as frozen source keys; **when the trigger fired**,
+      as verified files under `files/migration/v2-sources/` and removed from the prefs file through a journaled
+      cutover, because a trigger caused by the file's size is not fixed by leaving it large. The post-migration
+      candidate must then pass the same threshold (05 §6.4; audit 04+05 #12).
+  - Data restore (R2) is allowed only while the storage generation is `prefs-v1` (05 §9.4).
 - **Deletion** stays a transaction run backwards. `ConnectionController.deleteProfileAndLocalData` semantics move to
   `:engine:profiles`.
 
@@ -714,7 +743,9 @@ once.
 
 - **Unchanged:** the package `io.github.eslamasabry.opencode_mobile` and the signing lineage of the population being
   updated (§12 D2).
-- **versionCode** moves to a new base of **10000**, above every installed local build (4300–4511), and never goes
+- **versionCode** has a floor of **10000** and comes from one allocator and ledger for every APK (05 §9.1, 15 §2.6): above
+  every number hosted or installed on the owner's phone or the emulator (signed builds up to 900058 exist on emulators,
+  11 CR11-18), never a fixed range. It never goes
   back. The ABI splits (arm64-v8a, x86_64, universal) share one versionCode.
 - **Component freeze.** The merged-manifest component FQCNs, WorkManager worker class names, notification channel ids,
   shortcut ids and the `opencode-mobile://` scheme must equal a list extracted once from the Flutter 2.1.0+57 release
@@ -742,7 +773,9 @@ The in-place update ships only when all four are true:
 3. The upgrade journey (§10.2) passes.
 4. The owner's phone test passes.
 
-Anything left for later must be named and approved by the owner (§12 D6). Before the switch, the owner uses the
+Anything left for later must be named and approved by the owner (§12 D6), **with an approval record** (date and the
+owner's words in `docs/native/decisions.md`, referenced from each affected `scope.jsonl` row, 02 §3.6). §12's defaults
+guide planning only: a default that removes or defers a behaviour is not an approval (Astra M7). Before the switch, the owner uses the
 side-by-side **preview flavor** (`io.github.eslamasabry.opencode_mobile.native`, same local key, own data, no
 migration).
 
@@ -765,7 +798,12 @@ The slice-0 version of this journey runs while the classes live in library modul
   authority.
 - **Freeze before fan-out (end of slice 0):** `:core:model` types, `Outcome`/`Failure` categories, gateway interfaces and
   `ServerCapabilities`, store interfaces, `AppDispatchers`/`Clock`, route keys for slices 1–3, `KitPlatform`, and the
-  first 20 kit part signatures (from `docs/ux-system/kit-api/*.md`).
+  first 20 kit part signatures (from `docs/ux-system/kit-api/*.md`). **A contract is frozen only when it compiles**:
+  `contracts/slice-1.md` holds exactly one shape per shared type, taken from its owner section (03 §0.3), and 03 §23
+  check 15 compiles it together with representative consumers (the migration census, the deletion transaction, the
+  schedule CAS, one engine and one ViewModel). A reconciliation note is not a freeze (Astra B1). This ADR is the single
+  authoritative revision: where an older example in another section contradicts §5–§9 here, the example is wrong and
+  is removed when found.
 - **Slice recipe:**
   1. `contracts/<slice>.md` names the interfaces, `XUi`/`XActions`, `Failure` categories, catalog rows, and **what the
      slice deletes**.
@@ -798,19 +836,34 @@ The slice-0 version of this journey runs while the classes live in library modul
 | P1 | Skeleton: `build-logic`, catalog, ~12 modules on CMP 1.13.0-beta01 for android + desktop; Metro graph with a `ConnectionScope` extension, `metrox-viewmodel-compose`, Nav3 per-entry ViewModels, contributed entry installers; nightly iOS klib job | assembles; graph smoke passes; klib job passes for `core`/`engine` | CMP 1.12.2; Koin; klib job only for non-UI modules |
 | P2 | Predictive back: list → chat container transform with option A on the emulator, RTL on both edges, fling, reduced motion; spike option B on Jetpack Nav3 1.3-alpha + Compose 1.13-beta in `:ui:shell` `androidMain` | the six motion-native §4.4 checks; Android resolves to Google's nav3 binary | plain shared-axis for list → chat until B |
 | P3 | Transcript: a recorded 5,000-part stream through `TranscriptEngine` and block `LazyColumn` with the draw-phase fade | publish counts match the Flutter fixture; no frame over budget in a release-build Macrobenchmark | per-part `StateFlow<String>` |
-| P4 | Stability: recomposition counts on the chats list and transcript with and without `compose-stability.conf` | the config removes the extra recompositions | widen the config, or move state types into Compose-compiled modules |
-| P5 | Migration and identity: install over Flutter 2.1.0+57 (§10.2, short form); adopt prefs; decrypt one v11 secret; rootfs untouched; widgets, tiles, pinned shortcut, schedule, channel settings and FQCNs survive while classes live in library modules; time step 0; seed and measure the Room trigger (§9.8) | all survive; step 0 under 1 s on the emulator for 100 MB; trigger numbers recorded | move step 0 into the async runner, with the gate covering every prefs reader |
+| P4 | Stability: the chats list and transcript with and without `compose-stability.conf` (audited value types only, §9.3) | frame time, `equals` cost and allocations do not get worse, and the extra recompositions go | fix state ownership and reference reuse (revision-first states, reused rows), or move state types into Compose-compiled modules. **Never widen the config** to hide a cost (audit 01+03 #12) |
+| P5 | Migration and identity: install over Flutter 2.1.0+57 (§10.2, short form) on the emulator `emulator-5584` only; adopt prefs; decrypt one v11 secret; rootfs untouched; widgets, tiles, pinned shortcut, schedule, channel settings and FQCNs survive while classes live in library modules; time step 0 on the fence thread; seed and measure the Room trigger (§9.8) | all survive; first frame drawn and no ANR with a 64 MiB prefs file under main-thread StrictMode (05 J8b); step 0 time recorded; trigger numbers recorded | — (step 0 is already off the main thread) |
 | P6 | Strings: ARB → CMP XML; per-app language (Android 13 locale config) switches both a screen and a notification at runtime; Arabic plurals; multiple `strings_<feature>.xml` per values folder | both switch; plurals right | own `LocalResourceEnvironment` override; one file per language |
-| P7 | Kit seams: `KitTappable` (ripple + haptic), `KitFrameText` 1.3× cap with non-linear scaling at 200 %, `KitSheetHost`, frost on API 31+; Roborazzi goldens on the VPS (light/dark, en/ar); Robolectric on JDK 21 at SDK 37; desktop `runComposeUiTest` headless on the VPS (or `xvfb-run`) | one kit part tested three ways; matches Flutter on the emulator | linear cap; Robolectric only |
+| P7 | Kit seams: `KitTappable` (ripple + haptic), `KitFrameText` 1.3× cap with non-linear scaling at 200 %, `KitSheetHost`, frost on API 31+; Roborazzi goldens on the VPS (light/dark, en/ar); Robolectric on JDK 21 at SDK 37; desktop `runComposeUiTest` headless on the VPS (or `xvfb-run`) | one kit part tested three ways; matches Flutter on the emulator | Robolectric only. (The "linear cap" fallback is withdrawn: P7 showed it leaves frame titles up to 21 % smaller than Flutter; 06 §9.2) |
 | P8 | Build cost: clean and incremental times and Gradle memory, android-only vs android + desktop, on the PC and the VPS | numbers recorded; per-change vs nightly desktop compile decided; host caps set | desktop compile nightly only |
 | P9 | Allowlist and seams: the Konsist rules fail on a planted `material3`, `LocalContext` and raw `clickable` in a feature; the `PlatformViewHandle` terminal seam renders a Termux `TerminalView` | failures caught; terminal renders | — |
 | P10 | Throughput: lines and catalog rows per agent-week from slices 0–1 | numbers feed the schedule re-plan at M0 | — |
+
+**Slice-0 status on 2026-11-01** (cloud sessions, reports in `docs/native/slice0/` on `native/m0-2026-11-01`; host and
+desktop JVM only, **no emulator or device run yet**):
+
+| Proof | Result so far | Still owed |
+|---|---|---|
+| P1 | met for Android and desktop: assembles, Metro graph checked, `ConnectionScope` extension, Nav3 per-entry ViewModels, Konsist and module rules fail when planted; compileSdk 37.1 proven necessary | iOS klib job not run; one emulator launch; PC/VPS build numbers (P8) |
+| P2 | option A built in `:ui:shell` **commonMain** (no Android-ahead API needed); gate state machine with no timer; settle = composed-entry count | all six device checks (fling, RTL, cancel feel) on the emulator; option B not spiked |
+| P3 | publish counts equal Flutter's exactly (burst = 1, spaced = 10; 18,461 on the 5,004-part stream) | release Macrobenchmark; a 400-line open fence is over budget on the JVM (fix proposed: settled fence chunks) |
+| P4 | not run | — |
+| P5 | reader library with 84 tests: prefs, FSS v11, picker cache, crash-safe backup/restore/barrier/tombstones | the real-install run on `emulator-5584`; the Keystore alias across `adb install -r` |
+| P6 | ARB → CMP XML converter, two escaping profiles, plural rules checked | on-device language switch (API 30 and 33+), notification copy |
+| P7 | one part tested three ways; frame cap Flutter-exact at 200 % (06 §9.2 corrected); frost blur at API 37, solid at 30 | emulator side-by-side; goldens re-recorded on the VPS |
+| P8–P10 | P8 numbers from a 4-vCPU cloud container only | PC and VPS numbers; throughput at M0 |
 
 ---
 
 ## 12. Follow-up decisions for the owner
 
-Each has a recommended default. Work proceeds on the default until the owner answers.
+Each has a recommended default. Work proceeds on the default until the owner answers, **except** that no behaviour
+leaves the switch release on a default: removals and deferrals need the owner's recorded approval (§10.1).
 
 | # | Decision | Recommended default |
 |---|---|---|
@@ -823,11 +876,12 @@ Each has a recommended default. Work proceeds on the default until the owner ans
 | D7 | **Termux:** keep, migrate-out only, or drop (builtin-linux Q1). | Migrate-out only |
 | D8 | **Phone agents path:** Paseo on the phone vs the OpenCode 2 built-in Claude Agent provider (agents-backends 08–30). | Paseo (today's daily path), revisited after the switch |
 | D9 | **Room timing:** accept the measured trigger in §9.8. | Switch+1 unless triggered |
-| D10 | **Frost** on the composer and chat header (2026-10-30 exception): `RenderEffect` on API 31+, solid below that and under reduced effects. | Keep it |
+| D10 | **Frost** on the composer and chat header (2026-10-30 exception): `RenderEffect` on API 31+, solid below that and under reduced effects. These stay the **only** two blur places until the glass trial. | Keep it |
+| D10b | **Native glass trial, after the switch** (owner, 2026-11-01): an optional Style with real blur (`RenderEffect`/Haze) plus AGSL refraction, on the top bar and sheets only. The owner judges it on the phone; it ships only if liked (06 WP G1, 15 §12). | Trial after the switch |
 | D11 | **Live backgrounds (20 looks) and illustration scenes.** | Port after the switch, or drop if nobody misses them |
-| D12 | **Pre-release libraries at the switch:** no alpha artifact in the release classpath. A beta is allowed only for Material 3 1.5 inside the kit if Google has not finished it by then. | As stated |
+| D12 | **Pre-release libraries at the switch:** no alpha artifact in the release classpath. A beta is allowed only for Material 3 1.5 inside the kit if Google has not finished it by then. Development pins may be beta (CMP 1.13.0-beta01 today); the switch waits for CMP 1.13.x stable unless the owner admits the beta (asked if it slips more than two weeks past switch-ready). Enforced on the resolved release classpath by `ReleaseClasspathPolicyTest` (03 §19.6). | As stated |
 | D13 | **iOS phase prerequisites:** a Mac or macOS CI, the Apple Developer Program, and a push relay for "reply finished". Also: iOS system Liquid Glass chrome vs the "no glass" rule, and an iOS design pass over the top 10 screens before iOS UI starts. Swift bridge via SKIE or Obj-C export for WidgetKit, App Intents and the share extension. | Decide when iOS is funded |
-| D14 | **Desktop expectations:** Compose Desktop has no Linux screen-reader support and renders through XWayland. The frozen Flutter Linux build remains the desktop client until native desktop ships. | Accept |
+| D14 | **Desktop expectations:** Compose Desktop has no Linux screen-reader support and renders through XWayland. The frozen Flutter Linux build remains the desktop client until native desktop ships: after the Flutter tree leaves `master` at switch+1 it is built from the `flutter-final-<version>` tag on a `flutter-linux` maintenance branch (03 §1.1). | Accept |
 | D15 | **A second build VPS** to raise concurrency from 5–6 to about 9–10 agents. | Yes, if budget allows |
 | D16 | **In-flight Flutter branches** (services, vitals, backup, app updates, AppFunctions): land each before the freeze, or port it straight from its branch. | Decide per branch before slice 3 |
 | D17 | **Web dropped; Windows out** of the native plan. | Confirm |
@@ -860,3 +914,48 @@ Each has a recommended default. Work proceeds on the default until the owner ans
   - `navigation3-ui-android-1.2.0.module`: depends on `androidx.navigation3:navigation3-ui:1.2.0`; the AAR is 6,179
     bytes. `material3-android-1.13.0-beta01.aar` is 6,486 bytes. On Android these are shims over Google's
     artifacts.
+
+---
+
+## 14. Codex Sol audit follow-up (2026-11-01, second pass)
+
+This ADR had not been edited since the Sol audit of 01+03. Changes made here, finding by finding (03 holds the code):
+
+| Finding | State in this ADR |
+|---|---|
+| 1 BLOCKER, `WriterLane` race | fixed in §9.5 (count-first admission, 03 §17.3) |
+| 2 BLOCKER, compileSdk | fixed in §8 (37.1, the AGP DSL, proven by P1) |
+| 3 BLOCKER, forbidden type edges | fixed in §5.2 (`ServerOrigin`, `Redacted`, `ApprovedLink` types in `:core:common`; gate types and `StreamStatus` in `:core:model`); the §6.1 table needs no new edge |
+| 4 BLOCKER, two storage contracts | already fixed by 03 §0.3 (05 owns them); no ADR change |
+| 5 MAJOR, profile model | already fixed (03 §10.3, 05 §2.5) |
+| 6 MAJOR, generations | fixed in §9.5 |
+| 7 MAJOR, WorkManager init | fixed in §9.7 step 7 |
+| 8 MAJOR, backup on main thread | fixed in §4 row 9, §9.7 and §11 P5 |
+| 9 MAJOR, locale fallback | fixed in §4 row 6 |
+| 10 MAJOR, test wiring | already fixed in 03 (JDK 21 launcher, iOS actuals), plus Room KSP for iOS and the Robolectric flags (03 §6.4, §7.2) |
+| 11 MAJOR, Room surface | fixed in §5.2 (`:core:db` row) and 03 §10.6 |
+| 12 MAJOR, stability | fixed in §9.3 and §11 P4 |
+| 13 MAJOR, alpha fallback | fixed in §8 and §12 D12 |
+| 14 MINOR, removal dates | fixed in §12 D14 and 03 §1.1 |
+
+From the 04+05 audit this ADR also changed §9.7 (crash-safe transactions, component budgets) and §9.8 (Room retention
+when the trigger fires; R2 only on `prefs-v1`). The owner decisions made after the plan are in §5.2 and §6.2
+(`:engine:analytics`), §9.6 (analytics), §12 D10b (glass trial) and §8 (QR stays Google-free).
+
+### 14.1 Codex Astra full review (2026-11-01, NO-GO) — where each finding was fixed
+
+| Finding | State | Where |
+|---|---|---|
+| B1 ADR overrides the fixes; two `ProfileScope` shapes | fixed | this ADR §4, §8, §9.3–§9.8, §10.3 (a contract freezes only when it compiles with consumers); one `ProfileScope` in 05 §3.3, 03 §10.5 points to it; 03 §21.1 example rewritten |
+| B2 lost-photo migration misses the photo or blocks M5 | fixed | 05 M3 L4b against the real `oc.pendingPromptPhoto` JSON, plugin-only case, `MigrationWriter`, M5 write set, `PickerOnlyRecoveryJourney` reaching `Open`; 10 §16.3 points to it |
+| B3 credential transitions not durable | fixed | 05 §4.4 credential ledger (revisions, tombstones, invalidate-first), M2 retries suppressed by it, R1 guard persists `guardDeleted.<id>` before deleting, `CredentialTransitionTest` crash points |
+| M1 deletion misses embedded data in backups | fixed | 16 §1.4 `ProfileStructuralEdit` on every retained copy and `.bak`; byte-level canary test; 05 §3.5 |
+| M2 untrusted intents can run actions | fixed | 07 §7.4 trusted (`.InternalEntryActivity`, non-exported) vs untrusted arrivals; 16 §1.8.1 |
+| M3 updater on API 26–27 | fixed | 16 §8.3 steps 6–7 by API, `PackageInfoCompat`, P16-4b on an API 26 AVD |
+| M4 WebView egress | fixed | 16 §1.8.5 `shouldInterceptRequest`, main-frame check, Safe Browsing per host class, the WebSocket/WebRTC gap stated, `WebPreviewEgressTest` |
+| M5 version codes | fixed | one allocator and ledger, no upper range or fixed start: §9.9, 05 §9.1, 15 §2.6, 11 CR11-18 |
+| M6 M0 gate omits checks 15–17 | fixed | 03 §23 one checklist (`gates.tsv`), check 15 with consumers; 15 §4 M0 exit and what M0 does not promise |
+| M7 removals pass on defaults | fixed | §10.1, §12 preamble; 02 §3.6 `approval` field, 02 §10 item 10 |
+| N1 size comparison | fixed | 12 §11 like-for-like breakdown; README §1 |
+| N2 J2-R2 contradiction | fixed | 05 §10.5 J2-R2 asserts R2 is refused; partition tested at the recovery layer |
+| Sol-status note: compileSdk not in the ADR | fixed | §8 |

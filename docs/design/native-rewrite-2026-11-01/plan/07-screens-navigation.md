@@ -13,8 +13,8 @@ single-owner modules, ADR §5.2). Feature agents own their own route file, entry
 3. Every way into the app (shortcuts, links, shares, notifications, widgets, tiles, scheduled runs) goes through one
    router. It waits until the app is ready and opens the right place exactly once, including shortcuts and
    notifications that the Flutter app created before the update.
-4. Removed: "Press back again to exit", the Termux management pages, outside (A2A) agents, and four dead or duplicate
-   pages. AI Team and FactsBook come right after the switch.
+4. Removed: "Press back again to exit", the Termux management pages, outside (A2A) agents, browser mode, and four dead
+   or duplicate pages. AI Team, FactsBook and the on-phone assistant come right after the switch.
 5. Six small choices for you are in §13. Each has the default we build if you say nothing.
 
 Tags: **[V]** checked today against official docs or the source. **[R]** read in the repo, a map, a research file, the
@@ -454,8 +454,8 @@ interface AppNavigator {
     /** The top key; for ViewModels that must know whether they are on top (03 §15.3). */
     val top: StateFlow<AppRoute?>
 
-    /** Push [route]. On top already: arrival only (N5). Deeper: popTo it (N10). Gated routes: §2.8. */
-    fun open(route: AppRoute)
+    /** Push [route] and post [arrival] for it. On top already: arrival only (N5). Deeper: popTo it (N10). Gated: §2.8. */
+    fun open(route: AppRoute, arrival: Arrival? = null)
 
     /** Open a conversation. [fromOrigin] = the caller is a row that registered a grow-from-row origin (§3.1).
      *  When Chat(ref) is already on top, only posts [arrival] (no second copy, c5842e836); deeper: popTo (N10). */
@@ -466,16 +466,16 @@ interface AppNavigator {
 
     /** Clear the whole stack to [root] (null = whatever RootDecision says now), then push [then] if given.
      *  Flutter's pushNamedAndRemoveUntil('/servers' | '/', (_) => false). Runs N3 for every removed entry. */
-    fun resetTo(root: RootRoute? = null, then: AppRoute? = null)
+    fun resetTo(root: RootRoute? = null, then: AppRoute? = null, arrival: Arrival? = null)   // arrival for the final top
 
     /** resetTo(ChatsRoute.Conversations, then). Flutter's pushNamedAndRemoveUntil('/home', (_) => false). */
-    fun land(then: AppRoute? = null)
+    fun land(then: AppRoute? = null, arrival: Arrival? = null)
 
     /** Replace only index 0 when the root KIND changes (RootViewModel only). Pages above stay unless N12 removes them. */
     fun replaceRoot(root: RootRoute)
 
     /** Rail, sidebar, Ctrl+1..3: reselect = pop to that destination; else pop to root and push it. */
-    fun selectDestination(destination: TopLevel)
+    fun selectDestination(destination: TopLevel, arrival: Arrival? = null)
 
     /** Same path as the system Back: runs the top page's handler first (Ctrl+W, a page's own Close). */
     fun back()
@@ -644,40 +644,66 @@ like any other entry.
 Flutter wraps every chat route in `ConversationBackendScope`, which swaps in the conversation's own connection
 (SCREENS-NAV-110). Native:
 
-- The chat entry, every `ChatPagesRoute` and every sheet keyed by a `ConversationRef` resolve their graph with
-  `ConnectionRegistry.graphFor(ref)` (ADR §9.1). Nothing reads "the active server" to draw a conversation.
-- When the graph is not open yet (an agent chat opened before its connection exists), the chat shows
-  `KitSkeletonTranscript` while `ConnectionRegistry.open(ref.profileId)` runs.
+- The chat entry, every `ChatPagesRoute`, every page with `from: R` and every sheet keyed by a `ConversationRef` resolve
+  their graph with `ConnectionRegistry.graphFor(ref)` (ADR §9.1), which uses `ref.backend` to pick the main or the
+  phone-agents graph (§2.2.1). Nothing reads "the active server" to draw a conversation.
+- When the graph is not open yet (an agent chat opened before its connection exists, or restored after process death),
+  the chat shows `KitSkeletonTranscript` while `ConnectionRegistry.open(ref)` runs.
 - The status line inside a conversation shows that conversation's backend in its own words ("Claude Code isn't
   answering", not "OpenCode is reconnecting"). The shell's status slot asks the top entry for its `StatusSource`
   (§10.1).
 
 ### 2.8 Capability gates on routes
 
-Each entry installer declares what its route needs:
+Each key declares what it needs in its `meta.requires` (§2.2.1), so the navigator can check it before a push (N7) and
+the check can depend on the key's own arguments:
 
 ```kotlin
+// :ui:routes — plain data; ServerFlag and PlatformFlag are enums in :core:model, evaluated by :core:domain
 sealed interface RouteRequirement {
     data object None : RouteRequirement
-    data class Platform(val flag: PlatformFlag) : RouteRequirement          // e.g. BuiltinLinux, Voice, Camera, Notifications, BackgroundService, TailscaleHandoff, HomeWidget
+    data class Platform(val flag: PlatformFlag) : RouteRequirement          // e.g. BuiltinLinux, Voice, Camera, Notifications, BackgroundService, TailscaleHandoff, HomeWidget, AppSelfUpdate
     data class Server(val flag: ServerFlag, val explain: EnableFlowId?) : RouteRequirement // checked on the route's profile
     data class All(val parts: List<RouteRequirement>) : RouteRequirement
+    data class Any(val parts: List<RouteRequirement>) : RouteRequirement
+    data object ScheduleTarget : RouteRequirement   // Flutter canSchedulePrompts: scheduledPrompts + non-transient transport + an open project
 }
 
-data class RouteMeta(
-    val motion: RouteMotion = RouteMotion.Page,
-    val pane: Pane = Pane.Single,
-    val requires: RouteRequirement = RouteRequirement.None,
-)
+// example: the gate follows the key's arguments
+@Serializable data class Review(val profileId: ProfileId, val projectDir: ProjectDir, val scope: ReviewScope,
+                                val from: ConversationRef? = null) : ProjectRoute {
+    override val meta get() = RouteMeta(requires = when (scope) {
+        is ReviewScope.Session -> Server(ServerFlag.SessionDiff, explain = null)
+        ReviewScope.WorkingTree, ReviewScope.Branch -> Server(ServerFlag.FileBrowsing, explain = EnableFlowId.ProjectChoose)
+    })
+}
 ```
 
-`RouteGate.check(route, world)` in `:ui:shell`:
+`RouteGate.check(route, world: ShellWorld)` in `:ui:shell`:
 
 - `Platform` false → the route is **not registered** on that platform (installers check `PlatformCapabilities` when
   they install). A call to `open` it logs `nav.absent` and does nothing. No UI may show a door to it.
 - `Server` false on the route's profile → `showSheet(CapabilityExplainer(explain))` when an enable flow exists, else
   `ServersRoute.Capabilities(profileId)` ("Available on this server" explains why).
 - Unknown (the profile is not connected) → the page opens and shows its own state.
+- Doors follow the same evaluation: a row, chip, slash command or search entry whose route fails is absent, never
+  disabled (`SessionMenuOffer`, `ProjectTools.available`, the search index all call `RouteGate.wouldOpen(route)`).
+
+**The Files destination follows Flutter's project tools** (`ProjectHub.toolsFor`, `project_hub_screen.dart:264–278`).
+`ProjectTools.available(capabilities)` in `:core:domain` is a straight port, used by the Files hub's rows, the rail
+destination, Ctrl+2, Go to and `RouteGate`:
+
+| Tool (row on the Files hub) | Needs |
+|---|---|
+| Files, Changes, Search | `fileBrowsing` |
+| Terminal | `terminal` |
+| Health | `projectManagement` |
+| Worktrees | `projectManagement` or `worktreeBrowsing` |
+| Services | `developmentServices` |
+| Workspaces | `projectManagement` and `managedWorkspaces` |
+
+The hub exists while **any** tool is available; a server without file browsing keeps its other tools as rows, and the
+destination is dropped only when none is left (SCREENS-NAV-63, B-NAV-044, B-NAV-048).
 
 Gated routes (Platform unless marked Server):
 
@@ -688,12 +714,18 @@ Gated routes (Platform unless marked Server):
 | `ServersRoute.Tailscale` | `TailscaleHandoff` |
 | `SettingsRoute.Voice` | `Voice` |
 | `SettingsRoute.Notifications(page = Background)` | `BackgroundService` |
+| `SettingsRoute.Updates` | `AppSelfUpdate` (Android only: the app installs its own updates only there, `whats_new_places.dart`) |
 | `UsageRoute.WidgetSettings` | `HomeWidget` |
-| `ProjectRoute.Files/Folder/FileView` | Server `fileBrowsing` (explain `projectChoose`) |
-| `ProjectRoute.Terminal` | Server `terminal` (page explains when the server keeps no terminals, SCREENS-NAV-06) |
-| `ProjectRoute.Review`, `ProjectRoute.Diff` | Server `sessionDiff` or `projectManagement` |
-| `ProjectRoute.Health`, `Worktrees`, `Services` | Server `projectManagement` |
-| `ProjectRoute.Workspaces` | Server `managedWorkspaces` |
+| `ProjectRoute.Files` | `Any` of the tool needs above (explain `projectChoose` when none) |
+| `ProjectRoute.Folder`, `ProjectRoute.FileView`, Files search | Server `fileBrowsing` |
+| `ProjectRoute.Review(Session)` | Server `sessionDiff` (Flutter `/diff`, `chat_commands.dart:72`) |
+| `ProjectRoute.Review(WorkingTree / Branch)` | Server `fileBrowsing` (Flutter's Changes tool rides on Files' gate) |
+| `ProjectRoute.Diff(TurnFiles)` / `(WorkingTreeFile)` / `(RevertFile)` | Server `sessionDiff` / `fileBrowsing` / `sessionRevert` |
+| `ProjectRoute.Health` | Server `projectManagement` |
+| `ProjectRoute.Worktrees` | Server `projectManagement` or `worktreeBrowsing` (`Any`) |
+| `ProjectRoute.Services` | Server `developmentServices` |
+| `ProjectRoute.Workspaces` | Server `projectManagement` and `managedWorkspaces` (`All`) |
+| `SchedulesRoute.List` | `ScheduleTarget`: Server `scheduledPrompts`, a profile whose transport is not transient, and an open project (Flutter `canSchedulePrompts`, `schedule_routes.dart:17`); doors are hidden when it fails |
 | `ChatsRoute.ClaudeImport` | Server `providerImportSupported` |
 | `ChatsRoute.AllConversations` | Server `globalSessionSearch` |
 | `ChatPagesRoute.Note` | Server `supportsSessionNotes` |
@@ -702,9 +734,15 @@ Gated routes (Platform unless marked Server):
 | `SettingsRoute.Providers`, `McpCatalog`, `McpSetup`, `Tools` | Server `serverCatalog` (explain `modelSignIn` / `mcpAdd`) |
 | `UsageRoute.Hub(section = Spending)` | Server `usageSpending` (the tab is absent, not the page) |
 
-Flag names in this table follow the map where it cites them (`fileBrowsing`, `terminal`, `projectManagement`,
-`sessionDiff`, `sessionRevert`, `supportsSessionNotes`, `globalSessionSearch`, `serverCatalog`,
-`providerImportSupported`); the others are descriptive. The binding names come from `ServerCapabilities` (85 flags,
+`ProjectRoute.Terminal` is **not gated**: Flutter's `OpenTerminalIntent` (Ctrl+Backquote) always opens the Terminal
+page, and the page explains when the server keeps no terminals (SCREENS-NAV-06). Its other doors (the `/terminal`
+slash command, the Files hub row, Go to "Terminal") are hidden when the server lacks `terminal`, as in Flutter
+(`chat_commands.dart:69`).
+
+Flag names in this table follow the Flutter source where it was read (`fileBrowsing`, `terminal`,
+`projectManagement`, `worktreeBrowsing`, `developmentServices`, `managedWorkspaces`, `sessionDiff`, `sessionRevert`,
+`supportsSessionNotes`, `globalSessionSearch`, `serverCatalog`, `scheduledPrompts`, `providerImportSupported`); the
+others are descriptive. The binding names come from `ServerCapabilities` (85 flags,
 ADR §5.2 `:core:domain`): the feature agent copies the exact flag the Flutter screen checks today and records it in
 `contracts/<slice>.md`. A screen with no gate today gets none.
 
@@ -716,29 +754,39 @@ ADR §5.2 `:core:domain`): the feature agent copies the exact flag the Flutter s
 @Inject
 class ChatsEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
-        entry<ChatsRoute.Conversations>(metadata = RouteMeta(motion = RouteMotion.Root).toNav()) {
+        entry<ChatsRoute.Conversations> {                       // no metadata: the key's `meta` says everything
             val vm = metroViewModel<ConversationsViewModel>()
             ConversationsScreen(vm.state.collectAsStateWithLifecycle().value, vm)
         }
-        entry<ChatsRoute.Inbox>(metadata = RouteMeta().toNav()) {
+        entry<ChatsRoute.Inbox> {
             val vm = metroViewModel<InboxViewModel>()
             InboxScreen(vm.state.collectAsStateWithLifecycle().value, vm)
         }
-        entry<ChatsRoute.NewConversation>(metadata = RouteMeta(motion = RouteMotion.FullScreenDialog).toNav()) { key ->
+        entry<ChatsRoute.NewConversation> { key ->
             val vm = assistedMetroViewModel<NewConversationViewModel, NewConversationViewModel.Factory> { create(key) } // 03 S5
             NewConversationScreen(vm.state.collectAsStateWithLifecycle().value, vm)
         }
         // …
     }
 }
+
+// :ui:routes ChatsRoutes.kt — meta lives on the key
+@Serializable data class NewConversation(val profileId: ProfileId? = null, val projectDir: ProjectDir? = null) : ChatsRoute {
+    override val meta get() = RouteMeta(motion = RouteMotion.FullScreenDialog)
+}
 ```
 
-- `RouteMeta.toNav()` turns motion into `NavDisplay.TransitionKey` / `PopTransitionKey` / `PredictivePopTransitionKey`
-  metadata [V names, developer.android.com "Animate between destinations"] and pane into the list-detail metadata
-  (§8.3). It lives in `:ui:routes` and is implemented by the kit's transition helpers.
+- **Only `:ui:shell` turns `meta` into Nav3 metadata.** The shell wraps the assembled entry provider exactly as 03 §15.4
+  does (`withRouteMotion`, renamed `withRouteMeta`): it adds the pane role as the list-detail metadata (§8.3) and a
+  marker of the push motion. It adds **no** per-entry `TransitionKey`/`PopTransitionKey`, because Nav3 lets per-entry
+  transition metadata override the display's specs and the operation-based classes of §3.1 must win; the global
+  `transitionSpec`, `popTransitionSpec` and `predictivePopTransitionSpec` read the navigator's `NavOp` first and the
+  entry's marker second (§3.1). The specs are built from the kit's `KitMotionSpecs` (08 §5.9); `:ui:kit` never sees
+  `:ui:routes`.
 - Entry decorators (shell): `rememberSaveableStateHolderNavEntryDecorator()`,
-  `rememberViewModelStoreNavEntryDecorator()`, and the shell's `ShortcutClaimsDecorator` (§9.3) [V names in
-  kmp-cmp-status §4].
+  `rememberViewModelStoreNavEntryDecorator()`, the shell's `ShortcutClaimsDecorator` (§9.3), and the motion decorator
+  that reports each entry's transition settle to the kit's `RowTransformGate` and provides `KitRouteTransition`
+  (08 §5.4, 03 §15.6) [V names in kmp-cmp-status §4].
 - One ViewModel per page (ADR §9.1). A ViewModel gets `AppNavigator` by injection and never touches the back stack.
 
 ---
@@ -748,59 +796,75 @@ class ChatsEntries : EntryInstaller {
 ### 3.1 Motion per route class
 
 All durations come from kit tokens (150–250 ms) except the owner-approved chat motions (MOT-2, MOT-5: the chat grows out
-of its row in 450 ms and returns in 300 ms, `KitMotion.rowReturn`) [R ui-kit UI-KIT-07/08].
+of its row in 450 ms and returns in 300 ms, `KitMotion.rowReturn`) [R ui-kit UI-KIT-07/08]. Exact specs: 08 §5.4 and
+§5.9.
 
-| `RouteMotion` | Used by | Forward (tap) | Pop (button, Ctrl+W, page Close) | Predictive back gesture | Motion level Calm | Motion level Off / system "remove animations" |
+**Most classes depend on how a page was opened, not on its key.** Nav3 1.2.0 decides "pop" by comparing stacks: a
+`replaceTop` (same size, last key differs) counts as a forward move and plays the target's forward motion, and `land()`
+(a strict subset) counts as a pop and plays the removed page's pop motion [R review of `NavDisplay.kt` `isPop`; P2
+confirms]. So the shell's global specs read the navigator's last `NavOp` (N13) first, and fall back to the key's static
+`RouteMotion` only for plain pushes and pops:
+
+| Class | Chosen when | Forward | Pop (button, Ctrl+W, page Close) | Predictive back gesture | Calm | Off / system "remove animations" |
 |---|---|---|---|---|---|---|
-| `GrowFromRow` | `ChatRoute.Chat` opened from a row that registered an origin (Conversations, Inbox, All conversations) | container transform: `sharedBounds(ChatKey(ref))` from the row, 450 ms; list holds still | shrink into the row, 300 ms; falls back to `Page` pop if the row is gone or off screen | Material full-screen preview (scale 1 → 0.9, fade-through at 35 %, shift **away from the swipe edge**); shared bounds **off** | cross-fade 150 ms | none |
-| `Page` | most pages | shared-axis X, 250 ms | reverse | Material full-screen preview | cross-fade 150 ms | none |
-| `FullScreenDialog` | `NewConversation`, `PairingScanner` | slides up from the bottom, 250 ms | slides down | the page follows the finger down (`PredictivePopTransitionKey` = slide out vertically) | cross-fade | none |
-| `TopLevel` | `Conversations`, `Files`, `Settings.Hub` when switched by rail/sidebar/Ctrl+1..3 | fade-through, 250 ms (leaving fades in the first third) | same | Material preview | cross-fade | none |
-| `Replace` | `replaceTop` (new conversation → chat, import → chat) | cross-fade 250 ms | — | — | cross-fade | none |
-| `Root` | `replaceRoot`, `land` | cross-fade 250 ms, no slide | — | — | cross-fade | none |
+| `GrowFromRow` | `NavOp.OpenChat(fromOrigin = true)` and the kit `RowTransformGate` allows it (origin row attached and on screen, gate `Idle`) | container transform: `sharedBounds(ChatKey(ref))` from the row, 450 ms; list holds still | shrink into the row, 300 ms, when the popped chat was opened this way and its row is still attached and visible; else `Page` pop | Material full-screen preview (scale 1 → 0.9, fade-through at 35 %, shift **away from the swipe edge**); shared bounds **off** | cross-fade 150 ms | none |
+| `Page` | `Push`, `OpenChat(fromOrigin = false)`, and pops of `Page` keys | shared-axis X, 250 ms | reverse | Material full-screen preview | cross-fade 150 ms | none |
+| `FullScreenDialog` | `Push` of a key whose `meta.motion` is `FullScreenDialog` (`NewConversation`, `PairingScanner`) and its pop | slides up from the bottom, 250 ms | slides down | the page follows the finger down (08 §5.9.1) | cross-fade | none |
+| `TopLevel` | `NavOp.SelectDestination` (rail, sidebar, Ctrl+1..3) | fade-through, 250 ms (leaving fades in the first third) | same | Material preview | cross-fade | none |
+| `Replace` | `NavOp.ReplaceTop` (new conversation → chat, import → chat, terminal ↔ local terminal) | cross-fade 250 ms | — | — | cross-fade | none |
+| `Root` | `NavOp.Reset` (`resetTo`, `land`, `replaceRoot`), whether Nav3 sees it as a pop or not | cross-fade 250 ms, no slide | — | — | cross-fade | none |
+
+`Replace`, `Root` and `TopLevel` are never written on a key. The per-key `RouteMotion` is only `Page` or
+`FullScreenDialog`, plus `growsFromRow` on `ChatRoute.Chat`. `ShellMotionTest` (08) table-tests (op, from, to) → class,
+including `replaceTop` to a `growsFromRow` key (must be `Replace`) and `land()` from a chat (must be `Root`).
 
 List-detail scenes (§8.3): changing only the detail pane cross-fades the pane in 150 ms; the list pane does not move.
 
 ### 3.2 Predictive back with the row → chat transform (option A, ADR §9.4)
 
-Slice-0 proof P2 settles the exact hooks [U]. The shape:
+Slice-0 proof P2 settles the exact hooks [U]. The gate is 08 §5.4's `RowTransformGate` (`:ui:kit`
+`motion/RowTransformGate.kt`), fed by the shell; this section only wires it:
 
 ```kotlin
 // :ui:shell commonMain — sketch; names checked against Nav3 1.2.0 / NavigationEvent 1.1.0 in P2
 @Composable
-internal fun ShellNavDisplay(stack: NavBackStack<NavKey>, nav: AppNavigatorImpl, installers: Set<EntryInstaller>) {
+internal fun ShellNavDisplay(stack: NavBackStack<NavKey>, nav: AppNavigatorImpl, provider: (NavKey) -> NavEntry<NavKey>) {
+    val gate = rememberRowTransformGate()                                   // kit; replaces the demo's 700 ms latch
     val dispatcher = LocalNavigationEventDispatcherOwner.current!!.navigationEventDispatcher
-    val transition by dispatcher.transitionState.collectAsState()
-    val inGesture = transition is NavigationEventTransitionState.InProgress
-    var poppedByGesture by remember { mutableStateOf(false) }   // replaces the demo's 700 ms latch
-
+    LaunchedEffect(dispatcher) {                                            // GestureStarted / GestureCancelled
+        dispatcher.transitionState.collect { gate.onTransitionState(it) }
+    }
     SharedTransitionLayout {
-        // Kit reads this in Modifier.kitGrowFromRow(): SharedContentConfig.isEnabled = !inGesture && !poppedByGesture
-        CompositionLocalProvider(LocalRowTransformEnabled provides (!inGesture && !poppedByGesture)) {
+        CompositionLocalProvider(LocalRowTransformGate provides gate) {    // kit's Modifier.growFromRow reads it
             NavDisplay(
                 backStack = stack,
-                onBack = { nav.onSystemBack(fromGesture = inGesture).also { if (inGesture) poppedByGesture = true } },
+                onBack = { nav.onSystemBack(fromGesture = gate.inGesture).also { gate.onBackCommitted() } },
                 sharedTransitionScope = this,
                 sceneStrategies = listOf(rememberShellListDetailStrategy()),       // §8.3
                 entryDecorators = listOf(
                     rememberSaveableStateHolderNavEntryDecorator(),
                     rememberViewModelStoreNavEntryDecorator(),
                     rememberShortcutClaimsDecorator(),
+                    rememberMotionDecorator(gate),   // counts running entry transitions; 0 → gate.send(TransitionSettled)
                 ),
-                transitionSpec = KitTransitions.pageForward,
-                popTransitionSpec = KitTransitions.pagePop,
-                predictivePopTransitionSpec = { edge -> KitTransitions.predictivePop(edge) },
-                entryProvider = entryProvider { installers.forEach { with(it) { install() } } },
+                transitionSpec = { ShellMotion.forward(nav.lastOp, initialState, targetState) },
+                popTransitionSpec = { ShellMotion.pop(nav.lastOp, initialState, targetState) },
+                predictivePopTransitionSpec = { edge -> ShellMotion.predictivePop(edge, initialState) },
+                entryProvider = provider,                                   // withRouteMeta(...) of all installers
             )
         }
-        // Cleared on settle, never on a timer:
-        LaunchedEffect(isTransitionActive) { if (!isTransitionActive) poppedByGesture = false }
     }
 }
 ```
 
-- The Conversations list freezes its row order while `isTransitionActive` (Flutter `f7e775dd3`, `89828a3c8`): the
-  screen passes `frozen = true` to the kit feed list, which applies queued reorders after settle.
+- The gate is cleared by `TransitionSettled`, which the shell sends when **no more than one entry is composed** (08
+  §5.4, as built and tested in slice-0 P2 D4; exact after a commit and after a cancel, and correct under Off). It is **never** cleared from
+  `SharedTransitionScope.isTransitionActive`: that flag is true only while matched shared elements run, and a gesture
+  pop with shared bounds off has none, so a flag cleared there would stay set and every later row tap would lose its
+  transform (the bug in this section's earlier sketch, 08 §13.2). `RowTransformGateTest` covers it.
+- The Conversations list freezes its row order (Flutter `f7e775dd3`, `89828a3c8`) while the gate is not `Idle` **or** a
+  page covers the list (the list entry is not the top entry): the screen passes `frozen = true` to the kit feed list,
+  which applies queued reorders once both are false. Gesture pops therefore hold the order too.
 - Option B (Compose 1.13 + Nav3 1.3 deferred two-stage transitions) lives in `:ui:shell` `androidMain` as a
   `JETPACK_AHEAD.md` row and becomes the default the week Google marks both stable (ADR §9.4).
 - RTL: the predictive shift follows `swipeEdge`, not the layout direction, because an Arabic user can swipe from either
@@ -818,6 +882,10 @@ internal fun ShellNavDisplay(stack: NavBackStack<NavKey>, nav: AppNavigatorImpl,
 
 This order is plain Kotlin (`BackOwnerPolicy` in `:ui:shell`) and table-tested in `commonTest` with
 `navigationevent-testing` (testing-perf §4.2).
+
+A hardware **Esc** on Android follows the same order: it closes an open menu, sheet, overlay or find bar, clears a
+search field, and otherwise is left unconsumed, so Android's key map turns it into Back (`Generic.kcm` maps
+`ESCAPE` to `BACK` as a fallback). Esc never stops a running reply on Android (§9.1).
 
 ### 3.4 Pages with their own Back guard
 
@@ -858,9 +926,10 @@ index 0 (RootRoute):   ChatsRoute.Conversations ◄──── RootDecision ─
      "N need you" ──► ChatsRoute.Inbox ──► ChatRoute.Chat (lands on the request card)
 ```
 
-Rail / sidebar destinations (medium and wider): **Conversations**, **Files** (only when the connected server can browse
-files), **Settings**. The rail highlights the nearest `TopLevelRoute` from the top of the stack: `[Conversations, Chat]`
-highlights Conversations; `[Conversations, Chat, Files]` (opened from the project chip) highlights Files.
+Rail / sidebar destinations (medium and wider): **Conversations**, **Files** (while the connected server offers at
+least one project tool, `ProjectTools.available`, §2.8), **Settings**. The rail highlights the nearest `TopLevelRoute`
+from the top of the stack: `[Conversations, Chat]` highlights Conversations; `[Conversations, Chat, Files(from = chat)]`
+(opened from the project chip) highlights Files.
 
 ### 4.2 Area graphs
 
@@ -874,15 +943,21 @@ ServersRoute.Servers ──► Editor(Add|Edit|Credentials) ──► PairingSca
         │            └──► SettingsRoute.Notifications(section = servers)
         ├──► PhoneRoute.ThisPhone (the phone's own row)       ├──► PhoneRoute.TermuxMigration (Termux migration row)
         └── sheets: QueuedPromptMove, ConnectionDetails
-ServerSwitcher sheet ──(after close)──► Servers(arrival) | PhoneRoute.SetupStart | ChatRoute.Chat | phone action | leave
+ServerSwitcher sheet ──(after close)──► Servers(arrival) | PhoneRoute.SetupStart | ChatRoute.Chat | phone action
+                     ──(Leave / Disconnect / active phone server removed)──► resetTo(Servers)
+Editor or Servers: connect / save succeeded ──► land()          ServerPage: Disconnect ──► resetTo(Servers)
+Connection card: Change server / Update password / Update token / Review certificate ──► resetTo(Servers) + arrival
 ```
 
 **This phone (Android only)**
 
 ```
 PhoneRoute.ThisPhone ──► SetupStart ──► SetupProgress ──► SetupReady ──land(then = Chat(FirstRun))
+        │                     └── phone server paths ──► resetTo(Servers) + ServersArrival(Connect | EnterPhoneCredentials)
+        │                                                 SetupReady: Leave without a project ──► resetTo()
         ├──► Linux ──► Running | LinuxPorts | LinuxStorage | LinuxPackages | LinuxServices ──► LinuxService(name) / LinuxServiceAdd
-        │         └──► LinuxBackups (also "Back up first" from Reset)
+        │         ├──► LinuxBackups (also "Back up first" from Reset)
+        │         └── Repair, Reset Linux ──► SetupProgress (also opened by AppStartup when a reset resumes, §2.6)
         ├──► LocalTerminal   ├──► KeepRunning   ├──► AgentsRoute.Hub   └──► TermuxMigration
 ```
 
@@ -893,8 +968,8 @@ SettingsRoute.Hub (search + Server, Agent, Conversations, This app, Help)
   Group(Server):        ServersRoute.Servers, PhoneRoute.ThisPhone
   Group(Agent):         ModelPicker sheet (NewConversations), Providers, UsageRoute.Hub, Tools, AgentsRoute.Hub
   Group(Conversations): reasoning / timestamps / phrase-chips switches in place, Default shell (local sheet), Voice, PermissionsAutomation ──► SavedPermissions
-  Group(ThisApp):       Notifications(Notifications), Notifications(Background) ──► PhoneRoute.KeepRunning, Appearance, Language (local sheet), Privacy ──► PrivacyPolicy sheet
-  Group(Help):          AboutRoute.Guide, AboutRoute.Tips, AboutRoute.ReportProblem, AboutRoute.About ──► Notices
+  Group(ThisApp):       Notifications(Notifications), Notifications(Background) ──► PhoneRoute.KeepRunning, Appearance, Language (local sheet), Privacy ──► PrivacyPolicy sheet, Updates (Android)
+  Group(Help):          AboutRoute.Guide, AboutRoute.Tips (──► WhatsNew sheet), AboutRoute.ReportProblem, AboutRoute.About ──► Notices, WhatsNew sheet
   With several servers: "By server" rows ──► ByServer(kind) ──► ServerPage(profileId)
 ```
 
@@ -915,50 +990,52 @@ dialog, state, part), **Native home** (route, shared sheet, local sheet in the n
 
 | # | Flutter | Kind | Native home | State holder | Entry points | Rules and decisions | Rows | Slice |
 |---|---|---|---|---|---|---|---|---|
-| A01 | `AppBootstrapGate` (`lib/main_parts/bootstrap_gate.dart`) | state | Shell opening gate (pre-graph composable): Opening… / Updating your app… (migration) / Try again after 8 s / failure with Report a problem + Start fresh | `BootstrapViewModel` (S) over `:engine:entry` `BootstrapState` + `MigrationGate` | every launch | first frame draws immediately (ADR §9.7); Start fresh = confirm, closes phone agents first (ee2c53940); no raw errors | SCREENS-NAV-01, B-MIGR-*, E2E-39 | 1 |
-| A02 | — (new) | state | Shell safe mode: Report a problem, Settings, Start fresh | `SafeModeViewModel` (S) | crash-loop guard (3 crashes in 10 s, ADR §9.7) | Settings opens without connecting | ADR §9.7 | 1 |
-| A03 | `_Root` (`lib/main_parts/root.dart`) | logic | `RootDecision` (`:engine:entry`) + `RootViewModel` (S) calling `replaceRoot` (§2.6) | `RootViewModel` | launch, profile/connection change | side duties move to `AppStartup` | SCREENS-NAV-02, B-NAV-017, B-NAV-024 | 2 |
+| A01 | `AppBootstrapGate` (`lib/main_parts/bootstrap_gate.dart`) | state | Shell opening gate (pre-graph composable): Opening… / Updating your app… (migration) / Try again after 8 s / failure with Report a problem + Start fresh | `BootstrapViewModel` (S) over `:engine:entry` `ShellWorld` (bootstrap state + `MigrationGate`) | every launch | first frame draws immediately (ADR §9.7); Start fresh = confirm, closes phone agents first (ee2c53940); no raw errors | SCREENS-NAV-01, B-MIGR-*, E2E-39 | 1 |
+| A02 | — (new) | state | Shell safe mode: Report a problem, Settings, Start fresh | `SafeModeViewModel` (S) over `ShellWorld` (crash-loop state from `:engine:diagnostics`) | crash-loop guard (3 crashes in 10 s, ADR §9.7) | Settings opens without connecting | ADR §9.7 | 1 |
+| A03 | `_Root` (`lib/main_parts/root.dart`) | logic | `RootDecision` (`:engine:entry`) + `RootViewModel` (S) calling `replaceRoot`; profile removal through N12 (§2.6) | `RootViewModel` over `ShellWorld` | launch, profile/connection change | row 1 = no **active** profile; side duties move to `AppStartup`, except the resumed Linux reset, which opens setup progress through the router | SCREENS-NAV-02, B-NAV-017, B-NAV-024 | 2 |
 | A04 | `ManagedMoveView` | state | root route `OnboardingRoute.ManagedMove` | `ManagedMoveViewModel` | `RootDecision` | quiet retries while the phone server starts; failure: Details + Try again | B-NAV-029 | 3 |
 | A05 | `HomeScreen` + `HomeOpening` | page | **merged away**: shell chrome (rail/sidebar/top-bar controls, §8.2) + `ChatsRoute.Conversations` root; opening state lives in Conversations | — | — | §6.2 M1 | SCREENS-NAV-03/06, B-NAV-037 | 2 |
 | A06 | `SavedServerConnectionCard` | state | state block of Conversations (connecting / starting / not answering / credentials / start the phone server) | `ConversationsViewModel` | root connecting | "Connected" only when a probe proved it; shared 8 s clock | SCREENS-NAV-73, B-NAV-007/008/009, E2E-03 | 2 |
-| A07 | `AppConnectionStatusScope`, `AppExitNoticeLine`, `ThermalNoticeLine`, background pause notice, one-shot notices | part | shell `StatusSlot` drawn by the top page's `KitScreen`; conditions from `:engine:attention` combiner (§10.1) | `StatusViewModel` (S) | always | one status line per window; priority connection > appStopped > heat > riskySwitch > work > update > info | SCREENS-NAV-07/83 | 2 |
+| A07 | `AppConnectionStatusScope`, `AppExitNoticeLine`, `ThermalNoticeLine`, background pause notice, one-shot notices | part | shell `StatusSlot` drawn by the top page's `KitScreen`; conditions from `:engine:attention` combiner (§10.1) | `StatusViewModel` (S) | always | one status line per window; priority connection > appStopped > heat > riskySwitch > work > update > info; the freeze tip's process-budget line ("new heavy work waits", `process_budget_status.dart`) is a `work` condition whose Open goes to `PhoneRoute.Running` | SCREENS-NAV-07/83 | 2 (budget line 3) |
 | A08 | `showServerSwitcher` | sheet | `SheetKey.ServerSwitcher` | `ServerSwitcherViewModel` | server pill | only chooses; acts after close (N2); same-host servers told apart by port | SCREENS-NAV-08, B-NAV-040/041 | 2 |
 | A09 | `showConnectionDetailsSheet` | sheet | `SheetKey.ConnectionDetails(profileId)` | `ConnectionDetailsViewModel` | status line Details; Servers row | Update password → `Editor(Credentials)`; certificate review → `Editor(Edit)` | SCREENS-NAV-09 | 2 |
 | A10 | `KitCapabilityExplainer` + `registerCapabilityFlows` (`capability_flows.dart`) | sheet | `SheetKey.CapabilityExplainer(flow)` + `EnableFlows` table (§7.12) | `CapabilityExplainerViewModel` (S) | any gated door | unregistered flows explain instead of offering a dead button | SCREENS-NAV-20 | 2 |
 | A11 | `showProductError` | dialog | kit `KitAlert` in the screen that failed (only when no part can carry the failure) | that screen's VM | — | fixed words + Details + Report a problem | SCREENS-NAV-26 | 2 |
 | A12 | `showCommandPalette` (`desktop/shortcuts.dart`) | sheet | `SheetKey.CommandLauncher` | `CommandLauncherViewModel` | Search button, Ctrl+K, `/help` | empty field: Go to places then 3 recent conversations; same matcher as Settings search; up to 400 conversations and 200 projects | SCREENS-NAV-10, B-NAV-049/056/057/058, E2E-24 | 5 |
 | A13 | `showShortcutsHelp` | sheet | `SheetKey.ShortcutsHelp` | none (reads `ShortcutCatalog`) | Ctrl+/, About, Settings › Help row | generated from the bindings (single source, §9) | DESKTOP-WEB-CROSS-12 | 5 |
-| A14 | `DesktopReleaseNotice`, `ShorebirdUpdateNotice` | part | status line kind `update` + `SheetKey.AppUpdate` | `UpdateViewModel` (S) | update found | Shorebird ends at the switch; native updater (ADR §9.9) | SCREENS-NAV-104 | 4 |
+| A14 | `DesktopReleaseNotice`, `ShorebirdUpdateNotice`, freeze tip `kit_update_dot.dart`, `kit_update_sheet.dart`, the gear tap in `home_screen.dart` | part | status line kind `update` + `SheetKey.AppUpdate`; an update dot on the gear (compact) and on the rail/sidebar Settings item (medium+); a gear or rail-Settings tap while an update waits opens `AppUpdate` first (§8.2) | `UpdateViewModel` (S) over `ShellWorld` (update-notice state, `:engine:diagnostics`) | update found | Shorebird ends at the switch; native updater (ADR §9.9); owner rule `app-updates-two-layers` | SCREENS-NAV-104, B-MIGR-012, freeze top-up rows | 4 |
+| A15 | freeze tip `whats_new_sheet.dart` + `whats_new_places.dart` | sheet | `SheetKey.WhatsNew` (§2.3) | `WhatsNewViewModel` | once after an update; About › What's new; Help › Tips | "Show me" = close, then `open(target)` + `HighlightArrival(anchor)`; steps whose target is absent on this platform have no Show me | freeze top-up rows | 4 |
 
 ### B. Conversations (`:feature:chats`)
 
 | # | Flutter | Kind | Native home | State holder | Entry points | Rules and decisions | Rows | Slice |
 |---|---|---|---|---|---|---|---|---|
-| B01 | `ChatsHomeScreen` (`screens/chats/chats_home_screen.dart`) | page | `ChatsRoute.Conversations` (root, Top) | `ConversationsViewModel` | launch, `land()`, rail, Ctrl+1, Back from Files/Settings | one list by urgency, sections Today / Earlier only (no state sections); "N need you" line opens Inbox; filter chips (project, connections when > 1, Running); New chat floating action hidden when the empty state offers it; late rows fade + rise 8 dp, first rows none; row says "Opening…" while an old agent chat reopens; reading width 720 centred | SCREENS-NAV-27/37, B-NAV-010/024/027/030/031/037/065/066/067, E2E-21, E2E-36 | 2 |
+| B01 | `ChatsHomeScreen` (`screens/chats/chats_home_screen.dart`) | page | `ChatsRoute.Conversations` (root, Top) | `ConversationsViewModel` | launch, `land()`, rail, Ctrl+1, Back from Files/Settings | one list by urgency, sections Today / Earlier only (no state sections); "N need you" line opens Inbox; filter chips (project, connections when > 1, Running); New chat floating action hidden when the empty state offers it; late rows fade + rise 8 dp, first rows none; row says "Opening…" while an old agent chat reopens; an agent chat that **cannot resume** asks "Start new conversation" (`agents-start-new`) and, on yes, `startNewChatReplacing` creates the new chat, then `openChat(newRef)` (`chats_home_screen.dart:237`, `chats_host.dart:444`); rows have no long-press menu (as in Flutter); reading width 720 centred | SCREENS-NAV-27/37, B-NAV-010/024/027/030/031/037/065/066/067, E2E-21, E2E-36 | 2 |
 | B02 | request cards inside rows (`chats_host.dart listRequest`) | part | part of B01 (kit-chat request card, secondary buttons) | B01 | — | permission answered in place with the Undo window; question/form rows open the chat | SCREENS-NAV-28 | 3 |
-| B03 | `showChatsProjectSheet` | sheet | local sheet of B01 | B01 | project chip | "Open a project…" closes this sheet, then opens `SheetKey.OpenProject` | SCREENS-NAV-29 | 2 |
+| B03 | `showChatsProjectSheet` | sheet | local sheet of B01 | B01 | project chip | "Open a project…" closes this sheet, then opens `SheetKey.OpenProject` (sequenced by `SheetPresence`, N2) | SCREENS-NAV-29 | 2 |
 | B04 | `showChatsSourcesSheet` | sheet | local sheet of B01 | B01 | connections chip | the active connection cannot be hidden; `oc.chatListShown.<profile>` | SCREENS-NAV-29 | 2 |
 | B05 | `InboxScreen` / `openInbox` | page | `ChatsRoute.Inbox` | `InboxViewModel` | "N need you" line; `ConversationsArrival(NeedsYou)` from notifications, Attention tile, widgets; Go to "Needs you" | oldest first; permissions answered in place; watched (monitor) rows tappable, never answerable here; empty: calm line + up to 5 finished-not-opened | SCREENS-NAV-35/36, B-NAV-002/003/025/082, E2E-36 | 3 |
 | B06 | `ProfileMonitorInbox` | part | **dropped**: not mounted anywhere in this checkout; its rows are Inbox `InboxWatchedEntry` rows | — | — | §6.1 X5 | — | — |
-| B07 | `NewChatScreen` / `showNewChat` | page | `ChatsRoute.NewConversation(profileId?, projectDir?)` | `NewConversationViewModel` | New chat button, empty states, Go to | full-screen dialog with Close; draft per project `oc.draft.new-chat.<b64url dir>.<profile>`; send → `replaceTop(Chat(ref))` with `OpenedAs.Existing`; Git failure swaps Retry for Git repair; agent cards checked against what the phone can run | SCREENS-NAV-30, B-NAV-032/053, E2E-21 | 2 |
+| B07 | `NewChatScreen` / `showNewChat` | page | `ChatsRoute.NewConversation(profileId?, projectDir?)` | `NewConversationViewModel` | New chat button, empty states, Go to; Files "Ask about this file" when not opened for a chat (D03) | full-screen dialog with Close; draft per project `oc.draft.new-chat.<b64url dir>.<profile>`; a starting text never travels in the key: the caller has `:engine:composer` write it into that draft first (Flutter `showNewChat(initialText: '@path ')`, `files_viewer.dart:105`); send → `replaceTop(Chat(ref))` with `OpenedAs.Existing`; Git failure swaps Retry for Git repair; agent cards checked against what the phone can run | SCREENS-NAV-30, B-NAV-032/053, E2E-21 | 2 |
 | B08 | `showAgentModelSheet` (`screens/agents/agent_model_sheet.dart`) | sheet | local sheet of B07 | B07 | agent card model row | used only by New conversation [R grep] | SCREENS-NAV-62 | 3 |
 | B09 | `showGitRepairSheet` | sheet | local sheet of B07 | B07 | start failure `projectGit` | starts at once; plain Git words | SCREENS-NAV-32 | 3 |
-| B10 | `showIsolatedTaskSheet` | sheet | local sheet of B07 (and of B01 row menu "Start in a separate copy") | B07 / B01 | "In a separate copy" | Back closes and stops waiting; hidden for folders with no commit | SCREENS-NAV-33 | 5 |
+| B10 | `showIsolatedTaskSheet` | sheet | local sheet of B07 only (Flutter's only caller is New conversation, `new_chat_screen.dart:235` → `startSeparateCopy`) | B07 | "In a separate copy" | Back closes and stops waiting; hidden for folders with no commit | SCREENS-NAV-33 | 5 |
 | B11 | `showClaudeImport` / `ClaudeImportScreen` | page | `ChatsRoute.ClaudeImport(profileId, projectDir)` | `ClaudeImportViewModel` | New conversation "Import from Claude Code" | gated `providerImportSupported`; result → `replaceTop(Chat)` | SCREENS-NAV-31 | 5 |
 | B12 | `GlobalSessionsScreen` | page | `ChatsRoute.AllConversations(profileId, archived)` | `AllConversationsViewModel` | `/sessions`, Search "all conversations"/"archived conversations" | search first; one project filter; "Continue this session here?" local sheet; load more on scroll with visible Try again | SCREENS-NAV-34 | 5 |
 | B13 | `SessionImportScreen` | page | `ChatsRoute.ImportConversation(profileId)` | `ImportConversationViewModel` | All conversations menu; Search hub row | file picked through `ActivityResults` (SAF); result → `replaceTop(Chat)` | SCREENS-NAV-55 | 5 |
 | B14 | `OlderSessionsPager`, `LastKnownSessions`, `KitFeedItem` rows | part | kit parts used by B01 | B01 | — | last-known rows never fill live maps | SCREENS-NAV-37 | 2 |
+| B15 | `ReturnBrief` (`lib/state/return_brief_state.dart` + its Conversations part) | part | first block of B01 on the first visit after the person was away (STATE-DATA-24), above Today; never a page, never a new bar level (it takes the place of the first rows and folds into them) | `ConversationsViewModel` over `:engine:connection` `ReturnBrief` (read state, 04 §7.10) | first open of Conversations after time away; never on a cold start with nothing unreviewed | lists unreviewed **identities** ("3 conversations finished while you were away", each a row that opens its chat), never a time interval and never an outcome it did not observe; equal or older idle sessions are not blanket-acknowledged; **Dismiss** acknowledges exactly the rows shown, by kind, session and id; overflow beyond the bound stays unacknowledged (the line says "and N more", which opens the list filtered to them); busy, viewed and blocked sessions are not result rows; unsupported read state and a partial inventory show their own quiet line ("Can't tell what's new on this server"), distinct from an empty brief (which shows nothing); dismissals stored per profile and location (`[baseUrl, directory, workspace]`), drained on profile deletion; enters with the list's 150–250 ms fade + rise, reduced motion fades only | B-CHAT-093, 094, 095, B-STATE-082, 083 | 2 |
 
 ### C. The conversation (`:feature:chat`, `:feature:chat-composer`, `:feature:chat-pages`)
 
 | # | Flutter | Kind | Native home | State holder | Entry points | Rules and decisions | Rows | Slice |
 |---|---|---|---|---|---|---|---|---|
-| C01 | `ChatScreen` (71 files, `screens/chat_screen.dart` + `screens/chat/*`) | page | `ChatRoute.Chat(ref)` + `ChatArrival` | `ChatViewModel` (S chat lead) hosting `ComposerViewModel` (`:feature:chat-composer`) inside the same entry | rows, Inbox, notifications, widgets, pinned shortcuts, links, share, scheduled runs, Search, continue-with, new conversation | Back guard §3.4; `GrowFromRow` when opened from a row; read acknowledgement only while the transcript is visibly read; first paint from the saved tail excerpt | SCREENS-NAV-38–54, CHAT-*, B-NAV-005/023, E2E-05/06/10/11 | 2 |
+| C01 | `ChatScreen` (71 files, `screens/chat_screen.dart` + `screens/chat/*`) | page | `ChatRoute.Chat(ref)` + `ChatArrival` | `ChatViewModel` (S chat lead) hosting `ComposerViewModel` (`:feature:chat-composer`) inside the same entry | rows, Inbox, notifications, widgets, pinned shortcuts, links, share, scheduled runs, Search, continue-with, new conversation | Back guard §3.4; `GrowFromRow` when opened from a row; read acknowledgement only while the transcript is visibly read; first paint from the saved tail excerpt; on open, `ChatViewModel` makes the chat's project the last-used one (`oc.lastProject.<profile>`, CHAT-GENUI-66; never for the demo or a temporary folder), which feeds the Files hub and New conversation | SCREENS-NAV-38–54, CHAT-*, B-NAV-005/023, E2E-05/06/10/11 | 2 |
 | C02 | find bar (`chat/transcript_find.dart`) | part | in-page mode of C01 | C01 | Ctrl+F, `/find`, session menu | Esc closes; F3 / Shift+F3; excerpt panel for hidden hits | SCREENS-NAV-54 | 2 |
 | C03 | timeline sheet (`chat/timeline_sheet.dart`) | sheet | local sheet of C01 | C01 | session menu, `/timeline` | prompt row has Fork | SCREENS-NAV-54 | 4 |
 | C04 | message actions (`chat/chat_message_actions.dart`) | sheet/menu | local `KitMenu` of C01 | C01 | the visible "Message actions" disc; long-press | copy redacted unless own prompt | SCREENS-NAV-41/54 | 2 |
 | C05 | `showStageRevertSheet` | sheet | local sheet of C01 → `ChatPagesRoute.StagedRevert` | C01 | message actions "Undo from here" | two shapes by server ability | SCREENS-NAV-54 | 4 |
-| C06 | session menu (`widgets/session_menu.dart`, `chat/chat_session_menu.dart`) | menu | local `KitMenu` of C01 (top-bar overflow) | C01 | ⋯ in the chat bar | "Go to" group then "Do" group, Delete last under a divider; gated by `SessionMenuOffer.of(capabilities)`; adds **Pin / Unpin** (O-07-2) | SCREENS-NAV-55, B-NAV-051, E2E-24 | 2 (items land with their pages) |
+| C06 | session menu (`widgets/session_menu.dart`, `chat/chat_session_menu.dart`) | menu | local `KitMenu` of C01 (top-bar overflow) | C01 | ⋯ in the chat bar | "Go to" group then "Do" group, Delete last under a divider; gated by `SessionMenuOffer.of(capabilities)`; adds **Pin / Unpin** (O-07-2; the only new home, no row long-press) | SCREENS-NAV-55, B-NAV-051, E2E-24 | 2 (items land with their pages) |
 | C07 | context ring sheet | sheet | local sheet of C01 → `ChatPagesRoute.Context` | C01 | context ring | "Compact now" when supported | SCREENS-NAV-39 | 4 |
 | C08 | `showRunningWorkSheet` | sheet | local sheet of C01 | C01 | work count in the bar | urgency order; spinner stops when idle | SCREENS-NAV-57 | 4 |
 | C09 | `ShellOutputScreen` | page | `ChatPagesRoute.ShellOutput(ref, shellId)` | `ShellOutputViewModel` | C08 row | Follow switch; stop with confirm | SCREENS-NAV-57 | 4 |
@@ -1002,34 +1079,36 @@ backend kind):
 |---|---|---|---|
 | `/new` | create session → `replaceTop(Chat, NewlyCreated)` | `/status` | `ServersRoute.ServerPage(ref.profileId)` |
 | `/sessions` | `ChatsRoute.AllConversations` | `/debug` | `AboutRoute.ReportProblem` |
-| `/workspaces` | `popTo(root)` (the one home; never a second shell) | `/themes` | `SettingsRoute.Appearance` |
-| `/files` | `ProjectRoute.Files(profileId, projectDir)` + `FilesArrival` | `/diff` | `ProjectRoute.Review(scope = Session(ref))` |
-| `/health` | `ProjectRoute.Health` | `/context` | C07 sheet |
+| `/workspaces` | `selectDestination(Conversations)` + `ConversationsArrival(None)` (Flutter dispatches `OpenChatsIntent()`, which also clears the list's filter, `chat_command_actions.dart:226`) | `/themes` | `SettingsRoute.Appearance` |
+| `/files` | `ProjectRoute.Files(profileId, projectDir, from = ref)` + `FilesArrival(openFiles = true)`; a temporary folder opens with no project | `/diff` | `ProjectRoute.Review(scope = Session(ref), from = ref)` (gated `sessionDiff`) |
+| `/health` | `ProjectRoute.Health` (gated `projectManagement`) | `/context` | C07 sheet |
 | `/move`, `/warp`, `/org` | `SheetKey.SessionDestination(mode)` | `/timeline` | C03 sheet |
 | `/editor` | C22 overlay | `/note` | `ChatPagesRoute.Note` |
-| `/terminal` | `ProjectRoute.Terminal` | `/approvals` | `SheetKey.Approvals` |
+| `/terminal` | `ProjectRoute.Terminal` (the command is hidden without `terminal`, as in Flutter) | `/approvals` | `SheetKey.Approvals` |
 | `/models`, `/agents`, `/variants` | `SheetKey.ModelPicker(Conversation(ref))` | `/plan` | kit task sheet (local) |
 | `/connect` | `SettingsRoute.Providers` | `/help` | `SheetKey.CommandLauncher` |
-| `/mcps`, `/tools`, `/skills`, `/references` | `SettingsRoute.Tools(section)` | `/share`, `/unshare`, `/rename`, `/fork`, `/compact`, `/thinking`, `/timestamps`, `/undo`, `/redo`, `/copy`, `/export`, `/shell`, `/retry`, `/reload` | actions in C01 (no navigation), or `ChatPagesRoute.Export` for `/export` |
+| `/skills` | `SettingsRoute.Tools(profileId, Skills, from = ref)` (gated `serverCatalog`); the skill applies to this conversation when the server `supportsSessionSkills`; a used skill goes through `:engine:composer` as a "Skill applied" note, which the chat shows and then reloads (`chat_command_actions.dart:337–355`) | `/references` | `SettingsRoute.Tools(profileId, References, from = ref)` (gated `fileBrowsing`): a picker; the chosen reference is staged in `:engine:composer` for this conversation and the page pops back to the chat (`onSelected: _attachReference`) |
+| `/mcps`, `/tools` | `SettingsRoute.Tools(profileId, section)` (no conversation) | `/share`, `/unshare`, `/rename`, `/fork`, `/compact`, `/thinking`, `/timestamps`, `/undo`, `/redo`, `/copy`, `/export`, `/shell`, `/retry`, `/reload` | actions in C01 (no navigation), or `ChatPagesRoute.Export` for `/export` |
 
 ### D. Project: files, review, Git, terminal, services (`:feature:project`)
 
 | # | Flutter | Kind | Native home | State holder | Entry points | Rules and decisions | Rows | Slice |
 |---|---|---|---|---|---|---|---|---|
-| D01 | `ProjectHub` / `openProjectFiles` / `openProjectTool` (`project_hub_screen.dart`) | page | `ProjectRoute.Files(profileId, projectDir?)` (Top; list pane) | `FilesHubViewModel` | chat project chip; rail Files (medium+); Ctrl+2; Search / Go to "Files"; `/files` | project = last used for a chat (`oc.lastProject.<profile>`), never a temp folder; tools in a fixed order; Changes and other tools are **visible rows** (obvious options); reselecting Files pops to the hub | SCREENS-NAV-63, B-NAV-026/044, E2E-14/20 | 5 |
-| D02 | `FilesScreen` + `files/*` (browse, name / symbol / text search) | page | `ProjectRoute.Folder(profileId, projectDir, path)` (list pane); search is an in-page mode of D01/D02 | `FolderViewModel` | folder rows; breadcrumbs (tap = `popTo`) | folders as routes give native predictive back per level; shared storage asks All files access first and never shows a blocked folder as empty (#87); visible "more" button per row | SCREENS-NAV-64 | 5 |
-| D03 | `showFilePreviewSheet(Loading)` + viewers (`widgets/file_preview.dart`, `pdf_file_preview.dart`, `svg_file_preview.dart`, `delimited_file_preview.dart`) | sheet | `ProjectRoute.FileView(profileId, projectDir?, path, line?)`: a page on compact, the detail pane on expanded (O-07-3) | `FileViewViewModel` | file rows; path chips in replies; tool output "Show all" | Attach / More (Find, Copy, Wrap, Show source, Save to device, Copy path, Open in Files, Open in Review); PDF via the isolated service | SCREENS-NAV-64, B-NAV-028, E2E-14 | 5 |
+| D01 | `ProjectHub` / `openProjectFiles` / `openProjectTool` (`project_hub_screen.dart`) | page | `ProjectRoute.Files(profileId, projectDir?, from?)` (Top; list pane) | `FilesHubViewModel` | **for a chat** (`from = ref`): the chat project chip (`chat_top_bar.dart:305`), the turn's "All files" link (`chat-turn-all-files`, `chat_files.dart:422`, named in the owner's no-bottom-nav decision), `/files` (`chat_command_actions.dart:235`); **not for a chat** (`from = null`): rail Files (medium+), Ctrl+2, Search / Go to "Files" | project = last used for a chat (`oc.lastProject.<profile>`, written by C01), never a temp folder; tools in a fixed order from `ProjectTools.available` (§2.8; the page exists while any tool does); Changes and other tools are **visible rows** (obvious options); a "Scheduled prompts" row when `ScheduleTarget` holds (K01); reselecting Files pops to the hub | SCREENS-NAV-63, B-NAV-026/044, E2E-14/20 | 5 |
+| D02 | `FilesScreen` + `files/*` (browse, name / symbol / text search) | page | `ProjectRoute.Folder(profileId, projectDir, path)` (list pane); search is an in-page mode of D01/D02 | `FolderViewModel` | folder rows; breadcrumbs (tap = `popTo` when that folder is in the stack, else `replaceTop` of the run's first `Folder`) | folders as routes give native predictive back per level; at most 8 consecutive `Folder` entries live (§2.2.3 rule 6); `from` is passed down unchanged; shared storage asks All files access first and never shows a blocked folder as empty (#87); visible "more" button per row | SCREENS-NAV-64 | 5 |
+| D03 | `showFilePreviewSheet(Loading)` + viewers (`widgets/file_preview.dart`, `pdf_file_preview.dart`, `svg_file_preview.dart`, `delimited_file_preview.dart`) | sheet | `ProjectRoute.FileView(profileId, projectDir?, path, line?)`: a page on compact, the detail pane on expanded (O-07-3) | `FileViewViewModel` | file rows; path chips in replies; tool output "Show all" | More (Find, Copy, Wrap, Show source, Save to device, Copy path, Open in Files, Open in Review); PDF via the isolated service. **Opened for a chat** (`from != null`): Attach, Add reference and "Ask about this file" are shown; they stage through `:engine:composer` keyed by `from`, then `popTo(ChatRoute.Chat(from))`. **Not for a chat**: those are hidden, and "Ask about this file" opens `ChatsRoute.NewConversation(profileId, projectDir)` after `:engine:composer` has written `@path ` into that new-chat draft (`files_viewer.dart:90–105`) | SCREENS-NAV-64, B-NAV-028, E2E-14 | 5 |
 | D04 | row actions sheet | sheet | local sheet of D02 | D02 | the row's visible "more" | — | SCREENS-NAV-64 | 5 |
-| D05 | `showFileShareSheet` (Wi-Fi share) | sheet | local sheet of D03 | D03 | FileView More | stops on close, Stop, or 15 min | SCREENS-NAV-64/70 | 5 |
+| D05 | `showFileShareSheet` (Wi-Fi share), freeze tip `link_file_share.dart` | sheet | local sheet of D03; and a local sheet of C01 for a file link tapped in a reply ("Share on Wi-Fi") | D03 / C01 | FileView More; a file link in a reply | stops on close, Stop, or 15 min; a file on another server or one this phone cannot read says so instead of offering it | SCREENS-NAV-64/70, freeze top-up rows | 5 |
+| D05a | freeze tip `phone_file_prompt.dart` (open a phone file from a chat link) | dialog | local kit confirm of C01, then the system chooser: `ACTION_VIEW` on a `FileProvider` URI with `FLAG_GRANT_READ_URI_PERMISSION` + `ClipData` (§7.7); an `.apk` goes to the package installer, whose own screen confirms | C01 | a phone-file link in a reply | where the build cannot hand files over, it says where the file is | freeze top-up rows | 5 |
 | D06 | `SharedStorageAccessFlow` | flow | `ActivityResults` + `PermissionGate` service (`:android:platform`) with a kit confirm in D02 | D02 | opening a shared-storage project | never at start-up | SCREENS-NAV-64 | 5 |
-| D07 | `ReviewWorkspace` / `pushWorkingTreeReview` | page | `ProjectRoute.Review(profileId, projectDir, scope)` | `ReviewViewModel` | Changes row; changed-files rows under a turn; `/diff` | unified vs side-by-side from width; comment sheet local with `KitDraft`; hands the formatted prompt to the chat composer through `:engine:composer` | SCREENS-NAV-65, B-NAV-053 | 5 |
+| D07 | `ReviewWorkspace` / `pushWorkingTreeReview` | page | `ProjectRoute.Review(profileId, projectDir, scope, from?)` | `ReviewViewModel` | Changes row; changed-files rows under a turn; `/diff` | unified vs side-by-side from width; comment sheet local with `KitDraft`; **for a chat**: "Add to prompt" and comment-to-prompt stage through `:engine:composer` keyed by `from` (the chat's `ReviewHandoffSession`, UX-103); **not for a chat**: those are hidden and a review comment copies through `KitCopy` | SCREENS-NAV-65, B-NAV-053 | 5 |
 | D08 | `DiffPage` | page | `ProjectRoute.Diff(profileId, source)` | `DiffViewModel` | C36 files; changed-file rows | "Change 1 of N"; N / P / F7 | SCREENS-NAV-65 | 5 |
 | D09 | `showGitSheet` (`lib/ui/git/*`) | sheet | `SheetKey.Git(profileId, projectDir)` | `GitSheetViewModel` | chat branch chip; Files hub; Go to | plain Git words; GitHub device flow; half-done banner | SCREENS-NAV-66, B-NAV-020/021/022/023, E2E-15 | 5 |
-| D10 | `TerminalPage` / `TerminalScreen` (`terminal_screen.dart`, `terminal/*`) | page | `ProjectRoute.Terminal(profileId, projectDir?)` | `TerminalViewModel` | Ctrl+Backquote; `/terminal`; Files hub icon; Go to "Terminal" | one live shell; tabs from two; visible overflow instead of long-press; source line switches to `PhoneRoute.LocalTerminal` with `replaceTop` | SCREENS-NAV-67, E2E-16 | 5 |
-| D11 | `ProjectHealthScreen` | page | `ProjectRoute.Health` | `HealthViewModel` | Files hub row; `/health`; enable flow `projectGitInit` | "Initialize Git repository?" confirm | SCREENS-NAV-69 | 5 |
-| D12 | `WorktreesScreen` | page | `ProjectRoute.Worktrees` | `WorktreesViewModel` | Files hub row | pinned New worktree | SCREENS-NAV-69 | 5 |
-| D13 | `DevelopmentServicesScreen` | page | `ProjectRoute.Services` | `ServicesViewModel` | Files hub row | editor and logs sheets local; polls 5 s only while shown | SCREENS-NAV-69 | 5 |
-| D14 | `ManagedWorkspacesScreen` | page | `ProjectRoute.Workspaces` | `WorkspacesViewModel` | Files hub row; `/workspaces` menu | gated `managedWorkspaces` | SCREENS-NAV-69 | 5 |
+| D10 | `TerminalPage` / `TerminalScreen` (`terminal_screen.dart`, `terminal/*`) | page | `ProjectRoute.Terminal(profileId, projectDir?)` | `TerminalViewModel` | Ctrl+Backquote (always); `/terminal`, Files hub row, Go to "Terminal" (only with `terminal`) | not gated (§2.8): the page explains when the server keeps no terminals; one live shell; tabs from two; visible overflow instead of long-press; source line switches to `PhoneRoute.LocalTerminal` with `replaceTop`; **Accessible mode** toggle in the bar (06 §7.7: transcript + "Send to terminal" field; on by itself under TalkBack) | SCREENS-NAV-67, E2E-16, DESKTOP-WEB-CROSS-30 | 5 |
+| D11 | `ProjectHealthScreen` | page | `ProjectRoute.Health` (`projectManagement`) | `HealthViewModel` | Files hub row; `/health`; enable flow `projectGitInit` | "Initialize Git repository?" confirm | SCREENS-NAV-69 | 5 |
+| D12 | `WorktreesScreen` | page | `ProjectRoute.Worktrees` (`projectManagement` or `worktreeBrowsing`) | `WorktreesViewModel` | Files hub row | pinned New worktree | SCREENS-NAV-69 | 5 |
+| D13 | `DevelopmentServicesScreen` | page | `ProjectRoute.Services` (`developmentServices`) | `ServicesViewModel` | Files hub row | editor and logs sheets local; polls 5 s only while shown | SCREENS-NAV-69 | 5 |
+| D14 | `ManagedWorkspacesScreen` | page | `ProjectRoute.Workspaces` | `WorkspacesViewModel` | Files hub row | gated `projectManagement` and `managedWorkspaces` | SCREENS-NAV-69 | 5 |
 | D15 | `ProjectsScreen` | page | `ProjectRoute.Projects(profileId)` | `ProjectsViewModel` | Go to "Projects"; enable flow `projectChoose` | "Current" mark never colour only; rename has a visible menu | SCREENS-NAV-69, B-NAV-011 | 5 |
 | D16 | `FolderBrowserSheet`, `RemoteFolderSheet`, `ProjectFolderActions` | sheet | `SheetKey.OpenProject(profileId, purpose)` | `OpenProjectViewModel` | B03; B07; D01 with no project; D15 | first page = New project, Search, Opened before (memory `obvious-options-first`); browsing is a quiet link at the bottom | SCREENS-NAV-69 | 3 |
 
@@ -1037,10 +1116,10 @@ backend kind):
 
 | # | Flutter | Kind | Native home | State holder | Entry points | Rules and decisions | Rows | Slice |
 |---|---|---|---|---|---|---|---|---|
-| E01 | `ServersScreen` (+ `servers/*`, welcome, `PhoneSetupWelcomeEntry`) | page | `ServersRoute.Servers` (root when no profile or re-entry; pushed from Settings) + `ServersArrival` | `ServersViewModel` | `RootDecision`; Settings › Server; launch `connect`; switcher "Add a server" | as root: brand + menu (About, Report a problem, Setup guide); welcome "this phone" vs "my computer"; every row opens its own server page; the phone's rows lead; a failed connect shows inline in the verdict style; forget = confirm + profile sweep | SCREENS-NAV-71, B-NAV-017/018/040/041, E2E-01, E2E-35 | 2 |
-| E02 | profile editor (`servers/profile_editor*.dart`, 7 files) | page | `ServersRoute.Editor(mode)` | `EditorViewModel` | E01 Add / Edit / Credentials; enable flows `addServer*`; connection details | steps are in-page state (Back steps back, §3.4); auto-test after 800 ms; certificate trust sheet (`showKitServerTrust`) local; plain-HTTP consent; save never connects without success; password never echoed | SCREENS-NAV-72, B-NAV-006/016, E2E-01/02/04 | 2 |
+| E01 | `ServersScreen` (+ `servers/*`, welcome, `PhoneSetupWelcomeEntry`) | page | `ServersRoute.Servers` (root when no **active** profile or re-entry; pushed from Settings) + `ServersArrival` (Connect, Add, EnterPhoneCredentials, Edit, Forget; §2.5) | `ServersViewModel` | `RootDecision`; Settings › Server; launch `connect`; switcher "Add a server" and phone rows; `resetTo(Servers)` from Leave, Disconnect, Change server and setup start (§2.4 table) | as root: brand + menu (About, Report a problem, Setup guide); welcome "this phone" vs "my computer"; every row opens its own server page; the phone's rows lead; a failed connect shows inline in the verdict style; forget = confirm + profile sweep (N12 then removes that profile's pages); connect success → `land()`; `EnterPhoneCredentials` restores the app-written password first (§2.5) | SCREENS-NAV-71, B-NAV-017/018/040/041, E2E-01, E2E-35 | 2 |
+| E02 | profile editor (`servers/profile_editor*.dart`, 7 files) | page | `ServersRoute.Editor(mode, connectOnSave, focusPassword)` | `EditorViewModel` | E01 Add / Edit / Credentials; `EnterPhoneCredentials` fallback (`connectOnSave`, `focusPassword`, phone URL prefilled); `Edit(focusPassword)` from the connection banner and AI setup; enable flows `addServer*`; connection details | steps are in-page state (Back steps back, §3.4); auto-test after 800 ms; certificate trust sheet (`showKitServerTrust`) local; plain-HTTP consent; save never connects without success; a successful connect or save calls `land()`, so the editor never stays above the new Conversations root (E2E-01 step 6); password never echoed | SCREENS-NAV-72, B-NAV-006/016, E2E-01/02/04 | 2 |
 | E03 | `PairingScannerScreen` | page | `ServersRoute.PairingScanner` | `PairingScannerViewModel` | E02 "Scan" | CameraX + zxing-cpp (Google-free, memory `freeze-owner-decisions`); payload goes to `:engine:profiles` `PairingInbox` (memory only, `Redacted`), **never** a route result; "Paste instead"; no scan on desktop | SCREENS-NAV-72, E2E-02 | 2 |
-| E04 | `ServerPageScreen` / `openServerPage` (`settings/server_page.dart`) | page | `ServersRoute.ServerPage(profileId)` | `ServerPageViewModel` | E01 rows; By server rows; `/status`; switcher row ⋯ | pinned to its profile (SC11); Connection / In this app / On the server; every action names the server ("Disconnect from Laptop"); plugins section in place | SCREENS-NAV-75/93, B-NAV-068/069, E2E-22 | 2 (server-owned rows 4–5) |
+| E04 | `ServerPageScreen` / `openServerPage` (`settings/server_page.dart`) | page | `ServersRoute.ServerPage(profileId)` | `ServerPageViewModel` | E01 rows; By server rows; `/status`; switcher row ⋯ | pinned to its profile (SC11); Connection / In this app / On the server; every action names the server ("Disconnect from Laptop"; Disconnect → `resetTo(Servers)`, `server_page.dart:192`); plugins section in place | SCREENS-NAV-75/93, B-NAV-068/069, E2E-22 | 2 (server-owned rows 4–5) |
 | E05 | `ConnectionCheckScreen` | page | `ServersRoute.ConnectionCheck(profileId)` | `ConnectionCheckViewModel` | E04 Connection | five steps run on open; no server text | SCREENS-NAV-75 | 2 |
 | E06 | `ReachComputerScreen` | page | `ServersRoute.ReachComputer` | none (static) | E05 (only entry today [R grep]) | Tailscale first, SSH tunnel second, never a public tunnel | SCREENS-NAV-76 | 4 |
 | E07 | `HostManagementScreen` | page | `ServersRoute.HostSetup(profileId)` | `HostSetupViewModel` | E04 | copyable commands; the app never runs them; host update restart dialog stays local to E04 | SCREENS-NAV-76 | 4 |
@@ -1055,20 +1134,20 @@ backend kind):
 
 | # | Flutter | Kind | Native home | State holder | Entry points | Rules and decisions | Rows | Slice |
 |---|---|---|---|---|---|---|---|---|
-| F01 | `ThisPhoneScreen` / `openThisPhone` (+ `this_phone/*`) | page | `PhoneRoute.ThisPhone` | `ThisPhoneViewModel` | Settings › Server › This phone; E01 phone row; launch `linux`; Status widget Linux line; enable flow `serverGeneration` (host = this phone) | ordered by likelihood; every act names its object ("Stop the server on this phone"); each optional tool has its own "Remove <tool>" with measured space | SCREENS-NAV-78, BUILTIN-LINUX-44, E2E-18 | 3 |
-| F02 | `PhoneSetupStartScreen` (+ `SetupCustomizeSheet` local) | page | `PhoneRoute.SetupStart(addTools)` | `SetupStartViewModel` | welcome "this phone"; F01 Add tools; enable flow `phoneSetup` | one promise, one filled button; numbers from the registry | SCREENS-NAV-79, E2E-17 | 3 |
-| F03 | `PhoneSetupProgressScreen` | page | `PhoneRoute.SetupProgress` | `SetupProgressViewModel` | F02 start; launch `phone_setup`; Reset Linux | job runs in `SetupService`; "Safe to leave"; Pause / Continue; Details holds steps, log, Report | SCREENS-NAV-79, E2E-17 | 3 |
-| F04 | `PhoneSetupReadyScreen` | page | `PhoneRoute.SetupReady` | `SetupReadyViewModel` | F03 done; launch `phone_setup_done` | one name makes a project, then `land(then = Chat(ref))` with `OpenedAs.FirstRun`; haptic done | SCREENS-NAV-79 | 3 |
+| F01 | `ThisPhoneScreen` / `openThisPhone` (+ `this_phone/*`); freeze tip process-budget card | page | `PhoneRoute.ThisPhone` | `ThisPhoneViewModel` | Settings › Server › This phone; E01 phone row; launch `linux`; Status widget Linux line; enable flow `serverGeneration` (host = this phone) | ordered by likelihood; every act names its object ("Stop the server on this phone"); each optional tool has its own "Remove <tool>" with measured space | SCREENS-NAV-78, BUILTIN-LINUX-44, E2E-18 | 3 |
+| F02 | `PhoneSetupStartScreen` (+ `SetupCustomizeSheet` local) | page | `PhoneRoute.SetupStart(addTools)` | `SetupStartViewModel` | welcome "this phone"; F01 Add tools; enable flow `phoneSetup` | one promise, one filled button; numbers from the registry; when the phone server already exists: running with a profile → `resetTo(Servers)` + `Connect(profileId, detectedRunning)`, running without one → `resetTo(Servers)` + `EnterPhoneCredentials(null, openCode2 = true)`, stopped → `resetTo(Servers)` (`phone_setup_start_screen.dart:385–395`) | SCREENS-NAV-79, E2E-17 | 3 |
+| F03 | `PhoneSetupProgressScreen` | page | `PhoneRoute.SetupProgress` | `SetupProgressViewModel` | F02 start; launch `phone_setup`; Reset Linux; Linux › Repair (check-and-repair runs here); a pending Linux reset resumed at start (`AppStartup`, §2.6) | job runs in `SetupService`; "Safe to leave"; Pause / Continue; Details holds steps, log, Report | SCREENS-NAV-79, E2E-17 | 3 |
+| F04 | `PhoneSetupReadyScreen` | page | `PhoneRoute.SetupReady` | `SetupReadyViewModel` | F03 done; launch `phone_setup_done` | one name makes a project, then `land(then = Chat(ref))` with `OpenedAs.FirstRun`; an existing project → `land()`; Leave without a project → `resetTo()`; haptic done | SCREENS-NAV-79 | 3 |
 | F05 | `PhoneSetupTermuxScreen`, `PhoneSetupTermuxJobScreen` | page | **dropped** (D7 migrate-out only) | — | — | §6.1 X1 | SCREENS-NAV-79 | — |
 | F06 | `PhoneSetupUnsupportedScreen` | page | **dropped**: off Android the phone routes are not registered | — | — | §6.1 X4 | — | — |
-| F07 | `LinuxManagerScreen` / `openLinuxManager` | page | `PhoneRoute.Linux` | `LinuxHubViewModel` | F01 "Linux" | Repair asks first; Reset Linux confirm (never red) | SCREENS-NAV-80, BUILTIN-LINUX-40/43 | 3 |
-| F08 | `LinuxProcessesPage` + `RunningOnPhoneScreen` | page | **merged**: `PhoneRoute.Running` (owner-approved S8, memory `linux-manager-plan`) | `RunningViewModel` | F01 "Running on this phone"; F07 | refresh 10 s only while shown; stop with confirm; protected rows never offered | SCREENS-NAV-78/80, BUILTIN-LINUX-11/40, E2E-20 | 3 |
+| F07 | `LinuxManagerScreen` / `openLinuxManager`; freeze tip `kit_vitals_strip.dart` | page | `PhoneRoute.Linux` | `LinuxHubViewModel` | F01 "Linux" | the vitals strip (up to four readings, each with a spoken label) is sampled every 5 s **only while this page is the top entry** (`Lifecycle` + `top`); Repair asks first, then opens `SetupProgress`; Reset Linux confirm (never red) | SCREENS-NAV-80, BUILTIN-LINUX-40/43 | 3 |
+| F08 | `LinuxProcessesPage` + `RunningOnPhoneScreen` | page | **merged**: `PhoneRoute.Running` (owner-approved S8, memory `linux-manager-plan`) | `RunningViewModel` | F01 "Running on this phone"; F07; the process-budget status line's Open | refresh 10 s only while shown; stop with confirm; protected rows never offered; freeze tip: the child-process-limit card (`child_limit_card.dart`: one notice, steps, one button to Developer options when this APK can open it, a quiet Hide) | SCREENS-NAV-78/80, BUILTIN-LINUX-11/40, E2E-20 | 3 |
 | F09 | `LinuxPortsPage` | page | `PhoneRoute.LinuxPorts` | `LinuxPortsViewModel` | F07 | a port is listed only if a loopback connect succeeds; previewable rows open `ProjectRoute.DevPreview` | BUILTIN-LINUX-40 | 3 |
 | F10 | `LinuxStoragePage` | page | `PhoneRoute.LinuxStorage` | `LinuxStorageViewModel` | F07 | cleanups only inside allowed roots | BUILTIN-LINUX-41, E2E-19 | 3 |
 | F11 | `LinuxPackagesPage` + `LinuxJobPanel` | page | `PhoneRoute.LinuxPackages` | `LinuxPackagesViewModel` | F07 | the job panel survives leaving; named Stop | BUILTIN-LINUX-42 | 3 |
 | F12 | Linux services pages (branch `feat/linux-services-ui-2026-10-31`) | page | `PhoneRoute.LinuxServices`, `LinuxService(name)`, `LinuxServiceAdd` | one VM each | F07 | port straight from the branch per ADR D16 | BUILTIN-LINUX-45/46 | 3 (D16) |
 | F13 | Linux backups (branch `feat/linux-backup-2026-11-01`) + `ProjectExportScreen` in-app use | page | `PhoneRoute.LinuxBackups` ("Projects only" = the former Export projects) | `BackupsViewModel` | F07; F01; Reset "Back up first" | owner-approved move of Export into Backups | BUILTIN-LINUX-48/59 | 3 (D16) |
-| F14 | `LocalTerminalView` | page | `PhoneRoute.LocalTerminal` | `LocalTerminalViewModel` | F01 "Open a terminal"; D10 source line (`replaceTop`) | works while the server is stopped | SCREENS-NAV-68, BUILTIN-LINUX-50 | 3 |
+| F14 | `LocalTerminalView` | page | `PhoneRoute.LocalTerminal` | `LocalTerminalViewModel` | F01 "Open a terminal"; D10 source line (`replaceTop`) | works while the server is stopped; **Accessible mode** toggle (06 §7.7) | SCREENS-NAV-68, BUILTIN-LINUX-50, DESKTOP-WEB-CROSS-30 | 3 |
 | F15 | `openKeepRunningScreen` / `KeepRunningSection` | page | `PhoneRoute.KeepRunning` | `KeepRunningViewModel` | Settings › Background summary row; enable flow `allowBackground`; `Notifications(section = keep-running)` target | steps ordered by what is left; "You're set"; Android's 6 h / 24 h stated plainly | SCREENS-NAV-92, ANDROID-PLATFORM-44 | 4 |
 | F16 | `TermuxMigrationScreen` / `openTermuxMigration` + `TermuxMigrationRow` / `Offer` | page | `PhoneRoute.TermuxMigration` | `TermuxMigrationViewModel` | E01 migration row; F01 | never deletes Termux; resumable | SCREENS-NAV-81, BUILTIN-LINUX-63 | 3 |
 | F17 | `TermuxProcessesScreen`, `TermuxStorageScreen`, `showTermuxOtherAppsSheet`, `TermuxRunawayWatcher` / `WorkRunawayNotice` | page/sheet | **dropped** (D7) | — | — | §6.1 X1 | SCREENS-NAV-81 | — |
@@ -1079,9 +1158,9 @@ backend kind):
 
 | # | Flutter | Kind | Native home | State holder | Entry points | Rules and decisions | Rows | Slice |
 |---|---|---|---|---|---|---|---|---|
-| G01 | `AgentsHubScreen` + `AgentsScreen` + `AgentsSection` (+ F18) | page | **merged**: `AgentsRoute.Hub` | `AgentsHubViewModel` | Settings › Agent › Agents; F01 agents row; enable flow `addToolClaude` | every agent this phone can run + state + the one act needed (install, sign in, phone check, resume); "Cards from agents" switch row | SCREENS-NAV-84, E2E-31 | 3 |
+| G01 | `AgentsHubScreen` + `AgentsScreen` + `AgentsSection` (+ F18) | page | **merged** (owner choice O-07-5, default merge): `AgentsRoute.Hub` | `AgentsHubViewModel` | Settings › Agent › Agents; F01 agents row; enable flow `addToolClaude` | every agent this phone can run + state + the one act needed (install, sign in, phone check, resume); "Cards from agents" switch row | SCREENS-NAV-84, E2E-31 | 3 |
 | G02 | `showAgentSheet` (steps list / setup / check / signIn) + `AgentPhoneCheckView` | sheet | `SheetKey.Agent(agentId, step, signInAgain)` | `AgentSheetViewModel` | G01 rows; B07 agent cards; Conversations agent notices | one sheet; each step replaces the frame in place | SCREENS-NAV-84 | 3 |
-| G03 | `AgentSignInTerminalScreen` | page | `AgentsRoute.SignInTerminal(agentId)` | `SignInTerminalViewModel` | G02 sign-in step | opens Claude's sign-in page only through the exact-URL check; holds the sign-in foreground claim | SCREENS-NAV-84, ANDROID-PLATFORM-16, E2E-31 | 3 |
+| G03 | `AgentSignInTerminalScreen` | page | `AgentsRoute.SignInTerminal(agentId)` | `SignInTerminalViewModel` | G02 sign-in step | opens Claude's sign-in page only through the exact-URL check; holds the sign-in foreground claim; **Accessible mode** (06 §7.7) ships with it in slice 3, with "Open sign-in page" and "Copy code" above the transcript (17 §1.5) | SCREENS-NAV-84, ANDROID-PLATFORM-16, E2E-31, DESKTOP-WEB-CROSS-30 | 3 |
 | G04 | `AgentAccountScreen` / `AgentAccountPanel` | page | `AgentsRoute.Account(profileId)` | `AgentAccountViewModel` | E04 (Codex); enable flow `modelSignIn` (agent account) | pinned to the profile it opened for | SCREENS-NAV-84, E2E-29 | 5 |
 | G05 | `AgentStatusNotices`, `CardsFromAgentsRow` | part | parts of B01 and G01 | B01 / G01 | — | each action names its target | SCREENS-NAV-84 | 3 |
 | G06 | `ExternalAgentsScreen`, `ExternalAgentDetailScreen`, `ExternalTaskScreen` / `openExternalAgents` | page | **dropped** (ADR D6 default: A2A dropped) | — | — | §6.1 X2 | SCREENS-NAV-85 | — |
@@ -1106,7 +1185,7 @@ notification kinds still route (§7.6, §7.8); Team data on disk stays untouched
 
 | # | Flutter | Kind | Native home | State holder | Entry points | Rules and decisions | Rows | Slice |
 |---|---|---|---|---|---|---|---|---|
-| I01 | `SettingsScreen` (hub, search, `SettingsServersBlock`) | page | `SettingsRoute.Hub` (Top; list pane) + `HighlightArrival` | `SettingsHubViewModel` | gear (compact); rail Settings; Ctrl+,; Ctrl+3 | search field + five one-word groups; only Server has a value line; "N settings aren't available on this server – Why"; with several servers "You can change some of these for one server" block | SCREENS-NAV-90, B-NAV-042/068/070/071/072/073, E2E-22 | 4 |
+| I01 | `SettingsScreen` (hub, search, `SettingsServersBlock`) | page | `SettingsRoute.Hub` (Top; list pane) + `HighlightArrival` | `SettingsHubViewModel` | gear (compact; `AppUpdate` sheet first while an update waits); rail Settings; Ctrl+, (opens over the current page, as Flutter's `_openSettings`); Ctrl+3 | search field + five one-word groups, searched with `SearchMatcher` over the settings `SearchEntry` set (§10.4); only Server has a value line; "N settings aren't available on this server – Why"; with several servers "You can change some of these for one server" block | SCREENS-NAV-90, B-NAV-042/068/070/071/072/073, E2E-22 | 4 |
 | I02 | `SettingsGroupScreen` (`settings/settings_group_page.dart`) | page | `SettingsRoute.Group(group)` (detail pane) | `SettingsGroupViewModel` | I01 rows; search results | rows per `settingsGroupRowIds` (kept as the test tags); a group with no rows has no door | SCREENS-NAV-90 | 4 |
 | I03 | `ByServerScreen` | page | `SettingsRoute.ByServer(kind)` | `ByServerViewModel` | I02 "By server" rows; Privacy | personal choices everywhere; owned things with their named owner (memory `settings-scope-model`) | SCREENS-NAV-90, B-NAV-068 | 4 |
 | I04 | `AppearanceSettingsScreen` (+ `appearance_one_page.dart`, `showThemePackPreview` local, `GlassChoiceControl`) | page | `SettingsRoute.Appearance` | `AppearanceViewModel` | I02 This app; `/themes`; tour `make-it-yours` | guided first visit, then one page; every choice applies at once; Saver holds Style and Background; **glass control dropped** (no glass); Background question absent until D11 | SCREENS-NAV-91, B-KIT-040/059, E2E-23/38 | 4 |
@@ -1119,12 +1198,66 @@ notification kinds still route (§7.6, §7.8); Team data on disk stays untouched
 | I11 | `VoiceSettingsScreen` (`lib/voice/voice_ui.dart`) + `showVoiceAutomaticSetupSheet` | page | `SettingsRoute.Voice` (automatic setup sheet local) | `VoiceSettingsViewModel` | I02 Conversations | Natural voice rows; hidden where read aloud does not exist | MEDIA-VOICE-21/22 | 5 |
 | I12 | `AiSetupScreen` | page | `SettingsRoute.AiSetup(profileId)` | `AiSetupViewModel` | E04 On the server | review only (owner decision 2026-09-28) | SCREENS-NAV-93 | 5 |
 | I13 | `IntegrationsScreen(mode: providers)` (+ key dialog, OAuth sheet, device-code dialog, credential sheet, pending-auth recovery) | page | `SettingsRoute.Providers(profileId, connectProviderId?)` | `ProvidersViewModel` | I02 Agent; E04; `/connect`; enable flow `modelSignIn`; launch `usage_target:add_key` | keys never echoed; authorization through the link policy | SCREENS-NAV-95, B-NAV-047, E2E-37 | 5 |
-| I14 | `CapabilitiesScreen` / `openTools` (tabs MCP, Commands, Tools, Skills, References, External agents) | page | `SettingsRoute.Tools(profileId, section)`; MCP tab body = the former `IntegrationsScreen(mode: mcp)`; **External agents tab dropped** | `ToolsViewModel` (one per tab body, created on first open) | I02 Agent; `/mcps`, `/tools`, `/skills`, `/references`; enable flow `mcpAdd` | each tab built on first open and kept | SCREENS-NAV-94, B-NAV-076 | 5 |
+| I14 | `CapabilitiesScreen` / `openTools` (tabs MCP, Commands, Tools, Skills, References, External agents) | page | `SettingsRoute.Tools(profileId, section, from?)` (with `from`, Skills applies to that conversation and References is a picker for it, C-slash); MCP tab body = the former `IntegrationsScreen(mode: mcp)`; **External agents tab dropped** | `ToolsViewModel` (one per tab body, created on first open) | I02 Agent; `/mcps`, `/tools`, `/skills`, `/references`; enable flow `mcpAdd` | each tab built on first open and kept | SCREENS-NAV-94, B-NAV-076 | 5 |
 | I15 | `showMcpAddSheet`, `McpCatalogScreen`, `McpSetupScreen` | sheet/page | add sheet local to I14; `SettingsRoute.McpCatalog(profileId)`; `SettingsRoute.McpSetup(profileId)` | `McpCatalogViewModel`, `McpSetupViewModel` | I14 MCP tab | loopback OAuth callback completes sign-in | SCREENS-NAV-95 | 5 |
 | I16 | `CommandsScreen`, `ToolsScreen`, `SkillsScreen` (+ skill activation sheet), `ReferencesScreen` | page (embedded) | tab bodies of I14 | per tab | I14 | Commands pick → `SheetKey.RunCommand` | SCREENS-NAV-94 | 5 |
 | I17 | `ServerPluginsSection` | part | section of E04 | E04 | — | refresh on the page bar | SCREENS-NAV-93 | 5 |
-| I18 | `ManageSpaceScreen` + `ProjectExportScreen` (`lib/manage_space_main.dart`) | page | `ManageSpaceActivity`: `ManageSpaceRoute.Home`, `ManageSpaceRoute.ExportProjects` | `ManageSpaceViewModel`, `ExportProjectsViewModel` | Android app info › Storage › Manage space | reads plain preferences only; Delete everything after explicit confirm | SCREENS-NAV-101 | 4 |
+| I18 | `ManageSpaceScreen` + `ProjectExportScreen` (`lib/manage_space_main.dart`) | page | `ManageSpaceActivity`: `ManageSpaceRoute.Home`, `ManageSpaceRoute.ExportProjects` | `ManageSpaceViewModel`, `ExportProjectsViewModel` | Android app info › Storage › Manage space | waits for `MigrationGate` behind "Updating your app…" (§2.2.2); reads plain preferences only; Delete everything after explicit confirm, stopping `MigrationRunner` first and wiping its journal | SCREENS-NAV-101, E2E-39 | 4 |
+| I20 | freeze tip `settings/updates_screen.dart` | page | `SettingsRoute.Updates` (This app; Android only, `AppSelfUpdate`) | `UpdatesViewModel` | This app › Updates (`settings-updates`); `AppUpdate` sheet; What's new "Show me" (anchor `updates-check-now`) | state, failure with Details, build details fold, Update / Cancel / Install, "Check now", the switch that turns checks off, release notes | freeze top-up rows (16 CR16-10) | 4 |
 | I19 | Keyboard shortcuts row; Try the demo row | row | rows in I02 Help (shortcuts row only when a hardware keyboard has been seen, or desktop) | I02 | — | opens `SheetKey.ShortcutsHelp` / `ChatRoute.Demo` | SCREENS-NAV-93 | 5 |
+
+**Settings scope engine (`:engine:settings`; STATE rows of `settings_scope_domain`, `settings_scope_controller`,
+`settings_access`, `app_preferences_store`; owner rule 02 §1.1 row 23, memory `settings-scope-model`).** Every Settings
+row reads and writes through one facade, ported from `lib/domain/settings_scope.dart` and the frozen contract
+`docs/design/settings-scope-contract-2026-10-12.md` (types copied, Dart → Kotlin):
+
+```kotlin
+package io.github.eslamasabry.oc.engine.settings.scope
+public enum class SettingOwnerKind { Device, Connection, Host, ProviderAccount, Project, Chat }
+public enum class SettingAuthority { LocalPreference, ServerConfiguration, HostRuntime, ProviderAccount }
+public enum class SettingValueState { Known, Unknown, Unsupported, Stale }
+public enum class SettingOriginKind { DefaultValue, ExplicitValue, Migrated, Reported }
+public enum class SettingsFailureReason { Unsupported, InvalidValue, StaleTarget, Conflict, StorageFailed, Disposed,
+                                          Offline, NeedsSignIn, Managed, OutcomeUnknown }
+public sealed interface SettingsTarget {            // ids are opaque, non-secret; UI supplies owner names
+    public data object Device : SettingsTarget
+    public data class Connection(val profileId: ProfileId) : SettingsTarget
+    public data class Host(val hostId: String) : SettingsTarget
+    public data class ProviderAccount(val accountId: String) : SettingsTarget
+    public data class Project(val profileId: ProfileId, val projectId: String) : SettingsTarget
+    public data class Chat(val profileId: ProfileId, val sessionId: String, val projectId: String?) : SettingsTarget
+}
+public data class SettingsRowScope(val rowId: String, val owners: ImmutableSet<SettingOwnerKind>, val labelCode: String)
+public data class EffectiveSetting(val id: String, val target: SettingsTarget, val value: SettingValue?,
+    val state: SettingValueState, val authority: SettingAuthority, val origin: SettingOriginKind,
+    val revision: Long, val writable: Boolean, val reason: SettingsFailureReason?)
+public class SettingsEditToken internal constructor(val before: EffectiveSetting, internal val ownerFingerprint: String,
+                                                    internal val issuer: Any)
+public interface SettingsAccess {
+    public suspend fun read(id: String, target: SettingsTarget): EffectiveSetting
+    public fun watch(id: String, target: SettingsTarget): Flow<EffectiveSetting>     // initial value, changes, stale/deleted
+    public suspend fun beginEdit(id: String, target: SettingsTarget): Outcome<SettingsEditToken>
+    public suspend fun write(edit: SettingsEditToken, value: SettingValue?): Outcome<EffectiveSetting>  // only after ack
+}
+public object SettingsScopeCatalog { public val rows: ImmutableList<SettingsRowScope>; public fun forRow(rowId: String): SettingsRowScope? }
+```
+
+| Rule | Value |
+|---|---|
+| Personal choices | `Device` owner; apply everywhere at once; one shared store per app, so every live connection graph sees the same acknowledged value (B-STATE-126: disposing a secondary graph never breaks shared preferences) |
+| Owned things | stay with their named owner (`Connection`, `Host`, `ProviderAccount`, `Project`, `Chat`); with one connection there is no picker; with several, a server-owned row says "By server" and opens I03 |
+| Catalog | all 67 settings doors of the freeze tip have a fixed owner set (`SettingsScopeCatalog`, copied); `SettingsScopeCatalogTest` fails when a Settings row id has no entry; absent scenes are `Unsupported`, never a made-up value |
+| Writes | serialized per key; listeners see acknowledged values only; a refused write never publishes an optimistic value and restores the cached one (B-STATE-004, 005); multi-key writes are all-or-nothing |
+| Tokens | a snapshot for conflict and identity, not a credential; only the issuing facade accepts it; switching the main connection does not retarget it; removing or replacing the profile or changing its transport identity invalidates it; a newer observed revision → `Conflict` and the page re-reads; forged or replayed tokens fail (B-STATE-125, 127, 128) |
+| Consent | a consent save stays on the captured connection even if the active one changes; a late transport change cannot grant consent to the replacement (B-STATE-124) |
+| No global Advanced switch | detail goes under per-task Details |
+| Copy to other servers | a separate explicit action with per-server receipts (not at the switch) |
+| Network | none through this facade at the switch (server configuration rows keep their own engines) |
+
+Tests (`:engine:settings` commonTest): `SettingsScopeCatalogTest`, `SettingsEditTokenTest`, `SettingsAccessTest`,
+`PreferencesTest`, `DisplayPreferenceRollbackTest`, `SharedPreferencesAcrossGraphsTest`, `SessionAgentSettingTest`
+(B-STATE-129), `DownloadConsentTest` (B-STATE-031), `TeachingStoreTest` (B-STATE-142). Built by S1-ENG (contract
+`contracts/slice-1.md`); the pages are I01–I20 in slice 4.
 
 ### J. Usage (`:feature:usage`)
 
@@ -1132,7 +1265,7 @@ notification kinds still route (§7.6, §7.8); Team data on disk stays untouched
 |---|---|---|---|---|---|---|---|---|
 | J01 | `UsageHubScreen` (+ `UsagePlansPage`, `UsageScreen` spending, `UsageRefreshSlot`) | page | `UsageRoute.Hub(section)` | `UsageHubViewModel` | I02 Agent; launch `usage`; quota notifications; enable flow `quotaCollectorGuide` | Plans most urgent first, bars show what is left, never red; Spending tab absent when unsupported (then no tab strip); one Refresh | SCREENS-NAV-96, B-NAV-078/079, E2E-33 | 5 |
 | J02 | `UsageSubscriptionScreen` | page | `UsageRoute.Subscription(key)` | `UsageSubscriptionViewModel` | J01 plan rows | exact resets; details folded | SCREENS-NAV-96 | 5 |
-| J03 | `UsageAddPickerScreen` + `UsageAddScreen` | page | **merged**: `UsageRoute.Add(profileId?)` with the connection choice as its first step (§6.2 M4) | `UsageAddViewModel` | J01 "Add"; sign-in helpers | — | SCREENS-NAV-96 | 5 |
+| J03 | `UsageAddPickerScreen` + `UsageAddScreen` | page | **merged** (owner choice O-07-6, default merge): `UsageRoute.Add(profileId?)` with the connection choice as its first step (§6.2 M4) | `UsageAddViewModel` | J01 "Add"; sign-in helpers | — | SCREENS-NAV-96 | 5 |
 | J04 | `UsageReadFromScreen` | page | `UsageRoute.ReadFrom(profileId?, providerId?)` | `UsageReadFromViewModel` | J01; launch `usage_target:set_up` | one-shot read-only check per refresh | SCREENS-NAV-96, B-NAV-077 | 5 |
 | J05 | `UsageAlertsScreen` | page | `UsageRoute.Alerts` | `UsageAlertsViewModel` | J01 | quiet hours and Wi-Fi only are the shared values | SCREENS-NAV-96 | 5 |
 | J06 | `UsageWidgetScreen` | page | `UsageRoute.WidgetSettings` | `UsageWidgetViewModel` | J01; launch `usage_settings` | feeds the Status widget plan line | SCREENS-NAV-97, B-NAV-080 | 5 |
@@ -1142,7 +1275,7 @@ notification kinds still route (§7.6, §7.8); Team data on disk stays untouched
 
 | # | Flutter | Kind | Native home | State holder | Entry points | Rules and decisions | Rows | Slice |
 |---|---|---|---|---|---|---|---|---|
-| K01 | `ScheduledPromptsScreen` / `openScheduledPrompts` / `openStoredScheduledPrompts` | page | `SchedulesRoute.List` (+ `HighlightArrival(scheduleId)`) | `SchedulesViewModel` | Go to "Scheduled prompts"; Settings search; scheduled-run notification fallback | calm rows; one mint "New scheduled prompt" at the thumb | SCREENS-NAV-98, B-NAV-054/055, E2E-27 | 4 |
+| K01 | `ScheduledPromptsScreen` / `openScheduledPrompts` / `openStoredScheduledPrompts` | page | `SchedulesRoute.List(profileId, projectDir, from?)` (+ `HighlightArrival(scheduleId)`) | `SchedulesViewModel` (one server: `ScheduledPromptsController(profileId)`) | Files hub row (`project_hub_screen.dart:634`, `:874`); session menu "Scheduled prompts" (`from = ref`, `chat_session_menu.dart:150`); Go to "Scheduled prompts"; Settings search; scheduled-run notification fallback (the stored schedule's profile and project) | gated `ScheduleTarget` (§2.8): doors absent when the server cannot schedule, the transport is transient or no project is open; a new schedule is seeded with the project, workspace, `from`'s session, agent and model, and a conversation's schedule keeps that conversation's model (`scheduleSelectionSeed`, B-NAV-055); calm rows; one mint "New scheduled prompt" at the thumb | SCREENS-NAV-98, B-NAV-054/055, E2E-27 | 4 |
 | K02 | `showScheduleSheet` (+ `KitWheel`, history) | sheet | `SheetKey.Schedule(scheduleId?, ref?)` | `ScheduleSheetViewModel` | K01 rows; C27 | one main action naming the moment ("Schedule for 9:00 AM"); typed prompt kept as a draft | SCREENS-NAV-98 | 4 |
 
 ### L. About, diagnostics, help (`:feature:about`)
@@ -1152,7 +1285,7 @@ notification kinds still route (§7.6, §7.8); Team data on disk stays untouched
 | L01 | `AppDiagnosticsScreen` / `openReportProblem` / `openBugReport` / `openFailedJobReport` (route `/debug`) | page | `AboutRoute.ReportProblem(problemId?, jobId?)` | `ReportProblemViewModel` | every error state's "Report a problem"; Help; `/debug`; Search "crash"; safe mode | the failure is recorded in `:engine:diagnostics` first and passed by id, never as text; draft `oc.draft.report.app` | SCREENS-NAV-102, B-NAV-015/045, E2E-34 | 4 |
 | L02 | `AppDiagnosticsKeptScreen` (+ `PerfTraceSection`, `ExitHistorySection`, `CrashReportsSection`) | page | `AboutRoute.Kept` | `KeptViewModel` | L01 | problem exits lead; Performance report kept (owner uses it) | SCREENS-NAV-102, B-NAV-012 | 4 |
 | L03 | `openCrashReportShare` | sheet | local sheet of L02 | L02 | Share | shows the exact text; only an explicit Share hands it over | SCREENS-NAV-102 | 4 |
-| L04 | `AboutScreen` (+ notices) | page | `AboutRoute.About` and `AboutRoute.Notices` | `AboutViewModel` | I02 Help; Servers root menu | open-source notices from bundled files | SCREENS-NAV-103, B-NAV-001 | 4 |
+| L04 | `AboutScreen` (+ notices; freeze tip star / share / What's new) | page | `AboutRoute.About` and `AboutRoute.Notices` | `AboutViewModel` | I02 Help; Servers root menu | open-source notices from bundled files; two quiet rows "Star on GitHub" (`about-star-github`, through `openExternalLink`) and "Share the app" (system chooser with the website link); a "What's new" row opens `SheetKey.WhatsNew` | SCREENS-NAV-103, B-NAV-001 | 4 |
 | L05 | `GuideScreen` | page | `AboutRoute.Guide` | none (static + capability) | I02 Help; Servers root menu; Go to "Help" | leads with `opencode2 pair`; Advanced fold | SCREENS-NAV-76/103 | 4 |
 | L06 | `TipsScreen` | page | `AboutRoute.Tips` | `TipsViewModel` | I02 Help | every teaching entry with "Show me"; "Show tips again" | SCREENS-NAV-25, B-NAV-074, E2E-38 | 4 |
 | L07 | `showPrivacyPolicy` | sheet | `SheetKey.PrivacyPolicy` | none | I08; L04 | bundled `PRIVACY.md` (rewritten before the switch, ADR §9.6) | SCREENS-NAV-93 | 4 |
@@ -1166,7 +1299,8 @@ notification kinds still route (§7.6, §7.8); Team data on disk stays untouched
 | M03 | `WidgetSteerScreen` (`/widgets/steer`, `/widgets/voice`) | panel | `WidgetPanel.Steer(widgetId, voice)` | `WidgetSteerViewModel` | widget steer / voice buttons | steer mode from the snapshot; voice starts dictation at once | SCREENS-NAV-100, ANDROID-PLATFORM-26 | 4 |
 
 The overlay activity reads only display preferences, never secrets (ANDROID-PLATFORM-25). It has no back stack: Back
-and a tap on the ground close the activity.
+and a tap on the ground close the activity. Until `MigrationGate` opens it draws "Updating your app…" instead of a
+panel (§2.2.2), because a widget button can be the first native launch after the update.
 
 ### N. FactsBook (deferred, ADR D6, behind `oc.dev.factsbook`)
 
@@ -1202,6 +1336,7 @@ obeys "one sheet at a time".
 | X6 | `IntegrationsMode.legacyCombined` | No entry point opens it [R grep]. Providers and MCP already have their own places. | This section |
 | X7 | `GlassChoiceControl` and `oc.glass*` choices | Glass styles were removed (memory `no-glass-rule`); stored values read as Solid. | Owner rule |
 | X8 | "While you were away" page | No Flutter screen shows it today. Its feed rules (B-NAV-082) power the Inbox empty state's "finished, not opened yet" list, which is kept. | This section (nothing visible lost) |
+| X9 | Settings › Help "Browser mode" (`settings-browser-mode`, freeze tip `browser_mode_screen.dart`) | The web shell is dropped. | ADR D17, 02 §3.5 |
 
 ### 6.2 Merged
 
@@ -1219,10 +1354,28 @@ Not merged, on purpose: server terminal (`ProjectRoute.Terminal`, `:feature:proj
 (`PhoneRoute.LocalTerminal`, `:feature:phone`) stay two routes because the ADR puts them in different modules; they share
 one kit terminal part and switch with `replaceTop`.
 
+**Approval (02 §3.2, screens-nav row: "Merges under the simplify rule only with the owner's OK").** M2 and M6 are
+owner-approved (memory `linux-manager-plan`); M7 is owner choice O-07-3. M1 and M5 change nothing the person sees on a
+phone (M1 replaces the tab host with the stack model; the visible rail question is O-07-1; M5 was already embedded).
+**M3 and M4 are visible merges without an owner decision yet**, so they are owner choices O-07-5 and O-07-6 (§13);
+each feature agent builds the default (merge); if the owner says no, the two Flutter pages are ported as they are.
+
 ### 6.3 Deferred to after the switch (ADR D6, D11)
 
 AI Team (§5 H), FactsBook (§5 N), live backgrounds and illustration scenes in Appearance (D11). Each is absent until
 ported; nothing shows a disabled door.
+
+Freeze-tip items with no door at the switch (02 §3.5): "Assistant on this phone" (Gemma) — the Settings row
+`settings-local-assistant`, its search entry and the chat menu's "Summarize on this phone" (`chat_local_summary.dart`)
+are absent; "Claude Agent" in the agent pickers (`pickers_claude_agent.dart`) follows D8 (default: not in the product).
+
+### 6.4 Behaviour changes this section decides (no owner choice needed)
+
+| Change | Why |
+|---|---|
+| No duplicate pages: opening a page already deeper in the stack goes back to it (N10) instead of stacking a copy | Two copies would share one ViewModel, composer and scroll in Nav3; Back from the reached page still goes where it went before the copy was opened |
+| Hardware-keyboard shortcuts work on Android (Ctrl only), not just in the chat (§9.2) | Nothing changes for touch users |
+| A stack restored after process death keeps the root plus the top 20 pages (§2.2.3 rule 6) | Flutter restored nothing; this is strictly more |
 
 ---
 
@@ -1259,7 +1412,11 @@ class MainActivity : ComponentActivity() {
   `enableOnBackInvokedCallback="true"` [R android-platform §3, V android-surfaces §9.3].
 - `EntryIntentReader` reuses the Flutter-era Kotlin validators unchanged: `SessionLinkIngress.accepts` (non-empty,
   ≤ 1,024 chars, every char `0x21..0x7e`, only `opencode-mobile://session*` and `://team*`; rejected links are consumed
-  too), the `LaunchShortcutChannel` whitelist and regexes, `ScheduledPromptPolicy.validId`.
+  too), the `LaunchShortcutChannel` whitelist and regexes, `ScheduledPromptPolicy.validId`. Ids that pass these
+  are always valid `SafeId`s (§2.2.1, `SafeIdTest`).
+- `ACTION_QS_TILE_PREFERENCES` (tile long-press, §7.11) is read from `Intent.EXTRA_COMPONENT_NAME`:
+  `.AttentionTileService` → `TilePreferences(Attention)`, `.PauseTileService` → `TilePreferences(Pause)`, anything else
+  ignored.
 - Requests submitted before the graph is ready wait inside `EntryRouter` (it lives in `AppScope`); there is no "Dart
   ready" handshake any more.
 
@@ -1277,9 +1434,11 @@ public sealed interface EntryRequest {
     public data class AlertOpen(val kind: AlertKind, val profileId: ProfileId?, val sessionId: SessionId?, val monitorToken: String?, val reply: Boolean, override val receivedAt: Instant) : EntryRequest { override val channel = EntryChannel.Alert }
     public data class ScheduledOpen(val profileId: ProfileId, val scheduleId: String, val sessionId: SessionId?, override val receivedAt: Instant) : EntryRequest { override val channel = EntryChannel.Schedule }
     public data class TilePreferences(val tile: TileId, override val receivedAt: Instant) : EntryRequest { override val channel = EntryChannel.Shortcut }
+    /** From AppStartup only (a resumed Linux reset opens setup progress, §2.6); never from an Intent. */
+    public data class Internal(val target: EntryTarget, override val receivedAt: Instant) : EntryRequest { override val channel = EntryChannel.Internal }
 }
 
-public enum class EntryChannel { Shortcut, Link, Share, Alert, Schedule }
+public enum class EntryChannel { Shortcut, Link, Share, Alert, Schedule, Internal }
 
 public sealed interface LaunchAction {
     public data object Connect : LaunchAction
@@ -1296,10 +1455,10 @@ public sealed interface LaunchAction {
 
 /** Neutral targets; :ui:shell maps them to routes (ADR §4 row 26). */
 public sealed interface EntryTarget {
-    public data class Chat(val ref: ConversationRef, val focusComposer: Boolean, val landOn: LandOn?, val opened: Opened) : EntryTarget // LandOn: Request(id) | OldestRequest | Failure
+    public data class Chat(val ref: ConversationRef, val focusComposer: Boolean, val landOn: LandOn?, val opened: Opened) : EntryTarget // ref already resolved by ConnectionRegistry.resolveRef (§2.2.1); LandOn: Request(id) | OldestRequest | Failure
     public data class Conversations(val filter: Filter) : EntryTarget          // None | Running
     public data object NeedsYou : EntryTarget                                 // Conversations + Inbox
-    public data class Servers(val request: ServersRequestTarget?) : EntryTarget
+    public data class Servers(val request: ServersRequestTarget?) : EntryTarget  // mirrors ServersRequest (§2.5)
     public data class PhoneSetup(val stage: SetupStage) : EntryTarget         // Progress | Ready
     public data object ThisPhone : EntryTarget
     public data class Usage(val section: UsageSectionTarget) : EntryTarget
@@ -1308,7 +1467,7 @@ public sealed interface EntryTarget {
     public data class AgentSignIn(val agentId: String) : EntryTarget
     public data class UsageReadFrom(val profileId: ProfileId, val providerId: String) : EntryTarget
     public data class Settings(val section: SettingsSectionTarget) : EntryTarget // Notifications | Background
-    public data class ScheduledPrompts(val highlightScheduleId: String?) : EntryTarget
+    public data class ScheduledPrompts(val profileId: ProfileId, val projectDir: ProjectDir, val highlightScheduleId: String?) : EntryTarget // the stored schedule's server and project
     public data class SessionAddress(val linkTicket: Long) : EntryTarget
     public data class SwitchServerThen(val profileId: ProfileId, val reason: SwitchReason, val then: EntryTarget) : EntryTarget
     public data class Land(val then: EntryTarget?) : EntryTarget
@@ -1322,7 +1481,25 @@ public interface EntryRouter {
 }
 
 public data class EntryHandoff(val id: Long, val target: EntryTarget, val notice: EntryNotice?)
+
+/** The one read model :ui:shell uses (§2.1). Implemented in :engine:entry over profiles, connection, diagnostics,
+ *  settings and the MigrationGate, so :ui:shell needs no other engine. */
+public interface ShellWorld {
+    public val bootstrap: StateFlow<BootstrapState>            // includes MigrationGate open / waiting / failed
+    public val activeProfileId: StateFlow<ProfileId?>
+    public val savedProfileIds: StateFlow<Set<ProfileId>>
+    public fun capabilities(profileId: ProfileId): StateFlow<CapabilitySnapshot?>   // null = not connected yet (gate "unknown")
+    public val platform: PlatformCapabilities
+    public val update: StateFlow<UpdateNoticeState>             // :engine:diagnostics update-notice state
+    public val safeMode: StateFlow<SafeModeState>               // crash-loop guard
+    public val rootDecision: StateFlow<RootKind>                // RootDecision.decide over the same state; the shell maps
+                                                                // RootKind (Conversations | Servers(request?) | ManagedMove) to a RootRoute
+}
 ```
+
+This replaces 03 §15.8's `PendingEntry`/`OpenChat`/`OpenChats` shapes (§16): one pending handoff with an id
+(`EntryHandoff`), a separate `waiting` flow for the status line, and targets named after places (`Chat`, `NeedsYou`,
+`SwitchServerThen`, `Land`) rather than verbs.
 
 ### 7.3 The rules (one mechanism replaces Flutter's seven, SCREENS-NAV §4)
 
@@ -1332,12 +1509,15 @@ public data class EntryHandoff(val id: Long, val target: EntryTarget, val notice
    `Wait(reason)`, `Go(target, effects)` or `Drop(notice)`. It re-runs when bootstrap or the migration gate changes,
    when any connection status changes, on app resume, and on a 1 s tick only while a `ScheduledOpen` waits.
 3. **Nothing before the gate.** Every request waits for `BootstrapState.Ready` and `MigrationGate.open` (ADR §9.7).
-4. **Waiting vs final.** *Waiting* = a saved server is on its way and nothing has failed: keep the request and show
-   one status line ("Waiting for <server>…", `KitStatusKind.work`). *Final* = no profile, re-entry needed, or the
+4. **Waiting vs final.** *Waiting* = the active server is on its way and nothing has failed: keep the request and show
+   one status line ("Waiting for <server>…", `KitStatusKind.work`). *Final* = **no active profile** (the same condition
+   as `RootDecision` row 1, §2.6: nothing saved, or the person left or disconnected), re-entry needed, or the
    connection failed: consume the request with a plain notice and send the person to `Servers`.
 5. **Consume once, and only if still the same.** After `Go` or `Drop`, the slot is cleared only if its generation did not
    change while effects ran, so an item that arrived meanwhile is not swallowed.
-6. **Effects run in the router, guarded.** `CreateSession` checks that the profile, location and repository revision did
+6. **Effects run in the router, guarded.** `ResolveRef(ownerProfileId, sessionId)` turns the ids a notification,
+   widget row, pinned shortcut or scheduled run carries into the canonical `ConversationRef` (main or phone agents,
+   §2.2.1) before any `Chat` target is built. `CreateSession` checks that the profile, location and repository revision did
    not change during the create (Flutter guard); `SeedDraft` writes shared text into `:engine:composer` as the new
    conversation's draft; `Connect(profileId)` switches server first. A failed effect becomes a notice plus a fallback
    target; it never navigates to a broken page.
@@ -1354,14 +1534,14 @@ public data class EntryHandoff(val id: Long, val target: EntryTarget, val notice
 | `Chat` | `openChat(ref, ChatArrival(focusComposer, landOn, opened))` |
 | `Conversations(filter)` | `selectDestination(Conversations)` + `ConversationsArrival(filter)` |
 | `NeedsYou` | `selectDestination(Conversations)` + `ConversationsArrival(NeedsYou)` (Conversations opens the Inbox above itself) |
-| `Servers(request)` | `open(ServersRoute.Servers)` + `ServersArrival(request)`; no push when Servers is already on top |
+| `Servers(request)` | `open(ServersRoute.Servers)` + `ServersArrival(request)`; no push when Servers is already on top, `popTo` when it is deeper (N10) |
 | `PhoneSetup(stage)` | `open(PhoneRoute.SetupProgress)` or `open(PhoneRoute.SetupReady)` (N5 dedupes) |
 | `ThisPhone` | `open(PhoneRoute.ThisPhone)` |
 | `Usage(section)`, `UsageWidgetSettings`, `UsageReadFrom` | `open(UsageRoute.Hub(section))`, `open(UsageRoute.WidgetSettings)`, `open(UsageRoute.ReadFrom(...))` |
 | `ProviderSignIn` | `open(SettingsRoute.Providers(profileId, connectProviderId = providerId))` |
 | `AgentSignIn` | `showSheet(SheetKey.Agent(agentId, SignIn, signInAgain = false))` |
 | `Settings(section)` | `open(SettingsRoute.Notifications(page = Notifications or Background))` |
-| `ScheduledPrompts(id)` | `open(SchedulesRoute.List)` + `HighlightArrival(id)` |
+| `ScheduledPrompts(profileId, projectDir, id)` | `open(SchedulesRoute.List(profileId, projectDir))` + `HighlightArrival(id)` |
 | `SessionAddress(ticket)` | `showSheet(SheetKey.SessionAddress(ticket))` |
 | `SwitchServerThen` | `showSheet(SheetKey.SwitchServer(...))`; the sheet's VM resubmits `then` after the switch |
 | `Land(then)` | `land()` then the mapping of `then` |
@@ -1371,15 +1551,31 @@ public data class EntryHandoff(val id: Long, val target: EntryTarget, val notice
 Extra `oc.shortcut` (whitelist below, or the `usage_target` regex
 `^usage_target:(sign_in|add_key|set_up):[a-z0-9][a-z0-9_-]{0,31}:[A-Za-z0-9._-]{1,64}$`).
 
+**Trusted vs untrusted arrivals (Astra M2; 16 §1.8.1 is the rule).** An allowlisted string proves nothing about who sent
+it: any app can start the exported `MainActivity` with these extras. So:
+
+- **Internal** = an app-owned `PendingIntent` (widgets, notifications, tiles) aimed at the **non-exported**
+  `.InternalEntryActivity` (a new, non-exported trampoline-free activity that forwards to the same task as
+  `MainActivity`; listed in the component ledger as an addition) carrying an `EntryRequest` with `trusted = true`.
+  Only these may run the "Waits for" column's connect and the `CreateSession` effect.
+- **Untrusted** = everything that reaches the exported `MainActivity` (static and pinned launcher shortcuts included,
+  which Android delivers as plain explicit intents), with `trusted = false`. It is **navigation only**: `new_task` opens
+  the new-conversation sheet with the server named and a **Start** button, `usage_target` opens its target page with
+  "Connect to <server>?" when that server is not connected; **no connect, no `CreateSession`, no gateway call before
+  the person taps**. A new task is never created automatically from an untrusted arrival.
+- `UntrustedArrivalTest` (Robolectric) fires every action as an explicit intent from another package and asserts zero
+  gateway calls and zero new sessions before a tap; `TrustedArrivalTest` fires the same through the widget
+  `PendingIntent` and asserts the effect runs.
+
 | Action | Producers | Waits for | Final conditions | Target | Rows |
 |---|---|---|---|---|---|
 | `connect` | static shortcut; Status widget server lines | nothing | — | `Servers(null)` over whatever shows; connection untouched | B-ANDR-028, E2E-25 |
-| `new_task` | static shortcut; Conversations widget "+" (data `opencode-widget://new-conversation/<id>`); status notification "New chat" | the active connection ready | no profile → Servers + "Add a server first"; re-entry → Servers(Credentials); failed → Servers + notice | effect `CreateSession` → `Chat(opened = NewlyCreated)` | B-ANDR-028 |
+| `new_task` | static shortcut; Conversations widget "+" (data `opencode-widget://new-conversation/<id>`); status notification "New chat" | the active connection ready | no active profile → Servers + "Add a server first" (or "Choose a server first" when servers are saved); re-entry → `Servers(Edit(profileId, focusPassword = true))`; failed → Servers + notice | internal: effect `CreateSession` → `Chat(opened = NewlyCreated)`; untrusted (static shortcut, any other app): the new-conversation sheet, created only on **Start** | B-ANDR-028 |
 | `activity` | Attention tile; Status widget Tasks line; sessions widget | bootstrap only | no profile → Servers + notice | `NeedsYou` | B-NAV-025 |
 | `usage` | Status widget plan line | bootstrap only | no profile → Servers + notice | `Usage(Plans)` | B-NAV-077 |
 | `usage_settings` | usage widget empty state | bootstrap only | — | `UsageWidgetSettings` | — |
 | `background_settings` | widget "Background settings" state | bootstrap only | — | `Settings(Background)`; opens the setting, never enables it | ANDROID-PLATFORM-26 |
-| `usage_target:sign_in\|add_key\|set_up:<provider>:<profile>` | usage widget rows | the row's server connected (it is connected first if it is not the active one) | gone server or unknown provider → `Usage(Plans)` + notice | Claude on this phone → `AgentSignIn`; GLM / MiniMax and `add_key` → `ProviderSignIn`; `set_up` → `UsageReadFrom`; others → `ProviderSignIn` | B-NAV-077, E2E-26 |
+| `usage_target:sign_in\|add_key\|set_up:<provider>:<profile>` | usage widget rows | internal: the row's server connected (it is connected first if it is not the active one); untrusted: never connects, asks "Connect to <server>?" | gone server or unknown provider → `Usage(Plans)` + notice | Claude on this phone → `AgentSignIn`; GLM / MiniMax and `add_key` → `ProviderSignIn`; `set_up` → `UsageReadFrom`; others → `ProviderSignIn` | B-NAV-077, E2E-26 |
 | `linux` | Status widget Linux line | bootstrap only | not Android → dropped | `ThisPhone` | — |
 | `phone_setup`, `phone_setup_done` | `SetupService` notifications | never waits for a connection | — | reads `setup.json`: running or stopped → `PhoneSetup(Progress)`; done, first setup, ready not yet shown → `PhoneSetup(Ready)`; else nothing | SCREENS-NAV-14 |
 | unknown value | — | — | — | consumed, nothing happens | B-ANDR-028 |
@@ -1387,8 +1583,9 @@ Extra `oc.shortcut` (whitelist below, or the `usage_target` regex
 ### 7.5 Pinned-session shortcuts (SCREENS-NAV-15)
 
 - Extras `oc.shortcut.profile`, `oc.shortcut.session`; ids `oc.session:<profile>:<session>`; at most 4; titles ≤ 80.
-- Target: only for the **active** profile → `Chat(ref)` (dedupes on top). Another profile → dropped with the notice
-  "That conversation is on another server" (never switches silently).
+- Target: only for the **active** profile → `ResolveRef` (§7.3 rule 6; a phone-agent conversation pinned under its
+  owner profile resolves to its `PhoneAgents` ref) → `Chat(ref)` (dedupes on top). Another profile → dropped with the
+  notice "That conversation is on another server" (never switches silently).
 - Publication: `:android:background` republishes on every launch and on pin changes; stale ids are **disabled, not
   removed**, so user-pinned copies grey out with a reason (ANDROID-PLATFORM-30). Disconnect withdraws all; profile
   deletion clears them.
@@ -1398,7 +1595,7 @@ Extra `oc.shortcut` (whitelist below, or the `usage_target` regex
 
 | Link | Parser (`:engine:entry`, ported from `lib/domain/session_handoff.dart`, `team_link.dart`, `session_address_link.dart`) | Target |
 |---|---|---|
-| `opencode-mobile://session?profile=<P>&session=<S>` | ids by `isSafeIdentifier`; exact shape only; credentials never stored | same saved server active → `Chat(ref)`; another saved server → effect `Connect`, then `Land(then = Chat(ref))`; unknown profile → `SessionAddress(ticket)` sheet on its "Add server" step (the link carries no address, so it leads to `ServersRoute.Editor(Add)` and keeps the link until the server is added and signed in); re-entry needed → `Servers(Credentials)` + notice |
+| `opencode-mobile://session?profile=<P>&session=<S>` | ids by `isSafeIdentifier` (a subset of `SafeId`; anything that fails becomes `Drop(notice)`, never a thrown error); exact shape only; credentials never stored | same saved server active → `Chat(ref)`; another saved server → effect `Connect`, then `Land(then = Chat(ref))`; unknown profile → `SessionAddress(ticket)` sheet on its "Add server" step (the link carries no address, so it leads to `ServersRoute.Editor(Add)` and keeps the link until the server is added and signed in); re-entry needed → `Servers(Edit(profileId, focusPassword = true))` + notice |
 | `opencode-mobile://session/v2?...` (address links) | parsed network-silent into origin, instance UUID, session id; 21 failure categories; gated by `sessionAddressHandoff` | `SessionAddress(ticket)`; only a found existing conversation navigates; a new link replaces the open sheet |
 | `opencode-mobile://team/gate/<P>/<gate>`, `.../run/<P>/<run>` | ids `^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$` | until AI Team ships: gate → `NeedsYou`; run → `Conversations(Running)`. Never answers anything. |
 | anything else, > 1,024 chars, bad chars | rejected by `SessionLinkIngress` | consumed, nothing happens |
@@ -1416,11 +1613,15 @@ Rows: B-NAV-061, B-NAV-062, B-NAV-063, B-NAV-064, B-ANDR-071, B-ANDR-073, E2E-25
 - **Images and Direct Share** are owner choice O-07-4 (default: after the switch).
 - **Out**: the system chooser with `EXTRA_EXCLUDE_COMPONENTS = [MainActivity]` (never offers itself), and explicit
   `FLAG_GRANT_READ_URI_PERMISSION` + `ClipData` for any `FileProvider` URI (Android 18 stops automatic grants)
-  [V android-surfaces §12].
+  [V android-surfaces §12]. The same rules apply to **Open with…** for a phone file tapped in a reply (freeze tip,
+  §5 D05a): `ACTION_VIEW` on a `FileProvider` URI with the grant flag and `ClipData`, through the chooser; an `.apk`
+  goes to `PackageInstaller`'s own confirm screen. "Share the app" (About) sends only the website link.
 
 ### 7.8 Notification taps (SCREENS-NAV-18)
 
-Body tap or Open button → `MainActivity` with the alert extras (`FLAG_ACTIVITY_CLEAR_TOP | SINGLE_TOP`).
+Body tap or Open button → `MainActivity` with the alert extras (`FLAG_ACTIVITY_CLEAR_TOP | SINGLE_TOP`). Phone-agent
+alerts carry the **owner** phone profile id (`_alertProfileId`); every row below first runs `ResolveRef`, so an agent
+notification for the chat already on top builds the same ref and only posts its arrival (N4).
 
 | `CodingAlertKind` | Target |
 |---|---|
@@ -1444,8 +1645,9 @@ E2E-08.
 ### 7.9 Scheduled-run taps (SCREENS-NAV-19)
 
 Extras `scheduledProfileId`, `scheduledPromptId`, `scheduledSessionId`. The request is held up to **30 s** while the
-app's own start-up connection settles (Flutter `23c851fc8`), then: run's conversation reachable → `Chat(ref)` (switching
-server first if needed); else → `ScheduledPrompts(highlight = scheduleId)`; the morning summary → `ScheduledPrompts`; a
+app's own start-up connection settles (Flutter `23c851fc8`), then: run's conversation reachable → `ResolveRef` →
+`Chat(ref)` (switching server first if needed); else → `ScheduledPrompts(profileId, projectDir of the stored schedule,
+highlight = scheduleId)`; the morning summary → `ScheduledPrompts`; a
 deleted schedule or a changed server → nothing (never falls back to another target). Re-evaluated on every resume.
 Rows: B-NAV-054, E2E-27.
 
@@ -1457,8 +1659,8 @@ Rows: B-NAV-054, E2E-27.
 | Conversations widget: **Reply** | `AlertOpen` built from the row's alert extras with `oc.widgetReply = true` | `Chat(focusComposer = true)`; on the open chat, focuses in place (N4) |
 | Conversations widget: **Open**, a row | `AlertOpen(reply = false)` | `Chat(ref)` (other project/connection resolved first) |
 | Conversations widget: **+** | `Launch(NewTask)` | §7.4 |
-| Conversations widget: **Edit** | `WidgetConfigureActivity` → `WidgetPanel.Project` | overlay, not the app |
-| steer / voice buttons | `WidgetRouteActivity` → `WidgetPanel.Steer` | overlay |
+| Conversations widget: **Edit** (and the system's widget configure step) | `WidgetConfigureActivity` (`APPWIDGET_CONFIGURE`) → `WidgetOverlayActivity` with `WidgetPanel.Project` (Status widget: `WidgetPanel.Style`) | overlay, not the app |
+| steer / voice buttons | `WidgetRouteActivity` with data `opencode-widget://<steer\|voice>/<widgetId>/<token>` (`WidgetV2Bridge.routeIntent`) → `WidgetOverlayActivity` with `WidgetPanel.Steer` | overlay |
 | Status widget lines | `connect`, `linux`, `activity`, `usage` | §7.4 |
 | anywhere else on a widget | plain launch | resume where the person was |
 
@@ -1469,59 +1671,83 @@ Widgets are redrawn on `MY_PACKAGE_REPLACED`, so their PendingIntents are recrea
 
 | Tile | Tap | Long-press |
 |---|---|---|
-| `AttentionTileService` (needs-you count) | `startActivityAndCollapse(PendingIntent)` with `oc.shortcut=activity` → `NeedsYou` | **new**: `ACTION_QS_TILE_PREFERENCES` on `MainActivity` → `TilePreferences(Attention)` → `Settings(Notifications)` |
-| `PauseTileService` (pause/resume live mode) | toggles through `LivePauseReceiver`; the app does not open | **new**: → `Settings(Background)` |
+| `AttentionTileService` (needs-you count) | `TileServiceCompat.startActivityAndCollapse(...)` with `oc.shortcut=activity` → `NeedsYou` | **new**: `ACTION_QS_TILE_PREFERENCES` on `MainActivity`, `EXTRA_COMPONENT_NAME` = `.AttentionTileService` → `TilePreferences(Attention)` → `Settings(Notifications)` |
+| `PauseTileService` (pause/resume live mode) | toggles through `LivePauseReceiver`; the app does not open | **new**: `EXTRA_COMPONENT_NAME` = `.PauseTileService` → `TilePreferences(Pause)` → `Settings(Background)` |
 
-The long-press filter is added because without it Android opens App info [V android-surfaces §10]. Adding an intent
-filter does not change any component name, so the component freeze (ADR §9.9) still holds.
+- Opening the app from a tile uses `androidx.core`'s `TileServiceCompat.startActivityAndCollapse`, which takes the
+  `PendingIntent` form on API 34+ (where the `Intent` form throws) and the `Intent` form below; `startActivityAndCollapse
+  (PendingIntent)` alone exists only from API 34 and minSdk is 26. Flutter's `AttentionTileService` already uses the
+  compat call; `PauseTileService`'s own version check is replaced by it.
+- One `ACTION_QS_TILE_PREFERENCES` filter on `MainActivity` serves both tiles; `EntryIntentReader` tells them apart by
+  `Intent.EXTRA_COMPONENT_NAME` and ignores any other component (§7.1).
+- The long-press filter is added because without it Android opens App info [V android-surfaces §10]. Adding an intent
+  filter does not change any component name, so the component freeze (ADR §9.9) still holds.
 
 ### 7.12 Capability enable flows (SCREENS-NAV-20)
 
-`EnableFlows` in `:ui:shell` maps each id to a target. A flow the platform cannot run is not registered, so the
-explainer explains instead of offering a dead button.
+Enable flows are a **multibinding**, as 03 §13.5 decides ("no central lists"): the feature that can run a flow
+contributes `CapabilityFlow(id: EnableFlowId, platform: PlatformFlag?, target: (CapabilitySnapshot) -> FlowTarget)`
+(`:ui:routes` type; `FlowTarget` = a route, a sheet key or a permission request) with `@ContributesIntoSet`. A flow the
+platform cannot run is not contributed on that platform, so the explainer explains instead of offering a dead button.
+The table below is the **contract**, not code: `EnableFlowsTest` (in `:quality`, over the desktop and Android graphs)
+asserts the contributed set per platform equals it. A flow whose targets span features is contributed by the feature
+named in the last column; it may name other features' keys because keys live in `:ui:routes`.
 
-| Flow id | Target | Registered when |
-|---|---|---|
-| `addServer` | `ServersRoute.Editor(Add(null))` | always |
-| `addServerCodex`, `addServerPaseo` | `ServersRoute.Editor(Add(Codex))`, `(Add(Paseo))` | always |
-| `serverGeneration` | host = this phone → `PhoneRoute.ThisPhone`; else `Editor(Add)` | always |
-| `modelSignIn` | `serverCatalog` → `SettingsRoute.Providers`; `agentAccount` → `AgentsRoute.Account`; else `SheetKey.ModelPicker` | always |
-| `mcpAdd` | `SettingsRoute.Tools(section = Mcp)` | always |
-| `projectChoose` | `ProjectRoute.Projects` | always |
-| `projectGitInit` | `ProjectRoute.Health` | always |
-| `quotaCollectorGuide` | no profile → `Editor(Add)`; else `UsageRoute.Hub(Plans)` | always |
-| `phoneSetup` | `PhoneRoute.SetupStart(false)` | Android |
-| `addToolClaude` | `AgentsRoute.Hub`; connected through Claude Code → `land()` | Android |
-| `voiceModelSetup` | `SheetKey.VoiceModelSetup` | `Voice` |
-| `allowMicrophone`, `allowCamera` | `PermissionGate.request(...)`; permanently denied → app settings | `Voice` / `PromptPhotos` or `QrPairing` |
-| `allowNotifications` | `SettingsRoute.Notifications(page = Notifications)` | `Notifications` |
-| `allowBackground` | `PhoneRoute.KeepRunning` | `BackgroundService` |
-| `tailscaleSetup` | `ServersRoute.Tailscale` | `TailscaleHandoff` |
-| `teamTurnOn`, `teamHostGuide` | not registered until AI Team | — |
-| `phoneSetupTermux`, `addExternalAgent` | not registered (X1, X2) | — |
+| Flow id | Target | Registered when | Contributed by |
+|---|---|---|---|
+| `addServer` | `ServersRoute.Editor(Add(null))` | always | `:feature:servers` |
+| `addServerCodex`, `addServerPaseo` | `ServersRoute.Editor(Add(Codex))`, `(Add(Paseo))` | always | `:feature:servers` |
+| `serverGeneration` | host = this phone → `PhoneRoute.ThisPhone`; else `Editor(Add)` | always | `:feature:servers` |
+| `modelSignIn` | `serverCatalog` → `SettingsRoute.Providers`; `agentAccount` → `AgentsRoute.Account`; else `SheetKey.ModelPicker` | always | `:feature:settings` |
+| `mcpAdd` | `SettingsRoute.Tools(section = Mcp)` | always | `:feature:settings` |
+| `projectChoose` | `ProjectRoute.Projects` | always | `:feature:project` |
+| `projectGitInit` | `ProjectRoute.Health` | always | `:feature:project` |
+| `quotaCollectorGuide` | no profile → `Editor(Add)`; else `UsageRoute.Hub(Plans)` | always | `:feature:usage` |
+| `phoneSetup` | `PhoneRoute.SetupStart(false)` | Android | `:feature:phone` |
+| `addToolClaude` | `AgentsRoute.Hub`; connected through Claude Code → `land()` | Android | `:feature:agents` |
+| `voiceModelSetup` | `SheetKey.VoiceModelSetup` | `Voice` | `:feature:settings` |
+| `allowMicrophone`, `allowCamera` | `PermissionGate.request(...)`; permanently denied → app settings | `Voice` / `PromptPhotos` or `QrPairing` | `:feature:chat-composer` / `:feature:servers` |
+| `allowNotifications` | `SettingsRoute.Notifications(page = Notifications)` | `Notifications` | `:feature:settings` |
+| `allowBackground` | `PhoneRoute.KeepRunning` | `BackgroundService` | `:feature:phone` |
+| `tailscaleSetup` | `ServersRoute.Tailscale` | `TailscaleHandoff` | `:feature:servers` |
+| `teamTurnOn`, `teamHostGuide` | not registered until AI Team | — | — |
+| `phoneSetupTermux`, `addExternalAgent` | not registered (X1, X2) | — | — |
 
 ### 7.13 The frozen entry contract (add to the component-freeze list, ADR §9.9)
 
 Pinned shortcuts keep their intent inside the launcher, notifications posted by the Flutter app keep their
-PendingIntents after the update, and placed widgets keep theirs until redrawn. So the native app must accept exactly
-these, forever:
+PendingIntents (body taps **and** action buttons) after the update, and placed widgets keep theirs until redrawn. So
+the native app must accept exactly these, forever. The table is split by the component that receives the intent; each
+component keeps its frozen class name (ADR §9.9) and parses only its own rows.
 
-| Producer | Intent shape the native app must accept |
-|---|---|
-| Static shortcuts | ids `connect`, `new_task`; explicit `MAIN` to `.MainActivity`; extra `oc.shortcut` |
-| Launch actions | extra `oc.shortcut` with the §7.4 whitelist and the `usage_target` regex |
-| Pinned sessions | extras `oc.shortcut.profile`, `oc.shortcut.session`; ids `oc.session:<profile>:<session>` |
-| Coding alerts | extras `io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_KIND`, `...extra.CODING_ALERT_SESSION_ID`, `...extra.CODING_ALERT_PROFILE_ID`, `io.github.eslamasabry.opencode_mobile.MONITOR_TOKEN` |
-| Widget reply | boolean extra `oc.widgetReply` |
-| Widget overlay | extras `oc.widgetMode`, `oc.widgetPayload`; data `opencode-widget://action/<widgetId>/<id>` |
-| Status actions (receiver) | extras `io.github.eslamasabry.opencode_mobile.extra.STATUS_ACTION`, `...extra.STATUS_SESSION`; data `opencode://status/stop_reply` |
-| Scheduled runs | extras `scheduledProfileId`, `scheduledPromptId`, `scheduledSessionId` |
-| Links | `VIEW` + `BROWSABLE`, scheme `opencode-mobile`, hosts `session`, `team` |
-| Share | `SEND` `text/plain`, `Intent.EXTRA_TEXT`, `Intent.EXTRA_SUBJECT` |
+| Receiving component | Producer | Intent shape the native app must accept | Parser |
+|---|---|---|---|
+| `.MainActivity` | Static shortcuts | ids `connect`, `new_task`; explicit `MAIN`; extra `oc.shortcut` | `EntryIntentReader` |
+| `.MainActivity` | Launch actions (widgets, setup and status notifications, tiles) | extra `oc.shortcut` with the §7.4 whitelist and the `usage_target` regex | `EntryIntentReader` |
+| `.MainActivity` | Pinned sessions | extras `oc.shortcut.profile`, `oc.shortcut.session`; ids `oc.session:<profile>:<session>` | `EntryIntentReader` |
+| `.MainActivity` | Coding-alert body tap / Open | extras `io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_KIND`, `...extra.CODING_ALERT_SESSION_ID`, `...extra.CODING_ALERT_PROFILE_ID`, `io.github.eslamasabry.opencode_mobile.MONITOR_TOKEN`; boolean `oc.widgetReply` for a widget Reply | `EntryIntentReader` |
+| `.MainActivity` | Scheduled runs | extras `scheduledProfileId`, `scheduledPromptId`, `scheduledSessionId` | `EntryIntentReader` |
+| `.MainActivity` | Links | `VIEW` + `BROWSABLE`, scheme `opencode-mobile`, hosts `session`, `team` | `EntryIntentReader` |
+| `.MainActivity` | Share | `SEND` `text/plain`, `Intent.EXTRA_TEXT`, `Intent.EXTRA_SUBJECT` | `EntryIntentReader` |
+| `.MainActivity` | Tile long-press (new) | `android.service.quicksettings.action.QS_TILE_PREFERENCES` + `Intent.EXTRA_COMPONENT_NAME` | `EntryIntentReader` |
+| `.WidgetRouteActivity` | Widget steer / voice buttons | data `opencode-widget://<configure\|steer\|voice>/<widgetId>/<token>`; extras `oc.widgetMode`, `oc.widgetPayload`, `AppWidgetManager.EXTRA_APPWIDGET_ID` (`WidgetV2Bridge.routeIntent`) | `WidgetRouteParser` (`:android:widgets`) |
+| `.WidgetConfigureActivity` | Widget Edit, system configure | `android.appwidget.action.APPWIDGET_CONFIGURE` + `EXTRA_APPWIDGET_ID` | `WidgetRouteParser` |
+| `.BackgroundConnectionService` (foreground service) | Widget row actions (Allow, Reject, Stop, Approve plan, Resume) | action `io.github.eslamasabry.opencode_mobile.action.WIDGET_ACTION`; data `opencode-widget://action/<widgetId>/<token>`; extra `oc.widgetPayload` (`WidgetV2Bridge.actionIntent`, `getForegroundService`) | `WidgetActionParser` (`:android:widgets`) |
+| `.CodingActionReceiver` | Notification actions Allow once / Reject / option / reply from the shade | action `io.github.eslamasabry.opencode_mobile.action.CODING_ALERT.<decision>`; data `opencode://coding-alert/<key>/<decision>`; extras `...extra.CODING_ALERT_KIND`, `...extra.CODING_ALERT_SESSION_ID`, `...extra.CODING_ALERT_KEY`, `...extra.CODING_ALERT_PROFILE_ID`, `...extra.CODING_ALERT_DECISION`, `io.github.eslamasabry.opencode_mobile.CODING_ALERT_REQUEST_ID` (no `.extra`), `...extra.CODING_ALERT_OPTION_TEXT`; RemoteInput key `oc.codingAlertReply` | `CodingActionParser` (`:android:background`) |
+| `.StatusActionReceiver` | Status notification Stop the reply | action `io.github.eslamasabry.opencode_mobile.action.STATUS`; extras `...extra.STATUS_ACTION`, `...extra.STATUS_SESSION`; data `opencode://status/stop_reply` | `StatusActionParser` (`:android:background`) |
+| `.LivePauseReceiver` | Live-mode notification Pause, Pause tile | action `io.github.eslamasabry.opencode_mobile.action.PAUSE_LIVE` | `LivePauseParser` (`:android:background`) |
 
-`:quality` `EntryContractTest` reads this table from `quality/freeze/entry-extras.txt` and checks that
-`EntryIntentReader` accepts a sample of each, and E2E-39 (upgrade journey) proves a pinned shortcut and a notification
-created by Flutter 2.1.0+57 open the right conversation in the native build.
+Constant values are copied from the Flutter-era Kotlin (`BackgroundConnectionService.kt:820–837`,
+`StatusNotification.kt:32–34`, `WidgetV2Bridge.kt:15–67`) [R, read 2026-11-01]. Section 11's intent table lists the same
+receivers; `quality/freeze/entry-extras.txt` is generated from the **union** of this table and section 11's, so neither
+can drop a row alone.
+
+`EntryContractTest` is not a `:quality` test (a JVM library cannot build real `Intent`s or see the Android library
+`:android:platform`). Each parser has its own Robolectric test in the module that holds it (`:android:platform`,
+`:android:widgets`, `:android:background`), reading `entry-extras.txt` as a test resource and checking that every row
+for its component parses and that every unknown extra or value is dropped. `:quality` keeps only a text check that the
+file and the manifest's component names agree. E2E-39 (upgrade journey) proves a pinned shortcut, a Flutter-posted
+notification (tap **and** an Allow once action) and both widgets work in the native build.
 
 ---
 
@@ -1541,23 +1767,43 @@ created by Flutter 2.1.0+57 open the right conversation in the native build.
 
 - **Compact.** `ChatsRoute.Conversations` draws `KitTopBar.shell`: server pill (name, "+N" other shown servers, one
   status word), Search, Settings gear. No other page has shell controls.
+- **The gear while an update waits** (freeze tip, owner rule `app-updates-two-layers`): the gear (and on medium+ the
+  rail or sidebar Settings item) carries the kit update dot; a tap opens `SheetKey.AppUpdate` first — "Update now"
+  starts the native updater and stays on the current page, the "What's new" link opens the release page through
+  `openExternalLink`, "Go to Settings" closes the sheet and then opens Settings (N2), and dismissing does nothing. With
+  no update waiting the gear opens Settings directly.
 - **Medium.** The rail sits at the start edge; the same top bar on Conversations; the rail names the destination.
 - **Expanded / large.** The sidebar holds the shell controls (pill, Search, gear) as its header plus the destinations;
   Conversations has no bar, only its large title.
 - **Persistent rail (O-07-1, default yes).** On medium and wider windows the rail or sidebar stays visible under every
   pushed page (chat, settings pages, viewers); pushed pages fill the content area beside it. Flutter covered the rail
   with pushed pages; keeping it removes a relayout on every push and keeps destinations one tap away. With O-07-1 = no,
-  the shell hides the rail for any route whose `RouteMeta` is not top-level, and the push covers it.
-- Destinations: Conversations (badge = unified attention count), Files (only when the connected server can browse
-  files), Settings. An unavailable destination is absent. Selecting one calls `selectDestination` (§2.4).
+  the shell hides the rail for any route that is not a `TopLevelRoute`, and the push covers it.
+- Destinations: Conversations (badge = unified attention count), Files (while the connected server offers any project
+  tool, §2.8), Settings (update dot while an update waits). An unavailable destination is absent. Selecting one calls
+  `selectDestination` (§2.4); Settings goes through the update sheet first, as the gear does.
+- Rail and sidebar labels are always visible (A11Y-1, §10.8); no icon-only destinations.
 - Status line: one per window, drawn by the top page's `KitScreen` under its bar (§10.1).
 
 ### 8.3 List-detail scenes
 
 Material `ListDetailSceneStrategy` from `adaptive-navigation3` (CMP 1.3.0) with `listPane()` / `detailPane()` metadata
-[V API names, developer.android.com "custom layouts"; U the CMP artifact's exact package, slice-1 shell spike]. On
-compact and medium the same keys show one at a time; on expanded and large the scene shows the nearest list entry
-beside the top detail entry.
+[V API names, developer.android.com "custom layouts"; U the CMP artifact's exact package, slice-1 shell spike], with two
+changes the shell makes:
+
+- **The directive is measured on NavDisplay's own area, not the window.** `rememberListDetailSceneStrategy` defaults to
+  `calculatePaneScaffoldDirective(currentWindowAdaptiveInfoV2())`, which measures the window [R review of
+  adaptive-navigation3 1.3.0 source; slice-1 spike confirms]. With the 296–400 dp sidebar outside `NavDisplay`, an
+  840 dp window leaves about 544 dp, below this section's own minimum (list 296 + detail 360 + gutter). The shell wraps
+  `NavDisplay` in `BoxWithConstraints` and passes `PaneScaffoldDirective(maxHorizontalPartitions = if (maxWidth >= 296 +
+  360 + gutter) 2 else 1, …)` built from those constraints.
+- **Only a contiguous run at the top of the stack forms a two-pane scene.** The top entry must be a `Detail`, and
+  every entry between it and the nearest `List` below must also be a `Detail` of the same area (Settings or Files):
+  [Hub, Group(ThisApp), Appearance] shows Hub beside Appearance; anything else renders the top entry single-pane. So `/themes` from a chat ([Conversations, Chat, Appearance]) and Server page → `SettingsRoute.Providers`
+  show one pane, and a Settings hub buried under other pages is never pulled into view. `ShellScenesTest` covers both
+  cases.
+
+On compact and medium the same keys show one at a time.
 
 | Area | List pane | Detail pane | Empty detail | Width rule |
 |---|---|---|---|---|
@@ -1596,22 +1842,26 @@ registered there. Until then `:desktopApp` is the kit gallery only.
 
 ### 9.1 Bindings
 
-Every binding is registered for **Ctrl and Meta** (Cmd on macOS later). No plain-letter accelerators, except the review
-page's local letters and the focused request card's keys, and those never fire while a text field has focus.
+On **Android every binding uses Ctrl only.** Meta (the Search/Windows key) combinations are system shortcuts that
+Android handles before the app: Meta+/ opens the Keyboard Shortcuts Helper, Meta+N the notification shade, and
+Meta+letter keys launch apps (Meta+K calendar, among others), so a Meta binding would be listed in the help sheet and
+do nothing. Meta is registered as the primary modifier only on macOS (Cmd) when the desktop phase starts; Linux desktop
+uses Ctrl. No plain-letter accelerators, except the review page's local letters and the focused request card's keys,
+and those never fire while a text field has focus.
 
 | Keys | Action | Scope | Claimed by / fallback |
 |---|---|---|---|
 | Ctrl+K | command launcher | anywhere | chat claims it for its command sheet; fallback `showSheet(CommandLauncher)` |
 | Ctrl+N | new conversation | anywhere | fallback: create session → `Chat(NewlyCreated)`; failure = one status line in plain words |
 | Ctrl+F | find in this page | chat (find bar), Files (search), Settings (search) | swallowed when nobody claims it |
-| Ctrl+, | Settings | anywhere | `selectDestination(Settings)` |
+| Ctrl+, | Settings | anywhere | `open(SettingsRoute.Hub)` over the current page, as Flutter (`OpenSettingsIntent` → `_openSettings` pushes Settings, `alerts_and_shortcuts.dart:179`); Back returns to the page; if the hub is already deeper, N10 pops to it. Ctrl+3 is the "switch destination" key |
 | Ctrl+W | close this page | anywhere | `back()` (page guards still run) |
 | Ctrl+/ | keyboard shortcuts | anywhere | `showSheet(ShortcutsHelp)` |
-| Ctrl+Backquote | terminal | anywhere | `open(ProjectRoute.Terminal(active profile))`; the page explains when the server keeps no terminals |
-| Ctrl+1 / 2 / 3 | Conversations / Files / Settings | anywhere | `selectDestination` (on phones Files and Settings open as pages); Files unavailable on this server → no-op; Ctrl+4 does not exist |
+| Ctrl+Backquote | terminal | anywhere | `open(ProjectRoute.Terminal(active profile))`; not gated (§2.8): the page explains when the server keeps no terminals |
+| Ctrl+1 / 2 / 3 | Conversations / Files / Settings | anywhere | `selectDestination` (on phones Files and Settings open as pages); Files absent (the server offers no project tool, §2.8) → no-op; Settings goes through the update sheet first while an update waits (§8.2); Ctrl+4 does not exist |
 | Ctrl+Enter | send | composer | — |
 | Enter / Shift+Enter | send / newline | composer, only with a fine pointer; phones keep Enter = newline | — |
-| Esc | close overlay; close find; stop the running reply | overlay; chat (only when no IME composition and find closed) | — |
+| Esc | close the open menu, sheet or overlay; close find; close the composer tray, suggestions or voice mode; then leave the field | overlay; chat | never stops a running reply (Stop is its own visible control; Flutter never bound Esc to stop). Unclaimed, Esc is not consumed, so on Android it falls back to Back (§3.3) |
 | F2 / Shift+F2 | next / previous recent model | chat | — |
 | F4 / Shift+F4 | thinking level | chat | — |
 | Ctrl+B | move running work to the background | chat | — |
@@ -1625,8 +1875,8 @@ page's local letters and the focused request card's keys, and those never fire w
 
 ### 9.2 Where they work
 
-- **Android with a hardware keyboard: all of them** (decided here; Flutter bound only the chat-local keys on Android).
-  Nothing changes for touch users, and no plain letters are bound.
+- **Android with a hardware keyboard: all of them, with Ctrl** (decided here; Flutter bound only the chat-local keys on
+  Android). Nothing changes for touch users, and no plain letters are bound.
 - `MainActivity.onProvideKeyboardShortcuts` publishes the same groups to Android's system Keyboard Shortcuts Helper
   (Meta+/) [U: interplay with Compose key handling, slice-5 check on the emulator with `adb shell input keycombination`].
 - Desktop: all, when its phase starts.
@@ -1635,7 +1885,8 @@ page's local letters and the focused request card's keys, and those never fire w
 
 - `ShortcutCatalog`: one list of `ShortcutBinding(id, keys, group = Anywhere|Conversation|Review, labelKey, scope)`.
   The help sheet and the Android helper are generated from it, so a binding without a help row cannot exist
-  (`ShortcutCatalogTest`; the Flutter gesture audit found unlisted shortcuts before, `b2cf153f8`).
+  (`ShortcutCatalogTest`; the Flutter gesture audit found unlisted shortcuts before, `b2cf153f8`). The test also fails
+  on any Android binding that uses Meta, and on any binding of Esc to an action other than close/clear/leave-field.
 - `ShortcutDispatcher`: one `Modifier.onPreviewKeyEvent` at the root maps a key event to an `AppShortcut`, offers it to
   the claims of the **top entry and any open sheet only**, newest first, and runs the fallback when none claims it. This
   is the Compose form of Flutter's claim bus, where each claim re-checked `ModalRoute.isCurrent`.
@@ -1677,7 +1928,12 @@ The navigation-level tags to carry over: `home-shell-nav`, `home-shell-search`, 
 `settings-category-language`, `settings-category-privacy`, `settings-setup-guide`, `settings-tips`,
 `library-report-bug`, `settings-about-notices`), `chat-project-chip`, `chat-git-chip`, `session-actions-button`,
 `session-menu-<action>`, `chat-leave-unsaved-draft`, `command-palette-query`, `keyboard-shortcuts-sheet`,
-`agents-sheet`. The tag `home-shell-tab-*` now marks rail destinations.
+`agents-sheet`, `chat-turn-all-files`, `agents-start-new`, `agents-hub-list`. The tag `home-shell-tab-*` now marks rail
+destinations. Freeze-tip tags (read from `oc_app-freeze` at `fc5c1e78f`): `settings-updates`, `updates-page`,
+`updates-state`, `updates-failure`, `updates-build-details`, `updates-check-switch`, `updates-check-now`,
+`updates-notes`, `updates-update`, `updates-cancel`, `updates-install`, `about-star-github`, and the update-sheet and
+What's new tags as they are on that branch (the slice-4 agent copies them from `kit_update_sheet.dart` and
+`whats_new_sheet.dart`).
 
 ### 10.3 Teaching (hidden gestures need a tip and a visible path)
 
@@ -1688,20 +1944,35 @@ The navigation-level tags to carry over: `home-shell-nav`, `home-shell-search`, 
 | Hold the mic = push to talk | tap the mic | `hold-mic` (kept) |
 | Appearance tour | Settings › Appearance | `make-it-yours` (kept) |
 | Long-press the launcher icon for pinned conversations | session menu Pin (O-07-2) | **new** `launcher-shortcuts`, offered once after the first pin |
-| Long-press a conversation row for its menu | the chat's own ⋯ menu | none (the visible path is the primary one) |
 | Long-press a Quick Settings tile | Settings › Notifications / Background rows | none (system gesture) |
+
+Conversation rows get **no** long-press menu (as in Flutter, whose `KitFeedItem` has only `onTap`): Pin lives in the
+chat's ⋯ menu (O-07-2) and "Start in a separate copy" stays in New conversation (B10), so no hidden gesture is added
+there.
 
 Each tip has en + ar copy and a Help › Tips row (B-NAV-019, B-NAV-038, B-NAV-074).
 
 ### 10.4 Search index and Go to
 
-- Every route in §2.2.2 is in the search index (`:feature:search`) by its title, or listed in `SearchExclusions.kt`
-  with a reason. `SearchIndexCoverageTest` walks the `AppRoute` subclasses through the serializers module and fails on
-  a route that is neither (B-NAV-057).
-- An index entry stores `target: AppRoute` plus an optional `HighlightArrival` anchor id (anchor ids like
-  `effects-vibration`, never route strings). Gated entries follow §2.8 (B-NAV-058, B-NAV-072).
+- **Types** (`:ui:routes`, plain data): `SearchEntry(id: String, target: AppRoute, titleKey: String, keywordsKey:
+  String?, anchorId: String?, area: SearchArea /* Settings | Page | Tool */)` and `SearchExclusion(routeClass: String,
+  reason: String)`. `titleKey` names a string in `:ui:words` (`:ui:routes` cannot see `:ui:words`). Each feature
+  contributes its entries as a `Set<SearchEntry>` / `Set<SearchExclusion>` multibinding from its `XSearch.kt`
+  (03 §13.5's `Set<SettingsSearchEntry>` becomes this one type for every area, §16).
+- **One matcher.** `SearchMatcher` in `:engine:settings` (pure; prefix, typo and swapped-letter tolerance, Arabic and
+  mixed queries, literal above fuzzy, title above keyword: B-NAV-057/059/071) works on `(id, words)` pairs. The
+  Settings hub search (`:feature:settings`, slice 4) matches the `Settings` area; the command launcher
+  (`:feature:search`, slice 5) matches every area plus conversations and projects. Neither feature depends on the
+  other. Both index and matcher are built in **slice 4** with Settings, so E2E-22 steps 1–5 can pass in slice 4.
+- Every route in §2.2.2 has an entry or an exclusion with a reason. `SearchIndexCoverageTest` lives in `:quality`
+  (which may depend on every module): it builds the desktop graph, walks the `AppRoute` subclasses from the sealed
+  serializer descriptor, fails on a route that is in neither set, and fails on a `titleKey` that does not resolve in
+  both English and Arabic (B-NAV-057). A `:ui:routes`-only test cannot see the features' contributions.
+- An entry stores `target: AppRoute` plus an optional `HighlightArrival` anchor id (anchor ids like
+  `effects-vibration`, never route strings). Gated entries follow §2.8 through `RouteGate.wouldOpen` (B-NAV-058,
+  B-NAV-072).
 - Go to (empty launcher): Needs you, Files + project name, Projects, Settings, Servers, Terminal, Scheduled prompts, Help;
-  then the last 3 conversations. AI Team appears only once ported (B-NAV-056).
+  then the last 3 conversations. Each Go to row follows its route's gate. AI Team appears only once ported (B-NAV-056).
 
 ### 10.5 Text scale, RTL, motion, max width
 
@@ -1726,6 +1997,20 @@ Keep the Flutter `PerfTrace` names so the owner's Performance report reads the s
 `app.bootstrap`, `app.shell_frame`, `app.first_connected`, `chat.open_to_first_transcript` (with
 `source: saved_excerpt|live`), `chat.open_to_fresh`, `settings.open`, plus `nav.<from>-><to>` from N8.
 
+### 10.8 Accessibility of navigation
+
+- **Page title announced.** `KitScreen` sets `paneTitle` from the route's title on every page (not only sheets,
+  dialogs and tours), so TalkBack announces each route change once the transition settles (`TransitionSettled`,
+  08 §5.4), never at its start.
+- **Focus returns.** When a page pops, the shell moves accessibility focus back to the element that opened it (the row,
+  chip or button that registered as the origin; the same origin the grow-from-row transform uses), or to the page
+  title when that element is gone. A sheet does the same for its opener when it closes.
+- **Labels always visible.** Rail and sidebar items always show their label (A11Y-1); the gear and Search have content
+  descriptions that name their target ("Settings", "Search conversations and settings").
+- **Counts in words.** Help's "Report a problem" row states the number of kept problems in words ("2 problems kept"),
+  not only as a badge; the Conversations rail badge has a spoken count ("3 need you").
+- Checked by the §12.3 TalkBack pass and by kit semantics tests of `KitScreen`, `KitNavRail` and `KitSheetHost`.
+
 ---
 
 ## 11. Build order and agent work packages
@@ -1733,54 +2018,64 @@ Keep the Flutter `PerfTrace` names so the owner's Performance report reads the s
 Each package is one agent, one branch, one worktree. Shared files (`:ui:routes` route files, `:ui:words` string files)
 are edited only by the feature named on the row (ADR §4 row 22).
 
+"Done when" names only the flow steps whose modules exist by the end of that slice (module start slices from ADR
+§5.2); the remaining steps of the same flow are listed again in the slice that makes them possible.
+
 | Slice | Package | Owner | Writes | Reads | Done when |
 |---|---|---|---|---|---|
-| 0 | P2 predictive-back proof (ADR §11) | Opus | `:ui:shell` spike, kit transition helpers | motion-native §4.4 | the six checks pass on the emulator; option A hooks named for §3.2 |
-| 0 | Route-key freeze for slices 1–3 | coordinator | `:ui:routes` `AppRoute.kt`, `Sheets.kt`, files for chats, chat, composer, servers, phone, agents, onboarding; `:core:model` ids | this section §2.2–§2.3 | `RouteRoundTripTest`, `RouteKeyContentTest` green |
-| 1 | Shell skeleton | coordinator (Opus for the navigator) | `:ui:shell`: `App()`, opening gate, safe mode, `ShellNavDisplay`, `AppNavigatorImpl`, `ArrivalsImpl`, `ShellSheetHost`, `RouteGate`, rail/sidebar frame, status slot, list-detail strategy | §2, §3, §8 | navigator rules N1–N9 table-tested; desktop gallery shows the shell with fakes |
-| 1 | Entry router core | Codex (backend) with the coordinator | `:engine:entry` types, `decide`, `RootDecision`, link parsers; `:android:platform` `EntryIntentReader` | §7 | the §7.4–§7.9 tables as `commonTest` rows; catalog rows named |
-| 2 | Onboarding + Conversations + Inbox + New conversation | Sonnet | `:feature:onboarding`, `:feature:chats` | §5 A, B | E2E-01 and E2E-21 steps 1–7 green on the `.native` preview build (steps 8–9 need slice-4 chat pages) |
-| 2 | Chat entry, arrivals and Back guard | chat lead (Opus) | `:feature:chat` entries | §3.4, §2.5 | B-NAV-005 test; draft guard test; dedupe test |
-| 2 | Servers | Sonnet | `:feature:servers` | §5 E | E2E-01/02/03/04 green |
+| 0 | P2 predictive-back proof (ADR §11) | Opus | `:ui:shell` spike, kit transition helpers | motion-native §4.4; 08 §5.4 | the six checks pass on the emulator; option A hooks named for §3.2; Nav3 `isPop` and `contentKey` facts recorded (§3.1, §2.2.3 rule 3) |
+| 0 | Navigation freeze for slices 1–3 | coordinator | `:ui:routes` `AppRoute.kt`, `Sheets.kt`, `AppNavigator.kt`, `Arrivals.kt`, `RouteMeta.kt`, `Search.kt`, `CapabilityFlow.kt`, route files for chats, chat, composer, servers, phone, agents, onboarding; `:core:model` ids, `SafeId`, `ServerFlag`, `PlatformFlag`, `PrefillAddress`; the §16 amendments in 03 and the ADR | this section §2.1–§2.5, §16 | `RouteRoundTripTest`, `RouteKeyContentTest`, `SafeIdTest` green; 03 §15 and ADR §9.4 match §16 |
+| 1 | Shell skeleton | coordinator (Opus for the navigator) | `:ui:shell`: `App()`, opening gate, safe mode, `ShellNavDisplay`, `AppNavigatorImpl` (+ `NavOp`), `ArrivalsImpl`, `ShellSheetHost` + `SheetPresence`, `RouteGate`, `withRouteMeta`, rail/sidebar frame, status slot, list-detail strategy; `:engine:entry` **interfaces only** (`ShellWorld`, `EntryRouter`, `EntryTarget`, `EntryHandoff`), which moves that module's start from slice 2 to slice 1 (ADR §5.2 amendment, §16) | §2, §3, §8 | navigator rules N1–N13 table-tested; `ShellMotionTest`, `ShellScenesTest`, `BackStackSizeTest` green; desktop gallery shows the shell with a fake `ShellWorld` |
+| 2 | Entry router core | Codex (backend) with the coordinator | `:engine:entry` implementation: `decide`, `RootDecision`, `ResolveRef`, link parsers, `ShellWorld` impl; `:android:platform` `EntryIntentReader` (both start in slice 2 per ADR §5.2) | §7 | the §7.4–§7.9 tables as `commonTest` rows; `EntryIntentReader` Robolectric test for the `MainActivity` rows of §7.13; catalog rows named |
+| 2 | Onboarding + Conversations + New conversation | Sonnet | `:feature:onboarding`, `:feature:chats` | §5 A, B | on the `.native` preview build: E2E-01 steps 1 and 3–8 (step 2's "Set up on this phone" row arrives with `:feature:phone` in slice 3); E2E-21 steps 1–2 and 4–7 (step 3 needs the Inbox, slice 3; steps 8–9 need slice-4 chat pages) |
+| 2 | Chat entry, arrivals and Back guard | chat lead (Opus) | `:feature:chat` entries | §3.4, §2.5 | B-NAV-005 test; draft guard test; dedupe tests (N4, N10); pending-discard survives process death (§2.5) |
+| 2 | Servers | Sonnet | `:feature:servers` | §5 E | E2E-02 steps 1–4 (paste; the Scan button is absent until slice 5, "Paste instead" is the path); E2E-03 steps 1–3 and 6; E2E-04 green; `resetTo`/`land` call sites of §2.4 covered by `AppNavigatorTest` |
+| 3 | Inbox | Sonnet (the chats agent) | `:feature:chats` Inbox (needs `:engine:requests`, slice 3) | §5 B05 | E2E-21 step 3 (as amended, §16); E2E-36 Inbox steps |
 | 3 | Composer sheets | Sonnet | `:feature:chat-composer` | §5 C14–C24 | — |
-| 3 | This phone, setup, Linux pages | Sonnet | `:feature:phone` | §5 F | E2E-17/18/19/20 green |
+| 3 | This phone, setup, Linux pages | Sonnet | `:feature:phone` | §5 F | E2E-17/18/19 green; E2E-20 steps 1–5 (steps 6–7 test the project hub, slice 5); E2E-01 step 2; E2E-03 step 5 (phone server) |
 | 3 | Agents | Sonnet | `:feature:agents` | §5 G | E2E-31 green |
-| 4 | Chat pages, Settings, Schedules, About, widget panels, tiles, scheduled-run routing | Sonnet ×4 (one per feature) | `:feature:chat-pages`, `:feature:settings`, `:feature:schedules`, `:feature:about`, `:feature:widget-panels` | §5 C, I, K, L, M; §7.9–§7.11 | E2E-22, E2E-25, E2E-26, E2E-27, E2E-38 green |
-| 5 | Project, Usage, Search, keyboard shortcuts, demo | Sonnet ×3 | `:feature:project`, `:feature:usage`, `:feature:search`, `:ui:shell` shortcuts | §5 D, J, A12/A13; §9 | E2E-14/15/16/24/33 green |
-| 6 | Switch hardening | coordinator | `quality/freeze/entry-extras.txt`, upgrade journey | §7.13 | E2E-39 green with a pinned shortcut, a Flutter-posted notification and both widgets |
+| 4 | Chat pages, Settings (incl. Updates page, search index types and `SearchMatcher`), Schedules, About (incl. What's new, star/share), widget panels, tiles, scheduled-run routing | Sonnet ×4 (one per feature) | `:feature:chat-pages`, `:feature:settings`, `:feature:schedules`, `:feature:about`, `:feature:widget-panels`; `:engine:settings` `SearchMatcher` | §5 C, I, K, L, M; §7.9–§7.11; §10.4 | E2E-22 steps 1–5 and 8–9 (steps 6–7 need the launcher and project tools, slice 5); E2E-21 steps 8–9; E2E-25, E2E-26, E2E-27, E2E-38 green |
+| 5 | Project, Usage, Search, keyboard shortcuts, demo, pairing scanner | Sonnet ×3 | `:feature:project`, `:feature:usage`, `:feature:search`, `:ui:shell` shortcuts; the scanner door in `:feature:servers` | §5 D, J, A12/A13, E03; §9 | E2E-14/15/16/24/33 green; E2E-22 steps 6–7; E2E-20 steps 6–7; E2E-02 steps 5–6 (needs the `:ui:kit-content` scanner, slice 3, and CameraX + zxing-cpp in `:android:media`, slice 5); E2E-03 step 4 (Codex, `:protocol:codex`, slice 5) |
+| 6 | Switch hardening | coordinator | `quality/freeze/entry-extras.txt` (generated from §7.13 ∪ section 11), upgrade journey | §7.13 | E2E-39 green with a pinned shortcut, a Flutter-posted notification (tap and Allow once), both widgets, and Manage space opened before the first launch (§2.2.2) |
 
 Recipe for adding one page (any feature agent):
 
-1. Add the key to your feature's route file in `:ui:routes` (rules §2.2.3). Add a sample to `RouteSamples.kt` for the
-   round-trip test.
+1. Add the key to your feature's route file in `:ui:routes` (rules §2.2.3), with its `meta` getter (push motion, pane,
+   requirement). Add a sample to `RouteSamples.kt` for the round-trip test.
 2. Write `XUi` + `XActions` in `presentation/`, the ViewModel (assisted factory if the key has arguments, 03 S5).
-3. Add the `entry<…>` to `XEntries.kt` with `RouteMeta(motion, pane, requires)`.
+3. Add the `entry<…>` to `XEntries.kt` (no metadata; the shell reads the key's `meta`).
 4. Add the screen `XScreen(state, actions)` from kit parts only, with the Flutter `ValueKey` as the test tag when one
    existed.
 5. Add strings to your `strings_<feature>.xml` (en + ar at least; ADR §7.5).
-6. Add a search index entry or a `SearchExclusions` line.
+6. Add a `SearchEntry` or a `SearchExclusion` to your `XSearch.kt` multibinding (§10.4).
 7. If the page has a hidden gesture, register a tip (§10.3).
-8. Run T0: your ViewModel test, `RouteRoundTripTest`, `RouteKeyContentTest`, `SearchIndexCoverageTest`.
+8. Run T0: your ViewModel test, `RouteRoundTripTest`, `RouteKeyContentTest`; `SearchIndexCoverageTest` runs in
+   `:quality` at T2.
 
 ---
 
 ## 12. Acceptance checks
 
-### 12.1 Logic (T0/T1, `commonTest` on the desktop JVM)
+### 12.1 Logic (T0/T1; `commonTest` on the desktop JVM unless the module is named)
 
-| Test | Proves | Rows |
-|---|---|---|
-| `AppNavigatorTest` | N1–N9 on a plain `SnapshotStateList`: dedupe, `openChat` arrival-only on top, `land`, `replaceRoot` keeps pages above, `selectDestination` reselect pops, sheet-first ordering | B-NAV-005, B-NAV-024, B-NAV-037 |
-| `RootDecisionTest` | the §2.6 table | B-NAV-017, B-NAV-024, B-NAV-029 |
-| `RouteGuardTest` | restored stacks drop deleted profiles and off platform flags; root rebuilt | — |
-| `BackOwnerPolicyTest` | §3.3 order; the root never consumes Back; chat guard enabled only when the draft differs | ADR §9.4 |
-| `EntryRouterTest` | §7.3 rules 1–9; every row of §7.4–§7.10 | B-NAV-005, B-NAV-025, B-NAV-054, B-NAV-061, B-NAV-063, B-NAV-064, B-NAV-077, B-ANDR-027, B-ANDR-028, B-ANDR-071, B-ANDR-073, B-ANDR-075 |
-| `LinkParserTest` | session, address and team link shapes; length and character bounds | B-NAV-063 |
-| `EnableFlowsTest` | §7.12 registrations per platform capability | SCREENS-NAV-20 |
-| `ShortcutCatalogTest` | every binding has a help row; no plain-letter global bindings | DESKTOP-WEB-CROSS-12 |
-| `RouteRoundTripTest`, `RouteKeyContentTest`, `BackStackSizeTest` | §2.2.3 | — |
-| `SearchIndexCoverageTest` | §10.4 | B-NAV-057 |
-| `EntryContractTest` (`:quality`) | §7.13 | E2E-39 |
+| Test | Where | Proves | Rows |
+|---|---|---|---|
+| `AppNavigatorTest` | `:ui:shell` | N1–N13 on a plain `SnapshotStateList`: dedupe on top, `openChat` arrival-only on top, **no key twice** (Chat(A) → Relations(A) → Chat(C) → Relations(C) → `openChat(A)` pops to the existing Chat(A)), `land`, `resetTo` (every call site of the §2.4 table, including connect success → `land()` leaving no editor above Conversations), `replaceRoot` keeps pages above, live profile removal (N12: forgetting the last server leaves `[Servers]`), `selectDestination` reselect pops, sheet-first ordering for shared **and** local sheets through a fake `SheetPresence`, `NavOp` recorded for every call, Files opened from chat A and from the rail are two entries | B-NAV-005, B-NAV-024, B-NAV-037 |
+| `RootDecisionTest` | `:engine:entry` | the §2.6 table, including **saved profiles but no active one → Servers list** and **nothing saved → welcome** | B-NAV-017, B-NAV-024, B-NAV-029 |
+| `RouteGuardTest` | `:ui:shell` | restored and live stacks drop deleted profiles (`profileId`, `ref`, `from`) and off platform flags; a restored `PhoneAgents` chat survives while its owner profile exists; root rebuilt | — |
+| `ShellMotionTest` | `:ui:shell` | (`NavOp`, from, to) → motion class (§3.1), including `replaceTop` → `Replace` and `land` from a chat → `Root` | — |
+| `ShellScenesTest` | `:ui:shell` | two panes only for a contiguous list → detail run and only when NavDisplay's own width allows (§8.3) | — |
+| `RowTransformGateTest` | `:ui:kit` | 08 §5.4, including a tap after a committed gesture getting its transform back | B-KIT-054 |
+| `BackOwnerPolicyTest` | `:ui:shell` | §3.3 order; the root never consumes Back; chat guard enabled only when the draft differs; Esc → close/clear or unconsumed | ADR §9.4 |
+| `EntryRouterTest` | `:engine:entry` | §7.3 rules 1–9; every row of §7.4–§7.10; an agent notification for the open agent chat resolves to the same ref and only posts its arrival; a link with an id that fails `SafeId` → `Drop(notice)` | B-NAV-005, B-NAV-025 (amended), B-NAV-054, B-NAV-061, B-NAV-063, B-NAV-064, B-NAV-077, B-ANDR-027, B-ANDR-028, B-ANDR-071, B-ANDR-073, B-ANDR-075 |
+| `LinkParserTest`, `SafeIdTest` | `:engine:entry`, `:core:model` | session, address and team link shapes; length and character bounds; every edge rule is a subset of `SafeId` | B-NAV-063 |
+| `EnableFlowsTest` | `:quality` (graph) | the contributed `Set<CapabilityFlow>` per platform equals §7.12 | SCREENS-NAV-20 |
+| `RouteGateTest` | `:ui:shell` | one row per flag combination of the §2.8 Files tools table (the Files destination exists while any tool does), Review/Diff per scope, `ScheduleTarget` | B-NAV-044, B-NAV-048 |
+| `ShortcutCatalogTest` | `:ui:shell` | every binding has a help row; no plain-letter global bindings; no Meta binding on Android; Esc never bound to stop | DESKTOP-WEB-CROSS-12 |
+| `RouteRoundTripTest`, `RouteKeyContentTest` | `:ui:routes` | §2.2.3 rules 1–4, `PrefillAddress` never holds user info, query or fragment | — |
+| `BackStackSizeTest` | `:ui:shell` `androidUnitTest` (Robolectric, `Parcel.dataSize()`) | §2.2.3 rule 6 | — |
+| `SearchIndexCoverageTest` | `:quality` (graph) | §10.4 | B-NAV-057 |
+| Entry parser tests (`EntryIntentReaderTest`, `WidgetRouteParserTest`, `WidgetActionParserTest`, `CodingActionParserTest`, `StatusActionParserTest`, `LivePauseParserTest`) | Robolectric in `:android:platform`, `:android:widgets`, `:android:background` | each component's rows of §7.13, read from `entry-extras.txt` | E2E-39 |
 
 ### 12.2 Device flows (T3, Maestro, both apps)
 
@@ -1799,8 +2094,13 @@ build (ADR §10.1).
    chat (O-07-1), sheet adaptivity (§8.4), max widths with extreme content at 280, 412 and 1600 dp.
 4. Hardware keyboard (`adb shell input keycombination`): every §9.1 row; nothing fires while typing in the composer.
 5. Process death (`adb shell am kill` while backgrounded, then reopen from Recents): the stack restores; no link,
-   share or shortcut replays (§7.1).
+   share or shortcut replays (§7.1); a still-empty new conversation is discarded on leaving it (§2.5); a restored agent
+   chat reopens.
 6. Arabic: the whole graph walked once in RTL.
+7. TalkBack (§10.8): page titles announced after each transition; focus returns to the opening row on Back; rail labels
+   read; Help's problem count spoken in words.
+8. First native launch through a side door (E2E-39): Manage space from App info, and a widget steer button, both before
+   `MainActivity` has run: "Updating your app…" first, then the page or panel.
 
 ---
 
@@ -1809,9 +2109,11 @@ build (ADR §10.1).
 | # | Question | Default | Why |
 |---|---|---|---|
 | O-07-1 | On tablets, landscape phones and desktop, should the side rail stay visible while a conversation or another page is open? (Phones are not affected.) | **Yes, keep it visible** | No jump on every page open; Conversations, Files and Settings stay one tap away; this is how Android's own tablet apps behave. |
-| O-07-2 | Pinning a conversation: move "Pin" from the Subagents page (its only home today) to the conversation's ⋯ menu and the row's long-press menu? | **Yes** | Pins feed the launcher shortcuts, but nobody can find the control today (SCREENS-NAV-112). Same number of controls, better place. |
+| O-07-2 | Pinning a conversation: move "Pin" from the Subagents page (its only home today) to the conversation's ⋯ menu? | **Yes** | Pins feed the launcher shortcuts, but nobody can find the control today (SCREENS-NAV-112). Same number of controls, better place. No long-press menu is added to conversation rows: Flutter has none, and it would be a hidden gesture in a "nothing lost" release. |
 | O-07-3 | Open files as a page (with the usual back swipe) instead of a tall sheet on phones? On tablets the file shows beside the list either way. | **Yes, a page** | One viewer everywhere, native back preview, and it survives Android closing the app. |
 | O-07-4 | Accept shared pictures from other apps, and show your recent conversations in Android's share sheet (Direct Share)? | **Not in the switch release; right after it** | The switch release is "nothing lost" (ADR §10); these are new features. |
+| O-07-5 | Agents: make one "Agents" page out of today's Agents hub, the agents list and the "agent on this phone" page (M3)? | **Yes, one page** | With outside (A2A) agents dropped and AI Team later, the three show the same rows; one place to find and fix an agent. If no, the three pages are ported as they are. |
+| O-07-6 | Adding a plan to Usage: make "which connection?" the first step of the Add page instead of its own page (M4)? | **Yes, a first step** | The picker page is 53 lines with one choice; as a step it saves one Back and one page. If no, it stays a page. |
 
 Decisions already in the ADR that this section applies: D5 (drop "Press back again to exit"), D6 (AI Team and FactsBook
 after the switch, A2A dropped), D7 (Termux migrate-out only), D11 (live backgrounds later), D16 (Linux services, vitals
@@ -1831,14 +2133,18 @@ and backups ported from their branches).
 | U-07-6 | `onProvideKeyboardShortcuts` with Compose; system helper shows our groups | slice 5 emulator check | skip the system helper; the in-app help sheet stays |
 | U-07-7 | `ACTION_QS_TILE_PREFERENCES` on the ZTE MyOS launcher | slice 4 owner phone check (read-only adb allowed) | App info opens, as today |
 | R-07-1 | The chat library is the product (27.7k lines); its Back guard and arrivals are where regressions hide | chat lead owns C01; tests in §12.1 first | — |
-| R-07-2 | 25 shared sheets make `Sheets.kt` a hotspot | coordinator owns the file; one PR per new key | — |
+| R-07-2 | 26 shared sheets make `Sheets.kt` a hotspot | coordinator owns the file; one PR per new key | — |
+| U-07-8 | `NavEntry.Content()` used outside `NavDisplay` for shared sheets (`SheetInstaller` over `EntryProviderScope<SheetKey>`, §2.3) | slice-1 shell spike (same assumption as 03 §15.4) | `:ui:routes` becomes `oc.kmp.compose` and installers return composable maps (ADR §5.2 amendment) |
+| U-07-9 | Nav3 1.2.0 `isPop` rule and `contentKey` uniqueness as the review describes them (§3.1, §2.2.3 rule 3) | P2 in slice 0 reads `NavDisplay.kt` at the pinned version | the `NavOp`-first specs and N10 are safe either way; only the [R] tags change |
+| U-07-10 | `rememberListDetailSceneStrategy` accepting a directive built from `BoxWithConstraints` (§8.3) | slice-1 shell spike | the documented custom `SceneStrategy` with the same two rules |
 
 ---
 
 ## 15. Sources
 
 - ADR `01-architecture-decision.md` §4 rows 12/13/18/26, §5.2, §6, §7, §9.1, §9.4, §9.7, §9.9, §10, §11 P2, §12.
-- `03-architecture-modules.md` choices S5, S10, S12, S17 and §2.2 (in progress on 2026-11-01).
+- `03-architecture-modules.md` choices S5, S10, S12, S17, §2.2, §13.5 and §15.1–§15.8; `05-data-migration.md` §7.1,
+  §7.10; `08-motion-animation.md` §5.4, §5.9, §13.2; `02-principles-scope.md` §3.2, §3.5, §3.6.
 - Maps: `screens-nav.md` (all sections; SCREENS-NAV-01–112), `chat-genui.md` (CHAT-GENUI-19/25/28/49/66/67),
   `android-platform.md` (§3, ANDROID-PLATFORM-05–07, 17–33), `builtin-linux.md` (BUILTIN-LINUX-40–50, 63–64, Q1),
   `agents-backends.md` (AGENTS-BACKENDS-46), `desktop-web-cross.md` (§3.B), `ui-kit.md` (UI-KIT-06/07/08/21–32),
@@ -1853,6 +2159,21 @@ and backups ported from their branches).
   `lib/ui/screens/agents/agent_model_sheet.dart`, `lib/ui/screens/chat/chat_command_actions.dart`,
   `test/home_navigation_test.dart` (lines 700–830), and the Kotlin `LaunchActivityBridge.kt`,
   `BackgroundConnectionService.kt` (extra constants), `ScheduledPromptChannel.kt`, `SessionWidgetIntents.kt`.
+  Read again for the review revision (2026-11-01): `lib/main_parts/root.dart` (`_Root.build`, `_finishLinuxReset`,
+  connection-card callbacks), `lib/state/connection.dart` (`agentBackendProfileSuffix`, `_alertProfileId`),
+  `lib/state/connection/{connect.dart,phone_agents.dart,phone_agents_backend.dart}`,
+  `lib/ui/screens/{servers_screen.dart,servers/servers_actions.dart,project_hub_screen.dart,files/files_viewer.dart}`,
+  `lib/ui/screens/chat/{chat_top_bar.dart,chat_files.dart,chat_commands.dart,chat_drafts.dart,chat_session_menu.dart}`,
+  `lib/ui/screens/scheduling/schedule_routes.dart`, `lib/ui/screens/chats/{chats_home_screen.dart,new_chat_screen.dart}`,
+  `lib/ui/screens/phone_setup/{phone_setup_start_screen.dart,phone_setup_ready_screen.dart}`,
+  `lib/ui/screens/settings/server_page.dart`, `lib/ui/desktop/shortcuts.dart`, `lib/main_parts/alerts_and_shortcuts.dart`,
+  `lib/ui/kit/chat/kit_composer.dart` (Esc), `lib/domain/session_handoff.dart` (`isSafeIdentifier`), every
+  `pushNamedAndRemoveUntil` call site, the manifest, `WidgetV2Bridge.kt`, `StatusNotification.kt`,
+  `PauseTileService.kt`, `AttentionTileService.kt`.
+- Freeze branch (`int/freeze-2026-11-01` at `fc5c1e78f`, read through `git show`): the 23 added `lib/ui` files, in
+  particular `settings/updates_screen.dart`, `whats_new_sheet.dart`, `whats_new_places.dart`, `kit_update_sheet.dart`,
+  `kit_update_dot.dart`, `kit_vitals_strip.dart`, `process_budget_status.dart`, `child_limit_card.dart`,
+  `link_file_share.dart`, `phone_file_prompt.dart`, `about_screen.dart`, `home_screen.dart`, `settings_group_page.dart`.
 - Official docs read 2026-11-01 [V]: developer.android.com "Navigation 3: custom layouts" (`SceneStrategy`,
   `sceneStrategies`, Material `ListDetailSceneStrategy`, `listPane`/`detailPane`/`extraPane`) and "Animate between
   destinations" (`transitionSpec`, `popTransitionSpec`, `predictivePopTransitionSpec`, `NavDisplay.TransitionKey`,
@@ -1862,3 +2183,128 @@ and backups ported from their branches).
   `android-native-feel`, `steer-not-queue`, `chat-kit-decisions-2026-10-02`, `vision-decisions-2026-10-20`,
   `linux-manager-plan`, `freeze-owner-decisions-2026-11-01`, `dev-freeze-native-rewrite-2026-11-01`,
   `blocked-feature-decisions-2026-09-28`, `ux-skills-for-navigation`, `no-glass-rule`, `app-updates-two-layers`.
+
+---
+
+## 16. Reconciliation with sections 03, 05, 08, the ADR and the catalog
+
+This section is the single source for the navigation shapes listed in §0.1. Before the slice-0 freeze the coordinator
+writes these amendments into the other files (this revision does not edit them); until then an agent that finds a
+difference follows this section.
+
+| Where | Says today | Becomes | Why |
+|---|---|---|---|
+| 03 §15.1 `AppRoute` | `val motion: RouteMotion get() = SharedAxisX`; enum `{Root, SharedAxisX, GrowFromRow, SlideUp}` | abstract `val meta: RouteMeta` (getter, not serialized) with `RouteMotion {Page, FullScreenDialog}`, `growsFromRow`, `pane`, `requires` (§2.2.1); the six motion **classes** of §3.1 (08 §5.9 names) are chosen by `NavOp` | Key-borne metadata keeps 03's pattern; the operation-based classes cannot live on a key (§3.1) |
+| 03 §15.1 inventory | `OnboardingRoute.FirstRun`, `ChatsRoute.Home/All/New`, `ChatRoute(ref, focusComposer)`, `ChatPagesRoute.Review/Notes`, `ServersRoute.List/Pairing/Details`, `PhoneRoute.Home/Setup/Terminal/Health`, `AgentsRoute.Agent`, `ProjectRoute.Viewer/Git/Preview`, `SettingsRoute.ManageSpace`, `SchedulesRoute.Editor/History`, `AboutRoute.Report/Diagnostics/Updates`, `SearchRoute.Launcher` | §2.2.2's 85 keys. Renames: Home → `Conversations`, All → `AllConversations`, New → `NewConversation`, `ChatRoute` → `ChatRoute.Chat(ref)` (focus is a `ChatArrival`), List → `Servers`, Pairing → `PairingScanner`, Details → `SheetKey.ConnectionDetails`, Viewer → `FileView`, Preview → `DevPreview`, Report → `ReportProblem`, Diagnostics → `Kept`, `PhoneRoute.Home` → `ThisPhone`, `PhoneRoute.Terminal` → `LocalTerminal`, `ChatPagesRoute.Notes` → `Note`. Moved: Review → `ProjectRoute.Review(scope = Session)`; `PhoneRoute.Health` → no page (Flutter has no phone-health screen; the phone's state is part of `ThisPhone` and `Linux`); `AboutRoute.Updates` → `SettingsRoute.Updates` (This app, as on the freeze branch). Not routes: `FirstRun` (a `ChatArrival`), `ProjectRoute.Git` (`SheetKey.Git`), `SettingsRoute.ManageSpace` (its own activity, §2.2.2), `SchedulesRoute.Editor/History` (`SheetKey.Schedule`, history inside it), `SearchRoute.Launcher` (`SheetKey.CommandLauncher`), `AgentsRoute.Agent` (`SheetKey.Agent`) | Flutter shows these as sheets or separate activities; a route would add a back-stack level the person never had |
+| 03 §15.3 `AppNavigator` | `top`, `open`, `openChat(ref, focusComposer)`, `land()`, `replaceRoot(root)` = "replace the whole stack", `back` | §2.4: `top`, `open`, `openChat(ref, ChatArrival, fromOrigin)`, `replaceTop`, `resetTo(root?, then?)` (the whole-stack replace), `land(then?)`, `replaceRoot` (index 0 only), `selectDestination`, `back`, `popTo`, `showSheet`, `closeSheet`, `arrivals`; `NavOp` | Arrivals (land on a request, menu action, first run, highlight) and `land(then)` are needed by entry routing; "replace the whole stack" is `resetTo` |
+| 03 §15.4 `withRouteMotion` | adds `RouteMotion` metadata per entry | `withRouteMeta` adds the pane role and a push-motion marker only; no per-entry transition keys; global specs read `NavOp` first (§2.9, §3.1) | Per-entry transition metadata would override the operation-based classes |
+| 03 §15.7 sheets | "a sheet becomes a route only with the coordinator's approval"; no shared-sheet concept | add `SheetKey` + `Set<SheetInstaller>` (shell-hosted, not routes, not saved) and `SheetPresence` (§2.3); the "route only with approval" rule stays | 26 sheets are opened by several features or by the router; features cannot depend on each other |
+| 03 §15.8 `EntryRouter` | `PendingEntry(id, target?, waiting?)`; targets `OpenChat`, `OpenChats`, `NewConversation`, `OpenServers`, `OpenSettings`, `OpenUsage`, `OpenPhone`, `OpenScheduleHistory`; requests `Shortcut`, `ShareText`, `AlertTap`, `ScheduledRunTap`, `WidgetTap`, `TileTap` | §7.2: `EntryHandoff` + separate `waiting`; `EntryTarget` (`Chat`, `Conversations`, `NeedsYou`, `Servers`, `PhoneSetup`, `ThisPhone`, `Usage…`, `ProviderSignIn`, `AgentSignIn`, `Settings`, `ScheduledPrompts`, `SessionAddress`, `SwitchServerThen`, `Land`); `EntryRequest` with `Internal`; `ShellWorld` | Covers every §7.4–§7.10 row, including switch-then and land-then |
+| 03 §13.5 multibindings | `Set<SettingsSearchEntry>` consumed by `:feature:search`; `Set<CapabilityFlow>` consumed by the kit explainer | `Set<SearchEntry>` + `Set<SearchExclusion>` (`:ui:routes` types) consumed by `:feature:settings` and `:feature:search` through `SearchMatcher` (`:engine:settings`); `Set<CapabilityFlow>` stays a multibinding, §7.12's table is its contract; add `Set<SheetInstaller>` | One index for both searches, built in slice 4 (§10.4) |
+| ADR §9.4 | `AppNavigator`: `open`, `openChat(ref, focusComposer)`, `land`, `replaceRoot`, `back` | the §2.4 list; `openChat(ref, ChatArrival, fromOrigin)` | as above |
+| ADR §5.2 `:engine:entry` start slice | 2 | 1 for interfaces (`ShellWorld`, `EntryRouter`, `EntryTarget`, `EntryHandoff`), implementation in 2 | The slice-1 shell compiles against them (§11) |
+| ADR §5.2 / §6.1 | `:ui:shell` reads only entry, attention, settings engines | unchanged: everything else reaches the shell through `ShellWorld` in `:engine:entry` (§2.1) | `:engine:entry` is engine 16 and may read profiles, connection and diagnostics |
+| `:core:model` freeze list (ADR §10.3) | `ConversationRef(profileId, sessionId)` | adds `backend: ConversationBackend`, `SafeId`, `ServerFlag`, `PlatformFlag`, `ProjectPath`, `PrefillAddress`, the 1,024-byte path bound (§2.2) | Phone-agent identity; gates evaluable from keys; size budget |
+| 05 §7.1 | receivers, workers, tiles, services await the gate | add `ManageSpaceActivity`, `WidgetConfigureActivity`/`WidgetRouteActivity`/`WidgetOverlayActivity` (draw "Updating your app…"), and "Delete everything stops `MigrationRunner` first" (§2.2.2) | Either can be the first native launch |
+| 08 §13.2 | corrections to 07 §3.2 and to 03's motion names | applied here (§3.1, §3.2) | — |
+| Catalog B-NAV-025 and E2E-21 step 3 | "Every entry that used to open the Inbox now opens Chats with its filter applied" | `amended` entry in `native/catalog/scope.jsonl` (02 §3.6: rows are never edited): "Needs-you entries (notification, Quick Settings tile, widget, the `activity` shortcut) open Conversations at the root with the Inbox opened above it; running entries open Conversations filtered to Running" — source `test/home_navigation_test.dart:752`, `home_screen.dart:134`. E2E-21 step 3 and its Maestro flow say the same | The row contradicted the code and its own test; a flow written from it fails on both apps |
+| Section 11's intent table | lists receivers separately | `quality/freeze/entry-extras.txt` is generated from §7.13 ∪ section 11 (§7.13) | Neither table can drop a row alone |
+
+---
+
+## Review notes (2026-11-01 revision)
+
+Each issue from the review was checked against the Flutter source (`oc_app-batch1` at `65e3f70a3`, the freeze branch
+at `fc5c1e78f`), the ADR, sections 02, 03, 05, 08 and the catalog before changing anything.
+
+**Fixed (confirmed real):**
+
+1. **07 vs 03 shapes (both blocker reports).** Removed "03 wins on the shape". §0.1 now makes this section the single
+   source for routes, `AppNavigator`, arrivals, `SheetKey`, search and flow types and the entry types; 03 keeps file
+   layout and DI. §16 lists every difference (motion, inventory, navigator, sheets, `EntryRouter`, multibindings) and
+   the ADR §9.4 `openChat` amendment. Enable flows are a multibinding; §7.12's table is the contract (`EnableFlowsTest`).
+2. **Module rules.** `RouteMeta` is plain data on the key (`abstract val meta`, per-argument gates); flag enums move
+   to `:core:model`; only `:ui:shell` builds Nav3 metadata (`withRouteMeta`); `SheetInstaller` reuses Nav3's
+   `EntryProviderScope` so `:ui:routes` stays Compose-free (fallback recorded, U-07-8); `ShellWorld` in `:engine:entry`
+   gives the shell bootstrap, profiles, capabilities, update and safe-mode state without new edges; N7 reads
+   `route.meta.requires`.
+3. **Motion by operation.** `NavOp` recorded by the navigator; `Replace`, `Root`, `TopLevel` and grow-from-row are
+   chosen from it; keys carry only `Page`/`FullScreenDialog`; `openChat(fromOrigin)` feeds the gate's `TapOpen`.
+4. **`poppedByGesture` bug.** The sketch now uses 08 §5.4's `RowTransformGate`, cleared on `TransitionSettled`; the
+   list freeze follows the gate or "a page covers the list".
+5. **Duplicate keys deeper in the stack.** Rule N10 (no key twice; `popTo` then arrival) and an `AppNavigatorTest` case.
+6. **Back-stack size (two reports).** Path fields capped at 1,024 UTF-8 bytes with interning beyond; saved copy = root +
+   top 20; `Folder` runs capped at 8; `BackStackSizeTest` under Robolectric in `:ui:shell` with 128 KiB / 16 KiB budgets.
+7. **Search index module.** `SearchEntry`/`SearchExclusion` in `:ui:routes`, contributed per feature; `SearchMatcher`
+   in `:engine:settings`; built in slice 4; coverage test in `:quality` (not `:ui:routes` as the review suggested: the
+   entries come from feature contributions that a `:ui:routes` test cannot see).
+8. **Build order "done when".** Every check is scoped to steps whose modules exist; entry-router implementation moved
+   to slice 2, `:engine:entry` interfaces to slice 1 (ADR amendment in §16); Inbox moved to slice 3 to match B05 and
+   its `:engine:requests` dependency.
+9. **List-detail directive and lone details.** Directive built from NavDisplay's constraints; only a contiguous
+   list → detail run forms two panes.
+10. **B-NAV-025 / E2E-21 step 3 (two reports).** Recorded as a `scope.jsonl` amendment in §16 (catalog rows are never
+    edited, 02 §3.6), with the corrected wording and the Flutter test line.
+11. **Meta and Esc.** Ctrl only on Android; Esc never stops a reply and falls back to Back when unclaimed; both in
+    `ShortcutCatalogTest`. (Esc-to-stop is dropped everywhere, not only on Android: Flutter never bound it.)
+12. **§7.13 contract.** Split by receiving component with the exact URIs and extras, including the coding-action,
+    status, live-pause and widget-action intents; per-module Robolectric parser tests; `entry-extras.txt` generated
+    from §7.13 ∪ section 11.
+13. **Id rules.** One `SafeId` superset in `:core:model`; every edge rule is a tested subset; parse functions, never
+    throwing `init`; bad ids → `Drop(notice)`. The "Flutter /chat/<id> rule" citation was wrong and is corrected.
+14. **`prefillAddress`.** `PrefillAddress` value class strips user info, path, query and fragment at construction.
+15. **Profile removed while running, and whole-stack resets.** N12 (live `RouteGuard` filter, then `resetTo`), N11 and
+    `resetTo` with a table of every Flutter `pushNamedAndRemoveUntil` call site; connect/save success → `land()`.
+16. **M3/M4 approval.** Added as O-07-5 and O-07-6 with "merge" as the default; §6.2 states which merges are approved.
+17. **Quick Settings tiles.** `TileServiceCompat.startActivityAndCollapse`; `EXTRA_COMPONENT_NAME` tells the tiles
+    apart.
+18. **Local sheets and N2.** `SheetPresence` in the kit, reported by every `KitSheetHost`; N2 waits on it; `onHidden`
+    added to the kit sheet API.
+19. **Files opened from a chat (blocker).** `from: ConversationRef?` on Files, Folder, FileView, Review, Diff (and
+    Tools, Schedules); chat-only affordances shown only with `from`; staging through `:engine:composer`, then
+    `popTo(Chat(from))`; "Ask about this file" without a chat seeds the new-chat draft.
+20. **Phone-agent identity.** `ConversationRef.backend` plus `ResolveRef(owner, session)` in the router; `RouteGuard`
+    keeps agent refs while the owner profile exists; test rows added.
+21. **Root decision.** Row 1 is "no active profile" (welcome only when nothing is saved); §7.3 rule 4 uses the same
+    condition; both cases in `RootDecisionTest`.
+22. **Servers requests.** `ServersRequest` now has all five Flutter kinds; `EnterPhoneCredentials` keeps the
+    restore-first rule; the editor gets `connectOnSave` and `focusPassword`.
+23. **Freeze-tip features.** `SettingsRoute.Updates`, the gear update dot and gear-tap `AppUpdate` sheet,
+    `SheetKey.WhatsNew` with "Show me" → open + highlight, About star/share, the Linux vitals strip (5 s, top entry
+    only), the process-budget status line and child-limit card, Wi-Fi share and "open a phone file" from chat links,
+    freeze tags; the 23 new freeze UI files were read and each has a home, a drop (browser mode, D17) or a deferral
+    (Gemma, Claude Agent).
+24. **Files gating.** `ProjectTools.available` (port of `toolsFor`); the destination exists while any tool does;
+    Services, Worktrees, Workspaces and Review rows corrected; `RouteGateTest` per flag combination.
+25. **Scheduled prompts scope.** `SchedulesRoute.List(profileId, projectDir, from?)`, the `ScheduleTarget` gate, the
+    seed rules, and the Files hub door in K01.
+26. **`/skills` and `/references`.** They carry `from` and stage results through `:engine:composer`. The review said
+    `/skills` is gated by `supportsSessionSkills` and `/tools` by `toolInventory`; the source shows `/skills` is gated
+    by `serverCatalog` (with `supportsSessionSkills` deciding only whether the session id is passed) and `/references`
+    by `fileBrowsing`, so those gates were used instead.
+27. **Row long-press menu.** Dropped (Flutter rows have only `onTap`); O-07-2 now moves Pin to the chat's ⋯ menu only;
+    B10 corrected to New conversation only; the §10.3 row removed.
+28. **Manage space and widget panels before the gate.** Both draw "Updating your app…" until the gate opens; Delete
+    everything stops the runner first and wipes its journal; E2E-39 step and §12.3 check added.
+29. **Setup progress entry points.** `AppStartup` submits `PhoneSetup(Progress)` when a reset resumes; F03 lists that
+    and Linux › Repair.
+30. **Discard flag after process death.** Kept in `:engine:composer` (`oc.pendingDiscard.<profileId>`) instead of the
+    key, so equality of chat keys is unchanged.
+31. **Small chat-list and Files behaviours.** "Can't reopen" confirm (`agents-start-new`), the lastProject writer, the
+    "All files" link entry, and `/workspaces` → Conversations with the filter cleared.
+32. **Terminal gate.** Removed from §2.8 (`None`); doors other than Ctrl+Backquote stay hidden without `terminal`.
+33. **Accessibility.** New §10.8 and a TalkBack check in §12.3.
+34. **Ctrl+,.** Kept Flutter's behaviour: Settings opens over the current page.
+
+**Rejected or changed from the suggested fix:**
+
+- None of the issues was rejected outright. Three suggested fixes were adjusted after checking the source: the search
+  coverage test runs in `:quality`, not `:ui:routes` (item 7); the `/skills` and `/references` gates follow the source,
+  not the review text (item 26); and Esc-to-stop is removed on every platform rather than only on Android (item 11). The
+  "Setup failure → `resetTo(RootDecision)`" call site in the review is, in the source, "Setup ready: Leave without a
+  project" (`phone_setup_ready_screen.dart:229`), and is listed that way. The review's `WidgetActionReceiver` for
+  `opencode-widget://action/…` is, in the source, `BackgroundConnectionService` with `ACTION_WIDGET_ACTION` through
+  `getForegroundService`; §7.13 names that component.
+- Edits that belong in other files (03 §15, ADR §9.4/§5.2, 05 §7.1, the catalog's `scope.jsonl`) were **not** made
+  here; they are listed in §16 for the coordinator, because this revision was limited to section 07.
+

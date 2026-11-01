@@ -1,0 +1,9 @@
+You are the final independent reviewer (Codex Astra) of a complete plan to rewrite the Flutter Android app "OpenCode Mobile" as a native Kotlin Multiplatform + Compose app: Android first, iOS and Linux desktop later, with a day-1 in-place update over the Flutter app (same package, same signing key, first-launch data migration), and test-first parity from a 1,544-behaviour catalog.
+READ-ONLY: do not modify any file.
+Plan root: /home/eslam/Storage/Code/wt/native-plan. Start with README.md, then plan/01..17. Use map/ (the current app), research/, catalog/ and the earlier audits in audit/codex-*.md (Sol found 7 blockers in 01/03/04/05; check whether each is actually fixed in the text). Current Flutter source (read-only): /home/eslam/Storage/Code/wt/oc_app-batch1. Slice-0 code built from the draft is on the remote branch native/m0-2026-11-01 (clone https://github.com/Eslamasabry/opencode-mobile-next to /tmp if you want to check it).
+Find what will make this plan FAIL or lose user data or features: wrong technical claims (APIs, versions, Android behaviour), migration risks, contradictions between sections, gaps against today's app, an unrealistic schedule or parallelism, missing owner decisions, and security or privacy holes.
+Output a markdown report:
+- a verdict line (GO, GO-WITH-FIXES or NO-GO);
+- findings by severity (BLOCKER / MAJOR / MINOR), each with: where (file and section), the problem, evidence, and the concrete fix;
+- the top 5 changes you would make first.
+No praise, no restating the plan.

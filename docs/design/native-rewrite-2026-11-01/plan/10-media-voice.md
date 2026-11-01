@@ -19,11 +19,11 @@ docs). **[R]** read in the repo, a map, research or memory. **[U]** unverified; 
    settings carry over on the in-place update with no re-download.
 2. Speech stays on the phone and stays in the APK (sherpa-onnx Whisper and Kokoro, about 10 MB). The native app keeps
    the speech model loaded while you talk instead of reloading it every 30 seconds, so long dictation gets faster.
-3. Google's ML Kit is gone: QR scanning uses CameraX plus zxing-cpp (open source, about 1.7 MB smaller), which keeps
-   the scanner F-Droid-ready as you decided on 2026-11-01.
+3. Google's ML Kit is gone: QR scanning uses CameraX plus zxing-cpp (open source, about 1.7 MB smaller), as you
+   decided on 2026-11-01. There is one APK for everyone; F-Droid follows section 16's plan (our own signed build).
 4. Everything uses Android's own surfaces: the system photo picker, system camera, file dialogs and share sheet, with
    native ripples, haptics and predictive back. Untrusted PDFs still open in a sealed separate process.
-5. Eleven small decisions for you are in §24, each with a default we work on until you answer (for example: keep a
+5. Twelve small decisions for you are in §24, each with a default we work on until you answer (for example: keep a
    half-downloaded model when you tap Cancel, yes; accept pictures shared into the app, after the switch).
 
 ---
@@ -46,18 +46,18 @@ docs). **[R]** read in the repo, a map, research or memory. **[U]** unverified; 
 | # | Choice | Why, and what it removes |
 |---|---|---|
 | M1 | No new Gradle modules for media. Logic is `:engine:media` (commonMain only); Android work is `:android:media`; UI parts are `:ui:kit-content` / `:ui:kit-chat`; screens live in the features the ADR already names. | ADR §5.2 already has the homes. Removes a `:speech-native` module (research §7 idea) and a Wi-Fi server module. |
-| M2 | **One warm recognizer per recording.** The Whisper model loads once when listening starts and is released 20 s after the recording ends (or at once on memory pressure). | Flutter reloads the model for every 30 s chunk [R map §8]. Removes per-chunk load time and the isolate machinery. |
+| M2 | **One warm recognizer per recording.** The Whisper model loads once when listening starts and is released 20 s after the recording ends, or between chunks when memory is low (§6.3). Phones under 6 GB total RAM close it between chunks (today's behaviour) until P-M2 reports. | Flutter reloads the model for every 30 s chunk [R map §8]. Removes per-chunk load time and the isolate machinery. |
 | M3 | **Cancel keeps the `.part` files** of a model download (resume next time); **Remove** deletes every staged, partial and backup file. A cancel during verification or publishing still cleans the staged files. | Settles DRIFT 33a in favour of what the docs and B-MEDIA-012 promise. Removes a re-download of up to 375 MB after an accidental Cancel. Amends B-MEDIA-025 clause "cancelled downloads leave no files" to "leave no marker" (§20.3). |
-| M4 | **Verified stamp.** After a full SHA-256 check, `.native-verified.json` beside `.installed.json` records each file's length and mtime. Start-up checks the stamp only; a full re-hash runs on mismatch, on a recognizer load failure, and once per pack on the first native launch. | Flutter re-hashes up to 540 MB whenever the voice manager is created [R map §8]. Removes that work from every first mic tap. |
+| M4 | **Verified stamp** (owner decision D10-12, default yes). After a full SHA-256 check, `.native-verified.json` beside `.installed.json` records each file's length and the SHA-256 of its first and last 1 MiB (§7.2; commonMain can compute both, no new platform seam). Start-up checks the stamp only (≈ 2 MiB read per file); a full re-hash runs on mismatch, on a recognizer load failure, and once per pack on the first native launch. | Flutter re-hashes up to 540 MB whenever the voice manager is created [R map §8]. Removes that work from every first mic tap. |
 | M5 | **The natural voice (Kokoro) gate is enforced:** total RAM ≥ 2000 MB. | DRIFT 33c: declared, never enforced. |
 | M6 | **Typed failures only.** Every media failure is `Failure.Media(problem: MediaProblem, details)` (§4.1). No copy is chosen by matching exception text. | DRIFT 33b (voice and pairing copy chosen by exact message strings). Removes a whole class of silent copy breakage. |
-| M7 | **Our own small XML pull reader** in `:engine:media` commonMain (no DTD, no external entities, caps on size and depth), shared by the SVG validator and the Office reader. | Removes `xmlutil`/`xml` dependencies and XXE risk by construction. |
+| M7 | **Our own small XML pull reader** in `:engine:media` commonMain (no DTD, no external entities, caps on size and depth), shared by the SVG validator and the Office reader. Section 12 proposes xmlutil core 1.0.2 instead (R-13, N-39, R12-5); C10-20 asks the coordinator to pick one. Either way the Dart order is kept: the regex DOCTYPE/ENTITY pre-check runs before any parse. | Removes `xmlutil`/`xml` dependencies and XXE risk by construction. |
 | M8 | **Three primitives in `:core:common`** (`expect`, the only module allowed to): `Sha256` (incremental), `RawInflate` (ZIP "deflate" entries) and `secureRandomBytes`. Android and desktop actuals use `java.security.MessageDigest`, `java.util.zip.Inflater` and `java.security.SecureRandom`. | `DartJson.sha256Hex` (05 §2.5) needs SHA-256 anyway; a 375 MB file needs the platform's fast digest. Removes a hand-written inflater. |
-| M9 | **One Coil `ImageLoader`, no disk cache**, memory cache keyed by `ImageRef` (profile + source + version). Bytes come only through `KitImageResolver` (the gateway's file transport with its caps). Coil never fetches a URL. | Removes a shared HTTP/disk cache that could hold one server's files after the server is deleted. |
-| M10 | **Photos are always re-encoded in-app** (decode at target size, long edge ≤ 2048 px, JPEG quality 85), except GIF and animated WebP that already fit the caps, which are kept byte for byte. EXIF (including location) is dropped. | `image_picker` did the scaling before; the Photo Picker does not [R map §12 risk 6]. One rule instead of per-format guesses. |
-| M11 | **Camera photos go through the system camera app** (`TakePicture`) into `files/camera-capture-v1/<id>.jpg`, after a `PermissionGate` CAMERA request. | Parity; removes an in-app camera screen (owner decision D10-8 can add one later). |
+| M9 | **One Coil `ImageLoader`, no disk cache**, built by `:ui:kit-content` (`KitImageLoaders.create`) with `serviceLoaderEnabled(false)` and only the components we add; memory cache keyed by `ImageRef.cacheKey` (profile + source + version). Bytes come only through `KitImageResolver` (the gateway's file transport with its caps). Coil never fetches a URL. | Removes a shared HTTP/disk cache that could hold one server's files after the server is deleted. |
+| M10 | **Photos are always re-encoded in-app** (decode at target size, long edge ≤ 2048 px): a bitmap **with alpha → PNG** (lossless), otherwise **JPEG quality 85** (the `image_picker` rule, `ImageResizer.java:182` `bitmap.hasAlpha()`). GIF and animated WebP that already fit the caps are kept byte for byte. EXIF (including location) is dropped. | `image_picker` did the scaling before; the Photo Picker does not [R map §12 risk 6]. One rule instead of per-format guesses; transparent logos and screenshots keep their transparency. |
+| M11 | **Camera photos go through the system camera app** (`TakePicture`) into `files/camera-capture-v1/<id>.jpg`, after a `PermissionGate` CAMERA request. The FileProvider root this needs is C10-14. | Parity; removes an in-app camera screen (owner decision D10-8 can add one later). |
 | M12 | **PDF: keep the isolated `LocalPdfService`** (same FQCN, same limits). `androidx.pdf` is not used. | Keeps the security answer for untrusted PDFs; removes Material Views + RecyclerView from the APK. |
-| M13 | **QR drawing uses `qrose-encoder-matrix` 1.3.1** (pure Kotlin matrix) and a kit `Canvas` painter with whole-pixel modules, not the `qrose` Compose painter. | Keeps the LOOK-21 pixel snapping and EC level M; removes a Compose painter dependency. |
+| M13 | **QR drawing uses `qrose-encoder-matrix` 1.3.1** (pure Kotlin matrix) and a kit `Canvas` painter with whole-pixel modules, not the `qrose` Compose painter. qrose encodes with one fixed mask, so `QrRules` (pure commonMain) **always** picks the lowest-penalty mask of the eight (ISO 18004 rules N1–N4, a port of Dart `qr` 3.0.2 `_lostPoint`), as Flutter's `QrImage` does. | Keeps the LOOK-21 pixel snapping, EC level M and today's scannability; removes a Compose painter dependency. |
 | M14 | **The Wi-Fi share server is a ~250-line `ServerSocket` server** in `:android:media` (GET/HEAD only), not Ktor server. | ADR ExternalRules allow Ktor only in net/protocol modules; removes `ktor-server-cio` (and its size) for one file at a time. |
 | M15 | **Read aloud and dictation stay foreground-only.** No `mediaPlayback` or `microphone` foreground service. | Parity, Android 15/17 audio rules satisfied with no service [R research §9]; background listening is owner decision D10-5. |
 | M16 | **Recovery reads the image_picker leftovers once.** If `oc.pendingPromptPhoto` has no `path` on the first native launch, the migration fills it from `flutter_image_picker_shared_preference` (§16.3). | Closes the one gap where a photo taken just before the update would be lost. |
@@ -67,18 +67,27 @@ docs). **[R]** read in the repo, a map, research or memory. **[U]** unverified; 
 | # | To | Request | Default until answered |
 |---|---|---|---|
 | C10-1 | 03 §10.1 (core owner) | Add `Failure.Media(val problem: MediaProblem, override val details: Redacted?)` and the append-only `enum class MediaProblem` (§4.1). `:ui:words` gets one exhaustive `when` for it. | Builders code against §4.1. |
-| C10-2 | 03 §10.1 | Add `expect` primitives `Sha256`, `RawInflate` and `secureRandomBytes(n)` to `:core:common` (§4.2). `DartJson.sha256Hex` uses `Sha256`. | As §4.2. |
+| C10-2 | 03 §10.1 | Add `expect` primitives `Sha256`, `RawInflate` and `secureRandomBytes(n)` to `:core:common` (§4.2), with Android, desktop **and iosMain** actuals now (the nightly `-Poc.ios=true` klib compile, ADR P1, fails on an expect without an iOS actual). `DartJson.sha256Hex` uses `Sha256`. | As §4.2. |
 | C10-3 | ADR §5.2 "Starts" column | `:engine:media` and `:android:media` start in **slice 3**, not 5: the composer's attachments (slice 3) need the MIME gate, photo caps and photo re-encoding. Voice, read aloud, viewer, PDF and Wi-Fi share stay in slice 5. | Slice 3. |
-| C10-4 | 03 §10.4 (`:core:domain`) | Define the types 03 names but does not spell out: `PickedFile`, `PhotoTarget`, `DocumentTarget`, `SharedFile` (§4.3). Add `AppPermission.LocalNetwork` for the targetSdk-37 slice. | As §4.3. |
-| C10-5 | 03 §12.1 | `AndroidPermissionGate` and `AndroidActivityResults` attach to **whichever host activity is resumed** (`MainActivity` or `WidgetOverlayActivity`), not only `MainActivity`: the widget voice panel asks for the microphone (07 M03). | As stated. |
+| C10-4 | 03 §10.4 (`:core:domain`) and §10.1 (`:core:common`) | Define the types 03 names but does not spell out: `PickedFile`, `PhotoTarget`, `DocumentTarget`, `SharedFile`, `ContentAccess`, `ExternalOpen` in `:core:domain` (§4.3). `PlatformContentHandle` and `InsertedContent` go in **`:core:common`** next to `PlatformViewHandle` (ADR §7.3), because `:ui:kit-chat` creates them and may not depend on `:core:domain` (ADR §6.1). Add `AppPermission.LocalNetwork` for the targetSdk-37 slice. | As §4.3. |
+| C10-5 | — | **Withdrawn.** The widget voice box keeps the system recognizer owned by section 11 (`WidgetOverlayPort.dictate`), so media never asks for the microphone from `WidgetOverlayActivity`; `AndroidPermissionGate`/`AndroidActivityResults` stay attached to `MainActivity` as 03 §12.1 says. | — |
 | C10-6 | 03 §11.2 media row | Add to the media engine's public API: `SpeechSynthesizer` (Kokoro), `ImageCodec`, `QrImageDecoder`, `LocalFileServer`, `AttachmentIntake`, `PendingPhotoRecovery`, `ModelPacks`, `VoiceSetup`, `ReadAloud`, `VoiceConversation`, `FilePreview`, `WifiShare`. | §4.5. |
-| C10-7 | 04 §3.10 (`Downloader`) | `DownloadRequest` options the voice packs need: manual HTTPS-only redirects (max 5, each hop `https`), exact `Content-Range` check on 206, `Content-Length` must equal the remaining pinned bytes, connect 15 s / per-step 15 s / body-idle 20 s timeouts, `User-Agent`, a `keepPartialOnCancel` flag (M3), and a progress throttle. | §7.4 lists them; `:core:net` owner adds them. |
+| C10-7 | 04 §3.10 (`Downloader`) | `DownloadRequest` options the voice packs need: manual HTTPS-only redirects (max 5, each hop `https`), exact `Content-Range` check on 206, an `expectedLength` pin (a missing `Content-Length` is allowed; a present one must equal the remaining pinned bytes; the body is aborted the moment it passes the pin; the exact total is required at the end), connect 15 s / per-step 15 s / body-idle 20 s timeouts, `User-Agent`, a `keepPartialOnCancel` flag (M3), and a progress throttle. | §7.4 lists them; `:core:net` owner adds them. |
 | C10-8 | 03 §11.2 `composer` row | An app-scoped `DraftStore.appendAttachment(ref: ConversationRef, attachment: DraftAttachmentRef): Outcome<AppendResult>` so photo recovery can reach the recorded conversation's draft while that connection is not live. | §10.5. |
 | C10-9 | 05 Appendix D | `flutter_image_picker_shared_preference` is read once by migration step M16 (§16.3) before v3 deletes it. | §16.3. |
 | C10-10 | ADR §9.9 component freeze | Intentionally removed components: `io.flutter.plugins.imagepicker.ImagePickerFileProvider` (authority `${applicationId}.flutter.image_provider`) and every `mobile_scanner`/ML Kit component. Added: `androidx.core.content.FileProvider` with authority `${applicationId}.localfiles` (same as the freeze-tip build). `.LocalPdfService` stays at its FQCN with `:local_pdf`. | §15.2. |
 | C10-11 | 06 §7.7 | `KitQr` built on `qrose-encoder-matrix` (M13); `KitImage` takes an `ImageRef`, never bytes or a URL; `KitImageMarkup` returns a `MarkupDocument`, the engine rasterizes it (§9.4). | As stated. |
 | C10-12 | 11 (notifications) | `NotificationSurface.showModelDownload(phase, received, total): Boolean` and `dismissModelDownload()`, keeping channel `opencode_voice_setup`, id `0x701CE` and the rules of §7.5. | §7.5. |
 | C10-13 | 07 (routes) | `ProjectRoute.FileView` gains `transientSource: String?` for previews without a server path (§11.1). | §11.1. |
+| C10-14 | 11 §14.3 and 16 §1.8.3 (B-SEC-195) | Allow one narrow FileProvider root, `<files-path name="camera" path="camera-capture-v1/"/>`, for `TakePicture` targets, with the security review row 11 §14.3 asks for (`docs/security/fileprovider-camera-capture.md`: one subdirectory that holds only capture files; a URI is built only for `<captureId>.jpg`; the write grant goes to the camera app for that one URI; the file is deleted after use; stale files are swept at start). 11 §14.3 also lists `<cache-path name="share" path="share/"/>`, which 16 already allows. `FileProviderPathsTest`'s allowlist gains exactly the camera element. Must be answered **before MV-2 starts**; files-path was chosen over `cache/` because the capture must survive the system clearing cache while the camera app is in front. | As §15.2. |
+| C10-15 | 03 §10.4 (`PermissionGate`) | `request(permission: AppPermission, alsoAsk: Set<AppPermission> = emptySet()): PermissionStatus`, shown as one system dialog; the status returned is the first permission's. Needed for `RECORD_AUDIO` + `POST_NOTIFICATIONS` together (Flutter parity, `MainActivityMedia.kt:147-150`). | §6.8. |
+| C10-16 | 11 §10.8 | Add "first microphone request" (with `alsoAsk`, C10-15) and "the voice setup sheet" (`AskingNotifications`, §7.7) to the contexts where `POST_NOTIFICATIONS` may be asked. | §6.8, §7.7. |
+| C10-17 | 06 §7.7 (`KitImage` row) | `KitImage`, `KitImageResolver` and `LocalKitImageLoader` live in **`:ui:kit`** (K, slice 3), built by the kit owner, because `:ui:kit-chat` (chips, sent photos, `KitPictureGroup`) cannot depend on `:ui:kit-content`. The loader factory `KitImageLoaders` (fetcher, keyer, SVG/GIF decoders) stays in `:ui:kit-content` (KN, slice 3). | §9.1, MV-3a/3b. |
+| C10-18 | 06 §7.7 (`KitScanner` row) | Move `KitScanner` (+ `KitScannerCamera`, `KitScannerFailure`) from slice 4 to **slice 3**: pairing by scanning is slice 3 (MV-9, 15 S3-KCCONTENT). `KitQr` stays in slice 4 (its first user, Wi-Fi share, is slice 5). | MV-9. |
+| C10-19 | 09 (Pictures paragraph, ~line 1271) | Transcript pictures pass `ImageRef.MessagePart`/`ServerFile`/`ToolOutput` to `KitImage` and use the one resolver-backed fetcher of §9.1. Delete 09's per-scheme `data:`/`file:` fetchers and the keys `part:<message>:<index>`, `path:<profile>:<path>`, `tool:<identity>` (the part key has no profile and can collide across profiles). | §9.1–§9.2. |
+| C10-20 | 12 (R-13, N-39, R12-5, G5, ExternalRules) | The coordinator picks xmlutil (12) or our own pull reader (M7). If M7 stands: remove N-39, R12-5, the G5 xmlutil entry and the `io.github.pdvrieze.xmlutil` ExternalRules line, and keep 12's note that the regex DOCTYPE/ENTITY pre-check runs first. If xmlutil wins: M7 and `XmlPull` are dropped and N8 tests the same hostile inputs against xmlutil's common `KtXmlReader` (never a platform StAX reader). | M7. |
+| C10-21 | 12 R-21 and 03 §5 catalog | R-21 and the `qrose` catalog row become `qrose-encoder-matrix` 1.3.1 with `QrRules` mask selection (M13); the `qrose` painter row is removed. | M13. |
+| C10-22 | 03 §10.4 (`BlobArea`) | Add `CameraCapture("camera-capture-v1")` and `PromptStash("prompt-stash-attachments-v1")`. `ImageRef.AppFile` (in `:core:model`, below `:core:domain`) takes a `:core:model` enum `AppImageArea { CameraCapture }` that `ImageResolver` maps to the `BlobArea`. | §4.3, §10.4. |
 
 ### 0.4 What this section does not decide
 
@@ -127,7 +136,7 @@ another module is named. Slices are the ADR's (0 skeleton … 6 switch). Every f
 | 29 Excel/Word as text | own ZIP + XML readers | `office` | — | composer note | MV-2 | 3 |
 | 30 Keyboard-inserted images and clipboard paste | `contentReceiver`; "Paste image from clipboard" row | `attach` | `clipboard` | composer field + "+" sheet | MV-2 | 3 |
 | 31 Desktop file drop | `dragAndDropTarget` | `attach` | — | desktop phase only | — | desktop |
-| 32 Chips, thumbnails, sent photos, reply pictures | `KitImage` with `ImageRef` | `images` | `image` | `KitComposerChips`, transcript | MV-3 | 3 |
+| 32 Chips, thumbnails, sent photos, reply pictures | `KitImage` with `ImageRef` | `images` | `image` | `KitComposerChips`, transcript | MV-3a, MV-3b | 3 |
 | 33 What each agent can take | capability gating | — | — | `:feature:chat-composer` | MV-2 | 3 |
 | 34 Photo asks from agent cards | same store and limits | `attach` | — | card renderer (09) | MV-2 | 3 |
 | 35 Attach from viewers, tool output, project | Attach vs Add to prompt | `attach` | — | viewer actions | MV-4 | 5 |
@@ -137,11 +146,11 @@ another module is named. Slices are the ADR's (0 skeleton … 6 switch). Every f
 | 39 Files screen viewer | Ask about this file, Share on Wi-Fi | `preview` | — | `:feature:project` | MV-4 | 5 |
 | 40 Local PDF (isolated) | `LocalPdfService` | `preview` (interface) | `pdf` + `:androidApp` manifest | `KitPdfPage` | MV-4 | 5 |
 | 41 SVG / CSV limits | validator, table parser | `preview`, `xml` | — | viewer bodies | MV-4 | 5 |
-| 42 Gallery + zoom + send to composer | swipe only when not zoomed | `images` | — | `KitImageGallery`, `KitZoom` | MV-3 | 5 |
-| 43 Markup editor | four inks, crop, full-resolution export | `images` (`MarkupRaster`) | `image` | `KitImageMarkup` | MV-3 | 5 |
+| 42 Gallery + zoom + send to composer | swipe only when not zoomed | `images` | — | `KitImageGallery`, `KitZoom` | MV-3b | 5 |
+| 43 Markup editor | four inks, crop, full-resolution export | `images` (`MarkupRaster`) | `image` | `KitImageMarkup` | MV-3b | 5 |
 | 44 Save and Copy | SAF create document, verbatim copy | `preview` | contracts in `:android:platform` | viewer More | MV-4 | 5 |
-| 45 Wi-Fi share | token server, rules, QR + link sheet | `share` | `share` (`LanFileServer`) | `:feature:project` sheet | MV-8 | 5 |
-| 46 Scan a pairing QR | CameraX + zxing-cpp, latch, never keep the value | `qr` (rules) | scanner slot in `:ui:kit-content` androidMain | `KitScanner`; `ServersRoute.PairingScanner` | MV-9 | 3 |
+| 45 Wi-Fi share | token server, rules, QR + link sheet | `share` | `share` (`LanFileServer`) | `KitFileShareSheet` (kit-content), hosted by `:feature:project` and `:feature:chat` | MV-8 | 5 |
+| 46 Scan a pairing QR | CameraX + zxing-cpp, latch, never keep the value | `qr` (rules) | scanner slot in `:ui:kit-content` androidMain | `KitScanner` (slice 3 by C10-18); `ServersRoute.PairingScanner` | MV-9 | 3 |
 | 47 Show a QR (`KitQr`) | EC M, quiet zone 4, pixel snap | `qr` | — | `KitQr` (kit-content) | MV-8 | 4–5 |
 | 48 Camera seam | `hasCamera`, three-state permission | — | `:android:platform` | — | MV-9 | 3 |
 | 49 Reader preferences | `oc.readerPreferences.<id>` (owner `:engine:settings`, 05) | — | — | viewer | MV-4 | 5 |
@@ -149,7 +158,11 @@ another module is named. Slices are the ADR's (0 skeleton … 6 switch). Every f
 
 Freeze-tip additions (02 §3.5, "Switch"): **clipboard image paste** (with 30, MV-2), **Wi-Fi share of chat file links
 and phone files streamed from disk** (with 45, MV-8), **open a phone file with another app / install an `.apk` through
-the system installer** (with 44, MV-4).
+the system installer** (with 44, MV-4). The chat side of the last two (phone-file sheet, chat file preview actions,
+`shareLinkedFile` rules) is specified in §12.1.
+
+The widget voice box (07 M03) is **not** media's: it uses the system recognizer owned by section 11
+(`WidgetOverlayPort.dictate`, `RecognizerIntent`, 60 s, ≤ 8,000 chars); media provides nothing for it.
 
 ---
 
@@ -164,8 +177,8 @@ the system installer** (with 44, MV-4).
 | QR matrix | `io.github.alexzhirkevich:qrose-encoder-matrix` | **1.3.1** [V, 2026-10-05] | `:ui:kit-content`, `:engine:media` | pure Kotlin | same | same |
 | QR scan, camera | CameraX `camera-core`, `camera-camera2`, `camera-lifecycle`, `camera-compose` | **1.6.2** [V]; move to 1.7.0 when stable (1.7.0-rc01 on 2026-10-21 [V]) | `:ui:kit-content` (a), `:android:media` | `CameraXViewfinder` + `ImageAnalysis` | AVFoundation metadata output (no library) | none (no scan row; paste only) |
 | QR decode | `io.github.zxing-cpp:android` | **3.1.1** [V, 2026-07-29] | `:ui:kit-content` (a), `:android:media` | `BarcodeReader` on the Y plane; 16 KB aligned [I research] | not needed | ZXing core 3.5.4 on a picked image (desktop phase) |
-| Speech (ASR + TTS) | sherpa-onnx Kotlin API, **vendored AAR** `sherpa-onnx-2.0.1.aar` | **2.0.1** [V GitHub release 2026-10-26; not on Maven Central] | `:android:media` only | `OfflineRecognizer`, `OfflineTts` | C API xcframework [U] | `sherpa-onnx-jvm-2.0.1.jar` + Linux native jar [U] |
-| Photo orientation (API 26–27 only) | `androidx.exifinterface:exifinterface` | **1.4.2** [V] | `:android:media` | used only below API 28 (`ImageDecoder` applies EXIF itself) | — | — |
+| Speech (ASR + TTS) | sherpa-onnx Kotlin API, **vendored AAR** `sherpa-onnx-2.0.1.aar`, fetched by `tools/vendor/fetch.sh` (§2.2) | **2.0.1** [V GitHub release 2026-10-26; not on Maven Central] | `:android:media` only | `OfflineRecognizer`, `OfflineTts` | C API xcframework [U] | `sherpa-onnx-jvm-2.0.1.jar` + Linux native jar [U] |
+| Photo orientation (API 26–27 only) | platform `android.media.ExifInterface(InputStream)` (API 24+; 12 R-18) | — | `:android:media` | used only below API 28 (`ImageDecoder` applies EXIF itself); no `androidx.exifinterface` dependency | — | — |
 | FileProvider | `androidx.core:core` | **1.19.1** (ADR §8) | `:androidApp`, `:android:platform` | `FileProvider` (manifest in `:androidApp`) | — | — |
 | Pickers, camera, SAF, permissions | `androidx.activity:activity` result contracts | **1.13.0** (ADR §8) | `:android:platform` | `PickVisualMedia`, `PickMultipleVisualMedia`, `TakePicture`, `OpenDocument`, `CreateDocument`, `RequestPermission` | FileKit 0.17.0 (iOS phase) | FileKit 0.17.0 (desktop phase) |
 | System voice | platform `android.speech.tts.TextToSpeech` | — | `:android:media` | port of `ReadAloudBridge` | `AVSpeechSynthesizer` | speech-dispatcher or capability off [U] |
@@ -184,27 +197,29 @@ qrose = "1.3.1"
 camerax = "1.6.2"
 zxing-cpp = "3.1.1"
 sherpa-onnx = "2.0.1"
-exifinterface = "1.4.2"
 zxing-core = "3.5.4"
 
 [libraries]
-qrose-encoder-matrix = { module = "io.github.alexzhirkevich:qrose-encoder-matrix", version.ref = "qrose" }   # replaces the `qrose` painter row (M13)
-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }
+qrose-encoder-matrix = { module = "io.github.alexzhirkevich:qrose-encoder-matrix", version.ref = "qrose" }   # replaces the `qrose` painter row (M13, C10-21)
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing-core" }                                    # tests only
-# unchanged rows already in 03 §5: coil-*, telephoto-zoomable, camerax-*, zxing-cpp, sherpa-onnx (vendored)
+# unchanged rows already in 03 §5: coil-compose/svg/gif (no coil-network-*: 03 bans the group), telephoto-zoomable, camerax-*, zxing-cpp, sherpa-onnx (vendored)
 ```
 
 `ExternalRules` additions (03 §6.6): `"io.github.alexzhirkevich" to { p -> p == ":ui:kit-content" || p == ":engine:media" }`,
-`"androidx.exifinterface" to { p -> p == ":android:media" }`, `"com.google.zxing" to` test configurations only.
+`"com.google.zxing" to` test configurations only. 03 already bans every `io.coil-kt.coil3:coil-network-*` artifact
+(the S7 prerequisite R12-4 asked for).
 `telephoto-zoomable-image-coil3` is removed from the catalog (Android-only sub-sampling; not needed until a measured
 stutter, §18).
 
 ### 2.2 The vendored sherpa-onnx AAR (single owner: the media lead)
 
-1. Source: `https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-2.0.1.aar` (49,441,341 bytes [I
-   research]). Path: `native/third_party/maven/com/k2fsa/sherpa/onnx/sherpa-onnx-android/2.0.1/sherpa-onnx-android-2.0.1.aar`
-   plus a hand-written `.pom` (no dependencies). Its SHA-256 goes into `native/third_party/SHA256SUMS`; `:quality`
-   fails the build on a mismatch (03 §3.1 already routes the group there).
+1. Source: `https://github.com/k2-fsa/sherpa-onnx/releases/download/v2.0.1/sherpa-onnx-2.0.1.aar` (49,441,341 bytes
+   [V 12 R-24]). **Run `tools/vendor/fetch.sh` in every fresh worktree** (12 §9.3): it downloads the AAR, checks SHA-256
+   `a8d09d1d32f3eb8520482c6d3d43fae674681c5b050385967c70a3c2c9bf0ee7`, and writes it to
+   `native/third_party/maven/com/k2fsa/sherpa/onnx/sherpa-onnx-android/2.0.1/sherpa-onnx-android-2.0.1.aar`. That
+   folder is **git-ignored** (49 MB); the hand-written `.pom` (no dependencies) next to it is committed, and the hash is
+   in `native/third_party/SHA256SUMS` (`ThirdPartyHashTest`). `settings.gradle.kts` fails early with "run
+   tools/vendor/fetch.sh" when the file is missing.
 2. Never fetched at build time from JitPack (its 2.0.1 build shows "Error" [I research]).
 3. A version bump is a single-owner change: new AAR, new hash, the R8 smoke (§2.4 step 4) and the RTF benchmark (§18)
    on NX721J. The Flutter build pins the same 2.0.1, so the model files are byte-compatible across the switch.
@@ -226,24 +241,36 @@ android {
 The ABI splits of ADR §9.9 filter the sherpa-onnx and zxing-cpp `.so` files with everything else. Every shipped `.so`
 must have `p_align 0x4000` (16 KB); `tool/native/check_so_alignment.py` runs at T2 over the arm64 APK.
 
-### 2.4 R8 (`:android:media/consumer-rules.pro`, published to the app by the convention plugin)
+### 2.4 R8 (`:androidApp/src/main/keepRules/sherpa.keep`, 03 and 12 R-24; content supplied by the media lead)
 
 ```
 # sherpa-onnx: JNI reads config fields by name; the AAR ships an empty proguard.txt [I research §7]
 -keep class com.k2fsa.sherpa.onnx.** { *; }
+# Kokoro streaming: JNI CallCallback looks up invoke([F)Ljava/lang/Integer; by name (§8.5)
+-keepclassmembers class io.github.eslamasabry.oc.android.media.speech.KokoroSink { java.lang.Integer invoke(float[]); }
 # zxing-cpp ships its own consumer rule (-keep class zxingcpp.** { *; }) [I]; nothing to add.
 ```
 
+**Why the `KokoroSink` rule exists** [V sherpa-onnx `jni/offline-tts.cc` at v2.0.1, `CallCallback`]: the native code
+calls `GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;")` on the callback object; if that method is missing it
+returns 1 ("continue") **without clearing the pending `NoSuchMethodError`**. Kotlin 2.4.21 compiles lambdas with
+`invokedynamic` by default, and the class D8 makes for such a lambda has only `invoke(Object)Object`; R8 may also
+rename or inline the specialised method of a class-based lambda. A plain lambda would therefore never be called (no
+streamed audio, Stop ignored) and an error could surface after the call returns. Upstream's own Android apps use
+Kotlin 1.9.0 with minify off, so this path is untested upstream. Hence a **named class** (§8.5) plus this rule.
+
 Checks, in order, before any APK leaves the PC:
 
-1. `analyzeReleaseR8Config` (ADR §9.9) shows the sherpa keep rule applied.
+1. `analyzeReleaseR8Config` (ADR §9.9) shows both sherpa keep rules applied.
 2. `apkanalyzer files list` on the arm64 APK: `lib/arm64-v8a/libonnxruntime.so` and `libsherpa-onnx-jni.so` present;
    no `libsherpa-onnx-c-api.so`, no `libbarhopper*`, no `mlkit` assets, no `com/google/mlkit` classes.
 3. `./gradlew :androidApp:dependencies --configuration stableReleaseRuntimeClasspath | grep -E "mlkit|play-services|firebase"` prints nothing.
-4. **Release smoke** (`:android:benchmark` or an instrumented test on the release build): construct
+4. **Release smoke** (`:android:benchmark` or an instrumented test on the **R8 release build**): construct
    `OfflineRecognizer(null, config)` with the `tiny` fixture paths pushed to the emulator and decode a 2 s WAV; construct
    `OfflineTts` with a missing-file config and expect `IllegalArgumentException` from its `require` (proves JNI field
-   lookup survives R8).
+   lookup survives R8); with the `kokoro-en` fixture, synthesize three sentences through `KokoroSink` and assert **at
+   least one callback per sentence**, then synthesize again with a sink that returns 0 on its first call and assert
+   synthesis returns after that call with no further callbacks and no pending exception.
 
 ### 2.5 Size budget (arm64 APK, release, compressed)
 
@@ -252,10 +279,10 @@ Checks, in order, before any APK leaves the PC:
 | sherpa-onnx (onnxruntime 7.9 MB + jni 1.9 MB) | ≤ 9.9 MB | [I research §7] |
 | zxing-cpp | ≤ 0.8 MB | [I research §4] |
 | CameraX (core, camera2, lifecycle, compose) | ≤ 1.2 MB after R8 | [U] measured in MV-9 |
-| Coil 3 + svg (AndroidSVG) + gif | ≤ 1.0 MB after R8 | [U] measured in MV-3 |
+| Coil 3 + svg (AndroidSVG) + gif | ≤ 1.0 MB after R8 | [U] measured in MV-3b |
 | qrose-encoder-matrix | ≤ 0.1 MB | [U] |
 | Licence texts | ≤ 0.1 MB | — |
-| **Media total** | **≤ 13 MB** | the T2 size gate (03, 16) reports media growth separately |
+| **Media total** | **≤ 13.1 MB** (the sum of the rows above) | the T2 size gate (03, 16) reports media growth separately |
 
 ### 2.6 Considered and rejected
 
@@ -269,9 +296,9 @@ Checks, in order, before any APK leaves the PC:
 | Embedded photo picker (`androidx.photopicker` 1.0.0-alpha02) | alpha, Android 14 + SDK extension 15 only | system Photo Picker |
 | MediaPipe `tasks-audio` Kokoro (LiteRT, GPU) | no ASR, second runtime, size unknown | sherpa-onnx for both; revisit only if Kokoro RTF fails §18 |
 | Downloading the speech runtime | W^X and dynamic-code rules; a new failure mode [V research §7] | bundled `.so` |
-| A separate `:speech` process | ADR §9.5: the PDF service is the only extra process | in-process; memory gate + low-memory release (§6.4) |
+| A separate `:speech` process | ADR §9.5: the PDF service is the only extra process | in-process; RAM gate, a memory check before every chunk, and closing the session between chunks on phones under 6 GB (§6.3) — not `onTrimMemory`, whose `RUNNING_*` levels are no longer delivered since API 34 |
 | Ktor server (CIO) for Wi-Fi share | ExternalRules confine Ktor to net/protocol; size | `ServerSocket` server (M14) |
-| `xmlutil`, `ksoup` or similar XML libraries | not on the commonMain allowlist (ADR §7.2); DTD/entity surface | own pull reader (M7) |
+| `xmlutil`, `ksoup` or similar XML libraries | not on the commonMain allowlist (ADR §7.2); DTD/entity surface | own pull reader (M7); 12 proposes xmlutil, the coordinator decides (C10-20) |
 | Telephoto `zoomable-image-coil3` (sub-sampling) | Android-only; images are capped at 2048 px for prompts and 4096 px for decode | plain `zoomable`; revisit if §18 shows stutter |
 | Telephoto `flick` (drag to dismiss) | two dismiss gestures fight predictive back (demo lesson) | predictive back is the one dismiss gesture |
 | sherpa `Vad` (Silero/TEN) instead of the RMS detector | changes thresholds and the catalog rows | RMS `SilenceDetector`; VAD is a post-switch experiment |
@@ -279,13 +306,17 @@ Checks, in order, before any APK leaves the PC:
 
 ### 2.7 F-Droid readiness (owner, 2026-11-01: Google-free QR, F-Droid submission after the rewrite)
 
-| Item | `stable` flavour | `fdroid` flavour (defined by section 16; built later from source by F-Droid) |
+Section 16 owns the F-Droid route (§9, N16-D8, N16-D12, D16-5): **one APK**, built reproducibly so F-Droid can ship
+our own signed build (F12), with the updater made install-source-aware at runtime. There is no `fdroid` flavour in this
+section. What media contributes:
+
+| Item | State at the switch (one APK) | F-Droid status |
 |---|---|---|
-| QR decoder | zxing-cpp 3.1.1 from Maven Central (a trusted binary source in F-Droid's policy [R `docs/release/fdroid-2026-10-31.md` on `feat/fdroid-2026-10-31`]) | same |
-| Google SDKs | none; the T2 grep (§2.4 step 3) fails on `mlkit`, `play-services`, `firebase` | same guard |
-| Photo Picker backport entry (`com.google.android.gms.metadata.ModuleDependencies`, a manifest string, no dependency) | present | removed by the flavour manifest (`tools:node="remove"`); API < 30 without the system picker falls back to `OpenDocument` |
-| sherpa-onnx | vendored AAR (a binary in the repo, which F-Droid's scanner refuses) | **D10-6 Lite:** the AAR is not on the classpath; `:android:media`'s `speech` package binds `UnavailableSpeechRecognizer` and `UnavailableSpeechSynthesizer` (`voice = false`, natural voice hidden); the phone's own voices still read aloud. **Full** (later): build sherpa-onnx and ONNX Runtime from source in the recipe |
-| `.apk` **Install** action | shown | hidden (`REQUEST_INSTALL_PACKAGES` removed by the flavour manifest) |
+| QR decoder | zxing-cpp 3.1.1 from Maven Central | **[U]** 16 F6: whether F-Droid's scanner accepts a Maven-Central native AAR; else build it from source (Apache-2.0, CMake) in the recipe |
+| Google SDKs | none; the T2 grep (§2.4 step 3) fails on `mlkit`, `play-services`, `firebase` | clean |
+| Photo Picker backport entry (`com.google.android.gms.metadata.ModuleDependencies`, a manifest string, no dependency) | present | [U] whether the scanner flags a manifest-only entry; if it does, the entry is removed for **every** build (API < 30 without the system picker then falls back to `OpenDocument`) |
+| sherpa-onnx | vendored AAR fetched by hash (§2.2) | 16 F5: build sherpa-onnx and ONNX Runtime from source in the recipe (keeps the shared signature). A voice-less F-Droid build would **give up the shared signature** (16 §5.9: a different F-Droid build cannot carry our signature), so it is only the fallback in D10-6. If it is ever kept, the sherpa code first moves to its own `:android:speech` module bound through Metro, so the variant drops a module instead of adding flavours to `:android:media` |
+| `.apk` **Install** action | shown when `PermissionGate.status(InstallPackages) != NotApplicable` (§12); the system asks the person every time | unchanged; the updater, not this action, is install-source-aware (16 N16-D8) |
 | Model downloads from `huggingface.co` | on a tap, with consent | disclosed in the metadata as a network download of model data |
 
 ---
@@ -302,8 +333,11 @@ runtime, agents, attention, schedule) through their public APIs, `:core:*` excep
 native/engine/media/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/media/
   MediaGraph.kt                 @ContributesTo(AppScope) accessors; Unavailable* defaults are bound by DesktopAppGraph
   MediaFailures.kt              helpers that build Failure.Media with Redacted details (never raw text)
+  state/      VoiceState.kt  VoicePhase.kt  ModelPacksState.kt  VoiceSetupStage.kt  ReadAloudState.kt
+              WifiShareState.kt  PreviewData.kt   (every type the UI renders; `…oc.engine.media.state` matches the
+                                                   ADR §9.3 `compose-stability.conf` pattern `…oc.engine.**.state.**`)
   audio/      AudioSession.kt  AudioCapture.kt  PcmPlayer.kt                      (interfaces, §5)
-  voice/      VoiceController.kt  VoiceState.kt  Pcm16Chunker.kt  ChunkQueue.kt  SilenceDetector.kt
+  voice/      VoiceController.kt  Pcm16Chunker.kt  ChunkQueue.kt  SilenceDetector.kt
               AutoSendPolicy.kt  DraftMerge.kt  VoiceLanguage.kt  LevelMeter.kt  SpeechRecognizer.kt
   models/     ModelPackSpec.kt  ModelCatalog.kt (pins)  PackSupport.kt  AutomaticPack.kt  ModelPacks.kt
               PackInstaller.kt  InstalledMarker.kt  VerifiedStamp.kt  DeviceProbe.kt  SetupNetwork.kt
@@ -314,7 +348,7 @@ native/engine/media/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/media/
               PhotoRules.kt  PendingPhotoRecovery.kt  ClipboardImages.kt  ImageCodec.kt
   office/     OfficeText.kt  ZipCentralDirectory.kt
   xml/        XmlPull.kt
-  preview/    FilePreview.kt  PreviewData.kt  MimeMap.kt  StrictUtf8.kt  Truncate.kt  DelimitedText.kt  StaticSvg.kt
+  preview/    FilePreview.kt  MimeMap.kt  StrictUtf8.kt  Truncate.kt  DelimitedText.kt  StaticSvg.kt
               PdfPageRenderer.kt  PdfPages.kt  ViewerFind.kt
   images/     ImageResolver.kt  GalleryIndex.kt  MarkupDocument.kt  MarkupRaster.kt
   share/      WifiShare.kt  ShareHttp.kt (request parse + response headers, pure)  PathSafety.kt  LocalFileServer.kt
@@ -328,17 +362,18 @@ native/engine/media/src/commonTest/resources/ fixtures: pcm/, office/, svg/, csv
 
 | Module | Media parts |
 |---|---|
-| `:ui:kit` | `KitImage` (Coil `AsyncImage` + `KitImageResolver` seam, §9.1), `KitSheetHost` (used by every media sheet) |
+| `:ui:kit` | `KitImage`, `KitImageResolver`, `LocalKitImageLoader` (§9.1; moved here from 06's KN row by C10-17, built by the kit owner), `KitSheetHost` (used by every media sheet) |
 | `:ui:kit-chat` | `KitComposerVoice`, `KitVoicePhase`, `KitMicHoldDetector`, `KitLevelMeter`, `KitComposerTray`, `KitComposerChips.attachments` |
-| `:ui:kit-content` | `KitViewer` (+ bodies), `KitPdfPage`, `KitZoom`, `KitImageGallery`, `KitImageMarkup`, `KitSvgImage`, `KitQr`, `KitScanner` (common frame) + `androidMain` `AndroidScannerSlot` (CameraX + zxing-cpp) |
+| `:ui:kit-content` | `KitImageLoaders` (the one Coil loader: fetcher, keyer, SVG/GIF decoders, profile eviction; §9.1), `KitViewer` (+ bodies), `KitPdfPage`, `KitZoom`, `KitImageGallery`, `KitImageMarkup`, `KitSvgImage`, `KitQr`, `KitFileShareSheet` (§13.4), `KitScanner` (common frame) + `androidMain` `AndroidScannerSlot` (CameraX + zxing-cpp) |
 | `:feature:chat-composer` | voice mode wiring, first-mic setup sheet, tray, attachments, paste row, voice conversation strip |
-| `:feature:chat` | message menu "Read reply prose" / "Read with another voice", gallery overlay, sent photos, turn file rows |
+| `:feature:chat` | message menu "Read reply prose" / "Read with another voice", gallery overlay, sent photos, turn file rows, the phone-file sheet and chat file preview actions (§12.1), hosting `KitFileShareSheet` for chat file links |
 | `:feature:settings` | `SettingsRoute.Voice` page, `SheetKey.VoiceModelSetup` sheet, read-aloud voice section |
-| `:feature:project` | `ProjectRoute.FileView`, Save / Share / Open with, Wi-Fi share sheet |
+| `:feature:project` | `ProjectRoute.FileView`, Save / Share / Open with, hosting `KitFileShareSheet` |
 | `:feature:servers` | `ServersRoute.PairingScanner` (stages, paste instead) |
 | `:feature:phone` | voice component row in phone setup |
 | `:feature:about` | "Voice licences" rows |
-| `:feature:widget-panels` | voice panel (`WidgetPanel.Steer(widgetId, voice = true)`) reusing `VoiceController` |
+
+The widget voice panel (`:feature:widget-panels`) is not listed: it uses the system recognizer owned by section 11.
 
 ### 3.3 `:android:media` (plain Android library)
 
@@ -346,7 +381,7 @@ native/engine/media/src/commonTest/resources/ fixtures: pcm/, office/, svg/, csv
 native/android/media/src/main/kotlin/io/github/eslamasabry/oc/android/media/
   MediaBindings.kt              @ContributesBinding(AppScope) for every interface below
   audio/      AndroidAudioSession.kt  AndroidAudioCapture.kt  AndroidPcmPlayer.kt
-  speech/     SherpaSpeechRecognizer.kt  SherpaSpeechSynthesizer.kt  SherpaConfigs.kt
+  speech/     SherpaSpeechRecognizer.kt  SherpaSpeechSynthesizer.kt  SherpaConfigs.kt  KokoroSink.kt (§8.5)
   tts/        AndroidSystemTts.kt                 (port of ReadAloudBridge.kt, 477 lines)
   device/     AndroidDeviceProbe.kt  AndroidSetupNetwork.kt
   image/      AndroidImageCodec.kt  AndroidMarkupRaster.kt
@@ -354,6 +389,7 @@ native/android/media/src/main/kotlin/io/github/eslamasabry/oc/android/media/
   qr/         ZxingQrImageDecoder.kt
   pdf/        PdfPageRasterizer.kt (runs inside the isolated process)  AndroidPdfPageRenderer.kt (client, port of LocalPdfBridge.kt)
   share/      AndroidLanFileServer.kt  WifiAddress.kt
+  (no keep-rule file here: the sherpa rules live in `:androidApp/src/main/keepRules/sherpa.keep`, §2.4)
 native/android/media/src/test/…                 Robolectric + JVM tests (§20.4); there were none for these bridges in Flutter
 ```
 
@@ -405,8 +441,16 @@ transcript text (§17).
 
 ### 4.2 Primitives in `:core:common` (C10-2)
 
+All three get **iosMain actuals now** (about 60 lines in MV-1a), because the nightly `-Poc.ios=true` klib compile of
+core and engine modules (ADR P1, §6.3) fails on an `expect` with no iOS actual. They use only Kotlin/Native's built-in
+Apple platform libraries, no cinterop dependency: `platform.CoreCrypto` `CC_SHA256_Init/Update/Final`, `platform.zlib`
+`inflateInit2` with window bits −15, and `platform.Security` `SecRandomCopyBytes`. [U] whether the Linux-hosted klib
+cross-compile resolves those platform libraries; if it does not, the iosMain actuals are pure Kotlin (a ~90-line
+SHA-256, `secureRandomBytes` over `arc4random_buf` from `platform.posix`, and a `RawInflate` that returns null so
+Office reading reports `OfficeUnreadable` until the iOS phase).
+
 ```kotlin
-/** Incremental SHA-256. Android/desktop actual: java.security.MessageDigest("SHA-256"). iOS: CommonCrypto (later). */
+/** Incremental SHA-256. Android/desktop actual: java.security.MessageDigest("SHA-256"). iOS: CommonCrypto. */
 public expect class Sha256() {
     public fun update(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size)
     public fun digestHex(): String          // lowercase hex, 64 chars; the object is spent afterwards
@@ -420,9 +464,14 @@ public expect object RawInflate {
 public expect fun secureRandomBytes(count: Int): ByteArray
 ```
 
-### 4.3 Shared types (C10-4: `:core:domain` and `:core:model`)
+### 4.3 Shared types (C10-4: `:core:common`, `:core:domain` and `:core:model`)
 
 ```kotlin
+// :core:common — next to PlatformViewHandle (ADR §7.3), because :ui:kit-chat creates these and may not see :core:domain
+/** Same idea as PlatformViewHandle: only :ui:kit-chat androidMain creates it, only :android:platform casts it. */
+public interface PlatformContentHandle { public val native: Any }
+public data class InsertedContent(val handle: PlatformContentHandle, val mime: String?)
+
 // :core:domain — results of ActivityResults (03 §10.4)
 public data class PickedFile(
     val handle: String,            // opaque: a content:// URI or an app-owned absolute path; never shown, never logged
@@ -445,9 +494,6 @@ public interface ContentAccess {
     /** Keyboard- or paste-inserted content (§10.8); reads while the platform object in [content] is still referenced. */
     public suspend fun readInserted(content: InsertedContent, limit: Long): Outcome<ByteArray>
 }
-/** Same idea as PlatformViewHandle (03 §10.1): only :ui:kit-chat androidMain creates it, only :android:platform casts it. */
-public interface PlatformContentHandle { public val native: Any }
-public data class InsertedContent(val handle: PlatformContentHandle, val mime: String?)
 public interface ExternalOpen {                                 // impl: :android:platform (port of openLocalFile)
     public fun openWithChooser(file: SharedFile.OnDisk): Outcome<Unit>     // Failure.Media(NoAppToOpen) when nothing can open it
     public fun installPackage(file: SharedFile.OnDisk): Outcome<Unit>      // system installer screen; never silent
@@ -460,14 +506,21 @@ public interface ExternalOpen {                                 // impl: :androi
     @Serializable public data class ServerFile(val profileId: ProfileId, val path: String, val version: String?) : ImageRef
     @Serializable public data class ToolOutput(val conversation: ConversationRef, val callId: String, val path: String) : ImageRef
     @Serializable public data class DraftBlob(val conversation: ConversationRef, val blobSha256: String) : ImageRef
-    @Serializable public data class AppFile(val area: String, val relative: String) : ImageRef   // camera capture, markup result
+    @Serializable public data class AppFile(val area: AppImageArea, val relative: String) : ImageRef   // camera capture
+    public companion object {
+        /** The profile field of a cacheKey, compared exactly (profile "1" never matches "12"); null for AppFile. */
+        public fun profileOfCacheKey(key: String): ProfileId?
+    }
 }
+public enum class AppImageArea { CameraCapture }   // append-only; ImageResolver maps it to BlobArea.CameraCapture (C10-22)
 ```
 
-`cacheKey` = `"<variant>|<profileId>|<id fields joined by |>"`. A profile deletion calls `ImageResolver.evict(profileId)`,
-which removes every memory-cache entry whose key contains that profile (registered as a `ProfileCloser`, 03 §11.2).
+`cacheKey` = `"<variant>|<profileId or ->|<id fields joined by |>"`, every field percent-encoded so `|` never appears
+inside one. A profile deletion runs a `ProfileCloser` (03 §11.2) registered in `:androidApp` that calls
+`KitImageLoaders.evictProfile(loader, profileId)` (`:ui:kit-content`): it iterates `memoryCache.keys` and removes the
+keys whose `ImageRef.profileOfCacheKey` **equals** the profile (§9.1).
 
-### 4.4 State types the UI renders (`:engine:media` public, `@Immutable` through `compose-stability.conf`)
+### 4.4 State types the UI renders (`:engine:media` public, package `io.github.eslamasabry.oc.engine.media.state`, stable through `compose-stability.conf`'s `…oc.engine.**.state.**` pattern)
 
 ```kotlin
 public sealed interface VoiceState {
@@ -482,8 +535,9 @@ public sealed interface VoiceState {
     public data class Failed(val problem: MediaProblem, val wordsKept: String) : VoiceState
 }
 public sealed interface PrepStep { data class Downloading(val received: Long, val total: Long) : PrepStep; data object Verifying : PrepStep; data object Loading : PrepStep }
-public enum class VoiceMode { Tap, Hold, Conversation, WidgetPanel }
+public enum class VoiceMode { Tap, Hold, Conversation }
 public enum class VoiceEnd { Person, Silence, LeftApp, PageCovered, ScopeChanged, ChunkFailed }
+// Done(words = "") is a valid end: the composer shows "Nothing was heard. Tap the mic and try again." (§6.4)
 
 /** What KitComposerVoice draws (MEDIA-VOICE-18). Built by the composer ViewModel from VoiceState + ConversationState. */
 public enum class VoicePhase { Starting, Listening, Writing, WaitingReply, SpeakingReply, ReplyReady, Paused, MicDenied, Failed, SendingSoon }
@@ -499,8 +553,11 @@ recompose the composer (PERF-4 parity).
 // ---- audio (single owner: AudioSession, §5)
 public enum class AudioInterruption { FocusLost, OutputDeviceRemoved, OtherRecordingStarted, AppLeftForeground }
 public interface AudioSession {
-    /** Before any microphone start: stops reading aloud, arms the 10 s capture guard. false = playback would not stop. */
+    /** Before any microphone start: stops reading aloud, arms the 10 s capture guard, requests capture focus (A8).
+     *  false = playback would not stop. */
     public suspend fun beforeCapture(): Boolean
+    /** After stop, finish, cancel or failure of a recording: abandons the capture focus (A8). */
+    public suspend fun endCapture()
     /** Playback asks for focus (GAIN_TRANSIENT). Failed(ReadAloudBusy) while the guard or any recording is active. */
     public suspend fun acquirePlayback(): Outcome<PlaybackLease>
     public val interruptions: SharedFlow<AudioInterruption>
@@ -510,7 +567,7 @@ public interface PlaybackLease { public suspend fun release() }
 public sealed interface CaptureEvent {
     public class Frame(public val pcm16le: ByteArray) : CaptureEvent      // 4096 bytes = 128 ms at 16 kHz mono
     public data object Silenced : CaptureEvent                            // AudioRecordingConfiguration.isClientSilenced
-    public data object Interrupted : CaptureEvent                         // focus/route taken by a call etc.
+    public data object Interrupted : CaptureEvent                         // capture focus lost (A8) or read() < 0
 }
 public interface AudioCapture {
     /** Cold: collecting starts AudioRecord (MIC, 16 kHz, mono, PCM16); cancelling stops and releases it. */
@@ -553,9 +610,18 @@ public sealed interface DeviceProbeResult {
     public data object Unknown : DeviceProbeResult        // probe failed or timed out (5 s): capture assumed possible
     public data object Unsupported : DeviceProbeResult    // platform with no capture path (desktop now)
 }
-public interface DeviceProbe { public suspend fun probe(): DeviceProbeResult }
+public interface DeviceProbe {
+    public suspend fun probe(): DeviceProbeResult
+    /** Cheap, no timeout: ActivityManager.MemoryInfo now (§6.3 memory check). null off Android. */
+    public fun memoryNow(): MemoryNow?
+}
+public data class MemoryNow(val availMb: Long, val thresholdMb: Long, val low: Boolean)
 public enum class SetupNetwork { Unmetered, Metered, Offline, Unknown }
-public interface SetupNetworkSource { public suspend fun current(): SetupNetwork }
+public interface SetupNetworkSource {
+    public suspend fun current(): SetupNetwork
+    /** Each class change, distinct (Android: ConnectivityManager.registerDefaultNetworkCallback, classified as §7.6). */
+    public val changes: Flow<SetupNetwork>
+}
 
 // ---- images, clipboard, pdf, qr, wifi
 public data class PreparedImage(val bytes: ByteArray, val mime: String, val width: Int, val height: Int)
@@ -594,12 +660,13 @@ public interface VoiceController {
     public val state: StateFlow<VoiceState>
     public val level: StateFlow<Float>
     public suspend fun start(request: VoiceStart): Outcome<Unit>   // VoiceStart(scope: SpeechScope, mode: VoiceMode, stopOnSilence: Boolean)
-    public suspend fun finish(): Outcome<String>                   // stop the mic, write the rest, return every word
-    public suspend fun cancel(keepWords: Boolean)                  // Leave keeps, Cancel discards (two different calls in Flutter)
+    public suspend fun finish(): Outcome<String>                   // stop the mic, write the rest, return every word (also ON_STOP and PageCovered, §6.4)
+    public suspend fun cancel(keepWords: Boolean)                  // Leave/Esc/stop while Starting keep; Cancel, slip, drag-to-cancel discard
     public fun onHostChanged(host: VoiceHost)                      // Foreground | Inactive | Background | PageCovered | ScopeChanged
 }
 public interface ModelPacks {
-    public val state: StateFlow<ModelPacksState>                   // per pack: Installed | Partial(bytes) | Missing | Unsupported(reason); selection; running job
+    public val state: StateFlow<ModelPacksState>                   // per pack: Installed | Partial(bytes, total) | Missing | Unsupported(reason); selection; running job
+    public suspend fun discardPartial(pack: PackId): Outcome<Unit>  // deletes <pack>.installing/ (§7.8); refused while that pack downloads
     public suspend fun select(pack: PackId): Outcome<Unit>         // refused while downloading, verifying or loading
     public suspend fun setLanguage(choice: VoiceLanguage): Outcome<Unit>
     public suspend fun setAutoSend(on: Boolean): Outcome<Unit>
@@ -631,14 +698,17 @@ public interface AttachmentIntake {
     public suspend fun fromClipboard(target: ConversationRef, current: DraftAttachments): Outcome<IntakeResult>
     public suspend fun fromBytes(target: ConversationRef, current: DraftAttachments, name: String, mime: String?, bytes: ByteArray): Outcome<IntakeResult>
 }
-public interface PendingPhotoRecovery { public suspend fun recover(): RecoveryResult }   // NothingPending | Attached | ProfileRemoved | RetryRequired
+/** The single owner of a photo whose caller is gone (§10.5). Bootstrap calls recover(); a launcher re-registered after
+ *  process death calls recover(outcome). Serialized by one Mutex; idempotent (dedupes on the vault blob). */
+public interface PendingPhotoRecovery { public suspend fun recover(outcome: LauncherOutcome? = null): RecoveryResult }   // NothingPending | Attached | ProfileRemoved | Unavailable | RetryRequired
+public sealed interface LauncherOutcome { data object Captured : LauncherOutcome; data object Cancelled : LauncherOutcome; data class Picked(val files: ImmutableList<PickedFile>) : LauncherOutcome }
 public interface FilePreview { public suspend fun prepare(name: String, declaredMime: String?, bytes: ByteArray, wantedLine: Int?): PreviewData }
 public interface WifiShare {
     public val state: StateFlow<WifiShareState>                     // Off | Live(url, name, sizeBytes, downloads, endsAt) | Ended | Failed(problem)
     public suspend fun start(source: ShareSource): Outcome<Unit>    // stops the previous share first
     public suspend fun stop()
 }
-public interface ImageResolver { public suspend fun bytes(ref: ImageRef, maxBytes: Long): Outcome<ByteArray>; public fun evict(profile: ProfileId) }
+public interface ImageResolver { public suspend fun bytes(ref: ImageRef, maxBytes: Long): Outcome<ByteArray> }   // eviction is the loader's (§4.3)
 ```
 
 ---
@@ -660,6 +730,7 @@ through it. Port source: `ReadAloudBridge.kt` (`beforeMicrophoneCapture`, `micGu
 | A5 | Output removed | `AudioDeviceCallback.onAudioDevicesRemoved` with an output device while a lease is held emits `OutputDeviceRemoved` (headphones unplugged) → playback stops (`Cancelled`, no failure note). |
 | A6 | Foreground only | `AppLeftForeground` is emitted on the host activity's `ON_PAUSE` (parity: `MainActivity.onPause → readAloud.pause()`). Playback stops. Capture uses `ON_STOP` instead (§6.5). |
 | A7 | Our own silencing | Capture registers its own `AudioRecordingCallback` **before** `startRecording()` and maps `AudioRecordingConfiguration.isClientSilenced() == true` (API 29+) to `CaptureEvent.Silenced` → the pill says "Another app is using the microphone. Recording paused." and the controller treats it as `RecordingInterrupted` after 2 s of silence (new: Flutter recorded silent garbage) [R research §8]. |
+| A8 | Capture focus (parity with `record_android` 2.1.2 `AudioSessionManager`, `audioInterruption: pause`) | `beforeCapture()` also requests `AudioFocusRequest(AUDIOFOCUS_GAIN)` with `USAGE_MEDIA` + `CONTENT_TYPE_SPEECH` and `setAcceptsDelayedFocusGain(true)`, so music and podcasts pause while the person dictates; `endCapture()` abandons it on stop, finish, cancel and failure. `AUDIOFOCUS_LOSS`, `LOSS_TRANSIENT` or `LOSS_TRANSIENT_CAN_DUCK` while listening makes `AndroidAudioCapture` emit `CaptureEvent.Interrupted` (→ `RecordingInterrupted`, §6.4). A delayed grant does not hold back the mic (Flutter recorded at once too). |
 
 ### 5.2 Android 15 and 17 audio rules
 
@@ -704,6 +775,7 @@ override fun frames(): Flow<CaptureEvent> = callbackFlow {
         .apply { if (Build.VERSION.SDK_INT >= 30) setPrivacySensitive(true) }
         .build()
     val silenced = session.watchOwnRecording(record.audioSessionId) { trySend(CaptureEvent.Silenced) }   // A7, before start
+    val focus = session.watchCaptureFocus { trySend(CaptureEvent.Interrupted) }                          // A8 focus loss
     record.startRecording()
     val reader = launch(micLane) {                                  // micLane = dispatchers.io.limitedParallelism(1)
         val buffer = ByteArray(4096)
@@ -714,7 +786,7 @@ override fun frames(): Flow<CaptureEvent> = callbackFlow {
         }
     }
     awaitClose {
-        reader.cancel(); silenced.close()
+        reader.cancel(); silenced.close(); focus.close()
         try { record.stop() } catch (_: IllegalStateException) { /* never started */ }
         record.release()
     }
@@ -749,7 +821,8 @@ override suspend fun open(pack: InstalledPack, language: WhisperLanguage, thread
 | Rule | Value |
 |---|---|
 | Threads | `threads = if (cpuCount >= 4) 2 else 1` (`conservativeVoiceThreadCount` parity) |
-| Warm session (M2) | `VoiceController` keeps one `RecognizerSession` for (pack, language) while recording; closes it **20 s** after the recording ends, at once on `ComponentCallbacks2.onTrimMemory(TRIM_MEMORY_RUNNING_LOW or higher)`, on pack change, and on remove |
+| Warm session (M2) | `VoiceController` keeps one `RecognizerSession` for (pack, language) while recording; closes it **20 s** after the recording ends, on pack change, and on remove |
+| Memory check | `onTrimMemory`'s `RUNNING_*` levels are not delivered since API 34 and `onLowMemory` is not called, so they are **not** used. Before each chunk is transcribed, `DeviceProbe.memoryNow()` reads `ActivityManager.MemoryInfo` (`availMem`, `threshold`, `lowMemory`); when `lowMemory` or `availMem < threshold + 256 MiB`, the session is closed after that chunk and reopened for the next one. On phones with **total RAM < 6 GB** the session is always closed between chunks (Flutter's behaviour, so memory never exceeds today's) until P-M2 shows a warm session is safe there |
 | Load overlap | capture starts at once; frames buffer in the chunker while the model loads, so the first words are never lost; the pill shows `Starting` until the session is open, then `Listening` |
 | Ordered chunks | `ChunkQueue`: chunk *n* is transcribed only after chunk *n − 1*; results land in `words[n]`; the draft shows `words.joinToString(" ")` merged into the **original** draft base each time (never appended twice) |
 | Chunk failure | stop capture; keep `words[0 until n]`; `Failed(ChunkNotTranscribed, wordsKept)` (B-MEDIA-010) |
@@ -773,16 +846,25 @@ override suspend fun open(pack: InstalledPack, language: WhisperLanguage, thread
    - `Frame` → chunker; publish `level` (≤ 30 Hz); if `stopOnSilence`, feed `SilenceDetector` with the buffer's
      duration (16 kHz × 2 bytes = 32 bytes per ms, so a 4096-byte buffer is 128 ms); a full chunk → `ChunkQueue`.
    - `Silenced` → pill note; after 2 s continuous → treat as `Interrupted`.
-   - `Interrupted` → stop with `RecordingInterrupted`, words kept.
+   - `Interrupted` (capture focus lost, A8; `read()` < 0; or `Silenced` for more than 2 s) → **cancel** the recording
+     job, **drop the untranscribed audio** (the current chunk and any queued chunk that has not started), and set
+     `Failed(RecordingInterrupted, wordsKept = the words already written into the draft)`. Nothing more is transcribed
+     (B-MEDIA-023 "interruption discards audio").
    - silence detected → `finish()` with `VoiceEnd.Silence`.
 8. A 100 ms ticker updates the elapsed clock (`since`), with **no cap** on duration (P10.3).
 
-`finish()`: cancel the frame collector; wait ≤ **2 s** for the reader to stop; enqueue the final partial chunk if it
-has any samples; state `Writing`; await the queue; zero chunks with zero samples → `Failed(NoAudioCaptured)`;
-else `Done(words, endedBy)`.
+`finish(endedBy)`: cancel the frame collector; wait ≤ **2 s** for the reader to stop; enqueue the final partial chunk if
+it has any samples; state `Writing`; await the queue; zero chunks with zero samples → `Failed(NoAudioCaptured)`;
+words empty after trimming → `Done("", endedBy)`, and the composer leaves the box as it was and shows the note
+"Nothing was heard. Tap the mic and try again." (`voiceModeNothingHeard`); else `Done(words, endedBy)`. Called by
+Done/Send, by silence, **and by `ON_STOP` (`LeftApp`) and a covering page (`PageCovered`)** — parity with Flutter's
+`_pauseDictation`, which calls `stopListening()` and still writes up to 30 s of not-yet-transcribed speech. A pending
+auto-send countdown is cancelled first and its words stay in the box, unsent (also `_pauseDictation`).
 
 `cancel(keepWords)`: cancel the recording job; state `Cancelling` while a decode is in JNI; then `Done(words,
-endedBy)` if `keepWords` (Leave, Esc, lifecycle) else `Idle` (Cancel, slip, drag-to-cancel).
+endedBy)` if `keepWords` (Leave, Esc, and a stop while still `Starting`) else `Idle` (Cancel, slip, drag-to-cancel).
+`keepWords = true` keeps the words already written but drops the chunk in progress, so it is **never** used for a
+lifecycle event.
 
 | Flutter `VoiceComposerState` | Native `VoiceState` | Test |
 |---|---|---|
@@ -801,8 +883,8 @@ endedBy)` if `keepWords` (Leave, Esc, lifecycle) else `Idle` (Cancel, slip, drag
 |---|---|---|
 | `ON_PAUSE` without `ON_STOP` (permission dialog, multi-window focus) — Flutter `inactive` | keeps recording | stops (A6) |
 | Notification shade pulled down | keeps recording (no lifecycle event) | keeps reading |
-| `ON_STOP` (app or overlay activity no longer visible) — Flutter `paused`/`hidden` | stops the mic at once, writes the words already recorded, `VoiceEnd.LeftApp` | stopped already |
-| A page pushed over the chat (the chat entry is no longer the top Nav3 entry; the shell exposes `isTopEntry` to the screen, 07) | stops, words kept, `PageCovered` | stops |
+| `ON_STOP` (the app is no longer visible) — Flutter `paused`/`hidden` | `finish(LeftApp)`: stops the mic at once and still writes the recorded audio, chunk in progress included; while `Starting` → `cancel(keepWords = true)`; a running auto-send countdown is cancelled first (words stay, unsent) | stopped already |
+| A page pushed over the chat (the chat entry is no longer the top Nav3 entry; the shell exposes `isTopEntry` to the screen, 07) | `finish(PageCovered)`, same rules as `ON_STOP` | stops |
 | Speech scope changes (server, session, location revision, base URL, credentials, profile readability) | stops, words kept, `ScopeChanged` | stops, forgets the chosen voice id |
 | Return from Android settings opened by "Allow microphone in Android settings" | not a "leave": on `ON_START` the controller retries the permission once | — |
 
@@ -816,8 +898,12 @@ The chat screen feeds these through `LifecycleEventEffect` (allowlisted `android
   `onHoldEnd(cancelled)`; the ViewModel maps them to `VoiceController.start(mode = Hold)`, `finish()` and
   `cancel(keepWords = false)`.
 - Haptics through `KitHaptic` (06 §12.2): `Commit` when the hold starts, `Select` each time the finger crosses the
-  80 dp line in or out, `Send` on a committed release. Nothing on a cancelled release.
-- Words while holding: "Release to send" / "Release to cancel" (frame text, 1.3× cap).
+  80 dp line in or out, `Send` on a committed release (Flutter parity: `kit_mic_hold.dart:197` plays
+  `KitHaptics.send()` there, although the release only ends the recording). Nothing on a cancelled release.
+- Words while holding (the `vptt*` ARB strings, frame text, 1.3× cap): "Let go when you're done"
+  (`vpttLetGoToFinish`) and, past the 80 dp line, "Let go to cancel" (`vpttLetGoToCancel`). A release **only ends the
+  recording** (`finish()`, Flutter `_finishHold` → `stopListening()`); the words land in the box and are never sent by
+  the hold ("Holding the mic never sends by itself", `vpttAutoSendDetail`).
 - Early release: a lift while the permission prompt or setup is still in progress is remembered and applied the
   moment listening starts (`Cancelled` → cancel; `Finished` → finish). A setup sheet appearing in between turns the
   session into a tap recording (`mode = Tap`).
@@ -831,7 +917,8 @@ The chat screen feeds these through `LifecycleEventEffect` (allowlisted `android
 
 1. Setting `voice.auto_send` (bool, default false, Settings › Voice typing, switch test tag `voice-auto-send`).
 2. Only a tap dictation with the setting on stops by silence (§6.6). Then the composer shows `SendingSoon` with the
-   words and a **3 s** countdown ("Sending in 3…", Cancel, Send now); the countdown ticks in the pill, not in the VM.
+   words and a **3 s** countdown ("Sending in 3…" `vpttSendingIn`, **Don't send** `vpttDontSend`, Send now); the
+   countdown ticks in the pill, not in the VM.
 3. At zero, or on Send now, the ViewModel sends **only if** the field text equals the text captured when the countdown
    began **and** `mayAutoSend(text)`, the app is in the foreground, and no send is in flight. Anything else cancels the
    countdown and leaves the words in the field.
@@ -846,7 +933,7 @@ The chat screen feeds these through `LifecycleEventEffect` (allowlisted `android
 |---|---|
 | Already granted | `Granted` (no prompt) |
 | Asked before (`voice_permissions.microphone_requested == true`) and no rationale to show | `PermanentlyDenied` without prompting |
-| Prompt | `RECORD_AUDIO`, plus `POST_NOTIFICATIONS` in the same request on API 33+ when not granted (so the download notification can show) |
+| Prompt | `request(Microphone, alsoAsk = setOf(Notifications))` (C10-15): `RECORD_AUDIO`, plus `POST_NOTIFICATIONS` in the same system dialog on API 33+ when not granted (so the download notification can show; Flutter parity, `MainActivityMedia.kt:147-150`). 11 §10.8 lists this as an allowed notification context (C10-16) |
 | After the result | granted → `Granted`; not granted and no rationale → `PermanentlyDenied`; else `Denied`; write `microphone_requested = true` |
 | Concurrent request | the second caller awaits the first answer (Flutter returned `permission_in_progress`; awaiting is simpler and safe) |
 | Off Android | `PermanentlyDenied` for the microphone, never a claimed grant (B-MEDIA-032, commit `883a5eb69`) |
@@ -869,21 +956,21 @@ Recovery copy in voice mode (`:ui:words` `strings_chat_composer.xml`, ported fro
 | Listening (dictation) | Leave (×) | level meter (9 bars) + "Listening…" + `m:ss` (no cap) | **Done** (accent circle) |
 | Listening (conversation) | Leave (×) | same + "Read replies aloud" chip | **Send** (accent circle) |
 | Writing | Leave (×) | "Writing down what you said…" | waiting ring |
-| SendingSoon | Cancel | words + "Sending in 3…" | **Send now** |
+| SendingSoon | **Don't send** (`vpttDontSend`) | words + "Sending in 3…" | **Send now** |
 | WaitingReply / SpeakingReply / ReplyReady / Paused | see §8.6 | | |
 | MicDenied / Failed | Leave (×) | one plain sentence | the fix button (`voice-mode-allow-mic`, `voice-mode-open-settings`, `voice-mode-try-again`) |
 
 Kit rules: frame text (1.3× cap); the level meter is decorative (`clearAndSetSemantics {}`), reads `level` in
-`drawBehind`, uses `KitMaxWidth.reading`, and under `MotionPolicy.Off` draws static bars at rest (the words say
-"Listening…"); phase changes cross-fade in 150–200 ms (`KitMotion.standard`), none under reduced motion. Test tags:
-`voice-mode`, `voice-mode-try-again`, `voice-mode-open-settings`, `voice-mode-allow-mic`.
+`drawBehind`, uses `KitMaxWidth.reading`, lights bars from the **start** edge and mirrors in RTL (`visualIndex = if
+(rtl) bars - 1 - i else i`, Flutter `kit_level_meter.dart:157`, 06 §12.1 rule 2), and under `MotionPolicy.Off` draws
+static bars at rest (the words say "Listening…"); phase changes cross-fade in 150–200 ms (`KitMotion.standard`), none
+under reduced motion. Test tags: `voice-mode`, `voice-mode-try-again`, `voice-mode-open-settings`,
+`voice-mode-allow-mic`.
 
-### 6.10 The widget voice panel
+### 6.10 The widget voice box
 
-`WidgetPanel.Steer(widgetId, voice = true)` (07 M03) starts dictation at once in `WidgetOverlayActivity` with
-`mode = WidgetPanel`. The same `VoiceController` (App scope) serves it; the permission prompt attaches to the overlay
-activity (C10-5). The panel's `ON_STOP` ends the recording like the chat's. If no pack is installed, the panel says
-"Set up voice typing in the app first" with an **Open the app** button (never a download from the overlay).
+The widget voice box uses the system recognizer owned by section 11 (`WidgetOverlayPort.dictate`); media provides
+nothing for it.
 
 ---
 
@@ -904,7 +991,9 @@ Kokoro extras: speaker id **3** (`af_heart`), output **24,000 Hz** (open fails o
 `OfflineTtsKokoroModelConfig(model, voices, tokens, lexicon)` with `lang` empty, `maxNumSentences = 1`.
 
 ```kotlin
-public enum class PackKind { Speech, NaturalVoice /* later: Assistant (Gemma, after the switch) */ }
+/** Each kind has its own root: Speech and NaturalVoice → files/voice_models; Assistant → files/local_llm_models
+ *  (the freeze tip's Gemma folder, kept in place, §16.1), so the Assistant pack never re-downloads 3.7 GB. */
+public enum class PackKind(public val root: String) { Speech("voice_models"), NaturalVoice("voice_models") /* later: Assistant("local_llm_models"), after the switch */ }
 @JvmInline public value class PackId(public val raw: String)          // "base" | "small" | "tiny" | "kokoro-en"
 public data class ModelFile(val name: String, val bytes: Long, val sha256: String)
 public data class ModelPackSpec(val id: PackId, val kind: PackKind, val repo: String, val revision: String,
@@ -914,27 +1003,33 @@ public data class ModelPackSpec(val id: PackId, val kind: PackKind, val repo: St
 }
 ```
 
-The same `ModelPacks` machinery takes the Gemma assistant pack after the switch (02 §3.5) with a new `PackKind`; do not
-build a second downloader (map §12 risk 15).
+The same `ModelPacks` machinery takes the Gemma assistant pack after the switch (02 §3.5) with a new `PackKind` whose
+root is `files/local_llm_models` (where the freeze tip already keeps it); do not build a second downloader (map §12
+risk 15).
 
 ### 7.2 On-disk layout (unchanged from Flutter; never moved, ADR §9.7)
 
 ```
 files/voice_models/<packId>-<revision>/<file>…        the model files
 files/voice_models/<packId>-<revision>/.installed.json {"pack":id,"revision":rev,"files":[{"name","length","sha256"}]}  — Flutter's shape, written exactly so
-files/voice_models/<packId>-<revision>/.native-verified.json  NEW (M4): {"v":1,"files":[{"name","length","mtimeMs"}],"verifiedAtMs":…}
+files/voice_models/<packId>-<revision>/.native-verified.json  NEW (M4, D10-12): {"v":1,"files":[{"name","length","headSha256","tailSha256"}],"verifiedAtMs":…}
+                                                              head/tail = SHA-256 of the first and last 1 MiB (the whole file when shorter)
 files/voice_models/<packId>-<revision>.installing/<file>.part   staging (resume source)
 files/voice_models/<packId>-<revision>/<file>.voice-backup     during a replace only
 files/voice_models/<packId>-<revision>/.installed.json.tmp     during the atomic marker write
 ```
 
 The root comes from `BlobStore.path(BlobArea.VoiceModels)` (03 §10.5). Flutter's `getApplicationSupportDirectory()` is
-`Context.filesDir` on Android [U research §0 item 5]; §22 P-M6 proves it on the emulator with a Flutter-installed pack
-before MV-6 merges. If it differs, the first-launch migration moves the folder once (never a re-download).
+`Context.filesDir` on Android [V `path_provider_android` 2.3.1, the version in `pubspec.lock`:
+`getApplicationSupportPath()` returns `_applicationContext.filesDir`], so the folder is read in place; J1 (§16.4 step 5)
+checks it stays byte-identical.
 
-`installed(pack)` = marker exists and matches id + revision **and** the stamp matches every file's length and mtime.
-If the stamp is missing or stale: full SHA-256 pass on `dispatchers.io` with `Sha256` (64 KiB reads), write the stamp,
-then report installed. A mismatching file deletes the marker and the stamp (B-MEDIA-025 parity).
+`installed(pack)` = marker exists and matches id + revision **and** the stamp matches every file's length and head/tail
+hashes (about 2 MiB read per file, so no new platform seam: kotlinx-io `FileMetadata` has no modification time and
+`BlobStore` exposes none). If the stamp is missing or stale: full SHA-256 pass on `dispatchers.io` with `Sha256`
+(64 KiB reads), write the stamp, then report installed. A mismatching file deletes the marker and the stamp (B-MEDIA-025
+parity). A corrupted middle byte that the stamp cannot see is still caught: a recognizer load failure runs the full
+check (§6.3).
 
 ### 7.3 Support check and automatic choice (`PackSupport`, `AutomaticPack`; B-MEDIA-002, 011, 024)
 
@@ -943,11 +1038,14 @@ supportFor(pack, device):
   device == Unsupported                      → Unsupported(platform)
   abis non-empty and none of {arm64-v8a, armeabi-v7a, x86, x86_64} → Unsupported(PackAbiUnsupported)
   totalRamMb != null and totalRamMb < pack.minTotalRamMb → Unsupported(PackMemoryTooSmall)
-  not installed and availableStorage != null and availableStorage < size + max(128 MiB, size / 4) → Unsupported(PackStorageTooSmall)
+  not installed and availableStorage != null and availableStorage < remaining + max(128 MiB, size / 4) → Unsupported(PackStorageTooSmall)
+      (remaining = size − bytes already in that pack's .part files, M3)
   else Supported
   (totalRamMb == null blocks nothing here: the person may try a manual pick)
 
 automaticPack(selected, device):
+  device == Unsupported, or hasMicrophone == false → none (no offer, no download; Flutter `automaticVoicePack` checks
+                                                     !captureSupported || !hasMicrophone first, B-MEDIA-011)
   device unknown, or totalRamMb == null or 0 → none (MemoryUnknown: "Choose a speech model")
   selected installed and eligible            → selected        (eligible = Supported, or only short of storage)
   else the eligible pack with the highest minTotalRamMb (small > base > tiny); storage never changes the choice
@@ -970,7 +1068,7 @@ Per-file request (C10-7 lists the `DownloadRequest` options the `:core:net` owne
 | Headers | `User-Agent: OpenCode-Mobile/voice-model`; never credentials or cookies |
 | Timeouts | connect 15 s; each step (connect, first byte, redirect) 15 s; body idle 20 s |
 | Resume | `.part` of length *k* > 0 → `Range: bytes=k-`; accept **206 only if `Content-Range` equals `bytes k-(len-1)/len` exactly**; **200** → restart from zero; anything else → `DownloadHttp` |
-| Length | `Content-Length` must equal the remaining pinned bytes (else `DownloadLength`); a body longer than the pin aborts |
+| Length | a **missing** `Content-Length` is accepted (chunked or HTTP/2 without the header; Flutter accepted `-1`, `model_download.dart:567`); a **present** one must equal the remaining pinned bytes (else `DownloadLength`); the body is aborted the moment it passes the pin; at the end the `.part` must be exactly the pinned length (else `DownloadIncomplete`) |
 | Already complete | `.part` length == pinned length → no request; go to verify |
 | Verify | SHA-256 + length of each staged file on `dispatchers.io`, cancellable; mismatch deletes that `.part` → `DownloadChecksum` |
 | Progress | throttled to ≥ 100 ms and ≥ 1 % steps (the UI and the notification never see every chunk) |
@@ -1022,7 +1120,7 @@ Boolean` and `dismissModelDownload()`. Rules to keep exactly:
 | Self-expiry | `setTimeoutAfter(15 min)`, renewed by every update (a killed process never leaves an ongoing row) |
 | Ordering | updates go through one `Mutex` + "latest wins" conflation per `phase:percent`, so a queued progress post can never overtake Complete or a dismissal (B-ANDR-102) |
 | Not a service | the notification does not keep the download alive (parity; D10-4) |
-| Permission | `POST_NOTIFICATIONS` requested with the mic (§6.8) or by the setup sheet; a denial never blocks setup; the sheet says "also shows in the notification" **only** when the post returned true |
+| Permission | `POST_NOTIFICATIONS` requested with the mic (§6.8, C10-15) or by the setup sheet (C10-16); a denial never blocks setup; the sheet says "also shows in the notification" **only** when the post returned true |
 
 ### 7.6 Network class for consent (`AndroidSetupNetwork`, B-ANDR-101)
 
@@ -1037,11 +1135,11 @@ Started by the composer when `VoiceController.start` returns `SpeechModelMissing
 
 | Stage | Shown | Next |
 |---|---|---|
-| `Checking` | progress | probe device → `automaticPack`; none → `Problem(MemoryUnknown or the smallest pack's reason)` |
+| `Checking` | progress | probe device; **no microphone** (`hasMicrophone == false` or `Unsupported`) → `Problem(NoMicrophone)` with no download offer; `automaticPack` none → `Problem(MemoryUnknown or the smallest pack's reason)`; the chosen pack's `supportFor` reports storage → `Problem(PackStorageTooSmall)` with the size to free, **before** `NeedsConsent`, and never a different pack (Flutter `automatic_setup.dart:138-151`, B-MEDIA-011) |
 | (installed) | — | start listening; hand off |
 | `NeedsConsent(pack, network)` | "This phone's memory picked Balanced"; primary **Download 161 MB** or **Download 161 MB on mobile data**; a notice on mobile/unknown; Details fold (file names, exact MiB, the memory rule — the only place they appear); tertiary **Choose another speech model** (opens `SheetKey.VoiceModelSetup`) | consent is **per attempt, never stored**; `Metered`/`Unknown` need `allowMetered = true`; `Offline` → `Problem(DownloadOffline)` with Try again |
 | `AskingNotifications` | system prompt | **re-read the network after the prompt**; if it changed to Metered/Unknown/Offline, go back to `NeedsConsent`/`Problem` |
-| `Downloading(received, total, notified)` | plain MB bar ("Downloading 48 MB of 161 MB"), **Cancel download** | a network change to Metered mid-download pauses and asks again (E2E-13 step 2) |
+| `Downloading(received, total, notified)` | plain MB bar ("Downloading 48 MB of 161 MB"), **Cancel download** | watches `SetupNetworkSource.changes`: a change to `Metered` or `Unknown` when the consent had `allowMetered = false` **pauses** = `ModelPacks.cancelDownload()` keeping the `.part` files (M3), then `NeedsConsent(pack, network)` whose primary reads **Resume download on mobile data (113 MB left)**; `Offline` → `Problem(DownloadOffline)` with Try again (resumes). New behaviour (Flutter only re-read the network before starting and after the notification prompt, `automatic_setup.dart:183-221`); E2E-13 step 2 asks for it |
 | `Verifying` | waiting bar, no Cancel | → `Ready` or `Problem(DownloadChecksum)` |
 | `Ready` | "The speech model is on this phone" + **Start listening** | in the foreground: start the mic and `handOff()`; if the app is in the background when it finishes: stay at `Ready` — **never open the mic from the background** |
 | `Problem(kind)` | plain words + fix: Try again / Show the download (busy) / Allow microphone in Android settings / Choose a speech model | — |
@@ -1050,6 +1148,8 @@ Started by the composer when `VoiceController.start` returns `SpeechModelMissing
   longer cancels the recording (B-MEDIA-021).
 - **Closing the sheet cancels the download** (the `.part` files stay, M3); leaving the app does not.
 - A download already started from Settings is `DownloadBusy` here with **Show the download**.
+- Downloads started from Settings (a direct tap on **Download Balanced (161 MB)**) keep Flutter's rule: no metered
+  question and no network watching; the button names the size, which is the consent.
 - Creating the setup without a mic tap does no work (no probe, no network) (B-MEDIA-019).
 
 ### 7.8 Settings › Voice typing (`SettingsRoute.Voice`) and the model sheet (`SheetKey.VoiceModelSetup`)
@@ -1060,17 +1160,33 @@ Gated by `PlatformCapabilities.voice` (the route is absent, never disabled, wher
 2. A failure notice with a Details fold (redacted).
 3. Privacy line with a lock glyph: "Audio never leaves this phone."
 4. No-microphone notice when `hasMicrophone == false`.
-5. **Speech model** single-choice list (`actsOnTap = false`: a tap only chooses). Rows: "Installed" or
-   "Not downloaded · 161 MB" + description; unsupported rows are dimmed **with the reason** in the row. For the selected
-   installed pack: **Re-download Balanced** and **Delete Balanced (160 MB)** (destructive, confirm sheet naming pack
-   and size).
-6. Pinned primary that follows the manager: **Download Balanced (161 MB)** → nothing while busy → **Use Balanced**
-   once a download here finishes → nothing (secondary becomes **Done**) when the selected pack is installed.
+5. **Speech model** single-choice list (`actsOnTap = false`: a tap only chooses). Rows: "Installed",
+   "Not downloaded · 161 MB", or for a pack with kept `.part` files (M3) **"Downloaded 120 MB of 375 MB"** + description;
+   unsupported rows are dimmed **with the reason** in the row. For the selected installed pack: **Re-download Balanced**
+   and **Delete Balanced (160 MB)** (destructive, confirm sheet naming pack and size). For any pack with a partial
+   download: **Resume download (255 MB left)** and **Discard 120 MB** (destructive confirm naming pack and size;
+   `ModelPacks.discardPartial`). Choosing another pack keeps the partial for resuming later; Remove, Discard and the
+   phone-setup removal delete it. The storage check and every button size count only the **remaining** bytes. The ADR
+   §9.7 storage audit counts partials.
+6. Pinned primary that follows the manager: **Download Balanced (161 MB)** (or **Resume download** with the remaining
+   size) → nothing while busy → **Use Balanced** once a download here finishes → nothing (secondary becomes **Done**)
+   when the selected pack is installed.
 7. **Language** row (`voice-model-language`) → choice sheet (`voice-language-<name>` tags); names in their own script.
 8. **Send when I stop talking** switch (`voice-auto-send`) with its detail line.
-9. **Read-aloud voice** section, only when `PlatformCapabilities.readAloud`: **Phone's voice** (default) / **Natural voice
-   (download, about 148 MB)** → "Natural voice" once installed; choosing it when missing downloads then selects (same
-   consent rules); **Remove natural voice (148 MB)** is a destructive confirm.
+9. **Read-aloud voice** section, only when `PlatformCapabilities.readAloud` (Flutter parity, each point a test row):
+   - **Phone's voice** (default) / **Natural voice (download, about 148 MB)** → "Natural voice" once installed.
+     Choosing it when missing downloads then selects. **No metered-data question** (parity: Flutter's natural-voice
+     download has none; the row names the size).
+   - While downloading: "Downloading the natural voice" (`naturalVoiceDownloading`) with "X MB of 148 MB" and
+     **Cancel**; the Cancel is hidden while verifying. The **Natural voice** row is disabled while busy.
+   - Choosing **Phone's voice** during the download cancels it (the `.part` files stay, M3).
+   - `voice.read_aloud_natural` turns true **only once the files are installed**, never at the start of the download.
+   - No space → `naturalVoiceNoSpace(size)` ("There isn't enough free storage. Free up about {size} and try again.");
+     other failures → `naturalVoiceFailed`.
+   - Below the M5 RAM gate (2000 MB) the Natural row is dimmed with the reason in the row ("This phone's memory is too
+     small for the natural voice").
+   - **Remove natural voice (148 MB)** (`naturalVoiceRemove`) is a destructive confirm ("Remove the natural voice?",
+     **Keep it**).
 
 A download keeps running in `ModelPacks` when the page or sheet closes; reopening shows its progress. Sizes in words are
 decimal MB/GB ("160 MB", "1.2 GB", `voiceSizeText` parity); exact MiB only under Details.
@@ -1150,8 +1266,18 @@ lines.
   OfflineTtsModelConfig(kokoro = …, numThreads = threads, provider = "cpu"), maxNumSentences = 1))`; fail if
   `sampleRate() != 24_000`; split with `SentenceSplitter` (regex `[^.!?\n]+[.!?]*\s*|\n+`, then cut pieces longer than
   **280** chars at the last space before 280, else at 280); for each piece
-  `generateWithCallback(piece, sid = 3, speed = 1f) { samples -> if (job.isActive) { chunks.trySendBlocking(samples); 1 } else 0 }`
-  [U: the "0 stops" semantics, proof P-M4]; `free()` on close.
+  `generateWithCallback(piece, sid = 3, speed = 1f, callback = KokoroSink(job, chunks))` with a **named class, never a
+  lambda** (§2.4: the JNI looks up `invoke([F)Ljava/lang/Integer;`, which an `invokedynamic` lambda does not have):
+
+  ```kotlin
+  // :android:media/speech/KokoroSink.kt — kept by the sherpa.keep rule in §2.4
+  internal class KokoroSink(private val job: Job, private val chunks: SendChannel<FloatArray>) : (FloatArray) -> Int {
+      override fun invoke(p1: FloatArray): Int =                       // compiles to invoke([F)Ljava/lang/Integer;
+          if (job.isActive && chunks.trySendBlocking(p1).isSuccess) 1 else 0   // 0 = stop synthesis
+  }
+  ```
+
+  [U: the "0 stops" semantics on the R8 release build, proof P-M4 and N1]; `free()` on close.
 - **Playback** (`AndroidPcmPlayer`): `AudioTrack.Builder()` with `ENCODING_PCM_FLOAT`, mono, 24,000 Hz, `MODE_STREAM`,
   buffer `max(minBuffer, sampleRate * 4)` bytes, attributes `USAGE_MEDIA`/`CONTENT_TYPE_SPEECH`; writes
   `WRITE_NON_BLOCKING` with `delay(15)` when the track is full (cancellable, never stuck in native code); after the
@@ -1186,7 +1312,7 @@ references, or the connection cannot send.
 
 | Conversation state | Pill (`VoicePhase`) | Primary | Exit to |
 |---|---|---|---|
-| Listening | Listening + "Read replies aloud" chip | **Send** | Sending |
+| Listening | Listening + "Read replies aloud" chip | **Send** | Sending; if the words are empty: no send, back to Listening with the note "Nothing was heard. Tap the mic and try again." (`voiceModeNothingHeard`) |
 | Sending | Writing | — | WaitingReply (armed watch) or Failed |
 | WaitingReply | "Waiting for the reply…" | — | SpeakingReply (auto read on) / ReplyReady / Paused / Review |
 | SpeakingReply | "Reading the reply aloud" | **Stop** (neutral circle) | ReplyReady |
@@ -1216,7 +1342,7 @@ errored; prose is non-empty. Outcomes: `Idle`, `Waiting`, `ReviewNeeded` ("could
 ### 9.1 One loader, bytes only through the gateway (M9)
 
 ```kotlin
-// :ui:kit commonMain — the only seam; features never see Coil
+// :ui:kit commonMain (C10-17: 06 moves these from KN to K) — the only seam; features never see Coil
 public fun interface KitImageResolver { public suspend fun bytes(ref: ImageRef, maxBytes: Long): Outcome<ByteArray> }
 public val LocalKitImageLoader: ProvidableCompositionLocal<ImageLoader> = staticCompositionLocalOf { error("provided at the root") }
 
@@ -1225,23 +1351,33 @@ public val LocalKitImageLoader: ProvidableCompositionLocal<ImageLoader> = static
     aspectRatio: Float? = null,          // known width/height reserves space before decode: streaming never jumps
     fit: KitImageFit = KitImageFit.Cover, maxBytes: Long = 8L * 1024 * 1024,
 )
+// Each request sets its own crossfade from the kit's current MotionPolicy (Full/Calm → 200 ms, Off → 0), so a change
+// of motion, Saver or heat applies at once, not after a restart.
 ```
 
-`:androidApp` builds the loader once (`AppImageLoader.create(context, resolver, motion)`) and provides it beside
-`LocalKitPlatform`:
+`:ui:kit-content` builds the loader (`KitImageLoaders.create(platformContext, resolver)`, commonMain plus an
+`androidMain` part that adds the animated decoders) — the ExternalRules let only kit-content use `coil-svg`/`coil-gif`.
+`:androidApp` only calls it once, provides the result beside `LocalKitPlatform`, and registers the eviction
+`ProfileCloser` (§4.3):
 
 ```kotlin
-ImageLoader.Builder(context)
+ImageLoader.Builder(platformContext)
+    .serviceLoaderEnabled(false)                              // no component arrives by ServiceLoader (S7); we add each one
     .components {
         add(ImageRefKeyer())                                  // memory-cache key = ImageRef.cacheKey
         add(ImageRefFetcher.Factory(resolver))                // calls KitImageResolver; never a network fetch
         add(SvgDecoder.Factory())                             // fed only SanitizedSvg bytes (§11.4)
-        if (Build.VERSION.SDK_INT >= 28) add(AnimatedImageDecoder.Factory()) else add(GifDecoder.Factory())
+        addPlatformDecoders()                                 // androidMain: AnimatedImageDecoder (API 28+) else GifDecoder
     }
     .diskCache(null)                                          // no shared disk cache for server content (M9)
-    .memoryCache { MemoryCache.Builder().maxSizePercent(context, 0.15).build() }
-    .crossfade(if (motion.reduced) 0 else 200)                // 150–250 ms rule; off under reduced motion
+    .memoryCache { MemoryCache.Builder().maxSizePercent(platformContext, 0.15).build() }
+    .crossfade(0)                                             // per request in KitImage (MotionPolicy changes at runtime)
     .build()
+
+public fun KitImageLoaders.evictProfile(loader: ImageLoader, profile: ProfileId) {
+    val cache = loader.memoryCache ?: return
+    cache.keys.filter { ImageRef.profileOfCacheKey(it.key) == profile }.forEach(cache::remove)   // exact field, never substring
+}
 ```
 
 - `KitImageResolver` is `ImageResolver.bytes` (`:engine:media`), which routes each `ImageRef`:
@@ -1256,7 +1392,10 @@ ImageLoader.Builder(context)
   pixels are read (markup, copy image).
 - Under `MotionPolicy.Off`, animated GIF/WebP show their first frame (decoder factory swapped for the request).
 - Failure state: a neutral glyph; words from 120 dp wide ("Can't show this picture"), never red.
-- Profile deletion → `ImageResolver.evict(profileId)` clears that profile's memory-cache keys (§4.3).
+- Profile deletion → the `:androidApp` `ProfileCloser` calls `KitImageLoaders.evictProfile` (§4.3); a test proves
+  deleting profile `1` leaves profile `12`'s entries.
+- One fetcher for every picture: 09's transcript pictures use these `ImageRef`s and this loader, not per-scheme
+  fetchers of their own (C10-19).
 - A stored attachment id reads "Image", never the id (`3f695ef01`).
 
 ### 9.2 Where pictures appear
@@ -1271,14 +1410,22 @@ ImageLoader.Builder(context)
 ### 9.3 Gallery (`KitImageGallery`, MEDIA-VOICE-42)
 
 - Opened by tapping any picture; shows **every picture of the transcript in transcript order**, starting at the tapped
-  one, "2 of 5". `GalleryIndex.build(transcript)` (pure, `:engine:media/images`) produces the ordered refs with keys
-  `part:<messageId>:<index>`, `path:<path>` (skipping paths already known missing), `tool:<identity>`.
+  one, "2 of 5". `GalleryIndex.build(transcript)` (pure, `:engine:media/images`) produces the ordered `ImageRef`s
+  (`MessagePart`, `ServerFile` skipping paths already known missing, `ToolOutput`), deduplicated by `ImageRef.cacheKey`
+  (C10-19 removes 09's profile-less `part:`/`path:`/`tool:` keys).
 - `HorizontalPager` (`beyondViewportPageCount = 1`: only the shown picture and its neighbours load); each page is
   `Modifier.zoomable(state)` (Telephoto 0.19.0) around `KitImage`.
-- **A swipe changes the picture only when the shown one is not zoomed:**
-  `userScrollEnabled = (zoomState.zoomFraction ?: 0f) < 0.01f`. Zoom range 0.2×–5×; visible **Zoom out / Fit to screen /
-  Zoom in** buttons (A11Y-5) and keyboard zoom; the zoom buttons satisfy "teach what is hidden" (pinch is never the only
-  path).
+- **Zoom limits as Flutter's gallery** (`KitZoomMode.fit`, floor 1.0, max 5× of fit; `kit_image.dart:985`):
+  `ZoomSpec(minZoomFactor = 1f, …)` so the fitted picture is the minimum, and a `DynamicZoomSpec` whose maximum is
+  recomputed from the content size so it equals **5 × the fit scale** (Telephoto measures `maxZoomFactor` against the
+  original image size, not the fitted size [V `ZoomSpec.kt` at tag 0.19.0]). The 0.2× floor exists only for a separate
+  canvas mode (`KitZoom(mode = Canvas)`, where Flutter uses `KitZoomMode.canvas`), never in the gallery or image bodies.
+- **A swipe changes the picture only when the shown one is not zoomed and fewer than two fingers are down:**
+  `userScrollEnabled = (zoomState.zoomFraction ?: 0f) < 0.01f && pointersDown < 2` (`zoomFraction` is 0 exactly at the
+  minimum, which is now the fit; the pointer count comes from a `pointerInput` observer on the pager, as Flutter locks
+  swiping during a pinch). Test: **at rest, a swipe changes the picture**; zoomed, it pans. Visible **Zoom out / Fit to
+  screen / Zoom in** buttons (A11Y-5) and keyboard zoom; the zoom buttons satisfy "teach what is hidden" (pinch is
+  never the only path).
 - An unreadable picture shows the gallery's own plain error page with **Try again**; the gallery opens at once and does
   not wait on file checks.
 - **Edit** opens the markup editor; **Send** puts the picture (edited or original) into the composer's attachments,
@@ -1350,9 +1497,12 @@ text (05 §5, unchanged layout). Byte length is computed from the base64 length 
    - API ≥ 28: `ImageDecoder.createSource(contentResolver, uri)` with `setTargetSize` so the long edge ≤ **2048**
      (aspect kept, never upscaled), `allocator = ALLOCATOR_SOFTWARE`; EXIF orientation is applied by the decoder.
    - API 26–27: `BitmapFactory` with `inSampleSize` + exact scale, rotation from `ExifInterface` 1.4.2.
-   - Encode JPEG **quality 85** (M10). Kept byte for byte instead: GIF, and animated WebP, when ≤ 10 MiB and ≤ 2048 px.
-   - Result over 10 MiB → `PhotoTooLarge`. Undecodable or HEIC below API 28 → `PhotoUnsupported` ("This picture's
-     format can't be attached. Try a screenshot or a JPEG.").
+   - Encode (M10): a bitmap with alpha (`bitmap.hasAlpha()`) → **PNG** (lossless, still ≤ 2048 px), otherwise
+     **JPEG quality 85** — `image_picker`'s rule (`ImageResizer.java:182`). Kept byte for byte instead: GIF, and
+     animated WebP, when ≤ 10 MiB and ≤ 2048 px.
+   - A PNG over 10 MiB falls back to JPEG 85 drawn on white (new: the picture still attaches instead of failing).
+     Any other result over 10 MiB → `PhotoTooLarge`. Undecodable or HEIC below API 28 → `PhotoUnsupported` ("This
+     picture's format can't be attached. Try a screenshot or a JPEG.").
 3. Sniff the **output** bytes by magic (`MagicBytes`): PNG `89 50 4E 47 0D 0A 1A 0A`, JPEG `FF D8 FF`, GIF87a/89a,
    WebP `RIFF????WEBP`; anything else → `PhotoUnsupported` (B-MEDIA-008 "fake extensions are rejected").
 4. Skip duplicates (same data URL); stop when the draft is full (`DraftFull` note).
@@ -1367,38 +1517,77 @@ text (05 §5, unchanged layout). Byte length is computed from the base64 length 
    files/camera-capture-v1/<captureId>.jpg`; if that write fails, the camera is **not** launched (`PhotoStorage`;
    B-MEDIA-008 "failed request persistence never launches the camera").
 3. `ActivityResults.takePhoto(PhotoTarget(captureId))` → `TakePicture` with the `FileProvider` URI
-   `content://${applicationId}.localfiles/camera/<captureId>.jpg` (§15.2). The launcher is registered in
-   `MainActivity.onCreate` with the fixed key `oc.takePhoto`, so a result after process death is delivered to the new
-   activity.
-4. `false` (cancelled) → delete the file and the record. `true` → `preparePhoto` on the file, attach into the
-   **recorded** conversation, delete the capture file, clear the record.
+   `content://${applicationId}.localfiles/camera/<captureId>.jpg` (§15.2; the root is C10-14). The launcher is
+   registered in `MainActivity.onCreate` with the fixed key `oc.takePhoto`, so a result after process death is
+   delivered to the new activity. The gallery launchers are registered the same way: `PickVisualMedia` with key
+   `oc.pickPhoto` and `PickMultipleVisualMedia` with key `oc.pickPhotos`.
+4. **One owner per result** (`AndroidActivityResults`, `:android:platform`):
+   - **The caller is still waiting** (same process): the suspended `takePhoto`/`pickImages` call resumes. Camera
+     `false` → delete the file and the record. `true` → `preparePhoto` on the file, attach into the **recorded**
+     conversation, delete the capture file, clear the record. Gallery → §10.3.
+   - **Nobody is waiting** (the process died while the camera or picker was in front): the re-registered launcher only
+     reports the outcome, `PendingPhotoRecovery.recover(LauncherOutcome.Captured | Cancelled | Picked(files))`, and
+     does nothing else. Recovery (§10.5) is then the only code that attaches, deletes or clears; it shares one `Mutex`
+     with the bootstrap call and dedupes on the vault blob, so the photo can never attach twice.
 
 ### 10.5 The pending-photo record and recovery (MEDIA-VOICE-27; B-MEDIA-008, B-STATE-088)
 
 - Key `oc.pendingPromptPhoto` (owner `:engine:composer`, format unchanged, 05 Appendix A): JSON
   `{id, profileID, sessionID, directory, workspace, ref?, path?, name?, failed}`; `id` = microseconds since epoch as
   text. It is written **before** any picker or camera opens; a second pick is refused while it exists
-  (`PhotoPending`: "Another photo is still waiting. Open its conversation first.").
+  (`PhotoPending`, `photoPendingOther`: "A photo is still waiting for another conversation. Add or discard it
+  there, then try again.").
 - Identities (ids, directory, workspace, blob) must survive the `Redactor` unchanged, else the record is refused
   (`savedPromptIdentity` parity), so a record can never route to another owner.
-- **Recovery** (`PendingPhotoRecovery.recover()`), run by bootstrap before any chat route reads drafts (07 shell
-  order), serialized:
+- **Recovery** (`PendingPhotoRecovery.recover(outcome)`), the single owner of a photo whose caller is gone. Bootstrap
+  calls `recover()` before any chat route reads drafts (07 shell order); a launcher re-registered after process death
+  calls `recover(outcome)` (§10.4). One `Mutex`; idempotent. Port of `DraftPhotoRecovery` and
+  `PromptPhotos.recoverLostData`:
   1. No record → `NothingPending`.
-  2. Profile gone → delete the capture file and record → `ProfileRemoved` (profile removal always wins).
-  3. `ref` present (already in the vault) → append the ref to the recorded conversation's draft via
-     `DraftStore.appendAttachment(ref, …)` (C10-8; app-scoped, works without a live connection).
-  4. Else `path` present and the file exists and is non-empty → `preparePhoto`, write the vault blob
+  2. Profile gone → **remove that profile's drafts** (`withoutProfile`), **collect both vaults** for that owner
+     (`draft-attachments-v1` and `prompt-photo-recovery-v1`), delete the capture file and the record →
+     `ProfileRemoved` (profile removal always wins; Flutter `_removed`).
+  3. `ref` present (the bytes sit in the **recovery** vault `prompt-photo-recovery-v1/<sha256(profile)>/<blob>.blob`,
+     not the draft vault): if an earlier run already committed that blob to the recorded draft, discard the record and
+     stop (dedupe). Else restore it with the vault's bounded, same-location read (length and SHA-256 checked;
+     Flutter `readPending`); set `oc.draftAttachmentVault = true`; **store it into `draft-attachments-v1`**
+     (`vault.store`); append the attachment to the recorded conversation's draft via `DraftStore.appendAttachment`
+     (C10-8; app-scoped, works without a live connection); save the draft; **only then** discard the record and
+     collect the recovery vault.
+  4. Else `path` present and the file exists and is non-empty → `preparePhoto`, write the draft vault blob
      (content-addressed, dedupes on restart; set `oc.draftAttachmentVault = true` first), append, delete the capture
-     file.
-  5. Enforce ≤ 5 attachments and ≤ 32 MiB per draft; a payload where `Redactor.containsSecret` is true is not attached
+     file, discard the record.
+  5. `outcome = Picked(files)` (a gallery result after process death) → copy the **first** picked image (parity:
+     `files.first`) into the recovery vault as the record's `ref`, then step 3.
+  6. **Records that can never succeed are not kept** (B-MEDIA-008 "cancel and denial leave no blocking photo"):
+     - `outcome = Cancelled` → delete the record and any capture file, silently.
+     - Camera record whose capture file is missing or zero bytes, and `outcome` is `Cancelled` or none → delete
+       silently (the camera wrote nothing: a cancel).
+     - `outcome = Captured` but the file is missing or zero bytes → `failed = true`, show `PhotoUnavailable` once
+       (`photoUnavailable`: "The photo could not be opened. Try adding it again from Photo library or Take photo."),
+       then discard → `Unavailable`.
+     - No `ref`, no `path` and no outcome → wait until the host activity has reached `ON_START` once in this process
+       (registered launchers have received any pending result by then); still nothing → `failed = true`,
+       `PhotoUnavailable` once, discard → `Unavailable`. Flutter discarded such a record when no lost data came
+       back and showed a failed one once.
+     - A record already `failed` → `PhotoUnavailable` once, discard.
+  7. Enforce ≤ 5 attachments and ≤ 32 MiB per draft; a payload where `Redactor.containsSecret` is true is not attached
      (`RetryRequired`).
-  6. Any failure keeps the record and returns `RetryRequired`; never exposes exception text (it can hold paths).
+  8. Any other failure (storage, vault, draft save) keeps the record and returns `RetryRequired`; never exposes
+     exception text (it can hold paths). `RetryRequired` (steps 7–8) is the only result that leaves a record behind,
+     and the composer's pending-photo row ("Pending photo", **Add recovered photo to draft** / **Discard pending
+     photo**, `photoPendingTitle`, `photoAddToDraft`, `photoDiscard`) always lets the person drop it, so
+     `PhotoPending` never blocks for good.
 - **Opening a conversation with a waiting photo:** a photo for this conversation joins the composer at once; one for
   another conversation goes into that conversation's saved draft; one that cannot move blocks a new pick with
   `PhotoPending`.
 - Profile deletion: `clearForProfile(profileId)` drops a record of that profile and its capture file; the vault
   `collect` runs as 05 §5 says.
-- Stale captures: at start, files in `files/camera-capture-v1/` with no record are deleted.
+- Stale captures: at start, files in `files/camera-capture-v1/` (`BlobArea.CameraCapture`, C10-22) with no record are
+  deleted.
+- Tests (`PendingPhotoRecoveryTest`, B-MEDIA-008): one per rule of step 6, a `ref` record restored from the recovery
+  vault (and a second run that finds the blob already committed), profile removal collecting both vaults, and
+  "a launcher result and the bootstrap call race: the photo attaches once".
 
 ### 10.6 Files (MEDIA-VOICE-28, 29; B-CHAT-009, B-CHAT-010, B-MEDIA-006)
 
@@ -1442,7 +1631,8 @@ text (05 §5, unchanged layout). Byte length is computed from the base64 length 
 - **Keyboard (IME `commitContent`: GIFs, stickers, the keyboard's clipboard chip):** `KitComposer` attaches
   `Modifier.contentReceiver` in `:ui:kit-chat` **androidMain** (the listener needs `ClipData`; `JETPACK_AHEAD` only if
   CMP's common API lacks it). For each item with an `image/*` type and a URI, the kit emits
-  `onContentInserted(InsertedContent(handle = PlatformContentHandle(item), mime))` and marks it consumed; text items are
+  `onContentInserted(InsertedContent(handle = PlatformContentHandle(item), mime))` (both types in `:core:common`, which
+  kit-chat may use) and marks it consumed; text items are
   returned to the field. The ViewModel calls `AttachmentIntake.fromKeyboard`, which reads through
   `ContentAccess.readInserted(handle, 10 MiB)` (`:android:platform`) while the `TransferableContent` is still
   referenced. Name `pasted-image-<epochMs>.<jpg|gif|webp|bmp|png>`; mime defaults to `image/png`; then the same
@@ -1604,13 +1794,45 @@ the viewer.
 | **Copy contents** / **Copy original** | viewer | verbatim (`redact = false`, B-MEDIA-001); a failed copy offers Retry | "Copied" |
 | Copy chat text | message menu (09) | redacted copy | — |
 | **Share <name>** (system sheet) | viewer More (D10-11) | `ShareService.shareFile(SharedFile.Bytes)` → write to `cache/share/<uuid>/<name>`, `FileProvider` URI, `ACTION_SEND` chooser with `EXTRA_EXCLUDE_COMPONENTS = MainActivity`; `cache/share/` is emptied at every app start | `ShareUnavailable` when no target |
-| **Open with another app** | phone-file sheet for a tapped path in shared storage (freeze tip) | `ExternalOpen.openWithChooser(OnDisk)`: `FileProvider` URI under `external-path`, MIME from the extension (`*/*` fallback), `FLAG_GRANT_READ_URI_PERMISSION`, chooser | `NoAppToOpen` |
-| **Install** (an `.apk` an agent saved) | same sheet, only for `.apk` | `ExternalOpen.installPackage(OnDisk)`: `ACTION_VIEW` with `application/vnd.android.package-archive`; the system installer screen is the confirmation; never silent; hidden when `REQUEST_INSTALL_PACKAGES` is absent (F-Droid flavour) | — |
+| **Open with another app** | phone-file sheet for a tapped path in shared storage (freeze tip, §12.1) | `ExternalOpen.openWithChooser(OnDisk)`: `FileProvider` URI under `external-path`, MIME from the extension (`*/*` fallback), `FLAG_GRANT_READ_URI_PERMISSION`, chooser | `NoAppToOpen` |
+| **Install** (an `.apk` an agent saved) | same sheet, only for `.apk` | `ExternalOpen.installPackage(OnDisk)`: `ACTION_VIEW` with `application/vnd.android.package-archive`; the system installer screen is the confirmation; never silent. Shown when `PermissionGate.status(InstallPackages) != NotApplicable` (the one APK declares `REQUEST_INSTALL_PACKAGES`, 16 §1.8); when Android has not yet allowed this app to install, `request(InstallPackages)` opens the system "Install unknown apps" page first | — |
 | Share text out | reply menu, report | `ShareService.shareText(text, subject)`, excludes this app (B-ANDR-074, 077) | — |
 | Text shared in | `ACTION_SEND text/plain` | owned by section 11 and `EntryRouter` (B-ANDR-074…076); images shared in are D10-2 | — |
 
 Every URL the app did not author still goes through `ExternalLinkPolicy`/`openExternalLink`; the actions above open
 files, never URLs.
+
+### 12.1 Phone-file sheet and chat file links (freeze tip `b4954ae4f`, `6ce60d6f0`, `637ffea4c`; B-MEDIA-036, B-MEDIA-037)
+
+Built in `:feature:chat` (MV-4 for the sheet and preview actions, MV-8 for the Wi-Fi share wiring); ports
+`phone_file_prompt.dart`, `link_file_share.dart` and the chat `file_preview.dart` actions.
+
+1. **Phone-file sheet** (`offerPhoneFile`; sheet tag `phone-file-sheet`), when the person taps a chat link to a file on
+   this phone that the app does not show itself:
+   - Kit confirm sheet: title "Open <name>?" / "Install <name>?" (`phoneFileOpenTitle` / `phoneFileInstallTitle`),
+     body `phoneFileOpenBody` / `phoneFileInstallBody`, confirm **Open with…** / **Install…**
+     (`phoneFileOpenAction` / `phoneFileInstallAction`, tag `phone-file-confirm`), and the alternative **Share on
+     Wi-Fi** (`fileShareAction`, tag `phone-file-share-wifi`) when `wifiFileShare` is on. Confirm calls
+     `ExternalOpen.openWithChooser` or `installPackage` (§12).
+   - The build cannot hand files over (`ExternalOpen` unavailable, e.g. desktop): no button that cannot work; a kit
+     alert says where the file is (`phoneFileWhereOpen` / `phoneFileWhereInstall` with the folder name; tag
+     `phone-file-where`) with **Copy path** (`readerUiCopyPath`, tag `phone-file-copy-path`).
+   - Opening failed: a kit alert "Open it in Files" (`phoneFileFindTitle`) with `phoneFileFindBody(path)` (tag
+     `phone-file-find`).
+2. **The chat file preview's own actions** (tool-card and chat-link previews, tags `file-preview-*`): primary as today
+   (**Attach to prompt** `file-preview-attach` where allowed), secondary **Share on Wi-Fi** (`file-preview-share-wifi`),
+   and in More: **Copy original** (`file-preview-copy-original`, verbatim), **Save to device**
+   (`file-preview-download`), **Copy path** (`file-preview-copy-path`), **Open in Files** (`file-preview-open-files`),
+   **Open in Review** (`file-preview-open-review`, when the file has a change), plus the viewer's Wrap and
+   source/rendered toggles.
+3. **`shareLinkedFile` rules** (pure parts in `:engine:media/share`, `PathSafety`): `looksSecret(path)` → refused
+   (`WifiSharePrivateFile`) before anything is read. On this phone: a shared-storage path is streamed from disk as is;
+   a built-in Linux guest path is mapped to its host path through the Linux folder map (`BuiltinRootfsFolders`
+   normalize → parent → host directory, owned by `:android:linux`, reached through its engine API); a path the app
+   cannot reach on disk, or a disk file that cannot be read, **falls back to the bytes the tap already fetched**. Only a
+   privacy refusal is final. No source at all → `WifiShareUnavailable`.
+4. The Wi-Fi share sheet itself is the kit part `KitFileShareSheet` (§13.4), so `:feature:chat` and `:feature:project`
+   host the same part without depending on each other.
 
 ---
 
@@ -1657,15 +1879,20 @@ files, never URLs.
   for GET stream the body; close.
 - `stop()` closes the server socket and every open connection. No keep-alive, no Range, no chunked encoding, no
   compression.
-- Desktop phase: this class moves to a new `oc.jvm.library` module (ADR §7.4) unchanged.
+- Desktop phase: only the socket loop moves to a new `oc.jvm.library` module (ADR §7.4 allows no project
+  dependencies there), taking plain callbacks (`(head: ByteArray) -> response bytes/stream`); the `LocalFileServer`
+  binding that calls `ShareHttpHandler` stays in a module that may depend on `:engine:media` (`:android:media` now, a
+  desktop binding module then).
 - **Android 17 (targetSdk 37):** accepting an incoming TCP connection on the LAN needs `ACCESS_LOCAL_NETWORK`
   [V developer.android.com local-network-permission, 2026-11-01]. At the switch targetSdk is 36 (ADR §8), so nothing
   changes; the targetSdk-37 slice adds `AppPermission.LocalNetwork` (C10-4) and asks before `start`, with
   `WifiShareUnavailable` and an **Allow** fix when refused.
 
-### 13.4 The sheet (`:feature:project`, local sheet of the viewer)
+### 13.4 The sheet (`KitFileShareSheet` in `:ui:kit-content`; hosted as a local sheet by `:feature:project` and `:feature:chat`)
 
-Title "Share on Wi-Fi"; the file name and size; `KitQr` of the URL (semantics label "QR code to download <name>"); the
+The part takes plain values (phase, url, name, size, downloads, endsAt; kit modules cannot see engine types), which
+each host's ViewModel maps from `WifiShareState`, and reports Copy/Stop up; the ViewModel calls `WifiShare`. Title "Share on
+Wi-Fi"; the file name and size; `KitQr` of the URL (semantics label "QR code to download <name>"); the
 warning "Anyone on this Wi-Fi with the link can download this file."; the link in a copyable code block with **Copy
 link**; "Downloaded N times" (plural; 0 → "Not downloaded yet"); "Stops sharing in m:ss" (ticks each second);
 **Stop sharing**. Ended: "Sharing has stopped. Nobody can download this file now." Unavailable: "Sharing could not start.
@@ -1687,9 +1914,13 @@ Try again in a moment." Test tags: `file-share-sheet`, `file-share-qr`, `file-sh
 - The data is never shown as text, logged or put in semantics; only the host's label is. Empty payload refused
   (B-KIT-026). Too long → the notice "This is too long for a QR code. Copy the link instead." `KitQr.fits(data)` lets a
   host decide first.
-- Readability test: every QR the app draws for 50 fixture payloads (Wi-Fi URLs, handoff links up to 1,000 chars) is
-  rendered by Roborazzi and decoded with ZXing core 3.5.4 in a JVM test. If any fails, add penalty-based mask selection
-  (ISO 18004 rules N1–N4) over qrose's eight `QrMaskPattern`s.
+- **Mask selection is mandatory (M13):** `QrRules.bestMask(data, ec)` (pure commonMain, MV-8) builds the matrix for
+  each of qrose's eight `QrMaskPattern`s and keeps the one with the lowest ISO 18004 penalty (rules N1–N4), a port of
+  Dart `qr` 3.0.2 `QrImage` `_lostPoint`; qrose alone always uses `PATTERN000`. Tests: the penalty equals Dart's
+  `_lostPoint` on exported fixture matrices, and the chosen mask equals Dart's for the 50 fixture payloads (fixtures
+  record Dart's version, mode and mask).
+- Readability test: every QR the app draws for the 50 fixture payloads (Wi-Fi URLs, handoff links up to 1,000 chars)
+  is rendered by Roborazzi and decoded with ZXing core 3.5.4 in a JVM test.
 
 ### 14.2 Scanning one: pairing (MEDIA-VOICE-46)
 
@@ -1750,14 +1981,14 @@ analysis.setAnalyzer(decodeExecutor) { proxy ->                       // one sin
 
 | Flag | Android | Desktop now | Gates |
 |---|---|---|---|
-| `voice` | true | false | mic button, "Voice input" row, Settings › Voice typing, phone-setup voice component, widget voice panel |
+| `voice` | true | false | mic button, "Voice input" row, Settings › Voice typing, phone-setup voice component |
 | `readAloud` | true | false | "Read reply prose", the read-aloud voice section, voice conversation |
 | `voice && readAloud` | true | false | "Voice conversation" |
 | `promptPhotos` | true | false | Photos and Camera in the tray and the tools list; agent-card photo asks |
 | `localPdf` | true on API ≥ 29 | false | PDF bodies (else Binary with Save) |
 | `qrPairing` | `FEATURE_CAMERA_ANY` | false | "Scan pairing QR" |
 | `wifiFileShare` | true | false (desktop phase may turn it on) | "Share on Wi-Fi" |
-| `inAppUpdater` (03) | stable flavour only | — | the `.apk` **Install** action (§12) |
+| `PermissionGate.status(InstallPackages)` (03) | not `NotApplicable` (declared in the one APK) | `NotApplicable` | the `.apk` **Install** action (§12); not `inAppUpdater`, which section 16 makes install-source-aware for the updater only |
 
 Off-Android answers are honest: the device probe says `Unsupported`, the microphone permission is
 `PermanentlyDenied`, opening settings is a no-op (B-MEDIA-032).
@@ -1781,7 +2012,7 @@ Off-Android answers are honest: the device probe says `Unsupported`, the microph
               android:exported="false" android:grantUriPermissions="true">
         <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/local_file_paths"/>
     </provider>
-    <!-- Photo Picker backport through Google Play services on API 19–29 (removed in the fdroid overlay with tools:node="remove") -->
+    <!-- Photo Picker backport through Google Play services on API 19–29 (one APK; [U] F-Droid scanner verdict, §2.7) -->
     <service android:name="com.google.android.gms.metadata.ModuleDependencies" android:enabled="false"
              android:exported="false" tools:ignore="MissingClass">
         <intent-filter><action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES"/></intent-filter>
@@ -1795,10 +2026,15 @@ Off-Android answers are honest: the device probe says `Unsupported`, the microph
 ```xml
 <paths>
     <external-path name="shared_storage" path="."/>          <!-- open a phone file with another app (freeze tip) -->
-    <files-path name="camera" path="camera-capture-v1/"/>     <!-- TakePicture targets (§10.4) -->
-    <cache-path name="share" path="share/"/>                  <!-- system share of fetched bytes (§12) -->
+    <files-path name="camera" path="camera-capture-v1/"/>     <!-- TakePicture targets (§10.4); needs C10-14 -->
+    <cache-path name="share" path="share/"/>                  <!-- system share of fetched bytes (§12); allowed by 16 §1.8.3 -->
 </paths>
 ```
+
+11 §14.3 forbids any root beyond `external-path` without a security review row, and 16 §1.8.3's
+`FileProviderPathsTest` (B-SEC-195) fails on anything but `external-path shared_storage` and `cache-path share`.
+C10-14 asks for the camera root and its review row, and updates B-SEC-195's allowlist in the same change; it is a
+prerequisite of MV-2 (camera) and MV-4 (system share).
 
 Removed on purpose (listed in the component-freeze allowlist): `io.flutter.plugins.imagepicker.ImagePickerFileProvider`
 (`${applicationId}.flutter.image_provider`) and every `mobile_scanner`/ML Kit component. `allowBackup="false"` and the
@@ -1823,13 +2059,17 @@ data-extraction rules stay as they are (11), so models, vault files and captures
 | `flutter.oc.readerPreferences.<id>` | JSON `{sourceFirst?, wrapCode?}` | `:engine:settings` | swept with the profile |
 | `flutter.oc.tips` | JSON (includes `hold-mic`) | `:engine:settings` | nobody is re-taught |
 | `files/voice_models/**` | §7.2 | `:engine:media` | marker shape kept exactly; Flutter can still read it after a rollback |
+| `files/local_llm_models/**` (Gemma assistant, about 3.7 GB, freeze tip `feat/gemma-assistant`) | the freeze tip's downloader layout | `:engine:media` (after the switch, `PackKind.Assistant`, §7.1) | **kept in place, unread until after the switch**; never deleted or moved, so the later Assistant pack does not re-download |
+| `flutter.local_assistant.enabled` | bool | `:engine:media` (after the switch) | kept in the adopted prefs file, unread until after the switch |
 | `files/draft-attachments-v1/**`, `files/prompt-photo-recovery-v1/**`, `files/prompt-stash-attachments-v1/**` | data-URL text blobs (05 §5) | `:engine:composer` | |
 | `cache/…` image_picker copies | JPEG/PNG | migration step M16 | the migration never clears `cache/` (05 §7.7) |
 | `shared_prefs/voice_permissions.xml`, `camera_permissions.xml` | `microphone_requested`, `camera_requested` | `:android:platform` | untouched; without them a permanent denial would read as "denied" once |
 | Runtime grants (`RECORD_AUDIO`, `CAMERA`, `POST_NOTIFICATIONS`) | OS-held | — | survive `install -r` with the same signer |
 
-New, native-only: `files/voice_models/<pack>-<rev>/.native-verified.json` (M4), `files/camera-capture-v1/`,
-`cache/share/`. Flutter ignores all three, so a rollback to 2.1.0+57 still works.
+New, native-only: `files/voice_models/<pack>-<rev>/.native-verified.json` (M4, D10-12), `files/camera-capture-v1/`,
+`cache/share/`. Flutter ignores all three, so a rollback to 2.1.0+57 still works. No new preference or marker is added
+for media (owner rule, memory `roadmap-issues-2026-10-31`: "don't add new locks/stores"; the stamp file is put to the
+owner as D10-12).
 
 ### 16.2 First native launch
 
@@ -1841,32 +2081,38 @@ New, native-only: `files/voice_models/<pack>-<rev>/.native-verified.json` (M4), 
 
 ### 16.3 M16: the image_picker leftovers (C10-9; runs inside `MigrationRunner`, `:android:migration`)
 
+**Defined once in 05 §7.4 M3 step L4b** (Astra B2); this subsection is context. Where they differ, 05 wins: the condition also requires `failed != true`, the rewrite goes through `MigrationWriter` and keeps every other JSON field byte-identical, and M5 lists `oc.pendingPromptPhoto` in its declared write set.
+
 Only when `flutter.oc.pendingPromptPhoto` exists **and** has no `path` **and** no `ref`:
 
 1. Read `shared_prefs/flutter_image_picker_shared_preference.xml` (plugin file, `getSharedPreferences` is allowed in
    `:android:migration`, Konsist rule 7).
 2. Take the first existing, non-empty file among: the string set `flutter_image_picker_image_path`, then the string
    `flutter_image_picker_pending_image_uri` (a path under `cache/`).
-3. Write it into the record's `path` (through the adopted prefs writer lane) and set a marker
-   `native.migration.v1.pendingPhoto = done`. Never delete the plugin file (05 deletes it at v3).
-4. If nothing is found, set `failed = true` in the record so the composer says once: "The photo you took before the
-   update could not be found." (`PhotoUnavailable`), then clears it.
+3. Write it into the record's `path` (through the adopted prefs writer lane). No marker is needed: once `path` is set
+   the condition above is false, so the step is idempotent. Never delete the plugin file (05 deletes it at v3).
+4. If nothing is found, set `failed = true` in the record; recovery (§10.5 step 6) shows `PhotoUnavailable`
+   (`photoUnavailable`) once, then discards the record.
 
 ### 16.4 Upgrade-journey additions (ADR §10.2; 05 J1)
 
 Seed on the Flutter 2.1.0+57 AVD: `tiny` installed and selected, language `arabic`, auto-send on, read-aloud consent
 given, natural voice off; a draft with two photo attachments; a `oc.pendingPromptPhoto` record whose `path` points into
-`cache/`; microphone permanently denied (two denials) and camera granted. Then `adb install -r` the native APK and
-check, **with the network turned off** (proves no re-download):
+`cache/`; microphone permanently denied (two denials) and camera granted. A second J1 run seeds instead a record with a
+`ref` whose blob sits in `files/prompt-photo-recovery-v1/` (the app died between `_complete` and the composer taking
+the photo; only one record can exist at a time). Then `adb install -r` the native APK and check, **with the network
+turned off** (proves no re-download):
 
 1. Settings › Voice typing shows Compact as "Installed", language Arabic, auto-send on (B-MEDIA-022; B-MIGR-009).
 2. Tapping the mic shows the "Android blocks the microphone…" state with **Allow microphone in Android settings** (the
    three-state memory survived).
-3. The pending photo is in the recorded conversation's draft (B-STATE-088), and the two draft photos show thumbnails
+3. The pending photo is in the recorded conversation's draft (B-STATE-088) in both runs (the `ref` run: its blob is
+   now in `draft-attachments-v1` and the recovery vault is collected), and the two draft photos show thumbnails
    (B-STATE-016).
 4. "Read reply prose" reads without asking for consent again.
-5. `files/voice_models/**` SHA-256 manifest is byte-identical before and after (02 S-4); only `.native-verified.json`
-   is new.
+5. `files/voice_models/**` SHA-256 manifest is byte-identical before and after (02 S-4) and the folder is still under
+   `files/` (the `path_provider_android` 2.3.1 fact of §7.2); only `.native-verified.json` is new. A seeded
+   `files/local_llm_models/` is untouched.
 
 ---
 
@@ -1878,9 +2124,9 @@ check, **with the network turned off** (proves no re-download):
 | S2 | Transcripts, drafts, file names, paths, URLs and credentials never reach logs, diagnostics or notification text | `RedactingWriter` (03); `VoiceDownloadNotificationTest` (fixed strings only; B-ANDR-102); `MediaFailuresTest` (details are shapes or tokens) |
 | S3 | Read aloud is consented once, offline voices only, never touches the engine before consent | `ReadAloudConsentTest` (B-MEDIA-009) |
 | S4 | Untrusted PDFs are parsed only in the isolated, permission-less process; descriptors are unlinked before writing; the PNG header is checked before decoding | `LocalPdfContractTest` (B-MEDIA-004), instrumented `LocalPdfServiceTest` (§20.4) |
-| S5 | SVG renders only through `SanitizedSvg`; no WebView in previews | `StaticSvgTest` (B-CHAT-107); Konsist: `SvgDecoder` only in `:androidApp`'s loader; `KitSvgImage(SanitizedSvg)` signature |
+| S5 | SVG renders only through `SanitizedSvg`; no WebView in previews | `StaticSvgTest` (B-CHAT-107); Konsist: `SvgDecoder` only in `:ui:kit-content`'s `KitImageLoaders`; `KitSvgImage(SanitizedSvg)` signature |
 | S6 | XML input never resolves a DTD or an external entity | `XmlPullTest` (billion-laughs, external entity, DOCTYPE fixtures all refused) |
-| S7 | Coil never fetches a URL; no disk cache; a deleted profile's images leave the memory cache | `AppImageLoaderTest`, `ImageResolverEvictTest` |
+| S7 | Coil never fetches a URL; no disk cache; a deleted profile's images leave the memory cache | `KitImageLoadersTest` (kit-content: the built loader has no network fetcher and `serviceLoaderEnabled == false`; 03's ExternalRules already ban every `coil-network-*` artifact), `ImageCacheEvictTest` (deleting profile `1` evicts its keys and keeps profile `12`'s) |
 | S8 | A scanned or pasted pairing code is never stored, rendered, put in semantics or logged | `PairingScannerSecretTest` (B-ANDR-049, B-PROTO-069, B-SEC-107) |
 | S9 | Wi-Fi share is explicit per file, 15 minutes, Wi-Fi only, GET/HEAD only, 192-bit token, constant-time compare, `nosniff`, `no-store`, never app-private files or secrets | `ShareHttpTest`, `PathSafetyTest`, `WifiShareTest` (B-MEDIA-034) |
 | S10 | A recovered photo whose payload looks like a secret is not attached; identities that change under redaction are refused | `PendingPhotoRecoveryTest` (B-MEDIA-008, B-SEC-151) |
@@ -1923,29 +2169,30 @@ Targets marked [U] are first guesses; §22 proofs replace them with measured num
 |---|---|
 | Android-native feel to the maximum | system Photo Picker, system camera app, SAF dialogs, system share sheet; platform ripple on tray buttons; `KitHaptic` on hold start/cross/send and on QR lock; predictive back closes viewer, gallery, scanner and sheets with the system animation |
 | Smooth streaming | `KitImage` reserves space from known dimensions; level meter in the draw phase; transcript pictures never jump |
-| 150–250 ms motion, reduced motion | tray fold + fade, pill phase cross-fades, image cross-fade 200 ms; all off under `MotionPolicy.Off`; GIFs show a still |
+| 150–250 ms motion, reduced motion | tray fold + fade, pill phase cross-fades, image cross-fade 200 ms (set per request from the current `MotionPolicy`, §9.1); all off under `MotionPolicy.Off`; GIFs show a still |
 | Kit only | every media surface is a kit part (`KitComposerVoice`, `KitComposerTray`, `KitLevelMeter`, `KitViewer`, `KitPdfPage`, `KitImage`, `KitZoom`, `KitImageGallery`, `KitImageMarkup`, `KitQr`, `KitScanner`, `KitSheetHost`) |
 | No glass | the tray, pill and viewer are solid; no blur on the scanner (dim only) |
 | Simple, judge by what it removes | §0.2 lists what each choice removes; no in-app camera, no second picker, no extra process |
 | Plain words, never raw errors | `Failure.Media` → `strings_media_failures.xml`; sizes in decimal MB; Details fold for the rest |
-| Obvious options as rows | Photos / Camera / File in the tray; Voice input and Voice conversation as rows; Save / Share / Open with as rows; Paste image from clipboard as a row; Paste it instead on every scanner stage |
+| Obvious options as rows | Photos / Camera / File in the tray; Voice input and Voice conversation as rows; Paste image from clipboard as a row; Paste it instead on every scanner stage; **Open with… / Install…** are the confirm button of the phone-file sheet (§12.1). The viewer frame holds one primary and one secondary (no new bar level), so **Save and Share stay in the viewer's More (⋯)** next to Find and Copy, as in Flutter |
 | No new bar or row level | the voice pill replaces the composer field in place; the tray grows the existing pill by one row (owner concept C); the Wi-Fi sheet is a local sheet |
 | Actions name their target | "Download Balanced (161 MB)", "Delete Balanced (160 MB)", "Save report.pdf", "Share on Wi-Fi", "Stop reading aloud", "Remove natural voice (148 MB)" |
 | Steer, never queue | dictation and auto-send go through the one send path; a conversation cannot send while the agent works |
 | Hard max widths | level meter `KitMaxWidth.reading`; `KitQr` ≤ 240 dp; viewer prose 720 dp; sheets ≤ 640 dp on medium |
 | Frame text 1.3×, reading text full | pill words, tray labels, chips, viewer frame = frame text; viewer body, transcripts, licence texts = reading text |
-| Arabic RTL | layout mirrors; level meter, progress bars and the QR do **not** mirror; table data stays LTR; mic hold cancel distance is direction-free; spoken language is independent of layout direction |
+| Arabic RTL | layout mirrors; **the level meter and every progress fill mirror** (painters read `layoutDirection`, 06 §12.1 rule 2; Flutter `KitLevelMeter` LAY-8, `kit_level_meter_test` ".5 lights the first six, mirrored in RTL"); only the QR and table data stay LTR; mic hold cancel distance is direction-free; spoken language is independent of layout direction |
 | Teach hidden gestures | `hold-mic` tip; pinch is never the only zoom path (zoom buttons) |
 
 ### 19.2 Copy (one-off ARB conversion, ADR §7.5; files per feature)
 
 | ARB family (count) | XML file in `:ui:words` | Owner |
 |---|---|---|
-| `kitVoice*` (17), `kitViewer*` (19), `kitMarkup*` (17), `kitGallery*` (8), `kitScanner*` (4), `kitQr*` | `strings_kit_content.xml`, `strings_kit_chat.xml` | kit owners |
-| `voiceMode*`, `voiceConversation*`, `voiceAutoSetup*` (22), `photo*` (13), `chatAttachment*` (7), `chatUiAttach*` (7), `draftAttachments*`, `composerTool*`, `composerTray*`, `codexTextOnlyPrompt`, `tipHoldMic*` | `strings_chat_composer.xml` | composer feature |
+| `kitVoice*` (17), `kitViewer*` (19), `kitMarkup*` (17), `kitGallery*` (8), `kitScanner*` (4), `kitQr*`, `fileShare*` (13, used by `KitFileShareSheet`) | `strings_kit_content.xml`, `strings_kit_chat.xml` | kit owners |
+| `voiceMode*` (incl. `voiceModeNothingHeard`), `voiceConversation*`, `voiceAutoSetup*` (22), `vpttLetGoToFinish`, `vpttLetGoToCancel`, `vpttSendingIn`, `vpttDontSend`, `photo*` (13), `chatAttachment*` (7), `chatUiAttach*` (7), `draftAttachments*`, `composerTool*`, `composerTray*`, `codexTextOnlyPrompt`, `tipHoldMic*` | `strings_chat_composer.xml` | composer feature |
+| `phoneFile*` (10: Open/Install title, body and action; Find title and body; Where open/install) and the chat file preview action labels | `strings_chat.xml` | chat lead (§12.1) |
 | `readAloud*` (21) | `strings_chat.xml` | chat lead |
-| `voiceSetup*`, `e7VoiceUi*` (71), `vptt*` (11), `naturalVoice*` (8), `voiceNotices*` | `strings_settings.xml` (voice section) | settings feature |
-| `file*` (59), `filePdf*` (5), `filePreview*` (6), `readerUi*` (81), `fileShare*` (13) | `strings_project.xml` | project feature |
+| `voiceSetup*`, `e7VoiceUi*` (71), the other `vptt*` (language and auto-send rows), `naturalVoice*` (8), `voiceNotices*` | `strings_settings.xml` (voice section) | settings feature |
+| `file*` (59), `filePdf*` (5), `filePreview*` (6), `readerUi*` (81) | `strings_project.xml` | project feature |
 | `e7SetupScan*`, `e7SetupCamera*`, `pairingScanner*` | `strings_servers.xml` | servers feature |
 | every `MediaProblem` sentence and fix label | `strings_media_failures.xml` | l10n owner (exhaustive `when` in `MediaFailureWords`) |
 | `native_voice_setup/downloading/preparing/ready/failed` | `strings_os.xml` (feeds Android `res`) | l10n owner |
@@ -1965,12 +2212,15 @@ script and never translated.
 
 ### 19.4 Licences (MEDIA-VOICE-16)
 
-Settings › About › "Voice licences" (`about-voice-licences`): OpenAI Whisper (MIT), Kokoro (hexgrad, Apache-2.0),
-sherpa-onnx (k2-fsa, Apache-2.0), ONNX Runtime (Microsoft, MIT). The Flutter `record` row disappears (AudioRecord is the
-platform); new rows: zxing-cpp (Apache-2.0), Coil (Apache-2.0), Telephoto (Apache-2.0), qrose (MIT), CameraX
-(Apache-2.0). Texts live in `:ui:words` `composeResources/files/notices/<id>.txt`; the viewer reflows 80-column text into
-paragraphs (`reflowLicenseText` parity); one action **Open <project> website** through `openExternalLink`.
-`THIRD_PARTY_NOTICES.md` drops the ML Kit section.
+Settings › About › "Voice licences" (`about-voice-licences`) keeps exactly the voice stack: OpenAI Whisper (MIT),
+Kokoro (hexgrad, Apache-2.0), sherpa-onnx (k2-fsa, Apache-2.0), ONNX Runtime (Microsoft, MIT). The Flutter `record` row
+disappears (AudioRecord is the platform). General libraries (zxing-cpp, Coil, Telephoto, qrose, CameraX) are **not**
+voice rows: they appear on the general notices page from section 12's Licensee report (12 §8.3). Because the vendored
+sherpa-onnx AAR is not a Maven artifact Licensee can see, the media lead adds it and its bundled ONNX Runtime to
+`native/third_party/BUNDLED.toml` (12 §8.3: name, version, licence, licence file, source URL, modification note), so
+`THIRD_PARTY_NOTICES.md` generation covers them. Texts live in `:ui:words` `composeResources/files/notices/<id>.txt`; the
+viewer reflows 80-column text into paragraphs (`reflowLicenseText` parity); one action **Open <project> website**
+through `openExternalLink`. `THIRD_PARTY_NOTICES.md` drops the ML Kit section.
 
 ### 19.5 Analytics hooks (owner decision 2026-11-01: analytics core with BASIC and opt-in DETAILED tiers; core owned by 16)
 
@@ -1979,7 +2229,7 @@ languages of speech:
 
 | Event | Allowed fields |
 |---|---|
-| `voice_dictation_done` | `mode` (tap/hold/conversation/widget), `chunks` (bucket 1, 2–5, 6+), `ended_by` (`VoiceEnd`) |
+| `voice_dictation_done` | `mode` (tap/hold/conversation), `chunks` (bucket 1, 2–5, 6+), `ended_by` (`VoiceEnd`) |
 | `voice_model_installed` | `pack` (`base`/`small`/`tiny`/`kokoro-en`), `resumed` (bool) |
 | `read_aloud_started` | `engine` (system/natural), `automatic` (bool) |
 | `attachment_added` | `kind` (photo/camera/file/office/keyboard/clipboard) |
@@ -2002,15 +2252,15 @@ Flutter tests named in each row's `sources` (`catalog/behaviors.jsonl`).
 |---|---|---|---|
 | B-MEDIA-001 strict UTF-8 preview, Save keeps bytes | unit | `FilePreviewTest` (engine) | invalid UTF-8 and NUL fixtures |
 | B-MEDIA-002 pack by RAM; voice by locale | unit | `AutomaticPackTest`, `VoicePickTest` (engine) | device probe values |
-| B-MEDIA-003 level meter thresholds | unit | `LevelMeterTest` (engine) | — |
+| B-MEDIA-003 level meter thresholds | unit | `LevelMeterTest` (engine) + `KitLevelMeterTest` (kit-chat: ".5 lights the first six, mirrored in RTL", ported from `kit_level_meter_test`) and the kit RTL capture | — |
 | B-MEDIA-004 PDF transport budgets | contract | `PdfResultValidatorTest` (engine) + `AndroidPdfPageRendererTest` (Robolectric) | recorded results: wrong page, oversize PNG, bad IHDR |
 | B-MEDIA-005 natural pins, script routing, splitter | unit | `ModelCatalogTest`, `ReadLanguageTest`, `SentenceSplitterTest` (engine) | — |
 | B-MEDIA-006 Office as text | unit (+E2E-12) | `OfficeTextTest` (engine) | the Flutter `.xlsx`/`.docx` fixtures (openpyxl, LibreOffice), name-only stub |
 | B-MEDIA-007 gallery picking, room, single picker, cancel | integration (+E2E-12) | `AttachmentIntakePickTest` (engine) | `FakeActivityResults`, `FakeImageCodec` |
-| B-MEDIA-008 picker lifecycle, recovery, profile removal | integration | `PendingPhotoRecoveryTest`, `AttachmentIntakeCameraTest` (engine) | `FakeKeyValueStore`, `FakeDraftStore`, temp files |
+| B-MEDIA-008 picker lifecycle, recovery, profile removal | integration | `PendingPhotoRecoveryTest`, `AttachmentIntakeCameraTest` (engine): every §10.5 step-6 rule, the `ref` restore from the recovery vault, launcher-vs-bootstrap race attaches once | `FakeKeyValueStore`, `FakeDraftStore`, `FakeVaults` (draft + recovery), temp files |
 | B-MEDIA-009 read-aloud lifecycle | integration | `ReadAloudTest` (engine) | `FakeSystemTts`, `FakeAudioSession` |
-| B-MEDIA-010 3-minute dictation in ordered chunks; failure keeps words | integration (+E2E-13) | `VoiceControllerChunkTest` (engine) | `WavCapture` (the Flutter 3-minute fixture as PCM), `FakeRecognizer` that fails chunk 4 |
-| B-MEDIA-011 RAM gate, offer, automatic blocks | unit | `PackSupportTest` (engine) | — |
+| B-MEDIA-010 3-minute dictation in ordered chunks; failure keeps words | integration (+E2E-13) | `VoiceControllerChunkTest` (engine), incl. "Done with no words leaves the box as it was and shows Nothing was heard"; `VoiceControllerLifecycleTest`: "leaving the app 20 s into chunk 2 keeps those 20 s of words" | `WavCapture` (the Flutter 3-minute fixture as PCM), `FakeRecognizer` that fails chunk 4 |
+| B-MEDIA-011 RAM gate, offer, automatic blocks | unit | `PackSupportTest`, `VoiceSetupFlowTest` (engine): no microphone → no pack and `Problem(NoMicrophone)`; chosen pack short of storage → `Problem(PackStorageTooSmall)` before consent, never another pack | — |
 | B-MEDIA-012 install resumes after a stop | integration | `PackInstallerResumeTest`, `VoiceSetupComponentTest` (engine) | `MockEngine` via `:core:testing` |
 | B-MEDIA-013 failures as kinds; remove rules | unit | `VoiceInstallFailureTest` (engine) | — |
 | B-MEDIA-014 PCM16 normalisation, odd bytes, 30 s | unit | `Pcm16ChunkerTest` (engine) | split-buffer vectors |
@@ -2022,7 +2272,7 @@ Flutter tests named in each row's `sources` (`catalog/behaviors.jsonl`).
 | B-MEDIA-020 setup states, background finish waits | integration | `VoiceSetupFlowTest` (engine) | fake host lifecycle |
 | B-MEDIA-021 restart, hand-off, ownership | unit | `VoiceSetupHandOffTest` (engine) | — |
 | B-MEDIA-022 pack and language persist | migration | `VoicePrefsAdoptionTest` (Robolectric, `:core:data` a) + J1 | a seeded `FlutterSharedPreferences.xml` |
-| B-MEDIA-023 robust recording, stale generations | unit | `VoiceControllerCancelTest` (engine) | — |
+| B-MEDIA-023 robust recording, stale generations | unit | `VoiceControllerCancelTest` (engine): an `Interrupted` event drops untranscribed audio and keeps only the words already written | — |
 | B-MEDIA-024 preflight; merge around selection | unit | `DraftMergeTest`, `PackSupportTest` (engine) | — |
 | B-MEDIA-025 checksum, exact `Content-Range`, marker only when verified | contract | `PackInstallerTest` (engine) | `MockEngine`: 206 good/bad range, 200 restart, corrupt body |
 | B-MEDIA-026 stalls, idle timeout, cancel in finalization | integration | `PackInstallerStallTest` (engine) | `MockEngine` with a stalled body, `TestDispatchers` |
@@ -2059,7 +2309,7 @@ Flutter tests named in each row's `sources` (`catalog/behaviors.jsonl`).
 | Row | Amendment | Why |
 |---|---|---|
 | B-MEDIA-025 | "cancelled downloads never create a marker; a cancel **during download keeps the `.part`** for resume" (the Flutter assertion `cancelledStore.files isEmpty` at `voice_downloader_test.dart:278` no longer holds) | M3 / D10-1 |
-| B-MEDIA-007 | "photos are scaled down **by the app before the bytes are attached**" (not by the picker) | M10 |
+| B-MEDIA-007 | "photos are scaled down **by the app before the bytes are attached**" (not by the picker); "a picture with transparency is attached as PNG, others as JPEG 85" | M10 |
 | B-MEDIA-008 | "a lost native result retains the original destination after restart" now means: the record's `path` names the capture file | §10.5 |
 | B-MEDIA-031 | "the manifest pins runtime dependencies" means the vendored AAR's SHA-256 and version 2.0.1, plus `RECORD_AUDIO` in the merged manifest | §2.2 |
 | B-MEDIA-032 | "on Android the probe uses the channel" means the `AndroidDeviceProbe` binding | §4.5 |
@@ -2068,25 +2318,28 @@ Catalog top-up from the freeze tip (02 §3.5; next free ids, written by the test
 **B-MEDIA-035** clipboard image paste (sources `test/composer_paste_image_test.dart`,
 `android/…/ClipboardImagePolicyTest.kt`), **B-MEDIA-036** Wi-Fi share path safety for phone files (`wifi_file_share_test.dart`
 additions in `6ce60d6f0`, `637ffea4c`), **B-MEDIA-037** open a phone file with another app and install an `.apk` through the
-system installer (`b4954ae4f`).
+system installer (`b4954ae4f`). B-MEDIA-036 and B-MEDIA-037 are the flows of §12.1 (phone-file sheet, chat
+file preview actions, `shareLinkedFile` fallbacks).
 
 ### 20.4 Native-only checks (no Flutter equivalent; the Flutter bridges had no Kotlin tests at all)
 
 | # | Check | Where | Tier |
 |---|---|---|---|
-| N1 | Release smoke: sherpa classes survive R8 and `tiny` decodes a 2 s WAV | instrumented, release build | T3 |
+| N1 | Release smoke on the **R8 release build**: sherpa classes survive R8; `tiny` decodes a 2 s WAV; Kokoro through `KokoroSink` gets at least one callback per sentence; a sink returning 0 stops synthesis with no pending exception (§2.4 step 4) | instrumented, release build | T3 |
 | N2 | APK inspection: no `libsherpa-onnx-c-api.so`, no ML Kit, every `.so` 16 KB aligned | `tool/native/check_so_alignment.py` + `apkanalyzer` | T2 |
 | N3 | `TakePicture` with CAMERA denied leaves no pending record and shows plain words | `AttachmentIntakeCameraTest` + Robolectric `ActivityResults` | T1 |
 | N4 | Android 17 `throw` hardening: background read aloud fails closed, no crash | emulator API 37 | T3 |
-| N5 | `AudioSession` rules A1–A7 | `AndroidAudioSessionTest` (Robolectric `ShadowAudioManager`) | T1 |
+| N5 | `AudioSession` rules A1–A8 (A8: capture asks `AUDIOFOCUS_GAIN` with delayed gain, abandons it on stop/cancel, and each of `LOSS`, `LOSS_TRANSIENT`, `LOSS_TRANSIENT_CAN_DUCK` emits `CaptureEvent.Interrupted`) | `AndroidAudioSessionTest` (Robolectric `ShadowAudioManager`) | T1 |
 | N6 | `LocalPdfService`: encrypted fixture → `PdfEncrypted`; 201-page fixture → page 200 refused; a pathological PDF trips the 10 s watchdog; killing `:local_pdf` → `PdfFailed`; the input path is gone from `cacheDir` while rendering | instrumented `LocalPdfServiceTest` | T3 |
 | N7 | `ShareHttp` fuzz: 10,000 random request heads never crash, never answer 200 without the exact token path | `ShareHttpFuzzTest` (engine) | T1 |
 | N8 | `XmlPull` hostile input: DOCTYPE, billion laughs, external entity, 10,000-deep nesting all refused | `XmlPullTest` (engine) | T1 |
 | N9 | Office zip bomb (one entry inflating to 1 GiB) refused within 64 MiB | `OfficeTextTest` | T1 |
-| N10 | `ImageCodec`: EXIF-rotated JPEG comes out upright on API 26 (Robolectric) and API 28+ (instrumented); HEIC below 28 → `PhotoUnsupported` | `AndroidImageCodecTest` | T1/T3 |
+| N10 | `ImageCodec`: EXIF-rotated JPEG comes out upright on API 26 (Robolectric, platform `ExifInterface`) and API 28+ (instrumented); HEIC below 28 → `PhotoUnsupported`; a **transparent PNG fixture** comes out as PNG with its alpha kept; an over-10 MiB alpha PNG falls back to JPEG on white | `AndroidImageCodecTest` | T1/T3 |
 | N11 | Level updates do not recompose `KitComposer` | recomposition-count harness | T1 |
 | N12 | Component freeze lists the removed image_picker provider and ML Kit components as intentional | `:quality` freeze test | T2 |
-| N13 | QR readability: 50 fixture payloads drawn by `KitQr` decode with ZXing core | `KitQrDecodeTest` (kit-content desktop test) | T1 |
+| N13 | QR readability and mask: 50 fixture payloads drawn by `KitQr` decode with ZXing core; `QrRules` picks Dart's mask for each | `KitQrDecodeTest` (kit-content desktop test), `QrMaskTest` (engine) | T1 |
+| N14 | Gallery: at rest a swipe changes the picture; zoomed, or with two fingers down, it does not; the maximum zoom is 5× of fit | `KitImageGalleryTest` (kit-content) | T1 |
+| N15 | Downloads: no `Content-Length` header still installs; a present wrong one fails `DownloadLength`; a body past the pin aborts; a network change to Metered during a first-mic download pauses with the `.part` kept and asks again | `PackInstallerTest`, `VoiceSetupConsentTest` (engine, `FakeSetupNetworkSource.changes`) | T1 |
 
 ### 20.5 Device recipes for the emulator (PC, one lock holder; never the owner's phone for basic passes)
 
@@ -2100,9 +2353,14 @@ system installer (`b4954ae4f`).
   pairing QR PNG (generated by `opencode2 pair` in a dark terminal) as a wall poster [U: P-M3 confirms; fallback
   `-camera-back webcam0` with a `v4l2loopback` device fed by `ffmpeg -loop 1 -re -i pair-qr.png -f v4l2 /dev/videoN`].
 - **Network classes:** `adb shell svc wifi disable|enable`, `adb shell svc data disable|enable`.
+- **Audio focus during dictation (E2E-13 extra step):** start a song in another app (`adb shell am start -a
+  android.intent.action.VIEW -d file:///sdcard/Music/fixture.mp3 -t audio/mpeg`), tap the mic: the song pauses; start
+  the song again from its notification while dictating: recording stops with "Recording was interrupted." and the words
+  already written stay.
 - **Process death with the camera open:** open Camera from the tray; while the camera app is in front run
   `adb shell am kill io.github.eslamasabry.opencode_mobile` (kills only a background process); take the picture; the
-  photo must land in the recorded conversation.
+  photo must land in the recorded conversation exactly once. Repeat with **Photos** (the Photo Picker in front) and
+  pick one picture; then once more and press Back in the camera: no record is left and the next Photos tap works.
 - **Wi-Fi share from inside the device:**
   `adb shell 'printf "GET /<token>/<name> HTTP/1.1\r\nHost: x\r\n\r\n" | toybox nc <wlan-ip> <port>'` (and the same with
   `POST`, a wrong token, and after Stop).
@@ -2118,20 +2376,24 @@ manifest fragment and `MediaBindings.kt` belong to the media lead. Estimates in 
 
 | WP | Slice | Owner (model) | Contents | Write set | Depends on | Acceptance | Est. |
 |---|---|---|---|---|---|---|---|
-| MV-0 | 1–3 | media lead (Opus) | proofs P-M1…P-M7 (§22) | `native/tools/proofs/media/**`, `docs/qa/native/media-proofs-*` | ADR P1 skeleton | each proof's acceptance line recorded with numbers | 1.5 |
-| MV-1a | 3 | Codex | pure logic for attachments and previews: `attach/` rules, `MagicBytes`, `PromptAttachmentMime`, `BoundedRead`, `AttachmentLimits`, `office/`, `xml/`, `preview/` adapters, `DelimitedText`, `StaticSvg`, `ViewerFind`, `Truncate`; C10-1/C10-2 primitives with the core owner | `engine/media/src/commonMain/**/{attach,office,xml,preview}/**`, tests | contracts s3 | B-MEDIA-001, 006, B-CHAT-009/010/021–024/107 green at T1; N7–N9 | 2 |
-| MV-1b | 5 | Codex | pure logic for voice, models, read aloud, conversation, share, QR rules | `engine/media/src/commonMain/**/{voice,models,setup,readaloud,conversation,share,qr}/**`, tests | contracts s5 | B-MEDIA-002, 003, 005, 011, 013–016, 018, 021, 023–025, 028–031, 034 (pure parts) green at T1 | 3 |
-| MV-2 | 3 | Sonnet (Android), Claude (UI) | `AttachmentIntake`, `PendingPhotoRecovery`, `AndroidImageCodec`, `AndroidClipboardImages`, `ContentAccess`/`ActivityResults` use, tray + tools rows + chips + paste row, camera flow, keyboard content | `android/media/**/{image,clipboard}/**`, `feature/chat-composer/**` (attachment files only), `engine/media/**/attach/**` | MV-1a, `:engine:composer` drafts + vault (05/09), 03 `ActivityResults` | B-MEDIA-007, 008, B-STATE-088 green; E2E-12 steps 1–2 green on the release build; N3, N10 | 3 |
-| MV-3 | 3 / 5 | kit-content owner (Sonnet) | slice 3: `KitImage`, `KitImageResolver`, `AppImageLoader`, `ImageResolver`; slice 5: `GalleryIndex`, `KitImageGallery`, `KitZoom`, `KitImageMarkup`, `MarkupRaster` | `ui/kit/**/image/**`, `ui/kit-content/**/{gallery,markup,zoom}/**`, `android/media/**/image/AndroidMarkupRaster.kt`, `androidApp/**/AppImageLoader.kt` | KN3 / KN5 (06) | chips and sent photos load through the resolver (S7 tests); gallery swipe-only-when-not-zoomed test; markup export at full resolution ≤ 9 MiB | 2.5 |
-| MV-4 | 5 | Sonnet; Opus reviews PDF | viewer adapters wiring, `KitViewer` bodies, find, reader prefs, PDF client + service port, Save / Copy / Share / Open with, turn and tool output loaders | `ui/kit-content/**/viewer/**`, `android/media/**/pdf/**`, `androidApp/**/LocalPdfService.kt`, `feature/project/**` (viewer files) | MV-1a, MV-3, 07 `ProjectRoute.FileView` | B-MEDIA-004, B-NAV-028 green; N6; E2E-14 step 1 | 3 |
-| MV-5 | 5 | Opus (`VoiceController`, `AudioSession`), Sonnet (capture, recognizer, pill wiring) | `AndroidAudioSession`, `AndroidAudioCapture`, `SherpaSpeechRecognizer`, `VoiceController`, hold detector wiring, auto-send flow, permission recovery, widget voice panel | `android/media/**/{audio,speech}/**`, `engine/media/**/voice/**`, `feature/chat-composer/**` (voice files), `feature/widget-panels/**` (voice panel) | MV-1b, MV-0 P-M1/P-M2, KN5 mic hold + level meter | B-MEDIA-010, 017, 020, 023, 033 green; N1, N5, N11; E2E-13 steps 3–4 | 4 |
+| MV-0 | 1–3 | media lead (Opus) | proofs P-M1…P-M5, P-M7 (§22) | `native/tools/proofs/media/**`, `docs/qa/native/media-proofs-*` | ADR P1 skeleton | each proof's acceptance line recorded with numbers | 1.5 |
+| MV-1a | 3 | Codex | pure logic for attachments, previews and images: `attach/` rules, `MagicBytes`, `PromptAttachmentMime`, `BoundedRead`, `AttachmentLimits`, `office/`, `xml/`, `preview/` adapters, `DelimitedText`, `StaticSvg`, `ViewerFind`, `Truncate`, `images/ImageResolver`, the `state/` types they need; C10-1/C10-2 primitives **with their Android, desktop and iosMain actuals** (§4.2) with the core owner | `engine/media/src/commonMain/**/{attach,office,xml,preview,images,state}/**`, tests; the C10-2 files in `core/common` through the core owner | contracts s3 | B-MEDIA-001, 006, B-CHAT-009/010/021–024/107 green at T1; N7–N9; the nightly iOS klib job green for `:core:common` and `:engine:media` | 2.2 |
+| MV-1b | 5 | Codex | pure logic for voice, models, read aloud, conversation, share, QR rules (incl. `QrRules.bestMask`), `GalleryIndex`, `MarkupDocument` | `engine/media/src/commonMain/**/{voice,models,setup,readaloud,conversation,share,qr,images,state}/**`, tests | contracts s5 | B-MEDIA-002, 003, 005, 011, 013–016, 018, 021, 023–025, 028–031, 034 (pure parts) green at T1 | 3 |
+| MV-2 | 3 | Sonnet (Android), Claude (UI) | `AttachmentIntake`, `PendingPhotoRecovery` (§10.5 single owner), `AndroidImageCodec`, `AndroidClipboardImages`, `ContentAccess`/`ActivityResults` use (fixed-key launchers `oc.takePhoto`, `oc.pickPhoto`, `oc.pickPhotos`), tray + tools rows + chips + paste row, camera flow, keyboard content | `android/media/**/{image,clipboard}/**`, `feature/chat-composer/**` (attachment files only), `engine/media/**/attach/**` | MV-1a, `:engine:composer` drafts + vault (05/09), 03 `ActivityResults`, **C10-14 answered** (camera FileProvider root), C10-22 | B-MEDIA-007, 008, B-STATE-088 green; E2E-12 steps 1–2 green on the release build; N3, N10 | 3 |
+| MV-3a | 3 | kit owner (Sonnet) | `KitImage` (per-request crossfade), `KitImageResolver`, `LocalKitImageLoader` in `:ui:kit` (C10-17) | `ui/kit/**/image/**` | K3 (06) | `KitImage` reserves space from known dimensions; crossfade follows a runtime `MotionPolicy` change | 0.5 |
+| MV-3b | 3 / 5 | kit-content owner (Sonnet) | slice 3: `KitImageLoaders` (loader, `ImageRefFetcher`, `ImageRefKeyer`, decoders, `evictProfile`) and the 10-line `:androidApp` wiring handed to the coordinator as a patch (provide the loader, register the eviction `ProfileCloser`); slice 5: `KitImageGallery`, `KitZoom` (fit and canvas modes), `KitImageMarkup`, and `AndroidMarkupRaster` in `:android:media` | `ui/kit-content/**/{image,gallery,markup,zoom}/**`, `android/media/**/image/AndroidMarkupRaster.kt`; `androidApp/**` only by the coordinator applying the patch | MV-3a, KN3 / KN5 (06), MV-1a (`ImageResolver`) | chips and sent photos load through the resolver (S7 tests: no network fetcher, `serviceLoaderEnabled == false`, exact-profile eviction); N14; markup export at full resolution ≤ 9 MiB | 2 |
+| MV-4 | 5 | kit-content owner (`KitViewer` bodies, find), Sonnet (the rest); Opus reviews PDF | viewer adapters wiring, `KitViewer` bodies, find, reader prefs, PDF client + service port, Save / Copy / Share / Open with, the phone-file sheet and chat file preview actions (§12.1), turn and tool output loaders | `ui/kit-content/**/viewer/**`, `android/media/**/pdf/**`, `androidApp/**/LocalPdfService.kt` (a patch the coordinator applies), `feature/project/**` (viewer files), `feature/chat/**` (phone-file sheet, chat preview actions) | MV-1a, MV-3b, 07 `ProjectRoute.FileView`, C10-14 (11's `cache-path share` row) | B-MEDIA-004, 037, B-NAV-028 green; N6; E2E-14 step 1 | 3.3 |
+| MV-5 | 5 | Opus (`VoiceController`, `AudioSession`), Sonnet (capture, recognizer, pill wiring) | `AndroidAudioSession` (A1–A8), `AndroidAudioCapture`, `SherpaSpeechRecognizer` (memory check, §6.3), `VoiceController`, hold detector wiring, auto-send flow, permission recovery | `android/media/**/{audio,speech}/**`, `engine/media/**/voice/**`, `feature/chat-composer/**` (voice files) | MV-1b, MV-0 P-M1/P-M2, KN5 mic hold + level meter, C10-15 | B-MEDIA-010, 017, 020, 023, 033 green; N1, N5, N11; E2E-13 steps 3–4 and the audio-focus step | 4 |
 | MV-6 | 5 | Codex (engine), Sonnet (UI, notification) | `ModelPacks`, `PackInstaller` (over `Downloader`), stamp, `AndroidDeviceProbe`, `AndroidSetupNetwork`, `VoiceSetup`, Settings › Voice + model sheet, setup sheet, download notification (C10-12), phone-setup component | `engine/media/**/{models,setup}/**`, `android/media/**/device/**`, `feature/settings/**` (voice), `android/background/**` (model download notice only) | MV-1b, C10-7 in `:core:net` | B-MEDIA-012, 019–022, 025–027, 030, 032, B-ANDR-101/102, B-L10N-024, B-LINUX-220 green; E2E-13 steps 1–2 | 3.5 |
-| MV-7 | 5 | Opus (`ReplyWatch`, `VoiceConversation`), Sonnet (TTS port, Kokoro) | `AndroidSystemTts`, `SherpaSpeechSynthesizer`, `AndroidPcmPlayer`, `ReadAloud`, consent and voice sheets, message menu items, conversation strip | `android/media/**/{tts,speech/SherpaSpeechSynthesizer.kt,audio/AndroidPcmPlayer.kt}`, `engine/media/**/{readaloud,conversation}/**`, `feature/chat/**` (read-aloud files) | MV-5 (`AudioSession`), MV-6 (packs), `:core:markdown` `forSpeech` | B-MEDIA-005, 009, 018 green; N4; Kokoro stop is immediate on the emulator | 3 |
-| MV-8 | 5 | Codex (rules), Sonnet (server, sheet), kit-content owner (`KitQr`) | `WifiShare`, `PathSafety`, `ShareHttp`, `AndroidLanFileServer`, `WifiAddress`, the sheet, `KitQr` | `engine/media/**/share/**`, `android/media/**/share/**`, `feature/project/**` (share sheet), `ui/kit-content/**/qr/KitQr.kt` | MV-1b | B-MEDIA-034, B-KIT-026 green; N13; E2E-14 step 2 | 2 |
-| MV-9 | 3 | kit-content owner (Sonnet) | `KitScanner` + `AndroidScannerSlot` (CameraX + zxing-cpp), pairing screen stages, camera permission use | `ui/kit-content/**/scanner/**`, `feature/servers/**` (scanner files) | KN3, 03 `PermissionGate`, 04 pairing parser | B-ANDR-049 green; P-M3 numbers met; `dependencyInsight` shows no ML Kit | 1.5 |
-| MV-10 | 6 | migration owner (Opus) + Sonnet | M16, upgrade-journey additions (§16.4), licence texts and rows, `THIRD_PARTY_NOTICES.md`, the device recipes as Maestro flows | `android/migration/**` (M16 only), `ui/words/composeResources/files/notices/**`, `feature/about/**` (licence rows), `e2e/media/**` | all MV | J1 media checks green; E2E-12/13/14 green on the release build | 1.5 |
+| MV-7 | 5 | Opus (`ReplyWatch`, `VoiceConversation`), Sonnet (TTS port, Kokoro) | `AndroidSystemTts`, `SherpaSpeechSynthesizer`, `AndroidPcmPlayer`, `ReadAloud`, consent and voice sheets, message menu items, conversation strip | `android/media/**/{tts,speech/SherpaSpeechSynthesizer.kt,speech/KokoroSink.kt,audio/AndroidPcmPlayer.kt}`, `engine/media/**/{readaloud,conversation}/**`, `feature/chat/**` (read-aloud files) | MV-5 (`AudioSession`), MV-6 (packs), `:core:markdown` `forSpeech` | B-MEDIA-005, 009, 018 green; N1 (Kokoro part), N4; Kokoro stop is immediate on the emulator; the §7.8 natural-voice rows | 3 |
+| MV-8 | 5 | Codex (rules), Sonnet (server, hosts), kit-content owner (`KitQr`, `KitFileShareSheet`) | `WifiShare`, `PathSafety`, `ShareHttp`, `shareLinkedFile` rules (§12.1 step 3), `AndroidLanFileServer`, `WifiAddress`, `KitFileShareSheet`, `KitQr` + `QrRules` mask selection, the sheet hosts in project and chat | `engine/media/**/{share,qr}/**`, `android/media/**/share/**`, `feature/project/**` (share host), `feature/chat/**` (share host for chat links), `ui/kit-content/**/{qr,share}/**` | MV-1b, MV-4 (chat file preview) | B-MEDIA-034, 036, B-KIT-026 green; N13; E2E-14 step 2 | 2.3 |
+| MV-9 | 3 | kit-content owner (Sonnet) | `KitScanner` + `AndroidScannerSlot` (CameraX + zxing-cpp), pairing screen stages, camera permission use | `ui/kit-content/**/scanner/**`, `feature/servers/**` (scanner files) | KN3, **C10-18** (06 moves `KitScanner` to slice 3), 03 `PermissionGate`, 04 pairing parser | B-ANDR-049 green; P-M3 numbers met; `dependencyInsight` shows no ML Kit | 1.5 |
+| MV-10 | 6 | migration owner (Opus) + Sonnet | M16, upgrade-journey additions (§16.4, both J1 runs), voice licence texts and rows, the AAR + ONNX Runtime rows in `BUNDLED.toml`, `THIRD_PARTY_NOTICES.md`, the device recipes as Maestro flows | `android/migration/**` (M16 only), `ui/words/composeResources/files/notices/**`, `feature/about/**` (licence rows), `native/third_party/BUNDLED.toml` (media rows), `e2e/media/**` | all MV | J1 media checks green; E2E-12/13/14 green on the release build | 1.5 |
 
-Total ≈ 30.5 aw [U]. Critical path: MV-0 P-M1 → MV-5 → MV-7. MV-2 and MV-9 are the only slice-3 media work.
+Total ≈ 31.8 aw [U]. Critical path: MV-0 P-M1 → MV-5 → MV-7. MV-1a, MV-2, MV-3a, MV-3b (slice-3 part) and MV-9 are the
+slice-3 media work. Each single-owner module's files are written only by its owner: `ui/kit/**` by the kit owner
+(MV-3a), `ui/kit-content/**` by the kit-content owner, `androidApp/**` by the coordinator (MV-3b and MV-4 hand it
+patches), `core/common` by the core owner.
 
 ---
 
@@ -2139,15 +2401,17 @@ Total ≈ 30.5 aw [U]. Critical path: MV-0 P-M1 → MV-5 → MV-7. MV-2 and MV-9
 
 | # | Proof | Acceptance | Fallback |
 |---|---|---|---|
-| P-M1 | Vendored sherpa-onnx 2.0.1 AAR in `third_party/maven`, the keep rule, `useLegacyPackaging`, excludes; release build on the API 37 emulator decodes a 2 s WAV with `tiny`; `OfflineTts` throws `IllegalArgumentException` on a missing file | N1 and N2 pass; arm64 speech libs ≤ 9.9 MB compressed | build the AAR on the VPS from the release `jniLibs` tarball with `android/SherpaOnnxAar` (README for 2.0.1) and pin that hash |
-| P-M2 | Whisper tiny/base/small on a 4 GB AVD and on NX721J (the `.native` preview flavour, installed only while the owner is present): RTF, warm load time, peak RSS, low-memory-killer behaviour during a 3-minute recording | numbers recorded; §18 targets confirmed or replaced | release the session between chunks on < 6 GB phones; never choose `small` automatically below 6 GB |
+| P-M1 | Vendored sherpa-onnx 2.0.1 AAR fetched by `tools/vendor/fetch.sh` into `third_party/maven`, the `sherpa.keep` rules (incl. `KokoroSink`), `useLegacyPackaging`, excludes; R8 release build on the API 37 emulator decodes a 2 s WAV with `tiny`; `OfflineTts` throws `IllegalArgumentException` on a missing file | N1 and N2 pass; arm64 speech libs ≤ 9.9 MB compressed | build the AAR on the VPS from the release `jniLibs` tarball with `android/SherpaOnnxAar` (README for 2.0.1) and pin that hash |
+| P-M2 | Whisper tiny/base/small on a 4 GB AVD and on NX721J (the `.native` preview flavour, installed only while the owner is present): RTF, warm load time, peak RSS, the §6.3 memory check firing, low-memory-killer behaviour during a 3-minute recording with a live session stream | numbers recorded; §18 targets confirmed or replaced; decides whether phones under 6 GB may keep the session warm | keep closing the session between chunks on < 6 GB phones (the default until this reports); never choose `small` automatically below 6 GB |
 | P-M3 | CameraX 1.6.2 `CameraXViewfinder` + zxing-cpp on the emulator virtual scene and NX721J with a real `opencode2 pair` QR in a dark terminal (inverted) | p95 < 30 ms; first lock < 1 s; inverted code read | `tryHarder = true`; then 1.7.0 for built-in focus; last resort ZXing core 3.5.4 |
-| P-M4 | Kokoro: `generateWithCallback` returning 0 stops synthesis; first sound and RTF on NX721J; stop latency | stop ≤ 150 ms; first sound ≤ 3 s cold | synthesize sentence by sentence with `generate()` and stop between sentences |
-| P-M5 | Android 17 `throw` hardening on an API 37 image: background reading stops cleanly; the reply-finished notification sound (system-played) under the `shortService` FGS still plays | no exception, sound plays | stop reading on `ON_STOP` as well as `ON_PAUSE` (already true); notification sound unaffected by design |
-| P-M6 | Flutter `getApplicationSupportDirectory()` is `filesDir`: install Flutter 2.1.0+57 on the emulator, download `tiny`, `adb shell run-as … ls files/voice_models` | the pack dir is under `files/` | M-step in `MigrationRunner` moves the folder once (`atomicMove` per pack dir), never re-downloads |
+| P-M4 | Kokoro on the **R8 release build** through `KokoroSink`: at least one callback per sentence; returning 0 stops synthesis with no pending exception afterwards; first sound and RTF on NX721J; stop latency | every sentence streams; stop ≤ 150 ms; first sound ≤ 3 s cold | synthesize sentence by sentence with `generate()` and stop between sentences |
+| P-M5 | Android 17 `throw` hardening on an API 37 image: background reading stops cleanly; the reply-finished notification sound (system-played) still plays while the `dataSync` reply-watch FGS (ADR §9.5, §5.2) runs; repeat under the widget-action `shortService` only if that service also posts a sound | no exception, sound plays | stop reading on `ON_STOP` as well as `ON_PAUSE` (already true); notification sound unaffected by design |
 | P-M7 | Keyboard content and paste: Gboard GIF commit read after `onReceive` returns; whether the text field offers **Paste** for an image-only clip with `contentReceiver` attached (Compose 1.13) | both observed on API 37 | copy into `cache/inserted/` inside the receiver; add the "Paste image" text-menu item (`JETPACK_AHEAD`) |
 | P-M8 | (after the switch, optional) `VOICE_RECOGNITION` source vs `MIC`: levels and silence detection with NX721J recordings | detector rows still pass with re-tuned constants | stay on `MIC` |
 | P-M9 | PDF: spawn cost of one isolated bind per page vs one per document | numbers recorded | stay per page (parity) |
+
+P-M6 is withdrawn: `path_provider_android` 2.3.1 returns `filesDir` for the support directory (checked in source,
+§7.2); J1 (§16.4 step 5) keeps the byte-identical check.
 
 ---
 
@@ -2162,9 +2426,9 @@ Total ≈ 30.5 aw [U]. Critical path: MV-0 P-M1 → MV-5 → MV-7. MV-2 and MV-9
 | Pickers, save, share | FileKit 0.17.0 | FileKit 0.17.0 (XDG portal); no system share |
 | `PdfPageRenderer` | PDFKit | Apache PDFBox 3.0.8 in a child JVM process (keeps the isolation idea) [U] |
 | Scanner | `AVCaptureMetadataOutput` (QR built in) | none (paste only) |
-| `LocalFileServer` | `Network.framework` listener | the same `ServerSocket` code moved to an `oc.jvm.library` module |
+| `LocalFileServer` | `Network.framework` listener | the socket loop moved to an `oc.jvm.library` module (plain callbacks, no project dependencies); the binding stays where it may see `:engine:media` |
 | `ClipboardImages` | `UIPasteboard` | AWT clipboard image flavor [U] |
-| Primitives (`Sha256`, `RawInflate`, `secureRandomBytes`) | CommonCrypto, `zlib` via cinterop, `SecRandomCopyBytes` | same JVM actuals as Android |
+| Primitives (`Sha256`, `RawInflate`, `secureRandomBytes`) | **written now** (§4.2): `platform.CoreCrypto`, `platform.zlib`, `platform.Security` — built-in Kotlin/Native platform libraries, no cinterop dependency | same JVM actuals as Android |
 | Everything in `:engine:media` commonMain | unchanged | unchanged |
 
 Nothing in this section uses an Android type in commonMain; the nightly iOS klib compile (ADR §6.3) keeps it that way.
@@ -2180,12 +2444,13 @@ Nothing in this section uses an Android type in commonMain; the nightly iOS klib
 | D10-3 | Add "Scan from a picture" next to the camera scanner (for a QR screenshot)? | **After the switch** | "Paste the code instead" already covers it |
 | D10-4 | Keep model downloads alive when Android closes the app (a background download job)? | **No** | Downloads resume where they stopped (D10-1); one less background service |
 | D10-5 | Dictation or reading aloud with the screen off or the app in the background? | **No** | Needs microphone/media foreground services and lock-screen controls; Android 17 silences background audio |
-| D10-6 | F-Droid build: drop voice typing and the natural voice (Lite), or build sherpa-onnx and ONNX Runtime from source (Full)? | **Lite** for the first submission (after the rewrite); phone voices still read aloud | Building ONNX Runtime from source is weeks of work; the QR scanner is already Google-free |
+| D10-6 | F-Droid (after the rewrite): build sherpa-onnx and ONNX Runtime from source in the recipe (Full), or ship a voice-less F-Droid build (Lite)? | **Full**, decided at submission time with section 16's D16-5; Lite only if the source build fails | Full keeps one APK and our shared signature (16 F12), so people can move between GitHub and F-Droid builds. A voice-less build **gives up the shared signature** (F-Droid would sign a different APK, 16 §5.9) and needs sherpa moved to its own `:android:speech` module first. Building ONNX Runtime from source is weeks of work, which is why this is asked now |
 | D10-7 | Use Google's new PDF viewer (search, select text) instead of the sealed renderer? | **No** | It parses untrusted PDFs inside the app and adds a second design language |
 | D10-8 | An in-app camera instead of the system camera app for photos? | **No** | The system camera is the most native and removes a screen |
 | D10-9 | Arabic natural voice? | **Wait**; the phone's voice reads Arabic | No lexicon-based Arabic Kokoro model exists yet |
 | D10-10 | Stop sharing on Wi-Fi when the app goes to the background? | **No** (as today: up to 15 minutes) | Matches today; the sheet shows the time left |
 | D10-11 | Add **Share <name>** (the system share sheet) to the file viewer's More, beside Save? | **Yes, at the switch** | The Android-natural way to hand a file to another app; about 40 lines |
+| D10-12 | Keep a small "verified" note beside each speech model so 540 MB is not re-checked on the first mic tap after every start? (You asked for no new stores on 2026-10-31.) | **Yes** | One small file per model, written only after a full check; without it the first mic tap of every app start re-reads up to 540 MB (about 4 s on your phone). The alternative is a per-start check run in the background, which costs battery every start |
 
 ---
 
@@ -2207,18 +2472,126 @@ Nothing in this section uses an Android type in commonMain; the nightly iOS klib
   `android/app/src/main/AndroidManifest.xml`; freeze branch `int/freeze-2026-11-01` commits `9ac39cd68`, `92ed57977`
   (clipboard image), `7febdd764`, `637ffea4c`, `6ce60d6f0` (Wi-Fi share), `b4954ae4f` (open local file), `0ae129579`
   (F-Droid feasibility), `724806fdc` (Google-free scanner, unmerged by owner decision).
-- Plugin source: `image_picker_android-0.8.13+25` `ImagePickerCache.java` (preference names), its manifest (provider
-  authority, Photo Picker backport service).
+- Plugin source: `image_picker_android-0.8.13+25` `ImagePickerCache.java` (preference names), `ImageResizer.java:182`
+  (`saveAsPNG = bitmap.hasAlpha()`), its manifest (provider authority, Photo Picker backport service);
+  `record_android` 2.1.2 `AudioSessionManager.kt` (capture focus `AUDIOFOCUS_GAIN`, delayed gain, loss handling);
+  `path_provider_android` 2.3.1 `path_provider_android_real.dart` (support path = `filesDir`); `qr` 3.0.2
+  `qr_image.dart` (best mask by `_lostPoint`).
 - Checked today [V], 2026-11-01: Maven Central / Google Maven metadata — Coil 3.6.3, Telephoto 0.19.0 (1.0.0-alpha02
   latest), qrose and `qrose-encoder-matrix` 1.3.1 (sources read: `QroseEncoders.QR(errorCorrection, maskPattern)`,
   `QrErrorCorrection.M`, `Matrix2D`), CameraX `camera-compose` 1.6.2 / 1.7.0-rc01, zxing-cpp `android` 3.1.1,
-  `exifinterface` 1.4.2, androidx.core 1.19.1; GitHub API — sherpa-onnx v2.0.1 published 2026-10-26; sherpa-onnx
+  `exifinterface` 1.4.2 (no longer used: the platform `ExifInterface` suffices, 12 R-18), androidx.core 1.19.1; GitHub API — sherpa-onnx v2.0.1 published 2026-10-26; sherpa-onnx
   `kotlin-api` at tag v2.0.1 (`OfflineRecognizer(assetManager, config)`, `OfflineStream.release()`,
   `OfflineWhisperModelConfig`, `OfflineTts.generateWithCallback`, `OfflineTtsKokoroModelConfig.lexicon`, `free()`);
-  Telephoto `ZoomableState.zoomFraction` at tag 0.19.0; developer.android.com "Copy and paste" (Compose
+  Telephoto `ZoomableState.zoomFraction` and `ZoomSpec.kt` (maximum relative to the original size, minimum relative to
+  the base scale) at tag 0.19.0; sherpa-onnx `sherpa-onnx/jni/offline-tts.cc` `CallCallback` at v2.0.1 (looks up
+  `invoke([F)Ljava/lang/Integer;`, returns 1 without clearing the exception); Coil `coil-core` `imageLoaders.kt`
+  (`ImageLoader.Builder.serviceLoaderEnabled`); developer.android.com "Copy and paste" (Compose
   `contentReceiver`, `hasMediaType(MediaType.Image)`); developer.android.com "Local network permission" (accepting an
   incoming TCP connection needs it at targetSdk 37).
 - Owner memory: `freeze-owner-decisions-2026-11-01` (Google-free QR, F-Droid after the rewrite, analytics tiers),
   `dev-freeze-native-rewrite-2026-11-01`, `voice-model-memory-gate`, `gemma-assistant`, `roadmap-issues-2026-10-31`,
   `android-native-feel`, `micro-animations-wanted`, `text-scale-cap`, `no-raw-errors-rule`, `component-max-width-rule`,
   `teach-what-is-hidden`, `no-glass-rule`, `test-on-emulator-not-phone`, `no-owner-phone-screenshots`.
+
+---
+
+## Review notes (2026-11-01 revision)
+
+Each review issue was checked against the Flutter tree, the freeze tip, plugin and library sources, and sections 01, 03,
+06, 09, 11, 12 and 16 before editing. Numbers follow the review's order.
+
+**Accepted and fixed**
+
+1. Kokoro callback: confirmed in sherpa-onnx v2.0.1 `CallCallback`. A named `KokoroSink` class plus a keep rule (§2.4,
+   §8.5); N1 and P-M4 now run on the R8 release build and check callbacks per sentence and stop on 0.
+2. Gallery zoom: minimum = fit (`minZoomFactor = 1f`), maximum = 5× of fit through `DynamicZoomSpec`, 0.2× only in a
+   canvas mode, pager locked while two or more fingers are down, "at rest a swipe changes the picture" test (N14).
+3. `PlatformContentHandle`/`InsertedContent` moved to `:core:common` (C10-4, §4.3).
+4. `KitImage` and its seam in `:ui:kit` by change request C10-17. MV-3 is split into MV-3a (kit owner) and MV-3b
+   (kit-content owner), and `androidApp/**` gets patches only. MV-4's kit-content work was aligned the same way.
+5. The loader is built in `:ui:kit-content` with `serviceLoaderEnabled(false)`. Eviction is an `:androidApp`
+   `ProfileCloser` that compares the parsed profile field exactly (§4.3, §9.1, S7). The `coil-network-ktor3` part was
+   already fixed: 03 now bans every `coil-network-*` artifact, so no prerequisite is needed.
+6. Change request C10-19 to 09 removes its per-scheme fetchers and its profile-less keys. `GalleryIndex` now yields
+   `ImageRef`s.
+7. F-Droid: the `fdroid` flavour column is removed and we ship one APK. Install is gated on
+   `PermissionGate.status(InstallPackages)`. D10-6 now says that a voice-less build gives up the shared signature.
+   zxing-cpp is marked [U]. A voice-less variant would first need an `:android:speech` module (§2.7, §12, §15.1).
+8. xmlutil vs M7: change request C10-20 asks the coordinator to choose. Either way, the regex DOCTYPE pre-check order
+   is kept.
+9. and 30. FileProvider roots: change request C10-14 goes to 11 and 16, with a security review row and an update to
+   B-SEC-195's allowlist, and must be answered before MV-2 and MV-4 start. We chose the narrow `files-path` (option b)
+   over `cache/`, because a capture has to survive the system clearing cache while the camera app is in front, and it
+   fits `BlobArea.CameraCapture`.
+10. Stamp: it now records size plus the SHA-256 of each file's first and last 1 MiB, so no mtime and no new seam are
+    needed (§7.2).
+11. iOS actuals for the three primitives are now written in MV-1a. Whether the Linux-hosted klib job resolves the Apple
+    platform libraries is marked [U], with a pure-Kotlin fallback (§4.2).
+12. and 34. Process death: each result now has one owner. Launchers re-registered after process death (fixed keys
+    `oc.takePhoto`, `oc.pickPhoto`, `oc.pickPhotos`) only report an outcome to `PendingPhotoRecovery`. New rules cover
+    records that can never succeed, and `RetryRequired` is the only result that leaves a record behind (§10.4, §10.5).
+13. and 39. Alpha goes to PNG and everything else to JPEG 85, as `image_picker` does. A PNG over 10 MiB falls back to
+    JPEG on white (new behaviour, marked as such). N10 gets a transparent-PNG fixture and the B-MEDIA-007 amendment is
+    updated.
+14. QR mask selection is now mandatory: `QrRules.bestMask` is a port of `_lostPoint`, with mask-parity tests (M13,
+    §14.1, N13).
+15. `SetupNetworkSource.changes` is added. Pause is defined as cancel with the `.part` files kept, then `NeedsConsent`
+    with Resume. Downloads started from Settings keep Flutter's rule (no metered question) (§4.5, §7.7, N15).
+16. Memory: the plan no longer relies on `onTrimMemory`. A `MemoryInfo` check runs before every chunk, and phones under
+    6 GB close the session between chunks until P-M2 reports (§6.3, §2.6, M2).
+17. Hold to talk: the `vptt*` copy is used and the SendingSoon secondary says **Don't send**.
+18. and 36. The level meter and every progress fill now mirror in RTL (§6.9, §19.1, B-MEDIA-003 test).
+19. A missing `Content-Length` is accepted, and the pin is enforced while streaming (§7.4, C10-7).
+20. The four differences with 12 are settled: the platform `ExifInterface` is used, the keep rule is in
+    `:androidApp/keepRules/sherpa.keep`, the AAR comes from `fetch.sh` with its SHA-256 named in §2.2, and change
+    request C10-21 updates 12's R-21.
+21. The UI-rendered state types are in the `…engine.media.state` package (§3.1, §4.4).
+22. The crossfade is set per request from the current `MotionPolicy`, and the loader default is 0.
+23. The media size total is now 13.1 MB.
+24. P-M5 now runs under the `dataSync` reply-watch service.
+25. Change request C10-18 moves `KitScanner` to slice 3. `KitQr` stays in slice 4, because its first user is in slice 5.
+26. The §19.1 claim is corrected: Save and Share stay in the viewer's More menu. Putting them in the frame would add a
+    bar level.
+27. Only the socket loop moves to an `oc.jvm.library` module (§13.3, §23).
+29. The widget voice panel is removed (§6.10, `VoiceMode.WidgetPanel`, the MV-5 write set and the §15.1 row) and C10-5
+    is withdrawn. No owner question was added, because parity (the system recognizer) is the default.
+31. Capture audio focus is new rule A8, with the `endCapture()` seam, an N5 test and an E2E-13 step.
+32. `ON_STOP` and a covering page now call `finish()`, which writes the remaining audio. `cancel(keepWords)` is no
+    longer used for lifecycle events (§6.4, §6.5, lifecycle test row).
+33. Recovery step 3 is rewritten: the photo is restored from the recovery vault, stored into the draft vault, deduped,
+    then the record is discarded and the vault collected. Step 2 now removes the profile's drafts and collects both
+    vaults. Because only one record can exist at a time, J1 tests the `ref` case in a second run.
+35. Setup now checks the microphone and storage before consent, and never switches to another pack (§7.3, §7.7).
+37. New §12.1 covers the phone-file sheet, the chat file preview actions and the `shareLinkedFile` rules. The Wi-Fi
+    sheet is now a kit part (`KitFileShareSheet`). `feature/chat/**` is added to the MV-4 and MV-8 write sets, and the
+    `phoneFile*` copy is listed (the freeze tip has 10 such keys, not 11).
+38. Partial downloads are now visible in Settings, with **Resume** and **Discard**, and size checks count only the
+    remaining bytes (§7.8, `discardPartial`).
+40. Empty words lead to the "Nothing was heard" note, in dictation and in conversation.
+41. An interruption cancels the recording and drops untranscribed audio; the words already written stay.
+42. Change requests C10-15 (`request(…, alsoAsk)`) and C10-16 (the 11 §10.8 contexts) are added.
+43. The natural-voice behaviours are listed in §7.8. There is no metered question (parity).
+44. Owner decision D10-12 is added for the stamp, and the migration marker is dropped because the M16 step is
+    idempotent.
+45. `files/local_llm_models/**` and `local_assistant.enabled` are kept in place, and each `PackKind` has its own root.
+46. Marked [V] from the `path_provider_android` 2.3.1 source; P-M6 is withdrawn.
+47. The Voice licences page lists only the voice stack. The AAR and ONNX Runtime are added to `BUNDLED.toml`.
+- Also fixed while editing: the `PhotoPending` and `PhotoUnavailable` sentences are now the Flutter ARB strings
+  (`photoPendingOther`, `photoUnavailable`) instead of invented ones.
+
+**Partly rejected, with reasons**
+
+- 16: the issue asked that `small` never be picked automatically below 6 GB. That was not adopted unconditionally.
+  Closing the session between chunks on those phones already restores Flutter's memory use, so the automatic choice
+  keeps parity (3,400 MB). The §18/P-M2 condition still applies.
+- 17: the request to play the `Commit`/`Done` haptic on release was rejected. Flutter plays `KitHaptics.send()` on a
+  committed release (`kit_mic_hold.dart:197`), so `Send` is parity. Only the words were wrong.
+- 28: `ImageRef.AppFile.area` cannot be a `BlobArea`. `BlobArea` lives in `:core:domain`, which `:core:model` and
+  `:ui:kit` cannot see. It is a `:core:model` enum, `AppImageArea`, instead. The `BlobArea` additions are kept.
+- 34: a cancel after process death stays silent, as in Flutter (a record with no lost data is discarded with no note).
+  `PhotoUnavailable` shows only when a result was expected but never arrived or came back empty.
+- 9 and 30: of the two options offered, (b) `files-path` with a review row was chosen over (a) `cache-path`, for the
+  reason given in 9 above.
+
+No issue was rejected outright.

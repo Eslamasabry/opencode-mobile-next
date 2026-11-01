@@ -17,7 +17,8 @@ agent-card (generative UI) port.
    colours behind a swap seam, and keep the agent-card contract with your agents byte for byte.
 4. Tests come first, from the 124 chat behaviours plus the send, draft and queue behaviours; a recorded 5,000-part
    reply and a 6,000-word stream are the speed tests your phone must pass before the switch.
-5. Four small questions for you are in §19; work follows the recommended answer until you reply.
+5. Four small questions for you are in §19; work follows the recommended answer until you reply. The review fixes of
+   2026-11-01 are listed at the end (Review notes).
 
 ---
 
@@ -53,6 +54,17 @@ Checked today for this section [V]:
   default.
 - `androidx.compose.ui:ui-text-android:1.13.0-beta02` sources contain **no `DrawAnnotation`**. The draw-phase-only
   annotation is still unreleased; §8.3 uses the offscreen mask until it ships.
+- `org.jetbrains.compose.ui:ui:1.13.0-beta01` sources (CMP, latest): `commonMain/androidx/compose/ui/FrameRate.kt`
+  exports `Modifier.preferredFrameRate(FrameRateCategory)` in **common** code (§8.5).
+- `foundation-android-1.13.0-beta02` `StatelessInputConnection.android.kt`: every IME `commitContent` becomes
+  `ClipData.Item(contentUri)` with `TransferableContent.Source.Keyboard`; the `InputContentInfo` that holds the read
+  grant rides in `platformTransferableContent.extras`. Compose never hands over bytes (§10.1).
+- Same jar: `Modifier.filterTextContextMenuComponents` (commonMain) and `TextContextMenuKeys.CopyKey`/`SelectAllKey`;
+  `ComposeFoundationFlags` KDoc calls every flag temporary, to be set before Compose loads, with an R8 `-assumevalues`
+  rule for release (§7.8).
+- `io.coil-kt.coil3:coil-core:3.6.3` sources: `ImageLoader.Builder.serviceLoaderEnabled(enable)` (default `true`);
+  with it on, every `FetcherServiceLoaderTarget` on the runtime classpath (such as a `coil-network-*` artifact) is added
+  to every loader (§9.1).
 
 ### 0.3 Where the chat code lives
 
@@ -68,7 +80,7 @@ Module rules are the ADR's (§5.2, §6). Package roots follow 03 and 06.
 | `:engine:requests` (F) | `…oc.engine.requests` (+ `.cards`, `.forms`) | §5, §13 | 3 (see §0.4 C1) |
 | `:engine:composer` (F) | `…oc.engine.composer` | §10 rules (drafts, stash, phrases, references) | 3 |
 | `:ui:kit-chat` (S kit-chat owner) | `…oc.ui.kit.chat.{transcript,markdown,composer,request,agent,host}` | §6.3 `ComposerHost`, §7–§9 parts, `RevealRegistry`, `KitAgentCard`, `KitForm` | 2 |
-| `:ui:kit-content` (S kit-content owner) | `…oc.ui.kit.content.{code,diff}` | `CodeTokenizer`, `KitCodeBlock`, `DiffModel`, `KitDiffView` (§9.2, §9.3) | 3 (plain code block in 2, §17) |
+| `:ui:kit-content` (S kit-content owner) | `…oc.ui.kit.content.{code,diff}` | `CodeTokenizer`, `KitCodeBlock`, `DiffModel`, `KitDiffView` (§9.2, §9.3) | 2 for the plain `KitCodeBlock` only (unit S2-KCODE, §17; needs ADR-09-2), the rest 3 |
 | `:feature:chat` (S chat lead) | `…oc.feature.chat` | §6, §7 | 2 |
 | `:feature:chat-composer` (F) | `…oc.feature.chatcomposer` | §10 UI, `FullComposerHost` | 3 |
 | `:feature:chat-pages` (F) | `…oc.feature.chatpages` | §11 pages | 4 |
@@ -80,10 +92,11 @@ already covers them, so no rule changes.
 
 | # | Conflict | Handling |
 |---|---|---|
-| C1 | ADR §5.2 starts `:engine:requests` in slice 3. 06 (unit KC2) and 07 (C10, C11) put the request card in slice 2, and the daily path cannot run without answering permission asks: the app writes ask-first rules into every OpenCode 2 session (map CHAT-GENUI-45; memory `oc2-stuck-tools-root-cause`). | **Amendment request ADR-09-1 to the coordinator:** create `:engine:requests` in slice 2 with permissions and one-question asks only (§17 unit S2-REQ). Forms, always-allow, cards stay slice 3+. Until §5.2 is amended, S2-REQ is scheduled as the **first** unit of slice 3 and the slice-2 finish line (§17) excludes "answer a permission"; nothing else in this section changes. |
+| C1 | ADR §5.2 starts `:engine:requests` in slice 3. 06 (unit KC2) and 07 (C10, C11) put the request card in slice 2, and the daily path cannot run without answering permission asks: in the default "Ask first" mode the app installs ask-first rules into each OpenCode 2 session before a send (04 §7.9 step 3; auto-approved sessions get their original rules back), so every tool call of an ordinary conversation waits for an answer (map CHAT-GENUI-45; memory `oc2-stuck-tools-root-cause`). | **Amendment request ADR-09-1 to the coordinator:** create `:engine:requests` in slice 2 with permissions and one-question asks only (§17 unit S2-REQ). Forms, always-allow, cards stay slice 3+. Until §5.2 is amended, S2-REQ is scheduled as the **first** unit of slice 3 and the slice-2 finish line (§17) excludes "answer a permission"; nothing else in this section changes. |
 | C2 | ADR §5.2 says `:feature:chat` owns the `ComposerHost` contract, but §6.1 forbids feature → feature dependencies, so `:feature:chat-composer` cannot implement an interface declared in `:feature:chat`. | The slot interface file lives in `:ui:kit-chat` (`…oc.ui.kit.chat.host.ComposerHost`, UI-only types, no engine types), and `MODULE_OWNERS` gets a **file-level** row naming the chat lead as its owner (kit-chat owner reviews). Ownership matches the ADR; only the file's module differs (§6.3). |
 | C3 | The map marks the list primitive, Markdown renderer and highlighter as DECIDE. | Decided in §7.1, §9.1, §9.2, each with a fallback and a spike (§16). |
 | C4 | genui research says the Flutter form parser ignores OC2 `hidden`; catalog row B-PROTO-022 says hidden fields become preset answers. | The native `FormSpec` adapter honours `hidden` exactly as B-PROTO-022 states, with its own test (§5.5). Whichever Flutter path missed it does not matter once the row is green. |
+| C5 | ADR §6.1 lets `:ui:kit-chat` use only kit, design, words, `:core:markdown`, `:core:model`, common and security. Several chat parts need more: tool rows and live lines were sketched over `:core:domain`/engine types, and tool-row bodies and agent cards draw `KitCodeBlock`, `KitDiffView` and `KitChart` from `:ui:kit-content`. 06 §7.7 also wants a plain code block in slice 2, while `:ui:kit-content` starts in slice 3. | (1) Kit-chat parts take **kit-local UI models** only (`KitToolKind`, `KitToolStatus`, `KitTurnPhase` from 06 §7.8, plus `KitToolView`, `KitLiveTurn` and `KitPendingBubble` added here as plain kit data classes); `:feature:chat` maps `ToolView`, `LiveTurn` and `PendingSend` into them and passes plain lambdas, never `ChatActions` (ADR §9.1: kit parts never see a ViewModel). (2) **Amendment request ADR-09-2:** add the acyclic edge `:ui:kit-chat → :ui:kit-content` to ADR §6.1 and `ModuleRules`, and start `:ui:kit-content` in slice 2 with the plain `KitCodeBlock` only. If refused, the kit-chat parts that embed content (`KitToolRow` body, `KitCardBody`) take `@Composable` content slots that `:feature:chat` fills with kit-content parts. Transcript code rows need neither: `ChatRow` in the feature draws `RowKind.Code` with `KitCodeBlock` directly (features may use both kits). |
 
 ---
 
@@ -97,7 +110,7 @@ Each owner rule becomes one mechanism and one check. Reviewers reject a chat cha
 | R2 | Native feel (`android-native-feel`) | Platform ripple via `KitTappable`; stretch overscroll by default (never override `LocalOverscrollFactory`); predictive back from 07; haptics only through `KitHaptic` | Konsist bans `performHapticFeedback`, `clickable` in features |
 | R3 | 150–250 ms motion, reduced motion (`micro-animations-wanted`) | All durations from `MotionTokens`; `MotionLevel` Full/Calm/Off decides fade, growth, glide (§8.6) | Konsist bans raw `tween`/`spring` outside the kit |
 | R4 | Only named list items animate layout (MOT-5, owner 2026-10-27) | The growing reply, the work-line fold, the step arrival, the row→chat transform. Nothing else in the transcript animates size or placement. | `TranscriptMotionTest` (§15) |
-| R5 | One moving thing while a reply runs (MOT-15) | `movingPart(glowOn, level)` in kit-chat: the composer glow travels when on, else the Stop ring turns; under Calm/Off neither | `MovingPartTest` |
+| R5 | One moving thing while a reply runs (MOT-15) | `movingPart(glowOn, level)` in kit-chat decides only which part *travels*: the composer glow when on, else the Stop ring; under Calm/Off neither travels, but the glow is still **drawn** (Calm: still ring, halo held; Saver: one still hairline) and progress loops run at half pace under Calm (§8.6; 08 §5.3 and M8-6 are the source of truth) | `MovingPartTest` |
 | R6 | Keep the green running glow (`composer-green-glow-liked`) | `KitComposerGlow` ported verbatim (Classic default, Soft ring), drawn only in `drawBehind` | screenshot later; owner eye |
 | R7 | No glass (`no-glass-rule`) except D10 frost on header and composer while scrolled under | `scrolledUnderTop`/`scrolledUnderBottom` lambdas from the list (§7.6) feed `KitFrost` | 06 frost tests |
 | R8 | Plain words, never raw errors (`no-raw-errors-rule`) | `ChatUi` carries `Failure` categories and enums only; `:ui:words` maps them; server text only as `Redacted` in the kit Details fold | B-SEC-104, `NoServerTextInChatUiTest` |
@@ -108,9 +121,9 @@ Each owner rule becomes one mechanism and one check. Reviewers reject a chat cha
 | R13 | Hard max widths (`component-max-width-rule`) | Conversation cap 700 dp; prompt bubble ≤ 85 % with 48 dp start inset; composer field ≤ 40 % of window height; request card ≤ 45 % (60 % at 2.5× text) (06 §8) | 06 capacity tests |
 | R14 | Frame text ≤ 1.3×, reading text full (`text-scale-cap`) | §9.7 table | 06 text-scale tests |
 | R15 | Arabic RTL | Prose `TextDirection.Content`; code, diffs, paths, commands LTR with FSI/PDI isolation; only reading-direction glyphs mirror (B-KIT-001) | `BidiIsolationTest` |
-| R16 | Teach hidden gestures (`teach-what-is-hidden`) | Tips `stop-after-step`, `send-later`, `hold-mic` registered with `TeachingRegistry`; each hidden gesture also has a visible path | `ChatTipsRegisteredTest` |
-| R17 | Every URL the app did not author goes through `openExternalLink` (AGENTS security) | All Markdown links are `LinkAnnotation.Clickable` → `actions.openLink(url)`; the root `LocalUriHandler` is `ExternalLinkUriHandler`; smart selection off (§7.8) | `LinkPolicyTest`, B-SEC-064 flow |
-| R18 | Never echo credentials | Copy transcript and exports go through `Redactor`; card and answer content never stored in journals | B-SEC-094, B-SEC-151 |
+| R16 | Teach hidden gestures (`teach-what-is-hidden`) | Tips `stop-after-step`, `send-later`, `hold-mic` registered with `TeachingRegistry`; using the gesture retires its tip for good (§10.10); each hidden gesture also has a visible path | `ChatTipsRegisteredTest`, `ChatTipRetiredOnUseTest` |
+| R17 | Every URL the app did not author goes through `openExternalLink` (AGENTS security) | All Markdown links are `LinkAnnotation.Clickable` → `actions.openLink(url)`; the root `LocalUriHandler` is `ExternalLinkUriHandler`; smart selection off and the selection menu filtered to Copy and Select all (§7.8) | `LinkPolicyTest`, B-SEC-064 flow |
+| R18 | Never echo credentials | Code, command, output, diff, background-work and queued-bubble parts **display** `Redactor.text(source)` (§9.2, §9.5); Copy transcript and exports go through `Redactor`; card and answer content never stored in journals | B-SEC-094, B-SEC-151, `MonoSurfacesRedactedTest` |
 | R19 | Gate on capabilities, never on backend kind | Every chat branch reads `ServerCapabilities` or a gateway facet result (`MidTurnPrompt`), never `BackendKind` | Konsist: `BackendKind` not imported in `:feature:chat*`, `:engine:transcript`, `:engine:delivery` |
 | R20 | Reconcile by refetch, never replay (AGENTS) | `TranscriptStale`, reconnects and run ends that crossed a drop re-read history (§3.4) | B-CHAT-005, B-PROTO-034 |
 
@@ -263,7 +276,8 @@ public data class ToolView(
 public object ToolPresentation {
     /** Lower-cased id switch (map CHAT-GENUI-14): read, list, glob, grep, bash|shell, edit, write, patch|apply_patch,
      *  webfetch, websearch, task|subagent, todowrite|todo, question, lsp, plan, worktree_setup, skill,
-     *  sendmessage|send_message, toolsearch, exact card names (§13.3), task_notification. Never a raw id as words. */
+     *  sendmessage|send_message, toolsearch, exact card names (`CARD_TOOL_NAMES`, public in `:core:model` `…cards`,
+     *  shared with §13.3), task_notification. Never a raw id as words. */
     public fun of(part: Part, waitingForYou: Boolean): ToolView
     /** Live-line words for a running step ("Running npm test"); named=false when the step's own row is right above. */
     public fun runningPhrase(view: ToolView, named: Boolean): LivePhrase
@@ -272,6 +286,10 @@ public object ToolPresentation {
 
 `waitingForYou` is passed in by the caller that knows about requests (a blocked call or a running `question` tool says
 "Waiting for you", never Running; AUTO-15).
+
+`ToolView` is a `:core:domain` type, so kit parts never take it (C5): `:feature:chat` maps it to the kit-local
+`KitToolView(kind: KitToolKind, status: KitToolStatus, subject, detail: KitToolDetail?, durationMs, added, removed)` in
+`ChatRow`, and the same mapping feeds the timeline sheet and find.
 
 ---
 
@@ -287,12 +305,17 @@ are frozen in `contracts/s2.md` at the start of slice 2.
 public class TranscriptEngine @Inject internal constructor(/* gateway, dispatchers, clock, firstPaint, settings, diagnostics */) {
     /** Ref-counted. Keeps at most 3 transcripts warm (LRU); a handle with no holder closes after 60 s [new: bounds memory]. */
     public fun open(ref: ConversationRef): TranscriptHandle
+    /** Conversation-row tap: starts the newest-page read the open will join (Flutter `prefetchSessionTail`,
+     *  B-STATE-122). Deduplicated by (generation, session, historyRevision, revertBoundary); a failure is silent. */
+    public fun prefetch(ref: ConversationRef)
 }
 
 public interface TranscriptHandle : AutoCloseable {
     public val state: StateFlow<TranscriptState>
     public suspend fun loadOlder(): Outcome<Unit>
     public fun refreshRecent(reason: RefreshReason)                 // debounced 150 ms (map CHAT-GENUI-03)
+    public suspend fun reload(reset: Boolean): Outcome<Unit>        // reset = drop older pages, cursors and deferred maps first (§3.3 history resets)
+    public fun removeMessage(id: String)                            // local removal after a confirmed server delete (§6.6)
     public fun setExpanded(key: FoldKey, open: Boolean)             // §3.9; publishes at once (user action)
     public fun collapseAll()
     public suspend fun materialize(target: JumpTarget): Outcome<Int> // load pages/open folds until the row exists; returns its index
@@ -305,8 +328,10 @@ public interface TranscriptHandle : AutoCloseable {
 public data class TranscriptState(
     val phase: TranscriptPhase,                       // Loading | Excerpt(ExcerptRows) | Live | Failed(Failure)
     val rows: ImmutableList<TranscriptRow>,           // NEWEST FIRST: index 0 is the bottom of the reverse list (§7.1)
-    val index: ImmutableMap<String, Int>,             // message id / part id / call id → row index (jumps, find)
-    val run: RunFacts,                                // busy, retrying, lastOutcome, crossedDrop, connects
+    val index: ImmutableMap<String, Int>,             // message id / part id / call id → OLDEST-FIRST row position; list index = rows.size - 1 - i (§3.7)
+    val messageOrder: ImmutableMap<String, Int>,      // message id → oldest-first ordinal; changes only on a new message or an older-page prepend (§7.3 pill)
+    val messageCount: Int,
+    val run: RunFacts,                                // busy, retrying, lastOutcome, crossedDrop, connects, historyEpoch (+1 per history reset)
     val inbox: ImmutableList<InboxPrompt>,            // prompts waiting in the server inbox: never prompt rows (§4.3)
     val older: OlderState,                            // None | Available | Loading | NeedsReload | Exhausted
     val revert: SessionRevertFacts?,                  // staged undo boundary, if any
@@ -341,7 +366,11 @@ search index) runs on the engine's lane and on `AppDispatchers.default`, never o
 
 ### 3.3 Event apply table
 
-Input: `GatewayEvents.project` (04 §6.5) filtered to the handle's session id. Every row keeps its Flutter test.
+Input: `GatewayEvents.all` (04 §6.5) filtered to the handle's session id. Not `project`: that view keeps only the
+graph's current directory, and a warm handle (§3.1) or a chat in another project would then miss its own events and
+come back stale [new: Flutter had one chat per directory]. `OtherDirectoryHandleTest`: open chat A in directory X,
+switch the graph to Y, stream events for A, return to A → fresh rows, run state and live line with no refetch needed.
+Every row keeps its Flutter test.
 
 | `GatewayEvent` | Apply | Must not be lost |
 |---|---|---|
@@ -353,8 +382,11 @@ Input: `GatewayEvents.project` (04 §6.5) filtered to the handle's session id. E
 | `Notice(…)` | Stored as a notice part (T9, T10) | notices never end a turn |
 | `RunStarted` | `run.busy = true`; `run.startedAtMs` if unset | `session.step.started` restores a lost busy (04 §7.6) |
 | `RunEnded(outcome)` | `run.busy = false`, `run.lastOutcome = outcome`; if `run.crossedDrop` → `refreshRecent(RunEndedAfterDrop)` | `RunEnded(Failed)` is never followed by an idle that overwrites it (04) |
-| `RunRetrying(…)` | `run.retry = RetryFacts(attempt, nextAtMs, tag)` | the retry ticker runs only while retrying (§4.1) |
-| `RevertChanged` | update `revert`; a history reset with no staged revert removes messages `>= removedFrom` **at once** and clears deferred maps before reloading | never reveal a stale staged tail |
+| `RunRetrying(…)` | `run.retry = RetryFacts(attempt, nextAtMs, tag, advice)` (advice per §4.1 rule 4) | the retry ticker runs only while retrying (§4.1) |
+| `RevertChanged` | update `revert`; a history reset with no staged revert removes messages `>= removedFrom` **at once** and clears deferred maps before reloading; then the history-reset steps below | never reveal a stale staged tail |
+| `HistoryReset(Compacted \| Reverted \| Deleted)` (OC2 `session.compacted`, `session.history.reset`; needs GE-09-1) | `reload(reset = true)` with deferred maps cleared; `older = NeedsReload`; `run.historyEpoch++` (`:engine:requests` card states watch it and go stale until they re-derive, §13.4; the transcript never calls requests, which is later in the engine order); `firstPaint.remove(ref)` (§3.4 step 7) | older pages already loaded show T4 "pruned" only after this reload (Flutter `chat_stream.dart:44-61`) |
+| `MessageRemoved(id)` / `PartRemoved(messageId, partId)` (needs GE-09-1) | message: stamp its version, drop it and its deferred parts and deltas, add `id` to `removedMessageIds` (delivery's reconcile drops pending sends whose local or canonical id matches; the transcript never calls delivery), `older = NeedsReload`, next load resets history; part: stamp, drop it and its deferred delta | a removed message never comes back from a stale page (`chat_stream.dart:117-160`) |
+| `Notice(kind = ShellChanged)` for this session; any `ShellChanged` | session notice: `refreshRecent(ShellChanged)` + `backgroundWork.reloadShells()`; a bare `ShellChanged`: `reloadShells()` only | the background-work line never shows a shell that ended (`chat_stream.dart:63-70`) |
 | `InboxChanged` | maintain `inbox`; a user message whose id is an inbox id is kept out of prompt rows (it joins the newest turn, `9de34551c`) | the optimistic copy is hidden from the transcript |
 | `SessionDeleted` | phase `Failed(NotFound)`; stop the stall tracker | — |
 | `Connected` after a drop | `run.connects++`; `run.crossedDrop = run.busy`; `refreshRecent(Reconnected)` | reconcile by refetch, never replay (R20) |
@@ -366,7 +398,10 @@ Input: `GatewayEvents.project` (04 §6.5) filtered to the handle's session id. E
    this conversation (`oc.chatTail.<profileId>`, owned by `:engine:connection` per 05 §6.2), publish
    `Excerpt(rows)` at once: read-only text rows, never merged into history (map CHAT-GENUI-04; B-STATE-121). Then read the
    newest page through `ServerGateway.messagePage(sessionId, cursor = null, limit = 100)` (or the staged-revert boundary
-   read when `revert != null`, map CHAT-GENUI-03), with `versionAtStart = eventVersion`.
+   read when `revert != null`, map CHAT-GENUI-03), with `versionAtStart = eventVersion`. A read started by
+   `prefetch(ref)` (row tap) is joined, never repeated. The ViewModel's first open also calls
+   `projects.rememberLastUsed(ref.directory)` (Files follows it), except for watched and demo chats
+   (`chat_screen.dart:470-474`).
 2. **Merge (`mergeHydrated`, a pure function ported from `_mergeHydratedMessages`):** for every hydrated message, keep
    the live copy if `messageVersions[id] > versionAtStart`; parts likewise by `partVersions`; live parts missing from
    the snapshot but newer are appended; messages absent from the snapshot are kept only if they are a pending send, newer
@@ -380,17 +415,35 @@ Input: `GatewayEvents.project` (04 §6.5) filtered to the handle's session id. E
 5. **Reader place.** The engine does not scroll. It publishes; §7.4 keeps the reader's place by key.
 6. **Link down while messages are on screen:** the transcript says nothing; the connection line speaks. Never "isn't
    answering" after a trip to the background (owner 2026-10-27).
+7. **Excerpt writer** (the S-11 first paint has nothing to show without it; port of `chat_history.dart`
+   `_saveOpeningExcerpt` + `session_cache.dart` `_saveSessionTailSnapshot`). `TranscriptHandle.close()` and app
+   background (`ProcessLifecycle` stop, through `:engine:connection`) call `firstPaint.save(ref, rowsSnapshot)`; each
+   newest-page read also refreshes it. Rules: at most **12** excerpts of **1,000** Unicode scalars, one conversation per
+   profile; `Redactor.text` before anything reaches disk; never while a revert is staged, never for a deleted session,
+   never for watched or demo chats, never while history is still loading or from a stale load scope; optimistic bubbles
+   (pending sends) left out; the save is fenced by connection generation and profile-deletion revision.
+   `RevertChanged`, a history reset (§3.3) and session deletion call `firstPaint.remove(ref)`. `ExcerptWriterTest` (rows
+   B-STATE-121, 122): a canary secret never reaches the stored excerpt; a staged revert writes nothing; a reset removes
+   the entry.
 
 ### 3.5 Publish policy
 
 ```kotlin
-internal class Publisher(private val clock: Clock, private val scope: CoroutineScope, private val publish: () -> Unit) {
-    private var lastPublishMs = Long.MIN_VALUE; private var pending: Job? = null
+/** `laneScope` is the handle's lane-confined scope (`dispatchers.default.limitedParallelism(1)`, §3.2): `changed`, the
+ *  launched trailing publish and both fields below run only on that lane, so they need no lock and cannot race. */
+internal class Publisher(private val clock: Clock, private val laneScope: CoroutineScope, private val publish: () -> Unit) {
+    private var lastPublishMs: Long? = null          // null = never published; a sentinel number would overflow `now - last`
+    private var pending: Job? = null
     /** Called on the lane after every apply. B-CHAT-096 and the publish-count test pin it. */
     fun changed(kind: ChangeKind) {
-        val now = clock.nowMs()
-        if (kind == ChangeKind.UserAction || now - lastPublishMs >= 50) { pending?.cancel(); pending = null; doPublish(now); return }
-        if (pending == null) pending = scope.launch { delay(50 - (now - lastPublishMs)); pending = null; doPublish(clock.nowMs()) }
+        val now = clock.nowMs()                      // monotonic (elapsed) time, never wall time
+        val last = lastPublishMs
+        if (kind == ChangeKind.UserAction || last == null || now - last >= 50) {
+            pending?.cancel(); pending = null; doPublish(now); return
+        }
+        if (pending == null) pending = laneScope.launch {
+            delay((50 - (now - last)).coerceIn(0L, 50L)); pending = null; doPublish(clock.nowMs())
+        }
     }
     private fun doPublish(now: Long) { lastPublishMs = now; publish() }
 }
@@ -401,7 +454,9 @@ internal class Publisher(private val clock: Clock, private val scope: CoroutineS
 - `ChangeKind.UserAction` (fold toggles, collapse all, jump materialisation) publishes at once.
 - **Nobody watching [new]:** when `state.subscriptionCount == 0` (screen gone, `WhileSubscribed(5_000)` expired), the
   handle keeps applying events to the model but skips display passes and row building; the first new subscriber gets one
-  full derive. This is the chat's part of S-16 (hidden while an agent streams, ≤ 5 % of a core).
+  full derive. This is the chat's part of S-16 (hidden while an agent streams, ≤ 5 % of a core). Nothing outside the
+  open chat subscribes to a handle: notifications, widgets and the Conversations list read session status from
+  `:engine:connection` and `:engine:attention`, never `TranscriptState` (§4 intro), so this skip really triggers.
 - Every `delay`/`conflate`/`debounce` in this module carries a comment naming its catalog row (ADR §9.5).
 
 ### 3.6 Display passes and the per-turn cache
@@ -431,6 +486,7 @@ public sealed interface TranscriptRow {
     public val key: String              // stable, String, never an index or hashCode
     public val kind: RowKind            // LazyColumn contentType
     public val turnId: String
+    public val messageId: String?       // the message this row draws (null for Older/Excerpt); feeds the earlier-messages pill (§7.3)
     public val position: TurnPosition   // First | Middle | Last | Only: spacing and the 700 dp column, no frames
 }
 
@@ -441,23 +497,27 @@ public enum class RowKind { Prompt, Prose, Heading, Quote, ListItem, Code, Table
 | Row | Key | Built from | Notes |
 |---|---|---|---|
 | `PromptRow` | `prompt:<messageId>` | user message | text as `Inlines` with path chips counted, attachment refs, `unanswered` mark |
-| `BlockRow` (Prose, Heading, Quote, ListItem, Code, Table, Pictures, AgentBlock, Rule) | `b:<partId>:<startOffset>` | `:core:markdown` blocks of an assistant text part | `live = true` only for the tail block of a part receiving deltas; `origin = Streamed \| Loaded` (§8.2) |
-| `ThoughtRow` | `thought:<partId>` | reasoning part | folded under its first line unless the global reasoning toggle is on; placeholder thoughts dropped |
+| `BlockRow` (Prose, Heading, Quote, ListItem, Code, Table, Pictures, AgentBlock, Rule) | `b:<messageId>/<partId>:<startOffset>` (OC2 part ids are per-message ordinals such as `text-0`, so `partId` alone repeats in every step and turn: the P3 fixture had 3,540 unique keys for 5,933 rows [V slice-0 P3 D2]) | `:core:markdown` blocks of an assistant text part | `live = true` only for the tail block of a part receiving deltas; `origin = Streamed \| Loaded` (§8.2) |
+| `ThoughtRow` | `thought:<messageId>/<partId>` (same reason) | reasoning part | folded under its first line unless the global reasoning toggle is on; placeholder thoughts dropped |
 | `WorkLineRow` | `work:<turnId>` | all tool parts and folded passing words of a turn | `WorkState` (Running, WaitingForYou, Done, EndedFailed, Stopped), counts, open/closed |
 | `TimelineStepRow` | `step:<turnId>:<callId or partId>` | one entry per step when the work line is open | an open work line of 200 calls is 200 lazy rows; "Show N earlier steps" folds the oldest |
 | `NoticeRow`, `MarkerRow` | `notice:<partId>`, `marker:<partId>` | notice/switch/compaction parts | marker = hairline-word-hairline; a failed newest compaction offers "Compact again" |
 | `BackgroundResultRow` | `bg:<partId>` | background shell/agent results | one line, opens to command/output; protocol text only under Details |
 | `CardCallRow` | `card:<callId>` | exact card tool calls (§13.3) | carries only the call facts; the card itself comes from the requests side table (§6.1) |
 | `AssistantErrorRow` | `err:<messageId>` | assistant error | kind → fix table (§9.6); quiet when more steps followed |
-| `FooterRow` | `footer:<turnId>` | turn owner (§3.6) | Copy, More, meta (model name, time, usage when the timestamps toggle is on), changed files |
+| `FooterRow` | `footer:<turnId>` | turn owner (§3.6) | Copy, More, `FooterMeta` (§9.6: model only when it changed, turn totals, words only on the newest turn), changed files |
 | `OlderRow` | `older` | `OlderState` | "Load older" or "Reload"; always the last row (top of the screen) |
 | `ExcerptRow` | `excerpt:<n>` | opening excerpt | read-only; replaced wholesale by live rows |
 
 **No copy per publish.** The engine keeps its rows in a `PersistentList` **oldest first** (new rows and the changing
 tail sit at the cheap end of the persistent vector) and publishes `rows = NewestFirst(list)`, an O(1) read-only
 `ImmutableList` view in `:core:model` (`…core.model.transcript.ReversedImmutableList`, `get(i) = list[size - 1 - i]`). Replacing the tail
-block is one O(log n) `set`; a publish never copies 5,000 rows. `TranscriptState.index` stores newest-first indices.
-`ReversedViewTest` checks equality, iteration order and that the view's identity changes only when the list does.
+block is one O(log n) `set`; a publish never copies 5,000 rows. `TranscriptState.index` stores **oldest-first**
+positions, which do not move when blocks are appended at the newest end (they shift only on the rare older-page
+prepend), so a streaming publish never rebuilds a 5,000-entry map; jump and find call sites convert with
+`rows.size - 1 - i`. `ReversedViewTest` checks equality, iteration order and that the view's identity changes only
+when the list does; `IndexStableOnAppendTest` checks that appending a block changes no existing `index` entry (at
+most one persistent `put` for a new id, never a rebuild).
 
 The live line, optimistic prompt bubbles and pending skeletons are **not** engine rows: they come from
 `:engine:delivery` and are placed by the list (§7.1), so the transcript never waits on delivery state.
@@ -498,17 +558,19 @@ PartDelta(Text) ─► model.text += delta ─► liveText[part].append(delta)  
 | Part | Ported from | Constants and rules | Rows |
 |---|---|---|---|
 | `TranscriptSearch` | `lib/domain/transcript_search.dart` | per-message cache; offsets across text, reasoning, tool words (as `ToolPresentation` names them), file names; binary, synthetic and redacted protocol rows excluded; updates on streaming, older-page prepend and deletion; produces `FindMarks` per row key | B-CHAT-115 |
-| `TurnStallTracker` | `lib/domain/turn_stall.dart` | 5 s tick; after **45 s** of silence a bounded probe (≤ **10 s**); running tools hold the clock; a waiting request is not a stall; probes carry opaque tokens; only this session's message/tool output is progress; evidence is safe booleans; bounded memory; blank ids ignored. Every **15 s** an open turn re-reads waiting permissions and questions (a lost ask); if that read fails, running tools stop holding the clock off | B-CHAT-118, B-CHAT-119 |
+| `TurnStallTracker` | `lib/domain/turn_stall.dart` | 5 s tick; after **45 s** of silence a bounded probe (≤ **10 s**); running tools hold the clock; a waiting request is not a stall, and a waiting form whose `sessionID` is the `"global"` sentinel (MCP elicitation) holds **every** open turn's clock (`connection/turn_stall.dart:38`); the tracker learns of waiting asks from the gateway's own events and its 15 s re-read, never from `:engine:requests` (later in the engine order), and `FormCreated`/`FormSettled` for session `"global"` pass the handle's session filter for this purpose only; probes carry opaque tokens; only this session's message/tool output is progress; evidence is safe booleans; bounded memory; blank ids ignored. Every **15 s** an open turn re-reads waiting permissions and questions (a lost ask); if that read fails, running tools stop holding the clock off | B-CHAT-118, B-CHAT-119 |
 | `StuckCommand` | `stuck_command.dart` | a foreground command still running after **15 min** → `stall = Stuck(command ≤ 40 chars, cd x; dropped, since)`; Send becomes "Stop and send" for agents that run a message after the reply | map CHAT-GENUI-23 |
 | `BackgroundTasks` | `lib/domain/background_tasks.dart` | running only while: the starting step said so, no ending notice names it (by tool-use or task id), started < **6 h** ago, the agent process was not seen down since; named by program not folder | B-CHAT-007, 008, 011 |
 | `RunResult` | `lib/domain/run_result.dart` | server facts only; newest step decides; changed files only from completed executed edit tools; bounded | B-CHAT-068, 100, 101 |
 | `Unanswered` | `_unansweredTurn`, `no_reply_reason.dart` | the newest prompt with no words, steps or error → "Not answered"; reason from `AgentTurnFailureMemory` (`oc.agentTurnFailures.<id>`, redacted, survives restart) | map CHAT-GENUI-52 |
-| `ContextShare` | `lib/state/context_usage.dart` | newest reply's tokens / that model's window; unknown if either missing; calm < 70 %, warning 70–94 %, full ≥ 95 %; shown from 50 % | B-CHAT-019, B-CHAT-057 |
+| `ContextShare` | `lib/state/context_usage.dart` | newest reply's tokens / that model's window; unknown if either missing; calm < 70 %, warning 70–94 %, full ≥ 95 %; shown from 50 %. **Writer for the list:** whenever an open handle resolves a known fraction (not for watched or demo chats), it calls `:engine:connection` `contextUsageMemory.remember(ref, fraction)` (`oc.contextUsage.<id>`, ≤ 200 entries, swept with the profile, 05); the Conversations list falls back to it for sessions whose server reports no `contextUse`, such as Paseo agents (`chat_top_bar.dart:92`, `chat_feed.dart:355`) | B-CHAT-019, B-CHAT-057; `ContextUsageMemoryTest` (the list fallback reads what the chat wrote) |
 
 ### 3.11 Counters and trace sections
 
-`internal object TranscriptCounters` (reset per test; no-ops in release builds through a `const val ENABLED`):
-`publishes`, `displayPassMessages`, `markdownParses`, `tailReparses`, `rowsReplaced`. Trace sections (`androidx.tracing`
+`internal object TranscriptCounters` (reset per test): `publishes`, `displayPassMessages`, `markdownParses`,
+`tailReparses`, `rowsReplaced`. They are **always compiled** as plain `Long` increments on the lane (a few adds per
+publish). AGP-KMP library modules have one variant and no `BuildConfig` (the ADR uses `AppBuildInfo` in `:androidApp`
+only), so there is no per-build-type constant to switch them off, and none is needed. Trace sections (`androidx.tracing`
 2.0.5 through `:core:common` `Trace`): `chat.apply`, `chat.derive`, `chat.publish`, `chat.openToFirstTranscript`
 (attribute `source = excerpt | live`), `chat.openToFresh`. They feed the in-app Performance report the owner pastes into
 issues, with the same names as the Flutter marks (map §7).
@@ -517,8 +579,12 @@ issues, with the same names as the Flutter marks (map §7).
 
 ## 4. A running turn, from the person's side (`:engine:delivery`)
 
-`:engine:delivery` sits above transcript and requests in the engine order (ADR §6.2), so it is where "what is the
-agent doing right now" is decided once, for the chat, the notification and the widget alike.
+`:engine:delivery` sits after transcript and requests in the engine order (ADR §6.2), so it is where "what is the
+agent doing right now" is decided for the **open chat**: `LiveTurn` derives from an open `TranscriptHandle`, which
+closes 60 s after the screen goes. Notifications, widgets and the Conversations list do **not** read it; they read the
+handle-free per-session status that `:engine:connection` keeps (`sessionStatuses()` polling and `RunStarted`/`RunEnded`,
+04 §11.2) through `:engine:attention` `StatusModel` (11). Both sides read the same `stoppedByPerson` memory in
+`:engine:connection` (§4.4), so a stop the person made is never "Failed" on either.
 
 ### 4.1 The live line (`ConversationActivity`)
 
@@ -552,7 +618,12 @@ Rules (map CHAT-GENUI-08, 23, 40, 50; each a test in `ConversationActivityTest`)
    asks is not repeated above its card.
 4. A provider retry is a condition of the running turn, not a request: phase `Retrying`; "rate limit" only when it is
    one or the server gave no reason; a 1 s ticker runs only while `retry.nextAtMs` is in the future; a stuck "0:00"
-   becomes plain "Retrying…".
+   becomes plain "Retrying…". When the server attaches advice (Flutter `attention_card.dart:679` `retry.action
+   {title, message, label, link}`: "upgrade", "add credit"), `RetryFacts.advice: RetryAdvice(title, message, label,
+   SafeUrl?)` carries it; the retry notice shows the server's title and message as advice (not as an error headline;
+   through the redacting `KitNotice`, bidi-isolated) with **one** labelled button whose link goes through
+   `openExternalLink` (R17), exactly as Flutter does (`attention_card.dart:676-705`). A rate-limit retry keeps our own
+   headline. Needs `RunRetrying` to carry it (request GE-09-1).
 5. `Stuck` comes from `StuckCommand` (§3.10): the live line names the command and its age with "may be stuck", and the
    one chip-row Stop turns amber and is worded for a stuck step (`chat_composer_region.dart` `_stopRowChip`). A silent
    turn classified by the stall tracker shows a `KitTurnStall` notice with its own Stop and Details actions
@@ -574,6 +645,9 @@ public class PromptDelivery @Inject internal constructor(/* gateway pair, transc
     public suspend fun undoStopAfterStep(session: SessionId): Outcome<Unit>
     public suspend fun checkAgain(id: LocalSendId): Outcome<ReceiptLook>               // looks, never sends
     public suspend fun resend(id: LocalSendId, confirmedByPerson: Boolean): Outcome<LocalSendId>
+    /** Texts of dispatched, not-confirmed sends for this conversation: the draft never restores one (§10.8). */
+    public fun unconfirmedTexts(ref: ConversationRef): ImmutableSet<String>
+    // + `outcomes` / `acknowledge` below the step table
 }
 
 public data class SendRequest(val ref: ConversationRef, val text: String, val mentions: ImmutableList<Mention>,
@@ -590,14 +664,33 @@ Order (port of `_performSend`; every step is a test in `PromptDeliveryTest`):
 | 3 | Stop first for "Stop and send" agents; fold staged review references (§10.7) | — | B-CHAT-099 |
 | 4 | Offline: wait ≤ **10 s** for the transport, then the offline queue, or "draft saved" on servers without a queue | a send after a resume waits for the connection instead of queueing (`4e635b73b`) | B-STATE-039 |
 | 5 | Write the **durable dispatch marker** before the composer clears, for queue-capable servers (not for steers or voice-conversation sends) | marker refused by storage → the prompt stays unsent and the words stay | B-STATE-042 |
-| 6 | **Bubble first** (`PendingSend` published) unless steering or voice conversation (those stay transport-first: they need the exact message id); composer cleared through `ComposerHost`; follow the live edge; `localTurnSinceMs` set | trace `chat.sendToBubble` (`order = bubble_first \| transport_first`) | map CHAT-GENUI-32 |
+| 6 | **Bubble first** (`PendingSend` published) unless steering or voice conversation (those stay transport-first: they need the exact message id); the composer UI clears its field when `send` returns (`ComposerChrome.onSent`, §6.3; delivery never calls the composer); follow the live edge; `localTurnSinceMs` set | trace `chat.sendToBubble` (`order = bubble_first \| transport_first`) | map CHAT-GENUI-32 |
 | 7 | `awaitActionTransport()`; `waitForSessionSelection(session)`; re-check the gateway epoch | a changed connection dispatches to neither server | B-STATE-119 |
 | 8 | Dispatch: `CorrelatedPromptGateway.promptWithMessageId` when `clientPromptMessageID`, else `prompt(...)` with delivery per §4.3 | — | B-PROTO-011, B-PROTO-025 |
-| 9 | Accepted: clear the marker, remember in prompt history, learn the phrase chip (§10.4), trace `chat.sendToAck`; if Stop was pressed while on the wire, stop again now | — | map CHAT-GENUI-40 |
-| 10 | Failed: remove the bubble; read the turn (a failed request says nothing about a turn already running); if bytes left the device, keep the marker and say "We couldn't confirm whether this was sent" with Check again (never auto-resend); else put text and attachments back, prepended to what was typed since; the reason goes to the status line, not a snackbar | B-STATE-040, B-STATE-043 |
+| 9 | Accepted: clear the marker, publish `SendOutcome.Accepted(id, ref, typedText, phraseCandidate)` in `outcomes` (`:engine:composer` records prompt history and learns the phrase chip from it, §10.4), clear `stoppedByPerson(ref)` (§4.4), trace `chat.sendToAck`; if Stop was pressed while on the wire, stop again now | — | map CHAT-GENUI-40 |
+| 10 | Failed: remove the bubble; read the turn (a failed request says nothing about a turn already running) | if bytes left the device, keep the marker and say "We couldn't confirm whether this was sent" with Check again (never auto-resend); else publish `SendOutcome.PutBack(id, ref, text, attachments)` and `:engine:composer` merges it into the draft, prepended to what was typed since; the reason goes to the status line, not a snackbar | B-STATE-040, B-STATE-043 |
 
-`sendInsteadOfDraft` is the same pipeline but leaves the composer untouched, and a failed chip send never leaves its
-words in the box ("pongSay pong", 2026-10-27). The status line's Try again repeats that same send.
+**Engine order (ADR §6.2).** Delivery is #7 and composer #8, so delivery never calls `Drafts`, `PromptHistory` or
+`PhraseChips`. It publishes durable outcomes as state, and the composer, which may use delivery, collects them:
+
+```kotlin
+public val outcomes: StateFlow<ImmutableList<SendOutcome>>   // on PromptDelivery; ids, bounded (≤ 32), survives the screen
+public fun acknowledge(id: SendOutcomeId)                     // composer calls it after applying; the entry leaves the list
+public sealed interface SendOutcome { val id: SendOutcomeId; val ref: ConversationRef
+    public data class Accepted(/*…*/ val typedText: String, val phraseCandidate: Boolean) : SendOutcome
+    public data class PutBack(/*…*/ val text: String, val attachments: ImmutableList<PromptAttachment>) : SendOutcome }
+```
+
+An acknowledged state field, not a channel (ADR §9.1). `:engine:composer` collects it in its own connection scope,
+independent of any screen; an entry stays until acknowledged, so an outcome produced before the collector started
+(graph rebuild) is still applied, and the list drops its oldest entry past 32. In slice 2, before `:engine:composer`
+exists, `BasicComposerHost`'s ViewModel applies `PutBack` for its open conversation and acknowledges it.
+`SendOutcomeTest` (delivery) and `ComposerAppliesOutcomesTest` (composer). The edge "composer reads
+`PromptDelivery.outcomes`" is named in contract s2 (S2-DLV) and s3 (S3-COMP-E).
+
+`sendInsteadOfDraft` is the same pipeline but leaves the composer untouched: it never publishes `PutBack`, so a failed
+chip send never leaves its words in the box ("pongSay pong", 2026-10-27). The status line's Try again repeats that same
+send.
 
 ### 4.3 Steer, never queue
 
@@ -637,6 +730,10 @@ Decided per conversation from capabilities and the `MidTurnPromptGateway` facet 
 - **Tap:** if the send is still waiting (transport, model choice, storage) it is called off and the words come back;
   if the request is on the wire, stop now and again once the server took it. Wait ≤ **5 s** for the transport, haptic
   `Commit`, and `noteStopFromThisApp` **before** the call, so the server's interrupt does not read as another device.
+  The stop also records `stoppedByPerson(ref)` in `:engine:connection` (port of `connection.dart:345`
+  `markStoppedByPerson`, fix `f0420edee`): OpenCode 2 reports a stop as a normal finish, and this memory makes the
+  Conversations row (07) and attention say "Stopped", not "Done" or "Failed". The next prompt (§4.2 step 9) or opening
+  the conversation clears it. Row B-AGENT-243, `StopByPersonTest`.
 - **Hold** (only where a send steers): "Stop after this step" sends a steering note; the live line reads "Stopping after
   this step · Undo" while the note waits in the inbox; servers without an inbox have nothing to take back, so no Undo.
   The tip `stop-after-step` shows once a reply has run **10 s**, never while a card waits.
@@ -648,7 +745,8 @@ Decided per conversation from capabilities and the `MidTurnPromptGateway` facet 
 
 ### 4.5 Offline queue, markers and receipts
 
-Stored format, limits and migration are 05's (`oc.offlineQueue`, byte-for-byte dispatch markers). Behaviour rows owned
+Built in slice 2 by S2-DLV (roadmap C15-1), reading a real Flutter `oc.offlineQueue` blob unchanged. Stored format,
+limits and migration are 05's (`oc.offlineQueue`, byte-for-byte dispatch markers). Behaviour rows owned
 by `PromptDelivery` + `OfflineQueueStore`: B-STATE-008, 009, 033–046, 062, 066, 119 and flows E2E-10, E2E-11. Rules
 the chat surfaces: a send that left the device without a confirmed outcome never flushes on its own, not even after a
 restart; "Check again" only looks (command receipt lookup); the queue says what it dropped and why; an entry the
@@ -717,8 +815,30 @@ with no leftover English.
   `capabilities.permissionRequests`.
 - Auto-approval replies **"once" only, never "always"**. A failed automatic reply leaves the request visible with the
   reason.
-- The 13B choice: "Always allow" is on the card's Details sheet with a one-step confirm naming its scope first ("Always
-  allow npm install in neon-breaker?").
+- **Effective mode** (`AutoApproval.effective(sessionId)`, the same resolver 04 §7.9 step 3 installs into
+  `ServerRunsTools`): the session's own setting wins, an explicit **Ask** included, so a conversation set to Ask keeps
+  asking under "Approve everything"; else the parent chain (an ancestor with `inheritToChildren` passes its mode down,
+  one without stops the walk); else the server-wide reserved `"*"` key in `oc.autoApprove.<profileId>`; else ask
+  (`session_auto_approval.dart:198`).
+- **Every mode change** (conversation, "Approve everything", clearing back to "follow the parent") does, in order
+  (port of `permissions.dart` `_setSessionAutoApproval` / `_setApprovesEverything`):
+  1. Store the choice; a refused write keeps the last choice and says so.
+  2. **Sweep** waiting permission asks of the affected sessions, including ones a reconnect hydration found, and answer
+     "once" where the new effective mode is automatic. Never questions or forms.
+  3. **Resync the server** through the `SessionPermissionSync` gateway facet (a capability-gated facet in
+     `:core:domain`, implemented by the OpenCode 2 gateway; never a cast to a protocol type, R19): the session and its
+     direct child sessions for a conversation change, every session with a waiting ask for "Approve everything".
+     Best effort; the next send installs the same rules anyway. Without it a reply already running keeps the old
+     ask-first rules, a missed ask hangs the tool until the server's 60-minute sweep, and the 2026-10-25 root cause
+     comes back (memory `oc2-stuck-tools-root-cause`). Needs the facet in 04 (request GE-09-1).
+  4. Profile deletion `drain()`s in-flight approval writes before the sweep removes the key (B-STATE-099).
+  `AutoApprovalTest` covers rows B-AGENT-222–225 and B-STATE-099.
+- The 13B choice (memory `chat-kit-decisions-2026-10-02`, `kit_request_card.dart:1067,1197`): **Always allow is a
+  quiet action on the card itself**, in `KitRequestCard`'s start row beside Allow once and Reject. A tap opens one
+  confirm that names what and where ("Always allow npm install in neon-breaker?"); Cancel, a dismissal or an answer
+  that landed meanwhile sends nothing. Shown only when `capabilities.persistentPermissionGrants &&
+  request.canAlwaysAllow`. The Details sheet repeats it; it is never only there (obvious options as visible rows, R9).
+  `PermissionAskTest` checks the gate.
 - The third identical ask (permission + exact patterns + `always` scope) invites "Always allow" once per server and
   scope, only where the server keeps grants (`persistentPermissionGrants`; Paseo only with `canAlwaysAllow`); durable
   claim before showing; recorded as accepted only after the server took it; never while auto-approving
@@ -751,7 +871,7 @@ public enum class FieldKind { Text, Multiline, Number, Integer, Toggle, Select, 
 
 | Source | Adapter | Answer encoder | Slice |
 |---|---|---|---|
-| OpenCode 2 `Form.Info` (incl. MCP elicitation with `sessionID: "global"` and the `question` tool's `metadata.kind = "question"`) | `Oc2FormAdapter` | `replyForm`: 400 `FormInvalidAnswerError` keeps the form open with an error notice; 409 `FormAlreadySettledError` closes and says once it was answered on another device | 3 |
+| OpenCode 2 `Form.Info` (incl. MCP elicitation with `sessionID: "global"`, which is answered from attention (Inbox and notification, 07/11) as a connection-level form sheet, never as a chat card (`profile_monitor_screen.dart:100` `presentConnectionForm`), and holds every open turn's stall clock (§3.10); and the `question` tool's `metadata.kind = "question"`) | `Oc2FormAdapter` | `replyForm`: 400 `FormInvalidAnswerError` keeps the form open with an error notice; 409 `FormAlreadySettledError` closes and says once it was answered on another device | 3 |
 | Agent card `form` ask | `CardFormAdapter` | the two-line card answer (§13.4) | 5 |
 | ACP v2 elicitation (`form` first, `url` only once the host-consent row exists) | `AcpElicitationAdapter` | accept / decline / cancel + content | with the backend |
 | Codex `mcpServer/elicitation/request` | `CodexElicitationAdapter` | accept / decline / cancel | 5 |
@@ -798,7 +918,8 @@ public data class ChatUi(
     val motion: MotionLevel, val reasoningOpen: Boolean, val timestampsVisible: Boolean,
     val capabilities: ChatCapabilitiesUi,             // the flags the screen reads, never the backend kind
     val arrival: ChatArrivalUi?,                      // land on request / failure / menu action, acknowledged (§6.7)
-    val readOnlyReason: ReadOnlyReason?,              // sub-agent, watching
+    val readOnlyReason: ReadOnlyReason?,              // sub-agent; `Watching` kept in the enum but deferred with AI Team (07 C41): no UI at the switch
+    val pendingInsert: InsertRequest?,                // agent ```choices tap waiting for the composer (§6.3); acknowledged, never a channel
 )
 
 public interface ChatActions {
@@ -808,9 +929,10 @@ public interface ChatActions {
     fun copyReply(turnId: String); fun messageAction(target: MessageRef, action: MessageAction)
     fun answer(id: RequestId, answer: RequestAnswer); fun undoAnswer(id: RequestId); fun openRequestDetails(id: RequestId)
     fun answerCard(identity: CardKey, answer: CardAnswerDraft); fun undoCard(identity: CardKey)
-    fun insertChoice(text: String)                    // ```choices block → composer
+    fun insertChoice(text: String)                    // ```choices block → sets ChatUi.pendingInsert; insertDone(id) clears it
+    fun insertDone(id: Long)
     fun stop(mode: StopMode); fun undoStopAfterStep(); fun showLiveSteps()   // live-line tap: opens the running work line with "Stop after this step" under it
-    fun find(query: String?); fun findNext(); fun findPrevious()
+    fun find(query: String?); fun findNext(); fun findPrevious(); fun openTimeline()
     fun retrySend(id: LocalSendId); fun checkAgain(id: LocalSendId)
     fun arrivalShown(id: Long); fun nudgeShown(id: String); fun leaveRequested()
 }
@@ -838,20 +960,33 @@ public interface ComposerHost {
     @Composable public fun Composer(target: ComposerTarget, chrome: ComposerChrome, modifier: Modifier)
 }
 public data class ComposerTarget(val profileId: String, val sessionId: String?)     // plain ids; no engine types
+public data class InsertRequest(val id: Long, val text: String)
 public class ComposerChrome(                                     // what the chat hands the composer
     public val busy: () -> Boolean,                             // read in draw/layout only
     public val requestWaiting: () -> Boolean,                   // the card owns the composer: no glow, no Stop
     public val onSent: () -> Unit,                              // follow the live edge, lift the bubble
-    public val insertTextRequests: Flow<String>,                // agent ```choices taps
+    public val pendingInsert: () -> InsertRequest?,             // agent ```choices tap; state, not a one-shot flow (ADR §9.1)
+    public val insertDone: (id: Long) -> Unit,                  // the composer inserted it at the selection
 )
 ```
 
+- A choice tap sets `ChatUi.pendingInsert`. The composer reads it, inserts the text at the selection once per `id`,
+  and calls `insertDone(id)`. A request made while the composer is not composed (recomposition, a sheet in
+  transition) waits in state instead of being lost, as a `Flow` collector would lose it.
+- **Engines per conversation.** The `ComposerHost` binding is App-scoped (it is a UI slot), but its engines are
+  Connection-scoped. Each implementation's `Composer(target, …)` (in its feature module; the kit only declares the
+  interface) creates a per-conversation `ComposerViewModel` (Metro ViewModel, keyed by `target`) that resolves
+  `PromptDelivery`, `Drafts`, steer facets and capabilities through `ConnectionRegistry.graphFor(…)` for the target's
+  conversation (the profile's graph while a new conversation has no session id yet) (ADR §9.1). Nothing
+  Connection-scoped is injected into the App-scoped binding.
 - **Slice 2:** `:feature:chat` binds `BasicComposerHost` (`@ContributesBinding(AppScope::class)`): `KitComposer` v1 with
   `TextFieldState`, Send, Stop in the chip row, steer per §4.3, model chip read-only. No drafts yet (§17 S2 gap).
-- **Slice 3:** `:feature:chat-composer` contributes `FullComposerHost` with
-  `@ContributesBinding(AppScope::class, replaces = [BasicComposerHost::class])` [U: Metro `replaces` is P1's check; if
-  absent, the slice-3 unit deletes `BasicComposerHost` in the same merge]. The slice-3 contract names
-  `BasicComposerHost` under "what this slice deletes".
+- **Slice 3:** `:feature:chat-composer` contributes `FullComposerHost` with a plain
+  `@ContributesBinding(AppScope::class)`. No `replaces`: it would need a compile-time reference to `BasicComposerHost`
+  in `:feature:chat`, the feature → feature edge ADR §6.1 bans. Instead the chat lead deletes `BasicComposerHost` in
+  the **same merge** as S3-COMP-UI (the coordinator merges both), so exactly one binding exists at every commit; Metro's
+  duplicate-binding error catches a missed deletion at build time. The slice-3 contract names `BasicComposerHost`
+  under "what this slice deletes".
 - The chat entry gets `ComposerHost` injected into its entry installer and calls `composerHost.Composer(…)` inside the
   layer. `:feature:chat` never imports `:feature:chat-composer`.
 
@@ -862,7 +997,7 @@ One kit part fixes the order, most urgent at the top, so no screen can add a lev
 
 | Slot (top → bottom) | Owner | Shown when |
 |---|---|---|
-| `findBar` | chat | find is open |
+| `findBar` | chat | find is open; it sits by the keyboard it is typed with, over the conversation it searches, capped at 38 % of the body height (`chat_composer_region.dart:278-285`) |
 | `request` | chat (`RequestCardUi`) | a request waits; shares the height left over the composer, capped at 45 % of the window (60 % at 2.5× text), scrolls; a sliver too short for question + answers anchors at the bottom so "Allow once" is under the finger |
 | `queued` | composer | an inbox prompt waits (`KitQueuedMessage`) |
 | `nudge` / `tip` | chat | one nudge at a time; yields to any card |
@@ -872,7 +1007,8 @@ One kit part fixes the order, most urgent at the top, so no screen can add a lev
 
 ### 6.5 Status line, connection states and first paint
 
-- **One status line** under the top bar, most urgent first (map CHAT-GENUI-53): watching, send error (Try again /
+- **One status line** under the top bar, most urgent first (map CHAT-GENUI-53): watching (deferred with AI Team, 07
+  C41: keep the enum value, no UI at the switch), send error (Try again /
   Choose another model / Sign in / Continue elsewhere), prompt error (hidden when the same error is already on a
   message), queued drafts, staged undo (Review / Put back / Keep) or "undone", sub-agent "n of m" with parent link,
   shared-by-link banner, free-model caption, "No model signed in · Sign in", Auto-approve note, the first-run
@@ -889,12 +1025,15 @@ One kit part fixes the order, most urgent at the top, so no screen can add a lev
 
 - One action list per message for every way in (footer More, prompt long-press, right-click, Shift+F10, TalkBack custom
   actions): Copy, Fork from here, Read aloud (hidden when the reply has no prose), Undo from here (prompt; offered while
-  busy with the reason), Delete message (last, confirmed by the message leaving with an Undo bar), Error details, Retry
-  / Send again. Copy of an agent-card answer shows the summary, never the `[oc-ui answer …]` JSON (`15d71b52e`).
+  busy with the reason), Delete message (last; gated on `capabilities.messageDelete`), Error details, Retry / Send
+  again. **Delete message** asks first with a destructive confirm ("Delete this message?" / "The message and all of
+  its parts"), then deletes on the server, `handle.removeMessage(id)`, and `handle.reload(reset = true)`; the message
+  leaving is the confirmation. There is **no Undo bar**: the server delete cannot be reversed
+  (`chat_message_actions.dart:146-167`). `MessageDeletedTest`. Copy of an agent-card answer shows the summary, never the `[oc-ui answer …]` JSON (`15d71b52e`).
 - Copy reply = the turn's adjacent assistant prose, notices in the middle skipped, verbatim (the reply is the person's
   to paste), confirmed by the kit tick + announcement. Copy transcript = Markdown with the person's prompts verbatim and
   everything else through `Redactor` (SEC-13).
-- Find: docked under the top bar; "3 of 12"; "searching N loaded · search all" only when history is partly unloaded;
+- Find: the composer layer's `findBar` slot (§6.4); "3 of 12"; "searching N loaded · search all" only when history is partly unloaded;
   prose matches are marked in place in the draw phase (`KitFindMark`, wash .18 passive / .38 active, never a text
   colour); hidden matches get an excerpt above their turn naming where. Esc clears then closes; F3 / Shift+F3; closes
   when the location changes.
@@ -915,6 +1054,21 @@ One kit part fixes the order, most urgent at the top, so no screen can add a lev
 - **Run finished:** haptic `Done` once (skipped under Off); the first reply of a first run asks the notification
   question once; one-time nudges (approvals on the 3rd identical ask, review after edits, leave-and-be-told after 60 s
   of waiting, compact at ≥ 80 % context, pin on 2nd project) through one nudge slot.
+
+### 6.8 Analytics hooks (owner decision 2026-11-01; the core and schema are 16 §5)
+
+The chat is the core journey, so it tells the analytics core whether sends, streams and answers work after the switch.
+All three events are **DETAILED** (opt-in), carry only enums and buckets (16 §5.4: never text, ids, model or provider
+names, server addresses), and are classes in 16's `AnalyticsSchema.kt` with a PRIVACY.md row in the same PR.
+
+| Event | When | Props |
+|---|---|---|
+| `prompt_sent` | §4.2 step 9 (accepted) or step 10 (failed) | `delivery` (Plain / Steer / RestartTurn / AfterReply / Offline), `result` (Accepted / Unconfirmed / Failed), `attachments: CountBucket` |
+| `reply_ended` | a turn this app watched ends (`RunEnded`) | `outcome` (Done / StoppedByPerson / Interrupted / Failed), `first_word: DurationBucket` (send accepted → first visible word), `failure` (`AgentErrorCause` name or None) |
+| `request_answered` | an answer leaves the hold (§5.1, §13.5) | `kind` (Permission / Question / Form / Card), `via` (Chat / Notification / List / Automatic) |
+
+Emitted from `:engine:delivery` and `:engine:requests` through the `Analytics` interface (never from the UI).
+`ChatAnalyticsTest` checks the field allowlist.
 
 ---
 
@@ -941,14 +1095,24 @@ internal fun ChatTranscript(ui: ChatUi, actions: ChatActions, list: TranscriptLi
             modifier = modifier,
         ) {
             ui.live?.let { live ->                                                   // no Stop here (§4.4); a tap shows the steps
-                item(key = "live", contentType = "live") { KitTurnLive(live, ui.motion, onShowSteps = actions::showLiveSteps) }
+                item(key = "live", contentType = "live") {
+                    KitTurnLive(live.toKit(), ui.motion, onShowSteps = actions::showLiveSteps)   // LiveTurn → KitLiveTurn (C5)
+                }
             }
-            items(ui.pending, key = { "pending:${it.localId}" }, contentType = { RowKind.Prompt }) { KitMessagePending(it, actions) }
-            items(ui.rows, key = { it.key }, contentType = { it.kind }) { row -> ChatRow(row, ui, actions) }
+            items(ui.pending, key = { "pending:${it.localId}" }, contentType = { RowKind.Prompt }) { p ->
+                KitMessagePending(p.toKit(), onRetry = { actions.retrySend(p.localId) },          // plain lambdas, never ChatActions
+                                  onCheckAgain = { actions.checkAgain(p.localId) })
+            }
+            items(ui.rows, key = { it.key }, contentType = { it.kind }) { row -> ChatRow(row, ui, actions) }   // feature; maps to kit parts
         }
     }
 }
 ```
+
+`ChatRow` is the feature's mapping function: it turns each `TranscriptRow` into kit parts with kit-local models and
+plain lambdas (`RowKind.Code` → `KitCodeBlock` from `:ui:kit-content`; tool rows → `KitToolRow(view: KitToolView, …)`).
+No kit part receives `ChatUi`, `ChatActions`, `ToolView` or `LiveTurn` (ADR §6.1, §9.1; Konsist K1 plus the
+dependency check).
 
 Bottom-to-top order (index 0 is the bottom): live line → optimistic prompt bubbles → engine rows (newest first) → the
 `older` row. The live line is a real item only while a turn runs; it is never an empty placeholder.
@@ -975,10 +1139,25 @@ public class TranscriptListState internal constructor(public val lazy: LazyListS
 1. At the live edge, growth of the bottom item keeps its bottom glued to the viewport and pushes older rows up. That is
    the follow, at zero cost.
 2. A **new item at index 0** (the next block, a tool row, the live line, a pending bubble) is not shown by itself: the
-   list keeps its anchor on the old first item [V `requestScrollToItem` KDoc]. While `following`, the list host calls
-   `lazy.requestScrollToItem(0)` in the same frame as the insert:
-   `LaunchedEffect(Unit) { snapshotFlow { ui.newestKey }.collect { if (list.following) list.lazy.requestScrollToItem(0) } }`.
-   The new tail block grows from zero height (§8.4), so the hop is invisible.
+   list keeps its anchor on the old first item [V `requestScrollToItem` KDoc]. While `following`, the list host asks
+   for index 0 in the **same frame** as the insert. `ui` is a plain parameter, not snapshot state, so a
+   `snapshotFlow { ui.… }` inside `LaunchedEffect(Unit)` would read it once and never emit again; the key is computed
+   in composition instead:
+
+   ```kotlin
+   val newestKey = ui.live?.let { "live" } ?: ui.pending.firstOrNull()?.let { "pending:${it.localId}" } ?: ui.rows.firstOrNull()?.key
+   val lastNewest = remember { arrayOf<String?>(null) }
+   SideEffect {                                   // runs after this composition applies, before this frame's remeasure
+       if (newestKey != lastNewest[0]) {
+           lastNewest[0] = newestKey
+           if (list.following) list.lazy.requestScrollToItem(0)   // only sets a request the next remeasure consumes
+       }
+   }
+   ```
+
+   The new tail block grows from zero height (§8.4), so the hop is invisible. `FollowNewItemTest` (`:feature:chat`
+   Compose host test): at the live edge, a turn start (live line), a pending bubble and a new block each keep index 0
+   in view in the frame they appear.
 3. The person's drag (`lazy.interactionSource` drag start) sets `following = false`. Reaching the live edge again, the
    Jump pill, or the person's own send sets it back.
 4. Sending from far up jumps to the newest end first (`890aa83a6`), then aligns above the composer padding, not flush
@@ -986,6 +1165,14 @@ public class TranscriptListState internal constructor(public val lazy: LazyListS
    longer distances jump first; under Off it jumps.
 5. Distance is always measured from the newest end. Nested horizontal scrollers (code, tables, diffs) never count as
    transcript scroll (map CHAT-GENUI-09).
+6. **"N earlier messages" pill** (`earlier-messages-pill`; port of `chat_scroll.dart:170-193`,
+   `chat_transcript.dart:196-214`). Visible only while `awayFromLatest && messageCount > 30`. It counts whole
+   **messages** sitting fully above the viewport, not rows: the feature reads the oldest visible row's `messageId`,
+   looks up its oldest-first ordinal in `TranscriptState.messageOrder`, and that ordinal is the count (every message
+   older than a partly visible one is fully above). The count is a `derivedStateOf` over `lazy.layoutInfo` read
+   **only** inside the lambda handed to `KitJumpPill.older(count = { … })`, so scrolling recomposes the pill only when
+   the number changes (scroll performance, 2026-10-24). A tap opens the timeline sheet (`openTimeline`); a leaving pill
+   keeps its last words while it fades. `EarlierPillCountTest`.
 
 ### 7.4 Older history and reloads keep your place
 
@@ -1041,9 +1228,18 @@ public class TranscriptListState internal constructor(public val lazy: LazyListS
   live line.
 - The live (streaming) block: selection **off** until Compose 1.13 stable ships the "selection constrained during
   concurrent text updates" fix; then on, via the 06 `JETPACK_AHEAD` row "Compose 1.13 selection-while-streaming fix".
-- **Smart selection off [new, security]:** `ComposeFoundationFlags.isSmartSelectionEnabled = false` in
-  `OcApplication.onCreate` before the first composition [V flag, default true]. The system's "Open" action on a
-  selected URL would bypass `openExternalLink` (R17). Owner: coordinator (`:androidApp`); test `SmartSelectionOffTest`.
+- **Smart selection off [new, security]:** the system's "Open" or "Call" action on a selected URL or number would bypass
+  `openExternalLink` (R17). Two layers, because the flag alone is temporary (its KDoc says flags may disappear) and
+  removing it would silently remove the protection:
+  1. `KitTranscriptSelection` adds `Modifier.filterTextContextMenuComponents { it.key == TextContextMenuKeys.CopyKey ||
+     it.key == TextContextMenuKeys.SelectAllKey }` (foundation 1.13, commonMain [V]): the transcript's menu keeps only
+     Copy and Select all, whatever the flag does. Owner: kit-chat owner.
+  2. `ComposeFoundationFlags.isSmartSelectionEnabled = false` in `OcApplication.onCreate` **before** `super.onCreate()`
+     [V flag, default true; KDoc: set before Compose code loads], plus the KDoc's R8 rule in `:androidApp`
+     (`-assumevalues class androidx.compose.foundation.ComposeFoundationFlags { public static boolean
+     isSmartSelectionEnabled return false; }`). Owner: coordinator.
+  `SmartSelectionOffTest` asserts the filtered menu over a selected URL and phone number has no Open or Call item
+  (and only Copy and Select all).
 - "Select all" only covers composed rows; whole-reply copy is the footer's Copy (parity), not select-all.
 
 ### 7.9 Accessibility order
@@ -1057,8 +1253,10 @@ and a matching `zIndex`. Each Markdown block is its own semantics node (Flutter 
 ### 7.10 Keyboard
 
 `Modifier.onPreviewKeyEvent` on the list host: PageUp/PageDown scroll one viewport, Home goes to the oldest loaded,
-End to the live edge. Ctrl/Cmd+F opens find, F3/Shift+F3 navigate, Esc stops a reply when nothing else is open. The
-bindings table is 07 §9; this section implements the handlers.
+End to the live edge. Ctrl/Cmd+F opens find, F3/Shift+F3 navigate, Esc stops a reply when nothing else is open.
+F4/Shift+F4 step the thinking level forward/back through `['', …the model's variants]`
+(`chat_command_actions.dart:34`); the three model-cycle shortcuts (next recent, previous recent, next favourite; `model_shortcuts.dart:183-204`) are the same
+actions as the model chip's menu (§10.3). The bindings table is 07 §9; this section implements the handlers.
 
 ---
 
@@ -1072,7 +1270,7 @@ engine lane          ─► model.append ─► StreamingMarkdown tail ─► pu
 ViewModel            ─► ChatUi.rows (tail BlockRow replaced, settled rows untouched)
 kit-chat, per frame  ─► RevealRegistry: shown (word-snapped)  → layout only when a word lands (8–20 × / s)
                         fresh runs [start, end, born]         → draw only (DstOut mask)        (§8.3)
-                        ReplyGrow spring on the live block    → layout of that item only        (§8.4)
+                        grow-only node on the live block      → layout of that item only        (§8.4)
                         preferredFrameRate(High) while any of the above is active               (§8.5)
 ```
 
@@ -1085,7 +1283,8 @@ recycling never loses it):
 
 ```kotlin
 public class RevealRegistry internal constructor(private val motion: () -> MotionLevel) {
-    /** Created the first time a row with live = true and origin = Streamed composes. Loaded rows never animate. */
+    /** Created the first time a row with live = true and origin = Streamed composes. Loaded rows never animate.
+     *  `textLength` must read snapshot state (see the rule under the clock below). */
     public fun stateFor(key: String, textLength: () -> Int, predecessor: String?): RevealState
     internal fun forget(key: String)        // when shown == length and no fade runs remain
 }
@@ -1133,6 +1332,12 @@ internal suspend fun RevealState.drive(text: () -> CharSequence, predecessorDone
 }
 ```
 
+- **Inputs are snapshot reads.** `drive` parks inside `snapshotFlow { active && predecessorDone() }`, which wakes only
+  when a snapshot value it read changes. The row's text arrives as a plain parameter of a recomposed item, so the item
+  hands it over through `rememberUpdatedState(row.text)` (or a snapshot-backed holder), and `text`, `textLength` and
+  `predecessorDone` read that state. A lambda over the plain row field would capture the first text, and a parked reveal
+  would never wake when the text grows. `RevealWakesOnGrowthTest` (`:ui:kit-chat`): the reveal catches up and parks,
+  the text grows, the next frame reveals the new words.
 - A new tail block waits for its predecessor in the same part (`predecessorDone`) so words never appear out of order.
   While waiting it is a zero-height item; it grows from zero (§8.4). This is the only zero-height row.
 - When a block settles (the part moved on), it keeps its `RevealState` until it catches up, then the registry forgets it.
@@ -1175,25 +1380,31 @@ internal fun Modifier.kitFreshFade(layout: () -> TextLayoutResult?, state: Revea
 
 ### 8.4 Smooth growth
 
-- `Modifier.animateContentSize(animationSpec = KitMotion.replyGrow /* spring(dampingRatio = 1f, stiffness = 700f) */,
-  alignment = Alignment.TopStart)` on the live block only (06 §4.8 token; Flutter `KitMotion.replyGrow`, ζ ≈ 1.0,
-  ≈ 210 ms a line).
-- Shrinks are taken at once (a rewrap that shortens never animates).
-- Fallback if spike SP-3 shows clipped descenders or shrink animation: a 40-line `LayoutModifierNode` in kit-chat that
-  animates only growth with an `Animatable` and keeps a descender allowance (port of `_KitMdGrow`, `2d9a65b45`).
+- **Primary: `Modifier.kitGrowOnly()`**, a ~40-line `LayoutModifierNode` in kit-chat (port of `_KitMdGrow`,
+  `2d9a65b45`) on the live block only. It measures the child, animates only **growth** of the reported height with an
+  `Animatable` on `KitMotion.replyGrow` (06 §4.8 token, `spring(dampingRatio = 1f, stiffness = 700f)`; Flutter ζ ≈ 1.0,
+  ≈ 210 ms a line), places the child top-aligned, and keeps a descender allowance so the last line is never clipped.
+- Shrinks are taken at once (a rewrap that shortens never animates). `animateContentSize` cannot do this: it animates
+  every size change, shrinks included, so it is used only as the throwaway baseline inside spike SP-3, never in
+  production.
 
 ### 8.5 Frame-rate vote
 
 `Modifier.preferredFrameRate(FrameRateCategory.High)` on the live block **only while** `RevealState.active` or the grow
 animation runs; removed when the reply settles. On adaptive-refresh devices views default to a "Normal" (about 60 Hz)
-vote, and an alpha-only fade may not raise it by itself [V research]. If CMP 1.13 does not export the modifier in
-`commonMain`, it is a `KitPlatform.frameRateHint(active)` seam implemented in kit-chat `androidMain` (`JETPACK_AHEAD`
-row) [U: SP-3 checks]. Diagnostics logs `Display.hasArrSupport()` once per process (owner phone unknown).
+vote, and an alpha-only fade may not raise it by itself [V research]. The modifier is in CMP **common** code
+(`org.jetbrains.compose.ui:ui:1.13.0-beta01`, `commonMain/androidx/compose/ui/FrameRate.kt`) [V], so kit-chat
+`commonMain` calls it directly; no seam and no `androidMain` code are needed. (Were one ever needed, ADR §7.3 already
+puts the frame-rate hint in `KitPlatform`, implemented once in `:ui:kit` `androidMain`.) Diagnostics logs
+`Display.hasArrSupport()` once per process (owner phone unknown).
 
 ### 8.6 Motion levels in the chat
 
 `MotionLevel` comes from `resolveMotion(...)` in `:ui:design` (06 §4.8): system animator scale 0, the person's Off or
 Saver → Off; battery saver, severe heat or Calm → Calm; else Full.
+
+08 M8-6 (Calm, progress loops vs ambient loops) and 08 §5.3 (the glow) are the source of truth; this table only
+applies them to the chat parts.
 
 | Motion | Full | Calm | Off |
 |---|---|---|---|
@@ -1203,9 +1414,11 @@ Saver → Off; battery saver, severe heat or Calm → Calm; else Full.
 | Follow glide after send | glide ≤ 1 viewport | jump | jump |
 | Work-line fold, step arrival | 250 ms | fade only | none |
 | Sent-bubble lift | 250 ms rise from 0.92 (`lift` spring) | fade in place | none |
-| Stream caret | breathes once a second | still | still |
-| Live-line light sweep | 2.2 s sweep | still | still |
-| Composer glow vs Stop ring (MOT-15) | glow travels if on, else ring turns | neither | neither |
+| Stream caret (ambient loop) | breathes once a second | still | still |
+| Live-line light sweep (progress loop) | 2.2 s sweep | half pace (4.4 s, `kit_turn.dart:1193`) | still |
+| Step light (progress loop) | full pace | half pace (`KitMotion.stepLapCalm` 4.0 s) | still |
+| Composer glow (08 §5.3) | travels and breathes when on | drawn still: `primary` ring, halo held (Flutter `_GlowMode.calm`) | none; **Saver** (which forces Off) draws one still 1 dp `primary` hairline while a reply runs |
+| What travels (MOT-15) | the glow if on, else the Stop ring | nothing travels | nothing travels |
 | Haptics | Send, Done, Commit, LongPress (never on scroll, stream or plain taps) | same | Done skipped |
 
 ### 8.7 Never animated
@@ -1268,9 +1481,15 @@ Rules carried over (each from `kit_markdown_test` 23, `kit_markdown_image_test` 
   `capabilities.fileBrowsing`.
 - Pictures: a stored attachment id never shows as a name ("Image" instead); web addresses are **never fetched**;
   `file:///abs` reads through the app's file transport; ≤ **8 MiB** per read, else a named chip that still opens the
-  viewer. The chat's Coil 3.6.3 `ImageLoader` has **no network fetcher** (no `coil-network-*` artifact on the chat's
-  classpath) — the privacy rule is enforced by the dependency graph [new]; custom `Fetcher`s for `data:` and
-  `file:` through the gateway, cache keys `part:<message>:<index>`, `path:<profile>:<path>`, `tool:<identity>`.
+  viewer. The chat's Coil 3.6.3 `ImageLoader` has **no network fetcher** [new]. A missing artifact on "the chat's
+  classpath" cannot guarantee that: an APK has one runtime classpath, and Coil adds every ServiceLoader-registered
+  fetcher to every loader that does not opt out [V `serviceLoaderEnabled`, default true]. So: (1) every app
+  `ImageLoader` is built with `serviceLoaderEnabled(false)` and an explicit component list (the gateway `Fetcher`s for
+  `data:` and `file:`, the decoders it needs); (2) R12-4 is accepted: `coil-network-ktor3` leaves `:androidApp` and
+  `:desktopApp` (03 §7.1 table); (3) `ChatImageLoaderNoNetworkTest`: an `https://` request fails without opening a
+  socket (fake socket factory counts 0); (4) a `:quality` check fails the build when `releaseRuntimeClasspath` contains
+  any `io.coil-kt.coil3:coil-network-*`. Cache keys `part:<message>:<index>`, `path:<profile>:<path>`,
+  `tool:<identity>`.
 - Agent blocks (```` ```choices ````, ```` ```checklist ````, ```` ```command ````) are built only for **closed** fences:
   choices = tappable rows that insert the text into the composer (`actions.insertChoice`), checklist = read-only with
   done items muted (not struck through), command = "Run on your computer" lines with a 48 dp copy button.
@@ -1280,7 +1499,8 @@ Rules carried over (each from `kit_markdown_test` 23, `kit_markdown_image_test` 
 - RTL: prose follows content direction; inline code, paths and numbers are FSI…PDI isolated; code is always LTR.
 - A reply ending in code, a table or pictures shows no caret on a line of its own.
 
-`:ui:kit-chat` parts (06 §7.8 names): `KitMarkdownProse`, `KitMarkdownHeading`, `KitMarkdownQuote`,
+`:ui:kit-chat` parts (06 §7.8 names; a `Block.Code` row is drawn by `ChatRow` with `:ui:kit-content` `KitCodeBlock`,
+not by a kit-chat part, C5): `KitMarkdownProse`, `KitMarkdownHeading`, `KitMarkdownQuote`,
 `KitMarkdownListItem`, `KitMarkdownTable` (one horizontal scroller of measured columns; inline-code cells
 `softWrap = false`; scroll inside the 700 dp cap), `KitPictureGroup`, `KitAgentBlock`, `KitStreamCaret` (takes no
 width), `KitFindMark`. Inline → `AnnotatedString` is built in `remember(block, styles)`: once per block instance, a
@@ -1310,8 +1530,15 @@ public enum class CodeLanguage { /* the ~45 Flutter aliases mapped to SyntaxMP g
 - An open fence is never highlighted (§3.8). A closed fence is tokenised once on `default` and cached.
 - In the transcript: capped at **12 lines** with "Open full output"; `$` prompts drawn before each command and outside
   the copied text; continuation lines (heredoc body, trailing `\` `|` `&&`, open quotes or brackets, for/if bodies,
-  comments) get none (B-CHAT-055). Copy copies the source, never the display; a failed copy keeps a snapshot for Try
-  again. Commands and code scroll sideways with an edge fade; output wraps on compact windows; wrapping breaks only at
+  comments) get none (B-CHAT-055). Copy copies the source, never the display decorations (`$` prompts, the line cap);
+  a failed copy keeps a snapshot for Try again.
+- **Redacted display (SEC-2, SEC-4; owned by `:ui:kit-content` and `:ui:kit-chat`).** What a code, command, output or
+  diff part **displays** is `Redactor.text(source)`, computed off the main thread together with the tokens and cached
+  with them (`kit_code_block.dart:685,924,1081`). Copy goes through `KitCopy` with its default `redact = true`, as the
+  Flutter code block does (`KitIconButton.copy` default); only the turn footer's "Copy reply" passes `redact = false`
+  (SEC-13, the person's own reply). "Open full output" opens the redacted text too (06 §7.7). In debug builds
+  `KitCodeBlock(kind = Command)` asserts `!Redactor.containsSecret(text)` (SEC-4: a command shown to the person carries
+  a placeholder, never a real key). Needs `:ui:kit-content → :core:security` (06 CR06-2). Commands and code scroll sideways with an edge fade; output wraps on compact windows; wrapping breaks only at
   spaces and punctuation, never inside identifiers. `.fill` mode (full reader) is a lazy list per line with find marks.
 - **Benchmark gate (spike SP-4, half a day):** 45 aliases × 3 real agent outputs from the owner's transcripts (redacted),
   SyntaxMP vs Highlights 1.1.0 vs kotlin-textmate 0.3.0; correctness by eye on the emulator + tokenise time per 20k
@@ -1349,13 +1576,20 @@ only opens it with the ordered keys.
 
 ### 9.5 Tool rows, the work line and the timeline
 
-- `KitToolRow(view: ToolView, opened: Boolean, …)`: kind glyph, plain title, mono LTR subject, detail, status, duration,
-  ± counts, body when opened. Body per kind (map CHAT-GENUI-14): shell = the step's command box (command, first lines,
+- `KitToolRow(view: KitToolView, opened: Boolean, …)` (kit-local model, C5; the feature maps `ToolView`): kind glyph,
+  plain title, mono LTR subject, detail, status, duration, ± counts, body when opened. The diff body uses
+  `:ui:kit-content` `KitDiffView` through the ADR-09-2 edge, or a `diff: @Composable () -> Unit` slot the feature fills
+  if ADR-09-2 is refused. Body per kind (map CHAT-GENUI-14): shell = the step's command box (command, first lines,
   "Show all", exit code, "Run this command again"); edit/write/patch = `KitDiffView` capped at 12 lines + "Open all
   changes"; read = line count heading, no "(no output)" box; web fetch = address; sub-agent = "Delegated to explore ·
   Done" opening the child conversation; todo = one line "Updated tasks"; question = asked + answered in words; card call
   = the card (§13.7) or one quiet "Show card"; connector search = one row per connector.
 - Output is cut **before** it reaches the row: 12 lines + "Open full output" (reader) + copy of the whole text (PERF-2).
+- Every mono surface **displays** redacted text (the §9.2 rule): the shell command and output boxes of tool rows
+  (`kit_tool_row.dart:1396-1397`), background-work lines (`kit_background_work_line.dart:183`), the queued bubble and
+  its details (`pending_sends_strip.dart:147`), diffs, notices and the file viewer. `MonoSurfacesRedactedTest`
+  (`:ui:kit-chat` + `:ui:kit-content`, Compose host): a canary key registered with the `Redactor` and printed by a
+  tool (`cat .env`, `printenv`) never appears in the semantics tree of any of these parts.
 - A step "interrupted" reads Stopped, not an error. A failed step offers one neutral Retry (10A); shell failure offers
   "Run this command again"; never both. Error text is in the tool's own words under Details; no danger colour.
 - `KitWorkLine`: running / waitingForYou / done / endedFailed / stopped; opens in place (250 ms fold, R4) to
@@ -1375,17 +1609,37 @@ only opens it with the ordered keys.
 | Provider auth | Open providers / "Sign in with Claude Code" for a phone agent | Details |
 | Output length | Continue | — |
 | Model not found | Choose another model; "Use X and resend" when the server named one it has | Details |
-| Usage limit / no credit | Another model | Details |
+| Usage limit / no credit | Another model; "resets with the plan's window" for a usage limit | Details |
 | Content filter | — (no handoff) | Details |
 | Lost connection mid-turn | Continue, unless the agent went on | Details |
 | Stopped by the person | none: "You stopped this reply." (not an error) | — |
 
   An error followed by more steps is a quiet line in the story, not an alarm. "Continue with another agent" is a quiet
   second way out of a provider failure, never opened by itself.
-- Footer (`KitTurnFooter`): Copy beside More; meta = model name from the catalog (never `provider/model` or a raw id,
-  readable fallback from the id), time, tokens + cost (3 decimals, "essentially free" below) only when the timestamps
-  toggle is on; the turn's changed files (each one tap from its contents, then "All files"); "You stopped this reply."
-  or who stopped it; Continue after a length cut.
+- **`AgentErrorCause`** (`:core:domain`, port of `lib/domain/agent_error_text.dart`; B-AGENT-012):
+  `ConnectionDropped`, `TimedOut`, `ProviderUnreachable`, `RequestTooLarge`, `RateLimited`, `ProviderBusy`,
+  `OutOfCredit`, `UsageLimit`, `ProviderAuth`, `ServerDiskFull`, plus `Unknown`. The classifier is an **ordered** rule
+  list, most specific first, ported in order with its tests: `UsageLimit` ("Free usage limit reached", "Go usage limit
+  exceeded", `usage limit (reached|exceeded)`, `UsageLimitError`) wins over `OutOfCredit` and over the HTTP 429 /
+  rate-limit rule; exhausted credit beats 429; missing or rejected keys → `ProviderAuth` with the sign-in recovery.
+  Only `ConnectionDropped`, `TimedOut`, `RateLimited` and `ProviderBusy` are self-healing (a retry may follow; the
+  actual retry state still comes from the server). Every cause has Arabic words (`strings_chat_errors.xml`).
+- **Paseo specifics** (B-AGENT-024, 025, 035): a `[System Error] Internal error: … code: …` text is parsed into kind,
+  agent and model and shown as an error row, never prose (`paseo/mappers.dart:716`, `chat_notices.dart:311`); a Claude
+  Code API-failure line is a failed turn, while text that merely mentions it stays a reply, and the failed state holds
+  until the next prompt; a refused model is "model unavailable"; a missing sign-in is said before sending; a saved
+  Kilo record the helper no longer holds asks for a new chat. Tests `AgentErrorCauseTest`, `AgentRunFailureTest`.
+- **Footer** (`KitTurnFooter`): Copy beside More; the turn's changed files (each one tap from its contents, then "All
+  files"); "You stopped this reply." or who stopped it; Continue after a length cut. Meta words come from a pure
+  `FooterMeta.of(turn, previousTurn)` in `:engine:transcript` (port of `transcript_turns.dart:686` `_messageMeta`,
+  `FooterMetaTest`):
+  - **Model only when it changed:** named when the turn ran on a different model than the assistant step before it,
+    or switched part-way (labels joined with " → "); never on every turn (`simplify-and-natural`). Names come from the
+    catalog (never `provider/model` or a raw id; readable fallback from the id).
+  - **Turn totals:** tokens and cost summed over all steps of the turn (cost 3 decimals, "essentially free" below).
+  - **Only the newest turn** shows meta words (`_inLatestTurn`; a prompt still waiting in the inbox joins that turn);
+    older turns keep a quiet footer.
+  - Time and usage show only with the timestamps toggle on.
 
 ### 9.7 Text scale, width and direction per part
 
@@ -1417,8 +1671,18 @@ there is no delivery segment (R12).
   `/` and `@` detection runs at once. Mention ranges are UTF-16 offsets (same as the wire, map CHAT-GENUI-29).
 - One editor structure: the field grows from 1 to 8 lines, then scrolls inside its height budget (≤ 40 % of the window);
   the focused field is never re-parented (a re-parent drops the IME).
-- Keyboard images: `Modifier.contentReceiver` accepts only inline image bytes; URI-only commits are ignored; each image
-  becomes an attachment through the same limits (§10.6).
+- **Keyboard images** (keyboard GIFs, stickers, the clipboard-image paste chip). Compose never hands over bytes: every
+  IME `commitContent` arrives as `ClipData.Item(contentUri)` with `TransferableContent.Source.Keyboard`, and the
+  `InputContentInfo` that holds the read grant rides in `platformTransferableContent.extras` [V 1.13.0-beta02]. (The
+  Flutter rule "inline bytes only, URI-only commits ignored" came from Flutter's engine reading the URI into
+  `KeyboardInsertedContent.data`, `chat_attachments.dart:338`; copied literally it would drop every keyboard image.)
+  So the `KitComposer` receiver lives in the kit's `androidMain` (features have no `androidMain` and no `LocalContext`):
+  for each `clipEntry.clipData` item URI it opens `ContentResolver.openInputStream` **while the grant is alive** (before
+  `onReceive` returns the remaining content), streams the read and stops at limit + 1 bytes; the MIME comes from
+  `clipMetadata`, else from sniffing the first bytes; the bytes go through the §10.6 limits into the vault as one
+  attachment each. Gate: `capabilities.promptAttachments`, else the composer note says this agent takes text only.
+  `KeyboardContentTest` (Robolectric in the kit, plus one emulator check): committing a content URI yields exactly one
+  attachment; an over-limit stream is refused without reading past limit + 1.
 - Keys: Ctrl/Cmd+Enter sends; with a fine pointer Enter sends and Shift+Enter is a newline; on touch Enter is a newline;
   Esc closes suggestions, else leaves voice mode, else unfocuses. Text is always kept. Desktop arrow keys browse sent
   prompts, keeping selection and composing text (B-CHAT-089).
@@ -1444,7 +1708,7 @@ while a reply runs (it never comes and goes mid-row). A window too short keeps t
 
 | Chip | Shows | Rules | Rows |
 |---|---|---|---|
-| Model | catalog name; readable name from the id while loading (a previously seen name first); agent only when it differs from the server default and there is a real choice; effort only when a real choice, as words ("High"); "No model signed in" before the first send with nothing signed in; ellipsis | never `provider/model` or a raw id; runtime-prefixed ids (`kilo/google/x`) match `google/x`; "new" mark for a model released < 30 days; the chosen model applies to **this conversation only**; send reads the selection after `waitForSessionSelection` | B-CHAT-066, B-CHAT-067, B-KIT-057 |
+| Model | catalog name; readable name from the id while loading (a previously seen name first); with **no model picked**, the server's default model by name, or "Loading…" while the catalog loads; agent only when it differs from the server default and there is a real choice; effort only when a real choice, as words ("High"); "No model signed in" before the first send with nothing signed in; ellipsis | never `provider/model` or a raw id; runtime-prefixed ids (`kilo/google/x`) match `google/x`; "new" mark for a model released < 30 days; the chosen model applies to **this conversation only** (B-STATE-111, 112); send reads the selection after `waitForSessionSelection`; long-press, right-click and the TalkBack custom actions open the three model-cycle shortcuts (next recent, previous recent, next favourite); a model-cycle shortcut (chip menu or keys, §7.10) leaves the composer note "Next turns in this conversation use {model}." (`chatUiNextTurnsModel`); F4/Shift+F4 step the thinking level (§7.10); a "model not found" error re-reads the catalog (`chat_stream.dart:313-321`) | B-CHAT-066, B-CHAT-067, B-KIT-057; `ModelChipLabelTest` |
 | Approval | filled shield "Auto-approve" / outline "Asks first" / "Auto-approve paused" (disconnected) | opens the approvals sheet (07 C13) | map CHAT-GENUI-27 |
 | Agent features | "Fast" lit when on, or the agent's name with a settings icon | per-conversation switches read from and saved to the server; a reopened chat shows its chip from the first frame (last-known cache) | map CHAT-GENUI-27 |
 | Tasks | "Plan 3/5" | opens the Tasks sheet; progress = completed / tracked, cancelled ignored | B-CHAT-065 |
@@ -1515,6 +1779,15 @@ The ViewModel orchestrates: `ActivityResults` (`:android:platform`, ADR §7.3) �
   after sends; a full store (50) **refuses** new drafts rather than evicting unsent work; a refused write tells the
   person when they leave (B-STATE-100–102). Back leaves at once when the words are on disk (07 §3.4 guard). An untouched
   brand-new conversation is deleted after you leave it (best effort; Back never waits on the server).
+- **Restore rules** (`:engine:composer` `Drafts.restoreFor(ref, unconfirmed = delivery.unconfirmedTexts(ref))`, port of
+  `chat_screen.dart:476-494`; `DraftRestoreTest`):
+  1. A saved draft whose text already waits above the composer as a dispatched, not-confirmed send is **not** restored
+     (`_waitsAsUnconfirmed`): restoring it would put a duplicate send one tap away ("never send twice").
+  2. Share-intent `initialText` or attachments replace the saved draft for that opening.
+  3. Attachments are recovered asynchronously from the vault; missing ones produce one composer note, "Some
+     attachments cannot be restored", naming them.
+  4. Voice dictation never saves partial words as a draft; only words committed to the field count.
+  5. Watched and demo chats have no drafts (no save, no restore).
 - Saved prompts (stash, 50 per server), "Reuse a prompt" (text only), the full-screen editor (an overlay sharing the
   same `TextFieldState`, Done pinned above the keyboard, Close with changes asks once): rows B-CHAT-088, B-STATE-085–087,
   B-STATE-136, B-STATE-141. Formats are 05's.
@@ -1535,7 +1808,10 @@ The ViewModel orchestrates: `ActivityResults` (`:android:platform`, ADR §7.3) �
 `TeachingRegistry` entries contributed by the chat features: `stop-after-step` (hold Stop), `send-later` (hold Send),
 `hold-mic` (hold the mic). Each at most twice, one tip at a time, never amber, never while a question waits or the
 keyboard covers its anchor, replayable in Help › Tips; each gesture also has a visible path (the live-line tap shows
-"Stop after this step"; the + sheet has "Send later").
+"Stop after this step"; the + sheet has "Send later"). **Using the gesture retires its tip:** hold Stop, hold Send and
+hold mic call `teaching.recordUsed(id)`, and a used tip never shows again (Flutter `tips.markUsed` in
+`chat_stop_after_step.dart:56`, `chat_schedule_send.dart:66`, `chat_voice.dart:174`). 03 §11.2's `TeachingRegistry`
+has only `shouldShow`/`recordShown`, so this needs `recordUsed` (request MO-09-2). `ChatTipRetiredOnUseTest`.
 
 ---
 
@@ -1639,7 +1915,10 @@ public sealed interface CardParse {
 ### 13.3 Admission and validation (`:engine:requests` `…requests.cards`)
 
 ```kotlin
-internal val CARD_TOOL_NAMES = setOf("mcp__oc-ui__show", "oc-ui_show")   // exact; never suffix, substring or title match
+// :core:model …core.model.cards (public: `ToolPresentation` in :core:domain must see it too, §2.4)
+public val CARD_TOOL_NAMES: Set<String> = setOf("mcp__oc-ui__show", "oc-ui_show")   // exact; never suffix, substring or title match
+
+// :engine:requests …requests.cards
 
 internal fun admit(part: Part, info: MessageInfo, scope: CardScope): CardParse? {
     if (part.type != PartType.Tool || part.toolName !in CARD_TOOL_NAMES) return null      // ordinary tool row
@@ -1669,8 +1948,17 @@ internal fun admit(part: Part, info: MessageInfo, scope: CardScope): CardParse? 
 
 **Test-first:** copy `test/fixtures/genui/validation.json` (182 KB) and the runtime fixtures
 (`runtime_paseo_claude_tool.json`, `runtime_opencode1_tool.json`, `runtime_paseo_paging.json`) into
-`engine/requests/src/commonTest/resources/genui/`. `CardCorpusTest` (written before the validator) asserts accept/reject
-and the normalised output for every case. `CardJsTwinCorpusTest` (JVM, VPS) runs the helper's JavaScript validator under
+`engine/requests/src/commonTest/resources/genui/`. The fixture holds only `{name, input, error}` for its 65 cases: no
+normalised JSON and no revision hashes. Nothing in it pins Dart `jsonEncode` details (an integer vs a double, `1e3`
+printed as `1000.0`, escape forms), so a Kotlin port could pass accept/reject and still hash differently; then Flutter
+card-journal entries (`gen_ui_journal.dart:189` compares the stored `revision`) would stop matching after the switch,
+unblocking a resend or turning cards Unknown. So, **before Dart tooling is retired**, the cards unit runs a one-off
+Dart script in its own worktree of the `v2.1.0+57` tag (never merged) that writes `validation.expected.json`: for
+every accepted case the compact normalised JSON and its `revision`. `CardCorpusTest` (written before the validator)
+asserts accept/reject for every case and **byte equality** of the normalised JSON and the revision for every accepted
+one. `CardJournalMigrationTest` loads a real Flutter `oc.genui.journal.<profileId>` blob captured from the owner's
+release build (values are not stored there; routing metadata only) and checks every entry still matches its card's
+identity and revision. `CardJsTwinCorpusTest` (JVM, VPS) runs the helper's JavaScript validator under
 Node against the same corpus, so the JS twin stays honest after Dart is gone; it needs `node` ≥ 20 on the VPS (added to
 02 §10's start-up checklist) and fails, never skips, when Node is missing on T2.
 
@@ -1707,13 +1995,28 @@ Answer wire format (unchanged):
 
 Tap → **held 3 s** with Undo, keyed by full identity (the card collapses to the answer: "SQLite", "Run it"; Undo
 restores the choice, form values or photos from the per-card draft) → re-check (stale, deleted, busy, unsupported,
-disabled) → send through `PromptDelivery` (§4.2) → **only the authoritative echo makes a receipt**; an acknowledgement
+disabled) → send through `CardAnswerSender` → **only the authoritative echo makes a receipt**; an acknowledgement
 alone stays "unconfirmed". Duplicate taps send once; a busy session refuses; late admission or source replacement never
 sends an old answer; uncertain delivery persists **without values** in `oc.genui.journal.<profileId>` (routing metadata
 only) and blocks resend after restart; a definite failure keeps the answer for an explicit retry; session or profile
 deletion fences late writes; corrupt persisted state fails closed (B-CHAT-050, B-CHAT-051). Photo answers validate the
 matching attachments before dispatch (1..max images, 10 MiB each, 20 MiB total); no attachments ride non-photo answers
 (B-CHAT-053).
+
+**Engine order.** `:engine:requests` is #6 and `:engine:delivery` #7 (ADR §6.2), so requests never calls
+`PromptDelivery`. `:engine:requests` declares the consumer interface and delivery implements it, the same pattern
+§13.8 uses for `CardsAvailability`:
+
+```kotlin
+// :engine:requests …requests.cards
+public interface CardAnswerSender {
+    /** Sends the two-line answer through the §4.2 pipeline as an ordinary prompt; never steered, never queued. */
+    public suspend fun sendAnswer(ref: ConversationRef, text: String, photos: ImmutableList<PromptAttachment>): Outcome<SendHandle>
+}
+// :engine:delivery — @ContributesBinding(ConnectionScope::class) internal class DeliveryCardAnswerSender @Inject constructor(delivery: PromptDelivery) : CardAnswerSender
+```
+
+The edge is named in contract s5 (S5-CARDS-E). `CardAnswersTest` uses a fake sender.
 
 ### 13.6 Recovery and coverage (never wake a sleeping agent)
 
@@ -1726,19 +2029,24 @@ watermarks only, 200 most recent sessions) skips conversations whose recent hist
 running turn, a truncated tail, a superseded source, a changed prompt, or any read that held a card (B-CHAT-043,
 B-CHAT-044, B-CHAT-052; incidents `e8e5bf602`, `902399baa`, `e25778df3`).
 
-### 13.7 Renderer and the streaming skeleton
+### 13.7 Renderer
 
-- `ChatUi.cards[callId]` is a `CardUi`: `Skeleton(agentName)`, `Full(card, state, delivery, draft)`, `Receipt`,
-  `PassedOver`, `Unreadable(reason)`. The `CardCallRow` composable reads it by key, so a delivery change touches one row.
-- **Skeleton:** when the transcript shows a pending or running tool part whose name is exactly a card name (OC2
-  `session.tool.input.started` → `PartUpserted(pending)`, 04 §7.6), the card shell shows at once (eyebrow, no buttons).
-  The streamed input is never parsed. On completion with a valid card it cross-fades to the card over `KitMotion.standard` (250 ms) with
-  `animateContentSize` for the height (Off: swap at once); on failure or invalid input it becomes the one-line
-  unreadable row. After a reconnect there is no skeleton, only the final card (deltas are volatile).
+- `ChatUi.cards[callId]` is a `CardUi`: `Full(card, state, delivery, draft)`, `Receipt`, `PassedOver`,
+  `Unreadable(reason)`. The `CardCallRow` composable reads it by key, so a delivery change touches one row.
+- **Pending and running card calls stay ordinary tool rows** at the switch, exactly as Flutter does (B-CHAT-045: "its
+  running form stays an ordinary tool row"); the card appears when the call completes with a valid card. The streaming
+  skeleton from genui research §9.5 is **not** built for the switch: it is not Flutter behaviour, it contradicts
+  B-CHAT-045, and cards are qualified for Claude Code via Paseo only, where it would never show. Later candidate
+  ([new], after OC2 card qualification): only on OC2 `session.tool.input.started`, only when `CardsAvailability` is on
+  for that agent and `oc.genui.enabled.<profileId>` is true, with a `scope.jsonl` amendment for B-CHAT-045; never from
+  parsed streamed input.
 - `KitAgentCard` (`:ui:kit-chat` `…kit.chat.agent`): eyebrow "Claude Code asks" (frame text), title and body (reading
   text), ask slot; a card with an ask wears the needs-you tone, a report is neutral; one shape at the Reading cap (720 dp);
   lives in the reply, never inside a folded work line.
-- Body renderer: one exhaustive `when` over `CardNode` (a new node type fails compilation until the kit has a part):
+- Body renderer: one exhaustive `when` over `CardNode` (a new node type fails compilation until the kit has a part).
+  `CardNode` is a `:core:model` type, which kit-chat may use. `KitCodeBlock` and `KitChart` are `:ui:kit-content`
+  parts, reached through the ADR-09-2 edge; if ADR-09-2 is refused, `KitCardBody` takes `code` and `chart`
+  `@Composable` slots that `:feature:chat` fills with those parts (C5):
 
 ```kotlin
 @Composable
@@ -1775,13 +2083,15 @@ public fun KitCardBody(nodes: ImmutableList<CardNode>, onLink: (SafeHttpsUrl) ->
 ### 13.8 Setup: who owns the helper
 
 The ADR puts runtime scripts in `:engine:runtime` as resources with checksums and phone agents in `:engine:agents`
-(both above `:engine:requests`). So:
+(both later than `:engine:requests` in the engine order, so they may use it, never the reverse). So:
 
 | Piece | Home |
 |---|---|
 | `server.cjs` (zero-dependency Node stdio helper, JS validator twin), `install.py`, `verify.py`, `owners.json` handling | `:engine:runtime` resources `runtime/genui/*` with SHA-256 (`RuntimeScripts`), copied verbatim from `lib/builtin/agents/gen_ui_server.dart` and `gen_ui_install_scripts.dart` |
 | Install, verify, disable orchestration; Claude Code registration (`claude mcp add --scope user --transport stdio oc-ui -- <node> <helper>` in the profile's `CLAUDE_CONFIG_DIR`, exact rule `mcp__oc-ui__show`); OpenCode 2 `mcp.servers.oc-ui` in `/root/.oc-opencode2/config/opencode/opencode.json` (JSONC-safe, owned entries only) | `:engine:agents` `CardsSetup` |
-| "Are cards usable for this agent here?" | interface `CardsAvailability` declared in `:engine:requests` (the consumer), implemented by `CardsSetup` with `@ContributesBinding(ConnectionScope::class)` |
+| "Are cards usable for this agent here?" | interface `CardsAvailability` declared in `:engine:requests` (the consumer), implemented by `CardsSetup` with `@ContributesBinding(AppScope::class)`: `:engine:agents` is App-scoped (03 §11.2), and the `ConnectionScope` graph extension inherits App bindings, so connection-scoped card code can inject it. A `ConnectionScope` contribution from an App-scoped class would mis-scope it (Metro may reject it). The method takes the profile and agent as arguments. |
+| `ConnectorSearchBridge`: the loopback server `find_connectors` calls (port of `lib/state/mcp_connector_search_bridge.dart`) | `:engine:integrations` over `:core:net`: binds `127.0.0.1` on a random port with a random 32-byte bearer from `secureRandomBytes`; started only while cards are on for a qualified agent, stopped when cards are disabled, the agent is unqualified or the profile closes; the bearer is registered with the `Redactor` at creation and never logged, put in shell arguments, prefs or diagnostics; validated, bounded queries and responses (B-CHAT-124). It starts and stops itself by watching card state; integrations is #15 in the engine order, so it may use requests, runtime and agents, and none of them calls it |
+| `SearchPublisher`: tells the helper where the bridge is (port of `lib/builtin/agents/gen_ui_search_publish.dart`) | `:engine:runtime`: writes `{endpoint, bearer}` to `enabled.search.json` inside the app-private rootfs (`filesDir/linux/…`) only; refuses a bearer that is not 64 hex characters, a missing root, any symlink on the path (checked without following links) and any public or shared folder; never passes the bearer on a command line |
 | Setup status words (`Off`, `Unavailable(reason)`, `Installing`, `On(agents)`, `Partial`, `RestartRequired`, `Failed`; reasons as enums) | `:ui:words` `strings_chat_cards.xml` |
 
 Rules kept: a registration alone is never "ready" (status On only after the MCP `initialize` self-check); a pending
@@ -1797,8 +2107,10 @@ connector card with one primary **Connect** and in-place progress (suggested, co
 authorizing, checkingTools, toolsReady, connectedReadinessUnknown, failed, unavailable); OAuth through
 `openExternalLink`; manual-code fallback; "Tools ready" only when the runtime confirms; every failure one fixed sentence.
 No Connect where the runtime cannot connect from chat (Claude Code) or for listings needing keys or local packages.
-`find_connectors` searches the cached catalogue through the app bridge with bounded, validated queries and responses
-(B-CHAT-033, B-CHAT-046, B-CHAT-048, B-CHAT-124). Own unit in slice 5, after cards v1.
+`find_connectors` searches the cached catalogue through the app bridge (`ConnectorSearchBridge` + `SearchPublisher`,
+§13.8) with bounded, validated queries and responses (B-CHAT-033, B-CHAT-046, B-CHAT-048, B-CHAT-124). Connector
+qualification, payload suspension, per-agent caches, consent and admission are rows B-AGENT-130–135. Own unit in
+slice 5 (S5-CONNECT), after cards v1.
 
 ---
 
@@ -1820,12 +2132,12 @@ No Connect where the runtime cannot connect from chat (Claude Code) or for listi
 
 | Counter test (`:engine:transcript` unless noted) | Setup | Assertion | Flutter source |
 |---|---|---|---|
-| `PublishCountTest` | 100 deltas in one burst, then 10 spaced 60 ms apart | burst → ≤ 2 publishes; spaced → ≤ 10; first delta published with no delay | `perf_chat_test.dart` (`stream_flushes ≤ tokens`) |
+| `PublishCountTest` | `TestClock` starting at a realistic time (`1_760_000_000_000`, never 0: a clock at 0 hides overflow bugs); 100 deltas in one burst, then 10 spaced 60 ms apart | the first delta publishes **without advancing time**; burst → **exactly 1** publish (Flutter's own flush gives 1 for a burst in one synchronous task; the native leading publish runs on the lane's next turn, after the events already queued [V P3 §4, D8–D9]); spaced → exactly 10; a trailing publish lands ≤ 50 ms after the window opened | `perf_chat_test.dart` (`stream_flushes ≤ tokens`) |
 | `OtherConversationQuietTest` | events for another session at 20 / s for 10 s | 0 publishes on this handle; 0 recompositions of the chat screen (Compose test, `:feature:chat`) | `chat_rebuild_budget_test.dart:132` |
 | `NewestTurnOnlyTest` | 1,000-turn history, 10 deltas into the newest turn | `displayPassMessages ≤ 20` | `chat_rebuild_budget_test.dart:104` |
 | `TailUpdateTest` (`:core:markdown` + engine) | prefix "## Plan / **this** / dart fence" + 10 tail updates | 10 tail re-parses, 0 full parses, settled code and heading `Block` instances identical (`===`) | `perf_chat_test.dart` "ten tail updates" |
 | `LinearMergeTest` | 1,000 and 5,000 fragments, fragmented and not | merged output identical; a counting builder probe copies ≤ 2 × the total text length (linear, not the old quadratic ~15×). Counts, never wall-clock timings, as in Flutter | B-CHAT-096, `docs/qa/codex-perf-2026-09-28/chat.md` |
-| `BlockRelayoutCounterTest` (`:ui:kit-chat`, Compose host test) | 200-block reply, tail update | exactly 1 `BlockRow` measured (counting `Modifier.layout` probe in a test build) | S-9 |
+| `BlockRelayoutCounterTest` (`:ui:kit-chat`, Compose host test) | 200-block reply, tail update | exactly 1 `BlockRow` measured, counted by a kit test hook (`LocalKitTestHooks.onBlockMeasured`, a `CompositionLocal` that is null in production), not a build flavour: AGP-KMP library modules have one variant | S-9 |
 | `RevealDrawOnlyTest` (`:ui:kit-chat`) | live block revealing for 1 s at 120 Hz test clock | text re-measures only on word landings (≤ 20), never per frame | §8.3 |
 | `TranscriptRecompositionTest` (`:feature:chat`) | 5,000-part transcript, 50 deltas | recompositions of settled rows = 0 with `compose-stability.conf` (ADR P4) | ADR P4 |
 
@@ -1860,7 +2172,7 @@ relative (≤ 10 % worse than the last green); absolute numbers only on NX721J w
 | Finished-reply block cache | 512 parts per handle |
 | Deferred parts and deltas | 256 keys and 1 MiB per handle (§3.2) |
 | Code token cache | 48 entries (theme-independent) |
-| Decoded images | Coil memory cache `maxSizePercent(0.15)`; disk cache only for `file:`/`data:` decodes, 64 MiB, in `cacheDir` |
+| Decoded images | Coil memory cache `maxSizePercent(0.15)`; disk cache only for `file:`/`data:` decodes, 64 MiB, in `cacheDir`; `serviceLoaderEnabled(false)` on every loader (§9.1) |
 | Tool output in rows | first 12 lines + count; the full text stays in the model, not copied into rows |
 | Search index | per message; dropped with the handle |
 | Reveal registry | one entry per revealing block; forgotten when done |
@@ -1901,20 +2213,41 @@ Test names start with the row id (ADR §6.3 rule 12), e.g. `` `B-CHAT-117 a late
 |---|---|---|
 | B-CHAT-110, 111, 109, B-AGENT-186 | `:core:domain` | `ToolPresentationTest` |
 | B-CHAT-112, 113, 114, 121, 069, 071, 097 | `:core:model` / `:engine:transcript` | `TranscriptModelTest`, `V2RowsTest` |
-| B-CHAT-005, 096, 116, 117, B-PROTO-061, B-STATE-121 | `:engine:transcript` | `ApplyEventsTest`, `HistoryMergeTest`, `SettleTest` |
+| B-CHAT-005, 096, 116, 117, B-PROTO-061, B-STATE-121 | `:engine:transcript` | `ApplyEventsTest`, `HistoryMergeTest`, `SettleTest`, `HistoryResetTest` (§3.3 reset/removal/shell rows), `OtherDirectoryHandleTest`, `MessageDeletedTest` |
+| B-STATE-122 (+ the writer side of 121) | `:engine:transcript` + `:engine:connection` (first-paint cache) | `ExcerptWriterTest`, `TailPrefetchTest` (a prefetch joins the open; a late result for a deleted profile is rejected) |
 | B-CHAT-115 | `:engine:transcript` | `TranscriptSearchTest` |
-| B-CHAT-118, 119 | `:engine:transcript` | `TurnStallTrackerTest` |
-| B-CHAT-007, 008, 011 | `:engine:transcript` | `BackgroundTasksTest` |
+| B-CHAT-118, 119 | `:engine:transcript` | `TurnStallTrackerTest` (incl. global forms) |
+| B-CHAT-007, 008, 011, B-AGENT-034 | `:engine:transcript` | `BackgroundTasksTest` (034: background shell ids and task names; ordinary steps carry no marker) |
+| footer meta (`transcript_turns.dart` tests) | `:engine:transcript` | `FooterMetaTest` |
 | B-CHAT-068, 100, 101 | `:engine:transcript` | `RunResultTest` |
-| B-CHAT-019, 057, 102 | `:engine:transcript` | `ContextShareTest` |
+| B-CHAT-019, 057, 102, B-STATE-012 | `:engine:transcript` | `ContextShareTest`, `ContextUsageMemoryTest` (012: `oc.contextUsage.<profile>`, newest 200 sessions, `null` forgets, nonsense dropped; the agents feed reads it, 17 §1.8) |
+| B-AGENT-012, 024, 025, 035 | `:core:domain` (`AgentErrorCause`) + `:engine:transcript` | `AgentErrorCauseTest`, `AgentRunFailureTest` |
+| B-STATE-047…053 | `:engine:delivery` | `PendingCommandJournalTest` (metadata only, survives restart; duplicate claims grant one; uncertain and terminal receipts never become sent again; malformed journal or unknown profile fails closed; capacity and byte limits keep tombstones; profile deletion closes and drains) |
+| B-STATE-059 | `:engine:composer` | `PhraseChipsStoreTest` (learned phrases per profile, corrupt blob reads as nothing, swept, no late write after deletion) |
+| B-STATE-113 | `:engine:transcript` (session note) | `SessionNoteTest` (re-read before save rejects another client's change; scope change never writes into a new location; duplicate saves serialize) |
+| B-STATE-114 | `:engine:connection` (`SessionPins`) | `SessionPinsTest` (survive reload, never cross profile or location, failed storage not shown as saved) |
+| B-STATE-120 | `:engine:project` | `SessionSkillTest` (17 §2.9) |
+| B-STATE-082, 083, B-CHAT-093…095 | `:engine:connection` (`ReturnBrief`, read state) | `ReturnBriefTest` (screen home 07 B15) |
+| B-CHAT-013, 014, B-STATE-029 | `:engine:agents` (`ChatFeed`) | `ChatFeedTest`, `MergedChatFeedTest` (17 §1.14; slice 2 via FORCE) |
+| B-CHAT-090, 091 | `:engine:integrations` (`Usage`) | `QuotaAnswersTest` (17 §3.5) |
+| B-CHAT-092 | `:engine:runtime` (`ReplyWatch` timings, `oc.replySpeed.inApp`) | `ReplyTimingTest` (11 §22.1 item 4) |
 | B-CHAT-059, 060, 064 + Markdown fixtures | `:core:markdown` | `BlockParseTest`, `StreamingMarkdownTest`, `PathChipScannerTest`, `PictureScannerTest`, `ProseForSpeechTest` |
 | B-CHAT-055, 058 | `:ui:kit-content` (common, pure) | `CommandLineStartsTest`, `DiffModelTest` |
-| B-STATE-008, 009, 033–046, 119, B-AGENT-069, 070, 317, B-PROTO-025, 045 | `:engine:delivery` | `PromptDeliveryTest`, `SteerTest`, `OfflineQueueTest`, `ReceiptsTest` |
+| B-STATE-008, 009, 033–046, 119, B-AGENT-069, 070, 317, B-PROTO-025, 045 | `:engine:delivery` | `PromptDeliveryTest`, `SteerTest`, `OfflineQueueTest`, `ReceiptsTest`, `SendOutcomeTest` |
 | map CHAT-GENUI-08/40/50 rules | `:engine:delivery` | `ConversationActivityTest` |
-| B-CHAT-073, 074, 075, 076, 122, B-AGENT-031, 221, B-PROTO-048, B-SEC-147 | `:engine:requests` | `PermissionAskTest`, `ExactlyOnceReplyTest`, `AlwaysAllowInvitationTest` |
+| B-AGENT-243 | `:engine:delivery` (records `stoppedByPerson`) + `:engine:attention` (reads it; 11) | `StopByPersonTest` (a stop is never Failed and never needs the person; a real failure still does) |
+| chat analytics (§6.8) | `:engine:delivery`, `:engine:requests` | `ChatAnalyticsTest` |
+| B-CHAT-073, 074, 075, 076, 122, B-AGENT-031, 221, B-PROTO-048, B-SEC-147 | `:engine:requests` | `PermissionAskTest` (incl. the always-allow gate), `ExactlyOnceReplyTest`, `AlwaysAllowInvitationTest` |
+| B-AGENT-222, 223, 224, 225, B-STATE-099 | `:engine:requests` | `AutoApprovalTest` (effective mode, sweep, server resync, drain before sweep) |
 | B-CHAT-072, B-PROTO-022, 044, B-CHAT-028 | `:engine:requests` | `QuestionsTest`, `FormSpecTest`, `Oc2FormAdapterTest` |
-| B-CHAT-029–053 | `:engine:requests` (`cards`) + `:engine:agents` (`CardsSetup` rows 034–036, 040–042, 047, 049) | `CardCorpusTest`, `CardJsTwinCorpusTest`, `CardStatesTest`, `CardAnswersTest`, `CardJournalTest`, `CardRecoveryTest`, `CardsSetupTest` |
-| B-CHAT-077–086, 017, 018, 087–089, 098, 099, B-STATE-016, 100–102, 136, 138, 141 | `:engine:composer` | `PhraseChipsTest`, `PhraseMomentTest`, `StartersTest`, `MentionsTest`, `DraftsTest`, `StashTest`, `ReviewReferencesTest` |
+| B-CHAT-029–053 | `:engine:requests` (`cards`) + `:engine:agents` (`CardsSetup` rows 034–036, 040–042, 047, 049) | `CardCorpusTest`, `CardJsTwinCorpusTest`, `CardStatesTest`, `CardAnswersTest`, `CardJournalTest`, `CardJournalMigrationTest`, `CardRecoveryTest`, `CardsSetupTest` |
+| B-AGENT-130–135 | `:engine:integrations` (`ConnectorSearchBridge`) + `:engine:runtime` (`SearchPublisher`) + `:engine:requests` (`cards`) — unit S5-CONNECT | `ConnectorQualificationTest`, `ConnectorSearchBridgeTest`, `SearchPublisherTest`, `ConnectorAdmissionTest` |
+| B-CHAT-077–086, 017, 018, 087–089, 098, 099, B-STATE-016, 100–102, 136, 138, 140, 141 | `:engine:composer` | `PhraseChipsTest`, `PhraseMomentTest`, `StartersTest`, `MentionsTest`, `DraftsTest`, `DraftRestoreTest`, `StashTest` (140: save → restart → restore → profile deletion), `ReviewReferencesTest`, `ComposerAppliesOutcomesTest` |
+| B-STATE-111, 112 | `:engine:connection` (`Selection`) | `SessionSelectionTest` |
+| B-STATE-115 | `:engine:connection` | `ReadStateTest` (with B-CHAT-012) |
+| B-AGENT-110, B-CHAT-015 | `:engine:connection` | `FreeModelNoticeTest` (the free-model caption on the status line; 015's stored dismissals also stay 05's migration row) |
+| B-CHAT-108 | `:engine:connection` (session creation) | `SkillConversationTest` (stages the skill id without running the agent; never duplicates) |
+| keyboard images, chip rules, tips, insert | `:ui:kit-chat`, `:feature:chat-composer`, `:engine:settings` | `KeyboardContentTest`, `ModelChipLabelTest`, `ChatTipRetiredOnUseTest`, `InsertRequestTest` |
 | B-CHAT-009, 010, B-MEDIA-006–008 | `:engine:media` (+ `:engine:composer` vault) | `AttachmentLimitsTest`, `OfficeTextTest`, `PhotoRecoveryTest` |
 | B-CHAT-103–106, 120, 001–003 | `:engine:project` | `StagedRevertTest`, `UndoFromHereTest`, `ActiveContextTest` |
 | B-CHAT-025–027 | `:engine:project` | `DevPreviewTest` |
@@ -1922,12 +2255,22 @@ Test names start with the row id (ADR §6.3 rule 12), e.g. `` `B-CHAT-117 a late
 | B-CHAT-006 | `:engine:settings` | `GlowChoiceTest` |
 | B-CHAT-012 | `:engine:connection` | `ReadStateTest` |
 | B-CHAT-004, 016, 056, 061, 062, 063, 123 | `:ui:kit-chat` / `:ui:kit-content` | Roborazzi `*ScreenshotTest` (light/dark, en/ar) |
+| list and selection behaviour (§7.3, §7.8, §9.1, §9.5) | `:feature:chat`, `:ui:kit-chat`, `:ui:kit-content` | `FollowNewItemTest`, `EarlierPillCountTest`, `RevealWakesOnGrowthTest`, `SmartSelectionOffTest`, `ChatImageLoaderNoNetworkTest`, `MonoSurfacesRedactedTest` |
+
+**Chat-domain rows owned by other sections** (recorded so `scope.jsonl` does not drop them; the coordinator confirms
+each in §19.2 request SC-09-1; **picked up 2026-11-01 by 17 and the rows above**: 013/014 → 17 §1.6 `ChatFeed`, 090/091 → 17 §3.5, 092 → 11 §22.1, 093–095 → 07 B15): B-CHAT-013, 014 (chat feed) and 093–095 (return brief) → 07 / `:feature:chats` +
+`:engine:agents` `ChatFeed`; B-CHAT-090, 091 (quota and spend answers) → the usage owner (`:engine:integrations`
+`Usage`); B-CHAT-092 (reply timing) → 11, which ports `lib/builtin/reply_watch.dart` and its `oc.replySpeed.inApp`
+timings (13 reads them); B-CHAT-020 → 14 (E2E-21); B-CHAT-021–024 and 107 → 10; B-CHAT-070 → 04 (Paseo streaming);
+B-L10N-003 (folder facts line) and B-L10N-016 (permission titles per locale) → 06 (`FolderFactsWordsTest`,
+`PermissionTitleWordsTest`); the chat only uses those words.
 
 ### 15.3 Fixtures to port
 
 | Flutter | Native | Owner |
 |---|---|---|
 | `test/fixtures/genui/validation.json` + `runtime_*.json` | `engine/requests/src/commonTest/resources/genui/` | cards unit |
+| `validation.expected.json` (new: normalised JSON + `revision` per accepted case, generated once by a Dart script on a `v2.1.0+57` worktree, §13.3) and one real `oc.genui.journal.<profileId>` blob | same folder | cards unit, **before** Dart tooling is retired |
 | `test/perf_chat_test.dart` shapes (1,000/5,000 parts, fragmented or not) | `core/testing` `TranscriptFixtures.history(count, fragmented)` | test-writer lane |
 | `test/chat_live_events_test.dart` scripted events | `core/testing` `WireFixtures.load("oc2/2.1.1/…sse")` replayed through `FakeServerGateway` | test-writer lane |
 | Markdown test inputs (`kit_markdown_test` 23, `kit_markdown_image_test` 25, `markdown_path_link_test` 9, `markdown_reading_test` 16, `markdown_agent_blocks_test` 5, `markdown_streaming_test` 3) | `core/markdown/src/commonTest/resources/md/*.md` + expected `*.blocks.json` | `:core:markdown` unit |
@@ -1970,9 +2313,9 @@ their first form; the rest run at the start of the unit that needs them, on a th
 |---|---|---|---|---|
 | SP-1 | Block items vs turn items on the 5,000-part fixture | Opus, 2 days (inside P3) | J3 fling and J2 stream meet S-9/S-10 on the emulator relative to Flutter R; 1 block re-laid out per tail update | turn items with block items only for turns > 40 blocks (§7.1) |
 | SP-2 | JetBrains `StreamingMarkdownFile` on real agent output: setext headings, lazy list continuation, a table whose header arrives before its delimiter row, a 400-line open fence | Codex, 1 day | output equals the Flutter fixtures; tail re-parse with the open-fence wrapper ≤ 1 ms per append on the emulator for the 400-line fence | port Flutter's parser (§9.1) |
-| SP-3 | Draw-only fade, `animateContentSize` growth (descenders, shrink), `preferredFrameRate` export in CMP 1.13 common | Opus, 1 day (inside P3) | `RevealDrawOnlyTest` green; no clipped descenders in Roborazzi at 1.0/2.0 text; frame-rate vote visible in Perfetto | `LayoutModifierNode` grow (§8.4); `KitPlatform.frameRateHint` seam (§8.5) |
+| SP-3 | Draw-only fade; grow-only `LayoutModifierNode` (descenders, no shrink animation) against an `animateContentSize` baseline; the frame-rate vote from common `preferredFrameRate` [V exported] | Opus, 1 day (inside P3) | `RevealDrawOnlyTest` green; no clipped descenders in Roborazzi at 1.0/2.0 text; a shrink never animates; frame-rate vote visible in Perfetto | tune the descender allowance; if the vote does not show, a `JETPACK_AHEAD` row for the Jetpack modifier (no new seam) |
 | SP-4 | Highlighter: SyntaxMP vs Highlights vs kotlin-textmate | Sonnet, ½ day | correct colours on shell, JSON, TS, Kotlin, diff for 45 aliases × 3 outputs; ≤ 20 ms per 20k chars on the emulator | kotlin-textmate on Android (size re-check), then plain |
-| SP-5 | Selection: across 3 blocks and one screen of scroll, copied text order in a reverse list, live block on 1.13-beta, smart selection off | Sonnet, 1 day | order correct; no crash in 1,000 select-while-stream iterations on 1.13 | selection off on the live block until 1.13 stable |
+| SP-5 | Selection: across 3 blocks and one screen of scroll, copied text order in a reverse list, live block on 1.13-beta, smart selection off, the filtered menu (Copy, Select all only) | Sonnet, 1 day | order correct; no crash in 1,000 select-while-stream iterations on 1.13; no Open/Call item over a selected URL or number | selection off on the live block until 1.13 stable |
 | SP-6 | TalkBack order with `traversalIndex` + `zIndex` on a reverse list | Sonnet, ½ day, emulator with TalkBack | prompts read oldest→newest within the viewport; header, list, composer in that order | per-turn semantics merge |
 | SP-7 | Insert at index 0 while following: `requestScrollToItem(0)` + grow-from-zero looks continuous | Opus, inside P3 | no visible hop in a 240 fps screen recording of J2 on the emulator | keep the tail block's key stable across splits (one live item per part) |
 
@@ -1981,10 +2324,16 @@ their first form; the rest run at the start of the unit that needs them, on a th
 ## 17. Build order: units per slice
 
 **What the chat rewrite removes** (the simplify rule; slice contracts list these under "deletes"):
-`scrollable_positioned_list` and the pinned-count workaround; the Dart `highlight` package; the custom grow `RenderBox`;
-paint-only span copying for the fade; the second form renderer; the delivery segment (queue choice) wherever a runtime
-steers; seven per-screen pending-intent paths for chat entry (07 `EntryRouter`); the demo's per-frame re-parse and
-per-frame spans.
+`scrollable_positioned_list` and the pinned-count workaround; the Dart `highlight` package; the custom grow `RenderBox`
+(replaced by one grow-only layout node); paint-only span copying for the fade; the second form renderer; the delivery
+segment (queue choice) wherever a runtime steers; seven per-screen pending-intent paths for chat entry (07
+`EntryRouter`); the demo's per-frame re-parse and per-frame spans; `coil-network-ktor3` (R12-4); `BasicComposerHost`
+(slice 3).
+
+Unit names follow the roadmap (15) where it names the same work: S2-KC here = roadmap S2-KCA (transcript, stream and
+Markdown parts) + S2-KCB (message, tool, work, request and composer parts); S3-COMP-E = S3-COMPE; S3-COMP-UI =
+S3-COMPUI; S3-FORMS = S3-REQFORMS; S3-CODE = S3-KCCONTENT's code-block part; S5-CARDS-E/SET/UI and S5-CONNECT = S5-CARDS.
+S2-KCODE is new here and needs ADR-09-2.
 
 Model choice follows ADR §10.3 and owner memory (`subagent-model-choice`, `codex-backend-claude-frontend`): Codex builds
 core/engine logic from the contract; Claude Sonnet builds kit and features; Opus takes the transcript engine, the list
@@ -1996,28 +2345,31 @@ and the reveal.
 | S2-MODEL | 2 | Codex | `:core:model`, `:core:domain` | §2 types and `ToolPresentation` with their rows green | wire adapters | contract s2 |
 | S2-MD | 2 | Codex | `:core:markdown` | streaming blocks, scanners, `proseForSpeech` green on the ported fixtures (SP-2 first) | any UI | S2-MODEL |
 | S2-TX | 2 | Opus | `:engine:transcript` | events → newest-first rows with fences, merge, passes, 50 ms publish; §14.2 engine counters green | the list | S2-MODEL, S2-MD, 04 OC2 adapter |
-| S2-DLV | 2 | Codex | `:engine:delivery` | send pipeline §4.2 steps 1–10 (no offline queue persistence yet), steer table, Stop, live line | drafts, attachments | S2-TX |
-| S2-KC | 2 | Opus + Sonnet | `:ui:kit-chat` | 06 unit KC2 parts + `RevealRegistry`, `kitFreshFade`, `KitTranscriptList`, `TranscriptListState`, `ComposerHost` | code colours, diff page | 06 K1 |
-| S2-CHAT | 2 | Opus | `:feature:chat` | the chat screen with the list, follow, jump, find, status line, message actions, `BasicComposerHost`; J1–J3 recorded on the emulator | composer extras | S2-TX, S2-DLV, S2-KC |
+| S2-DLV | 2 | Codex | `:engine:delivery` | send pipeline §4.2 steps 1–10, `outcomes`/`acknowledge`, steer table, Stop (incl. `stoppedByPerson`), live line, **and the offline queue with dispatch markers and command receipts**, reading a real Flutter `oc.offlineQueue` blob unchanged (roadmap C15-1) | drafts, attachments | S2-TX, S1-DATA |
+| S2-KC | 2 | Opus + Sonnet | `:ui:kit-chat` | 06 unit KC2 parts (with kit-local models, C5) + `RevealRegistry`, `kitFreshFade`, `kitGrowOnly`, `KitTranscriptList`, `TranscriptListState`, `ComposerHost` | code colours, diff page | 06 K1 |
+| S2-KCODE | 2 (needs ADR-09-2) | Sonnet (kit-content owner) | `:ui:kit-content` (created here) | the plain `KitCodeBlock`: `BasicText` + `horizontalScroll`, LTR, mono, 12-line cap with "Open full output", redacted display, Copy, no tokenizer; `ChatRow` maps `RowKind.Code` to it | colours (S3-CODE) | 06 K1 |
+| S2-CHAT | 2 | Opus | `:feature:chat` | the chat screen with the list, follow, jump, earlier-messages pill, find, status line, message actions, `BasicComposerHost`; J1–J3 recorded on the emulator | composer extras | S2-TX, S2-DLV, S2-KC, S2-KCODE |
 | S2-REQ (C1) | 2 if ADR-09-1 is accepted, else first of 3 | Codex + Sonnet | `:engine:requests`, request card in `:feature:chat` | answer a permission and a one-question ask in the chat, exactly once, with the 3 s hold | forms, always allow, notifications | S2-TX |
-| S3-COMP-E | 3 | Codex | `:engine:composer`, offline queue in `:engine:delivery` | drafts, vault, stash, history, phrase chips, references, offline queue with markers green | UI | S2-DLV, 05 |
-| S3-COMP-UI | 3 | Sonnet | `:feature:chat-composer` | `FullComposerHost` replaces the basic one: chips row, tray, attachments, mentions, commands, editor, saved prompts | voice runtime | S3-COMP-E |
+| S3-COMP-E | 3 | Codex | `:engine:composer` | drafts (with the §10.8 restore rules), vault, stash, history, phrase chips, references, photo recovery record; applies `PromptDelivery.outcomes` | UI; the offline queue (S2-DLV owns it) | S2-DLV, 05 |
+| S3-COMP-UI | 3 | Sonnet | `:feature:chat-composer` | `FullComposerHost` (plain binding; the chat lead deletes `BasicComposerHost` in the same merge): chips row, tray, attachments, keyboard images, mentions, commands, editor, saved prompts | voice runtime | S3-COMP-E |
 | S3-FORMS | 3 | Codex + Sonnet | `:engine:requests`, `:ui:kit-chat` `KitForm` | `FormSpec` + OC2 adapter (`hidden`, `when`), question sheet, approval modes, always-allow invitation | card forms | S2-REQ |
-| S3-CODE | 3 | Sonnet | `:ui:kit-content` | `CodeTokenizer` + SyntaxMP (SP-4 first), `KitCodeBlock` full, inline `KitDiffView` | diff page | S2-KC |
+| S3-CODE | 3 | Sonnet | `:ui:kit-content` | `CodeTokenizer` + SyntaxMP (SP-4 first), `KitCodeBlock` full, inline `KitDiffView` | diff page | S2-KCODE |
 | S3-WORK | 3 | Sonnet | `:ui:kit-chat` | open timeline rows, step light, background work line, running work sheet | — | S2-KC |
 | S4-PAGES | 4 | Codex + Sonnet | `:engine:project` review model, `:feature:chat-pages` | undo from here (both shapes), Review the undo, context pages, export, note, relations | Files hub | S2-CHAT |
 | S5-CARDS-E | 5 | Codex | `:engine:requests` `cards` | corpus-green validator, states, answers, journal, recovery (B-CHAT-029–053 minus setup) | install | S3-FORMS |
 | S5-CARDS-SET | 5 | Codex (runtime owner reviews) | `:engine:agents` `CardsSetup`, `:engine:runtime` assets | install, verify, disable for Claude Code on the emulator's built-in Linux; status words | OpenCode 2 qualification | slice-3 runtime |
 | S5-CARDS-UI | 5 | Sonnet | `:ui:kit-chat` `KitAgentCard`, `:feature:chat`, `:feature:chats` list slot | a qualified Claude Code card shows, answers once with Undo, recovers after restart | connector card | S5-CARDS-E |
-| S5-CONNECT | 5 | Codex + Sonnet | `:engine:integrations`, kit | connector card + `find_connectors` | — | S5-CARDS-UI |
+| S5-CONNECT | 5 | Codex + Sonnet | `:engine:integrations` (`ConnectorSearchBridge`), `:engine:runtime` (`SearchPublisher`), kit | connector card + `find_connectors` with the loopback bridge and its rules (§13.8); B-AGENT-130–135 green | — | S5-CARDS-UI |
 | S5-DIFF | 5 | Sonnet | `:ui:kit-content` | diff page (unified/split), line selection actions | — | S3-CODE |
 | S6-PERF | 6 | Sonnet (perf lane) | `:android:benchmark` | S-9…S-13, S-16, S-20 met on NX721J (owner OK); profiles regenerated | new features | all |
 
 **Slice-2 finish line (chat part):** on the preview flavor, the owner opens a conversation on the phone's OpenCode 2
 server, sends a prompt, watches a reply with code stream smoothly, stops it, sends while a reply runs (it adds to the
 turn), scrolls up through older history without a jump, finds a word, and J1–J3 numbers are recorded; plus "answers a
-permission" if ADR-09-1 is accepted. **Slice-2 known gaps (preview only, closed in slice 3):** drafts are not saved,
-attachments are not offered, code has no colours, forms are not shown.
+permission" if ADR-09-1 is accepted. Code in that reply is drawn by the plain `KitCodeBlock` of S2-KCODE; if the
+coordinator refuses ADR-09-2, S2-KCODE builds the same plain block as a public kit-chat part and S3-CODE moves it to
+`:ui:kit-content` (one import change in `ChatRow`). **Slice-2 known gaps (preview only, closed in slice 3):** drafts are
+not saved, attachments are not offered, code has no colours, forms are not shown.
 
 ---
 
@@ -2025,20 +2377,26 @@ attachments are not offered, code has no colours, forms are not shown.
 
 The chat is done for the switch when every line below is true on the release build:
 
-1. Every in-scope chat row of §15.2 has a passing native test, named after its row (S-1).
+1. Every catalog row whose module in `scope.jsonl` is a chat module (`:core:markdown`, `:engine:transcript`,
+   `:engine:delivery`, `:engine:requests`, `:engine:composer`, `:ui:kit-chat`, `:feature:chat*`, and the chat rows
+   §15.2 places in other modules) has a passing native test, named after its row (S-1). Rows §15.2 hands to other
+   sections are checked there, not dropped.
 2. E2E-05, 06, 07, 10, 11, 12, 15, 21, 29, 30, 36, 37 are green on the native release build after being green on Flutter
    R (S-2).
 3. §14.1 numbers are met on NX721J; §14.2 counters are green at T1.
 4. No chat file imports `material3`, `LocalContext`, raw `clickable`, raw `tween`/`spring`, `BackendKind` (Konsist).
 5. No server or exception text reaches a visible label: `NoServerTextInChatUiTest` scans `ChatUi` producers for `String`
    fields fed from `Failure.details` or `errorText` (only `Redacted` crosses).
-6. `LinkPolicyTest`: every link path in the chat (Markdown, cards, notices, footers) ends in `openExternalLink` or the
-   dev-preview claim; `SmartSelectionOffTest` green.
+6. `LinkPolicyTest`: every link path in the chat (Markdown, cards, notices, footers, retry advice) ends in
+   `openExternalLink` or the dev-preview claim; `SmartSelectionOffTest` green (filtered menu has no Open or Call).
+   `ChatImageLoaderNoNetworkTest` green and no `coil-network-*` in `releaseRuntimeClasspath`.
+   `MonoSurfacesRedactedTest` green.
 7. `NoQueueChoiceTest`: with a steering runtime and a running turn, no composer state offers a queue choice; an old
    stored `queue` value is ignored.
 8. The upgrade journey (ADR §10.2) shows a Flutter draft with an attachment, an unconfirmed send marker, saved prompts,
    phrase chips and card journal entries intact after the switch; the unconfirmed send is still unconfirmed and is not
-   sent (map §3 migration notes).
+   sent, and its text is not restored into the composer (§10.8 rule 1); journal entries still match their cards'
+   revisions (`CardJournalMigrationTest`) (map §3 migration notes).
 9. TalkBack (SP-6 method) hears one announcement per finished turn and reads the transcript oldest to newest.
 10. At 200 % system text in Arabic on a 320 dp width: reply text scales fully, chips and the composer stay at 1.3×, no
     chip cuts mid-word, code stays LTR (06 capacity tests at 280/412/1600 dp).
@@ -2062,8 +2420,13 @@ The chat is done for the switch when every line below is true on the release bui
 | # | Request | Needed by |
 |---|---|---|
 | ADR-09-1 | Amend ADR §5.2: `:engine:requests` starts in slice 2 (permissions and one-question asks); the rest stays slice 3+ (§0.4 C1) | contract s2 freeze |
+| ADR-09-2 | Amend ADR §6.1 and `ModuleRules`: add the acyclic edge `:ui:kit-chat → :ui:kit-content` (kit-content never depends on kit-chat), and amend ADR §5.2: `:ui:kit-content` starts in slice 2 with the plain `KitCodeBlock` only (06 §7.7 already says "2 (plain)"); with 06 CR06-2 (`:ui:kit-content → :core:security`). If refused: content slots (§0.4 C5) and the plain block in kit-chat until slice 3 (§17) | contract s2 freeze |
 | MO-09-1 | `MODULE_OWNERS` file-level row: `ui/kit-chat/…/host/ComposerHost.kt` → chat lead (§0.4 C2) | slice 2 |
-| AA-09-1 | `OcApplication.onCreate`: `ComposeFoundationFlags.isSmartSelectionEnabled = false` before the first composition (§7.8) | slice 2 |
+| MO-09-2 | 03 §11.2 `TeachingRegistry` gains `recordUsed(id)`; a used tip never shows again (§10.10) | slice 2 |
+| AA-09-1 | `OcApplication.onCreate`: `ComposeFoundationFlags.isSmartSelectionEnabled = false` **before** `super.onCreate()`, plus the R8 `-assumevalues` rule in `:androidApp` (§7.8); the kit's menu filter is the second layer | slice 2 |
+| GE-09-1 | 04 §11.2 additions: (a) `HistoryReset(sessionId, cause: Compacted \| Reverted \| Deleted)` from OC2 `session.compacted` / `session.history.reset`, and `MessageRemoved` / `PartRemoved` where a backend emits them (§3.3); (b) `RunRetrying` carries optional `RetryAdvice(title, message, label, link)` from the server's retry action (§4.1 rule 4); (c) a `SessionPermissionSync` facet, `syncSessionPermissions(sessionId)` behind a capability, implemented by the OpenCode 2 gateway (§5.3) | contract s2 (a, b), s3 (c) |
+| CL-09-1 | 03 §7.1: remove `coil-network-ktor3` from `:androidApp` and `:desktopApp` (accepts 12 R12-4); `:quality` check on `releaseRuntimeClasspath` for `coil-network-*` (§9.1) | slice 2 |
+| SC-09-1 | `scope.jsonl`: record the chat-domain rows §15.2 hands to 04, 06, 07, 10, 11, 14 and the usage owner, so none is dropped | contract s2 freeze |
 | VPS-09-1 | Node ≥ 20 on the build VPS for `CardJsTwinCorpusTest` (02 §10 checklist) | slice 5 |
 | FX-09-1 | FX-OC2 gains `perf:stream-6000`, `perf:history-5000`, `perf:tools-200` (§14.3) | slice 2 |
 
@@ -2096,6 +2459,97 @@ The chat is done for the switch when every line below is true on the release bui
   `…/io/github/petertrr/kotlin-multiplatform-diff/maven-metadata.xml` (1.4.0),
   `https://dl.google.com/android/maven2/androidx/compose/ui/ui-text/maven-metadata.xml` (1.13.0-beta02 latest),
   `foundation-android-1.13.0-beta02-sources.jar` (`LazyDsl.kt` `cacheWindow`, `LazyListState.requestScrollToItem`,
-  `SelectionState.kt`, `ComposeFoundationFlags.isSmartSelectionEnabled = true`),
-  `ui-text-android-1.13.0-beta02-sources.jar` (no `DrawAnnotation`).
+  `SelectionState.kt`, `ComposeFoundationFlags.isSmartSelectionEnabled = true` and its KDoc,
+  `StatelessInputConnection.android.kt` `toTransferableContent`, `TextContextMenuModifier.kt`
+  `filterTextContextMenuComponents`, `TextContextMenuData.kt` `TextContextMenuKeys`),
+  `ui-text-android-1.13.0-beta02-sources.jar` (no `DrawAnnotation`),
+  `https://repo1.maven.org/maven2/org/jetbrains/compose/ui/ui/1.13.0-beta01/ui-1.13.0-beta01-sources.jar`
+  (`commonMain/androidx/compose/ui/FrameRate.kt`), `…/io/coil-kt/coil3/coil-core/3.6.3/coil-core-3.6.3-sources.jar`
+  (`imageLoaders.kt` `serviceLoaderEnabled`, `RealImageLoader.kt` `addServiceLoaderComponents`).
+- Flutter source added in review: `lib/state/connection/permissions.dart:330-420`, `lib/state/session_auto_approval.dart:198`,
+  `lib/ui/screens/chat/{chat_attachments.dart:338, chat_history.dart:51, chat_stream.dart:30-160, chat_scroll.dart:170,
+  chat_transcript.dart:185-214, chat_message_actions.dart:146, chat_top_bar.dart:92, transcript_turns.dart:686-750,
+  chat_composer_region.dart:278, composer.dart:656, attention_card.dart:679}`, `lib/ui/screens/chat_screen.dart:470-494`,
+  `lib/state/connection/{session_cache.dart, turn_stall.dart:38}`, `lib/state/session_tail_cache.dart`,
+  `lib/ui/kit/{kit_code_block.dart, kit_copy.dart, kit_icon_button.dart, kit_request_card.dart:1067-1210,
+  chat/kit_tool_row.dart:1396}`, `lib/domain/agent_error_text.dart`, `lib/state/mcp_connector_search_bridge.dart`,
+  `lib/builtin/agents/gen_ui_search_publish.dart`, `test/fixtures/genui/validation.json`.
+
+---
+
+## Review notes (2026-11-01)
+
+Each issue was checked against the Flutter source, the other plan sections or the published sources before changing
+anything.
+
+**Changed (accepted):**
+
+- Keyboard images (§10.1): replaced the copied "inline bytes only" rule; the kit `androidMain` receiver reads each
+  content URI while the grant lives, capped at limit + 1, MIME from metadata or sniffing; `KeyboardContentTest`.
+- Publisher (§3.5): `Long.MIN_VALUE` sentinel replaced by `null`; `laneScope` stated; delay clamped;
+  `PublishCountTest` starts its clock at `1_760_000_000_000` and asserts an immediate first publish.
+- Engine order (§4.2, §13.5): delivery publishes `outcomes` that `:engine:composer` collects (history, phrases,
+  put-back); requests sends card answers through `CardAnswerSender`, implemented in delivery. Also fixed a third
+  upward call found while editing: the transcript no longer calls requests on a history reset (`historyEpoch`), and the
+  stall tracker reads asks from gateway events, not from requests.
+- Kit-chat dependencies (§0.4 C5, §2.4, §7.1, §9.5, §13.7): kit-local models and plain lambdas; ADR-09-2 asks for the
+  `:ui:kit-chat → :ui:kit-content` edge, with content slots as the fallback.
+- Slice-2 code block (§0.3, §17): new unit S2-KCODE (plain `KitCodeBlock`), `ChatRow` maps `RowKind.Code` to it;
+  `:ui:kit-content` starting in slice 2 is part of ADR-09-2.
+- `ComposerHost` (§6.3): no `replaces`; the chat lead deletes `BasicComposerHost` in the S3-COMP-UI merge; a
+  per-conversation `ComposerViewModel` resolves Connection engines through `ConnectionRegistry.graphFor`.
+- Following the live edge (§7.3, §8.2): `newestKey` computed in composition; `requestScrollToItem(0)` in a
+  `SideEffect` of the same frame (the request is consumed by that frame's remeasure; a `SideEffect` rather than a bare
+  composition call so an abandoned composition cannot issue it); reveal inputs read through snapshot state; tests added.
+- Coil (§9.1, §14.4): `serviceLoaderEnabled(false)` on every loader, R12-4 accepted, socket test and classpath check.
+- Card revision parity (§13.3, §15.3, §18): Dart-generated `validation.expected.json` with byte-equal normalised JSON
+  and revisions; `CardJournalMigrationTest`.
+- Warm handles in other projects (§3.3): handles read `GatewayEvents.all` filtered by session; `OtherDirectoryHandleTest`.
+- Offline queue (§4.5, §17): S2-DLV owns queue, markers and receipts (roadmap C15-1); S3-COMP-E is composer state only;
+  added a roadmap name map.
+- Growth (§8.4, SP-3): grow-only layout node is primary; `animateContentSize` only as the spike baseline.
+- Frame rate (§8.5, SP-3, §0.2): `preferredFrameRate` is in CMP common [V]; seam fallback deleted.
+- `TranscriptState.index` (§3.1, §3.7): oldest-first positions.
+- Counters (§3.11, §14.2): always compiled; the relayout probe is a kit test hook.
+- Find bar (§6.4, §6.6): composer-layer slot, as the code has it.
+- Choice insert (§6.1, §6.3): `pendingInsert` state with `insertDone(id)`, no flow.
+- Smart selection (§7.8, AA-09-1, SP-5, §18): menu filter to Copy and Select all in the kit, flag set before
+  `super.onCreate()`, R8 rule.
+- `ConversationActivity` (two issues, §4 intro, §3.5): limited to the open chat; attention and widgets read
+  `:engine:connection` session status through `StatusModel`.
+- `CARD_TOOL_NAMES` and `CardsAvailability` (§2.4, §13.3, §13.8): public in `:core:model`; App-scoped binding.
+- Approval modes (§5.3, §0.4 C1, §15.2): effective mode with explicit Ask, sweep, server resync through a
+  `SessionPermissionSync` facet (GE-09-1), drain before the profile sweep; C1 reworded; B-AGENT-222–225, B-STATE-099
+  cited.
+- Redaction (§9.2, §9.5, R18): every mono surface displays `Redactor.text`; SEC-4 debug assertion;
+  `MonoSurfacesRedactedTest`. Partly corrected: the review said Copy uses the raw source, but Flutter's code-block Copy
+  uses `KitCopy`'s default `redact = true` (`kit_icon_button.dart:79`), and 06 §7.7 says code blocks redact on copy.
+  The plan follows the code and 06; only the footer's "Copy reply" copies verbatim.
+- Opening excerpt writer (§3.4 step 7, §3.1 `prefetch`, §15.2): added with the Flutter rules; B-STATE-122 cited.
+- Always allow (§5.3): on the card face with one confirm, gated, repeated in Details.
+- Delete message (§6.6, §3.1): destructive confirm, no Undo bar, `removeMessage` + `reload(reset = true)`.
+- History resets (§3.3, GE-09-1): compaction, removal and shell rows added.
+- Card skeleton (§13.7): dropped for the switch (not Flutter, contradicts B-CHAT-045); kept as a gated later candidate.
+- Motion under Calm (§8.6, R5): progress loops at half pace, glow drawn still, Saver hairline; 08 named as the source.
+- Earlier-messages pill (§7.3 rule 6, §3.1, §3.7): message ordinals and a pill-only derived count.
+- Connector bridge (§13.8, §13.9, §17, §15.2): `ConnectorSearchBridge` and `SearchPublisher` with their rules;
+  B-AGENT-130–135 cited.
+- Errors (§4.1 rule 4, §9.6, §15.2): `RetryAdvice` (GE-09-1), the ordered `AgentErrorCause` list, Paseo specifics;
+  B-AGENT-012/024/025/035 cited.
+- Footer meta (§3.7, §9.6): `FooterMeta.of`, model only when changed, turn totals, newest turn only.
+- Draft restore (§10.8, §4.2 API): five rules, `unconfirmedTexts`.
+- Uncited rows (§15.2, §18 check 1, SC-09-1): added with modules and tests, other sections' rows recorded.
+- Context share writer (§3.10); tips retired on use (§10.10, R16, MO-09-2); model chip rules (§10.3, §7.10); global
+  forms and the stall clock (§3.10, §5.5); `stoppedByPerson` (§4.4); watching deferred (§6.1, §6.5); chat analytics
+  (§6.8); last-used project on open (§3.4 step 1).
+
+**Rejected, in part:**
+
+- B-L10N-003 and B-L10N-016 are not uncited: 06 §17 already owns them (`FolderFactsWordsTest`,
+  `PermissionTitleWordsTest`). §15.2 records that instead of adding duplicate tests in `StartersTest`/`PermissionAskTest`.
+- B-CHAT-092 (reply timing) goes to 11, not 13: 11 ports `lib/builtin/reply_watch.dart` and its
+  `oc.replySpeed.inApp` timings; 13 only reads them.
+- The suggested `requestScrollToItem` call "directly in composition" became a `SideEffect` in the same frame (see
+  above); the behaviour the review asked for is unchanged.
+- No issue was rejected outright.
 

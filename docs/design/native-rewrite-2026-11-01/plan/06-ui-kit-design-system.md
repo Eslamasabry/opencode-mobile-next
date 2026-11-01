@@ -73,7 +73,7 @@ Every row is final for agents unless §19 lists it as an owner question.
 | K8 | Frame-text cap | One common `Density` wrapper caps `sp → dp` at 1.3× the unscaled size and lets the platform's non-linear scaling through below the cap (§9). | Owner rule 2026-10-31; works on every target |
 | K9 | Sheets, dialogs, confirm, undo | **Declarative, screen state** (§01 §9.4). Rendered in-window by `KitSheetHost` (§01 §9.4), which also hosts dialogs, confirm and the undo bar, on the M3 1.5 in-window `BottomSheet`. Menus, tips and term bubbles use foundation `Popup`. | One inset model; built-in predictive back; shared elements work |
 | K10 | Pickers | `KitDateTimePicker` wraps M3 1.5 `DatePicker` / `TimePicker` (input mode included) in kit chrome. It replaces 1,431 lines of custom Dart. Fallback: port the custom picker. | Android-native feel; judge by what it removes |
-| K11 | Secret field | `KitField(kind = Secret)` is built on `BasicSecureTextField`. Clipboard copies of secrets set Android 13+ `EXTRA_IS_SENSITIVE`. | Native privacy, no IME learning |
+| K11 | Secret field | `KitField(kind = Secret)` is built on `BasicSecureTextField`, never prefilled (a stored value shows "Saved · Replace" and no input until Replace), no autofill, `IME_FLAG_NO_PERSONALIZED_LEARNING` (16 SI-4, N16-D16). Clipboard copies of secrets set Android 13+ `EXTRA_IS_SENSITIVE`. | Native privacy, no IME learning, Flutter parity (DESKTOP-WEB-CROSS-64) |
 | K12 | Frost | In the kit, in three pieces. `KitFrostState` is hoisted by `KitScreen`. `Modifier.kitFrostSource(state)` goes on the content that scrolls behind (the transcript list) and records it into a `GraphicsLayer`; it is a kit modifier on the feature allowlist, so `:feature:chat` never touches `graphicsLayer`. `Modifier.kitFrost(role, state)` on the composer and the chat header draws that layer through a `RenderEffect` blur on API 31+. Compose cannot blur "what is behind" without a source, which is why the source exists. Exactly two roles (composer, chat header). **Fallback if P7 fails: a solid surface.** Haze is not a fallback: `12-package-registry` X-21 bans it. | §01 D10, §7.6; §12 X-21 |
 | K13 | Live backgrounds, illustration scenes | Not in the switch release (§01 D11). The prefs are kept. `KitStateView` uses its icon tile. The `KitIllustration` API name is reserved. | §01 D11 |
 | K14 | AI Team and FactsBook parts | After the switch (§01 D6), into `:ui:kit-content`, package `…ui.kit.content.team`. Their strings are converted now (§13.3). | §01 D6 |
@@ -371,7 +371,8 @@ Knob maths (B-KIT-038):
 
 - Soft corners keep about 60 % of the radius. Sharp uses the style's `sharpRadius` (Paper 0, Signal 4, default 2).
   Stadiums and circles never change.
-- Compact density: rows 48/54, button 48, section gap 16, label gap 6. **Touch targets never shrink.**
+- Compact density: rows 48/56, button 48, section gap 16, label gap 6. **Touch targets never shrink.** (56 = Dart
+  `rowHeightTwoLine - space2`; the code wins, P7 D3.)
 - Platform high contrast (§5.7) forces depth Flat and edges Hairline. It turns Soft into Solid, but Brutal, Paper and
   Signal keep themselves (`keepsUnderHighContrast`).
 - **Saver** makes the *effective* Style Solid **and the effective knobs none** (Dart `KitEffects.underSaver`:
@@ -456,7 +457,7 @@ Fonts: `AppSans` = Geist variable, `AppMono` = Geist Mono variable, both SIL OFL
 |---|---|---|---|
 | gutter | 16 | sectionGap | 24 / 16 |
 | labelGap | 8 / 6 | panelPadding | 16 |
-| rowHeightOne / Two | 56 / 64 (48 / 54) | choiceRowMin | 56 |
+| rowHeightOne / Two | 56 / 64 (48 / 56) | choiceRowMin | 56 |
 | buttonHeight | 52 / 48 | minTarget | 48 (never smaller) |
 | chipHeight | 32 (48 hit area) | iconTile | 28, radius 9 |
 | smallIcon | 20 | navHeight | 60, radius 22 |
@@ -837,11 +838,12 @@ interface KitPlatform {
     fun dynamicSource(): DynamicSource?                            // Material You tones, API 31+ only
     val isDebug: Boolean                                            // from AppBuildInfo.debuggable; debug, test and preview builds = true (kitAssert, §16.2)
     @Composable fun pressIndication(ink: Color): Indication        // Android: M3 ripple(bounded) at pressedAlpha .12
-    @Composable fun hapticPerformer(): (KitHaptic) -> Unit         // Android: view.performHapticFeedback(constant) per §4.9 / §08 §6.2; desktop: no-op
+    fun haptic(kind: KitHaptic)                                    // Android: view.performHapticFeedback(constant) per §4.9 / §08 §6.2 through the
+                                                                    // activity's decorView (honours the system Touch feedback setting); desktop: no-op.
+                                                                    // A plain function, not @Composable: as built in P7 (D5)
     @Composable fun SystemBars(darkContent: Boolean, ground: Color)
     fun frostEffect(spec: FrostSpec, density: Float): FrostEffect?  // Android API 31+: RenderEffect blur + saturation; null = draw solid (§7.2)
-    fun frameDensity(base: Density, cap: Float): Density            // default: the common ScaledFontDensity (§9.2); Android may return the
-                                                                    // FontScaleConverterFactory variant if P7 needs it (no contract change)
+    // (no frameDensity member: P7 showed text sizing cannot go through a custom Density; frame text uses frameDp, §9.2)
     fun Modifier.highFrameRate(active: Boolean): Modifier          // Android: preferredFrameRate(High) [§7.6 JETPACK_AHEAD if not in CMP]
     fun formatMoment(epochMs: Long, style: MomentStyle, localeTag: String, is24h: Boolean): String  // Latin digits (nu-latn), §12.1 rule 8
     fun formatNumber(value: Double, style: NumberStyle, localeTag: String): String   // decimalPattern, currency (B-L10N-012); Latin digits
@@ -887,7 +889,7 @@ CMP 1.13.0-beta01 already resolves Jetpack Compose runtime, ui and foundation **
 | `RenderEffect` blur on a recorded `GraphicsLayer` for frost | platform API 31 + Compose ui 1.13.0-beta01 | `AndroidFrost.kt` (`:ui:kit`) | solid surface | never (platform-only effect; desktop stays solid) |
 | `Modifier.imeNestedScroll()` (`@ExperimentalLayoutApi`) | foundation-layout 1.13.0-beta01 | transcript (`:ui:kit-chat`), only if the nubia spike passes and a tip is registered | plain `imePadding` | CMP exports it as stable |
 | `Modifier.preferredFrameRate` | ui 1.13.0-beta01 | `KitPlatform.highFrameRate` while a live block reveals | no-op | CMP exports it [U] |
-| `FontScaleConverterFactory` frame cap | platform API 34 | `KitPlatform.frameDensity` — **only if P7 shows the common wrapper loses non-linear scaling** | linear cap | — |
+| ~~`FontScaleConverterFactory` frame cap~~ | — | dropped: P7 proved the per-size `frameDp` path in common code (§9.2) | — | — |
 
 The earlier "Compose 1.13 selection-while-streaming fix" row is dropped: that fix ships in the pinned 1.13.0-beta01.
 P7 checks selection over a streaming block once; if it still breaks, `KitSelectable` disables selection on the live
@@ -987,7 +989,7 @@ the coordinator reviews it like code.
 | `KitRefresh` | `KitRefresh` | K | 2 | M3 `PullToRefreshBox` + custom indicator drawing the portal brackets | one per screen |
 | `KitAndroidPageTransitionsBuilder`, `KitPageTransitionsBuilder`, `KitPageOrigin` | `KitTransitions` (specs) + `Modifier.kitPageOrigin(key)` / `kitPageOriginTarget(key)` | K + S | 1 | Nav3 `transitionSpec`/`popTransitionSpec`/`predictivePopTransitionSpec`; `SharedTransitionLayout` + `sharedBounds` | the §01 §9.4 policy; open 450 ms, row return 300 ms; disabled during a back gesture |
 | `KitHaptics` | `KitHaptic` (D) + `KitHaptics` (K) | D/K | 0f | `LocalHapticFeedback` through `KitPlatform` | §4.9 |
-| `KitTappable`, `KitPressTracker`, `KitTappableRole` | `KitTappable` (+ internal `PressHold`) | K | 0f | `Modifier.combinedClickable(interactionSource, indication = kit ripple, role, onClickLabel, onLongClickLabel, hapticFeedbackEnabled = false)` + `focusable` + `hoverable` | 48 dp hit area; pressed visible at least 100 ms; disabled needs a `disabledReason`; menu opened by right-click, long-press or Shift+F10 (B-KIT-051) |
+| `KitTappable`, `KitPressTracker`, `KitTappableRole` | `KitTappable` (+ internal `PressHold`) | K | 0f | `Modifier.combinedClickable(interactionSource, indication = kit ripple, role, onClickLabel, onLongClickLabel, hapticFeedbackEnabled = false)` **alone**: it is already focusable and hoverable, so no extra `focusable()`/`hoverable()` (that would add a second Tab/D-pad stop). Hover fill and the focus ring are drawn from the shared `interactionSource` | 48 dp hit area; pressed visible at least 100 ms; a disabled tappable carries its reason (`KitEnabled.Disabled(reason)`, §16.2); menu opened by right-click, long-press or Shift+F10 (B-KIT-051); `KitTappableTest` asserts one focus stop per tappable |
 | `KitInk`, `KitInkLayer` | `KitPress` (internal) | K | 0f | `ripple(bounded = true, color = ink)` + `RippleConfiguration(rippleAlpha = pressed .12)` | under Off: flat pressed fill, same tree (no remount) |
 | `AppIconography`, `AppIcons`, `AppGlyph` | `KitGlyphs` (generated) + `KitIcons` (one glyph per verb: copy, run, stop, send, queue, retry, externalLink) | K | 0f | `ImageVector` | §4.11 |
 | `KitIcon` (`s/m/l`, tone, `.status`, `.mark`) | `KitIcon` | K | 0f | `Image(imageVector, colorFilter = tint)` | decorative by default (`contentDescription = null`); grows ≤ 1.5× with text |
@@ -995,8 +997,8 @@ the coordinator reviews it like code.
 | `KitVectorLogo`, `KitVectorLogoLoad` | `KitVectorLogo` | K | 3 | `KitMarks` by slug; unknown slug → initials avatar | no network SVG |
 | `KitBidi` | `Bidi` | D | 1 | pure | B-L10N-006 |
 | `KitTime` | `KitTime` | K | 1 | `KitPlatform.formatMoment` | 12/24 h follows the phone; B-KIT-033 elapsed words live in `:ui:words` |
-| `KitCopy` | `KitCopy` | K | 1 | `LocalClipboard.setClipEntry(platform.clipEntry(text, sensitive))` + a live-region "Copied" | never a snackbar; the control shows a check for 2 s; the map lists a light tick while MOT-11 lists copy as haptic-free: the Dart `kit_copy.dart` decides |
-| `KitRedact` | `Redactor` | E (`:core:security`) | 0 | pure | the kit renders only `Redacted` in `KitDetailsFold` |
+| `KitCopy` | `KitCopy(text, redact: Boolean = true, sensitive: Boolean = false)` | K | 1 | `Redactor.text(text)` when `redact`, then `LocalClipboard.setClipEntry(platform.clipEntry(safe, sensitive))` + a live-region "Copied" | **masks by default**, as Dart `KitCopy.copy` does (`redact = true`); the 25 Dart call sites that pass `redact: false` on purpose (code blocks, message text and the like) are ported by name and listed in `api/KitCopy.md`; plays `KitHaptic.Send` (Dart parity, §4.9); never a snackbar; the control shows a check for 2 s; `KitCopyTest`: a registered secret is masked by default |
+| `KitRedact` | `Redactor` | E (`:core:security`) | 0 | pure | **the kit calls it**: `:ui:kit`, `:ui:kit-chat` and `:ui:kit-content` depend on `:core:security` (§01 §6.1 already allows it for the first two; §22 asks for `:ui:kit-content`). Code block, log panel, terminal output, diff, viewer (screen text and find), tool row, background work line, `KitField`, `KitNotice` and `KitDetailsFold` redact before they display, copy or "open full", exactly the 12 Dart kit files that call `KitRedact` on the freeze tip; G12 port = `KitRedactionGateTest` (§17) |
 | `kitTypingInField` | `KitTypingGuard` | K | 2 | focus state of kit fields | bare-key shortcuts stand down |
 | `KitLinkScope` | `KitLinkScope` | K | 2 | local `UriHandler` override | lets a screen claim local dev-server links first |
 | `KitSystemBars` | `KitSystemBars` | K | 1 | `KitPlatform.SystemBars` | §5.6 |
@@ -1014,7 +1016,8 @@ the coordinator reviews it like code.
 | Signal: `kitSignalColors`, `KitTrack`, `KitTrackPainter`, `kitPaintTrack`, `KitTrackDecoration`, `kitSignalHead`, `kitSignalRing`, `kitSignalStartTick`, `kitSignalTies`, `kitSegmentTimer`, `kitSignalKey`, `kitSignalStopKey`, `kitSignalNeedsYou`, `kitSignalSample` | `SignalSpec` (D) + `SignalPainters` (K, `DrawScope` functions) + `Modifier.kitTrack()` | D/K | 4 | `drawBehind`, mirrored by `layoutDirection` | lamps breathe only when loops are allowed; B-KIT-042 |
 | `kitSignalSlip`, `kitSignalInSlip` | `KitSignalSlip` | KC | 4 | kit draw | request cards in Signal |
 | `KitLiveBackground`, `KitLiveStyle`, `KitLiveClock`, `KitLivePalette`, `KitLiveMemory`, 20 looks, `KitLiveLookPreview`, `live_mock_chat` | — at the switch | — | after switch (D11) | (AGSL `RuntimeShader` API 33+ or Canvas at 6–12 fps with the shared clock and 30 s idle rest) | prefs kept; B-KIT-002/-020/-047 still tested in `:engine:settings` |
-| `KitFrost`, `KitFrostHeader`, `KitFrostStrength`, `KitFrostHold`, `KitFrostRole` | `Modifier.kitFrost(role, shown)` + `FrostPolicy` | K/D | 2 | `rememberGraphicsLayer()` records the content behind; `RenderEffect.createBlurEffect` + saturation `ColorMatrix` on API 31+; seeded 3 % noise tile; 1 px light line; solid below API 31 and when held | D10; strengths: Weak σ6 sat 1.2 tint .62 (header .72), Balanced σ10/1.4/.70 (.80), Strong σ16/1.6/.76 (.85); dark tint −10 %; held solid by Saver, Off, high contrast and non-Solid styles; B-KIT-018 |
+| `KitFrost`, `KitFrostHeader`, `KitFrostStrength`, `KitFrostHold`, `KitFrostRole` | `KitFrostState` + `Modifier.kitFrostSource(state)` + `Modifier.kitFrost(role, state)` + `FrostPolicy` | K/D | signatures 0f; built 2 | Flutter's `BackdropFilter` blurs whatever is behind; Compose has no backdrop, so `kitFrostSource` (on the transcript list, through `LocalKitFrost`) records its content each frame into a `rememberGraphicsLayer()` held by `KitFrostState`, and `kitFrost` draws the region of that layer under its own bounds through `KitPlatform.frostEffect` (`RenderEffect.createBlurEffect` + saturation `ColorMatrix`, API 31+); seeded 3 % noise tile; 1 px light line; solid below API 31 and when held | D10; strengths: Weak σ6 sat 1.2 tint .62 (header .72), Balanced σ10/1.4/.70 (.80), Strong σ16/1.6/.76 (.85); dark tint −10 %; held solid by Saver, Off, high contrast and non-Solid styles; B-KIT-018. **σ is Flutter's blur sigma in logical pixels**; `RenderEffect` takes a radius in physical pixels (Skia: σ ≈ 0.57735·r + 0.5), so `blurRadiusPx = (σ·density − 0.5) / 0.57735` (`FrostPolicyTest` pins it; P7 compares against the Flutter frost golden side by side). Fallback if P7 fails: solid (no Haze; §12 X-21) |
+| `GlassChoiceControl` (Settings › Appearance, under the Style cards; `appearance_screen.dart:998–1009`) | `KitSegmented` with 4 values (Off, Weak, Balanced, Strong) under the Style question, label = Dart `frostGlassQuestion` | K (part) + F (screen) | 4 | `KitSegmented` | stored in `oc.glass` (§5.2); disabled with its reason under Saver, motion Off, high contrast and non-Solid styles (the same holds as `FrostPolicy`); the owner asked for this control on 2026-10-30. §07 X7 wrongly drops it (§22) |
 | `KitGuide` (+ Item, Group, Question, Next) | `KitGuide` | K | 4 | kit draw + `LazyRow` chips | one decision at a time; `oc.appearanceGuide` lives in the engine |
 | `KitOptionCard` | `KitOptionCard` | K | 4 | kit draw | chosen = ring + check |
 | `KitAccentRow`, `KitAccentSwatch`, `KitSwatch`, `KitSwatchGrid`, `KitThemePreview` | same | K | 4 | kit draw; arrow-key focus group | B-KIT-049 |
@@ -1023,7 +1026,7 @@ the coordinator reviews it like code.
 | `KitCarousel` | `KitCarousel` | K | 4 | foundation `HorizontalPager` with `contentPadding` peek + dots | every card its own target |
 | `KitTip`, `KitTipBubble` | `KitTip` | K | 2 | `Popup` anchored by `Modifier.kitTipAnchor(TipId)`; live region polite | never amber; fades after about 4 s; any touch fades it |
 | `KitTour`, `KitTourStep`, `KitTour.offer` | `KitTour`, `KitTourOffer` | K | 4 | in-window overlay with a cutout scrim (`BlendMode.Clear`) | highlight glides (jumps under Off) |
-| `TipController`, `teachingRegistry` | `TeachingRegistry`, `TipController` | E (`:engine:settings`) | 2 | pure | max 2 showings, one at a time, 2 min cooldown; B-L10N-020 |
+| `TipController`, `teachingRegistry` | `TeachingRegistry`, `TipController` | E (`:engine:settings`) | 2 | pure | max 2 showings, one at a time, 2 min cooldown; B-L10N-020; includes the freeze tip's `whats-new` tour (`Teaching.whatsNew`; "Show me" for Updates opens Settings › This app › Updates, `fc8164b8f`) |
 
 ### 7.3 Frames and navigation (UI-KIT-21…25)
 
@@ -1044,9 +1047,10 @@ the coordinator reviews it like code.
 | `KitStatusMark`, `KitMarkState`; `KitTaskMark` | same | K | 1 | `Canvas` | spinner becomes a still dot under Off |
 | `KitStatusTag`, `KitStatusTagTone` | same | K | 1 | kit draw | a word, never a control |
 | `KitStatusAnswer`, `KitAnswerTone`, `KitAnswerScale` | same | K | 3 | kit draw | |
-| `KitJumpPill`, `KitJumpPillLayer`, `KitJumpEdge` | same | K | 2 | kit draw; `derivedStateOf` on list state | chat threshold 480 px |
+| `KitJumpPill`, `KitJumpPillLayer`, `KitJumpEdge` | same | K | 2 | kit draw; `derivedStateOf` on list state | chat threshold **480 dp** (Flutter's 480 is logical pixels, `chat_scroll.dart:125`), held as `Layout.JUMP_PILL_THRESHOLD`, compared after `toPx()`, never a raw pixel literal |
 | `KitScrollFade` | same | K | 2 | `drawWithContent` + gradient mask (`BlendMode.DstIn`) | never a hard cut mid-word |
-| `KitArrival`, `KitArrivalScope` | same | K | 4 | `LazyListState.animateScrollToItem` + accent wash once | anchor ids such as `effects-vibration` |
+| `KitArrival`, `KitArrivalScope` | same | K | 4 | `LazyListState.animateScrollToItem` + accent wash once | stable anchor ids, never route strings (the Dart doc example `effects-vibration` names a row that does not exist; use real anchors such as the Keep running steps) |
+| `KitUpdateDot` (freeze tip) | same | K | 4 | `Canvas` dot on the top-end corner of its child | amber dot on the Settings gear and the Settings rail destination while an app update waits; fades in over `QUICK` (none under Off); excluded from semantics and taps (the host's label says "Settings, update available"); an approved amber meaning (§2) |
 
 ### 7.4 Modals and overlays (UI-KIT-26…32)
 
@@ -1060,14 +1064,15 @@ the host that `KitScreen` and the shell place. The coordinator should align §03
 
 | Dart part(s) | Native | Mod | Slice | Built on | Notes |
 |---|---|---|---|---|---|
-| `showKitSheet`, `KitSheet`, `KitSheetStep`, `KitSheetTone`, `KitSheetHeight`, `showKitFramedSheet` | `KitSheet(visible, onDismissRequest, title, subtitle?, height, actions, dirty, draft, dismissible, framed, body)`, `KitSheetStep` | K | 0f | M3 1.5 in-window `BottomSheet` (`rememberBottomSheetState`) + kit scrim; medium: capped 640; expanded+: centred 560 panel, `Full` → 400–480 end sheet | handle; header ≤ 4 words with Close at the end; pinned `KitActionBlock`; keyboard lifts the actions; no sheet on a sheet (a second view replaces the first); the predictive back preview is M3's own; B-KIT-032 |
+| `showKitSheet`, `KitSheet`, `KitSheetStep`, `KitSheetTone`, `KitSheetHeight`, `showKitFramedSheet` | `KitSheet(visible, onDismissRequest, title, subtitle?, height, actions, dirty, draft, dismissible, framed, body)`, `KitSheetStep` | K | 0f | M3 1.5 in-window `BottomSheet` (`rememberBottomSheetState`) + kit scrim; medium: capped 640; expanded+: centred 560 panel, `Full` → 400–480 end sheet | handle; header ≤ 4 words with Close at the end; pinned `KitActionBlock`; keyboard lifts the actions; no sheet on a sheet (a second view replaces the first); the predictive back preview is M3's own; B-KIT-032. **"Closes when answered elsewhere"** (Dart `routes: RequestRoutes`): in the declarative model the screen's ViewModel observes the request, sets `visible = false` when another device or the server answers it, and shows `KitReceipt` "Answered on <server>". The kit has no parameter for it; that half of B-KIT-032 is a ViewModel test (§17) |
 | `KitDraft` | `KitDraftBinding(text, onTextChange)` | K (binding) + E (`:engine:composer` store, `oc.draft.<target>.<profileId>`) | 2 | | a multiline field in a sheet must pass `draft` (G48 → manifest gate) |
 | `showKitConfirm`, `KitConfirmSheet`, `KitConsequences`, `KitConsequenceMark` | `KitConfirm(spec: KitConfirmSpec?, onConfirm, onCancel)`, `KitConsequences` | K | 0f | `KitSheet` on compact; 480 dialog on wide | kinds Neutral/Stop/Destructive/Discard; confirm = strong neutral fill; typed name; Enter confirms only Neutral; debug asserts title ends "?" or "؟" and label ∉ {OK, Yes, Continue, Confirm}; B-KIT-015 |
 | `showKitInputDialog`, `showKitAlert` | `KitInputDialog`, `KitAlert` | K | 1 | in-window centred panel 480 + scrim | input focused and selected on open; IME action submits; text kept across rotation (`rememberSaveable`); B-KIT-016 |
 | `KitMenu`, `KitMenuItem`, `KitMenuGroup`, `showKitMenu`, `KitMenuPanel`, `kitMenuLayout` | `KitMenu(expanded, onDismiss, anchor, groups)`, `KitMenuPanel`, `MenuLayout.arrange()` | K | 1 | foundation `Popup` + kit draw, max 320 | ordering logic is pure (B-KIT-022); destructive items last after one divider |
-| `showKitUndo` | `KitUndoBar(offer, onUndo, onTimeout)` | K + S (one host) | 2 | kit draw in the root overlay; reads `LocalKitBottomInset` | one at a time; 8 s; persists under accessible navigation (`AccessibilityManager.isTouchExplorationEnabled` → no timeout + Dismiss) |
+| `showKitUndo` | `KitUndoBar(offer, onUndo, onTimeout)` | K + S (one host) | 2 | kit draw in the root overlay; reads `LocalKitBottomInset` | one at a time; 8 s, stretched by `LocalAccessibilityManager.current?.calculateRecommendedTimeoutMillis(UNDO_WINDOW, containsControls = true)` (the user's accessibility timeout); persists under accessible navigation (`KitSystemSignals.accessibleNavigation` → no timeout + Dismiss, Dart `MediaQuery.accessibleNavigationOf`) |
+| `showKitUpdateSheet`, `KitUpdateChoice` (freeze tip) | `KitUpdateSheet(visible, version, note, onChoice)` | K | 4 | `KitSheet` | declarative; "Version X is ready", one plain line from the release, a What's new link, Update now / Open Settings; Back chooses nothing (owner `app-updates-two-layers`) |
 | `KitSwipeAction` | `KitSwipeAction(id, onAct, menuTwin: KitMenuItem)` | K | 2 | M3 `SwipeToDismissBox` (wrapped) | `menuTwin` is a required parameter (A11Y-5); no destructive tint |
-| `KitDetailsFold`, `showKitTechnicalDetails` | `KitDetailsFold(details: Redacted, notes, values)`, `KitTechnicalDetails` | K | 1 | `KitReveal` | the only place `Redacted` renders; LTR, copyable; last and collapsed |
+| `KitDetailsFold`, `showKitTechnicalDetails` | `KitDetailsFold(details: Redacted, notes, values)`, `KitTechnicalDetails` | K | 1 | `KitReveal` | the only place raw technical details (a `Failure`'s `Redacted` details) appear, already redacted; LTR, copyable (`KitCopy`, redacting); last and collapsed |
 | `KitTechnicalValue` | same | K | 1 | `KitLtr` | |
 | `KitOneTimeCode` | same | K | 3 | large mono, LTR, Copy (`sensitive = true`) | GitHub device flow |
 | `KitTerm`, `showKitTerm` | `KitTerm` | K | 4 | `Popup` bubble, max 320, 48 dp target | |
@@ -1092,7 +1097,7 @@ the host that `KitScreen` and the shell place. The coordinator should align §03
 | `KitChip`, `KitChipKind`, `KitChipTone` | same | K | 0f | kit draw 32 dp in a 48 dp target | always carries a word; frame text |
 | `KitChipWrap` | same | K | 1 | `FlowRow` with run spacing that keeps targets clear | |
 | `KitFilterChip`, `KitFilterChips` | same | K | 2 | `LazyRow` + `KitScrollFade` | `needsYou` is the only amber chip |
-| `KitField` (+ kinds Text, Multiline, Mono, Path, Url, Number, Secret; `KitNumberFormatter`) | `KitField` | K | 0f | `BasicTextField(TextFieldState)`; Secret → `BasicSecureTextField`; Number → `InputTransformation` mapping Arabic-Indic digits and the Arabic decimal separator to ASCII | label above (never floating); helper or error line as a live region; counter from 80 % of max; secret: reveal + Paste, no suggestions, `KeyboardOptions(autoCorrectEnabled = false, keyboardType = Password)`; "Checking…" escalates at 8 s |
+| `KitField` (+ kinds Text, Multiline, Mono, Path, Url, Number, Secret; `KitNumberFormatter`) | `KitField` | K | 0f | `BasicTextField(TextFieldState)`; Secret → `BasicSecureTextField`; Number → `InputTransformation` mapping Arabic-Indic digits and the Arabic decimal separator to ASCII | label above (never floating); helper or error line as a live region; counter from 80 % of max; secret: reveal + Paste, no suggestions, `KeyboardOptions(autoCorrectEnabled = false, keyboardType = Password)`, no `contentType` and not important for autofill, `IME_FLAG_NO_PERSONALIZED_LEARNING` via `InterceptPlatformTextInput`, **never prefilled** (`SecretFieldPresence`: `Empty` → field; `Saved` → the line "Saved · Replace" and no input until Replace → `Editing`), value LTR and bidi-isolated, every keystroke registered with `KitRedact` before the host hears it (16 SI-4, B-SEC-204); "Checking…" escalates at 8 s |
 | `KitSearchField`, `KitSearchNoMatch` | same | K | 2 | `KitField` + count line | 300 ms debounce + one count announcement; shown only above 8 items (B-KIT-030) |
 | `KitAskField` | same | K | 3 | `BasicTextField` | mic while empty, Send once typed; note line never amber |
 | `KitStartBox` | same | KC | 2 | `BasicTextField(TextFieldState)` | new conversation box |
@@ -1114,7 +1119,7 @@ the host that `KitScreen` and the shell place. The coordinator should align §03
 | `KitSkeletonRows` | same | K | 1 | kit draw, no motion, `clearAndSetSemantics {}` | |
 | `KitProgress`, `KitProgressView` (`.staged`) | same | K | 1 | `Canvas` | never goes backwards within a job; B-KIT-025 |
 | `KitProgressRow`, `KitProgressRing`, `KitTrailMark`, `KitWindowRow`, `KitPlanBlock` | same | K | 3–5 | `Canvas` | the window row fills with the share left |
-| `KitContextRing`, `KitContextLevel`, `KitContextChart`, `KitContextBar`, `KitContextSheet` | same | KC | 3 | `Canvas` | 70 / 95 thresholds; high context in text1, never amber or red (B-KIT-058) |
+| `KitContextRing`, `KitContextLevel`, `KitContextChart`, `KitContextBar`, `KitContextSheet` | same | KC | 3 | `Canvas` | accent below 70 %, **attention (amber) from 70 % to 95 %**, text1 from 95 %, never red (`kit_context_ring.dart`; map UI-KIT-41 "warning from 70"); a halo when 70 % or 95 % is crossed upward; tested from `test/kit/kit_context_ring_test.dart` rows. (B-KIT-058's "high context in primary text" is the AI Team `teamContextTone`, parked with D6.) |
 | `KitLevelMeter` | same | KC | 5 | `Canvas` | decorative; the host says "Listening" |
 | `KitReceipt`, `KitReceiptState` | same | K | 2 | kit draw | "Sent" is never "Done"; "Not confirmed yet" at 8 s |
 | `KitNeedsYou`, `KitNeedsYouReason` | same | K | 1 | kit draw | the one attention marker, always with its word |
@@ -1122,16 +1127,18 @@ the host that `KitScreen` and the shell place. The coordinator should align §03
 | `KitChecklist`, `KitStep` | same | K | 3 | kit draw | marks come from the engine, never inferred |
 | `KitLastKnown`, `KitLastKnownRow` | same | K | 2 | `KitRow` read-only | |
 | `KitTranscriptExcerpt`, `KitExcerptMessage`, `KitSkeletonTranscript` | same | KC | 2 | kit draw | redacted and cut |
+| `KitVitalsStrip`, `KitVital` (freeze tip) | same | K | 3 | kit draw | Linux › vitals head: at most 4 cells (`kitAssert`), equal widths; values one line (shrink to fit, never ellipsize); words one line, ellipsized; the summary wraps to 3 lines, then ellipsizes; cells are frame text (1.3×), the summary is reading text; under 340 dp or from 1.6× text, more than two cells wrap into rows of two; Reading cap; heat is never amber; a value change cross-fades (`QUICK`); not a live region |
 
 ### 7.7 Content (UI-KIT-44…49)
 
 | Dart part(s) | Native | Mod | Slice | Built on | Notes |
 |---|---|---|---|---|---|
 | `KitCodeBlock`, `KitCodeKind`, `KitCodeHighlight`, `kitCommandLineStarts`, `kitCodeBreakable` | same; highlighting behind `CodeTokenizer` (SyntaxMP 0.3.0, §01 §8) | KN | 2 (plain) / 3 (highlight) | `BasicText` + `horizontalScroll` | LTR, mono, selectable, redacted; > 20,000 chars render plain; cache of 48; an unclosed fence stays plain while streaming |
-| `KitDiffView`, `KitDiffFile/Line/LineKind/FileStatus/Gap/Selection`, `showKitDiff` | same (`KitDiffPage`) | KN | 5 | `LazyColumn` | unified on phone, side by side from expanded; a page, never a sheet on a sheet |
-| `KitLogPanel`, `KitLogLine/Level/End/Size`, `KitLogBuffer` | same; `LogBuffer` pure | KN | 3 | `LazyColumn` follow-the-tail | ring buffer of 2,000 lines (B-KIT-021); polls only while visible |
-| `KitViewer`, `showKitViewer`, `KitViewerContent`, `KitPdfPage` | `KitViewer` | KN | 5 | sheet, page or pane by window | PDF pages come from `:android:media`'s isolated renderer as bitmaps |
+| `KitDiffView`, `KitDiffFile/Line/LineKind/FileStatus/Gap/Selection`, `showKitDiff` | same (`KitDiffPage`) | KN | 5 | `LazyColumn` | unified on phone, side by side from expanded; a page, never a sheet on a sheet; lines redacted before display and copy |
+| `KitLogPanel`, `KitLogLine/Level/End/Size`, `KitLogBuffer` | same; `LogBuffer` pure | KN | 3 | `LazyColumn` follow-the-tail | ring buffer of 2,000 lines (B-KIT-021); polls only while visible; lines redacted before display and copy |
+| `KitViewer`, `showKitViewer`, `KitViewerContent`, `KitPdfPage` | `KitViewer` | KN | 5 | sheet, page or pane by window | PDF pages come from `:android:media`'s isolated renderer as bitmaps; screen text and find run on redacted text |
 | `KitMarkdown`, `KitMarkdownBlockBuilder`, `KitMarkdownFileLinks`, `KitMarkdownImageKind`, `kitMarkdownBlankComments` | `KitMarkdown` over the `:core:markdown` block model | KC | 2 | `BasicText` per block | the chat section owns streaming (§01 §9.3); links go through `LocalUriHandler`; B-KIT rows in the CHAT area |
+| `chat/kit_markdown_unfinished.dart` (freeze tip, `0932767f0`) | the unfinished-tail rule, pure, in `:core:markdown` (called by `KitMarkdown` while streaming) | KC (+ core) | 2 | pure | while a reply streams, half-written inline syntax on the **last line only** (`**bol`, `` `cod ``, `~~stri`, `[label](htt`, a cut table row) is closed or hidden before the tail block parses, so raw marks never show and the word fade never sees words change size; fences keep their own rule; a finished reply is drawn exactly (a lone trailing `*` stays) |
 | `KitFindMark`, `KitStreamCaret` | same | KC | 2 | draw phase | wash .18 passive / .38 active, never a text colour |
 | `KitImage`, `KitImageSource` | same | KN | 3 | Coil 3 `AsyncImage` | never a raw URL string |
 | `KitAvatar` | same | K | 1 | kit draw (initials / icon); image variant takes a `Painter` from KN | never coloured by identity |
@@ -1140,7 +1147,7 @@ the host that `KitScreen` and the shell place. The coordinator should align §03
 | `KitImageMarkup`, `showKitImageMarkup` | `KitImageMarkup` | KN | 5 | `Canvas` + pointer input | four fixed `MarkupInk`s |
 | `KitQr` | same | KN | 4 | qrose 1.3.1 | dark on light card in every theme; an empty payload is refused (B-KIT-026) |
 | `KitScanner`, `KitScannerCamera`, `KitScannerFailure` | `KitScanner` | KN | 4 | slot → `CameraXViewfinder` + **zxing-cpp** (Google-free; owner 2026-11-01) | latches once; never stores or renders the decoded value |
-| `KitTerminalView` (`.live`, `.output`), `KitTerminalText` | `KitTerminalView` | KN | 5 | `.live` = slot → Termux `TerminalView` via `AndroidView`; `.output` = common `BasicText` with ANSI spans | errors in text1 semibold, ANSI red mapped (B-XPLAT-011) |
+| `KitTerminalView` (`.live`, `.output`, `.accessible`), `KitTerminalText` | `KitTerminalView` | KN | 3 (`.live` + `.accessible` for the sign-in terminal) / 5 | `.live` = slot → Termux `TerminalView` via `AndroidView`; `.output` = common `BasicText` with ANSI spans; `.accessible` = common, below | errors in text1 semibold, ANSI red mapped (B-XPLAT-011); `.output` redacted before display and copy; **accessible mode** (DESKTOP-WEB-CROSS-30) below |
 | `TerminalKeyBar`, `TerminalBarKey` | same | KN | 5 | kit draw | sticky Ctrl/Alt; key caps capped at 1.3× |
 | `KitTerminalOsc52`, `KitTerminalLinks`, `showKitTerminalLinkSheet` | same | KN | 5 | pure parsers + `KitSheet` | B-XPLAT-009, B-XPLAT-010 |
 | `KitWebPreview`, `KitWebPreviewController` | same | KN | 5 | slot → hardened `WebView` | one origin; no JS bridge; storage cleared on open and close |
@@ -1148,20 +1155,34 @@ the host that `KitScreen` and the shell place. The coordinator should align §03
 | `KitFactRow`, `KitProvenance` | same | KN | after switch (D6 FactsBook) | | |
 | `KitWorkGraph` + node/edge/geometry | same | KN | after switch (D6) | | geometry is pure and tested |
 
+**Terminal accessible mode (DESKTOP-WEB-CROSS-30).** A screen reader cannot read the character grid, so:
+
+| Piece | Rule |
+|---|---|
+| The grid | the `AndroidView` holding `TerminalView` is wrapped in `Modifier.clearAndSetSemantics { contentDescription = "Terminal"; stateDescription = <title> }`; no grid cell reaches the semantics tree |
+| The switch | a visible toolbar toggle "Accessible mode" (`terminal-accessible-mode` test tag) on every live terminal (local shell, server shell, sign-in); it turns on by itself when TalkBack or Switch Access is on (`KitPlatform.signals.screenReader`), and the person can turn it off |
+| Transcript | `TerminalModel.transcript` (17 §2.6): plain text with ANSI CSI/OSC sequences stripped by `TranscriptSanitizer` (port of `_transcriptSanitizer`), capped at the newest **100,000 characters**, redacted; shown as a selectable `KitText` list (one item per line, `mergeDescendants` per line) whose last 3 lines are a polite live region, throttled to one announcement per second |
+| Input | a `KitField(Mono)` labelled "Send to terminal" with a Send button; Send writes `value + "\r"` and clears the field; the key bar's Ctrl/Alt stay available |
+| Sign-in terminal | in accessible mode the "Open sign-in page" and "Copy code" buttons stay above the transcript (17 §1.5) |
+
+Tests: `TerminalAccessibleModeTest` (Robolectric: no grid nodes; stripped and capped transcript; field sends value + CR;
+auto-on with a screen reader) ports the 10 `terminal_accessibility_test` behaviours in slice 3, not in W14-18.
+
 ### 7.8 Chat parts (UI-KIT-50…53), single owner of `:ui:kit-chat`
 
 | Dart part(s) | Native | Slice | Built on | Notes |
 |---|---|---|---|---|
-| `KitComposer`, `KitComposerDelivery`, `KitComposerVoice`, `KitVoicePhase`, `KitComposerFailure`, `KitComposerTray`, `KitComposerTip`, edge, glow, layer, caption, classic | `KitComposer(state: KitTextState, …)` | 2 / 3 | `BasicTextField(TextFieldState)` (`typealias KitTextState = TextFieldState` + `rememberKitTextState()`, so features need no foundation text import); `contentReceiver` for keyboard images; `Modifier.navigationBarsPadding().imePadding()` | the field owns text (§01 §9.2); Send fires on lift when it has a long-press menu (`ee0815e9f`); Stop ignores taps for 800 ms after a send (`49d067f2d`); glow read only in `drawBehind`; one thing moves (MOT-15); frame text |
-| `KitComposerChips` (`.model`, `.attachments`, `.suggestions`), `KitModelChipState`, `KitAttachment`, `KitSuggestion`, `KitComposerStatusStrip` | same | 3 | `LazyRow` + `KitScrollFade` | Stop sits at the end of the chip row while running; the model chip ellipsizes |
+| `KitComposer`, `KitComposerDelivery`, `KitComposerVoice`, `KitVoicePhase`, `KitComposerFailure`, `KitComposerTray`, `KitComposerTip`, edge, glow, layer, caption, classic | `KitComposer(state: KitTextState, …)` | 2 / 3 | `BasicTextField(TextFieldState)` (`typealias KitTextState = TextFieldState` + `rememberKitTextState()`, so features need no foundation text import); `contentReceiver` for keyboard images; `Modifier.navigationBarsPadding().imePadding()` | the field owns text (§01 §9.2); Send fires on lift when it has a long-press menu (`ee0815e9f`); Stop ignores taps for 800 ms after a send (`49d067f2d`); **"Stop and send" is an amber pill** (`kit_composer_caption.dart`, `attentionFill`); the hint ellipsizes at large text (`a978542f3`); glow read only in `drawBehind`; one thing moves (MOT-15); frame text (Dart `KitField.composer` inside `KitChrome`) |
+| `KitComposerChips` (`.model`, `.attachments`, `.suggestions`), `KitModelChipState`, `KitAttachment`, `KitSuggestion`, `KitComposerStatusStrip` | same | 3 | `LazyRow` + `KitScrollFade` | Stop sits at the end of the chip row while running; **the Stop chip turns amber when the step looks stuck** (owner 2026-10-30; `KitComposerStatusStrip` → `KitChipTone.Attention`); the approval chip shows as its glyph when Stop shares a phone's row at large text (`4addbfe22`); the model chip ellipsizes; frame text |
+| `KitPasteImage`, `KitPasteImageMenu` (freeze tip, `9ac39cd68`, `92ed57977`) | `KitPasteImageMenu` (KC) | 3 | the composer field's text context menu (`BasicTextField` toolbar / `LocalTextToolbar`) | "Paste image" added next to Paste while the clipboard holds a picture; the clipboard check runs when the menu opens, never in the background; without a picture the menu is the platform's own, item for item; the image goes to the composer's attachments |
 | `KitMicHoldDetector`, `KitMicPress`, `KitMicPressOutcome` | same | 5 | `pointerInput` with `awaitEachGesture`, followed through changes | tap / hold / drag-cancel |
 | `KitPhraseChips` | same | 3 | `LazyRow` | |
 | `KitTaskChip`, `showKitTaskSheet`, `KitTaskItem` | `KitTaskChip`, `KitTaskSheet` | 3 | | no level of its own |
 | `KitProjectFileList`, `showKitProjectFileSheet` | `KitProjectFileList`, `KitProjectFileSheet` | 3 | | |
-| `KitMessage`, `KitMessageKind`, `KitBubbleWidth`, `kitPromptBubbleFill/Decoration`, `KitMessageLift` | same (`Modifier.kitMessageLift`) | 2 | `BasicText`; lift = `graphicsLayer` from 0.92 with the `lift` spring | bubble radii 20/20/6/20 |
+| `KitMessage`, `KitMessageKind`, `KitBubbleWidth`, `kitPromptBubbleFill/Decoration`, `KitMessageLift` | same (`Modifier.kitMessageLift`) | 2 | `BasicText`; lift = `graphicsLayer` scale from 0.92 → 1 over `STANDARD` (250 ms) on `Enter` (Dart `kit_message_lift.dart`; **no spring, no overshoot**); none under Off | bubble radii 20/20/6/20 |
 | `KitTurn`, `KitTurnPhase`, `KitTurnSegment`, `KitTurnActivity`, `KitTurnLive`, `KitTurnStall`, `KitTurnFooter` | same | 2 | block items in the transcript `LazyColumn` | the live line sweep is drawn with a `Brush` in the draw phase |
-| `KitToolRow`, `KitToolKind`, `KitToolStatus`, `KitStepCommand` | same | 2 | | a failure the agent got past stays folded and neutral |
-| `KitStepTimeline`, `KitStepPreview`, `KitStepNodeState`, step light / node / signal | same | 3 | step light = `drawWithCache` sweep, no recomposition | |
+| `KitToolRow`, `KitToolKind`, `KitToolStatus`, `KitStepCommand` | same | 2 | | a failure the agent got past stays folded and neutral; output redacted before display and copy (§7.1 `KitRedact`) |
+| `KitStepTimeline`, `KitStepPreview`, `KitStepNodeState`, step light / node / signal | same | 3 | step light = `drawWithCache` sweep, no recomposition | a step or live-line dot waiting on the person is amber (`kit_step_light.dart`, `kit_turn.dart`) |
 | `KitWorkLine`, `KitWorkState`, `KitWorkCounts`, `KitBackgroundWorkLine`, `KitBackgroundTask` | same | 2 | `KitReveal` | |
 | `KitQueuedMessage` | same | 2 | | one bubble; steer, never queue where steering exists |
 | `KitAgentStrip`, `KitAgent`, `KitAgentTint` | same | 3 | | identity by name, never colour |
@@ -1186,21 +1207,25 @@ These are ported as described in §8, §14, §15 and §17.
 
 ### 8.1 Caps by role (`:ui:design` `CapRole`; the values are Flutter's `KitLayout` tokens)
 
-| `CapRole` | Cap (dp) | Aligns when wider | Typical parts |
+Default alignment is Dart's (`kit_max_width.dart`): page-level roles keep `AlignmentDirectional.center`; only the
+inline roles (chip, popover, lane) keep the start edge. A caller passes `CapAlign.End` only for a value that ends its
+row.
+
+| `CapRole` | Cap (dp) | Aligns when wider (`defaultAlign`) | Typical parts |
 |---|---|---|---|
-| Conversation | 700 | start | KitMessage, KitMarkdown, KitTurn (paints 717 on purpose: its copy and more buttons reach 17 dp past), KitToolRow, KitWorkLine, KitComposer + chip rows, KitRequestCard, KitSteerBox |
-| Reading | 720 | start | KitNotice, KitReceipt, KitField, KitSegmented, KitChecklist, KitActionBlock, cards, charts, KitStatusLine, KitText |
-| List | 960 | start | KitRow, KitRowGroup, KitChoiceList, KitMiniTable, KitCodeBlock, KitLogPanel, KitSearchField |
+| Conversation | 700 | centre | KitMessage, KitMarkdown, KitTurn (paints 717 on purpose: its copy and more buttons reach 17 dp past), KitToolRow, KitWorkLine, KitComposer + chip rows, KitRequestCard, KitSteerBox |
+| Reading | 720 | centre (a caller may pass start for words that start their line) | KitNotice, KitReceipt, KitField, KitSegmented, KitChecklist, KitActionBlock, cards, charts, KitStatusLine, KitText, KitVitalsStrip |
+| List | 960 | centre | KitRow, KitRowGroup, KitChoiceList, KitMiniTable, KitCodeBlock, KitLogPanel, KitSearchField |
 | Sheet | 640 | centre | KitSheet and every sheet-hosted part; pickers |
 | Confirm | 560 | centre | KitConfirm (sheet), KitFloatingPanel content |
 | Dialog | 480 | centre | KitAlert, KitInputDialog, KitConfirm as a dialog on wide windows |
-| Popover | 320 | anchor | KitMenu, KitTerm, KitTip (bubble 280) |
-| Toast | 480 | bottom-start | KitUndoBar |
+| Popover | 320 | start (anchored) | KitMenu, KitTerm, KitTip (bubble 280) |
+| Toast | 480 | bottom-start (positioned by the host past the start clearance, Dart `kit_undo.dart`) | KitUndoBar |
 | State | 440 | centre | KitStateView, KitSearchNoMatch |
 | Lane | 400 | start | KitBoardLane, KitTaskCard (later) |
-| Control | 400 | start (end for a value that ends a row) | KitButton, KitOneTimeCode, KitQr, KitWheel |
-| Chip | 320 | start / end | KitChip, KitFilterChip, KitStatusTag, KitTaskChip, KitJumpPill, KitRowValue, KitTerm |
-| Glyph | 96 | — | KitIcon, KitIconButton, KitStatusMark, KitAvatar, KitFloatingAction (rings that carry words use Reading) |
+| Control | 400 | centre (end only when the caller passes it for a value that ends a row) | KitButton, KitOneTimeCode, KitQr, KitWheel |
+| Chip | 320 | start (end when the caller passes it) | KitChip, KitFilterChip, KitStatusTag, KitTaskChip, KitJumpPill, KitRowValue, KitTerm |
+| Glyph | 96 | centre | KitIcon, KitIconButton, KitStatusMark, KitAvatar, KitFloatingAction, KitUpdateDot (rings that carry words use Reading) |
 | Fill | none | — | KitScreen, KitTopBar, KitNavRail, KitSidebar, KitTabStrip, KitDivider, viewers, overlays |
 | Wrapper | none | — | KitTappable, KitSurface, KitFloatingSurface, motion and scroll wrappers |
 | Scope | none | — | KitTheme, KitLinkScope, status scopes |
@@ -1210,20 +1235,29 @@ Panes (LAY-5): list 296, detail 360–700, side 340.
 ### 8.2 How a part holds its cap
 
 ```kotlin
-// ui/kit/foundation/KitMaxWidth.kt
-fun Modifier.kitMaxWidth(role: CapRole, align: CapAlign = role.defaultAlign): Modifier =
-    this.layout { measurable, constraints ->
-        val cap = role.capDp?.dp?.roundToPx() ?: return@layout measurable.measure(constraints).run { layout(width, height) { place(0, 0) } }
+// ui/kit/foundation/KitMaxWidth.kt  — a port of Dart _RenderKitMaxWidth.performLayout
+fun Modifier.kitMaxWidth(role: CapRole, align: CapAlign = role.defaultAlign): Modifier {
+    val capDp = role.capDp ?: return this                     // Fill, Wrapper, Scope: no layout node at all
+    return this.layout { measurable, constraints ->
+        val cap = capDp.dp.roundToPx()
         val childMax = minOf(constraints.maxWidth, cap)
         val placeable = measurable.measure(constraints.copy(minWidth = minOf(constraints.minWidth, childMax), maxWidth = childMax))
-        val width = if (constraints.hasBoundedWidth) constraints.maxWidth else placeable.width
+        val width = constraints.constrainWidth(placeable.width) // wraps the child; grows only when the parent forces a min width
         layout(width, placeable.height) {
             val x = when (align) { CapAlign.Start -> 0; CapAlign.End -> width - placeable.width; CapAlign.Center -> (width - placeable.width) / 2 }
             placeable.placeRelative(x, 0)     // placeRelative mirrors Start/End in RTL
         }
     }
+}
 ```
 
+- The box **wraps its child** (Dart: `size = constraints.constrain(child.size)`). A chip in a `Row` or `FlowRow` keeps its
+  intrinsic width and never takes the remaining space. Only a parent that forces a minimum width (a caller's
+  `fillMaxWidth()`) makes the box wider than the child, and then the child sits at its alignment.
+- `KitMaxWidthTest` (desktop compose, commonTest) pins: a `KitChip` inside a `Row` at 412 dp keeps its intrinsic width
+  and its sibling still fits; `Modifier.fillMaxWidth().kitMaxWidth(Reading)` at 1,600 dp gives a 720 dp child placed at
+  its alignment (centre; start and end mirrored in RTL); a role with no cap adds no layout node; and every role's
+  `defaultAlign` at 1,600 dp matches §8.1.
 - The cap is applied **inside** the part (its outermost modifier), so a caller cannot widen it. A caller's
   `Modifier.fillMaxWidth()` fills the slot, and the part's own content still stops at the cap.
 - On a phone every cap except Glyph is wider than the content, so phones are untouched (Flutter's rule).
@@ -1237,8 +1271,11 @@ fun Modifier.kitMaxWidth(role: CapRole, align: CapAlign = role.defaultAlign): Mo
 
 ### 8.3 The capacity contract, ported
 
-- Copy `test/kit/kit_capacity.json` and `kit_capacity_allowlist.json` into `ui/kit*/capacity/`, split by module.
-  The new `:tools:capacity-port` script (a Kotlin main in `:tools:strings`) applies the §7.0 renames.
+- Copy `test/kit/kit_capacity.json` and `kit_capacity_allowlist.json` (freeze tip) into `ui/kit*/capacity/`, split by
+  module. The new `:tools:capacity-port` script (a Kotlin main in `:tools:strings`) applies `kit_renames.tsv` (§7.0):
+  a `rename` row renames the key, `merge-into` merges its slots into the target's entry, `drop` and `defer` move the
+  entry to `capacity/deferred.json` with the reason. A Dart key with no native part and no row fails the run, so no
+  orphan entries survive.
 - The schema does not change:
   - role cap;
   - each text slot's overflow rule: `wrap`, `ellipsis:N`, `fade:N` or `scroll` (`clip:N` and `visible:N` are
@@ -1247,19 +1284,26 @@ fun Modifier.kitMaxWidth(role: CapRole, align: CapAlign = role.defaultAlign): Mo
 - Copy `test/support/stress_content.dart` to `ui/testing/src/commonMain/kotlin/…/StressContent.kt`. The fixtures:
   about 1,000 characters of prose (Arabic prose in RTL), a 300-character unbroken URL, CJK without spaces, emoji ZWJ /
   flags / keycaps, huge numbers, the empty string, pseudo-localisation (+40 % in brackets, accented), and lists of 50.
-- **How the native gate measures.** Kit parts publish test-visible semantics (`KitSemantics.kt`):
+- **How the native gate measures.** Kit parts publish test-visible semantics (`KitSemantics.kt`), **static values
+  only**, so nothing is written back from a text layout on the hot path (streaming transcript blocks included):
   - `KitPart` — the part name on the part's root node;
-  - `KitTextFit` — on every `KitText`: line count, `hasVisualOverflow`, declared max lines and overflow, and whether
-    an ellipsis or fade was drawn.
+  - `KitTextFit` — on every `KitText`: the declared rule only (max lines and overflow kind: `wrap`, `ellipsis:N`,
+    `fade:N`, `scroll`).
 
-  These properties cost a few bytes per node. They are kept in release builds, because they are also the hooks for
-  the screen-standard checks (§15.5). They never carry content beyond what the text node already holds.
+  The measured values (line count, `hasVisualOverflow`, whether the ellipsis or fade was drawn) are read **in tests
+  only**, by calling the text node's `SemanticsActions.GetTextLayoutResult`, which Compose text nodes already expose.
+  The capacity gate and `ScreenStandardCheck` (§15.5) share one helper, `textFitOf(node)`, in `:ui:testing`.
 - **Gate** (`ui/kit/src/androidHostTest/…/KitCapacityTest.kt`, Robolectric `@GraphicsMode(NATIVE)`, JDK 21, sharded
   `-Pshard=1..8`):
-  - It runs every part's capacity scene at text 1.0 and 2.0:
+  - It runs every part's capacity scene at text 1.0, **1.3** and 2.0 (1.3 is where row titles start to wrap,
+    supporting lines go to 2, the frame cap begins and `1.2999999523 ≥ 1.29` matters):
     - at 280 dp with every fixture, LTR and RTL;
     - at 412 dp as written, pseudo-localised and with prose, both directions;
     - at 1,600 dp, LTR, as written and with prose, token, numbers and pseudo.
+  - **The G6 port** (Flutter `test/kit/kit_overflow_matrix.dart`): the adaptive and row parts (sheet, confirm, dialog,
+    undo, top bar, row family, chips, buttons, action block, field, segmented, status line, composer) also run at
+    320×640, 360×740, 600×960, 800×1280, 840×1180, 1280×800 and 915×412, at text 1.0 / 1.3 / 2.0, LTR and RTL.
+    600 and 840 are the window-class switches. `KitOverflowMatrixTest` is its own sharded Robolectric class.
   - It fails on:
     - any exception;
     - a `KitTextFit` that lost words without the declared ellipsis, fade or scroller;
@@ -1270,8 +1314,8 @@ fun Modifier.kitMaxWidth(role: CapRole, align: CapAlign = role.defaultAlign): Mo
   - The allowlist only shrinks. `-Pkit.capacity.write=true` tightens it and never adds.
 - A desktop-JVM twin (`commonTest`, `runComposeUiTest`) runs only the 1,600 dp width checks, so agents get a T0
   signal without Robolectric. Android text metrics are the truth, so the Robolectric gate is the T1 gate.
-- Each part's scene comes from its preview functions (§15.2). A part's capacity scene **is** its "long content"
-  preview, rendered with the fixtures.
+- Each part's capacity scene is a separate `<Part>CapacityScene` in the test source set (§15.2), because previews in
+  `commonMain` cannot see the test-only stress fixtures.
 
 ---
 
@@ -1289,71 +1333,78 @@ fun Modifier.kitMaxWidth(role: CapRole, align: CapAlign = role.defaultAlign): Mo
 - **Fixed caps that stay** (Dart named constants): leading and state icons 1.5×, terminal text 2.0×, terminal key caps
   1.3×, monogram 1.3×, badges and counts 1.3×.
 
-### 9.2 Implementation (common code; the non-linear part comes from the platform density)
+### 9.2 Implementation (rewritten from slice-0 P7, 2026-11-01)
+
+**The earlier sketch here was wrong, and P7 measured why** [V `docs/native/slice0/P7-kit.md` D1 on
+`native/m0-2026-11-01`]. It overrode `TextUnit.toDp()` in a custom `ScaledFontDensity`. Compose lays text out with the
+layout coordinator as its `Density`, and the coordinator forwards only `density` and `fontScale`, so a custom `toDp`
+never reaches text on Android, which re-derives sizes from `fontScale` through its own non-linear converter. With that
+class, 16 sp at 200 % rendered at 20.2 dp instead of 20.8 dp. Desktop is linear, which hid the problem. Capping the
+scale alone (the old "linear cap" fallback, or `FontScaleConverterFactory`) would leave frame titles up to 21 % smaller
+than Flutter (28 sp → 28.8 dp against Flutter's 36.4 dp) and let 13 sp exceed 1.3×. What P7 built, and what this plan
+now freezes:
 
 ```kotlin
-// ui/kit/foundation/KitTextScale.kt
-@Immutable
-internal class ScaledFontDensity(
-    private val base: Density, private val multiplier: Float, private val capOfSpec: Float,
-) : Density {
-    override val density: Float get() = base.density
-    override val fontScale: Float get() = minOf(base.fontScale * multiplier, capOfSpec)   // for code that only reads the number
-    override fun TextUnit.toDp(): Dp {
-        val platform = with(base) { (value * multiplier).sp.toDp() }   // keeps Android 14 non-linear scaling
-        val ceiling = (value * capOfSpec).dp
-        return if (platform > ceiling) ceiling else platform
+// ui/kit/foundation/KitTextScale.kt (shape as built in P7; signatures freeze in contracts/kit-v1.md)
+
+/** Root: KitTheme provides the app density with ONLY the font scale changed (a × s, capped at 2.5×). The uncapped
+ *  app density is also kept in LocalKitAppDensity for frame text to measure against. */
+@Composable internal fun scaledFontDensity(base: Density, multiplier: Float, cap: Float): Density =
+    remember(base, multiplier, cap) { Density(base.density, minOf(base.fontScale * multiplier, cap)) }
+
+/** Frame text: KitText(role = frame) computes the exact frame size per spec size, then lays its words out at that
+ *  size under font scale 1, with line height and tracking scaled in proportion. */
+internal object TextScalePolicy {
+    const val ROOT_CAP = 2.5f
+    const val FRAME_CAP = 1.3f
+    /** dp a frame text of [spec] renders at: the platform's own (non-linear) size, never above FRAME_CAP × spec. */
+    fun frameDp(spec: TextUnit, appDensity: Density): Dp = with(appDensity) {
+        minOf(spec.toDp().value, spec.value * FRAME_CAP).dp
     }
-    override fun Dp.toSp(): TextUnit = with(base) { (this@toSp / multiplier).toSp() }
 }
 
-/** Root: KitTheme provides this once. */
-@Composable internal fun rememberAppTextDensity(textSize: AppTextSize): Density {
-    val base = LocalDensity.current
-    return remember(base, textSize) { ScaledFontDensity(base, textSize.factor, TextScalePolicy.ROOT_CAP) }
-}
-
-/** Frame text: every frame part wraps its text in this (kit-internal; screens never call it). */
-@Composable fun KitFrameText(content: @Composable () -> Unit) {
-    val appDensity = LocalDensity.current
-    val capped = remember(appDensity) { ScaledFontDensity(appDensity, 1f, TextScalePolicy.FRAME_CAP) }
-    CompositionLocalProvider(LocalDensity provides capped, content = content)
-}
+/** Wrapper for NON-text content inside frame parts (icons sized from text): caps the font scale at 1.3. KitText in
+ *  frame role does not rely on it; it uses frameDp above. */
+@Composable fun KitFrameText(content: @Composable () -> Unit)
 
 /** The effective scale at body size; kit layout decisions read this (`>= 1.29f`, never `>= 1.3f`). */
-@Composable fun kitTextScale(): Float = with(LocalDensity.current) { 16.sp.toDp().value / 16f }
+@Composable fun kitTextScale(): Float
 ```
 
 Notes:
 
-- The frame wrapper caps relative to the **spec** size, and the spec size is the `sp` value. Frame text is therefore
-  ≤ 1.3 × spec, whatever `a × s` is. Below the cap, the platform's non-linear curve is kept (the owner's "keeps
-  Android's nonlinear scaling").
-- `KitFrameText` also caps `Dp.toSp` users such as icon sizing, because icon code converts dp to sp through the same
-  density. Icons use `min(kitTextScale(), 1.5)` explicitly instead.
-- **[U] P7 proves it.** A Robolectric test at `@Config(fontScale = 2f, sdk = [36])` and an emulator check at 200 %
-  system font must show the following:
-  - a `KitButton` label measures 1.3 × 16 sp × density;
-  - a reply body measures the platform's non-linear 16 sp at 2.0;
-  - neither clips.
-
-  **Fallback** (the §01 `JETPACK_AHEAD` row): `AndroidKitPlatform` builds the frame density from
-  `FontScaleConverterFactory.forScale(s)` (API 34+) and caps its output, applied in the kit's `androidMain` only.
+- The cap is relative to the **spec** size (the `sp` value), so frame text is ≤ 1.3 × spec whatever `a × s` is. Below
+  the cap it keeps the platform's non-linear size exactly (the owner's "keeps Android's nonlinear scaling"), because
+  `frameDp` asks the platform's own converter (through the uncapped app density) and only clips the result.
+- Icons inside frame parts use `min(kitTextScale(), 1.5)` explicitly; `KitFrameText` caps any other content that
+  converts text units.
+- **Proven in P7** (Robolectric at SDK 37, fontScale 2.0): a frame `KitButton` label of 16 sp measures 20.8 dp, which is
+  exactly Flutter's rule measured against Android's own non-linear converter; a reply body keeps the platform's size.
+  Goldens: `native/ui/kit/src/screenshots/KitFrameText/`. Still owed: the side-by-side with the Flutter app on the
+  emulator at 200 % (P7 open problem 1).
+- The `JETPACK_AHEAD` row for `FontScaleConverterFactory` (§6.1) is **not needed** and is dropped.
 
 ### 9.3 Which parts are frame text
 
-| Frame text (≤ 1.3×) | Reading text (full, ≤ 2.5×) | Own fixed cap |
+**The rule is mechanical: a part is frame text if and only if its Dart build is wrapped in `KitChrome` on the freeze
+tip, or it is built on such a part.** That is Flutter's list (kit-v2 "Text scale: frame and reading"): `KitTopBar`,
+`KitChip`, `KitButton`, `KitField.composer`, `KitComposerStatusStrip`, `KitSessionTabs` and the `KitSheet` title.
+Everything else keeps the full scale or its own named Dart cap. The owner's rule exists for low-vision readers, so
+the list is not extended silently: the extensions an earlier draft proposed are owner question §19 Q10.
+
+| Frame text (≤ 1.3×; Dart `KitChrome`) | Reading text (full, ≤ 2.5×) | Own fixed cap (Dart named constants) |
 |---|---|---|
 | KitTopBar family (title, pill, scope, link, branch, origin), KitShellControls | KitMessage, KitMarkdown, KitTurn words, KitToolRow output, KitStepTimeline words, KitCodeBlock (reading mono) | KitIcon leading/state ≤ 1.5× |
-| KitChip, KitFilterChip(s), KitStatusTag, KitTaskChip, composer chips, KitRowValue chips | KitRow title and supporting line, KitSwitchRow, KitExpandRow, KitFeedItem | Terminal text ≤ 2.0× |
-| KitButton, KitIconButton tooltip, KitActionBlock labels, KitSegmented labels | KitStateView, KitNotice, KitReceipt, KitStatusLine, KitChecklist, KitDetailsFold | Terminal key caps ≤ 1.3× |
-| KitComposer field + hint + chips; KitStartBox; KitAskField | KitField value, helper and error; KitChoiceList | Badges and counts ≤ 1.3× |
-| KitSheet header (title, subtitle, Close), KitConfirm and KitAlert title | Sheet body, confirm body, menu items, tips and tour cards, help pages | Avatar monogram ≤ 1.3× |
-| KitTabStrip, KitSessionTabs, KitNavRail and KitSidebar labels, KitBreadcrumb | Settings rows, Appearance questions | — |
-| KitJumpPill, KitUndoBar label and action, terminal key bar | Log panel, diff, viewer bodies | — |
+| KitChip and the parts built on it (KitFilterChip(s), KitTaskChip, composer chips, phrase chips) | KitRow title and supporting line, KitSwitchRow, KitExpandRow, KitFeedItem | Terminal text ≤ 2.0× |
+| KitButton and the parts built on it (KitActionBlock labels) | KitStateView, KitNotice, KitReceipt, KitStatusLine, KitChecklist, KitDetailsFold | Terminal key caps ≤ 1.3× |
+| KitComposer field + hint (`KitField.composer`); KitComposerStatusStrip | KitField value, helper and error (non-composer kinds); KitStartBox; KitAskField; KitChoiceList | Badges and counts ≤ 1.3× |
+| KitSheet title (header) | KitSheet subtitle and body; KitConfirm and KitAlert title and body; menu items; tips and tour cards; help pages | Avatar monogram ≤ 1.3× |
+| KitSessionTabs | KitUndoBar message and action; KitJumpPill; KitBreadcrumb; KitSegmented labels; KitTabStrip; Settings rows; Appearance questions | KitNavRail / KitSidebar labels ≤ 2.0× (`navLabelMaxScale`) |
+| KitVitalsStrip cells (its own 1.3 constant) | Log panel, diff, viewer bodies; KitVitalsStrip summary | — |
 
 - Any new part declares its kind in its KDoc (`Text: frame` or `Text: reading`). The manifest gate (§14.4) fails a
-  part with no `Text:` line.
+  part with no `Text:` line. A new frame part is an owner-visible change: it goes in the PR summary with a 200 %
+  capture.
 - TalkBack labels are unchanged by the cap.
 - Chips at 2× in en and ar never ellipsize mid-word: `KitWordText` cuts there.
 
@@ -1417,6 +1468,8 @@ Desktop never blocks a change (§01 §7.1).
   at 360 (B-KIT-029).
 - Roborazzi captures at 412×915, 915×412 (short), 800×1280, 1280×800 and 1600×1000 for the parts that adapt: sheet,
   confirm, dialog, undo, top bar, row, diff.
+- `KitMaxWidthTest` (§8.2) pins each `CapRole`'s cap and default alignment at 1,600 dp, LTR and RTL, so a start-aligned
+  column on tablets and PCs fails a test.
 
 ---
 
@@ -1430,7 +1483,7 @@ Desktop never blocks a change (§01 §7.1).
 | Labels | Icon-only controls need a label (assert in debug; manifest check). Decorative icons have none. | `contentDescription`; `KitIcon(decorative = true)` default |
 | Click labels | Tap and long-press actions say what they do ("Open", "More actions for <name>") | `onClick(label = …)`, `onLongClick(label = …)` |
 | Hidden gestures as actions | Every long-press menu item and every swipe action is also a custom action | `customActions = menu.items.map { CustomAccessibilityAction(it.label) { … } }` (B-KIT-051) |
-| Disabled reason | A disabled control states why, once | `disabled()` + `stateDescription = reason` |
+| Disabled reason | A disabled control states why, once | `disabled()` + `stateDescription = reason` (from `KitEnabled.Disabled`) |
 | State | Selected, checked, expanded, collapsed, working | `selected`, `toggleableState`, `stateDescription`, `expand()/collapse()` |
 | Headings | Section labels, page titles and sheet titles | `heading()` |
 | Live updates | The status line, receipts, field errors, search result counts, the "Copied" note, tips, the composer phase, tour cards | `liveRegion = LiveRegionMode.Polite` (Assertive never) |
@@ -1440,6 +1493,15 @@ Desktop never blocks a change (§01 §7.1).
 | Skeletons, scenes, decorative marks | Hidden | `clearAndSetSemantics {}` |
 | Colour alone | Never: every state has a word or a glyph (§4.10); needs-you always has its word | design rule; screenshot review |
 
+- **Gesture twins and tips (DESKTOP-WEB-CROSS-29, owner rule "teach hidden gestures").** Every hidden gesture
+  (long-press, swipe, double-tap, drag, edge gesture, keyboard shortcut) has three things before its part or screen
+  merges: a **visible twin** (a button, row or menu item that does the same thing), the `customActions` entry above, and
+  a **tip** registered in `TeachingRegistry` with en and ar copy and a Help › Tips row. The native ledger
+  `native/config/gesture-ledger.json` (port of `docs/design/ui-ledger/gesture-audit.json`, 101 entries at the freeze
+  tip) lists each gesture with `{id, where, twin, tipId}`; `GestureLedgerTest` (`:quality`, T2) fails when a
+  `KitTappable(onLongClick)`, `KitSwipeActions`, `detectDragGestures`, `combinedClickable` or `KeyboardShortcut` call
+  site is not in the ledger, or when a ledger entry has no twin or no tip. Tips that need the full teaching UI (tour)
+  may land later; the twin and the registry entry may not.
 - **Announcements.** `View.announceForAccessibility` is not used. Every announcement is a live region, which works
   on Android, desktop (Windows/macOS) and iOS later.
 - **Touch targets.** 48 × 48 dp minimum through `KitTappable`'s hit area (chips draw 32 inside 48). No two 48 dp areas
@@ -1450,8 +1512,10 @@ Desktop never blocks a change (§01 §7.1).
 - **Text scaling.** §9. Reading text reaches 2.5×; supporting lines wrap rather than truncate.
 - **Reduced motion.** §4.8. The system animator scale 0 always wins.
 - **Keyboard and switch access.** §10.2. Switch Access uses the same focus order.
-- **Copy and secrets.** Secret fields are excluded from autofill learning. `KitField(Secret)` uses
-  `BasicSecureTextField`, which Android treats as a password field. Copies are marked sensitive.
+- **Copy and secrets.** Secret fields take no part in autofill (neither save nor offer) and tell the keyboard not to
+  learn (`IME_FLAG_NO_PERSONALIZED_LEARNING`); they are never prefilled and show "Saved · Replace" for a stored value.
+  `KitField(Secret)` uses `BasicSecureTextField`, which Android treats as a password field. Copies are marked
+  sensitive. TalkBack reads "Password, saved" for a stored value, never the value or its length.
 - **Desktop Linux** has no screen reader (D14). Windows and macOS map semantics through CMP's accessibility bridge.
 
 ### 11.2 Tooling
@@ -1499,9 +1563,13 @@ Desktop never blocks a change (§01 §7.1).
    follows its first strong character. Frame copy uses the locale's direction.
 7. **Arabic type:** system sans and letter spacing 0. Signal's engraved small capitals become plain bold with tracking
    0. Mono stays Geist Mono.
-8. **Digits:** as the Flutter app shows them today. CMP templates insert `arg.toString()` (Western digits). Numbers
-   formatted by `KitPlatform.formatNumber` follow the locale's default numbering. [U: compare against the Flutter
-   Arabic goldens in the parity screenshots; if they differ, `formatNumber` pins `latn` digits.]
+8. **Digits: Latin (Western) digits in every language, as the Flutter app shows them today.** Flutter's intl 0.20.3
+   `ar` symbols use Latin digits for numbers (`NumberSymbols` `ar`: `ZERO_DIGIT '0'`) and dates (`DateSymbols` `ar`
+   has no Arabic-Indic zero digit; only `ar_EG` and similar regions do), while Android's locale data may default `ar`
+   to Arabic-Indic. So `formatNumber` and `formatMoment` format with the locale tag plus `-u-nu-latn` (for example
+   `Locale.forLanguageTag("ar-u-nu-latn")`), and so do the `:android:*` notification and widget time formatters
+   (§22 asks §11 to use the same helper). CMP templates insert `arg.toString()`, which is Latin already. The parity
+   capture of an Arabic screen with numbers and times is the check.
 9. **Input:** `KitField(Number)` turns Arabic-Indic digits and the Arabic decimal separator into ASCII
    (`KitNumberFormatter` port).
 10. **Plural forms:** Arabic uses zero, one, two, few, many and other (§13.4).
@@ -1524,16 +1592,20 @@ The brief said "8 locales". The source ships **7** (`AppLocaleStore.supportedLan
 and §01 says 7. This plan ships the 7. The pipeline does not depend on the number of languages, so an 8th language is
 one folder plus a picker row (§19 Q1). The two qa-only pseudolocales (§13.7) are not shipped languages.
 
-| Lang | Keys today (ARB) | Plural messages | `select` messages | Direction | Coverage vs en (9,468 keys) |
+Counted on the freeze tip `fc5c1e78f` [R, 2026-11-01]. Batch1 had 369 fewer keys per language in en and ar (en 9,468,
+ar 10,486). The converter's report is the final word, and it runs only after the last Flutter merge.
+
+| Lang | Keys today (ARB) | Messages with a plural | `select` messages | Direction | Coverage vs en (9,837 keys) |
 |---|---|---|---|---|---|
-| en | 9,468 | 282 | 6 | LTR | 100 % (reference) |
-| ar | 10,486 (1,018 orphans dropped) | 303 | 7 | **RTL** | ≈ 100 % |
-| zh | 8,654 | 222 | 2 | LTR | ≈ 91 % |
-| es | 2,695 | 80 | 1 | LTR | ≈ 28 % |
+| en | 9,837 | 267 | 6 | LTR | 100 % (reference) |
+| ar | 10,855 (1,018 orphans dropped) | 309 | 7 | **RTL** | 100 % |
+| zh | 8,654 | 222 | 2 | LTR | ≈ 88 % |
+| es | 2,695 | 80 | 1 | LTR | ≈ 27 % |
 | ja, pt, ru | 661 each | 29 each | 0 | LTR | ≈ 7 % (the rest falls back to English) |
 
-Placeholders in en: 1,480 `String`, 585 `int`, 38 `Object`, 14 `num`. 44 placeholders carry `format: decimalPattern`.
-Plurals in en: 228 whole-message, 33 embedded in text. Counted today from the ARB files [R].
+Placeholders in en: 1,562 `String`, 601 `int`, 38 `Object`, 14 `num`. 44 placeholders carry `format: decimalPattern`.
+Plurals: counted per message (a message with two plurals counts once; batch1's 228 whole-message + 33 embedded = 261
+by this count; the converter report gives the freeze split).
 
 Android-native strings today: `res/values{,-ar}/strings.xml` (148 each), `widget_v2_strings.xml`,
 `widget_v2_bridge_strings.xml`, `scheduled_prompts.xml` and `bb_idle_strings.xml`, in en and ar only.
@@ -1571,37 +1643,61 @@ compose.resources {
   - the 148 native strings plus the widget, schedule and idle files above.
 
   **Their resource names stay exactly as they are today**, because pinned shortcuts and widgets reference them.
-  `:androidApp`'s `generateOsStrings` task copies `strings_os.xml` from every `values*` folder into
-  `build/generated/res/osStrings/values*/` and registers it with
-  `androidComponents.onVariants { it.sources.res?.addGeneratedSourceDirectory(…) }`. Android lint
-  `MissingTranslation` runs on that copy.
+- **One copy, in one small library.** The `generateOsStrings` task lives in **`:android:os-strings`** (an
+  `android.library` with resources only, owned by the l10n owner). It copies `strings_os.xml` from every `values*`
+  folder of `:ui:words` into `build/generated/res/osStrings/values*/` and registers it with
+  `androidComponents.onVariants { it.sources.res?.addGeneratedSourceDirectory(…) }`. `:androidApp` and every
+  `:android:*` module that reads `@string/` depend on it (today's `res/layout` and `res/xml` hold 43 `@string/`
+  references on the freeze tip, most in the widget layouts and widget info files that move to `:android:widgets`). An app module may reference a library's resources, so the manifest's app label and
+  shortcut labels resolve too. One copy means no parity test between copies; this replaces §11's CR11-8 two-copy plan
+  (§22). Android lint `MissingTranslation` runs on the generated copy.
+- **`strings_os.xml` exists in all 7 language folders**, never only en and ar: the converter writes it for every
+  shipped language (at least `app_name`, a name that is the same in every language, plus every OS string whose
+  translation exists or that the l10n owner accepts from the report's ARB matches). That is what gives AGP a
+  `values-xx` folder per language for the generated LocaleConfig (§13.6). `:tools:strings check` fails when a shipped
+  language has no `strings_os.xml`.
 
 ### 13.3 The converter (`:tools:strings`, run once; the l10n owner runs and reviews it)
 
 ```bash
+# Source: the freeze tip (int/freeze-2026-11-01, recorded SHA; fc5c1e78f today). Run only after the last Flutter merge.
 ./gradlew :tools:strings:run --args="convert \
-  --arb /home/eslam/Storage/Code/wt/oc_app-batch1/lib/l10n \
-  --dart-lib /home/eslam/Storage/Code/wt/oc_app-batch1/lib \
-  --android-res /home/eslam/Storage/Code/wt/oc_app-batch1/android/app/src/main/res \
+  --arb /home/eslam/Storage/Code/wt/oc_app-freeze/lib/l10n \
+  --dart-lib /home/eslam/Storage/Code/wt/oc_app-freeze/lib \
+  --android-res /home/eslam/Storage/Code/wt/oc_app-freeze/android/app/src/main/res \
+  --source-sha fc5c1e78f \
   --routes tools/strings/feature-routes.tsv \
   --out ui/words/src/commonMain/composeResources \
   --report build/strings/convert-report.md"
 ```
+
+The converter refuses to run when the worktree's `HEAD` is not `--source-sha`, and writes the SHA into the report and
+into a header comment of every generated file. If the freeze branch moves, the coordinator re-records the SHA at M0
+and the conversion runs again.
 
 Steps (each tested in `ConverterTest` with fixtures cut from the real ARB files):
 
 1. **Parse** every `app_<lang>.arb` in key order. Check `@@locale`. Drop ar/zh/es/ja/pt/ru keys absent from en (the
    1,018 Arabic orphans, plus any others) and list them in the report.
 2. **Route each key to a feature file:**
-   - Find the Dart files that read the key (word-boundary match of `.<key>` in files that import
-     `app_localizations.dart`).
+   - Search **every Dart file under `lib/` except `lib/l10n/`** for a word-boundary match of `.<key>`. There is no
+     import filter: about 290 files are `part of` another library (every `chat/*.dart` part of `chat_screen.dart`,
+     the `kit_sheet.dart` parts such as `kit_confirm_sheet.dart`), and a part file inherits its library's imports and
+     never imports `app_localizations.dart` itself. An import filter would mark about 2,300 used keys (24 %) as
+     unused; without it about 1 % stay unused [R: both rules run over the freeze tip's ARB and `lib/`].
+   - **Route by the path of the file where the key is used** (for a part file, the part file's own path, not its
+     library's).
    - Map each file path to a feature with `feature-routes.tsv`. Example rows: `lib/ui/kit/` → `kit`,
      `lib/ui/screens/chat/` → `chat`, `lib/widgets_overlay/` → `widget_panels`, team paths → `team`.
    - Keys starting `team` → `strings_team.xml`; keys starting `fb` → `strings_factsbook.xml`.
    - A key used by exactly one feature goes to that feature's file. A key used by several goes to
      `strings_common.xml`. A key used nowhere is **not converted** and is listed as unused, for the owner to confirm
      before the ARB freeze.
+   - **The report fails the run when more than 2 % of en keys come out unused**: that share means the search missed
+     files, not that the copy is dead.
    - **An unrouted path fails the run.** Nothing lands in `common` silently.
+   - `ConverterTest` includes a fixture built from a real part file: `lib/ui/kit/kit_confirm_sheet.dart`
+     (`part of 'kit_sheet.dart'`) using `kitConfirmKeepRunning` must route the key to `strings_kit.xml`.
 3. **Placeholders:** ARB `{name}` becomes positional `%N$s` (String, Object, num) or `%N$d` (int).
    - N is the order of first appearance **in the English string**, and the same index map is applied to every
      language. A translation that reorders words keeps the right values.
@@ -1609,22 +1705,35 @@ Steps (each tested in `ConverterTest` with fixtures cut from the real ARB files)
      Konsist rule makes every call site pass `kitNumber(n)` (which formats through `KitPlatform.formatNumber`).
 4. **Plurals:** a whole-message ICU plural becomes `<plurals>`.
    - An embedded plural (33 in en) is expanded: the text around it is copied into every quantity item.
-   - A message with two plurals is split into two resources. The report lists each one, and the l10n owner writes the
-     code that composes them (expected: a handful).
+   - A message with two plurals is **refused**, like a nested plural (P6 found 7, not "a handful"); the l10n owner
+     writes them by hand and the converter lists them.
+   - Every `<plurals>` lists every category of its language; a missing one takes its exact `=N` branch, else `other`.
+     A key that one language pluralises and another writes as plain text is promoted to `<plurals>` everywhere.
+     Branches a language's rules can never pick (47 `one{…}` in zh) are dropped and listed. [V P6]
    - Exact selectors `=N` follow §13.4.
-5. **`select` messages** (6 en, 7 ar) become one `<string name="<key>__<branch>">` per branch. Code chooses the branch
-   with an exhaustive `when` (§01 §7.5: "the 6 ICU `select` messages become code").
+5. **`select` messages** (6 en, 7 ar) are **refused** by the converter (P6 decision, "fail loudly"); with
+   `--skip-unsupported` it converts everything else and lists them. The l10n owner writes one
+   `<string name="<key>__<branch>">` per branch by hand, and code chooses the branch with an exhaustive `when` (§01
+   §7.5: "the 6 ICU `select` messages become code").
 6. **Escaping:**
-   - XML-escape `&`, `<` and `>`. Escape `'` as `\'` and `"` as `\"`. A leading `@` or `?` becomes `\@` or `\?`.
-   - Bidi isolates and other invisible characters become `\uXXXX`.
-   - A literal `%` that is not a placeholder stays `%` in CMP files. In `strings_os.xml` the string gets
-     `formatted="false"`.
-   - [U: P6 checks that CMP unescapes `\'` and `\uXXXX` the way Android does; the converter golden test pins the
-     result.]
+   - **Settled by P6 [V CMP `PrepareComposeResources.handleSpecialCharacters`]:** after DOM parsing CMP turns only `\n`,
+     `\t`, `\uXXXX` and `\\` back into characters; `\'`, `\"`, `\@` and `\?` would reach the screen with their
+     backslash. So there are two profiles:
+     - **feature files (CMP only):** `'`, `"`, `@` and `?` stay as typed;
+     - **`strings_os.xml` (CMP and Android `res`):** `'` and `"` become `\u0027` / `\u0022`; a leading `@` or `?` and
+       leading, trailing or repeated spaces become `\uXXXX` (both CMP and aapt2 decode those); a literal `%` with no
+       placeholder gets `formatted="false"`.
+   - Both profiles: XML-escape `&`, `<` and `>`; newline `\n`, tab `\t`, backslash `\\`; bidi marks, zero-width and other
+     invisible characters become `\uXXXX` so a reviewer sees them.
+   - CMP inserts every argument with `toString()` whether the token is `%1$d` or `%1$s`; the 35 `decimalPattern` keys
+     need a locale-formatted number passed in (`kitNumber(n)`).
+   - Unused keys go to `unused/strings_unused.xml` outside `composeResources` (keys in = keys out); they do not ship.
 7. **Android strings:** merge the 6 native XML files into `strings_os.xml`, keeping the names. Where an ARB key holds
-   the same English text in more languages, the converter offers the match in the report. It never auto-copies.
-8. **Report:** counts per file and language, unused keys, dropped orphans, multi-plural and select messages,
-   decimalPattern keys, and routing conflicts.
+   the same English text in more languages, the converter offers the match in the report. It never auto-copies. It
+   always writes a `strings_os.xml` for **all 7** languages (§13.2), so every shipped language has its `values-xx`
+   folder.
+8. **Report:** the source SHA, counts per file and language, unused keys and their share, dropped orphans,
+   multi-plural and select messages, decimalPattern keys, and routing conflicts.
 
 After conversion **the ARB files are frozen with Flutter**. New copy goes into the XML only.
 
@@ -1655,10 +1764,16 @@ always express.
 suspend fun PluralsText.filesLeft(count: Int): String = …   // the same rule, for notifications and widgets
 ```
 
-- Counts today: en `=0` ×31, `=1` ×199; ar `=0` ×58, `=1` ×218, `=2` ×64; zh `=0` ×25, `=1` ×139; es `=0` ×4,
-  `=1` ×55.
-- **Arabic must have all six categories** for every plural (the G27 port). [U: P6 asserts that CMP picks zero, one,
-  two, few, many and other for 0, 1, 2, 3, 11 and 100 in `ar`.]
+- Counts on the freeze tip, per message: en `=0` ×30, `=1` ×202; ar `=0` ×57, `=1` ×222, `=2` ×66; zh `=0` ×24,
+  `=1` ×136; es `=0` ×4, `=1` ×53; ja, pt, ru a handful each. (The converter report gives per-selector totals.)
+- **Arabic must have all six categories** for every plural (the G27 port). P6's `PluralRules.kt` was checked rule by
+  rule against CMP's CLDR lists for the 7 languages (ar 0, 1, 2, 3, 11, 100 → zero, one, two, few, many, other) [V P6].
+- **A language borrowing English plural text** (P6 finding): when a key is missing in pt or ru, CMP reads English's
+  `<plurals>` but picks the category with pt or ru rules (pt 0 → `one` → "1 draft queued"; ru 21 → `one`). The
+  generated helpers resolve a key missing in the current language with the **English** rules. The on-device P6 proof
+  includes pt, count 0, on an English-only key.
+- The helper checks `__eqN` **before** `pluralStringResource` (pt `kitNeedsYouWaitingSpoken`: only `__eq1` has the right
+  text for 1, because pt `one` also covers 0). P6's `report/exact-selectors.tsv` lists the 209 keys that need it.
 
 ### 13.5 How code reads words
 
@@ -1699,8 +1814,12 @@ suspend fun PluralsText.filesLeft(count: Int): String = …   // the same rule, 
    - **After the write is acknowledged** (B-L10N-002): `:android:background` re-posts visible notifications and
      `:android:widgets` re-renders. A refused write keeps the last acknowledged language.
 4. **AGP:** `androidResources { generateLocaleConfig = true }` in `:androidApp`, plus `src/main/res/resources.properties`
-   with `unqualifiedResLocale=en`. This works because the generated `strings_os` resources give every language a
-   `values-xx` folder.
+   with `unqualifiedResLocale=en`. AGP builds the LocaleConfig from the `values-*` folders of the app module and its
+   library module dependencies, so it lists all 7 languages only because `:android:os-strings` carries a
+   `strings_os.xml` in all 7 folders (§13.2) and `:tools:strings check` enforces that. **No hand-written
+   `xml/locales_config.xml`:** Android's docs say the build fails if a LocaleConfig file is created manually while
+   `generateLocaleConfig` is on, so §03's `:androidApp` res tree drops that file (§22). `LocaleConfigTest`
+   (`:androidApp` unit test) reads the merged manifest's generated config and expects exactly the 7 tags.
 5. **Proof (§01 P6):** on an API 33 and an API 30 emulator, switching the language changes a screen and a notification
    at runtime, and Arabic plurals are right. **Fallback:** our own `LocalResourceEnvironment` override, one file per
    language.
@@ -1736,6 +1855,7 @@ suspend fun PluralsText.filesLeft(count: Int): String = …   // the same rule, 
    `title =`, `label =`, `body =`, `supporting =`, `placeholder =`, `contentDescription =`) in `:feature:*` or the kit.
    The shrink-only list is `quality/hardcoded_strings_allowlist.txt`.
 8. Every tip and tour has en and ar copy (B-L10N-020).
+9. Every shipped language folder has a `strings_os.xml` (the LocaleConfig depends on it, §13.6).
 
 ---
 
@@ -1745,8 +1865,9 @@ suspend fun PluralsText.filesLeft(count: Int): String = …   // the same rule, 
 
 - Only `:ui:kit`, `:ui:kit-chat` and `:ui:kit-content` may declare `org.jetbrains.compose.material3:*`.
   `material3-adaptive*` may be declared by `:ui:shell` and the kit.
-- `:feature:*` get `compose.runtime`, `compose.ui`, `compose.foundation` (for layout and lazy lists) and `:ui:words`
-  (resources). Everything they draw comes from `:ui:kit*`.
+- `:feature:*` get `compose.runtime`, `compose.ui`, `compose.foundation` (for layout and lazy lists),
+  `org.jetbrains.compose.ui:ui-tooling-preview` (screen previews, §15.1) and `:ui:words` (resources). Everything they
+  draw comes from `:ui:kit*`.
 
 ### 14.2 Konsist rules in `:quality` (the native G16)
 
@@ -1779,6 +1900,8 @@ class KitOnlyRuleTest {
 | `androidx.lifecycle.*` (viewmodel, `collectAsStateWithLifecycle`), the Metro ViewModel accessor | |
 | `androidx.navigation3.runtime.*` | only in the feature's `Entries.kt` |
 | `org.jetbrains.compose.resources.{stringResource, pluralStringResource}` + `io.github.eslamasabry.oc.ui.words.res.*` | |
+| `androidx.compose.ui.tooling.preview.{Preview, PreviewParameter, PreviewParameterProvider}` | screen previews (§15.1); the `oc.kmp.feature` convention plugin adds `org.jetbrains.compose.ui:ui-tooling-preview` to `commonMain` (§22 raises the same line for §01 §6.3 rule 1 and §03) |
+| `io.github.eslamasabry.oc.ui.kit.preview.*` | `KitPreview`, `KitSamples` |
 | `io.github.eslamasabry.oc.ui.{kit,design,words,routes}.*`, engine public APIs, `core.{domain,model,common}`, `kotlinx.*` | |
 
 **Banned, with the part to use instead** (a failure message names it):
@@ -1788,7 +1911,7 @@ class KitOnlyRuleTest {
 | `Text`, `BasicText`, `ClickableText`, `AnnotatedString` styling | `KitText`, `KitWordText`, `KitMarkdown` |
 | `Icon`, `Image`, `painterResource`, `vectorResource` | `KitIcon`, `KitImage`, `KitAvatar` |
 | `clickable`, `combinedClickable`, `selectable`, `toggleable`, `pointerInput`, `draggable`, `anchoredDraggable`, `indication` | `KitTappable`, `KitRow`, `KitSwipeAction`, `KitSwitchRow` |
-| `background`, `border`, `clip`, `shadow`, `graphicsLayer`, `alpha`, `drawBehind`, `drawWithContent`, `blur`, `Canvas` | `KitSurface`, `Modifier.kitDim`, a kit part |
+| `background`, `border`, `clip`, `shadow`, `graphicsLayer`, `alpha`, `drawBehind`, `drawWithContent`, `blur`, `Canvas` | `KitSurface`, `Modifier.kitDim`, `Modifier.kitFrostSource` (the transcript under the frosted composer), a kit part |
 | `animate*AsState`, `Animatable`, `AnimatedVisibility`, `AnimatedContent`, `Crossfade`, `animateContentSize`, `animateItem`, `tween`, `spring`, `updateTransition`, `rememberInfiniteTransition` | `KitReveal`, `KitSwap`, `KitPresence`, `KitEntrance`, `KitAnimatedValue`, `KitAnimatedRows` |
 | `Dialog`, `Popup`, `ModalBottomSheet`, any `material3.*` | `KitSheet`, `KitConfirm`, `KitAlert`, `KitMenu` |
 | `BasicTextField`, `TextField`, `TextFieldState` | `KitField`, `KitComposer` (`KitTextState`) |
@@ -1818,19 +1941,31 @@ For every public `@Composable fun Kit*` in `:ui:kit*` `commonMain`:
 2. At least one `@Preview` per declared state, named `<Part>_<State>Preview`.
 3. An entry in `capacity/kit_capacity.json`.
 4. A spec in `api/<Part>.md` and a row in `KIT.md`.
-5. Icon-only parts require a non-empty label parameter. Parts with `enabled` require a `disabledReason`.
+5. Icon-only parts require a non-empty label parameter. Parts that can be disabled take `enabled: KitEnabled`
+   (§16.2), so a disabled part without a reason does not compile.
+6. Its Dart name exists in Dart under the same name, or `kit_renames.tsv` has a row for it (§7.0).
 
 `kit_manifest_allowlist.json` only shrinks.
 
 ### 14.5 Rules inside the kit (`KitInternalRulesTest`)
 
-- `attention*` roles are read only in `KitNeedsYou.kt`, `KitRequestCard*.kt`, `KitFilterChip.kt` and
-  `SignalPainters.kt` (LOOK-24).
-- `RenderEffect` and `blur(` appear only in `AndroidFrost.kt`. `Modifier.shadow` appears nowhere. `ModalBottomSheet`,
-  `Dialog(` and `AlertDialog` appear nowhere (the in-window overlay replaces them).
+- **Attention (LOOK-4, LOOK-24), by meaning.** Raw `attention`, `attentionFill`, `onAttentionFill`,
+  `attentionSurface` and `attentionLine` reads appear only in `KitColors.kt`, `MaterialBridge.kt` and the files on
+  `attention_allowlist.txt` (seeded from the 42 Dart kit files that read attention on the freeze tip, mapped to their
+  native files; shrink-only). Every other part reaches amber only through `TextTone.Attention`,
+  `StatusTone.Attention`, `KitChipTone.Attention`, `KitSheetTone.Attention`, `KitNeedsYou` or the style's
+  `NeedsYouLook`, and Konsist allows those APIs only in files whose Dart counterpart uses them. A new amber use needs
+  an owner-approved meaning (§2) and an allowlist line in the same PR.
+- `RenderEffect` and `blur(` appear only in `AndroidFrost.kt` (switch release; §18.1's Glass trial adds one file behind
+  an owner flag). `Modifier.shadow` appears nowhere. `ModalBottomSheet`, `Dialog(` and `AlertDialog` appear nowhere
+  (the in-window overlay replaces them).
 - `ripple(` appears only in `KitPress.kt`. `performHapticFeedback` and `LocalHapticFeedback` appear only in
   `KitHaptics.kt` and the platform classes.
-- Raw `tween(`, `spring(` and `PathEasing(` appear only in `KitMotion.kt` and `KitMotionScheme.kt`.
+- Raw `tween(`, `spring(`, `CubicBezierEasing(` and `PathEasing(` appear only in `KitMotion.kt` and
+  `KitMotionScheme.kt`. The androidx curve names `EaseOutCubic`, `EaseInCubic`, `EaseInOutQuad` and `EaseOutQuad`
+  appear nowhere: they are different curves from Flutter's of the same name (§4.8).
+- `require(` and `check(` appear in no `@Composable` kit function: a throw in composition kills the process
+  (§01 §9.6). Rules use `kitAssert` or the API shape (§16.2).
 - `LocalOverscrollFactory provides` appears nowhere.
 
 ### 14.6 When a part is missing (the process every agent follows)
@@ -1859,7 +1994,7 @@ For every public `@Composable fun Kit*` in `:ui:kit*` `commonMain`:
 - Obvious options are visible rows.
 - No raw error text.
 - Technical text only under Details.
-- Amber only for needs-you; no red.
+- Amber only for an approved needs-you meaning (§2); no red.
 - Ripple, stretch, predictive back and haptics are native.
 - 150–250 ms motion, still under Off.
 - Hard caps hold at 1,600 dp.
@@ -1879,6 +2014,12 @@ For every public `@Composable fun Kit*` in `:ui:kit*` `commonMain`:
 - Wrapper: `KitPreview(appearance = KitAppearance.Default, locale = "en", widthDp = 412) { … }`, a public composable in
   `:ui:kit` package `…ui.kit.preview`. It applies `KitTheme` with `PreviewKitPlatform` (fixed signals, no side
   effects). `KitSamples` in the same package holds realistic copy and fake models for previews.
+- **Variants without editing previews.** `KitPreview` first reads `LocalKitPreviewOverride` (`KitPreviewOverride(
+  appearance, locale, textScale, widthDp, signals)`); when it is set, its values replace the preview's own arguments.
+  The capture harness (§15.3) and the desktop gallery (§15.4) provide it, which is how one preview renders dark + ar,
+  other Styles, Saver, high contrast and text 2.0. Without the local (Android Studio), the preview's own arguments
+  apply. (ComposablePreviewScanner 0.9's `@PreviewWrapper` is the alternative if the local proves awkward; it works
+  automatically with the Android scanner.)
 - **Every part:** one preview per declared state (`KitRow_DisabledPreview`) plus `_LongContentPreview`, which uses the
   longest realistic content.
 - **Every feature screen:** previews of `XScreen(state = canned XUi, actions = FakeXActions)` for loading, empty,
@@ -1896,17 +2037,24 @@ author and called by `KitCapacityTest` (§8.3).
 | What | Variants | Size |
 |---|---|---|
 | Every part preview | light + en; dark + ar (RTL) — Solid, Graphite, text 1.0 | 412×915 at density 2.625 (420 dpi) |
+| `_Default` of the 20 frozen parts (§18.2) | + dark + en; light + ar | 412×915 |
 | `_Default` and `_LongContent` of every part | + text 2.0 (en, light); + 1280×800 (en, light) | |
-| `_Default` of the style-sensitive parts (surfaces, rows, buttons, chips, fields, segmented, switch, sheet, confirm, request card, composer, message, status line) | + Soft, Brutal, Paper, Signal × light/dark (en) | 412×915 |
+| `_Default` of the style-sensitive parts (surfaces, rows, buttons, chips, fields, segmented, switch, sheet, confirm, request card, composer, message, status line) | + Soft, Brutal, Paper, Signal × light/dark (en); **+ Saver; + high contrast × the 5 styles (dark, en)** | 412×915 |
 | Every feature screen preview | light + en; dark + ar; long state also at text 2.0 | 412×915 |
+| Daily-path screens (Conversations, chat, request, Settings, Appearance) | **+ Saver; + high contrast; + Soft, Brutal, Paper, Signal × light/dark; + the owner's own look (light, Midnight pack, blue accent; memory `design-schools-direction`)** | 412×915 |
 | Adaptive parts (sheet, confirm, dialog, undo, top bar, diff) | + 915×412, 800×1280, 1600×1000 | |
 
-Estimate at the switch: about 330 parts → about 2,600 kit images, plus about 600 screen images. The Flutter suite
-held 4,937 goldens [R testing-perf].
+These rows follow the owner rule `independent-visual-auditor` (every style × light/dark, plus Saver, high contrast and
+RTL, after an app-wide look change). Estimate at the switch: about 330 parts → about 3,000 kit images, plus about 900
+screen images. The Flutter suite held 4,937 goldens [R testing-perf].
 
 Harness: `KitPreviewCaptureTest` (each kit module's `androidHostTest`; `@GraphicsMode(NATIVE)`; JDK 21) scans with
-ComposablePreviewScanner 0.9.3 (`CommonComposablePreviewScanner().scanPackageTrees("io.github.eslamasabry.oc.ui.kit")`
-[V version; U exact API]). It wraps each preview in the variant matrix and calls
+ComposablePreviewScanner 0.9.3's **Android** scanner:
+`AndroidComposablePreviewScanner().scanPackageTrees("io.github.eslamasabry.oc.ui.kit")` [V version; U exact API].
+The previews use `androidx.compose.ui.tooling.preview.Preview` (§15.1), and the scanner's README says those are found
+by the Android scanner, including in `commonMain` packages. The `:common` and `:jvm` scanner modules
+(`CommonComposablePreviewScanner`) scan the deprecated JetBrains `@Preview` and are removed in 0.10.0, so they are not
+used. The harness provides `LocalKitPreviewOverride` for each variant (§15.1) and calls
 `captureRoboImage("src/screenshots/<Part>/<Preview>-<variant>.png")`.
 
 - Tasks: record and verify through the Roborazzi plugin. The exact task names depend on the AGP-KMP variant naming
@@ -1921,7 +2069,11 @@ ComposablePreviewScanner 0.9.3 (`CommonComposablePreviewScanner().scanPackageTre
 ./gradlew :desktopApp:run --args="--export build/gallery --part KitRow --locale ar --scale 2.0 --width 412"   # headless PNGs (VPS; xvfb-run fallback)
 ```
 
-- It discovers previews at startup with ComposablePreviewScanner's JVM artifact (0.9.3 [V]), so it needs no registry.
+- It reads a **registry of preview functions generated at build time**: a small Gradle task in `:desktopApp`
+  (`generatePreviewRegistry`) lists every `@Preview` function in the kit modules' `commonMain` (a source scan, or a
+  KSP processor if the scan proves fragile) and writes `PreviewRegistry.kt` with one entry per preview. The
+  deprecated ComposablePreviewScanner `:jvm` artifact is not used (removed in 0.10.0). The gallery provides
+  `LocalKitPreviewOverride` from its toolbar.
 - Toolbar: pack, mode, style, corners, spacing, locale (the 7 languages + pseudo), text scale (1.0 / 1.3 / 2.0), width
   presets (280 / 412 / 600 / 840 / 1280 / 1600), and an RTL toggle.
 - Desktop rendering is Skia, not Android. The gallery is **never** used for visual sign-off, which stays on Android
@@ -1930,15 +2082,16 @@ ComposablePreviewScanner 0.9.3 (`CommonComposablePreviewScanner().scanPackageTre
 ### 15.5 Screen-standard checks (the `[auto]` rules of `docs/ux-system/screen-standard.md`)
 
 `ScreenStandardCheck` in `:ui:testing` runs on every feature-screen preview capture, in en and ar at text 1.0 and 2.0.
-It reads the kit's test-visible semantics (`KitSemantics.kt`):
+It reads the kit's test-visible semantics (`KitSemantics.kt`) and measures text through `textFitOf(node)`, which calls
+each text node's `SemanticsActions.GetTextLayoutResult` (§8.3):
 
 | Rule | How it is measured |
 |---|---|
 | At most one main action, visible without scrolling | count of nodes with `KitSemantics.PrimaryAction` = 1, inside the viewport |
 | First view ≤ 7 items | nodes whose `KitPart` ∈ {KitRow, KitFeedItem, KitSwitchRow, KitExpandRow, card parts} intersecting the viewport ≤ 7 |
-| A row ≤ 2 lines of text | sum of `KitTextFit.lines` inside each `KitRow` ≤ 2 at text 1.0 |
+| A row ≤ 2 lines of text | sum of measured line counts (`textFitOf`) inside each `KitRow` ≤ 2 at text 1.0 |
 | ≤ 3 text sizes | distinct `KitSemantics.TypeRole` values with on-screen text ≤ 3 |
-| Nothing cut off | no `KitTextFit` lost words without its declared rule |
+| Nothing cut off | no text node lost words (measured overflow) without its declared `KitTextFit` rule |
 | No red | already guaranteed by `NoRedScanTest`; nothing to measure |
 
 - Results go to `status.json` (§15.6).
@@ -1955,13 +2108,15 @@ It reads the kit's test-visible semantics (`KitSemantics.kt`):
     results; and catalog-row coverage.
 - **Serve:**
   - The script rsyncs the output to the PC at `/home/eslam/Storage2/catalog/native/current`.
-  - A systemd user unit `oc-native-catalog-serve.service` serves it on `100.64.0.10:8767` (Tailscale only).
+  - A systemd user unit `oc-native-catalog-serve.service` serves it on `<PC tailnet address>:8767` (Tailscale only).
   - At the switch it moves to `:8766`, and Widgetbook (`oc-catalog-serve.service`, `oc-catalog-rebuild.timer`)
     retires.
 - **Solid pixel parity (judge visuals hard).** For the 20 frozen parts and the daily-path screens, the script also
-  places the Flutter golden (`test/goldens/kit/…`, DPR 3.0, 412×915) next to the native capture at the same size, with
-  a diff overlay. This is **a review list, not a gate**: the renderers differ in hinting and ripple. The independent
-  auditor marks each difference "intended" or "bug" in `docs/qa/kit-parity-<date>/README.md`.
+  places the Flutter golden (`test/goldens/kit/…` on the freeze tip: **412×915 pixels, DPR 1.0**) next to a native
+  capture recorded for parity with Robolectric qualifiers `w412dp-h915dp-mdpi` (density 1.0), so the two match pixel
+  for pixel with no resampling, plus a diff overlay. The normal catalog stays at 420 dpi. This is **a review list, not
+  a gate**: the renderers differ in hinting and ripple. The independent auditor marks each difference "intended" or
+  "bug" in `docs/qa/kit-parity-<date>/README.md`.
 
 ---
 
@@ -1973,7 +2128,7 @@ It reads the kit's test-visible semantics (`KitSemantics.kt`):
   1. required data;
   2. `modifier: Modifier = Modifier`;
   3. optional data;
-  4. state flags (`enabled`, `disabledReason`, `working`);
+  4. state flags (`enabled: KitEnabled`, `working`);
   5. callbacks;
   6. a trailing content slot.
 - Parameter types: plain Kotlin types, kit or design types, `@Immutable` models from `:core:model`, `Failure`,
@@ -1987,10 +2142,25 @@ It reads the kit's test-visible semantics (`KitSemantics.kt`):
   §9.2).
 - Lists: plain `List<T>`. Preserve instances in the caller. `compose-stability.conf` marks the model and design
   packages stable (§01 §9.3).
+- **Never throw from composition.** §01 §9.6: an exception in composition kills the process, because Compose has no
+  error widget. The Dart kit states its rules as about 160 `assert(...)` calls that run in debug only; Kotlin
+  `commonMain` has no debug-only assert, and `require`/`check` throw in release too. So:
+  - where the type system can carry the rule, it does (`KitEnabled` below; a required `menuTwin`; a non-empty label
+    type for icon-only parts);
+  - every other rule uses the kit-internal `kitAssert(condition) { message }` (`foundation/KitAssert.kt`): it throws
+    only when `LocalKitPlatform.current.isDebug` (debug, test and preview builds) and logs once through `AppLog` in
+    release;
+  - `KitInternalRulesTest` bans `require(` and `check(` inside `@Composable` kit functions (§14.5).
 
 ### 16.2 Template
 
 ```kotlin
+/** Enabled, or disabled with the reason a person hears once (A11Y: a disabled control says why). */
+@Immutable sealed interface KitEnabled {
+    data object Enabled : KitEnabled
+    data class Disabled(val reason: String) : KitEnabled
+}
+
 /**
  * A tappable line in a list: what it is, one supporting line, and its value or chevron.
  *
@@ -2008,14 +2178,13 @@ fun KitRow(
     supporting: String? = null,
     leading: KitRowLeading? = null,
     trailing: KitRowTrailing = KitRowTrailing.None,
-    enabled: Boolean = true,
-    disabledReason: String? = null,
+    enabled: KitEnabled = KitEnabled.Enabled,       // a disabled row cannot be built without its reason
     menu: List<KitMenuItem> = emptyList(),
     onClick: (() -> Unit)? = null,
 ) {
-    require(enabled || disabledReason != null) { "KitRow: a disabled row must say why" }
+    kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }  // throws in debug/test/preview only; logs in release
     KitTappable(
-        onClick = onClick, menu = menu, enabled = enabled, disabledReason = disabledReason,
+        onClick = onClick, menu = menu, enabled = enabled,
         role = KitTappableRole.Button,
         modifier = modifier.kitMaxWidth(CapRole.List).semantics(mergeDescendants = true) { kitPart("KitRow") },
     ) { /* Row: leading (40 dp lead column), texts (KitText RowTitle / Secondary), trailing */ }
@@ -2027,7 +2196,8 @@ fun KitRow(
 1. The part file, its KDoc lines (§14.4), the `api/<Part>.md` spec (ported from `docs/ux-system/kit-api/<Part>.md`
    where one exists; native changes marked "Native:") and a `KIT.md` row.
 2. A preview per state, plus `_LongContentPreview`.
-3. A capacity contract entry and a capacity scene, passing at 280, 412 and 1,600 dp, text 1.0 and 2.0, LTR and RTL.
+3. A capacity contract entry and a capacity scene, passing at 280, 412 and 1,600 dp, text 1.0, 1.3 and 2.0, LTR and
+   RTL (plus the G6 sizes for adaptive and row parts, §8.3).
 4. Roborazzi captures recorded on the VPS (§15.3 matrix).
 5. A logic test for every catalog row it carries (§17), named after the row.
 6. Accessibility: role, labels, disabled reason, state, live regions and custom actions (§11.1);
@@ -2054,7 +2224,7 @@ Module codes as in §7.0; **W** = `:ui:words`; **T** = `:tools:strings`; **Q** =
 | B-KIT-017, -037, -038, -039, -041, -046, -048 | `FineTuneTest`, `StyleSetTest`, `KnobMathsTest`, `HighContrastStyleTest`, `StyleContrastTest`, `StyleTransitionTest`, `StyleHooksTest` | D | unit |
 | B-KIT-042, -043, -044, -045 | `SignalCaptureTest`, `BrutalCaptureTest`, `PaperCaptureTest`, `SoftCaptureTest` | K | screenshot |
 | B-KIT-002, -006, -040, -047, -059 (storage half) | `LiveHeldByStyleTest`, `MotionPrefMigrationTest`, `StyleResetsKnobsTest`, `LivePolicyWriteTest`, `TextSizePrefTest` | E:settings | unit / migration |
-| B-KIT-018, -020 | `FrostPolicyTest`, `LivePolicyTest` | D | unit |
+| B-KIT-018, -020 | `FrostPolicyTest` (incl. `blurRadiusPx`), `LivePolicyTest` | D | unit |
 | B-KIT-052, -059 (render half), -060 | `TypeScaleTest` (D); `TextScaleCapTest`, `KitCapacityTest` (K) | D + K | unit + screenshot |
 | B-KIT-023, -054 | `KitMotionPartsTest`, `ReducedMotionSettlesTest`, `KitTransitionsTest` (+ S `PredictiveBackPolicyTest`) | K, S | integration |
 | B-KIT-001 | `GlyphMirrorCaptureTest` | K | screenshot |
@@ -2070,7 +2240,11 @@ Module codes as in §7.0; **W** = `:ui:words`; **T** = `:tools:strings`; **Q** =
 | B-KIT-053 | `KitThemeDefaultsTest` (missing appearance → defaults) | K | unit |
 | B-KIT-055 | `TerminalCursorTest` (KN); its scene half waits for D11 | KN | screenshot |
 | B-KIT-056 | `NoRedScanTest` (two exemptions) | Q | unit |
-| B-KIT-028, B-KIT-058 (team half) | parked with D11 / D6; the "high context in text1" half → `KitContextRingTest` (KC) | — / KC | screenshot |
+| B-KIT-028, B-KIT-058 | parked with D11 / D6 (B-KIT-058 is about AI Team states and `teamContextTone`, including its "high context in primary text" half) | — | screenshot |
+| (no catalog row; Dart `test/kit/kit_context_ring_test.dart`) | `KitContextRingTest`: accent < 70 %, attention 70–95 %, text1 ≥ 95 %, never red; halo on crossing 70 % and 95 % upward | KC | unit + screenshot |
+| G12 port (`test/redaction_test.dart`; SEC-2, SEC-4) | `KitRedactionGateTest`: register known secrets with the `Redactor`, render every technical part (code block, log panel, terminal output, diff, viewer + find, tool row, background work line, field, notice, details fold) and run every copy path; assert only the masked form appears on screen and on the clipboard. Plus `KitCopyTest` (masked by default; the named `redact = false` call sites) | K, KC, KN | screenshot / semantics |
+| (no catalog row; Dart `kit_max_width.dart`) | `KitMaxWidthTest` (§8.2) | K | unit (desktop compose) |
+| B-KIT-032 "closes when answered elsewhere" half | the owning screen's ViewModel test (request answered elsewhere → `visible = false` + receipt) | F | unit |
 | B-L10N-001, -020 | `LocaleChoiceTest`, `TeachingRegistryTest` | E:settings | unit |
 | B-L10N-002, -013 | `AppLocaleApplierTest` (`:android:platform`), `NativeTextLocaleTest` (`:android:background`, `:android:widgets`) | android | integration / contract |
 | B-L10N-003, -004, -005, -008, -009, -010 (runtime), -014, -016, -017, -019, -024 | `FolderFactsWordsTest`, `UntitledWordsTest`, `NodeRefusalWordsTest`, `SupportedLanguagesTest`, `LocaleResolutionTest`, `PluralRulesTest`, `ScheduleWordsTest`, `PermissionTitleWordsTest`, `LanguageCoverageTest`, `SetupErrorWordsTest`, `VoiceManifestWordsTest` | W | unit |
@@ -2091,8 +2265,9 @@ at a Compose ratio of about 0.6. **They are replaced by the measured P10 through
 
 | WP | Slice | Owner (model) | Contents | Depends on | Estimate | Acceptance |
 |---|---|---|---|---|---|---|
-| K0 | 0 | kit owner (Opus) | `:ui:design` skeleton: `Roles` + Graphite + `Contrast`, type scale, `Tokens`, `Shape`, `MotionTokens` + `MotionPolicy`, `WindowClass`, `CapRole`, `TextScalePolicy`. `:ui:kit`: `KitTheme`, `KitPlatform` (Android, Desktop, Fake, Preview), `KitText`, `KitIcon` + the glyph generator, `KitSurface` (Solid), `KitTappable` + ripple + haptics, `KitFrameText`, `KitMaxWidth`, `KitSheet` on the in-window `BottomSheet`, `Modifier.kitFrost` spike. `:ui:testing` harness, the Roborazzi VPS setup, the `:desktopApp` gallery skeleton | §01 P1 | 2–3 aw | §01 **P7** passes: one part tested three ways (desktop compose test, Robolectric, Roborazzi light/dark en/ar); the frame cap at 200 % keeps non-linear scaling below the cap; ripple and haptic on the emulator; the 20 signatures (§18.2) frozen in `contracts/kit-v1.md`; `GlyphProvenanceTest` green |
-| W1 | 1 | l10n owner (Sonnet) | `:tools:strings` convert + check + pseudo; `feature-routes.tsv`; all 7 languages converted; `strings_os` generation; `PluralsGenerated`; `SupportedLanguages`; `LanguageCoverage`; `AppLocaleApplier` (with the `:android:platform` owner) | K0 (module), §01 P6 | 1.5–2 aw | §01 **P6**; `convert-report.md` reviewed (unused keys listed for the owner); `check` green; screen + notification switch language at runtime on API 33 and 30 |
+| K0 | 0 | kit owner (Opus) | `:ui:design` skeleton: `Roles` + Graphite + `Contrast`, type scale, `Tokens`, `Shape`, `MotionTokens` + `MotionPolicy`, `WindowClass`, `CapRole`, `TextScalePolicy`. `:ui:kit`: `KitTheme`, `KitPlatform` (Android, Desktop, Fake, Preview), `KitText`, `KitIcon` + the glyph generator, `KitSurface` (Solid), `KitTappable` + ripple + haptics, `KitFrameText`, `KitMaxWidth`, `kitAssert`, `KitSheet` on the in-window `BottomSheet`, the frost spike (`KitFrostState` + `kitFrostSource` + `kitFrost`). `:ui:testing` harness, the Roborazzi VPS setup, the `:desktopApp` gallery skeleton | §01 P1 | 2–3 aw | §01 **P7** passes: one part tested three ways (desktop compose test, Robolectric, Roborazzi light/dark en/ar); the frame cap at 200 % keeps non-linear scaling below the cap; ripple and haptic on the emulator; frost side by side with the Flutter frost golden; the 20 signatures (§18.2) frozen in `contracts/kit-v1.md`; `GlyphProvenanceTest` and `KitMaxWidthTest` green |
+| W0 | 0 | l10n owner (Sonnet) | the **P6 spike**: `:tools:strings convert` on 2–3 feature files (one of them a `part of` file) from the freeze tip, en + ar; `:ui:words` with those files; `:android:os-strings` with en + ar; CMP plural selection in `ar` (zero…other for 0, 1, 2, 3, 11, 100); `\'` and `\uXXXX` unescaping; locale switch of a screen and a service-posted notification on API 33 and API 30 | §01 P1 | 0.5–1 aw | §01 **P6** |
+| W1 | 1 | l10n owner (Sonnet) | the full conversion: `:tools:strings` convert + check + pseudo; `feature-routes.tsv`; all 7 languages from the freeze tip at its recorded SHA, after the last Flutter merge; `strings_os` for all 7 in `:android:os-strings`; generated LocaleConfig; `PluralsGenerated`; `SupportedLanguages`; `LanguageCoverage`; `AppLocaleApplier` (with the `:android:platform` owner) | W0, K0 | 1.5–2 aw | `convert-report.md` reviewed (unused share ≤ 2 %, unused keys listed for the owner); `check` green; `LocaleConfigTest` lists 7 languages; screen + notification switch language at runtime on API 33 and 30 |
 | K1 | 1 | kit owner + 1 kit agent (Sonnet) under the owner | the 31 packs + accents + dynamic colour; frames (`KitScreen`, top bar, status line and slot, nav rail and sidebar, page heading, system bars); the row family; buttons, action block, icon button, chips; `KitField` (all kinds); segmented, choice list, switch and expand rows; modals (sheet, confirm, dialog, menu, undo, details fold); states (state view, notice, loading bar, skeleton, progress, receipt, needs-you); motion parts; capacity, manifest, Konsist and literal gates live | K0 | 6–7 aw | every part meets §16.3; gates green with empty or shrink-only allowlists; pixel-parity review list for the 20 parts done by the auditor |
 | KC2 | 2 | chat-kit owner (Opus for turn, transcript and markdown; Sonnet for the rest) | `KitMessage` + lift, `KitTurn` family, `KitToolRow`, `KitWorkLine`, `KitQueuedMessage`, `KitMarkdown` blocks + `KitStreamCaret` + `KitFindMark`, `KitRequestCard` + sheet + `FormSpec` renderer, `KitComposer` v1 (field, Send/Stop, chips row, delivery, frost), `KitStartBox`, transcript excerpt and skeleton | K1; `:core:markdown` | 5–6 aw | the §01 **P3** transcript benchmark; chat parts meet §16.3; the composer rides the IME frame by frame on the emulator |
 | K2 | 2 | kit agent (Sonnet) | tip, refresh, jump pill, tab strip and switcher, search field, filter chips, scroll fade, last known, server trust, top-bar pill, scope, link, typing guard, link scope, scroll area | K1 | 2 aw | §16.3 |
@@ -2100,8 +2275,10 @@ at a Compose ratio of about 0.6. **They are replaced by the measured P10 through
 | K4 | 4 | kit owner (Opus for the four styles) | Soft, Brutal, Paper, Signal specs + painters + captures; appearance parts (guide, option card, swatches, accent row, fine-tune, step slider, carousel); tour; date and time pickers on M3; wheel; widget panel parts; arrival | K1 | 4–5 aw | `StyleContrastTest` over every style × knob × pack × brightness; every style capture reviewed light and dark; the owner sees one screen per style per mode |
 | KN5 | 5 | content-kit owner (Sonnet) | diff view + page, viewer, gallery, markup, zoom, live terminal slot + key bar + OSC 52 + links, web preview slot, charts and tables, session tabs, breadcrumb, mic hold, level meter | KN3 | 4 aw | §16.3; the terminal renders through the `PlatformViewHandle` seam (§01 P9) |
 | — | after switch | — | live backgrounds (D11), scenes (D11), AI Team parts + work graph (D6), fact row (D6) | owner decision | — | — |
+| G1 | after switch | kit owner (Opus, render-compare loop) | **The owner-gated Glass trial** (owner answer "A", 2026-11-01, memory `no-glass-rule`): one optional sixth Style, Glass: a `RenderEffect` blur plus AGSL refraction on API 33+, on the **top bar and sheets only**, solid fallback below API 33 and under Saver, motion Off and high contrast. It adds one allowlisted file (for example `AndroidGlass.kt`) behind an owner flag, its own contrast floors and Saver/high-contrast holds in `StyleContrastTest`, and uses real blur: `RenderEffect`, directly or through Haze (12 N-98, version pinned at that slice [U]; adopting it narrows 12 X-21 in the same commit), with refraction only through the platform AGSL `RuntimeShader` inside the kit. It starts only **after the switch** (15 §12); until then the only blur in the app is the two frost places (composer, chat header). The owner judges it on the phone, as they judged the demo; it ships only if they like it, otherwise the flag and file are deleted | the switch release; owner go | 1–2 aw | owner yes on the phone; emulator frame timing within the §13 budget; every gate stays green with the flag off |
 
-Total to the switch: about 29–33 agent-weeks of kit and words work [U, re-planned at M0].
+Total to the switch: about 30–34 agent-weeks of kit and words work [U, re-planned at M0]. The Glass trial (G1) is
+after the switch and not in this total.
 
 ### 18.2 The 20 signatures frozen at the end of slice 0 (§01 §10.3)
 
@@ -2126,8 +2303,11 @@ Total to the switch: about 29–33 agent-weeks of kit and words work [U, re-plan
 19. `KitConfirm`
 20. `KitStateView`
 
-The types they take are frozen with them: `KitPlatform`, `KitAppearance`, `Tokens`, `CapRole`, `TypeRole`,
-`TextTone`, `KitHaptic`, `MotionLevel`, `Failure`/`Redacted` usage, `KitMenuItem`, `KitTextState`. `KitNotice` and
+The types they take are frozen with them: `KitPlatform` (with `isDebug`, `frameDensity` and `frostEffect`),
+`KitSystemSignals` (with `accessibleNavigation`), `KitAppearance`, `Tokens`, `CapRole`, `TypeRole`, `TextTone`,
+`KitHaptic`, `MotionLevel`, `KitEnabled`, `Failure`/`Redacted` usage, `KitMenuItem`, `KitTextState`. The frost
+signatures freeze with them although frost is built in slice 2: `KitFrostState`, `Modifier.kitFrostSource(state)`
+and `Modifier.kitFrost(role, state)`, because the chat feature places the source. `KitNotice` and
 `KitDetailsFold` freeze in the first week of slice 1.
 
 ### 18.3 Machine rules for kit work
@@ -2148,14 +2328,17 @@ The types they take are frozen with them: `KitPlatform`, `KitAppearance`, `Token
 | Q2 | Per-part kit gates (capacity, Roborazzi, accessibility checks) are built with each part now. Do they count as the "widget tests come later" work? | Build them now: they are the kit's definition of done and cost little per part. If not: keep only the logic gates (contrast, tokens, policies, menu order) + one Roborazzi capture per part, and run the capacity gate in the widget-test phase. |
 | Q3 | Date and time pickers become Android's own Material pickers inside kit chrome (K10), replacing the custom picker. | Yes |
 | Q4 | Replies and prompts take their direction from their own words, so an English reply in the Arabic UI reads left to right (K17). Flutter aligned them to the UI direction. | Content direction |
-| Q5 | The tab lens (5.6 %) and sent-bubble lift (8.3 %) springs overshoot slightly today. Keep them, or make them flat like everything new? | Keep (parity); check side by side on the emulator |
+| Q5 | The tab lens's springs overshoot slightly today (head 5.6 %, lift while dragged 8.3 %). Keep them, or make them flat like everything new? (The sent bubble has no spring; it is a 250 ms ease.) | Keep (parity); check side by side on the emulator |
 | Q6 | A haptic tick when a swipe action crosses its threshold (Android `GestureThresholdActivate`). | No (not in today's haptic list) |
-| Q7 | Selecting text in replies: allow Android's own extra menu items (Translate, Share), or keep only Copy and Select all? | Keep Copy and Select all (parity) |
+| Q7 | Selecting text in replies: allow Android's own extra menu items (Translate, Share), or keep only Copy and Select all? | Keep Copy and Select all (parity), through `ComposeFoundationFlags.isSmartSelectionEnabled = false` or a kit text toolbar (§7.1) |
 | Q8 | Foldables: hinge-aware split layouts. | No; window width only |
-| Q9 | Arabic digits: keep Western digits as today, or use Arabic-Indic digits? | As the Flutter app shows today (checked in the parity captures) |
+| Q9 | Arabic digits: keep Western digits as today, or use Arabic-Indic digits? | Western digits, as today (`nu-latn`, §12.1 rule 8) |
+| Q10 | The 1.3× frame cap covers what Flutter caps today (top bar, chips, buttons, composer field, status strip, session tabs, sheet title). Should it also cover the undo bar, confirm and alert titles, the start box, the ask field, breadcrumbs, the jump pill, segmented labels and tab strips? Capping them keeps shapes but makes those words smaller for people who need large text. | No: keep Flutter's list. Any extension is shown to the owner first as a 200 % capture |
+| Q11 | A Vibration on/off row in Settings › Appearance (today there is none; the phone's Touch feedback setting decides). | No row at the switch; if wanted, one device-wide `oc.<what>` key |
 
 §01 already decides frost (D10, keep, two places), live backgrounds and scenes (D11, after the switch or drop), and
-AI Team / FactsBook (D6, after the switch). This section follows those defaults.
+AI Team / FactsBook (D6, after the switch). This section follows those defaults. The owner already answered the
+post-switch Glass trial ("A", 2026-11-01): it is WP G1 (§18.1), not a question.
 
 ---
 
@@ -2164,14 +2347,16 @@ AI Team / FactsBook (D6, after the switch). This section follows those defaults.
 | Risk | Control |
 |---|---|
 | M3 1.5 beta API churn (Slider, `BottomSheet`, pickers) | Only kit modules see M3, and only behind kit names. One owner absorbs the churn. D12 allows a beta M3 only inside the kit. |
-| The common frame-text density does not keep Android's non-linear curve [U] | P7 measures it. Fallback: `FontScaleConverterFactory` in kit `androidMain` (`JETPACK_AHEAD` row). |
+| The common frame-text density does not keep Android's non-linear curve | **Settled by P7**: the custom-`toDp` design failed (20.2 dp, not 20.8); the per-size `frameDp` path matches Flutter exactly (§9.2). Remaining risk: the emulator side-by-side. |
 | CMP resources ignore the per-app locale outside composition [U] | P6 proves it. Fallback: our own `LocalResourceEnvironment` and an explicit environment for `getString`. |
 | The in-window `BottomSheet` is experimental, or has accessibility gaps | `KitSheet` hides it. Fallback: `ModalBottomSheet` behind the same API (motion-native §3.4). |
 | Glyph extraction does not match the font rendering | `GlyphParityTest`. Fallback: ship the TTFs and draw glyph text (§4.11). |
 | The Robolectric capacity gate is slow (Flutter needed about 22 min in 8 shards) | Shard on the VPS. Agents use the desktop width-only twin at T0. Run only touched parts' scenes at T1, all at T2. |
 | Solid pixel drift between Flutter and Compose renderers | Auditor parity list (§15.6). Hold the exact tokens; only renderer-level differences are accepted. |
 | About 330 parts is a lot | WP order follows the slices; parts land only when a slice needs them; D6 and D11 parts wait. |
-| Key routing for 9,468 strings mis-files keys | An unrouted path fails the converter; the report goes to the l10n owner; feature agents can move keys between their own files later. |
+| Key routing for 9,837 strings mis-files or drops keys | No import filter, so `part of` files count (§13.3); an unused share above 2 % fails the run; an unrouted path fails the converter; the report goes to the l10n owner; feature agents can move keys between their own files later. |
+| The conversion runs on a stale Flutter snapshot | The converter takes `--source-sha` and refuses a worktree at another commit; the SHA is re-recorded at M0 and the run happens after the last Flutter merge. |
+| Frost cannot be built in-kit on API 31+ | Solid surface (frost is optional chrome). No Haze: §12 X-21. |
 | Konsist rules have false positives or holes | P9 plants violations; every allowlist only shrinks; the review checklist (§14.7) backs it up. |
 | Desktop Linux has no screen reader | Accepted (§01 D14). Android TalkBack is the accessibility truth. |
 
@@ -2188,8 +2373,15 @@ AI Team / FactsBook (D6, after the switch). This section follows those defaults.
   - `../research/kmp-cmp-status.md`: §3, §6, §12.4.
   - `../research/testing-perf.md`: §4, §5.
 - **Catalog:** `../catalog/BEHAVIORS.md`: KIT (B-KIT-001…062), L10N (B-L10N-001…024), XPLAT-009/010/011.
-- **Repo (read-only)** `/home/eslam/Storage/Code/wt/oc_app-batch1`:
-  - `lib/ui/kit/**`, `lib/ui/theme_roles.dart`, `theme_packs*.dart`, `app_iconography.dart`;
+- **Repo (read-only)**, the freeze tip `int/freeze-2026-11-01` at `fc5c1e78f`
+  (`/home/eslam/Storage/Code/wt/oc_app-freeze`; it contains batch1 `65e3f70a3`, `/home/eslam/Storage/Code/wt/oc_app-batch1`):
+  - `lib/ui/kit/**` (incl. `kit_chrome.dart`, `kit_update_dot.dart`, `kit_update_sheet.dart`, `kit_vitals_strip.dart`,
+    `kit_paste_image_menu.dart`, `chat/kit_markdown_unfinished.dart`, `kit_max_width.dart`, `kit_icon.dart`,
+    `motion/kit_haptics.dart`, `kit_copy.dart`, `kit_frost.dart`), `lib/ui/theme_roles.dart` (`schemeFromRoles`),
+    `theme_packs*.dart`, `app_iconography.dart`, `lib/state/glass_choice.dart`,
+    `lib/ui/screens/settings/glass_choice_control.dart`, `lib/ui/teaching/teaching.dart`;
+  - `test/kit/kit_overflow_matrix.dart` (G6), `test/redaction_test.dart` (G12), `test/kit/kit_style_test.dart`,
+    `test/kit/kit_context_ring_test.dart`, `test/goldens/kit/` (412×915 px, DPR 1);
   - `lib/state/app_locale.dart`, `lib/l10n/app_*.arb`, `l10n.yaml`;
   - `assets/fonts/{geist,phosphor}/`, `assets/marks/`;
   - `android/app/src/main/res/values*/`;
@@ -2204,14 +2396,139 @@ AI Team / FactsBook (D6, after the switch). This section follows those defaults.
   `agent-format-churn`, `independent-visual-auditor`.
 - **Checked today [V], 2026-11-01:**
   - Maven Central `maven-metadata.xml`:
-    - `dev.chrisbanes.haze:haze` latest **2.0.1** (2026-09-29);
+    - `dev.chrisbanes.haze:haze` latest **2.0.1** (2026-09-29); not used (§12 X-21 bans it; frost falls back to solid);
     - `org.jetbrains.compose.components:components-resources` **1.13.0-beta01**;
     - `org.jetbrains.compose.ui:ui-tooling-preview` **1.13.0-beta01**;
     - `io.github.sergio-sastre.ComposablePreviewScanner:{core,common,jvm}` **0.9.3**;
     - `io.github.takahirom.roborazzi:roborazzi-compose-desktop` **1.77.0**.
-  - Gradle Plugin Portal: `io.github.composegears.valkyrie` 0.5.2 (2026-07-21). Considered for SVG → `ImageVector`;
-    not used, because the glyph generator reads the TTFs directly.
+  - Gradle Plugin Portal: `io.github.composegears.valkyrie` 0.5.2 (2026-07-21). Not used for glyphs (the generator
+    reads the TTFs directly); one of the two options for the 79 SVG marks (§4.11).
+  - ComposablePreviewScanner `README.md` and `README_DEPRECATED.md` (GitHub, sergio-sastre): "The `:common` and `:jvm`
+    modules are deprecated and will be removed in version 0.10.0"; androidx `@Preview`s, including in common
+    packages, are scanned with `AndroidComposablePreviewScanner`; `@PreviewWrapper` since 0.9.0.
+  - Kotlin docs "What's new in Compose Multiplatform 1.13": 1.13.0-beta01 maps to Jetpack runtime/ui/foundation
+    1.13.0-beta01 and Material3 1.5.0-beta01.
+  - developer.android.com "Per-app language preferences": AGP builds the LocaleConfig from the `res` folders of the app
+    module and its library module dependencies; "the build fails if you do manually create a LocaleConfig file" while
+    automatic support is on.
+  - androidx `ComposeFoundationFlags.isSmartSelectionEnabled` (default true) [V reference page; U effect on the
+    toolbar items, checked in P7].
+  - Pinned Flutter SDK `curves.dart` (Shorebird cache `91f8bd75…`): `easeOutCubic (0.215, 0.61, 0.355, 1.0)`,
+    `easeInCubic (0.55, 0.055, 0.675, 0.19)`, `easeInOutQuad (0.455, 0.03, 0.515, 0.955)`,
+    `easeOutQuad (0.25, 0.46, 0.45, 0.94)`; `page_transitions_theme.dart` `kTransitionMilliseconds = 450`.
+  - intl 0.20.3 (`pubspec.lock`): `NumberSymbols` `ar` `ZERO_DIGIT '0'`; `DateSymbols` `ar` without an Arabic-Indic
+    zero digit.
   - kotlinlang.org "Manage local resource environment": the `LocalAppLocale` pattern for CMP resources on Android
     (configuration override + `Locale.setDefault`), which the page calls a workaround "until a common public API is
     implemented".
-- **Counted today [R]** from the ARB files: keys, plurals, selects, placeholder types, `=N` selectors (§13.1, §13.4).
+- **Counted today [R]** from the freeze tip's ARB files: keys, plurals, selects, placeholder types, `=N` selectors
+  (§13.1, §13.4); and the key-routing simulation of §13.3 (import filter vs every Dart file).
+
+---
+
+## 22. Change requests to other sections (the coordinator merges them)
+
+| # | Section | Change | Why (this file) |
+|---|---|---|---|
+| CR06-1 | §01 §5.2 module table | `:ui:design`, `:ui:kit`, `:ui:testing` start in slice 0; `:ui:words` and `:tools:strings` start in slice 0 with spike scope (W0); add `:android:os-strings` (`android.library`, resources only, S l10n owner, slice 0). Slice 0 creates about 17 modules, not 12. | §3.1; P6 and P7 are slice-0 proofs and §10.3 freezes `KitPlatform` and 20 kit signatures at the end of slice 0 |
+| CR06-2 | §01 §6.1 dependency table, §03 | `:ui:kit-content` may depend on `:core:security` (the `Redactor`); `:androidApp` and `:android:*` may depend on `:android:os-strings`. | §7.1 `KitRedact`; §13.2 |
+| CR06-3 | §01 §6.3 rule 1, §03 `oc.kmp.feature` | Add `androidx.compose.ui.tooling.preview.{Preview, PreviewParameter, PreviewParameterProvider}` and `…ui.kit.preview.*` to the feature allowlist; the plugin adds `org.jetbrains.compose.ui:ui-tooling-preview` to `commonMain`. | §14.2; §15.1 requires screen previews from slice 2 |
+| CR06-4 | §03 `:androidApp` res tree | Remove the hand-written `xml/locales_config.xml`; the LocaleConfig is generated (`generateLocaleConfig = true`), and a manual file fails the build. Move `generateOsStrings` / `copyOsStrings` to `:android:os-strings`. | §13.6 step 4; §13.2 |
+| CR06-5 | §05 key table and M-D5 | `oc.glass` is **A** (adopted, read by `:engine:settings` as the frost strength; unknown → `balanced`; device-wide, not swept), not I; remove it from M-D5's dead-key list. `oc.effectsDepth/Edges/GlowColours/GlowSpeed` stay I. | §5.2; owner 2026-10-30 |
+| CR06-6 | §07 X7 and row I04 | Keep `GlassChoiceControl` as a `KitSegmented` (Off/Weak/Balanced/Strong) under the Style question, with the held reasons; "glass control dropped" is wrong: it is the frost control. | §7.2 |
+| CR06-7 | §08 M8-2, the curve table, `KitMotion.Enter/Exit` and §6.3 | `Enter`/`Exit` are Flutter's control points (`0.215, 0.61, 0.355, 1` and `0.55, 0.055, 0.675, 0.19`), never the androidx `EaseOutCubic`/`EaseInCubic`; add `StepEase`/`StepOut`. §6.3: copy plays `Send` (Dart `kit_copy.dart` parity). §08 §13.2's corrections to this file are applied here. | §4.8, §4.9 |
+| CR06-8 | §11 S11-8, CR11-8, §11 copy table | Superseded: `strings_os` is generated once into `:android:os-strings`, which `:androidApp` and `:android:widgets` depend on; no second copy and no parity test. Notification and widget time and number formatters use the same `nu-latn` helper as `KitPlatform.formatMoment`. | §13.2; §12.1 rule 8 |
+| CR06-9 | §01 §11 P6 | P6's acceptance adds: a key used only in a `part of` file routes correctly, and the unused share is ≤ 2 % on the spike files. | §13.3 |
+
+## Review notes (2026-11-01 revision)
+
+What changed, by review issue. "Confirmed" means the issue was checked against the freeze tip (`fc5c1e78f`), the
+pinned Flutter SDK, sibling plan sections or a primary web source before the edit.
+
+- **Stale snapshot (blocker): confirmed, fixed.** Rule 0, §0, §13.1, the converter's paths and §21 now point at
+  `int/freeze-2026-11-01` `fc5c1e78f`, re-recorded at M0; the converter checks `--source-sha` and runs after the last
+  Flutter merge. Recounted §13.1 (en 9,837, ar 10,855). Added §7 rows for `KitUpdateDot`, `KitUpdateSheet`,
+  `KitVitalsStrip`, `KitPasteImageMenu`, the unfinished-tail Markdown rule, the large-text approval chip, the
+  ellipsizing hint and the `whats-new` tour; `KitChrome` → `KitFrameText` is in the rename map.
+- **Converter key routing (blocker): confirmed, fixed.** Rerunning the rule gave 2,281 unused keys on batch1 (2,325 on
+  the freeze tip) with the import filter, about 1 % without it. §13.3 drops the filter, routes by the using file's own
+  path, adds the `kit_confirm_sheet.dart` fixture and a 2 % unused-share failure.
+- **`kitMaxWidth` width (major): confirmed, fixed** to `constraints.constrainWidth(placeable.width)`, no layout node
+  without a cap, `KitMaxWidthTest` added.
+- **CapRole alignment (major): confirmed, fixed** to Dart's defaults (centre for page-level roles; start for chip,
+  popover, lane; Toast stays bottom-start, which matches `kit_undo.dart`).
+- **Curves (major): confirmed, fixed** with Flutter control points, `StepEase`/`StepOut`, and a Konsist ban on the
+  androidx names; CR06-7 for §08.
+- **`lift` spring / bubble lift / Q5 (two issues, major): confirmed, fixed.** `lensLift` is the tab lens; the bubble is
+  a 250 ms `Enter` tween; Q5 covers the lens only. `EXIT` removed; token sources cited (the separate minor issue).
+- **Haptics map and copy haptic (major): confirmed, fixed** to §08 §6.2 (Send = VirtualKey, Commit = KeyboardTap,
+  Done = Confirm, toggles and segments on API 34+); copy plays `Send` like Dart. `KitMotionState` gains §08's fields
+  (also `debugTimeScale`, which §08 lists).
+- **Attention allowlist (two issues, major): confirmed, fixed by meaning.** 42 Dart kit files read attention. Not
+  adopted: "only `KitColors` reads raw roles", because 27 Dart kit files (context ring, step light, composer caption…)
+  read the raw roles directly, so a seeded, shrink-only file allowlist plus the attention APIs is the gate. The stuck Stop
+  chip and the Stop-and-send pill are now in §7.8.
+- **`require` in composition (major): confirmed, fixed** with `kitAssert` (debug, test, preview only), `KitEnabled`, a
+  ban on `require(`/`check(` in composables, and `KitPlatform.isDebug`.
+- **Redaction (two issues, major): confirmed, fixed.** `KitCopy(text, redact = true, sensitive)`; the 12 Dart parts that
+  redact keep doing so; `KitRedactionGateTest` ports G12; CR06-2 for `:ui:kit-content`. 25 `redact: false` call sites on
+  the freeze tip (the issue said 24).
+- **Frost source (major): confirmed, fixed** with `KitFrostState` + `kitFrostSource` + `kitFrost`, frozen in slice 0.
+  Haze removed as a fallback (solid instead), rather than adding an X-21 exception; one file name (`AndroidFrost.kt`).
+- **Frost control and `oc.glass` (major): confirmed, fixed** (§5.2, §7.2; CR06-5, CR06-6).
+- **Glass trial after the switch (major): confirmed** from memory `no-glass-rule`; WP G1 added and the 5-style,
+  2-role and blur rules marked as switch-release rules.
+- **Preview scanner and variants (major): confirmed** from the scanner's `README_DEPRECATED.md`; fixed with
+  `AndroidComposablePreviewScanner`, `LocalKitPreviewOverride` and a build-time gallery registry.
+- **Feature allowlist lacks `@Preview` (major): confirmed, fixed** (§14.1, §14.2; CR06-3).
+- **`strings_os` in widgets (major): confirmed** (43 `@string/` references on the freeze tip, the issue said 28).
+  Chose the one-library option `:android:os-strings` over §11's two copies (CR06-8).
+- **LocaleConfig (major): confirmed** from Android's docs; fixed with `strings_os` in all 7 folders, a check rule, and
+  CR06-4 to drop the manual file.
+- **Module start slices (major): confirmed, fixed**; W1 split into W0 (slice-0 P6 spike) and W1 (CR06-1).
+- **Line-height alignment (major): confirmed, fixed** to `Proportional`, `Center` only in `KitField`/`KitSearchField`.
+- **Material bridge table (two issues, minor): confirmed, fixed** from `schemeFromRoles`; the test compares against
+  values generated from the Dart function.
+- **Parity DPR (minor): confirmed** (goldens are 412×915 px); parity captures at `w412dp-h915dp-mdpi`.
+- **KitPlatform seams (minor): partly adopted.** Added `isDebug` and `frameDensity`. The suggested
+  `calculateRecommendedTimeoutMillis` alone is not parity (Dart shows the undo bar with no timeout under accessible
+  navigation), so `KitSystemSignals.accessibleNavigation` was added and the recommended timeout is used otherwise.
+- **JETPACK_AHEAD versions and Q7 (minor): confirmed, fixed**; the selection row was dropped; Q7 now names
+  `isSmartSelectionEnabled = false` or a kit toolbar [U in P7].
+- **Double focus target (minor): confirmed, fixed** (`combinedClickable` alone).
+- **`KitTextFit` in release (minor): confirmed, fixed** (static rule only; tests use `GetTextLayoutResult`).
+- **Glyph and mark sources (minor): partly adopted.** `_duotoneBackgrounds` is now a source. Rejected detail: fontTools
+  does have an SVG path parser (`fontTools.svgLib.path`), but it does not cover the marks' group transforms, `evenodd`
+  and `clipPath`, so §4.11 handles those explicitly or uses Valkyrie.
+- **§8.3 vs §15.2 (minor): confirmed, fixed.**
+- **Haptics key (minor): confirmed, fixed**; Vibration row is Q11.
+- **Read rules and Saver (minor): confirmed, fixed** in §4.3.
+- **Rename map (minor): confirmed, fixed** with `kit_renames.tsv`, consumed by `:tools:capacity-port` and
+  `KitManifestTest`.
+- **Frame list (minor): confirmed, fixed** to Flutter's `KitChrome` list; extensions are Q10.
+- **Arabic digits (minor): confirmed, fixed** with `nu-latn` in both formatters and the `:android:*` ones (CR06-8).
+- **Frost σ → radius (minor): confirmed, fixed** (`blurRadiusPx`).
+- **Capture matrix (minor): confirmed, fixed** (Saver, high contrast, ar-light/en-dark for the 20 parts, the owner's
+  look).
+- **Capacity matrix (minor): confirmed, fixed** (text 1.3; the G6 sizes as `KitOverflowMatrixTest`).
+- **Sheet closes when answered elsewhere (minor): confirmed, fixed** (ViewModel owns it; test moved).
+- **Jump pill 480 px (minor): confirmed, fixed** to 480 dp through `Layout`.
+- **Context ring and B-KIT-058 (major): confirmed, fixed** (amber 70–95 %; B-KIT-058 parked with D6).
+
+No issue was rejected outright. Two were adopted in part (the KitPlatform accessibility timeout and the fontTools
+detail), and one had two options, of which the one-library `strings_os` was chosen.
+
+## Slice-0 learnings folded in (2026-11-01)
+
+From `docs/native/slice0/P6-strings.md` and `P7-kit.md` on `native/m0-2026-11-01`:
+
+| Finding | Where it changed this section |
+|---|---|
+| A custom `Density.toDp` never reaches text on Android; the frame cap is a per-size `frameDp` under font scale 1 (16 sp at 200 % = 20.8 dp, Flutter-exact) | §9.2 rewritten; `KitPlatform.frameDensity` and the `FontScaleConverterFactory` `JETPACK_AHEAD` row dropped |
+| `KitPlatform` haptics are a plain `haptic(kind)` through the activity's `decorView` | §6 |
+| Compact two-line row is 56, not 54 (Dart computes `rowHeightTwoLine - space2`) | §4.3, §4.5 |
+| Flutter's `Enter` curve is (0.215, 0.61, 0.355, 1), which is **not** androidx `EaseOutCubic` (0.33, 1, 0.68, 1) | §4.8 is right; 08 §2.2 corrected |
+| CMP unescapes only `\n`, `\t`, `\uXXXX`, `\\`; two escaping profiles; `select` and double plurals refused; English-rule fallback for borrowed plurals; `__eqN` before categories | §13.3, §13.4 |
+| Roborazzi task names: `recordRoborazziAndroidHostTest` / `verifyRoborazziAndroidHostTest` / `compareRoborazziAndroidHostTest` (and `…Desktop`) | §15.3 (settles 03 P-03-4) |
+| The kit sheet is kit-drawn in slice 0 (deterministic goldens); M3 1.5's in-window sheet with drag and predictive back is tried in WP K1 | K9 stays the target; P7 D4 is a slice-0 deviation only |
+| Goldens recorded in a cloud container must be re-recorded on the VPS before they gate anything | §15.3 rule unchanged; P7 D13 |
