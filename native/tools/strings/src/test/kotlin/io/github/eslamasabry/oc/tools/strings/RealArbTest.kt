@@ -130,6 +130,23 @@ class RealArbTest {
     }
 
     @Test
+    fun `the hand recipes convert exactly the 38 refused messages, and nothing else is refused`() {
+        val recipes = HandRecipes.read(repo.resolve("native/tools/strings/hand-recipes.tsv"))
+        val e = Hand.expand(arbs, recipes)
+        val handled = e.converted.flatMap { h -> h.locales.map { "$it:${h.key}" } }.toSet()
+        assertEquals(conv.problems.map { "${it.locale}:${it.key}" }.toSet(), handled)
+        assertEquals(38, handled.size)
+        val c = Converter({ routing.featureByKey[e.baseOf[it] ?: it] }).convert(e.arbs)
+        assertEquals(emptyList(), c.problems)
+        // Accounting still holds in ARB keys: every key is converted (or unused), missing, or an orphan.
+        for (l in c.locales) {
+            val base = l.convertedKeys().map { e.baseKey(it) }.toSet()
+            val arb = arbs.first { it.locale == l.locale }
+            assertEquals(arb.messages.keys - l.orphans.toSet(), base, l.locale)
+        }
+    }
+
+    @Test
     fun `CLI fails loudly and writes nothing without --skip-unsupported`() {
         val tmp = Files.createTempDirectory("arb2xml-cli")
         val err = ByteArrayOutputStream()

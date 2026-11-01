@@ -17,6 +17,21 @@ class IcuParseException(message: String) : RuntimeException(message)
 object Icu {
     fun parse(message: String): List<IcuNode> = Parser(message).parseAll()
 
+    /** Writes [nodes] back as ICU text; `parse(print(n)) == n` for anything [parse] returns. */
+    fun print(nodes: List<IcuNode>): String = buildString {
+        fun branches(arg: String, kind: String, b: Map<String, List<IcuNode>>) {
+            append('{').append(arg).append(", ").append(kind).append(',')
+            for ((sel, body) in b) append(' ').append(sel).append('{').append(print(body)).append('}')
+            append('}')
+        }
+        for (n in nodes) when (n) {
+            is IcuNode.Text -> append(n.text)
+            is IcuNode.Arg -> append('{').append(n.name).append('}')
+            is IcuNode.Plural -> branches(n.arg, "plural", n.branches)
+            is IcuNode.Select -> branches(n.arg, "select", n.branches)
+        }
+    }
+
     /** Names of arguments in order of first appearance (plural/select selector args count where they open). */
     fun argOrder(nodes: List<IcuNode>): List<String> {
         val out = LinkedHashSet<String>()

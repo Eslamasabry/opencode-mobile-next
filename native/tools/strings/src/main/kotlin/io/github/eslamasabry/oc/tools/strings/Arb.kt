@@ -23,6 +23,8 @@ data class ArbFile(
     val locale: String,
     val messages: LinkedHashMap<String, String>,
     val placeholders: Map<String, LinkedHashMap<String, PlaceholderMeta>>,
+    /** Argument order forced for a key (hand conversions: every select branch numbers its arguments alike). */
+    val argOrder: Map<String, List<String>> = emptyMap(),
 )
 
 class ArbFormatException(message: String) : RuntimeException(message)

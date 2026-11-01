@@ -31,7 +31,6 @@ enum class ProblemKind(val label: String) {
     BAD_SELECTOR("plural selector that is neither a CLDR category nor =N"),
     PLURAL_WITHOUT_OTHER("plural without `other` and a category left uncovered"),
     LITERAL_FORMAT_TOKEN("text already contains a %N\$s / %N\$d token that CMP would substitute"),
-    OS_PERCENT_CONFLICT("strings_os value mixes a literal % with placeholders (Android would need %%, CMP would show it)"),
 }
 
 /** A message the converter cannot turn into CMP XML. Listed loudly; the run fails unless told to skip them. */
@@ -62,6 +61,11 @@ data class LocaleResult(
     /** "key: category" for branches this language's plural rules can never select (dropped). */
     val unreachableBranches: List<String>,
 ) {
+    /** [keysIn] counted as ARB keys, when hand recipes replaced some keys with several ([base] maps back). */
+    var originalKeys: Set<String> = emptySet()
+
+    fun keysInBase(base: (String) -> String): Int = if (originalKeys.isEmpty()) keysIn else originalKeys.map(base).toSet().size
+
     fun convertedKeys(includeUnused: Boolean = true): Set<String> =
         files.filterKeys { includeUnused || it != UNUSED }.values.flatten().mapTo(LinkedHashSet()) { it.key }
 
@@ -73,8 +77,34 @@ data class Conversion(
     val locales: List<LocaleResult>,
     val plans: Map<String, KeyPlan>,
     val problems: List<Problem>,
+    /** locale → the Flutter app's native Android strings (names kept), written after the ARB keys in strings_os. */
+    val nativeOs: Map<String, List<Resource>> = emptyMap(),
 ) {
     operator fun get(locale: String) = locales.first { it.locale == locale }
+
+    /** Everything that goes into `strings_os.xml` for [locale]: ARB keys routed to `os`, then the native strings. */
+    fun osResources(locale: String): List<Resource> =
+        locales.firstOrNull { it.locale == locale }?.files?.get(OS).orEmpty() + nativeOs[locale].orEmpty()
+
+    /**
+     * Merges the native Android strings into `strings_os` (plan 06 §13.3 step 7). Their names are kept, because
+     * pinned shortcuts and widgets reference them; a name that clashes with any converted resource fails.
+     * Languages the ARB files do not have are refused.
+     */
+    fun withNativeOs(native: Map<String, List<Resource>>): Conversion {
+        for ((locale, res) in native) {
+            val loc = locales.firstOrNull { it.locale == locale }
+            requireNotNull(loc) { "Android strings for $locale, which has no app_$locale.arb" }
+            val taken = loc.files.values.flatten().mapTo(HashSet()) { it.name }
+            val clash = res.map { it.name }.filter { it in taken }
+            require(clash.isEmpty()) { "Android strings clash with converted ARB names in $locale: $clash" }
+            val dup = res.groupBy { it.name }.filterValues { it.size > 1 }.keys
+            require(dup.isEmpty()) { "Android strings defined twice in $locale: $dup" }
+        }
+        return copy(nativeOs = native)
+    }
+
+    companion object { const val OS = "os" }
 }
 
 /**
@@ -107,7 +137,7 @@ class Converter(
             skipped.getValue(locale) += key
         }
 
-        for ((key, enText) in en.messages) {
+        for ((key, _) in en.messages) {
             // 1. Parse and classify every language's message.
             val parsed = LinkedHashMap<String, List<IcuNode>>()
             for (arb in all) {
@@ -138,7 +168,8 @@ class Converter(
 
             // 2. Placeholder index map, from first appearance in the template (then any metadata-only names).
             val meta = en.placeholders[key].orEmpty()
-            val names = LinkedHashSet(Icu.argOrder(enNodes)).apply { addAll(meta.keys) }
+            val names = en.argOrder[key]?.let { LinkedHashSet(it) }
+                ?: LinkedHashSet(Icu.argOrder(enNodes)).apply { addAll(meta.keys) }
             val pluralArgs = parsed.mapValues { (_, n) -> n.filterIsInstance<Plural>().singleOrNull()?.arg }
             val placeholders = names.mapIndexed { i, name ->
                 val m = meta[name]
@@ -191,11 +222,6 @@ class Converter(
                 val out = render(locale, key, nodes, byName, pluralArg, exact, promoted, unreachable) { kind, detail ->
                     problem(locale, key, kind, detail)
                 } ?: continue
-                if (feature == "os" && out.any { r -> values(r).any { hasLiteralPercentAndArgs(it) } }) {
-                    problem(locale, key, ProblemKind.OS_PERCENT_CONFLICT, enText)
-                    if (locale == template) { parsed.remove(template); plans.remove(key); templateLost(); break }
-                    continue
-                }
                 files.getValue(locale).getOrPut(feature ?: LocaleResult.UNUSED) { mutableListOf() } += out
             }
         }
@@ -210,7 +236,7 @@ class Converter(
                 skipped = skipped.getValue(arb.locale).toList(),
                 promoted = promoted.getValue(arb.locale),
                 unreachableBranches = unreachable.getValue(arb.locale),
-            )
+            ).also { it.originalKeys = arb.messages.keys.toSet() }
         }
         return Conversion(template, results, plans, problems)
     }
@@ -295,13 +321,4 @@ class Converter(
         return listOf(Resource.Plurals(key, key, items)) + eq
     }
 
-    private fun values(r: Resource) = when (r) {
-        is Resource.Str -> listOf(r.text)
-        is Resource.Plurals -> r.items.values.toList()
-    }
-
-    private fun hasLiteralPercentAndArgs(s: String): Boolean {
-        val stripped = formatToken.replace(s, "")
-        return stripped.length != s.length && '%' in stripped
-    }
 }

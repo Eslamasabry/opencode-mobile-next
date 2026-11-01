@@ -33,7 +33,7 @@ KEYS = [
 
 root = os.getcwd()
 src = os.path.join(root, "lib", "l10n")
-dst = os.path.join(root, "native", "tools", "arb2xml", "src", "test", "resources", "fixture", "lib", "l10n")
+dst = os.path.join(root, "native", "tools", "strings", "src", "test", "resources", "fixture", "lib", "l10n")
 os.makedirs(dst, exist_ok=True)
 for name in sorted(os.listdir(src)):
     if not (name.startswith("app_") and name.endswith(".arb")):

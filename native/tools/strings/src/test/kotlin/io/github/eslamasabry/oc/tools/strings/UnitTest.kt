@@ -98,11 +98,15 @@ class ConverterTest {
     }
 
     @Test
-    fun `strings_os refuses a literal percent next to placeholders`() {
+    fun `strings_os keeps a literal percent next to placeholders, and the Android res copy doubles it`() {
         val c = Converter({ "os" }).convert(listOf(arb("en", "a" to "{p}% used", "b" to "100% sure"), arb("ar", "a" to "{p}٪", "b" to "١٠٠٪")))
-        assertEquals(listOf("en:a", "ar:a"), c.problems.map { "${it.locale}:${it.key}" })
+        assertEquals(emptyList(), c.problems)
         val xml = XmlWriter.render(c["en"].files.getValue("os"), "os", "app_en.arb")
+        assertTrue("<string name=\"a\">%1\$s% used</string>" in xml, xml)
         assertTrue("<string name=\"b\" formatted=\"false\">100% sure</string>" in xml, xml)
+        val res = XmlWriter.renderAndroidRes(c["en"].files.getValue("os"), "app_en.arb")
+        assertTrue("<string name=\"a\">%1\$s%% used</string>" in res, res)
+        assertTrue("<string name=\"b\" formatted=\"false\">100% sure</string>" in res, res)
     }
 }
 

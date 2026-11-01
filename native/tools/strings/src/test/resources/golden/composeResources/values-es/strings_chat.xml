@@ -2,6 +2,23 @@
 <!-- Converted once from lib/l10n/app_es.arb by native/tools/strings (plan 06 §13.3).
      The ARB files are frozen with Flutter: edit this file, not the ARB. -->
 <resources>
+    <string name="e7SettingsStorageSummary">%1$s de trabajo sin enviar: %2$s (%3$s) y %4$s (%5$s). Los mensajes en cola se descartan tras %6$d días.</string>
+    <plurals name="e7SettingsStorageSummary__queued">
+        <item quantity="one">1 mensaje en cola</item>
+        <item quantity="many">%1$d mensajes en cola</item>
+        <item quantity="other">%1$d mensajes en cola</item>
+    </plurals>
+    <string name="e7SettingsStorageSummary__queued__eq0">%1$d mensajes en cola</string>
+    <string name="e7SettingsStorageSummary__queued__eq1">1 mensaje en cola</string>
+    <string name="e7SettingsStorageSummary__queued__eq2">%1$d mensajes en cola</string>
+    <plurals name="e7SettingsStorageSummary__drafts">
+        <item quantity="one">1 borrador</item>
+        <item quantity="many">%1$d borradores</item>
+        <item quantity="other">%1$d borradores</item>
+    </plurals>
+    <string name="e7SettingsStorageSummary__drafts__eq0">%1$d borradores</string>
+    <string name="e7SettingsStorageSummary__drafts__eq1">1 borrador</string>
+    <string name="e7SettingsStorageSummary__drafts__eq2">%1$d borradores</string>
     <string name="chatUiReferenceAlreadyAdded">@%1$s ya está en el mensaje</string>
     <plurals name="chatUiDraftsQueued">
         <item quantity="one">1 borrador en cola; se enviará al reconectar.</item>

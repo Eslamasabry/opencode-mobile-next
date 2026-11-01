@@ -62,9 +62,15 @@ object Fixture {
 
     fun arbs() = Arb.readDir(arbDir)
 
-    fun conversion(): Pair<Conversion, Routing> {
+    /** The two fixture keys the converter refuses, with the recipes the real hand-recipes.tsv gives them. */
+    val recipes = HandRecipes.parse(
+        listOf("runningPhoneCpu\tselect\tlevel words", "e7SettingsStorageSummary\tsplit-plurals\ttwo counts"),
+    )
+
+    fun conversion(recipes: List<Recipe> = emptyList()): Pair<Conversion, Routing> {
         val arbs = arbs()
         val routing = Router.route(arbs.first().messages.keys, dartLib(), routes)
-        return Converter({ routing.featureByKey[it] }).convert(arbs) to routing
+        val e = Hand.expand(arbs, recipes)
+        return Converter({ routing.featureByKey[e.baseOf[it] ?: it] }).convert(e.arbs) to routing
     }
 }

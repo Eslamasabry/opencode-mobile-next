@@ -3,6 +3,29 @@
      The ARB files are frozen with Flutter: edit this file, not the ARB. -->
 <resources>
     <string name="monitorRequestSummary">%1$s · %2$s\n%3$s: %4$s</string>
+    <string name="e7SettingsStorageSummary">%1$s من العمل غير المرسل — %2$s (%3$s) و%4$s (%5$s). تُحذف الطلبات في قائمة الانتظار بعد %6$d يومًا.</string>
+    <plurals name="e7SettingsStorageSummary__queued">
+        <item quantity="zero">لا طلبات في قائمة الانتظار</item>
+        <item quantity="one">طلب واحد في قائمة الانتظار</item>
+        <item quantity="two">طلبان في قائمة الانتظار</item>
+        <item quantity="few">%1$d طلبات في قائمة الانتظار</item>
+        <item quantity="many">%1$d طلبًا في قائمة الانتظار</item>
+        <item quantity="other">%1$d طلب في قائمة الانتظار</item>
+    </plurals>
+    <string name="e7SettingsStorageSummary__queued__eq0">لا طلبات في قائمة الانتظار</string>
+    <string name="e7SettingsStorageSummary__queued__eq1">طلب واحد في قائمة الانتظار</string>
+    <string name="e7SettingsStorageSummary__queued__eq2">طلبان في قائمة الانتظار</string>
+    <plurals name="e7SettingsStorageSummary__drafts">
+        <item quantity="zero">لا مسودات</item>
+        <item quantity="one">مسودة واحدة</item>
+        <item quantity="two">مسودتان</item>
+        <item quantity="few">%1$d مسودات</item>
+        <item quantity="many">%1$d مسودة</item>
+        <item quantity="other">%1$d مسودة</item>
+    </plurals>
+    <string name="e7SettingsStorageSummary__drafts__eq0">لا مسودات</string>
+    <string name="e7SettingsStorageSummary__drafts__eq1">مسودة واحدة</string>
+    <string name="e7SettingsStorageSummary__drafts__eq2">مسودتان</string>
     <string name="chatUiReferenceAlreadyAdded">\u200E@%1$s موجود بالفعل في الطلب</string>
     <plurals name="chatUiDraftsQueued">
         <item quantity="zero">لا مسودات في قائمة الانتظار.</item>
@@ -40,4 +63,8 @@
         <item quantity="other">كل الملفات · %1$d ملف آخر تغيّر</item>
     </plurals>
     <string name="chatTurnAllFilesMore__eq1">كل الملفات · ملف آخر تغيّر</string>
+    <string name="runningPhoneCpu__idle">خامل · %1$s%</string>
+    <string name="runningPhoneCpu__light">خفيف · %1$s%</string>
+    <string name="runningPhoneCpu__busy">مشغول · %1$s%</string>
+    <string name="runningPhoneCpu__other">مشغول جدًا · %1$s%</string>
 </resources>

@@ -19,7 +19,7 @@ import kotlin.test.fail
  * src/test/resources/golden are the reviewed expectation; `-PupdateGoldens=true` rewrites them.
  */
 class GoldenTest {
-    private val conv = Fixture.conversion().first
+    private val conv = Fixture.conversion(Fixture.recipes).first
 
     private fun res(locale: String, name: String): Resource =
         conv[locale].files.values.flatten().firstOrNull { it.name == name } ?: fail("$locale has no $name")
@@ -30,7 +30,7 @@ class GoldenTest {
     @Test
     fun `fixture XML matches the goldens byte for byte`() {
         val out = Files.createTempDirectory("arb2xml-golden")
-        XmlWriter.write(conv, out.resolve("composeResources"), out.resolve("unused"))
+        XmlWriter.write(conv, out.resolve("composeResources"), out.resolve("unused"), androidResOut = out.resolve("androidRes"))
         val actual = files(out)
         if (System.getProperty("strings.updateGoldens") == "true") {
             Fixture.goldenDir.toFile().deleteRecursively()
@@ -148,7 +148,8 @@ class GoldenTest {
     }
 
     @Test
-    fun `select and multi-plural messages are refused and listed, orphans dropped`() {
+    fun `select and multi-plural messages are refused and listed without a recipe, orphans dropped`() {
+        val conv = Fixture.conversion().first
         val kinds = conv.problems.groupBy({ it.kind }, { "${it.locale}:${it.key}" })
         assertEquals(listOf("en:runningPhoneCpu", "ar:runningPhoneCpu"), kinds[ProblemKind.SELECT])
         assertEquals(
@@ -163,9 +164,18 @@ class GoldenTest {
     }
 
     @Test
+    fun `with their recipes the same messages are converted`() {
+        assertEquals(emptyList(), conv.problems)
+        assertEquals("Idle · %1\$s%", str("en", "runningPhoneCpu__idle"))
+        assertEquals("خامل · %1\$s%", str("ar", "runningPhoneCpu__idle"))
+        assertEquals(PluralRules.ALL, plural("ar", "e7SettingsStorageSummary__drafts").keys.toList())
+        assertTrue(str("zh", "e7SettingsStorageSummary").startsWith("未发送内容共 %1\$s：%2\$s（%3\$s）和 %4\$s"))
+    }
+
+    @Test
     fun `missing keys are reported per language`() {
         assertEquals(emptyList(), conv["en"].missing)
-        assertEquals(14, conv["ja"].missing.size)
+        assertEquals(19, conv["ja"].missing.size) // 14 ARB keys; the two hand keys count once per resulting message
         assertTrue("servicesIntro" in conv["ja"].missing)
         assertTrue("chatUiDraftsQueued" !in conv["ja"].missing)
     }

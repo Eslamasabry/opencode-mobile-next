@@ -1,4 +1,4 @@
-# arb2xml feature routes (plan 06 §13.3 step 2).
+# strings feature routes (plan 06 §13.3 step 2).
 #
 # Two kinds of rows, tab-separated:
 #   key:<prefix>   <feature>   a key whose name starts with <prefix> followed by an
