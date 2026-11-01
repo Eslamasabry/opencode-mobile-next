@@ -2,8 +2,6 @@ package io.github.eslamasabry.oc.engine.diagnostics
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.Redacted
-import io.github.eslamasabry.oc.core.common.RedactorApi
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.core.testing.TestClock
 import kotlin.test.Test
@@ -105,12 +103,11 @@ class DiagnosticsTest {
         assertTrue(entry.message.endsWith("[truncated]"))
     }
 
-    @OptIn(RedactorApi::class)
     @Test
     fun `B-SEC-008 a shown failure reports its category to the port and keeps only its kind in the ring`() {
         val signals = RecordingSignals()
         val diagnostics = Diagnostics(Redactor(), clock, signals)
-        val failure = Failure.Net.Unreachable(Failure.Net.Unreachable.Why.Timeout, Redacted("synthetic-provider-secret"))
+        val failure = Failure.Net.Unreachable(Failure.Net.Unreachable.Why.Timeout, Redactor().details("synthetic-provider-secret"))
         diagnostics.failureShown(failure)
         diagnostics.failureShown(Failure.Refused(RefusalReason.ConsentMissing))
         assertEquals(listOf<Failure>(failure, Failure.Refused(RefusalReason.ConsentMissing)), signals.errors)
