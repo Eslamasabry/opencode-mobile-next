@@ -21,4 +21,17 @@ class DlvIdentityTest {
         assertEquals(listOf("original", "replacement"), w.link.deliveredTexts())
         assertTrue(reborn.restart().queue.entries().isEmpty())
     }
+
+    @Test
+    fun `B-STATE-009 DLV-4 legacy identity collisions survive repeated flush and restart`() = runTest {
+        val w = World(Disk(), this, link = FakeLink(capabilities = ServerCapabilities(commandReceipts = true), correlated = true))
+        w.queue.queuePrompt(prompt("a", text = "original"))
+        w.queue.flush()
+        // Older versions admitted this collision. Simulate their durable queue without using new admission.
+        assertTrue(w.store.save(listOf(prompt("a", text = "legacy replacement"))))
+        val reborn = w.restart()
+        repeat(2) { reborn.queue.flush() }
+        assertEquals(listOf("legacy replacement"), reborn.restart().queue.entries().map { it.text })
+        assertEquals(listOf("original"), w.link.deliveredTexts())
+    }
 }

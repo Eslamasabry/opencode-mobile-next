@@ -496,6 +496,12 @@ public class OfflineQueue(
 
     private suspend fun sendOne(link: SendLink, entry: QueuedPrompt, explicit: Boolean, allowed: () -> Boolean): Step {
         val session = entry.sessionId
+        // An older version may have admitted an unmarked replacement under a tombstoned id. Never mark it:
+        // a later receipt reconciliation would otherwise mistake it for the old command (B-STATE-009).
+        when (val used = commandIdUsed(entry)) {
+            is Outcome.Failed -> return Step.Stop
+            is Outcome.Ok -> if (used.value) return Step.Next
+        }
         // 1. Staged revert (read only): keep the entry with its reason, never commit the revert (B-PROTO-023, 043).
         if (link.capabilities.sessionRevert) {
             when (val pending = link.revertPending(session)) {
