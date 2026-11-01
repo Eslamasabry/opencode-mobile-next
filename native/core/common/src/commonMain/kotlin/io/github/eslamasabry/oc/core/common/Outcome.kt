@@ -37,3 +37,13 @@ public suspend inline fun <T> attempt(classify: (Throwable) -> Failure, block: (
     } catch (e: Throwable) {
         Outcome.Failed(classify(e))
     }
+
+public inline fun <T> Outcome<T>.onOk(block: (T) -> Unit): Outcome<T> = also { if (it is Outcome.Ok) block(it.value) }
+
+public inline fun <T> Outcome<T>.onFailed(block: (Failure) -> Unit): Outcome<T> =
+    also { if (it is Outcome.Failed) block(it.failure) }
+
+/** Shorthand for engines and fakes. */
+public fun <T> T.ok(): Outcome<T> = Outcome.Ok(this)
+
+public fun Failure.failed(): Outcome<Nothing> = Outcome.Failed(this)

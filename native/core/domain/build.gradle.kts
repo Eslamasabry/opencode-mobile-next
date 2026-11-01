@@ -1,9 +1,10 @@
 plugins { id("oc.kmp.library") }
 
+// `api`: gateway signatures expose common (Outcome, ids), model (value types) and security (HostClass).
 kotlin {
     sourceSets.commonMain.dependencies {
-        implementation(project(":core:common"))
-        implementation(project(":core:model"))
-        implementation(project(":core:security"))
+        api(project(":core:common"))
+        api(project(":core:model"))
+        api(project(":core:security"))
     }
 }

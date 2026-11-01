@@ -22,8 +22,8 @@ class CommonTest {
 
     @Test
     fun `attempt turns other throwables into the classified failure`() = runTest {
-        val out = attempt({ Failure.Network(Redacted.shape(it)) }) { error("boom secret") }
-        val failure = assertIs<Failure.Network>(assertIs<Outcome.Failed>(out).failure)
+        val out = attempt({ Failure.Unexpected(Redacted.shape(it)) }) { error("boom secret") }
+        val failure = assertIs<Failure.Unexpected>(assertIs<Outcome.Failed>(out).failure)
         assertEquals("IllegalStateException", failure.details?.text)
     }
 
@@ -46,13 +46,37 @@ class CommonTest {
 
     @Serializable private data class Probe(val count: Int)
 
+    @Serializable private data class Nested(val items: List<Probe>, val name: String)
+
     @Test
-    fun `WireJson decode errors never contain the input`() {
-        val secret = "sk-live-SECRET"
-        val error = assertFailsWith<SerializationException> {
-            WireJson.decodeFromString(Probe.serializer(), """{"count":"$secret"}""")
+    fun `B-PROTO-137 decoding errors never contain the input JSON`() {
+        val fakeKey = "sk-ant-" + "api03-FAKE0137" + "notarealkey00"
+        val bodies =
+            listOf(
+                """{"count":"$fakeKey"}""", // wrong type
+                """{"items":[{"count":"$fakeKey"}],"name":"x"}""", // nested wrong type
+                """{"items":[],"name":"$fakeKey""", // truncated
+                """{"items":[], $fakeKey}""", // malformed
+                """["$fakeKey"]""", // wrong shape
+            )
+        for (body in bodies) {
+            val error = assertFailsWith<SerializationException> { WireJson.decodeFromString(Nested.serializer(), body) }
+            val text = error.toString() + error.message.orEmpty() + error.cause?.message.orEmpty()
+            assertFalse(fakeKey in text || "FAKE0137" in text, "decode error echoed the body: $body")
         }
-        assertFalse(error.message.orEmpty().contains(secret))
         assertTrue(WireJson.decodeFromString(Probe.serializer(), """{"count":3,"extra":1}""").count == 3)
+    }
+
+    @Test
+    fun `network failures are one closed family under Failure`() {
+        val failures: List<Failure> =
+            listOf(
+                Failure.Net.Offline(),
+                Failure.Net.Unreachable(Failure.Net.Unreachable.Why.Dns, null),
+                Failure.Net.NotSupported(FeatureId("sessionNotes")),
+                Failure.Net.Rejected(422, WireTag("ValidationError"), WireExtras.None, null),
+            )
+        assertTrue(failures.all { it is Failure.Net })
+        assertEquals(null, Failure.Net.Offline().details)
     }
 }
