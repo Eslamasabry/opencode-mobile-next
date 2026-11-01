@@ -162,7 +162,7 @@ class PublishCountTest {
         }
 
     @Test
-    fun `a hidden handle keeps applying but skips derivation until watched`() =
+    fun `HiddenHandleTest a hidden handle keeps applying but skips derivation until watched`() =
         runTest {
             val (handle, parent) = openHandle(Ev.history(10, fragmented = false), watched = false)
             advanceUntilIdle()

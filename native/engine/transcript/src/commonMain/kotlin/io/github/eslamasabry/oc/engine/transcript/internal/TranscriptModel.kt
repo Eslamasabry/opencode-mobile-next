@@ -151,7 +151,7 @@ internal class TranscriptModel(
             GatewayEvent.Connected -> {
                 run = run.copy(connects = run.connects + 1, crossedDrop = run.busy)
                 if (historyLoaded) refresh(RefreshReason.Reconnected) // reconcile by refetch, never replay (R20)
-                false
+                true // run facts changed (connects, crossedDrop)
             }
             is GatewayEvent.RunStarted -> mine(event.sessionId.raw) && setRun(run.copy(busy = true, retry = null))
             is GatewayEvent.RunRetrying ->

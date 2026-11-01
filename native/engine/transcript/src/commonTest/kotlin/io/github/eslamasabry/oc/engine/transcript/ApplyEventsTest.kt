@@ -90,7 +90,7 @@ class ApplyEventsTest {
     }
 
     @Test
-    fun `an open fence is one live code block and closes into a settled one`() {
+    fun `CHAT-GENUI-02 an open fence is one live code block and closes into a settled one`() {
         h.apply(Ev.runStarted, Ev.assistant("a"), Ev.text("a", "t"))
         h.apply(Ev.delta("a", "t", "Look:\n\n```kotlin\nval a = 1\n"))
         val open = h.derive().rows[0] as BlockRow
@@ -108,7 +108,7 @@ class ApplyEventsTest {
     }
 
     @Test
-    fun `a whole-part upsert equal to the streamed text keeps the blocks, a rewrite re-parses once`() {
+    fun `CHAT-GENUI-02 a whole-part upsert equal to the streamed text keeps the blocks, a rewrite re-parses once`() {
         h.apply(Ev.runStarted, Ev.assistant("a"), Ev.text("a", "t"), Ev.delta("a", "t", "One.\n\nTwo."))
         val before = h.derive()
         h.apply(Ev.text("a", "t", "One.\n\nTwo.", ended = true))
@@ -206,7 +206,7 @@ class ApplyEventsTest {
     }
 
     @Test
-    fun `the end of a run settles live blocks and adds one footer`() {
+    fun `CHAT-GENUI-06 the end of a run settles live blocks and adds one footer`() {
         h.apply(Ev.prompt("u", "Go") + listOf(Ev.runStarted, Ev.assistant("a"), Ev.text("a", "t")))
         h.apply(Ev.delta("a", "t", "Working"), Ev.tool("a", "c", ToolStatus.Running))
         val running = h.derive()
