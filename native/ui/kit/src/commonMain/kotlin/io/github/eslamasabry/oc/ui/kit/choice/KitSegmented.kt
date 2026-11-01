@@ -130,6 +130,7 @@ public fun <T> KitSegmented(
 
 @Composable
 private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled: KitEnabled, onChange: (T) -> Unit) {
+    val haptics = rememberKitHaptics()
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
@@ -153,8 +154,11 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
             Row(
                 Modifier.weight(1f)
                     .heightIn(min = (tokens.minTarget - Space.S2).dp)
-                    .kitSelectTap(chosen, Role.RadioButton, segEnabled, KitHaptic.Select, KitShapeId.Tile) {
-                        SegmentedRules.onTap(s, selected, enabled.isEnabled)?.let(onChange)
+                    .kitSelectTap(chosen, Role.RadioButton, segEnabled, haptic = null, KitShapeId.Tile) {
+                        SegmentedRules.onTap(s, selected, enabled.isEnabled)?.let {
+                            haptics(KitHaptic.Select)
+                            onChange(it)
+                        }
                     }
                     .background(fill)
                     .padding(horizontal = Space.S2.dp),
@@ -170,6 +174,7 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
 
 @Composable
 private fun <T> StackedSegments(segments: List<KitSegment<T>>, selected: T, enabled: KitEnabled, onChange: (T) -> Unit) {
+    val haptics = rememberKitHaptics()
     Column(Modifier.fillMaxWidth().selectableGroup()) {
         segments.forEach { s ->
             val segEnabled = if (!enabled.isEnabled) enabled else s.enabled
@@ -178,8 +183,12 @@ private fun <T> StackedSegments(segments: List<KitSegment<T>>, selected: T, enab
                 selected = s.value == selected,
                 mark = KitChoiceMark.Radio,
                 enabled = segEnabled,
-                haptic = KitHaptic.Select,
-                onClick = { SegmentedRules.onTap(s, selected, enabled.isEnabled)?.let(onChange) },
+                onClick = {
+                    SegmentedRules.onTap(s, selected, enabled.isEnabled)?.let {
+                        haptics(KitHaptic.Select)
+                        onChange(it)
+                    }
+                },
             )
         }
     }

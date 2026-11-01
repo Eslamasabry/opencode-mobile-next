@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
+import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.eslamasabry.oc.ui.kit.motion.KitEasing
@@ -25,6 +26,8 @@ internal fun interface KitBackProgress {
  */
 @Composable
 internal fun KitPredictiveBack(enabled: Boolean, onBack: () -> Unit): KitBackProgress {
+    // No dispatcher (a bare preview or a test without one): nothing to register; Close and the scrim still work.
+    if (LocalNavigationEventDispatcherOwner.current == null) return NoBack
     val state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
     NavigationBackHandler(state = state, isBackEnabled = enabled, onBackCompleted = onBack)
     return KitBackProgress {
@@ -33,4 +36,15 @@ internal fun KitPredictiveBack(enabled: Boolean, onBack: () -> Unit): KitBackPro
             else -> 0f
         }
     }
+}
+
+private val NoBack = KitBackProgress { 0f }
+
+/** Under motion Off a modal has no enter or exit transition at all, so its first frame is final (MOT-7). */
+internal class ModalMotion(private val off: Boolean) {
+    inline fun enter(t: () -> androidx.compose.animation.EnterTransition): androidx.compose.animation.EnterTransition =
+        if (off) androidx.compose.animation.EnterTransition.None else t()
+
+    inline fun exit(t: () -> androidx.compose.animation.ExitTransition): androidx.compose.animation.ExitTransition =
+        if (off) androidx.compose.animation.ExitTransition.None else t()
 }

@@ -73,3 +73,11 @@ internal fun Modifier.kitSelectTap(
         )
     }
 }
+
+/** Plays a haptic through the kit seam when the appearance allows it; for parts that decide after the tap. */
+@Composable
+internal fun rememberKitHaptics(): (KitHaptic) -> Unit {
+    val platform = LocalKitPlatform.current
+    val on = LocalKitAppearance.current.haptics
+    return remember(platform, on) { { kind -> if (on) platform.haptic(kind) } }
+}

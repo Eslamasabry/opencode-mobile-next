@@ -111,9 +111,10 @@ internal fun DialogLayer(state: KitSheetHostState) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
+    val still = ModalMotion(KitMotion.state.reduced)
     val dismiss = { if (entry.dismissible) entry.onDismissRequest() }
     val back = KitPredictiveBack(enabled = state.dialogShown.targetState && entry.dismissible) { dismiss() }
-    AnimatedVisibility(state.dialogShown, enter = fadeIn(specs.enter()), exit = fadeOut(specs.exit())) {
+    AnimatedVisibility(state.dialogShown, enter = still.enter { fadeIn(specs.enter()) }, exit = still.exit { fadeOut(specs.exit()) }) {
         Box(
             Modifier.fillMaxSize().background(colors.scrim).testTag("kit-dialog-scrim").pointerInput(entry) { detectTapGestures { dismiss() } },
         )
@@ -139,8 +140,8 @@ internal fun DialogLayer(state: KitSheetHostState) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 AnimatedVisibility(
                     state.dialogShown,
-                    enter = slideInVertically(specs.spatial<IntOffset>()) { it },
-                    exit = slideOutVertically(specs.exit<IntOffset>()) { it },
+                    enter = still.enter { slideInVertically(specs.spatial<IntOffset>()) { it } },
+                    exit = still.exit { slideOutVertically(specs.exit<IntOffset>()) { it } },
                 ) {
                     Box(
                         panel.widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp).fillMaxWidth().heightIn(max = cap)
@@ -154,7 +155,7 @@ internal fun DialogLayer(state: KitSheetHostState) {
             }
         } else {
             Box(Modifier.fillMaxSize().padding(Space.S6.dp).imePadding(), contentAlignment = Alignment.Center) {
-                AnimatedVisibility(state.dialogShown, enter = fadeIn(specs.enter()) + scaleIn(specs.enter(), initialScale = 0.96f), exit = fadeOut(specs.exit())) {
+                AnimatedVisibility(state.dialogShown, enter = still.enter { fadeIn(specs.enter()) + scaleIn(specs.enter(), initialScale = 0.96f) }, exit = still.exit { fadeOut(specs.exit()) }) {
                     Box(
                         panel.widthIn(max = DIALOG_MAX_DP.dp).fillMaxWidth().heightIn(max = cap)
                             .predictiveShrink(back, TransformOrigin.Center)

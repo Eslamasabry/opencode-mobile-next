@@ -258,8 +258,9 @@ private fun SheetLayer(state: KitSheetHostState) {
     val entry = state.entry ?: return
     val colors = LocalKitColors.current
     val specs = KitMotion.specs
+    val still = ModalMotion(KitMotion.state.reduced)
     val back = KitPredictiveBack(enabled = state.shown.targetState && entry.dismissible && state.dialog == null) { entry.requestDismiss() }
-    AnimatedVisibility(state.shown, enter = fadeIn(specs.enter()), exit = fadeOut(specs.exit())) {
+    AnimatedVisibility(state.shown, enter = still.enter { fadeIn(specs.enter()) }, exit = still.exit { fadeOut(specs.exit()) }) {
         Box(
             Modifier.fillMaxSize()
                 .background(colors.scrim)
@@ -276,8 +277,8 @@ private fun SheetLayer(state: KitSheetHostState) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                     AnimatedVisibility(
                         state.shown,
-                        enter = slideInVertically(specs.spatial<IntOffset>()) { it },
-                        exit = slideOutVertically(specs.exit<IntOffset>()) { it },
+                        enter = still.enter { slideInVertically(specs.spatial<IntOffset>()) { it } },
+                        exit = still.exit { slideOutVertically(specs.exit<IntOffset>()) { it } },
                     ) {
                         val sized =
                             when (entry.height) {
@@ -296,7 +297,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                 }
             KitSheetPlacement.Centred ->
                 Box(Modifier.fillMaxSize().padding(Space.S6.dp), contentAlignment = Alignment.Center) {
-                    AnimatedVisibility(state.shown, enter = fadeIn(specs.enter()) + scaleIn(specs.enter(), initialScale = 0.96f), exit = fadeOut(specs.exit())) {
+                    AnimatedVisibility(state.shown, enter = still.enter { fadeIn(specs.enter()) + scaleIn(specs.enter(), initialScale = 0.96f) }, exit = still.exit { fadeOut(specs.exit()) }) {
                         SheetPanel(
                             entry,
                             Modifier.widthIn(max = SheetLayout.CENTRED_MAX_DP.dp).fillMaxWidth().heightIn(max = maxSheet)
@@ -310,8 +311,8 @@ private fun SheetLayer(state: KitSheetHostState) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
                     AnimatedVisibility(
                         state.shown,
-                        enter = slideInHorizontally(specs.spatial<IntOffset>()) { it },
-                        exit = slideOutHorizontally(specs.exit<IntOffset>()) { it },
+                        enter = still.enter { slideInHorizontally(specs.spatial<IntOffset>()) { it } },
+                        exit = still.exit { slideOutHorizontally(specs.exit<IntOffset>()) { it } },
                     ) {
                         SheetPanel(
                             entry,
