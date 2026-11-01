@@ -1,0 +1,4 @@
+    versionCode=10000 minSdk=26 targetSdk=36
+    lastUpdateTime=2026-11-01 19:10:08
+    signatures=PackageSignatures{7834b62 version:2, signatures:[105d04ba], past signatures:[]}
+      firstInstallTime=2026-11-01 18:49:19

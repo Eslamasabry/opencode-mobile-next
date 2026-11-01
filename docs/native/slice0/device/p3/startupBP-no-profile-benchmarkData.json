@@ -1,0 +1,109 @@
+{
+    "context": {
+        "build": {
+            "brand": "google",
+            "device": "emu64xa",
+            "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+            "id": "AE3A.240806.043",
+            "model": "sdk_gphone64_x86_64",
+            "type": "userdebug",
+            "version": {
+                "codename": "REL",
+                "sdk": 35
+            }
+        },
+        "cpuCoreCount": 6,
+        "cpuLocked": false,
+        "cpuMaxFreqHz": 2000,
+        "memTotalBytes": 6217424896,
+        "sustainedPerformanceModeEnabled": false,
+        "artMainlineVersion": 350820300,
+        "osCodenameAbbreviated": "REL",
+        "compilationMode": "run-from-apk",
+        "payload": {}
+    },
+    "benchmarks": [
+        {
+            "name": "startupBaselineProfile",
+            "params": {},
+            "className": "io.github.eslamasabry.oc.benchmark.StartupBenchmark",
+            "totalRunTimeNs": 25034765694,
+            "metrics": {
+                "timeToInitialDisplayMs": {
+                    "minimum": 230.970922,
+                    "maximum": 265.919378,
+                    "median": 245.594881,
+                    "coefficientOfVariation": 0.04874164673882673,
+                    "runs": [
+                        265.919378,
+                        248.379728,
+                        238.108203,
+                        242.810034,
+                        255.039558,
+                        235.042609,
+                        251.57606,
+                        230.970922,
+                        234.764801,
+                        261.494211
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 0,
+            "repeatIterations": 10,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 0",
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter000_2026-11-01-14-39-20.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 1",
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter001_2026-11-01-14-39-22.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 2",
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter002_2026-11-01-14-39-25.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 3",
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter003_2026-11-01-14-39-27.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 4",
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter004_2026-11-01-14-39-29.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 5",
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-32.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 6",
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter006_2026-11-01-14-39-34.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 7",
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter007_2026-11-01-14-39-36.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 8",
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter008_2026-11-01-14-39-39.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 9",
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter009_2026-11-01-14-39-41.perfetto-trace"
+                }
+            ]
+        }
+    ]
+}

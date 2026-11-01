@@ -17,3 +17,5 @@
 :androidApp	S	coordinator	slice-0
 :desktopApp	S	kit-owner	slice-0
 :quality	S	coordinator	slice-0
+:android:migration	S	migration-lead	slice-0
+:android:surfaces	S	coordinator	slice-0

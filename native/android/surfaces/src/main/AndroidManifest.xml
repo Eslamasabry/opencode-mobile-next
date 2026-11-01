@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.SessionsWidgetProvider" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_sessions_info" />
+        </receiver>
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.SessionsWideWidgetProvider" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_sessions_wide_info" />
+        </receiver>
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.SessionsListWidgetProvider" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_sessions_list_info" />
+        </receiver>
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.SessionsStripWidgetProvider" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_sessions_strip_info" />
+        </receiver>
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.UsageWidgetProvider" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_usage_info" />
+        </receiver>
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.UsageWideWidgetProvider" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_usage_wide_info" />
+        </receiver>
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.StatusWidgetProvider" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_status_info" />
+        </receiver>
+        <service android:name="io.github.eslamasabry.opencode_mobile.AttentionTileService" android:exported="true"
+            android:icon="@android:drawable/stat_notify_sync" android:label="@string/p5_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+        </service>
+        <service android:name="io.github.eslamasabry.opencode_mobile.PauseTileService" android:exported="true"
+            android:icon="@android:drawable/stat_notify_sync" android:label="@string/p5_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+        </service>
+    </application>
+</manifest>
