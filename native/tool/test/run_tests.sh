@@ -296,6 +296,45 @@ SH
 else
   echo "skip vps end-to-end tests: rsync is not installed"
 fi
+# Local Gradle runs through a fake gradlew: cwd must be native/, one -p at most, exit classes and MISSING tasks.
+if command -v java >/dev/null; then
+  R="$(new_repo)"; cd "$R" || exit 1
+  cat >native/gradlew <<'SH'
+#!/usr/bin/env bash
+[[ "$PWD" == */native ]] || { echo "wrong cwd $PWD"; exit 3; }
+n=0; for a in "$@"; do [[ "$a" == -p ]] && n=$((n + 1)); done
+((n <= 1)) || { echo "Multiple arguments were provided for command-line option '-p'."; exit 1; }
+case "${FAKE_GRADLE:-ok}" in
+  ok) mkdir -p core/common/build/test-results/desktopTest
+      echo '<testsuite name="x" tests="2"><testcase classname="C" name="B-X-001 ok"/></testsuite>' >core/common/build/test-results/desktopTest/TEST-x.xml
+      exit 0 ;;
+  red) mkdir -p core/common/build/test-results/desktopTest
+       echo '<testsuite name="x" tests="1"><testcase classname="C" name="B-X-002 red"><failure/></testcase></testsuite>' >core/common/build/test-results/desktopTest/TEST-y.xml
+       exit 1 ;;
+  missing) echo "Task 'analyzeStableReleaseR8Config' not found in project ':androidApp'."; exit 1 ;;
+  net) echo "Received status code 429 from server: Too Many Requests"; exit 1 ;;
+esac
+SH
+  chmod +x native/gradlew
+  H="$TMP_ROOT/home$RANDOM"; mkdir -p "$H"
+  low=(env OC_MIN_FREE_MB=0 OC_T2_MIN_DISK_GB=0 OC_BUILD_LOCK_FILE="$H/build.lock" HOME="$H")
+  expect "ladder: t0 passes on green tests" 0 "${low[@]}" native/tool/t0.sh :core:common B-X-001
+  expect_out "ladder: t0 counts the tests" 'tests run: 2'
+  expect "ladder: t0 fails on a red test" 1 "${low[@]}" FAKE_GRADLE=red native/tool/t0.sh :core:common
+  expect_out "ladder: t0 names the failing test" 'C > B-X-002 red'
+  expect "ladder: t0 maps a 429 to could-not-run (2)" 2 "${low[@]}" FAKE_GRADLE=net native/tool/t0.sh :core:common
+  expect "ladder: t2 build-logic step runs from native/ with one -p" 0 "${low[@]}" native/tool/t2.sh --where local --steps build-logic
+  expect_out "ladder: a --steps run is PARTIAL" 'PARTIAL run'
+  expect "ladder: t2 reports a missing gate task as a failure" 1 "${low[@]}" FAKE_GRADLE=missing native/tool/t2.sh --where local --steps r8-config
+  expect_out "ladder: t2 names the missing task" 'MISSING: .*analyzeStableReleaseR8Config'
+  echo x >native/core/common/C.kt
+  expect "ladder: t1 runs the touched module's tasks locally" 0 "${low[@]}" native/tool/t1.sh --base native/main --globs 'native/**' --where local
+  exec 8>"$H/build.lock"; flock 8
+  expect "ladder: t1 with the build slot held cannot run (2)" 2 "${low[@]}" OC_LOCK_WAIT=1 native/tool/t1.sh --base native/main --where local
+  exec 8>&-
+else
+  echo "skip local ladder tests: no java"
+fi
 expect "ladder: t2 dry run lists every step" 0 native/tool/t2.sh --dry-run --where local
 expect_out "ladder: t2 includes the assemble step" 'step assemble: ./gradlew -Poc.debugSignRelease=true'
 expect "ladder: a run writes exit-code" 0 bash -c 'ls native/build/native-t2/*/exit-code >/dev/null'

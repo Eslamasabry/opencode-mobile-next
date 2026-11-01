@@ -53,7 +53,7 @@ else
   oc_check_memory || { oc_say "memory: below the floor, not starting Gradle (plan 02 §7.8)"; oc_status 2; exit 2; }
   lock="$(oc_build_lock_file)"
   oc_say "lock: build slot $lock"
-  oc_step gradle oc_with_lock "$lock" "$OC_NATIVE/gradlew" -p "$OC_NATIVE" --console=plain ${OC_GRADLE_ARGS:-} "${args[@]}"
+  oc_step gradle oc_with_lock "$lock" "$OC_TOOL_DIR/lib/gradlew.sh" "${args[@]}"
   rc=$?
   ((rc == 75)) && { oc_say "lock: build slot busy for ${OC_LOCK_WAIT:-1800} s"; oc_status 2; exit 2; }
 fi

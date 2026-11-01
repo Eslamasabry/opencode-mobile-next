@@ -94,8 +94,7 @@ run_gradle() { # <step name> <gradle args...>
   if [[ "$where" == vps ]]; then
     oc_step "$name" "$OC_TOOL_DIR/vps_gradle.sh" --no-sync -- "$@"
   else
-    oc_step "$name" oc_with_lock "$(oc_build_lock_file)" "$OC_NATIVE/gradlew" -p "$OC_NATIVE" --console=plain \
-      ${OC_GRADLE_ARGS:-} "$@"
+    oc_step "$name" oc_with_lock "$(oc_build_lock_file)" "$OC_TOOL_DIR/lib/gradlew.sh" "$@"
   fi
   local rc=$?
   if ((rc == 75)); then oc_say "lock: build slot busy"; oc_status 2; return; fi

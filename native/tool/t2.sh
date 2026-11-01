@@ -62,7 +62,7 @@ for line in "${lines[@]}"; do
   if [[ "$where" == vps ]]; then
     oc_step "$name" "$OC_TOOL_DIR/vps_gradle.sh" --no-sync --lock-file '~/.oc-native-t2.lock' --min-disk-gb "$min_disk" -- "${args[@]}"
   else
-    oc_step "$name" "$OC_NATIVE/gradlew" -p "$OC_NATIVE" --console=plain ${OC_GRADLE_ARGS:-} "${args[@]}"
+    oc_step "$name" "$OC_TOOL_DIR/lib/gradlew.sh" "${args[@]}"
   fi
   rc=$?
   ((rc == 0)) && continue

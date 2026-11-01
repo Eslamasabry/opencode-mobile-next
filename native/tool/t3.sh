@@ -104,7 +104,7 @@ anim 1
 oc_step flows-animations-on "${runpy[@]}" --flows E2E-05 --out "$OC_RUN_DIR/flows-anim" || oc_status 1
 
 # 6. instrumented classes
-oc_step instrumented env ANDROID_SERIAL="$serial" "$OC_NATIVE/gradlew" -p "$OC_NATIVE" --console=plain \
+oc_step instrumented env ANDROID_SERIAL="$serial" "$OC_TOOL_DIR/lib/gradlew.sh" \
   :androidApp:connectedStableReleaseAndroidTest
 rc=$?
 if ((rc != 0)); then

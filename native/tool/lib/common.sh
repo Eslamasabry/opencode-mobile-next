@@ -232,11 +232,6 @@ oc_with_lock() {
   flock -w "${OC_LOCK_WAIT:-1800}" -E 75 "$f" "$@"
 }
 
-# Gradle from native/, plain console. Extra args come from $OC_GRADLE_ARGS (space-separated).
-oc_gradlew() {
-  # shellcheck disable=SC2086
-  (cd "$OC_NATIVE" && ./gradlew --console=plain ${OC_GRADLE_ARGS:-} "$@")
-}
 
 # Re-exec the calling script detached (plan 02 §8: T1–T4 run detached). Prints where to wait.
 # Usage at the top of a script: oc_maybe_detach <tier-dir> "$@"
