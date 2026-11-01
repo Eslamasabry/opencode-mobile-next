@@ -63,7 +63,8 @@ tags: [parity, slice-5, g5, project]
     file: ../_fx/fx.js
     env:
       TARGET: FX-OC2
-      ACTION: restore
+      ACTION: restore-endpoint
+      ARGS: '{"path": "/api/shell"}'
 - back
 
 # S2 Open a conversation in `app`: the header chip names the branch once; start a conversation in a different
@@ -80,8 +81,12 @@ tags: [parity, slice-5, g5, project]
       PROJECT: ${output.fx.projectOther}
 - assertVisible: ${output.c.gitSheetChipSemanticsPlain}
 - back
-# The first conversation is the newest of project app in the list.
-- tapOn: ${output.c.chatsHomeToday}
+# Show project app's conversations only; the one from S1 is the newest there.
+- tapOn: ${output.s.chatsHomeAllProjects}
+- tapOn: ${output.fx.projectApp}
+- tapOn:
+    below: ${output.s.chatsHomeToday}
+# confirm: the first row under "Today" is a conversation row.
 - assertVisible: ${output.t.gitSheetChipSemantics.replace('{branch}', 'main')}  # literal-ok: fixture fact gitBranch (request)
 
 # S3 Edit a file via the agent, open Git, type a message under "Describe what changed" and use "save and send" in

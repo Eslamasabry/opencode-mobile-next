@@ -446,8 +446,11 @@ def check_syntax(args) -> int:
     for f in lint_flows.flow_files():
         p = subprocess.run([maestro, "check-syntax", str(f)], capture_output=True, text=True,
                            env={**os.environ, "MAESTRO_CLI_NO_ANALYTICS": "1"})
-        out = (p.stdout + p.stderr).strip().splitlines()
-        result = out[-1] if out else ""
+        # Maestro prints its verdict on stdout; the JVM's "Picked up JAVA_TOOL_OPTIONS" goes to stderr.
+        out = [re.sub(r"\x1b\[[0-9;]*m", "", l).strip() for l in (p.stdout + "\n" + p.stderr).splitlines()]
+        out = [l for l in out if l and not l.startswith("Picked up JAVA_TOOL_OPTIONS")]
+        verdict = [re.sub(r"\x1b\[[0-9;]*m", "", l).strip() for l in p.stdout.splitlines() if l.strip()]
+        result = verdict[-1] if verdict else ""
         if p.returncode != 0 or result != "OK":
             bad += 1
             print("SYNTAX", f.relative_to(E2E), " | ".join(l for l in out if "JAVA_TOOL_OPTIONS" not in l))

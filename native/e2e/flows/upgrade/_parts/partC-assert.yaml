@@ -1,0 +1,200 @@
+# E2E-39 Part C (assert), shared by both apps: everything Part A left is still there. It runs on the Flutter app as
+# the baseline (Part B) and on the native app after the in-place install. It leaves the app as it found it (Arabic is
+# switched back on at the end) so it can run twice. Each section records output.pc.<step> = true for the main flow.
+# Strings come from the caller (strings.js already ran).
+appId: ${APP_ID}
+---
+- evalScript: ${output.pc = {}}
+
+# Upgrade launch: Conversations (Arabic), not the welcome screen, no first-run guide or first-reply question.
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.x_ar_chats_home}
+    timeout: 60000
+- assertNotVisible: ${output.s.welcomeComputerConnect}
+- evalScript: ${output.pc.S4 = true}
+
+# Language Arabic as set; switch to English for the checks below (restored at the end).
+- tapOn: ${output.s.x_ar_settings}
+- tapOn: ${output.s.x_ar_settings_search}
+- setClipboard:
+    text: ${output.t.x_ar_language}
+- pasteText
+- hideKeyboard
+- tapOn: ${output.s.x_ar_language}
+- tapOn: ${output.s.e7LocaleUiEnglish}
+- extendedWaitUntil:
+    visible: ${output.s.settingsV3Language}
+    timeout: 15000
+- back
+- back
+
+# Text Smallest, style Soft with the tweak, finished-work notifications on: nothing reset to defaults.
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.textSizeTitle}
+- tapOn:
+    text: ${output.s.textSizeTitle}
+    index: 1
+- assertVisible:
+    text: ${output.s.textSizeSmallest}
+    checked: true
+- back
+- back
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.e7AppearanceTitle}
+- tapOn:
+    text: ${output.s.e7AppearanceTitle}
+    index: 1
+# confirm: the style and fine-tune choices expose a checked/selected state to accessibility.
+- assertVisible:
+    text: ${output.s.appearanceSurfaceSoft}
+    checked: true
+- assertVisible:
+    text: ${output.s.appearanceFineTuneCornersSharp}
+    checked: true
+- back
+- back
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.notifyFinishedRuns}
+- tapOn:
+    text: ${output.s.notifyFinishedRuns}
+    index: 1
+- assertVisible:
+    text: ${output.s.notifyFinishedRuns}
+    checked: true
+- back
+- back
+- evalScript: ${output.pc.S5 = true}
+
+# FX-OC2 connected with no password prompt; the pinned certificate still in force.
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- assertVisible: ${output.s.serverRowConnected}
+- assertNotVisible: ${output.s.e7SetupServerPassword}
+- assertNotVisible: ${output.c.e7SetupCertificate}
+- assertNotVisible: ${output.s.e7ConnectionFailure20}
+- back
+- back
+- evalScript: ${output.pc.S6 = true}
+
+# Pins, the draft with its attachment, the saved prompt, the always-allow rule and the queued prompt.
+- extendedWaitUntil:
+    visible: "Upgrade pin one"  # literal-ok: title seeded in Part A
+    timeout: 30000
+- assertVisible:
+    text: "Upgrade pin two"  # literal-ok: title seeded in Part A
+    above: "Upgrade draft"  # literal-ok: title seeded in Part A
+- assertNotVisible: "(?s).*Upgrade pin one.*Upgrade pin one.*"  # literal-ok: nothing duplicated by the migration
+- tapOn: "Upgrade draft"  # literal-ok: title seeded in Part A
+- extendedWaitUntil:
+    visible: "upgrade draft text"  # literal-ok: the draft typed in Part A
+    timeout: 30000
+- assertVisible: ${'.*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data (the attachment chip)
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.promptStashTitle}
+- assertVisible: ".*upgrade saved prompt.*"  # literal-ok: the saved prompt from Part A
+- back
+- back
+- back
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.e7SettingsUi74}
+- tapOn:
+    text: ${output.s.e7SettingsUi74}
+    index: 1
+- assertVisible: ".*\\bls\\b.*"  # literal-ok: the always-allowed shell command from Part A
+- back
+- back
+- back
+- tapOn: "Upgrade queued"  # literal-ok: title seeded in Part A
+- assertVisible: ${output.s.chatUiQueuedWillSendWhenReconnected}
+- back
+- evalScript: ${output.pc.S7 = true}
+
+# Built-in Linux, project app and its server are there without reinstall; the server starts.
+- runFlow: ../../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- assertNotVisible: ${output.s.phoneSetupStartSetUp}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerRunning}
+    timeout: 60000
+- back
+- back
+- tapOn: ${output.s.chatsHomeAllProjects}
+- assertVisible: ${output.fx.projectApp}
+- back
+- evalScript: ${output.pc.S8 = true}
+
+# The draft's attachment from the old documents directory opens.
+- tapOn: "Upgrade draft"  # literal-ok: title seeded in Part A
+- tapOn: ${'.*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data (the attachment chip)
+- extendedWaitUntil:
+    visible: ${output.s.fileSave}
+    timeout: 30000
+- back
+- back
+- evalScript: ${output.pc.S9 = true}
+
+# No password or token in the log (the runner also scrubs and scans after the run).
+# adb: logcat-scan
+- runScript:
+    file: ../../_hooks/adb.js
+    env:
+      HOOK: logcat-scan
+- assertTrue: ${output.hook.found == false}
+- evalScript: ${output.pc.S11 = true}
+
+# The schedule still fires; the pinned shortcuts are published (and the widget redraws when one was placed).
+# adb: clock-advance
+- runScript:
+    file: ../../_hooks/adb.js
+    env:
+      HOOK: clock-advance
+      ARGS: '{"advance_minutes": 1440}'
+- runFlow: ../../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${'(' + output.s.x_native_schedule_title + '|.*ECHO daily upgrade.*)'}  # literal-ok: the schedule's notification (title or the stub reply)
+    timeout: 60000
+- runFlow: ../../_sub/close-shade.yaml
+# adb: clock-restore
+- runScript:
+    file: ../../_hooks/adb.js
+    env:
+      HOOK: clock-restore
+- pressKey: Home
+- runFlow:
+    when:
+      visible: ${output.s.x_widget_conversations_title}
+    commands:
+      - assertVisible: "Upgrade pin one"  # literal-ok: the widget lists the seeded conversation
+- longPressOn: ${output.s.x_app_label}
+- extendedWaitUntil:
+    visible: "Upgrade pin one"  # literal-ok: a pinned conversation's launcher shortcut
+    timeout: 15000
+- pressKey: Back
+- evalScript: ${output.pc.S12 = true}
+
+# Leave it as found: Arabic again.
+- launchApp
+- runFlow: ../../_sub/open-settings.yaml
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.settingsV3Language}
+- tapOn: ${output.s.settingsV3Language}
+- tapOn: ${output.s.e7LocaleUiArabic}
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.x_ar_chats_home}
+    timeout: 60000

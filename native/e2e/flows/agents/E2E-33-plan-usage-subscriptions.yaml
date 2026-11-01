@@ -1,0 +1,135 @@
+# E2E-33 Plan usage and subscriptions
+# slice: 5   avd: A   fixtures: FX-OC2, FX-OC2-B, FX-USAGE   snapshot: base
+# rows: B-AGENT-073, B-NAV-079
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-5, g5, agents]
+---
+- runScript: ../../runner/out/strings.js
+# Secrets from the runner: SERVER_PASSWORD, SERVER_B_PASSWORD. FX-OC2's computer holds Codex and MiniMax sign-ins
+# that FX-USAGE answers for (readings, expired token, offline on demand).
+- runFlow: ../_sub/connect-fx-oc2.yaml
+- runFlow: ../_sub/add-second-server.yaml
+
+# S1 Settings > Usage: nothing is read until you turn plan-usage reading on for a server; turning on stores a
+#    per-profile setting and reads at once; turning off removes it and forgets the answer; it applies to saved
+#    OpenCode servers only (not In-app Ubuntu or Paseo); a server asking for a password is skipped; deleting the
+#    server sweeps the setting. [B-AGENT-073]
+# S1 [B-AGENT-073]
+# SUSPECTED-GAP: the usage readers call the providers' own hosts; FX-USAGE stands in only where the build lets its
+#   base URL be overridden (native stableQa). Flutter R may show "Can't read" instead of numbers.
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S1 plan usage is read only after turning it on per server [B-AGENT-073]"
+- scrollUntilVisible:
+    element: ${output.s.settingsHubGroupUsage}
+- tapOn: ${output.s.settingsHubGroupUsage}
+- tapOn: ${output.s.usageTabPlans}
+# Nothing read yet: no request reached FX-USAGE.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-USAGE
+      ACTION: request-log
+- assertTrue: ${output.fxr.count == 0}
+- assertNotVisible: ${output.rc.usageLeft}
+# confirm: each saved server has a "Reading <server>" row with Turn on / Turn off.
+- tapOn: ${output.s.usageComputerTurnOn}
+- extendedWaitUntil:
+    visible: ${output.rc.usageComputerFound}
+    timeout: 60000
+- assertVisible: ${output.rc.usageLeft}
+- tapOn: ${output.s.usageComputerTurnOff}
+- extendedWaitUntil:
+    notVisible: ${output.rc.usageLeft}
+    timeout: 30000
+- assertVisible: ${output.s.usageComputerTurnOn}
+# Turn it on for FX-OC2-B, then delete that server: its setting goes with it.
+- tapOn:
+    text: ${output.s.usageComputerTurnOn}
+    index: 1
+- back
+- back
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- longPressOn: ${'.*' + output.fx.serverBAddress.split(':')[1] + '.*'}  # literal-ok: the FX-OC2-B row, by its port
+- tapOn: ${output.s.phoneServerForget}
+- back
+- runFlow: ../_sub/add-second-server.yaml
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsHubGroupUsage}
+- tapOn: ${output.s.settingsHubGroupUsage}
+- tapOn: ${output.s.usageTabPlans}
+- assertVisible:
+    text: ${output.s.usageComputerTurnOn}
+    index: 1
+# confirm: the delete action of a saved server row ("Forget saved sign-in" is the best guess; it may be "Remove").
+# UNIT-ONLY: In-app Ubuntu and Paseo servers are not offered; a server asking for a password is skipped
+#   (PlanUsageSetting tests); the per-profile key is oc.planUsage.<profileId> (ProfileStore sweep test).
+
+# S2 Subscriptions page states: nothing signed in shows only the add list; In-app Codex is one readable card; an
+#    unreadable PC sign-in shows "Set up"; once read it shows numbers; offline shows stale numbers and flags a passed
+#    reset; an expired sign-in shows "Sign in again". [B-NAV-079]
+# S2 [B-NAV-079]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-USAGE
+      ACTION: set-state
+      ARGS: '{"codex": "none", "minimax": "none"}'
+    label: "S2 the plan card states: add, set up, numbers, stale, sign in again [B-NAV-079]"
+- tapOn: ${output.s.usageComputerTurnOn}
+- extendedWaitUntil:
+    visible: ${output.s.usageAddSection}
+    timeout: 60000
+- assertNotVisible: ${output.rc.usageLeft}
+# An unreadable sign-in on the computer: "Set up".
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-USAGE
+      ACTION: set-state
+      ARGS: '{"codex": "unreadable"}'
+- tapOn: ${output.s.usagePlansRefresh}
+- extendedWaitUntil:
+    visible: ${output.s.usageNeedsSetupHeader}
+    timeout: 60000
+# Readable: numbers.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-USAGE
+      ACTION: set-state
+      ARGS: '{"codex": "reading", "minimax": "reading"}'
+- tapOn: ${output.s.usagePlansRefresh}
+- extendedWaitUntil:
+    visible: ${output.rc.usageLeft}
+    timeout: 60000
+- assertVisible: ${output.s.quotaCodex}
+- assertVisible: ${output.s.quotaMiniMax}
+# Offline after a reading whose reset has passed: stale numbers, the passed reset flagged.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-USAGE
+      ACTION: set-state
+      ARGS: '{"codex": "offline", "resetPassed": true}'
+- tapOn: ${output.s.usagePlansRefresh}
+- extendedWaitUntil:
+    visible: ${output.s.usageResetPassed}
+    timeout: 60000
+- assertVisible: ${output.rc.usageLeft}
+# Expired sign-in.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-USAGE
+      ACTION: set-state
+      ARGS: '{"codex": "expired"}'
+- tapOn: ${output.s.usagePlansRefresh}
+- extendedWaitUntil:
+    visible: ${output.s.usageSignInAgain}
+    timeout: 60000
+# UNIT-ONLY: In-app Codex as one readable card needs built-in Linux (UsageHub card test).

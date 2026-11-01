@@ -206,13 +206,15 @@ def lint_tree(check_keys: bool = True) -> dict:
         text = p.read_text(encoding="utf-8")
         for form, key in _KEYREF.findall(text):
             (used["fx_keys"] if form == "fx" else used["strings"]).add(key)
-        used["hooks"].update(re.findall(r"HOOK:\s*([A-Za-z0-9-]+)", text))
-        for block in re.split(r"\n- ", text):
-            if "_fx/fx.js" in block:
-                t = re.search(r"TARGET:\s*([A-Za-z0-9-]+)", block)
-                a = re.search(r"ACTION:\s*([A-Za-z0-9-]+)", block)
-                if t and a:
-                    used["fx_actions"].add(f"{t.group(1)} {a.group(1)}")
+        used["hooks"].update(re.findall(r"(?m)^\s*HOOK:\s*([A-Za-z0-9-]+)", text))
+        # Every (TARGET, ACTION) pair, nested runFlow commands included: an ACTION pairs with the TARGET
+        # written just before it.
+        target = None
+        for line in text.splitlines():
+            if (m := _FX_T.match(line)):
+                target = m.group(1)
+            elif (m := _FX_A.match(line)) and target:
+                used["fx_actions"].add(f"{target} {m.group(1)}")
         if p.name.startswith("E2E-"):
             fid = p.name[:6]
             if fid in found and not p.name.endswith("-qa.yaml"):
