@@ -1,0 +1,91 @@
+package io.github.eslamasabry.oc.engine.connection
+
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Multibinds
+import dev.zacsweers.metro.SingleIn
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.supervisedContext
+import io.github.eslamasabry.oc.core.domain.GatewayFactory
+import io.github.eslamasabry.oc.core.model.ServerProfile
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.job
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+/** Zero backends is legal in slice 0 (no :protocol:* yet); the consumer declares the multibinding (plan 03 §13.5). */
+@ContributesTo(AppScope::class)
+public interface ConnectionMultibindings {
+    @Multibinds(allowEmpty = true) public val gatewayFactories: Set<GatewayFactory>
+}
+
+/** Owns every live [ConnectionGraph] (plan 03 §13.4). App-scoped code reaches connection state only through here. */
+@SingleIn(AppScope::class)
+@Inject
+public class ConnectionRegistry(
+    private val factories: Set<GatewayFactory>,
+    private val graphFactory: ConnectionGraph.Factory,
+    private val appScope: AppCoroutineScope,
+    private val dispatchers: AppDispatchers,
+) {
+    init {
+        check(factories.groupBy { it.backend }.all { it.value.size == 1 }) { "two GatewayFactory for one backend" }
+    }
+
+    private val mutableLive = MutableStateFlow<PersistentMap<ProfileId, ConnectionGraph>>(persistentMapOf())
+    public val live: StateFlow<ImmutableMap<ProfileId, ConnectionGraph>> = mutableLive.asStateFlow()
+
+    // Whole open/close operations are serialised (audit MAJOR 6: a serial dispatcher alone is not a mutex).
+    private val admission = Mutex()
+
+    /** Idempotent: returns the live graph when one exists. Opens gateways, then creates the extension. */
+    public suspend fun open(profile: ServerProfile): Outcome<ConnectionGraph> =
+        admission.withLock {
+            live.value[profile.id]?.let { return@withLock Outcome.Ok(it) }
+            val factory =
+                factories.firstOrNull { it.backend == profile.backend }
+                    ?: return@withLock Outcome.Failed(Failure.Unavailable(FeatureId("backend.${profile.backend}")))
+            when (val pair = factory.connect(profile)) {
+                is Outcome.Failed -> pair
+                is Outcome.Ok -> {
+                    val scope =
+                        ConnectionCoroutineScope(
+                            supervisedContext(appScope.coroutineContext.job, dispatchers.default, "conn-${profile.id.raw}"),
+                        )
+                    val graph = graphFactory.create(profile, pair.value, scope)
+                    graph.session.markConnected()
+                    mutableLive.update { it.putting(profile.id, graph) }
+                    Outcome.Ok(graph)
+                }
+            }
+        }
+
+    /** The conversation's own backend. Null = that connection is not live. */
+    public fun graphFor(ref: ConversationRef): ConnectionGraph? = live.value[ref.profileId]
+
+    /** Stop admission → cancel streams (and join) → release (ADR §9.1). Writer-lane drain joins in slice 1. */
+    public suspend fun close(profile: ProfileId) {
+        admission.withLock {
+            val graph = live.value[profile] ?: return@withLock
+            mutableLive.update { it.removing(profile) }
+            (graph.scope.coroutineContext[Job])?.cancelAndJoin()
+            graph.session.close()
+        }
+    }
+}
