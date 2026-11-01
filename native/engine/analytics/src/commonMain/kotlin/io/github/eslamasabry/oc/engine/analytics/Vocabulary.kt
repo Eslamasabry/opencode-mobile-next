@@ -13,7 +13,7 @@ public enum class StartKind { Cold, Warm }
 /** Backend kinds as counted in BASIC. Mirrors `:core:model` BackendKind without depending on it. */
 public enum class ServerKind { OpenCode2, Paseo, Codex }
 
-/** Agent kinds as counted in BASIC. TODO(move-to-core): align with the agents engine's own enum when it lands. */
+/** Agent kinds as counted in BASIC. TODO(engine-agents): align with the agents engine's own enum when it lands. */
 public enum class AgentKind { OpenCode, ClaudeCode, Codex, Gemini, Acp, Other }
 
 /** Where a server is, as a class of address (plan 16 §5.3). Never the address itself. */
@@ -71,7 +71,7 @@ public enum class ErrorCategory {
 }
 
 /**
- * DETAILED: screens by kind. TODO(move-to-core): generated from `:ui:routes` once routes exist; an engine cannot see
+ * DETAILED: screens by kind. TODO(ui-routes): generated from `:ui:routes` once routes exist; an engine cannot see
  * route classes (ADR §6.1), so this list is the analytics side of that mapping. Never route arguments.
  */
 public enum class ScreenId {
