@@ -46,8 +46,7 @@ public enum class KitErrorKind {
          */
         public fun of(failure: Failure?): KitErrorKind =
             when (failure) {
-                is Failure.Net.Offline, is Failure.Net.Unreachable, is Failure.Net.TrustRefused,
-                is Failure.Net.DeliveryUnknown, is Failure.ComputerDidNotAnswer, is Failure.Unknown,
+                is Failure.Network, is Failure.Certificate, is Failure.ComputerDidNotAnswer, is Failure.Unknown,
                 -> Network
                 else -> Other
             }

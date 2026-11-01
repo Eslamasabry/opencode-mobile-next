@@ -10,8 +10,10 @@ val roborazzi = libs.versions.roborazzi.get()
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":core:common"))
+        implementation(project(":ui:words")) // S1-KITA2: kit-internal words from strings_kit.xml (plan 06 §13.5)
         api(project(":ui:design")) // tokens appear in kit signatures (KitHaptic, TypeRole, TextTone, KitShapeId)
         implementation(libs.compose.material3) // kit modules only (ExternalRules)
+        implementation(libs.navigationevent.compose) // S1-KITA2: the topmost sheet or dialog owns Back (plan 06 §7.4)
     }
     sourceSets.getByName("androidHostTest").dependencies {
         implementation(libs.junit4)

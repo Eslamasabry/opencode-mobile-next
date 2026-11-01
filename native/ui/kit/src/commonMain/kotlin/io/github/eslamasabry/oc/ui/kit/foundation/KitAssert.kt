@@ -1,19 +1,24 @@
 package io.github.eslamasabry.oc.ui.kit.foundation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.NonRestartableComposable
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 
+private val log = AppLog.tagged("kit")
+
+/** Thrown by [kitAssert] in debug, test and preview builds. */
+public class KitRuleBroken(message: String) : IllegalStateException(message)
+
 /**
- * The kit's structural rule check (plan 06 §16.1): throws only in debug, test and preview builds
- * (`KitPlatform.isDebug`), so a broken rule fails a test, while a release build never dies in composition (§01 §9.6).
- * Release logging joins when `:ui:kit` gets `AppLog`. `require(`/`check(` stay out of composables.
+ * The kit's debug assertion (plan 06 §16.1): composition never throws in release, because Compose has no error widget.
+ * Debug, test and preview builds ([io.github.eslamasabry.oc.ui.kit.platform.KitPlatform.isDebug]) throw [KitRuleBroken];
+ * release logs the rule (never the caller's data) once per call.
  */
 @Composable
-@ReadOnlyComposable
+@NonRestartableComposable
 internal fun kitAssert(condition: Boolean, message: () -> String) {
-    if (!condition && LocalKitPlatform.current.isDebug) throw KitRuleBroken(message())
+    if (condition) return
+    if (LocalKitPlatform.current.isDebug) throw KitRuleBroken(message())
+    log.w { message() }
 }
-
-/** A kit rule a caller broke (debug builds only). */
-public class KitRuleBroken(message: String) : IllegalStateException(message)
