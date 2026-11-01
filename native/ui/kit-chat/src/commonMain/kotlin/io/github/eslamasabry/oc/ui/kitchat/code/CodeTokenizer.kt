@@ -50,8 +50,8 @@ public class CachedCodeTokenizer(private val delegate: CodeTokenizer) : CodeToke
         val tokens = hit ?: delegate.tokenize(code, language)
         while (true) {
             val current = cache.load()
-            var next = current.remove(key).put(key, tokens) // most recently used goes last
-            while (next.size > CACHE_SIZE) next = next.remove(next.keys.first())
+            var next = current.removing(key).putting(key, tokens) // most recently used goes last
+            while (next.size > CACHE_SIZE) next = next.removing(next.keys.first())
             if (cache.compareAndSet(current, next)) return tokens
         }
     }

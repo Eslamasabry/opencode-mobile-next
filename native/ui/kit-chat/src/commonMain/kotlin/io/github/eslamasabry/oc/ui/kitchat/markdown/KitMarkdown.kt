@@ -413,7 +413,7 @@ private fun MdText(
     val revealing = state != null && (live || state.active)
     var m = modifier.fillMaxWidth()
     if (revealing) m = m.clipToBounds().growOnly(enabled = live && reveal!!.motion == KitMotionLevel.Full)
-    var textModifier: Modifier = if (revealing) Modifier.kitFreshFade({ holder.layout }, state!!) else Modifier
+    var textModifier: Modifier = if (revealing) Modifier.kitFreshFade({ holder.layout }, state) else Modifier
     if (caret) {
         val colors = LocalKitColors.current
         textModifier = textModifier.kitStreamCaret({ holder.layout }, { visible.length }, colors)

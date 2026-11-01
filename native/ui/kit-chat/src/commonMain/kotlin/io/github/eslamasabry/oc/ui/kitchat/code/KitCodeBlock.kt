@@ -2,10 +2,11 @@ package io.github.eslamasabry.oc.ui.kitchat.code
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -123,7 +124,10 @@ public fun KitCodeBlock(
     val lines =
         remember(display) {
             var at = 0
-            display.split('\n').map { CodeLine(it, at).also { _ -> at += it.length + 1 } }
+            val raw = display.split('\n')
+            // A source ending in a newline draws no empty last line.
+            val kept = if (raw.size > 1 && raw.last().isEmpty()) raw.dropLast(1) else raw
+            kept.map { CodeLine(it, at).also { _ -> at += it.length + 1 } }
         }
     val colourable = kind == KitCodeKind.Code && !open && language != CodeLanguage.Plain
     val tokenizer = LocalKitCodeTokenizer.current
@@ -145,15 +149,6 @@ public fun KitCodeBlock(
                 .background(colors.fill, RoundedCornerShape(8.dp))
                 .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp),
         ) {
-            if (copyLabel != null && onCopy != null) {
-                DisableSelection {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        KitTappable(onClick = { onCopy(display) }) {
-                            KitText(copyLabel, role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame)
-                        }
-                    }
-                }
-            }
             val lineStyle = mono.copy(color = colors.text, textDirection = TextDirection.Ltr)
             val body = @Composable {
                 Column {
@@ -177,7 +172,23 @@ public fun KitCodeBlock(
                     }
                 }
             }
-            if (wrap) body() else Row(Modifier.horizontalScroll(rememberScrollState())) { body() }
+            val copying = copyLabel != null && onCopy != null
+            // Copy sits at the end of the first line, over the block's corner, not on a header of its own
+            // (Dart `_CodePlan.inline`); the lines keep clear of it.
+            Box(Modifier.fillMaxWidth()) {
+                val lines = if (copying) Modifier.padding(end = COPY_CLEARANCE.dp) else Modifier
+                if (wrap) Box(lines) { body() } else Row(lines.horizontalScroll(rememberScrollState())) { body() }
+                if (copying) {
+                    DisableSelection {
+                        KitTappable(
+                            onClick = { onCopy(display) },
+                            modifier = Modifier.align(Alignment.TopEnd).offset(x = Space.S3.dp, y = (-14).dp),
+                        ) {
+                            KitText(copyLabel, role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+                        }
+                    }
+                }
+            }
             if (hidden > 0 && moreLabel != null && onMore != null) {
                 DisableSelection {
                     KitTappable(onClick = onMore, modifier = Modifier.align(Alignment.Start)) {
@@ -188,6 +199,9 @@ public fun KitCodeBlock(
         }
     }
 }
+
+/** Room kept at the end of the lines for the Copy button. */
+private const val COPY_CLEARANCE = 56
 
 /** Plan 09 §9.2: code and output in the transcript stop at 12 lines. */
 public const val TRANSCRIPT_MAX_LINES: Int = 12
