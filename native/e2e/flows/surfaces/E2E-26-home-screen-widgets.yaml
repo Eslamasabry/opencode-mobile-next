@@ -1,0 +1,327 @@
+# E2E-26 Home-screen widgets
+# slice: 4   avd: A   fixtures: FX-OC2, FX-OC2-B   snapshot: widgets
+# rows: B-ANDR-022, B-ANDR-103, B-ANDR-104, B-ANDR-106, B-NAV-005, B-ANDR-109, B-NAV-077
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-4, g4, surfaces, phone-smoke]
+---
+- runScript: ../../runner/out/strings.js
+
+# Snapshot "widgets": adb cannot place widgets, so the AVD snapshot already holds the app with the Conversations,
+# Status and Usage widgets on the home screen. No clearState here (it would orphan the placed widgets' data).
+- launchApp:
+    stopApp: true
+- runFlow:
+    when:
+      visible: ${output.s.welcomeComputerConnect}
+    commands:
+      - runFlow:
+          file: ../_sub/connect-server.yaml
+          env:
+            ADDRESS: ${output.fx.serverAddress}
+            PASSWORD: ${SERVER_PASSWORD}
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+- runFlow: ../_sub/add-second-server.yaml
+
+# S1 Place the Conversations widget: it shows at most twelve sessions with busy flags and the model name, never a raw
+#    id; unchanged data causes no redraw. After a profile deletion the widget clears. [B-ANDR-022]
+# S1 [B-ANDR-022]
+# Fourteen conversations, oldest first; the widget keeps the newest twelve.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: seed-sessions
+      ARGS: '{"project": "app", "titles": ["Widget row 01", "Widget row 02", "Widget row 03", "Widget row 04", "Widget row 05", "Widget row 06", "Widget row 07", "Widget row 08", "Widget row 09", "Widget row 10", "Widget row 11", "Widget row 12", "Widget row 13", "Widget row 14"]}'
+    label: "S1 at most twelve rows, model name, no raw id [B-ANDR-022]"
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+- pressKey: Home
+- extendedWaitUntil:
+    visible: ${output.s.x_widget_conversations_title}
+    timeout: 30000
+- scrollUntilVisible:
+    element: Widget row 03  # literal-ok: title seeded through the fixture above
+    direction: DOWN
+    timeout: 20000
+- assertNotVisible: Widget row 02  # literal-ok: title seeded through the fixture above (13th newest)
+- assertNotVisible: Widget row 01  # literal-ok: title seeded through the fixture above (14th newest)
+- assertNotVisible: ${'(?s).*\\bses_[A-Za-z0-9]{6,}.*'}  # literal-ok: OpenCode session id shape must never show
+# literal-ok: fixture fact stubModelName (request): the stub model's display name
+- assertVisible: ${'(?s).*e2e-stub.*'}
+# UNIT-ONLY: unchanged data causes no redraw (RemoteViews update count).
+# Profile deletion clears the widget: remove FX-OC2-B, then FX-OC2; the widget falls back to its empty line.
+- launchApp
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+# confirm: a saved server row shows its address (as in E2E-35, a long-press opens Remove)
+- longPressOn: ${'(?s).*' + output.fx.serverBAddress.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- tapOn: ${output.s.capsuleRemove}
+- extendedWaitUntil:
+    visible: ${output.re.e7SetupRemoveServer}
+    timeout: 15000
+- tapOn:
+    text: ${output.s.capsuleRemove}
+    below: ${output.c.serversRemoveBody}
+- longPressOn: ${'(?s).*' + output.fx.serverAddress.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- tapOn: ${output.s.capsuleRemove}
+- extendedWaitUntil:
+    visible: ${output.re.e7SetupRemoveServer}
+    timeout: 15000
+- tapOn:
+    text: ${output.s.capsuleRemove}
+    below: ${output.c.serversRemoveBody}
+- pressKey: Home
+- extendedWaitUntil:
+    visible: ${output.s.x_widget_v2_empty}
+    timeout: 30000
+- assertNotVisible: Widget row 14  # literal-ok: title seeded through the fixture above
+# Back to two servers for the rest of the flow.
+- launchApp
+- runFlow:
+    when:
+      visible: ${output.s.welcomeComputerConnect}
+    commands:
+      - runFlow:
+          file: ../_sub/connect-server.yaml
+          env:
+            ADDRESS: ${output.fx.serverAddress}
+            PASSWORD: ${SERVER_PASSWORD}
+- runFlow: ../_sub/add-second-server.yaml
+
+# S2 Send `e2e:ask-edit`: the widget shows the question with Allow/Deny and no raw fields; tap Allow on the widget while
+#    the app is not running: the exact pending request is approved, the real status is read after the reply, then the
+#    widget closes; if the status route is down, the widget says disconnected and the answered request is not
+#    replayed. [B-ANDR-103, B-ANDR-104]
+# S2 [B-ANDR-103, B-ANDR-104]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S2 Allow on the widget with the app closed [B-ANDR-103, B-ANDR-104]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- stopApp
+- pressKey: Home
+- extendedWaitUntil:
+    visible: ${output.s.x_widget_v2_allow_short}
+    timeout: 30000
+# confirm: Flutter R's Conversations widget offers Allow, Reply and Open (Deny is answered in the app)
+- assertVisible: ${output.s.x_widget_reply}
+- assertNotVisible: ${'(?s).*"(tool|callID|permission)".*'}  # literal-ok: raw request fields must never show
+- tapOn: ${output.s.x_widget_v2_allow_short}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "permission-reply"}'
+- assertTrue: ${output.fxr.count == 1 && output.fxr.last.reply == 'once' && output.fxr.last.sameRequest}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "session-status", "after": "permission-reply"}'
+- assertTrue: ${output.fxr.count >= 1}
+- extendedWaitUntil:
+    notVisible: ${output.s.x_widget_v2_allow_short}
+    timeout: 30000
+# Status route down: the widget says disconnected; the answered request is not replayed.
+- launchApp
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- stopApp
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: refuse-endpoint
+      ARGS: '{"kind": "session-status", "status": 503}'
+- pressKey: Home
+- extendedWaitUntil:
+    visible: ${output.s.x_widget_v2_allow_short}
+    timeout: 30000
+- tapOn: ${output.s.x_widget_v2_allow_short}
+- extendedWaitUntil:
+    visible: ${output.c.x_widget_v2_offline_plain}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "permission-reply"}'
+- assertTrue: ${output.fxr.count == 2}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: restore-endpoint
+      ARGS: '{"kind": "session-status"}'
+
+# S3 Tap Stop on the widget during `e2e:slow-finish`: only that run stops; tap it twice quickly: dispatched once; a
+#    finished run cannot be stopped; an old run cannot stop its replacement; an unsupported action is rejected before
+#    connecting. [B-ANDR-106]
+# S3 [B-ANDR-106]
+- launchApp:
+    label: "S3 Stop on the widget, once, only that run [B-ANDR-106]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- pressKey: Home
+# confirm: the widget's stop control label (the Status/card widget; native_stop "Stop")
+- extendedWaitUntil:
+    visible: ${output.s.android_native_stop}
+    timeout: 30000
+- tapOn: ${output.s.android_native_stop}
+- tapOn:
+    text: ${output.s.android_native_stop}
+    optional: true
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "session-abort"}'
+- assertTrue: ${output.fxr.count == 1 && output.fxr.last.sameSessionAsStatus}
+- extendedWaitUntil:
+    notVisible: ${output.s.android_native_stop}
+    timeout: 30000
+# UNIT-ONLY: an old run cannot stop its replacement; an unsupported action is rejected before connecting.
+
+# S4 Tap Reply on the widget: the chat opens ready to type. Tap Open: the chat opens without focusing the field. Use
+#    the widget overlay: the style window, the steer box and the voice box work from the overlay. [B-NAV-005,
+#    B-ANDR-109]
+# S4 [B-NAV-005, B-ANDR-109]
+- tapOn:
+    text: ${output.s.x_widget_reply}
+    label: "S4 Reply and Open from the widget; overlay boxes work [B-NAV-005, B-ANDR-109]"
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+# UNIT-ONLY: the composer has focus and the keyboard is up (Maestro cannot read focus).
+- pressKey: Home
+- tapOn: ${output.s.x_widget_v2_open}
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- pressKey: Home
+# Overlay: steer while a run works.
+- launchApp
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- pressKey: Home
+- tapOn: ${output.s.x_widget_v2_steer_hint}
+- extendedWaitUntil:
+    visible: ${output.s.widgetV2SteerTitle}
+    timeout: 15000
+- tapOn: ${output.s.widgetV2MessageHint}
+- inputText: e2e:echo steer from widget
+- tapOn: ${output.s.widgetV2Send}
+- extendedWaitUntil:
+    visible: ${output.s.widgetV2Accepted}
+    timeout: 30000
+# Overlay: voice box.
+- tapOn: ${output.s.x_widget_v2_voice}
+- extendedWaitUntil:
+    visible: ${output.s.widgetV2VoiceTitle}
+    timeout: 15000
+- tapOn: ${output.s.widgetV2Cancel}
+# Overlay: style window (the launcher's reconfigure entry on the widget is system UI).
+- longPressOn: ${output.s.x_widget_conversations_title}
+# retry-reason: launcher context menu (system UI, not ours)
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn: Widget settings  # literal-ok: Pixel launcher's reconfigure item
+- extendedWaitUntil:
+    visible: ${output.s.widgetV2ConfigureTitle}
+    timeout: 15000
+- tapOn: ${output.s.widgetV2BackgroundTinted}
+- tapOn: ${output.s.widgetV2SaveStyle}
+
+# S5 Usage widget: tap a provider row: OpenCode sign-in for that server, agent sign-in for Claude on this phone, "Read
+#    usage from" for set-up rows; GLM and MiniMax ask for a key, others sign in; a deleted server opens nothing wrong.
+#    [B-NAV-077]
+# S5 [B-NAV-077]
+- runFlow:
+    file: ../_sub/close-shade.yaml
+    label: "S5 Usage widget rows open the right place [B-NAV-077]"
+- pressKey: Home
+- scrollUntilVisible:
+    element: ${output.s.android_usage_widget_title}
+    direction: DOWN
+- runFlow:
+    when:
+      visible: ${output.s.android_usage_widget_sign_in}
+    commands:
+      - tapOn: ${output.s.android_usage_widget_sign_in}
+      # confirm: the OpenCode sign-in for that server lands on its Providers page
+      - extendedWaitUntil:
+          visible: ${output.c.settingsV3Providers}
+          timeout: 30000
+      - pressKey: Home
+- runFlow:
+    when:
+      visible: ${output.s.android_usage_widget_add_key}
+    commands:
+      - tapOn: ${output.s.android_usage_widget_add_key}
+      - extendedWaitUntil:
+          visible: ${output.c.agentAccountApiKey}
+          timeout: 30000
+      - pressKey: Home
+- runFlow:
+    when:
+      visible: ${output.s.android_usage_widget_set_up}
+    commands:
+      - tapOn: ${output.s.android_usage_widget_set_up}
+      - extendedWaitUntil:
+          visible: ${output.rc.usageReadFrom}
+          timeout: 30000
+      - pressKey: Home
+# A deleted server's row opens nothing wrong: remove FX-OC2-B, tap its stale row.
+- launchApp
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- longPressOn: ${'(?s).*' + output.fx.serverBAddress.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- tapOn: ${output.s.capsuleRemove}
+- tapOn:
+    text: ${output.s.capsuleRemove}
+    below: ${output.c.serversRemoveBody}
+- pressKey: Home
+- runFlow:
+    when:
+      visible: ${output.s.android_usage_widget_sign_in}
+    commands:
+      - tapOn: ${output.s.android_usage_widget_sign_in}
+- assertNotVisible: ${output.s.recentErrorGeneric}
+- assertNotVisible: ${output.c.settingsV3ServerGone}
+# UNIT-ONLY: agent sign-in for Claude on this phone, and GLM/MiniMax vs sign-in routing per provider (FX-USAGE rows).

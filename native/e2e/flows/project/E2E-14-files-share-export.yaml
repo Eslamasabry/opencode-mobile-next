@@ -1,0 +1,227 @@
+# E2E-14 Files, previews, sharing out and exporting a project
+# slice: 5   avd: A   fixtures: FX-OC2   snapshot: flutter-linux
+# rows: B-MEDIA-034, B-ANDR-074, B-SEC-099, B-LINUX-102
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-5, g5, project]
+---
+- runScript: ../../runner/out/strings.js
+# The flutter-linux snapshot holds built-in Linux with project app and is connected to FX-OC2: never clearState.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+
+# S1 Open the project > "Files" and a text file: the preview opens; Save keeps the original bytes. Open `data.csv`
+#    as a table.
+# S1 []
+# confirm: Flutter R reaches the project hub through the "Files" tab; the native app through the project.
+- tapOn:
+    text: ${output.s.shellTabFiles}
+    label: "S1 open the project's files"
+- tapOn: ${output.fx.fileReadme}
+- extendedWaitUntil:
+    visible: ${output.s.fileSave}
+    timeout: 30000
+- tapOn: ${output.s.fileSave}
+# UNIT-ONLY: the saved file has exactly the original bytes (FilesViewer save test).
+- back
+- tapOn: ${output.fx.fileCsv}
+- extendedWaitUntil:
+    visible: ${output.s.filePreviewViewMode}
+    timeout: 30000
+- tapOn: ${output.s.filePreviewViewMode}
+- tapOn: ${output.s.fileTable}
+- assertVisible: ${output.s.fileTable}
+# confirm: the view-mode control is labelled "Show file as" and offers "Table" for a CSV.
+- back
+
+# S2 Tap Share on a file, "Share over Wi-Fi": [adb] turn Wi-Fi off first -> see "This phone is not on Wi-Fi";
+#    Wi-Fi on -> a link appears. [adb] `curl` the link: exactly the one file downloads as an attachment; any other
+#    path returns 404; POST returns 405; the download counter goes up; stop sharing and the link dies; only a
+#    private LAN address counts as Wi-Fi. [B-MEDIA-034]
+# S2 [B-MEDIA-034]
+# adb: net
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: net
+      ARGS: '{"wifi": "off"}'
+    label: "S2 Wi-Fi off, share refuses in plain words [B-MEDIA-034]"
+- tapOn: ${output.fx.fileNotes}
+- extendedWaitUntil:
+    visible: ${output.s.fileShareAction}
+    timeout: 30000
+- tapOn: ${output.s.fileShareAction}
+- extendedWaitUntil:
+    visible: ${output.s.fileShareNoWifi}
+    timeout: 30000
+- back
+# adb: net
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: net
+      ARGS: '{"wifi": "on"}'
+- tapOn: ${output.s.fileShareAction}
+- extendedWaitUntil:
+    visible: ${output.s.fileShareLinkLabel}
+    timeout: 60000
+- assertVisible: ${output.s.fileShareWarning}
+- assertVisible: ${output.re.fileShareDownloads}
+# The link reads http://<the emulator's Wi-Fi address>:<port>/<token>; read the port and path from it.
+- copyTextFrom:
+    text: "http://[0-9.]+:[0-9]+/.*"  # literal-ok: shape of the share link the app prints (address chosen by Android)
+- evalScript: ${output.shareRest = maestro.copiedText.replace(/^http:\/\/[^\/]+/, '')}
+- evalScript: ${output.sharePort = parseInt(maestro.copiedText.split('/')[2].split(':')[1], 10)}
+# SUSPECTED-GAP: device-http forwards a device port to the host; if the share server binds only the Wi-Fi address
+#   (not loopback) the forward cannot reach it, and a second device on the emulator network is needed.
+# adb: device-http
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: device-http
+      ARGS: "${JSON.stringify({port: output.sharePort, path: output.shareRest, method: 'GET'})}"
+- assertTrue: ${output.hook.status == 200}
+- assertTrue: ${String(output.hook.disposition).indexOf('attachment') == 0}
+# adb: device-http
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: device-http
+      ARGS: "${JSON.stringify({port: output.sharePort, path: output.shareRest + '-other', method: 'GET'})}"
+- assertTrue: ${output.hook.status == 404}
+# adb: device-http
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: device-http
+      ARGS: "${JSON.stringify({port: output.sharePort, path: output.shareRest, method: 'POST'})}"
+- assertTrue: ${output.hook.status == 405}
+# The counter went up by exactly the one GET that succeeded.
+# The =1 form of the counter ("Downloaded 1 time"), cut out of the run language's plural text.
+- extendedWaitUntil:
+    visible: ${output.t.fileShareDownloads.match(/(?:=1|one)\{([^}]*)\}/)[1]}
+    timeout: 15000
+- tapOn: ${output.s.fileShareStop}
+- extendedWaitUntil:
+    visible: ${output.s.fileShareEnded}
+    timeout: 15000
+# adb: device-http
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: device-http
+      ARGS: "${JSON.stringify({port: output.sharePort, path: output.shareRest, method: 'GET'})}"
+- assertTrue: ${output.hook.status != 200}
+# UNIT-ONLY: only a private LAN address counts as Wi-Fi (FileShareServer address-choice test).
+- back
+- back
+
+# S3 Tap Share (system) on a reply: the chooser opens and this app is not listed as a target. [B-ANDR-074]
+# S3 [B-ANDR-074]
+- tapOn:
+    text: ${output.s.shellTabChats}
+    label: "S3 a reply to share [B-ANDR-074]"
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "e2e:echo share-me"  # literal-ok: stub-model magic prompt
+- extendedWaitUntil:
+    visible: "ECHO share-me"  # literal-ok: stub-model reply
+    timeout: 30000
+- longPressOn: "ECHO share-me"  # literal-ok: stub-model reply
+# confirm: the reply menu's system-share action is labelled "Share"; when Flutter R has none, the same ShareOut
+#   path is reached from Settings > "Share the app".
+- runFlow:
+    when:
+      visible: ${output.s.capabilityShare}
+    commands:
+      - tapOn: ${output.s.capabilityShare}
+- runFlow:
+    when:
+      notVisible: ${output.s.capabilityShare}
+    commands:
+      - back
+      - runFlow: ../_sub/open-settings.yaml
+      - scrollUntilVisible:
+          element: ${output.s.shareRowTitle}
+      - tapOn: ${output.s.shareRowTitle}
+# The Android chooser is system UI: this app's own launcher label must not be a target.
+# confirm: the launcher label is "OpenCode" (same text as the Quick Settings tile label).
+- extendedWaitUntil:
+    visible: "Share|Share with|Send to.*"  # literal-ok: Android chooser title (system UI, not our strings)
+    timeout: 15000
+- assertNotVisible: ${output.s.android_tile_label}
+- back
+
+# S4 Export a project (plain): the zip leaves out every credential, including provider keys and tokens wherever the
+#    names appear; export private: it adds credentials and OpenCode data but not logs, and the file name says it is
+#    private. [B-SEC-099]
+# S4 [B-SEC-099]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S4 export projects plain, then private [B-SEC-099]"
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- scrollUntilVisible:
+    element: ${output.s.thisPhoneExportProjects}
+- tapOn: ${output.s.thisPhoneExportProjects}
+- extendedWaitUntil:
+    visible: ${output.s.projectExportSave}
+    timeout: 30000
+- assertVisible: ${output.s.projectExportPrivate}
+- tapOn: ${output.s.projectExportSave}
+# The Storage Access Framework save screen is system UI.
+- extendedWaitUntil:
+    visible: "SAVE|Save"  # literal-ok: DocumentsUI save button (system UI)
+    timeout: 30000
+- assertNotVisible: ".*[Pp]rivate.*\\.zip"  # literal-ok: the plain export's suggested file name has no "private"
+- tapOn: "SAVE|Save"  # literal-ok: DocumentsUI save button (system UI)
+- extendedWaitUntil:
+    visible: ${output.rc.projectExportDone}
+    timeout: 60000
+# The fixture project holds a provider key file and a token file: they are counted as left out.
+- assertVisible: ${output.rc.projectExportDoneLeftOut}
+# UNIT-ONLY: which entries the zip holds (no credentials by name or content) - ProjectExport plain-mode test.
+- back
+- tapOn: ${output.s.thisPhoneExportProjects}
+- tapOn: ${output.s.projectExportPrivate}
+- assertVisible: ${output.s.projectExportPrivateDetail}
+- tapOn: ${output.s.projectExportSave}
+- extendedWaitUntil:
+    visible: ".*[Pp]rivate.*\\.zip"  # literal-ok: the private export's suggested file name says private
+    timeout: 30000
+- tapOn: "SAVE|Save"  # literal-ok: DocumentsUI save button (system UI)
+- extendedWaitUntil:
+    visible: ${output.s.projectExportDonePrivate}
+    timeout: 60000
+# UNIT-ONLY: the private zip adds credentials and OpenCode data but never logs - ProjectExport private-mode test.
+- back
+
+# S5 On built-in Linux: export a project that exists only inside Ubuntu with a Git repository: the export includes
+#    the Git objects; names that cannot be framed are skipped. [B-LINUX-102]
+# S5 [B-LINUX-102]
+# Project app of the flutter-linux snapshot lives only inside Ubuntu and is a Git repository.
+- tapOn:
+    text: ${output.s.thisPhoneExportProjects}
+    label: "S5 export an Ubuntu-only Git project [B-LINUX-102]"
+- assertVisible: ${output.c.projectExportProjectsLabel}
+- assertVisible: ${output.fx.projectApp}
+- tapOn: ${output.s.projectExportSave}
+- extendedWaitUntil:
+    visible: "SAVE|Save"  # literal-ok: DocumentsUI save button (system UI)
+    timeout: 30000
+- tapOn: "SAVE|Save"  # literal-ok: DocumentsUI save button (system UI)
+- extendedWaitUntil:
+    visible: ${output.rc.projectExportDone}
+    timeout: 60000
+- assertNotVisible: ${output.s.projectExportFailedSource}
+# UNIT-ONLY: the zip includes .git objects; a name the zip format cannot frame is skipped (ProjectExport framing
+#   test). A device sees only the finished count.

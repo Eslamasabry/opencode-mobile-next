@@ -1,0 +1,141 @@
+# E2E-24 Command launcher, Go to and the conversation menu
+# slice: 5   avd: A, T   fixtures: FX-OC2   snapshot: base
+# rows: B-NAV-056, B-NAV-049, B-NAV-051
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-5, g5, nav]
+---
+- runScript: ../../runner/out/strings.js
+
+# FX-OC2 with five recent conversations (titles are fixture data passed in ARGS).
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: seed-sessions
+      ARGS: '{"project": "app", "titles": ["Recent one", "Recent two", "Recent three", "Recent four", "Recent five"]}'
+- runFlow: ../_sub/connect-fx-oc2.yaml
+
+# S1 Open the launcher (search button; Ctrl+K on a keyboard): with an empty field see places first, then the last three
+#    conversations; typing filters; rows follow server capabilities, never the product name. [B-NAV-056]
+# S1 [B-NAV-056]
+# confirm: on a phone the launcher opens from the Conversations top bar's search button (KitTopBar "Search").
+# NEEDS-HOOK: key-combo: Ctrl+K on AVD-T's hardware keyboard (adb shell input keycombination 113 39)
+- tapOn:
+    text: ${output.s.kitTopBarSearch}
+    label: "S1 places first, then three recent; filtering; capability rows [B-NAV-056]"
+- extendedWaitUntil:
+    visible: ${output.s.librarySettingsTitle}
+    timeout: 15000
+- assertVisible:
+    text: ${output.s.librarySettingsTitle}
+    above: ${output.s.searchRecentTitle}
+- assertVisible:
+    text: ${output.s.searchRecentTitle}
+    above: Recent five  # literal-ok: newest seeded title
+- assertVisible: Recent four  # literal-ok: seeded title
+- assertVisible: Recent three  # literal-ok: seeded title
+- assertNotVisible: Recent two  # literal-ok: seeded title (fourth newest: not in the empty-field list)
+# Typing filters.
+- inputText: servers
+- assertVisible: ${output.s.e7SetupServers}
+- assertNotVisible: ${output.s.librarySettingsTitle}
+# Rows follow capabilities: without a terminal, no Terminal row.
+- eraseText: 20
+- inputText: terminal
+- assertVisible: ${output.s.libraryTerminalTitle}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: set-capabilities
+      ARGS: '{"without": ["terminal"]}'
+- back
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+- tapOn: ${output.s.kitTopBarSearch}
+- inputText: terminal
+- assertNotVisible: ${output.s.libraryTerminalTitle}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: set-capabilities
+      ARGS: '{"without": []}'
+- back
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+# UNIT-ONLY: rows never key on the product name (DesktopCommand gating unit test).
+
+# S2 Type a command by its label, then by a hint or keyword in different case: all find it; conversations appear only as
+#    search results (matched by project and title); "shortcuts" help lists the keys. [B-NAV-049]
+# S2 [B-NAV-049]
+- tapOn:
+    text: ${output.s.kitTopBarSearch}
+    label: "S2 label, hint and keyword in any case; conversations by title [B-NAV-049]"
+- inputText: Settings
+- assertVisible: ${output.s.librarySettingsTitle}
+- eraseText: 20
+# A word from Settings' hint ("Models, providers, notifications, settings"), upper case.
+- inputText: PROVIDERS
+- assertVisible: ${output.s.librarySettingsTitle}
+- eraseText: 20
+# A Terminal keyword, mixed case.
+- inputText: CoNsOlE
+- assertVisible: ${output.s.libraryTerminalTitle}
+- eraseText: 20
+# Conversations only as results, matched by title and by project.
+- inputText: Recent two
+- assertVisible: ${'(?s).*Recent two.*'}  # literal-ok: seeded title as a search result
+- assertVisible: ${output.rc.launcherConversationHint}
+- eraseText: 20
+- inputText: ${output.fx.projectApp}
+- assertVisible: ${'(?s).*Recent one.*'}  # literal-ok: seeded title matched by its project
+- eraseText: 20
+- inputText: shortcuts
+- tapOn: ${output.s.e7LocaleUiKeyboardShortcuts}
+- extendedWaitUntil:
+    visible: ${output.s.e7LocaleUiCommandLauncher}
+    timeout: 15000
+- back
+- back
+
+# S3 Open the conversation menu: "Go to" and "Do" actions depend on the server's capabilities; the command sheet lists
+#    the same. [B-NAV-051]
+# S3 [B-NAV-051]
+- tapOn:
+    text: Recent one  # literal-ok: seeded title
+    label: "S3 the conversation menu's Go to and Do follow capabilities [B-NAV-051]"
+- tapOn: ${output.s.chatUiSessionMenu}
+- assertVisible: ${output.s.sessionMenuGoTo}
+- assertVisible: ${output.s.sessionMenuDo}
+- assertVisible: ${output.s.chatUiForkSession}
+- assertVisible: ${output.s.chatUiShareSession}
+- back
+# Without share on the server, Share leaves both the menu and the command sheet.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: set-capabilities
+      ARGS: '{"without": ["session-share"]}'
+- back
+- runFlow: ../_sub/restart-app.yaml
+- tapOn: Recent one  # literal-ok: seeded title
+- tapOn: ${output.s.chatUiSessionMenu}
+- assertNotVisible: ${output.s.chatUiShareSession}
+- back
+# confirm: the in-chat command sheet opens from the composer's "/" (chat_commands.dart)
+- tapOn: ${output.s.kitComposerField}
+- inputText: /
+- assertNotVisible: ${output.s.chatUiShareSession}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: set-capabilities
+      ARGS: '{"without": []}'

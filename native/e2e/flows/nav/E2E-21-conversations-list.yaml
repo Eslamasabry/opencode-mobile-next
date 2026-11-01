@@ -1,0 +1,317 @@
+# E2E-21 Conversations list: merged servers, pins, titles, status
+# slice: 2   avd: A   fixtures: FX-OC2, FX-OC2-B   snapshot: base
+# rows: B-NAV-030, B-NAV-011, B-NAV-025, B-NAV-032, B-NAV-065, B-NAV-066, B-NAV-067, B-CHAT-012, B-CHAT-020, B-PROTO-096
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-2, g2, nav]
+---
+- runScript: ../../runner/out/strings.js
+
+# Two servers, each with several conversations. FX-OC2-B shares some session ids with FX-OC2 and holds the
+# placeholder ISO title and the leaked tool-call title (fixture contract).
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: seed-sessions
+      ARGS: '{"project": "app", "sessions": [{"id": "ses_e2e_shared", "title": "Shared on A"}, {"title": "Sort recent"}, {"title": "Sort running", "prompt": "e2e:slow-finish"}, {"title": "Sort needs", "prompt": "e2e:ask-edit"}]}'
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: seed-sessions
+      ARGS: '{"project": "other", "sessions": [{"id": "ses_e2e_shared", "title": "Shared on B"}]}'
+- runFlow: ../_sub/connect-fx-oc2.yaml
+- runFlow: ../_sub/add-second-server.yaml
+
+# S1 Conversations list: rows sort attention first, then running, then recent; two sessions with the same id on
+#    different servers are two rows and each opens its own server's conversation. [B-NAV-030]
+# S1 [B-NAV-030]
+- extendedWaitUntil:
+    visible: Sort needs  # literal-ok: title seeded through the fixture above
+    timeout: 30000
+    label: "S1 attention, running, recent; same id on two servers is two rows [B-NAV-030]"
+- assertVisible:
+    text: Sort needs  # literal-ok: seeded title
+    above: Sort running  # literal-ok: seeded title
+- assertVisible:
+    text: Sort running  # literal-ok: seeded title
+    above: Sort recent  # literal-ok: seeded title
+- assertVisible: Shared on A  # literal-ok: seeded title (same session id as B)
+- assertVisible: Shared on B  # literal-ok: seeded title (same session id as A)
+- tapOn: Shared on B  # literal-ok: seeded title
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: request-count
+      ARGS: '{"kind": "session-get", "session": "ses_e2e_shared"}'
+- assertTrue: ${output.fxr.count >= 1}
+- back
+- tapOn: Shared on A  # literal-ok: seeded title
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "session-get", "session": "ses_e2e_shared"}'
+- assertTrue: ${output.fxr.count >= 1}
+- back
+
+# S2 Project choices are ordered by update time (stable ties, unknown dates last); with the ordering unavailable the
+#    app does not contact the server for it; an empty server stays empty; a failing server is a failure, not empty.
+#    [B-NAV-011]
+# S2 [B-NAV-011]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: touch-project
+      ARGS: '{"project": "other"}'
+    label: "S2 projects by update time; a failing server is a failure [B-NAV-011]"
+- tapOn: ${output.s.chatsHomeAllProjects}
+- extendedWaitUntil:
+    visible: ${output.s.chatsFilterSheetTitle}
+    timeout: 15000
+- assertVisible:
+    text: ${'(?s).*' + output.fx.projectOther + '.*'}  # literal-ok: built from fixture data
+    above: ${'(?s).*' + output.fx.projectApp + '.*'}  # literal-ok: built from fixture data
+- back
+# UNIT-ONLY: stable ties, unknown dates last, and no request when the ordering is unavailable.
+# A failing server is a failure, not an empty list.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: refuse-endpoint
+      ARGS: '{"kind": "session-list", "status": 500}'
+- swipe:
+    direction: DOWN
+- extendedWaitUntil:
+    visible: ${output.rc.chatsHomeIncompleteNamed}
+    timeout: 30000
+- assertNotVisible: ${output.s.chatsHomeEmptyTitle}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: restore-endpoint
+      ARGS: '{"kind": "session-list"}'
+- swipe:
+    direction: DOWN
+
+# S3 Open entry points that used to open the Inbox (a notification, the status badge): each opens Conversations with
+#    the filter applied. [B-NAV-025]
+# S3 [B-NAV-025]
+# confirm: Flutter R's needs-you line under the title opens the Inbox screen (chats_home_screen.dart openInbox); its
+#   tap label is "<n> need you, Inbox".
+- tapOn:
+    text: ${output.c.inboxTitle}
+    label: "S3 the needs-you entry opens the filtered list [B-NAV-025]"
+- extendedWaitUntil:
+    visible: Sort needs  # literal-ok: seeded title (the waiting ask)
+    timeout: 15000
+- assertNotVisible: Sort recent  # literal-ok: seeded title (nothing waits there)
+- back
+# UNIT-ONLY: the notification and status-badge entry points route to the same filter (E2E-25 S8 covers the tap).
+
+# S4 "New conversation" with two backends: the chooser needs an explicit source and keeps the agent; with one source it
+#    starts directly; duplicate names and a missing default are refused; a failed start keeps its cause under Details.
+#    [B-NAV-032]
+# S4 [B-NAV-032]
+- tapOn:
+    text: ${output.s.chatsHomeNewChat}
+    label: "S4 new conversation asks for a source with two backends [B-NAV-032]"
+- extendedWaitUntil:
+    visible: ${output.s.chatsNewChooseProject}
+    timeout: 15000
+# Nothing starts before a source is chosen.
+- tapOn: ${output.s.kitComposerField}
+- inputText: e2e:echo no source yet
+- tapOn: ${output.s.kitComposerSend}
+- assertVisible: ${output.c.chatsNewNeedProject}
+- tapOn: ${output.fx.projectOther}
+# A failed start keeps its cause under Details.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: refuse-endpoint
+      ARGS: '{"kind": "session-create", "status": 500}'
+- tapOn: ${output.s.kitComposerSend}
+- extendedWaitUntil:
+    visible: ${output.s.chatsNewFailedTitle}
+    timeout: 30000
+- tapOn: ${output.s.kitDetails}
+- assertVisible: ${'(?s).*500.*'}  # literal-ok: the refused status the fixture returned
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: restore-endpoint
+      ARGS: '{"kind": "session-create"}'
+- back
+- back
+# UNIT-ONLY: keeps the agent, starts directly with one source, duplicate names and a missing default refused.
+
+# S5 Pin a conversation: it sorts first; unpin restores the order; a pinned conversation older than the first page is
+#    still reachable after fetching once; a failed pinned read offers retry without losing the pin. [B-NAV-065]
+# S5 [B-NAV-065]
+# SUSPECTED-GAP: no pin action found on Flutter R's Conversations rows (only sessionRelationsPin on Subagents).
+# confirm: the pin control's label and place on the first Flutter run.
+- longPressOn:
+    text: Sort recent  # literal-ok: seeded title
+    label: "S5 pin sorts first, unpin restores, failed pin read retries [B-NAV-065]"
+- tapOn: ${output.rc.sessionRelationsPin}
+- assertVisible:
+    text: Sort recent  # literal-ok: seeded title
+    above: Sort needs  # literal-ok: seeded title
+# A failed pinned read offers retry without losing the pin.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: refuse-endpoint
+      ARGS: '{"kind": "session-get", "status": 500}'
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.s.commonRetry}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: restore-endpoint
+      ARGS: '{"kind": "session-get"}'
+- tapOn: ${output.s.commonRetry}
+- extendedWaitUntil:
+    visible: Sort recent  # literal-ok: seeded title
+    timeout: 30000
+- longPressOn: Sort recent  # literal-ok: seeded title
+- tapOn: ${output.rc.sessionRelationsUnpin}
+- assertVisible:
+    text: Sort needs  # literal-ok: seeded title
+    above: Sort recent  # literal-ok: seeded title
+# UNIT-ONLY: a pinned conversation older than the first page is fetched once (OlderSessionsPager).
+
+# S6 Titles: a server placeholder title loses its ISO timestamp; real titles are untouched; blank falls back to the
+#    screen's own wording; leaked tool-call/model markup is cut from titles (also half-cut markers); a list never shows
+#    the markup. [B-NAV-066, B-NAV-067]
+# S6 [B-NAV-066, B-NAV-067]
+- scrollUntilVisible:
+    element: Shared on B  # literal-ok: seeded title
+    label: "S6 clean titles: no ISO stamp, no tool-call markup [B-NAV-066, B-NAV-067]"
+- assertNotVisible: ${'(?s).*' + output.fx.isoTitleSession.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- assertNotVisible: ${'(?s).*' + output.fx.leakedMarkupTitle + '.*'}  # literal-ok: built from fixture data
+- assertNotVisible: ${'(?s).*</?tool_call.*'}  # literal-ok: half-cut markup marker
+- assertVisible: Sort recent  # literal-ok: real titles stay untouched
+# UNIT-ONLY: blank titles fall back to the screen's own wording (TitleCleaner unit cases).
+
+# S7 A conversation that finished after it was last opened shows as finished-unseen; open it or let it run and the mark
+#    clears; tap Stop in the chat: it shows "Stopped" until the next prompt or reopening. [B-CHAT-012]
+# S7 [B-CHAT-012]
+- extendedWaitUntil:
+    visible:
+      text: ${output.s.chatsHomeDone}
+      below: Sort running  # literal-ok: seeded title (its slow-finish ran to the end unseen)
+    timeout: 60000
+    label: "S7 finished-unseen, then Stopped until the next prompt [B-CHAT-012]"
+- tapOn: Sort running  # literal-ok: seeded title
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- back
+- assertNotVisible:
+    text: ${output.s.chatsHomeDone}
+    below: Sort running  # literal-ok: seeded title
+# Stop in the chat: "Stopped" until the next prompt.
+- tapOn: Sort running  # literal-ok: seeded title
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- tapOn: ${output.s.kitComposerStop}
+- back
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeStopped}
+    timeout: 30000
+- tapOn: Sort running  # literal-ok: seeded title
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo after stop
+- back
+- assertNotVisible: ${output.s.chatsHomeStopped}
+
+# S8 Conversation menu > "Continue with…": pick another agent; the source gets a link line naming the agent and the new
+#    conversation a link line naming the title. [B-CHAT-020]
+# S8 [B-CHAT-020]
+# SUSPECTED-GAP: "another agent" needs a second agent or model; FX-OC2 offers its own models only.
+- tapOn:
+    text: Sort recent  # literal-ok: seeded title
+    label: "S8 Continue with another agent links both conversations [B-CHAT-020]"
+- tapOn: ${output.s.chatUiSessionMenu}
+- tapOn: ${output.s.continueWithMenu}
+- extendedWaitUntil:
+    visible: ${output.s.continueWithTitle}
+    timeout: 15000
+- tapOn: ${output.s.continueWithModelsHere}
+- tapOn: ${output.s.continueWithStart}
+- extendedWaitUntil:
+    visible: ${output.s.continueWithOpenConversation}
+    timeout: 60000
+- tapOn: ${output.s.continueWithOpenConversation}
+# The new conversation names its source title.
+- extendedWaitUntil:
+    visible: ${'(?s).*Sort recent.*'}  # literal-ok: seeded source title in the link line
+    timeout: 30000
+- back
+# confirm: the link-line wording on the source (names the agent or model it continued with)
+- tapOn: Sort recent  # literal-ok: seeded title
+- assertVisible: ${output.c.continueWithAnother}
+
+# S9 Conversation menu > export: the downloaded file is complete, redacted by default, with no location; on a server
+#    without export the option is remembered as absent without repeated requests. [B-PROTO-096]
+# S9 [B-PROTO-096]
+# confirm: Flutter R's export entry ("Export transcript" in chat commands / "Export conversation" screen)
+- tapOn:
+    text: ${output.s.chatUiSessionMenu}
+    label: "S9 export is complete and redacted; absent export is remembered [B-PROTO-096]"
+- tapOn: ${output.s.chatUiExportTranscript}
+- extendedWaitUntil:
+    visible: ${output.s.exportTitle}
+    timeout: 15000
+# UNIT-ONLY: the written file is complete, redacted by default and carries no location (SessionExport unit tests).
+- back
+- back
+# A server without export: absent, remembered, not asked again.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: refuse-endpoint
+      ARGS: '{"kind": "session-export", "status": 404}'
+- tapOn: Sort recent  # literal-ok: seeded title
+- tapOn: ${output.s.chatUiSessionMenu}
+- runFlow:
+    when:
+      visible: ${output.s.chatUiExportTranscript}
+    commands:
+      - tapOn: ${output.s.chatUiExportTranscript}
+      - back
+- back
+- tapOn: ${output.s.chatUiSessionMenu}
+- assertNotVisible: ${output.s.chatUiExportTranscript}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "session-export"}'
+- assertTrue: ${output.fxr.count <= 1}

@@ -1,0 +1,298 @@
+# E2E-18 The phone's own server: start, crash recovery, stop, honest status
+# slice: 3   avd: A   fixtures: FX-OC2, FX-OC2-B   snapshot: flutter-linux
+# rows: B-NAV-041, B-LINUX-151, B-LINUX-152, B-LINUX-010, B-ANDR-008, B-ANDR-003, B-NAV-012, B-STATE-025, B-LINUX-240, B-LINUX-250, B-ANDR-025, B-LINUX-037
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-3, g3, linux]
+---
+- runScript: ../../runner/out/strings.js
+# flutter-linux: built-in Linux with OpenCode set up (E2E-17 done), its server running, FX-OC2 saved. No clearState.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+
+# S1 Settings > "This phone": the server is named "This phone" everywhere; two saved servers that read the same are
+#    told apart by port (and by secure/insecure when the host matches). [B-NAV-041]
+# S1 [B-NAV-041]
+- runFlow:
+    file: ../_sub/add-second-server.yaml
+    label: "S1 This phone by name, same-looking servers by port [B-NAV-041]"
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- assertVisible: ${output.c.phoneSetupProfileName}
+# FX-OC2 and FX-OC2-B share the host 10.0.2.2: each row names its port.
+- assertVisible: ${'.*:' + output.fx.serverAddress.split(':')[1] + '.*'}  # literal-ok: built from fixture data
+- assertVisible: ${'.*:' + output.fx.serverBAddress.split(':')[1] + '.*'}  # literal-ok: built from fixture data
+# UNIT-ONLY: same host and port told apart by secure/insecure (ServerLabel disambiguation test).
+- back
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- assertVisible: ${output.s.settingsV3ThisPhone}
+
+# S2 Stop the server from the page; kill and relaunch the app: it stays stopped when the person stopped it
+#    explicitly; with "restart on phone" off it stays stopped; with restart on and not explicitly stopped, opening
+#    the app starts it, waits for the first resume, and connects. [B-LINUX-151]
+# S2 [B-LINUX-151]
+- scrollUntilVisible:
+    element: ${output.s.thisPhoneStop}
+    label: "S2 a stop by the person sticks; otherwise opening starts it [B-LINUX-151]"
+- tapOn: ${output.s.thisPhoneStop}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerOff}
+    timeout: 60000
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- assertVisible: ${output.s.thisPhoneAnswerOff}
+- assertVisible: ${output.s.thisPhoneAnswerOffLine}
+# Start it, then end it without the person stopping it: opening the app starts it again.
+- tapOn: ${output.s.thisPhoneStart}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerRunning}
+    timeout: 60000
+# adb: kill-app-proc
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: kill-app-proc
+      ARGS: '{"match": "opencode"}'
+- stopApp
+- launchApp
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerRunning}
+    timeout: 60000
+# UNIT-ONLY: with "restart on phone" off it stays stopped; the start waits for the first resume
+#   (BuiltinAutostart tests; the setting has no visible switch on Flutter R).
+
+# S3 [adb] make the start fail fast once: the app tries once more then leaves the reason; a timeout is not retried;
+#    a crash restart counts against a budget but opening the app still starts a stopped server even past an
+#    exhausted budget. [B-LINUX-151]
+# S3 [B-LINUX-151]
+# NEEDS-HOOK: break-phone-server-start: make the next start of the in-app server exit at once (e.g. a bad port in its
+#   launch config), then undo it.
+- tapOn:
+    text: ${output.s.thisPhoneRestartRow}
+    label: "S3 a failed start is tried once more, then explained [B-LINUX-151]"
+- tapOn: ${output.s.thisPhoneAnswerRestartNow}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerStartFailed}
+    timeout: 60000
+- assertVisible: ${output.s.thisPhoneAnswerStartFailedLine}
+- tapOn: ${output.s.thisPhoneStartAgain}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerRunning}
+    timeout: 60000
+# UNIT-ONLY: exactly one retry, no retry after a timeout, the crash budget (BuiltinRestartPolicy tests).
+
+# S4 Start a hung server (accepts connections, never answers) and one that rejects our password: at launch each is
+#    replaced; a young booting one is waited for; a healthy server whose connect failed is simply reconnected.
+#    [B-LINUX-152]
+# S4 [B-LINUX-152]
+# NEEDS-HOOK: phone-server-impostor: run a listener on the in-app server's port inside Linux that accepts and never
+#   answers (then one that answers 401), before the app launches.
+- stopApp:
+    label: "S4 a hung or wrong server is replaced at launch [B-LINUX-152]"
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerRunning}
+    timeout: 60000
+# adb: ps-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: ps-count
+      ARGS: '{"match": "opencode"}'
+- assertTrue: ${output.hook.count >= 1}
+# UNIT-ONLY: a young booting server is waited for; a healthy one is only reconnected (BuiltinLaunchRecovery tests).
+
+# S5 [adb] `am force-stop` the app while the server and a conversation run: relaunch; the status says the app was
+#    stopped without claiming Android did it; the exit notice never says it is starting again when auto-restart is
+#    off; with it on, recovery restarts the server exactly once with one notice and no duplicate starts.
+#    [B-LINUX-010, B-ANDR-008]
+# S5 [B-LINUX-010, B-ANDR-008]
+- stopApp:
+    label: "S5 a force-stop is told honestly, one restart [B-LINUX-010, B-ANDR-008]"
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- assertNotVisible: ${output.s.thisPhoneAnswerAndroidClosed}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerRunning}
+    timeout: 60000
+# adb: ps-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: ps-count
+      ARGS: '{"match": "opencode"}'
+# Exactly one server process tree: no duplicate start.
+- assertTrue: ${output.hook.count >= 1 && output.hook.count <= 2}
+# adb: dumpsys-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: dumpsys-count
+      ARGS: '{"service": "notification", "match": "restart"}'
+- assertTrue: ${output.hook.count <= 1}
+# UNIT-ONLY: the exit notice wording with auto-restart off (BuiltinExitNotice test).
+
+# S6 Open the exit list in Diagnostics: entries read "Today", "Yesterday", then dates; only abnormal exits are marked
+#    as problems; a normal stop or an app update is silent; the newest first. [B-ANDR-003, B-NAV-012]
+# S6 [B-ANDR-003, B-NAV-012]
+- back:
+    label: "S6 the exit list reads Today, only problems marked [B-ANDR-003, B-NAV-012]"
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.e7SettingsUi88}
+- tapOn:
+    text: ${output.s.e7SettingsUi88}
+    index: 1
+- scrollUntilVisible:
+    element: ${output.s.diagnosticsExitHistoryTitle}
+- assertVisible: ${output.s.diagnosticsExitHistoryNote}
+# The force-stops above are user stops: routine, not problems.
+- assertVisible: ${output.rc.diagnosticsExitRoutine}
+- assertNotVisible: ${output.s.diagnosticsExitCrash}
+- tapOn: ${output.rc.diagnosticsExitShowAll}
+- assertVisible: ${output.rc.diagnosticsExitToday}
+- assertVisible: ${output.s.diagnosticsExitForceStop}
+# UNIT-ONLY: "Yesterday" and dated entries, newest first (ExitHistory formatting test; needs past exits).
+- back
+- back
+
+# S7 After a restart the recovery report waits for an authenticated health answer before claiming recovery; a
+#    stopped or uninstalled server is never probed; remote and deleted profiles are not checked. [B-STATE-025]
+# S7 [B-STATE-025]
+- tapOn:
+    text: ${output.s.settingsV3ThisPhone}
+    label: "S7 recovery is claimed only after a real answer [B-STATE-025]"
+- tapOn: ${output.s.thisPhoneRestartRow}
+- tapOn: ${output.s.thisPhoneAnswerRestartNow}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerRestarting}
+    timeout: 30000
+- assertNotVisible: ${output.s.thisPhoneAnswerRunning}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerRunning}
+    timeout: 60000
+# UNIT-ONLY: health is authenticated before "recovered"; stopped, uninstalled, remote and deleted profiles are never
+#   probed (RecoveryReport tests).
+
+# S8 [adb] kill the server process; open This phone: the server is shown stopped (not running from saved state);
+#    with the permission denied no command is sent; an unknown port is never scanned. [B-LINUX-240, B-LINUX-250]
+# S8 [B-LINUX-240, B-LINUX-250]
+# adb: kill-app-proc
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: kill-app-proc
+      ARGS: '{"match": "opencode"}'
+    label: "S8 a killed server reads stopped, not running [B-LINUX-240, B-LINUX-250]"
+- back
+- tapOn: ${output.s.settingsV3ThisPhone}
+- extendedWaitUntil:
+    visible: ${'(' + output.s.thisPhoneAnswerStoppedItself + '|' + output.s.thisPhoneAnswerRestarting + '|' + output.s.thisPhoneAnswerRestartsSoon + ')'}  # literal-ok: alternation of three strings
+    timeout: 60000
+- assertNotVisible: ${output.s.thisPhoneAnswerRunning}
+# UNIT-ONLY: with the permission denied no command is sent; an unknown port is never scanned (PhoneServerProbe tests).
+
+# S9 Start the in-app server for the first time: the app asks once about battery exemption and maker auto-start;
+#    refuse: after restart it remembers the refusal with a plain explanation; it does not ask again for other
+#    changes. [B-ANDR-025]
+# S9 [B-ANDR-025]
+# confirm: the flutter-linux snapshot is taken before these two questions were answered.
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerRunning}
+    timeout: 60000
+    label: "S9 battery and auto-start asked once, a no is remembered [B-ANDR-025]"
+- runFlow:
+    when:
+      visible: ${output.s.consentBatteryTitle}
+    commands:
+      - assertVisible: ${output.rc.consentBatteryBody}
+      - tapOn: ${output.s.consentNotNow}
+- runFlow:
+    when:
+      visible: ${output.s.consentMakerTitle}
+    commands:
+      - tapOn: ${output.s.consentNotNow}
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- assertNotVisible: ${output.s.consentBatteryTitle}
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.consentRowBattery}
+- tapOn:
+    text: ${output.s.consentRowBattery}
+    index: 1
+- assertVisible: ${output.s.consentValueDeclined}
+- assertVisible: ${output.s.consentWhyBattery}
+- back
+- back
+
+# S10 Tap Start on a server that is not running: the in-app server is recognised only with its address and Ubuntu
+#     installed; starting writes the password, starts the profile runtime and waits; cancelling the confirmation
+#     never starts it; kill the server process and the page reports that it exited; a refused start without
+#     details reads as one sentence. [B-LINUX-037]
+# S10 [B-LINUX-037]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S10 Start waits for the server; an exit is reported [B-LINUX-037]"
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.thisPhoneStop}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerOff}
+    timeout: 60000
+- tapOn: ${output.s.thisPhoneStart}
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerStarting}
+    timeout: 30000
+- extendedWaitUntil:
+    visible: ${output.s.thisPhoneAnswerRunning}
+    timeout: 60000
+# adb: kill-app-proc
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: kill-app-proc
+      ARGS: '{"match": "opencode"}'
+- extendedWaitUntil:
+    visible: ${'(' + output.s.thisPhoneAnswerStoppedItself + '|' + output.s.thisPhoneAnswerRestarting + ')'}  # literal-ok: alternation of two strings
+    timeout: 60000
+# UNIT-ONLY: recognised only with its address and Ubuntu installed; cancelling the confirmation never starts it;
+#   a refused start without details is one sentence (BuiltinServerControl tests).

@@ -1,0 +1,202 @@
+# E2E-20 Dev servers, ports, projects and processes on the phone
+# slice: 5   avd: A   fixtures: FX-OC2   snapshot: flutter-linux
+# rows: B-LINUX-016, B-LINUX-148, B-LINUX-087, B-LINUX-180, B-LINUX-143, B-LINUX-058, B-NAV-043, B-NAV-044
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-5, g5, project]
+---
+- runScript: ../../runner/out/strings.js
+# flutter-linux: built-in Linux with project app. Never clearState here.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+# Prepare the phone's projects (Needs): a package.json project, a Cargo.toml project, a hidden folder, a
+# node_modules folder, and python's http.server on 8123 started inside project web (its dev server).
+# confirm: the phone's projects folder is /root/projects inside Ubuntu (ProjectDevServer tests use that path).
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- scrollUntilVisible:
+    element: ${output.s.thisPhoneTerminal}
+- tapOn: ${output.s.thisPhoneTerminal}
+- extendedWaitUntil:
+    visible: ${output.s.localTerminalSemantics}
+    timeout: 60000
+- tapOn: ${output.s.localTerminalSemantics}
+- inputText: ${'cd /root/projects && mkdir -p ' + output.fx.linuxProjectNode + '/node_modules/deep ' + output.fx.linuxProjectRust + ' .hidden-e2e lone && echo {} > ' + output.fx.linuxProjectNode + '/package.json && touch ' + output.fx.linuxProjectRust + '/Cargo.toml lone.txt'}  # literal-ok: shell command built from fixture data
+- pressKey: Enter
+- inputText: ${'cd ' + output.fx.linuxProjectNode + ' && (python3 -m http.server ' + output.fx.devServerPort + ' > /tmp/e2e-http.log 2>&1 &) && cd ..'}  # literal-ok: shell command built from fixture data
+- pressKey: Enter
+- inputText: ${'(PORT=' + (parseInt(output.fx.devServerPort, 10) + 1) + ' sh -c "python3 -m http.server \\$PORT" > /tmp/e2e-port.log 2>&1 &)'}  # literal-ok: a server named only by the PORT variable
+- pressKey: Enter
+- back
+- back
+- back
+
+# S1 Project browser: lists folders with a git mark, sorted; hidden entries and files are hidden; navigate in and
+#    up to the root; on a fresh install without a projects folder it lists nothing; with the server stopped it
+#    works without starting Ubuntu. [B-LINUX-016]
+# S1 [B-LINUX-016]
+- tapOn:
+    text: ${output.s.chatsHomeAllProjects}
+    label: "S1 the folder browser lists only folders, sorted [B-LINUX-016]"
+- tapOn: ${output.s.chatsFilterOpenProject}
+- extendedWaitUntil:
+    visible: ${output.s.folderBrowserProjectsHere}
+    timeout: 30000
+- assertVisible: ${output.fx.projectApp}
+- assertVisible: ${output.fx.linuxProjectNode}
+- assertVisible:
+    text: ${output.fx.linuxProjectRust}
+    below: ${output.fx.linuxProjectNode}
+- assertVisible:
+    text: ${output.fx.linuxProjectNode}
+    below: ${output.fx.projectApp}
+- assertVisible: ${output.s.folderBrowserGit}
+- assertNotVisible: ".hidden-e2e"  # literal-ok: the hidden folder made above
+- assertNotVisible: "lone.txt"  # literal-ok: the file made above
+- tapOn: ${output.rc.folderBrowserShowInside}
+- tapOn: ${output.s.folderBrowserUp}
+- assertVisible: ${output.s.folderBrowserProjectsHere}
+# UNIT-ONLY: a fresh install without a projects folder lists nothing; with the server stopped the listing does not
+#   start Ubuntu (PhoneFolderBrowser tests).
+- back
+
+# S2 Project scan: a folder with a marker is a project of the right kind; code-marker repositories keep their kind
+#    and have git; Android, node_modules, hidden and build folders are skipped and never entered; five levels deep is
+#    the limit; links are not followed; the root itself is not a project. [B-LINUX-148]
+# S2 [B-LINUX-148]
+- tapOn:
+    text: ${output.s.chatsHomeAllProjects}
+    label: "S2 the scan finds marked projects, skips the rest [B-LINUX-148]"
+- assertVisible: ${output.fx.linuxProjectNode}
+- assertVisible: ${output.fx.linuxProjectRust}
+- assertVisible: ${output.s.phoneScanGit}
+- assertNotVisible: "node_modules"  # literal-ok: folder name that is never a project
+- assertNotVisible: "deep"  # literal-ok: folder inside node_modules, never entered
+- assertNotVisible: ".hidden-e2e"  # literal-ok: hidden folder made above
+# UNIT-ONLY: the kind of each project, the depth limit of five, links not followed, the root not a project
+#   (PhoneProjectScan tests).
+- back
+
+# S3 Settings > "Running on this phone": the python server on port 8123 appears even though Android hides socket
+#    tables; a server named only by the PORT variable appears with its log file offered. [B-LINUX-087]
+# S3 [B-LINUX-087]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S3 the python server and the PORT server are found [B-LINUX-087]"
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- scrollUntilVisible:
+    element: ${output.c.runningPhoneTitle}
+- tapOn: ${output.c.runningPhoneTitle}
+- extendedWaitUntil:
+    visible: ${output.s.runningPhoneTitle}
+    timeout: 30000
+- assertVisible: ${output.t.runningPhoneName.match(/python\{([^}]*)\}/)[1]}
+- back
+# The ports page names the port and the program behind it.
+- scrollUntilVisible:
+    element: ${output.c.linuxMgrRow}
+- tapOn: ${output.c.linuxMgrRow}
+- tapOn: ${output.s.linuxMgrPorts}
+- extendedWaitUntil:
+    visible: ${output.t.linuxMgrPortRow.replace('{port}', output.fx.devServerPort)}
+    timeout: 30000
+- assertVisible: ${output.t.linuxMgrPortRow.replace('{port}', String(parseInt(output.fx.devServerPort, 10) + 1))}
+# confirm: where the PORT server's log file is offered (a log action on its row).
+- tapOn: ${output.t.linuxMgrPortRow.replace('{port}', String(parseInt(output.fx.devServerPort, 10) + 1))}
+- assertVisible: ".*e2e-port\\.log.*"  # literal-ok: the log file the PORT server writes (made above)
+- back
+- back
+- back
+
+# S4 Rows use plain names for kernel process names and name a command by what it runs, not where it lives.
+#    Processes are grouped in a tree under their parent; there is no Stop on the server roots or the app.
+#    [B-LINUX-180, B-LINUX-143]
+# S4 [B-LINUX-180, B-LINUX-143]
+- tapOn:
+    text: ${output.c.runningPhoneTitle}
+    label: "S4 plain names, a tree, no Stop on roots [B-LINUX-180, B-LINUX-143]"
+- extendedWaitUntil:
+    visible: ${output.s.runningPhoneTitle}
+    timeout: 30000
+- assertVisible: ${output.t.runningPhoneGroup.match(/openCode\{([^}]*)\}/)[1]}
+- assertNotVisible: ".*/usr/bin/python3.*"  # literal-ok: a row never names the program by its path
+- tapOn: ${output.t.runningPhoneGroup.match(/openCode\{([^}]*)\}/)[1]}
+- assertVisible: ${output.s.runningPhoneServerRoot}
+- assertNotVisible: ${output.t.runningPhoneStopNamed.replace('{name}', output.t.runningPhoneGroup.match(/openCode\{([^}]*)\}/)[1])}
+- back
+# UNIT-ONLY: the parent/child grouping of every process (PhoneProcessTree test).
+
+# S5 In "Running on this phone" tap Stop on a server shell: the server is asked and the row disappears; stopping a
+#    program kills only that process; if the stop fails the row stays and says so. [B-LINUX-058]
+# S5 [B-LINUX-058]
+- tapOn:
+    text: ${output.t.runningPhoneName.match(/python\{([^}]*)\}/)[1]}
+    index: 0
+    label: "S5 stop one program, only it ends [B-LINUX-058]"
+- tapOn: ${output.rc.runningPhoneStopNamed}
+- tapOn: ${output.s.runningPhoneStop}
+- extendedWaitUntil:
+    visible: ${output.rc.runningPhoneStopped}
+    timeout: 30000
+# The other python program (the PORT server) still runs: only one process was stopped.
+- assertVisible: ${output.t.runningPhoneName.match(/python\{([^}]*)\}/)[1]}
+# UNIT-ONLY: a failed stop keeps the row and says so (RunningOnPhone stop-failure test).
+- back
+- back
+- back
+
+# S6 Project hub: the dev server line shows nothing when unknown, says a found server once and keeps it when a later
+#    look fails, treats a program listening inside the project as its dev server and ignores programs outside the
+#    project. [B-NAV-043]
+# S6 [B-NAV-043]
+# confirm: Flutter R shows the dev server line on the project's Terminal page; switch the project to web first.
+- tapOn:
+    text: ${output.s.shellTabFiles}
+    label: "S6 the dev server line follows the project [B-NAV-043]"
+- tapOn: ${output.s.e7LibrarySwitchProject}
+- tapOn: ${output.fx.linuxProjectNode}
+- tapOn: ${output.s.libraryTerminalTitle}
+- runFlow:
+    when:
+      visible: ${output.s.terminalScreenUsePhone}
+    commands:
+      - tapOn: ${output.s.terminalScreenUsePhone}
+# The PORT server listens outside project web (started from /root/projects) and does not count; the 8124 one was
+# stopped in S5, so the line names the server started inside web, if it still runs, or nothing.
+- assertNotVisible: ${output.s.terminalDevServerRunning + '.*' + String(parseInt(output.fx.devServerPort, 10) + 1)}  # literal-ok: built from strings and fixture data
+- back
+- tapOn: ${output.s.e7LibrarySwitchProject}
+- tapOn: ${output.fx.linuxProjectRust}
+- tapOn: ${output.s.libraryTerminalTitle}
+- assertNotVisible: ${output.s.terminalDevServerRunning}
+- back
+# UNIT-ONLY: said once, and kept when a later look fails (ProjectDevServer refresh test).
+
+# S7 Project hub rows follow the connected server, list tools in a fixed order, and each tool opens its existing
+#    screen. [B-NAV-044]
+# S7 [B-NAV-044]
+- assertVisible:
+    text: ${output.s.shellTabFiles}
+    label: "S7 hub tools in a fixed order, each opens its screen [B-NAV-044]"
+- assertVisible:
+    text: ${output.s.libraryTerminalTitle}
+    below: ${output.rc.filesMenuChanges}
+- assertVisible:
+    text: ${output.s.servicesTitle}
+    below: ${output.s.libraryTerminalTitle}
+- tapOn: ${output.rc.filesMenuChanges}
+- assertVisible: ${output.s.readerUiChanges}
+- back
+- tapOn: ${output.s.libraryTerminalTitle}
+- assertVisible: ${output.s.e7SetupNewTerminal}
+- back
+- tapOn: ${output.s.servicesTitle}
+- assertVisible: ${output.s.servicesTitle}
+- back

@@ -1,0 +1,328 @@
+# E2E-15 Git page, GitHub sign-in, remotes and undo
+# slice: 5   avd: A   fixtures: FX-OC2, FX-GH, FX-GIT   snapshot: flutter-linux
+# rows: B-NAV-020, B-NAV-023, B-NAV-021, B-SEC-084, B-BUILD-014, B-CHAT-099, B-CHAT-120
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-5, g5, project]
+---
+- runScript: ../../runner/out/strings.js
+# flutter-linux: connected to FX-OC2, whose project app is a Git repository with origin = the FX-GIT bare repo and
+# project other is not a repository. Never clearState here.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+
+# S1 Open a project that is not a repository: the Git page says so as a view (not an error). Open `app`: see
+#    loading, then ready; actions show busy while running; one action at a time; a failed refresh keeps the last
+#    snapshot. [B-NAV-020]
+# S1 [B-NAV-020]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectOther}
+    label: "S1 a folder without Git is a calm view [B-NAV-020]"
+# confirm: the conversation header carries the Git chip; with no branch its label is the plain one.
+- tapOn: ${output.c.gitSheetChipSemanticsPlain}
+- extendedWaitUntil:
+    visible: ${output.s.gitNotRepositoryTitle}
+    timeout: 30000
+- assertVisible: ${output.s.gitNotRepositoryBody}
+- assertNotVisible: ${output.s.gitProblemNotARepository}
+- back
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- tapOn: ${output.rc.gitSheetChipSemantics}
+# Loading, then ready (the clean or changed state of the repository).
+- extendedWaitUntil:
+    visible: ${output.s.gitSaveChanges}
+    timeout: 30000
+# A refresh shows its busy words while it runs.
+- tapOn: ${output.s.gitActionRefresh}
+- extendedWaitUntil:
+    visible: ${output.s.gitSaveChanges}
+    timeout: 30000
+# UNIT-ONLY: one action at a time (a second tap while busy is ignored) - GitController serial-lane test.
+# A failed refresh keeps the last snapshot.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: refuse-endpoint
+      ARGS: '{"path": "/api/shell"}'
+- tapOn: ${output.s.gitActionRefresh}
+- extendedWaitUntil:
+    visible: ${output.s.gitCheckFailed}
+    timeout: 30000
+- assertVisible: ${output.s.gitSaveChanges}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: restore
+- back
+
+# S2 Open a conversation in `app`: the header chip names the branch once; start a conversation in a different
+#    project: the chip rebinds; reopen the first chat: the branch shows from the first frame. [B-NAV-023]
+# S2 [B-NAV-023]
+- assertVisible:
+    text: ${output.t.gitSheetChipSemantics.replace('{branch}', 'main')}  # literal-ok: fixture fact gitBranch (request)
+    label: "S2 the chip names the branch once [B-NAV-023]"
+- assertNotVisible: ${'(?s).*' + 'main' + '.*' + 'main' + '.*'}  # literal-ok: fixture fact gitBranch (request); built from fixture data (branch named twice)
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectOther}
+- assertVisible: ${output.c.gitSheetChipSemanticsPlain}
+- back
+# The first conversation is the newest of project app in the list.
+- tapOn: ${output.c.chatsHomeToday}
+- assertVisible: ${output.t.gitSheetChipSemantics.replace('{branch}', 'main')}  # literal-ok: fixture fact gitBranch (request)
+
+# S3 Edit a file via the agent, open Git, type a message under "Describe what changed" and use "save and send" in
+#    one tap: it saves, then sends, then reads once; a failed save stops there; a failed send keeps the save and
+#    says so. [B-NAV-021]
+# S3 [B-NAV-021]
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "e2e:files-edit"  # literal-ok: stub-model magic prompt
+    label: "S3 save and send in one tap [B-NAV-021]"
+- extendedWaitUntil:
+    visible: ${output.rc.filesMenuChanges}
+    timeout: 60000
+- tapOn: ${output.rc.gitSheetChipSemantics}
+- tapOn: ${output.s.gitCommitMessageHint}
+- inputText: "e2e save one"  # literal-ok: commit message typed by the person
+- hideKeyboard
+- tapOn: ${output.rc.gitSaveAndSendTo}
+- extendedWaitUntil:
+    visible: ${output.rc.gitDoneSavedAndSent}
+    timeout: 60000
+- assertVisible: ${output.s.gitStateUpToDate}
+# A failed send keeps the save and says so.
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "e2e:files-edit"  # literal-ok: stub-model magic prompt
+- extendedWaitUntil:
+    visible: ${output.rc.filesMenuChanges}
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-GIT
+      ACTION: reject-push
+- tapOn: ${output.rc.gitSheetChipSemantics}
+- tapOn: ${output.s.gitCommitMessageHint}
+- inputText: "e2e save two"  # literal-ok: commit message typed by the person
+- hideKeyboard
+- tapOn: ${output.rc.gitSaveAndSendTo}
+- extendedWaitUntil:
+    visible: ${output.rc.gitSavedNotSent}
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-GIT
+      ACTION: restore
+# UNIT-ONLY: save -> send -> one read, and a failed save stops before sending (GitController save-and-send test).
+
+# S4 Tap "Sign in to GitHub": the device code and the verification link appear; [fx] approve in the stub; the
+#    account shows; push works. Cancel in the middle and approve late: the late token is ignored. A failed attempt
+#    says why and stores nothing. Make the stub reject the token: the account signs out. [B-SEC-084]
+# S4 [B-SEC-084]
+# SUSPECTED-GAP: Flutter R hard-codes github.com/login/device/code; FX-GH is reached only through the native
+#   stableQa githubBaseUrl override (a -qa companion). On Flutter R this step is expected to fail.
+- scrollUntilVisible:
+    element: ${output.s.gitHubSignIn}
+    label: "S4 GitHub device sign-in, cancel, deny, revoke [B-SEC-084]"
+- tapOn: ${output.s.gitHubSignIn}
+- extendedWaitUntil:
+    visible: ${output.s.gitHubEnterCode}
+    timeout: 30000
+- assertVisible: ${output.s.gitHubOpenGitHub}
+- assertVisible: ${output.s.gitHubCopyCode}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-GH
+      ACTION: approve
+- extendedWaitUntil:
+    visible: ${output.rc.gitHubSignedInAs}
+    timeout: 30000
+- tapOn: ${output.rc.gitSendSavesTo}
+- extendedWaitUntil:
+    visible: ${output.s.gitDonePushed}
+    timeout: 60000
+# Sign out, start again, cancel in the middle, then the stub approves late: still signed out.
+- tapOn: ${output.s.gitHubSignOut}
+- tapOn: ${output.s.gitHubSignOutConfirm}
+- tapOn: ${output.s.gitHubSignIn}
+- extendedWaitUntil:
+    visible: ${output.s.gitHubEnterCode}
+    timeout: 30000
+- tapOn: ${output.s.gitHubCancel}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-GH
+      ACTION: approve
+- assertVisible: ${output.s.gitHubSignIn}
+- assertNotVisible: ${output.rc.gitHubSignedInAs}
+# A denied attempt says why and stores nothing.
+- tapOn: ${output.s.gitHubSignIn}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-GH
+      ACTION: deny
+- extendedWaitUntil:
+    visible: ${output.s.gitHubProblemDenied}
+    timeout: 30000
+- assertNotVisible: ${output.rc.gitHubSignedInAs}
+# Signed in again, then the stub rejects the token: the account signs out.
+- tapOn: ${output.s.gitHubSignIn}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-GH
+      ACTION: approve
+- extendedWaitUntil:
+    visible: ${output.rc.gitHubSignedInAs}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-GH
+      ACTION: revoke-token
+- tapOn: ${output.s.gitActionRefresh}
+- extendedWaitUntil:
+    visible: ${output.s.gitHubSignIn}
+    timeout: 60000
+- assertNotVisible: ${output.rc.gitHubSignedInAs}
+
+# S5 Add a remote: a name or address with shell metacharacters is refused before anything runs; adding shows it and
+#    refuses a duplicate; a remote with credentials in its address is listed without them; clone puts the project
+#    beside this one and refuses a taken folder. [B-BUILD-014]
+# S5 [B-BUILD-014]
+- scrollUntilVisible:
+    element: ${output.s.gitMoreLabel}
+    label: "S5 remotes and clone refuse bad input [B-BUILD-014]"
+- tapOn: ${output.s.gitMoreLabel}
+- tapOn: ${output.s.gitRemotesRow}
+- tapOn: ${output.s.gitActionAddRemote}
+- tapOn: ${output.s.gitRemoteNameLabel}
+- inputText: "up;touch x"  # literal-ok: a remote name with a shell metacharacter
+- tapOn: ${output.s.gitRemoteAddressLabel}
+- inputText: ${'http://10.0.2.2:8702/app.git'}  # literal-ok: fixture fact gitRemoteUrl (request)
+- hideKeyboard
+- tapOn: ${output.s.gitActionAddRemote}
+- assertVisible: ${output.s.gitProblemInvalidRemoteName}
+# UNIT-ONLY: nothing ran on the server before the refusal (GitRemoteInput validation test; FX-OC2 shell log empty).
+- eraseText: 20
+- tapOn: ${output.s.gitRemoteNameLabel}
+- eraseText: 20
+- inputText: "backup"  # literal-ok: a new remote name
+- tapOn: ${output.s.gitRemoteAddressLabel}
+- eraseText: 80
+- inputText: ${'http://10.0.2.2:8702/app.git'.replace('://', '://e2e:pw@')}  # literal-ok: fixture fact gitRemoteUrl (request)
+- hideKeyboard
+- tapOn: ${output.s.gitActionAddRemote}
+- assertVisible: ${output.s.gitProblemRemoteAddressHasPassword}
+- tapOn: ${output.s.gitRemoteAddressLabel}
+- eraseText: 120
+- inputText: ${'http://10.0.2.2:8702/app.git'}  # literal-ok: fixture fact gitRemoteUrl (request)
+- hideKeyboard
+- tapOn: ${output.s.gitActionAddRemote}
+- extendedWaitUntil:
+    visible: ${output.s.gitDoneRemoteAdded}
+    timeout: 30000
+- assertVisible: "backup"  # literal-ok: the remote just added
+# A duplicate name is refused.
+- tapOn: ${output.s.gitActionAddRemote}
+- tapOn: ${output.s.gitRemoteNameLabel}
+- inputText: "backup"  # literal-ok: the same remote name again
+- tapOn: ${output.s.gitRemoteAddressLabel}
+- inputText: ${'http://10.0.2.2:8702/app.git'}  # literal-ok: fixture fact gitRemoteUrl (request)
+- hideKeyboard
+- tapOn: ${output.s.gitActionAddRemote}
+- assertVisible: ${output.s.gitProblemRemoteExists}
+- back
+# The fixture's own remote "mirror" was configured with user:password in its URL: listed without them.
+- assertNotVisible: ".*:[^/@]*@.*"  # literal-ok: no user:password@ in any listed remote address
+- back
+# Clone: a taken folder is refused, a new one lands beside this project.
+- tapOn: ${output.s.gitCloneRow}
+- tapOn: ${output.s.gitCloneAddressLabel}
+- inputText: ${'http://10.0.2.2:8702/app.git'}  # literal-ok: fixture fact gitRemoteUrl (request)
+- tapOn: ${output.s.gitCloneFolderLabel}
+- eraseText: 40
+- inputText: ${output.fx.projectOther}
+- hideKeyboard
+- tapOn: ${output.s.gitCloneButton}
+- assertVisible: ${output.s.gitProblemFolderExists}
+- tapOn: ${output.s.gitCloneFolderLabel}
+- eraseText: 40
+- inputText: "app-clone"  # literal-ok: a free folder name beside the project
+- hideKeyboard
+- tapOn: ${output.s.gitCloneButton}
+- extendedWaitUntil:
+    visible: ${output.rc.gitDoneCloned}
+    timeout: 60000
+- back
+- back
+
+# S6 In a conversation, comment on lines of a diff (Review): the references appear in the composer as structured
+#    quotes; ten at most; a long snippet is truncated with a notice. [B-CHAT-099]
+# S6 [B-CHAT-099]
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "e2e:files-edit"  # literal-ok: stub-model magic prompt
+    label: "S6 a review comment becomes a quote in the composer [B-CHAT-099]"
+- extendedWaitUntil:
+    visible: ${output.rc.filesMenuChanges}
+    timeout: 60000
+- tapOn: ${output.rc.filesMenuChanges}
+# confirm: the changes list opens the Review workspace; a diff line is selected by tapping it.
+- tapOn: ${'.*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- tapOn: ${output.rc.kitDiffLineAdded}
+- tapOn: ${output.s.kitDiffComment}
+- tapOn: ${output.s.reviewWorkspaceCommentLabel}
+- inputText: "check this line"  # literal-ok: review comment typed by the person
+- hideKeyboard
+- tapOn: ${output.s.reviewWorkspaceAddComment}
+- extendedWaitUntil:
+    visible: ${output.s.chatUiReviewCommentAddedToThePrompt}
+    timeout: 15000
+- tapOn: ${output.s.reviewWorkspaceBackToChat}
+- assertVisible: ${'.*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- assertVisible: "check this line"  # literal-ok: the comment now quoted in the composer
+# UNIT-ONLY: at most ten quotes; a long snippet is cut with a notice (ReviewQuote composer test).
+
+# S7 Tap "Undo from here" on a prompt: it lists the files the agent edited, once each; on a server that undoes
+#    directly it works at once, on a staged-undo server it goes through the staging sheet. [B-CHAT-120]
+# S7 [B-CHAT-120]
+- longPressOn:
+    text: "e2e:files-edit"  # literal-ok: the prompt sent above
+    index: 0
+    label: "S7 undo from a prompt lists edited files once [B-CHAT-120]"
+- tapOn: ${output.s.revertFromHere}
+- extendedWaitUntil:
+    visible: ${output.s.reviewRevertSheetTitle}
+    timeout: 30000
+- assertVisible: ${'.*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- assertNotVisible: ${'(?s).*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*' + output.fx.fileNotes.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data (no file listed twice)
+# FX-OC2 is a staged-undo server: the staging sheet decides.
+- tapOn: ${output.s.revertReview}
+- extendedWaitUntil:
+    visible: ${output.s.revertStaged}
+    timeout: 30000
+- tapOn: ${output.s.revertClearAction}
+# UNIT-ONLY: a server that undoes directly applies it at once (RevertController direct-mode test).

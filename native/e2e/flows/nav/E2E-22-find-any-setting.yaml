@@ -1,0 +1,251 @@
+# E2E-22 Find any setting: search, groups, per-server pages
+# slice: 4   avd: A, T, AR   fixtures: FX-OC2, FX-OC2-B   snapshot: base
+# rows: B-NAV-068, B-NAV-069, B-NAV-071, B-NAV-072, B-NAV-070, B-NAV-073, B-NAV-057, B-NAV-059, B-NAV-058, B-NAV-081, B-NAV-050
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-4, g4, nav]
+---
+- runScript: ../../runner/out/strings.js
+
+# Arabic and tablet: the runner repeats this file on AVD-AR with --lang ar (every output.* selector switches to the
+# Arabic ARB) and on AVD-T; the steps below are the same in each.
+- runFlow: ../_sub/connect-fx-oc2.yaml
+
+# S1 Settings with one server: see one list of groups. Add a second server: see per-server pages with rows lined up,
+#    overrides shown, a way back, and a server page that keeps to its own server. [B-NAV-068]
+# S1 [B-NAV-068]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S1 one server: one list; two servers: per-server pages [B-NAV-068]"
+- assertVisible: ${output.s.settingsHubGroupNotifications}
+- assertNotVisible: ${output.s.settingsV3ByServer}
+- back
+- runFlow: ../_sub/add-second-server.yaml
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ByServer}
+- assertVisible: ${output.rc.settingsV3ServersCount}
+# The server page of FX-OC2-B: its own rows, overrides marked, a way back.
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+# confirm: a saved server row shows its address; tapping it opens that server's settings page
+- tapOn: ${'(?s).*' + output.fx.serverBAddress.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- extendedWaitUntil:
+    visible: ${output.s.settingsV3UseMyDefault}
+    timeout: 15000
+- assertVisible: ${output.s.settingsV3Watch}
+- assertVisible: ${output.s.settingsV3ShareRead}
+- assertNotVisible: ${'(?s).*' + output.fx.serverAddress.replace(/\./g, '\\.') + '.*'}  # literal-ok: the page keeps to server B
+
+# S2 On a server page change two values, then tap "Use my default": every difference the page shows resets, including
+#    read sharing. [B-NAV-069]
+# S2 [B-NAV-069]
+- tapOn:
+    text: ${output.s.settingsV3Watch}
+    label: "S2 Use my default resets every difference, read sharing too [B-NAV-069]"
+- tapOn: ${output.s.settingsV3ShareRead}
+- extendedWaitUntil:
+    visible: ${output.s.settingsV3DifferentHere}
+    timeout: 15000
+- tapOn: ${output.s.settingsV3UseMyDefault}
+- runFlow:
+    when:
+      visible: ${output.rc.settingsV3UseMyDefaultDetail}
+    commands:
+      - tapOn:
+          text: ${output.s.settingsV3UseMyDefault}
+          below: ${output.rc.settingsV3UseMyDefaultDetail}
+- extendedWaitUntil:
+    visible: ${output.rc.settingsV3UseMyDefaultDone}
+    timeout: 15000
+- assertNotVisible: ${output.s.settingsV3DifferentHere}
+- back
+- back
+
+# S3 Tap "Search settings" and type: `backg` (prefix) finds Background; `notifcations` (typo) and `notifiactions`
+#    (swapped letters) find Notifications; `الإشعارات` finds the same row and a mixed query such as
+#    `notifications إشعارات` still works; a literal match ranks above a fuzzy one and equal matches keep their order; a
+#    word from the acceptance wording of a row (for example "alerts") finds it; legacy aliases from earlier versions
+#    still work. [B-NAV-071]
+# S3 [B-NAV-071]
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: backg
+    label: "S3 prefix, typo, swapped letters, Arabic, mixed and acceptance words [B-NAV-071]"
+- assertVisible: ${output.s.settingsV3Background}
+- tapOn: ${output.s.settingsHubSearch}
+- eraseText: 30
+- inputText: notifcations
+- hideKeyboard
+- assertVisible: ${output.s.settingsV3Notifications}
+- tapOn: ${output.s.settingsHubSearch}
+- eraseText: 30
+- inputText: notifiactions
+- hideKeyboard
+- assertVisible: ${output.s.settingsV3Notifications}
+# Arabic through the clipboard (Maestro inputText is ASCII-only on Android).
+- tapOn: ${output.s.settingsHubSearch}
+- eraseText: 30
+- setClipboard:
+    text: الإشعارات  # literal-ok: the catalog's Arabic query
+- pasteText
+- hideKeyboard
+- assertVisible: ${output.s.settingsV3Notifications}
+- tapOn: ${output.s.settingsHubSearch}
+- eraseText: 30
+- setClipboard:
+    text: notifications إشعارات  # literal-ok: the catalog's mixed query
+- pasteText
+- hideKeyboard
+- assertVisible: ${output.s.settingsV3Notifications}
+# A word from a row's acceptance wording.
+- tapOn: ${output.s.settingsHubSearch}
+- eraseText: 30
+- inputText: alerts
+- hideKeyboard
+- assertVisible: ${output.s.settingsV3Notifications}
+# A legacy alias.
+- tapOn: ${output.s.settingsHubSearch}
+- eraseText: 30
+- inputText: debug
+- hideKeyboard
+- assertVisible: ${output.s.e7LibraryReportABug}
+# UNIT-ONLY: literal above fuzzy and stable order for equal matches (SearchIndex ranking unit tests).
+
+# S4 Search for features this phone lacks (a desktop-only row): not listed; `crash` still opens diagnostics; no alias
+#    leads to a dead end. [B-NAV-072]
+# S4 [B-NAV-072]
+- tapOn:
+    text: ${output.s.settingsHubSearch}
+    label: "S4 desktop-only rows hidden; crash opens diagnostics [B-NAV-072]"
+- eraseText: 30
+- inputText: keyboard shortcuts
+- hideKeyboard
+- assertNotVisible: ${output.s.e7LibraryKeyboardShortcuts}
+- assertNotVisible: ${output.s.e7LocaleUiKeyboardShortcuts}
+- tapOn: ${output.s.settingsHubSearch}
+- eraseText: 30
+- inputText: crash
+- hideKeyboard
+- tapOn: ${output.s.e7LibraryReportABug}
+- extendedWaitUntil:
+    visible: ${output.c.reportProblemPrivacy}
+    timeout: 15000
+- back
+# UNIT-ONLY: no alias leads to a dead end (every SearchEntry's open() resolves; search_index unit test).
+
+# S5 Tap a result: the page opens, scrolls to the row and highlights it; repeat in Arabic and in a tablet-size window.
+#    [B-NAV-070, B-NAV-073]
+# S5 [B-NAV-070, B-NAV-073]
+- tapOn:
+    text: ${output.s.settingsHubSearch}
+    label: "S5 a result opens its page at the row [B-NAV-070, B-NAV-073]"
+- eraseText: 30
+- inputText: keep running
+- hideKeyboard
+- tapOn: ${output.s.e7SettingsUi25}
+- extendedWaitUntil:
+    visible: ${output.s.e7SettingsUi26}
+    timeout: 15000
+- assertVisible: ${output.s.e7SettingsUi25}
+# UNIT-ONLY: the highlight itself (a decoration Maestro cannot read).
+# Arabic and tablet: the runner's --lang ar on AVD-AR and the AVD-T run repeat this step unchanged.
+- back
+- back
+
+# S6 Open the global search / command palette (desktop shortcut or in-app search): every screen and tab is found by its
+#    title; each result names the page that holds it; a title match ranks above a keyword match. [B-NAV-057,
+#    B-NAV-059]
+# S6 [B-NAV-057, B-NAV-059]
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 15000
+    label: "S6 in-app search finds screens and names their page [B-NAV-057, B-NAV-059]"
+# confirm: the in-app search entry on Conversations (KitTopBar search, tooltip "Search")
+- tapOn: ${output.s.kitTopBarSearch}
+- inputText: terminal
+- hideKeyboard
+- assertVisible: ${output.s.libraryTerminalTitle}
+- assertVisible: ${output.rc.discoverSearchIn}
+# UNIT-ONLY: a title match ranks above a keyword match.
+- back
+
+# S7 On the in-app Linux server search "phone": one "Running on this phone" result; on a backend without catalog or
+#    project tools those results are absent; OpenCode 2 keeps the catalog; AI setup is found by name when shared.
+#    [B-NAV-058]
+# S7 [B-NAV-058]
+# SUSPECTED-GAP: the in-app Linux server needs the flutter-linux snapshot; on FX-OC2 the phone result is absent.
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S7 per-backend results: phone, catalog, AI setup [B-NAV-058]"
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: phone
+- assertVisible: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsHubSearch}
+- eraseText: 30
+- inputText: ai setup
+- hideKeyboard
+- assertVisible: ${output.s.aiSetupTitle}
+- back
+
+# S8 On a server that cannot serve a tile, health section, git init or settings row: it is hidden; on OpenCode 1 the
+#    v2-only features are hidden. [B-NAV-081]
+# S8 [B-NAV-081]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: set-capabilities
+      ARGS: '{"without": ["health", "git-init", "config-read"]}'
+    label: "S8 rows a server cannot serve are hidden [B-NAV-081]"
+- runFlow: ../_sub/restart-app.yaml
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- tapOn: ${'(?s).*' + output.fx.serverBAddress.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- assertNotVisible: ${output.s.e7SettingsUi57}
+- assertNotVisible: ${output.s.aiSetupTitle}
+- runFlow:
+    when:
+      visible: ${output.rc.settingsHubUnavailableCount}
+    commands:
+      - tapOn: ${output.s.settingsHubUnavailableWhy}
+      - extendedWaitUntil:
+          visible: ${output.s.capabilityScreenTitle}
+          timeout: 15000
+      - back
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: set-capabilities
+      ARGS: '{"without": []}'
+- back
+- back
+# UNIT-ONLY: OpenCode 1 hides the v2-only features (no OpenCode 1 profile in this flow's fixtures).
+
+# S9 Search "background checks": it lands where each server's checks live; the profile monitor no longer has a
+#    Background checks line; the Changes count shows on the project hub; the background notification line is plain
+#    and short. [B-NAV-050]
+# S9 [B-NAV-050]
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: background checks
+    label: "S9 background checks land on each server's watch rows [B-NAV-050]"
+- tapOn: ${output.s.notifySectionServers}
+- extendedWaitUntil:
+    visible: ${output.s.notifySectionServers}
+    timeout: 15000
+- back
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- tapOn: ${'(?s).*' + output.fx.serverBAddress.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- assertNotVisible: ${output.s.monitorBackgroundChecks}
+# UNIT-ONLY: the Changes count on the project hub and the short background notification line.

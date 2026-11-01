@@ -1,0 +1,378 @@
+# E2E-07 Answer from the notification shade
+# slice: 4   avd: A   fixtures: FX-OC2   snapshot: base
+# rows: B-SEC-105, B-AGENT-031, B-CHAT-074, B-AGENT-032, B-ANDR-038, B-PROTO-046, B-CHAT-076, B-CHAT-037
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-4, g4, surfaces]
+---
+- runScript: ../../runner/out/strings.js
+
+# Setup: connected to FX-OC2, notifications allowed, the live connection on so asks reach the shade with the app away.
+- runFlow: ../_sub/connect-fx-oc2.yaml
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: keep running
+- tapOn: ${output.s.e7SettingsUi25}
+- tapOn: ${output.s.e7SettingsUi25}
+- extendedWaitUntil:
+    visible: ${output.s.e7SettingsUi32}
+    timeout: 30000
+- back
+- back
+# Notification copy (Kotlin, follows the app language): "Edit notes.txt?", "<agent> has a question for you".
+- evalScript: ${output.askEditNotes = '(?s).*' + output.s.android_native_ask_edit.replace('%1\\$s', output.fx.fileNotes.replace('.', '\\.')) + '.*'}
+- evalScript: ${output.askQuestion = '(?s).*' + output.s.android_native_alert_question_title.replace('%1\\$s', '.*') + '.*'}
+- evalScript: ${output.askRun = '(?s).*' + output.s.android_native_ask_run.replace('%1\\$s', '.*') + '.*'}
+
+# S1 Send `e2e:ask-edit`, press Home. Open the shade. see one notification naming the program/sub-command or the
+#    file with the right verb ("edit notes.txt"), subtitle `<server> · <project>`; no secret from a command appears in
+#    the title or body. [B-SEC-105]
+# S1 [B-SEC-105]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S1 open a conversation in app [B-SEC-105]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.askEditNotes}
+    timeout: 30000
+# Subtitle "<server> · <project>": the project name rides after the middle dot.
+- assertVisible: ${'(?s).*· ' + output.fx.projectApp + '.*'}  # literal-ok: built from fixture data
+- assertNotVisible: ${output.fx.secretKey}
+- assertVisible: ${output.s.android_native_allow_once}
+- assertVisible: ${output.s.android_native_reject}
+# "Always allow" is never offered from a notification.
+- assertNotVisible: ${output.s.chatUiAlwaysAllow}
+
+# S2 Tap "Allow once" in the shade: the exact pending request is approved, once; open the app and see the card
+#    settled. Repeat with "Deny": rejected without a durable grant. Tap the in-app button and the notification button at
+#    the same instant ([adb] two taps in parallel): exactly one reply reaches the server and the first decision wins.
+#    [B-AGENT-031, B-CHAT-074]
+# S2 [B-AGENT-031, B-CHAT-074]
+- tapOn:
+    text: ${output.s.android_native_allow_once}
+    label: "S2 allow once from the shade [B-AGENT-031, B-CHAT-074]"
+- runFlow: ../_sub/close-shade.yaml
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatRequestAnswerAllowed}
+    timeout: 30000
+- assertNotVisible: ${output.s.kitRequestAllowOnce}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "permission-reply"}'
+- assertTrue: ${output.fxr.count == 1 && output.fxr.last.reply == 'once'}
+# Deny: the shade's "Reject" button (the app's wording for deny).
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.askEditNotes}
+    timeout: 30000
+- tapOn: ${output.s.android_native_reject}
+- runFlow: ../_sub/close-shade.yaml
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatRequestAnswerRejected}
+    timeout: 30000
+- assertNotVisible: ${output.s.chatRequestAlwaysOn}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "permission-reply"}'
+- assertTrue: ${output.fxr.count == 2 && output.fxr.last.reply == 'reject' && !output.fxr.durableGrants}
+# Race: in-app button and shade button for the same ask.
+# NEEDS-HOOK: parallel-tap: tap the in-app "Allow once" and the shade "Allow once" at the same instant
+# Sequential fallback: the shade decision first, then the in-app card; still exactly one reply.
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.askEditNotes}
+    timeout: 30000
+- tapOn: ${output.s.android_native_reject}
+- runFlow: ../_sub/close-shade.yaml
+- launchApp
+- runFlow:
+    when:
+      visible: ${output.s.kitRequestAllowOnce}
+    commands:
+      - tapOn: ${output.s.kitRequestAllowOnce}
+- extendedWaitUntil:
+    visible: ${output.s.chatRequestAnswerRejected}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "permission-reply"}'
+- assertTrue: ${output.fxr.count == 3 && output.fxr.last.reply == 'reject'}
+
+# S3 Send `e2e:question` (one free-text question): the notification offers a reply field; type an answer and send;
+#    the question is answered and the chat shows it. An empty reply is refused before any request. For `e2e:choice`
+#    (3 short options) see three option buttons that answer with their label; for `e2e:choice4` (4 options) see only
+#    an Open action. A choice-only question never offers the reply field. [B-AGENT-032, B-ANDR-038]
+# S3 [B-AGENT-032, B-ANDR-038]
+# SUSPECTED-GAP: Flutter R's question alert carries only Open (StatusNotificationModel.kt AlertButtons.plan
+#   "question" -> OPEN); no RemoteInput reply field and no option buttons.
+# confirm: the reply action label in the shade (x_widget_reply "Reply" is the app's own word for it).
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:question
+    label: "S3 free-text question answered from the shade [B-AGENT-032, B-ANDR-038]"
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAnswer}
+    timeout: 30000
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.askQuestion}
+    timeout: 30000
+# Empty reply: refused before any request.
+- tapOn: ${output.s.x_widget_reply}
+- pressKey: Enter
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "question-reply"}'
+- assertTrue: ${output.fxr.count == 0}
+- tapOn: ${output.s.x_widget_reply}
+- inputText: blue sky
+- pressKey: Enter
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "question-reply"}'
+- assertTrue: ${output.fxr.count == 1 && output.fxr.last.answer == 'blue sky'}
+- runFlow: ../_sub/close-shade.yaml
+- launchApp
+- extendedWaitUntil:
+    visible: ${'(?s).*blue sky.*'}  # literal-ok: the answer typed above
+    timeout: 30000
+# Three short options: three buttons answering with their label, never a reply field.
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:choice
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAnswer}
+    timeout: 30000
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.askQuestion}
+    timeout: 30000
+# literal-ok: fixture fact choiceOption1 (request): stub-model e2e:choice options are Red, Green, Blue
+- assertVisible: Red
+# literal-ok: fixture fact choiceOption2 (request)
+- assertVisible: Green
+# literal-ok: fixture fact choiceOption3 (request)
+- assertVisible: Blue
+- assertNotVisible: ${output.s.x_widget_reply}
+# literal-ok: fixture fact choiceOption2 (request)
+- tapOn: Green
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "question-reply"}'
+- assertTrue: ${output.fxr.count == 2 && output.fxr.last.answer == 'Green'}
+- runFlow: ../_sub/close-shade.yaml
+# Four options: only Open.
+- launchApp
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:choice4
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAnswer}
+    timeout: 30000
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.askQuestion}
+    timeout: 30000
+- assertVisible: ${output.s.android_native_open}
+- assertNotVisible: ${output.s.x_widget_reply}
+# literal-ok: fixture fact choiceOption1 (request)
+- assertNotVisible: Red
+- runFlow: ../_sub/close-shade.yaml
+- launchApp
+# Answer the 4-option question in the app so it does not hold later steps.
+# literal-ok: fixture fact choice4Option1 (request): stub-model e2e:choice4 first option is One
+- tapOn: One
+- runFlow:
+    when:
+      visible: ${output.s.kitRequestSendAnswers}
+    commands:
+      - tapOn: ${output.s.kitRequestSendAnswers}
+
+# S4 On OpenCode 2, reply on a permission ask with text: the request is rejected with that message on that exact
+#    request. If the request id is stale (answered elsewhere first), the notification refreshes instead of resolving a
+#    different request. [B-PROTO-046]
+# S4 [B-PROTO-046]
+# SUSPECTED-GAP: Flutter R offers no reply field on a permission alert (Allow once / Reject only).
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell git push
+    label: "S4 reject a permission with a message [B-PROTO-046]"
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.askRun}
+    timeout: 30000
+- tapOn: ${output.s.x_widget_reply}
+- inputText: use git status instead
+- pressKey: Enter
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "permission-reply"}'
+- assertTrue: ${output.fxr.last.reply == 'reject' && output.fxr.last.message == 'use git status instead' && output.fxr.last.sameRequest}
+- runFlow: ../_sub/close-shade.yaml
+# Stale id: the server answers first, the shade's Allow refreshes the alert instead of resolving another request.
+- launchApp
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell ls
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.askEditNotes}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: answer-pending
+      ARGS: '{"match": "notes.txt", "reply": "once"}'
+- tapOn: ${output.s.android_native_allow_once}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "permission-reply"}'
+- assertTrue: ${output.fxr.wrongTarget == 0}
+- assertNotVisible: ${output.askEditNotes}
+- runFlow: ../_sub/close-shade.yaml
+
+# S5 Answer an ask in the app; the notification for it disappears. Answer one on the server after it timed out: the
+#    notification Allow is handled with no error. [B-CHAT-076]
+# S5 [B-CHAT-076]
+- launchApp:
+    label: "S5 answered in the app clears the shade [B-CHAT-076]"
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.askRun}
+    timeout: 30000
+- runFlow: ../_sub/close-shade.yaml
+- launchApp
+- tapOn: ${output.s.kitRequestAllowOnce}
+- runFlow: ../_sub/open-shade.yaml
+- assertNotVisible: ${output.askRun}
+- runFlow: ../_sub/close-shade.yaml
+# Timed out on the server, then Allow from the shade: handled, no error.
+- launchApp
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.askEditNotes}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: expire-pending
+      ARGS: '{"match": "notes.txt"}'
+- tapOn: ${output.s.android_native_allow_once}
+- runFlow: ../_sub/close-shade.yaml
+- launchApp
+- assertNotVisible: ${output.s.recentErrorGeneric}
+- assertNotVisible: ${output.s.kitRequestAllowOnce}
+
+# S6 Open the app with a question waiting: the waiting card is in the feed, and typing a reply clears the attention
+#    marker for that conversation. [B-CHAT-037]
+# S6 [B-CHAT-037]
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:question
+    label: "S6 waiting question card and its marker [B-CHAT-037]"
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAnswer}
+    timeout: 30000
+- pressKey: Home
+- launchApp
+- assertVisible: ${output.s.kitRequestAnswer}
+- assertVisible: ${output.s.kitRequestNeedsYouLabel}
+# confirm: the free-text answer field of the question card (the composer answers it on Flutter R)
+- tapOn: ${output.s.kitComposerField}
+- inputText: green
+- assertNotVisible: ${output.s.kitRequestNeedsYouLabel}

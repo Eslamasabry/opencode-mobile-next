@@ -1,0 +1,113 @@
+# E2E-16 Terminal shells that outlive the screen
+# slice: 5   avd: A   fixtures: FX-OC2   snapshot: flutter-linux
+# rows: B-LINUX-097, B-LINUX-100
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-5, g5, project]
+---
+- runScript: ../../runner/out/strings.js
+# flutter-linux: built-in Linux installed, project app, connected. Never clearState here.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+
+# S1 Project > "Terminal" > "New terminal": a shell opens at the screen's size and is numbered 1; open a second:
+#    numbered 2 (open order); [adb] make start fail (stop Linux) -> a plain reason is shown. [B-LINUX-097]
+# S1 [B-LINUX-097]
+# confirm: Flutter R reaches the project hub through the "Files" tab.
+- tapOn:
+    text: ${output.s.shellTabFiles}
+    label: "S1 phone shells are numbered in open order [B-LINUX-097]"
+- tapOn: ${output.s.libraryTerminalTitle}
+# confirm: a project on a server terminal list offers "Use this phone's terminal" for the built-in Linux shells.
+- runFlow:
+    when:
+      visible: ${output.s.terminalScreenUsePhone}
+    commands:
+      - tapOn: ${output.s.terminalScreenUsePhone}
+- tapOn: ${output.s.localTerminalNewShell}
+- extendedWaitUntil:
+    visible: ${output.t.localTerminalShellName.replace('{number}', '1')}
+    timeout: 60000
+- assertVisible: ${output.s.localTerminalSemantics}
+# UNIT-ONLY: the shell opens at the screen's rows and columns (LocalTerminal size test).
+- tapOn: ${output.s.localTerminalNewShell}
+- extendedWaitUntil:
+    visible: ${output.t.localTerminalShellName.replace('{number}', '2')}
+    timeout: 60000
+- assertVisible: ${output.t.localTerminalShellName.replace('{number}', '1')}
+# Make the next start fail: end Linux under the app (its proot processes), then ask for a third shell.
+# adb: kill-app-proc
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: kill-app-proc
+      ARGS: '{"match": "proot"}'
+# confirm: with Linux ended the next start fails rather than bringing Linux back by itself.
+- tapOn: ${output.s.localTerminalNewShell}
+- extendedWaitUntil:
+    visible: ${output.s.localTerminalFailedTitle}
+    timeout: 60000
+- assertVisible: ${output.s.localTerminalFailedBody}
+- tapOn: ${output.s.localTerminalTryAgain}
+- extendedWaitUntil:
+    visible: ${output.s.localTerminalSemantics}
+    timeout: 60000
+
+# S2 Run `sleep 300 &` then close the terminal screen and the app ([adb] force-stop), relaunch and open Terminal:
+#    both shells are adopted once if Android still runs them with recent output; run `exit` in one: it is listed as
+#    ended; tap "Restart" on it: replaced by a new shell; tap Stop on a running one: it stays listed as ended.
+#    [B-LINUX-100]
+# S2 [B-LINUX-100]
+- tapOn:
+    text: ${output.s.localTerminalSemantics}
+    label: "S2 shells survive the screen and the app [B-LINUX-100]"
+- inputText: "sleep 300 &"  # literal-ok: shell command typed by the person
+- pressKey: Enter
+- back
+- back
+# adb: ps-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: ps-count
+      ARGS: '{"match": "sleep"}'
+- assertTrue: ${output.hook.count >= 1}
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- tapOn: ${output.s.shellTabFiles}
+- tapOn: ${output.s.libraryTerminalTitle}
+- runFlow:
+    when:
+      visible: ${output.s.terminalScreenUsePhone}
+    commands:
+      - tapOn: ${output.s.terminalScreenUsePhone}
+# Adopted once each: the numbered shells are back, and not twice.
+- extendedWaitUntil:
+    visible: ${output.t.localTerminalShellName.replace('{number}', '1')}
+    timeout: 60000
+- assertNotVisible: ${'(?s).*' + output.t.localTerminalShellName.replace('{number}', '1') + '.*' + output.t.localTerminalShellName.replace('{number}', '1') + '.*'}  # literal-ok: built from strings (no shell listed twice)
+# UNIT-ONLY: a shell Android no longer runs, or without recent output, is not adopted (ShellAdoption test).
+- tapOn: ${output.t.localTerminalShellName.replace('{number}', '1')}
+- tapOn: ${output.s.localTerminalSemantics}
+- inputText: "exit"  # literal-ok: shell command typed by the person
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: ${output.s.localTerminalEndedTitle}
+    timeout: 30000
+- tapOn: ${output.s.localTerminalRestart}
+- extendedWaitUntil:
+    visible: ${output.s.localTerminalSemantics}
+    timeout: 60000
+- assertNotVisible: ${output.s.localTerminalEndedTitle}
+# Stop a running one: it stays listed, as ended.
+- tapOn: ${output.s.localTerminalStopShell}
+- tapOn: ${output.s.localTerminalStop}
+- extendedWaitUntil:
+    visible: ${output.s.localTerminalEndedTitle}
+    timeout: 30000

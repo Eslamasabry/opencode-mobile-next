@@ -1,0 +1,564 @@
+# E2E-17 Set up the built-in Linux on a phone: preflight, progress, cancel, resume
+# slice: 3   avd: A, S, F   fixtures: FX-LINUXDL, fx-proxy   snapshot: base
+# rows: B-LINUX-210, B-LINUX-211, B-STATE-030, B-LINUX-201, B-LINUX-227, B-ANDR-050, B-LINUX-199, B-LINUX-195, B-LINUX-203, B-LINUX-229, B-LINUX-163, B-LINUX-164, B-LINUX-165, B-LINUX-245, B-LINUX-014, B-LINUX-220, B-LINUX-113
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-3, g3, linux, linux-setup]
+---
+- runScript: ../../runner/out/strings.js
+# One file for all three AVD roles. On AVD S (1.5 GB) the preflight refuses in S1 and every later step is skipped
+# (output.small). AVD F is AVD A plus the fill-disk hook (S2, S7). Starts from a clean install: no Linux yet.
+- evalScript: ${output.small = false}
+
+# S1 Welcome > "Set up on this phone": the preflight passes on the normal AVD and shows the size and time. On the
+#    small AVD (under 2 GB) it is refused naming both numbers; at about 2-3 GB it is allowed with a "slow phone"
+#    note; at 4 GB and above there is no note. [B-LINUX-210]
+# S1 [B-LINUX-210]
+- launchApp:
+    clearState: true
+    stopApp: true
+    label: "S1 preflight: size and time, or a refusal with numbers [B-LINUX-210]"
+- extendedWaitUntil:
+    visible: ${output.s.welcomePhoneSetUp}
+    timeout: 30000
+- tapOn: ${output.s.welcomePhoneSetUp}
+- runFlow:
+    when:
+      visible: ${output.s.phoneSetupPreflightLowMemoryHeadline}
+    commands:
+      # AVD S: refused, naming the minimum and this phone's memory.
+      - assertVisible: ${output.rc.phoneSetupPreflightLowMemoryBody}
+      - assertNotVisible: ${output.s.phoneSetupStartSetUp}
+      - evalScript: ${output.small = true}
+- runFlow:
+    when:
+      true: ${!output.small}
+    commands:
+      - extendedWaitUntil:
+          visible: ${output.s.phoneSetupStartSetUp}
+          timeout: 30000
+      - assertVisible: ${output.rc.phoneSetupStartPromise}
+      - assertVisible: ${output.rc.phoneSetupStartSteps}
+      # AVD A has 4 GB: no slow-phone note.
+      - assertNotVisible: ${output.rc.phoneSetupPreflightMayBeSlow}
+# UNIT-ONLY: the 2-3 GB band allowed with the slow-phone note (no AVD of that size; PhoneSetupPreflight test).
+
+# S2 On the nearly full disk: setup is blocked and says exactly how many bytes to free; with exactly the required
+#    space it passes; the slow-phone note is checked after the space check. [B-LINUX-211]
+# S2 [B-LINUX-211]
+# adb: fill-disk
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S2 a full disk blocks setup with the space to free [B-LINUX-211]"
+    commands:
+      - back
+      # adb: fill-disk
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: fill-disk
+            ARGS: '{"leave_mb": 300}'
+      - tapOn: ${output.s.welcomePhoneSetUp}
+      - extendedWaitUntil:
+          visible: ${output.s.phoneSetupPreflightLowSpaceHeadline}
+          timeout: 30000
+      - assertVisible: ${output.rc.phoneSetupPreflightLowSpaceBody}
+      - assertVisible: ${output.s.phoneSetupPreflightOpenStorage}
+      - assertNotVisible: ${output.s.phoneSetupStartSetUp}
+      - back
+      # adb: unfill-disk
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: unfill-disk
+      - tapOn: ${output.s.welcomePhoneSetUp}
+      - extendedWaitUntil:
+          visible: ${output.s.phoneSetupStartSetUp}
+          timeout: 30000
+# UNIT-ONLY: exactly the required space passes; the memory note is decided after the space check (preflight test).
+
+# S3 On a normal AVD over mobile data with a download over the threshold: ask consent first; Wi-Fi: no prompt.
+#    [B-STATE-030]
+# S3 [B-STATE-030]
+# adb: net
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S3 mobile data asks first, Wi-Fi does not [B-STATE-030]"
+    commands:
+      # adb: net
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: net
+            ARGS: '{"wifi": "off", "data": "on"}'
+      - tapOn: ${output.s.phoneSetupStartSetUp}
+      # SUSPECTED-GAP: on Flutter R the mobile-data consent may only guard voice and local-assistant downloads.
+      # confirm: the consent sheet's wording for the Linux download (the voice download says this line).
+      - extendedWaitUntil:
+          visible: ${output.rc.voiceAutoSetupMobileData}
+          timeout: 30000
+      - assertNotVisible: ${output.s.phoneSetupProgressTitle}
+      - back
+      # adb: net
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: net
+            ARGS: '{"wifi": "on", "data": "off"}'
+# UNIT-ONLY: the strict size threshold, unknown/VPN routes and unproven sizes never ask (MobileDownloadConsent test).
+
+# S4 Start setup and watch: the bar never moves backwards when a new stage begins; no estimate shows in the first
+#    10 seconds; bytes and percent are real; the setup uses the pinned upstream builds. [B-LINUX-201, B-LINUX-227]
+# S4 [B-LINUX-201, B-LINUX-227]
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S4 honest progress, no early estimate [B-LINUX-201, B-LINUX-227]"
+    commands:
+      # Slow the mirror so the stages can be watched.
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-LINUXDL
+            ACTION: throttle
+            ARGS: '{"kbps": 4000}'
+      - tapOn: ${output.s.phoneSetupStartSetUp}
+      - extendedWaitUntil:
+          visible: ${output.s.phoneSetupProgressTitle}
+          timeout: 30000
+      - assertNotVisible: ${output.rc.phoneSetupRingMinutesLeft}
+      - assertNotVisible: ${output.s.phoneSetupRingUnderMinute}
+      - extendedWaitUntil:
+          visible: ${output.rc.phoneSetupRingDownloading}
+          timeout: 60000
+      # Bytes count real: "<done> of <total>" with units.
+      - extendedWaitUntil:
+          visible: ${output.rc.setupProgressViewBytes}
+          timeout: 60000
+      - assertVisible: ${output.rc.setupProgressViewPercent}
+# UNIT-ONLY: the bar never moves backwards at a stage change; the scripts use the pinned upstream builds
+#   (SetupEngine progress test, termux_aiteam_script test).
+
+# S5 Press Home during download: a setup notification shows numeric progress; tap it: the app opens on the setup
+#    screen (also from cold start). On finish the notification says whether it finished. [B-ANDR-050]
+# S5 [B-ANDR-050]
+# adb: shade
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S5 the setup notification shows progress and opens setup [B-ANDR-050]"
+    commands:
+      - pressKey: Home
+      - runFlow: ../_sub/open-shade.yaml
+      - extendedWaitUntil:
+          visible: ${output.rc.phoneSetupNotificationTitle}
+          timeout: 30000
+      - assertVisible: ${output.rc.phoneSetupNotificationProgress}
+      - tapOn: ${output.rc.phoneSetupNotificationTitle}
+      - extendedWaitUntil:
+          visible: ${output.s.phoneSetupProgressTitle}
+          timeout: 30000
+# UNIT-ONLY: a cold-start tap is drained once (force-stop clears the app's notifications, so a device cannot keep one
+#   for a cold tap; PhoneSetupNotificationRoute test). The finished notice is checked at the end of S7.
+
+# S6 Cancel at 40 percent: the native job stops, finished components stay; nothing native is handed over while
+#    still checking. Reopen: the interrupted job is shown, "Continue setup" resumes, skipping components whose
+#    checks pass with their version. [B-LINUX-199, B-LINUX-195]
+# S6 [B-LINUX-199, B-LINUX-195]
+# adb: ps-count
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S6 stop at 40 percent, continue skips what is done [B-LINUX-199, B-LINUX-195]"
+    commands:
+      - extendedWaitUntil:
+          visible: ".*\\b([4-9][0-9])%.*"  # literal-ok: any percent from 40 up
+          timeout: 300000
+      - tapOn: ${output.s.setupProgressViewCancel}
+      - extendedWaitUntil:
+          visible: ${output.s.phoneSetupProgressStopTitle}
+          timeout: 15000
+      - assertVisible: ${output.s.phoneSetupProgressStopMessage}
+      - tapOn: ${output.s.phoneSetupProgressStopConfirm}
+      - extendedWaitUntil:
+          visible: ${output.s.setupProgressViewCancelled}
+          timeout: 60000
+      # adb: ps-count
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: ps-count
+            ARGS: '{"match": "proot"}'
+      - assertTrue: ${output.hook.count == 0}
+      - stopApp
+      - launchApp
+      - extendedWaitUntil:
+          visible: ${output.rc.welcomePhoneStopped}
+          timeout: 30000
+      - tapOn: ${output.s.welcomePhoneContinue}
+      - extendedWaitUntil:
+          visible: ${output.s.phoneSetupProgressTitle}
+          timeout: 30000
+      # The Linux base finished before the stop: it is not downloaded again.
+      - assertNotVisible: ${output.t.phoneSetupRingDownloading.replace('{name}', output.t.phoneSetupLinuxTitle)}
+# UNIT-ONLY: nothing native is handed over while still checking; skipped components match by version
+#   (SetupEngine resume tests).
+
+# S7 [fx] cut the network at the download: the failure names the part and the cause ("no internet"), not an exit
+#    code; [adb] `kill -9` the installer: "interrupted", not a later failure mislabelled; fill the disk mid-way: a
+#    full-storage message with how to resume; corrupt the checksum: a checksum message. [B-LINUX-203]
+# S7 [B-LINUX-203]
+# adb: kill-app-proc
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S7 each failure in plain words, each continues [B-LINUX-203]"
+    commands:
+      - extendedWaitUntil:
+          visible: ${output.rc.phoneSetupRingDownloading}
+          timeout: 300000
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-LINUXDL
+            ACTION: cut
+      - extendedWaitUntil:
+          visible: ${output.rc.setupProgressViewNoInternet}
+          timeout: 120000
+      - assertNotVisible: ".*exit (code )?[0-9]+.*"  # literal-ok: no exit code in the failure words
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-LINUXDL
+            ACTION: restore
+      - tapOn: ${output.s.setupProgressViewContinue}
+      - extendedWaitUntil:
+          visible: ${output.rc.phoneSetupRingInstalling}
+          timeout: 300000
+      # adb: kill-app-proc
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: kill-app-proc
+            ARGS: '{"match": "proot"}'
+      - assertTrue: ${output.hook.killed >= 1}
+      - extendedWaitUntil:
+          visible: ${output.s.setupProgressViewInterrupted}
+          timeout: 60000
+      - tapOn: ${output.s.setupProgressViewContinue}
+      - extendedWaitUntil:
+          visible: ${output.s.phoneSetupProgressTitle}
+          timeout: 30000
+      # adb: fill-disk
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: fill-disk
+            ARGS: '{"leave_mb": 20}'
+      - extendedWaitUntil:
+          visible: ${output.rc.phoneSetupErrorNoSpace}
+          timeout: 300000
+      # adb: unfill-disk
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: unfill-disk
+      - tapOn: ${output.s.setupProgressViewContinue}
+      # SUSPECTED-GAP: a corrupted checksum needs the download served by FX-LINUXDL; Flutter R fetches from the pinned
+      #   hosts (no download-base override), so the mirror cannot corrupt what Flutter R downloads.
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-LINUXDL
+            ACTION: corrupt-checksum
+      - extendedWaitUntil:
+          visible: ${output.rc.phoneSetupErrorChecksum}
+          timeout: 300000
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-LINUXDL
+            ACTION: restore
+      - tapOn: ${output.s.setupProgressViewContinue}
+      # Run to the end (several minutes on the mirror).
+      - repeat:
+          times: 8
+          while:
+            notVisible: ${output.s.phoneSetupReadyTitle}
+          commands:
+            - extendedWaitUntil:
+                visible: ${output.s.phoneSetupReadyTitle}
+                timeout: 300000
+                optional: true
+      - assertVisible: ${output.s.phoneSetupReadyTitle}
+      # S5's last clause: the notification now says it finished.
+      - runFlow: ../_sub/open-shade.yaml
+      - extendedWaitUntil:
+          visible: ${output.rc.phoneSetupNotificationDone}
+          timeout: 30000
+      - runFlow: ../_sub/close-shade.yaml
+      - tapOn: ${output.s.phoneSetupReadyNameLabel}
+      - inputText: ${output.fx.projectApp}
+      - hideKeyboard
+      - tapOn: ${output.s.phoneSetupReadyCreateOpen}
+      - extendedWaitUntil:
+          visible: ${output.s.kitComposerField}
+          timeout: 120000
+      - back
+# UNIT-ONLY: an old signal line never relabels a later failure (SetupEngine failure-words test).
+
+# S8 Break the environment on purpose (revoke storage permission, stop Linux): the problem is named with one cause,
+#    one fix, shown before any command runs; the permission request asks Android directly and a permanent "no" is
+#    remembered with an explanation; after a storage reset the first screen explains what to do. [B-LINUX-229]
+# S8 [B-LINUX-229]
+# adb: appop
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S8 a broken environment names one cause and one fix [B-LINUX-229]"
+    commands:
+      # confirm: the storage access the phone projects need is the All-files app-op on Android 11+.
+      # adb: appop
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: appop
+            ARGS: '{"op": "MANAGE_EXTERNAL_STORAGE", "mode": "deny"}'
+      - runFlow: ../_sub/open-settings.yaml
+      - scrollUntilVisible:
+          element: ${output.s.settingsV3ThisPhone}
+      - tapOn: ${output.s.settingsV3ThisPhone}
+      - tapOn: ${output.s.thisPhoneTerminal}
+      - extendedWaitUntil:
+          visible: ${output.s.e7SetupAppSettings}
+          timeout: 30000
+      - assertVisible: ${output.s.e7SetupOpenAppSettings}
+      - back
+      # adb: appop
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: appop
+            ARGS: '{"op": "MANAGE_EXTERNAL_STORAGE", "mode": "allow"}'
+      # Stop Linux under the app: This phone names what is wrong and the one way back.
+      # adb: kill-app-proc
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: kill-app-proc
+            ARGS: '{"match": "proot"}'
+      - extendedWaitUntil:
+          visible: ${'(' + output.s.thisPhoneAnswerStoppedItself + '|' + output.s.thisPhoneAnswerAndroidClosed + '|' + output.s.thisPhoneAnswerOff + ')'}  # literal-ok: alternation of three strings
+          timeout: 60000
+          optional: true
+      - assertVisible: ${output.s.thisPhoneAnswerRestartNow}
+      - tapOn: ${output.s.thisPhoneAnswerRestartNow}
+      - extendedWaitUntil:
+          visible: ${output.s.thisPhoneAnswerRunning}
+          timeout: 120000
+      - back
+# UNIT-ONLY: a permanent "no" is remembered with its explanation; the first screen after a storage reset
+#   (TermuxClarity tests).
+
+# S9 When a server is already running: the setup asks first ("stop OpenCode?") and nothing is stopped before "Yes";
+#    answer "No": nothing changes and it ends in plain words; with nothing running there is no question.
+#    [B-LINUX-163, B-LINUX-164, B-LINUX-165]
+# S9 [B-LINUX-163, B-LINUX-164, B-LINUX-165]
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S9 ask before stopping a running server [B-LINUX-163, B-LINUX-164, B-LINUX-165]"
+    commands:
+      # The AI Team setup is the setup that must stop OpenCode first.
+      - scrollUntilVisible:
+          element: ${output.s.thisPhoneAddTools}
+      - tapOn: ${output.s.thisPhoneAddTools}
+      - tapOn: ${output.s.aiteamComponentTitle}
+      - tapOn: ${output.s.phoneSetupStartAdd}
+      - extendedWaitUntil:
+          visible: ${output.s.phoneTeamStopTitle}
+          timeout: 300000
+      - assertVisible: ${output.s.phoneTeamStopWaiting}
+      - assertVisible: ${output.s.phoneTeamStopConfirm}
+      # Nothing stopped before an answer: the server still answers.
+      - back
+      - assertVisible: ${output.s.thisPhoneAnswerRunning}
+      - tapOn: ${output.s.phoneSetupOpenWelcomeShowProgress}
+      - tapOn: ${output.s.phoneTeamStopCancel}
+      - extendedWaitUntil:
+          visible: ${output.s.phoneTeamFailDeclinedTitle}
+          timeout: 30000
+      - assertVisible: ${output.s.phoneTeamFailDeclinedBody}
+      - back
+      - assertVisible: ${output.s.thisPhoneAnswerRunning}
+      # With nothing running: stop the server first, then start the team setup again: no question.
+      - tapOn: ${output.s.thisPhoneStop}
+      - extendedWaitUntil:
+          visible: ${output.s.thisPhoneAnswerOff}
+          timeout: 60000
+      - tapOn: ${output.s.phoneSetupOpenWelcomeShowProgress}
+      - assertNotVisible: ${output.s.phoneTeamStopTitle}
+      - assertVisible: ${output.s.phoneTeamNotNeeded}
+      - back
+# confirm: where the AI Team setup is resumed from This phone ("Show progress") after a decline.
+
+# S10 Finish: a fresh install has an in-app server profile with a new password; an existing install keeps its
+#     password; an already right server stays connected. [B-LINUX-245]
+# S10 [B-LINUX-245]
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S10 the finished setup is a saved server named This phone [B-LINUX-245]"
+    commands:
+      - back
+      - scrollUntilVisible:
+          element: ${output.s.e7SetupServers}
+      - tapOn: ${output.s.e7SetupServers}
+      - assertVisible: ${output.c.phoneSetupProfileName}
+      - assertNotVisible: ${output.s.e7SetupServerPassword}
+      - back
+      - back
+      - assertVisible: ${output.s.chatsHomeTitle}
+# UNIT-ONLY: the password is new on a fresh install and kept on an existing one; a right server stays connected
+#   (TermuxSetupFinish tests).
+
+# S11 Open "Add tools" while the previous job ended failed: it still starts; make the start break: the job fails with
+#     its text kept and "Continue" starts it again to done. [B-LINUX-014]
+# S11 [B-LINUX-014]
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S11 Add tools starts after a failed job and continues to done [B-LINUX-014]"
+    commands:
+      - runFlow: ../_sub/open-settings.yaml
+      - scrollUntilVisible:
+          element: ${output.s.settingsV3ThisPhone}
+      - tapOn: ${output.s.settingsV3ThisPhone}
+      - scrollUntilVisible:
+          element: ${output.s.thisPhoneAddTools}
+      - tapOn: ${output.s.thisPhoneAddTools}
+      - extendedWaitUntil:
+          visible: ${output.s.phoneSetupStartAddTitle}
+          timeout: 30000
+      # The previous job (the AI Team setup in S9) ended failed/declined: Add tools still starts.
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-LINUXDL
+            ACTION: cut
+      - tapOn: ${output.s.aiteamComponentTitle}
+      - tapOn: ${output.s.phoneSetupStartAdd}
+      - extendedWaitUntil:
+          visible: ${output.s.setupProgressViewFailedTitle}
+          timeout: 300000
+      - tapOn: ${output.s.kitDetails}
+      - assertNotVisible: ${output.s.setupProgressViewNoLog}
+      - back
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-LINUXDL
+            ACTION: restore
+      - tapOn: ${output.s.setupProgressViewContinue}
+      - repeat:
+          times: 4
+          while:
+            notVisible: ${output.s.setupProgressViewDone}
+          commands:
+            - extendedWaitUntil:
+                visible: ${output.s.setupProgressViewDone}
+                timeout: 300000
+                optional: true
+      - assertVisible: ${output.s.setupProgressViewDone}
+# UNIT-ONLY: a start that throws becomes a failed job instead of a crash (AddToolsRun test).
+
+# S12 Choose the optional voice component: off by default, checked before Linux exists, installs once with bytes
+#     shown after Linux, fails its row in plain words with Continue retrying; cancel stops the download; kill the app
+#     mid-download and it resumes. [B-LINUX-220]
+# S12 [B-LINUX-220]
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S12 the optional voice component installs, fails, resumes [B-LINUX-220]"
+    commands:
+      - back
+      - tapOn: ${output.s.thisPhoneAddTools}
+      - assertVisible:
+          text: ${output.s.voiceComponentTitle}
+          checked: false
+      - tapOn: ${output.s.voiceComponentTitle}
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-LINUXDL
+            ACTION: throttle
+            ARGS: '{"kbps": 2000}'
+      - tapOn: ${output.s.phoneSetupStartAdd}
+      - extendedWaitUntil:
+          visible: ${output.rc.setupProgressViewBytes}
+          timeout: 120000
+      # Cancel stops the download.
+      - tapOn: ${output.s.setupProgressViewCancel}
+      - tapOn: ${output.s.phoneSetupProgressStopConfirm}
+      - extendedWaitUntil:
+          visible: ${output.s.setupProgressViewCancelled}
+          timeout: 60000
+      - tapOn: ${output.s.setupProgressViewContinue}
+      - extendedWaitUntil:
+          visible: ${output.rc.setupProgressViewBytes}
+          timeout: 120000
+      # A cut fails the voice row in plain words; Continue retries.
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-LINUXDL
+            ACTION: cut
+      - extendedWaitUntil:
+          visible: ${output.rc.setupProgressViewFailedAt}
+          timeout: 120000
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-LINUXDL
+            ACTION: restore
+      - tapOn: ${output.s.setupProgressViewContinue}
+      - extendedWaitUntil:
+          visible: ${output.rc.setupProgressViewBytes}
+          timeout: 120000
+      # Kill the app mid-download: it resumes on the next launch.
+      - stopApp
+      - launchApp
+      - runFlow: ../_sub/open-settings.yaml
+      - scrollUntilVisible:
+          element: ${output.s.settingsV3ThisPhone}
+      - tapOn: ${output.s.settingsV3ThisPhone}
+      - tapOn: ${output.s.phoneServerCardShowProgress}
+      - repeat:
+          times: 4
+          while:
+            notVisible: ${output.s.setupProgressViewDone}
+          commands:
+            - extendedWaitUntil:
+                visible: ${output.s.setupProgressViewDone}
+                timeout: 300000
+                optional: true
+      - assertVisible: ${output.s.setupProgressViewDone}
+      - back
+      - tapOn: ${output.s.thisPhoneAddTools}
+      - assertVisible: ${output.rc.thisPhoneRemoveTool}
+# UNIT-ONLY: off by default and checked before Linux exists; installs once (VoiceComponent tests).
+
+# S13 Run the smoke check from the setup page: the real pinned OpenCode runs on the host. [B-LINUX-113]
+# S13 [B-LINUX-113]
+- runFlow:
+    when:
+      true: ${!output.small}
+    label: "S13 the installed OpenCode runs and names its version [B-LINUX-113]"
+    commands:
+      - back
+      - assertVisible: ${output.rc.phoneServerCardVersion}
+      - assertVisible: ${output.s.thisPhoneAnswerRunning}
+# UNIT-ONLY: the smoke check runs the real pinned OpenCode on the host (opencode_native_install host test); a device
+#   sees only the running server and its version.

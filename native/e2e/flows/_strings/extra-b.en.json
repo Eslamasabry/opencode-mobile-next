@@ -1,0 +1,79 @@
+{
+ "_comment": "Labels for surfaces/nav/privacy flows (E2E-07..09, 21..27, 34, 36, 38) that are not in the ARB or values/strings.xml. Android-side ones come from other res/values XML files that gen_strings does not read.",
+ "x_widget_reply": {
+  "text": "Reply",
+  "source": "android/app/src/main/res/values/widget_v2_strings.xml widget_reply (also the shade reply action; confirm)"
+ },
+ "x_app_label": {
+  "text": "OpenCode Mobile",
+  "source": "android/app/build.gradle.kts:66 manifestPlaceholders appLabel (launcher icon label)"
+ },
+ "x_widget_conversations_title": {
+  "text": "Conversations",
+  "source": "android/app/src/main/res/values/widget_v2_strings.xml widget_conversations_title"
+ },
+ "x_widget_v2_allow_short": {
+  "text": "Allow",
+  "source": "android/app/src/main/res/values/widget_v2_strings.xml widget_v2_allow_short"
+ },
+ "x_widget_v2_open": {
+  "text": "Open",
+  "source": "android/app/src/main/res/values/widget_v2_strings.xml widget_v2_open"
+ },
+ "x_widget_v2_empty": {
+  "text": "Open the app to connect",
+  "source": "android/app/src/main/res/values/widget_v2_strings.xml widget_v2_empty"
+ },
+ "x_widget_v2_steer_hint": {
+  "text": "Steer while it works…",
+  "source": "android/app/src/main/res/values/widget_v2_strings.xml widget_v2_steer_hint"
+ },
+ "x_widget_v2_voice": {
+  "text": "Voice",
+  "source": "android/app/src/main/res/values/widget_v2_strings.xml widget_v2_voice"
+ },
+ "x_widget_v2_offline_plain": {
+  "text": "Offline",
+  "source": "android/app/src/main/res/values/widget_v2_strings.xml widget_v2_offline_plain"
+ },
+ "x_native_schedule_title": {
+  "text": "Scheduled prompt",
+  "source": "android/app/src/main/res/values/scheduled_prompts.xml native_schedule_title"
+ },
+ "x_native_schedule_digest_title": {
+  "text": "Morning digest",
+  "source": "android/app/src/main/res/values/scheduled_prompts.xml native_schedule_digest_title"
+ },
+ "x_ar_settings": {
+  "text": "الإعدادات",
+  "source": "lib/l10n/app_ar.arb librarySettingsTitle (tapped while the app is Arabic during the English run)"
+ },
+ "x_ar_settings_search": {
+  "text": "ابحث في الإعدادات",
+  "source": "lib/l10n/app_ar.arb settingsHubSearch (tapped while the app is Arabic during the English run)"
+ },
+ "x_ar_language": {
+  "text": "اللغة",
+  "source": "lib/l10n/app_ar.arb settingsV3Language (tapped while the app is Arabic during the English run)"
+ },
+ "x_ar_use_system_language": {
+  "text": "استخدام لغة النظام",
+  "source": "lib/l10n/app_ar.arb e7LocaleUiSystem (tapped while the app is Arabic during the English run)"
+ },
+ "x_ar_chats_home": {
+  "text": "المحادثات",
+  "source": "lib/l10n/app_ar.arb chatsHomeTitle (tapped while the app is Arabic during the English run)"
+ },
+ "x_ja_chats_home": {
+  "text": "会話",
+  "source": "lib/l10n/app_ja.arb chatsHomeTitle (system-locale fallback check)"
+ },
+ "x_ar_native_allow_once": {
+  "text": "السماح مرة واحدة",
+  "source": "android/app/src/main/res/values-ar/strings.xml native_allow_once"
+ },
+ "x_ar_widget_conversations_title": {
+  "text": "المحادثات",
+  "source": "android/app/src/main/res/values-ar/widget_v2_strings.xml widget_conversations_title"
+ }
+}
