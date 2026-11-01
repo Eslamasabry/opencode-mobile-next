@@ -31,7 +31,8 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     // The ledger cross-check reads the Flutter repo's own ledger file.
-    systemProperty("oc.repoRoot", rootDir.resolve("../../..").canonicalPath)
+    // rootDir is native/; the Flutter repo root is its parent (the ../../.. form dated from the standalone spike build).
+    systemProperty("oc.repoRoot", rootDir.resolve("..").canonicalPath)
     testLogging {
         events("failed")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
