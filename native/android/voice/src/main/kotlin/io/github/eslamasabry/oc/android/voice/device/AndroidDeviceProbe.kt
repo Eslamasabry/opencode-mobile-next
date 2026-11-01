@@ -29,7 +29,7 @@ public class AndroidDeviceProbe(private val context: Context, private val io: Co
                     val memory = ActivityManager.MemoryInfo().also { activityManager.getMemoryInfo(it) }
                     DeviceProbeResult.Known(
                         totalRamMb = memory.totalMem.takeIf { it > 0 }?.let { it / MIB },
-                        availableStorageBytes = runCatching { StatFs(context.filesDir.path).availableBytes }.getOrNull(),
+                        availableStorageBytes = freeBytes(),
                         supportedAbis = Build.SUPPORTED_ABIS.toList().toImmutableList(),
                         hasMicrophone = context.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE),
                         lowRamDevice = activityManager.isLowRamDevice,
@@ -47,6 +47,13 @@ public class AndroidDeviceProbe(private val context: Context, private val io: Co
             val memory = ActivityManager.MemoryInfo().also { activityManager.getMemoryInfo(it) }
             MemoryNow(availMb = memory.availMem / MIB, thresholdMb = memory.threshold / MIB, low = memory.lowMemory)
         } catch (_: RuntimeException) {
+            null
+        }
+
+    private fun freeBytes(): Long? =
+        try {
+            StatFs(context.filesDir.path).availableBytes
+        } catch (_: IllegalArgumentException) {
             null
         }
 

@@ -204,7 +204,7 @@ class ReadAloudTest {
         }
 
     @Test
-    fun `plan 10 8_6 one reader app-wide - a new reading replaces the old one`() =
+    fun `B-MEDIA-009 one reader app-wide - a new reading replaces the old one`() =
         runTest {
             prefs.setReadAloudConsent(true)
             val speech = reader()

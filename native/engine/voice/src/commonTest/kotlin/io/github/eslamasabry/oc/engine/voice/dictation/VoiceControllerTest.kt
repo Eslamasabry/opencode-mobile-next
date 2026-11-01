@@ -305,7 +305,7 @@ class VoiceControllerTest {
         }
 
     @Test
-    fun `M2 phones under 6 GB or low on memory close the session between chunks`() =
+    fun `B-MEDIA-010 M2 phones under 6 GB or low on memory close the session between chunks`() =
         runTest {
             source.ramMb = 4_000
             val voice = controller()
@@ -327,7 +327,7 @@ class VoiceControllerTest {
         }
 
     @Test
-    fun `M2 the warm session is reused by the next recording and closed 20 s after the last`() =
+    fun `B-MEDIA-010 M2 the warm session is reused by the next recording and closed 20 s after the last`() =
         runTest {
             val voice = controller()
             voice.start(tap)
@@ -348,7 +348,7 @@ class VoiceControllerTest {
         }
 
     @Test
-    fun `plan 10 6_3 a model that fails to load is re-checked in full and reported broken`() =
+    fun `B-MEDIA-023 a model that fails to load is re-checked in full and reported broken`() =
         runTest {
             recognizer.openFails = true
             val voice = controller()

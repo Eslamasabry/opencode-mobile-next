@@ -128,7 +128,7 @@ class SherpaSpeechTest {
     }
 
     @Test
-    fun `plan 10 6_3 a model that cannot load is SpeechModelBroken and decodes run on the speech lane`() =
+    fun `B-MEDIA-023 a model that cannot load is SpeechModelBroken and decodes run on the speech lane`() =
         runTest {
             val runtime = FakeRuntime()
             val lane = StandardTestDispatcher(testScheduler)

@@ -68,7 +68,13 @@ public class AndroidSetupNetwork(private val context: Context) : SetupNetworkSou
             } catch (_: RuntimeException) {
                 trySend(SetupNetwork.Unknown)
             }
-            awaitClose { runCatching { cm.unregisterNetworkCallback(callback) } }
+            awaitClose {
+                try {
+                    cm.unregisterNetworkCallback(callback)
+                } catch (_: IllegalArgumentException) {
+                    // never registered
+                }
+            }
         }.distinctUntilChanged()
 
     private fun facts(): NetworkFacts? =

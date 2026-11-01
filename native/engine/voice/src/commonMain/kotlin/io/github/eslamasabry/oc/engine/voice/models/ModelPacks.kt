@@ -204,11 +204,10 @@ public class ModelPacks(
             } catch (e: CancellationException) {
                 withContext(NonCancellable) {
                     val partial = installer.partialBytes(spec)
+                    val status = if (partial > 0) PackStatus.Partial(partial, spec.totalBytes) else PackStatus.Missing
                     lane.withLock {
-                    running = null
-                    mutableState.update {
-                            it.copy(job = null, packs = it.packs.with(spec.id, if (partial > 0) PackStatus.Partial(partial, spec.totalBytes) else PackStatus.Missing))
-                        }
+                        running = null
+                        mutableState.update { it.copy(job = null, packs = it.packs.with(spec.id, status)) }
                     }
                 }
                 throw e

@@ -54,7 +54,7 @@ class RulesTest {
     }
 
     @Test
-    fun `plan 10 8_4 system voice chunks stay under the limit and never split a surrogate pair`() {
+    fun `B-MEDIA-009 system voice chunks stay under the limit and never split a surrogate pair`() {
         val text = "ab" + "😀".repeat(5) + "cd"
         val pieces = SystemTtsRules.chunks(text, 3)
         assertEquals(text, pieces.joinToString(""))

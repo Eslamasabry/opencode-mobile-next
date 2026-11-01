@@ -313,22 +313,22 @@ public class PackInstaller(
             } catch (e: Throwable) {
                 // "Re-download keeps the verified old model on failure": take the new files out, put the old back.
                 log.w(e) { "publish failed; rolling back" }
-                for (path in published) runCatchingIo { files.delete(path) }
-                for (path in backedUp) runCatchingIo { files.move("$path$BACKUP", path) }
-                runCatchingIo { files.delete("${markerPath(spec)}.tmp") }
+                for (path in published) orNullOnIoError { files.delete(path) }
+                for (path in backedUp) orNullOnIoError { files.move("$path$BACKUP", path) }
+                orNullOnIoError { files.delete("${markerPath(spec)}.tmp") }
                 if (e is StorageFullException) media(MediaProblem.DownloadNoSpace, e) else media(MediaProblem.DownloadIncomplete, e)
             }
         }
 
     private fun cleanAfterPublish(spec: ModelPackSpec) {
-        runCatchingIo {
+        orNullOnIoError {
             for (file in spec.files) files.delete("${packDir(spec)}/${file.name}$BACKUP")
             files.deleteTree(stagingDir(spec))
         }
     }
 
     private fun cleanStaging(spec: ModelPackSpec) {
-        runCatchingIo { files.deleteTree(stagingDir(spec)) }
+        orNullOnIoError { files.deleteTree(stagingDir(spec)) }
     }
 
     // ---- records
@@ -337,12 +337,12 @@ public class PackInstaller(
 
     private fun readMarker(spec: ModelPackSpec): InstalledMarker? {
         val text = files.readText(markerPath(spec)) ?: return null
-        return runCatchingIo { recordJson.decodeFromString(InstalledMarker.serializer(), text) }
+        return orNullOnIoError { recordJson.decodeFromString(InstalledMarker.serializer(), text) }
     }
 
     private suspend fun invalidate(spec: ModelPackSpec) {
         if (lockOf(spec).isLocked) return // an install owns the folder right now
-        runCatchingIo {
+        orNullOnIoError {
             files.delete(markerPath(spec))
             files.delete(stampPath(spec))
         }
@@ -375,7 +375,7 @@ public class PackInstaller(
 
     private fun stampMatches(spec: ModelPackSpec): Boolean {
         val text = files.readText(stampPath(spec)) ?: return false
-        val stamp = runCatchingIo { recordJson.decodeFromString(VerifiedStamp.serializer(), text) } ?: return false
+        val stamp = orNullOnIoError { recordJson.decodeFromString(VerifiedStamp.serializer(), text) } ?: return false
         if (stamp.v != 1 || stamp.files.map { it.name } != spec.files.map { it.name }) return false
         return spec.files.zip(stamp.files).all { (file, recorded) ->
             recorded.length == file.bytes &&
@@ -468,7 +468,7 @@ public class PackInstaller(
                 },
             ).failed()
 
-        inline fun <T> runCatchingIo(block: () -> T): T? =
+        inline fun <T> orNullOnIoError(block: () -> T): T? =
             try {
                 block()
             } catch (e: CancellationException) {
