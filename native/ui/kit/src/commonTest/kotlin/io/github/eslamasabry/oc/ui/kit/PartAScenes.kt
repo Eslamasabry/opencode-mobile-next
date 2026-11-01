@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.RedactorApi
 import io.github.eslamasabry.oc.ui.design.color.Packs
@@ -177,7 +178,7 @@ fun NoticeScene(w: PartAWords, open: Boolean = true) {
         KitCostNotice(w.cost)
         KitOfferNotice(w.offer, KitLineAction(w.turnOn, {}), KitLineAction(w.notNow, {}))
         KitErrorNotice(
-            w.couldNotLoad, failure = Failure.Net.Offline(),
+            w.couldNotLoad, failure = Failure.Network(NetworkWhy.Offline),
             retry = KitLineAction(w.tryAgain, {}), switchServer = KitLineAction(w.switchServer, {}),
             report = KitLineAction(w.report, {}),
         )

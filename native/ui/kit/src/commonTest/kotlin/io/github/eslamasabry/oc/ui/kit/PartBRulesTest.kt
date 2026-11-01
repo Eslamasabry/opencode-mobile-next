@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.RedactorApi
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -191,12 +192,12 @@ class PartBRulesTest {
     @OptIn(RedactorApi::class)
     @Test
     fun `B-KIT-034 an error offers retry and the network fix or a report, and only handlers that exist`() {
-        val offline = Failure.Net.Offline(details = Redacted("Offline"))
+        val offline = Failure.Network(NetworkWhy.Offline, details = Redacted("Offline"))
         assertEquals(
             listOf(ErrorWay.TryAgain, ErrorWay.SwitchServer, ErrorWay.CopyDetails),
             StateViewRules.errorWays(offline, canRetry = true, canSwitch = true, canReport = true),
         )
-        val disk = Failure.Storage(io.github.eslamasabry.oc.core.common.StorageProblem.Full)
+        val disk = Failure.StorageRefused()
         assertEquals(listOf(ErrorWay.TryAgain, ErrorWay.ReportProblem), StateViewRules.errorWays(disk, canRetry = true, canSwitch = true, canReport = true))
         assertEquals(emptyList(), StateViewRules.errorWays(disk, canRetry = false, canSwitch = false, canReport = false))
     }

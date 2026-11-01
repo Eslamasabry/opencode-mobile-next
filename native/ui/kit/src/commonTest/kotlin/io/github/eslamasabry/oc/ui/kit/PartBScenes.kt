@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.NetworkWhy
 import kotlin.time.Duration.Companion.minutes
 
 /** Sample copy for the part-B scenes (tests only; screens take theirs from `:ui:words`). */
@@ -240,7 +241,7 @@ fun StatesScene(w: PartBWords) {
             kind = KitStateKind.Error,
             title = w.failedTitle,
             body = w.failedBody,
-            failure = Failure.Net.Offline(),
+            failure = Failure.Network(NetworkWhy.Offline),
             onRetry = {},
             retryLabel = w.retry,
             onSwitchServer = {},

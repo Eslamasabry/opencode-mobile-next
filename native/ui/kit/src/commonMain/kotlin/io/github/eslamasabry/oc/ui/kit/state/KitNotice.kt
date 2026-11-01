@@ -16,6 +16,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Redacted
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -39,17 +40,27 @@ public enum class KitErrorKind {
         /**
          * The native classifier (B-KIT-024). Dart matched exception types: timeouts, sockets, handshakes, HTTP client and
          * WebSocket errors were network. Native code has no raw errors at the kit, only [Failure] values, so the same
-         * meaning is read from the closed tree: no network, unreachable (DNS, refused, timeout, reset, no route), a
-         * refused handshake, a delivery left unknown, the Paseo computer not answering and the generic connectivity
-         * line are network; a server that answered (busy, rejected, failed, not found…) and every app-side failure are
-         * other. Null → other.
+         * meaning is read from the flat list: no network or unreachable ([Failure.Network]), a timeout
+         * ([Failure.TimedOut]), a refused handshake ([Failure.Certificate] and the transport refusals), a delivery left
+         * unknown (`Refused(DispatchUncertain)`, plan 04 §3.8), the Paseo computer not answering and the generic
+         * connectivity line are network; a server that answered (busy, rejected, failed, not found…) and every other
+         * app-side failure are other. Null → other.
          */
         public fun of(failure: Failure?): KitErrorKind =
             when (failure) {
-                is Failure.Network, is Failure.Certificate, is Failure.ComputerDidNotAnswer, is Failure.Unknown,
+                is Failure.Network, is Failure.TimedOut, is Failure.Certificate, is Failure.ComputerDidNotAnswer,
+                is Failure.Unknown,
                 -> Network
+                is Failure.Refused -> if (failure.reason in TRANSPORT_REFUSALS) Network else Other
                 else -> Other
             }
+
+        /** The refusals that were the old `TrustRefused` and `DeliveryUnknown` leaves: the link, not the app. */
+        private val TRANSPORT_REFUSALS: Set<RefusalReason> =
+            setOf(
+                RefusalReason.DispatchUncertain, RefusalReason.CleartextNotConfirmed, RefusalReason.OriginChanged,
+                RefusalReason.CredentialsInUrl, RefusalReason.PinNeedsHttps,
+            )
     }
 }
 
