@@ -177,6 +177,10 @@ public class OfflineQueue(
             if (prompt.payloadBytes > QueueLimits.MAX_ENTRY_BYTES) return@withLock QueueRefusal.TooLarge.ok()
             val current = queue()
             if (current.any { it.id == prompt.id }) return@withLock QueueRefusal.DuplicateId.ok()
+            when (val used = commandIdUsed(prompt)) {
+                is Outcome.Failed -> return@withLock used
+                is Outcome.Ok -> if (used.value) return@withLock QueueRefusal.DuplicateId.ok()
+            }
             val limited = QueueLimits.enforce(current + prompt, clock.now().toEpochMilliseconds())
             // The new entry losing its own eviction pass, or an entry on the wire being evicted, means no room.
             val keptIds = limited.kept.mapTo(HashSet()) { it.id }
@@ -271,6 +275,18 @@ public class OfflineQueue(
         return true
     }
 
+    /** Tombstones reserve ids even after the corresponding queue row has been removed (B-STATE-009). */
+    private fun commandIdUsed(prompt: QueuedPrompt): Outcome<Boolean> {
+        val journal = when (val opened = journals.forProfile(prompt.profileId)) {
+            is Outcome.Failed -> return opened
+            is Outcome.Ok -> opened.value
+        }
+        return when (val read = journal.read()) {
+            is Outcome.Failed -> read
+            is Outcome.Ok -> read.value.any { it.commandId == CommandReceipt.queueCommandId(prompt.id) }.ok()
+        }
+    }
+
     // ---------------------------------------------------------------- online sends (plan 04 §13.5)
 
     /** Persists (or refreshes) an online send's marked entry before the composer clears (B-STATE-041, 042). */
@@ -285,6 +301,7 @@ public class OfflineQueue(
             }
             val q = queue()
             val existing = q.indexOfFirst { it.id == prompt.id }
+            if (existing < 0 && (commandIdUsed(prompt) as? Outcome.Ok)?.value != false) return@withLock false
             if (existing >= 0 && (prompt.id !in onlineInFlight || q[existing].profileId != prompt.profileId ||
                     q[existing].sessionId != prompt.sessionId)
             ) {
@@ -605,7 +622,7 @@ public class OfflineQueue(
             }
         }
         return when {
-            sent is Outcome.Ok && sent.value.state == CommandReceiptState.Confirmed -> DispatchResult.Accepted
+            sent is Outcome.Ok && sent.value.sameIdentity(receipt) && sent.value.state == CommandReceiptState.Confirmed -> DispatchResult.Accepted
             else -> DispatchResult.Unknown(failure)
         }
     }
