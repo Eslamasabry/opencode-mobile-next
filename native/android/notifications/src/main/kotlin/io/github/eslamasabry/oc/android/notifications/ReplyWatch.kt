@@ -5,8 +5,8 @@ import android.app.Service
 import android.content.Context
 import android.content.pm.ServiceInfo
 import androidx.core.app.ServiceCompat
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -222,39 +222,39 @@ public class ReplyWatchServiceBody(
         val watchJob = Job(scope.coroutineContext[Job])
         job = watchJob
         scope.launch(watchJob, start = CoroutineStart.UNDISPATCHED) {
-                // Reconcile retained moments before returning watch readiness, then stay subscribed.
-                launch(start = CoroutineStart.UNDISPATCHED) {
-                    source.pendingAlerts.collect { pending ->
-                        pending.forEach { moment ->
-                            if (announce(moment.alert)) source.acknowledgeAlert(moment.id)
-                        }
+            // Reconcile retained moments before returning watch readiness, then stay subscribed.
+            launch(start = CoroutineStart.UNDISPATCHED) {
+                source.pendingAlerts.collect { pending ->
+                    pending.forEach { moment ->
+                        if (announce(moment.alert)) source.acknowledgeAlert(moment.id)
                     }
-                }
-                var idleSince: Long? = null
-                while (true) {
-                    val now = elapsedMs()
-                    val progressing = source.progressing.value
-                    idleSince = if (progressing) null else idleSince ?: now
-                    val end =
-                        ReplyWatchPolicy.end(
-                            ReplyWatchState(
-                                startedAtMs = startedAt,
-                                nowMs = now,
-                                progressing = progressing,
-                                idleSinceMs = idleSince,
-                                appVisible = source.appVisible.value,
-                                joined = joined,
-                                serverStillHoldsRow = source.serverHoldsRow.value,
-                            ),
-                        )
-                    if (end != null) {
-                        finish(end)
-                        break
-                    }
-                    if (!joined) refreshRow(now)
-                    delay(tickMs)
                 }
             }
+            var idleSince: Long? = null
+            while (true) {
+                val now = elapsedMs()
+                val progressing = source.progressing.value
+                idleSince = if (progressing) null else idleSince ?: now
+                val end =
+                    ReplyWatchPolicy.end(
+                        ReplyWatchState(
+                            startedAtMs = startedAt,
+                            nowMs = now,
+                            progressing = progressing,
+                            idleSinceMs = idleSince,
+                            appVisible = source.appVisible.value,
+                            joined = joined,
+                            serverStillHoldsRow = source.serverHoldsRow.value,
+                        ),
+                    )
+                if (end != null) {
+                    finish(end)
+                    break
+                }
+                if (!joined) refreshRow(now)
+                delay(tickMs)
+            }
+        }
     }
 
     private fun announce(alert: CodingAlert): Boolean {
@@ -301,12 +301,19 @@ public class ReplyWatchServiceBody(
         releaseRow()
         running?.cancel()
     }
+
     private fun releaseRow() {
         val leavingService = service
         service = null
         owners.end(StatusOwner.Reply) { remaining ->
-            leavingService?.let { s ->
-                ServiceCompat.stopForeground(s, if (remaining == null) ServiceCompat.STOP_FOREGROUND_REMOVE else ServiceCompat.STOP_FOREGROUND_DETACH)
+            // Live mode and sign-in share BackgroundConnectionService with reply watch. They keep its
+            // foreground promise; the server alone has a separate service from which we may detach.
+            val sharedServiceNeeded = owners.has(StatusOwner.Live) || owners.has(StatusOwner.SignIn)
+            if (!sharedServiceNeeded) {
+                leavingService?.let { s ->
+                    ServiceCompat.stopForeground(s, if (remaining == null) ServiceCompat.STOP_FOREGROUND_REMOVE else ServiceCompat.STOP_FOREGROUND_DETACH)
+                    s.stopSelf()
+                }
             }
             if (remaining != null) {
                 try {
@@ -318,7 +325,5 @@ public class ReplyWatchServiceBody(
                 manager.cancel(NotificationIds.STATUS)
             }
         }
-        leavingService?.stopSelf()
     }
-
 }

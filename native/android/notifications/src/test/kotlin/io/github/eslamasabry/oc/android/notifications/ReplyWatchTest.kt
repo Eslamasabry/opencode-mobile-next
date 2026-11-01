@@ -185,12 +185,14 @@ class ReplyWatchServiceTest {
     @Test
     fun `S11-4 notify finding 3 live and sign-in co-owners survive timeout and destruction`() = runTest {
         for (owner in listOf(StatusOwner.Live, StatusOwner.SignIn)) {
-            val (body, _) = start(Source())
+            val (body, sharedService) = start(Source())
             runCurrent()
             val remaining = StatusContent(StatusKind.Idle, owner.name)
             owners.begin(owner, remaining)
             body.onTimeout()
             assertFalse(owners.has(StatusOwner.Reply))
+            assertFalse(shadowOf(sharedService).isStoppedBySelf)
+            assertFalse(shadowOf(sharedService).isForegroundStopped)
             assertEquals(owner.name, shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
             owners.end(owner) { }
 
