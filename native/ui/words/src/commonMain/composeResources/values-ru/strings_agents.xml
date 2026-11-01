@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ru.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="agentsChooseTitle">Выбор агента</string>
+    <string name="agentsStateReady">Готов</string>
+    <string name="agentsStateNotInstalled">Не установлен · %1$s</string>
+    <string name="agentsStateNotInstalledNoSize">Не установлен</string>
+    <string name="agentsStateSignInNeeded">Нужно войти</string>
+    <string name="agentsStateChecking">Проверяем вход…</string>
+    <string name="agentsStateStopped">Остановлен в фоне</string>
+    <string name="agentsStateLimit">Достигнут лимит тарифа</string>
+    <string name="agentsStateUnavailable">Пока недоступен на этом телефоне</string>
+    <string name="agentsSetupTitle">Настройка %1$s · %2$s</string>
+    <string name="agentsSetupTitleNoSize">Настройка %1$s</string>
+    <string name="agentsSetupBody">%1$s работает на этом телефоне. При установке скачиваются сам агент и всё необходимое для него.</string>
+    <string name="agentsInstallAction">Установить %1$s</string>
+    <string name="agentsCancelSetup">Отменить настройку</string>
+    <string name="agentsInstalling">Установка %1$s…</string>
+    <string name="agentsStepInstall">Установлен</string>
+    <string name="agentsStepVersion">Версия</string>
+    <string name="agentsStepConnection">Подключение</string>
+    <string name="agentsStepReady">Готов</string>
+    <string name="agentsSignInTitle">Войти через %1$s</string>
+    <string name="agentsSignInAgain">Войти снова</string>
+    <string name="agentsSignedIn">Вход выполнен</string>
+    <string name="agentsSignedInAs">Вход выполнен как %1$s</string>
+    <string name="agentsRemoveAction">Удалить %1$s</string>
+    <string name="agentsRemoving">Удаление %1$s…</string>
+    <string name="agentsDone">Готово</string>
+    <string name="agentsModelTitle">Выбор модели</string>
+    <string name="agentsModelDefault">Модель по умолчанию</string>
+    <string name="agentsModelLoading">Загрузка списка моделей…</string>
+    <string name="agentsLimitUnknown">Достигнут лимит тарифа %1$s · повторите позже</string>
+    <string name="agentsSignInAction">Войти в %1$s</string>
+    <string name="agentsStoppedLine">%1$s остановился в фоне</string>
+    <string name="agentsResumeAction">Возобновить %1$s</string>
+    <string name="agentsChecking">Ищем агентов на этом телефоне…</string>
+    <string name="agentsStateNeedsArm">Нужен 64-разрядный телефон</string>
+    <string name="agentsInstallHint">Установить</string>
+    <string name="agentsChipSignIn">Войти</string>
+    <string name="agentsChipResume">Возобновить</string>
+    <string name="agentsChipCheck">Проверить</string>
+</resources>

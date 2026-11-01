@@ -1,0 +1,99 @@
+package io.github.eslamasabry.oc.tools.strings
+
+/**
+ * Generates `HandWords.kt` in `:ui:words`: the code half of the hand conversions (plan 01 §7.5, plan 06 §13.3).
+ *
+ * - A select key gets `fun <key>(<arg>: String): StringResource`, an exhaustive `when` over the branches with
+ *   `else` → `other`, exactly as ICU picks a branch.
+ * - A split key gets `suspend fun <key>(…): String` (notifications, widgets, workers) and `@Composable fun
+ *   <key>Text(…): String`. Each count picks its `__eqN` string first, then its plural (plan 06 §13.4), and the
+ *   sentence takes the pieces plus the plain arguments.
+ */
+object HandWordsKotlin {
+    const val PACKAGE = "io.github.eslamasabry.oc.ui.words"
+    private const val RES = "$PACKAGE.res"
+
+    /** [shipped] says whether a hand-converted key is in composeResources (an unused key has no accessor). */
+    fun render(conversion: Conversion, expansion: Expansion, shipped: (String) -> Boolean): String {
+        val imports = sortedSetOf<String>()
+        val body = StringBuilder()
+        val plans = conversion.plans
+        for (h in expansion.converted) {
+            if (!shipped(h.key) || h.names.any { it !in plans }) continue
+            val types = h.params.toMap()
+            fun kt(name: String) = when (types[name]) {
+                "int" -> "Int"
+                "String", null -> "String"
+                else -> "Any"
+            }
+            body.append('\n')
+            when (h.recipe.kind) {
+                RecipeKind.SELECT -> {
+                    val arg = h.selectArg!!
+                    imports += "org.jetbrains.compose.resources.StringResource"
+                    imports += "$RES.Res"
+                    body.append("    /** `${h.key}`: {$arg, select, ${h.branches.joinToString("|")}}. A value with no branch reads `other`, as in ICU. */\n")
+                    body.append("    public fun ${h.key}($arg: String): StringResource = when ($arg) {\n")
+                    for ((b, name) in h.branches.zip(h.names)) {
+                        imports += "$RES.$name"
+                        if (b != "other") body.append("        \"$b\" -> Res.string.$name\n")
+                    }
+                    body.append("        else -> Res.string.${h.key}__other\n")
+                    body.append("    }\n")
+                }
+                RecipeKind.SPLIT_PLURALS -> {
+                    val params = h.params.joinToString(", ") { (n, _) -> "$n: ${kt(n)}" }
+                    val frame = plans.getValue(h.key)
+                    val frameArgs = frame.placeholders.joinToString(", ") { p ->
+                        if (p.name.endsWith(Hand.PIECE_SUFFIX)) p.name.removeSuffix(Hand.PIECE_SUFFIX) + "Text" else p.name
+                    }
+                    imports += "$RES.Res"; imports += "$RES.${h.key}"
+                    for (composable in listOf(false, true)) {
+                        val (str, plural) = if (composable) "stringResource" to "pluralStringResource" else "getString" to "getPluralString"
+                        imports += "org.jetbrains.compose.resources.$str"
+                        if (composable) imports += "androidx.compose.runtime.Composable"
+                        body.append("    /** `${h.key}`: one sentence with ${h.pluralArgs.size} counts (${h.pluralArgs.joinToString()}); each count is its own plural. */\n")
+                        if (composable) {
+                            body.append("    @Composable\n    public fun ${h.key}Text($params): String {\n")
+                        } else {
+                            body.append("    public suspend fun ${h.key}($params): String {\n")
+                        }
+                        for (a in h.pluralArgs) {
+                            val piece = "${h.key}__$a"
+                            val plan = plans.getValue(piece)
+                            val args = plan.placeholders.joinToString(", ") { it.name }
+                            imports += "$RES.$piece"
+                            imports += "org.jetbrains.compose.resources.$plural"
+                            if (plan.exact.isEmpty()) {
+                                body.append("        val ${a}Text = $plural(Res.plurals.$piece, $a, $args)\n")
+                                continue
+                            }
+                            body.append("        val ${a}Text = when ($a) {\n")
+                            for (n in plan.exact) {
+                                imports += "$RES.${piece}__eq$n"
+                                body.append("            $n -> $str(Res.string.${piece}__eq$n, $args)\n")
+                            }
+                            body.append("            else -> $plural(Res.plurals.$piece, $a, $args)\n")
+                            body.append("        }\n")
+                        }
+                        body.append("        return $str(Res.string.${h.key}, $frameArgs)\n")
+                        body.append("    }\n\n")
+                    }
+                    body.setLength(body.length - 1)
+                }
+            }
+        }
+        return buildString {
+            append("// Generated by native/tools/strings from hand-recipes.tsv (`strings convert`). Do not edit.\n")
+            append("package $PACKAGE\n\n")
+            for (i in imports) append("import $i\n")
+            append("\n/**\n")
+            append(" * The code half of the hand-converted messages: ICU `select` messages and messages with several plurals,\n")
+            append(" * which CMP XML cannot hold as one resource (plan 01 §7.5, plan 06 §13.3; native/tools/strings/report).\n")
+            append(" */\n")
+            append("public object HandWords {")
+            append(body)
+            append("}\n")
+        }
+    }
+}

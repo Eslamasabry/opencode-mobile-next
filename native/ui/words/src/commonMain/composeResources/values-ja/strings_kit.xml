@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ja.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="kitSheetClose">閉じる</string>
+    <string name="kitSheetDismiss">閉じる</string>
+    <string name="kitSheetLoading">読み込み中</string>
+    <string name="kitConfirmFailed">完了しませんでした。もう一度お試しください。</string>
+    <string name="kitDiscardTitle">変更を破棄しますか？</string>
+    <string name="kitDiscardBody">ここで変更した内容は保存されていません。破棄すると元に戻せません。</string>
+    <string name="kitDiscardConfirm">変更を破棄</string>
+    <string name="kitCopied">コピーしました</string>
+    <string name="kitMore">その他</string>
+    <string name="kitCopy">コピー</string>
+    <string name="kitMenu">メニュー</string>
+    <string name="kitReportProblem">問題を報告</string>
+    <string name="kitMarkPaused">一時停止</string>
+    <string name="kitTaskNeedsYou">対応が必要</string>
+    <string name="kitTaskStopped">停止しました</string>
+    <string name="kitReceiptSending">送信中…</string>
+    <string name="kitReceiptSent">送信済み</string>
+    <string name="kitReceiptConfirmed">完了</string>
+    <string name="kitReceiptNotConfirmed">まだ確認できていません</string>
+    <string name="kitReceiptRefused">受け付けられませんでした</string>
+    <string name="kitReceiptAnsweredElsewhere">%1$s で回答済み</string>
+    <string name="kitReceiptAnsweredElsewhereUnknown">別の端末で回答済み</string>
+    <string name="kitDetailsHide">詳細を隠す</string>
+    <string name="kitNeedsYouReasonDecision">判断が必要です</string>
+    <string name="kitNeedsYouReasonBlocked">停止中: 対応が必要</string>
+    <string name="kitNeedsYouReasonConsent">確認が必要です</string>
+    <plurals name="kitNeedsYouBadgeSuffix">
+        <item quantity="other">、%1$s件があなたの対応待ち</item>
+    </plurals>
+    <string name="kitNeedsYouBadgeSuffix__eq1">、%1$s件があなたの対応待ち</string>
+    <string name="kitNeedsYouWaiting">%1$s待ち</string>
+    <plurals name="kitNeedsYouWaitingSpoken">
+        <item quantity="other">%1$s分待機中</item>
+    </plurals>
+    <string name="kitNeedsYouWaitingSpoken__eq0">待機時間は1分未満</string>
+    <string name="kitNeedsYouWaitingSpoken__eq1">1分待機中</string>
+    <string name="kitNeedsYouWhoOnServer">%2$s の %1$s</string>
+    <string name="kitJumpLatest">最新へ移動</string>
+    <plurals name="kitJumpNewLatest">
+        <item quantity="other">新着 %1$d件 · 最新へ移動</item>
+    </plurals>
+    <string name="kitJumpNewLatest__eq1">新着 %1$d件 · 最新へ移動</string>
+    <string name="kitChoiceCurrent">現在の設定</string>
+    <string name="kitChoiceRecommended">おすすめ</string>
+    <string name="kitChoiceOtherSend">回答を送信</string>
+    <string name="kitTopBarClose">閉じる</string>
+    <string name="kitTopBarSwitchServer">サーバーを切り替える</string>
+    <string name="kitTopBarSwitchProject">プロジェクトを切り替える</string>
+    <string name="kitTopBarMore">その他の操作</string>
+    <string name="kitUntilOff">オフにするまで</string>
+    <string name="kitUntilConversation">この会話の間</string>
+    <string name="kitUntilHour">1時間</string>
+    <string name="kitRiskTurnOn">オンにする</string>
+    <string name="kitRiskNotNow">今はしない</string>
+    <string name="kitRiskTurnOff">オフにする</string>
+    <string name="kitRequestApprove">承認</string>
+    <string name="kitRequestSendBack">差し戻す</string>
+    <string name="kitRequestAnswer">回答</string>
+    <string name="kitRequestSend">送信</string>
+    <string name="kitRequestReplyEmptyReason">先に返信を入力してください。</string>
+    <plurals name="kitRequestMoreAnswers">
+        <item quantity="other">ほかに回答 %1$s件</item>
+    </plurals>
+    <string name="kitRequestExpired">期限切れ · エージェントは待機をやめました</string>
+    <string name="kitRequestAge">%1$s待ち</string>
+    <string name="kitRequestChooseOneReason">回答を1つ以上選んでください。</string>
+</resources>

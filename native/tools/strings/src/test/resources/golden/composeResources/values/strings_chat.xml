@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_en.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="monitorRequestSummary">%1$s · %2$s\n%3$s: %4$s</string>
+    <string name="e7SettingsStorageSummary">%1$s of unsent work — %2$s (%3$s) and %4$s (%5$s). Queued prompts are discarded after %6$d days.</string>
+    <plurals name="e7SettingsStorageSummary__queued">
+        <item quantity="one">1 queued prompt</item>
+        <item quantity="other">%1$d queued prompts</item>
+    </plurals>
+    <string name="e7SettingsStorageSummary__queued__eq0">%1$d queued prompts</string>
+    <string name="e7SettingsStorageSummary__queued__eq1">1 queued prompt</string>
+    <string name="e7SettingsStorageSummary__queued__eq2">%1$d queued prompts</string>
+    <plurals name="e7SettingsStorageSummary__drafts">
+        <item quantity="one">1 draft</item>
+        <item quantity="other">%1$d drafts</item>
+    </plurals>
+    <string name="e7SettingsStorageSummary__drafts__eq0">%1$d drafts</string>
+    <string name="e7SettingsStorageSummary__drafts__eq1">1 draft</string>
+    <string name="e7SettingsStorageSummary__drafts__eq2">%1$d drafts</string>
+    <string name="chatUiReferenceAlreadyAdded">@%1$s is already in the prompt</string>
+    <plurals name="chatUiDraftsQueued">
+        <item quantity="one">1 draft queued to send on reconnect.</item>
+        <item quantity="other">%1$s drafts queued to send on reconnect.</item>
+    </plurals>
+    <plurals name="chatUiQuestionsSummary">
+        <item quantity="one">%1$s · 1 question</item>
+        <item quantity="other">%1$s · %2$s questions</item>
+    </plurals>
+    <string name="chatUiRateLimitCountdown">Rate limited. Retrying%1$s in %2$s</string>
+    <plurals name="kitNeedsYouWaitingSpoken">
+        <item quantity="one">waiting 1 minute</item>
+        <item quantity="other">waiting %1$s minutes</item>
+    </plurals>
+    <string name="kitNeedsYouWaitingSpoken__eq0">waiting less than a minute</string>
+    <string name="kitNeedsYouWaitingSpoken__eq1">waiting 1 minute</string>
+    <plurals name="chatTurnAllFilesMore">
+        <item quantity="one">All files · %1$d more changed</item>
+        <item quantity="other">All files · %1$d more changed</item>
+    </plurals>
+    <string name="chatTurnAllFilesMore__eq1">All files · %1$d more changed</string>
+    <string name="runningPhoneCpu__idle">Idle · %1$s%</string>
+    <string name="runningPhoneCpu__light">Light · %1$s%</string>
+    <string name="runningPhoneCpu__busy">Busy · %1$s%</string>
+    <string name="runningPhoneCpu__other">Very busy · %1$s%</string>
+</resources>

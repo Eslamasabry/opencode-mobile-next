@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_es.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="widgetV2ConfigureTitle">Estilo del widget</string>
+    <string name="widgetV2AccentWallpaper">Fondo de pantalla</string>
+    <string name="widgetV2AccentApp">Tema de la app</string>
+    <string name="widgetV2AccentGreen">Verde</string>
+    <string name="widgetV2AccentTeal">Turquesa</string>
+    <string name="widgetV2AccentBlue">Azul</string>
+    <string name="widgetV2AccentAmber">Ámbar</string>
+    <string name="widgetV2SaveStyle">Guardar estilo</string>
+    <string name="widgetV2SteerTitle">Agregar a este turno</string>
+    <string name="widgetV2AfterReplyTitle">Enviar tras esta respuesta</string>
+    <string name="widgetV2VoiceTitle">Mensaje nuevo</string>
+    <string name="widgetV2MessageHint">Escribe un mensaje</string>
+    <string name="widgetV2Send">Enviar</string>
+    <string name="widgetV2StaleRequest">La conversación cambió. Tu mensaje sigue aquí.</string>
+    <string name="widgetV2Unavailable">La conexión en segundo plano no está disponible. Tu mensaje sigue aquí.</string>
+    <string name="widgetV2Unsupported">Esta conexión no puede hacer eso.</string>
+    <string name="widgetV2Uncertain">No pudimos confirmar si se envió. Revisa la conversación antes de enviar de nuevo.</string>
+    <string name="widgetV2InvalidRequest">Escribe un mensaje antes de enviar.</string>
+    <string name="widgetV2UnknownBehavior">Esperando los detalles de la conversación…</string>
+    <string name="widgetV2StyleStale">Este widget cambió. Ciérralo e inténtalo de nuevo.</string>
+    <string name="widgetV2StyleUnavailable">No se pudo guardar el estilo. Inténtalo de nuevo.</string>
+    <string name="widgetV2DictationUnavailable">El dictado no está disponible ahora. Puedes escribir.</string>
+    <string name="widgetV2RestartUnavailable">Esta conversación solo se puede cambiar desde la app.</string>
+</resources>

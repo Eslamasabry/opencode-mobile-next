@@ -1,0 +1,1831 @@
+key	plural_arg	args (index:name:type:format)
+servicesExit		1:code:int:-
+aboutBuildVersion		1:version:String:- 2:buildNumber:String:-
+workCount		1:count:int:-
+workExitCode		1:code:int:-
+workStatusElapsed		1:status:String:- 2:elapsed:String:-
+termuxRestartBusyMessage	count	1:count:int:-
+commandRunTitle		1:command:String:-
+sessionNoteBytes		1:used:int:- 2:limit:int:-
+usagePeriod		1:from:String:- 2:to:String:-
+usageTimezone		1:timezone:String:-
+usageModelSteps		1:steps:String:-
+usageModelTokens		1:tokens:String:-
+usageSuccessRate		1:rate:String:-
+usageUpdated		1:time:String:-
+mcpWorkspaceLocation		1:workspace:String:-
+promptStashAttachments	count	1:count:int:-
+promptStashReferences	count	1:count:int:-
+usageMatchingRecords		1:count:String:-
+credentialUnnamed		1:index:int:-
+promptStashLocation		1:directory:String:-
+transcriptFindCount	total	1:total:int:- 2:current:int:-
+activeContextRefreshFailed		1:error:String:-
+activeContextTypeCount		1:type:String:- 2:count:int:-
+activeContextPartHeading		1:kind:String:- 2:name:String:-
+draftAttachmentRecoveryDetail		1:names:String:-
+usageProviderModelCount	count	1:count:int:-
+usageProviderCostShare		1:percent:String:-
+usageBudgetProgress		1:used:String:- 2:limit:String:- 3:unit:String:-
+monitorRequestSummary		1:profile:String:- 2:kind:String:- 3:lastChecked:String:- 4:time:String:-
+monitorMinutes	minutes	1:minutes:int:-
+managedRecoveryAttempts		1:attempts:int:-
+managedRecoveryNext		1:time:String:-
+mobileTasksProgress		1:done:int:- 2:total:int:-
+connectionPasswordUnreadable		1:server:String:-
+connectionTokenUnreadable		1:server:String:-
+queuedBannerReview	count	1:count:int:-
+isolatedTaskPreparing		1:name:String:-
+isolatedTaskReady		1:name:String:-
+isolatedTaskReadyIdle		1:name:String:-
+isolatedTaskUnconfirmed		1:name:String:-
+isolatedTaskFailed		1:name:String:-
+isolatedTaskOpening		1:name:String:-
+isolatedTaskOpened		1:name:String:-
+fileLineOutsidePreview		1:line:int:-
+agentAccountUpdated		1:time:String:-
+agentAccountPercentUsed		1:percent:int:-
+agentAccountWindowMinutes		1:minutes:int:-
+agentAccountWindowHours		1:hours:int:-
+agentAccountWindowDays		1:days:int:-
+projectFolderPathHint		1:directory:String:-
+projectFolderCreateSubtitle		1:directory:String:-
+setupSwitchRetry		1:runtime:String:-
+setupSwitchProfileName		1:runtime:String:-
+setupSwitchProgressTitle		1:runtime:String:-
+e7ConnectionFailure1		1:attempts:int:-
+e7ConnectionFailure32		1:port:int:-
+e7PermissionAction7		1:permission:String:-
+e7BannerReconnectingServer		1:server:String:-
+e7BannerReconnectingServerSemantic		1:server:String:-
+e7BannerCheckingExplanationAgent		1:agent:String:-
+e7BannerStaleExplanationAgent		1:agent:String:-
+e7SharedDetail307		1:step:int:-
+e7SharedDetail385		1:count:String:- 2:limit:String:-
+e7SharedDetail386		1:count:String:-
+e7SharedDetail429		1:destination:String:-
+e7SharedDetail514		1:error:String:-
+e7SharedDetail714		1:count:int:-
+e7SharedDetail715		1:count:int:-
+e7SharedDetail721		1:minimum:String:- 2:maximum:String:-
+e7SharedDetail722		1:minimum:String:-
+e7SharedDetail723		1:maximum:String:-
+e7SharedDetail726		1:count:int:-
+e7SharedDetail753		1:minimum:int:- 2:maximum:int:-
+e7SharedDetail754		1:count:int:-
+e7SharedDetail755		1:count:int:-
+e7SharedDetail756		1:range:String:- 2:count:int:-
+e7SharedDetail764		1:host:String:-
+e7SharedDetail765		1:field:String:-
+e7AppearanceUsesMode		1:mode:String:-
+e7SettingsDisconnectTitle		1:server:String:-
+e7SettingsVersion		1:version:String:-
+e7SettingsStorageSummary		1:total:String:- 2:queued__plural:String:- 3:queueBytes:String:- 4:drafts__plural:String:- 5:draftBytes:String:- 6:days:int:-
+e7SettingsStorageSummary__queued	queued	1:queued:int:-
+e7SettingsStorageSummary__drafts	drafts	1:drafts:int:-
+e7SettingsQueueDeleteSummary	count	1:count:int:-
+e7SettingsQueueDeleteBody	count	1:count:int:-
+e7SettingsDraftDeleteSummary	count	1:count:int:-
+e7SettingsDraftDeleteBody	count	1:count:int:-
+e7SettingsRestartBody		1:version:String:- 2:current:String:-
+e7SettingsInstallVersion		1:version:String:-
+e7SettingsInstalledVersion		1:version:String:-
+e7SettingsRestartVersion		1:version:String:-
+e7SettingsRetryError		1:error:String:-
+e7SettingsUpdateVersion		1:version:String:-
+e7SettingsDiagnosticOccurrences		1:count:int:-
+e7ProjectProjectRenameFailed		1:error:String:-
+e7ProjectProjectWorktrees	count	1:count:int:-
+e7ProjectProjectRenameAction		1:name:String:-
+readerUiLine		1:number:int:-
+readerUiReferenceAdded		1:label:String:-
+readerUiReferenceDuplicate		1:label:String:-
+readerUiReferenceFull		1:count:int:-
+readerUiAttached		1:name:String:-
+readerUiChangedCount	count	1:count:int:-
+readerUiAttachedReturn		1:name:String:-
+readerUiSaveNamed		1:name:String:-
+readerUiSavedDevice		1:name:String:-
+readerUiPathLine		1:path:String:- 2:line:int:-
+readerUiOnPrompt		1:count:int:-
+readerUiNewLines		1:label:String:-
+readerUiOldLines		1:label:String:-
+readerUiLineRange		1:first:int:- 2:last:int:-
+readerUiReviewPrompt		1:path:String:-
+readerUiSaved		1:name:String:-
+activityAgentNeedsInput		1:agent:String:-
+e7WorkspaceSessionId		1:id:String:-
+e7WorkspaceMinutesAgo		1:count:int:-
+e7WorkspaceHoursAgo		1:count:int:-
+e7WorkspaceDaysAgo		1:count:int:-
+e7WorkspaceFileCount	count	1:count:int:-
+chatUiChooseAgentMode		1:agent:String:-
+chatUiAgentIsReconnecting		1:agent:String:-
+chatUiAgentIsReconnectingTryAgainShortly		1:agent:String:-
+chatUiToolFrom		1:tool:String:- 2:server:String:-
+chatUiQueuedWithEviction		1:detail:Object:-
+chatUiCommandUnavailable		1:command:Object:-
+chatUiAttachmentCountLimit		1:count:Object:-
+chatUiQueuedSent	count	1:count:num:-
+chatUiOtherDraftsWaitingSuffix	count	1:count:num:-
+chatUiNextTurnsModel		1:model:Object:-
+chatUiReferenceAlreadyAdded		1:name:Object:-
+chatUiFileAttached		1:filename:Object:-
+chatUiSaveFile		1:filename:Object:-
+chatUiFileSaved		1:filename:Object:-
+chatUiDraftsQueued	count	1:count:num:-
+chatUiOtherDraftsWaiting	count	1:count:num:-
+chatUiQuestionCount	count	1:count:num:-
+chatUiPermissionNeeded		1:title:Object:-
+chatUiQuestionLabel		1:title:Object:-
+chatUiQuestionsSummary	count	1:question:Object:- 2:count:num:-
+chatUiRateLimitRetry		1:attempt:Object:-
+chatUiRateLimitCountdown		1:attempt:Object:- 2:time:Object:-
+chatUiReferencesAttachedNotice	count	1:count:num:-
+chatUiAttachedCount		1:count:Object:-
+chatUiEarlierMessageCount	count	1:count:num:-
+chatUiTokenCount		1:count:Object:-
+chatUiPositionOfTotal		1:position:Object:- 2:total:Object:-
+chatUiSubagentCount		1:count:Object:-
+chatUiToolsSummary		1:tools:Object:-
+chatUiFromLine		1:line:Object:-
+chatUiLineCount	count	1:count:num:-
+chatUiLineRange		1:start:Object:- 2:end:Object:-
+chatUiEntryCount	count	1:count:num:-
+chatUiFoundCount		1:count:Object:-
+chatUiMatchCount	count	1:count:num:-
+chatUiFileCount	count	1:count:num:-
+chatUiProviderSearch		1:provider:Object:-
+chatUiResultCount	count	1:count:num:-
+chatUiAnsweredCount		1:count:Object:-
+chatUiAskedCount		1:count:Object:-
+chatUiDurationMinutesSeconds		1:minutes:Object:- 2:seconds:Object:-
+chatUiDurationSeconds		1:seconds:Object:-
+chatUiFileLoadFailed		1:error:Object:-
+chatUiMoreEntries		1:total:Object:-
+chatUiEntryTotal		1:total:Object:-
+chatUiAnsweredDetail		1:answer:Object:-
+chatUiLoadingFile		1:filename:Object:-
+chatUiPreviewGeneratedImage		1:filename:Object:-
+chatUiParentSession		1:title:Object:-
+chatUiChooseOption		1:option:Object:-
+e7LibraryWritesOnlyTo		1:detail1:String:-
+e7LibraryInvalidOnLineUseKEYVALUE		1:detail1:String:- 2:detail2:String:-
+e7LibraryInvalidNameOnLine		1:detail1:String:- 2:detail2:String:-
+e7LibraryDuplicateName		1:detail1:String:- 2:detail2:String:-
+e7LibraryRevokeAccess2		1:detail1:String:-
+e7LibrarySearchTools2		1:detail1:String:-
+e7LibraryRemove		1:detail1:String:-
+e7LibraryIsReady		1:detail1:String:-
+e7LibraryWasCreatedItsSetupStatusIsNot		1:detail1:String:-
+e7LibraryCouldNotVerifyBeforeThisDestructiveAction		1:detail1:String:- 2:detail2:String:-
+e7LibraryResetToTheDefaultBranch		1:detail1:String:-
+e7LibraryAndItsBranchWereRemoved		1:detail1:String:-
+e7LibraryReset		1:detail1:String:-
+e7LibraryDefaultBranch		1:detail1:String:-
+e7LibraryChangedFiles		1:detail1:String:-
+e7LibraryLoading		1:detail1:String:-
+e7LibraryAuthenticated		1:detail1:String:-
+e7LibraryStoredCredential		1:detail1:String:-
+e7LibraryDisconnect2		1:detail1:String:-
+e7LibraryCredentialRemovedServerEnvironmentRemainsActive		1:detail1:String:-
+e7LibraryDisconnected2		1:detail1:String:-
+e7LibraryConnect2		1:detail1:String:-
+e7LibraryIsConnected		1:detail1:String:-
+e7LibraryChangedFilesDetected	count	1:count:int:-
+e7SetupTerminalNumber		1:number:int:-
+e7SetupCopyCommandLabel		1:label:String:-
+e7SetupConnectFailedDetail		1:name:String:- 2:detail:String:-
+e7SetupSavedConnectFailed		1:name:String:- 2:detail:String:-
+e7SetupSaveFailed		1:name:String:- 2:detail:String:-
+e7SetupRemoveServer		1:name:String:-
+e7SetupRemovedDisconnectFailed		1:name:String:- 2:detail:String:-
+e7SetupRemoveFailed		1:name:String:- 2:detail:String:-
+e7SetupPairedChoice		1:host:String:- 2:count:int:-
+e7SetupPaired		1:host:String:-
+e7SetupStartFailed		1:detail:String:-
+e7SetupRestartFailed		1:detail:String:-
+e7SetupStopFailed		1:detail:String:-
+e7SetupElapsedSeconds		1:seconds:int:-
+e7SetupElapsedMinutes		1:minutes:int:- 2:seconds:int:-
+e7SetupDeleteDisclosure		1:queued__plural:String:- 2:drafts__plural:String:-
+e7SetupDeleteDisclosure__queued	queued	1:queued:int:-
+e7SetupDeleteDisclosure__drafts	drafts	1:drafts:int:-
+e7SetupPairingFailed		1:detail:String:- 2:hint:String:-
+e7SetupProbeV2		1:version:String:-
+e7SetupConnectingProfile		1:name:String:-
+e7SetupConnectingAttempt		1:attempt:int:-
+e7SetupLastSetupDetail		1:detail:String:-
+e7SetupBridgeDetail		1:detail:String:-
+e7SetupDiagnosticsUnavailable		1:detail:String:-
+e7SetupProbeHttp		1:status:String:-
+e7SetupProbeError		1:detail:String:-
+e7SetupServerExit		1:code:String:-
+e7ModelUiUseModelMode		1:model:String:- 2:agent:String:-
+e7ModelUiCount	count	1:count:int:-
+e7ModelUiContext		1:count:String:-
+e7ModelUiOutput		1:count:String:-
+e7ModelUiFavorite		1:model:String:-
+e7ModelUiUnfavorite		1:model:String:-
+e7ModelUiEffort		1:variant:String:- 2:effort:String:-
+e7ModelUiCost		1:input:String:- 2:output:String:-
+e7VoiceUiDownloadPercent		1:percent:int:-
+e7VoiceUiDownloadProgress		1:received:String:- 2:total:String:-
+e7VoiceUiSetupFailed		1:error:String:-
+e7VoiceUiDeletePack		1:model:String:-
+e7VoiceUiDeleteDetail		1:size:String:-
+e7VoiceUiDownloadSize		1:size:String:-
+e7VoiceUiPackSemantics		1:model:String:- 2:size:String:- 3:badges:String:- 4:description:String:-
+e7VoiceUiMemory		1:model:String:- 2:required:int:- 3:available:int:-
+e7VoiceUiStorage		1:model:String:- 2:size:String:-
+e7ModelUiProviderPair		1:first:String:- 2:last:String:-
+e7ModelUiProviderMany		1:first:String:- 2:last:String:-
+e7ModelUiUnloadedProviders	count	1:count:int:- 2:providers:String:-
+approvalsUiAutoApproved		1:action:String:-
+approvalsUiSaveFailed		1:error:String:-
+handoffUiComputerIntro		1:binary:String:-
+handoffUiComputerVerify		1:verified:String:- 2:binary:String:-
+teamUiEditorConfigured		1:url:String:-
+teamUiRowNotAvailableReason		1:reason:String:-
+teamUiRowOn		1:server:String:-
+teamUiRowOnReadOnly		1:server:String:-
+teamUiRowUnreachable		1:minutes:String:-
+teamUiTurnOffTitle		1:server:String:-
+teamUiCardAgentsSummary		1:total:int:- 2:working:int:- 3:waiting:int:- 4:idle:int:- 5:stopped:int:-
+teamUiCardRefreshFailed		1:time:String:-
+teamUiCardStale		1:time:String:-
+teamUiHomeGateLinkAgent		1:name:String:-
+teamUiHomeGateLinkRun		1:title:String:-
+teamUiHomeGateLinkWork		1:title:String:-
+teamUiHomeRunProgress		1:done:int:- 2:total:int:-
+teamUiRunBlockedByDeps	count	1:count:int:-
+teamUiRunElapsedDays		1:count:int:-
+teamUiRunElapsedHours		1:hours:int:- 2:minutes:int:-
+teamUiRunElapsedMinutes		1:count:int:-
+teamUiRunSinceHandoff		1:elapsed:String:-
+teamUiRunTimelineAgentStopped		1:name:String:-
+teamUiRunTimelineAgentWoke		1:name:String:-
+teamUiRunTimelineGateOpened		1:title:String:-
+teamUiRunTimelineGateResolved		1:title:String:-
+teamUiRunTimelineRunChanged		1:state:String:-
+teamUiRunTimelineWorkClosed		1:title:String:-
+teamUiRunTimelineWorkCreated		1:title:String:-
+teamUiRunTimelineWorkUpdated		1:title:String:-
+teamUiAgentContextSemantics		1:percent:int:-
+teamUiAgentContextShort		1:percent:int:-
+teamUiAgentSessionAge		1:age:String:-
+teamUiAgentTermSession		1:id:String:-
+teamUiWorkSheetStamp		1:date:String:- 2:clock:String:- 3:age:String:-
+teamUiUsageCostEstimated		1:cost:String:-
+teamUiUsageTokens		1:count:String:-
+teamUiGateAnswerRunRetry		1:work:String:- 2:agent:String:-
+teamUiGateAnswerRejected		1:message:String:-
+teamUiControlStopConfirmTitle		1:agent:String:-
+teamUiControlRestartConfirmTitle		1:agent:String:-
+teamUiControlReceiptLine		1:control:String:- 2:state:String:-
+teamUiStartRunSend		1:planner:String:-
+teamUiMergeRequest		1:id:String:-
+teamUiMergeFiles	files	1:files:int:- 2:additions:int:- 3:deletions:int:-
+teamUiMergeApprovedBy		1:login:String:-
+teamUiMergeConfirmAction		1:branch:String:-
+teamUiMergeDisabledReason		1:line:String:- 2:detail:String:-
+teamUiMergeBoundary		1:text:String:-
+teamUiMergeMerged		1:branch:String:- 2:commit:String:-
+teamUiMergeAlready		1:branch:String:-
+teamUiMergeUnavailable		1:reason:String:-
+teamUiPolicySupervision		1:level:String:-
+teamUiPolicyRig		1:rig:String:-
+teamUiPolicySemantics		1:level:String:- 2:boundaries:String:-
+termuxStorageRowUsed		1:size:String:-
+termuxStorageTotal		1:size:String:-
+termuxStorageDeletableTotal		1:size:String:-
+termuxStorageScannedMinutesAgo		1:minutes:int:-
+termuxStorageScannedHoursAgo		1:hours:int:-
+termuxStorageCleanConfirmTitle		1:size:String:- 2:category:String:-
+termuxStorageCleanConfirm		1:size:String:-
+termuxStorageFreed		1:size:String:-
+termuxStorageInUse		1:process:String:-
+termuxStorageRefusedCount		1:count:int:-
+termuxStorageProjectBuild		1:size:String:- 2:build:String:-
+termuxStorageBytesGb		1:value:String:-
+termuxStorageBytesMb		1:value:String:-
+termuxStorageBytesKb		1:value:String:-
+termuxStorageBytesB		1:value:String:-
+termuxProcsStopSemantics		1:name:String:-
+termuxProcsStopOneTitle		1:name:String:-
+termuxProcsOrphanParentGone		1:elapsed:String:-
+termuxProcsOrphanCpu		1:cpu:String:-
+termuxProcsStopped		1:count:int:-
+termuxProcsStoppedForced		1:count:int:- 2:forced:int:-
+termuxProcsRemaining		1:count:int:-
+termuxProcsRefused		1:count:int:-
+termuxProcsDurationSeconds		1:seconds:int:-
+termuxProcsDurationMinutes		1:minutes:int:-
+termuxProcsDurationHours		1:hours:int:- 2:minutes:int:-
+termuxProcsMemoryMb		1:mb:int:-
+teamUiPhoneFailedChecksum		1:name:String:-
+teamUiPhoneFailedDownloadDns		1:host:String:-
+teamUiPhoneFailedDownloadConnect		1:host:String:-
+teamUiPhoneFailedDownloadTimeout		1:host:String:-
+teamUiPhoneFailedDownloadTls		1:host:String:-
+teamUiPhoneFailedDownloadHttp		1:host:String:- 2:code:String:-
+teamUiPhoneFailedDownloadInterrupted		1:host:String:-
+teamUiPhoneFailedDownloadOther		1:host:String:- 2:code:String:-
+teamUiPhoneFailedHealth		1:url:String:-
+teamUiPhoneFailedReason		1:reason:String:-
+teamUiPhoneStatusWorking		1:verb:String:-
+teamUiPhoneStatusRunning	count	1:count:int:-
+teamUiPhoneStatusUnreachable		1:url:String:-
+teamUiPhoneVersions		1:gc:String:- 2:bd:String:- 3:dolt:String:-
+teamUiPhoneActionFailed		1:reason:String:-
+teamUiPhoneFailedNoSpace		1:detail:String:-
+safetyMcpDisconnectTitle		1:server:String:-
+discoverSearchIn		1:parent:String:-
+gestureEquivFileRowActions		1:name:String:-
+capabilityScreenIntro		1:server:String:-
+nudgeApprovals		1:action:String:-
+nudgeCompact		1:percent:String:-
+localAgentSignInOpenFailed		1:command:String:-
+localAgentVersions		1:claude:String:- 2:paseo:String:- 3:node:String:-
+localAgentFailedNoSpace		1:detail:String:-
+localAgentFailedReason		1:detail:String:-
+localAgentConnectFailed		1:detail:String:-
+localAgentCardActionFailed		1:detail:String:-
+chatUiRetryingSoon		1:attempt:String:-
+chatUiRetryingCountdown		1:attempt:String:- 2:time:String:-
+approvalModeEverythingAgentDetail		1:agent:String:-
+chatAttachmentOfficeHeader		1:name:String:-
+chatAttachmentOfficeUnreadable		1:name:String:-
+chatAttachmentOfficeEmpty		1:name:String:-
+chatAttachmentDocumentAttached		1:name:String:-
+chatAttachmentSheetAttached		1:name:String:- 2:sheets__plural:String:- 3:rows__plural:String:-
+chatAttachmentSheetAttached__sheets	sheets	1:sheets:int:-
+chatAttachmentSheetAttached__rows	rows	1:rows:int:-
+otherServerWorking	count	1:count:int:-
+chatUiAskAgent		1:agent:String:-
+terminalShowEarlier	count	1:count:int:decimalPattern
+terminalOpenFull		1:count:int:decimalPattern
+setupProgressViewMinutesLeft	minutes	1:minutes:int:-
+setupProgressViewBytes		1:done:String:- 2:total:String:-
+setupProgressViewPercent		1:percent:int:-
+setupProgressViewStageMeasured		1:stage:String:- 2:measured:String:-
+setupProgressViewFailedDuring		1:stage:String:-
+builtinServerStartFailed		1:reason:String:-
+builtinServerTimedOut		1:seconds:int:-
+builtinServerConnectFailed		1:reason:String:-
+builtinServerProfileName		1:runtime:String:-
+phoneSetupNotificationProgress		1:percent:String:-
+phoneSetupErrorOffline		1:name:String:-
+phoneSetupErrorInstall		1:name:String:-
+phoneSetupErrorChecksum		1:name:String:-
+phoneSetupErrorNoSpace		1:name:String:-
+phoneSetupReadyCreateFailed		1:reason:String:-
+phoneSetupReadyOpenFailed		1:reason:String:-
+phoneServerCardVersion		1:version:String:-
+projectFolderCreateFailed		1:reason:String:-
+projectFolderCheckFailed		1:reason:String:-
+folderBrowserCurrent		1:path:String:-
+folderBrowserOpen		1:name:String:-
+folderBrowserShowInside		1:name:String:-
+phoneSetupStartPromise		1:size:String:-
+phoneSetupStartSteps		1:time:String:-
+phoneSetupStartStepsTime	minutes	1:minutes:int:-
+phoneSetupStartAboutMinutes	minutes	1:minutes:int:-
+phoneSetupStartMegabytes		1:value:String:-
+phoneSetupStartGigabytes		1:value:String:-
+phoneSetupStartIncludes		1:tools:String:-
+phoneSetupStartListPair		1:first:String:- 2:last:String:-
+phoneSetupStartProgressHeadline		1:percent:int:-
+phoneSetupStartFailed		1:reason:String:-
+phoneSetupStartTotals		1:time:String:- 2:size:String:-
+phoneSetupStartApproxSize		1:size:String:-
+phoneSetupPreflightUnsupportedBody		1:abi:String:-
+phoneSetupPreflightLowMemoryBody		1:minimum:int:decimalPattern 2:actual:int:decimalPattern
+phoneSetupPreflightMayBeSlow		1:memory:int:decimalPattern
+phoneSetupPreflightLowSpaceBody		1:size:String:-
+phoneSetupOpenPhoneRuntime		1:name:String:- 2:runtime:String:-
+chatStartItemCount	count	1:count:int:-
+chatStartChangeCount	count	1:count:int:-
+perfTraceStatLine		1:count:int:- 2:p50:String:- 3:p95:String:- 4:max:String:-
+perfTraceFailed	count	1:count:int:-
+perfTraceAt		1:time:String:-
+perfTraceWithin		1:parent:String:-
+aiteamComponentStageDownloading		1:index:String:- 2:total:String:-
+aiteamComponentAddingTitle		1:names:String:-
+aiteamComponentOfferBody		1:size:String:-
+aiteamComponentTurnOn		1:project:String:-
+aiteamComponentStageProject		1:project:String:-
+aiteamComponentStageSoFar		1:time:String:-
+aiteamComponentStageTook		1:time:String:-
+aiteamComponentProjects		1:projects:String:-
+aiteamComponentFailed		1:reason:String:-
+workOpenLiveConversation		1:title:String:-
+agentNotAnsweringPhone		1:agent:String:-
+workServerNotAnswering		1:server:String:-
+workRunaway		1:duration:String:-
+workRunawayInProject		1:project:String:- 2:duration:String:-
+aiteamBringInDone		1:project:String:- 2:commit:String:-
+aiteamBringInDirty		1:commit:String:- 2:project:String:- 3:files:String:-
+aiteamBringInDiverged		1:commit:String:- 2:project:String:-
+aiteamBringInFailed		1:project:String:- 2:reason:String:-
+aiteamBringInAction		1:project:String:-
+teamUiHostPhraseComputerNamed		1:name:String:-
+teamUiTaskSteps	total	1:total:int:- 2:done:int:-
+teamUiTaskDoneAgo		1:when:String:-
+teamUiTaskMergedAgo		1:when:String:-
+teamUiTaskCancelledAgo		1:when:String:-
+teamUiHomeDoneMore	count	1:count:int:-
+teamUiHomeNeedsYouAnnouncement		1:question:String:-
+teamUiRunStageSemantics		1:position:int:- 2:stage:String:-
+phoneServerRowStatus		1:runtime:String:- 2:state:String:-
+pluginsTeamRowFound		1:server:String:-
+pluginsBuiltinActive		1:count:int:-
+pluginsBuiltinFailed		1:count:int:-
+localTerminalShellName		1:number:int:-
+localTerminalEndedBody		1:code:int:-
+localTerminalCost		1:perShell:int:- 2:limit:int:-
+localTerminalCostNow		1:perShell:int:- 2:count:int:- 3:limit:int:-
+addServerCheckingHost		1:host:String:-
+addServerConnectingHost		1:host:String:-
+teamDiscoverNeedsServer		1:server:String:-
+teamDiscoverDownloadTitle		1:size:String:-
+teamDiscoverComputerTitle		1:server:String:-
+teamDiscoverLooking		1:server:String:-
+teamNowChecksEvery		1:minutes:String:-
+teamOutputNotRunning		1:name:String:-
+teamAgentTitle		1:role:String:- 2:name:String:-
+teamAgentWorksOn		1:title:String:-
+teamOutputStartingPhone		1:age:String:-
+teamWatchBannerRole		1:role:String:- 2:state:String:-
+teamOpenConversationHint		1:name:String:-
+teamChatSubtitle		1:host:String:-
+teamChatStopConfirmBody		1:task:String:-
+teamChatLeadPlanned	count	1:count:int:-
+teamChatLeadRouted		1:title:String:-
+teamChatLeadStarting		1:title:String:-
+teamChatLeadClaimedWorker		1:title:String:-
+teamChatLeadPushed		1:title:String:-
+teamChatLeadReview		1:title:String:-
+teamChatLeadMerged		1:title:String:-
+teamChatLeadStepFailed		1:title:String:-
+teamChatLeadStepCancelled		1:title:String:-
+teamChatLeadNeedsYou		1:question:String:-
+teamChatStepsSummary	count	1:count:int:- 2:done:int:-
+teamChatComposerGoesTo		1:name:String:-
+teamBoardEpicProgress		1:done:int:- 2:total:int:-
+teamBoardFlagBlockedBy		1:title:String:-
+teamBoardFlagBlockedByMore		1:title:String:- 2:count:int:-
+teamBoardFlagInEpic		1:epic:String:-
+teamBoardFlagMoving		1:column:String:-
+teamBoardMoveSheetWhere		1:column:String:-
+teamBoardCancelTitle		1:title:String:-
+teamBoardMoveFailedTitle		1:title:String:-
+appExitForceStopped		1:time:String:-
+appExitLowMemory		1:time:String:-
+appExitCrashed		1:time:String:-
+appExitKilled		1:time:String:-
+appExitServerStopped		1:what:String:-
+appExitServerAndTeamStopped		1:what:String:-
+appExitServerStoppedManual		1:what:String:-
+appExitServerAndTeamStoppedManual		1:what:String:-
+appExitServerBack		1:what:String:-
+appExitServerBackTeam		1:what:String:-
+appExitAtTime		1:time:String:-
+appExitOnDay		1:day:String:- 2:time:String:-
+teamAgentLastStep		1:step:String:-
+teamAgentLastActive		1:elapsed:String:-
+teamChatLeadEarlier	count	1:count:int:-
+kitConfirmTypeName		1:name:String:-
+kitChipRemove		1:label:String:-
+kitZoomLevel		1:percent:String:-
+kitZoomShortcut		1:action:String:- 2:key:String:-
+kitProgressStep		1:step:int:decimalPattern 2:of:int:decimalPattern
+kitProgressEtaSeconds	seconds	1:seconds:int:decimalPattern
+kitProgressEtaMinutes	minutes	1:minutes:int:decimalPattern
+kitProgressEtaHours	hours	1:hours:int:decimalPattern
+kitSinceStillWaiting		1:seconds:int:decimalPattern
+kitSinceWaitingFor	minutes	1:minutes:int:decimalPattern
+kitSinceAge	minutes	1:minutes:int:decimalPattern
+kitTerminalViewShowingLast	count	1:count:int:decimalPattern
+kitUndoFailed		1:message:String:-
+kitFieldShowNamed		1:label:String:-
+kitFieldHideNamed		1:label:String:-
+kitFieldStillChecking		1:seconds:int:-
+kitFieldCount	count	1:count:int:decimalPattern 2:max:int:decimalPattern
+kitWorkRead	count	1:count:int:-
+kitWorkSearched	count	1:count:int:-
+kitWorkListed	count	1:count:int:-
+kitWorkEdited	count	1:count:int:-
+kitWorkRan	count	1:count:int:-
+kitWorkFetched	count	1:count:int:-
+kitWorkDelegated	count	1:count:int:-
+kitWorkOther	count	1:count:int:-
+kitWorkNotRun	count	1:count:int:-
+kitWorkSteps	count	1:count:int:-
+kitWorkEarlierSteps	count	1:count:int:-
+kitReceiptRefusedReason		1:reason:String:-
+kitReceiptAnsweredElsewhere		1:where:String:-
+kitReceiptActRefusedReason		1:act:String:- 2:reason:String:-
+kitReceiptAt		1:time:String:-
+kitCopyValue		1:label:String:-
+kitDetailsShowAll	count	1:count:int:-
+kitDetailsValueSpoken		1:label:String:- 2:value:String:-
+kitProgressRowPercent		1:percent:int:decimalPattern
+kitProgressRowAsOf		1:time:String:-
+kitModelContext		1:percent:String:-
+kitAttachmentOpen		1:label:String:-
+kitAttachmentImage		1:label:String:-
+kitAttachmentFile		1:label:String:-
+kitAttachmentFolder		1:label:String:-
+kitAttachmentReference		1:label:String:-
+kitNeedsYouSpan	count	1:count:int:decimalPattern
+kitNeedsYouBadgeSuffix	count	1:count:int:decimalPattern
+kitNeedsYouWaiting		1:age:String:-
+kitNeedsYouWaitingSpoken	minutes	1:minutes:int:decimalPattern
+kitNeedsYouWhoOnServer		1:who:String:- 2:server:String:-
+kitWorkGraphNode		1:title:String:- 2:state:String:-
+kitWorkGraphNeeds		1:title:String:-
+kitWorkGraphNeedsMore	count	1:title:String:- 2:count:int:-
+kitJumpNewLatest	count	1:count:int:-
+kitChoiceSelectedCount	count	1:count:int:-
+kitVoiceElapsed		1:minutes:String:- 2:seconds:String:-
+kitSearchFilterActive		1:name:String:-
+kitSearchResults	count	1:count:int:-
+kitSearchPartial		1:count:int:-
+kitSearchNoMatch		1:query:String:-
+kitSearchNoMatchIn		1:what:String:- 2:query:String:-
+kitAgentOpen		1:name:String:-
+kitAgentLabel__yes		1:name:String:- 2:role:String:- 3:state:String:-
+kitAgentLabel__other		1:name:String:- 2:role:String:- 3:state:String:-
+kitBreadcrumbOpen		1:folder:String:-
+kitBreadcrumbOpenRoot		1:root:String:-
+kitBreadcrumbCurrent		1:folder:String:-
+kitBreadcrumbMore	count	1:count:int:-
+kitCodeShowAll	count	1:count:int:-
+kitCodeChanges		1:added:int:- 2:removed:int:-
+kitTabLabel		1:label:String:- 2:count:int:decimalPattern
+kitQueuedTitle		1:count:int:-
+kitQueuedAttachments	count	1:count:int:-
+kitQueuedItemLabel		1:index:int:- 2:count:int:- 3:text:String:- 4:state:String:-
+kitLogQuiet		1:age:String:-
+kitLogQuietSeconds		1:seconds:int:-
+kitLogEndedExit		1:code:String:-
+kitLogFailedExit		1:code:String:-
+kitLogNewLines	count	1:count:int:-
+kitLogDropped	count	1:count:int:-
+kitLogWarningLine		1:line:String:-
+kitLogErrorLine		1:line:String:-
+safetyDisconnectWaiting	count	1:count:int:-
+kitChecklistNext		1:step:String:-
+kitChecklistNeedsYou		1:action:String:-
+kitRequestMoreAnswers	count	1:count:int:decimalPattern
+kitRequestAge		1:age:String:-
+kitDiffFiles	count	1:count:int:-
+kitDiffChangeOf		1:index:int:decimalPattern 2:count:int:decimalPattern
+kitDiffLines		1:start:int:decimalPattern 2:end:int:decimalPattern
+kitDiffRenamed		1:path:String:-
+kitDiffTooBig		1:shown:int:decimalPattern 2:total:int:decimalPattern
+kitDiffLineAdded		1:number:int:-
+kitDiffLineRemoved		1:number:int:-
+kitDiffLinesAdded		1:start:int:- 2:end:int:-
+kitDiffLinesRemoved		1:start:int:- 2:end:int:-
+kitDiffSelected	count	1:count:int:-
+kitDiffCounts		1:added:int:- 2:removed:int:-
+kitDiffLine		1:number:int:-
+kitBoardLane	count	1:column:String:- 2:count:int:-
+kitBoardLaneLoading		1:column:String:-
+kitMarkdownTable	rows	1:rows:int:-
+kitToolTookSeconds	count	1:count:int:decimalPattern
+kitToolTookMinutes	count	1:count:int:decimalPattern
+kitViewerFindCount		1:index:int:decimalPattern 2:count:int:decimalPattern
+kitViewerTruncated		1:shown:int:decimalPattern 2:total:int:decimalPattern
+kitViewerCantShowBody		1:type:String:- 2:size:String:-
+kitViewerLoadFailed		1:name:String:-
+kitViewerPage		1:page:int:decimalPattern 2:count:int:decimalPattern
+kitViewerPageFailed		1:page:int:decimalPattern
+kitCapNotOnHost	count	1:count:int:- 2:feature:String:- 3:host:String:-
+kitCapWorksOn		1:hosts:String:-
+kitCapWhyElsewhere		1:notHere:String:- 2:worksOn:String:-
+kitCapAnd		1:first:String:- 2:last:String:-
+kitCapComma		1:first:String:- 2:next:String:-
+kitCapServerOnHost		1:server:String:- 2:host:String:-
+activityQuestionProgress		1:index:int:- 2:total:int:-
+homeShellProjectUnavailableReason		1:server:String:-
+homeShellProjectUnavailableShort		1:server:String:-
+managedWorkspacesOpenFailed		1:name:String:-
+managedWorkspacesRemoveTitle		1:name:String:-
+managedWorkspacesRemoveBody		1:provider:String:-
+managedWorkspacesRemoved		1:name:String:-
+managedWorkspacesEmptyBody		1:project:String:-
+projectHealthLineCounts		1:added:int:- 2:removed:int:-
+projectFolderCreateHelper		1:directory:String:-
+servicesStarted		1:name:String:-
+servicesRemoved		1:name:String:-
+servicesStopTitle		1:name:String:-
+servicesRestartTitle		1:name:String:-
+servicesForgetTitle		1:name:String:-
+servicesRemoveTitle		1:name:String:-
+savedPermissionsRevokedDetail		1:action:String:-
+privacyDeleteQueuedCount	count	1:count:int:-
+privacyDeleteDraftsCount	count	1:count:int:-
+kitMessageThoughtForSeconds	count	1:count:int:-
+kitMessageThoughtForMinutes	count	1:count:int:-
+serversRemoveDrafts	count	1:count:int:-
+profileMonitorSwitchBody		1:current:String:- 2:target:String:-
+serverSettingsUpgradeBody		1:target:String:- 2:server:String:- 3:current:String:-
+serverSettingsUpgradeKeepsRunning		1:current:String:-
+serverSettingsUpgradeRestartAfter		1:target:String:-
+serverSettingsCopyUpdateCommands		1:server:String:-
+languagePickerPartlyTranslated		1:percent:int:-
+appearancePickerPreviewLabel		1:name:String:-
+appearancePickerThemeApplied		1:name:String:-
+localAgentEntrySignedOut		1:state:String:-
+formRendererDateAndTime		1:date:String:- 2:time:String:-
+kitTurnStillStarting		1:seconds:int:-
+serverSettingsDisconnectTitle		1:serverName:String:-
+kitDateFormatHint		1:example:String:-
+kitDateOutOfRange		1:first:String:- 2:last:String:-
+kitDateTimeClear		1:title:String:-
+globalSessionsMoveTitle		1:project:String:-
+globalSessionsMoveBody		1:title:String:- 2:from:String:- 3:to:String:-
+globalSessionsMoveBack		1:project:String:-
+globalSessionsProjectInUse		1:project:String:-
+importMessages	count	1:count:int:-
+modelPickerDetailsOutput		1:count:String:-
+modelPickerDetailsPrice		1:input:String:- 2:output:String:-
+modelPickerShowMore	count	1:count:int:-
+phoneServerCardDisconnect		1:server:String:-
+teamPhoneRemoveFrees		1:size:int:-
+externalLinkOpensHost		1:host:String:-
+runCommandArgumentsHelper		1:command:String:-
+runCommandFailedTitle		1:command:String:-
+teamAgentScreenPause		1:agent:String:-
+teamAgentScreenPaused		1:agent:String:-
+teamAgentScreenResume		1:agent:String:-
+teamAgentScreenNudge		1:agent:String:-
+teamAgentScreenRestart		1:agent:String:-
+teamAgentScreenStop		1:agent:String:-
+teamAgentScreenStopBody		1:agent:String:- 2:task:String:-
+teamAgentScreenStoppedTitle		1:agent:String:-
+teamAgentScreenCrashedTitle		1:agent:String:-
+teamAgentScreenModelFrom		1:model:String:- 2:provider:String:-
+teamAgentScreenGateIfIgnored		1:agent:String:-
+teamAgentScreenControlsElsewhere		1:agent:String:-
+gateSheetFixItDetail		1:agent:String:-
+gateSheetFixRequest		1:task:String:- 2:error:String:-
+gateSheetOpenAgent		1:agent:String:-
+teamIntroSetUpOn		1:server:String:-
+teamIntroTurnOn		1:server:String:-
+teamAgentsChecked		1:age:String:-
+teamWorkSheetOpenAgentConversation		1:name:String:-
+agentAccountLimitReached		1:reset:String:-
+agentAccountResetInDays	days	1:days:int:-
+agentAccountResetInHours	hours	1:hours:int:-
+agentAccountResetInMinutes	minutes	1:minutes:int:-
+agentAccountResetWhen		1:relative:String:- 2:time:String:-
+reviewWorkspaceAllViewedMessage	count	1:count:int:-
+reviewWorkspaceCommentOnFile		1:file:String:-
+reviewWorkspaceAddFileToPrompt		1:file:String:-
+integrationsModelCount	count	1:count:int:-
+integrationsProviderActions		1:name:String:-
+integrationsManageAccounts		1:name:String:-
+integrationsServerSignIn		1:name:String:-
+integrationsDisconnectNamed		1:name:String:-
+integrationsDisconnectBody		1:name:String:-
+integrationsSignInAtHost		1:host:String:-
+integrationsSignInInstructions		1:instructions:String:-
+integrationsOAuthInputsContinue		1:name:String:-
+integrationsMcpActions		1:name:String:-
+integrationsMcpSignIn		1:name:String:-
+integrationsMcpReconnect		1:name:String:-
+integrationsMcpSigningIn		1:name:String:-
+integrationsMcpRemoveUntilRestart		1:name:String:-
+integrationsMcpRemoveTitle		1:name:String:-
+terminalScreenStopTitle		1:name:String:-
+terminalScreenRemoveTitle		1:name:String:-
+terminalScreenRemoveEnded	count	1:count:int:-
+terminalScreenRemoveEndedTitle	count	1:count:int:-
+terminalScreenRowRunning		1:command:String:-
+terminalScreenRowEnded		1:code:String:- 2:command:String:-
+terminalScreenRowEndedNoCode		1:command:String:-
+terminalScreenMenuLabel		1:name:String:-
+terminalScreenOpen		1:name:String:-
+terminalScreenRename		1:name:String:-
+terminalScreenStop		1:name:String:-
+terminalScreenRemove		1:name:String:-
+terminalScreenPaste		1:name:String:-
+terminalScreenDetailsTitle		1:name:String:-
+localTerminalStopNamedTitle		1:name:String:-
+localTerminalPasteNamed		1:name:String:-
+defaultShellOnlyOne		1:name:String:-
+defaultShellSaveFailed		1:error:String:-
+reviewRevertFileLines		1:added:int:- 2:removed:int:-
+reviewRevertFileSupporting		1:folder:String:- 2:lines:String:-
+reviewRevertKeepConfirmTitle		1:title:String:-
+reviewRevertRestoreConfirmTitle		1:title:String:-
+reviewRevertRestoreConsequenceFiles	count	1:count:int:-
+appDiagnosticsClearTitle	count	1:count:int:-
+appDiagnosticsClearBody	count	1:count:int:-
+appDiagnosticsClearConfirm	count	1:count:int:-
+capabilityAvailableCount	count	1:count:int:-
+voiceSetupDownloadPack		1:model:String:- 2:size:String:-
+voiceSetupUsePack		1:model:String:-
+voiceSetupRedownloadPack		1:model:String:-
+voiceSetupDeletePack		1:model:String:- 2:size:String:-
+voiceSetupKeepPack		1:model:String:-
+voiceSetupDownloadingPack		1:model:String:-
+voiceNoticesMadeBy		1:maker:String:- 2:license:String:-
+voiceNoticesOpenWebsite		1:name:String:-
+desktopReleaseAvailable		1:tag:String:-
+runningWorkAgentState		1:state:String:-
+runningWorkCommandState		1:state:String:-
+runningWorkStopAgent		1:title:String:-
+runningWorkStopAgentTitle		1:title:String:-
+shellOutputStopsIn		1:time:String:-
+shellOutputAboutToStop		1:time:String:-
+sessionDestinationCloudKind		1:state:String:-
+sessionDestinationChangesGo		1:destination:String:-
+sessionDestinationChangesCopied		1:destination:String:-
+sessionDestinationChangesStay		1:place:String:-
+sessionDestinationMoveWithout		1:destination:String:-
+consoleOrganizationSwitchBody		1:organization:String:-
+consoleOrganizationSwitchConfirm		1:organization:String:-
+sessionContextVerdictPlenty		1:percent:String:-
+sessionContextVerdictUsed		1:percent:String:-
+sessionContextVerdictNear		1:percent:String:-
+sessionContextVerdictFull		1:percent:String:-
+sessionContextTokens		1:count:String:-
+sessionContextPercent		1:percent:String:-
+sessionDestinationChangesCount	count	1:count:int:-
+activeContextAllCount		1:count:int:-
+activeContextRowMenu		1:type:String:-
+activeContextOpenMessage		1:type:String:-
+activeContextCopyMessage		1:type:String:-
+activeContextCopyPart		1:part:String:-
+sessionNoteTooLong		1:over:int:- 2:limit:int:-
+sessionRelationsStopTitle		1:title:String:-
+sessionRelationsSubagentCount	count	1:count:int:-
+sessionRelationsRowMenu		1:title:String:-
+sessionRelationsOpen		1:title:String:-
+sessionRelationsCopyHandoff		1:title:String:-
+sessionRelationsPin		1:title:String:-
+sessionRelationsUnpin		1:title:String:-
+sessionRelationsStop		1:title:String:-
+webSearchResults	count	1:count:int:-
+webSourcesAddNamed		1:title:String:-
+webSourcesRowMenu		1:title:String:-
+webSourcesOpenHost		1:host:String:-
+webSourcesRemoveNamed		1:title:String:-
+webSourcesDone	count	1:count:int:-
+capabilitiesToolsMissingOnServer		1:server:String:-
+mcpSetupSaveNamed		1:name:String:-
+mcpSetupAddNamed		1:name:String:-
+externalAgentsRemoveNamed		1:name:String:-
+externalAgentsRemoveTitle		1:name:String:-
+externalAgentsSaveNamed		1:name:String:-
+externalAgentsNewTaskNamed		1:name:String:-
+externalAgentsReplaceKeyNamed		1:name:String:-
+externalAgentsReplaceKeyTitle		1:name:String:-
+externalAgentsSendNamed		1:name:String:-
+externalAgentsReplyNamed		1:name:String:-
+externalAgentsCheckedAt		1:age:String:-
+externalAgentsStopMenu		1:name:String:-
+mcpSetupSavedNamed		1:name:String:-
+mcpSetupSavedNotConnectedBody		1:reason:String:-
+credentialSheetEmptyBody		1:provider:String:-
+credentialSheetActions		1:label:String:-
+credentialSheetUseNamed		1:label:String:-
+credentialSheetRenameNamed		1:label:String:-
+credentialSheetRemoveNamed		1:label:String:-
+credentialSheetRemoveBody		1:label:String:- 2:provider:String:-
+credentialSheetRenamed		1:label:String:-
+pendingAuthRecoveryForgetTitle		1:integration:String:-
+commandsScreenRunsWith		1:agent:String:-
+commandsScreenCopy		1:command:String:-
+referencesScreenAdd		1:mention:String:-
+referencesScreenShowDetails		1:name:String:-
+referencesScreenCopyMention		1:mention:String:-
+referencesScreenSheetBody		1:mention:String:-
+skillSheetCopyCommand		1:command:String:-
+toolCardDelegatedTo		1:agent:String:-
+toolCardExitFailed		1:code:int:-
+toolCardLoadImageAgain		1:name:String:-
+toolCardChangesIn		1:file:String:-
+mobileTasksShowAll		1:count:int:-
+composerToolsAgentTextOnly		1:agent:String:-
+launcherConversationHint		1:project:String:- 2:agent:String:-
+composerToolsAgentPicturesOnly		1:agent:String:-
+chatsNewAgentNeedsProjectsFolder		1:agent:String:-
+connectionReconnectTo		1:server:String:-
+serverDisconnectFrom		1:server:String:-
+monitorSwitchToTitle		1:server:String:-
+monitorSwitchTo		1:server:String:-
+servicesStartNamed		1:service:String:-
+servicesStopNamed		1:service:String:-
+serverSettingsChangeSignIn		1:server:String:-
+serverSettingsAuthBasic		1:user:String:-
+projectHubChangedFiles	count	1:count:int:-
+projectHubTerminalsRunning	count	1:count:int:-
+terminalScreenNoTerminalNamed		1:server:String:-
+integrationsFinishSigningIn		1:provider:String:-
+integrationsEnterCodeFor		1:provider:String:-
+integrationsCancelSignInFor		1:provider:String:-
+integrationsSignInActions		1:provider:String:-
+integrationsAccountCount	count	1:count:int:-
+modelPickerUseModel		1:model:String:-
+voiceSetupNotDownloaded		1:size:String:-
+sessionContextMessagesSplit		1:count:String:- 2:yours:String:- 3:agent:String:-
+thisPhoneUpdateDetail		1:version:String:-
+removeFromPhoneKeepBody		1:size:String:-
+removeFromPhoneDeleteBody		1:size:String:-
+chatRequestMoreWaiting	count	1:count:int:-
+chatRequestAlwaysScope		1:patterns:String:- 2:context:String:-
+chatRequestAlwaysConfirm		1:what:String:-
+teamUiGateRunStoppedTitle		1:title:String:-
+termuxProcsStopOrphans	count	1:count:int:-
+termuxProcsStopOrphansTitle	count	1:count:int:-
+teamUiPhoneWorkingOn		1:name:String:-
+teamAgentStepTool		1:tool:String:-
+termuxStorageCleanBuildCaches		1:size:String:-
+nudgeReviewChangesCount	count	1:count:int:-
+voiceComponentRemoveBody		1:size:String:-
+kitDiffFilePosition		1:index:int:- 2:count:int:-
+kitDiffFilePositionSpoken		1:index:int:- 2:count:int:-
+capabilityScreenIntroWithGaps		1:server:String:-
+reportProblemErrorsLabel	count	1:count:int:-
+reportProblemErrorBadge	count	1:count:int:-
+undoFromHereBody	count	1:count:int:-
+reviewRevertScreenIntroCount	count	1:count:int:-
+reviewRevertKeepConsequenceCount	count	1:count:int:-
+addServerConnectedHost		1:host:String:-
+addServerCheckSlow		1:host:String:-
+addServerReadyTitle		1:name:String:-
+addServerReadyOpen		1:name:String:-
+commandAuthSheetIntro		1:provider:String:-
+commandAuthCheckNamed		1:provider:String:-
+credentialRemoveAccountTitle		1:provider:String:- 2:name:String:-
+credentialRemoveConfirmNamed		1:name:String:-
+promptRestoredWithout		1:names:String:-
+usageSpentPeriod		1:period:String:-
+phoneSetupStartTermuxProgressHeadline		1:percent:int:-
+teamPhoneReadyBody		1:project:String:-
+teamUiStateNotAnsweringComputerNamed		1:computer:String:-
+teamHomeHeatPausedLine		1:time:String:-
+teamHomeHeatStoppedLine		1:time:String:-
+teamHomeSpentToday		1:usage:String:-
+teamIntroNotFound		1:server:String:-
+modelPickerThinkingChip		1:level:String:-
+modelPickerAgentChip		1:agent:String:-
+serversRemoveQueuedKept	count	1:count:int:-
+serversRemoveQueuedUncertain	count	1:count:int:-
+serversRemoveDeleteQueued	count	1:count:int:-
+serversRemoveQueuedChanged		1:name:String:-
+serversRemoveQueuedNotKept		1:name:String:-
+settingsHubUnavailableCount	count	1:count:int:-
+thisPhoneRemoveTool		1:tool:String:-
+thisPhoneRemoveToolTitle		1:tool:String:-
+thisPhoneRemoveToolBody		1:size:String:-
+thisPhoneRemoveToolNeededBy		1:tools:String:-
+removeFromPhoneKeepKeptSize		1:size:String:-
+productErrorServer		1:code:int:-
+sessionDestinationMoveWithChanges		1:destination:String:-
+sessionDestinationWarpWithChanges		1:destination:String:-
+sessionDestinationMoveTo		1:destination:String:-
+sessionDestinationNoChanges		1:place:String:-
+defaultReviewScopeNotice		1:scope:String:-
+defaultModelNotice		1:model:String:-
+teamControlReceiptSending		1:control:String:-
+termuxProcsBudget		1:count:int:- 2:limit:int:-
+termuxProcsBudgetNote		1:limit:int:-
+termuxProcsBudgetOver		1:limit:int:-
+termuxProcsRunningFor		1:elapsed:String:-
+termuxProcsStopKindBody		1:names:String:-
+termuxProcsStopKind		1:count:int:- 2:things:String:-
+termuxProcsStopKindTitle		1:count:int:- 2:things:String:-
+consentMakerBody		1:maker:String:-
+consentValueDeclinedCount	count	1:count:int:-
+consentAlwaysAllowQuestion		1:what:String:-
+teamHomeUpkeepGroup	count	1:count:int:- 2:kind:String:- 3:state:String:-
+managedWorkspacesCreateIn		1:provider:String:-
+voiceAutoSetupPicked		1:model:String:-
+voiceAutoSetupDownload		1:size:String:-
+voiceAutoSetupDownloadMobile		1:size:String:-
+voiceAutoSetupDetailMemoryValue		1:required:int:- 2:available:int:-
+terminalScreenEmptyBody		1:project:String:-
+externalAgentsStopTaskTitle		1:task:String:-
+externalAgentsStopTaskConfirm		1:agent:String:-
+toolsDetailMenu		1:tool:String:-
+kitDurationHours		1:hours:int:-
+kitDurationHoursMinutes		1:hours:int:- 2:minutes:int:-
+kitDurationDays		1:days:int:-
+kitDurationDaysHours		1:days:int:- 2:hours:int:-
+kitToolFor		1:duration:String:-
+kitSinceWaitingForLong		1:duration:String:-
+teamChatNowNoProgress		1:elapsed:String:-
+teamChatNoProgressBody		1:name:String:- 2:time:String:-
+teamChatNoProgressBodyNoControls		1:name:String:- 2:time:String:-
+teamChatNoProgressReportTitle		1:elapsed:String:-
+workRunawayStopped		1:helper:String:-
+workRunawayStopFailed		1:helper:String:-
+hostServiceTitle		1:server:String:-
+hostServiceIntro		1:server:String:-
+tailscaleSetupToDo		1:detail:String:-
+teamWatchComposerHint		1:name:String:-
+teamWatchAboutRole		1:role:String:-
+serversRemoveQueuedUnreadable		1:name:String:-
+teamModelRowTitle		1:model:String:-
+teamNowLastStart		1:duration:String:-
+teamNowUsuallyWithin		1:duration:String:-
+teamNowWatchAgent		1:name:String:-
+aiSetupSignInBody		1:server:String:-
+aiSetupOfflineBody		1:server:String:-
+aiSetupOfflineStale		1:server:String:-
+aiSetupSuggestSignInTitle		1:name:String:-
+aiSetupSuggestFixTitle		1:name:String:-
+aiSetupPermissionRules	count	1:count:int:-
+aiSetupSourceUnnamed		1:type:String:-
+aiSetupSourceSets		1:position:int:- 2:keys:String:-
+aiSetupSourceEmpty		1:position:int:-
+kitLastKnownRefreshing		1:updated:String:-
+lastKnownUpdatedAgo		1:ago:String:-
+serverRowQueuedWaiting	count	1:count:int:-
+serverRowMoveQueued	count	1:count:int:- 2:destination:String:-
+queuedMoveSubtitle		1:source:String:-
+queuedMoveQueuedAt		1:time:String:-
+queuedMoveFiles	count	1:count:int:-
+queuedMoveBlockedUncertain		1:source:String:-
+queuedMoveBlockedFile		1:source:String:-
+queuedMoveHidesSecrets	count	1:count:int:-
+queuedMoveUsesCurrentModel	count	1:count:int:- 2:destination:String:-
+queuedMoveAction	count	1:count:int:- 2:destination:String:-
+queuedMoveNoneLeft		1:source:String:-
+queuedMoveFailedDisconnected		1:destination:String:-
+queuedMoveFailedConversationGone		1:destination:String:-
+queuedMoveFailedNothing		1:source:String:-
+queuedMoveFailedNewConversation		1:destination:String:-
+queuedMoveFailedNotSaved		1:source:String:-
+queuedMoveDone	count	1:count:int:- 2:destination:String:-
+queuedMoveDonePartial		1:moved:int:- 2:total:int:- 3:destination:String:-
+queuedMoveUndoNone		1:destination:String:-
+queuedMoveUndoPartial	count	1:count:int:- 2:destination:String:- 3:source:String:-
+queuedMoveUndoFailed		1:destination:String:-
+sessionAddressChecking		1:host:String:-
+sessionAddressVerifyBody		1:name:String:-
+sessionAddressReadyBody		1:name:String:-
+sessionAddressSignInBody		1:name:String:-
+removeFromPhoneDeleteAllChoiceSize		1:size:String:-
+commandSheetServerGroup		1:server:String:-
+commandSheetAgentMissingTitle		1:agent:String:-
+commandSheetAgentMissingWhy		1:agent:String:-
+commandSheetAgentCommandNotSent		1:command:String:- 2:agent:String:-
+commandSheetShellNotSent		1:command:String:- 2:agent:String:-
+mcpCatalogNoMatch		1:query:String:-
+mcpCatalogHostedBy		1:host:String:-
+mcpCatalogNodeTitle		1:title:String:-
+mcpSetupFromCatalog		1:listing:String:- 2:server:String:-
+mcpSetupValueRequired		1:name:String:-
+isolatedTaskSending		1:name:String:-
+isolatedTaskRemoveTitle		1:name:String:-
+isolatedTaskRemoved		1:name:String:-
+setupProgressViewFailedAt		1:name:String:-
+workRunawayHelper		1:helper:String:- 2:duration:String:-
+workRunawayHelperInProject		1:helper:String:- 2:project:String:- 3:duration:String:-
+thisPhoneUpToDate		1:version:String:-
+thisPhoneUpdateTitle		1:runtime:String:-
+thisPhoneUpdateBody		1:version:String:-
+thisPhoneInstallFailed		1:runtime:String:-
+thisPhoneStopFailed		1:runtime:String:-
+thisPhoneCheckFailed		1:runtime:String:-
+thisPhoneSwitchStopped		1:runtime:String:-
+thisPhoneHistoryMovingCount		1:done:int:- 2:total:int:-
+serverRowDetailsTitle		1:name:String:-
+queuedRetryAll	count	1:count:int:-
+chatUiUseModelAndResend		1:model:String:-
+migrationItemSize	count	1:size:String:- 2:count:int:-
+migrationNotMovedSignInNamed		1:names:String:-
+migrationNeedsSpaceBody		1:needed:String:- 2:free:String:-
+migrationNeedsSpaceBodyUnknown		1:needed:String:-
+migrationNeedsBuiltinBody		1:runtime:String:-
+migrationSignInAgainNamed		1:names:String:-
+migrationProjectsWhereBody		1:folder:String:-
+migrationExportsWhereBody		1:items:String:-
+teamHomeLastKnownTasks		1:time:String:-
+teamHomeLastKnownAgents		1:time:String:-
+inAppServerStartTimedOutBody		1:seconds:int:-
+integrationsProviderDetails		1:name:String:-
+integrationsEnvironmentNote		1:name:String:-
+termuxProblemNotAnswering		1:runtime:String:-
+termuxProblemUnknown		1:runtime:String:-
+termuxFixRestart		1:runtime:String:-
+manageSpaceClearCacheDetail		1:size:String:-
+manageSpaceCacheCleared		1:size:String:-
+manageSpaceLostProjects	count	1:count:int:- 2:size:String:-
+manageSpaceLostSettings	count	1:count:int:-
+manageSpaceSavedServers	count	1:count:int:-
+projectExportDetail	count	1:count:int:- 2:size:String:-
+projectExportProgress		1:done:String:- 2:total:String:-
+projectExportDone		1:size:String:- 2:files:int:-
+projectExportDoneLeftOut	count	1:count:int:-
+e7ModelUiUnusableProviders	count	1:count:int:- 2:providers:String:-
+e7ModelUiProviderReloadWaits	count	1:count:int:-
+replySpeedLast		1:first:String:- 2:total:String:-
+replySpeedNoWords		1:total:String:-
+replySpeedSeconds		1:seconds:String:-
+perfFirstWordsSplit		1:app:String:- 2:server:String:-
+integrationsKeyOnlyHelper		1:name:String:-
+integrationsGetKey		1:name:String:-
+integrationsKeySavedReady		1:name:String:-
+integrationsKeySavedWaiting		1:name:String:-
+integrationsKeySavedUnusable		1:name:String:-
+integrationsKeySavedPending		1:name:String:-
+migrationReviewSpace		1:needed:String:- 2:free:String:-
+migrationReviewSpaceUnknown		1:needed:String:-
+pickerAddKeyFor		1:name:String:-
+pickerSignInTo		1:name:String:-
+pickerProviderReady		1:name:String:-
+pickerProviderNotLoaded		1:name:String:-
+kitTurnLiveNow		1:status:String:-
+kitTurnLiveFor		1:status:String:- 2:elapsed:String:-
+kitTurnLiveSeconds		1:seconds:int:-
+kitTurnLiveMinutes		1:minutes:int:- 2:seconds:int:-
+teamProgressOne		1:title:String:-
+teamProgressStep		1:title:String:- 2:done:int:- 3:total:int:-
+teamProgressMany		1:count:int:-
+teamChatWorkerNumbered		1:role:String:- 2:n:int:-
+teamRoleWorkingOn		1:task:String:- 2:age:String:-
+teamRoleUses		1:model:String:-
+teamRoleTaskCount	count	1:count:int:-
+teamSettingsAgentsRow	count	1:count:int:-
+teamRoleWorkingNow		1:task:String:-
+teamRoleNoTasks		1:role:String:-
+teamRoleGiveTask		1:role:String:-
+teamRoleReset		1:role:String:-
+teamRoleResetTitle		1:role:String:-
+teamRoleDelete		1:role:String:-
+teamRoleDeleteTitle		1:role:String:-
+teamRoleDeleteBody		1:role:String:-
+teamChatLeadStartingRole		1:role:String:- 2:title:String:-
+teamChatLeadClaimedRole		1:role:String:- 2:title:String:-
+teamChatLeadStartingItRole		1:role:String:-
+teamChatLeadClaimedItRole		1:role:String:-
+chatWatchTeamInstructions	count	1:count:int:decimalPattern 2:time:String:-
+chatWatchEmptyWorkingOn		1:task:String:-
+chatWatchEmptyReviewing		1:task:String:-
+teamProjectPlanningElapsed		1:minutes:int:-
+teamProjectPlanningSlow		1:minutes:int:-
+teamProjectAllTasksDone		1:total:int:-
+teamProjectProgress	working	1:done:int:- 2:total:int:- 3:working:int:-
+teamProjectLaneCount		1:busy:int:- 2:total:int:-
+teamProjectEditorCostMeasured		1:host:String:- 2:memory:String:-
+teamProjectEditorCostNotMeasured		1:host:String:-
+teamProjectHeadlineMilestone	working	1:current:int:- 2:total:int:- 3:working:int:-
+teamProjectHeadlineDone		1:total:int:-
+teamProjectGoalStatus		1:age:String:- 2:milestones__plural:String:- 3:repos__plural:String:- 4:milestones:int:- 5:repos:int:-
+teamProjectGoalStatus__milestones	milestones	1:milestones:int:-
+teamProjectGoalStatus__repos	repos	1:repos:int:-
+teamProjectGoalStatusDraft		1:milestones__plural:String:- 2:repos__plural:String:- 3:milestones:int:- 4:repos:int:-
+teamProjectGoalStatusDraft__milestones	milestones	1:milestones:int:-
+teamProjectGoalStatusDraft__repos	repos	1:repos:int:-
+teamProjectRequestWhere		1:role:String:- 2:server:String:-
+teamProjectRequestBlocks	count	1:role:String:- 2:count:int:-
+teamProjectMilestoneTasks		1:done:int:- 2:total:int:-
+teamProjectMilestoneWaits		1:number:int:-
+teamProjectLanesTitle		1:busy:int:- 2:total:int:-
+teamProjectLaneRunning		1:server:String:- 2:elapsed:String:-
+teamProjectLaneWaiting		1:server:String:-
+teamProjectLaneTitle		1:role:String:- 2:task:String:-
+teamProjectLaneNoteParallel	count	1:count:int:-
+teamProjectLaneNoteDemo		1:note:String:-
+teamProjectElapsedSeconds		1:count:int:-
+teamProjectElapsedMinutes		1:count:int:-
+teamProjectElapsedHours		1:hours:int:- 2:minutes:int:-
+teamProjectCostToday		1:amount:String:-
+teamProjectCostTodayOf		1:amount:String:- 2:limit:String:-
+teamProjectCostTotal		1:amount:String:-
+teamProjectCostTotalOf		1:amount:String:- 2:limit:String:-
+teamProjectBoardSummary		1:tasks__plural:String:- 2:milestones__plural:String:-
+teamProjectBoardSummary__tasks	tasks	1:tasks:int:-
+teamProjectBoardSummary__milestones	milestones	1:milestones:int:-
+teamProjectTimelineSummary	count	1:count:int:- 2:age:String:-
+teamProjectServersSummary	count	1:count:int:-
+teamProjectSettingsSummaryParallel		1:count:int:-
+teamProjectDecisionBy		1:who:String:- 2:age:String:-
+teamProjectPlanFor		1:number:int:-
+teamProjectPlanSummary		1:phases__plural:String:- 2:tasks__plural:String:- 3:repos__plural:String:-
+teamProjectPlanSummary__phases	phases	1:phases:int:-
+teamProjectPlanSummary__tasks	tasks	1:tasks:int:-
+teamProjectPlanSummary__repos	repos	1:repos:int:-
+teamProjectPlanPhase		1:number:int:- 2:title:String:-
+teamProjectPlanRepo		1:name:String:-
+teamProjectPlanAfter		1:number:int:-
+teamProjectPlanCriteria	count	1:count:int:-
+teamProjectPlanMore	count	1:count:int:-
+teamProjectPlanServerTitle		1:task:String:-
+teamProjectMergeEffectDev	tasks	1:tasks:int:- 2:repo:String:-
+teamProjectReceiptMerged		1:repo:String:-
+teamProjectReceiptPromoted		1:repo:String:-
+teamProjectTimelineRepeated		1:text:String:- 2:count:int:-
+teamProjectPromoteStatus		1:repo:String:-
+teamProjectPromoteMilestone		1:number:int:- 2:title:String:-
+teamProjectPromoteMerged		1:done:int:- 2:total:int:-
+teamProjectPromoteDays	count	1:count:int:-
+teamProjectPromoteAccepted		1:number:int:-
+teamProjectPromoteChanges	commits	1:commits:int:-
+teamProjectPromoteFiles	files	1:files:int:-
+teamProjectFindingsTitle		1:role:String:- 2:summary:String:-
+teamProjectFindingsCritical		1:count:int:-
+teamProjectFindingsMajor		1:count:int:-
+teamProjectFindingsMinor		1:count:int:-
+phoneTeamStripStep		1:step:int:- 2:total:int:-
+teamRefusalUnknown		1:action:String:-
+teamProjectInterruptedRow		1:name:String:-
+kitQueuedLastChecked		1:time:String:-
+folderBrowserHintMore		1:names:String:- 2:count:int:-
+folderBrowserNewProjectCreates		1:path:String:-
+phoneScanStopped		1:seconds:int:- 2:count:int:-
+phoneScanFirstShown		1:count:int:-
+openProjectUseFolder		1:name:String:-
+phoneScanChecked	folders	1:folders:int:- 2:found:int:-
+phoneScanDoneIn		1:count:int:- 2:time:String:-
+openProjectIn		1:folder:String:-
+approvalsSheetSetByParent		1:name:String:-
+chatsHomeOnlyProject		1:project:String:-
+chatsHomeIncompleteNamed		1:servers:String:-
+shellServerPlusOthers		1:name:String:- 2:count:int:-
+chatsHomeUnreachable		1:servers:String:-
+chatsSourcesSome		1:shown:int:- 2:total:int:-
+chatsHomeStillLoading		1:agents:String:-
+chatsHomeProjectEmptyTitle		1:project:String:-
+chatsHomeStartChatIn		1:project:String:-
+chatsFilterChatCount	count	1:count:int:-
+chatsFilterRunningCount		1:running:int:-
+chatsNewStartWith		1:agent:String:-
+chatProjectChipSemantics		1:name:String:-
+chatProjectServerChipSemantics		1:name:String:- 2:server:String:-
+agentsStateNotInstalled		1:size:String:-
+agentsSetupTitle		1:agent:String:- 2:size:String:-
+agentsSetupTitleNoSize		1:agent:String:-
+agentsSetupBody		1:agent:String:-
+agentsSetupSizeNote		1:size:String:-
+agentsInstallAction		1:agent:String:-
+agentsInstalling		1:agent:String:-
+agentsCheckRunning		1:agent:String:-
+agentsCheckPassed		1:agent:String:-
+agentsCheckFailed		1:agent:String:-
+agentsCheckAction		1:agent:String:-
+agentsResumeFailed		1:agent:String:-
+agentsSignInTitle		1:agent:String:-
+agentsSignInIntro		1:agent:String:-
+agentsSignInTerminalIntro		1:agent:String:-
+agentsSignInIntroOther		1:agent:String:-
+agentsSignInTerminalIntroOther		1:agent:String:-
+agentsSignInTerminalNotYet		1:agent:String:-
+agentsSignInStart		1:agent:String:-
+agentsSignedInBody		1:agent:String:-
+agentsSignInDone		1:agent:String:-
+agentsSignedInAs		1:account:String:-
+agentsSignOutAction		1:agent:String:-
+agentsSignOutTitle		1:agent:String:-
+agentsSignOutBody		1:agent:String:-
+agentsSignOutKept		1:agent:String:-
+agentsSignOutFailed		1:agent:String:-
+agentsRemoveAction		1:agent:String:-
+agentsRemoveTitle		1:agent:String:-
+agentsRemoving		1:agent:String:-
+agentsRemoved		1:agent:String:- 2:size:String:-
+agentsAlreadyRemoved		1:agent:String:-
+agentsSignInRejected		1:agent:String:-
+agentsSignInLimit		1:agent:String:-
+agentsLimitReset		1:agent:String:- 2:time:String:-
+agentsLimitUnknown		1:agent:String:-
+agentsSignedOutLine		1:agent:String:-
+agentsSignInAction		1:agent:String:-
+agentsStoppedLine		1:agent:String:-
+agentsResumeAction		1:agent:String:-
+agentsResumeNoticeBody		1:agent:String:-
+agentCardAsks		1:agent:String:-
+agentCardReports		1:agent:String:-
+agentCardAsksAnnouncement		1:agent:String:- 2:title:String:-
+agentCardFieldMin		1:min:String:-
+agentCardFieldMax		1:max:String:-
+agentCardPhotoRemove		1:number:int:-
+agentCardPhotoName		1:number:int:-
+agentCardPhotoCount		1:count:int:- 2:max:int:-
+agentCardChartSeries	count	1:count:int:-
+agentCardChartPoints	count	1:count:int:-
+agentCardChartHighest		1:where:String:- 2:value:String:-
+agentCardTableLabel		1:columns:int:- 2:rows:int:-
+agentCardDiffMore	count	1:count:int:-
+agentCardProgressValue		1:percent:int:-
+cardsStatusOn		1:agents:String:-
+cardsStatusPartial		1:agents:String:- 2:reason:String:-
+cardsStatusRestart		1:agents:String:-
+cardsStatusUnavailable		1:reason:String:-
+cardsStatusFailed		1:reason:String:-
+agentsSignInCopyCode		1:code:String:-
+cardsProblemNotQualifiedFor	count	1:count:int:- 2:agents:String:-
+cardsProblemRuntimeMissingFor		1:agents:String:-
+cardsProblemRegistrationFailedFor		1:agents:String:-
+cardsProblemVerificationFailedFor		1:agents:String:-
+cardsProblemRemovalFailedFor		1:agents:String:-
+crashReportsDelete	count	1:count:int:-
+crashReportsOnClears	count	1:count:int:-
+crashReportsOffDeletesAndClears	count	1:count:int:-
+crashReportsOffClears	count	1:count:int:-
+crashReportsDeleteBodyWithErrors	count	1:count:int:-
+chatUiToolMessageTo		1:name:String:-
+chatUiToolBackgroundNamedFinished		1:name:String:-
+chatUiToolBackgroundNamedFailed		1:name:String:-
+chatUiToolBackgroundNamedStopped		1:name:String:-
+chatUiToolBackgroundNamedEnded		1:name:String:-
+chatUiToolBackgroundNamedCutOff		1:name:String:-
+connectionSwitchingTo		1:target:String:-
+agentNamesPair		1:first:String:- 2:second:String:-
+diagnosticsReportSize	count	1:count:int:- 2:size:String:-
+backgroundPauseTimeLimit		1:at:String:-
+backgroundPauseUserStopped		1:at:String:-
+backgroundPauseAppUpdated		1:at:String:-
+diagnosticsExitRoutine	count	1:count:int:-
+diagnosticsExitShowAll	count	1:count:int:-
+diagnosticsExitToday		1:time:String:-
+diagnosticsExitYesterday		1:time:String:-
+liveToolOther		1:tool:String:-
+connectorCardSuggests		1:agent:String:-
+connectorCardAnnouncement		1:agent:String:- 2:name:String:-
+connectorCardCancelBody		1:name:String:-
+toolCardPageStatus		1:status:String:-
+toolCardAsked		1:prompt:String:-
+chatUiCompactedFrom		1:tokens:String:-
+chatRequestReadFrom		1:line:String:-
+chatRequestReadLines	count	1:count:num:-
+paseoCheckReady		1:agents:String:-
+connectionPasswordRejectedFor		1:server:String:-
+connectionTokenRejectedFor		1:server:String:-
+serverSettingsEditTitle		1:server:String:-
+serverSettingsRemoveTitle		1:server:String:-
+integrationsMcpDetails		1:name:String:-
+usageDaySteps	count	1:count:int:-
+modelPickerAgentUses		1:model:String:-
+sessionArchiveTitle		1:title:String:-
+sessionDeleteTitle		1:title:String:-
+monitorUnreachableTitle		1:server:String:-
+monitorUnreachableCheck		1:server:String:-
+agentsStateLimitReset		1:time:String:-
+teamUiGateAnswerConfirmCancelNamedBody		1:task:String:-
+teamProjectStopNamedBody		1:project:String:-
+teamProjectTaskStopNamedBody		1:task:String:-
+teamAgentUnavailableTitle		1:agent:String:-
+teamAgentUnavailableBody		1:reason:String:-
+teamRigPausedTitle		1:project:String:-
+teamRigPause		1:project:String:-
+teamRigResume		1:project:String:-
+teamRigPauseTitle		1:project:String:-
+teamRigPauseBody		1:project:String:-
+teamRigDelete		1:project:String:-
+teamRigDeleteTitle		1:project:String:-
+teamRigDeleteBody		1:project:String:-
+teamProjectDelete		1:project:String:-
+teamProjectDeleteTitle		1:project:String:-
+teamProjectDeleteBody		1:project:String:-
+teamAgentForceStop		1:agent:String:-
+teamAgentForceStopTitle		1:agent:String:-
+teamAgentForceStopBody		1:agent:String:-
+teamAgentStopStuckTitle		1:agent:String:-
+teamJobEveryDayAt		1:time:String:-
+teamJobEveryWeekdayAt		1:time:String:-
+teamJobEveryDowAt		1:day:String:- 2:time:String:-
+teamJobEveryMinutes	count	1:count:int:-
+teamJobEveryHours	count	1:count:int:-
+teamJobEverySeconds	count	1:count:int:-
+agentFeaturesSheetTitle		1:agent:String:-
+agentFeatureChipOff		1:name:String:-
+agentFeatureChipOn		1:name:String:-
+agentFeatureChangeFailed		1:name:String:-
+claudeImportIntro		1:project:String:-
+claudeImportRowDetail		1:project:String:- 2:when:String:-
+claudeImportAlready	count	1:count:int:-
+hostUpdateRow		1:computer:String:-
+hostUpdateRowRunning		1:version:String:-
+hostUpdateConfirmBody		1:computer:String:-
+hostUpdateConfirmPauses		1:computer:String:-
+hostUpdateDone		1:version:String:-
+hostUpdateCurrent		1:computer:String:-
+filesSearchInside		1:query:String:-
+filesTextLimited		1:count:int:-
+filesTextMatchLine		1:line:int:-
+kitGalleryPosition		1:current:int:- 2:total:int:-
+kitGalleryPictureLabel		1:current:int:- 2:total:int:- 3:name:String:-
+kitContextRingSemantics		1:percent:String:-
+kitContextSheetTokens		1:used:String:- 2:limit:String:-
+kitContextChartSemantics		1:count:String:- 2:percent:String:-
+phraseChipsSend		1:phrase:String:-
+settingsPhraseChipsHiddenCount	count	1:count:int:-
+kitFactToldLine		1:date:String:-
+kitFactSeenLine		1:source:String:- 2:date:String:-
+kitFactSeenNoSourceLine		1:date:String:-
+kitFactGuessedLine		1:date:String:-
+kitFactGuessedFromLine		1:date:String:- 2:source:String:-
+kitFactCalculatedLine		1:date:String:-
+kitFactWaitingLine		1:line:String:-
+fbMemoryFromFactsBook		1:count:int:-
+fbMemoryReview	count	1:count:int:-
+fbMemoryNotSaved	count	1:count:int:-
+fbKindLine		1:kind:String:- 2:detail:String:-
+fbAreaOther		1:area:String:-
+fbErrorRequest		1:id:String:-
+fbSearchMatches	count	1:count:int:- 2:query:String:-
+fbCaptureSavedReminder		1:when:String:-
+fbReminderWrote		1:text:String:-
+fbNeedsYouWaiting		1:count:int:-
+fbNotSavedCount	count	1:count:int:-
+fbNotSavedSince		1:when:String:-
+fbAreasShareConfirmTitle		1:area:String:-
+fbCareWaiting	count	1:count:int:-
+fbDisconnect		1:name:String:-
+fbDisconnectTitle		1:name:String:-
+fbErrorCode		1:code:String:-
+fbReminderPause		1:what:String:-
+fbReminderResume		1:what:String:-
+fbStatusSince		1:when:String:-
+fbWhenDaily		1:time:String:-
+fbErrorSlowAfter		1:seconds:int:-
+fbWhenWeeklyOn		1:days:String:- 2:time:String:-
+fbWhenMonthLast		1:time:String:-
+fbWhenMonthlyOn		1:day:int:- 2:time:String:-
+fbWhenYearlyOn		1:date:String:- 2:time:String:-
+fbThingOriginally		1:source:String:- 2:date:String:-
+fbSettingsBriefItems	count	1:count:int:-
+fbSettingsMinutes	count	1:count:int:-
+fbTriggersGroupShare	count	1:count:int:-
+fbTriggersGroupChat	count	1:count:int:-
+fbTriggersGroupNote	count	1:count:int:-
+fbRuleFinds		1:template:String:- 2:outcomes:String:-
+fbRuleWeek		1:proposed:int:- 2:ignored:int:-
+fbRuleWeekOffers	offers	1:proposed:int:- 2:ignored:int:- 3:offers:int:-
+fbRulePause		1:name:String:-
+fbRuleResume		1:name:String:-
+fbEventWhen		1:source:String:- 2:when:String:-
+fbRuleLimitValue	count	1:count:int:-
+fbRuleTestMatch		1:summary:String:- 2:when:String:-
+fbRuleTestWould		1:outcomes:String:-
+fbRuleDeleteBody		1:name:String:-
+fbEventCollapsed	count	1:count:int:-
+fbCareProposalWhen		1:what:String:- 2:when:String:-
+fbNeedsYouOffers	count	1:count:int:-
+fbOfferFromRule		1:name:String:-
+fbOfferSource		1:source:String:- 2:date:String:-
+fbCareApproveNamed		1:claim:String:-
+fbCareRejectNamed		1:claim:String:-
+fbCareEditNamed		1:claim:String:-
+fbCareSkipNamed		1:claim:String:-
+fbStatusNeedsLook	count	1:count:int:-
+fbStatusBackedUpAge		1:age:String:-
+fbEventOutcomeProposed	count	1:count:int:-
+fbCaptureRulesOn	count	1:count:int:-
+fbCaptureFactAdded		1:thing:String:-
+fbThingAddFact		1:thing:String:-
+fbThingRemind		1:thing:String:-
+fbThingReminderMade		1:thing:String:-
+fbThingExplainTold		1:date:String:-
+fbThingExplainSeen		1:source:String:- 2:date:String:-
+fbThingExplainSeenNoSource		1:date:String:-
+fbThingExplainGuessed		1:source:String:- 2:date:String:-
+fbThingExplainGuessedNoSource		1:date:String:-
+fbThingExplainCalculated		1:date:String:-
+settingsV3ServerConnected		1:name:String:-
+settingsV3ServersCount	count	1:count:int:-
+settingsV3DifferentOn	count	1:count:int:-
+settingsV3ModelNewOn		1:name:String:-
+settingsV3SectionOn		1:name:String:-
+settingsV3SavedOn		1:name:String:-
+settingsV3ConnectedVersion		1:version:String:-
+settingsV3ConnectTo		1:name:String:-
+settingsV3UseMyDefaultDetail		1:name:String:-
+settingsV3SharingCount		1:count:int:- 2:total:int:-
+fbSettingsUsePhoneZoneDetail		1:zone:String:-
+settingsV3ReconnectTo		1:name:String:-
+settingsV3UseMyDefaultDone		1:name:String:- 2:what:String:-
+settingsV3AgentsExternalCount	count	1:count:int:-
+settingsV3NotConnectedVersion		1:version:String:-
+quotaInAppStepChecking		1:server:String:-
+quotaInAppFailLinux		1:server:String:-
+quotaInAppFailNoNode		1:server:String:-
+quotaInAppFailNodeOld		1:server:String:-
+quotaInAppFailPrepare		1:server:String:-
+quotaInAppFailStart		1:server:String:-
+quotaInAppFailRemove		1:server:String:-
+usageLeft		1:percent:int:decimalPattern
+usageUsedPercent		1:percent:int:decimalPattern
+usageOnConnection		1:connection:String:-
+usageApiKeyOnly		1:provider:String:- 2:connection:String:-
+usageCantReadBody		1:connection:String:-
+usageSignInRanOut		1:provider:String:- 2:connection:String:-
+usageSignInRanOutOne		1:provider:String:-
+usageReaderBroken		1:provider:String:-
+usageOfflineStale		1:connection:String:- 2:age:String:-
+usageOfflineStaleOne		1:age:String:-
+usageDurationMinutes		1:minutes:int:-
+usageDurationHours		1:hours:int:-
+usageDurationHoursMinutes		1:hours:int:- 2:minutes:int:-
+usageDurationDays		1:days:int:-
+usageDurationDaysHours		1:days:int:- 2:hours:int:-
+usageResetsIn		1:time:String:- 2:duration:String:-
+usageResetsAt		1:time:String:-
+usageFiveHourResets		1:time:String:-
+usageWeekResets		1:time:String:-
+usageOutUntil		1:time:String:-
+usageResetSince		1:time:String:-
+usageReadAgo		1:age:String:-
+usageCheckedAgo		1:age:String:-
+usageReadFrom		1:connection:String:-
+usageAddTitle		1:provider:String:-
+usageAddWhere		1:provider:String:-
+usageAddPhoneNote		1:provider:String:-
+usageAddNoneTitle		1:provider:String:-
+usageReadFromSignedIn		1:providers:String:- 2:connection:String:-
+usageAlertAtPlan		1:provider:String:- 2:percent:int:decimalPattern
+usageAlertSameAsOthers		1:percent:int:decimalPattern
+usageViaOpenCodeNoPlan		1:connection:String:-
+usageSetupSignedInOn		1:connection:String:-
+usageSetupRanOutOn		1:connection:String:-
+usageComputerExplain		1:server:String:-
+usageComputerReadsValue		1:server:String:-
+usageComputerChecking		1:server:String:-
+usageComputerFound		1:plans:String:- 2:server:String:-
+usageComputerFoundNone		1:server:String:-
+usageComputerOnNote		1:server:String:-
+usageComputerNeedsNode		1:server:String:-
+usageComputerServerTooOld		1:server:String:-
+usageComputerOffline		1:server:String:-
+usageComputerNoAnswer		1:server:String:-
+usageComputerRowTitle		1:server:String:-
+usageBackAt		1:time:String:-
+usageWidgetPlans	count	1:count:int:-
+kitTaskChipCount		1:done:int:- 2:total:int:-
+kitTaskChipDone		1:done:int:- 2:total:int:-
+kitTaskChipAdded		1:done:int:- 2:total:int:-
+kitTaskChipSpoken		1:done:int:- 2:total:int:-
+kitTaskChipSpokenNow		1:done:int:- 2:total:int:- 3:task:String:-
+kitDiffFoldAbove	count	1:count:int:-
+kitDiffFoldBelow	count	1:count:int:-
+kitDiffFoldBetween	count	1:count:int:-
+notifStatusNeedsYou	count	1:count:int:-
+notifStatusStillWorking		1:count:int:-
+notifStatusChatsWorking		1:count:int:-
+notifStatusMore		1:count:int:-
+notifStatusWaitingCount		1:count:int:-
+notifStatusTasksProgress		1:done:int:- 2:total:int:-
+notifStatusMinutes		1:count:int:-
+notifStatusHours		1:count:int:-
+notifStatusWaitingProvider		1:provider:String:-
+notifStatusTriesAgainAt		1:time:String:-
+notifStatusReconnectingTitle		1:server:String:-
+notifStatusLastReply		1:ago:String:-
+notifStatusSetupTitle		1:step:int:- 2:steps:int:-
+notifStatusOnServer		1:server:String:-
+notifStatusPublicWorking		1:count:int:-
+continueWithSubtitle		1:title:String:- 2:project:String:-
+continueWithNeedsSignIn		1:agent:String:-
+continueWithLimitReached		1:agent:String:-
+continueWithNotReady		1:agent:String:-
+continueWithRecordSize		1:kb:int:-
+continueWithOmittedCount	count	1:count:int:-
+continueWithRecordFile		1:path:String:-
+continuedIn		1:agent:String:-
+continuedFrom		1:title:String:-
+continuedFromShort		1:title:String:-
+continuedInShort		1:agent:String:-
+kitComposerWaitsForAgent		1:agent:String:-
+effectsLookPreviewLabel		1:name:String:-
+agentsCheckPreviousNote		1:version:String:-
+agentsCheckDownload		1:component:String:- 2:downloaded:String:- 3:total:String:-
+agentsCheckDownloadUnknown		1:component:String:- 2:downloaded:String:-
+agentsCheckDownloading		1:component:String:-
+agentsCheckPreparing		1:component:String:-
+serverTrustCertificateValidity		1:from:String:- 2:to:String:-
+devPreviewFailedBody		1:port:String:-
+devPreviewRemoteNote		1:port:String:- 2:host:String:-
+devPreviewPortTitle		1:port:String:-
+devPreviewOnServer		1:host:String:-
+scheduleToday		1:time:String:-
+scheduleTomorrow		1:time:String:-
+scheduleInMinutes		1:minutes:String:-
+scheduleDeleteNamedTitle		1:name:String:-
+openCode2MoveRetrying		1:retry:int:- 2:total:int:-
+linuxMgrProcSummary	count	1:count:int:- 2:memory:String:-
+linuxMgrStopTitle		1:name:String:-
+linuxMgrStopHelpers	count	1:count:int:-
+linuxMgrStopLabel		1:name:String:-
+linuxMgrStopped	count	1:count:int:-
+linuxMgrStopForced		1:count:int:-
+linuxMgrStopRemaining		1:count:int:-
+linuxMgrStopChanged		1:count:int:-
+linuxMgrPortRow		1:port:int:-
+linuxMgrPortUsedBy		1:name:String:-
+linuxMgrPortPreviewNamed		1:port:int:-
+linuxMgrStorageTotal		1:size:String:-
+linuxMgrCleanBody		1:size:String:-
+linuxMgrCleanDone		1:size:String:-
+linuxMgrPkgCount	count	1:count:int:-
+linuxMgrPkgShowAll		1:count:int:-
+linuxMgrPkgAlready		1:name:String:-
+linuxMgrPkgUnknown		1:name:String:-
+linuxMgrPkgInstallTitle		1:names:String:-
+linuxMgrPkgInstallLabel		1:names:String:-
+linuxMgrPkgRemove		1:name:String:-
+linuxMgrPkgRemoveTitle		1:name:String:-
+linuxMgrPkgAlsoRemoved		1:list:String:-
+linuxMgrPkgBlockedPlan		1:list:String:-
+linuxMgrJobInstalling		1:names:String:-
+linuxMgrJobRemoving		1:names:String:-
+linuxMgrJobStopInstall		1:names:String:-
+linuxMgrJobStopRemove		1:names:String:-
+linuxMgrJobDoneInstall		1:names:String:-
+linuxMgrJobDoneRemove		1:names:String:-
+linuxMgrJobStopInstallTitle		1:names:String:-
+linuxMgrJobStopRemoveTitle		1:names:String:-
+servicesPorts	count	1:count:int:- 2:ports:String:-
+servicesOpenPreviewNamed		1:name:String:-
+servicesPreviewPort		1:port:String:-
+servicesStopFoundTitle		1:name:String:-
+devPreviewRunningNow		1:name:String:-
+linuxMgrResetForgetFailed		1:name:String:-
+linuxMgrResetLeft		1:name:String:- 2:what:String:-
+linuxMgrProcGroupCount	count	1:count:int:-
+gitRepairWorking		1:project:String:-
+gitRepairRestoring		1:done:int:- 2:total:int:-
+gitRepairAskingTermux		1:done:int:- 2:total:int:-
+gitRepairDoneTitle		1:project:String:-
+gitRepairDoneBody	count	1:count:int:-
+gitRepairHealthyBody		1:project:String:-
+gitRepairCannotTitle		1:project:String:-
+gitRepairMissingBody	count	1:count:int:-
+gitAhead	count	1:count:int:-
+gitConflictCount	count	1:count:int:-
+gitAskAgentFixConflictsPrompt		1:files:String:-
+gitHubSignedInAs		1:login:String:-
+gitDoneCloned		1:path:String:-
+gitSheetChipSemantics		1:branch:String:-
+gitSaveChangesCount	count	1:count:int:-
+gitSaveButton	count	1:count:int:-
+gitSaveOnBranch		1:branch:String:-
+gitSwitchRowOn		1:branch:String:-
+gitBranchRemoteOnly		1:remote:String:-
+gitNewBranchFrom		1:branch:String:-
+gitCloneInto		1:path:String:-
+gitUsesOwnSignInOn		1:host:String:-
+gitDoneSaved	count	1:count:int:-
+gitNewCount		1:count:int:-
+kitCarouselPlace		1:page:int:- 2:count:int:-
+chatSteerReadsAfterCommand		1:agent:String:-
+chatSteerReadsAfterStep		1:agent:String:-
+gitSendTo		1:place:String:- 2:branch:String:-
+gitDoneGotN	count	1:count:int:-
+reviewSummary	files	1:files:int:- 2:added:int:- 3:removed:int:-
+reviewUndoTitle	count	1:count:int:-
+modelPickerAllModels		1:count:int:-
+chatsHomeUnreachableShort		1:servers:String:-
+chatProjectChipFilesSemantics		1:name:String:-
+chatProjectServerChipFilesSemantics		1:name:String:- 2:server:String:-
+chatTurnAllFilesMore	count	1:count:int:-
+chatTurnFileLinesAdded	count	1:count:int:-
+chatTurnFileLinesRemoved	count	1:count:int:-
+settingsHubServerLine		1:where:String:- 2:state:String:-
+gitSaveAndSendTo	count	1:count:int:- 2:place:String:- 3:branch:String:-
+gitSendSavesTo	count	1:count:int:- 2:place:String:- 3:branch:String:-
+gitMessageAddOne		1:file:String:-
+gitMessageUpdateOne		1:file:String:-
+gitMessageUpdateTwo		1:first:String:- 2:second:String:-
+gitMessageUpdateMany	count	1:count:int:- 2:first:String:-
+gitDoneSavedAndSent		1:place:String:- 2:branch:String:-
+gitSavedNotSent		1:reason:String:-
+gitBusySendingTo		1:place:String:- 2:branch:String:-
+gitGetNewFrom	count	1:count:int:- 2:place:String:- 3:branch:String:-
+gitSavedSignInFirst		1:place:String:-
+thisPhoneAnswerMemory		1:size:String:-
+thisPhoneAnswerStorage		1:size:String:-
+thisPhoneAnswerHeatResumeIn		1:time:String:-
+thisPhoneAnswerRestartsIn		1:time:String:-
+thisPhoneAboutSeconds		1:seconds:int:-
+thisPhoneAboutMinutes		1:minutes:int:-
+serverSwitcherChecksAgain	count	1:count:int:-
+serverSwitcherTryAgainLabel		1:server:String:-
+serverSwitcherOpenRequestLabel		1:target:String:-
+serverSwitcherAllowLabel		1:command:String:- 2:server:String:-
+serverSwitcherUndoLabel		1:server:String:-
+kitRequestMoreTargets	count	1:count:int:-
+kitRequestChangeSize		1:added:int:- 2:removed:int:-
+chatRequestAskRunIn		1:command:String:- 2:project:String:-
+chatRequestAskRunNamed		1:command:String:-
+chatRequestAskRunAnyIn		1:project:String:-
+chatRequestAskEditNamed		1:file:String:-
+chatRequestAskEditFiles	count	1:count:int:-
+chatRequestAskCreateNamed		1:file:String:-
+chatRequestAskCreateFiles	count	1:count:int:-
+chatRequestAskDeleteNamed		1:file:String:-
+chatRequestAskDeleteFiles	count	1:count:int:-
+chatRequestAskReadNamed		1:file:String:-
+chatRequestAlwaysAllowNamed		1:what:String:-
+filesMenuChanges	count	1:count:int:-
+filesProjectSwitchLabel		1:name:String:-
+scheduleRuleDaily		1:time:String:-
+scheduleRuleWeekdays		1:time:String:-
+scheduleRuleHours	hours	1:hours:int:decimalPattern
+scheduleForTime		1:time:String:-
+scheduleForWhen		1:when:String:-
+scheduleForHours	hours	1:hours:int:decimalPattern
+scheduleForToday		1:time:String:-
+scheduleForTomorrow		1:time:String:-
+scheduleDayAt		1:day:String:- 2:time:String:-
+scheduleSent		1:when:String:-
+scheduleNotSent		1:when:String:-
+scheduleSkippedWhen		1:when:String:-
+inboxOpenLabel		1:conversation:String:-
+inboxOpenOnServer		1:server:String:-
+inboxUnreachable		1:servers:String:-
+goToNeedsYouHint	count	1:count:int:-
+inboxEmptyPartialLine		1:servers:String:-
+reportProblemKeptLead		1:when:String:-
+welcomePhoneCost		1:time:String:- 2:size:String:-
+welcomePhoneSettingUp		1:percent:int:-
+welcomePhoneStopped		1:percent:int:-
+kitProgressRingPercent		1:percent:String:-
+kitProgressRingSteps		1:done:String:- 2:total:String:-
+phoneSetupRingDownloading		1:name:String:-
+phoneSetupRingUnpacking		1:name:String:-
+phoneSetupRingInstalling		1:name:String:-
+phoneSetupRingMinutesLeft	minutes	1:minutes:int:-
+kitProgressRingOfTotal		1:total:String:-
+teamMergeGateQuestion	count	1:count:int:- 2:branch:String:-
+teamMergeGateChecksPassed	count	1:count:int:-
+teamMergeGateAnnouncement		1:question:String:-
+teamTaskNowOn		1:who:String:- 2:step:String:-
+teamTaskNowWorker		1:who:String:-
+teamTaskNowStarting		1:who:String:-
+teamTaskFinishedAgo		1:age:String:-
+chatLiveReading		1:name:String:-
+chatLiveEditing		1:name:String:-
+chatLiveWriting		1:name:String:-
+chatLiveRunning		1:name:String:-
+chatLiveSearching		1:name:String:-
+localTerminalStopNamed		1:name:String:-
+localTerminalCloseNamed		1:name:String:-
+terminalPlaceLabel		1:place:String:-
+terminalPlaceSwitchLabel		1:place:String:-
+connectionTryingAgainIn		1:seconds:int:-
+signalRowRunningCommand		1:command:String:-
+appearanceFineTuneReset		1:style:String:-
+kitTourStep		1:current:int:- 2:total:int:-
+appearanceGroupPair		1:first:String:- 2:second:String:-
+appearanceShapeValue		1:corners:String:- 2:spacing:String:-
+appearanceShapeNote		1:style:String:- 2:corners:String:- 3:spacing:String:-
+appearanceSeeAllThemes		1:count:int:-
+appearanceSeeAllLooks		1:count:int:-
+appearanceAccentMatchNote		1:theme:String:-
+appearanceGuideCountIntro		1:count:int:-
+appearanceGuideCountSeen		1:seen:int:- 2:total:int:-
+appearanceGuideCountAt		1:at:int:- 2:total:int:-
+appearanceGuideContinue		1:group:String:-
+appearanceGuideNext		1:name:String:-
+appearanceGuidePlace		1:label:String:- 2:value:String:- 3:at:int:- 4:count:int:- 5:group:String:-
+chatLoadAgentMissing		1:agent:String:-
+chatLoadAgentUnreadable		1:agent:String:-
+settingsV3UseMyDefaultDonePhone		1:what:String:-
+kitBackgroundWorkOne		1:task:String:- 2:time:String:-
+kitBackgroundWorkMany	count	1:count:int:-
+kitBackgroundWorkTask		1:task:String:- 2:time:String:-
+kitBackgroundWorkMinutes	minutes	1:minutes:int:-
+kitBackgroundWorkHours		1:hours:int:- 2:minutes:int:-
+kitBackgroundWorkOneAfterStop		1:task:String:- 2:time:String:-
+kitBackgroundWorkManyAfterStop	count	1:count:int:-
+chatAgentTurnLostConnectionTo		1:agent:String:- 2:company:String:-
+chatAgentTurnLostConnection		1:agent:String:-
+chatSendFailureLostConnectionTo		1:agent:String:- 2:company:String:-
+chatSendFailureLostConnection		1:agent:String:-
+chatBackgroundWorkWaitingFor		1:program:String:-
+chatSendFailureSignIn		1:agent:String:-
+chatSendFailureNoCredit		1:agent:String:-
+chatSendFailureBusy		1:agent:String:-
+chatSendFailureNeedsAccount		1:agent:String:-
+chatSendFailureSignInToAgent		1:agent:String:-
+runningPhoneSummary	count	1:count:int:- 2:memory:String:-
+runningPhoneLimitBody		1:count:int:- 2:limit:int:-
+runningPhoneGroupChat		1:title:String:-
+runningPhoneCpu__idle		1:percent:String:-
+runningPhoneCpu__light		1:percent:String:-
+runningPhoneCpu__busy		1:percent:String:-
+runningPhoneCpu__other		1:percent:String:-
+runningPhoneFromChat		1:title:String:-
+runningPhoneStopNamed		1:name:String:-
+runningPhoneStopTitle		1:name:String:-
+runningPhoneStopAllLeftBehind	count	1:count:int:-
+runningPhoneStopAllBody		1:names:String:-
+runningPhoneStopped	count	1:count:int:-
+runningPhoneAlreadyEnded	count	1:count:int:-
+runningPhoneRefusedApp		1:name:String:-
+runningPhoneRefusedServer		1:name:String:-
+runningPhoneRefusedStillRunning		1:name:String:-
+runningPhoneHeavyFor		1:elapsed:String:-
+runningPhoneStuckWhy		1:elapsed:String:-
+runningPhoneRowNormal	count	1:count:int:- 2:memory:String:-
+runningPhoneRowLeftBehind	count	1:count:int:-
+runningPhoneRowHeavy	count	1:count:int:- 2:name:String:- 3:percent:String:-
+runningPhoneRowNearLimit		1:count:int:- 2:limit:int:-
+chatStuckCommand		1:time:String:-
+chatStuckMinutes		1:minutes:int:-
+chatStuckHours		1:hours:int:- 2:minutes:int:-
+chatStuckUnnamed		1:time:String:-
+chatStuckWaitsNote		1:command:String:-
+kitComposerCantTakeMidReply		1:agent:String:-
+stopRowSemantics		1:agent:String:-
+vpttSendingIn		1:seconds:String:-
+vpttLanguageUnavailableOffline		1:language:String:-
+vpttLanguageCompactRough		1:language:String:-
+connCheckVersionOk		1:version:String:-
+connCheckSpeedOk		1:ms:int:-
+queueEvictedTooOld	count	1:count:int:-
+queueEvictedOverLimit	count	1:count:int:-
+queueEvictedSummary	count	1:count:int:- 2:reasons:String:-
+chatUiThinkingLevelSet		1:level:String:-
+fileShareQrLabel		1:name:String:-
+fileShareDownloads	count	1:count:int:-
+fileShareTimeLeft		1:time:String:-
+readAloudVoiceNaturalDownload		1:size:String:-
+naturalVoiceRemove		1:size:String:-
+naturalVoiceNoSpace		1:size:String:-
+processBudgetWaitRoom		1:ceiling:int:-
+processBudgetAgentsRunning	count	1:count:int:-
+processBudgetCount		1:count:int:- 2:ceiling:int:-
+agentsStateUpdating		1:version:String:-
+agentErrorFreeTierSize		1:tokens:String:-
+phoneFileInstallTitle		1:name:String:-
+phoneFileOpenTitle		1:name:String:-
+phoneFileFindBody		1:path:String:-
+phoneFileWhereInstall		1:name:String:- 2:folder:String:-
+phoneFileWhereOpen		1:name:String:- 2:folder:String:-
+agentUpdateSendBlocked		1:agent:String:- 2:percent:String:-
+agentUpdateSendBlockedNoPercent		1:agent:String:-
+teamVoiceDeveloperAs		1:persona:String:-
+teamVoiceNowWorking		1:developer:String:-
+teamVoiceReviewerResult	total	1:total:int:- 2:met:int:-
+teamVoiceApprovePlan		1:name:String:-
+teamVoiceAcceptPhase		1:phase:String:-
+teamVoicePutOnMain		1:repo:String:-
+linuxSvcHubRunning	count	1:count:int:- 2:names:String:-
+linuxSvcHubOff	count	1:count:int:-
+linuxSvcHubCrashed		1:name:String:-
+linuxSvcRunningFor		1:duration:String:-
+linuxSvcPort		1:port:String:-
+linuxSvcRetrying		1:code:int:- 2:seconds:int:-
+linuxSvcGaveUp	count	1:count:int:- 2:time:String:-
+linuxSvcGaveUpNoCount		1:time:String:-
+linuxSvcExited		1:code:int:-
+linuxSvcPortBusy		1:port:String:-
+linuxSvcStartNamed		1:name:String:-
+linuxSvcStopNamed		1:name:String:-
+linuxSvcRestartNamed		1:name:String:-
+linuxSvcRemoveNamed		1:name:String:-
+linuxSvcOpenNamed		1:name:String:-
+linuxSvcOpenDetail		1:port:String:-
+linuxSvcCameBack	count	1:count:int:- 2:time:String:-
+linuxSvcRemoveTitle		1:name:String:-
+linuxSvcLogCrashed		1:code:int:-
+linuxSvcLogEnded		1:code:int:-
+linuxSvcLogRetry		1:seconds:int:-
+linuxSvcLogPortBusy		1:port:String:-
+linuxSvcErrNameUsedBy		1:name:String:-
+linuxSvcErrPortServer		1:port:String:-
+linuxSvcErrPortUsedBy		1:port:String:- 2:name:String:-
+linuxVitalsHeatLabel		1:heat:-:-
+linuxVitalsMemoryLabel		1:value:-:-
+linuxVitalsCpuLabel		1:value:-:-
+linuxVitalsSummaryCool		1:memory:-:-
+linuxVitalsSummary		1:memory:-:-
+linuxVitalsHeavy		1:heat:-:- 2:program:-:- 3:percent:-:-
+linuxVitalsNotLinux		1:heat:-:- 2:percent:-:-
+shareAppMessage		1:url:String:-
+whatsNewTitle		1:version:String:-
+appUpdateReadyTitle		1:version:String:-
+appUpdateDownloadingTitle		1:version:String:-
+appUpdatePercent		1:percent:String:-
+appUpdateInstallReadyTitle		1:version:String:-
+appUpdateUpToDate		1:when:String:-
+appUpdateAvailableLine		1:version:String:- 2:size:String:-
+appUpdateSizeMb		1:mb:String:-
+appUpdateCurrentVersion		1:version:String:-
+appUpdateNotInstalled		1:version:String:-
+linuxBackupRowLast		1:date:-:-
+linuxBackupSaving		1:done:-:- 2:total:-:-
+linuxBackupSaved		1:size:-:- 2:name:-:-
+linuxRestoreBody		1:what:-:- 2:date:-:-
+linuxRestoreSkipped		1:names:-:-
+linuxRestoreCounts		1:projects:-:- 2:services:-:- 3:settings:-:- 4:packages:-:-
+localAssistantNotDownloaded		1:size:String:-
+localAssistantOnPhone		1:size:String:-
+localAssistantDownload		1:size:String:-
+localAssistantProgress		1:received:String:- 2:total:String:-
+localAssistantDelete		1:size:String:-
+localAssistantDeleteBody		1:size:String:-
+localAssistantNeedsWifi		1:size:String:-
+localAssistantNoSpace		1:size:String:-
+localAssistantStats		1:seconds:String:- 2:rate:String:-

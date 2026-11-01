@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_es.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="e7WorkspaceBackExit">Pulsa «Atrás» otra vez para salir</string>
+    <string name="serverSwitcherOpen">Cambiar de servidor</string>
+    <string name="workServerRestartTitle">¿Reiniciar OpenCode en este teléfono?</string>
+    <string name="workServerRestartBody">Se detendrá el turno del agente en curso. Tus conversaciones se conservan.</string>
+    <string name="workRunaway">OpenCode lleva %1$s ocupado sin nada que hacer</string>
+    <string name="workRunawayInProject">OpenCode lleva %2$s ocupado en %1$s sin nada que hacer</string>
+    <string name="homeShellProjectUnavailable">Archivos no está disponible</string>
+    <string name="homeShellProjectUnavailableReason">%1$s no ofrece archivos, cambios ni búsqueda de código. Conéctate a un servidor OpenCode para usarlos.</string>
+    <string name="homeShellProjectUnavailableShort">%1$s no tiene herramientas de proyecto.</string>
+    <string name="chatsNewAgentNeedsProjectsFolder">%1$s solo trabaja en los proyectos de este teléfono. Elige uno de ellos.</string>
+    <string name="workRunawayStopped">%1$s detenido</string>
+    <string name="workRunawayStopFailed">No se pudo detener %1$s. Inténtalo de nuevo o deténlo desde Termux.</string>
+    <string name="workRunawayHelper">Un proceso %1$s sobrante lleva %2$s ocupado sin nada que hacer</string>
+    <string name="workRunawayHelperInProject">Un proceso %1$s sobrante en %2$s lleva %3$s ocupado sin nada que hacer</string>
+    <string name="workRunawaySeeRunning">Ver qué se está ejecutando</string>
+    <string name="chatsHomeTitle">Conversaciones</string>
+    <string name="chatsHomeRunning">En curso</string>
+    <string name="chatsHomeDone">Listo</string>
+    <string name="chatsHomeFailed">Fallida</string>
+    <string name="chatsHomeToday">Hoy</string>
+    <string name="chatsHomeEarlier">Anteriores</string>
+    <string name="chatsHomeOnlyProject">Mostrando solo las conversaciones de %1$s. Este servidor no puede listar todos los proyectos.</string>
+    <string name="chatsHomeIncomplete">Algunas conversaciones no se pudieron cargar</string>
+    <string name="shellServerPlusOthers">%1$s +%2$d</string>
+    <string name="chatsHomeOpening">Abriendo…</string>
+    <string name="chatsHomeUnreachable">%1$s no responde. No se muestran sus conversaciones.</string>
+    <string name="chatsSourcesUnreachable">No responde</string>
+    <string name="chatsSourcesAll">Todas las conexiones</string>
+    <string name="chatsSourcesSome">%1$d de %2$d conexiones</string>
+    <string name="chatsSourcesSheetTitle">Conexiones en esta lista</string>
+    <string name="chatsSourcesMain">Las conversaciones nuevas empiezan aquí</string>
+    <string name="chatsSourcesOnPhone">En este teléfono</string>
+    <string name="chatsSourcesElsewhere">En otra computadora</string>
+    <string name="chatsSourcesAgents">Agentes en este teléfono</string>
+    <string name="chatsSourcesAlways">Siempre visible</string>
+    <string name="chatsHomeStillLoading">Cargando las conversaciones de %1$s…</string>
+    <string name="chatsHomeEmptyTitle">Aún no hay conversaciones</string>
+    <string name="chatsHomeNoMatchTitle">No hay conversaciones que coincidan</string>
+    <string name="chatsHomeNoMatchBody">Nada coincide con los filtros elegidos.</string>
+    <string name="chatsHomeClearFilters">Quitar filtros</string>
+    <string name="chatsHomeProjectEmptyTitle">No hay conversaciones en %1$s</string>
+    <string name="chatsHomeStartChatIn">Empezar una conversación en %1$s</string>
+    <string name="chatsHomeNewChat">Nueva conversación</string>
+    <string name="chatsHomeOpenFailed">No se pudo abrir esta conversación. Desliza hacia abajo para actualizar la lista.</string>
+    <string name="chatsFilterSheetTitle">Mostrar conversaciones de</string>
+    <plurals name="chatsFilterChatCount">
+        <item quantity="one">1 conversación</item>
+        <item quantity="many">%1$d conversaciones</item>
+        <item quantity="other">%1$d conversaciones</item>
+    </plurals>
+    <string name="chatsFilterChatCount__eq1">1 conversación</string>
+    <string name="chatsFilterRunningCount">%1$d en curso</string>
+    <string name="chatsFilterNeedsYouWord">te necesita</string>
+    <string name="chatsFilterOpenProject">Abrir un proyecto…</string>
+    <string name="chatsNewSeparateCopy">En una copia aparte</string>
+    <string name="chatsNewChooseProject">Elegir un proyecto</string>
+    <string name="chatsNewNeedProject">Elige un proyecto para empezar una conversación.</string>
+    <string name="chatsNewFailed">La conversación no se inició. Tu mensaje sigue aquí.</string>
+    <string name="agentsResumeNoticeTitle">¿Empezar una conversación nueva?</string>
+    <string name="agentsResumeNoticeBody">Empieza una conversación nueva. %1$s no puede reabrir esta, y se queda como está.</string>
+    <string name="agentsStartNew">Empezar conversación nueva</string>
+    <string name="agentsCancel">Cancelar</string>
+    <string name="chatsHomeOtherFolders">Otras carpetas</string>
+    <string name="shellServerSwitching">Cambiando…</string>
+    <string name="claudeImportTitle">Importar desde Claude Code</string>
+    <string name="workServerRestartBodyCommand">El comando en ejecución también se detendrá. Tus conversaciones se conservan.</string>
+</resources>

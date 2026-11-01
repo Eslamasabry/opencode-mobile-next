@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_es.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <plurals name="terminalShowEarlier">
+        <item quantity="one">Mostrar 1 línea anterior</item>
+        <item quantity="many">Mostrar %1$s líneas anteriores</item>
+        <item quantity="other">Mostrar %1$s líneas anteriores</item>
+    </plurals>
+    <string name="terminalShowEarlier__eq1">Mostrar 1 línea anterior</string>
+</resources>

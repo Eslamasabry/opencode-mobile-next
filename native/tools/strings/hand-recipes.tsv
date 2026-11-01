@@ -1,0 +1,23 @@
+# Hand conversions (plan 06 §13.3 steps 4–5, plan 01 §7.5): the 13 keys (38 messages across en, ar, es, zh) that
+# CMP XML cannot hold as one resource. The l10n owner chose each rewrite; `strings convert` applies it to every
+# language, and `strings check` redoes it. A refused message with no row here still fails the run.
+#
+# Columns (tab-separated): key, recipe, note.
+#   select         → <key>__<branch> per branch; HandWords.<key>(value) picks one with a `when` (else → other).
+#   split-plurals  → <key> keeps the sentence, each plural becomes <plurals name="<key>__<count>">;
+#                    HandWords.<key>(…) / <key>Text(…) compose it. Nothing about the sentence changes with a count.
+#
+# key	recipe	note
+kitAgentLabel	select	Agent row label with or without a role (hasRole = "yes"); both forms keep the name, role, state order.
+activeContextMessageTitle	select	One title per message role (8 roles + other "Message").
+runningPhoneGroup	select	Group heading per process kind on Running on this phone (10 kinds + other).
+runningPhoneName	select	Program name per process kind (19 kinds + other "Program").
+runningPhoneCpu	select	CPU level word; the " · {percent}%" after it is copied into each branch.
+runningPhoneAbout	select	One sentence per process kind (10 kinds + other).
+e7SettingsStorageSummary	split-plurals	Queued prompts and drafts are counted separately; sizes and days stay in the sentence.
+e7SetupDeleteDisclosure	split-plurals	Queued prompts and drafts; =0 is empty, so a zero count leaves its sentence out. Unused key: not shipped.
+chatAttachmentSheetAttached	split-plurals	Sheets and rows of an attached spreadsheet.
+teamProjectGoalStatus	split-plurals	Milestones and repos. Arabic writes both counts as numbers ("count: N"), so its sentence takes the numbers and it has no pieces.
+teamProjectGoalStatusDraft	split-plurals	As teamProjectGoalStatus, for a draft spec.
+teamProjectBoardSummary	split-plurals	Tasks across milestones; Chinese names the milestones first (positional arguments keep the values right).
+teamProjectPlanSummary	split-plurals	Three counts: phases, tasks, repos.

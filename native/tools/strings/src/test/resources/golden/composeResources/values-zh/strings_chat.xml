@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_zh.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="monitorRequestSummary">%1$s · %2$s\n%3$s：%4$s</string>
+    <string name="e7SettingsStorageSummary">未发送内容共 %1$s：%2$s（%3$s）和 %4$s（%5$s）。排队的提示词在 %6$d 天后会被丢弃。</string>
+    <plurals name="e7SettingsStorageSummary__queued">
+        <item quantity="other">%1$d 条排队的提示词</item>
+    </plurals>
+    <string name="e7SettingsStorageSummary__queued__eq0">%1$d 条排队的提示词</string>
+    <string name="e7SettingsStorageSummary__queued__eq1">1 条排队的提示词</string>
+    <string name="e7SettingsStorageSummary__queued__eq2">%1$d 条排队的提示词</string>
+    <plurals name="e7SettingsStorageSummary__drafts">
+        <item quantity="other">%1$d 份草稿</item>
+    </plurals>
+    <string name="e7SettingsStorageSummary__drafts__eq0">%1$d 份草稿</string>
+    <string name="e7SettingsStorageSummary__drafts__eq1">1 份草稿</string>
+    <string name="e7SettingsStorageSummary__drafts__eq2">%1$d 份草稿</string>
+    <string name="chatUiReferenceAlreadyAdded">@%1$s 已在提示词中</string>
+    <plurals name="chatUiDraftsQueued">
+        <item quantity="other">有 %1$s 份草稿在排队，重新连接后发送。</item>
+    </plurals>
+    <plurals name="chatUiQuestionsSummary">
+        <item quantity="other">%1$s · %2$s 个问题</item>
+    </plurals>
+    <string name="chatUiRateLimitCountdown">已触发速率限制。%2$s 后重试%1$s</string>
+    <plurals name="kitNeedsYouWaitingSpoken">
+        <item quantity="other">已等待 %1$s 分钟</item>
+    </plurals>
+    <string name="kitNeedsYouWaitingSpoken__eq0">已等待不到一分钟</string>
+    <string name="kitNeedsYouWaitingSpoken__eq1">已等待 1 分钟</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ja.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <plurals name="chatUiDraftsQueued">
+        <item quantity="other">再接続時に送信される下書きが %1$s 件、待機中です。</item>
+    </plurals>
+    <plurals name="chatUiQuestionsSummary">
+        <item quantity="other">%1$s · %2$s件の質問</item>
+    </plurals>
+    <string name="chatUiRateLimitCountdown">レート制限中です。%2$s 後に再試行%1$s</string>
+    <plurals name="kitNeedsYouWaitingSpoken">
+        <item quantity="other">%1$s分待機中</item>
+    </plurals>
+    <string name="kitNeedsYouWaitingSpoken__eq0">待機時間は1分未満</string>
+    <string name="kitNeedsYouWaitingSpoken__eq1">1分待機中</string>
+</resources>
