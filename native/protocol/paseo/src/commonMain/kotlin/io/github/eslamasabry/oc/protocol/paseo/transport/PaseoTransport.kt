@@ -53,6 +53,11 @@ public class PaseoTransport(
     random: Random = Random.Default,
     /** Set only on the private bounded-history connection. */
     private val boundedFrameBytes: Int? = null,
+    /**
+     * Reads the stored password at connect time when [password] is empty (the profile's CredentialReader, plan 04
+     * §4.8). Null or a failed read means no password.
+     */
+    private val passwordSource: (suspend () -> String?)? = null,
 ) {
     public val endpoint: PaseoEndpoint = PaseoEndpoint.parse(endpoint)
     public val clientId: String = clientId ?: newClientId(random)
@@ -127,6 +132,14 @@ public class PaseoTransport(
         workspaceFileEditing = false
         helloRejection = null
         val myEpoch = ++epoch
+        if (password.isEmpty() && passwordSource != null) {
+            password = passwordSource.invoke().orEmpty()
+            if (!io.github.eslamasabry.oc.protocol.paseo.PaseoProfileRules.passwordAcceptable(password)) {
+                password = ""
+                paseoFail(PaseoFailureKind.Authentication)
+            }
+            if (isClosed || myEpoch != epoch) paseoFail(PaseoFailureKind.Disconnected)
+        }
         val opened = try {
             socketFactory.open(endpoint, password)
         } catch (e: CancellationException) {
