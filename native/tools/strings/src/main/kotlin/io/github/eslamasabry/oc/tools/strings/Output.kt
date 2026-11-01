@@ -317,7 +317,7 @@ object ReportWriter {
             appendLine("## Routing")
             appendLine()
             val byPrefix = c.plans.values.count { p -> routing.usage[p.key].isNullOrEmpty() && p.feature != null }
-            appendLine("- Template keys: ${en.keysIn}. Read by Dart code: ${routing.usage.size}. Routed by key prefix only: $byPrefix.")
+            appendLine("- Template keys: ${en.keysInBase(base)}. Read by Dart code: ${routing.usage.size}. Routed by key prefix only: $byPrefix.")
             appendLine("- Unused (read by no Dart file): ${routing.unused.size}, written to `strings_unused.xml` outside composeResources for the owner to confirm.")
             appendLine("- Per-key routes and readers: `key-routes.tsv`.")
             appendLine()

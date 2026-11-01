@@ -135,11 +135,12 @@ private fun convert(o: Options, template: String, out: java.io.PrintStream, err:
         kt.writeText(HandWordsKotlin.render(conversion, expansion, shipped = { routing.featureByKey[it] != null }))
     }
     ReportWriter.write(conversion, routing, report, skippedProblems = skip, expansion = expansion)
+    val base = { k: String -> expansion.baseKey(k) } // counts in ARB keys
     for (l in conversion.locales) {
         out.println(
-            "${l.locale}: in ${l.keysIn}, converted ${l.convertedKeys(false).size}, " +
-                "unused ${l.files[LocaleResult.UNUSED].orEmpty().map { it.key }.toSet().size}, " +
-                "not convertible ${l.skipped.size}, orphans ${l.orphans.size}, missing ${l.missing.size}, " +
+            "${l.locale}: in ${l.keysInBase(base)}, converted ${l.convertedKeys(false).map(base).toSet().size}, " +
+                "unused ${l.files[LocaleResult.UNUSED].orEmpty().map { base(it.key) }.toSet().size}, " +
+                "not convertible ${l.skipped.size}, orphans ${l.orphans.size}, missing ${l.missing.map(base).toSet().size}, " +
                 "android strings ${conversion.nativeOs[l.locale].orEmpty().size}",
         )
     }

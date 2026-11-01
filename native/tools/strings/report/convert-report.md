@@ -48,7 +48,7 @@ Missing keys fall back to `values/` at runtime. Lists: `missing-<lang>.txt`; dro
 
 ## Routing
 
-- Template keys: 9900. Read by Dart code: 9694. Routed by key prefix only: 80.
+- Template keys: 9837. Read by Dart code: 9694. Routed by key prefix only: 80.
 - Unused (read by no Dart file): 130, written to `strings_unused.xml` outside composeResources for the owner to confirm.
 - Per-key routes and readers: `key-routes.tsv`.
 
