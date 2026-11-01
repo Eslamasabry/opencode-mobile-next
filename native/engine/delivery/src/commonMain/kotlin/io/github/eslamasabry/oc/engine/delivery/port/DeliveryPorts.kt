@@ -55,6 +55,12 @@ public interface SendLink {
 
     public suspend fun stop(session: SessionId): Outcome<StopResult>
 
+    /** `/name args` typed by the person (09 §4.2 step 1). Transport-first; never queued. */
+    public suspend fun slashCommand(session: SessionId, command: String, args: String): Outcome<Unit>
+
+    /** `!command` typed by the person. Transport-first; never queued. */
+    public suspend fun shell(session: SessionId, command: String): Outcome<Unit>
+
     /** Gateways that never hold a mid-turn message; null while the agent is not known (or the facet is absent). */
     public fun midTurnPrompt(session: SessionId): MidTurnPrompt?
 
@@ -73,6 +79,15 @@ public interface DeliveryConnection {
 /** The automation policy's `reconcileQueuedSends` (B-STATE-038). Read at every step of a flush. */
 public fun interface AutomationPolicy {
     public fun allowsQueuedSends(profile: ProfileId): Boolean
+}
+
+/** What the transcript and the review engine know about one conversation (bound by the app graph). */
+public interface ConversationFacts {
+    /** The server says a turn runs (`transcript.run.busy`). */
+    public fun running(ref: ConversationRef): Boolean
+
+    /** A staged undo waits for the person (09 §4.2 step 2, B-CHAT-106). */
+    public fun undoUnresolved(ref: ConversationRef): Boolean
 }
 
 /** `:engine:connection`'s stop memory (09 §4.4, port of `markStoppedByPerson`). */

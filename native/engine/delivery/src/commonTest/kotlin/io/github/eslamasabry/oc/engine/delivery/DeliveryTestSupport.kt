@@ -152,12 +152,27 @@ internal class FakeLink(
         return delivered.any { it.session == session && it.prompt.clientMessageId == messageId }.ok()
     }
 
+    var stopLog: MutableList<String>? = null
+
     override suspend fun stop(session: SessionId): Outcome<StopResult> {
         stops += session
+        stopLog?.add("link.stop")
         return StopResult.Stopped.ok()
     }
 
     override fun midTurnPrompt(session: SessionId): MidTurnPrompt? = midTurn
+
+    val commands = mutableListOf<String>()
+
+    override suspend fun slashCommand(session: SessionId, command: String, args: String): Outcome<Unit> {
+        commands += "/$command $args"
+        return Unit.ok()
+    }
+
+    override suspend fun shell(session: SessionId, command: String): Outcome<Unit> {
+        commands += "!$command"
+        return Unit.ok()
+    }
 
     fun deliveredTexts(): List<String> = delivered.map { it.prompt.text }
 }
@@ -212,3 +227,39 @@ internal fun prompt(
         createdAt = createdAt,
         dispatchedAt = dispatchedAt,
     )
+
+internal class Facts : io.github.eslamasabry.oc.engine.delivery.port.ConversationFacts {
+    val running = mutableSetOf<io.github.eslamasabry.oc.core.common.ids.ConversationRef>()
+    val undo = mutableSetOf<io.github.eslamasabry.oc.core.common.ids.ConversationRef>()
+
+    override fun running(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef): Boolean = ref in running
+
+    override fun undoUnresolved(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef): Boolean = ref in undo
+}
+
+/** Records the stop memory calls in order, interleaved with the link's stops by the caller. */
+internal class Stops(private val log: MutableList<String> = mutableListOf()) : io.github.eslamasabry.oc.engine.delivery.port.StopMemory {
+    val events: List<String> get() = log
+
+    override fun noteStopFromThisApp(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {
+        log += "note"
+    }
+
+    override fun markStoppedByPerson(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {
+        log += "mark"
+    }
+
+    override fun clearStoppedByPerson(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {
+        log += "clear"
+    }
+}
+
+internal val REF = io.github.eslamasabry.oc.core.common.ids.ConversationRef(P1, S1)
+
+internal fun World.delivery(
+    facts: Facts = Facts(),
+    stops: Stops = Stops(),
+    scope: CoroutineScope = test.backgroundScope,
+) = PromptDelivery(connection, queue, journals, facts, stops, clock, scope)
+
+internal fun req(text: String, typed: String = text) = SendRequest(REF, text, typedText = typed)
