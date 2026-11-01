@@ -141,8 +141,13 @@ public data class AgentHostStatus(
     }
 }
 
-/** An installed agent as the strict inventory reports it. An older version that runs still counts as installed. */
-public data class InstalledAgent(val version: String, val payloadPresent: Boolean = true)
+/**
+ * An agent as the strict inventory reports it. [version] is the version that runs (an older version that runs still
+ * counts as installed); null with [payloadPresent] is a partial payload that stays removable after a restart.
+ */
+public data class InstalledAgent(val version: String?, val payloadPresent: Boolean = true) {
+    public val installed: Boolean get() = version != null
+}
 
 public data class WorkspaceAccess(val readable: Boolean, val writable: Boolean) {
     public val usable: Boolean get() = readable && writable
