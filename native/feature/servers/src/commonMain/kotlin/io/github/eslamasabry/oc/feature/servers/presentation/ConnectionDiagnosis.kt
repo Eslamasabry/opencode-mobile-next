@@ -74,6 +74,9 @@ public data class DiagnosisContext(
 
 /** Ports `lib/ui/widgets/connection_failure.dart` from error strings to the typed [Failure] (B-NAV-007…009). */
 public object ConnectionDiagnosis {
+    /** The supported server install (Dart `openCode2UpgradeCommand`): a command, shown verbatim, not copy. */
+    public const val UPGRADE_COMMAND: String = "npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.2.5"
+
     public fun diagnose(
         failure: Failure,
         origin: ServerOrigin,

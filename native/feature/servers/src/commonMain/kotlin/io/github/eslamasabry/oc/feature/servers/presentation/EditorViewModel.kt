@@ -316,3 +316,19 @@ public class EditorViewModel(
 public object Fingerprints {
     public fun display(hex: String): String = hex.uppercase().chunked(2).joinToString(":")
 }
+
+/** `yyyy-MM-dd` (UTC) for certificate validity lines; numbers, not copy (Howard Hinnant's civil-from-days). */
+public object CivilDate {
+    public fun of(epochMs: Long): String {
+        val z = epochMs.floorDiv(86_400_000L) + 719_468
+        val era = z.floorDiv(146_097L)
+        val doe = z - era * 146_097
+        val yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365
+        val doy = doe - (365 * yoe + yoe / 4 - yoe / 100)
+        val mp = (5 * doy + 2) / 153
+        val d = doy - (153 * mp + 2) / 5 + 1
+        val m = if (mp < 10) mp + 3 else mp - 9
+        val y = yoe + era * 400 + if (m <= 2) 1 else 0
+        return "$y-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}"
+    }
+}
