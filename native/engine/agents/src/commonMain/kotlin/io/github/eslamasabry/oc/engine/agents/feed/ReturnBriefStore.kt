@@ -5,14 +5,16 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
 /**
- * The string preferences the brief store writes through (bound over `:core:data`'s prefs store by the app graph).
- * [write] returns false when the platform refused the commit.
+ * The string preferences the brief store writes through (bound over `:core:data`'s prefs store by
+ * the app graph). [write] returns false when the platform refused the commit.
  */
 public interface BriefPreferences {
     public suspend fun read(key: String): String?
@@ -24,9 +26,9 @@ public interface BriefPreferences {
 
 /**
  * Exact local dismissals of the return brief (Dart `ReturnBriefStore`), one blob per profile under
- * `oc.returnBrief.<profileId>` (ProfileScope-registered by the profiles owner), a map of location → ack. A refused write
- * never publishes an acknowledgement; writes for one profile run one at a time and merge; profile deletion drains the
- * queue, then clears both copies (B-STATE-082, 083).
+ * `oc.returnBrief.<profileId>` (ProfileScope-registered by the profiles owner), a map of location →
+ * ack. A refused write never publishes an acknowledgement; writes for one profile run one at a time
+ * and merge; profile deletion drains the queue, then clears both copies (B-STATE-082, 083).
  */
 public class ReturnBriefStore(private val prefs: BriefPreferences) {
     private val loaded = mutableMapOf<ProfileId, Map<String, ReturnBriefAck>>()
@@ -38,39 +40,62 @@ public class ReturnBriefStore(private val prefs: BriefPreferences) {
         loaded[profile] ?: decode(prefs.read(key(profile))).also { loaded[profile] = it }
 
     public suspend fun acknowledged(profile: ProfileId, location: String): ReturnBriefAck =
-        load(profile)[location] ?: ReturnBriefAck.Empty
+        lane(profile).withLock { load(profile)[location] ?: ReturnBriefAck.Empty }
 
-    /** Acknowledges exactly the identities [shown] holds now, even if rows arrive while the save waits. */
-    public suspend fun acknowledge(profile: ProfileId, location: String, shown: ReturnBrief): Outcome<Unit> {
+    /**
+     * Acknowledges exactly the identities [shown] holds now, even if rows arrive while the save
+     * waits.
+     */
+    public suspend fun acknowledge(
+        profile: ProfileId,
+        location: String,
+        shown: ReturnBrief,
+    ): Outcome<Unit> {
         val snapshot = shown.acknowledgement(null)
         return lane(profile).withLock {
             val entries = LinkedHashMap(load(profile))
-            val ack = (entries.remove(location) ?: ReturnBriefAck.Empty).merge(snapshot.runs, snapshot.requestIds)
+            val ack =
+                (entries.remove(location) ?: ReturnBriefAck.Empty).merge(
+                    snapshot.runs,
+                    snapshot.requestIds,
+                )
             entries[location] = ack
             while (entries.size > MAX_LOCATIONS) entries.remove(entries.keys.first())
             val blob = JsonObject(entries.mapValues { it.value.toJson() }).toString()
-            if (prefs.write(key(profile), blob)) {
-                loaded[profile] = entries
-                Unit.ok()
-            } else {
-                Failure.StorageRefused().failed()
+            // The platform may commit despite cancellation. Publish its result before releasing the
+            // lane.
+            withContext(NonCancellable) {
+                if (prefs.write(key(profile), blob)) {
+                    loaded[profile] = entries
+                    Unit.ok()
+                } else {
+                    Failure.StorageRefused().failed()
+                }
             }
         }
     }
 
-    /** Waits for queued dismissals of [profile], then clears the stored and in-memory acknowledgements. */
+    /**
+     * Waits for queued dismissals of [profile], then clears the stored and in-memory
+     * acknowledgements.
+     */
     public suspend fun deleteProfile(profile: ProfileId) {
         lane(profile).withLock {
-            prefs.remove(key(profile))
-            loaded.remove(profile)
+            withContext(NonCancellable) {
+                prefs.remove(key(profile))
+                loaded.remove(profile)
+            }
         }
     }
 
     private fun decode(raw: String?): Map<String, ReturnBriefAck> {
         if (raw == null) return emptyMap()
         val obj = parseOrNull(raw) as? JsonObject ?: return emptyMap()
-        return obj.entries.take(MAX_LOCATIONS)
-            .mapNotNull { (location, value) -> ReturnBriefAck.fromJson(value)?.let { location to it } }
+        return obj.entries
+            .take(MAX_LOCATIONS)
+            .mapNotNull { (location, value) ->
+                ReturnBriefAck.fromJson(value)?.let { location to it }
+            }
             .toMap()
     }
 
