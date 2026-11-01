@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app's open-portal mark (ic_launcher_monochrome), cropped for the card header. Tinted by the renderer. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="14dp" android:height="14dp" android:viewportWidth="56" android:viewportHeight="56">
+    <path android:pathData="M35,5 H17 A12,12 0 0 0 5,17 V38" android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="10" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M51,18 V39 A12,12 0 0 1 39,51 H18" android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="10" android:strokeLineCap="round" android:strokeLineJoin="round" />
+</vector>

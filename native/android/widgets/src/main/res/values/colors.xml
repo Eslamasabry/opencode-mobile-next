@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="launch_background">#101310</color>
+    <color name="launcher_background">#101713</color>
+    <!-- Home-screen widget palette; night variants in values-night. -->
+    <color name="widgetBackground">#F6F9F6</color>
+    <color name="widgetText">#172019</color>
+    <color name="widgetHint">#68776E</color>
+    <color name="widgetAccent">#176B4B</color>
+    <color name="widgetCard">#FAFAF8</color>
+    <color name="widgetPill">#ECECE6</color>
+    <color name="widgetTrack">#DCE5DE</color>
+    <color name="widgetAmber">#8F5B00</color>
+    <color name="widgetBarTrack">#381A1B1E</color>
+    <color name="widgetInk">#1A1B1E</color>
+</resources>

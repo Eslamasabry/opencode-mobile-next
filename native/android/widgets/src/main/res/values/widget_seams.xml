@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WIDGETS seam (native-authored). The copied action controller posts its short-service notification with
+     R.mipmap.ic_launcher, which :androidApp owns. This alias stands in inside the library; the app's own
+     mipmap/ic_launcher wins at the app's resource merge. -->
+<resources>
+    <item name="ic_launcher" type="mipmap">@android:mipmap/sym_def_app_icon</item>
+</resources>
