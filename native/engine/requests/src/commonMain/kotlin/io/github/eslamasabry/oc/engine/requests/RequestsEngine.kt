@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.common.WireTag
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -216,13 +217,21 @@ public class RequestsEngine(
         val sending =
             AnswerPhase.Sending(answer, clock.now().toEpochMilliseconds(), CompletableDeferred())
         var claimed: PendingRequest? = null
+        var refusal: Failure? = null
         state.update { list ->
             claimed = null
+            refusal = null
             list.mapEntry(id) { entry ->
-                if (entry.phase === expected) entry.withPhase(sending).also { claimed = it }
-                else entry
+                if (entry.phase !== expected) entry
+                else {
+                    val invalid = admissible(entry, answer)
+                    refusal = invalid
+                    if (invalid != null) entry.withPhase(AnswerPhase.NotAccepted(answer, invalid))
+                    else entry.withPhase(sending).also { claimed = it }
+                }
             }
         }
+        refusal?.let { return it.failed() }
         val entry = claimed ?: return null
         val write =
             scope.launch(lane) {
@@ -311,13 +320,43 @@ public class RequestsEngine(
             is PendingRequest.Permission ->
                 when {
                     answer is RequestAnswer.Question -> Failure.Unexpected()
-                    answer is RequestAnswer.Permission && answer.reply == PermissionReply.Always &&
-                        !(port.capabilities.value.persistentPermissionGrants && entry.request.canAlwaysAllow) ->
+                    answer is RequestAnswer.Permission &&
+                        answer.reply == PermissionReply.Always &&
+                        !(port.capabilities.value.persistentPermissionGrants &&
+                            entry.request.canAlwaysAllow) ->
                         Failure.Unavailable(FeatureId("persistentPermissionGrants"))
                     else -> null
                 }
-            is PendingRequest.Question -> if (answer is RequestAnswer.Permission) Failure.Unexpected() else null
+            is PendingRequest.Question ->
+                when {
+                    answer is RequestAnswer.Permission -> Failure.Unexpected()
+                    answer is RequestAnswer.Question && !validQuestionAnswer(entry, answer) ->
+                        Failure.Rejected(status = null, tag = WireTag("QUESTION_INVALID_ANSWER"))
+                    else -> null
+                }
         }
+
+    /**
+     * Validate wire-ready answers too: notifications and other callers do not pass through the
+     * sheet.
+     */
+    private fun validQuestionAnswer(
+        entry: PendingRequest.Question,
+        answer: RequestAnswer.Question,
+    ): Boolean {
+        val prompts = entry.question.prompts
+        if (answer.answers.size != prompts.size) return false
+        return prompts.indices.all { index ->
+            val prompt = prompts[index]
+            val values = answer.answers[index]
+            val offered = prompt.choices.map { it.label }
+            (prompt.optional || values.isNotEmpty()) &&
+                (prompt.multiple || values.size <= 1) &&
+                values.none { it.isBlank() } &&
+                values.distinct().size == values.size &&
+                (prompt.custom || values.all { it in offered })
+        }
+    }
 
     // ---- structure (lane only)
 

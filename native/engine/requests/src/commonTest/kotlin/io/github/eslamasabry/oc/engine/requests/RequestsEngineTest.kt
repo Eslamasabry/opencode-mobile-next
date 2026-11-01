@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.testing.TestClock
 import io.github.eslamasabry.oc.core.testing.TestDispatchers
 import io.github.eslamasabry.oc.core.testing.TestPacer
 import io.github.eslamasabry.oc.core.testing.assertTimerTable
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -559,6 +560,118 @@ class RequestsEngineTest {
                 assertIs<AnswerPhase.NotAccepted>(engine.phaseOf(id))
             }
             assertEquals(failures.size, port.replies.size)
+        }
+
+    @Test
+    fun `B-CHAT-072 req-5 direct engine commands reject invalid question payloads without writes`() =
+        runTest {
+            val engine = engine()
+            val q =
+                question("q1").let {
+                    it.copy(prompts = persistentListOf(it.prompts.single().copy(custom = false)))
+                }
+            port.questions = listOf(q)
+            engine.refresh()
+            val invalid =
+                listOf(
+                    persistentListOf(), // missing prompt
+                    persistentListOf(
+                        persistentListOf<String>(),
+                        persistentListOf("Yes"),
+                    ), // extra prompt
+                    answers(), // required prompt left empty
+                    answers("Maybe"), // not offered, no custom answer
+                    answers("Yes", "No"), // single-choice cardinality
+                    answers("Yes", "Yes"), // duplicate selection
+                    answers("   "), // blank text
+                )
+            invalid.forEach { payload ->
+                assertIs<Outcome.Failed>(
+                    engine.answer(RequestId("q1"), RequestAnswer.Question(payload))
+                )
+                assertIs<Outcome.Failed>(
+                    engine.answerNow(RequestId("q1"), RequestAnswer.Question(payload))
+                )
+                assertIs<AnswerPhase.Waiting>(engine.phaseOf("q1"))
+            }
+            engine.flushHeld(S1)
+            assertEquals(emptyList(), port.replies)
+            assertEquals(
+                Outcome.Ok(Unit),
+                engine.answerNow(RequestId("q1"), RequestAnswer.Question(answers("Yes"))),
+            )
+            assertEquals(listOf("answer q1 [[Yes]]"), port.replies)
+        }
+
+    @Test
+    fun `B-CHAT-072 req-5 valid optional custom multiple and multi-prompt answers still send`() =
+        runTest {
+            val engine = engine()
+            val optional =
+                question("optional").let {
+                    it.copy(
+                        prompts =
+                            persistentListOf(
+                                it.prompts.single().copy(optional = true, custom = false)
+                            )
+                    )
+                }
+            val multiple =
+                question("multiple", multiple = true).let {
+                    it.copy(prompts = persistentListOf(it.prompts.single().copy(custom = false)))
+                }
+            port.questions =
+                listOf(question("custom"), optional, multiple, question("many", prompts = 2))
+            engine.refresh()
+            val payloads =
+                listOf(
+                    "custom" to answers("Later"),
+                    "optional" to answers(),
+                    "multiple" to answers("Yes", "No"),
+                    "many" to persistentListOf(persistentListOf("Yes"), persistentListOf("No")),
+                )
+            payloads.forEach { (id, values) ->
+                assertEquals(
+                    Outcome.Ok(Unit),
+                    engine.answerNow(RequestId(id), RequestAnswer.Question(values)),
+                )
+            }
+            assertEquals(
+                listOf(
+                    "answer custom [[Later]]",
+                    "answer optional [[]]",
+                    "answer multiple [[Yes, No]]",
+                    "answer many [[Yes], [No]]",
+                ),
+                port.replies,
+            )
+        }
+
+    @Test
+    fun `B-CHAT-072 req-5 held answers are checked against updated prompts before claiming`() =
+        runTest {
+            val engine = engine()
+            val original = question("q1")
+            port.questions = listOf(original)
+            engine.refresh()
+            assertEquals(
+                Outcome.Ok(Unit),
+                engine.answer(RequestId("q1"), RequestAnswer.Question(answers("Later"))),
+            )
+            port.questions =
+                listOf(
+                    original.copy(
+                        prompts = persistentListOf(original.prompts.single().copy(custom = false))
+                    )
+                )
+            engine.refresh()
+            engine.flushHeld(S1)
+            assertEquals(emptyList(), port.replies)
+            assertIs<AnswerPhase.NotAccepted>(engine.phaseOf("q1"))
+            assertIs<Outcome.Failed>(engine.retry(RequestId("q1")))
+            advanceTimeBy(HELD_ANSWER + 1.milliseconds)
+            runCurrent()
+            assertEquals(emptyList(), port.replies)
         }
 
     @Test
