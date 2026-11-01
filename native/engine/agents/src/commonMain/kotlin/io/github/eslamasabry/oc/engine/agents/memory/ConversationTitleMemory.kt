@@ -3,7 +3,8 @@ package io.github.eslamasabry.oc.engine.agents.memory
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.AgentKeys
-import io.github.eslamasabry.oc.engine.agents.memory.DartJsonText.text
+import io.github.eslamasabry.oc.engine.agents.json.DartJsonText
+import io.github.eslamasabry.oc.engine.agents.json.DartJsonText.text
 import io.github.eslamasabry.oc.engine.agents.store.AgentPrefs
 import kotlinx.serialization.json.JsonObject
 

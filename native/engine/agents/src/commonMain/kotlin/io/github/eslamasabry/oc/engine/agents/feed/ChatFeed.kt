@@ -1,7 +1,7 @@
 package io.github.eslamasabry.oc.engine.agents.feed
 
 import io.github.eslamasabry.oc.engine.agents.AgentId
-import io.github.eslamasabry.oc.engine.agents.memory.DartJsonText
+import io.github.eslamasabry.oc.engine.agents.json.DartJsonText
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 

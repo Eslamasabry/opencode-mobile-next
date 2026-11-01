@@ -7,9 +7,9 @@ import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.agents.AgentKeys
-import io.github.eslamasabry.oc.engine.agents.memory.DartJsonText
-import io.github.eslamasabry.oc.engine.agents.memory.DartJsonText.isTrue
-import io.github.eslamasabry.oc.engine.agents.memory.DartJsonText.text
+import io.github.eslamasabry.oc.engine.agents.json.DartJsonText
+import io.github.eslamasabry.oc.engine.agents.json.DartJsonText.isTrue
+import io.github.eslamasabry.oc.engine.agents.json.DartJsonText.text
 import io.github.eslamasabry.oc.engine.agents.store.AgentPrefs
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf

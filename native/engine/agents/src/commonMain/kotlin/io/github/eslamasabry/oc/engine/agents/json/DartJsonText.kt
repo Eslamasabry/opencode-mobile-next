@@ -1,4 +1,4 @@
-package io.github.eslamasabry.oc.engine.agents.memory
+package io.github.eslamasabry.oc.engine.agents.json
 
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json

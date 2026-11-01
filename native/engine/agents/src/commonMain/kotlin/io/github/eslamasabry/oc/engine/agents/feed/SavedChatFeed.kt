@@ -6,10 +6,10 @@ import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.AgentKeys
 import io.github.eslamasabry.oc.engine.agents.OwnerId
-import io.github.eslamasabry.oc.engine.agents.memory.DartJsonText
-import io.github.eslamasabry.oc.engine.agents.memory.DartJsonText.int
-import io.github.eslamasabry.oc.engine.agents.memory.DartJsonText.isTrue
-import io.github.eslamasabry.oc.engine.agents.memory.DartJsonText.text
+import io.github.eslamasabry.oc.engine.agents.json.DartJsonText
+import io.github.eslamasabry.oc.engine.agents.json.DartJsonText.int
+import io.github.eslamasabry.oc.engine.agents.json.DartJsonText.isTrue
+import io.github.eslamasabry.oc.engine.agents.json.DartJsonText.text
 import io.github.eslamasabry.oc.engine.agents.store.AgentPrefs
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap

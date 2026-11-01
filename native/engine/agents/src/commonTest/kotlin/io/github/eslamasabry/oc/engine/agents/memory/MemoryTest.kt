@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.agents.memory
 
+import io.github.eslamasabry.oc.engine.agents.json.DartJsonText
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.testing.FakeAgentPrefs
