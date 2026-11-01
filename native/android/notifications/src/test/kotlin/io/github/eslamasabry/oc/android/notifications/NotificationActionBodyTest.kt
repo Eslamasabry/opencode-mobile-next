@@ -32,6 +32,7 @@ import org.robolectric.annotation.Config
  * `NotificationActionBody` (plan 11 §10.6; 16 WP-16.8 `NotificationActionAuthTest`; `NoTrampolineTest`). Every test
  * also asserts that no activity was started: Android 12+ blocks notification trampolines silently.
  */
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class NotificationActionBodyTest {
@@ -300,6 +301,19 @@ class NotificationActionBodyTest {
                 assertEquals(profile, open.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID))
                 assertEquals("same_session", open.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID))
             }
+        }
+    }
+
+    @Test
+    fun `B-ANDR-040 notify finding 5 a held status action keeps its target after another profile replaces the row`() = runTest {
+        val renderer = StatusRenderer(app, NotifyWords(app) { "en" })
+        fun row(profile: String) = renderer.build(StatusContent(StatusKind.Working, "Working",
+            conversation = ConversationRef(ProfileId(profile), SessionId("same_session")),
+            actions = listOf(StatusAction.Open, StatusAction.StopReply)), true, null)
+        val first = row("p1")
+        row("p2")
+        for (pending in listOf(first.contentIntent, first.actions[0].actionIntent, first.actions[1].actionIntent)) {
+            assertEquals("p1", shadowOf(pending).savedIntent.statusConversation()?.profileId?.raw)
         }
     }
 

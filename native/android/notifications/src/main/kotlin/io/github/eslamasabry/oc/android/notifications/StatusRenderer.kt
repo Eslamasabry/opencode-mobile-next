@@ -68,6 +68,7 @@ public class StatusRenderer(private val context: Context, private val words: Not
             Intent().apply {
                 component = FrozenComponents.of(context, FrozenComponents.MAIN_ACTIVITY)
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                data = targetUri("opencode://status/open", content)
                 putStatusConversation(content.conversation)
                 // EntryRouter already understands the frozen conversation routing extras.
                 content.conversation?.let {
@@ -78,6 +79,13 @@ public class StatusRenderer(private val context: Context, private val words: Not
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+
+    /** Extras do not participate in PendingIntent identity; keep older delivered actions on their own chat. */
+    private fun targetUri(base: String, content: StatusContent): android.net.Uri =
+        base.toUri().buildUpon()
+            .appendQueryParameter("profile", content.conversation?.profileId?.raw.orEmpty())
+            .appendQueryParameter("session", content.conversation?.sessionId?.raw.orEmpty())
+            .build()
 
     private fun dismissIntent(content: StatusContent): PendingIntent =
         PendingIntent.getBroadcast(
@@ -115,7 +123,7 @@ public class StatusRenderer(private val context: Context, private val words: Not
                         STOP_REPLY_REQUEST,
                         Intent(FrozenExtras.ACTION_STATUS).apply {
                             component = FrozenComponents.of(context, FrozenComponents.STATUS_ACTION_RECEIVER)
-                            data = FrozenExtras.STOP_REPLY_URI.toUri()
+                            data = targetUri(FrozenExtras.STOP_REPLY_URI, content)
                             putExtra(FrozenExtras.EXTRA_STATUS_ACTION, StatusAction.StopReply.wire)
                             putStatusConversation(content.conversation)
                         },
