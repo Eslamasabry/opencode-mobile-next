@@ -70,5 +70,7 @@ class AgentPinsParityTest {
         assertTrue("installDirectory =\n      '/home/oc/.local/share/oc-paseo/\$version-b0bcc4f6191b'" in paseoScripts)
         val tested = Regex("claudeCodeTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
         assertEquals(Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList(), pins.claudeCodeTestedVersions)
+        val paseoTested = Regex("paseoTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
+        assertEquals(Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList(), pins.paseoTestedVersions)
     }
 }

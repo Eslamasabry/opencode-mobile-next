@@ -38,6 +38,8 @@ public class AgentPins internal constructor(
     public val paseo: PaseoPins,
     public val node: NodePins,
     public val claudeCodeTestedVersions: ImmutableList<String>,
+    /** `paseoTestedVersions` (lib/paseo/tested_versions.dart): helper versions certification evidence carries across. */
+    public val paseoTestedVersions: ImmutableList<String>,
     private val agents: List<AgentDescriptor>,
 ) {
     public fun catalog(): AgentCatalog = AgentCatalog(agents)
@@ -70,8 +72,9 @@ public class AgentPins internal constructor(
                 )
             }
             val tested = root.getValue("claudeCodeTestedVersions").jsonArray.map { it.jsonPrimitive.content }
+            val paseoTested = root.getValue("paseoTestedVersions").jsonArray.map { it.jsonPrimitive.content }
             val agents = root.getValue("agents").jsonArray.map { descriptor(it.jsonObject) }
-            return AgentPins(paseo, node, tested.toImmutableList(), agents)
+            return AgentPins(paseo, node, tested.toImmutableList(), paseoTested.toImmutableList(), agents)
         }
 
         private fun descriptor(o: JsonObject): AgentDescriptor {

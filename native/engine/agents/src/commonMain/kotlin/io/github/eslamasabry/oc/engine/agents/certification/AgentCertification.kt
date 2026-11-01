@@ -76,8 +76,8 @@ public class AgentCertification private constructor(
     /** The shared tested-version sets (lib/paseo/tested_versions.dart). */
     public class TestedVersions(public val paseo: Set<String>, public val claudeCode: Set<String>) {
         public companion object {
-            /** `paseoTestedVersions`, copied verbatim (AgentCertificationFileTest compares with the Dart source). */
-            public val PASEO: Set<String> = linkedSetOf("0.9.2", "0.11.2", "0.12.0", "0.13.2", "0.14.0")
+            /** `paseoTestedVersions`, from the pins file (AgentPinsParityTest compares it with the Dart source). */
+            public val PASEO: Set<String> get() = AgentPins.builtIn.paseoTestedVersions.toCollection(LinkedHashSet())
 
             public val builtIn: TestedVersions by lazy {
                 TestedVersions(PASEO, AgentPins.builtIn.claudeCodeTestedVersions.toSet())
