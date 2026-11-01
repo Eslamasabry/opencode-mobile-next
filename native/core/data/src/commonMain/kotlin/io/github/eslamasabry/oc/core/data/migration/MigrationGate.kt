@@ -22,8 +22,9 @@ public enum class BlockReason { LowSpace, PrefsUnreadable, WriteRefused, Authori
 public data class MigrationNotices(val reenter: List<ProfileId> = emptyList())
 
 /**
- * The store gates WRITES, not reads (plan 05 §2.2): the gate screen, the crash-loop guard and the migrator must read.
- * Every `KeyValueStore` write suspends in [awaitWritable]; the migrator writes through its own `MigrationWriter`.
+ * Plan 05 §2.2 and §7.3. Every `KeyValueStore` write suspends in [awaitWritable]; the migrator writes through its own
+ * `MigrationWriter`. Reads through `KeyValueStore` are valid only once [state] is Open (earlier reads go through
+ * `MigrationReader`), and `SecretStore` is bound as `GatedSecretStore`, which suspends in [awaitOpen].
  *
  * `MigrationActions` (retry, restore, start fresh) are deliberately NOT here: the gate screen in `:ui:shell` may not
  * depend on `:core:data` (audit codex-04+05 BLOCKER 3); that surface belongs to an engine-level API.
@@ -33,6 +34,11 @@ public interface MigrationGate {
 
     /** Returns when the state is [GateState.Open]; never returns while Closed, Running or Blocked. */
     public suspend fun awaitWritable()
+
+    /** The same wait, for reads and engine start (plan 05 §7.3). */
+    public suspend fun awaitOpen() {
+        awaitWritable()
+    }
 }
 
 @RequiresOptIn(
