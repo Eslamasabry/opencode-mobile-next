@@ -216,6 +216,7 @@ public object InputDialogRules {
  * One value in a dialog (Dart `showKitInputDialog`; plan 06 §7.4): the field opens focused with its words selected;
  * the keyboard's action submits; nonsecret text survives rotation within [operationKey]. Closing removes the input
  * state; changing [operationKey] starts a new operation even when two targets have the same initial text.
+ * Secret input starts empty and is never saved or restored; a nonempty secret [initial] is refused.
  * [onResult] is called once: with the new text, or with null
  * when the person cancels or submits it unchanged (B-KIT-016). [validate] returns the error line, or null.
  *
@@ -237,6 +238,7 @@ public fun KitInputDialog(
     operationKey: Any? = initial,
     onResult: (String?) -> Unit,
 ) {
+    require(kind != KitFieldKind.Secret || initial.isEmpty()) { "Secret dialogs cannot be prefilled; use Saved / Replace for stored values" }
     if (!visible) return
     key(operationKey, kind) {
         InputDialogContent(title, fieldLabel, confirmLabel, initial, kind, validate, onResult)
@@ -253,7 +255,8 @@ private fun InputDialogContent(
     validate: (String) -> String?,
     onResult: (String?) -> Unit,
 ) {
-    val state: TextFieldState = rememberTextFieldState(initial)
+    val state: TextFieldState =
+        if (kind == KitFieldKind.Secret) remember { TextFieldState() } else rememberTextFieldState(initial)
     val focus = remember { FocusRequester() }
     val cancel = stringResource(Res.string.kitConfirmCancel)
     val typed = state.text.toString()

@@ -31,7 +31,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -89,13 +88,16 @@ public enum class SecretFieldPresence { Empty, Saved, Editing }
 
 /**
  * Where a secret field reports every keystroke before the host hears it (plan 16 SI-4, B-SEC-204). The shell provides
- * one that registers the value with `:core:security`'s `Redactor`; the default does nothing (tests, previews).
+ * one that synchronously registers the value with the app's `:core:security` `Redactor`. A missing provider is an
+ * error; tests and previews must explicitly supply a sink too.
  */
 public fun interface KitSecretSink {
     public fun register(value: String)
 }
 
-public val LocalKitSecretSink: ProvidableCompositionLocal<KitSecretSink> = staticCompositionLocalOf { KitSecretSink { } }
+public val LocalKitSecretSink: ProvidableCompositionLocal<KitSecretSink> = staticCompositionLocalOf {
+    error("KitField(Secret) requires the app redactor's LocalKitSecretSink")
+}
 
 /** The counter shows from 80 % of the limit (Dart `KitField`). */
 internal const val COUNTER_FROM: Float = 0.8f
@@ -284,7 +286,13 @@ private fun FieldBox(
     }
     if (kind == KitFieldKind.Secret) {
         val sink = LocalKitSecretSink.current
-        LaunchedEffect(state, sink) { snapshotFlow { state.text.toString() }.collect { if (it.isNotEmpty()) sink.register(it) } }
+        // Runs after validation, inside the edit transaction and before TextFieldState publishes to any consumer.
+        val register = remember(sink) {
+            InputTransformation {
+                val accepted = toString()
+                if (accepted.isNotEmpty() && accepted != originalText.toString()) sink.register(accepted)
+            }
+        }
         var revealed by rememberSaveable { mutableStateOf(false) }
         // The value is technical: left to right in an Arabic interface too, bidi-isolated by the LTR box.
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -293,7 +301,7 @@ private fun FieldBox(
                     state = state,
                     modifier = Modifier.weight(1f).testTag("kit-field-secret").semantics { contentDescription = label },
                     enabled = on,
-                    inputTransformation = transformation,
+                    inputTransformation = transformation?.then(register) ?: register,
                     textStyle = style,
                     keyboardOptions = keyboard,
                     onKeyboardAction = submit,
@@ -302,7 +310,7 @@ private fun FieldBox(
                     textObfuscationMode = if (revealed) TextObfuscationMode.Visible else TextObfuscationMode.RevealLastTyped,
                     decorator = { decorator(it) },
                 )
-                PasteButton(state, on)
+                PasteButton(state, on, maxLength, sink)
                 KitIconButton(
                     icon = if (revealed) KitPartGlyphs.EyeOff else KitPartGlyphs.Eye,
                     label =
@@ -336,10 +344,19 @@ private fun FieldBox(
 
 @Suppress("DEPRECATION") // LocalClipboard has no common plain-text read yet; LocalClipboardManager.getText() does.
 @Composable
-private fun PasteButton(state: TextFieldState, on: Boolean) {
+private fun PasteButton(state: TextFieldState, on: Boolean, maxLength: Int?, sink: KitSecretSink) {
     val clipboard = LocalClipboardManager.current
     KitTappable(
-        onClick = { clipboard.getText()?.text?.let { pasted -> state.edit { replace(0, length, pasted) } } },
+        onClick = {
+            clipboard.getText()?.text?.let { pasted ->
+                if (maxLength == null || pasted.length <= maxLength) {
+                    state.edit {
+                        if (pasted.isNotEmpty() && pasted != toString()) sink.register(pasted)
+                        replace(0, length, pasted)
+                    }
+                }
+            }
+        },
         enabled = on,
         disabledReason = if (on) null else "",
         shape = KitShapeId.Pill,

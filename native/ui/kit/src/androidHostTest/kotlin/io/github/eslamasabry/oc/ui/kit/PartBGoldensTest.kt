@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
+import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
@@ -73,7 +76,9 @@ class PartBGoldensTest(private val variant: KitGoldensTest.Variant) {
 
     @Test
     fun fields() {
-        show { FieldsScene(words) }
+        show {
+            CompositionLocalProvider(LocalKitSecretSink provides KitSecretSink {}) { FieldsScene(words) }
+        }
         tag("fields", "KitField", "kinds")
     }
 
