@@ -40,6 +40,7 @@ import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusLineFold
@@ -134,7 +135,17 @@ public fun KitScreen(
         }
     }
     if (framed) {
-        KitSheetHost(modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content() }
+        ScreenSheetHost(modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content() }
+    } else {
+        Box(modifier) { content() }
+    }
+}
+
+/** Pane and nested page frames use the encompassing window's modal layer. */
+@Composable
+private fun ScreenSheetHost(modifier: Modifier, content: @Composable () -> Unit) {
+    if (LocalKitSheetHost.current == null) {
+        KitSheetHost(modifier, content)
     } else {
         Box(modifier) { content() }
     }
@@ -244,7 +255,7 @@ private fun Panes(
         val x = if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl) 0.5f else size.width - 0.5f
         drawLine(hairline, Offset(x, 0f), Offset(x, size.height), 1f)
     }
-    KitSheetHost(modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+    ScreenSheetHost(modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
         Row(Modifier.fillMaxSize()) {
             Box(
                 Modifier.width(Layout.PANE_LIST_WIDTH.dp).fillMaxHeight().endRule()
