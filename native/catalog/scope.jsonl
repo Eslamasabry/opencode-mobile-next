@@ -1,0 +1,1650 @@
+{"id":"B-NAV-001","scope":"switch","slice":4,"module":":feature:about"}
+{"id":"B-NAV-002","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-NAV-003","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-NAV-004","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-NAV-005","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-NAV-006","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-NAV-007","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-NAV-008","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-NAV-009","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-NAV-010","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-NAV-011","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-NAV-012","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-NAV-013","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook/Memory node feature (test/factsbook), after the switch"}
+{"id":"B-NAV-014","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook/Memory node feature (test/factsbook), after the switch"}
+{"id":"B-NAV-015","scope":"switch","slice":4,"module":":feature:about"}
+{"id":"B-NAV-016","scope":"switch","slice":2,"module":":feature:onboarding"}
+{"id":"B-NAV-017","scope":"switch","slice":2,"module":":feature:onboarding"}
+{"id":"B-NAV-018","scope":"switch","slice":2,"module":":feature:onboarding"}
+{"id":"B-NAV-019","scope":"switch","slice":4,"module":":feature:about"}
+{"id":"B-NAV-020","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-NAV-021","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-NAV-022","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-NAV-023","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-NAV-024","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-NAV-025","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-NAV-026","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-NAV-027","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-NAV-028","scope":"switch","slice":5,"module":":ui:kit-content"}
+{"id":"B-NAV-029","scope":"switch","slice":3,"module":":feature:phone"}
+{"id":"B-NAV-030","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-NAV-031","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-NAV-032","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-NAV-033","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-NAV-034","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-NAV-035","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-NAV-036","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-NAV-037","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-NAV-038","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-NAV-039","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-NAV-040","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-NAV-041","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-NAV-042","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-043","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-NAV-044","scope":"switch","slice":5,"module":":feature:project"}
+{"id":"B-NAV-045","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-NAV-046","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-NAV-047","scope":"switch","slice":5,"module":":feature:settings"}
+{"id":"B-NAV-048","scope":"switch","slice":2,"module":":feature:chats","decision":"D14","amended":"Claude Code explains why it is gated where the in-app Linux is missing; Files works on a server without project tools; question sheet, search and shell frame layouts hold.","amended_at":"2026-11-01"}
+{"id":"B-NAV-049","scope":"switch","slice":5,"module":":feature:search"}
+{"id":"B-NAV-050","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-051","scope":"switch","slice":2,"module":":feature:chat"}
+{"id":"B-NAV-052","scope":"switch","slice":3,"module":":feature:chat-composer"}
+{"id":"B-NAV-053","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-054","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-NAV-055","scope":"switch","slice":4,"module":":feature:schedules"}
+{"id":"B-NAV-056","scope":"switch","slice":5,"module":":feature:search"}
+{"id":"B-NAV-057","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-058","scope":"switch","slice":4,"module":":feature:settings","decision":"NG1, D6; 02 §3.5 top-up","amended":"Search results hide what the server or device cannot open: in-app Linux has one Running on this phone; Linux Services is found only on the in-app Linux; backends lacking them drop catalog and project tools; OpenCode 2 keeps catalog; desktop gains shortcuts and loses phone-only results; without the shell its tabs are absent; AI setup is found by name when shared. (The OpenCode 1 and AI Team clauses are dropped; recheck by hand when the slice starts.)","amended_at":"2026-11-01"}
+{"id":"B-NAV-059","scope":"switch","slice":4,"module":":feature:settings","decision":"D14","amended":"Settings search finds and opens settings.","amended_at":"2026-11-01"}
+{"id":"B-NAV-060","scope":"after-switch","slice":null,"module":null,"decision":"D11","reason":"server illustration scenes (link scene repaint) are D11"}
+{"id":"B-NAV-061","scope":"switch","slice":1,"module":":core:data","decision":"02 §3.3 rule 3, N4-O4","amended":"Even though the session-address link feature is absent: deleting a profile sweeps its session-address link bindings, removing the feature's keys, files and secrets by their registered shapes.","amended_at":"2026-11-01"}
+{"id":"B-NAV-062","scope":"dropped","slice":null,"module":null,"decision":"NG8 (04 §19 N4-O4)","reason":"session-address links (include server address) are off in Flutter and not ported"}
+{"id":"B-NAV-063","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-NAV-064","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-NAV-065","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-NAV-066","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-NAV-067","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-NAV-068","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-069","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-070","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-071","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-072","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-073","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-074","scope":"switch","slice":4,"module":":feature:about"}
+{"id":"B-NAV-075","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-NAV-076","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-NAV-077","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-NAV-078","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-NAV-079","scope":"switch","slice":5,"module":":feature:usage"}
+{"id":"B-NAV-080","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-NAV-081","scope":"switch","slice":1,"module":":protocol:oc2","decision":"NG1","amended":"Tiles, health sections, git init and settings rows the server cannot serve are hidden.","amended_at":"2026-11-01"}
+{"id":"B-NAV-082","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-CHAT-001","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-CHAT-002","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-CHAT-003","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-CHAT-004","scope":"switch","slice":5,"module":":ui:kit-chat"}
+{"id":"B-CHAT-005","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-CHAT-006","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-CHAT-007","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-CHAT-008","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-CHAT-009","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-010","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-011","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-CHAT-012","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-CHAT-013","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-CHAT-014","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-CHAT-015","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-CHAT-016","scope":"switch","slice":2,"module":":feature:chat"}
+{"id":"B-CHAT-017","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-CHAT-018","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-CHAT-019","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-CHAT-020","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-CHAT-021","scope":"switch","slice":3,"module":":engine:media"}
+{"id":"B-CHAT-022","scope":"switch","slice":3,"module":":engine:media"}
+{"id":"B-CHAT-023","scope":"switch","slice":3,"module":":engine:media"}
+{"id":"B-CHAT-024","scope":"switch","slice":3,"module":":engine:media"}
+{"id":"B-CHAT-025","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-CHAT-026","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-CHAT-027","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-CHAT-028","scope":"switch","slice":3,"module":":engine:requests"}
+{"id":"B-CHAT-029","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-030","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-031","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-032","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-033","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-034","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-035","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-036","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-037","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-038","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-039","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-040","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-041","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-042","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-043","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-044","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-045","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-046","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-047","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-048","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-049","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-050","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-051","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-052","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-053","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-CHAT-054","scope":"switch","slice":5,"module":":ui:kit-content"}
+{"id":"B-CHAT-055","scope":"switch","slice":3,"module":":ui:kit-content"}
+{"id":"B-CHAT-056","scope":"switch","slice":3,"module":":ui:kit-content"}
+{"id":"B-CHAT-057","scope":"switch","slice":5,"module":":ui:kit-chat"}
+{"id":"B-CHAT-058","scope":"switch","slice":5,"module":":ui:kit-content"}
+{"id":"B-CHAT-059","scope":"switch","slice":5,"module":":ui:kit-content"}
+{"id":"B-CHAT-060","scope":"switch","slice":2,"module":":ui:kit-chat"}
+{"id":"B-CHAT-061","scope":"switch","slice":2,"module":":ui:kit-chat"}
+{"id":"B-CHAT-062","scope":"switch","slice":2,"module":":ui:kit-chat"}
+{"id":"B-CHAT-063","scope":"switch","slice":2,"module":":ui:kit-chat"}
+{"id":"B-CHAT-064","scope":"switch","slice":2,"module":":core:markdown"}
+{"id":"B-CHAT-065","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-CHAT-066","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-CHAT-067","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-CHAT-068","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-069","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-CHAT-070","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-CHAT-071","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-CHAT-072","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-CHAT-073","scope":"switch","slice":2,"module":":engine:requests"}
+{"id":"B-CHAT-074","scope":"switch","slice":2,"module":":engine:requests"}
+{"id":"B-CHAT-075","scope":"switch","slice":2,"module":":engine:requests"}
+{"id":"B-CHAT-076","scope":"switch","slice":2,"module":":engine:requests"}
+{"id":"B-CHAT-077","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-078","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-079","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-080","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-081","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-082","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-083","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-084","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-085","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-086","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-087","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-088","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-089","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-CHAT-090","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-CHAT-091","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-CHAT-092","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-CHAT-093","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-CHAT-094","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-CHAT-095","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-CHAT-096","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-097","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-CHAT-098","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-CHAT-099","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-CHAT-100","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-CHAT-101","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-CHAT-102","scope":"switch","slice":4,"module":":feature:chat-pages"}
+{"id":"B-CHAT-103","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-CHAT-104","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-CHAT-105","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-CHAT-106","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-CHAT-107","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-CHAT-108","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-CHAT-109","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-110","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-111","scope":"switch","slice":2,"module":":engine:transcript","decision":"D6","amended":"Every tool id is described in plain words (not the raw id) in the transcript work line, timeline sheet, copied transcript, permission requests and live notification.","amended_at":"2026-11-01"}
+{"id":"B-CHAT-112","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-113","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-114","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-115","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-116","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-117","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-118","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-119","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-120","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-CHAT-121","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-CHAT-122","scope":"switch","slice":2,"module":":engine:requests","decision":"NG1","amended":"An approval ask is worded from the request alone: short shell commands show words and project, long ones the family their pattern saves or 'a command', OpenCode 2 apply_patch lists every path, absolute paths read relative to the project, and Delete only when every file is deleted. (The OpenCode 1 edit clause is dropped.)","amended_at":"2026-11-01"}
+{"id":"B-CHAT-123","scope":"switch","slice":2,"module":":feature:chat"}
+{"id":"B-CHAT-124","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-AGENT-001","scope":"dropped","slice":null,"module":null,"decision":"NG8","reason":"Direct ACP client auth-method selection (acp_client_test); the direct ACP client is never ported"}
+{"id":"B-AGENT-002","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-003","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-004","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-005","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-006","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-007","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-008","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-009","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-010","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-011","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-012","scope":"switch","slice":3,"module":":engine:agents","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"Agent runtime errors are recognised by cause and said in plain words with what happens next, never leaking technical text in the headline; exhausted credit beats HTTP 429; a free-tier limit (FreeUsageLimitError or 'Free usage limit reached') is its own cause, apart from a paid plan's usage limit, while a real provider rate limit (429), a rejected key (401), an oversized request (413) and a context overflow keep their own causes; missing/rejected keys offer sign-in recovery; terminal errors do not promise retry; every cause has Arabic wording.","amended_at":"2026-11-01"}
+{"id":"B-AGENT-013","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-014","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-015","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-016","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-017","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-018","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-019","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-020","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-021","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-022","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-023","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-024","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-025","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-026","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-027","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-028","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-029","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-030","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-AGENT-031","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-AGENT-032","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-AGENT-033","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-AGENT-034","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-035","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-036","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-AGENT-037","scope":"after-switch","slice":null,"module":null,"decision":"NG22","reason":"Shared browser choice for Claude through the agent browser; NG22: the agent browser is not in the native plan now (freeze decisions 3 and 5)"}
+{"id":"B-AGENT-038","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team origin hook and rig script: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-039","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Plugins section says where the AI Team's work is: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-040","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team agent start window: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-041","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team agents launching OpenCode 2: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-042","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Turning the AI Team off/removing it: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-043","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team failures never re-enable or restart the team: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-044","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-045","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-046","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-047","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-048","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-049","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-050","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-051","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-052","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-053","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-054","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-055","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-056","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-057","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-058","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-059","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-060","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-061","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-062","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-063","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-064","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-065","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-066","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-067","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-068","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-069","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-070","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-071","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-072","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-073","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-074","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-075","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-076","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-077","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-AGENT-078","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-AGENT-079","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-AGENT-080","scope":"dropped","slice":null,"module":null,"decision":"D6","reason":"A2A external agent discover/send/reply/query/cancel: A2A external agents are dropped"}
+{"id":"B-AGENT-081","scope":"dropped","slice":null,"module":null,"decision":"D6","reason":"A2A receipt and finished-task handling: A2A external agents are dropped"}
+{"id":"B-AGENT-082","scope":"dropped","slice":null,"module":null,"decision":"D6","reason":"A2A durable delivery marker and task reopen: A2A external agents are dropped"}
+{"id":"B-AGENT-083","scope":"dropped","slice":null,"module":null,"decision":"D6","reason":"A2A cancel/completion races and credential change: A2A external agents are dropped"}
+{"id":"B-AGENT-084","scope":"dropped","slice":null,"module":null,"decision":"D6","reason":"A2A background pause and controller send claims: A2A external agents are dropped"}
+{"id":"B-AGENT-085","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook node contract fixtures: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-086","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook status and refusal reasons: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-087","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook cautious reading of newer node words: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-088","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook capability matrix and B2 fixtures: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-089","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook notes posted as events: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-090","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook inbox fallback: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-091","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook /v1/events posting: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-092","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook settings admin calls: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-093","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook outbox refusal matching: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-094","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook node request serialization: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-095","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook node request shape: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-096","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook pairing: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-097","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook outbox: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-098","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook offline capture: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-099","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Memory developer flag: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-100","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook refresh lists: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-101","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook rules parsing: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-102","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook rule editor checks: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-103","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook rule gateway: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-104","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook B5 contract: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-105","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook fake node rules: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-106","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook fake memory gateway: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-107","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook review and reminders: FactsBook (Memory) ships after the switch"}
+{"id":"B-AGENT-108","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-AGENT-109","scope":"switch","slice":5,"module":":engine:project","decision":"02 §3.3 rule 5, D6","amended":"A development-server failure report needs the exact owned run and an observed (non-zero, non-running) failure; its log excerpt is redacted.","amended_at":"2026-11-01"}
+{"id":"B-AGENT-110","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-111","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-112","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-113","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-114","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-115","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-AGENT-116","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-AGENT-117","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-AGENT-118","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Work graph kit part used only by AI Team screens: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-119","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-120","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-121","scope":"switch","slice":3,"module":":engine:agents","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"Packages install into the app prefix with the agent daemon and Claude Code both pinned to exact versions (Claude Code at the same tested release the built-in Linux installs, never npm's latest); install records the versions of verified Node and both packages; removing keeps the Claude sign-in unless forget-sign-in is asked.","amended_at":"2026-11-01"}
+{"id":"B-AGENT-122","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-123","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-124","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-125","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-126","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-127","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-128","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-129","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-130","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-131","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-AGENT-132","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-133","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-134","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-135","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-136","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-137","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-138","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-AGENT-139","scope":"switch","slice":4,"module":":engine:attention","decision":"02 §3.3 rule 5, D6","amended":"Monitor reads respect a shared deadline, report confirmed failures (cleared when busy), rotate boundedly keeping uncertainty, a revoked ownership performs no later calls, and partial reads close owned gateways.","amended_at":"2026-11-01"}
+{"id":"B-AGENT-140","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team project control routes: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-141","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team project page reads /orders: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-142","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-143","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-144","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-145","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-146","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-147","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-148","scope":"switch","slice":3,"module":":engine:requests"}
+{"id":"B-AGENT-149","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-150","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-151","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-152","scope":"after-switch","slice":null,"module":null,"decision":"NG22","reason":"Browser-use launch of a chat through the agent browser; NG22: the agent browser is not in the native plan now (freeze decisions 3 and 5)"}
+{"id":"B-AGENT-153","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-154","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-155","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-156","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-157","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-158","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-159","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-160","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-161","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-162","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-163","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-164","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-165","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-166","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-AGENT-167","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-168","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-169","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-170","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-171","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-172","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-173","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-174","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-175","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-176","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-177","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-178","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-179","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-180","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-181","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-182","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-183","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-184","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-185","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-186","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-187","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-188","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-AGENT-189","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-190","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-191","scope":"switch","slice":5,"module":":protocol:paseo"}
+{"id":"B-AGENT-192","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine completion presentation: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-193","scope":"switch","slice":1,"module":":engine:profiles","decision":"02 §3.3 rule 3, D6","amended":"Deleting a connection sweeps the built-in team engine data by its registered shapes (files/oc.teamEngine.<id>/, files/oc.teamEngineDeletion.<id>, oc.teamEngineAuth.<id>), even though AI Team is not in the app; the native app never attaches to or starts the phone engine.","amended_at":"2026-11-01"}
+{"id":"B-AGENT-194","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine ready-attach reconnect: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-195","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine planner presentation: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-196","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine interrupted-work Resume: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-197","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine checkpoint reasons: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-198","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Starting the phone engine: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-199","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine setup rollback: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-200","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine activity heartbeat leases: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-201","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine heartbeat failure and stop: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-202","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-203","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-AGENT-204","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-205","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-206","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-207","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-208","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-209","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-210","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Team host details sheet: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-211","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-212","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-213","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team worker state derived from sessions: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-214","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-215","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-AGENT-216","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-AGENT-217","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-AGENT-218","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-AGENT-219","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-AGENT-220","scope":"switch","slice":5,"module":":protocol:codex"}
+{"id":"B-AGENT-221","scope":"switch","slice":3,"module":":engine:requests"}
+{"id":"B-AGENT-222","scope":"switch","slice":3,"module":":engine:requests","decision":"02 §3.3 rule 5, D6","amended":"Automatic approval answers once and records: v1 answered once, v2 replies on its own contract (never always), legacy shape on its own ids; an already-resolved request is not logged as ours.","amended_at":"2026-11-01"}
+{"id":"B-AGENT-223","scope":"switch","slice":3,"module":":engine:requests"}
+{"id":"B-AGENT-224","scope":"switch","slice":3,"module":":engine:requests"}
+{"id":"B-AGENT-225","scope":"switch","slice":3,"module":":engine:requests","decision":"02 §3.3 rule 5, D6","amended":"Switching a conversation to auto, or approve-everything, answers already-waiting requests (including after reconnect); a conversation set to ask keeps waiting; approve-everything reaches never-seen conversations and is not listed as one.","amended_at":"2026-11-01"}
+{"id":"B-AGENT-226","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-AGENT-227","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-228","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-229","scope":"switch","slice":4,"module":":feature:settings","decision":"NG1","amended":"Choosing a chat agent for one OpenCode 2 chat leaves other chats and the profile default alone; it restores after restart and stays profile-specific. (The OpenCode 1 chat-agent path is not ported; recheck by hand when the slice starts.)","amended_at":"2026-11-01"}
+{"id":"B-AGENT-230","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-231","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-232","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-233","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-234","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-235","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-236","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-237","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-AGENT-238","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-AGENT-239","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-AGENT-240","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-AGENT-241","scope":"switch","slice":5,"module":":feature:servers"}
+{"id":"B-AGENT-242","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team run with planner off and run stages: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-243","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-AGENT-244","scope":"switch","slice":1,"module":":engine:profiles"}
+{"id":"B-AGENT-245","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team gate sheet and team failure families: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-246","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Finding the AI Team agent session by work folder: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-247","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Paging for the AI Team agent session: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-248","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team board columns: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-249","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team approve and merge: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-250","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team front/supervisor discovery: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-251","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team control receipts: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-252","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team gate answers and controls: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-253","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team give-task create and assign: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-254","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team sent control after restart: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-255","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team controller lifecycle: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-256","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team run start stages: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-257","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team conversation story: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-258","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team current-state line: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-259","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team conversation workers list: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-260","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team run timestamps: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-261","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team stuck diagnoses: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-262","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team cycle controller and now-line: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-263","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine failure codes and digest: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-264","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team folder classification: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-265","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team dispatch: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-266","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team uncertain assignment: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-267","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team work tick rows: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-268","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team closed convoys: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-269","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team finished-runs list: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-270","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team fixture gateway replay: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-271","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team follows the runtime to a new server: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-272","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City work state table: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-273","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City run state table: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-274","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City agent state table: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-275","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team gates mapping: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-276","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team gate rows and gate notifications: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-277","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team glance: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-278","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team host guide address hint: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-279","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team merge gate: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-280","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team models setup errors: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-281","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team state unknown members: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-282","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City status string mapping: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-283","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team work item state precedence: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-284","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team models keep raw payload: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-285","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team event types and cursor: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-286","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team capability sets: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-287","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team null gateway: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-288","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team mutation receipts and host identity: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-289","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team agent output merging: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-290","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team layer dependency rule: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-291","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team now-line: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-292","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team asleep vs paused and spinners: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-293","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team overview evidence: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-294","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team page: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-295","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team discovery and setup rows: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-296","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team policy document: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-297","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine refusals in the team project controller: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-298","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team editor roles and models: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-299","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team project lifecycle: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-300","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team budget and planning rules: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-301","scope":"switch","slice":1,"module":":engine:profiles","decision":"02 §3.3 rule 3, D6","amended":"Profile deletion removes stored team-project records (oc.orchestration.<id>.*, oc.team*.<id>) by their registered shapes, even though AI Team is not in the app, and nothing recreates them afterwards.","amended_at":"2026-11-01"}
+{"id":"B-AGENT-302","scope":"switch","slice":1,"module":":engine:profiles","decision":"02 §3.3 rule 3, D6","amended":"Profile deletion sweeps the team demo records by their registered shapes, even though AI Team is not in the app; no simulator is ever started.","amended_at":"2026-11-01"}
+{"id":"B-AGENT-303","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team planner state snapshots: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-304","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team refusal codes: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-305","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"In-app AI Team runtime status and verbs: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-306","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team agent session state and worker start: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-307","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team status words: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-308","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team task header line: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-309","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team usage evidence: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-310","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team usage label: AI Team / Gas City / phone engine ships after the switch"}
+{"id":"B-AGENT-311","scope":"switch","slice":1,"module":":engine:profiles","decision":"02 §3.3 rule 3, D6","amended":"Even though the AI Team is absent: the sweep removes the work graph's remembered-view keys by their registered shapes.","amended_at":"2026-11-01"}
+{"id":"B-AGENT-312","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-313","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-314","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-315","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-AGENT-316","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-AGENT-317","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-AGENT-318","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-PROTO-001","scope":"dropped","slice":null,"module":null,"decision":"NG8","reason":"direct ACP client (acp_client_test) is on the never-port list"}
+{"id":"B-PROTO-002","scope":"dropped","slice":null,"module":null,"decision":"NG8","reason":"direct ACP client (acp_client_test) is on the never-port list"}
+{"id":"B-PROTO-003","scope":"dropped","slice":null,"module":null,"decision":"NG8","reason":"direct ACP client (acp_client_test) is on the never-port list"}
+{"id":"B-PROTO-004","scope":"dropped","slice":null,"module":null,"decision":"NG8","reason":"direct ACP client (acp_client_test) is on the never-port list"}
+{"id":"B-PROTO-005","scope":"dropped","slice":null,"module":null,"decision":"NG8","reason":"direct ACP client (acp_client_test) is on the never-port list"}
+{"id":"B-PROTO-006","scope":"dropped","slice":null,"module":null,"decision":"NG8","reason":"direct ACP client (acp_client_test) is on the never-port list"}
+{"id":"B-PROTO-007","scope":"dropped","slice":null,"module":null,"decision":"NG8","reason":"direct ACP client (acp_client_test) is on the never-port list"}
+{"id":"B-PROTO-008","scope":"dropped","slice":null,"module":null,"decision":"NG8","reason":"direct ACP client (acp_client_test) is on the never-port list"}
+{"id":"B-PROTO-009","scope":"dropped","slice":null,"module":null,"decision":"NG8","reason":"direct ACP client (acp_client_test) is on the never-port list"}
+{"id":"B-PROTO-010","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-011","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-012","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-013","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-014","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-015","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-016","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-017","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-018","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-019","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-020","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-021","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-022","scope":"switch","slice":3,"module":":engine:requests"}
+{"id":"B-PROTO-023","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-PROTO-024","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-PROTO-025","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-PROTO-026","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-PROTO-027","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-028","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-PROTO-029","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-PROTO-030","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-PROTO-031","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-PROTO-032","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-PROTO-033","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-034","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-035","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-036","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-PROTO-037","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-038","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-039","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-040","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-PROTO-041","scope":"switch","slice":2,"module":":engine:delivery","decision":"NG1","amended":"Prompt dispatch supplies the caller's command ID. Where history confirms admission, only the exact user message ID confirms it (matching text with a wrong ID, session or role does not), paging is bounded, capability off refuses without lookup, and a closed connection cannot confirm. The OpenCode 1 history confirmation is not ported.","amended_at":"2026-11-01"}
+{"id":"B-PROTO-042","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-PROTO-043","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-PROTO-044","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-PROTO-045","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-PROTO-046","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-PROTO-047","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-PROTO-048","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-049","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-050","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook/Memory node feature (test/factsbook), after the switch"}
+{"id":"B-PROTO-051","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook/Memory node feature (test/factsbook), after the switch"}
+{"id":"B-PROTO-052","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook/Memory node feature (test/factsbook), after the switch"}
+{"id":"B-PROTO-053","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook/Memory node feature (test/factsbook), after the switch"}
+{"id":"B-PROTO-054","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook/Memory node feature (test/factsbook), after the switch"}
+{"id":"B-PROTO-055","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook/Memory node feature (test/factsbook), after the switch"}
+{"id":"B-PROTO-056","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook/Memory node feature (test/factsbook), after the switch"}
+{"id":"B-PROTO-057","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook/Memory node feature (test/factsbook), after the switch"}
+{"id":"B-PROTO-058","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-059","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-PROTO-060","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-PROTO-061","scope":"switch","slice":2,"module":":protocol:oc2"}
+{"id":"B-PROTO-062","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-PROTO-063","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-PROTO-064","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-PROTO-065","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-PROTO-066","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-PROTO-067","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-PROTO-068","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-PROTO-069","scope":"switch","slice":3,"module":":ui:kit-content"}
+{"id":"B-PROTO-070","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-PROTO-071","scope":"switch","slice":3,"module":":protocol:paseo","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"Hello rejection: wrong or missing password reads as authentication failure, incompatible protocol is named plainly, unknown reasons are a plain disconnect, close code alone still maps; the handshake advertises rejection support and the password only when set; unknown frames are ignored; only daemon versions that were run live are accepted (0.9.2, 0.11.2, 0.12.0, 0.13.2, 0.14.0) and any other version, near neighbours included, is refused until it has evidence; Claude Code is accepted only at tested pins (2.1.283, 2.1.294, 2.1.316) and the catalog's Claude pin is always one of them.","amended_at":"2026-11-01"}
+{"id":"B-PROTO-072","scope":"switch","slice":1,"module":":core:net"}
+{"id":"B-PROTO-073","scope":"switch","slice":2,"module":":engine:requests"}
+{"id":"B-PROTO-074","scope":"switch","slice":2,"module":":engine:requests"}
+{"id":"B-PROTO-075","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"phone project engine /v1 gateway (engine health, command refusals, create/poll), after the switch"}
+{"id":"B-PROTO-076","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"phone project engine /v1 gateway (engine health, command refusals, create/poll), after the switch"}
+{"id":"B-PROTO-077","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"phone project engine /v1 gateway (engine health, command refusals, create/poll), after the switch"}
+{"id":"B-PROTO-078","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-079","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-080","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-081","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-082","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-PROTO-083","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-084","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-085","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-086","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-087","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-088","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-PROTO-089","scope":"switch","slice":1,"module":":protocol:oc2","decision":"NG1","amended":"Session usage (cost, tokens, summary, agent, model, compacting) maps from OpenCode 2, stays null when the server does not report it, copyWith keeps identity, live v2 usage events update the stored session.","amended_at":"2026-11-01"}
+{"id":"B-PROTO-090","scope":"switch","slice":1,"module":":protocol:oc2","decision":"NG1","amended":"Retry state parses from v2 status/retry-scheduled events with attempt, message and next time; tracked until busy or idle; refresh hydrates details from status endpoint.","amended_at":"2026-11-01"}
+{"id":"B-PROTO-091","scope":"switch","slice":1,"module":":protocol:oc2","decision":"NG1","amended":"Tool timing and executed flag map from v2: running tool has start only, pending none, a v2 tool that never ran reads not executed, success event forwards executed.","amended_at":"2026-11-01"}
+{"id":"B-PROTO-092","scope":"switch","slice":1,"module":":protocol:oc2","decision":"NG1","amended":"Finish reason and typed errors map from v2 messages and step failures.","amended_at":"2026-11-01"}
+{"id":"B-PROTO-093","scope":"switch","slice":1,"module":":protocol:oc2","decision":"NG1","amended":"Model cost (per-million, tiered prefers base), status and release date, agent colour/model, and permission command/file previews map from OpenCode 2.","amended_at":"2026-11-01"}
+{"id":"B-PROTO-094","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-PROTO-095","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-PROTO-096","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-PROTO-097","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-PROTO-098","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-PROTO-099","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-PROTO-100","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-PROTO-101","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-PROTO-102","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-PROTO-103","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-104","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-PROTO-105","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-PROTO-106","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-PROTO-107","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-PROTO-108","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-109","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team front control receipts, after the switch"}
+{"id":"B-PROTO-110","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City (AI Team) gateway and mappers, after the switch"}
+{"id":"B-PROTO-111","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City (AI Team) gateway and mappers, after the switch"}
+{"id":"B-PROTO-112","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City (AI Team) gateway and mappers, after the switch"}
+{"id":"B-PROTO-113","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City (AI Team) gateway and mappers, after the switch"}
+{"id":"B-PROTO-114","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City (AI Team) gateway and mappers, after the switch"}
+{"id":"B-PROTO-115","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City (AI Team) gateway and mappers, after the switch"}
+{"id":"B-PROTO-116","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City (AI Team) gateway and mappers, after the switch"}
+{"id":"B-PROTO-117","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City (AI Team) gateway and mappers, after the switch"}
+{"id":"B-PROTO-118","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City (AI Team) gateway and mappers, after the switch"}
+{"id":"B-PROTO-119","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City (AI Team) gateway and mappers, after the switch"}
+{"id":"B-PROTO-120","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City (AI Team) gateway and mappers, after the switch"}
+{"id":"B-PROTO-121","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-122","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-123","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-PROTO-124","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-125","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-PROTO-126","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-PROTO-127","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-STATE-001","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-STATE-002","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-STATE-003","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-004","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-005","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-006","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-STATE-007","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-STATE-008","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-009","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-010","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-STATE-011","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-STATE-012","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-STATE-013","scope":"switch","slice":1,"module":":engine:profiles"}
+{"id":"B-STATE-014","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-STATE-015","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-STATE-016","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-017","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-018","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-019","scope":"dropped","slice":null,"module":null,"decision":"D6","reason":"Unsent external-agent (A2A) task drafts; A2A is dropped"}
+{"id":"B-STATE-020","scope":"switch","slice":1,"module":":engine:profiles","decision":"02 §3.3 rule 3, D6","amended":"Profile deletion removes the Memory pairing, token, key and outbox for that server only, even though Memory is not in the app; the keys are named by profile id so the sweep finds them.","amended_at":"2026-11-01"}
+{"id":"B-STATE-021","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-022","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-023","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-024","scope":"switch","slice":2,"module":":ui:kit-chat"}
+{"id":"B-STATE-025","scope":"switch","slice":3,"module":":engine:runtime","decision":"02 §3.3 rule 5, D6","amended":"After a restart or crash, the recovery report waits for an authenticated health answer before claiming recovery; a process with no answering server is never recovered; missing credentials do not probe or claim recovery; stopped and uninstalled servers are distinct and never probed; remote and deleted profiles are not checked; unknown historical services block an everything-is-back claim; normal launch, update, or no previously running services show no notice.","amended_at":"2026-11-01"}
+{"id":"B-STATE-026","scope":"switch","slice":1,"module":":engine:diagnostics"}
+{"id":"B-STATE-027","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-STATE-028","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-STATE-029","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-030","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-031","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-032","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-STATE-033","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-034","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-035","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-036","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-037","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-038","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-039","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-040","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-041","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-042","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-043","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-044","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-045","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-046","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-047","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-048","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-049","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-050","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-051","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-052","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-053","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-054","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-055","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-STATE-056","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-STATE-057","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine config and auth persistence; the phone engine (/v1) comes after the switch"}
+{"id":"B-STATE-058","scope":"switch","slice":1,"module":":engine:profiles","decision":"02 §3.3 rule 3, D6","amended":"Even though the phone engine is absent: deleting a profile that carries phone-engine data erases its engine config and auth; the sweep removes the feature's keys, files and secrets by their registered shapes, and a failed secret deletion keeps the deletion blocked with a safe code and permits retry.","amended_at":"2026-11-01"}
+{"id":"B-STATE-059","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-060","scope":"switch","slice":1,"module":":core:data","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"The profile sweep finds every per-profile key shape and nothing else: it matches the owning profile id in its place in the key, never a namespace word or an item id nested after another profile's id; a dotted id (a vs a.b, doomed vs doomed.agents) never takes another profile's keys; generated-interface, phrase-chip and agent display keys are swept while app-wide keys stay; deleting a profile leaves nothing keyed to it, nothing returns after restart, and deleting another profile leaves the first whole.","amended_at":"2026-11-01"}
+{"id":"B-STATE-061","scope":"switch","slice":1,"module":":engine:profiles","decision":"02 §3.3 rule 3, D6","amended":"Deleting forgets the shared phone owner and sweeps its recovery budget; the AI Team plugin data is cleared even though the feature is absent (the sweep removes the feature's keys, files and secrets by their registered shapes); a widget snapshot with no owner is cleared.","amended_at":"2026-11-01"}
+{"id":"B-STATE-062","scope":"switch","slice":2,"module":":engine:delivery"}
+{"id":"B-STATE-063","scope":"switch","slice":1,"module":":engine:profiles"}
+{"id":"B-STATE-064","scope":"switch","slice":1,"module":":engine:profiles"}
+{"id":"B-STATE-065","scope":"switch","slice":1,"module":":engine:profiles"}
+{"id":"B-STATE-066","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-067","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-068","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-STATE-069","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-STATE-070","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-STATE-071","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-STATE-072","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-STATE-073","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-STATE-074","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-STATE-075","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-STATE-076","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-STATE-077","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-STATE-078","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-STATE-079","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-STATE-080","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-STATE-081","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-082","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-083","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-084","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-STATE-085","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-086","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-087","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-088","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-089","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-STATE-090","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-STATE-091","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-STATE-092","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-STATE-093","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-STATE-094","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-STATE-095","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-STATE-096","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-STATE-097","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-STATE-098","scope":"switch","slice":1,"module":":engine:profiles"}
+{"id":"B-STATE-099","scope":"switch","slice":3,"module":":engine:requests"}
+{"id":"B-STATE-100","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-101","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-102","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-103","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-104","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-105","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-106","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-107","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-108","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-STATE-109","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-STATE-110","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-STATE-111","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-STATE-112","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-STATE-113","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-STATE-114","scope":"switch","slice":4,"module":":engine:project"}
+{"id":"B-STATE-115","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-116","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-117","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-118","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-119","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-120","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-STATE-121","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-122","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-STATE-123","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-124","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-125","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-126","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-127","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-128","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-129","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-130","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-STATE-131","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-STATE-132","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-STATE-133","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-STATE-134","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-135","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-136","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-137","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-138","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-139","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-140","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-141","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-142","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-STATE-143","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team control mutation records; AI Team comes after the switch"}
+{"id":"B-STATE-144","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team orchestration config defaults in profile JSON; AI Team comes after the switch"}
+{"id":"B-STATE-145","scope":"switch","slice":1,"module":":engine:profiles","decision":"02 §3.3 rule 3, D6","amended":"Profile deletion removes the last-known team record under its profile-scoped key, even though AI Team is not in the app; an unreadable record counts as no record and is still removed.","amended_at":"2026-11-01"}
+{"id":"B-STATE-146","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-STATE-147","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-STATE-148","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-STATE-149","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-STATE-150","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-STATE-151","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-STATE-152","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-STATE-153","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-STATE-154","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-STATE-155","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-STATE-156","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-STATE-157","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-STATE-158","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-SEC-001","scope":"dropped","slice":null,"module":null,"decision":"NG8","reason":"Direct ACP client RPC error handling; the direct ACP client is never ported"}
+{"id":"B-SEC-002","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-SEC-003","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-SEC-004","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-SEC-005","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-SEC-006","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-SEC-007","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-SEC-008","scope":"switch","slice":1,"module":":engine:diagnostics"}
+{"id":"B-SEC-009","scope":"switch","slice":1,"module":":ui:words"}
+{"id":"B-SEC-010","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-SEC-011","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-SEC-012","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-SEC-013","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-SEC-014","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-SEC-015","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-SEC-016","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-SEC-017","scope":"switch","slice":3,"module":":engine:requests"}
+{"id":"B-SEC-018","scope":"switch","slice":3,"module":":engine:requests"}
+{"id":"B-SEC-019","scope":"after-switch","slice":null,"module":null,"decision":"NG22","reason":"Launch grants for the agent browser; NG22: the agent browser is not in the native plan now (freeze decisions 3 and 5)"}
+{"id":"B-SEC-020","scope":"after-switch","slice":null,"module":null,"decision":"NG22","reason":"Generation fencing of agent-browser grants; NG22: the agent browser is not in the native plan now (freeze decisions 3 and 5)"}
+{"id":"B-SEC-021","scope":"after-switch","slice":null,"module":null,"decision":"NG22","reason":"Cleanup and quarantine of agent-browser grants; NG22: the agent browser is not in the native plan now (freeze decisions 3 and 5)"}
+{"id":"B-SEC-022","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-SEC-023","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine setup stop and credential handoff; the phone engine comes after the switch"}
+{"id":"B-SEC-024","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-025","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-026","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-027","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-028","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-029","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-030","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-031","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-032","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-033","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-034","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-035","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-036","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-037","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-038","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-SEC-039","scope":"switch","slice":1,"module":":core:data"}
+{"id":"B-SEC-040","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-SEC-041","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-042","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-043","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-044","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-045","scope":"switch","slice":1,"module":":engine:diagnostics"}
+{"id":"B-SEC-046","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-047","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-048","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-049","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-050","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-051","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-052","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-053","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-054","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-055","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-056","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-057","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-SEC-058","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-SEC-059","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-060","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-061","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-SEC-062","scope":"dropped","slice":null,"module":null,"decision":"D6","reason":"External (A2A) agent client request credentials; A2A is dropped"}
+{"id":"B-SEC-063","scope":"switch","slice":6,"module":":android:migration","decision":"S02-7","amended":"The native app holds no A2A credential. The v3 source cleanup erases every oc.a2aBearer.* secure entry together with the oc.externalAgents and oc.a2aTasks.* keys, and no late write can recreate them.","amended_at":"2026-11-01"}
+{"id":"B-SEC-064","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-065","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-066","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook Ed25519 signing; Memory comes after the switch"}
+{"id":"B-SEC-067","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook JSON canonicalization for signing; Memory comes after the switch"}
+{"id":"B-SEC-068","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook owner signer proofs; Memory comes after the switch"}
+{"id":"B-SEC-069","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Memory-node address rules; Memory comes after the switch"}
+{"id":"B-SEC-070","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook signature vector; Memory comes after the switch"}
+{"id":"B-SEC-071","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook control-chain trust; Memory comes after the switch"}
+{"id":"B-SEC-072","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook unsigned share handling; Memory comes after the switch"}
+{"id":"B-SEC-073","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Device authentication before a FactsBook owner signature; Memory comes after the switch"}
+{"id":"B-SEC-074","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Device-auth result mapping for FactsBook signing; Memory comes after the switch"}
+{"id":"B-SEC-075","scope":"switch","slice":1,"module":":engine:profiles","decision":"02 §3.3 rule 3, D6","amended":"The Memory vault passphrase stays in secure storage and is never written to disk or logged; it is deleted with the Memory data when the person deletes the server, even though Memory is not in the app. The native app never generates it or hands it to a node.","amended_at":"2026-11-01"}
+{"id":"B-SEC-076","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook disconnect and owner key handling; Memory comes after the switch (profile-deletion sweep stays in B-STATE-020)"}
+{"id":"B-SEC-077","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook node bearer token transport; Memory comes after the switch"}
+{"id":"B-SEC-078","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook owner review decisions; Memory comes after the switch"}
+{"id":"B-SEC-079","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-080","scope":"switch","slice":5,"module":":engine:requests"}
+{"id":"B-SEC-081","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-SEC-082","scope":"switch","slice":5,"module":":engine:project","decision":"02 §3.3 rule 5, D7","amended":"On built-in Linux, push hands the signed-in GitHub token to the drop and a rejected token signs the account out; on servers no sign-in is offered and the token stays home; abilities follow the snapshot.","amended_at":"2026-11-01"}
+{"id":"B-SEC-083","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-SEC-084","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-SEC-085","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-SEC-086","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-SEC-087","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-SEC-088","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-SEC-089","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-SEC-090","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-SEC-091","scope":"switch","slice":5,"module":":engine:project","decision":"02 §3.3 rule 5, D7","amended":"Repair only reaches the projects folder and uploads nothing outside it; pack files are verified by trailing checksum.","amended_at":"2026-11-01"}
+{"id":"B-SEC-092","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-SEC-093","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-SEC-094","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-095","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-096","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-SEC-097","scope":"switch","slice":3,"module":":engine:agents","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"The on-phone agent daemon runs as an ordinary user and is configured through its own settings before it runs (listen on loopback only, relay off, MCP injection into agents off, web UI off, dictation and voice mode off), then started with its 'daemon run' command; it never uses the launch flags newer Paseo refuses, never widens to all interfaces, never downloads speech models, and receives its password never as an argument and never traced.","amended_at":"2026-11-01"}
+{"id":"B-SEC-098","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-SEC-099","scope":"switch","slice":5,"module":":engine:runtime","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"A plain project export leaves out every credential, private root folders such as .ssh, and every Git configuration file (repository config, worktree config, .gitconfig, of any size); a private export adds credentials, OpenCode data and the Termux migration exports kept inside Linux, but not logs; the file name says when private; credential names are recognised wherever they are.","amended_at":"2026-11-01"}
+{"id":"B-SEC-100","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-101","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-102","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-103","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-SEC-104","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-SEC-105","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-SEC-106","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-SEC-107","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-SEC-108","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-SEC-109","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-SEC-110","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-SEC-111","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-SEC-112","scope":"after-switch","slice":null,"module":null,"decision":"NG22","reason":"Revoking agent-browser authority; NG22: the agent browser is not in the native plan now (freeze decisions 3 and 5)"}
+{"id":"B-SEC-113","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-SEC-114","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-SEC-115","scope":"switch","slice":3,"module":":protocol:paseo"}
+{"id":"B-SEC-116","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-117","scope":"switch","slice":1,"module":":engine:diagnostics"}
+{"id":"B-SEC-118","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone engine client address and redirect rules; the phone engine comes after the switch"}
+{"id":"B-SEC-119","scope":"switch","slice":1,"module":":core:security","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"Private IPv4 ranges (10/8, 172.16/12, 192.168/16, link-local etc.) are private and their neighbours are not; IPv6 unique-local and link-local (with or without a zone suffix) are private; an IPv4-mapped IPv6 address is judged by its IPv4 part; only .local names count as private names, and a name that merely starts with a private address is not private; the CGNAT/tailnet range is not private for this rule.","amended_at":"2026-11-01"}
+{"id":"B-SEC-120","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-121","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-122","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-123","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-124","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-125","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-126","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-127","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-128","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-129","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-130","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-SEC-131","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-SEC-132","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-SEC-133","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-SEC-134","scope":"switch","slice":1,"module":":engine:profiles"}
+{"id":"B-SEC-135","scope":"switch","slice":1,"module":":engine:profiles"}
+{"id":"B-SEC-136","scope":"switch","slice":1,"module":":engine:profiles"}
+{"id":"B-SEC-137","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-138","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-139","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-140","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-141","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-142","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-SEC-143","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-SEC-144","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-145","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-146","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-147","scope":"switch","slice":3,"module":":engine:requests"}
+{"id":"B-SEC-148","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-149","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-SEC-150","scope":"switch","slice":0,"module":":quality"}
+{"id":"B-SEC-151","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-SEC-152","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-SEC-153","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-154","scope":"switch","slice":1,"module":":core:security"}
+{"id":"B-SEC-155","scope":"dropped","slice":null,"module":null,"decision":"N4-O4","reason":"Session-address links, off in Flutter; retired, not ported"}
+{"id":"B-SEC-156","scope":"dropped","slice":null,"module":null,"decision":"N4-O4","reason":"Session-address link sender; session-address links are not ported"}
+{"id":"B-SEC-157","scope":"dropped","slice":null,"module":null,"decision":"N4-O4","reason":"Session-address link format; session-address links are not ported"}
+{"id":"B-SEC-158","scope":"dropped","slice":null,"module":null,"decision":"N4-O4","reason":"Session-address discovery transport; session-address links are not ported"}
+{"id":"B-SEC-159","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-SEC-160","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-SEC-161","scope":"switch","slice":5,"module":":engine:agents"}
+{"id":"B-SEC-162","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-SEC-163","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-SEC-164","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-SEC-165","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-SEC-166","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-SEC-167","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-SEC-168","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-SEC-169","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-SEC-170","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-SEC-171","scope":"switch","slice":6,"module":":androidApp"}
+{"id":"B-SEC-172","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-SEC-173","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-174","scope":"switch","slice":2,"module":":android:platform"}
+{"id":"B-SEC-175","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City orchestration transport policy; AI Team/Gas City come after the switch"}
+{"id":"B-SEC-176","scope":"switch","slice":1,"module":":engine:profiles","decision":"02 §3.3 rule 3, D6","amended":"Team-project editor drafts written by the Flutter app are removed by the profile deletion sweep, per target and profile, even though AI Team is not in the app; their secrets are never logged or restored.","amended_at":"2026-11-01"}
+{"id":"B-SEC-177","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-SEC-178","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-179","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-SEC-180","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-SEC-181","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-SEC-182","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-SEC-183","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-001","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-002","scope":"switch","slice":0,"module":":androidApp"}
+{"id":"B-ANDR-003","scope":"switch","slice":1,"module":":engine:diagnostics"}
+{"id":"B-ANDR-004","scope":"switch","slice":1,"module":":engine:diagnostics"}
+{"id":"B-ANDR-005","scope":"switch","slice":1,"module":":engine:diagnostics"}
+{"id":"B-ANDR-006","scope":"switch","slice":1,"module":":engine:diagnostics"}
+{"id":"B-ANDR-007","scope":"switch","slice":1,"module":":engine:diagnostics"}
+{"id":"B-ANDR-008","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-ANDR-009","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-010","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-011","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-012","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-013","scope":"switch","slice":4,"module":":android:background","decision":"ADR §9.5, 11 §9.3, D11-2","amended":"Coding alerts use the exact privacy-safe native contract. With live mode off, alerts are posted only for a run that reply watch holds after the person left the app (a short background service until the reply finishes); otherwise none is posted. A test notification ignores the live-mode gate but not platform permission; notification settings open once and failures are swallowed.","amended_at":"2026-11-01"}
+{"id":"B-ANDR-014","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-015","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-016","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-017","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-018","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-019","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-020","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-021","scope":"switch","slice":0,"module":":core:domain"}
+{"id":"B-ANDR-022","scope":"switch","slice":0,"module":":core:domain"}
+{"id":"B-ANDR-023","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-024","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-025","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-ANDR-026","scope":"switch","slice":1,"module":":engine:settings"}
+{"id":"B-ANDR-027","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-ANDR-028","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-ANDR-029","scope":"switch","slice":2,"module":":android:platform"}
+{"id":"B-ANDR-030","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-031","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-032","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-ANDR-033","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-ANDR-034","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-035","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-ANDR-036","scope":"switch","slice":1,"module":":engine:diagnostics"}
+{"id":"B-ANDR-037","scope":"switch","slice":1,"module":":core:net"}
+{"id":"B-ANDR-038","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-039","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-040","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-041","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-042","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-043","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-044","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-045","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-046","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-047","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-048","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-049","scope":"switch","slice":3,"module":":ui:kit-content"}
+{"id":"B-ANDR-050","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-051","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-ANDR-052","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-ANDR-053","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-054","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-055","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-056","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-ANDR-057","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-ANDR-058","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-ANDR-059","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-ANDR-060","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-ANDR-061","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-ANDR-062","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-ANDR-063","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-ANDR-064","scope":"switch","slice":4,"module":":engine:attention"}
+{"id":"B-ANDR-065","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-ANDR-066","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-ANDR-067","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-ANDR-068","scope":"switch","slice":6,"module":":androidApp","decision":"ADR §9.9","amended":"Android release resources are safe: no cleartext, adaptive/round/themed launcher icons, private and actionable background coding alerts, updates owned by the native AppUpdater (GitHub releases/latest, SHA256SUMS, same-signer check, PackageInstaller) with no Shorebird, bundled privacy policy naming sensitive surfaces, production signing lineage required, build identity exposed and shell approval authenticated, biometric lint exception narrow.","amended_at":"2026-11-01"}
+{"id":"B-ANDR-069","scope":"switch","slice":4,"module":":engine:diagnostics"}
+{"id":"B-ANDR-070","scope":"switch","slice":4,"module":":engine:schedule"}
+{"id":"B-ANDR-071","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-ANDR-072","scope":"switch","slice":2,"module":":android:platform"}
+{"id":"B-ANDR-073","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-ANDR-074","scope":"switch","slice":2,"module":":android:platform"}
+{"id":"B-ANDR-075","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-ANDR-076","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-ANDR-077","scope":"switch","slice":2,"module":":engine:entry"}
+{"id":"B-ANDR-078","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-ANDR-079","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-ANDR-080","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-ANDR-081","scope":"switch","slice":4,"module":":android:background"}
+{"id":"B-ANDR-082","scope":"after-switch","slice":null,"module":":engine:entry","decision":"D6","reason":"Team notification links (AI Team) come back with AI Team after the switch"}
+{"id":"B-ANDR-083","scope":"switch","slice":3,"module":":engine:runtime","decision":"02 §3.3 rule 5, D6","amended":"Built-in work on the phone is held at severe heat, and an early forecast of low headroom (headroom >= 0.95) holds it before severe.","amended_at":"2026-11-01"}
+{"id":"B-ANDR-084","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-ANDR-085","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-ANDR-086","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-ANDR-087","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Unreachable-team resume retry is the AI Team thermal guard (13 §: AI Team pause/stop rules return with AI Team)"}
+{"id":"B-ANDR-088","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-ANDR-089","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Guard acting only on loopback teams is the AI Team thermal guard (TeamThermalGuard, later)"}
+{"id":"B-ANDR-090","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-ANDR-091","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Suspending/waking the Gas City and its sessions is the Gas City supervisor API"}
+{"id":"B-ANDR-092","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Not restarting a team the person turned off is Gas City team recovery"}
+{"id":"B-ANDR-093","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-ANDR-094","scope":"switch","slice":4,"module":":android:platform"}
+{"id":"B-ANDR-095","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-ANDR-096","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-ANDR-097","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-ANDR-098","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-ANDR-099","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-ANDR-100","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-101","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-ANDR-102","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-ANDR-103","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-104","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-105","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-106","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-107","scope":"switch","slice":4,"module":":android:widgets","decision":"02 §3.3 rule 5, D6","amended":"A mutation error is uncertain, sanitized, closed and never retried; uncertainty is never a retryable rejection.","amended_at":"2026-11-01"}
+{"id":"B-ANDR-108","scope":"switch","slice":4,"module":":feature:widget-panels"}
+{"id":"B-ANDR-109","scope":"switch","slice":4,"module":":feature:widget-panels"}
+{"id":"B-ANDR-110","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-ANDR-111","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-112","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-113","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-114","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-115","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-116","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-117","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-118","scope":"switch","slice":4,"module":":android:widgets","decision":"02 §3.3 rule 5, NG1","amended":"A scheduled widget status check runs with one read, closes without mutating anything, and reports idle with a sanitized assistant reply.","amended_at":"2026-11-01"}
+{"id":"B-ANDR-119","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-120","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-ANDR-121","scope":"switch","slice":4,"module":":android:widgets"}
+{"id":"B-LINUX-001","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-002","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-003","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-004","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-005","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team optional install component is AI Team"}
+{"id":"B-LINUX-006","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team download pins (Gas City programs) are AI Team"}
+{"id":"B-LINUX-007","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-008","scope":"switch","slice":3,"module":":engine:runtime","decision":"02 §3.3 rule 5, D6","amended":"Named services on the Linux channel obey the start/stop/log/status contract, and status lists running services.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-009","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-010","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-011","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-012","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-013","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-014","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-015","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-016","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-017","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-018","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-019","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-020","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-021","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-022","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-023","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-024","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-025","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-026","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-027","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Phone-engine boundary tiers/attestation are the phone engine /v1"}
+{"id":"B-LINUX-028","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-029","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-030","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-031","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-032","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-033","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-034","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-035","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-036","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-037","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-038","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-039","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Turning on the in-app AI Team"}
+{"id":"B-LINUX-040","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team turn-on store preparation"}
+{"id":"B-LINUX-041","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Team city registration reuse on startup is Gas City"}
+{"id":"B-LINUX-042","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Unhealthy team city re-registration is Gas City"}
+{"id":"B-LINUX-043","scope":"switch","slice":3,"module":":engine:runtime","decision":"02 §3.3 rule 5, D6","amended":"Every bundled setup script (Ubuntu host, on-phone agent) is syntactically valid shell and passes shell lint when available.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-044","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Team supervisor loopback port and plugin config are Gas City"}
+{"id":"B-LINUX-045","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Adding a project to the team is AI Team"}
+{"id":"B-LINUX-046","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Team installed check is AI Team"}
+{"id":"B-LINUX-047","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Phone tuning of team orders is AI Team"}
+{"id":"B-LINUX-048","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Team supervisor start failure is AI Team"}
+{"id":"B-LINUX-049","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-050","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-051","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-052","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-053","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-054","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-055","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-056","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-057","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-058","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-059","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-060","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-061","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-062","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-063","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-064","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-065","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-066","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Phone memory node states are FactsBook/Memory"}
+{"id":"B-LINUX-067","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Running memory on the phone is FactsBook/Memory"}
+{"id":"B-LINUX-068","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Memory node stop/restart/remove is FactsBook/Memory"}
+{"id":"B-LINUX-069","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Memory auto-start on app open is FactsBook/Memory"}
+{"id":"B-LINUX-070","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-071","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-072","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-073","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-074","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-075","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-076","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-077","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-078","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-079","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-080","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-081","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-082","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-083","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-084","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-085","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-086","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-087","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-088","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-089","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-090","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-091","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-092","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-093","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-094","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-095","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-096","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-097","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-098","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-099","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-100","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-101","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-102","scope":"switch","slice":5,"module":":engine:project","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"Projects still inside Ubuntu and repositories made there are exported including Git objects; the plan file frames one entry per line, and a name it cannot frame, or legacy project names that overlap, refuse the export instead of silently leaving files out.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-103","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-104","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-105","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-106","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-107","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-108","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-109","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-110","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-111","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-112","scope":"switch","slice":3,"module":":engine:runtime","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"A checksum mismatch stops before anything is unpacked; an archive without the program, a program that will not run, a program whose health check answers unauthorized (that does not prove it starts), or a failure after activation restores the previous program and link.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-113","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-114","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-115","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-116","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-117","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-118","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-119","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-120","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-121","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-122","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-123","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-124","scope":"switch","slice":3,"module":":engine:runtime","decision":"NG1","amended":"On ARM64 the phone server host hands off the pinned Node after root user bootstrap. No OpenCode 1 host is ever installed (NG1); recheck by hand when the slice starts.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-125","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-126","scope":"switch","slice":3,"module":":engine:agents","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"Agent sign-in completes only after a signed-in probe; logout is verified; a check that could not run keeps a signed-in agent signed in; a list refresh asks an agent again only once its last answer is ten minutes old, and then the agent's own signed-out answer counts; a late older probe cannot complete a newer signed-out attempt; every sign-in check always ends.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-127","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-128","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-129","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-130","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-131","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-132","scope":"switch","slice":3,"module":":engine:agents","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"Unchanged installed pairs keep proof; a changed pin explains a check, but an older tested version that is still installed keeps running work while the update to the pin is owed, and only when nothing can run is the person asked for the check; a busy helper or running provider child blocks installation or update; running installs require continue; background loss exposes resume and restores the same component selection.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-133","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-134","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-135","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-136","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-137","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-138","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-139","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-140","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-141","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-142","scope":"switch","slice":3,"module":":engine:runtime","decision":"02 §3.3 rule 5, D7","amended":"Phone host runtime: history admission refuses every failure and identifies separate history; the in-app host preserves legacy installs.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-143","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-144","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-145","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-146","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-147","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-148","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-149","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-150","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-151","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-152","scope":"switch","slice":3,"module":":engine:runtime","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"A running server that does not answer is handled at launch: one rejecting our password is replaced, an old silent one is replaced, a young booting one is waited for, a young one that never answers is replaced once stale; a healthy server whose connect failed is simply connected again; a Stop that arrives during the launch health probe or while the launch password is saved prevents the replacement.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-153","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-154","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-155","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-156","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-157","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-158","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Phone AI Team eligibility is AI Team (phone_team_*)"}
+{"id":"B-LINUX-159","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Phone-team capability and setup target is AI Team (phone_team_*)"}
+{"id":"B-LINUX-160","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team setup profile change is AI Team (phone_team_*)"}
+{"id":"B-LINUX-161","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team setup waiting for replies is AI Team (phone_team_*)"}
+{"id":"B-LINUX-162","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team readiness check is AI Team (phone_team_*)"}
+{"id":"B-LINUX-163","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team setup with nothing running is AI Team (phone_team_*)"}
+{"id":"B-LINUX-164","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team setup stop question is AI Team (phone_team_*)"}
+{"id":"B-LINUX-165","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team setup declining stop is AI Team (phone_team_*)"}
+{"id":"B-LINUX-166","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team setup engine old-server question is AI Team (phone_team_*)"}
+{"id":"B-LINUX-167","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team failed proof keeps team Off is AI Team (phone_team_*)"}
+{"id":"B-LINUX-168","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team setup restoring OpenCode after failure is AI Team (phone_team_*)"}
+{"id":"B-LINUX-169","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team engine readiness after probe is AI Team (phone_team_*)"}
+{"id":"B-LINUX-170","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team setup engine cleanup is AI Team (phone_team_*)"}
+{"id":"B-LINUX-171","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team setup re-check after update is AI Team (phone_team_*)"}
+{"id":"B-LINUX-172","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team setup page states is AI Team (phone_team_*)"}
+{"id":"B-LINUX-173","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"AI Team stuck check and Resume is AI Team (phone_team_*)"}
+{"id":"B-LINUX-174","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Phone team reply-wait truth is AI Team (phone_team_*)"}
+{"id":"B-LINUX-175","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Phone team On/Off truth label is AI Team (phone_team_*)"}
+{"id":"B-LINUX-176","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-LINUX-177","scope":"switch","slice":5,"module":":engine:integrations","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"The usage collector helper starts only when something reads usage (starting the phone's OpenCode starts none), stays up while reads keep coming, stops after a quiet spell and starts again on the next read; one that runs is left alone; nothing starts when never set up, turned off or without the in-app Linux; turning off stops it and removes files, token and switch.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-178","scope":"switch","slice":5,"module":":engine:integrations"}
+{"id":"B-LINUX-179","scope":"switch","slice":3,"module":":feature:phone","decision":"02 §3.3 rule 5, D6","amended":"This-phone card, setup output (error and warning lines carry level) and local server rows render states","amended_at":"2026-11-01"}
+{"id":"B-LINUX-180","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-181","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-182","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-183","scope":"switch","slice":3,"module":":engine:runtime","decision":"02 §3.3 rule 5, D6","amended":"Removing a Linux component runs its registered remove script (Python), and a substituted unrecognized script is refused; unknown ids can never become shell commands.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-184","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-185","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-186","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-187","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-188","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-189","scope":"after-switch","slice":null,"module":":engine:runtime","decision":"D6","reason":"Removing the AI Team (team remover, Termux manager team removal) is AI Team"}
+{"id":"B-LINUX-190","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-191","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-192","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-193","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-194","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-195","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-196","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-197","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-198","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-199","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-200","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-201","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-202","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-203","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-204","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-205","scope":"switch","slice":3,"module":":engine:runtime","decision":"02 §3.3 rule 5, D6","amended":"An ownership failure keeps its stable recovery code through finish; the built-in finisher refuses Termux before touching profiles or native; switching the app server to OC2 keeps the legacy source surviving an earlier alias.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-206","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-207","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-208","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-209","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-210","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-211","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-212","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-213","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-214","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-215","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-216","scope":"dropped","slice":null,"module":null,"decision":"D7","reason":"Recognising an existing Termux install and reporting voice to the Termux host is Termux as a runtime host"}
+{"id":"B-LINUX-217","scope":"dropped","slice":null,"module":null,"decision":"D7","reason":"Termux host checks and jobs are Termux as a runtime host"}
+{"id":"B-LINUX-218","scope":"dropped","slice":null,"module":null,"decision":"D7","reason":"Termux host durable job state and watch is Termux as a runtime host"}
+{"id":"B-LINUX-219","scope":"dropped","slice":null,"module":null,"decision":"D7","reason":"Restoring a live Termux setup job is Termux as a runtime host"}
+{"id":"B-LINUX-220","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-LINUX-221","scope":"switch","slice":5,"module":":engine:runtime","decision":"02 §3.3 rule 5, D6","amended":"The storage permission is declared and bound into the Linux environment only when needed, and all shared storage is visible inside it.","amended_at":"2026-11-01"}
+{"id":"B-LINUX-222","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-223","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-224","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-225","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-226","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-LINUX-227","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-228","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-229","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-230","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-231","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-232","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-233","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-LINUX-234","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-LINUX-235","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-LINUX-236","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-LINUX-237","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-LINUX-238","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-LINUX-239","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-240","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-241","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-242","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-243","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-244","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-245","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-246","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-247","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-248","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-249","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-250","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-251","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-MEDIA-001","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-002","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-003","scope":"switch","slice":5,"module":":ui:kit-content"}
+{"id":"B-MEDIA-004","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-005","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-006","scope":"switch","slice":3,"module":":engine:media"}
+{"id":"B-MEDIA-007","scope":"switch","slice":3,"module":":engine:composer","decision":"10 §20.3, M10","amended":"Gallery and photo picking: photos are scaled down by the app before the bytes are attached; the gallery allows several up to the room left; one slot left uses the single picker; cancelling leaves nothing pending.","amended_at":"2026-11-01"}
+{"id":"B-MEDIA-008","scope":"switch","slice":3,"module":":engine:composer","decision":"10 §20.3, §10.5","amended":"Camera/picker requests are recorded before launch and selected bytes survive source deletion; cancel and denial leave no blocking photo; failed request persistence never launches the camera; after a lost native result and a restart the record's path names the capture file; a late result cannot resurrect a removed profile's photo; a pending photo blocks another picker; fake extensions and oversize images are rejected.","amended_at":"2026-11-01"}
+{"id":"B-MEDIA-009","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-010","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-011","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-012","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-013","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-014","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-015","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-016","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-017","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-018","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-019","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-020","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-021","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-022","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-023","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-024","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-025","scope":"switch","slice":5,"module":":engine:media","decision":"10 §20.3, M3 / D10-1","amended":"Model download is checksum-verified before the atomic install marker; partial responses resume only with matching Content-Range; corrupt or cancelled downloads never create a marker, and a cancel during download keeps the .part file for resume.","amended_at":"2026-11-01"}
+{"id":"B-MEDIA-026","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-027","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-028","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-029","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-030","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-031","scope":"switch","slice":5,"module":":engine:media","decision":"10 §20.3, §2.2","amended":"The voice model manifest pins the vendored sherpa-onnx AAR by SHA-256 and version 2.0.1, RECORD_AUDIO is in the merged manifest, exact model values and totals hold, and the bundled notices are complete.","amended_at":"2026-11-01"}
+{"id":"B-MEDIA-032","scope":"switch","slice":5,"module":":engine:media","decision":"10 §20.3, §4.5","amended":"On platforms without capture, the probe says unsupported, mic permission is refused, opening settings is a no-op; on Android the probe is the AndroidDeviceProbe binding, granted stays granted, a missing handler leaves it unknown.","amended_at":"2026-11-01"}
+{"id":"B-MEDIA-033","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-034","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-KIT-001","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-002","scope":"switch","slice":1,"module":":engine:settings","decision":"D11","amended":"The reply glow is one choice while each style keeps its own depth, and both persist across restarts.","amended_at":"2026-11-01"}
+{"id":"B-KIT-003","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-004","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-005","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-006","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-007","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-008","scope":"switch","slice":4,"module":":ui:kit","decision":"D11","amended":"The Saver mode is stored as the light-or-dark choice and survives restart, turns motion and the style off without touching the dark choice, and is a true black ground with every text role readable.","amended_at":"2026-11-01"}
+{"id":"B-KIT-009","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-010","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-011","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-012","scope":"switch","slice":2,"module":":ui:kit-chat"}
+{"id":"B-KIT-013","scope":"switch","slice":3,"module":":ui:kit"}
+{"id":"B-KIT-014","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-015","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-016","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-017","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-018","scope":"switch","slice":2,"module":":ui:kit-chat","decision":"D10","amended":"Frost appears only on the composer and the chat header: a RenderEffect blur on API 31+ and solid below that; strengths map to blur, saturation and tint, and saturation keeps grey grey; Saver, reduced motion or effects and high contrast keep surfaces solid; the stored choice is read once. No other surface turns to glass.","amended_at":"2026-11-01"}
+{"id":"B-KIT-019","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-020","scope":"after-switch","slice":null,"module":null,"decision":"D11","reason":"Live backgrounds (aurora default) are ported after the switch or dropped"}
+{"id":"B-KIT-021","scope":"switch","slice":5,"module":":ui:kit-content"}
+{"id":"B-KIT-022","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-023","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-024","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-025","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-026","scope":"switch","slice":5,"module":":ui:kit-content"}
+{"id":"B-KIT-027","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-028","scope":"after-switch","slice":null,"module":null,"decision":"D11","reason":"illustration scene palettes are D11"}
+{"id":"B-KIT-029","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-030","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-031","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-032","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-033","scope":"switch","slice":2,"module":":ui:kit-chat"}
+{"id":"B-KIT-034","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-035","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-036","scope":"switch","slice":2,"module":":ui:kit-chat"}
+{"id":"B-KIT-037","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-038","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-039","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-040","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-041","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-042","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-043","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-044","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-045","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-046","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-047","scope":"after-switch","slice":null,"module":null,"decision":"D11","reason":"Policy for the animated live background; live backgrounds follow the switch (D11)"}
+{"id":"B-KIT-048","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-049","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-050","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-051","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-052","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-053","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-054","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-055","scope":"after-switch","slice":null,"module":null,"decision":"D11","reason":"state illustration scenes (terminal-cursor scene, scene repaint) are D11"}
+{"id":"B-KIT-056","scope":"switch","slice":1,"module":":ui:design"}
+{"id":"B-KIT-057","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-KIT-058","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team state marks, after the switch"}
+{"id":"B-KIT-059","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-060","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-061","scope":"switch","slice":4,"module":":ui:kit"}
+{"id":"B-KIT-062","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-L10N-001","scope":"switch","slice":1,"module":":ui:words"}
+{"id":"B-L10N-002","scope":"switch","slice":1,"module":":ui:words"}
+{"id":"B-L10N-003","scope":"switch","slice":2,"module":":feature:chats"}
+{"id":"B-L10N-004","scope":"switch","slice":1,"module":":ui:words"}
+{"id":"B-L10N-005","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"FactsBook/Memory node feature (test/factsbook), after the switch"}
+{"id":"B-L10N-006","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-L10N-007","scope":"switch","slice":1,"module":":ui:words"}
+{"id":"B-L10N-008","scope":"switch","slice":1,"module":":ui:words"}
+{"id":"B-L10N-009","scope":"switch","slice":1,"module":":ui:words"}
+{"id":"B-L10N-010","scope":"switch","slice":1,"module":":ui:words"}
+{"id":"B-L10N-011","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-L10N-012","scope":"switch","slice":1,"module":":ui:words"}
+{"id":"B-L10N-013","scope":"switch","slice":1,"module":":ui:words"}
+{"id":"B-L10N-014","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team jobs schedule wording (od_team_jobs), after the switch"}
+{"id":"B-L10N-015","scope":"switch","slice":1,"module":":ui:words"}
+{"id":"B-L10N-016","scope":"switch","slice":2,"module":":engine:requests"}
+{"id":"B-L10N-017","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-L10N-018","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-L10N-019","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-L10N-020","scope":"switch","slice":1,"module":":engine:settings","decision":"02 §3.5 top-up (freeze tip fc5c1e78f)","amended":"Tip and tutorial ids are unique, tutorials have 2 to 4 steps (the What's new walkthrough, which runs in its own sheet rather than as a highlight tour, is the one exception), and every tip and tutorial has copy in English and Arabic.","amended_at":"2026-11-01"}
+{"id":"B-L10N-021","scope":"switch","slice":1,"module":":tools:strings","decision":"D6","amended":"Copy follows the glossary: labels say conversation (not session or chat), actions use glossary words with no banned synonyms, and no technical words (ports, paths, engine terms) appear outside Technical/Field keys.","amended_at":"2026-11-01"}
+{"id":"B-L10N-022","scope":"switch","slice":1,"module":":tools:strings"}
+{"id":"B-L10N-023","scope":"switch","slice":1,"module":":tools:strings"}
+{"id":"B-L10N-024","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-XPLAT-001","scope":"desktop-phase","slice":null,"module":null,"decision":"D14","reason":"Linux desktop entry, icons and package metadata is desktop product work"}
+{"id":"B-XPLAT-002","scope":"desktop-phase","slice":null,"module":null,"decision":"D14","reason":"Desktop packaging command name is desktop product work"}
+{"id":"B-XPLAT-003","scope":"switch","slice":0,"module":":core:domain"}
+{"id":"B-XPLAT-004","scope":"desktop-phase","slice":null,"module":null,"decision":"D14","reason":"Desktop saved window state is desktop product work"}
+{"id":"B-XPLAT-005","scope":"desktop-phase","slice":null,"module":null,"decision":"D14","reason":"Desktop window display choice is desktop product work"}
+{"id":"B-XPLAT-006","scope":"desktop-phase","slice":null,"module":null,"decision":"D14","reason":"Desktop window fitting is desktop product work"}
+{"id":"B-XPLAT-007","scope":"desktop-phase","slice":null,"module":null,"decision":"D14","reason":"Desktop window restore at startup is desktop product work"}
+{"id":"B-XPLAT-008","scope":"ios-phase","slice":null,"module":null,"decision":"D13","reason":"iOS keep-live preference and suspension is iOS product work"}
+{"id":"B-XPLAT-009","scope":"switch","slice":5,"module":":ui:kit-content"}
+{"id":"B-XPLAT-010","scope":"switch","slice":5,"module":":ui:kit-content"}
+{"id":"B-XPLAT-011","scope":"switch","slice":5,"module":":ui:kit-content"}
+{"id":"B-XPLAT-012","scope":"switch","slice":0,"module":":core:domain"}
+{"id":"B-XPLAT-013","scope":"switch","slice":0,"module":":core:domain"}
+{"id":"B-BUILD-001","scope":"switch","slice":0,"module":":quality"}
+{"id":"B-BUILD-002","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"AI Team management scripts: AI Team ships after the switch"}
+{"id":"B-BUILD-003","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-BUILD-004","scope":"switch","slice":5,"module":":engine:project","decision":"NG1, D6","amended":"Action-coverage ledgers (Files, Lists, Models, Phone, Servers, Settings, Terminal, Tools): every mutating call and control has a recorded decision, every proof names a test that exists, every reachable control has a tap path, and the OpenCode 2 gateway sends the expected request. (The Team ledger and the OpenCode 1 gateway are dropped.)","amended_at":"2026-11-01"}
+{"id":"B-BUILD-005","scope":"switch","slice":5,"module":":engine:project","decision":"02 §3.3 rule 5, D6, NG1","amended":"Per-area controls are proven both ways and each OpenCode 2 gateway sends the exact request for its action (Files, Lists, Models, Settings).","amended_at":"2026-11-01"}
+{"id":"B-BUILD-006","scope":"switch","slice":3,"module":":engine:agents","decision":"02 §3.3 rule 5, D6","amended":"The phone-agent catalog inventory file is the live catalog, with ledgers for catalog and certification; server capability switches each have a decision and only 'shown' switches move a row; every shown field of tools context appears on screen in some case.","amended_at":"2026-11-01"}
+{"id":"B-BUILD-007","scope":"switch","slice":6,"module":":androidApp"}
+{"id":"B-BUILD-008","scope":"desktop-phase","slice":null,"module":null,"decision":"D14","reason":"Desktop packaging script labelling bundles is desktop product work"}
+{"id":"B-BUILD-009","scope":"desktop-phase","slice":null,"module":null,"decision":"D14","reason":"Desktop release lookup and CI toolchain pin are desktop release work"}
+{"id":"B-BUILD-010","scope":"switch","slice":4,"module":":android:platform"}
+{"id":"B-BUILD-011","scope":"switch","slice":4,"module":":android:platform"}
+{"id":"B-BUILD-012","scope":"switch","slice":4,"module":":android:platform"}
+{"id":"B-BUILD-013","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-BUILD-014","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-BUILD-015","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-BUILD-016","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-BUILD-017","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-BUILD-018","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-BUILD-019","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-BUILD-020","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-BUILD-021","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-BUILD-022","scope":"ios-phase","slice":null,"module":null,"decision":"D13","reason":"iOS runner project contract is iOS product work"}
+{"id":"B-BUILD-023","scope":"switch","slice":0,"module":":quality"}
+{"id":"B-BUILD-024","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-BUILD-025","scope":"switch","slice":1,"module":":engine:diagnostics"}
+{"id":"B-BUILD-026","scope":"switch","slice":1,"module":":core:net"}
+{"id":"B-BUILD-027","scope":"switch","slice":2,"module":":engine:transcript"}
+{"id":"B-BUILD-028","scope":"switch","slice":6,"module":":androidApp"}
+{"id":"B-BUILD-029","scope":"switch","slice":6,"module":":androidApp"}
+{"id":"B-BUILD-030","scope":"switch","slice":0,"module":":quality"}
+{"id":"B-BUILD-031","scope":"switch","slice":0,"module":":quality"}
+{"id":"B-BUILD-032","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Gas City adapter import rule: Gas City ships after the switch"}
+{"id":"B-BUILD-033","scope":"switch","slice":0,"module":":quality"}
+{"id":"B-BUILD-034","scope":"dropped","slice":null,"module":null,"decision":"02 §3.2 packages-build (Flutter-only tooling)","reason":"APK plugin-registrant check (GeneratedPluginRegistrant) is Flutter-only tooling"}
+{"id":"B-MIGR-001","scope":"switch","slice":6,"module":":android:migration"}
+{"id":"B-MIGR-002","scope":"switch","slice":6,"module":":android:migration"}
+{"id":"B-MIGR-003","scope":"switch","slice":6,"module":":android:migration"}
+{"id":"B-MIGR-004","scope":"switch","slice":6,"module":":android:migration","decision":"ADR §9.9, D2, D3","amended":"Installing the native build over the Flutter build updates in place: same package name io.github.eslamasabry.opencode_mobile, signed by the signer of the lineage being updated (1DE5BF08…D60C for owner builds, 842284B2…1C for public releases), versionCode at least 10000, no uninstall, no data wipe.","amended_at":"2026-11-01"}
+{"id":"B-MIGR-005","scope":"switch","slice":6,"module":":android:migration"}
+{"id":"B-MIGR-006","scope":"switch","slice":6,"module":":android:migration"}
+{"id":"B-MIGR-007","scope":"switch","slice":6,"module":":android:migration"}
+{"id":"B-MIGR-008","scope":"switch","slice":6,"module":":android:migration"}
+{"id":"B-MIGR-009","scope":"switch","slice":6,"module":":android:migration"}
+{"id":"B-MIGR-010","scope":"switch","slice":6,"module":":android:migration","decision":"ADR §9.7, §9.8","amended":"Migration is one-shot and resumable: if the app is killed midway it resumes on the next start; re-running never duplicates drafts or prompts; the Flutter source data is never deleted in the switch release (source keys stay at least one release, files are never moved); a failed step shows a plain notice and leaves the old data untouched.","amended_at":"2026-11-01"}
+{"id":"B-MIGR-011","scope":"switch","slice":6,"module":":android:migration"}
+{"id":"B-MIGR-012","scope":"switch","slice":6,"module":":android:migration","decision":"ADR §9.9","amended":"Shorebird code push ends at the switch and the native AppUpdater takes over: it reads GitHub releases/latest, checks SHA256SUMS and the same signer, and installs through PackageInstaller; the app still tells the person a newer release exists and opens the install flow; when the update service is unavailable it never claims an update exists.","amended_at":"2026-11-01"}
+{"id":"B-MIGR-013","scope":"switch","slice":6,"module":":android:migration"}
+{"id":"B-NAV-083","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-084","scope":"switch","slice":4,"module":":feature:settings"}
+{"id":"B-NAV-085","scope":"after-switch","slice":null,"module":null,"decision":"S02-3 (Gemma assistant after the switch, D6)","reason":"The 'Assistant on this phone' (Gemma) is after the switch per plan 02 §3.5."}
+{"id":"B-NAV-086","scope":"switch","slice":4,"module":":feature:about"}
+{"id":"B-CHAT-125","scope":"switch","slice":2,"module":":core:markdown"}
+{"id":"B-CHAT-126","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-AGENT-319","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-320","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-321","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-322","scope":"dropped","slice":null,"module":null,"decision":"S02-3","reason":"Claude Agent trial follows D8 (default Paseo); owner 2026-10-31: not in the product"}
+{"id":"B-AGENT-323","scope":"dropped","slice":null,"module":null,"decision":"S02-3","reason":"Claude Agent trial follows D8 (default Paseo); owner 2026-10-31: not in the product"}
+{"id":"B-AGENT-324","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-AGENT-325","scope":"after-switch","slice":null,"module":null,"decision":"D6","reason":"Role voices in AI Team task conversations follow D6 (plan 02 §3.5)."}
+{"id":"B-PROTO-128","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-129","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-130","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-131","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-132","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-133","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-134","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-135","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-136","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-137","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-138","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-139","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-PROTO-140","scope":"switch","slice":5,"module":":protocol:oc2"}
+{"id":"B-PROTO-141","scope":"switch","slice":1,"module":":core:net"}
+{"id":"B-STATE-159","scope":"switch","slice":1,"module":":engine:connection"}
+{"id":"B-STATE-160","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-STATE-161","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-162","scope":"switch","slice":3,"module":":engine:composer"}
+{"id":"B-STATE-163","scope":"switch","slice":5,"module":":engine:project"}
+{"id":"B-STATE-164","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-SEC-184","scope":"switch","slice":1,"module":":protocol:oc2"}
+{"id":"B-SEC-185","scope":"switch","slice":4,"module":":android:platform"}
+{"id":"B-SEC-186","scope":"switch","slice":4,"module":":android:platform"}
+{"id":"B-SEC-187","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-SEC-188","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-SEC-189","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-SEC-190","scope":"switch","slice":4,"module":":androidApp"}
+{"id":"B-SEC-191","scope":"switch","slice":1,"module":":core:net"}
+{"id":"B-SEC-192","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-SEC-193","scope":"switch","slice":5,"module":":android:termux"}
+{"id":"B-ANDR-122","scope":"switch","slice":4,"module":":android:platform"}
+{"id":"B-ANDR-123","scope":"switch","slice":4,"module":":android:platform"}
+{"id":"B-ANDR-124","scope":"dropped","slice":null,"module":null,"decision":"NG17","reason":"Shorebird patch state; the native app has no code push, only the release updater"}
+{"id":"B-ANDR-125","scope":"switch","slice":4,"module":":android:platform"}
+{"id":"B-ANDR-126","scope":"switch","slice":4,"module":":android:platform"}
+{"id":"B-ANDR-127","scope":"switch","slice":3,"module":":android:linux"}
+{"id":"B-ANDR-128","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-ANDR-129","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-ANDR-130","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-252","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-253","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-254","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-255","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-256","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-257","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-258","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-259","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-260","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-261","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-262","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-263","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-264","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-265","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-266","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-267","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-268","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-269","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-270","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-271","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-272","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-273","scope":"switch","slice":5,"module":":engine:runtime"}
+{"id":"B-LINUX-274","scope":"switch","slice":3,"module":":android:linux"}
+{"id":"B-LINUX-275","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-276","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-277","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-278","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-279","scope":"switch","slice":3,"module":":engine:agents"}
+{"id":"B-LINUX-280","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-281","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-282","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-LINUX-283","scope":"switch","slice":3,"module":":engine:runtime"}
+{"id":"B-MEDIA-036","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-037","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-MEDIA-038","scope":"after-switch","slice":null,"module":null,"decision":"S02-3 (Gemma assistant after the switch, D6)","reason":"The 'Assistant on this phone' (Gemma) is after the switch per plan 02 §3.5."}
+{"id":"B-MEDIA-039","scope":"after-switch","slice":null,"module":null,"decision":"S02-3 (Gemma assistant after the switch, D6)","reason":"The 'Assistant on this phone' (Gemma) is after the switch per plan 02 §3.5."}
+{"id":"B-MEDIA-040","scope":"switch","slice":5,"module":":engine:media","decision":"02 §3.3 rule 3, S02-3","reason":"Deletion of a deferred feature's data stays; Manage space and Storage list the Gemma folder with Delete (plan 02 §3.5)."}
+{"id":"B-MEDIA-041","scope":"after-switch","slice":null,"module":null,"decision":"S02-3 (Gemma assistant after the switch, D6)","reason":"The 'Assistant on this phone' (Gemma) is after the switch per plan 02 §3.5."}
+{"id":"B-MEDIA-042","scope":"after-switch","slice":null,"module":null,"decision":"S02-3 (Gemma assistant after the switch, D6)","reason":"The 'Assistant on this phone' (Gemma) is after the switch per plan 02 §3.5."}
+{"id":"B-MEDIA-043","scope":"after-switch","slice":null,"module":null,"decision":"S02-3 (Gemma assistant after the switch, D6)","reason":"The 'Assistant on this phone' (Gemma) is after the switch per plan 02 §3.5."}
+{"id":"B-MEDIA-044","scope":"switch","slice":5,"module":":engine:media"}
+{"id":"B-KIT-063","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-064","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-065","scope":"switch","slice":1,"module":":ui:kit"}
+{"id":"B-KIT-066","scope":"switch","slice":1,"module":":ui:design"}
+{"id":"B-KIT-067","scope":"switch","slice":1,"module":":ui:design"}
+{"id":"B-XPLAT-014","scope":"desktop-phase","slice":null,"module":null,"decision":"D14","reason":"Desktop window icon packaging is desktop product work."}
+{"id":"B-XPLAT-015","scope":"dropped","slice":null,"module":null,"decision":"D17","reason":"Browser mode (fix/web-preview) is the web shell, dropped by D17"}
+{"id":"B-XPLAT-016","scope":"dropped","slice":null,"module":null,"decision":"D17","reason":"Browser mode (fix/web-preview) is the web shell, dropped by D17"}
+{"id":"B-XPLAT-017","scope":"dropped","slice":null,"module":null,"decision":"D17","reason":"Browser mode (fix/web-preview) is dropped: web shell out (D17, NG2)."}
+{"id":"B-BUILD-035","scope":"switch","slice":0,"module":":quality"}
+{"id":"B-BUILD-036","scope":"switch","slice":6,"module":":androidApp"}
+{"id":"B-MIGR-014","scope":"switch","slice":6,"module":":androidApp"}
+{"id":"B-MIGR-015","scope":"switch","slice":6,"module":":androidApp"}
