@@ -1,0 +1,22 @@
+{
+  "data": {
+    "id": "msg_04acb4987001Ei5pD9H8pLWeKb",
+    "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+    "timeCreated": 1787961231753,
+    "type": "user",
+    "payload": {
+      "text": "Reply with exactly the word: pong. Then use the read tool to read the file README.md (just the first 5 lines).",
+      "files": [
+        {
+          "data": "dGlueSBhdHRhY2htZW50",
+          "mime": "text/plain",
+          "source": {
+            "type": "inline"
+          },
+          "name": "att.txt"
+        }
+      ]
+    },
+    "delivery": "steer"
+  }
+}

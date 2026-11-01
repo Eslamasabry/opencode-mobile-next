@@ -1,0 +1,166 @@
+{
+ "data": [
+  {
+   "id": "msg_15c637850001DAbvOOmXP8LeQv",
+   "time": {
+    "created": 1792551385264
+   },
+   "text": "Use the read tool on README.md, then reply with exactly its first line.",
+   "type": "user"
+  },
+  {
+   "id": "msg_15c6378fe001qq3gCyi9VL7xdr",
+   "time": {
+    "created": 1792551387783,
+    "streamed": 1792551388723,
+    "completed": 1792551388800
+   },
+   "type": "assistant",
+   "agent": "build",
+   "model": {
+    "id": "glm-5.3-flash-free",
+    "providerID": "opencode",
+    "variant": "default"
+   },
+   "content": [
+    {
+     "type": "reasoning",
+     "text": "The user wants me to read README.md and reply with exactly its first line. Simple task: use the read tool on README.md, then output the first line verbatim.",
+     "native": {
+      "reasoningField": "reasoning_content"
+     },
+     "time": {
+      "created": 1792551388554,
+      "completed": 1792551388689
+     }
+    },
+    {
+     "type": "tool",
+     "id": "f96b8be5-7d45-4f80-9f49-0f0373b9114d",
+     "name": "read",
+     "executed": false,
+     "state": {
+      "status": "completed",
+      "input": {
+       "path": "README.md"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Read file README.md, lines 1-1\n1: # scratch"
+       }
+      ],
+      "metadata": {
+       "truncated": false
+      }
+     },
+     "time": {
+      "created": 1792551388673,
+      "ran": 1792551388714,
+      "completed": 1792551388768
+     }
+    }
+   ],
+   "snapshot": {
+    "start": "fe8a5305ed92502cc3c96432049de9cdc12a068e",
+    "end": "fe8a5305ed92502cc3c96432049de9cdc12a068e",
+    "files": []
+   },
+   "finish": "tool-calls",
+   "rawFinish": "tool_calls",
+   "cost": 0,
+   "tokens": {
+    "input": 7931,
+    "output": 47,
+    "reasoning": 0,
+    "cache": {
+     "read": 0,
+     "write": 0
+    }
+   }
+  },
+  {
+   "id": "msg_15c63869e001FCJY2FpbSO5kt9",
+   "time": {
+    "created": 1792551388870,
+    "streamed": 1792551389441,
+    "completed": 1792551389465
+   },
+   "type": "assistant",
+   "agent": "build",
+   "model": {
+    "id": "glm-5.3-flash-free",
+    "providerID": "opencode",
+    "variant": "default"
+   },
+   "content": [
+    {
+     "type": "text",
+     "text": "# scratch"
+    }
+   ],
+   "snapshot": {
+    "start": "fe8a5305ed92502cc3c96432049de9cdc12a068e",
+    "end": "fe8a5305ed92502cc3c96432049de9cdc12a068e",
+    "files": []
+   },
+   "finish": "stop",
+   "rawFinish": "stop",
+   "cost": 0,
+   "tokens": {
+    "input": 3517,
+    "output": 4,
+    "reasoning": 0,
+    "cache": {
+     "read": 4480,
+     "write": 0
+    }
+   }
+  },
+  {
+   "id": "msg_15c638921001snk4km4M21ZgTV",
+   "time": {
+    "created": 1792551389473
+   },
+   "type": "idle",
+   "outcome": "succeeded"
+  },
+  {
+   "type": "compaction",
+   "id": "msg_15c63892e001pKEPT66lnj3uoc",
+   "time": {
+    "created": 1792551389509
+   },
+   "status": "completed",
+   "reason": "manual",
+   "model": {
+    "id": "glm-5.3-flash-free",
+    "providerID": "opencode",
+    "variant": "default"
+   },
+   "summary": "## Objective\n- Read README.md and reply with exactly its first line.\n\n## Requirements\n- Reply must reproduce the first line of README.md exactly.\n\n## Decisions\n- (none)\n\n## Work State\n### Completed\n- Read README.md; first line is `# scratch` and was reported to the user.\n\n### Active\n- (none)\n\n### Blocked\n- (none)\n\n## Next Move\n- (none)\n\n## Relevant Files\n- `README.md`: the only file read; its first line is `# scratch`.\n\n## Important Context\n- README.md contains only a single line (`# scratch`); task is fully resolved with no follow-up requested.",
+   "cost": 0,
+   "tokens": {
+    "input": 786,
+    "output": 180,
+    "reasoning": 0,
+    "cache": {
+     "read": 7808,
+     "write": 0
+    }
+   }
+  },
+  {
+   "id": "msg_15c638f7e001D9DrJNEU6fCitj",
+   "time": {
+    "created": 1792551391102
+   },
+   "type": "idle",
+   "outcome": "succeeded"
+  }
+ ],
+ "cursor": {
+  "previous": "eyJpZCI6Im1zZ18xNWM2Mzc4NTAwMDFEQWJ2T09tWFA4TGVRdiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+  "next": "eyJpZCI6Im1zZ18xNWM2MzhmN2UwMDFEOURySk5FVTZmQ2l0aiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+ }
+}
