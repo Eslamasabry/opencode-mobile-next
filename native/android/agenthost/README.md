@@ -24,7 +24,7 @@ not share a FQCN on one classpath.
 | `src/test/resources/auth-scripts/` | The Dart-authored probe scripts the auth harness reads, written by `tool/extract_auth_scripts.py` from `lib/builtin/agents/agent_scripts.dart`; `PhoneAgentAuthRequest`'s SHA-256 check proves them byte-identical. |
 
 Twin rows (copy base: this repository at `580803d4`, the freeze snapshot; "source commit" is the last commit that
-changed the source file) are listed in the report §6 for `native/TWINS.md`, which the coordinator owns.
+changed the source file) are listed in the report §5.1 for `native/TWINS.md`, which the coordinator owns.
 
 ## Checks (T0)
 
