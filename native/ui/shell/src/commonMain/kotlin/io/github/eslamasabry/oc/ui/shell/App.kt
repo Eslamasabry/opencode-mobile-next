@@ -3,15 +3,16 @@ package io.github.eslamasabry.oc.ui.shell
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -20,6 +21,9 @@ import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.RouteSaving
+import io.github.eslamasabry.oc.ui.shell.nav.RowTransformGate
+import io.github.eslamasabry.oc.ui.shell.nav.ShellNavDisplay
+import io.github.eslamasabry.oc.ui.shell.nav.motionLevelOf
 
 /** The root both apps call (plan 03 §21.1). Boot/migration gate and safe mode join with :engine:entry (slice 2). */
 @Composable
@@ -30,22 +34,29 @@ public fun App(deps: ShellDependencies, platform: KitPlatform, viewModels: Metro
 }
 
 /**
- * Nav3 with a user-owned back stack, per-entry ViewModel stores and contributed entry installers (plan 03 §15.4).
- * Scenes and RouteMotion transitions are P2's spike; P1 proves the wiring.
+ * Nav3 with a user-owned back stack, per-entry ViewModel stores and contributed entry installers (plan 03 §15.4),
+ * route motion and predictive back with the row → chat transform, option A (P2; plan 07 §3.2, plan 08 §5.4).
  */
 @Composable
-public fun NavShell(start: AppRoute, deps: ShellDependencies) {
+public fun NavShell(start: AppRoute, deps: ShellDependencies, gate: RowTransformGate = remember { RowTransformGate() }) {
     val backStack = rememberNavBackStack(RouteSaving.configuration, start)
-    DisposableEffect(backStack) {
+    DisposableEffect(backStack, gate) {
         deps.navigator.attach(backStack)
-        onDispose { deps.navigator.detach(backStack) }
+        deps.navigator.gateListener = gate::on
+        onDispose {
+            deps.navigator.gateListener = null
+            deps.navigator.detach(backStack)
+        }
     }
     LaunchedEffect(backStack) { snapshotFlow { backStack.toList() }.collect { deps.navigator.publish() } }
     val provider = remember(deps.installers) { entryProvider<NavKey> { deps.installers.forEach { with(it) { install() } } } }
-    NavDisplay(
+    val scale by deps.motion.animatorScale.collectAsState()
+    ShellNavDisplay(
         backStack = backStack,
-        onBack = { deps.navigator.back() },
-        entryDecorators =
+        gate = gate,
+        level = motionLevelOf(scale),
+        onSystemBack = deps.navigator::systemBack,
+        baseDecorators =
             listOf(rememberSaveableStateHolderNavEntryDecorator(), rememberViewModelStoreNavEntryDecorator()),
         entryProvider = provider,
     )

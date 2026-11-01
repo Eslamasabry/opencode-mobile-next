@@ -11,6 +11,7 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactory
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
+import io.github.eslamasabry.oc.ui.shell.nav.SystemMotion
 import kotlin.reflect.KClass
 
 /** Zero features is legal (the desktop gallery); the consumer declares the multibinding (plan 03 §13.5). */
@@ -25,6 +26,7 @@ public interface ShellMultibindings {
 public class ShellDependencies(
     public val navigator: ShellNavigator,
     public val installers: Set<EntryInstaller>,
+    public val motion: SystemMotion,
 )
 
 /** One factory for both apps (plan 03 §13.7): every @ViewModelKey / assisted factory contributed on the classpath. */
