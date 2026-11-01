@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.android.notifications
 
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+
+
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
@@ -62,7 +66,7 @@ class NotificationActionBodyTest {
     private val shade = FakeShade()
     private val answers = mutableListOf<ShadeAnswer>()
     private var reply: suspend (ShadeAnswer) -> Outcome<Unit> = { Unit.ok() }
-    private val stops = mutableListOf<SessionId>()
+    private val stops = mutableListOf<ConversationRef>()
     private var lock = Lock(sdkInt = 35, locked = false)
     private val dismissedRows = mutableListOf<String>()
 
@@ -220,9 +224,10 @@ class NotificationActionBodyTest {
                     data = Uri.parse(FrozenExtras.STOP_REPLY_URI)
                     action?.let { putExtra(FrozenExtras.EXTRA_STATUS_ACTION, it) }
                     putExtra(FrozenExtras.EXTRA_STATUS_SESSION, session)
+                    putExtra(FrozenExtras.EXTRA_STATUS_PROFILE, "p1")
                 }
             assertEquals(ShadeOutcome.StopSent, body().onStatusAction(status("stop_reply")))
-            assertEquals(listOf("ses_7"), stops.map { it.raw })
+            assertEquals(listOf("ses_7"), stops.map { it.sessionId.raw })
             assertEquals(ShadeOutcome.Ignored, body().onStatusAction(status("open")))
             assertEquals(ShadeOutcome.Ignored, body().onStatusAction(status("stop_reply", session = "")))
             assertEquals(ShadeOutcome.Ignored, body().onStatusAction(status("stop_reply", act = "other")))
@@ -262,6 +267,37 @@ class NotificationActionBodyTest {
             val open = shadowOf(row.contentIntent).savedIntent
             assertEquals("per_2", open.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID))
             assertEquals(2, row.actions.size)
+        }
+    }
+
+    @Test
+    fun `B-ANDR-040 notify finding 5 refuses a legacy stop without a profile`() = runTest {
+        val intent = Intent(FrozenExtras.ACTION_STATUS).apply {
+            putExtra(FrozenExtras.EXTRA_STATUS_ACTION, StatusAction.StopReply.wire)
+            putExtra(FrozenExtras.EXTRA_STATUS_SESSION, "ses_7")
+        }
+        assertEquals(ShadeOutcome.Ignored, body().onStatusAction(intent))
+        assertTrue(stops.isEmpty())
+    }
+
+    @Test
+    fun `B-ANDR-040 notify finding 5 status stop and failed-stop Open retain the exact profile and chat`() = runTest {
+        val words = NotifyWords(app) { "en" }
+        val renderer = StatusRenderer(app, words)
+        for (profile in listOf("p1", "p2")) {
+            val target = ConversationRef(ProfileId(profile), SessionId("same_session"))
+            val row = renderer.build(StatusContent(StatusKind.Working, "Working", conversation = target,
+                actions = listOf(StatusAction.Open, StatusAction.StopReply)), true, null)
+            val stop = shadowOf(row.actions[1].actionIntent).savedIntent
+            var stopped: ConversationRef? = null
+            val handler = NotificationActionBody(shade, { Unit.ok() }, { stopped = it; Failed(Failure.Network()) }, lock)
+            assertEquals(ShadeOutcome.StopFailed, handler.onStatusAction(stop))
+            assertEquals(target, stopped)
+            for (pending in listOf(row.contentIntent, row.actions[0].actionIntent)) {
+                val open = shadowOf(pending).savedIntent
+                assertEquals(profile, open.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID))
+                assertEquals("same_session", open.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID))
+            }
         }
     }
 

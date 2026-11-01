@@ -79,9 +79,8 @@ public class NotificationActionBody(
             return ShadeOutcome.RowDismissed
         }
         if (intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) != StatusAction.StopReply.wire) return ShadeOutcome.Ignored
-        val session = intent.getStringExtra(FrozenExtras.EXTRA_STATUS_SESSION).orEmpty()
-        if (session.isBlank()) return ShadeOutcome.Ignored
-        val outcome = withTimeoutOrNull(answerDeadline) { stopper.stop(SessionId(session)) }
+        val conversation = intent.statusConversation() ?: return ShadeOutcome.Ignored
+        val outcome = withTimeoutOrNull(answerDeadline) { stopper.stop(conversation) }
         // On failure the row stays; its content tap (an activity PendingIntent) opens that chat.
         return if (outcome is Outcome.Ok || (outcome as? Outcome.Failed)?.failure is Failure.NotFound) {
             ShadeOutcome.StopSent

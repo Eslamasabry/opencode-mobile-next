@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.android.notifications
 
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+
+
 import android.app.Application
 import android.app.Notification
 import android.app.NotificationManager
@@ -133,7 +138,7 @@ class ReplyWatchServiceTest {
             val source = Source()
             val (body, service) = start(source)
             runCurrent()
-            source.status.value = StatusContent(StatusKind.Working, "Working on Fix login", sessionId = "ses_1")
+            source.status.value = StatusContent(StatusKind.Working, "Working on Fix login", conversation = ConversationRef(ProfileId("p1"), SessionId("ses_1")), turnId = "turn_1")
             advanceTimeBy(3_000)
             source.progressing.value = false
             source.alerts.tryEmit(finished)
@@ -208,12 +213,12 @@ class ReplyWatchServiceTest {
             val (body, _) = start(source)
             runCurrent()
             body.onRowDismissed("ses_1")
-            source.status.value = StatusContent(StatusKind.Working, "Working on Fix login", sessionId = "ses_1")
+            source.status.value = StatusContent(StatusKind.Working, "Working on Fix login", conversation = ConversationRef(ProfileId("p1"), SessionId("ses_1")), turnId = "turn_1")
             val again = Robolectric.buildService(ShellService::class.java).create().get()
             body.onStartCommand(again)
             assertFalse(shadowOf(again).lastForegroundNotification.extras.getBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING))
             // Another run is still promoted.
-            source.status.value = StatusContent(StatusKind.Working, "Working on Add tests", sessionId = "ses_2")
+            source.status.value = StatusContent(StatusKind.Working, "Working on Add tests", conversation = ConversationRef(ProfileId("p1"), SessionId("ses_2")), turnId = "turn_1")
             body.onRowDismissed("ses_9")
             val other = Robolectric.buildService(ShellService::class.java).create().get()
             body.onStartCommand(other)

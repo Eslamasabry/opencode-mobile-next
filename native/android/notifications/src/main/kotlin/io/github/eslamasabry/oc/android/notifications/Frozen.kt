@@ -64,6 +64,9 @@ public object FrozenExtras {
     public const val ACTION_STATUS: String = "$PKG.action.STATUS"
     public const val EXTRA_STATUS_ACTION: String = "$PKG.extra.STATUS_ACTION"
     public const val EXTRA_STATUS_SESSION: String = "$PKG.extra.STATUS_SESSION"
+    /** Native routing additions; legacy status taps without these cannot select a profile or turn. */
+    public const val EXTRA_STATUS_PROFILE: String = "oc.statusProfile"
+    public const val EXTRA_STATUS_TURN: String = "oc.statusTurn"
     public const val STOP_REPLY_URI: String = "opencode://status/stop_reply"
 
     /** New in the native app (S11-9): the status row's delete intent. Not held by any Flutter-era row. */

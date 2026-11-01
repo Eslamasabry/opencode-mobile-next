@@ -5,6 +5,7 @@ import android.content.Intent
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -107,7 +108,7 @@ public fun interface ShadeAnswerer {
 
 /** The seam for **Stop the reply** (live connection, else oneShot; plan 11 §10.6). */
 public fun interface ReplyStopper {
-    public suspend fun stop(session: SessionId): Outcome<Unit>
+    public suspend fun stop(conversation: ConversationRef): Outcome<Unit>
 }
 
 /** Whether the phone is locked now (`KeyguardManager.isDeviceLocked`) and the SDK level, for CR16-7. */
@@ -137,3 +138,16 @@ internal fun Failure.meansGone(): Boolean =
     this is Failure.NotFound || (this is Failure.Refused && reason == RefusalReason.AlreadyAnswered)
 
 internal fun Failure.meansStale(): Boolean = this is Failure.Refused && reason == RefusalReason.StaleScope
+
+/** Null for legacy status intents which cannot unambiguously select a connection. */
+internal fun Intent.statusConversation(): ConversationRef? {
+    val profile = getStringExtra(FrozenExtras.EXTRA_STATUS_PROFILE)?.takeIf { it.isNotBlank() } ?: return null
+    val session = getStringExtra(FrozenExtras.EXTRA_STATUS_SESSION)?.takeIf { it.isNotBlank() } ?: return null
+    return ConversationRef(ProfileId(profile), SessionId(session))
+}
+
+internal fun Intent.putStatusConversation(conversation: ConversationRef?) {
+    if (conversation == null) return
+    putExtra(FrozenExtras.EXTRA_STATUS_PROFILE, conversation.profileId.raw)
+    putExtra(FrozenExtras.EXTRA_STATUS_SESSION, conversation.sessionId.raw)
+}

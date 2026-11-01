@@ -254,7 +254,7 @@ public class ReplyWatchServiceBody(
         )
 
     private fun chip(content: StatusContent): LiveChip? {
-        val dismissed = synchronized(dismissedRuns) { content.sessionId.isNotEmpty() && content.sessionId in dismissedRuns }
+        val dismissed = synchronized(dismissedRuns) { content.conversation?.sessionId?.raw?.let { it in dismissedRuns } == true }
         return LiveUpdatePolicy.chipFor(content, dismissedRun = dismissed)
     }
 

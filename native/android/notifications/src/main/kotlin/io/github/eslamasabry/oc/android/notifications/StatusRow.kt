@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.android.notifications
 
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+
 /** Status situations (plan 11 §10.3). Wire names unchanged from `NotificationStatusKind.wireValue`. */
 public enum class StatusKind(public val wire: String) {
     NeedsYou("needs_you"),
@@ -47,7 +49,9 @@ public data class StatusContent(
     val progress: Int? = null,
     val actions: List<StatusAction> = listOf(StatusAction.Open),
     /** The chat **Stop the reply** stops, and the run the row's dismissal ends watching. */
-    val sessionId: String = "",
+    val conversation: ConversationRef? = null,
+    /** Stable identity of this turn, distinct from the conversation. */
+    val turnId: String = "",
     /** The lock screen's version: counts only (B-ANDR-047). */
     val publicTitle: String = "OpenCode",
     /** How many chats work / need you; drives the Live Update chip plural. */
@@ -68,7 +72,8 @@ public data class StatusContent(
             subText: String? = null,
             progress: Int? = null,
             actions: List<StatusAction> = emptyList(),
-            sessionId: String? = null,
+            conversation: ConversationRef? = null,
+            turnId: String = "",
             publicTitle: String? = null,
             count: Int = 1,
         ): StatusContent? {
@@ -82,7 +87,8 @@ public data class StatusContent(
                 subText = clip(subText).orEmpty(),
                 progress = progress?.coerceIn(0, MAX_PROGRESS),
                 actions = actions.distinct().take(MAX_ACTIONS).ifEmpty { listOf(StatusAction.Open) },
-                sessionId = clip(sessionId).orEmpty(),
+                conversation = conversation,
+                turnId = turnId,
                 publicTitle = clip(publicTitle)?.takeIf { it.isNotEmpty() } ?: "OpenCode",
                 count = count.coerceAtLeast(1),
             )

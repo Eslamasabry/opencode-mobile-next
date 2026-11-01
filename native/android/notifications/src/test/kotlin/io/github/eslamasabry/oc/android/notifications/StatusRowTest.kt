@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.android.notifications
 
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+
+
 import android.app.Application
 import android.app.Notification
 import android.content.pm.PackageManager
@@ -76,7 +81,7 @@ class PromotableStatusTest {
     private val renderer = StatusRenderer(app, words)
 
     private fun build(kind: StatusKind, lines: List<String> = emptyList(), count: Int = 1, progress: Int? = null): Notification {
-        val content = StatusContent(kind, "Working on Fix login", lines = lines, count = count, progress = progress, sessionId = "ses_1", actions = listOf(StatusAction.Open, StatusAction.StopReply))
+        val content = StatusContent(kind, "Working on Fix login", lines = lines, count = count, progress = progress, conversation = ConversationRef(ProfileId("p1"), SessionId("ses_1")), turnId = "turn_1", actions = listOf(StatusAction.Open, StatusAction.StopReply))
         return renderer.build(content, ongoing = true, chip = LiveUpdatePolicy.chipFor(content, dismissedRun = false))
     }
 
