@@ -28,11 +28,11 @@ public object AddressRules {
 
     public fun normalize(input: String): Outcome<ServerOrigin> {
         val text = input.trim().let { if ("://" in it) it else "http://$it" }
-        val m = ORIGIN.matchEntire(text) ?: return Outcome.Failed(Failure.Rejected(null, null))
+        val m = ORIGIN.matchEntire(text) ?: return Outcome.Failed(Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.InvalidAddress))
         val scheme = m.groupValues[1].lowercase()
-        if (scheme != "http" && scheme != "https") return Outcome.Failed(Failure.Rejected(null, null))
+        if (scheme != "http" && scheme != "https") return Outcome.Failed(Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.InvalidAddress))
         val host = m.groupValues[2].lowercase()
-        if (classify(host) == HostClass.Invalid) return Outcome.Failed(Failure.Rejected(null, null))
+        if (classify(host) == HostClass.Invalid) return Outcome.Failed(Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.InvalidAddress))
         val port = m.groupValues[3].toIntOrNull() ?: if (scheme == "https") 443 else 80
         return Outcome.Ok(ServerOrigin(scheme, host, port))
     }
