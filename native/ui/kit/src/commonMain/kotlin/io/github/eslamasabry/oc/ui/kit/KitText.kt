@@ -2,13 +2,18 @@ package io.github.eslamasabry.oc.ui.kit
 
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
-import io.github.eslamasabry.oc.ui.kit.foundation.KitFrameText
+import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
@@ -38,10 +43,26 @@ public fun KitText(
             textDirection = if (kind == KitTextKind.Reading) TextDirection.Content else TextDirection.Unspecified,
             textAlign = textAlign ?: TextAlign.Start,
         )
-    val draw = @Composable {
+    if (kind == KitTextKind.Reading) {
         BasicText(text, modifier, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        return
     }
-    if (kind == KitTextKind.Frame) KitFrameText(draw) else draw()
+    // Frame text, the Flutter way: min(platform size at the current scale, 1.3 × spec), per role size. Compose text
+    // reads only a density's font scale, so the words are laid out at that exact size under font scale 1 (1 sp = 1 dp),
+    // with line height and tracking scaled in proportion. Measured in P7; see KitTextScale.kt.
+    val app = LocalKitAppDensity.current ?: LocalDensity.current
+    val specSp = style.fontSize.value
+    val target = TextScalePolicy.frameDp(specSp, with(app) { specSp.sp.toDp().value })
+    val k = target / specSp
+    val sized =
+        style.copy(
+            fontSize = target.sp,
+            lineHeight = (style.lineHeight.value * k).sp,
+            letterSpacing = (style.letterSpacing.value * k).sp,
+        )
+    CompositionLocalProvider(LocalDensity provides Density(app.density, 1f)) {
+        BasicText(text, modifier, style = sized, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+    }
 }
 
 /** Slice-0 roles the first feature screens use. Kept so P1's screens compile; new code passes a [TypeRole]. */

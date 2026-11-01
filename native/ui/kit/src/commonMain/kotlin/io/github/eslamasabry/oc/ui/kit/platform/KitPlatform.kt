@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
-import io.github.eslamasabry.oc.ui.kit.foundation.ScaledFontDensity
+import io.github.eslamasabry.oc.ui.kit.foundation.scaledFontDensity
 import kotlinx.coroutines.flow.StateFlow
 
 public enum class KitPlatformFamily { Android, Desktop, Ios }
@@ -49,8 +49,8 @@ public interface KitPlatform {
     /** A blur + saturation effect for frost, or null to draw the surface solid (below API 31, desktop). */
     public fun frostEffect(spec: FrostSpec, density: Float): RenderEffect?
 
-    /** The density frame text renders with: [base] capped at [cap] × spec size, the platform curve kept below. */
-    public fun frameDensity(base: Density, cap: Float): Density = ScaledFontDensity(base, 1f, cap)
+    /** The density frame text renders with: [base]'s font scale capped at [cap], on the platform's own curve. */
+    public fun frameDensity(base: Density, cap: Float): Density = scaledFontDensity(base, 1f, cap)
 }
 
 public val LocalKitPlatform: ProvidableCompositionLocal<KitPlatform> =

@@ -27,3 +27,14 @@ kotlin {
 roborazzi {
     outputDir.set(layout.projectDirectory.dir("src/screenshots"))
 }
+
+// Robolectric 4.17 on the JDK 21 launcher (audit #10): its FileDescriptor interceptor reads JDK internals, and AGP-KMP
+// host tests do not add the opens that AGP's unit-test tasks add. Module-local for P7; belongs in oc.kmp.library.
+tasks.withType<Test>().matching { it.name.contains("AndroidHostTest") }.configureEach {
+    jvmArgs(
+        "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED",
+        "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+        "--add-opens=java.base/java.io=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+    )
+}

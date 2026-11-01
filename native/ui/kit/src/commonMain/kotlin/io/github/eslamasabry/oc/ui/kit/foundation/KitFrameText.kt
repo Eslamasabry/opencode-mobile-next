@@ -8,9 +8,11 @@ import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 
 /**
- * Frame text (Dart `KitChrome`): the words inside never render larger than 1.3× their spec size, whatever the system
- * and in-app text size; below the cap the platform's non-linear curve is kept. Frame parts (top bar, chips, buttons,
- * sheet headers, tabs) wrap their words in it; screens never call it. TalkBack labels are unchanged.
+ * Frame scope (Dart `KitChrome`) for frame content that is not a `KitText`: inside it the font scale is capped at 1.3,
+ * on the platform's own curve. Frame `KitText` (`kind = Frame`) does not need it: it sizes its words exactly as Flutter
+ * does, `min(platform size, 1.3 × spec)`, from the app density (see `KitText`). P7 measured that Compose text reads
+ * only a density's font scale, which is why this scope caps the scale rather than each size. Frame parts wrap their
+ * non-text content (icons sized from text, custom glyph text) in it; screens never call it. TalkBack is unchanged.
  *
  * Text: frame.
  */

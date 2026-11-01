@@ -31,6 +31,23 @@ public object TextScalePolicy {
 
     public fun isLargeText(effectiveScale: Float): Boolean = effectiveScale >= LARGE_TEXT_AT
 
-    /** The size in dp a [specSp] text renders at, given what the platform would give ([platformDp]) and a [cap]. */
-    public fun capped(specSp: Float, platformDp: Float, cap: Float): Float = minOf(platformDp, specSp * cap)
+    /**
+     * Flutter's frame rule (`MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3)` over the platform's scaler): the size
+     * in dp a [specSp] frame text renders at, given what the platform makes of it at the current scale ([platformDp]).
+     * Below the cap it is the platform's (non-linear) size; it never exceeds 1.3 × the spec size.
+     */
+    public fun frameDp(specSp: Float, platformDp: Float): Float = minOf(platformDp, specSp * FRAME_CAP)
+
+    /**
+     * The font scale for frame content that is not a `KitText` (the fallback the kit applies through the density): the system scale × the in-app Text size, capped at [FRAME_CAP]. The kit
+     * hands this scale to the platform, whose own (Android 14+ non-linear) curve turns sp into dp, so frame text is the
+     * platform's size at or below 130 % and never above 1.3× its spec size. Flutter clamps the result per size instead
+     * (`min(platform(s), 1.3 × spec)`); Compose text reads only the scale, so the kit caps the scale (P7 report).
+     */
+    public fun frameScale(systemScale: Float, appTextSize: AppTextSize = AppTextSize.Normal): Float =
+        minOf(systemScale * appTextSize.factor, FRAME_CAP)
+
+    /** The font scale reading text renders at: system × in-app Text size, capped at [ROOT_CAP]. */
+    public fun readingScale(systemScale: Float, appTextSize: AppTextSize = AppTextSize.Normal): Float =
+        minOf(systemScale * appTextSize.factor, ROOT_CAP)
 }

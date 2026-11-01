@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.KitTypography
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
@@ -82,6 +83,7 @@ public fun KitTheme(
     val ripple = remember { kitRippleConfiguration() }
     val selection = remember(colors) { TextSelectionColors(colors.accent, colors.accent.copy(alpha = 0.30f)) }
     val scheme = remember(roles) { MaterialBridge.scheme(roles) }
+    val appDensity = rememberAppTextDensity(appearance.textSize)
     CompositionLocalProvider(
         LocalKitPlatform provides platform,
         LocalKitAppearance provides appearance,
@@ -90,7 +92,8 @@ public fun KitTheme(
         LocalKitTokens provides tokens,
         LocalKitMotion provides motion,
         LocalLayoutDirection provides direction,
-        LocalDensity provides rememberAppTextDensity(appearance.textSize),
+        LocalDensity provides appDensity,
+        LocalKitAppDensity provides appDensity,
         LocalIndication provides platform.pressIndication(colors.text1),
         LocalRippleConfiguration provides ripple,
         LocalTextSelectionColors provides selection,

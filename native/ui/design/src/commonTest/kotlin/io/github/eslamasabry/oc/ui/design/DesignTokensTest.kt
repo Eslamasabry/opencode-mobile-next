@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.ui.design.effects.FrostStrength
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.motion.MotionSignals
 import io.github.eslamasabry.oc.ui.design.motion.resolveMotion
+import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.design.tokens.Corner
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
@@ -127,9 +128,13 @@ class DesignTokensTest {
     }
 
     @Test
-    fun `B-KIT-059 frame cap is 1_3 of spec and the large-text test uses 1_29`() {
-        assertEquals(20.8f, TextScalePolicy.capped(16f, platformDp = 32f, cap = TextScalePolicy.FRAME_CAP), 1e-4f)
-        assertEquals(18f, TextScalePolicy.capped(16f, platformDp = 18f, cap = TextScalePolicy.FRAME_CAP))
+    fun `B-KIT-059 frame scale caps at 1_3, reading at 2_5, and the large-text test uses 1_29`() {
+        assertEquals(20.8f, TextScalePolicy.frameDp(16f, platformDp = 28f), 1e-4f) // Android 16 sp at 200 %
+        assertEquals(25.0f, TextScalePolicy.frameDp(22f, platformDp = 25f)) // Android 22 sp at 130 %: kept
+        assertEquals(1.3f, TextScalePolicy.frameScale(2.0f))
+        assertEquals(1.15f, TextScalePolicy.frameScale(1.15f))
+        assertEquals(1.3f, TextScalePolicy.frameScale(1.2f, AppTextSize.Large))
+        assertEquals(2.5f, TextScalePolicy.readingScale(2.4f, AppTextSize.Large))
         assertTrue(TextScalePolicy.isLargeText(1.2999999523f))
         assertEquals(2.5f, TextScalePolicy.ROOT_CAP)
     }
