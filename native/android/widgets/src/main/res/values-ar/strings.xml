@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Verbatim subset of android/app/src/main/res/values-ar/strings.xml: only the entries the widget copies read. -->
+<resources>
+    <string name="widget_label">محادثة</string>
+    <string name="widget_description">الشيء الوحيد المهم الآن: ما يحتاجك، أو ما يعمل، أو آخر محادثة لك.</string>
+    <string name="native_team_working">قيد العمل</string>
+    <string name="native_widget_now">الآن</string>
+    <string name="native_widget_minutes">%1$d د</string>
+    <string name="native_widget_hours">%1$d س</string>
+    <string name="native_widget_days">%1$d ي</string>
+    <string name="usage_widget_title">الاستخدام</string>
+    <string name="usage_widget_description">ما تبقّى من كل حدّ في خططك، ومتى يتجدّد.</string>
+    <string name="usage_widget_empty">لا توجد قراءات للحدود بعد. افتح الاستخدام لربط مصدر.</string>
+    <string name="usage_widget_resets">يتجدّد خلال %1$s</string>
+    <string name="usage_widget_updated">حُدِّث منذ %1$s</string>
+    <string name="usage_widget_sign_in">سجّل الدخول</string>
+    <string name="usage_widget_add_key">أضف مفتاحًا</string>
+    <string name="usage_widget_not_signed_in">لم يتم تسجيل الدخول</string>
+    <string name="usage_widget_no_key">لم يُضف مفتاح</string>
+    <string name="usage_widget_set_up">إعداد</string>
+    <string name="usage_widget_cant_read">لا يمكن القراءة بعد</string>
+    <string name="usage_widget_auth">يلزم تسجيل الدخول</string>
+    <string name="usage_widget_this_phone">هذا الهاتف</string>
+    <string name="usage_widget_provider_claude">Claude</string>
+    <string name="usage_widget_provider_codex">Codex</string>
+    <string name="usage_widget_provider_minimax">MiniMax</string>
+    <string name="usage_widget_provider_glm">GLM</string>
+    <string name="usage_widget_column">%1$s  تبقّى %2$d%%</string>
+    <string name="usage_widget_short_hours">%1$d س</string>
+    <string name="usage_widget_short_days">%1$d ي</string>
+    <string name="usage_widget_short_week">أسبوع</string>
+    <string name="usage_widget_short_month">شهر</string>
+    <string name="widget_label_wide">المحادثات</string>
+    <string name="widget_label_list">قائمة المحادثات</string>
+    <string name="widget_label_strip">شريط المحادثة</string>
+    <string name="widget_description_wide">ما يحتاجك أو يعمل الآن، ومحادثاتك التالية.</string>
+    <string name="widget_description_list">الشيء الوحيد المهم الآن، ومحادثاتك الأخرى تحته.</string>
+    <string name="widget_description_strip">الشيء الوحيد المهم الآن، في سطر واحد.</string>
+    <string name="usage_widget_title_wide">الاستخدام، عريض</string>
+    <string name="usage_widget_description_wide">ما تبقّى من كل حدّ في خططك، بعمودين.</string>
+    <string name="widget_label_status">الحالة</string>
+    <string name="widget_description_status">خوادمك، ولينكس هذا الهاتف، والمهام الجارية، وأقرب حدّ في خططك إلى النفاد.</string>
+</resources>

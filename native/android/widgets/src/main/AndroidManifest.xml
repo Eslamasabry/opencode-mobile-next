@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- :android:widgets. The widget receivers of the Flutter app's manifest, copied with their frozen FQCNs (plan 11 §3):
+     a library resolves relative names against its own namespace, so every name here is written out in full. The
+     activities (WidgetConfigureActivity, WidgetRouteActivity, WidgetOverlayActivity) and WIDGET_OVERLAY_READY are
+     :androidApp shells (plan 11 §3) and are not declared here. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <receiver android:name="io.github.eslamasabry.opencode_mobile.WidgetActionReceiver" android:exported="false" />
+        <receiver
+            android:name="io.github.eslamasabry.opencode_mobile.SessionsWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_sessions_info" />
+        </receiver>
+        <receiver
+            android:name="io.github.eslamasabry.opencode_mobile.SessionsWideWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_label_wide">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_sessions_wide_info" />
+        </receiver>
+        <receiver
+            android:name="io.github.eslamasabry.opencode_mobile.SessionsListWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_label_list">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_sessions_list_info" />
+        </receiver>
+        <receiver
+            android:name="io.github.eslamasabry.opencode_mobile.SessionsStripWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_label_strip">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_sessions_strip_info" />
+        </receiver>
+        <receiver
+            android:name="io.github.eslamasabry.opencode_mobile.UsageWidgetProvider"
+            android:exported="true"
+            android:label="@string/usage_widget_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_usage_info" />
+        </receiver>
+        <receiver
+            android:name="io.github.eslamasabry.opencode_mobile.UsageWideWidgetProvider"
+            android:exported="true"
+            android:label="@string/usage_widget_title_wide">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_usage_wide_info" />
+        </receiver>
+        <receiver
+            android:name="io.github.eslamasabry.opencode_mobile.StatusWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_label_status">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_status_info" />
+        </receiver>
+    </application>
+</manifest>

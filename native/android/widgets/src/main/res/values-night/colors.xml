@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widgetBackground">#101310</color>
+    <color name="widgetText">#E3E8E4</color>
+    <color name="widgetHint">#7F8A83</color>
+    <color name="widgetAccent">#83CDAA</color>
+    <color name="widgetCard">#141518</color>
+    <color name="widgetPill">#22242A</color>
+    <color name="widgetTrack">#26302A</color>
+    <color name="widgetAmber">#F5B544</color>
+    <color name="widgetBarTrack">#38F3F3F1</color>
+    <color name="widgetInk">#F3F3F1</color>
+</resources>

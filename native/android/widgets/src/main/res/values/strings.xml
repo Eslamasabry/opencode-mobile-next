@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Verbatim subset of android/app/src/main/res/values/strings.xml: only the entries the widget copies read. -->
+<resources>
+    <string name="widget_label">Conversation</string>
+    <string name="widget_description">The one thing that matters now: what needs you, what is working, or your last conversation.</string>
+    <string name="native_team_working">Working</string>
+    <string name="native_widget_now">now</string>
+    <string name="native_widget_minutes">%1$dm</string>
+    <string name="native_widget_hours">%1$dh</string>
+    <string name="native_widget_days">%1$dd</string>
+    <string name="usage_widget_title">Usage</string>
+    <string name="usage_widget_description">What is left on each plan limit, and when it resets.</string>
+    <string name="usage_widget_empty">No limit readings yet. Open Usage to connect a source.</string>
+    <string name="usage_widget_resets">Resets in %1$s</string>
+    <string name="usage_widget_updated">Updated %1$s ago</string>
+    <string name="usage_widget_sign_in">Sign in</string>
+    <string name="usage_widget_add_key">Add key</string>
+    <string name="usage_widget_not_signed_in">Not signed in</string>
+    <string name="usage_widget_no_key">No key added</string>
+    <string name="usage_widget_set_up">Set up</string>
+    <string name="usage_widget_cant_read">Can\'t read yet</string>
+    <string name="usage_widget_auth">Sign-in needed</string>
+    <string name="usage_widget_this_phone">This phone</string>
+    <string name="usage_widget_provider_claude">Claude</string>
+    <string name="usage_widget_provider_codex">Codex</string>
+    <string name="usage_widget_provider_minimax">MiniMax</string>
+    <string name="usage_widget_provider_glm">GLM</string>
+    <string name="usage_widget_column">%1$s  %2$d%% left</string>
+    <string name="usage_widget_short_hours">%1$dh</string>
+    <string name="usage_widget_short_days">%1$dd</string>
+    <string name="usage_widget_short_week">Week</string>
+    <string name="usage_widget_short_month">Month</string>
+    <string name="widget_label_wide">Conversations</string>
+    <string name="widget_label_list">Conversations list</string>
+    <string name="widget_label_strip">Conversation strip</string>
+    <string name="widget_description_wide">What needs you or is working now, and your next conversations.</string>
+    <string name="widget_description_list">The one thing that matters now, and your other conversations under it.</string>
+    <string name="widget_description_strip">The one thing that matters now, on one line.</string>
+    <string name="usage_widget_title_wide">Usage, wide</string>
+    <string name="usage_widget_description_wide">What is left on each plan limit, two columns wide.</string>
+    <string name="widget_label_status">Status</string>
+    <string name="widget_description_status">Your servers, this phone\'s Linux, running tasks and the plan limit closest to running out.</string>
+</resources>

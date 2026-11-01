@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@android:id/background" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/widget_background">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/usage_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:id="@+id/usage_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="4dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="❯"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:fontFamily="monospace"
+            android:textColor="@color/widgetAccent" />
+        <TextView
+            android:id="@+id/usage_heading"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="@string/usage_widget_title"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="@color/widgetText" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/usage_empty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:text="@string/usage_widget_empty"
+        android:textSize="12sp"
+        android:textColor="@color/widgetHint"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/usage_rows"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
+    <LinearLayout
+        android:id="@+id/usage_row_0"
+        style="@style/WidgetUsageRow">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/usage_title_0" style="@style/WidgetUsageTitle" />
+            <TextView android:id="@+id/usage_left_0" style="@style/WidgetUsageLeft" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/usage_cols_0"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <LinearLayout style="@style/WidgetUsageColumn">
+                <TextView android:id="@+id/usage_c1_text_0" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c1_bar_0" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/usage_c2_0"
+                style="@style/WidgetUsageColumn"
+                android:layout_marginStart="12dp">
+                <TextView android:id="@+id/usage_c2_text_0" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c2_bar_0" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView android:id="@+id/usage_detail_0" style="@style/WidgetUsageDetail" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/usage_row_1"
+        style="@style/WidgetUsageRow">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/usage_title_1" style="@style/WidgetUsageTitle" />
+            <TextView android:id="@+id/usage_left_1" style="@style/WidgetUsageLeft" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/usage_cols_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <LinearLayout style="@style/WidgetUsageColumn">
+                <TextView android:id="@+id/usage_c1_text_1" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c1_bar_1" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/usage_c2_1"
+                style="@style/WidgetUsageColumn"
+                android:layout_marginStart="12dp">
+                <TextView android:id="@+id/usage_c2_text_1" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c2_bar_1" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView android:id="@+id/usage_detail_1" style="@style/WidgetUsageDetail" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/usage_row_2"
+        style="@style/WidgetUsageRow">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/usage_title_2" style="@style/WidgetUsageTitle" />
+            <TextView android:id="@+id/usage_left_2" style="@style/WidgetUsageLeft" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/usage_cols_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <LinearLayout style="@style/WidgetUsageColumn">
+                <TextView android:id="@+id/usage_c1_text_2" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c1_bar_2" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/usage_c2_2"
+                style="@style/WidgetUsageColumn"
+                android:layout_marginStart="12dp">
+                <TextView android:id="@+id/usage_c2_text_2" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c2_bar_2" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView android:id="@+id/usage_detail_2" style="@style/WidgetUsageDetail" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/usage_row_3"
+        style="@style/WidgetUsageRow">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/usage_title_3" style="@style/WidgetUsageTitle" />
+            <TextView android:id="@+id/usage_left_3" style="@style/WidgetUsageLeft" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/usage_cols_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <LinearLayout style="@style/WidgetUsageColumn">
+                <TextView android:id="@+id/usage_c1_text_3" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c1_bar_3" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/usage_c2_3"
+                style="@style/WidgetUsageColumn"
+                android:layout_marginStart="12dp">
+                <TextView android:id="@+id/usage_c2_text_3" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c2_bar_3" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView android:id="@+id/usage_detail_3" style="@style/WidgetUsageDetail" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/usage_row_4"
+        style="@style/WidgetUsageRow">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/usage_title_4" style="@style/WidgetUsageTitle" />
+            <TextView android:id="@+id/usage_left_4" style="@style/WidgetUsageLeft" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/usage_cols_4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <LinearLayout style="@style/WidgetUsageColumn">
+                <TextView android:id="@+id/usage_c1_text_4" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c1_bar_4" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/usage_c2_4"
+                style="@style/WidgetUsageColumn"
+                android:layout_marginStart="12dp">
+                <TextView android:id="@+id/usage_c2_text_4" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c2_bar_4" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView android:id="@+id/usage_detail_4" style="@style/WidgetUsageDetail" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/usage_row_5"
+        style="@style/WidgetUsageRow">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/usage_title_5" style="@style/WidgetUsageTitle" />
+            <TextView android:id="@+id/usage_left_5" style="@style/WidgetUsageLeft" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/usage_cols_5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <LinearLayout style="@style/WidgetUsageColumn">
+                <TextView android:id="@+id/usage_c1_text_5" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c1_bar_5" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/usage_c2_5"
+                style="@style/WidgetUsageColumn"
+                android:layout_marginStart="12dp">
+                <TextView android:id="@+id/usage_c2_text_5" style="@style/WidgetUsageColumnText" />
+                <ProgressBar android:id="@+id/usage_c2_bar_5" style="@style/WidgetUsageBar" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView android:id="@+id/usage_detail_5" style="@style/WidgetUsageDetail" />
+    </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
+</FrameLayout>

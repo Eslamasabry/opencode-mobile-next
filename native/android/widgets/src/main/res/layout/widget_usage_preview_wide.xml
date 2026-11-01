@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static picker preview: sample content in the live look; no data, no actions. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="@drawable/widget_background" android:layoutDirection="locale"
+    android:padding="12dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:paddingBottom="2dp">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="❯" android:textStyle="bold" android:textSize="16sp" android:fontFamily="monospace" android:textColor="@color/widgetAccent" />
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="@string/usage_widget_title" android:textStyle="bold" android:textSize="14sp" android:textColor="@color/widgetText" />
+    </LinearLayout><LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center_vertical" android:orientation="vertical" android:paddingTop="6dp" android:paddingBottom="4dp">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/widget_preview_usage_p1" android:textSize="13sp" android:textStyle="bold" android:textColor="@color/widgetText" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="2dp">
+            <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="8dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/widget_preview_usage_5h" android:textSize="12sp" android:textColor="@color/widgetText" android:maxLines="1" android:ellipsize="end" />
+                <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="3dp" android:max="100" android:progress="62" android:progressDrawable="@drawable/widget_usage_bar_ink" />
+            </LinearLayout>
+            <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="8dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/widget_preview_usage_wk" android:textSize="12sp" android:textColor="@color/widgetText" android:maxLines="1" android:ellipsize="end" />
+                <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="3dp" android:max="100" android:progress="18" android:progressDrawable="@drawable/widget_usage_bar_ink" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/widget_preview_usage_detail1" android:textSize="10sp" android:textColor="@color/widgetHint" />
+    </LinearLayout><LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center_vertical" android:orientation="vertical" android:paddingTop="6dp" android:paddingBottom="4dp">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/widget_preview_usage_p2" android:textSize="13sp" android:textStyle="bold" android:textColor="@color/widgetText" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="2dp">
+            <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="8dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/widget_preview_usage_5h_p2" android:textSize="12sp" android:textColor="@color/widgetText" android:maxLines="1" android:ellipsize="end" />
+                <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="3dp" android:max="100" android:progress="34" android:progressDrawable="@drawable/widget_usage_bar_ink" />
+            </LinearLayout>
+            <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="8dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/widget_preview_usage_wk_p2" android:textSize="12sp" android:textColor="@color/widgetText" android:maxLines="1" android:ellipsize="end" />
+                <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="3dp" android:max="100" android:progress="71" android:progressDrawable="@drawable/widget_usage_bar_ink" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/widget_preview_usage_detail2" android:textSize="10sp" android:textColor="@color/widgetHint" />
+    </LinearLayout>
+</LinearLayout>
