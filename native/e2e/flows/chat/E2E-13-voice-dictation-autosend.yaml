@@ -1,0 +1,276 @@
+# E2E-13 Dictate by voice, auto-send and the model download
+# slice: 5   avd: A   fixtures: FX-OC2, fx-proxy   snapshot: base
+# rows: B-MEDIA-019, B-MEDIA-010, B-MEDIA-017
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-5, g5, chat]
+---
+- runScript: ../../runner/out/strings.js
+
+# S1 [adb] mobile data only (Wi-Fi off). In the composer tap the microphone: before anything is downloaded see the
+#    consent line ("download over mobile data?"). Tap "Cancel": nothing downloads and the cancelled consent cannot
+#    authorize a later start. With no mic tap, no work happens at all. [B-MEDIA-019]
+# S1 [B-MEDIA-019]
+- runFlow:
+    file: ../_sub/connect-fx-oc2.yaml
+    label: "S1 mobile data asks before the voice download [B-MEDIA-019]"
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "RECORD_AUDIO", "grant": true}'
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: fx-proxy
+      ACTION: clear-request-log
+      ARGS: '{"kind": "voice-pack"}'
+# adb: net
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: net
+      ARGS: '{"wifi": "off", "data": "on"}'
+- tapOn: ${output.s.kitComposerVoice}
+- extendedWaitUntil:
+    visible: ${output.s.voiceAutoSetupTitle}
+    timeout: 30000
+- assertVisible: ${output.c.voiceAutoSetupMobileData}
+- assertVisible: ${output.re.voiceAutoSetupDownloadMobile}
+- tapOn: ${output.s.e7VoiceUiNotNow}  # confirm: the catalog's "Cancel" on the voice setup sheet
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: fx-proxy
+      ACTION: request-log
+      ARGS: '{"kind": "voice-pack"}'
+- assertTrue: ${output.fxr.count == 0}
+# The cancelled consent does not authorize a later start: the next tap asks again.
+- tapOn: ${output.s.kitComposerVoice}
+- extendedWaitUntil:
+    visible: ${output.re.voiceAutoSetupDownloadMobile}
+    timeout: 30000
+- tapOn: ${output.s.e7VoiceUiNotNow}
+# UNIT-ONLY: with no mic tap no work happens at all (voice setup controller test).
+
+# S2 Go offline, tap the microphone on first use: it is blocked with a plain explanation; reconnect: it retries; switch
+#    Wi-Fi to mobile mid-download: it asks again; accept: the pack downloads with progress and verification before it
+#    says ready and listening. [B-MEDIA-019]
+# S2 [B-MEDIA-019]
+- setAirplaneMode:
+    value: enabled
+    label: "S2 offline blocked, network switch asks again, verified pack [B-MEDIA-019]"
+- tapOn: ${output.s.kitComposerVoice}
+- extendedWaitUntil:
+    visible: ${output.c.voiceAutoSetupOffline}
+    timeout: 30000
+- setAirplaneMode: disabled
+# adb: net
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: net
+      ARGS: '{"wifi": "on"}'
+- runFlow:
+    when:
+      visible: ${output.c.voiceAutoSetupOffline}
+    commands:
+      - tapOn: ${output.s.e7VoiceUiRetry}  # confirm: the retry after reconnecting (or a fresh mic tap)
+# SUSPECTED-GAP: voice packs come from hard-coded hosts on Flutter R; throttling relies on fx-proxy seeing that host.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: fx-proxy
+      ACTION: throttle
+      ARGS: '{"kind": "voice-pack", "kbps": 256}'
+- extendedWaitUntil:
+    visible: ${output.re.voiceAutoSetupDownload}
+    timeout: 30000
+- tapOn: ${output.re.voiceAutoSetupDownload}
+- extendedWaitUntil:
+    visible: ${output.rc.e7VoiceUiDownloadPercent}
+    timeout: 30000
+# adb: net
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: net
+      ARGS: '{"wifi": "off", "data": "on"}'
+- extendedWaitUntil:
+    visible: ${output.re.voiceAutoSetupDownloadMobile}
+    timeout: 60000
+- tapOn: ${output.re.voiceAutoSetupDownloadMobile}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: fx-proxy
+      ACTION: unthrottle
+      ARGS: '{"kind": "voice-pack"}'
+- extendedWaitUntil:
+    visible: ${output.s.e7VoiceUiVerifying}
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ${output.s.kitVoiceListening}
+    timeout: 60000
+- tapOn: ${output.s.kitVoiceDone}
+# adb: net
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: net
+      ARGS: '{"wifi": "on"}'
+
+# S3 Feed the 3-minute speech: the text appears in order, in 30-second chunks; make one chunk fail (corrupt the WAV at
+#    1:30): recording stops and the text so far stays in the composer. [B-MEDIA-010]
+# S3 [B-MEDIA-010]
+- tapOn:
+    text: ${output.s.kitComposerVoice}
+    label: "S3 long speech in ordered chunks; a failed chunk keeps the text [B-MEDIA-010]"
+- extendedWaitUntil:
+    visible: ${output.s.kitVoiceListening}
+    timeout: 30000
+# adb: mic-feed
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: mic-feed
+      ARGS: '{"wav": "speech-3min"}'
+# The first chunk lands after about 30 s, the next ones in order.
+- extendedWaitUntil:
+    visible: (?s).*e2e speech one.*  # literal-ok: fixture fact speechChunk1 (request): words of the first 30 s
+    timeout: 60000
+- extendedWaitUntil:
+    visible: (?s).*e2e speech one.*e2e speech two.*  # literal-ok: fixture fact speechChunk2 (request), after chunk 1
+    timeout: 60000
+- extendedWaitUntil:
+    visible: (?s).*e2e speech two.*e2e speech three.*  # literal-ok: fixture fact speechChunk3 (request), after chunk 2
+    timeout: 60000
+- tapOn: ${output.s.kitVoiceDone}
+# A broken chunk at 1:30 stops recording; the text so far stays.
+- tapOn: ${output.s.kitComposerField}
+- eraseText: 2000
+- tapOn: ${output.s.kitComposerVoice}
+- extendedWaitUntil:
+    visible: ${output.s.kitVoiceListening}
+    timeout: 30000
+# adb: mic-feed
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: mic-feed
+      ARGS: '{"wav": "speech-3min-broken"}'
+- extendedWaitUntil:
+    visible: ${output.s.kitVoiceFailed}  # confirm: the stopped-recording state after a failed chunk
+    timeout: 60000
+- extendedWaitUntil:
+    visible: (?s).*e2e speech one.*  # literal-ok: fixture fact speechChunk1 (request): text before the break stays
+    timeout: 60000
+- runFlow:
+    when:
+      visible: ${output.s.kitVoiceLeave}
+    commands:
+      - tapOn: ${output.s.kitVoiceLeave}
+- assertVisible: (?s).*e2e speech one.*  # literal-ok: the text so far is in the composer
+
+# S4 Open voice settings: auto-send is off by default. Feed the 6-second phrase with a 3-second pause at the end:
+#    nothing is sent and recording continues; turn auto-send on and repeat: recording stops by itself after the pause,
+#    says why, a countdown shows in the pill, and the message is sent. [B-MEDIA-017]
+# S4 [B-MEDIA-017]
+- tapOn:
+    text: ${output.s.kitComposerField}
+    label: "S4 auto-send off by default; on, it stops, counts down and sends [B-MEDIA-017]"
+- eraseText: 2000
+- back
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.vpttAutoSendTitle}
+- tapOn:
+    text: ${output.s.vpttAutoSendTitle}
+    index: 1
+- assertVisible:
+    text: ${output.s.vpttAutoSendTitle}
+    checked: false
+- back
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: clear-request-log
+- tapOn: ${output.s.kitComposerVoice}
+- extendedWaitUntil:
+    visible: ${output.s.kitVoiceListening}
+    timeout: 30000
+# adb: mic-feed
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: mic-feed
+      ARGS: '{"wav": "phrase-6s"}'
+- extendedWaitUntil:
+    visible: (?s).*e2e phrase.*  # literal-ok: fixture fact phraseWords (request): words of the 6-second phrase
+    timeout: 60000
+- assertVisible: ${output.s.kitVoiceListening}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-log
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async"}'
+- assertTrue: ${output.fxr.count == 0}
+- tapOn: ${output.s.kitVoiceDone}
+- tapOn: ${output.s.kitComposerField}
+- eraseText: 2000
+- back
+# Auto-send on, then the same phrase.
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.vpttAutoSendTitle}
+- tapOn:
+    text: ${output.s.vpttAutoSendTitle}
+    index: 1
+- tapOn: ${output.s.vpttAutoSendTitle}
+- assertVisible:
+    text: ${output.s.vpttAutoSendTitle}
+    checked: true
+- back
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- tapOn: ${output.s.kitComposerVoice}
+- extendedWaitUntil:
+    visible: ${output.s.kitVoiceListening}
+    timeout: 30000
+# adb: mic-feed
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: mic-feed
+      ARGS: '{"wav": "phrase-6s"}'
+- extendedWaitUntil:
+    visible: ${output.re.vpttSendingIn}
+    timeout: 60000
+- assertVisible: ${output.s.vpttDontSend}
+# UNIT-ONLY: the sentence that says why recording stopped by itself (exact wording in the voice pill widget test).
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: wait-request
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "timeout_ms": 30000}'
+- assertTrue: ${output.fxr.count == 1}

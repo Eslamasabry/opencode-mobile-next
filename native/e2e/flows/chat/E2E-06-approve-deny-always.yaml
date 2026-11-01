@@ -1,0 +1,390 @@
+# E2E-06 Approve, deny and always-allow from inside the app
+# slice: 3   avd: A   fixtures: FX-OC2   snapshot: base
+# rows: B-AGENT-221, B-CHAT-123, B-SEC-147, B-AGENT-225, B-AGENT-224, B-CHAT-076
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-3, g3, chat, smoke, phone-smoke]
+---
+- runScript: ../../runner/out/strings.js
+
+# S1 Start a new conversation on a fresh server profile: see that nothing is auto-answered; send `e2e:ask-edit`; see a
+#    card "Permission needed" asking in plain words whether to edit `notes.txt`; buttons "Allow once" and "Deny". The
+#    OpenCode 2 shell/edit asks wait for you. Questions from the agent are never answered automatically.
+#    [B-AGENT-221]
+# S1 [B-AGENT-221]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: set-permission-mode
+      ARGS: '{"mode": "ask"}'
+    label: "S1 fresh profile asks; edit card waits for me [B-AGENT-221]"
+- runFlow: ../_sub/connect-fx-oc2.yaml
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- assertNotVisible: ${output.s.approvalsUiIndicatorOn}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- assertVisible: ${output.c.chatRequestAskEdit}  # confirm: the catalog's "Permission needed" card leads with this question
+- assertVisible: (?s).*notes\.txt.*  # literal-ok: fixture file named on the card (fx.fileNotes)
+- assertVisible: ${output.s.kitRequestReject}  # confirm: the catalog's "Deny" is "Reject" on Flutter R
+# The ask waits: still there after a while, nothing answered it.
+- extendedWaitUntil:
+    visible: ${output.c.chatRequestIfIgnored}  # confirm: the "waits until you answer" line on the card
+    timeout: 15000
+- assertNotVisible: ${output.s.chatRequestAnswerAllowed}
+- back
+# A question is never answered automatically.
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:question
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAnswer}
+    timeout: 30000
+- back
+
+# S2 Check the card wording for each kind in turn (edit, shell, read outside the project, web fetch): each asks its
+#    own plain question and names the file or command; an ask about writing outside the project names the file and
+#    its folder. [B-CHAT-123]
+# S2 [B-CHAT-123]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S2 each kind asks its own plain question [B-CHAT-123]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell ls
+- extendedWaitUntil:
+    visible: ${output.c.chatRequestAskCommand}
+    timeout: 30000
+- assertVisible: (?s).*\bls\b.*  # literal-ok: the command from the magic prompt
+- back
+# SUSPECTED-GAP: the stub model's magic prompts list has no read-outside / web-fetch / write-outside asks; these
+# names (e2e:ask-read-outside, e2e:ask-fetch, e2e:ask-write-outside) are requested from the stub model.
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-read-outside
+- extendedWaitUntil:
+    visible: ${output.c.chatRequestAskDirectory}
+    timeout: 30000
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-fetch
+- extendedWaitUntil:
+    visible: ${output.c.chatRequestTitleFetch}
+    timeout: 30000
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-write-outside
+- extendedWaitUntil:
+    visible: ${output.c.chatRequestAskDirectory}
+    timeout: 30000
+- assertVisible: (?s).*/tmp/.*  # literal-ok: stub prompt writes to a file under /tmp (folder named on the card)
+- back
+
+# S3 tap "Allow once": the tool runs, exactly one reply is sent and the card settles. Repeat and tap "Deny": the tool
+#    is refused and the agent continues. [B-CHAT-123]
+# S3 [B-CHAT-123]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: clear-request-log
+    label: "S3 allow once replies once; deny refuses [B-CHAT-123]"
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- tapOn: ${output.s.kitRequestAllowOnce}
+- extendedWaitUntil:
+    visible: ${output.s.chatRequestAnswerAllowed}
+    timeout: 30000
+- assertNotVisible: ${output.s.kitRequestAllowOnce}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-log
+      ARGS: '{"method": "POST", "path": "/api/permission/*/reply"}'
+- assertTrue: ${output.fxr.count == 1}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestReject}
+    timeout: 30000
+- tapOn: ${output.s.kitRequestReject}
+- extendedWaitUntil:
+    visible: ${output.s.chatRequestAnswerRejected}
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible: ${output.s.kitTurnLiveStopShort}
+    timeout: 60000
+
+# S4 Trigger the same kind of ask three times: on the third distinct ask see "Always allow" offered once; accept;
+#    restart the app; the same kind in the same scope no longer asks; the decline path explains what happens. Corrupt
+#    the stored rule file ([adb] on a userdebug emulator with `adb root`, overwrite it with garbage): no always-allow
+#    offer appears and the app does not crash. [B-SEC-147]
+# S4 [B-SEC-147]
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+    label: "S4 third ask offers Always allow; it survives restart [B-SEC-147]"
+- extendedWaitUntil:
+    visible: ${output.rc.consentAlwaysAllowQuestion}
+    timeout: 30000
+- assertVisible: ${output.s.consentAlwaysAllowDecline}
+- tapOn: ${output.s.chatUiAlwaysAllow}
+- runFlow:
+    when:
+      visible: ${output.rc.chatRequestAlwaysConfirm}
+    commands:
+      - tapOn:
+          text: ${output.s.chatUiAlwaysAllow}
+          index: 0
+- extendedWaitUntil:
+    notVisible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    notVisible: ${output.s.kitTurnLiveStopShort}
+    timeout: 60000
+- assertNotVisible: ${output.s.kitRequestAllowOnce}
+# The decline path: "Keep asking" on another kind, and the explanation of what happens.
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell ls
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- tapOn: ${output.s.kitRequestAllowOnce}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell ls -a
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- tapOn: ${output.s.kitRequestAllowOnce}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell ls -l
+- extendedWaitUntil:
+    visible: ${output.rc.consentAlwaysAllowQuestion}
+    timeout: 30000
+- tapOn: ${output.s.consentAlwaysAllowDecline}
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.consentGroupLabel}
+- tapOn:
+    text: ${output.s.consentGroupLabel}
+    index: 1
+- assertVisible: ${output.c.consentWhyAlwaysAllow}  # confirm: where the decline is explained (Your answers)
+- back
+- back
+# Corrupt the stored rules: no offer, no crash.
+# SUSPECTED-GAP: the always-allow rule file path; Flutter R keeps the rules in shared preferences.
+# adb: corrupt-app-file
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: corrupt-app-file
+      ARGS: '{"file": "files/always_allow_rules.json"}'
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell pwd
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- assertNotVisible: ${output.rc.consentAlwaysAllowQuestion}
+- tapOn: ${output.s.kitRequestAllowOnce}
+
+# S5 Turn the conversation to automatic approval while an ask is already waiting: the waiting ask is answered (also
+#    after a reconnect). A conversation set to ask keeps waiting. Approve-everything also reaches conversations the
+#    app has not opened yet. [B-AGENT-225]
+# S5 [B-AGENT-225]
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell whoami
+    label: "S5 auto mode answers the waiting ask; everything reaches unopened ones [B-AGENT-225]"
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- tapOn: ${output.s.chatUiSessionMenu}
+- tapOn: ${output.s.approvalsUiMenu}  # confirm: the approval mode lives in the conversation menu's Approvals
+- tapOn: ${output.s.approvalModeAutoTitle}
+- extendedWaitUntil:
+    notVisible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- assertVisible: ${output.c.approvalsUiIndicatorOn}
+# UNIT-ONLY: the waiting ask is also answered when it arrives again after a reconnect (auto-approval controller test).
+# A conversation still set to ask keeps waiting: the S2 shell ask is still there.
+- back
+- tapOn:
+    text: (?s).*e2e:ask-shell ls.*  # literal-ok: the S2 conversation's first prompt in the Conversations list
+    index: 0
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+# Approve everything reaches a conversation this app never opened.
+- tapOn: ${output.s.chatUiSessionMenu}
+- tapOn: ${output.s.approvalsUiMenu}
+- tapOn: ${output.s.approvalModeEverythingTitle}
+- tapOn:
+    text: ${output.s.approvalModeConfirmEverythingAction}
+    below: ${output.c.approvalModeConfirmEverythingBody}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: clear-request-log
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: start-session
+      ARGS: '{"project": "app", "prompt": "e2e:ask-shell date"}'
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: wait-request
+      ARGS: '{"method": "POST", "path": "/api/permission/*/reply", "timeout_ms": 30000}'
+- assertTrue: ${output.fxr.count >= 1}
+# Back to asking for the rest of the flow.
+- tapOn: ${output.s.chatUiSessionMenu}
+- tapOn: ${output.s.approvalsUiMenu}
+- tapOn: ${output.s.approvalModeAskTitle}
+
+# S6 [fx] block the reply endpoint (server refuses the reply) while tapping "Allow once": the request stays visible
+#    and pending with an explanation, not lost; turning approval off mid-flight does not recall a sent reply and later
+#    asks appear again. [B-AGENT-224]
+# S6 [B-AGENT-224]
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+    label: "S6 a refused reply keeps the request pending [B-AGENT-224]"
+- runFlow:
+    when:
+      notVisible: ${output.s.kitRequestAllowOnce}
+    commands:
+      - runFlow:
+          file: ../_sub/send-prompt.yaml
+          env:
+            PROMPT: e2e:ask-shell uname
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: refuse-endpoint
+      ARGS: '{"method": "POST", "path": "/api/permission/*/reply", "status": 500}'
+- tapOn: ${output.s.kitRequestAllowOnce}
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- assertVisible: ${output.c.consentAlwaysAllowFailed}  # confirm: the explanation shown when the reply is refused
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: restore-endpoint
+      ARGS: '{"method": "POST", "path": "/api/permission/*/reply"}'
+# UNIT-ONLY: turning approval off mid-flight does not recall a sent reply (auto-approval controller test).
+- tapOn: ${output.s.kitRequestAllowOnce}
+- extendedWaitUntil:
+    visible: ${output.s.chatRequestAnswerAllowed}
+    timeout: 30000
+
+# S7 [fx] time out the request server-side, then tap "Allow once": the card goes away with no error; a different 404 is
+#    a real failure and keeps the card. [B-CHAT-076]
+# S7 [B-CHAT-076]
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell hostname
+    label: "S7 an expired request goes away quietly [B-CHAT-076]"
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: expire-request
+      ARGS: '{"kind": "permission"}'
+- tapOn: ${output.s.kitRequestAllowOnce}
+- extendedWaitUntil:
+    notVisible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- assertNotVisible: ${output.c.consentAlwaysAllowFailed}
+- assertNotVisible: ${output.c.chatSendFailed}
+# UNIT-ONLY: a 404 that is not "request expired" keeps the card (permission reply error mapping test).

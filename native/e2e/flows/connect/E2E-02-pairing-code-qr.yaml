@@ -1,0 +1,225 @@
+# E2E-02 Pair with a code, a scanned QR and several addresses
+# slice: 3   avd: A   fixtures: FX-OC2, FX-TLS   snapshot: base
+# rows: B-PROTO-064, B-PROTO-068, B-SEC-124, B-PROTO-069, B-ANDR-049
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-3, g3, connect]
+---
+- runScript: ../../runner/out/strings.js
+
+# S1 On welcome tap "Connect to my computer", then "Paste pairing code". [adb] put the fixture pairing JSON on the
+#    clipboard (whitespace around it) and paste. see "Paired with <host>." The username from the code is kept; a code
+#    with a blank username connects as the default user. [B-PROTO-064]
+# S1 [B-PROTO-064]
+- runFlow:
+    file: ../_sub/start-clean.yaml
+    label: "S1 clean install, welcome [B-PROTO-064]"
+- tapOn: ${output.s.welcomeComputerConnect}
+- assertVisible: ${output.s.e7SetupPastePairing}
+# The fixture prints its real `opencode2 pair` JSON (per-run password inside); it lands in output.fxr.code.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: pairing-code
+      ARGS: '{"variant": "plain"}'
+- setClipboard: ${'  \n' + output.fxr.code + '\n  '}
+- tapOn: ${output.s.e7SetupPastePairing}
+- extendedWaitUntil:
+    visible: ${output.re.e7SetupPaired}
+    timeout: 30000
+- assertVisible: ${output.rc.e7SetupProbeV2}
+# UNIT-ONLY: the username field keeps the code's username (it sits in the folded manual fields).
+# A code with a blank username still pairs (connects as the default user `opencode`).
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: pairing-code
+      ARGS: '{"variant": "blank-username"}'
+- setClipboard: ${output.fxr.code}
+- tapOn: ${output.s.e7SetupPastePairing}  # confirm: the paste control keeps its label after a first pairing
+- extendedWaitUntil:
+    visible: ${output.re.e7SetupPaired}
+    timeout: 30000
+
+# S2 Repeat with a code whose first two addresses are dead and the third works: see "Paired with <host> — chosen from
+#    3 addresses in the code." (addresses tried in order, falls through refused ones, a host answering 401 still
+#    counts as the host, a bare host is normalised). [B-PROTO-068]
+# S2 [B-PROTO-068]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: pairing-code
+      ARGS: '{"variant": "dead-first-two"}'
+    label: "S2 code with two dead addresses first [B-PROTO-068]"
+- setClipboard: ${output.fxr.code}
+- tapOn: ${output.s.e7SetupPastePairing}
+- extendedWaitUntil:
+    visible: ${output.re.e7SetupPairedChoice}
+    timeout: 60000
+# UNIT-ONLY: the try order, a 401 host counting as the host and bare-host normalisation (pairing_test).
+
+# S3 Repeat with a code whose only address is plain `http://` on a public host: see the app hold it and ask for
+#    explicit consent for that origin before any request is sent; tap "Cancel" and confirm nothing was contacted
+#    (fixture request log empty). Repeat with a private-LAN `http://` address: it is held until confirmed, then
+#    paired. [B-SEC-124]
+# S3 [B-SEC-124]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: clear-request-log
+      ARGS: '{"server": "http-public"}'
+    label: "S3 public http code is held for consent [B-SEC-124]"
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: pairing-code
+      ARGS: '{"variant": "public-http"}'
+- setClipboard: ${output.fxr.code}
+- tapOn: ${output.s.e7SetupPastePairing}
+- extendedWaitUntil:
+    visible: ${output.c.serverTrustHttpPublicBody}
+    timeout: 30000
+- assertNotVisible: ${output.re.e7SetupPaired}
+- tapOn: ${output.s.addServerCleartextConfirm}
+- extendedWaitUntil:
+    visible: ${output.s.serverTrustHttpTitle}
+    timeout: 15000
+- assertVisible: ${output.s.serverTrustHttpAccept}
+# The catalog's "Cancel" is the sheet's close; closing never grants trust.
+- tapOn: ${output.s.kitSheetClose}  # confirm: the HTTP consent sheet's dismiss label
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: request-log
+      ARGS: '{"server": "http-public"}'
+- assertTrue: ${output.fxr.count == 0}
+# Private-LAN http:// is held, then pairs once confirmed.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: pairing-code
+      ARGS: '{"variant": "private-http"}'
+- setClipboard: ${output.fxr.code}
+- tapOn: ${output.s.e7SetupPastePairing}
+- extendedWaitUntil:
+    visible: ${output.c.addServerCleartextWarning}
+    timeout: 30000
+- tapOn: ${output.s.addServerCleartextConfirm}
+- tapOn: ${output.s.serverTrustHttpAccept}
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupProbeV2}
+    timeout: 30000
+
+# S4 Repeat with a malformed code (not JSON, no password, wrong types): see a plain failure sentence ("That pairing
+#    code is the wrong shape…"), never a crash or a raw exception.
+# S4 [B-PROTO-064]
+- setClipboard:
+    text: "{urls: not json at all"  # literal-ok: malformed pairing payload on purpose
+    label: "S4 malformed codes fail in plain words [B-PROTO-064]"
+- tapOn: ${output.s.e7SetupPastePairing}
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupPairShape}
+    timeout: 15000
+- setClipboard: '{"urls": ["${output.fx.serverUrl}"], "username": "opencode"}'
+- tapOn: ${output.s.e7SetupPastePairing}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupPairPasswordMissing}
+    timeout: 15000
+- setClipboard: '{"urls": "${output.fx.serverUrl}", "username": 7, "password": 9}'
+- tapOn: ${output.s.e7SetupPastePairing}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupPairUrlsType}  # confirm: which wrong-type sentence wins when several fields are wrong
+    timeout: 15000
+- assertNotVisible: '(?s).*(Exception|FormatException|TypeError|at [a-z_]+\.dart).*'  # literal-ok: raw error shapes that must never show
+- assertVisible: ${output.s.e7SetupPastePairing}
+
+# S5 tap "Scan pairing code"; see the camera preview and the instruction line; point the emulator camera at the
+#    fixture QR; see the same result as pasting the code. Scan a QR that is not a pairing code: see a plain refusal
+#    with a reason. [B-PROTO-069]
+# S5 [B-PROTO-069]
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "CAMERA", "grant": true}'
+    label: "S5 scan the fixture QR [B-PROTO-069]"
+# adb: camera-scene
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: camera-scene
+      ARGS: '{"image": "qr-pairing"}'
+- tapOn: ${output.s.e7SetupScanPairing}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupScanInstruction}
+    timeout: 30000
+- extendedWaitUntil:
+    visible: ${output.re.e7SetupPaired}
+    timeout: 30000
+# A QR that is not a pairing code: a plain refusal with a reason.
+# adb: camera-scene
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: camera-scene
+      ARGS: '{"image": "qr-other"}'
+- tapOn: ${output.s.e7SetupScanPairing}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupPairInvalid}
+    timeout: 30000
+- back
+
+# S6 [adb] revoke the camera permission (`pm revoke ... CAMERA`), tap "Scan pairing code": see a plain explanation
+#    that camera access is off and a way to paste instead; on an emulator without a camera see the "nothing to scan
+#    with" explanation and no fake camera answer. [B-ANDR-049]
+# S6 [B-ANDR-049]
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "CAMERA", "grant": false}'
+    label: "S6 camera off explains and offers paste [B-ANDR-049]"
+# Revoking a runtime permission kills the process: relaunch without clearing data.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ${output.s.welcomeComputerConnect}
+    timeout: 30000
+- tapOn: ${output.s.welcomeComputerConnect}
+- tapOn: ${output.s.e7SetupScanPairing}
+# The system asks again after a revoke; refuse it there (system UI, not ours).
+- runFlow:
+    when:
+      visible: "Don.t allow"  # literal-ok: Android permission dialog button (system UI)
+    commands:
+      - tapOn: "Don.t allow"  # literal-ok: Android permission dialog button (system UI)
+- extendedWaitUntil:
+    visible: ${output.s.e7SetupPasteInstead}
+    timeout: 15000
+- runFlow:
+    when:
+      visible: ${output.s.e7SetupCameraNeeded}
+    commands:
+      - assertVisible: ${output.c.e7SetupCameraPrivacy}
+- runFlow:
+    when:
+      visible: ${output.s.e7SetupCameraDisabled}
+    commands:
+      - assertVisible: ${output.c.e7SetupCameraSettingsDetail}
+# An emulator without a camera: "nothing to scan with", never a fake answer.
+# UNIT-ONLY: the no-camera state (the AVD always has a virtual camera; the camera bridge test proves it).
+- runFlow:
+    when:
+      visible: ${output.s.e7SetupNoCamera}
+    commands:
+      - assertVisible: ${output.c.e7SetupNoCameraDetail}
+- assertNotVisible: ${output.re.e7SetupPaired}

@@ -1,0 +1,285 @@
+# E2E-03 Connection failures are explained in plain words
+# slice: 2   avd: A   fixtures: FX-OC2, FX-TLS, FX-CODEX, replay   snapshot: base
+# rows: B-PROTO-094, B-PROTO-095, B-NAV-008, B-NAV-007, B-NAV-009, B-SEC-104
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-2, g2, connect]
+---
+- runScript: ../../runner/out/strings.js
+
+# S1 Add a server with the right address and a wrong password: see a sentence asking for the password (not "401").
+#    With an empty password on a password-protected v2 server: see "needs a password" wording, distinct from "wrong
+#    password". [B-PROTO-094]
+# S1 [B-PROTO-094]
+- runFlow:
+    file: ../_sub/start-clean.yaml
+    label: "S1 wrong and empty password read differently [B-PROTO-094]"
+- tapOn: ${output.s.welcomeComputerConnect}
+- tapOn: ${output.s.e7SetupServerUrl}
+- inputText: ${output.fx.serverAddress}
+- tapOn: ${output.s.e7SetupServerPassword}
+- inputText: not-the-password  # a wrong password on purpose
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupPasswordRejected}  # confirm: or e7SetupCredentialsRefused on the editor
+    timeout: 30000
+- assertNotVisible: '(?s).*\b401\b.*'  # literal-ok: the raw status must not show
+# Empty password on the password-protected v2 server.
+- tapOn: ${output.s.e7SetupServerPassword}
+- eraseText: 40
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupPasswordNeeded}  # confirm: the "needs a password" sentence on the editor
+    timeout: 30000
+- assertNotVisible: ${output.c.e7SetupPasswordRejected}
+
+# S2 Point the address at a host that is not an OpenCode server (any web page): see "not an OpenCode server". Point
+#    at a legacy OpenCode 1 server: see an upgrade instruction. A misspelt host name: see a spelling hint. A refused
+#    port: see "is it running?". A black-hole address: see the timeout line pointing to the setup guide.
+#    [B-PROTO-095]
+# S2 [B-PROTO-095]
+- tapOn:
+    text: ${output.s.e7SetupServerPassword}
+    label: "S2 each wrong address has its own sentence [B-PROTO-095]"
+- inputText: ${SERVER_PASSWORD}
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 120
+- inputText: ${output.fx.notOpencodeUrl}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupNotOpenCode}
+    timeout: 30000
+# Legacy OpenCode 1 (the replay server answers as v1).
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 120
+- inputText: ${output.fx.legacyV1Url}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.openCode1Unsupported}
+    timeout: 30000
+# Misspelt host name.
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 120
+- inputText: ${output.fx.misspeltHost}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupDns}
+    timeout: 30000
+# Refused port.
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 120
+- inputText: ${output.fx.deadAddress}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupRefused}
+    timeout: 30000
+# Black-hole address: the timeout line and the setup guide.
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 120
+- inputText: 192.0.2.1:4097  # literal-ok: fixture fact blackholeAddress (request); TEST-NET-1 never answers
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupTimeout}
+    timeout: 60000
+- assertVisible: ${output.s.e7SetupOpenSetupGuide}  # confirm: the guide action shows with the timeout line
+
+# S3 Point at the FX-TLS server whose certificate changed after trust: see "The server's certificate changed" and a
+#    Review action; the app blocks before sending the password. A certificate problem names the certificate; an
+#    unreachable remote reads "not reachable" with network checks; a Tailscale address that did not answer says to
+#    check Tailscale. [B-NAV-008]
+# S3 [B-NAV-008]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: swap-cert
+      ARGS: '{"server": "self-signed", "cert": "A"}'
+    label: "S3 changed certificate blocks before the password [B-NAV-008]"
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 120
+- inputText: ${output.fx.tlsSelfSignedUrl}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+# An untrusted certificate names the certificate.
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupCertificate}
+    timeout: 30000
+- tapOn: ${output.s.serverTrustCertificateInspect}
+- tapOn: ${output.s.serverTrustCertificateAccept}
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupProbeV2}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: swap-cert
+      ARGS: '{"server": "self-signed", "cert": "B"}'
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: clear-request-log
+      ARGS: '{"server": "self-signed"}'
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.serverTrustCertificateChangedTitle}
+    timeout: 30000
+- assertVisible: ${output.s.serverTrustCertificateRecheck}  # confirm: the catalog's "Review" action
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: request-log
+      ARGS: '{"server": "self-signed", "auth": true}'
+- assertTrue: ${output.fxr.count == 0}
+# A Tailscale-range address that does not answer says to check Tailscale.
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 120
+- inputText: ${output.fx.tailscaleDeadAddress}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7ConnectionFailure31}  # confirm: the Tailscale check line on the editor
+    timeout: 60000
+# An unreachable remote server, once saved: "not reachable" with network checks (the saved-server card).
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 120
+- inputText: ${output.fx.serverAddress}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupProbeV2}
+    timeout: 30000
+- tapOn: ${output.s.e7SetupConnect}
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+# SUSPECTED-GAP: the fixture must cut FX-OC2 off from the emulator while keeping it running (fx-proxy cut by host).
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: fx-proxy
+      ACTION: cut-host
+      ARGS: '{"host": "10.0.2.2", "port": 4097, "mode": "blackhole"}'
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.c.e7ConnectionFailure33}  # confirm: unreachable title on the saved-server card
+    timeout: 60000
+- assertVisible: ${output.c.e7ConnectionFailure36}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: fx-proxy
+      ACTION: restore-host
+      ARGS: '{"host": "10.0.2.2", "port": 4097}'
+
+# S4 Use a loopback address while nothing listens: see a Retry offer that does not assume Termux. A Codex-type
+#    server with a missing or rejected token asks for the token; a local Codex refusal points to the listener or
+#    tunnel; a remote Codex refusal recommends wss. [B-NAV-007]
+# S4 [B-NAV-007]
+- runFlow:
+    file: ../_sub/start-clean.yaml
+    label: "S4 loopback and Codex failures name their fix [B-NAV-007]"
+- tapOn: ${output.s.welcomeComputerConnect}
+- tapOn: ${output.s.e7SetupServerUrl}
+- inputText: 127.0.0.1:4999  # literal-ok: loopback port where nothing listens
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupNoServerAnswer}  # confirm: loopback no-answer sentence on the editor
+    timeout: 30000
+- assertVisible: ${output.s.e7SetupTestConnection}
+- assertNotVisible: ${output.c.e7ConnectionFailure26}
+# Codex: a remote ws:// address is refused with a wss recommendation.
+- back
+- tapOn: ${output.s.welcomeComputerConnect}
+- tapOn: ${output.s.addServerTypeCodex}  # confirm: where the server type is chosen on the connect screen
+- tapOn: ${output.s.e7SetupServerUrl}
+- inputText: ${'ws://' + output.fx.codexAddress}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupCodexPlain}
+    timeout: 15000
+# SUSPECTED-GAP: FX-CODEX must require a connection token on demand.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-CODEX
+      ACTION: require-token
+      ARGS: '{"on": true}'
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 120
+- inputText: ${'wss://' + output.fx.codexAddress}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7ConnectionFailure3}  # confirm: token-required sentence on the Codex editor
+    timeout: 30000
+# UNIT-ONLY: the local-Codex refusal (listener or tunnel) needs a Codex listener on the phone itself.
+
+# S5 Tap Test connection three times: after the third failure see the extra line that retrying will not start a
+#    server. For the app-managed phone server that does not answer see that it is stopped, and for OpenCode inside the
+#    app starting it is the fix. [B-NAV-009]
+# S5 [B-NAV-009]
+- runFlow:
+    file: ../_sub/connect-fx-oc2.yaml
+    label: "S5 third retry says retrying will not start a server [B-NAV-009]"
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: stop-server
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.s.commonRetry}
+    timeout: 60000
+- tapOn: ${output.s.commonRetry}
+- extendedWaitUntil:
+    visible: ${output.s.commonRetry}
+    timeout: 60000
+- tapOn: ${output.s.commonRetry}
+- extendedWaitUntil:
+    visible: ${output.s.commonRetry}
+    timeout: 60000
+- tapOn: ${output.s.commonRetry}
+- extendedWaitUntil:
+    visible: ${output.rc.e7ConnectionFailure1}
+    timeout: 60000
+# UNIT-ONLY: the app-managed phone server's "stopped" state and "start it" fix need built-in Linux (flutter-linux
+# snapshot); E2E-18 shows the phone server's honest status on a device.
+
+# S6 tap "Technical details" on any failure: only there is the raw error shown, verbatim. Assert that no screen text
+#    elsewhere contains an exception class name, "SocketException", a stack frame, HTTP status JSON or a protocol tag.
+#    [B-SEC-104]
+# S6 [B-SEC-104]
+- assertNotVisible:
+    text: '(?s).*(SocketException|HandshakeException|ClientException|Exception:|#0 |\.dart:\d+|"status":|HTTP/1\.1).*'  # literal-ok: raw error shapes that must never show
+    label: "S6 raw text only under Details [B-SEC-104]"
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: start-server
+- runFlow: ../_sub/start-clean.yaml
+- tapOn: ${output.s.welcomeComputerConnect}
+- tapOn: ${output.s.e7SetupServerUrl}
+- inputText: ${output.fx.deadAddress}
+- tapOn: ${output.s.e7SetupServerPassword}
+- inputText: ${SERVER_PASSWORD}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.s.kitDetails}  # confirm: the catalog's "Technical details" is "Details" on the editor
+    timeout: 30000
+- assertNotVisible: '(?s).*(SocketException|Connection refused|errno).*'  # literal-ok: raw socket text stays folded
+- tapOn: ${output.s.kitDetails}
+- assertVisible: '(?s).*(SocketException|Connection refused|errno).*'  # literal-ok: the verbatim raw error, only here

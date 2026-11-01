@@ -1,0 +1,179 @@
+# E2E-35 Remove a server and everything stored for it
+# slice: 2   avd: A   fixtures: FX-OC2, FX-OC2-B   snapshot: flutter-linux
+# rows: B-STATE-060, B-LINUX-070
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-2, g2, connect]
+---
+- runScript: ../../runner/out/strings.js
+
+# S1 Create per-server state on both servers (draft, saved prompt, pin, phrase chip, certificate pin, queued prompt,
+#    schedule). Remove FX-OC2: the dialog names the server and what leaves with it. [B-STATE-060]
+# S1 [B-STATE-060]
+# The flutter-linux snapshot is connected to FX-OC2 with project app (no clearState: Linux lives in app data).
+- launchApp:
+    stopApp: true
+    label: "S1 per-server state on both, remove FX-OC2 names what leaves [B-STATE-060]"
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+# FX-OC2: a draft, a saved prompt and a pin.
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- tapOn: ${output.s.kitComposerField}
+- inputText: draft-for-A
+- hideKeyboard
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- tapOn: ${output.s.kitComposerField}
+- inputText: stash-for-A
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerToolSaveForLater}
+- extendedWaitUntil:
+    visible: ${output.s.promptStashed}
+    timeout: 15000
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo pinned-A
+- extendedWaitUntil:
+    visible: ECHO pinned-A  # literal-ok: stub model reply to e2e:echo
+    timeout: 30000
+- back
+- longPressOn: pinned-A  # literal-ok: the conversation row carries the prompt text sent above
+- tapOn: ${output.rc.sessionRelationsPin}  # confirm: the pin action of a Conversations row
+# A queued prompt for FX-OC2: the server stops answering, the prompt waits.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: stop-server
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: queued-for-A
+- extendedWaitUntil:
+    visible: ${output.s.kitQueuedWaiting}
+    timeout: 30000
+- back
+# UNIT-ONLY: the learned phrase chip, the certificate pin (FX-OC2 is plain http) and a schedule for FX-OC2: the
+# deletion sweep test (ProfileStore.profileScopedPreferenceKeys) lists every oc.<what>.<profileId> key.
+# FX-OC2-B becomes the active server, with its own draft and saved prompt.
+- runFlow: ../_sub/add-second-server.yaml
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- tapOn: ${output.s.kitComposerField}
+- inputText: draft-for-B
+- hideKeyboard
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- tapOn: ${output.s.kitComposerField}
+- inputText: stash-for-B
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerToolSaveForLater}
+- extendedWaitUntil:
+    visible: ${output.s.promptStashed}
+    timeout: 15000
+- back
+# Remove FX-OC2 (the row that holds the waiting prompt).
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- longPressOn: ${output.rc.serverRowQueuedWaiting}
+- tapOn: ${output.s.capsuleRemove}
+- extendedWaitUntil:
+    visible: ${output.re.e7SetupRemoveServer}
+    timeout: 15000
+- assertVisible: ${output.c.serversRemoveBody}
+- assertVisible: ${output.rc.serversRemoveQueuedKept}
+- assertVisible: ${output.c.serversRemoveServerKeeps}
+- tapOn:
+    text: ${output.s.capsuleRemove}
+    below: ${output.c.serversRemoveBody}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: start-server
+
+# S2 After removal [adb] force-stop and relaunch: nothing for FX-OC2 returns (no draft, prompt, pin, phrase, trust,
+#    queue, schedule, widget row, shortcut); FX-OC2-B is whole. [B-STATE-060]
+# S2 [B-STATE-060]
+- runFlow:
+    file: ../_sub/restart-app.yaml
+    label: "S2 nothing of FX-OC2 returns, FX-OC2-B whole [B-STATE-060]"
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- assertNotVisible: draft-for-A  # literal-ok: text typed in S1
+- assertNotVisible: pinned-A  # literal-ok: text typed in S1
+- assertNotVisible: ${output.s.kitQueuedWaiting}
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.promptStashTitle}
+- tapOn:
+    text: ${output.s.promptStashTitle}
+    index: 1
+- extendedWaitUntil:
+    visible: stash-for-B  # literal-ok: text typed in S1
+    timeout: 15000
+- assertNotVisible: stash-for-A  # literal-ok: text typed in S1
+# The queued prompt moved to Saved prompts belongs to FX-OC2 and leaves with it when not kept on purpose.
+- assertNotVisible: queued-for-A  # literal-ok: text typed in S1; confirm: the removal kept-queue scope after removal
+- back
+- back
+# UNIT-ONLY: the widget row and launcher shortcut for FX-OC2 (E2E-26 and E2E-25 show those surfaces).
+
+# S3 Repeat on the in-app Linux server profile: forgetting the active in-app server profile removes it and leaves
+#    nothing behind. [B-LINUX-070]
+# S3 [B-LINUX-070]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S3 forget the active in-app server profile [B-LINUX-070]"
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- longPressOn: ${output.c.phoneSetupProfileName}  # confirm: the in-app server's row in Servers
+- tapOn: ${output.s.e7SetupConnect}
+- extendedWaitUntil:
+    visible: ${output.c.serverRowConnected}
+    timeout: 60000
+- longPressOn: ${output.c.serverRowConnected}
+- tapOn: ${output.s.capsuleRemove}
+- extendedWaitUntil:
+    visible: ${output.re.e7SetupRemoveServer}
+    timeout: 15000
+- assertVisible: ${output.c.serversRemoveActiveNext}
+- tapOn:
+    text: ${output.s.capsuleRemove}
+    below: ${output.c.serversRemoveBody}
+# With no active server left the app shows the servers; after a relaunch it must not reconnect the phone profile.
+- runFlow: ../_sub/restart-app.yaml
+- runFlow:
+    when:
+      notVisible: ${output.s.e7SetupAddServer}
+    commands:
+      - runFlow: ../_sub/open-settings.yaml
+      - scrollUntilVisible:
+          element: ${output.s.e7SetupServers}
+      - tapOn: ${output.s.e7SetupServers}
+- assertNotVisible: ${output.c.serverRowConnected}  # confirm: where the app lands with no active server
+# Only FX-OC2-B is left as a saved server; the phone's own row, if shown, offers set-up again, not a saved profile.
+- assertNotVisible: ${output.rc.serverRowQueuedWaiting}
