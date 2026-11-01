@@ -342,7 +342,7 @@ oc.test.forks=1
 
 `~/.gradle/gradle.properties` wins over the project file [R demo note]. The coordinator writes these once per machine.
 
-| Key | PC (8 CPU / 16 GB, one emulator) | VPS 169.58.71.211 (no KVM) |
+| Key | PC (8 CPU / 16 GB, one emulator) | VPS 203.0.113.10 (no KVM) |
 |---|---|---|
 | `org.gradle.jvmargs` | `-Xmx2g -XX:MaxMetaspaceSize=768m` | `-Xmx4g -XX:MaxMetaspaceSize=1g` |
 | `org.gradle.workers.max` | `2` | unset (all cores) |

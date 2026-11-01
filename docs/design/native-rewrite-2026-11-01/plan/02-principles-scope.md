@@ -977,7 +977,7 @@ uncommitted diff.
 
 | Machine | Runs | Settings and limits |
 |---|---|---|
-| VPS 169.58.71.211 (8 vCPU, 23 GB + 8 GB swap, 290 GB, no KVM) | T1, T2, release builds (then re-signed on the PC), Roborazzi record/verify (**the only golden host**), the headless desktop gallery, the nightly iOS klib job | `org.gradle.jvmargs=-Xmx3g` or more. One T2 at a time: `flock ~/.oc-native-t2.lock`. Before T2: `df -h /` must show ≥ 30 GB free (it filled up on 2026-11-01). The IP stays out of git: scripts read `OC_VPS_HOST`. |
+| VPS 203.0.113.10 (8 vCPU, 23 GB + 8 GB swap, 290 GB, no KVM) | T1, T2, release builds (then re-signed on the PC), Roborazzi record/verify (**the only golden host**), the headless desktop gallery, the nightly iOS klib job | `org.gradle.jvmargs=-Xmx3g` or more. One T2 at a time: `flock ~/.oc-native-t2.lock`. Before T2: `df -h /` must show ≥ 30 GB free (it filled up on 2026-11-01). The IP stays out of git: scripts read `OC_VPS_HOST`. |
 | PC (8 CPU, 16 GB, one emulator) | T0, T3 (emulator, Maestro, upgrade journey), T4 (Macrobenchmark, profiles), APK re-signing, git-side checks (§7.3) | Starting values, which slice-0 proof P8 confirms or replaces when it sets the host caps: `-Xmx2g`, `org.gradle.workers.max=2`, `kotlin.compiler.execution.strategy=in-process`. **One build at a time across both apps:** native scripts take the **same build slot** that Flutter fixers use, `tool/qa/machine_lock.sh build` (the lock file `/home/eslam/Storage/tmp/oc-build.lock`), never a separate native lock. A native Gradle build and a Flutter release build running together caused the two global OOMs in `pc-capacity-ceiling`. Before any Gradle or emulator start, `free -m` must show ≥ 7 GB available. |
 
 - **Concurrency:**

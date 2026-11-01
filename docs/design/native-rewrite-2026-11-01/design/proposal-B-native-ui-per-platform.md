@@ -971,7 +971,7 @@ real.
 
 ### 18.4 Machines (owner constraints)
 
-- **Builds, JVM tests and goldens run on the VPS** (`169.58.71.211`). It has no KVM, so no emulator there.
+- **Builds, JVM tests and goldens run on the VPS** (`203.0.113.10`). It has no KVM, so no emulator there.
 - **The PC** owns the single emulator; one holder at a time. Its ceiling is about 2 Codex + 1 Claude agent, and about
   one Gradle build at a time (`-Xmx2g`, 2 workers). Run `hog_watch` throughout.
 - From 00:00 to 02:00 only the VPS runs heavy work.

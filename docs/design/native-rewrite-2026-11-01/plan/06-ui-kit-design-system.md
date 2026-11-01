@@ -1955,7 +1955,7 @@ It reads the kit's test-visible semantics (`KitSemantics.kt`):
     results; and catalog-row coverage.
 - **Serve:**
   - The script rsyncs the output to the PC at `/home/eslam/Storage2/catalog/native/current`.
-  - A systemd user unit `oc-native-catalog-serve.service` serves it on `100.126.15.6:8767` (Tailscale only).
+  - A systemd user unit `oc-native-catalog-serve.service` serves it on `100.64.0.10:8767` (Tailscale only).
   - At the switch it moves to `:8766`, and Widgetbook (`oc-catalog-serve.service`, `oc-catalog-rebuild.timer`)
     retires.
 - **Solid pixel parity (judge visuals hard).** For the 20 frozen parts and the daily-path screens, the script also

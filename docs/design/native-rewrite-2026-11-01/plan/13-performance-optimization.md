@@ -89,7 +89,7 @@ Hot-path rework in `:engine:transcript`, `:ui:kit-chat` and `:core:markdown` goe
 
 Machines (memory `build-vps`, `pc-capacity-ceiling`, `quiet-hours-vps-only`, `shared-emulator-contention`) [R]:
 
-- **VPS** 169.58.71.211: 8 vCPU, 23 GB, **no KVM**, so no emulator. Runs builds, JVM tests, R8, size gates and JVM
+- **VPS** 203.0.113.10: 8 vCPU, 23 GB, **no KVM**, so no emulator. Runs builds, JVM tests, R8, size gates and JVM
   microbenchmarks.
 - **PC**: 8 CPU, 16 GB, one emulator `OC_API37` (android-37.0 google_apis x86_64). Runs T3 and T4 only, one lock
   holder at a time, no local Gradle build during T4, no emulator 00:00–02:00.
