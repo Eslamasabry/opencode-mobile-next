@@ -17,6 +17,7 @@ dependencies {
     implementation("org.conscrypt:conscrypt-openjdk-uber:2.5.2")
 
     testImplementation(kotlin("test-junit5"))
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
     testImplementation("com.squareup.okhttp3:mockwebserver3:$okhttp")
     testImplementation("com.squareup.okhttp3:okhttp-tls:$okhttp")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
@@ -31,7 +32,7 @@ tasks.test {
 
 // Live proofs against a scratch OpenCode 2 / Paseo on localhost. Never part of `test`.
 // Env: NETP_OC2_URL, NETP_OC2_URL_NEXT (2.2.5), NETP_PASEO_URL, NETP_PASSWORD_FILE (a path; the secret is never on argv).
-val liveTest by tasks.registering(Test::class) {
+tasks.register<Test>("liveTest") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     useJUnitPlatform { includeTags("live") }
