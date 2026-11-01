@@ -34,7 +34,7 @@ public class NotificationActionBody(
     private val lock: DeviceLock,
     private val answerDeadline: Duration = 15.seconds,
     /** The person swiped the status row away (S11-9): reply watch ends for that run only. */
-    private val onRowDismissed: (session: String) -> Unit = {},
+    private val onRowDismissed: (run: ReplyRun) -> Unit = {},
 ) {
     private val inFlight = mutableSetOf<String>()
 
@@ -75,7 +75,8 @@ public class NotificationActionBody(
     public suspend fun onStatusAction(intent: Intent): ShadeOutcome {
         if (intent.action != FrozenExtras.ACTION_STATUS) return ShadeOutcome.Ignored
         if (intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) == StatusRenderer.DISMISSED_ACTION) {
-            onRowDismissed(intent.getStringExtra(FrozenExtras.EXTRA_STATUS_SESSION).orEmpty())
+            val run = intent.statusRun() ?: return ShadeOutcome.Ignored
+            onRowDismissed(run)
             return ShadeOutcome.RowDismissed
         }
         if (intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) != StatusAction.StopReply.wire) return ShadeOutcome.Ignored

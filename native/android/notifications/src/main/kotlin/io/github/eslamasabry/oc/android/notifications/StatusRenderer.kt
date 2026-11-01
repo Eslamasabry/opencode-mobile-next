@@ -38,7 +38,7 @@ public class StatusRenderer(private val context: Context, private val words: Not
                         .setContentTitle(content.publicTitle)
                         .build(),
                 )
-                .setDeleteIntent(dismissIntent(content.conversation?.sessionId?.raw.orEmpty()))
+                .setDeleteIntent(dismissIntent(content))
         if (content.subText.isNotEmpty()) builder.setSubText(content.subText)
         if (content.lines.isNotEmpty()) {
             if (chip != null) {
@@ -79,15 +79,20 @@ public class StatusRenderer(private val context: Context, private val words: Not
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-    private fun dismissIntent(session: String): PendingIntent =
+    private fun dismissIntent(content: StatusContent): PendingIntent =
         PendingIntent.getBroadcast(
             context,
             DISMISS_REQUEST,
             Intent(FrozenExtras.ACTION_STATUS).apply {
                 component = FrozenComponents.of(context, FrozenComponents.STATUS_ACTION_RECEIVER)
-                data = FrozenExtras.STATUS_DISMISSED_URI.toUri()
+                // A previously delivered delete intent keeps its own turn when this row is replaced.
+                data = FrozenExtras.STATUS_DISMISSED_URI.toUri().buildUpon()
+                    .appendPath(content.conversation?.profileId?.raw.orEmpty())
+                    .appendPath(content.conversation?.sessionId?.raw.orEmpty())
+                    .appendPath(content.turnId).build()
                 putExtra(FrozenExtras.EXTRA_STATUS_ACTION, DISMISSED_ACTION)
-                putExtra(FrozenExtras.EXTRA_STATUS_SESSION, session)
+                putStatusConversation(content.conversation)
+                putExtra(FrozenExtras.EXTRA_STATUS_TURN, content.turnId)
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )

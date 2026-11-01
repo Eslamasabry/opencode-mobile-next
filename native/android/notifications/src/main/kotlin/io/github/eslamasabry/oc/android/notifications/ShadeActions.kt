@@ -151,3 +151,9 @@ internal fun Intent.putStatusConversation(conversation: ConversationRef?) {
     putExtra(FrozenExtras.EXTRA_STATUS_PROFILE, conversation.profileId.raw)
     putExtra(FrozenExtras.EXTRA_STATUS_SESSION, conversation.sessionId.raw)
 }
+
+internal fun Intent.statusRun(): ReplyRun? {
+    val conversation = statusConversation() ?: return null
+    val turn = getStringExtra(FrozenExtras.EXTRA_STATUS_TURN)?.takeIf { it.isNotBlank() } ?: return null
+    return ReplyRun(conversation, turn)
+}

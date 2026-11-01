@@ -35,6 +35,9 @@ public enum class StatusAction(public val wire: String) {
     }
 }
 
+/** A single turn, so a later reply in the same conversation has a different dismissal identity. */
+public data class ReplyRun(val conversation: ConversationRef, val turnId: String)
+
 /**
  * What the one status row (4747) shows, already worded by the status model (`:engine:attention`). Port of the Flutter
  * `StatusContent`: a malformed content is refused ([of] returns null) so a bad update never replaces a good one.
@@ -57,6 +60,11 @@ public data class StatusContent(
     /** How many chats work / need you; drives the Live Update chip plural. */
     val count: Int = 1,
 ) {
+    public val run: ReplyRun?
+        get() = conversation?.takeIf {
+            it.profileId.raw.isNotBlank() && it.sessionId.raw.isNotBlank() && turnId.isNotBlank()
+        }?.let { ReplyRun(it, turnId) }
+
     public companion object {
         public const val MAX_LINES: Int = 4
         public const val MAX_TEXT: Int = 240

@@ -68,7 +68,7 @@ class NotificationActionBodyTest {
     private var reply: suspend (ShadeAnswer) -> Outcome<Unit> = { Unit.ok() }
     private val stops = mutableListOf<ConversationRef>()
     private var lock = Lock(sdkInt = 35, locked = false)
-    private val dismissedRows = mutableListOf<String>()
+    private val dismissedRows = mutableListOf<ReplyRun>()
 
     private fun body() =
         NotificationActionBody(
@@ -241,9 +241,11 @@ class NotificationActionBodyTest {
                 Intent(FrozenExtras.ACTION_STATUS).apply {
                     putExtra(FrozenExtras.EXTRA_STATUS_ACTION, StatusRenderer.DISMISSED_ACTION)
                     putExtra(FrozenExtras.EXTRA_STATUS_SESSION, "ses_7")
+                    putExtra(FrozenExtras.EXTRA_STATUS_PROFILE, "p1")
+                    putExtra(FrozenExtras.EXTRA_STATUS_TURN, "turn_1")
                 }
             assertEquals(ShadeOutcome.RowDismissed, body().onStatusAction(swipe))
-            assertEquals(listOf("ses_7"), dismissedRows)
+            assertEquals(listOf(ReplyRun(ConversationRef(ProfileId("p1"), SessionId("ses_7")), "turn_1")), dismissedRows)
             assertTrue(stops.isEmpty())
         }
 

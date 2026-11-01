@@ -99,6 +99,9 @@ public interface ReplyRunSource {
     /** Some run is progressing (a run only waiting on a shown needs-you alert is not). */
     public val progressing: StateFlow<Boolean>
 
+    /** All runs covered by this watch, including a run settling or waiting on its shown alert. */
+    public val runs: StateFlow<Set<ReplyRun>>
+
     /** The row's words while watching (the "working" content of live mode); null = the module's fallback words. */
     public val status: StateFlow<StatusContent?>
 
@@ -136,7 +139,8 @@ public class ReplyWatchServiceBody(
     private val manager: NotificationManager = context.getSystemService(NotificationManager::class.java)
     private val throttle = StatusThrottle()
     private val _ended = MutableStateFlow<ReplyWatchEnd?>(null)
-    private val dismissedRuns = mutableSetOf<String>()
+    private val dismissedRuns = mutableSetOf<ReplyRun>()
+    private var displayedRun: ReplyRun? = null
     private var job: Job? = null
     private var service: Service? = null
 
@@ -153,7 +157,7 @@ public class ReplyWatchServiceBody(
                 ServiceCompat.startForeground(
                     service,
                     NotificationIds.STATUS,
-                    renderer.build(currentContent(), ongoing = true, chip = chip(currentContent())),
+                    render(currentContent()),
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
                 )
                 true
@@ -187,9 +191,12 @@ public class ReplyWatchServiceBody(
     }
 
     /** The person swiped the row away while `reply` was its only owner: the watch ends for that run only. */
-    public fun onRowDismissed(session: String) {
-        synchronized(dismissedRuns) { dismissedRuns += session }
-        if (active) finish(ReplyWatchEnd.Dismissed)
+    public fun onRowDismissed(run: ReplyRun) {
+        if (!active || !owners.isOnly(StatusOwner.Reply) || displayedRun != run || run !in source.runs.value) return
+        synchronized(dismissedRuns) { dismissedRuns += run }
+        // Keep collecting for the other runs, including ones in another profile with the same session id.
+        val remaining = synchronized(dismissedRuns) { source.runs.value - dismissedRuns }
+        if (remaining.isEmpty()) finish(ReplyWatchEnd.Dismissed)
     }
 
     public fun onDestroy() {
@@ -246,7 +253,7 @@ public class ReplyWatchServiceBody(
                 else -> throttle.due(now)
             } ?: return
         try {
-            manager.notify(NotificationIds.STATUS, renderer.build(next, ongoing = true, chip = chip(next)))
+            manager.notify(NotificationIds.STATUS, render(next))
         } catch (_: SecurityException) {
             // Permission revoked while watching: the alerts are blocked too; the end rules still apply.
         }
@@ -259,8 +266,13 @@ public class ReplyWatchServiceBody(
             publicTitle = words.text(R.string.notify_status_public_working),
         )
 
+    private fun render(content: StatusContent): android.app.Notification {
+        displayedRun = content.run
+        return renderer.build(content, ongoing = true, chip = chip(content))
+    }
+
     private fun chip(content: StatusContent): LiveChip? {
-        val dismissed = synchronized(dismissedRuns) { content.conversation?.sessionId?.raw?.let { it in dismissedRuns } == true }
+        val dismissed = synchronized(dismissedRuns) { content.run in dismissedRuns }
         return LiveUpdatePolicy.chipFor(content, dismissedRun = dismissed)
     }
 
