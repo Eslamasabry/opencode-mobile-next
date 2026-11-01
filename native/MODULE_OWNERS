@@ -31,3 +31,4 @@
 :engine:entry	S	coordinator	slice-2
 :engine:composer	S	chat-lead	slice-3
 :engine:runtime	S	runtime-owner	slice-3
+:engine:attention	S	attention-owner (widget ingress contract)	slice-4
