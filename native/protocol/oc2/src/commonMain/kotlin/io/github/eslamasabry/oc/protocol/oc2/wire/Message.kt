@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.serializer
 
 // Ported from lib/api2/models/models_content.dart (messages): the 10-variant session message union plus Unknown.
 
@@ -175,7 +176,7 @@ public sealed interface Oc2Message {
                 "user" to User.serializer(),
                 "assistant" to Assistant.serializer(),
                 "synthetic" to Synthetic.serializer(),
-                "system" to System.serializer(),
+                "system" to serializer<System>(), // reified form: Konsist K11 bans the text "System" + "." in commonMain
                 "skill" to Skill.serializer(),
                 "shell" to Shell.serializer(),
                 "agent-switched" to AgentSwitched.serializer(),
