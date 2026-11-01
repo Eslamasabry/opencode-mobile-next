@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -45,7 +46,7 @@ class FrameCaptureTest {
         mainClock.autoAdvance = true
         waitForIdle()
         mainClock.autoAdvance = false
-        onNodeWithText("Back").performClick()
+        onNodeWithContentDescription("Back").performClick()
         t = 0L
         for (at in listOf(0L, 60L, 120L, 240L, 300L)) {
             mainClock.advanceTimeBy(at - t)

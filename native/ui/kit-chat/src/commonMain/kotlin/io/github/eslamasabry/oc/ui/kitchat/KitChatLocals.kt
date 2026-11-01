@@ -16,7 +16,7 @@ public val LocalKitRedactor: ProvidableCompositionLocal<Redactor> =
 
 /**
  * Where kit-chat parts run their pure work (tokenising code, preparing diffs): the app provides its `AppDispatchers`
- * default context here (rule 6: no `Dispatchers.*` outside `:core:common`). Empty = the composition's own context,
+ * default context here (rule 6: no dispatcher singletons outside `:core:common`). Empty = the composition's own context,
  * which tests and previews use.
  */
 public val LocalKitChatWork: ProvidableCompositionLocal<CoroutineContext> = staticCompositionLocalOf { EmptyCoroutineContext }

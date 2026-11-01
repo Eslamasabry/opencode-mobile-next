@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.shell.nav
 
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -28,7 +29,7 @@ class PredictiveBackShellTest {
         onNodeWithText("Chat s2").assertExists()
         assertEquals(GateState.Idle, h.gate.state)
         assertEquals(listOf(GateEvent.TapOpen, GateEvent.TransitionSettled), h.gate.trace)
-        onNodeWithText("Back").performClick()
+        onNodeWithContentDescription("Back").performClick()
         waitForIdle()
         onNodeWithText("Chat s2").assertDoesNotExist()
         onNodeWithText("Row 2").assertExists()
@@ -79,7 +80,7 @@ class PredictiveBackShellTest {
         assertEquals(GateState.Idle, h.gate.state)
         onNodeWithText("Chat s1").assertExists()
         assertIs<ChatRoute>(h.navigator.top.value)
-        onNodeWithText("Back").performClick()
+        onNodeWithContentDescription("Back").performClick()
         waitForIdle()
         onNodeWithText("Row 4").performClick()
         mainClock.autoAdvance = false
