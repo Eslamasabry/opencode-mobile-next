@@ -1,8 +1,9 @@
 package io.github.eslamasabry.oc.protocol.oc2.wire
 
+import io.github.eslamasabry.oc.core.common.json.RawObjectSerializer
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -212,7 +213,7 @@ public sealed interface Oc2Message {
     }
 }
 
-internal object Oc2MessageSerializer : RawObjectSerializer<Oc2Message>("Message") {
+internal object Oc2MessageSerializer : RawObjectSerializer<Oc2Message>("oc2.Message") {
     override fun read(obj: JsonObject): Oc2Message = Oc2Message.fromJson(obj) ?: throw SerializationException("message without id")
 
     override fun write(value: Oc2Message): JsonElement = Oc2Message.toJson(value)

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.protocol.oc2.wire
 
+import io.github.eslamasabry.oc.core.common.json.RawObjectSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -32,7 +33,7 @@ public sealed interface Oc2ToolResultItem {
     }
 }
 
-internal object Oc2ToolResultItemSerializer : RawObjectSerializer<Oc2ToolResultItem>("ToolResultItem") {
+internal object Oc2ToolResultItemSerializer : RawObjectSerializer<Oc2ToolResultItem>("oc2.ToolResultItem") {
     override fun read(obj: JsonObject): Oc2ToolResultItem =
         when (obj.str("type")) {
             "text" -> Oc2Wire.decode(Oc2ToolResultItem.Text.serializer(), obj)
@@ -88,7 +89,7 @@ public sealed interface Oc2ToolState {
     }
 }
 
-internal object Oc2ToolStateSerializer : RawObjectSerializer<Oc2ToolState>("ToolState") {
+internal object Oc2ToolStateSerializer : RawObjectSerializer<Oc2ToolState>("oc2.ToolState") {
     override fun read(obj: JsonObject): Oc2ToolState =
         when (obj.str("status")) {
             "streaming" -> Oc2Wire.decode(Oc2ToolState.Streaming.serializer(), obj)
@@ -149,7 +150,7 @@ public sealed interface Oc2AssistantContent {
     }
 }
 
-internal object Oc2AssistantContentSerializer : RawObjectSerializer<Oc2AssistantContent>("AssistantContent") {
+internal object Oc2AssistantContentSerializer : RawObjectSerializer<Oc2AssistantContent>("oc2.AssistantContent") {
     override fun read(obj: JsonObject): Oc2AssistantContent =
         when (obj.str("type")) {
             "text" -> Oc2Wire.decode(Oc2AssistantContent.Text.serializer(), obj)

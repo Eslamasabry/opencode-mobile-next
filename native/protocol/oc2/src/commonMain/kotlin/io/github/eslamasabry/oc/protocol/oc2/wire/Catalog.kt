@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.protocol.oc2.wire
 
+import io.github.eslamasabry.oc.core.common.json.SurrogateSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -44,7 +45,7 @@ public data class Oc2ModelCost(
         val tier: Tier? = null,
     )
 
-    internal object Serializer : SurrogateSerializer<Oc2ModelCost, Wire>("ModelCost", Wire.serializer()) {
+    internal object Serializer : SurrogateSerializer<Oc2ModelCost, Wire>("oc2.ModelCost", Wire.serializer()) {
         override fun toValue(wire: Wire): Oc2ModelCost =
             Oc2ModelCost(wire.input, wire.output, wire.cache?.read ?: 0.0, wire.cache?.write ?: 0.0, wire.tier?.size)
 
