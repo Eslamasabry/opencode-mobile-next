@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="FlutterSecureSAlgorithmKey">RSA_ECB_OAEPwithSHA_256andMGF1Padding</string>
+    <string name="FlutterSecureSAlgorithmStorage">AES_GCM_NoPadding</string>
+</map>

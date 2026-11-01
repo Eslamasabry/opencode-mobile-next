@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="flutter_image_picker_type">image</string>
+    <set name="flutter_image_picker_image_path">
+        <string>/data/user/0/io.github.eslamasabry.opencode_mobile/cache/image_picker_fixture.jpg</string>
+    </set>
+    <long name="flutter_image_picker_max_width" value="4656722014701092864" />
+    <long name="flutter_image_picker_max_height" value="4656722014701092864" />
+    <int name="flutter_image_picker_image_quality" value="85" />
+</map>

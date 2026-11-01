@@ -1,0 +1,310 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="flutter.oc.profiles">[{&quot;id&quot;:&quot;1735000000000001&quot;,&quot;name&quot;:&quot;Fixture OC2&quot;,&quot;baseUrl&quot;:&quot;http://10.0.2.2:4097&quot;,&quot;backend&quot;:&quot;openCode&quot;,&quot;username&quot;:&quot;opencode&quot;,&quot;flavor&quot;:&quot;v2&quot;,&quot;requiresOpenCode2Migration&quot;:false,&quot;openCode2HistoryPending&quot;:false},{&quot;id&quot;:&quot;1735000000000002&quot;,&quot;name&quot;:&quot;Fixture Paseo&quot;,&quot;baseUrl&quot;:&quot;ws://10.0.2.2:5100&quot;,&quot;backend&quot;:&quot;paseo&quot;,&quot;username&quot;:&quot;&quot;,&quot;codexDirectory&quot;:&quot;/root/projects/x&quot;,&quot;flavor&quot;:&quot;v2&quot;,&quot;requiresOpenCode2Migration&quot;:false,&quot;openCode2HistoryPending&quot;:false}]</string>
+    <string name="flutter.oc.a2aTasks.phone">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;A2aTasks&quot;}</string>
+    <string name="flutter.oc.activeProfile">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ActiveProfile&quot;}</string>
+    <string name="flutter.oc.agent.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Agent&quot;}</string>
+    <string name="flutter.oc.agent.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Agent&quot;}</string>
+    <string name="flutter.oc.agentFeed.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentFeed&quot;}</string>
+    <string name="flutter.oc.agentFeed.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentFeed&quot;}</string>
+    <string name="flutter.oc.agentHandoffs.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentHandoffs&quot;}</string>
+    <string name="flutter.oc.agentHandoffs.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentHandoffs&quot;}</string>
+    <string name="flutter.oc.agentInstall.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentInstall&quot;}</string>
+    <string name="flutter.oc.agentInstall.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentInstall&quot;}</string>
+    <string name="flutter.oc.agentModel.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentModel&quot;}</string>
+    <string name="flutter.oc.agentModel.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentModel&quot;}</string>
+    <string name="flutter.oc.agentPhoneGate.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentPhoneGate&quot;}</string>
+    <string name="flutter.oc.agentPhoneGate.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentPhoneGate&quot;}</string>
+    <string name="flutter.oc.agentSignedOut.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentSignedOut&quot;}</string>
+    <string name="flutter.oc.agentSignedOut.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AgentSignedOut&quot;}</string>
+    <string name="flutter.oc.agentTurnFailures.1735000000000001">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:AgentTurnFailures&quot;,&quot;b&quot;]</string>
+    <set name="flutter.oc.agentTurnFailures.1735000000000002">
+        <string>legacy-set-entry</string>
+    </set>
+    <string name="flutter.oc.appearance">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Appearance&quot;}</string>
+    <string name="flutter.oc.appearanceAccent">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AppearanceAccent&quot;}</string>
+    <string name="flutter.oc.appearanceGuide">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AppearanceGuide&quot;}</string>
+    <string name="flutter.oc.appLocale">ar</string>
+    <string name="flutter.oc.attentionTile">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AttentionTile&quot;}</string>
+    <string name="flutter.oc.autoApprove.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AutoApprove&quot;}</string>
+    <string name="flutter.oc.autoApprove.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AutoApprove&quot;}</string>
+    <string name="flutter.oc.automaticActivity.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AutomaticActivity&quot;}</string>
+    <string name="flutter.oc.automaticActivity.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;AutomaticActivity&quot;}</string>
+    <string name="flutter.oc.automation.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Automation&quot;}</string>
+    <string name="flutter.oc.automation.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Automation&quot;}</string>
+    <string name="flutter.oc.backgroundPauseDismissed">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;BackgroundPauseDismissed&quot;}</string>
+    <string name="flutter.oc.budgets.1735000000000001">{&quot;retired&quot;:true}</string>
+    <string name="flutter.oc.budgets.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Budgets&quot;}</string>
+    <string name="flutter.oc.builtinRecovery.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;BuiltinRecovery&quot;}</string>
+    <string name="flutter.oc.builtinRecovery.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;BuiltinRecovery&quot;}</string>
+    <string name="flutter.oc.builtinServerOwner">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;BuiltinServerOwner&quot;}</string>
+    <string name="flutter.oc.byoHost.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ByoHost&quot;}</string>
+    <string name="flutter.oc.byoHost.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ByoHost&quot;}</string>
+    <string name="flutter.oc.certificatePin.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;CertificatePin&quot;}</string>
+    <string name="flutter.oc.certificatePin.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;CertificatePin&quot;}</string>
+    <string name="flutter.oc.chatAgent.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ChatAgent&quot;}</string>
+    <string name="flutter.oc.chatAgent.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ChatAgent&quot;}</string>
+    <boolean name="flutter.oc.chatListShown.1735000000000001" value="true" />
+    <boolean name="flutter.oc.chatListShown.1735000000000002" value="true" />
+    <string name="flutter.oc.chatNoticesSeen.1735000000000001">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:ChatNoticesSeen&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.chatNoticesSeen.1735000000000002">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3QurO0ABXNyABNqYXZhLnV0aWwuQXJyYXlMaXN0eIHSHZnHYZ0DAAFJAARzaXpleHAAAAACdwQAAAAC&#10;dAASYXV0by1hcHByb3ZlOnNlc18xdAASYXV0by1hcHByb3ZlOnNlc18yeA==&#10;</string>
+    <string name="flutter.oc.chatTail.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ChatTail&quot;}</string>
+    <string name="flutter.oc.chatTail.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ChatTail&quot;}</string>
+    <string name="flutter.oc.cleartextOk.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;CleartextOk&quot;}</string>
+    <string name="flutter.oc.cleartextOk.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;CleartextOk&quot;}</string>
+    <string name="flutter.oc.consumptionBudgets.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ConsumptionBudgets&quot;}</string>
+    <string name="flutter.oc.consumptionBudgets.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ConsumptionBudgets&quot;}</string>
+    <string name="flutter.oc.contextUsage.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ContextUsage&quot;}</string>
+    <string name="flutter.oc.contextUsage.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ContextUsage&quot;}</string>
+    <string name="flutter.oc.conversationTitles.1735000000000001">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:ConversationTitles&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.conversationTitles.1735000000000002">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:ConversationTitles&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.defaultNotices.1735000000000001">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:DefaultNotices&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.defaultNotices.1735000000000002">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:DefaultNotices&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.defaultProject.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;DefaultProject&quot;}</string>
+    <string name="flutter.oc.defaultProject.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;DefaultProject&quot;}</string>
+    <boolean name="flutter.oc.dev.factsbook" value="true" />
+    <string name="flutter.oc.developmentServices.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;DevelopmentServices&quot;}</string>
+    <string name="flutter.oc.developmentServices.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;DevelopmentServices&quot;}</string>
+    <string name="flutter.oc.draft.note.ses_fixture.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Draft&quot;}</string>
+    <string name="flutter.oc.draft.reportProblem.app">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Draft&quot;}</string>
+    <boolean name="flutter.oc.draftAttachmentVault" value="true" />
+    <boolean name="flutter.oc.effectsActivityGlow" value="true" />
+    <boolean name="flutter.oc.effectsBackgroundOn" value="true" />
+    <boolean name="flutter.oc.effectsCelebrations" value="true" />
+    <string name="flutter.oc.effectsCorners">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;EffectsCorners&quot;}</string>
+    <string name="flutter.oc.effectsDensity">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;EffectsDensity&quot;}</string>
+    <string name="flutter.oc.effectsDepth">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;EffectsDepth&quot;}</string>
+    <string name="flutter.oc.effectsEdges">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;EffectsEdges&quot;}</string>
+    <string name="flutter.oc.effectsGlowColours">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;EffectsGlowColours&quot;}</string>
+    <string name="flutter.oc.effectsGlowSpeed">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;EffectsGlowSpeed&quot;}</string>
+    <string name="flutter.oc.effectsGlowStyle">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;EffectsGlowStyle&quot;}</string>
+    <boolean name="flutter.oc.effectsLiveBackground" value="true" />
+    <boolean name="flutter.oc.effectsLiveHeldByStyle" value="true" />
+    <string name="flutter.oc.effectsLiveIntensity">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;EffectsLiveIntensity&quot;}</string>
+    <string name="flutter.oc.effectsLiveStyle">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;EffectsLiveStyle&quot;}</string>
+    <string name="flutter.oc.effectsMotion">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;EffectsMotion&quot;}</string>
+    <string name="flutter.oc.effectsSurfaceStyle">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;EffectsSurfaceStyle&quot;}</string>
+    <string name="flutter.oc.externalAgents">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ExternalAgents&quot;}</string>
+    <boolean name="flutter.oc.factsbook-node.stopped" value="true" />
+    <string name="flutter.oc.factsbookNode.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;FactsbookNode&quot;}</string>
+    <string name="flutter.oc.factsbookNode.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;FactsbookNode&quot;}</string>
+    <string name="flutter.oc.firstRun.notifyAsk">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;FirstRunNotifyAsk&quot;}</string>
+    <string name="flutter.oc.firstRun.state">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;FirstRunState&quot;}</string>
+    <string name="flutter.oc.freeModelNoteDismissed.1735000000000001">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:FreeModelNoteDismissed&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.freeModelNoteDismissed.1735000000000002">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:FreeModelNoteDismissed&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.genui.covered.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;GenuiCovered&quot;}</string>
+    <string name="flutter.oc.genui.covered.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;GenuiCovered&quot;}</string>
+    <boolean name="flutter.oc.genui.enabled.1735000000000001" value="true" />
+    <boolean name="flutter.oc.genui.enabled.1735000000000002" value="true" />
+    <string name="flutter.oc.genui.journal.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;GenuiJournal&quot;}</string>
+    <string name="flutter.oc.genui.journal.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;GenuiJournal&quot;}</string>
+    <string name="flutter.oc.glass">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Glass&quot;}</string>
+    <boolean name="flutter.oc.glassLiquidActive" value="true" />
+    <string name="flutter.oc.glassLiquidOffUntil">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;GlassLiquidOffUntil&quot;}</string>
+    <long name="flutter.oc.glassLiquidStrikes" value="42" />
+    <string name="flutter.oc.inFlowConsent.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;InFlowConsent&quot;}</string>
+    <string name="flutter.oc.inFlowConsent.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;InFlowConsent&quot;}</string>
+    <boolean name="flutter.oc.keepLiveInBackground" value="true" />
+    <string name="flutter.oc.keptQueuedPrompts">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;KeptQueuedPrompts&quot;}</string>
+    <string name="flutter.oc.lastProject.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;LastProject&quot;}</string>
+    <string name="flutter.oc.lastProject.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;LastProject&quot;}</string>
+    <string name="flutter.oc.linuxReset.pending">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;LinuxResetPending&quot;}</string>
+    <string name="flutter.oc.location.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Location&quot;}</string>
+    <string name="flutter.oc.location.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Location&quot;}</string>
+    <string name="flutter.oc.mainFeed.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;MainFeed&quot;}</string>
+    <string name="flutter.oc.mainFeed.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;MainFeed&quot;}</string>
+    <string name="flutter.oc.managedServerRecovery.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ManagedServerRecovery&quot;}</string>
+    <string name="flutter.oc.managedServerRecovery.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ManagedServerRecovery&quot;}</string>
+    <string name="flutter.oc.mobileDownloadConsent.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;MobileDownloadConsent&quot;}</string>
+    <string name="flutter.oc.mobileDownloadConsent.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;MobileDownloadConsent&quot;}</string>
+    <string name="flutter.oc.model.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Model&quot;}</string>
+    <string name="flutter.oc.model.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Model&quot;}</string>
+    <boolean name="flutter.oc.modelExplicit.1735000000000001" value="true" />
+    <boolean name="flutter.oc.modelExplicit.1735000000000002" value="true" />
+    <string name="flutter.oc.modelLibrary.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ModelLibrary&quot;}</string>
+    <string name="flutter.oc.modelLibrary.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ModelLibrary&quot;}</string>
+    <string name="flutter.oc.modelNames.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ModelNames&quot;}</string>
+    <string name="flutter.oc.modelNames.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ModelNames&quot;}</string>
+    <string name="flutter.oc.monitorAlerts.1735000000000001">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:MonitorAlerts&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.monitorAlerts.1735000000000002">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:MonitorAlerts&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.monitorBusy.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;MonitorBusy&quot;}</string>
+    <string name="flutter.oc.monitorBusy.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;MonitorBusy&quot;}</string>
+    <string name="flutter.oc.monitorRoutes.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;MonitorRoutes&quot;}</string>
+    <string name="flutter.oc.monitorRoutes.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;MonitorRoutes&quot;}</string>
+    <long name="flutter.oc.notify.checkInAfterMinutes" value="42" />
+    <boolean name="flutter.oc.notify.finishedRuns" value="true" />
+    <long name="flutter.oc.notify.quietEnd" value="420" />
+    <long name="flutter.oc.notify.quietStart" value="1320" />
+    <boolean name="flutter.oc.notify.quotaAlerts" value="true" />
+    <boolean name="flutter.oc.notify.requests" value="true" />
+    <long name="flutter.oc.notify.version" value="42" />
+    <boolean name="flutter.oc.notify.wifiOnly" value="true" />
+    <string name="flutter.oc.notifyRules.1735000000000001">{&quot;enabled&quot;:true,&quot;notifications&quot;:true,&quot;wifiOnly&quot;:false}</string>
+    <string name="flutter.oc.notifyRules.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;NotifyRules&quot;}</string>
+    <boolean name="flutter.oc.nudges.firstReplySeen" value="true" />
+    <string name="flutter.oc.nudges.projects">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;NudgesProjects&quot;}</string>
+    <string name="flutter.oc.nudges.shown">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;NudgesShown&quot;}</string>
+    <string name="flutter.oc.offlineQueue">[{&quot;id&quot;:&quot;q1&quot;,&quot;profileID&quot;:&quot;1735000000000001&quot;,&quot;sessionID&quot;:&quot;ses_1&quot;,&quot;text&quot;:&quot;queued while offline&quot;,&quot;attachments&quot;:[],&quot;mentions&quot;:[],&quot;createdAt&quot;:1730457000000},{&quot;id&quot;:&quot;q2&quot;,&quot;profileID&quot;:&quot;1735000000000001&quot;,&quot;sessionID&quot;:&quot;ses_1&quot;,&quot;text&quot;:&quot;marked as dispatched&quot;,&quot;attachments&quot;:[],&quot;mentions&quot;:[],&quot;createdAt&quot;:1730457001000,&quot;dispatchedAt&quot;:1730457002000}]</string>
+    <string name="flutter.oc.olderDraftsBackupV1.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;OlderDraftsBackupV1&quot;}</string>
+    <string name="flutter.oc.olderDraftsBackupV1.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;OlderDraftsBackupV1&quot;}</string>
+    <string name="flutter.oc.orchestration.1735000000000001.item1">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Orchestration&quot;}</string>
+    <boolean name="flutter.oc.paseoUsage.1735000000000001" value="true" />
+    <boolean name="flutter.oc.paseoUsage.1735000000000002" value="true" />
+    <string name="flutter.oc.pendingAuth.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PendingAuth&quot;}</string>
+    <string name="flutter.oc.pendingAuth.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PendingAuth&quot;}</string>
+    <string name="flutter.oc.pendingCommands.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PendingCommands&quot;}</string>
+    <string name="flutter.oc.pendingCommands.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PendingCommands&quot;}</string>
+    <string name="flutter.oc.pendingPromptPhoto">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PendingPromptPhoto&quot;}</string>
+    <string name="flutter.oc.permissionConsent.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PermissionConsent&quot;}</string>
+    <string name="flutter.oc.permissionConsent.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PermissionConsent&quot;}</string>
+    <string name="flutter.oc.phoneAgentGateMigration.1735000000000001">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:PhoneAgentGateMigration&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.phoneAgentGateMigration.1735000000000002">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:PhoneAgentGateMigration&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.phoneAgentOwner.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PhoneAgentOwner&quot;}</string>
+    <string name="flutter.oc.phoneAgentOwner.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PhoneAgentOwner&quot;}</string>
+    <boolean name="flutter.oc.phoneAgentsUsed.1735000000000001" value="true" />
+    <boolean name="flutter.oc.phoneAgentsUsed.1735000000000002" value="true" />
+    <boolean name="flutter.oc.phoneServerStopped.1735000000000001" value="true" />
+    <boolean name="flutter.oc.phoneServerStopped.1735000000000002" value="true" />
+    <string name="flutter.oc.phraseChips.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PhraseChips&quot;}</string>
+    <string name="flutter.oc.phraseChips.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PhraseChips&quot;}</string>
+    <boolean name="flutter.oc.phraseChips.enabled" value="true" />
+    <string name="flutter.oc.pinnedShortcuts">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PinnedShortcuts&quot;}</string>
+    <string name="flutter.oc.promptHistory.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PromptHistory&quot;}</string>
+    <string name="flutter.oc.promptHistory.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PromptHistory&quot;}</string>
+    <string name="flutter.oc.promptStash.1735000000000001.item1">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;PromptStash&quot;}</string>
+    <boolean name="flutter.oc.providerRuntimeRefresh.v1.1735000000000001.item1" value="true" />
+    <string name="flutter.oc.providerRuntimeUnloadable.1735000000000001.item1">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ProviderRuntimeUnloadable&quot;}</string>
+    <boolean name="flutter.oc.quotaCollector.1735000000000001" value="true" />
+    <boolean name="flutter.oc.quotaCollector.1735000000000002" value="true" />
+    <string name="flutter.oc.quotaMonitor.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;QuotaMonitor&quot;}</string>
+    <string name="flutter.oc.quotaMonitor.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;QuotaMonitor&quot;}</string>
+    <boolean name="flutter.oc.readAloudConsent" value="true" />
+    <string name="flutter.oc.readerPreferences.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ReaderPreferences&quot;}</string>
+    <string name="flutter.oc.readerPreferences.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ReaderPreferences&quot;}</string>
+    <string name="flutter.oc.readStateConsentMigration.v1">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ReadStateConsentMigration&quot;}</string>
+    <string name="flutter.oc.recentLocations.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;RecentLocations&quot;}</string>
+    <string name="flutter.oc.recentLocations.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;RecentLocations&quot;}</string>
+    <string name="flutter.oc.replySpeed.inApp">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ReplySpeedInApp&quot;}</string>
+    <string name="flutter.oc.returnBrief.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ReturnBrief&quot;}</string>
+    <string name="flutter.oc.returnBrief.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ReturnBrief&quot;}</string>
+    <boolean name="flutter.oc.savedPromptMigrationV1.1735000000000001" value="true" />
+    <boolean name="flutter.oc.savedPromptMigrationV1.1735000000000002" value="true" />
+    <boolean name="flutter.oc.scheduleDeleted.1735000000000001" value="true" />
+    <boolean name="flutter.oc.scheduleDeleted.1735000000000002" value="true" />
+    <string name="flutter.oc.scheduledPrompts.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ScheduledPrompts&quot;}</string>
+    <string name="flutter.oc.scheduledPrompts.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ScheduledPrompts&quot;}</string>
+    <string name="flutter.oc.sessionAgents.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionAgents&quot;}</string>
+    <string name="flutter.oc.sessionAgents.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionAgents&quot;}</string>
+    <string name="flutter.oc.sessionDisplayModels.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionDisplayModels&quot;}</string>
+    <string name="flutter.oc.sessionDisplayModels.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionDisplayModels&quot;}</string>
+    <string name="flutter.oc.sessionDrafts">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionDrafts&quot;}</string>
+    <string name="flutter.oc.sessionInventory.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionInventory&quot;}</string>
+    <string name="flutter.oc.sessionInventory.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionInventory&quot;}</string>
+    <string name="flutter.oc.sessionLinkBinding.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionLinkBinding&quot;}</string>
+    <string name="flutter.oc.sessionLinkBinding.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionLinkBinding&quot;}</string>
+    <string name="flutter.oc.sessionModels.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionModels&quot;}</string>
+    <string name="flutter.oc.sessionModels.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionModels&quot;}</string>
+    <string name="flutter.oc.sessionPins.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionPins&quot;}</string>
+    <string name="flutter.oc.sessionPins.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionPins&quot;}</string>
+    <string name="flutter.oc.sessionViews.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionViews&quot;}</string>
+    <string name="flutter.oc.sessionViews.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SessionViews&quot;}</string>
+    <string name="flutter.oc.setupAudit.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SetupAudit&quot;}</string>
+    <string name="flutter.oc.setupAudit.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SetupAudit&quot;}</string>
+    <string name="flutter.oc.setupRegistry.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SetupRegistry&quot;}</string>
+    <string name="flutter.oc.setupRegistry.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SetupRegistry&quot;}</string>
+    <string name="flutter.oc.sharedProjects.1735000000000001">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:SharedProjects&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.sharedProjects.1735000000000002">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:SharedProjects&quot;,&quot;b&quot;]</string>
+    <boolean name="flutter.oc.shareSessionViews" value="true" />
+    <boolean name="flutter.oc.shareSessionViews.1735000000000001" value="true" />
+    <boolean name="flutter.oc.shareSessionViews.1735000000000002" value="true" />
+    <boolean name="flutter.oc.shareSessionViewsDefault.1735000000000001" value="true" />
+    <boolean name="flutter.oc.shareSessionViewsDefault.1735000000000002" value="true" />
+    <string name="flutter.oc.shareSessionViewsOrigin.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ShareSessionViewsOrigin&quot;}</string>
+    <string name="flutter.oc.shareSessionViewsOrigin.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ShareSessionViewsOrigin&quot;}</string>
+    <string name="flutter.oc.sideFeed.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SideFeed&quot;}</string>
+    <string name="flutter.oc.sideFeed.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SideFeed&quot;}</string>
+    <boolean name="flutter.oc.stashAttachmentVault.1735000000000001" value="true" />
+    <boolean name="flutter.oc.stashAttachmentVault.1735000000000002" value="true" />
+    <boolean name="flutter.oc.tailscale.1735000000000001" value="true" />
+    <boolean name="flutter.oc.tailscale.1735000000000002" value="true" />
+    <string name="flutter.oc.teamEditorDrafts.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TeamEditorDrafts&quot;}</string>
+    <string name="flutter.oc.teamEditorDrafts.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TeamEditorDrafts&quot;}</string>
+    <boolean name="flutter.oc.teamEngineDeleted.1735000000000001" value="true" />
+    <boolean name="flutter.oc.teamEngineDeleted.1735000000000002" value="true" />
+    <boolean name="flutter.oc.teamMigrationKept.1735000000000001" value="true" />
+    <boolean name="flutter.oc.teamMigrationKept.1735000000000002" value="true" />
+    <string name="flutter.oc.teamModel.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TeamModel&quot;}</string>
+    <string name="flutter.oc.teamModel.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TeamModel&quot;}</string>
+    <string name="flutter.oc.teamRoles.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TeamRoles&quot;}</string>
+    <string name="flutter.oc.teamRoles.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TeamRoles&quot;}</string>
+    <string name="flutter.oc.teamTaskRoles.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TeamTaskRoles&quot;}</string>
+    <string name="flutter.oc.teamTaskRoles.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TeamTaskRoles&quot;}</string>
+    <long name="flutter.oc.teamWorkerStart.1735000000000001" value="42" />
+    <long name="flutter.oc.teamWorkerStart.1735000000000002" value="42" />
+    <string name="flutter.oc.teamWorkspace.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TeamWorkspace&quot;}</string>
+    <string name="flutter.oc.teamWorkspace.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TeamWorkspace&quot;}</string>
+    <string name="flutter.oc.termuxMigration.phone">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TermuxMigration&quot;}</string>
+    <boolean name="flutter.oc.termuxMigrationOffer.1735000000000001" value="true" />
+    <boolean name="flutter.oc.termuxMigrationOffer.1735000000000002" value="true" />
+    <string name="flutter.oc.textSize">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;TextSize&quot;}</string>
+    <string name="flutter.oc.themePack">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ThemePack&quot;}</string>
+    <boolean name="flutter.oc.thermalGuard" value="true" />
+    <string name="flutter.oc.thermalPause.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ThermalPause&quot;}</string>
+    <string name="flutter.oc.thermalPause.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ThermalPause&quot;}</string>
+    <string name="flutter.oc.tips">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Tips&quot;}</string>
+    <boolean name="flutter.oc.transcript.reasoningExpanded" value="true" />
+    <boolean name="flutter.oc.transcript.timestampsVisible" value="true" />
+    <string name="flutter.oc.usageAlerts.v1">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;UsageAlerts&quot;}</string>
+    <string name="flutter.oc.usageAlertSeen.v1">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;UsageAlertSeen&quot;}</string>
+    <boolean name="flutter.oc.usageComputerReader.1735000000000001" value="true" />
+    <boolean name="flutter.oc.usageComputerReader.1735000000000002" value="true" />
+    <string name="flutter.oc.usageLast.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;UsageLast&quot;}</string>
+    <string name="flutter.oc.usageLast.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;UsageLast&quot;}</string>
+    <string name="flutter.oc.usageWidget.v1">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;UsageWidget&quot;}</string>
+    <string name="flutter.oc.variant.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Variant&quot;}</string>
+    <string name="flutter.oc.variant.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;Variant&quot;}</string>
+    <string name="flutter.oc.widgetFollowup.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetFollowup&quot;}</string>
+    <string name="flutter.oc.widgetFollowup.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetFollowup&quot;}</string>
+    <string name="flutter.oc.widgetSessions">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetSessions&quot;}</string>
+    <string name="flutter.oc.widgetTarget.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetTarget&quot;}</string>
+    <string name="flutter.oc.widgetTarget.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetTarget&quot;}</string>
+    <string name="flutter.oc.widgetUsage.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetUsage&quot;}</string>
+    <string name="flutter.oc.widgetUsage.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetUsage&quot;}</string>
+    <string name="flutter.oc.widgetUsageSubs">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetUsageSubs&quot;}</string>
+    <string name="flutter.oc.withdrawnPrompts.1735000000000001">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:WithdrawnPrompts&quot;,&quot;b&quot;]</string>
+    <string name="flutter.oc.withdrawnPrompts.1735000000000002">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3QurO0ABXNyABpqYXZhLnV0aWwuQXJyYXlzJEFycmF5TGlzdNmkPL7NiAbSAgABWwABYXQAE1tMamF2&#10;YS9sYW5nL09iamVjdDt4cHVyABNbTGphdmEubGFuZy5TdHJpbmc7rdJW5+kde0cCAAB4cAAAAAF0&#10;AAtzZXNfMXxtc2dfMQ==&#10;</string>
+    <string name="flutter.oc.widgetStyle.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetStyle&quot;}</string>
+    <string name="flutter.oc.widgetStyle.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetStyle&quot;}</string>
+    <string name="flutter.oc.widgetActions.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetActions&quot;}</string>
+    <string name="flutter.oc.widgetActions.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetActions&quot;}</string>
+    <string name="flutter.oc.scheduleIndex.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ScheduleIndex&quot;}</string>
+    <string name="flutter.oc.scheduleIndex.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ScheduleIndex&quot;}</string>
+    <string name="flutter.oc.scheduleClaims.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ScheduleClaims&quot;}</string>
+    <string name="flutter.oc.scheduleClaims.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ScheduleClaims&quot;}</string>
+    <string name="flutter.oc.scheduleReceipts.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ScheduleReceipts&quot;}</string>
+    <string name="flutter.oc.scheduleReceipts.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;ScheduleReceipts&quot;}</string>
+    <string name="flutter.oc.schedulePhoneLease.phone">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SchedulePhoneLease&quot;}</string>
+    <string name="flutter.voice.selected_pack">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;VoiceSelectedPack&quot;}</string>
+    <string name="flutter.voice.language">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;VoiceLanguage&quot;}</string>
+    <boolean name="flutter.voice.auto_send" value="true" />
+    <boolean name="flutter.voice.read_aloud_natural" value="true" />
+    <string name="flutter.oc.secretReentry.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SecretReentry&quot;}</string>
+    <string name="flutter.oc.secretReentry.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;SecretReentry&quot;}</string>
+    <boolean name="flutter.oc.native.flutterReadable" value="true" />
+    <string name="flutter.oc.native.returnedAt">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;NativeReturnedAt&quot;}</string>
+    <string name="flutter.oc.native.movedToDb">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;NativeMovedToDb&quot;}</string>
+    <string name="flutter.oc.model.1735000000000001.agents">anthropic|claude</string>
+    <string name="flutter.oc.sessionModels.1735000000000001.agents">{}</string>
+    <boolean name="flutter.oc.providerRuntimeRefresh.v1.1735000000000001.%3Cdefault%3E%0A%3Cdefault%3E" value="true" />
+    <string name="flutter.oc.draft.note.ses_edge.1735000000000001">&lt;b&gt;&amp;&quot;quoted&quot;&lt;/b&gt;&#9;Tab&#10;Line&#1;&#27;[0m مرحبا 🚀</string>
+    <string name="flutter.oc.model.1735000000000099">openai|gpt</string>
+    <string name="flutter.oc.futureFeature.v9">kept</string>
+    <string name="flutter.oc.model.not a valid id">kept</string>
+    <boolean name="flutter.someOtherPlugin.flag" value="false" />
+    <int name="flutter.oc.fixture.int32" value="7" />
+    <float name="flutter.oc.fixture.float" value="1.5" />
+    <null name="flutter.oc.fixture.null" />
+    <string name="flutter.oc.fixture.bigint">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBCaWdJbnRlZ2Vyzz</string>
+    <string name="flutter.oc.fixture.double">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBEb3VibGUu1.0E-7</string>
+    <string name="unprefixed.kotlin.key">kept</string>
+</map>
