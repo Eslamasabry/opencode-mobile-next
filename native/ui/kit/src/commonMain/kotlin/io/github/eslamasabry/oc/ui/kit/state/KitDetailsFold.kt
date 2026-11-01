@@ -117,7 +117,9 @@ public fun KitDetailsFold(
                 horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
                 KitText(label, Modifier.weight(1f), role = TypeRole.Secondary, tone = TextTone.Secondary)
-                KitExitGlyph(ExitGlyph.Chevron, colors.text2, Modifier.rotate(if (open) -90f else 90f))
+                // The chevron points to the end (mirrored in RTL), so the turn that makes it point up or down mirrors too.
+                val toEnd = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1f else 1f
+                KitExitGlyph(ExitGlyph.Chevron, colors.text2, Modifier.rotate(if (open) -90f * toEnd else 90f * toEnd))
             }
         }
         AnimatedVisibility(
