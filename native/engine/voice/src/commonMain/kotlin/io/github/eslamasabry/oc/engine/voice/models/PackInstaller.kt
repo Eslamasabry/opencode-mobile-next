@@ -214,6 +214,8 @@ public class PackInstaller(
                     progress(offset)
                 }
                 withContext(dispatchers.io) { sink.flush() }
+            } catch (e: FetchFailure) {
+                return media(e.problem, e)
             } finally {
                 withContext(NonCancellable + dispatchers.io) { sink.close() }
             }

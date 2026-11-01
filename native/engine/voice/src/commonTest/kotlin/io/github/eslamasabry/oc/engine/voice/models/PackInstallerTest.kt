@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.engine.voice.models
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.failureOrNull
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.testing.TestDispatchers
@@ -343,5 +344,30 @@ class PackInstallerTest {
             files.openAppend(path).apply { write(changed, 0, changed.size); close() }
             assertNull(installer.installed(pack))
             assertNull(marker())
+        }
+}
+
+class PackInstallerTransportTest {
+    @Test
+    fun `B-MEDIA-026 a transport failure mid-body comes back as its kind and keeps the part`() =
+        runTest {
+            val contents = listOf(bytesOf(3_000, 1), bytesOf(5_000, 2))
+            val pack = testPack(contents = contents)
+            val root = tempRoot()
+            val fetcher = FakeFetcher(bodiesOf(pack, contents))
+            fetcher.script = {
+                object : FetchResponse by FakeResponse(200, contents[0]) {
+                    var reads = 0
+
+                    override suspend fun read(buffer: ByteArray): Int {
+                        if (reads++ == 1) throw FetchFailure(MediaProblem.DownloadClosed)
+                        contents[0].copyInto(buffer, 0, 0, 1_000)
+                        return 1_000
+                    }
+                }.ok()
+            }
+            val installer = PackInstaller(root, SystemModelFiles(), fetcher, TestDispatchers(StandardTestDispatcher(testScheduler)), SchedulerClock(testScheduler))
+            assertEquals(Failure.Media(MediaProblem.DownloadClosed, Redacted.shape(FetchFailure(MediaProblem.DownloadClosed))), installer.install(pack).failureOrNull())
+            assertEquals(1_000L, installer.partialBytes(pack))
         }
 }

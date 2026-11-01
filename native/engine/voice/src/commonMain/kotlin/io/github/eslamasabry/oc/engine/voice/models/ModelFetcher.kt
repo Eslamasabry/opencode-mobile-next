@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.voice.models
 
+import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
 
 /**
@@ -38,3 +39,6 @@ public interface FetchResponse {
     /** Aborts the connection; safe to call twice. */
     public fun close()
 }
+
+/** Thrown by [FetchResponse.read] for a transport failure mid-body; [PackInstaller] reports [problem]. */
+public class FetchFailure(public val problem: MediaProblem) : RuntimeException(problem.name)
