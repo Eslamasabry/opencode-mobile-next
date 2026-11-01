@@ -45,5 +45,9 @@ public interface SecretEntries {
     /** True only when the platform acknowledged the disk write. */
     public fun put(name: String, value: String): Boolean
 
+    /**
+     * True only when the platform acknowledged the disk write, also when the entry was already absent (an absent entry
+     * in memory does not prove the disk lost it).
+     */
     public fun remove(name: String): Boolean
 }

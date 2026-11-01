@@ -19,20 +19,35 @@ import io.ktor.client.request.prepareRequest
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpMethod
 import io.ktor.http.isSuccess
+import kotlinx.io.IOException
 
 /**
  * What one live connection's transport is allowed to do (plan 04 §3.3). The trust decision itself (cleartext consent,
- * pin) is made by `:core:security` before this exists; this only carries it to the engine.
+ * pin) is made by `:core:security` before this exists; this only carries it to the engine, and the engine enforces
+ * every field before a byte is written (plan 04 §4.6; review w1-core-net MAJOR 4): a request to another origin, an
+ * `http` request without [cleartextPermitted], an `http` request with a pin, a URL with user info, and a TLS leaf that
+ * does not match [pinnedLeafSha256] are all refused with a [TrustRefusal].
  */
 public class TransportSpec(
     public val origin: ServerOrigin,
     public val hostClass: HostClass,
     public val cleartextPermitted: Boolean,
-    /** SHA-256 of the pinned leaf certificate (32 bytes), or null. Enforced by the engine (`:core:net-okhttp`). */
+    /** SHA-256 of the pinned leaf certificate (32 bytes), or null. Enforced by the engine (`OkHttpEngineFactory`). */
     public val pinnedLeafSha256: ByteArray? = null,
     public val connectTimeoutMs: Long = 8_000,
-    public val requestTimeoutMs: Long = 120_000,
+    /**
+     * Inactivity between reads (Flutter Dio `receiveTimeout`), not a total (plan 04 §3.3–3.4; review w1-core-net
+     * MAJOR 10). There is no default total deadline: a call that needs one sets it in its own `timeout {}` block.
+     */
+    public val readTimeoutMs: Long = 120_000,
 )
+
+/**
+ * The trust gate refused a request before anything was sent (plan 04 §4.6), or the pinned leaf did not match. [failure]
+ * is the plain failure the caller gets (`Refused(OriginChanged | CleartextNotConfirmed | PinNeedsHttps |
+ * CredentialsInUrl)` or `Certificate(Changed | Expired | Untrusted)`). The message carries no URL.
+ */
+public class TrustRefusal(public val failure: Failure) : IOException("refused by the trust gate")
 
 /** How a transport error happened, as far as the engine can tell. Decides "may have landed" for mutations. */
 public enum class TransportError {
@@ -55,6 +70,13 @@ public interface EngineFactory {
 
     /** Engine-specific exceptions (java.net.*) are classified where they are known. */
     public fun classify(error: Throwable): TransportError
+
+    /**
+     * Runs after `engine.close()`: cancels calls still running on [engine] (an open event stream included) and frees
+     * what [create] built under it (OkHttp pool and dispatcher threads; plan 04 §3.1). Ktor's `HttpClient(engine)` does
+     * not manage an engine it was given, so without this nothing frees them (review w1-core-net MAJOR 6).
+     */
+    public fun release(engine: HttpClientEngine) {}
 }
 
 /** Read = safe to repeat; Mutation = the stack never repeats it (N4-D2, audit codex-04 BLOCKER 1). */
@@ -97,6 +119,8 @@ public object StatusMapping {
 /** Transport errors → plain failures. A mutation that may have reached the server is DispatchUncertain, never retried. */
 public object TransportFailures {
     public fun of(kind: CallKind, error: TransportError, cause: Throwable?): Failure {
+        // The trust gate refused before any byte left (plan 04 §4.6): its own failure, for mutations too.
+        trustRefusalIn(cause)?.let { return it.failure }
         val details = Redacted.shape(cause)
         return when {
             // Nothing reached the server, so even a mutation is safe to call failed (DNS, refused, no route, gate).
@@ -106,25 +130,43 @@ public object TransportFailures {
             else -> Failure.Network(NetworkWhy.Reset, details)
         }
     }
+
+    private fun trustRefusalIn(error: Throwable?): TrustRefusal? {
+        var current = error
+        var depth = 0
+        while (current != null && depth < MAX_CAUSE_DEPTH) {
+            if (current is TrustRefusal) return current
+            current = current.cause?.takeIf { it !== current }
+            depth += 1
+        }
+        return null
+    }
+
+    private const val MAX_CAUSE_DEPTH = 8
 }
 
 /**
  * One connection's Ktor client (plan 04 §3.3): no redirects, no retry plugin, no content negotiation, no logging
- * plugin, status codes as values. Closing it closes the engine.
+ * plugin, status codes as values. Closing it closes the engine and releases it (plan 04 §3.1).
  */
 public class HttpClientFactory(private val engines: EngineFactory) {
     public fun create(spec: TransportSpec): NetClient {
-        val client = HttpClient(engines.create(spec)) {
+        val engine = engines.create(spec)
+        val client = HttpClient(engine) {
             expectSuccess = false
             followRedirects = false
             install(HttpTimeout) {
                 connectTimeoutMillis = spec.connectTimeoutMs
-                requestTimeoutMillis = spec.requestTimeoutMs
-                socketTimeoutMillis = spec.requestTimeoutMs
+                // Inactivity only. requestTimeoutMillis stays unset: a long download or a slow reply that keeps sending
+                // must not be cut off at two minutes (plan 04 §3.3–3.4; review w1-core-net MAJOR 10).
+                socketTimeoutMillis = spec.readTimeoutMs
             }
             install(UserAgent) { agent = USER_AGENT }
         }
-        return NetClient(client, engines::classify)
+        return NetClient(client, engines::classify) {
+            engine.close()
+            engines.release(engine)
+        }
     }
 
     public companion object {
@@ -133,7 +175,12 @@ public class HttpClientFactory(private val engines: EngineFactory) {
     }
 }
 
-public class NetClient(public val http: HttpClient, private val classify: (Throwable) -> TransportError) {
+public class NetClient(
+    public val http: HttpClient,
+    private val classify: (Throwable) -> TransportError,
+    /** Closes and releases the engine this client was built on; [HttpClient.close] alone leaves it running. */
+    private val closeEngine: () -> Unit = {},
+) {
     /**
      * One request, one answer. A non-2xx status becomes its [StatusMapping] failure; any error becomes a
      * [TransportFailures] failure for the method's [CallKind]. Cancellation is rethrown. Nothing here retries.
@@ -156,7 +203,9 @@ public class NetClient(public val http: HttpClient, private val classify: (Throw
         }
     }
 
+    /** Stops new calls, then closes the engine and cancels calls still running on it (plan 04 §3.1 order). */
     public fun close() {
         http.close()
+        closeEngine()
     }
 }

@@ -27,11 +27,15 @@ public class DefaultPacer(
             val period = spec.cadence.periodFor(now) ?: awaitCancellation()
             if (returned) emit(Unit)
             while (true) {
-                delay(jittered(period, spec.cadence.jitter))
+                delay(jittered(period, spec.cadence.jitter).coerceAtLeast(floorFor(now)))
                 emit(Unit)
             }
         }
     }
+
+    /** PB-42 holds for the interval that actually runs: jitter may never take a hidden-idle wait under 60 s. */
+    private fun floorFor(visibility: Visibility): Duration =
+        if (visibility == Visibility.HiddenIdle) Cadence.HIDDEN_IDLE_MIN else Duration.ZERO
 
     private fun jittered(period: Duration, jitter: Double): Duration =
         if (jitter == 0.0) period else period * (1.0 + jitter * (random.nextDouble() * 2.0 - 1.0))

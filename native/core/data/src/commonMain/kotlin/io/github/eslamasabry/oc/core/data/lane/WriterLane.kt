@@ -9,50 +9,59 @@ import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.persistentHashSetOf
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.atomics.AtomicReference
 
 /**
  * One ordered write lane (ADR §9.5, plan 03 §17.3) with the audit fix for the drain race
- * (`audit/codex-01+03` BLOCKER 1).
+ * (`audit/codex-01+03` BLOCKER 1) and the admission-order fix (review w1-data-oc2 MAJOR 4).
  *
- * The plan's version checked an admission flag and THEN queued on the mutex, so a writer that passed the check but had
- * not reached the lock was invisible to `drain()`: drain could return, the sweep could run, and the writer would then
- * restore deleted data. Here admission and registration are one atomic step: a write is admitted only by adding its
- * ticket to the in-flight set with a compare-and-set on the same state that holds the admission flag. `stopAdmission()`
- * flips the flag on that state, so after it returns no new ticket can be added, and `drain()` awaits every ticket that
- * was admitted before, including writers still waiting for the mutex or paused before reaching it.
+ * Admission and ordering are one atomic step: a write is admitted by a compare-and-set on the state that holds the
+ * admission flag, the in-flight tickets AND the tail of the queue. The new ticket becomes the tail and remembers the
+ * ticket admitted just before it; it runs only after that one has finished. So writes run in admission order, whatever
+ * happens between admission and running (a writer paused after admission cannot be overtaken by a later one, which a
+ * mutex alone allowed: mutex fairness orders mutex waiters, not admissions). `stopAdmission()` flips the flag on that
+ * state, so after it returns no new ticket can be added, and `drain()` awaits every ticket admitted before.
  *
- * Cancellation: a writer cancelled while waiting for the mutex never runs its block; its ticket is completed in
- * `finally`, so drain does not wait for it. A writer cancelled inside its block is awaited until the block returns or
- * throws; blocks that must finish a platform commit use `withContext(NonCancellable)` (plan 03 §17.5 rule 2).
- *
- * Writes run in FIFO order (`Mutex` is fair), like Dart's chained futures.
+ * Cancellation: a writer cancelled before running never runs its block; its ticket is completed only when the ticket
+ * before it has completed (without suspending the cancelled writer), so the chain never lets a later write start
+ * early. A writer cancelled inside its block is awaited until the block returns or throws; blocks that must finish a
+ * platform commit use `withContext(NonCancellable)` (plan 03 §17.5 rule 2).
  */
 public class WriterLane(public val name: String) {
-    private class State(val admitting: Boolean, val inFlight: PersistentSet<CompletableDeferred<Unit>>)
+    private class State(
+        val admitting: Boolean,
+        val inFlight: PersistentSet<CompletableDeferred<Unit>>,
+        val tail: CompletableDeferred<Unit>?,
+    )
 
-    private val state = AtomicReference(State(admitting = true, inFlight = persistentHashSetOf()))
-    private val mutex = Mutex()
+    private val state = AtomicReference(State(admitting = true, inFlight = persistentHashSetOf(), tail = null))
 
-    /** Test seam: runs after a write is admitted and before it asks for the mutex (the race window of the audit). */
+    /** Test seam: runs after a write is admitted and before it waits for its turn (the race window of the audits). */
     internal var afterAdmission: (suspend () -> Unit)? = null
 
     public val isAdmitting: Boolean get() = state.load().admitting
 
     /**
-     * Runs [block] after every write admitted before it. Refused with [RefusalReason.ProfileClosing] once
-     * [stopAdmission] was called.
+     * Runs [block] after every write admitted before it, in admission order. Refused with
+     * [RefusalReason.ProfileClosing] once [stopAdmission] was called.
      */
     public suspend fun <T> write(block: suspend () -> Outcome<T>): Outcome<T> {
         val ticket = CompletableDeferred<Unit>()
-        if (!admit(ticket)) return Outcome.Failed(Failure.Refused(RefusalReason.ProfileClosing))
+        val previous = admit(ticket) ?: return Outcome.Failed(Failure.Refused(RefusalReason.ProfileClosing))
+        var ran = false
         try {
             afterAdmission?.invoke()
-            return mutex.withLock { block() }
+            previous.value?.await()
+            ran = true
+            return block()
         } finally {
-            release(ticket)
+            val before = previous.value
+            if (ran || before == null || before.isCompleted) {
+                release(ticket)
+            } else {
+                // Cancelled while waiting: hand the turn on only when the write before this one is done.
+                before.invokeOnCompletion { release(ticket) }
+            }
         }
     }
 
@@ -61,7 +70,7 @@ public class WriterLane(public val name: String) {
         while (true) {
             val s = state.load()
             if (!s.admitting) return
-            if (state.compareAndSet(s, State(admitting = false, inFlight = s.inFlight))) return
+            if (state.compareAndSet(s, State(admitting = false, inFlight = s.inFlight, tail = s.tail))) return
         }
     }
 
@@ -70,7 +79,7 @@ public class WriterLane(public val name: String) {
         while (true) {
             val s = state.load()
             if (s.admitting) return
-            if (state.compareAndSet(s, State(admitting = true, inFlight = s.inFlight))) return
+            if (state.compareAndSet(s, State(admitting = true, inFlight = s.inFlight, tail = s.tail))) return
         }
     }
 
@@ -82,18 +91,23 @@ public class WriterLane(public val name: String) {
         for (ticket in state.load().inFlight) ticket.await()
     }
 
-    private fun admit(ticket: CompletableDeferred<Unit>): Boolean {
+    /** The ticket admitted before [ticket] (boxed: it may be null), or null when the lane refused it. */
+    private fun admit(ticket: CompletableDeferred<Unit>): Box? {
         while (true) {
             val s = state.load()
-            if (!s.admitting) return false
-            if (state.compareAndSet(s, State(admitting = true, inFlight = s.inFlight.adding(ticket)))) return true
+            if (!s.admitting) return null
+            val next = State(admitting = true, inFlight = s.inFlight.adding(ticket), tail = ticket)
+            if (state.compareAndSet(s, next)) return Box(s.tail)
         }
     }
+
+    private class Box(val value: CompletableDeferred<Unit>?)
 
     private fun release(ticket: CompletableDeferred<Unit>) {
         while (true) {
             val s = state.load()
-            if (state.compareAndSet(s, State(admitting = s.admitting, inFlight = s.inFlight.removing(ticket)))) break
+            val next = State(admitting = s.admitting, inFlight = s.inFlight.removing(ticket), tail = s.tail)
+            if (state.compareAndSet(s, next)) break
         }
         ticket.complete(Unit)
     }

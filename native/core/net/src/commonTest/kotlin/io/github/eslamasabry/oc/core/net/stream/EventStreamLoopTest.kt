@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.security.HostClass
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -47,6 +48,7 @@ class EventStreamLoopTest {
         online: Online = Online.Yes,
         resume: ResumeMode = ResumeMode.None,
         scripts: List<Script> = emptyList(),
+        reconnectAllowed: MutableStateFlow<Boolean> = MutableStateFlow(true),
     ): Harness {
         val connector = FakeConnector(this, scripts)
         val network = FakeNetworkStatus(online)
@@ -60,6 +62,7 @@ class EventStreamLoopTest {
             random = Random(7),
             hidden = hidden,
             resume = resume,
+            reconnectAllowed = reconnectAllowed,
         )
         return Harness(this, connector, network, loop, hidden)
     }
@@ -224,7 +227,7 @@ class EventStreamLoopTest {
     }
 
     @Test
-    fun `N4-D6 401 stops the stream until retryNow`() = runTest {
+    fun `N4-D6 a terminal sign-in failure (stop) parks the stream until retryNow`() = runTest {
         val h = harness(
             scripts = listOf(Script.Fail(Failure.SignIn(SignInWhy.PasswordRejected), stop = true), Script.Body(emptyList(), Script.End.Hang)),
         )
@@ -281,5 +284,112 @@ class EventStreamLoopTest {
         h.start()
         advanceTimeBy(1_500)
         assertEquals(listOf(null, "42"), h.connector.lastEventIds)
+    }
+
+    @Test
+    fun `N4-D6 a retryNow sent while a refused request was in flight is kept (review w1-core-net MAJOR 8)`() = runTest {
+        // The person saves a new password while the request that is about to be refused is still out: the new
+        // password must be tried at once, not swallowed by the stop.
+        val h = harness(
+            scripts = listOf(
+                Script.Fail(Failure.SignIn(SignInWhy.PasswordRejected), stop = true, afterMs = 5_000),
+                Script.Body(emptyList(), Script.End.Hang),
+            ),
+        )
+        h.start()
+        advanceTimeBy(2_000)
+        h.loop.retryNow()
+        advanceTimeBy(10_000)
+        assertEquals(listOf(0L, 5_000L), h.connector.opens)
+        assertEquals(StreamStatus.Connected, h.statuses.last().second)
+    }
+
+    @Test
+    fun `N4-D6 OpenCode 2 sign-in failure keeps the backoff and is published as lastFailure`() = runTest {
+        val rejected = Failure.SignIn(SignInWhy.PasswordRejected)
+        val h = harness(scripts = listOf(Script.Fail(rejected), Script.Fail(rejected), Script.Body(emptyList(), Script.End.Hang)))
+        h.start()
+        assertEquals(rejected, h.loop.lastFailure.value)
+        assertTrue(h.statuses.last().second is StreamStatus.Reconnecting)
+        advanceTimeBy(3_500)
+        assertEquals(listOf(0L, 1_000L, 3_000L), h.connector.opens)
+        assertEquals(null, h.loop.lastFailure.value) // the next Connected clears it
+        assertTrue(h.statuses.none { it.second is StreamStatus.Stopped })
+    }
+
+    @Test
+    fun `B-PROTO-146 reconnect off - a drop schedules nothing and retryNow dials once`() = runTest {
+        val h = harness(
+            reconnectAllowed = MutableStateFlow(false),
+            scripts = listOf(Script.Body(listOf(0L to frame("a")), Script.End.Error)),
+        )
+        h.start()
+        advanceTimeBy(100_000)
+        assertEquals(listOf(0L), h.connector.opens)
+        assertEquals(StreamStatus.Disconnected(1, null), h.statuses.last().second)
+        assertEquals(listOf("a"), h.frames) // data received before the drop is kept
+        h.network.set(Online.Yes, id = 9) // a new network does not dial while reconnecting is off
+        runCurrent()
+        assertEquals(listOf(0L), h.connector.opens)
+        h.loop.retryNow()
+        runCurrent()
+        advanceTimeBy(100_000)
+        assertEquals(listOf(0L, 100_000L), h.connector.opens) // one try, then nothing scheduled again
+        assertEquals(StreamStatus.Disconnected(2, null), h.statuses.last().second)
+    }
+
+    @Test
+    fun `B-PROTO-146 turning reconnect off during a wait cancels the scheduled try, turning it on dials`() = runTest {
+        val allowed = MutableStateFlow(true)
+        val h = harness(reconnectAllowed = allowed)
+        h.start() // fails at 0; next try scheduled for 1 s
+        advanceTimeBy(500)
+        allowed.value = false
+        runCurrent()
+        assertEquals(StreamStatus.Disconnected(1, null), h.statuses.last().second)
+        advanceTimeBy(60_000)
+        assertEquals(listOf(0L), h.connector.opens)
+        allowed.value = true
+        runCurrent()
+        assertEquals(listOf(0L, 60_500L), h.connector.opens)
+    }
+
+    @Test
+    fun `B-PROTO-146 a live stream stays up when reconnect turns off, and a new network does not drop it`() = runTest {
+        val allowed = MutableStateFlow(true)
+        val h = harness(
+            reconnectAllowed = allowed,
+            scripts = listOf(Script.Body(listOf(0L to frame("a"), 20_000L to frame("b")), Script.End.Hang)),
+        )
+        h.start()
+        allowed.value = false
+        h.network.set(Online.Yes, id = 9)
+        advanceTimeBy(30_000)
+        assertEquals(listOf(0L), h.connector.opens)
+        assertEquals(StreamStatus.Connected, h.statuses.last().second)
+        assertEquals(listOf("a", "b"), h.frames)
+    }
+
+    @Test
+    fun `N4-D6 the resume cursor moves only after the collector took the frame (review w1-core-net MAJOR 9)`() = runTest {
+        val h = harness(
+            resume = ResumeMode.LastEventId,
+            scripts = listOf(
+                Script.Body(listOf(0L to "id: 1\ndata: a\n\nid: 2\ndata: b\n\n"), Script.End.Hang),
+                Script.Body(emptyList(), Script.End.Hang),
+            ),
+        )
+        // A busy collector: after frame 1 it asks for a new try (as a network change would) and stays busy, so the
+        // hand-over of frame 2 is cancelled. Frame 2 was never received, so the next try must resume after 1.
+        backgroundScope.launch {
+            h.loop.signals().collect { s ->
+                if (s is StreamSignal.Frame && s.frame.id == "1") {
+                    h.loop.retryNow()
+                    delay(1_000)
+                }
+            }
+        }
+        advanceTimeBy(5_000)
+        assertEquals(listOf(null, "1"), h.connector.lastEventIds)
     }
 }

@@ -2,10 +2,13 @@ package io.github.eslamasabry.oc.core.data.android
 
 import android.content.Context
 import android.content.SharedPreferences
+import io.github.eslamasabry.oc.core.data.kv.EarlyReadPolicy
 import io.github.eslamasabry.oc.core.data.kv.FlutterPrefsCodec
 import io.github.eslamasabry.oc.core.data.kv.PrefsKeyValueStore
 import io.github.eslamasabry.oc.core.data.migration.MigrationGate
+import io.github.eslamasabry.oc.core.data.migration.MigrationOnly
 import io.github.eslamasabry.oc.core.data.secret.AeadSecretStore
+import io.github.eslamasabry.oc.core.data.secret.GatedSecretStore
 import io.github.eslamasabry.oc.core.data.secret.SecretStore
 import io.github.eslamasabry.oc.core.security.Redactor
 import kotlinx.coroutines.CoroutineDispatcher
@@ -16,17 +19,37 @@ import kotlinx.coroutines.CoroutineDispatcher
  */
 public object AndroidDataStores {
 
-    /** The ADOPTED Flutter file: `shared_prefs/FlutterSharedPreferences.xml`, `flutter.` prefix and encodings kept. */
-    public fun flutterPrefs(context: Context, gate: MigrationGate, io: CoroutineDispatcher): PrefsKeyValueStore =
+    /**
+     * The ADOPTED Flutter file: `shared_prefs/FlutterSharedPreferences.xml`, `flutter.` prefix and encodings kept.
+     * [earlyReads]: [EarlyReadPolicy.Throw] in debug/qa builds, a diagnostics counter in release (plan 05 §2.2).
+     */
+    public fun flutterPrefs(
+        context: Context,
+        gate: MigrationGate,
+        io: CoroutineDispatcher,
+        earlyReads: EarlyReadPolicy = EarlyReadPolicy.Throw,
+    ): PrefsKeyValueStore =
         PrefsKeyValueStore(
             backend = SharedPreferencesBackend(open(context, FlutterPrefsCodec.FILE_NAME)),
             codec = FlutterPrefsCodec(ObjectStreamJavaListDecoder),
             gate = gate,
             io = io,
+            earlyReads = earlyReads,
         )
 
-    /** `shared_prefs/oc_secrets_v1.xml` + Keystore alias `oc.secrets.aesgcm.v1`. */
-    public fun secrets(context: Context, redactor: Redactor, io: CoroutineDispatcher): SecretStore =
+    /**
+     * `shared_prefs/oc_secrets_v1.xml` + Keystore alias `oc.secrets.aesgcm.v1`, bound for everyone as
+     * [GatedSecretStore]: every call waits for the migration gate (plan 05 §4.2; review w1-data-oc2 MAJOR 5).
+     */
+    public fun secrets(context: Context, gate: MigrationGate, redactor: Redactor, io: CoroutineDispatcher): SecretStore =
+        GatedSecretStore(rawSecrets(context, redactor, io), gate)
+
+    /** The raw store for the day-1 migrator only (plan 05 §4.2: it writes before the gate opens). */
+    @MigrationOnly
+    public fun secretsForMigration(context: Context, redactor: Redactor, io: CoroutineDispatcher): SecretStore =
+        rawSecrets(context, redactor, io)
+
+    private fun rawSecrets(context: Context, redactor: Redactor, io: CoroutineDispatcher): SecretStore =
         AeadSecretStore(
             entries = SharedPreferencesSecretEntries(open(context, AeadSecretStore.FILE_NAME)),
             aead = KeystoreAead(AeadSecretStore.KEY_ALIAS),

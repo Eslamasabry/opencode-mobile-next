@@ -27,7 +27,12 @@ internal class SecretReadBackMismatch : Exception()
  *
  * - Every read and write registers the value with the [Redactor] BEFORE returning or persisting it (a failing cipher
  *   may echo its input).
- * - `write` commits, reads back and compares; a mismatch deletes the entry and fails.
+ * - `write` commits, reads back and compares; a mismatch deletes the entry and fails. A refused commit is compensated:
+ *   the previous entry (or its absence) is committed back, so a value the disk refused can never be persisted later by
+ *   another, successful commit of the same file (Android's `commit()` changes memory before it writes the disk; review
+ *   w1-data-oc2 MAJOR 2).
+ * - `delete` always commits the removal and needs the acknowledgement, even when the platform's memory already says the
+ *   entry is gone: after a refused delete, memory is ahead of disk, and only a real commit removes it from disk.
  * - Values are cached after the first read (Keystore decrypt is 5–20 ms).
  * - All calls are serialised on one lock and run on [io].
  */
@@ -62,7 +67,12 @@ public class AeadSecretStore(
         return withContext(io + NonCancellable) {
             lock.withLock {
                 attempt(::secretFailure) {
-                    if (!entries.put(name, encrypt(name, value))) throw SecretWriteRefused()
+                    val previous = entries.get(name)
+                    if (!entries.put(name, encrypt(name, value))) {
+                        // Put the platform's memory back to what the disk holds; best effort, the failure stands.
+                        restore(name, previous)
+                        throw SecretWriteRefused()
+                    }
                     // A read-back that throws (bad tag, bad Base64) counts as a mismatch: nothing half-written stays.
                     val back = try {
                         entries.get(name)?.let { decrypt(name, it) }
@@ -85,13 +95,23 @@ public class AeadSecretStore(
             lock.withLock {
                 attempt(::secretFailure) {
                     forget(name)
-                    if (entries.get(name) != null && !entries.remove(name)) throw SecretWriteRefused()
+                    // Never skipped on "already absent": a refused delete leaves memory ahead of disk (review MAJOR 2).
+                    if (!entries.remove(name)) throw SecretWriteRefused()
                 }
             }
         }
 
     override suspend fun names(prefix: String): Outcome<Set<String>> =
         withContext(io) { lock.withLock { attempt(::secretFailure) { entries.names().filterTo(LinkedHashSet()) { it.startsWith(prefix) } } } }
+
+    private fun restore(name: String, previous: String?) {
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            if (previous == null) entries.remove(name) else entries.put(name, previous)
+        } catch (e: Exception) {
+            Unit // the refused write is already reported; a failing compensation changes nothing about that
+        }
+    }
 
     private fun encrypt(name: String, value: String): String {
         val sealed = aead.seal(value.encodeToByteArray(), name.encodeToByteArray())

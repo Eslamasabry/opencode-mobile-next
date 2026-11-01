@@ -7,6 +7,9 @@ import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.ServerOrigin
 import io.github.eslamasabry.oc.core.model.ServerProfile
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Credentials already resolved for one connection (plan 03 §10.7, plan 04 §4.8). Built by `:engine:connection` through
@@ -47,7 +50,7 @@ public data class ProbeResult(
 
 /**
  * Everything a factory needs to open a gateway pair (plan 04 §11.1). Fields the plan adds with their owning units —
- * `permit: TransportPermit` (S1-SECNET), `reconnectAllowed`, `serverRunsTools`, `options` (the connection engine) —
+ * `permit: TransportPermit` (S1-SECNET), `serverRunsTools`, `options` (the connection engine) —
  * are appended here, with defaults, when those types exist.
  */
 public data class GatewaySpec(
@@ -59,7 +62,15 @@ public data class GatewaySpec(
     val location: ServerLocation = ServerLocation.Default,
     /** The probe of this connect, when one ran; lets the gateway skip a second version read. */
     val probe: ProbeResult? = null,
+    /**
+     * N4-D21 (plan 04 §12.9): whether the gateway's event stream (and sockets) may reconnect on their own. The protocol
+     * passes it to `EventStreamLoop`; false keeps a live stream, schedules no try after a drop and lets only a person's
+     * Try again dial (B-PROTO-146; review w1-core-net MAJOR 7). Default: always allowed.
+     */
+    val reconnectAllowed: StateFlow<Boolean> = AlwaysAllowed,
 )
+
+private val AlwaysAllowed: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
 
 /** Backends plug in here (plan 03 S3): a Metro Set multibinding, one factory per [BackendKind] (plan 04 §11.1). */
 public interface GatewayFactory {

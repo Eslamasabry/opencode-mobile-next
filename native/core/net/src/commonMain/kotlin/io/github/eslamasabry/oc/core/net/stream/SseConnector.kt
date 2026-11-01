@@ -29,7 +29,10 @@ public sealed interface SseConnectResult {
     /** A 200 event stream was opened and its session ran to the end (clean, error or cancelled by the loop). */
     public data object Ended : SseConnectResult
 
-    /** No stream. [stop] = do not retry on a schedule (sign-in needed, incompatible server). */
+    /**
+     * No stream. [stop] = do not retry on a schedule (Paseo/Codex-style terminal sign-in, incompatible server). An
+     * OpenCode 2 sign-in failure is NOT a stop: its stream keeps the normal backoff (plan 04 §4.8, §6.2).
+     */
     public data class Failed(val failure: Failure, val stop: Boolean) : SseConnectResult
 }
 
@@ -41,10 +44,15 @@ public fun interface SseConnector {
 /**
  * The Ktor connector: `Accept: text/event-stream`, no request timeout, the stall rule lives in the loop (N4-D7).
  * [request] is rebuilt on every try (auth, `after=` cursor, `Last-Event-ID`).
+ *
+ * [stopOnAuthFailure]: false for OpenCode 2 (default): a 401/403 is a failed try like any other, the loop keeps its
+ * backoff and publishes the failure in `lastFailure` (plan 04 §4.8, §6.2; Flutter `sse2.dart:189-222`; review
+ * w1-core-net MAJOR 8). True only for a backend whose plan row makes sign-in failures terminal.
  */
 public class KtorSseConnector(
     private val client: HttpClient,
     private val classify: (Throwable) -> TransportError = { TransportError.Other },
+    private val stopOnAuthFailure: Boolean = false,
     private val request: HttpRequestBuilder.(lastEventId: String?) -> Unit,
 ) : SseConnector {
     override suspend fun connect(lastEventId: String?, session: suspend (SseBody) -> Unit): SseConnectResult {
@@ -59,7 +67,8 @@ public class KtorSseConnector(
             }.execute { response ->
                 val status = response.status.value
                 when {
-                    status == 401 || status == 403 -> SseConnectResult.Failed(StatusMapping.failureFor(status), stop = true)
+                    status == 401 || status == 403 ->
+                        SseConnectResult.Failed(StatusMapping.failureFor(status), stop = stopOnAuthFailure)
                     status !in 200..299 -> SseConnectResult.Failed(StatusMapping.failureFor(status), stop = false)
                     response.contentType()?.match(ContentType.Text.EventStream) != true ->
                         SseConnectResult.Failed(Failure.UnreadableReply(Redacted.shape(null, status)), stop = false)

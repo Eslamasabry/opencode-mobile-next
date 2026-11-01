@@ -10,13 +10,18 @@ import kotlinx.coroutines.flow.SharedFlow
  *
  * - Keys are LOGICAL: never the `flutter.` prefix. On Android the physical file is the adopted
  *   `shared_prefs/FlutterSharedPreferences.xml`.
- * - Reads are in-memory, cheap and never blocked by the migration gate. They only ever see acknowledged values.
+ * - Reads are in-memory, cheap and only valid once the migration gate is Open (plan 05 §2.2): before that, debug, qa
+ *   and test builds throw [GateNotOpen] and release builds count an early read ([EarlyReadPolicy]). Code that must
+ *   read earlier uses [MigrationReader]. Reads only ever see acknowledged values.
  * - Every mutation (commit, compare-and-set, the migrator's writes and the compensation after a refusal) runs under ONE
  *   file-wide lock, held from reading the previous values through the platform commit and the compensation
  *   (audit codex-04+05 MAJOR 8).
  */
 public interface KeyValueStore {
-    /** Logical key → decoded value; null when absent or stored as `<null>` (invisible to Dart too). */
+    /**
+     * Logical key → decoded value; null when absent or stored as `<null>` (invisible to Dart too). Before the gate is
+     * Open: [GateNotOpen] in debug/qa/test builds (plan 05 §2.2).
+     */
     public fun get(key: String): PrefValue?
 
     /** Logical keys starting with [prefix]. */
@@ -53,6 +58,31 @@ public interface PrefEdit {
     public fun putDouble(key: String, value: Double)
 
     public fun remove(key: String)
+}
+
+/** A read before the migration gate opened, in a debug, qa or test build (plan 05 §2.2). Names no key. */
+public class GateNotOpen : IllegalStateException("a preference was read before the migration gate opened")
+
+/**
+ * What a read before the gate is Open does (plan 05 §2.2). [Throw] in debug, qa and test builds; release builds pass
+ * a policy that adds one to the diagnostics `earlyRead` count and lets the read answer.
+ */
+public fun interface EarlyReadPolicy {
+    public fun onEarlyRead()
+
+    public companion object {
+        public val Throw: EarlyReadPolicy = EarlyReadPolicy { throw GateNotOpen() }
+    }
+}
+
+/**
+ * Plan 05 §2.2: the only reads allowed before the gate is Open. Obtained from `PrefsKeyValueStore.migrationReader()`
+ * (`@MigrationOnly`); no secrets.
+ */
+public interface MigrationReader {
+    public fun get(key: String): PrefValue?
+
+    public fun keys(prefix: String = ""): Set<String>
 }
 
 public fun KeyValueStore.string(key: String): String? = (get(key) as? PrefValue.Str)?.value

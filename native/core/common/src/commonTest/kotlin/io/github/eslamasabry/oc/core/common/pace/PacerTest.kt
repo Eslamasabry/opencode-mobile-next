@@ -98,4 +98,16 @@ class PacerTest {
         assertTrue(gaps.all { it in 8.seconds..12.seconds }, "gaps $gaps")
         assertTrue(gaps.toSet().size > 1, "jitter never varied")
     }
+
+    @Test
+    fun `PB-42 no hidden-idle timer fires faster than 60 s, jitter included (review w1-core-net MINOR 12)`() =
+        runTest(StandardTestDispatcher()) {
+            val spec = TimerSpec("test.idle", Cadence(10.seconds, null, hiddenIdle = 60.seconds, jitter = 0.5), "x")
+            val seen = ticksOf(MutableStateFlow(Visibility.HiddenIdle), spec)
+            advanceTimeBy(3_600_000)
+            val gaps = (listOf(0L) + seen).zipWithNext { a, b -> (b - a).milliseconds }
+            assertTrue(gaps.size >= 30)
+            assertTrue(gaps.all { it >= 60.seconds }, "gaps $gaps")
+            assertTrue(gaps.toSet().size > 1, "jitter above the floor still varies")
+        }
 }

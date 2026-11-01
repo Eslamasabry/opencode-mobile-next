@@ -132,18 +132,26 @@ internal sealed interface Reply {
     data class Ok(val body: String) : Reply
     data class Status(val code: Int, val headers: List<Pair<String, String>>) : Reply
     data object CloseWithoutAnswer : Reply
+
+    /** `Transfer-Encoding: chunked`: each chunk after [gapMs]; then the body ends, or the server goes quiet. */
+    data class Chunked(val chunks: List<String>, val gapMs: Long, val hangAfter: Boolean = false) : Reply
 }
 
-/** HTTP/1.1 keep-alive server on loopback that records every request it reads. */
-internal class CountingServer : AutoCloseable {
-    private val socket = ServerSocket(0, 50, InetAddress.getLoopbackAddress())
+/**
+ * HTTP/1.1 keep-alive server on loopback that records every request it reads. [socket] may be a TLS server socket
+ * ([scheme] `https`): a failed handshake then records nothing.
+ */
+internal class CountingServer(
+    private val socket: ServerSocket = ServerSocket(0, 50, InetAddress.getLoopbackAddress()),
+    private val scheme: String = "http",
+) : AutoCloseable {
     val port: Int = socket.localPort
     val requests: MutableList<SeenRequest> = Collections.synchronizedList(mutableListOf())
     val connectionsSeen = AtomicInteger()
 
     @Volatile var handler: (SeenRequest, Int) -> Reply = { _, _ -> Reply.Ok("") }
 
-    fun url(path: String) = "http://127.0.0.1:$port$path"
+    fun url(path: String) = "$scheme://127.0.0.1:$port$path"
 
     fun count(method: String) = requests.count { it.method == method }
 
@@ -168,6 +176,23 @@ internal class CountingServer : AutoCloseable {
             requests += seen
             val text = when (val reply = handler(seen, id)) {
                 Reply.CloseWithoutAnswer -> return
+                is Reply.Chunked -> {
+                    out.write("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nTransfer-Encoding: chunked\r\n\r\n".toByteArray())
+                    out.flush()
+                    for (chunk in reply.chunks) {
+                        Thread.sleep(reply.gapMs)
+                        val bytes = chunk.toByteArray()
+                        out.write("${Integer.toHexString(bytes.size)}\r\n".toByteArray())
+                        out.write(bytes)
+                        out.write("\r\n".toByteArray())
+                        out.flush()
+                    }
+                    if (reply.hangAfter) {
+                        while (!socket.isClosed && !s.isClosed) Thread.sleep(50)
+                        return
+                    }
+                    "0\r\n\r\n"
+                }
                 is Reply.Ok -> "HTTP/1.1 200 OK\r\nContent-Length: ${reply.body.length}\r\n\r\n${reply.body}"
                 is Reply.Status ->
                     "HTTP/1.1 ${reply.code} X\r\n" + reply.headers.joinToString("") { "${it.first}: ${it.second}\r\n" } +

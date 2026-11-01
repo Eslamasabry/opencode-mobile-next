@@ -149,5 +149,42 @@ class WriterLaneTest {
         assertTrue(lanes.forProfile(ProfileId("2")).isAdmitting)
         assertTrue(lanes.app.isAdmitting)
     }
-}
 
+    @Test
+    fun `B-STATE-002 a write paused after admission is not overtaken by a later one (review MAJOR 4)`() = runTest {
+        val lane = WriterLane("p")
+        val paused = CompletableDeferred<Unit>()
+        val reachedPause = CompletableDeferred<Unit>()
+        lane.afterAdmission = {
+            lane.afterAdmission = null // only the first writer pauses
+            reachedPause.complete(Unit)
+            paused.await()
+        }
+        val log = mutableListOf<String>()
+        launch { lane.write { log += "A"; Outcome.Ok(Unit) } }
+        reachedPause.await()
+        launch { lane.write { log += "B"; Outcome.Ok(Unit) } }
+        runCurrent()
+        assertEquals(emptyList(), log, "B ran before A, which was admitted first")
+        paused.complete(Unit)
+        lane.drain()
+        assertEquals(listOf("A", "B"), log)
+    }
+
+    @Test
+    fun `B-STATE-002 cancelling a queued write never lets the next one start early`() = runTest {
+        val lane = WriterLane("p")
+        val gate = CompletableDeferred<Unit>()
+        val log = mutableListOf<String>()
+        launch { lane.write { gate.await(); log += "A"; Outcome.Ok(Unit) } }
+        val b = launch { lane.write { log += "B"; Outcome.Ok(Unit) } }
+        launch { lane.write { log += "C"; Outcome.Ok(Unit) } }
+        runCurrent()
+        b.cancel()
+        runCurrent()
+        assertEquals(emptyList(), log, "C started while A was still running")
+        gate.complete(Unit)
+        lane.drain()
+        assertEquals(listOf("A", "C"), log)
+    }
+}
