@@ -7,6 +7,7 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -22,8 +23,10 @@ import kotlinx.coroutines.flow.stateIn
 public class ChatsViewModel(registry: ConnectionRegistry, private val nav: AppNavigator) : ViewModel(), ChatsActions {
     public val state: StateFlow<ChatsUi> =
         registry.live
-            .map { ChatsUi(liveConnections = it.size) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ChatsUi())
+            .map { ChatsUi(liveConnections = it.size, rows = ConversationFixture.rows) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ChatsUi(rows = ConversationFixture.rows))
 
     override fun showAll(): Unit = nav.open(ChatsRoute.All(filter = null))
+
+    override fun openConversation(ref: ConversationRef): Unit = nav.openChat(ref)
 }

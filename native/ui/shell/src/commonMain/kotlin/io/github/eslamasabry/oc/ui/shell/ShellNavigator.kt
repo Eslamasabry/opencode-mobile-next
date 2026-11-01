@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.RouteMotion
+import io.github.eslamasabry.oc.ui.shell.nav.GateEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +27,9 @@ public class ShellNavigator : AppNavigator {
     private var stack: MutableList<NavKey>? = null
     private var pending: ((MutableList<NavKey>) -> Unit)? = null
     private val mutableTop = MutableStateFlow<AppRoute?>(null)
+
+    /** NavShell's row-transform gate listens here (P2): a chat push is TapOpen, an in-app Back is ButtonBack. */
+    internal var gateListener: ((GateEvent) -> Unit)? = null
     override val top: StateFlow<AppRoute?> = mutableTop.asStateFlow()
 
     internal fun attach(backStack: MutableList<NavKey>) {
@@ -57,14 +61,25 @@ public class ShellNavigator : AppNavigator {
     }
 
     override fun openChat(ref: ConversationRef, focusComposer: Boolean): Unit = mutate { s ->
-        if ((s.lastOrNull() as? ChatRoute)?.ref != ref) s.add(ChatRoute(ref, focusComposer))
+        if ((s.lastOrNull() as? ChatRoute)?.ref != ref) {
+            gateListener?.invoke(GateEvent.TapOpen)
+            s.add(ChatRoute(ref, focusComposer))
+        }
     }
 
     override fun land(): Unit = mutate { it.replaceWith(ChatsRoute.Home) }
 
     override fun replaceRoot(root: AppRoute): Unit = mutate { it.replaceWith(root) }
 
-    override fun back(): Unit = mutate { s -> if (s.size > 1) s.removeAt(s.lastIndex) }
+    override fun back(): Unit = mutate { s ->
+        if (s.size > 1) {
+            gateListener?.invoke(GateEvent.ButtonBack)
+            s.removeAt(s.lastIndex)
+        }
+    }
+
+    /** NavDisplay's onBack: the shell has already told the gate whether a gesture or a key/button committed it. */
+    internal fun systemBack(): Unit = mutate { s -> if (s.size > 1) s.removeAt(s.lastIndex) }
 
     private fun MutableList<NavKey>.replaceWith(route: AppRoute) {
         add(route)
