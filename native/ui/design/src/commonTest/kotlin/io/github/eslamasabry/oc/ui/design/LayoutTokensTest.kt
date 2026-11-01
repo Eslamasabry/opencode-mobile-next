@@ -51,6 +51,18 @@ class LayoutTokensTest {
     }
 
     @Test
+    fun `B-KIT-029 panes follow the body - the detail keeps 360 dp after the list and the side`() {
+        assertTrue(Layout.showsDetail(WindowClass.Expanded, short = false, bodyWidthDp = 840f))
+        assertFalse(Layout.showsDetail(WindowClass.Medium, short = false, bodyWidthDp = 700f))
+        assertFalse(Layout.showsDetail(WindowClass.Expanded, short = true, bodyWidthDp = 915f))
+        assertFalse(Layout.showsDetail(WindowClass.Expanded, short = false, bodyWidthDp = 840f - 296f)) // a sidebar takes 296
+        assertTrue(Layout.showsDetail(WindowClass.Expanded, short = false, bodyWidthDp = 544f, listInBody = false))
+        assertTrue(Layout.showsSide(WindowClass.Large, short = false, bodyWidthDp = 1280f)) // 1280 − 296 − 340 = 644
+        assertFalse(Layout.showsSide(WindowClass.Large, short = false, bodyWidthDp = 1280f - 296f)) // 348 < 360
+        assertFalse(Layout.showsSide(WindowClass.Expanded, short = false, bodyWidthDp = 1199f))
+    }
+
+    @Test
     fun `B-KIT-035 every status tone has a word tone and a glyph and failure is never red`() {
         assertEquals(TextTone.Primary, StatusTone.Failure.text)
         assertEquals(TextTone.Attention, StatusTone.Attention.text)

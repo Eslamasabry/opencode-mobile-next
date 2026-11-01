@@ -45,4 +45,19 @@ public object Layout {
         val cap = minOf(SIDEBAR_MAX_WIDTH.toFloat(), windowWidthDp * SIDEBAR_MAX_SHARE)
         return (PANE_LIST_WIDTH * textScale).coerceIn(PANE_LIST_WIDTH.toFloat(), maxOf(PANE_LIST_WIDTH.toFloat(), cap))
     }
+
+    /**
+     * Whether a pane screen shows the detail beside the list (Dart `KitScreen.showsDetail`): a wide window that is not
+     * short, where the body (the window minus the sidebar) still leaves the detail its 360 dp minimum after the list.
+     * Panes follow the body, not the window.
+     */
+    public fun showsDetail(window: WindowClass, short: Boolean, bodyWidthDp: Float, listInBody: Boolean = true): Boolean =
+        window.isWide && !short && roomForDetail(bodyWidthDp, listInBody, withSide = false) >= PANE_DETAIL_MIN_WIDTH
+
+    /** Whether the side pane shows too (Dart `showsSide`): a large window, not short, with room for the detail after it. */
+    public fun showsSide(window: WindowClass, short: Boolean, bodyWidthDp: Float, listInBody: Boolean = true): Boolean =
+        window == WindowClass.Large && !short && roomForDetail(bodyWidthDp, listInBody, withSide = true) >= PANE_DETAIL_MIN_WIDTH
+
+    private fun roomForDetail(body: Float, listInBody: Boolean, withSide: Boolean): Float =
+        body - (if (listInBody) PANE_LIST_WIDTH else 0) - (if (withSide) PANE_SIDE_WIDTH else 0)
 }
