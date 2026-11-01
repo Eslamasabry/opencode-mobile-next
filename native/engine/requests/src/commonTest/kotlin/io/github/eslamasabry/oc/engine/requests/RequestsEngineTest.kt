@@ -508,5 +508,26 @@ class RequestsEngineTest {
         }
 
     @Test
+    fun `B-PROTO-048 req-3 project snapshots never admit or tombstone another projects asks`() =
+        runTest {
+            val engine = engine()
+            port.events.currentDirectory = "/project-a"
+            port.permissions = listOf(permission("a"))
+            port.events.emit(GatewayEvent.PermissionAsked(permission("a")), directory = "/project-a")
+            port.events.emit(GatewayEvent.PermissionAsked(permission("b", session = S2)), directory = "/project-b")
+            runCurrent()
+            // Other-project attention belongs to its owner; this engine must not accept an answer for B.
+            assertIs<Outcome.Failed>(engine.answer(RequestId("b"), RequestAnswer.Permission(PermissionReply.Once)))
+            engine.refresh()
+            port.events.currentDirectory = "/project-b"
+            port.permissions = listOf(permission("b", session = S2))
+            engine.refresh()
+            assertEquals(listOf("b"), engine.pending.value.map { it.id.raw })
+            assertEquals(Outcome.Ok(Unit), engine.answer(RequestId("b"), RequestAnswer.Permission(PermissionReply.Once)))
+            engine.flushHeld(S2)
+            assertEquals(listOf("reply b Once"), port.replies)
+        }
+
+    @Test
     fun `PB-42 the requests timer table is valid`() = assertTimerTable(RequestsTimers.ALL)
 }

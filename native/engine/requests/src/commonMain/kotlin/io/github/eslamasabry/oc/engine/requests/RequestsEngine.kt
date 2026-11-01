@@ -73,7 +73,8 @@ public class RequestsEngine(
 
     init {
         scope.launch(lane) {
-            port.events.all.collect { envelope ->
+            // Pending-list snapshots cover the current project; other-project attention has its own owner.
+            port.events.project.collect { envelope ->
                 when (val event = envelope.event) {
                     GatewayEvent.Connected -> scope.launch(lane) { refresh() }
                     is GatewayEvent.PermissionAsked -> upsert(PendingRequest.Permission(event.request))
