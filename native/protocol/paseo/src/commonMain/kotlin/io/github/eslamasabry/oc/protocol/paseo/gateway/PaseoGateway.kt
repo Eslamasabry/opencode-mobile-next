@@ -87,6 +87,7 @@ import io.github.eslamasabry.oc.protocol.paseo.stringOrNull
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoPush
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransportListener
+import io.github.eslamasabry.oc.protocol.paseo.work.PaseoWorkInventory
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -141,6 +142,8 @@ public class PaseoGateway(
     directory: String? = null,
     /** Mode a runtime's new agent must start in (phone helper: `claude → default`, always asking). */
     defaultProviderModes: Map<String, String> = emptyMap(),
+    /** Keep the helper-wide work inventory (the phone helper's gateway; plan 04 §8 `trackLocalWork = true`). */
+    trackLocalWork: Boolean = false,
     internal val random: Random = Random.Default,
     /** Overridable so tests do not wait for a warming daemon. */
     internal val providerWarmupAttempts: Int = 8,
@@ -205,6 +208,20 @@ public class PaseoGateway(
     /** Fixed failure of the last recovery that could not finish (Details only). */
     public var lastRecoveryFailure: Failure? = null
         private set
+
+    /** Helper-wide work truth (slice D's inventory), only when tracking local work. */
+    private val localWork: PaseoWorkInventory? = if (trackLocalWork) PaseoWorkInventory() else null
+
+    /** true = known work on the helper; false = a complete, current inventory proves idle; null = unknown (never idle). */
+    public val localWorkBusy: Boolean?
+        get() = if (closed || localWork == null) {
+            null
+        } else {
+            localWork.read(transport.connected, transport.epoch, awaitingTurn.isNotEmpty() || turnActive.isNotEmpty() || uncertain.isNotEmpty())
+        }
+
+    /** Changes to [localWorkBusy]'s inputs (inventory only; collecting never touches the transport). */
+    public val localWorkChanges: Flow<Unit> = localWork?.changes ?: kotlinx.coroutines.flow.emptyFlow()
 
     /** Optional hooks the owners of the requests book and the work inventory install (S3-PASEO integration). */
     internal val hooks = mutableListOf<PaseoGatewayHooks>()
@@ -342,6 +359,7 @@ public class PaseoGateway(
     internal suspend fun readSessionPage(cursor: String?, limit: Int): ServerPage<Session> {
         val scope = scopeDir
         val epoch = locationEpoch
+        val workRevision = localWork?.revision
         val result = transport.request(
             "fetch_agents_request",
             jsonOf(
@@ -355,6 +373,19 @@ public class PaseoGateway(
             ),
         )
         refreshCapabilities()
+        if (localWork != null && workRevision != null) {
+            val socket = transport.epoch
+            localWork.observePage(
+                result = result,
+                cursor = cursor,
+                epoch = socket,
+                requestRevision = workRevision,
+                listChildren = { parent ->
+                    transport.request("agent.provider_subagents.list.request", jsonOf("parentAgentId" to parent), timeoutMs = 2_000, expectedEpoch = socket)
+                },
+                stillCurrent = { !closed && transport.epoch == socket },
+            )
+        }
         checkLocation(scope, epoch)
         hooks.forEach { it.onAgentPage(result, cursor) }
         val items = ArrayList<Session>()
@@ -1146,6 +1177,7 @@ public class PaseoGateway(
     private fun onEvent(push: PaseoPush) {
         if (closed || push.epoch != transport.epoch) return
         try {
+            localWork?.event(push)
             hooks.forEach { it.onPush(push) }
             val p = push.payload
             val rawId = p.str("agentId") ?: p.obj("agent")?.str("id")
@@ -1180,6 +1212,8 @@ public class PaseoGateway(
             throw e
         } catch (_: Exception) {
             // A malformed push is dropped. No payload reaches logs.
+        } finally {
+            localWork?.changed()
         }
     }
 
@@ -1225,6 +1259,7 @@ public class PaseoGateway(
         providerEntries = null
         providerRevision++
         requests.disconnect()
+        localWork?.invalidate()
         hooks.forEach { it.onDisconnect() }
         refreshCapabilities()
         recoveryDegraded = true
@@ -1324,7 +1359,7 @@ public class PaseoGateway(
     private suspend fun readRecoveryList() {
         if (directoryValue == null) return
         // Listing re-subscribes and makes the daemon report pending permissions (list before requests).
-        if (hooks.any { it.wantsAllPages }) readAllSessions() else readSessionPage(null, 200)
+        if (localWork != null || hooks.any { it.wantsAllPages }) readAllSessions() else readSessionPage(null, 200)
     }
 
     override suspend fun close() {

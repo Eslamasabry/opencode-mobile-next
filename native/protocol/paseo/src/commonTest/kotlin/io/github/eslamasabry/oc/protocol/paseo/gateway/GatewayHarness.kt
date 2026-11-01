@@ -117,6 +117,7 @@ class GatewayHarness(
     password: String = "",
     directory: String? = DIR,
     defaultProviderModes: Map<String, String> = emptyMap(),
+    trackLocalWork: Boolean = false,
     val clock: TestClock = TestClock(Instant.parse("2026-09-19T03:36:00Z")),
 ) {
     val lane = StandardTestDispatcher(test.testScheduler)
@@ -134,6 +135,7 @@ class GatewayHarness(
         clock = clock,
         directory = directory,
         defaultProviderModes = defaultProviderModes,
+        trackLocalWork = trackLocalWork,
         providerWarmupIntervalMs = 0,
     )
     val events = mutableListOf<GatewayEvent>()

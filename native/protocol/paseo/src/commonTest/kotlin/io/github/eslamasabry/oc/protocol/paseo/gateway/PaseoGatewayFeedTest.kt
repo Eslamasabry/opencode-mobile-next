@@ -92,3 +92,31 @@ class PaseoGatewayFeedTest {
         assertTrue(port.sessionPage(null, 50).items.any { it.id.raw == "busy" })
     }
 }
+
+class PaseoGatewayLocalWorkTest {
+    @Test
+    fun `B-AGENT-168 the phone helper's gateway proves idle only from a complete current list and revokes it on loss`() = runTest {
+        val daemon = FakeDaemon().seedDefaults()
+        daemon.handlers["agent.provider_subagents.list.request"] = { m ->
+            "agent.provider_subagents.list.response" to jsonOf("parentAgentId" to m.str("parentAgentId"), "subagents" to emptyList<Any>())
+        }
+        val h = GatewayHarness(this, daemon, trackLocalWork = true)
+        kotlin.test.assertNull(h.gateway.localWorkBusy) // nothing read yet: unknown, never idle
+        h.gateway.allSessions()
+        assertEquals(false, h.gateway.localWorkBusy)
+        h.daemon.push("agent_stream", stream("a1", turn("turn_started")))
+        h.pump()
+        assertEquals(true, h.gateway.localWorkBusy)
+        h.daemon.drop()
+        h.pump()
+        // A lost link never proves idle (the open turn of this gateway still counts as work).
+        kotlin.test.assertNotEquals(false, h.gateway.localWorkBusy)
+        // A fresh gateway whose list was read and whose link then dropped is unknown, not idle.
+        val quiet = GatewayHarness(this, FakeDaemon().seedDefaults().also { d -> d.handlers.putAll(daemon.handlers) }, trackLocalWork = true)
+        quiet.gateway.allSessions()
+        assertEquals(false, quiet.gateway.localWorkBusy)
+        quiet.daemon.drop()
+        quiet.pump()
+        kotlin.test.assertNull(quiet.gateway.localWorkBusy)
+    }
+}

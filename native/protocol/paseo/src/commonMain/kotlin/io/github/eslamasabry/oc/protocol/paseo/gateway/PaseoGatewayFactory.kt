@@ -37,6 +37,8 @@ public class PaseoGatewayFactory(
     private val clock: Clock,
     private val requestTimeoutMs: Long = 20_000,
     private val defaultProviderModes: Map<String, String> = emptyMap(),
+    /** The phone helper's gateway keeps the helper-wide work inventory (plan 04 §8). */
+    private val trackLocalWork: Boolean = false,
 ) : GatewayFactory {
     override val kind: BackendKind = BackendKind.Paseo
 
@@ -87,6 +89,7 @@ public class PaseoGatewayFactory(
             clock = clock,
             directory = spec.location.directory,
             defaultProviderModes = defaultProviderModes,
+            trackLocalWork = trackLocalWork,
         )
         return GatewayPair(gateway, object : ServerOperationsGateway {})
     }
