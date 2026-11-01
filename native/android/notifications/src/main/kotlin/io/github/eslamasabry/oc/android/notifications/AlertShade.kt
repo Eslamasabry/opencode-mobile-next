@@ -53,72 +53,72 @@ public class AndroidAlertShade(
 
     override fun show(alert: CodingAlert, route: AlertRoute.Post): AlertShown {
         synchronized(shadeLock) {
-        if (!alert.isValid) return AlertShown.Invalid
-        blocked(route.channel)?.let { return it }
-        val id = NotificationIds.alert(alert.key)
-        val publicWords = publicWords(alert)
-        val (title, text) = privateWords(alert, publicWords)
-        val builder =
-            base(route.channel, title, text, openIntent(id, alert.kind, alert.sessionId, alert.profileId, alert.requestId, alert.monitorToken))
-                .setOnlyAlertOnce(!alert.kind.isQuota)
-                .setCategory(category(alert.kind))
-        if (!alert.kind.isQuota) builder.setPublicVersion(publicVersion(route.channel, publicWords))
-        route.group?.let { builder.setGroup(it).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN) }
-        if (alert.kind == AlertKind.Complete) builder.setTimeoutAfter(FINISHED_TIMEOUT_MS)
-        val subtext = alert.subtext.trim()
-        if (subtext.isNotEmpty()) builder.setSubText(subtext.take(MAX_SUBTEXT))
-        if (text.isNotEmpty()) builder.setStyle(NotificationCompat.BigTextStyle().bigText(text))
-        builder.extras.putString(FrozenExtras.EXTRA_SUMMARY_LINE, AlertCopy.summaryLine(alert, title))
-        AlertButtons.plan(alert).forEachIndexed { index, button -> builder.addAction(action(alert, button, id, index)) }
-        builder.extras.apply {
-            putString(FrozenExtras.EXTRA_CODING_ALERT_KIND, alert.kind.wire)
-            putString(FrozenExtras.EXTRA_CODING_ALERT_KEY, alert.key)
-            putString(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID, alert.profileId)
-            putString(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID, alert.sessionId)
-            putString(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID, alert.requestId)
-        }
-        if (!post(id, builder.build())) return AlertShown.Blocked(BlockedWhy.Permission)
-        route.group?.let { refreshSummary(it) }
-        return AlertShown.Shown
+            if (!alert.isValid) return AlertShown.Invalid
+            blocked(route.channel)?.let { return it }
+            val id = NotificationIds.alert(alert.key)
+            val publicWords = publicWords(alert)
+            val (title, text) = privateWords(alert, publicWords)
+            val builder =
+                base(route.channel, title, text, openIntent(id, alert.kind, alert.sessionId, alert.profileId, alert.requestId, alert.monitorToken))
+                    .setOnlyAlertOnce(!alert.kind.isQuota)
+                    .setCategory(category(alert.kind))
+            if (!alert.kind.isQuota) builder.setPublicVersion(publicVersion(route.channel, publicWords))
+            route.group?.let { builder.setGroup(it).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN) }
+            if (alert.kind == AlertKind.Complete) builder.setTimeoutAfter(FINISHED_TIMEOUT_MS)
+            val subtext = alert.subtext.trim()
+            if (subtext.isNotEmpty()) builder.setSubText(subtext.take(MAX_SUBTEXT))
+            if (text.isNotEmpty()) builder.setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            builder.extras.putString(FrozenExtras.EXTRA_SUMMARY_LINE, AlertCopy.summaryLine(alert, title))
+            AlertButtons.plan(alert).forEachIndexed { index, button -> builder.addAction(action(alert, button, id, index)) }
+            builder.extras.apply {
+                putString(FrozenExtras.EXTRA_CODING_ALERT_KIND, alert.kind.wire)
+                putString(FrozenExtras.EXTRA_CODING_ALERT_KEY, alert.key)
+                putString(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID, alert.profileId)
+                putString(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID, alert.sessionId)
+                putString(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID, alert.requestId)
             }
+            if (!post(id, builder.build())) return AlertShown.Blocked(BlockedWhy.Permission)
+            route.group?.let { refreshSummary(it) }
+            return AlertShown.Shown
+        }
     }
 
     override fun showOpenOnly(tap: ShadeTap): AlertShown {
         synchronized(shadeLock) {
-        if (tap.key.isBlank()) return AlertShown.Invalid
-        val channel = NotifyChannel.CodingAction
-        blocked(channel)?.let { return it }
-        val id = NotificationIds.alert(tap.key)
-        val title = words.text(R.string.notify_public_needs_you)
-        val text = words.text(R.string.notify_answer_in_app)
-        val builder =
-            base(channel, title, text, openIntent(id, tap.kind, tap.sessionId, tap.profileId, tap.requestId, ""))
-                .setOnlyAlertOnce(true)
-                .setSilent(true)
-                .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
-                .setPublicVersion(publicVersion(channel, title))
-        AlertPolicy.groupOf(tap.kind)?.let { builder.setGroup(it) }
-        builder.extras.putString(FrozenExtras.EXTRA_SUMMARY_LINE, title)
-        builder.extras.apply {
-            putString(FrozenExtras.EXTRA_CODING_ALERT_KIND, tap.kind.wire)
-            putString(FrozenExtras.EXTRA_CODING_ALERT_KEY, tap.key)
-            putString(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID, tap.profileId)
-            putString(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID, tap.sessionId)
-            putString(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID, tap.requestId)
-        }
-        if (!post(id, builder.build())) return AlertShown.Blocked(BlockedWhy.Permission)
-        return AlertShown.Shown
+            if (tap.key.isBlank()) return AlertShown.Invalid
+            val channel = NotifyChannel.CodingAction
+            blocked(channel)?.let { return it }
+            val id = NotificationIds.alert(tap.key)
+            val title = words.text(R.string.notify_public_needs_you)
+            val text = words.text(R.string.notify_answer_in_app)
+            val builder =
+                base(channel, title, text, openIntent(id, tap.kind, tap.sessionId, tap.profileId, tap.requestId, ""))
+                    .setOnlyAlertOnce(true)
+                    .setSilent(true)
+                    .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+                    .setPublicVersion(publicVersion(channel, title))
+            AlertPolicy.groupOf(tap.kind)?.let { builder.setGroup(it) }
+            builder.extras.putString(FrozenExtras.EXTRA_SUMMARY_LINE, title)
+            builder.extras.apply {
+                putString(FrozenExtras.EXTRA_CODING_ALERT_KIND, tap.kind.wire)
+                putString(FrozenExtras.EXTRA_CODING_ALERT_KEY, tap.key)
+                putString(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID, tap.profileId)
+                putString(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID, tap.sessionId)
+                putString(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID, tap.requestId)
             }
+            if (!post(id, builder.build())) return AlertShown.Blocked(BlockedWhy.Permission)
+            return AlertShown.Shown
+        }
     }
 
     override fun dismiss(key: String) {
         synchronized(shadeLock) {
-        if (key.isBlank()) return
-        manager.cancel(NotificationIds.alert(key))
-        // The last alert of a group takes its summary with it.
-        refreshSummary(AlertGroups.NEEDS_YOU)
-        refreshSummary(AlertGroups.FINISHED)
-            }
+            if (key.isBlank()) return
+            manager.cancel(NotificationIds.alert(key))
+            // The last alert of a group takes its summary with it.
+            refreshSummary(AlertGroups.NEEDS_YOU)
+            refreshSummary(AlertGroups.FINISHED)
+        }
     }
 
     override fun dismissIfCurrent(tap: ShadeTap): Boolean = synchronized(shadeLock) {
