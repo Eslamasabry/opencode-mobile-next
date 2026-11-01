@@ -6,6 +6,7 @@ Input on stdin:
 Prints one masked line per hit and exits 1 on any hit, 0 when clean.
 """
 
+import fnmatch
 import ipaddress
 import os
 import re
@@ -37,7 +38,13 @@ PERSONAL_DOMAINS = re.compile(
 )
 IPV4 = re.compile(r"(?<![\w.])(\d{1,3}(?:\.\d{1,3}){3})(?![\w]|\.\d)(/\d{1,2})?")
 IPV6 = re.compile(r"(?<![\w:])((?:f[cd][0-9a-f]{2}|fe[89ab][0-9a-f]):[0-9a-f:]*:[0-9a-f:]*)(/\d{1,3})?", re.I)
-PRIVATE_HOST = re.compile(r"\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:ts\.net|lan|internal|home\.arpa)\b", re.I)
+# Tailnet and home.arpa names are private anywhere; .lan and .internal only as a URL or user@ host, because
+# "x.y.internal" is also a Kotlin package path.
+PRIVATE_HOST = re.compile(
+    r"\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:ts\.net|home\.arpa)\b"
+    r"|(?:://|@)[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:lan|internal)(?![\w.-])",
+    re.I,
+)
 CGNAT = ipaddress.ip_network("100.64.0.0/10")
 BAD_FILE = re.compile(
     r"(?:^|/)(?:[^/]+\.(?:jks|keystore|p12|pfx|key)|key\.properties|local\.properties|google-services\.json|\.env|"
@@ -46,15 +53,22 @@ BAD_FILE = re.compile(
 
 
 def load_allow():
-    allow = set()
+    """Two line forms: "<rule> <exact value>" and "@path <fnmatch glob> <rule or *>" (a reviewed fixture file)."""
+    allow, paths = set(), []
     path = os.environ.get("OC_SCAN_ALLOW_FILE", "")
     if path and os.path.isfile(path):
         for line in open(path, encoding="utf-8"):
             line = line.split("#", 1)[0].strip()
-            if line:
-                rule, _, value = line.partition(" ")
-                allow.add((rule.strip(), value.strip()))
-    return allow
+            if not line:
+                continue
+            if line.startswith("@path "):
+                parts = line.split()
+                if len(parts) == 3:
+                    paths.append((parts[1], parts[2]))
+                continue
+            rule, _, value = line.partition(" ")
+            allow.add((rule.strip(), value.strip()))
+    return allow, paths
 
 
 def load_extra():
@@ -68,7 +82,7 @@ def load_extra():
     return out
 
 
-ALLOW = load_allow()
+ALLOW, ALLOW_PATHS = load_allow()
 EXTRA = load_extra()
 WATCH_EMAILS = {e.lower() for e in os.environ.get("OC_SCAN_EMAILS", "").split() if e}
 own = os.environ.get("OC_SCAN_OWN_EMAIL", "").strip().lower()
@@ -97,6 +111,8 @@ def private_ip(text):
         except ValueError:
             continue
         s = str(ip)
+        if s.endswith(".0") or s.endswith(".255"):
+            continue  # a network or broadcast address names a range boundary, not a host
         # RFC 1918, link-local and the tailnet range; not loopback, documentation or benchmark ranges.
         if (
             ip in ipaddress.ip_network("10.0.0.0/8")
@@ -144,9 +160,11 @@ def scan_text(text):
 hits = 0
 
 
-def report(where, rule, value):
+def report(where, rule, value, path=None):
     global hits
     if (rule, value) in ALLOW:
+        return
+    if path and any(fnmatch.fnmatchcase(path, g) and r in ("*", rule) for g, r in ALLOW_PATHS):
         return
     hits += 1
     print("HIT %-17s %s  %s" % (rule, where, mask(value, rule)))
@@ -184,7 +202,7 @@ def scan_patch(lines, label):
         if "+" in prefix:
             lineno += 1
             for rule, value in scan_text(body):
-                report("%s%s:%d" % (label, path, lineno), rule, value)
+                report("%s%s:%d" % (label, path, lineno), rule, value, path)
         elif prefix.strip() == "":
             lineno += 1
 

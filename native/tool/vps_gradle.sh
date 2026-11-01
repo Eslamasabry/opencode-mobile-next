@@ -44,6 +44,7 @@ for a in "$@"; do
   if [[ "$a" =~ (^|:)(assemble|bundle)[A-Za-z]*$ ]]; then remote_dir="~/wt/ocn-$unit-apk"; break; fi
 done
 
+rsync_dir="${remote_dir#\~/}" # rsync does not expand "~": a relative path is relative to the remote home
 host="${OC_VPS_HOST:-}"
 gradle_cmd="$(oc_quote ./gradlew --console=plain "$@")"
 remote_cmd="set -e; d=$remote_dir/native; avail=\$(df -Pk \"\$HOME\" | awk 'NR==2{print int(\$4/1048576)}');
@@ -66,7 +67,7 @@ if ((sync)); then
   echo "vps: syncing native/ to $remote_dir/native"
   ssh "${ssh_opts[@]}" "$host" "mkdir -p $remote_dir/native" || oc_die2 "cannot create $remote_dir on the VPS"
   rsync -az --delete -e "ssh ${ssh_opts[*]}" --exclude build/ --exclude .gradle/ --exclude .kotlin/ \
-    --exclude local.properties --exclude key.properties "$OC_NATIVE/" "$host:$remote_dir/native/" ||
+    --exclude local.properties --exclude key.properties "$OC_NATIVE/" "$host:$rsync_dir/native/" ||
     oc_die2 "rsync to the VPS failed"
 fi
 
@@ -77,7 +78,7 @@ rc=$?
 echo "vps: pulling test results and reports"
 rsync -rlz -e "ssh ${ssh_opts[*]}" --prune-empty-dirs --include='*/' \
   --include='**/build/test-results/**' --include='**/build/reports/**' --exclude='*' \
-  "$host:$remote_dir/native/" "$OC_NATIVE/" 2>/dev/null || echo "vps: warning: could not pull reports"
+  "$host:$rsync_dir/native/" "$OC_NATIVE/" 2>/dev/null || echo "vps: warning: could not pull reports"
 
 case $rc in
   0) exit 0 ;;
