@@ -23,3 +23,14 @@ fun dataAttachment(name: String, text: String, mime: String = "text/plain"): Pro
 
 fun fileAttachment(name: String, path: String = "/srv/app/$name"): PromptAttachment =
     PromptAttachment(mime = "text/plain", filename = name, url = "file://$path")
+
+/** Prefs whose commits wait on [gate] (a slow platform write) while the engine's lane is held. */
+class GatedPrefs(private val inner: io.github.eslamasabry.oc.engine.composer.store.MemoryComposerPrefs) :
+    io.github.eslamasabry.oc.engine.composer.store.ComposerPrefs by inner {
+    var gate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
+    override suspend fun commit(edit: io.github.eslamasabry.oc.engine.composer.store.PrefsEdit): Boolean {
+        gate?.await()
+        return inner.commit(edit)
+    }
+}
