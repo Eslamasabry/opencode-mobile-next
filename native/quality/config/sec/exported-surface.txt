@@ -1,0 +1,3 @@
+# ExportedSurfaceTest snapshot of androidApp/src/main/AndroidManifest.xml (plan 16 §1.8.1). One canonical line per
+# component, as ExportedSurface.render prints it. A change needs a CR16 row; review it, never refill it blindly.
+activity .MainActivity exported=true launchMode=singleTop filter(action=name:android.intent.action.MAIN category=name:android.intent.category.LAUNCHER)

@@ -1,0 +1,5 @@
+# Gate findings tolerated until the owning slice lands (plan 03's freeze-pending pattern). One id per line; the
+# rest of the line is the reason. Shrink-only: an id that no longer fires fails until it is removed.
+NSC-ABSENT                 androidApp res/xml/network_security_config.xml is created by WP-04.x / the androidApp owner (04 §4.7)
+FP-ABSENT                  androidApp res/xml/local_file_paths.xml arrives with the FileProvider slice (10 C10-10/C10-14)
+SURFACE-MAIN-TASKAFFINITY  .MainActivity needs android:taskAffinity="" (16 §1.8.1); androidApp manifest is coordinator-owned
