@@ -3,19 +3,20 @@ package io.github.eslamasabry.oc.engine.profiles
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
 import io.github.eslamasabry.oc.core.data.scope.ProfileKeyRule
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
-import io.github.eslamasabry.oc.core.common.Redacted
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 /**
  * An engine that holds per-profile writers or caches (plan 03 §13.5 `Set<ProfileCloser>`): connection, runtime,
@@ -160,7 +161,10 @@ public class ProfileDeletion(
         }
         if (!mine) return deferred.await()
         try {
-            val result = serial.withLock { run(id, options) }
+            val result = serial.withLock {
+                // B-STATE-098: finish an admitted deletion, including its final row/secret receipt.
+                withContext(NonCancellable) { run(id, options) }
+            }
             deferred.complete(result)
             return result
         } catch (e: Throwable) {
@@ -185,6 +189,11 @@ public class ProfileDeletion(
         store.beginDeletion(id)
         laneIds.forEach { lanes.closeProfile(it) }
         closers.forEach { it.stopAdmission(id) }
+        when (val drained = store.drainMutations()) {
+            is Outcome.Failed -> failures += OwnerFailure(ProfileKeys.OWNER, drained.failure)
+            is Outcome.Ok -> Unit
+        }
+        if (failures.isNotEmpty()) return reopen(id, laneIds, failures, removed, 0)
         laneIds.forEach { lanes.drainProfile(it) }
         for (closer in closers) {
             val drained = attempt(::unexpected) { closer.drain(id) }.flatten()
@@ -221,19 +230,15 @@ public class ProfileDeletion(
         if (failures.isNotEmpty()) return reopen(id, laneIds, failures, removed, swept)
 
         // 9. Row and secrets as one unit.
-        val secretNames = when (val owned = scope.ownedData(id)) {
-            is Outcome.Ok -> orderedSecretNames(owned.value.secretNames)
-            is Outcome.Failed -> {
-                failures += OwnerFailure(ProfileKeys.OWNER, owned.failure)
-                return reopen(id, laneIds, failures, removed, swept)
-            }
+        var secretCount = 0
+        val row = store.removeRowAndSecrets(id) {
+            scope.ownedData(id).map { owned -> orderedSecretNames(owned.secretNames).also { secretCount = it.size } }
         }
-        val row = store.removeRowAndSecrets(id, secretNames)
         if (row is Outcome.Failed) {
             failures += OwnerFailure(ProfileKeys.OWNER, row.failure)
             return reopen(id, laneIds, failures, removed, swept)
         }
-        removed[ProfileKeys.OWNER] = (removed[ProfileKeys.OWNER] ?: 0) + 1 + secretNames.size
+        removed[ProfileKeys.OWNER] = (removed[ProfileKeys.OWNER] ?: 0) + 1 + secretCount
 
         // 10. Retained keys last (everything but the keys kept for good), then cleaners that need the row gone.
         when (val last = scope.sweep(id, keptForGood)) {

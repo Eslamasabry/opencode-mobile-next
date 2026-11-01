@@ -6,14 +6,14 @@ import io.github.eslamasabry.oc.core.data.kv.PrefType
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.scope.KeyScope
 import io.github.eslamasabry.oc.core.data.scope.KeyShape
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
 
 /**
  * Plan 16 §1.4 `ProfileDeletionSweepTest` (SI-5, Astra M1): seeds every registered shape for profiles A and B in the
@@ -87,7 +87,8 @@ class ProfileDeletionSweepTest {
     private suspend fun TestScope.seeded(): Pair<Harness, List<MapCopy>> {
         val h = Harness(StandardTestDispatcher(testScheduler))
         otherEngines.forEach(h.scope::register)
-        val shapes = h.scope.shapes().filter { it.scope == KeyScope.Profile || it.scope == KeyScope.Owner }
+        // Recovery journals are consumed on load; their interrupted states have dedicated B-STATE-098 tests.
+        val shapes = h.scope.shapes().filter { (it.scope == KeyScope.Profile || it.scope == KeyScope.Owner) && it.prefix != ProfileKeys.TRANSACTION }
         // A new registration without a seed fails here: every registered per-profile shape is seeded for A and B.
         val perProfile = shapes.flatMap { s -> listOf(keyFor(s, a.raw) to valueFor(s, a.raw), keyFor(s, b.raw) to valueFor(s, b.raw)) }
         h.seed(*(perProfile + embedded()).toTypedArray())

@@ -45,31 +45,38 @@ public class SignInReset(
     private val mutex = Mutex()
 
     public suspend fun reset(): Outcome<Unit> = mutex.withLock {
-        store.dropCachedSecrets()
-        val owned = when (val found = enumerate()) {
-            is Outcome.Failed -> return refused()
-            is Outcome.Ok -> found.value
-        }
-        // Keep redaction for late diagnostics: register every value about to go.
-        for (name in owned) (secrets.read(name) as? Outcome.Ok)?.value?.let(redactor::registerSecret)
+        store.exclusiveSignInReset {
+            store.dropCachedSecrets()
+            val owned = when (val found = enumerate()) {
+                is Outcome.Failed -> return@exclusiveSignInReset refused()
+                is Outcome.Ok -> found.value
+            }
+            // Keep redaction for late diagnostics: register every value about to go.
+            for (name in owned) (secrets.read(name) as? Outcome.Ok)?.value?.let(redactor::registerSecret)
 
-        // Selection removal is confirmed BEFORE any secret goes: a refusal keeps every sign-in for a retry.
-        if (kv.commit(lanes.app) { remove(ProfileKeys.ACTIVE) } is Outcome.Failed) return refused()
-        store.activeCleared()
+            // Selection removal is confirmed BEFORE any secret goes: a refusal keeps every sign-in for a retry.
+            if (kv.commit(lanes.app) {
+                    remove(ProfileKeys.ACTIVE)
+                    // B-STATE-098: no interrupted save may restore a sign-in after this reset.
+                    kv.keys(ProfileKeys.TRANSACTION).forEach(::remove)
+                } is Outcome.Failed
+            ) return@exclusiveSignInReset refused()
+            store.activeCleared()
 
-        for (participant in participants) {
-            val done = attempt({ Failure.Unexpected(Redacted.shape(it)) }) { participant.reset(owned) }
-            if (done is Outcome.Failed || (done as Outcome.Ok).value is Outcome.Failed) return refused()
-        }
-        for (name in owned) if (secrets.delete(name) is Outcome.Failed) return refused()
+            for (participant in participants) {
+                val done = attempt({ Failure.Unexpected(Redacted.shape(it)) }) { participant.reset(owned) }
+                if (done is Outcome.Failed || (done as Outcome.Ok).value is Outcome.Failed) return@exclusiveSignInReset refused()
+            }
+            for (name in owned) if (secrets.delete(name) is Outcome.Failed) return@exclusiveSignInReset refused()
 
-        // Verified absent, or it is not a reset.
-        when (val left = enumerate()) {
-            is Outcome.Failed -> return refused()
-            is Outcome.Ok -> if (left.value.isNotEmpty()) return refused()
+            // Verified absent, or it is not a reset.
+            when (val left = enumerate()) {
+                is Outcome.Failed -> return@exclusiveSignInReset refused()
+                is Outcome.Ok -> if (left.value.isNotEmpty()) return@exclusiveSignInReset refused()
+            }
+            if (kv.get(ProfileKeys.ACTIVE) != null) return@exclusiveSignInReset refused()
+            return@exclusiveSignInReset Unit.ok()
         }
-        if (kv.get(ProfileKeys.ACTIVE) != null) return refused()
-        return Unit.ok()
     }
 
     private suspend fun enumerate(): Outcome<Set<String>> {

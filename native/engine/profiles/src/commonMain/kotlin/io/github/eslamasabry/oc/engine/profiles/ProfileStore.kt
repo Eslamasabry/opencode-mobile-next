@@ -4,10 +4,10 @@ import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
-import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefEdit
 import io.github.eslamasabry.oc.core.data.kv.bool
@@ -21,12 +21,14 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 /** What an edit does to the profile's connection secret (`pw.<id>` or `oc.codexToken.<id>`). */
 public sealed interface SecretEdit {
@@ -99,6 +101,7 @@ public class ProfileStore(
 ) {
     private val log = AppLog.tagged("profiles")
     private val mutex = Mutex()
+    private val transactions = ProfileTransactions(kv, secrets, lanes)
     private val mutableProfiles = MutableStateFlow<PersistentList<LoadedProfile>>(persistentListOf())
     private val mutableActive = MutableStateFlow<ProfileId?>(null)
     private val deleting = MutableStateFlow<Set<String>>(emptySet())
@@ -112,8 +115,10 @@ public class ProfileStore(
     public fun trust(id: ProfileId): ProfileTrustRecord =
         profile(id)?.let { it.trust.forOrigin(ProfileOrigins.trustOrigin(it.profile.baseUrl)) } ?: ProfileTrustRecord.None
 
-    /** Reads every saved profile. Never writes; a secret that cannot be read marks the profile for re-entry. */
+    /** Repairs interrupted transactions, then loads saved profiles. Unreadable secrets ask for re-entry. */
     public suspend fun load(): Outcome<ImmutableList<LoadedProfile>> = mutex.withLock {
+        val recovered = transactions.recover()
+        if (recovered is Outcome.Failed) return recovered
         val stored = StoredProfileJson.decodeList(kv.string(ProfileKeys.PROFILES))
         val loaded = stored.map { readProfile(it) }.toPersistentList()
         mutableProfiles.value = loaded
@@ -131,60 +136,81 @@ public class ProfileStore(
         secret: SecretEdit = SecretEdit.Keep,
         trust: TrustInput = TrustInput(),
     ): Outcome<LoadedProfile> = mutex.withLock {
-        if (profile.id.raw in deleting.value) return Failure.Refused(RefusalReason.ProfileClosing).failed()
-        trust.pin?.let { if (!TrustCodec.validPin(it.leafSha256)) return Failure.Refused(RefusalReason.InvalidAddress).failed() }
-        if (profile.transientTransport) return Failure.StorageRefused().failed()
-        if (secret is SecretEdit.Set) redactor.registerSecret(secret.value)
+        // B-STATE-098: admitted metadata, secret, compensation and publication finish together.
+        withContext(NonCancellable) {
+            if (profile.id.raw in deleting.value) return@withContext Failure.Refused(RefusalReason.ProfileClosing).failed()
+            trust.pin?.let { if (!TrustCodec.validPin(it.leafSha256)) return@withContext Failure.Refused(RefusalReason.InvalidAddress).failed() }
+            if (profile.transientTransport) return@withContext Failure.StorageRefused().failed()
+            if (secret is SecretEdit.Set) redactor.registerSecret(secret.value)
 
-        val id = profile.id
-        val previous = Snapshot.of(kv, id)
-        val rows = StoredProfileJson.rows(previous.profiles).orEmpty()
-        val index = rows.indexOfFirst { (it as? Map<*, *>)?.get("id") == id.raw }
-        val row = StoredProfileJson.encode(profile, rows.getOrNull(index) as? Map<*, *>)
-        val nextRows = rows.toMutableList().apply { if (index >= 0) set(index, row) else add(row) }
-        val storedTrust = ProfileTrustRecord(TrustCodec.decodePin(previous.pin), previous.cleartext?.let(::CleartextOkRecord))
-        val nextTrust = TrustCodec.next(profile, trust, storedTrust)
+            val recovery = transactions.recover()
+            if (recovery is Outcome.Failed) return@withContext recovery
+            val id = profile.id
+            val previous = Snapshot.of(kv, id)
+            val rows = StoredProfileJson.rows(previous.profiles).orEmpty()
+            val index = rows.indexOfFirst { (it as? Map<*, *>)?.get("id") == id.raw }
+            val row = StoredProfileJson.encode(profile, rows.getOrNull(index) as? Map<*, *>)
+            val nextRows = rows.toMutableList().apply { if (index >= 0) set(index, row) else add(row) }
+            val storedTrust = ProfileTrustRecord(TrustCodec.decodePin(previous.pin), previous.cleartext?.let(::CleartextOkRecord))
+            val nextTrust = TrustCodec.next(profile, trust, storedTrust)
 
-        val committed = kv.commit(lanes.app) {
-            putString(ProfileKeys.PROFILES, StoredProfileJson.encodeRows(nextRows))
-            putOrRemove(ProfileKeys.cleartextOk(id), nextTrust.cleartext?.origin)
-            putOrRemove(ProfileKeys.certificatePin(id), nextTrust.pin?.let(TrustCodec::encodePin))
-        }
-        if (committed is Outcome.Failed) return committed
+            if (secret !is SecretEdit.Keep) {
+                val started = transactions.beginSave(id, profile.secretName)
+                if (started is Outcome.Failed) return@withContext started
+            }
+            val committed = kv.commit(lanes.app) {
+                putString(ProfileKeys.PROFILES, StoredProfileJson.encodeRows(nextRows))
+                putOrRemove(ProfileKeys.cleartextOk(id), nextTrust.cleartext?.origin)
+                putOrRemove(ProfileKeys.certificatePin(id), nextTrust.pin?.let(TrustCodec::encodePin))
+            }
+            if (committed is Outcome.Failed) {
+                if (secret !is SecretEdit.Keep) transactions.finish(id, rollback = true)
+                return@withContext committed
+            }
 
-        val secretResult = when (secret) {
-            SecretEdit.Keep -> Unit.ok()
-            is SecretEdit.Set -> secrets.write(profile.secretName, secret.value)
-            SecretEdit.Clear -> secrets.delete(profile.secretName)
-        }
-        if (secretResult is Outcome.Failed) {
-            restore(previous, id)
-            log.w { "profile save refused by secure storage; metadata restored" }
-            return Failure.SecretUnavailable().failed()
-        }
-        if (secret is SecretEdit.Set) clearReentryFlag(id, if (profile.usesAgentSocket) "codexToken" else "pw")
+            val secretResult = when (secret) {
+                SecretEdit.Keep -> Unit.ok()
+                is SecretEdit.Set -> secrets.write(profile.secretName, secret.value)
+                SecretEdit.Clear -> secrets.delete(profile.secretName)
+            }
+            if (secretResult is Outcome.Failed) {
+                transactions.finish(id, rollback = true)
+                log.w { "profile save refused by secure storage; recovery retained until compensation completes" }
+                return@withContext Failure.SecretUnavailable().failed()
+            }
+            if (secret !is SecretEdit.Keep) {
+                val finished = transactions.finish(id)
+                if (finished is Outcome.Failed) {
+                    transactions.finish(id, rollback = true)
+                    return@withContext finished
+                }
+            }
+            if (secret is SecretEdit.Set) clearReentryFlag(id, if (profile.usesAgentSocket) "codexToken" else "pw")
 
-        val old = profile(id)
-        val hasSecret = when (secret) {
-            SecretEdit.Keep -> old?.hasSecret == true && old.profile.secretName == profile.secretName
-            is SecretEdit.Set -> secret.value.isNotEmpty()
-            SecretEdit.Clear -> false
+            val old = profile(id)
+            val hasSecret = when (secret) {
+                SecretEdit.Keep -> old?.hasSecret == true && old.profile.secretName == profile.secretName
+                is SecretEdit.Set -> secret.value.isNotEmpty()
+                SecretEdit.Clear -> false
+            }
+            val reentry = if (secret is SecretEdit.Keep && old != null && old.profile.secretName == profile.secretName) {
+                old.reentry
+            } else {
+                SecretReentry.None // Flutter upsert clears both flags; a later load flags a missing Codex token again
+            }
+            val loaded = LoadedProfile(profile, nextTrust, reentry, hasSecret, kv.bool(ProfileKeys.tailscale(id)) == true)
+            mutableProfiles.update { list ->
+                val i = list.indexOfFirst { it.id == id }
+                if (i >= 0) list.replacingAt(i, loaded) else list.adding(loaded)
+            }
+            loaded.ok()
         }
-        val reentry = if (secret is SecretEdit.Keep && old != null && old.profile.secretName == profile.secretName) {
-            old.reentry
-        } else {
-            SecretReentry.None // Flutter upsert clears both flags; a later load flags a missing Codex token again
-        }
-        val loaded = LoadedProfile(profile, nextTrust, reentry, hasSecret, kv.bool(ProfileKeys.tailscale(id)) == true)
-        mutableProfiles.update { list ->
-            val i = list.indexOfFirst { it.id == id }
-            if (i >= 0) list.replacingAt(i, loaded) else list.adding(loaded)
-        }
-        loaded.ok()
     }
 
     /** `oc.activeProfile`; null clears it. */
     public suspend fun setActive(id: ProfileId?): Outcome<Unit> = mutex.withLock {
+        val recovered = transactions.recover()
+        if (recovered is Outcome.Failed) return recovered
         if (id != null && id.raw in deleting.value) return Failure.Refused(RefusalReason.ProfileClosing).failed()
         val result = kv.commit(lanes.app) { putOrRemove(ProfileKeys.ACTIVE, id?.raw) }
         if (result is Outcome.Ok) mutableActive.value = id
@@ -192,7 +218,7 @@ public class ProfileStore(
     }
 
     /** The profile's connection secret for the transport, read through (never cached here). */
-    public suspend fun secret(id: ProfileId): Outcome<String?> {
+    public suspend fun secret(id: ProfileId): Outcome<String?> = mutex.withLock {
         val profile = profile(id)?.profile ?: return null.ok()
         val read = secrets.read(profile.secretName)
         if (read is Outcome.Ok) read.value?.let(redactor::registerSecret)
@@ -230,6 +256,9 @@ public class ProfileStore(
         deleting.update { it + id.raw }
     }
 
+    /** B-STATE-063 eng-2: drain the admitted app-lane saves before any sweep or secret enumeration. */
+    internal suspend fun drainMutations(): Outcome<Unit> = mutex.withLock { transactions.recover() }
+
     /** A failed deletion keeps the profile: saves are admitted again and trust/flags are re-read. */
     internal suspend fun cancelDeletion(id: ProfileId) {
         deleting.update { it - id.raw }
@@ -252,38 +281,62 @@ public class ProfileStore(
 
     /**
      * Plan 05 §3.5 step 9: the profile row and its secrets as one unit. Writes the new `oc.profiles` (and clears
-     * `oc.activeProfile` if it names [id]) in one commit, deletes [secretNames] in order, then verifies none is left.
+     * `oc.activeProfile` if it names [id]) in one commit, enumerates secrets under the store mutex, deletes them in order, then verifies none is left.
      * Any failure restores the previous `oc.profiles` and active pointer and publishes nothing.
      */
-    internal suspend fun removeRowAndSecrets(id: ProfileId, secretNames: List<String>): Outcome<Unit> = mutex.withLock {
-        val previousRaw = kv.string(ProfileKeys.PROFILES)
-        val previousActive = kv.string(ProfileKeys.ACTIVE)
-        val rows = StoredProfileJson.rows(previousRaw)
-        val nextRows = rows?.filterNot { (it as? Map<*, *>)?.get("id") == id.raw }
-        val removed = kv.commit(lanes.app) {
-            if (nextRows != null) putString(ProfileKeys.PROFILES, StoredProfileJson.encodeRows(nextRows))
-            if (previousActive == id.raw) remove(ProfileKeys.ACTIVE)
-        }
-        if (removed is Outcome.Failed) return removed
+    internal suspend fun removeRowAndSecrets(id: ProfileId, enumerate: suspend () -> Outcome<List<String>>): Outcome<Unit> = mutex.withLock {
+        // B-STATE-098: row removal and its compensation are an admitted completion.
+        withContext(NonCancellable) {
+            val secretNames = when (val names = enumerate()) {
+                is Outcome.Failed -> return@withContext names
+                is Outcome.Ok -> names.value
+            }
+            val started = transactions.beginDelete(id, secretNames)
+            if (started is Outcome.Failed) return@withContext started
+            val previousRaw = kv.string(ProfileKeys.PROFILES)
+            val previousActive = kv.string(ProfileKeys.ACTIVE)
+            val rows = StoredProfileJson.rows(previousRaw)
+            val nextRows = rows?.filterNot { (it as? Map<*, *>)?.get("id") == id.raw }
+            val removed = kv.commit(lanes.app) {
+                if (nextRows != null) putString(ProfileKeys.PROFILES, StoredProfileJson.encodeRows(nextRows))
+                if (previousActive == id.raw) remove(ProfileKeys.ACTIVE)
+            }
+            if (removed is Outcome.Failed) {
+                transactions.abandon(id)
+                return@withContext removed
+            }
 
-        val secretsGone = deleteAndVerify(secretNames)
-        if (secretsGone is Outcome.Failed) {
-            val restored = kv.commit(lanes.app) {
+            suspend fun restoreRow(): Outcome<Unit> = kv.commit(lanes.app) {
                 putOrRemove(ProfileKeys.PROFILES, previousRaw)
                 if (previousActive == id.raw) putString(ProfileKeys.ACTIVE, previousActive)
             }
-            if (restored is Outcome.Failed) log.e { "profile row could not be restored after a refused secret delete" }
-            return Failure.SecretUnavailable().failed()
+            val secretsGone = deleteAndVerify(secretNames)
+            if (secretsGone is Outcome.Failed) {
+                val restored = restoreRow()
+                if (restored is Outcome.Failed) log.e { "profile row could not be restored after a refused secret delete" }
+                else transactions.abandon(id)
+                return@withContext Failure.SecretUnavailable().failed()
+            }
+            val finished = transactions.finish(id)
+            if (finished is Outcome.Failed) {
+                restoreRow()
+                return@withContext finished
+            }
+            mutableProfiles.update { list -> list.filterNot { it.id == id }.toPersistentList() }
+            if (mutableActive.value == id) mutableActive.value = null
+            Unit.ok()
         }
-        mutableProfiles.update { list -> list.filterNot { it.id == id }.toPersistentList() }
-        if (mutableActive.value == id) mutableActive.value = null
-        Unit.ok()
     }
 
     /**
      * "Reset saved sign-ins" (Flutter `resetSavedSignIns`, first lines): every cached profile loses its secret and is
      * flagged for re-entry, metadata kept, before storage is touched.
      */
+    internal suspend fun <T> exclusiveSignInReset(block: suspend () -> Outcome<T>): Outcome<T> = mutex.withLock {
+        // B-STATE-098: reset invalidates recovery and removes staging secrets in the same admitted lane as saves.
+        withContext(NonCancellable) { block() }
+    }
+
     internal fun dropCachedSecrets() {
         mutableProfiles.update { list ->
             list.map { loaded ->
@@ -358,15 +411,6 @@ public class ProfileStore(
             }
         }
         return Unit.ok()
-    }
-
-    private suspend fun restore(previous: Snapshot, id: ProfileId) {
-        val restored = kv.commit(lanes.app) {
-            putOrRemove(ProfileKeys.PROFILES, previous.profiles)
-            putOrRemove(ProfileKeys.cleartextOk(id), previous.cleartext)
-            putOrRemove(ProfileKeys.certificatePin(id), previous.pin)
-        }
-        if (restored is Outcome.Failed) log.e { "saved profiles could not be restored after a refused secret write" }
     }
 
     private class Snapshot(val profiles: String?, val cleartext: String?, val pin: String?) {
