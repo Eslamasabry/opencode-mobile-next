@@ -74,8 +74,7 @@ public class SettingsPresenter(
         combine(local, facts, prefs, engines) { l, f, p, e -> build(l, f, p, e) }
             .stateIn(scope, SharingStarted.Eagerly, build(local.value, facts.value, prefs.value, engineNow()))
 
-    /** The screen hands over the words of every row that exists, in the person's language (no copy here, K2). */
-    public fun searchEntries(entries: List<SettingsSearchEntry>) {
+    override fun onSearchEntries(entries: List<SettingsSearchEntry>) {
         local.update { it.copy(entries = entries) }
     }
 

@@ -15,6 +15,9 @@ public interface SettingsActions {
 
     public fun onQuery(text: String)
 
+    /** The screen hands over the words of every row that exists, in the person's language (no copy here, K2). */
+    public fun onSearchEntries(entries: List<SettingsSearchEntry>)
+
     public fun onOutside(place: SettingsOutside)
 
     public fun onMode(mode: AppearanceMode)

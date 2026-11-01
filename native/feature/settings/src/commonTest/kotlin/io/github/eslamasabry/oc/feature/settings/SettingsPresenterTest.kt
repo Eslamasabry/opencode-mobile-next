@@ -97,7 +97,7 @@ class SettingsPresenterTest {
     @Test
     fun `plan 07 3_4 Back on the hub first clears the search`() =
         rig {
-            p.searchEntries(
+            p.onSearchEntries(
                 listOf(SettingsSearchEntry(SettingsRowId.Appearance, "Appearance", "theme")),
             )
             p.onQuery("theme"); settle()
