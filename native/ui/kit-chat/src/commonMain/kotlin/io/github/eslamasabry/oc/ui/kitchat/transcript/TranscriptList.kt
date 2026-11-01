@@ -37,7 +37,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.MotionTokens
-import io.github.eslamasabry.oc.ui.design.Spacing
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import kotlinx.coroutines.launch
 
@@ -95,7 +95,7 @@ public fun KitTranscriptList(
     jumpLabel: String,
     motion: KitMotionLevel,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(vertical = Spacing.M.dp),
+    contentPadding: PaddingValues = PaddingValues(vertical = Space.S4.dp),
     content: LazyListScope.() -> Unit,
 ) {
     val lastKey = remember { arrayOfNulls<String>(1) }
@@ -120,7 +120,7 @@ public fun KitTranscriptList(
             modifier = Modifier.fillMaxSize().testTag("transcript-list"),
             content = content,
         )
-        KitJumpToLatest(state, jumpLabel, motion, Modifier.align(Alignment.BottomCenter).padding(bottom = Spacing.M.dp))
+        KitJumpToLatest(state, jumpLabel, motion, Modifier.align(Alignment.BottomCenter).padding(bottom = Space.S4.dp))
     }
 }
 
@@ -156,7 +156,7 @@ private fun KitJumpToLatest(state: TranscriptListState, label: String, motion: K
             tonalElevation = 2.dp,
             modifier = Modifier.testTag("jump-to-latest"),
         ) {
-            Text(label, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = Spacing.M.dp, vertical = Spacing.S.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp))
         }
     }
 }

@@ -12,7 +12,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
-import io.github.eslamasabry.oc.ui.design.Spacing
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitRow
 import io.github.eslamasabry.oc.ui.kit.KitScreen
@@ -37,7 +37,7 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
         KitButton(label = stringResource(Res.string.chats_open_all), onClick = actions::showAll)
         LazyColumn(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(Spacing.S.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             items(state.rows, key = { it.ref.sessionId.raw }) { row ->
                 // The row registers its grow key; the chat page grows out of it and shrinks back into it (P2).

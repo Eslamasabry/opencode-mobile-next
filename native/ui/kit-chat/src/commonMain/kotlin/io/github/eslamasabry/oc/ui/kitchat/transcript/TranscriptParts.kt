@@ -24,7 +24,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.Spacing
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.stream.drive
@@ -35,7 +35,7 @@ import io.github.eslamasabry.oc.ui.kitchat.stream.kitFreshFade
 public enum class KitBlockKind { Prose, Heading, Quote, ListItem, Code }
 
 /** Plan 09 R13: the conversation column is capped at 700 dp. */
-private val Column = Modifier.fillMaxWidth().widthIn(max = 700.dp).padding(horizontal = Spacing.M.dp, vertical = Spacing.XS.dp)
+private val Column = Modifier.fillMaxWidth().widthIn(max = 700.dp).padding(horizontal = Space.S4.dp, vertical = Space.S1.dp)
 
 private class LayoutHolder {
     var layout: TextLayoutResult? = null
@@ -80,7 +80,7 @@ public fun KitReplyBlock(
     val textModifier = if (revealing) Modifier.kitFreshFade({ holder.layout }, reveal) else Modifier
     val boxed =
         if (kind == KitBlockKind.Code) {
-            Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)).padding(Spacing.S.dp)
+            Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)).padding(Space.S2.dp)
         } else {
             Modifier
         }
@@ -119,7 +119,7 @@ public fun KitPromptBubble(text: String, modifier: Modifier = Modifier) {
             modifier =
                 Modifier.fillMaxWidth(0.85f)
                     .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp))
-                    .padding(horizontal = Spacing.M.dp, vertical = Spacing.S.dp),
+                    .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
         )
     }
 }

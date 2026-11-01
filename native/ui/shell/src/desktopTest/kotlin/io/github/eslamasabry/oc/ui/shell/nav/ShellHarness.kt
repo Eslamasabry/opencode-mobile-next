@@ -23,7 +23,7 @@ import io.github.eslamasabry.oc.ui.kit.KitScreen
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
-import io.github.eslamasabry.oc.ui.kit.platform.KitHaptic
+import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.routes.ChatRoute

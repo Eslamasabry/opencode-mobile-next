@@ -10,10 +10,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.Spacing
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowMotion
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
-import io.github.eslamasabry.oc.ui.kit.platform.KitHaptic
+import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 
 /**
@@ -41,8 +41,8 @@ public fun KitRow(
         modifier = modifier.fillMaxWidth().kitGrowSource(growKey),
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = Spacing.M.dp, vertical = Spacing.S.dp + Spacing.XS.dp),
-            verticalArrangement = Arrangement.spacedBy(Spacing.XS.dp),
+            modifier = Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp + Space.S1.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
             KitText(title, KitTextRole.Body)
             if (supporting != null) KitText(supporting, KitTextRole.Supporting)
