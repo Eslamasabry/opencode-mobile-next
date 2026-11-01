@@ -1,0 +1,4 @@
+# K-SEC-7: the three reviewed mutable PendingIntents (plan 16 §1.8.2). File names.
+LegacyReplyAction.kt          # the legacy RemoteInput reply must be mutable
+PackageInstallerUpdater.kt    # the system fills the PackageInstaller status extras
+TermuxActivityCommands.kt     # Termux fills RUN_COMMAND result extras; leaves with migrate-out (ADR D7)

@@ -28,3 +28,33 @@ tasks.test {
         .withPropertyName("sources").withPathSensitivity(PathSensitivity.RELATIVE)
     systemProperty("oc.root", rootDir.absolutePath)
 }
+
+// S1-SECGATES (plan 16 §2): the K-SEC rules and the security gates. A separate suite that compiles no project module,
+// so it runs while the rest of the tree is being reconciled: `./gradlew :quality:secTest`.
+testing {
+    suites {
+        register<JvmTestSuite>("secTest") {
+            useJUnitJupiter()
+            dependencies {
+                implementation(libs.konsist)
+                implementation("org.jetbrains.kotlin:kotlin-test-junit5")
+                implementation(libs.compose.runtime) // the module applies the Compose compiler, which needs its runtime
+            }
+            targets.all {
+                testTask.configure {
+                    inputs.files(fileTree(rootDir) {
+                        include("**/src/**/*.kt", "**/src/**/*.xml", "**/build.gradle.kts", "build-logic/**/*.kt", "quality/config/**",
+                            "gradle/libs.versions.toml", "version.properties", "androidApp/lint.xml")
+                        exclude("**/build/**")
+                    }).withPropertyName("secSources").withPathSensitivity(PathSensitivity.RELATIVE)
+                    systemProperty("oc.root", rootDir.absolutePath)
+                    providers.gradleProperty("oc.leakBase").orNull?.let { systemProperty("oc.leakBase", it) }
+                    providers.gradleProperty("oc.leakMode").orNull?.let { systemProperty("oc.leakMode", it) }
+                    val leakRun = providers.gradleProperty("oc.leakBase").isPresent // a leak-gate run always reruns
+                    outputs.upToDateWhen { !leakRun }
+                }
+            }
+        }
+    }
+}
+tasks.named("check") { dependsOn("secTest") }

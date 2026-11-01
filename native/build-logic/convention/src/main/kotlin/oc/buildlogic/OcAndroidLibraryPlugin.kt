@@ -1,6 +1,7 @@
 package oc.buildlogic
 
 import com.android.build.api.dsl.LibraryExtension
+import oc.buildlogic.LintPolicy.ocLint
 import oc.buildlogic.Sdk.ocCompileSdk
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -21,7 +22,7 @@ class OcAndroidLibraryPlugin : Plugin<Project> {
                 namespace = Namespaces.of(path)
                 compileSdk { ocCompileSdk() }
                 defaultConfig { minSdk = Sdk.MIN }
-                lint { abortOnError = true }
+                lint { ocLint(file("lint.xml")) } // plan 16 §2.2 table (LintPolicy, S1-SECGATES)
             }
             val toolchains = extensions.getByType<JavaToolchainService>()
             tasks.withType<Test>().configureEach {

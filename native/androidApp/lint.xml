@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Android lint for :androidApp (plan 03 §19.5, plan 16 §2.2). abortOnError = true and no baseline come from the
+    oc.android.application convention (build-logic LintPolicy.kt, which applies the same table to every module).
+    :quality:secTest LintTableTest keeps this file, LintPolicy.kt and plan 16 §2.2 equal. Suppress one use in code with
+    @SuppressLint and a reason comment (KitWebPreview.kt SetJavaScriptEnabled; PackageInstallerUpdater API 26-27
+    PackageManagerGetSignatures), never by path here. Owner: S1-SECGATES.
+-->
+<lint>
+    <!-- plan 16 §2.2: raised to error -->
+    <issue id="TrustAllX509TrustManager" severity="error" />
+    <issue id="BadHostnameVerifier" severity="error" />
+    <issue id="AllowAllHostnameVerifier" severity="error" />
+    <issue id="SSLCertificateSocketFactoryCreateSocket" severity="error" />
+    <issue id="SSLCertificateSocketFactoryGetInsecure" severity="error" />
+    <issue id="WebViewClientOnReceivedSslError" severity="error" />
+    <issue id="AddJavascriptInterface" severity="error" />
+    <issue id="SetJavaScriptEnabled" severity="error" />
+    <issue id="UnspecifiedImmutableFlag" severity="error" />
+    <issue id="MutableImplicitPendingIntent" severity="error" />
+    <issue id="UnsafeImplicitIntentLaunch" severity="error" />
+    <issue id="UnsafeIntentLaunch" severity="error" />
+    <issue id="ExportedContentProvider" severity="error" />
+    <issue id="ExportedReceiver" severity="error" />
+    <issue id="ExportedService" severity="error" />
+    <issue id="ExportedPreferenceActivity" severity="error" />
+    <issue id="GrantAllUris" severity="error" />
+    <issue id="WorldReadableFiles" severity="error" />
+    <issue id="WorldWriteableFiles" severity="error" />
+    <issue id="HardcodedDebugMode" severity="error" />
+    <issue id="SecureRandom" severity="error" />
+    <issue id="TrulyRandom" severity="error" />
+    <issue id="GetInstance" severity="error" />
+    <issue id="UnsafeDynamicallyLoadedCode" severity="error" />
+    <issue id="UnsafeNativeCodeLocation" severity="error" />
+    <issue id="PackageManagerGetSignatures" severity="error" />
+    <issue id="AcceptsUserCertificates" severity="error" />
+    <issue id="DataExtractionRules" severity="error" />
+    <issue id="AllowBackup" severity="error" />
+    <issue id="UnprotectedSMSBroadcastReceiver" severity="error" />
+
+    <!-- The one path suppression. Our base-config permits cleartext by design (04 §4.7): Kotlin's TrustGateInterceptor is the cleartext boundary (04 §4.6, B-PROTO-139). -->
+    <issue id="InsecureBaseConfiguration">
+        <ignore path="src/main/res/xml/network_security_config.xml" />
+    </issue>
+</lint>

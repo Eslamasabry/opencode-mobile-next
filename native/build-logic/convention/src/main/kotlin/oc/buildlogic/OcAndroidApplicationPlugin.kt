@@ -1,6 +1,7 @@
 package oc.buildlogic
 
 import com.android.build.api.dsl.ApplicationExtension
+import oc.buildlogic.LintPolicy.ocLint
 import oc.buildlogic.Sdk.ocCompileSdk
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -43,7 +44,7 @@ class OcAndroidApplicationPlugin : Plugin<Project> {
                     buildConfig = true
                     compose = true
                 }
-                lint { abortOnError = true }
+                lint { ocLint(file("lint.xml")) } // plan 16 §2.2 table (LintPolicy, S1-SECGATES)
             }
             enforceModuleRules()
         }
