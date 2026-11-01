@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -47,6 +48,9 @@ import io.github.eslamasabry.oc.ui.kit.status.kitStatusSlotAbove
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+
+/** Optional host inset source; null uses the platform's safe drawing area and keyboard. */
+internal val LocalKitScreenInsets = compositionLocalOf<WindowInsets?> { null }
 
 /** How wide a single-pane body may grow on medium and wider windows (Dart `KitScreenWidth`). */
 public enum class KitScreenWidth(internal val cap: CapRole) {
@@ -92,7 +96,12 @@ public fun KitScreen(
     val window = LocalKitWindow.current
     val cap = if (window.cls == WindowClass.Compact) CapRole.Fill else width.cap
     val inner: @Composable (line: KitStatus?, ownsLine: Boolean) -> Unit = { line, ownsLine ->
-        Column(Modifier.fillMaxSize().testTag("kit-screen")) {
+        val insets = LocalKitScreenInsets.current ?: WindowInsets.safeDrawing.union(WindowInsets.ime)
+        Column(
+            Modifier.fillMaxSize()
+                .then(if (framed) Modifier.windowInsetsPadding(insets) else Modifier)
+                .testTag("kit-screen"),
+        ) {
             if (topBar != null) {
                 Box(Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))) {
                     topBar()
