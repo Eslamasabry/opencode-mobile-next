@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ja.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="agentsChooseTitle">エージェントを選ぶ</string>
+    <string name="agentsStateReady">準備完了</string>
+    <string name="agentsStateNotInstalled">未インストール · %1$s</string>
+    <string name="agentsStateNotInstalledNoSize">未インストール</string>
+    <string name="agentsStateSignInNeeded">サインインが必要</string>
+    <string name="agentsStateChecking">サインインを確認中…</string>
+    <string name="agentsStateStopped">バックグラウンドで停止しました</string>
+    <string name="agentsStateLimit">プランの上限に達しました</string>
+    <string name="agentsStateUnavailable">このスマートフォンではまだ使えません</string>
+    <string name="agentsSetupTitle">%1$s をセットアップ · %2$s</string>
+    <string name="agentsSetupTitleNoSize">%1$s をセットアップ</string>
+    <string name="agentsSetupBody">%1$s はこのスマートフォンで動作します。インストールすると、エージェントと必要なものがダウンロードされます。</string>
+    <string name="agentsInstallAction">%1$s をインストール</string>
+    <string name="agentsCancelSetup">セットアップをキャンセル</string>
+    <string name="agentsInstalling">%1$s をインストール中…</string>
+    <string name="agentsStepInstall">インストール済み</string>
+    <string name="agentsStepVersion">バージョン</string>
+    <string name="agentsStepConnection">接続</string>
+    <string name="agentsStepReady">準備完了</string>
+    <string name="agentsSignInTitle">%1$s でサインイン</string>
+    <string name="agentsSignInAgain">もう一度サインイン</string>
+    <string name="agentsSignedIn">サインイン済み</string>
+    <string name="agentsSignedInAs">%1$s としてサインイン中</string>
+    <string name="agentsRemoveAction">%1$s を削除</string>
+    <string name="agentsRemoving">%1$s を削除中…</string>
+    <string name="agentsDone">完了</string>
+    <string name="agentsModelTitle">モデルを選ぶ</string>
+    <string name="agentsModelDefault">既定のモデル</string>
+    <string name="agentsModelLoading">モデルを読み込んでいます…</string>
+    <string name="agentsLimitUnknown">%1$s のプラン上限に達しました · 後でもう一度お試しください</string>
+    <string name="agentsSignInAction">%1$s にサインイン</string>
+    <string name="agentsStoppedLine">%1$s がバックグラウンドで停止しました</string>
+    <string name="agentsResumeAction">%1$s を再開</string>
+    <string name="agentsChecking">このスマートフォン上のエージェントを探しています…</string>
+    <string name="agentsStateNeedsArm">64 ビットのスマートフォンが必要です</string>
+    <string name="agentsInstallHint">インストール</string>
+    <string name="agentsChipSignIn">サインイン</string>
+    <string name="agentsChipResume">再開</string>
+    <string name="agentsChipCheck">確認</string>
+</resources>

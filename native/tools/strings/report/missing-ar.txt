@@ -1,0 +1,4 @@
+teamProjectGoalStatus__milestones
+teamProjectGoalStatus__repos
+teamProjectGoalStatusDraft__milestones
+teamProjectGoalStatusDraft__repos

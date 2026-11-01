@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ar.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="usageWidgetIntro">تعرض ما تبقّى في خططك على أداة الاستخدام في الشاشة الرئيسية. تتحدّث أثناء عمل التطبيق.</string>
+    <string name="usageEmptyTitle">لا توجد اشتراكات بعد</string>
+    <string name="usageOnConnection">على %1$s</string>
+    <string name="usageWidgetSettingsShow">عرض هذه الخطط</string>
+    <string name="usageWidgetSettingsWindows">عرض حد الـ5 ساعات أو الأسبوعي أو كليهما</string>
+    <string name="usageWidgetWindowBoth">كلاهما</string>
+    <string name="usageWidgetWindowFiveHour">5 ساعات</string>
+    <string name="usageWidgetWindowWeekly">أسبوعي</string>
+    <string name="usageWidgetSettingsSetup">عرض الصفوف التي تحتاج إعدادًا</string>
+    <string name="usageWidgetSettingsSetupHelp">صفوف تسجيل الدخول وإضافة المفتاح والإعداد</string>
+    <string name="widgetV2ConfigureTitle">شكل الأداة</string>
+    <string name="widgetProjectTitle">اعرض المحادثات من</string>
+    <string name="widgetProjectUnavailable">تعذّر حفظ هذا الاختيار. حاول مرة أخرى.</string>
+    <string name="widgetV2AccentWallpaper">خلفية الهاتف</string>
+    <string name="widgetV2AccentApp">مظهر التطبيق</string>
+    <string name="widgetV2AccentGreen">أخضر</string>
+    <string name="widgetV2AccentTeal">أخضر مزرق</string>
+    <string name="widgetV2AccentBlue">أزرق</string>
+    <string name="widgetV2AccentAmber">كهرماني</string>
+    <string name="widgetV2SaveStyle">حفظ الشكل</string>
+    <string name="widgetV2SteerTitle">إضافة إلى هذا الدور</string>
+    <string name="widgetV2AfterReplyTitle">إرسال بعد هذا الرد</string>
+    <string name="widgetV2VoiceTitle">رسالة جديدة</string>
+    <string name="widgetV2MessageHint">اكتب رسالة</string>
+    <string name="widgetV2Send">إرسال</string>
+    <string name="widgetV2StaleRequest">تغيّرت المحادثة. رسالتك ما زالت هنا.</string>
+    <string name="widgetV2Unavailable">الاتصال في الخلفية غير متاح. رسالتك ما زالت هنا.</string>
+    <string name="widgetV2Unsupported">لا يدعم هذا الاتصال هذا الإجراء.</string>
+    <string name="widgetV2Uncertain">تعذّر تأكيد إرسال الرسالة. تحقّق من المحادثة قبل الإرسال مرة أخرى.</string>
+    <string name="widgetV2InvalidRequest">اكتب رسالة قبل الإرسال.</string>
+    <string name="widgetV2UnknownBehavior">بانتظار تفاصيل المحادثة…</string>
+    <string name="widgetV2StyleStale">تغيّرت هذه الأداة. أغلق هذه النافذة وحاول مرة أخرى.</string>
+    <string name="widgetV2StyleUnavailable">تعذّر حفظ الشكل. حاول مرة أخرى.</string>
+    <string name="widgetV2DictationUnavailable">الإملاء غير متاح الآن. يمكنك الكتابة بدلاً من ذلك.</string>
+    <string name="widgetV2RestartUnavailable">لا يمكن تغيير هذه المحادثة إلا من داخل التطبيق.</string>
+</resources>

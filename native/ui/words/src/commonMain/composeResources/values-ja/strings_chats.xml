@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ja.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="e7WorkspaceBackExit">もう一度「戻る」を押すと終了します</string>
+    <string name="serverSwitcherOpen">サーバーを切り替える</string>
+    <string name="chatsNewAgentNeedsProjectsFolder">%1$s はこのスマートフォン内のプロジェクトでのみ動作します。その中から選んでください。</string>
+    <string name="chatsHomeTitle">会話</string>
+    <string name="chatsHomeRunning">実行中</string>
+    <string name="chatsHomeDone">完了</string>
+    <string name="chatsHomeFailed">失敗</string>
+    <string name="chatsHomeToday">今日</string>
+    <string name="chatsHomeEarlier">それ以前</string>
+    <string name="chatsHomeIncomplete">読み込めなかった会話があります</string>
+    <string name="chatsHomeOpening">開いています…</string>
+    <string name="chatsHomeUnreachable">%1$s が応答していません。会話は表示されません。</string>
+    <string name="chatsSourcesUnreachable">応答なし</string>
+    <string name="chatsSourcesAll">すべての接続</string>
+    <string name="chatsSourcesSome">%2$d件中%1$d件の接続</string>
+    <string name="chatsSourcesSheetTitle">この一覧に表示する接続</string>
+    <string name="chatsSourcesMain">新しい会話はここで始まります</string>
+    <string name="chatsSourcesOnPhone">このスマートフォン上</string>
+    <string name="chatsSourcesElsewhere">別のパソコン上</string>
+    <string name="chatsSourcesAgents">このスマートフォンのエージェント</string>
+    <string name="chatsSourcesAlways">常に表示</string>
+    <string name="chatsHomeStillLoading">%1$s の会話を読み込み中…</string>
+    <string name="chatsHomeEmptyTitle">まだ会話はありません</string>
+    <string name="chatsHomeNoMatchTitle">一致する会話はありません</string>
+    <string name="chatsHomeNoMatchBody">選択したフィルターに合うものはありません。</string>
+    <string name="chatsHomeClearFilters">フィルターを解除</string>
+    <string name="chatsHomeProjectEmptyTitle">%1$s に会話はありません</string>
+    <string name="chatsHomeStartChatIn">%1$s で会話を始める</string>
+    <string name="chatsHomeNewChat">新しい会話</string>
+    <string name="chatsHomeOpenFailed">この会話を開けませんでした。下に引いて一覧を更新してください。</string>
+    <string name="chatsFilterSheetTitle">会話の表示元</string>
+    <plurals name="chatsFilterChatCount">
+        <item quantity="other">%1$d件の会話</item>
+    </plurals>
+    <string name="chatsFilterChatCount__eq1">%1$d件の会話</string>
+    <string name="chatsFilterRunningCount">%1$d件実行中</string>
+    <string name="chatsFilterNeedsYouWord">対応が必要</string>
+    <string name="chatsFilterOpenProject">プロジェクトを開く…</string>
+    <string name="chatsNewChooseProject">プロジェクトを選ぶ</string>
+    <string name="chatsNewNeedProject">会話を始めるにはプロジェクトを選んでください。</string>
+    <string name="chatsNewFailed">会話を始められませんでした。メッセージはここに残っています。</string>
+    <string name="agentsResumeNoticeTitle">新しい会話を始めますか？</string>
+    <string name="agentsResumeNoticeBody">新しい会話を始めます。%1$s はこの会話を再び開けないため、この会話はそのまま残ります。</string>
+    <string name="agentsStartNew">新しい会話を始める</string>
+    <string name="agentsCancel">キャンセル</string>
+    <string name="chatsHomeOtherFolders">その他のフォルダ</string>
+    <string name="shellServerSwitching">切り替え中…</string>
+</resources>

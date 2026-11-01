@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_pt.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="e7SetupEdit">Editar</string>
+    <string name="e7SetupConnect">Conectar</string>
+    <string name="firstRunWhereQuestion">Onde o seu agente deve trabalhar?</string>
+    <string name="firstRunOnComputer">No meu computador</string>
+    <string name="firstRunJustShowMe">Só quero ver</string>
+    <plurals name="otherServerWorking">
+        <item quantity="one">%1$d em andamento</item>
+        <item quantity="many">%1$d em andamento</item>
+        <item quantity="other">%1$d em andamento</item>
+    </plurals>
+    <string name="otherServerWorking__eq1">1 em andamento</string>
+    <string name="phoneSetupStartEntryDetail">Rode um agente de programação aqui mesmo. Não precisa de computador.</string>
+    <string name="addServerTypePaseo">Claude Code ou Pi</string>
+    <string name="welcomeComputerLine">Pareie com um código ou digite o endereço</string>
+    <string name="welcomeComputerConnect">Conectar ao meu computador</string>
+    <string name="welcomeMoreWays">Outras formas de configurar</string>
+    <string name="welcomeDemoLine">Uma conversa simulada</string>
+</resources>

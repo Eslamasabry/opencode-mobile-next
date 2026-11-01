@@ -64,6 +64,10 @@ object HandWordsKotlin {
                             val args = plan.placeholders.joinToString(", ") { it.name }
                             imports += "$RES.$piece"
                             imports += "org.jetbrains.compose.resources.$plural"
+                            if (plan.exact.isEmpty()) {
+                                body.append("        val ${a}Text = $plural(Res.plurals.$piece, $a, $args)\n")
+                                continue
+                            }
                             body.append("        val ${a}Text = when ($a) {\n")
                             for (n in plan.exact) {
                                 imports += "$RES.${piece}__eq$n"
