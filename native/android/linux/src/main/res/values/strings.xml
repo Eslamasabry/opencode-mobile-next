@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copied verbatim from android/app/src/main/res/values/strings.xml (S1-LINUX twin): only the
+     entries the copied runtime files read. Names unchanged (plan 11 §2.4 rule 3). -->
+<resources>
+    <plurals name="native_chip_pending">
+        <item quantity="one">%1$d needs you</item>
+        <item quantity="other">%1$d need you</item>
+    </plurals>
+    <plurals name="native_chip_running">
+        <item quantity="one">%1$d running</item>
+        <item quantity="other">%1$d running</item>
+    </plurals>
+    <string name="native_live_channel">Live coding connection</string>
+    <string name="native_live_description">Shown while OpenCode keeps a server session live in the background</string>
+    <string name="native_phone_server_body">Your agent keeps working while you use other apps.</string>
+    <string name="native_phone_server_channel">OpenCode on this phone</string>
+    <string name="native_phone_server_description">Shown while the phone server or project engine runs</string>
+    <string name="native_setup_channel">Setup</string>
+    <string name="native_status_action_new_chat">New chat</string>
+    <string name="native_status_action_open">Open</string>
+    <string name="native_status_action_start">Start</string>
+    <string name="native_status_action_stop_opencode">Stop OpenCode</string>
+    <string name="native_status_action_stop_reply">Stop the reply</string>
+    <string name="native_status_on_this_phone">on this phone</string>
+    <string name="native_status_paused_android_body">Android stops background work after 6 hours a day. Open OpenCode to keep going.</string>
+    <string name="native_status_paused_android_title">Paused · Android\'s background limit</string>
+    <string name="native_status_paused_idle_body">Tap to start OpenCode again</string>
+    <string name="native_status_paused_idle_title">Paused · nothing was running</string>
+    <string name="native_status_public_paused">OpenCode · paused</string>
+    <string name="native_status_public_ready">OpenCode · ready</string>
+    <string name="native_status_ready_body">Ready when you are</string>
+    <string name="native_status_ready_title">Ready · nothing running</string>
+</resources>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copied verbatim from android/app/src/main/res/values-ar/strings.xml (S1-LINUX twin): only the
+     entries the copied runtime files read. Names unchanged (plan 11 §2.4 rule 3). -->
+<resources>
+    <plurals name="native_chip_pending">
+        <item quantity="zero">لا شيء يحتاج إليك</item>
+        <item quantity="one">طلب واحد يحتاج إليك</item>
+        <item quantity="two">طلبان يحتاجان إليك</item>
+        <item quantity="few">%1$d طلبات تحتاج إليك</item>
+        <item quantity="many">%1$d طلبًا يحتاج إليك</item>
+        <item quantity="other">%1$d طلب يحتاج إليك</item>
+    </plurals>
+    <plurals name="native_chip_running">
+        <item quantity="zero">لا عمل جارٍ</item>
+        <item quantity="one">عمل واحد جارٍ</item>
+        <item quantity="two">عملان جاريان</item>
+        <item quantity="few">%1$d أعمال جارية</item>
+        <item quantity="many">%1$d عملًا جاريًا</item>
+        <item quantity="other">%1$d عمل جارٍ</item>
+    </plurals>
+    <string name="native_live_channel">اتصال مباشر للعمل</string>
+    <string name="native_live_description">يظهر عندما يُبقي OpenCode جلسة الخادم متصلة في الخلفية</string>
+    <string name="native_phone_server_body">يواصل وكيلك العمل بينما تستخدم تطبيقات أخرى.</string>
+    <string name="native_phone_server_channel">OpenCode على هذا الهاتف</string>
+    <string name="native_phone_server_description">يظهر أثناء تشغيل خادم الهاتف أو محرّك المشاريع</string>
+    <string name="native_setup_channel">إعداد الهاتف</string>
+    <string name="native_status_action_new_chat">محادثة جديدة</string>
+    <string name="native_status_action_open">فتح</string>
+    <string name="native_status_action_start">تشغيل</string>
+    <string name="native_status_action_stop_opencode">إيقاف OpenCode</string>
+    <string name="native_status_action_stop_reply">إيقاف الرد</string>
+    <string name="native_status_on_this_phone">على هذا الهاتف</string>
+    <string name="native_status_paused_android_body">يوقف أندرويد العمل في الخلفية بعد 6 ساعات يوميًا. افتح OpenCode لتواصل.</string>
+    <string name="native_status_paused_android_title">متوقف · حدّ الخلفية في أندرويد</string>
+    <string name="native_status_paused_idle_body">المس لتشغيل OpenCode من جديد</string>
+    <string name="native_status_paused_idle_title">متوقف · لم يكن شيء يعمل</string>
+    <string name="native_status_public_paused">OpenCode · متوقف</string>
+    <string name="native_status_public_ready">OpenCode · جاهز</string>
+    <string name="native_status_ready_body">جاهز عندما تكون جاهزًا</string>
+    <string name="native_status_ready_title">جاهز · لا شيء قيد التشغيل</string>
+</resources>
