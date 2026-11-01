@@ -51,6 +51,10 @@ internal class FakeConnector(private val scope: TestScope, scripts: List<Script>
     private val queue = ArrayDeque(scripts)
     val opens = mutableListOf<Long>()
     val lastEventIds = mutableListOf<String?>()
+
+    /** Sessions whose body is still open (PB-53: zero while hidden and idle). */
+    var openSessions = 0
+        private set
     var fallback: Script = Script.Fail()
 
     fun add(vararg scripts: Script) {
@@ -66,7 +70,12 @@ internal class FakeConnector(private val scope: TestScope, scripts: List<Script>
                 SseConnectResult.Failed(script.failure, script.stop)
             }
             is Script.Body -> {
-                session(ScriptedBody(script))
+                openSessions += 1
+                try {
+                    session(ScriptedBody(script))
+                } finally {
+                    openSessions -= 1
+                }
                 SseConnectResult.Ended
             }
         }

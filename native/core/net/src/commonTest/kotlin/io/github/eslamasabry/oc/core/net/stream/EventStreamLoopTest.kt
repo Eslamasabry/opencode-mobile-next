@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.core.net.stream
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.SignInWhy
+import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.core.net.gate.NetworkGate
 import io.github.eslamasabry.oc.core.model.NetworkState.Online
 import io.github.eslamasabry.oc.core.model.StreamStatus
@@ -12,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.random.Random
@@ -30,7 +32,7 @@ class EventStreamLoopTest {
         val connector: FakeConnector,
         val network: FakeNetworkStatus,
         val loop: EventStreamLoop,
-        val hidden: MutableStateFlow<Boolean>,
+        val visibility: MutableStateFlow<Visibility>,
     ) {
         val signals = mutableListOf<Pair<Long, StreamSignal>>()
         val statuses get() = signals.mapNotNull { (at, s) -> (s as? StreamSignal.Status)?.let { at to it.status } }
@@ -52,7 +54,7 @@ class EventStreamLoopTest {
     ): Harness {
         val connector = FakeConnector(this, scripts)
         val network = FakeNetworkStatus(online)
-        val hidden = MutableStateFlow(false)
+        val visibility = MutableStateFlow(Visibility.Foreground)
         val loop = EventStreamLoop(
             connector = connector,
             policy = policy,
@@ -60,11 +62,11 @@ class EventStreamLoopTest {
             gate = NetworkGate(network),
             clock = VirtualClock(this),
             random = Random(7),
-            hidden = hidden,
+            visibility = visibility,
             resume = resume,
             reconnectAllowed = reconnectAllowed,
         )
-        return Harness(this, connector, network, loop, hidden)
+        return Harness(this, connector, network, loop, visibility)
     }
 
     private fun frame(data: String) = "data: $data\n\n"
@@ -254,25 +256,152 @@ class EventStreamLoopTest {
     @Test
     fun `PB-51 hidden retries 1 s 2 s then 60-120 s`() = runTest {
         val h = harness()
-        h.hidden.value = true
+        h.visibility.value = Visibility.HiddenWatching
         h.start()
-        advanceTimeBy(1_000_000)
+        advanceTimeBy(3_600_000)
         val gaps = h.connector.opens.zipWithNext { a, b -> b - a }
         assertEquals(listOf(1_000L, 2_000L), gaps.take(2))
-        assertTrue(gaps.drop(2).isNotEmpty())
+        assertTrue(gaps.drop(2).size >= 29, "$gaps") // an hour of 60–120 s waits
         assertTrue(gaps.drop(2).all { it in 60_000L..120_000L }, "$gaps")
+    }
+
+    @Test
+    fun `PB-51 at most one try per 60 s after the second, also once a hidden stream drops`() = runTest {
+        // Connected while hidden, then dropped: the same pace applies to the reconnects (attempt counted from the drop).
+        val h = harness(scripts = listOf(Script.Body(listOf(0L to frame("a"), 10_000L to frame("b")), Script.End.Error)))
+        h.visibility.value = Visibility.HiddenWatching
+        h.start()
+        advanceTimeBy(1_800_000)
+        val afterDrop = h.connector.opens.drop(1)
+        assertEquals(listOf(11_000L, 13_000L), afterDrop.take(2)) // dropped at 10 s: 1 s, then 2 s
+        val tail = afterDrop.drop(1)
+        // Every 60 s window after the second retry holds at most one attempt.
+        tail.forEach { t -> assertTrue(tail.count { it in t until t + 60_000 } <= 1, "$tail") }
     }
 
     @Test
     fun `PB-51 return to foreground retries at once`() = runTest {
         val h = harness()
-        h.hidden.value = true
+        h.visibility.value = Visibility.HiddenWatching
         h.start()
         advanceTimeBy(10_000) // 0, 1 s, 3 s, then a 60–120 s wait
         assertEquals(3, h.connector.opens.size)
-        h.hidden.value = false
+        h.visibility.value = Visibility.Foreground
         runCurrent()
         assertEquals(listOf(0L, 1_000, 3_000, 10_000), h.connector.opens)
+        // The try on return counts as attempt 1: if it fails, the foreground schedule starts over at 1 s.
+        advanceTimeBy(1_001)
+        assertEquals(listOf(0L, 1_000, 3_000, 10_000, 11_000), h.connector.opens)
+    }
+
+    @Test
+    fun `PB-51 a hidden wait is not shortened by a flap on the same network, only by a new default network`() = runTest {
+        val h = harness()
+        h.visibility.value = Visibility.HiddenWatching
+        h.start()
+        advanceTimeBy(10_000) // waiting 60–120 s from 3 s
+        h.network.set(Online.No)
+        runCurrent()
+        h.network.set(Online.Yes) // same default network id
+        runCurrent()
+        assertEquals(3, h.connector.opens.size)
+        h.network.set(Online.Yes, id = 2) // Wi-Fi → mobile: a new network to dial on (N4-D8)
+        runCurrent()
+        assertEquals(listOf(0L, 1_000, 3_000, 10_000), h.connector.opens)
+    }
+
+    @Test
+    fun `PB-52 no dial while offline, hidden or not`() = runTest {
+        Visibility.entries.filter { it != Visibility.HiddenIdle }.forEach { visibility ->
+            val h = harness(online = Online.No)
+            h.visibility.value = visibility
+            val t0 = testScheduler.currentTime
+            h.start()
+            advanceTimeBy(600_000) // 10 min of airplane mode (PR-04)
+            assertEquals(emptyList(), h.connector.opens, "$visibility")
+            assertEquals(StreamStatus.WaitingForNetwork, h.statuses.last().second)
+            h.network.set(Online.Yes)
+            runCurrent()
+            assertEquals(listOf(t0 + 600_000L), h.connector.opens, "$visibility")
+        }
+    }
+
+    @Test
+    fun `PB-52 losing the network while hidden spends no tries`() = runTest {
+        val h = harness()
+        h.visibility.value = Visibility.HiddenWatching
+        h.start()
+        advanceTimeBy(10_000)
+        h.network.set(Online.No)
+        advanceTimeBy(600_000)
+        assertEquals(listOf(0L, 1_000, 3_000), h.connector.opens)
+    }
+
+    @Test
+    fun `PB-53 hidden idle opens no stream and arms no timer`() = runTest {
+        val h = harness(scripts = listOf(Script.Body(listOf(0L to frame("a")), Script.End.Hang)))
+        h.visibility.value = Visibility.HiddenIdle
+        h.start()
+        assertEquals(StreamStatus.Suspended, h.statuses.last().second)
+        val before = testScheduler.currentTime
+        advanceUntilIdle() // PB-40: with nothing scheduled, virtual time does not move (0 wake-ups)
+        assertEquals(before, testScheduler.currentTime)
+        advanceTimeBy(1_800_000)
+        assertEquals(emptyList(), h.connector.opens)
+        h.visibility.value = Visibility.Foreground
+        runCurrent()
+        assertEquals(listOf(1_800_000L), h.connector.opens)
+        assertEquals(StreamStatus.Connected, h.statuses.last().second)
+    }
+
+    @Test
+    fun `PB-53 going hidden idle closes a live stream and cancels a pending retry`() = runTest {
+        val h = harness(scripts = listOf(Script.Body(listOf(0L to frame("a")), Script.End.Hang)))
+        h.start()
+        assertEquals(StreamStatus.Connected, h.statuses.last().second)
+        h.visibility.value = Visibility.HiddenIdle
+        runCurrent()
+        assertEquals(StreamStatus.Suspended, h.statuses.last().second)
+        assertEquals(0, h.connector.openSessions)
+        advanceTimeBy(3_600_000)
+        assertEquals(listOf(0L), h.connector.opens)
+
+        // A pending retry (the failure path) is cancelled too, with no timer left behind.
+        val g = harness()
+        g.visibility.value = Visibility.HiddenWatching
+        val t0 = testScheduler.currentTime
+        g.start()
+        advanceTimeBy(10_000)
+        g.visibility.value = Visibility.HiddenIdle
+        runCurrent()
+        assertEquals(StreamStatus.Suspended, g.statuses.last().second)
+        advanceTimeBy(3_600_000)
+        assertEquals(listOf(t0, t0 + 1_000, t0 + 3_000), g.connector.opens)
+    }
+
+    @Test
+    fun `PB-53 hidden idle to watching dials at once with the count reset`() = runTest {
+        val h = harness()
+        h.visibility.value = Visibility.HiddenIdle
+        h.start()
+        advanceTimeBy(60_000)
+        h.visibility.value = Visibility.HiddenWatching // a reply watch starts
+        runCurrent()
+        advanceTimeBy(3_001)
+        assertEquals(listOf(60_000L, 61_000, 63_000), h.connector.opens)
+    }
+
+    @Test
+    fun `PB-53 a retryNow while hidden idle dials nothing until the person returns`() = runTest {
+        val h = harness()
+        h.visibility.value = Visibility.HiddenIdle
+        h.start()
+        h.loop.retryNow()
+        advanceTimeBy(60_000)
+        assertEquals(emptyList(), h.connector.opens)
+        h.visibility.value = Visibility.Foreground
+        runCurrent()
+        assertEquals(listOf(60_000L), h.connector.opens) // the stale retryNow does not add a second dial
     }
 
     @Test

@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.core.net.stream
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.net.gate.NetworkGate
 import io.github.eslamasabry.oc.core.net.sse.SseFrame
@@ -34,7 +35,13 @@ import kotlin.time.Clock
  * - a non-loopback host with no network waits in [StreamStatus.WaitingForNetwork] without spending tries and connects
  *   at once when the network returns, with the count reset; a new default network does the same, also for a live
  *   stream (N4-D8, B-PROTO-133); loopback is never gated;
- * - out of sight ([hidden]) the policy's hidden pace applies (PB-51); coming back fires a waiting try at once;
+ * - every wait comes from [BackoffPolicy.delayMs] with the current [visibility] (plan 13 amendment A2): out of sight
+ *   while something watches (HiddenWatching) tries go 1 s, 2 s, then every 60–120 s jittered (PB-51); a network flap
+ *   on the same default network never shortens that wait, a new default network does (N4-D8); a change to Foreground
+ *   fires a waiting try at once, counted as attempt 1 (a failure then waits 1 s);
+ * - HiddenIdle (nothing watching) dials nothing and arms no timer (PB-40, PB-53): a live stream is closed, a pending
+ *   wait is cancelled, the status is [StreamStatus.Suspended], and the loop only waits for the visibility to change;
+ *   then it dials at once with the count reset. A [retryNow] made while suspended is answered by that dial;
  * - a failed try's failure is published in [lastFailure] (401 → `SignIn(PasswordRejected)`, so the graph can set
  *   `passwordRejected`) and cleared by the next `Connected`. An OpenCode 2 401/403 keeps the normal backoff (plan 04
  *   §4.8); only a connector result with `stop = true` (a backend whose sign-in failure is terminal) parks the loop in
@@ -63,7 +70,8 @@ public class EventStreamLoop(
     private val gate: NetworkGate,
     private val clock: Clock,
     private val random: Random,
-    private val hidden: StateFlow<Boolean> = MutableStateFlow(false),
+    /** Plan 13 §11.1, bound from `LinkDemand` at graph level; picks the hidden pace (A2). */
+    private val visibility: StateFlow<Visibility> = MutableStateFlow(Visibility.Foreground),
     private val resume: ResumeMode = ResumeMode.None,
     private val readBufferBytes: Int = 16 * 1024,
     /** N4-D21, from `GatewaySpec.reconnectAllowed`: whether the loop may dial again on its own. */
@@ -84,9 +92,9 @@ public class EventStreamLoop(
     /** Cold: collecting runs the loop; cancelling the collector cancels the request and stops it. */
     public fun signals(): Flow<StreamSignal> = channelFlow { run() }.buffer(Channel.RENDEZVOUS)
 
-    private enum class End { Clean, Failed, Stalled, RetryNow, NetworkChanged }
+    private enum class End { Clean, Failed, Stalled, RetryNow, NetworkChanged, Idle }
 
-    private enum class Wake { Timer, RetryNow, NetworkChanged, Visible, Disallowed }
+    private enum class Wake { Timer, RetryNow, NetworkChanged, Visible, Idle, Disallowed }
 
     private enum class Resume { RetryNow, Allowed }
 
@@ -100,11 +108,19 @@ public class EventStreamLoop(
         var nextAt: Long? = null
         var lastEventId: String? = null
         while (true) {
-            if (!gate.isUsable(hostClass)) {
-                send(StreamSignal.Status(StreamStatus.WaitingForNetwork))
-                gate.awaitUsable(hostClass)
+            if (visibility.value == Visibility.HiddenIdle) {
+                send(StreamSignal.Status(StreamStatus.Suspended))
+                visibility.first { it != Visibility.HiddenIdle } // no timer armed while suspended (PB-40)
                 attempt = 0
                 nextAt = null
+                continue
+            }
+            if (!gate.isUsable(hostClass)) {
+                send(StreamSignal.Status(StreamStatus.WaitingForNetwork))
+                awaitUsableOrIdle()
+                attempt = 0
+                nextAt = null
+                continue
             }
             retry.tryReceive() // a request made before this try is answered by it (it reads the newest credentials)
             send(StreamSignal.Status(inFlight(attempt, nextAt)))
@@ -130,7 +146,7 @@ public class EventStreamLoop(
                 nextAt = null
                 continue
             }
-            if (end == End.RetryNow || end == End.NetworkChanged) {
+            if (end == End.RetryNow || end == End.NetworkChanged || end == End.Idle) {
                 attempt = 0
                 nextAt = null
                 continue
@@ -138,20 +154,20 @@ public class EventStreamLoop(
             val upSince = connectedAt
             if (upSince != null && now() - upSince >= policy.resetAfterStableMs) attempt = 0
             attempt += 1
+            val seen = visibility.value
+            if (seen == Visibility.HiddenIdle) continue // Suspended at the top of the loop
             if (!reconnectAllowed.value) {
                 attempt = waitWhileDisallowed(attempt)
                 nextAt = null
                 continue
             }
-            val wasHidden = hidden.value
-            val wait = policy.delayMs(attempt, wasHidden, random)
+            val wait = policy.delayMs(attempt, random, seen) ?: continue
             val at = now() + wait
             nextAt = at // known before the status goes out
             send(StreamSignal.Status(waiting(attempt, at)))
-            when (waitBeforeRetry(wait, wasHidden, gate.currentNetworkId())) {
+            when (waitBeforeRetry(wait, seen, gate.currentNetworkId())) {
                 Wake.Timer -> Unit
-                Wake.Visible -> nextAt = now()
-                Wake.RetryNow, Wake.NetworkChanged -> {
+                Wake.RetryNow, Wake.NetworkChanged, Wake.Visible, Wake.Idle -> {
                     attempt = 0
                     nextAt = null
                 }
@@ -178,6 +194,18 @@ public class EventStreamLoop(
         return when (resume) {
             Resume.RetryNow -> attempt // one try; if it fails, the loop comes back here
             Resume.Allowed -> 0
+        }
+    }
+
+    /** Offline: waits for a usable network, or for HiddenIdle (then the loop reports Suspended instead). */
+    private suspend fun awaitUsableOrIdle() {
+        coroutineScope {
+            val wakes = listOf(
+                async { gate.awaitUsable(hostClass) },
+                async { visibility.first { it == Visibility.HiddenIdle } },
+            )
+            select { wakes.forEach { d -> d.onAwait { } } }
+            wakes.forEach { it.cancel() }
         }
     }
 
@@ -211,6 +239,7 @@ public class EventStreamLoop(
         val reader = async { pump(body, generation, onId) }
         val interrupts = buildList {
             add(async { retry.receive(); End.RetryNow })
+            add(async { visibility.first { it == Visibility.HiddenIdle }; End.Idle }) // PB-53: 0 open streams
             if (gated) add(async { awaitAllowedNetworkChange(networkAtStart); End.NetworkChanged })
         }
         val all = interrupts + reader
@@ -261,11 +290,15 @@ public class EventStreamLoop(
         }
     }
 
-    private suspend fun waitBeforeRetry(waitMs: Long, wasHidden: Boolean, networkId: Long?): Wake = coroutineScope {
+    /** The one retry wait (A2's `@RetryLoop`): it waits only for a value from [BackoffPolicy.delayMs]. */
+    private suspend fun waitBeforeRetry(waitMs: Long, seen: Visibility, networkId: Long?): Wake = coroutineScope {
         val wakes: List<Deferred<Wake>> = buildList {
             add(async { delay(waitMs); Wake.Timer })
             add(async { retry.receive(); Wake.RetryNow })
-            if (wasHidden) add(async { hidden.first { !it }; Wake.Visible })
+            if (seen != Visibility.Foreground) {
+                add(async { visibility.first { it == Visibility.Foreground }; Wake.Visible })
+            }
+            add(async { visibility.first { it == Visibility.HiddenIdle }; Wake.Idle })
             if (gated) add(async { gate.awaitNetworkChangeFrom(networkId); Wake.NetworkChanged })
             add(async { reconnectAllowed.first { !it }; Wake.Disallowed })
         }

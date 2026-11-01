@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.core.net
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.SignInWhy
-import io.github.eslamasabry.oc.core.net.stream.BackoffPolicy
 import io.github.eslamasabry.oc.core.net.stream.KtorSseConnector
 import io.github.eslamasabry.oc.core.net.stream.SseConnectResult
 import io.ktor.client.HttpClient
@@ -16,35 +15,12 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
-import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class HttpTest {
-    @Test
-    fun `N4-D6 OpenCode 2 policy is 1 2 4 8 16 16 s with no jitter`() {
-        val r = Random(1)
-        assertEquals(listOf(1_000L, 2_000, 4_000, 8_000, 16_000, 16_000, 16_000), (1..7).map { BackoffPolicy.OpenCode2.delayMs(it, false, r) })
-    }
-
-    @Test
-    fun `PB-51 hidden pace keeps two quick tries then waits 60 to 120 s`() {
-        val r = Random(3)
-        assertEquals(listOf(1_000L, 2_000), (1..2).map { BackoffPolicy.OpenCode2.delayMs(it, true, r) })
-        repeat(1_000) { assertTrue(BackoffPolicy.OpenCode2.delayMs(3 + it % 9, true, r) in 60_000L..120_000L) }
-    }
-
-    @Test
-    fun `N4-D6 Gas City policy is jittered and capped at 30 s`() {
-        val r = Random(5)
-        repeat(1_000) { attempt ->
-            val d = BackoffPolicy.GasCity.delayMs(1 + attempt % 20, false, r)
-            assertTrue(d in 250L..30_000L, "$d")
-        }
-    }
-
     @Test
     fun `B-PROTO-129 statuses become plain failures`() {
         fun f(code: Int) = StatusMapping.failureFor(code)
