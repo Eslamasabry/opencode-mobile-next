@@ -107,7 +107,9 @@ public fun KitRow(
             else -> supporting
         }
     val value = trailing as? KitRowTrailing.Value
-    val action = (trailing as? KitRowTrailing.Action)?.action
+    val action = (trailing as? KitRowTrailing.Action)?.action?.let {
+        if (enabled) it else it.copy(enabled = false, disabledReason = disabledReason, onClick = {})
+    }
     val valueBelow = value != null && large
     val actionBelow = action != null && large
     val tappable = onClick != null || onLongClick != null
