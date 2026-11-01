@@ -1,0 +1,4 @@
+# Per-module test-task overrides for t0.sh and t1.sh: "<module><TAB><tasks separated by spaces>".
+# Without a row the tasks come from the module's convention plugin and source folders (tool/lib/common.sh).
+:androidApp	testPreviewDebugUnitTest
+:desktopApp	test
