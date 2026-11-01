@@ -1,6 +1,5 @@
-package io.github.eslamasabry.oc.core.data
+package io.github.eslamasabry.oc.core.common.dart
 
-import io.github.eslamasabry.oc.core.data.dart.DartJson
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -8,7 +7,7 @@ import kotlin.test.assertNull
 
 /**
  * Vectors derived from dart:convert `_JsonStringifier`, dart:core `Uri._uriEncode`, `DateTime.toIso8601String` and
- * `double.toString`. TODO(move-to-core): replace with the generated `dart-vectors.json` (plan 05 §2.5) in :core:common.
+ * `double.toString`. To be replaced by the generated `dart-vectors.json` (plan 05 §2.5, open: needs a Flutter toolchain).
  */
 class DartJsonTest {
     @Test

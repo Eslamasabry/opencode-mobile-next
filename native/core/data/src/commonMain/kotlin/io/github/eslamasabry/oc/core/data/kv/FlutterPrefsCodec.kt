@@ -1,6 +1,6 @@
 package io.github.eslamasabry.oc.core.data.kv
 
-import io.github.eslamasabry.oc.core.data.dart.DartJson
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 
 /**
  * Decodes the Java-serialised string list of `shared_preferences_android` before 2.4.3 (`ListEncoder` +
