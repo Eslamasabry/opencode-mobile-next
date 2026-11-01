@@ -1,0 +1,163 @@
+# E2E-19 Remove Linux, free space and reset without losing projects
+# slice: 3   avd: A   fixtures: FX-OC2, FX-LINUXDL   snapshot: flutter-linux
+# rows: B-LINUX-089, B-LINUX-247, B-LINUX-029, B-LINUX-093
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-3, g3, linux, linux-setup]
+---
+- runScript: ../../runner/out/strings.js
+# flutter-linux: built-in Linux with project app (a second project is made below), caches from setup. The reset in
+# step 4 sets Linux up again (long waits: tagged linux-setup). Never clearState here.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+
+# S1 Settings > "This phone" > storage: categories show real sizes; tap "Free up space": only safe paths (caches
+#    yes, projects and credentials never) are listed; after cleaning the freed space is the drop between readings,
+#    never negative; files in use today are kept; old agent versions are removed only when the current one is known.
+#    [B-LINUX-089, B-LINUX-247]
+# S1 [B-LINUX-089, B-LINUX-247]
+# confirm: the in-app Linux storage page is reached through the "Linux" row, then "Storage".
+- scrollUntilVisible:
+    element: ${output.c.linuxMgrRow}
+    label: "S1 storage by category, only safe paths to free [B-LINUX-089, B-LINUX-247]"
+- tapOn: ${output.c.linuxMgrRow}
+- tapOn: ${output.c.linuxMgrStorageDetail}
+- extendedWaitUntil:
+    visible: ${output.rc.linuxMgrStorageTotal}
+    timeout: 60000
+- assertVisible: ${output.s.linuxMgrCatBase}
+- assertVisible: ${output.s.linuxMgrCatProjects}
+- assertVisible: ${output.s.linuxMgrCatProjectsDetail}
+- tapOn: ${output.s.linuxMgrFreeUp}
+- assertVisible: ${output.s.linuxMgrCleanApt}
+- assertVisible: ${output.s.linuxMgrCleanTemp}
+- assertVisible: ${output.s.linuxMgrCleanKept}
+- assertNotVisible: ${output.s.linuxMgrCatProjects}
+- tapOn: ${output.s.linuxMgrCleanApt}
+- extendedWaitUntil:
+    visible: ${output.s.linuxMgrCleanAptAsk}
+    timeout: 15000
+- assertVisible: ${output.rc.linuxMgrCleanBody}
+- tapOn: ${output.s.linuxMgrCleanApt}
+- extendedWaitUntil:
+    visible: ${'(' + output.re.linuxMgrCleanDone + '|' + output.s.linuxMgrCleanNothing + ')'}  # literal-ok: alternation of two strings
+    timeout: 60000
+# Never negative: no minus sign in the freed size.
+- assertNotVisible: ${output.t.linuxMgrCleanDone.replace('{size}', '-.*')}
+# UNIT-ONLY: files used today are kept; old agent versions go only when the current one is known (LinuxClean tests).
+- back
+
+# S2 Run a scan, cancel it midway: it stops; the summary shows the last total. [B-LINUX-247]
+# S2 [B-LINUX-247]
+# confirm: the cancellable scan is the "Storage" page of This phone ("Scan storage" / "Stop scan").
+- back:
+    label: "S2 a cancelled scan keeps the last total [B-LINUX-247]"
+- back
+- scrollUntilVisible:
+    element: ${output.s.thisPhoneStorage}
+- tapOn: ${output.s.thisPhoneStorage}
+- runFlow:
+    when:
+      visible: ${output.s.termuxStorageScanAction}
+    commands:
+      - tapOn: ${output.s.termuxStorageScanAction}
+      - extendedWaitUntil:
+          visible: ${output.rc.termuxStorageTotal}
+          timeout: 300000
+- tapOn: ${output.s.termuxStorageRescanAction}
+- extendedWaitUntil:
+    visible: ${output.s.termuxStorageCancel}
+    timeout: 15000
+- tapOn: ${output.s.termuxStorageCancel}
+- extendedWaitUntil:
+    visible: ${output.s.termuxStorageCancelled}
+    timeout: 30000
+- assertVisible: ${output.rc.termuxStorageTotal}
+- back
+
+# S3 Remove the in-app Linux: projects are kept unless you ask otherwise; "delete everything" requires typing the
+#    exact confirmation; a near-match does not delete. [B-LINUX-029]
+# S3 [B-LINUX-029]
+- scrollUntilVisible:
+    element: ${output.s.thisPhoneRemove}
+    label: "S3 remove keeps projects; delete-all needs the exact words [B-LINUX-029]"
+- tapOn: ${output.s.thisPhoneRemove}
+- extendedWaitUntil:
+    visible: ${output.s.phoneServerCardRemoveTitle}
+    timeout: 15000
+- assertVisible: ${output.rc.removeFromPhoneKeepKept}
+- assertVisible: ${output.s.removeFromPhoneKeepConfirm}
+- tapOn: ${output.rc.removeFromPhoneDeleteAllChoice}
+- extendedWaitUntil:
+    visible: ${output.s.removeFromPhoneDeleteTitle}
+    timeout: 15000
+- assertVisible: ${output.s.removeFromPhoneDeleteLost}
+# confirm: the word to type is the action's own name ("Delete everything").
+- tapOn: ${output.rc.kitConfirmTypeName}
+- inputText: ${output.t.removeFromPhoneDeleteAll.slice(0, -1)}
+- hideKeyboard
+- tapOn: ${output.s.removeFromPhoneDeleteAll}
+# A near-match deleted nothing: still on the sheet, OpenCode still installed.
+- assertVisible: ${output.s.removeFromPhoneDeleteTitle}
+- tapOn: ${output.s.kitConfirmCancel}
+- runFlow:
+    when:
+      visible: ${output.s.phoneServerCardRemoveTitle}
+    commands:
+      - tapOn: ${output.s.kitConfirmCancel}
+- assertVisible: ${output.s.thisPhoneRemove}
+- assertVisible: ${output.s.thisPhoneTerminal}
+# UNIT-ONLY: the exact text deletes, and the keep-projects path keeps the project folders (PhoneRemove tests). The
+#   flow does not remove Linux here so that S4 can reset it.
+
+# S4 Reset Linux: a marker is saved before erasing; [adb] kill the app during the erase; relaunch: it finishes erasing
+#    and sets up again; kill it after erasing: it only sets up; a Linux installed in the meantime ends the reset
+#    quietly; the old Reply speed reading is gone. [B-LINUX-093]
+# S4 [B-LINUX-093]
+- scrollUntilVisible:
+    element: ${output.c.linuxMgrRow}
+    label: "S4 a reset killed halfway finishes on relaunch [B-LINUX-093]"
+- tapOn: ${output.c.linuxMgrRow}
+- scrollUntilVisible:
+    element: ${output.s.linuxMgrReset}
+- tapOn: ${output.s.linuxMgrReset}
+- extendedWaitUntil:
+    visible: ${output.s.linuxMgrResetTitle}
+    timeout: 15000
+- assertVisible: ${output.s.linuxMgrResetKept}
+- tapOn: ${output.s.linuxMgrResetWord}
+# Kill the app while it erases.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: ${'(' + output.s.linuxMgrResetCleanupTitle + '|' + output.s.phoneSetupProgressTitle + ')'}  # literal-ok: alternation of two strings
+    timeout: 120000
+- repeat:
+    times: 8
+    while:
+      notVisible: ${output.s.phoneSetupReadyTitle}
+    commands:
+      - extendedWaitUntil:
+          visible: ${output.s.phoneSetupReadyTitle}
+          timeout: 300000
+          optional: true
+- assertVisible: ${output.s.phoneSetupReadyTitle}
+# Projects stayed: project app is still offered.
+- tapOn: ${output.s.phoneSetupReadyOpenFolderInstead}
+- assertVisible: ${output.fx.projectApp}
+- back
+- back
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- assertNotVisible: ${output.rc.replySpeedLast}
+# UNIT-ONLY: the marker is written before erasing; a kill after erasing only sets up; a Linux installed meanwhile ends
+#   the reset quietly (LinuxReset tests).

@@ -1,0 +1,339 @@
+# E2E-10 Network loss, reconnect and never sending twice
+# slice: 2   avd: A   fixtures: FX-OC2, fx-proxy   snapshot: base
+# rows: B-PROTO-088, B-STATE-040, B-STATE-039, B-STATE-038, B-PROTO-045, B-STATE-008
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-2, g2, chat]
+---
+- runScript: ../../runner/out/strings.js
+
+# S1 Send `e2e:slow-finish`; [adb] airplane mode on at mid-reply; see the connection status line in plain words
+#    (never a raw error); airplane mode off: the reply continues, no duplicated message. [B-PROTO-088]
+# S1 [B-PROTO-088]
+- runFlow:
+    file: ../_sub/connect-fx-oc2.yaml
+    label: "S1 airplane mid-reply, plain status, no duplicate [B-PROTO-088]"
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- extendedWaitUntil:
+    visible: ${output.s.kitTurnLiveStopShort}
+    timeout: 30000
+- setAirplaneMode: enabled
+- extendedWaitUntil:
+    visible: ${output.c.connectionReconnectingQuiet}  # confirm: the plain status line while offline
+    timeout: 30000
+- assertNotVisible: '(?s).*(SocketException|ClientException|errno|Failed host lookup).*'  # literal-ok: raw error shapes that must never show
+- setAirplaneMode: disabled
+- extendedWaitUntil:
+    visible: All done\.  # literal-ok: final reply of e2e:slow-finish
+    timeout: 60000
+- assertNotVisible:
+    text: All done\.  # literal-ok: final reply of e2e:slow-finish, must not appear twice
+    index: 1
+
+# S2 [adb] switch Wi-Fi to mobile data at the instant a prompt is on the wire (hold the fixture response): after
+#    recovery the server has the prompt exactly once; a prompt whose send was cut by the switch is held for review
+#    rather than silently re-sent. [B-PROTO-088, B-STATE-040]
+# S2 [B-PROTO-088, B-STATE-040]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: clear-request-log
+    label: "S2 Wi-Fi to mobile mid-send: once, or held for review [B-PROTO-088, B-STATE-040]"
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: hold-response
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async"}'
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo switch-once
+# adb: net
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: net
+      ARGS: '{"wifi": "off", "data": "on"}'
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: release-response
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async"}'
+- extendedWaitUntil:
+    visible: ECHO switch-once  # literal-ok: stub model reply to e2e:echo
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-log
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "body_contains": "switch-once"}'
+- assertTrue: ${output.fxr.count == 1}
+# A send cut on the wire is held for review, not re-sent by itself.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: fx-proxy
+      ACTION: cut-mid-request
+      ARGS: '{"host": "10.0.2.2", "port": 4097, "path": "/api/session/*/prompt_async"}'
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo cut-on-wire
+# adb: net
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: net
+      ARGS: '{"wifi": "on"}'
+- extendedWaitUntil:
+    visible: ${output.c.kitQueuedUncertain}  # confirm: the held-for-review wording on the pending bubble
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: fx-proxy
+      ACTION: restore-host
+      ARGS: '{"host": "10.0.2.2", "port": 4097}'
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-log
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "body_contains": "cut-on-wire"}'
+- assertTrue: ${output.fxr.count <= 1}
+- assertVisible: ${output.c.kitQueuedUncertain}
+
+# S3 Go offline and send three prompts: they wait in a queue (visible "Waiting to send" bubble); come back online:
+#    they flush once, oldest first, and a count of how many were sent is shown. Prompts for another server stay queued
+#    and are counted. [B-STATE-039]
+# S3 [B-STATE-039]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S3 three offline prompts flush once, oldest first [B-STATE-039]"
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: clear-request-log
+- setAirplaneMode: enabled
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo q1
+- extendedWaitUntil:
+    visible: ${output.s.kitQueuedWaiting}
+    timeout: 15000
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo q2
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo q3
+- assertVisible: ${output.rc.kitQueuedTitle}
+- setAirplaneMode: disabled
+- extendedWaitUntil:
+    visible: ${output.re.chatUiQueuedSent}
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-log
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async"}'
+- assertTrue: ${output.fxr.count == 3}
+- assertTrue: ${output.fxr.texts.join('|') == 'e2e:echo q1|e2e:echo q2|e2e:echo q3'}
+# UNIT-ONLY: prompts queued for another server stay queued and are counted (offline queue test; E2E-11 S6 and E2E-35
+# show another server's queue surviving on a device).
+
+# S4 Turn the auto-send setting off and repeat: nothing is sent when the network returns; tap the explicit resend on
+#    one: it sends and is not counted as automatic. Turning the setting off while prompts wait stops delivery.
+#    [B-STATE-038]
+# S4 [B-STATE-038]
+# SUSPECTED-GAP: Flutter R may have no visible auto-send switch for the offline queue; the search term is a guess.
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S4 auto-send off: nothing flushes, explicit resend works [B-STATE-038]"
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.capabilityOfflineQueue}
+- tapOn:
+    text: ${output.s.capabilityOfflineQueue}  # confirm: the auto-send switch for queued prompts
+    index: 1
+- back
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: clear-request-log
+- setAirplaneMode: enabled
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo manual-1
+- extendedWaitUntil:
+    visible: ${output.s.kitQueuedWaiting}
+    timeout: 15000
+- setAirplaneMode: disabled
+- extendedWaitUntil:
+    visible: ${output.s.kitQueuedWaiting}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-log
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async"}'
+- assertTrue: ${output.fxr.count == 0}
+- tapOn: ${output.s.kitQueuedActions}
+- tapOn: ${output.s.chatUiSendPromptAgain}  # confirm: the explicit resend in the pending bubble's actions
+- extendedWaitUntil:
+    visible: ECHO manual-1  # literal-ok: stub model reply to e2e:echo
+    timeout: 60000
+- assertNotVisible: ${output.re.chatUiQueuedSent}
+# UNIT-ONLY: turning the setting off while prompts wait stops delivery mid-flush (offline queue test).
+# Turn auto-send back on.
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.capabilityOfflineQueue}
+- tapOn:
+    text: ${output.s.capabilityOfflineQueue}
+    index: 1
+- back
+- back
+
+# S5 Queue a prompt, cancel it from the pending bubble: the text returns to the composer. Cancel one the server already
+#    delivered: the item just drops (no error). Change the delivery mode of a pending prompt and see the server and the
+#    UI agree. [B-PROTO-045]
+# S5 [B-PROTO-045]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S5 cancel returns the text; delivery mode agrees [B-PROTO-045]"
+- setAirplaneMode: enabled
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo take-back
+- extendedWaitUntil:
+    visible: ${output.s.kitQueuedWaiting}
+    timeout: 15000
+- tapOn: ${output.s.kitQueuedActions}
+- tapOn: ${output.s.chatUiCancelMessage}
+- tapOn:
+    text: ${output.s.chatUiCancelMessage}
+    below: ${output.c.chatUiItsTextReturnsToTheComposerAs}
+- assertNotVisible: ${output.s.kitQueuedWaiting}
+- assertVisible: e2e:echo take-back  # literal-ok: the cancelled prompt's text back in the composer
+- setAirplaneMode: disabled
+# UNIT-ONLY: cancelling an item the server already delivered just drops it (race; offline queue test).
+# Delivery mode: while a reply runs, queue "after this reply", then change it to "add to this turn".
+- tapOn: ${output.s.kitComposerField}
+- eraseText: 60
+- inputText: e2e:slow-finish
+- tapOn: ${output.s.kitComposerSend}
+- extendedWaitUntil:
+    visible: ${output.s.kitTurnLiveStopShort}
+    timeout: 30000
+- tapOn: ${output.s.kitComposerField}
+- inputText: e2e:echo mode-change
+- tapOn: ${output.s.kitComposerSend}
+- extendedWaitUntil:
+    visible: ${output.s.kitQueuedAfterReply}
+    timeout: 15000
+- tapOn: ${output.s.kitQueuedActions}
+- tapOn: ${output.s.kitComposerAddToTurn}  # confirm: the delivery-mode change in the pending bubble's actions
+- extendedWaitUntil:
+    visible: ${output.s.kitQueuedAddToTurn}
+    timeout: 15000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-log
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "body_contains": "mode-change"}'
+- assertTrue: ${output.fxr.count == 1 && output.fxr.last.delivery == 'steer'}
+- extendedWaitUntil:
+    notVisible: ${output.s.kitTurnLiveStopShort}
+    timeout: 60000
+
+# S6 [fx] lose the response to a send: tap Retry; the app looks up the receipt and confirms without sending again; kill
+#    the app with a pending command, relaunch: it reconciles on flush and keeps the tab; with no receipt or a lost
+#    capability it never resends on its own. [B-STATE-008]
+# S6 [B-STATE-008]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: clear-request-log
+    label: "S6 lost response: receipt lookup, never a second send [B-STATE-008]"
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: lose-response
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "times": 1}'
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo receipt-check
+- extendedWaitUntil:
+    visible: ${output.s.commonRetry}  # confirm: the Retry on a send whose answer was lost
+    timeout: 60000
+- tapOn: ${output.s.commonRetry}
+- extendedWaitUntil:
+    visible: ECHO receipt-check  # literal-ok: stub model reply to e2e:echo
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-log
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "body_contains": "receipt-check"}'
+- assertTrue: ${output.fxr.count == 1}
+# Kill the app while a command is pending, relaunch: it reconciles and keeps the conversation open.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: lose-response
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "times": 1}'
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo killed-pending
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ECHO killed-pending  # literal-ok: stub model reply; the relaunch reopens this conversation
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-log
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "body_contains": "killed-pending"}'
+- assertTrue: ${output.fxr.count == 1}
+# UNIT-ONLY: with no receipt or a lost capability it never resends on its own (offline queue reconcile test).

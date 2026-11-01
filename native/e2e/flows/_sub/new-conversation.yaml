@@ -1,0 +1,8 @@
+# From Conversations: start a new conversation in PROJECT and wait for the composer. env: PROJECT
+appId: ${APP_ID}
+---
+- tapOn: ${output.s.chatsHomeNewChat}
+- tapOn: ${PROJECT}  # literal-ok: project name comes from fixture data via env
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000

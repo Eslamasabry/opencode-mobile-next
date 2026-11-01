@@ -1,0 +1,323 @@
+# E2E-23 Language, text size and look
+# slice: 4   avd: A, AR   fixtures: FX-OC2   snapshot: widgets
+# rows: B-L10N-008, B-L10N-001, B-L10N-009, B-L10N-013, B-KIT-059, B-KIT-040
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-4, g4, nav]
+---
+- runScript: ../../runner/out/strings.js
+
+# Snapshot "widgets": the Conversations widget is already on the home screen (adb cannot place widgets), so no
+# clearState. The runner repeats this file on AVD-AR with --lang ar; the x_ar_* labels are the Arabic words the app
+# shows after S1 switches it to Arabic, and stay Arabic in both runs.
+- launchApp:
+    stopApp: true
+- runFlow:
+    when:
+      visible: ${output.s.welcomeComputerConnect}
+    commands:
+      - runFlow:
+          file: ../_sub/connect-server.yaml
+          env:
+            ADDRESS: ${output.fx.serverAddress}
+            PASSWORD: ${SERVER_PASSWORD}
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+
+# S1 Settings > Language: the list contains only shipped languages and matches the saved-choice set; each language
+#    names itself (العربية). Choose Arabic: the app flips to RTL and everything reads Arabic; kill and relaunch: still
+#    Arabic; remove the override: it follows the system language. [B-L10N-008, B-L10N-001]
+# S1 [B-L10N-008, B-L10N-001]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S1 shipped languages, self-named; Arabic sticks; system again [B-L10N-008, B-L10N-001]"
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: language
+- tapOn: ${output.s.settingsV3Language}
+- assertVisible: ${output.s.e7LocaleUiEnglish}
+- assertVisible: ${output.s.e7LocaleUiArabic}
+- assertVisible: ${output.s.e7LocaleUiSystem}
+- scrollUntilVisible:
+    element: ${output.s.e7LocaleUiJapanese}
+- assertVisible: ${output.s.e7LocaleUiChinese}
+- assertVisible: ${output.s.e7LocaleUiSpanish}
+# Not shipped: never listed.
+- assertNotVisible: Svenska  # literal-ok: Swedish names itself; the app does not ship it
+- tapOn: ${output.s.e7LocaleUiArabic}
+- extendedWaitUntil:
+    notVisible: ${output.s.e7LocaleUiDescription}
+    timeout: 15000
+- assertVisible: ${output.s.e7LocaleUiArabic}
+# UNIT-ONLY: the layout direction is RTL (Maestro reads text, not direction); the saved-choice set equals the list.
+# adb: kill-app-proc
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: kill-app-proc
+      ARGS: '{"match": "opencode_mobile"}'
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.x_ar_chats_home}
+    timeout: 30000
+# Remove the override: follow the system language (English on AVD-A).
+- tapOn: ${output.s.x_ar_settings}
+- tapOn: ${output.s.x_ar_settings_search}
+- setClipboard:
+    text: ${output.t.x_ar_language}
+- pasteText
+- hideKeyboard
+- tapOn: ${output.s.x_ar_language}
+- tapOn: ${output.s.x_ar_use_system_language}
+- extendedWaitUntil:
+    visible: ${output.s.e7LocaleUiSystem}
+    timeout: 15000
+- back
+- back
+
+# S2 [adb] set the system locale list (emulator: `setprop persist.sys.locale` and restart, or Settings > System >
+#    Languages) to a language the app does not ship, such as Swedish, alone: the app reads English, not Arabic; set the
+#    list to Swedish then Japanese: the app reads Japanese (the next device language is tried before English); a
+#    shipped language is found by code, by region and by script (for example Traditional Chinese). [B-L10N-009]
+# S2 [B-L10N-009]
+# The locale hook restarts the Android framework (zygote); the next launch waits for it.
+# adb: locale
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: locale
+      ARGS: '{"tags": "sv-SE"}'
+    label: "S2 unshipped system language falls to the next one, then English [B-L10N-009]"
+- extendedWaitUntil:
+    visible: ${output.s.x_app_label}
+    timeout: 60000
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- assertNotVisible: ${output.s.x_ar_chats_home}
+# adb: locale
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: locale
+      ARGS: '{"tags": "sv-SE,ja-JP"}'
+- extendedWaitUntil:
+    visible: ${output.s.x_app_label}
+    timeout: 60000
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.x_ja_chats_home}
+    timeout: 60000
+# Traditional Chinese by script: the app ships Chinese, so zh-Hant-TW resolves to it, not English.
+# adb: locale
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: locale
+      ARGS: '{"tags": "zh-Hant-TW"}'
+- extendedWaitUntil:
+    visible: ${output.s.x_app_label}
+    timeout: 60000
+- launchApp
+- extendedWaitUntil:
+    notVisible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+# UNIT-ONLY: which Chinese script wins for zh-Hant (LocaleResolver unit cases; the app ships one zh table).
+# adb: locale
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: locale
+      ARGS: '{"tags": "en-US"}'
+- extendedWaitUntil:
+    visible: ${output.s.x_app_label}
+    timeout: 60000
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+
+# S3 Post a notification and place the widget while the app is Arabic: native text refreshes at once to Arabic, with
+#    localized agent titles, fallbacks and time labels; switch back and it returns to English. [B-L10N-013]
+# S3 [B-L10N-013]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S3 notification and widget text follow the app language [B-L10N-013]"
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: language
+- tapOn: ${output.s.settingsV3Language}
+- tapOn: ${output.s.e7LocaleUiArabic}
+- back
+- back
+- tapOn: ${output.s.x_ar_chats_home}
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- pressKey: Home
+- extendedWaitUntil:
+    visible: ${output.s.x_ar_widget_conversations_title}
+    timeout: 30000
+- assertNotVisible: ${output.s.x_widget_conversations_title}
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.s.x_ar_native_allow_once}
+    timeout: 30000
+- assertNotVisible: ${output.s.android_native_allow_once}
+# UNIT-ONLY: localized agent titles, fallbacks and time labels (NativeStrings per-locale unit cases).
+- runFlow: ../_sub/close-shade.yaml
+# Back to English: the native text follows.
+- launchApp
+- tapOn: ${output.s.x_ar_native_allow_once}
+- back
+- tapOn: ${output.s.x_ar_settings}
+- tapOn: ${output.s.x_ar_settings_search}
+- setClipboard:
+    text: ${output.t.x_ar_language}
+- pasteText
+- hideKeyboard
+- tapOn: ${output.s.x_ar_language}
+- tapOn: ${output.s.e7LocaleUiEnglish}
+- pressKey: Home
+- extendedWaitUntil:
+    visible: ${output.s.x_widget_conversations_title}
+    timeout: 30000
+
+# S4 Settings > "Text size": reads "Default" until chosen; choose "Smallest", then the largest: it applies at the app
+#    root and in Settings; the main screens (Conversations, a chat, Settings) still work at Smallest; kill and
+#    relaunch: the choice stays. [B-KIT-059]
+# S4 [B-KIT-059]
+- launchApp:
+    label: "S4 text size: Default until chosen, applies everywhere, persists [B-KIT-059]"
+- back
+- back
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: text size
+- tapOn: ${output.s.textSizeTitle}
+- assertVisible: ${output.s.textSizeDefault}
+- tapOn: ${output.s.textSizeLarge}
+- assertVisible: ${output.s.textSizeTitle}
+- tapOn: ${output.s.textSizeSmallest}
+- back
+- back
+- back
+# Main screens at Smallest: Conversations, a chat, Settings.
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 15000
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo small text
+- extendedWaitUntil:
+    visible: ${'(?s).*ECHO small text.*'}  # literal-ok: stub-model echo
+    timeout: 30000
+- back
+- runFlow: ../_sub/open-settings.yaml
+- runFlow: ../_sub/restart-app.yaml
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: text size
+- tapOn: ${output.s.textSizeTitle}
+- assertVisible:
+    text: ${output.s.textSizeSmallest}
+    selected: true
+- back
+- back
+- back
+
+# S5 Settings > Appearance > Style: pick Soft, tune corners/density, then pick Brutal: the fine-tune choices reset
+#    (Saver too); pick Soft again and tune: choices persist and restore exactly across restart; a new style clears
+#    them. [B-KIT-040]
+# S5 [B-KIT-040]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S5 style fine-tune resets on a new style, persists across restart [B-KIT-040]"
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: appearance
+- tapOn: ${output.s.e7AppearanceTitle}
+- scrollUntilVisible:
+    element: ${output.s.appearanceSurfaceSoft}
+- tapOn: ${output.s.appearanceSurfaceSoft}
+- scrollUntilVisible:
+    element: ${output.s.appearanceFineTuneCornersSharp}
+- tapOn: ${output.s.appearanceFineTuneCornersSharp}
+- tapOn: ${output.s.appearanceSpacingCompact}
+- tapOn: ${output.s.appearanceSurfaceBrutal}
+- assertNotVisible:
+    text: ${output.s.appearanceFineTuneCornersSharp}
+    selected: true
+- assertNotVisible:
+    text: ${output.s.appearanceSpacingCompact}
+    selected: true
+# Saver resets them too.
+- tapOn: ${output.s.appearanceSurfaceSoft}
+- tapOn: ${output.s.appearanceFineTuneCornersSharp}
+- scrollUntilVisible:
+    element: ${output.s.appearanceModeSaver}
+    direction: UP
+- tapOn: ${output.s.appearanceModeSaver}
+- scrollUntilVisible:
+    element: ${output.s.appearanceSurfaceSoft}
+- assertNotVisible:
+    text: ${output.s.appearanceFineTuneCornersSharp}
+    selected: true
+# Soft and tuned: exact restore after a restart.
+- tapOn: ${output.s.appearanceSurfaceSoft}
+- tapOn: ${output.s.appearanceFineTuneCornersSharp}
+- tapOn: ${output.s.appearanceSpacingCompact}
+- runFlow:
+    when:
+      visible: ${output.s.e7AppearanceApply}
+    commands:
+      - tapOn: ${output.s.e7AppearanceApply}
+- runFlow: ../_sub/restart-app.yaml
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: appearance
+- tapOn: ${output.s.e7AppearanceTitle}
+- scrollUntilVisible:
+    element: ${output.s.appearanceFineTuneCornersSharp}
+- assertVisible:
+    text: ${output.s.appearanceSurfaceSoft}
+    selected: true
+- assertVisible:
+    text: ${output.s.appearanceFineTuneCornersSharp}
+    selected: true
+- assertVisible:
+    text: ${output.s.appearanceSpacingCompact}
+    selected: true
+# A new style clears them.
+- tapOn: ${output.s.appearanceSurfaceBrutal}
+- assertNotVisible:
+    text: ${output.s.appearanceFineTuneCornersSharp}
+    selected: true
+# confirm: Flutter R exposes the chosen style/corners/spacing as selected semantics (KitSegment/KitChoice)

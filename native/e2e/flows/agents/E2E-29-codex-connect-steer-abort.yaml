@@ -1,0 +1,232 @@
+# E2E-29 Codex: connect, talk, steer, abort
+# slice: 5   avd: A   fixtures: FX-CODEX, FX-OC2   snapshot: base
+# rows: B-AGENT-060, B-AGENT-067, B-AGENT-069, B-AGENT-068, B-AGENT-057
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-5, g5, agents]
+---
+- runScript: ../../runner/out/strings.js
+# Secrets from the runner: SERVER_PASSWORD (FX-OC2), CODEX_TOKEN (FX-CODEX connection token).
+# FX-CODEX streams "ECHO <text>" for a plain prompt, like the stub model (fixture contract, requested).
+- runFlow: ../_sub/connect-fx-oc2.yaml
+
+# S1 Add server > Codex: enter the address and token; see the probe check health and project scope then close; a
+#    failed scoped read or unhealthy server is not shown as verified; a wrong token says it is rejected.
+#    [B-AGENT-060]
+# S1 [B-AGENT-060]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S1 the Codex probe checks health and scope; a bad token is named [B-AGENT-060]"
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupAddServer}
+- tapOn: ${output.s.addServerTypeCodex}
+- tapOn: ${output.s.connectionServerAddress}
+# SUSPECTED-GAP: ws:// is accepted only for a server on the phone (e7SetupCodexPlain); 10.0.2.2 is the PC, so
+#   Flutter R may refuse it. FX-CODEX may need a wss:// front (FX-TLS) for this step.
+- inputText: ${'ws://' + output.fx.codexAddress}  # literal-ok: scheme + fixture address
+- tapOn: ${output.s.codexProjectFolder}
+- inputText: "/work/app"  # literal-ok: fixture fact codexProjectDir (request)
+- tapOn: ${output.s.codexTokenLabel}
+- inputText: "wrong-token"  # literal-ok: a token FX-CODEX refuses
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.s.e7ConnectionFailure5}
+    timeout: 30000
+- assertNotVisible: ${output.s.codexConnectionVerified}
+# A failed scoped read is not "verified".
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-CODEX
+      ACTION: fail-scope
+- tapOn: ${output.s.codexTokenLabel}
+- eraseText: 40
+- inputText: ${CODEX_TOKEN}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.rc.addServerCheckFailedPlain}
+    timeout: 30000
+- assertNotVisible: ${output.s.codexConnectionVerified}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-CODEX
+      ACTION: restore
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.s.codexConnectionVerified}
+    timeout: 30000
+# confirm: the save button of the Codex editor ("Connect").
+- tapOn: ${output.s.e7SetupConnect}
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+# UNIT-ONLY: an unhealthy health answer is never "verified"; the probe socket is closed (CodexProbe tests).
+
+# S2 Open a project, start a new thread, send a prompt, see streaming; send to an existing thread; approve a tool
+#    ask; abort a turn; [fx] drop the socket mid-turn: the app recovers the authoritative state without duplicating.
+#    [B-AGENT-067]
+# S2 [B-AGENT-067]
+- tapOn:
+    text: ${output.s.chatsHomeNewChat}
+    label: "S2 Codex threads stream, approve, abort, recover [B-AGENT-067]"
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "e2e:echo codex one"  # literal-ok: prompt FX-CODEX echoes
+- extendedWaitUntil:
+    visible: "ECHO codex one"  # literal-ok: FX-CODEX reply
+    timeout: 30000
+# Send again into the same thread.
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "e2e:echo codex two"  # literal-ok: prompt FX-CODEX echoes
+- extendedWaitUntil:
+    visible: "ECHO codex two"  # literal-ok: FX-CODEX reply
+    timeout: 30000
+# A scripted turn that asks for approval.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-CODEX
+      ACTION: script-turn
+      ARGS: '{"turn": "approval"}'
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "run the tests"  # literal-ok: prompt for the scripted approval turn
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- tapOn: ${output.s.kitRequestAllowOnce}
+- assertNotVisible: ${output.s.kitRequestAllowOnce}
+# Abort a long turn.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-CODEX
+      ACTION: script-turn
+      ARGS: '{"turn": "long"}'
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "write a lot"  # literal-ok: prompt for the scripted long turn
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerStop}
+    timeout: 30000
+- tapOn: ${output.s.kitComposerStop}
+- extendedWaitUntil:
+    notVisible: ${output.s.kitComposerStop}
+    timeout: 30000
+# Drop the socket mid-turn: the turn ends once, with no duplicate.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-CODEX
+      ACTION: script-turn
+      ARGS: '{"turn": "long"}'
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "e2e:echo after drop"  # literal-ok: prompt FX-CODEX echoes
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-CODEX
+      ACTION: drop-socket
+- extendedWaitUntil:
+    visible: "ECHO after drop"  # literal-ok: FX-CODEX reply
+    timeout: 60000
+- assertNotVisible: "(?s).*ECHO after drop.*ECHO after drop.*"  # literal-ok: the recovered reply appears once
+
+# S3 While a turn is busy send a default message: it steers the active turn; while idle it starts a turn; choose
+#    explicit steer: targets the authoritative turn without resuming it; explicit queue and an unsupported attachment
+#    never go out. [B-AGENT-069]
+# S3 [B-AGENT-069]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-CODEX
+      ACTION: script-turn
+      ARGS: '{"turn": "long"}'
+    label: "S3 a message while busy steers; queue never goes out [B-AGENT-069]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "write a lot"  # literal-ok: prompt for the scripted long turn
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerStop}
+    timeout: 30000
+- tapOn: ${output.s.kitComposerField}
+- inputText: "focus on tests"  # literal-ok: steer text typed by the person
+- assertVisible: ${output.s.kitComposerAddToTurn}
+- tapOn: ${output.s.kitComposerAddToTurn}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-CODEX
+      ACTION: request-log
+      ARGS: '{"method": "turn/steer", "last": 1}'
+- assertTrue: ${output.fxr.count == 1}
+# Explicit queue ("Send after this reply") is not sent to Codex.
+- tapOn: ${output.s.kitComposerField}
+- inputText: "later please"  # literal-ok: text typed by the person
+- longPressOn: ${output.s.kitComposerAddToTurn}
+- runFlow:
+    when:
+      visible: ${output.s.kitComposerSendAfter}
+    commands:
+      - tapOn: ${output.s.kitComposerSendAfter}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-CODEX
+      ACTION: request-log
+      ARGS: '{"text": "later please"}'
+- assertTrue: ${output.fxr.count == 0}
+- tapOn: ${output.s.kitComposerStop}
+# confirm: the composer's long-press menu offers the explicit send choices on Codex.
+# UNIT-ONLY: explicit steer targets the authoritative turn without resuming it; an unsupported attachment never goes
+#   out (CodexComposer tests).
+
+# S4 Open the project hub on Codex: no Project tab tools are offered. [B-AGENT-068]
+# S4 [B-AGENT-068]
+- back:
+    label: "S4 no project tools on a Codex server [B-AGENT-068]"
+- assertNotVisible: ${output.s.shellTabFiles}
+- assertNotVisible: ${output.s.libraryTerminalTitle}
+
+# S5 Open the conversation menu > "Continue with…" > Claude: a reviewable draft appears and nothing is changed; with
+#    Codex as the destination the option is unavailable without a qualified file writer. [B-AGENT-057]
+# S5 [B-AGENT-057]
+- tapOn:
+    below: ${output.s.chatsHomeToday}
+    label: "S5 Continue with... gives a reviewable draft, changes nothing [B-AGENT-057]"
+- tapOn: ${output.s.kitTopBarMore}
+- tapOn: ${output.s.continueWithMenu}
+- extendedWaitUntil:
+    visible: ${output.s.continueWithTitle}
+    timeout: 30000
+# confirm: Claude is listed under "Agents on this phone" only when it is set up there; otherwise the list says why.
+- runFlow:
+    when:
+      visible: ${output.s.localAgentPageTitle}
+    commands:
+      - tapOn: ${output.s.localAgentPageTitle}
+      - extendedWaitUntil:
+          visible: ${output.s.continueWithRecordTitle}
+          timeout: 30000
+      - assertVisible: ${output.s.continueWithReadPreview}
+      - assertVisible: ${output.s.continueWithSourceStays}
+      - tapOn: ${output.s.continueWithCancel}
+- assertNotVisible: ${output.s.firstRunAgentCodex}
+- back
+# UNIT-ONLY: Codex as a destination needs a qualified file writer (ContinueWith destinations test).

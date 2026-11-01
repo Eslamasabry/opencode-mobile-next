@@ -1,0 +1,6 @@
+# Force-stop and relaunch the app WITHOUT clearing data.
+appId: ${APP_ID}
+---
+- stopApp
+- launchApp:
+    stopApp: true

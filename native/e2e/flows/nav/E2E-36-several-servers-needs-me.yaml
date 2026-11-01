@@ -1,0 +1,211 @@
+# E2E-36 Several servers: what needs me, across everything
+# slice: 4   avd: A   fixtures: FX-OC2, FX-OC2-B   snapshot: base
+# rows: B-NAV-002, B-NAV-010, B-AGENT-077, B-NAV-082, B-ANDR-059
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-4, g4, nav]
+---
+- runScript: ../../runner/out/strings.js
+
+# Each server holds a waiting permission ask and a finished conversation; FX-OC2-B's live in project "other".
+# Titles are fixture data passed in ARGS.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: seed-sessions
+      ARGS: '{"project": "app", "sessions": [{"title": "Wait on A", "prompt": "e2e:ask-edit"}, {"title": "Done on A", "prompt": "e2e:echo done a"}]}'
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: seed-sessions
+      ARGS: '{"project": "other", "sessions": [{"title": "Wait on B", "prompt": "e2e:ask-shell ls"}, {"title": "Done on B", "prompt": "e2e:echo done b"}]}'
+- runFlow: ../_sub/connect-fx-oc2.yaml
+- runFlow: ../_sub/add-second-server.yaml
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+- evalScript: ${output.checkIn = '(?s).*' + output.s.android_native_alert_checkin_title.replace('%1\\$s', '.*') + '.*'}
+
+# S1 Conversations list > the "Needs you" filter: requests from all servers appear in urgency order with stable ties,
+#    each routed to its server; opening one lands in that server's conversation; check-ins are never counted as
+#    requests. [B-NAV-002]
+# S1 [B-NAV-002]
+# confirm: Flutter R's needs-you line under the Conversations title opens the Inbox (tap label "<n> need you, Inbox")
+- tapOn:
+    text: ${output.c.inboxTitle}
+    label: "S1 asks from both servers, each opens on its server [B-NAV-002]"
+- extendedWaitUntil:
+    visible: ${output.s.inboxTitle}
+    timeout: 15000
+- assertVisible: Wait on A  # literal-ok: seeded title
+- assertVisible: Wait on B  # literal-ok: seeded title
+- assertVisible: ${output.c.inboxAsksPermission}
+- tapOn: Wait on B  # literal-ok: seeded title
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: request-count
+      ARGS: '{"kind": "session-get", "title": "Wait on B"}'
+- assertTrue: ${output.fxr.count >= 1}
+- back
+- back
+# UNIT-ONLY: urgency order with stable ties; check-ins are never counted as requests (InboxModel unit tests).
+
+# S2 "Conversations elsewhere" lists other projects only (not the one being viewed), running first, then by recency;
+#    attention from other projects is tallied per project, answering clears it and switching into a project hands it
+#    back to the app. [B-NAV-010, B-AGENT-077]
+# S2 [B-NAV-010, B-AGENT-077]
+- tapOn:
+    text: ${output.s.chatsHomeAllProjects}
+    label: "S2 other projects only, tallied, cleared by answering [B-NAV-010, B-AGENT-077]"
+- tapOn: ${'(?s).*' + output.fx.projectApp + '.*'}  # literal-ok: built from fixture data
+- extendedWaitUntil:
+    visible: ${'(?s).*' + output.fx.projectApp + '.*'}  # literal-ok: built from fixture data
+    timeout: 15000
+# confirm: Flutter R's "Conversations elsewhere" is the project sheet's "Other folders" view
+- tapOn: ${'(?s).*' + output.fx.projectApp + '.*'}  # literal-ok: the project chip now names the project
+- tapOn: ${output.s.chatsHomeOtherFolders}
+- extendedWaitUntil:
+    visible: Wait on B  # literal-ok: seeded title in project other
+    timeout: 15000
+- assertNotVisible: Wait on A  # literal-ok: the viewed project's conversation is not elsewhere
+# The tally for project other: one needs you.
+- tapOn: ${output.s.chatsHomeOtherFolders}
+- assertVisible: ${output.rc.chatsFilterNeedsYouWord}
+- back
+# Answering clears it.
+- tapOn: Wait on B  # literal-ok: seeded title
+- tapOn: ${output.s.kitRequestAllowOnce}
+- back
+- tapOn: ${output.s.chatsHomeOtherFolders}
+- assertNotVisible: ${output.rc.chatsFilterNeedsYouWord}
+- back
+# UNIT-ONLY: running first then recency; switching into a project hands the tally back to the app.
+
+# S3 Return after being away: the while-away feed shows only unread, idle, unblocked root conversations as finished
+#    work, newest first; acknowledge one: only that run is hidden; an empty feed says it is empty. [B-NAV-082]
+# S3 [B-NAV-082]
+- tapOn:
+    text: ${output.s.chatsHomeOtherFolders}
+    label: "S3 finished-unread feed; acknowledge hides only that run [B-NAV-082]"
+- tapOn: ${output.s.chatsHomeAllProjects}
+- pressKey: Home
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: seed-sessions
+      ARGS: '{"project": "app", "sessions": [{"title": "Away on A", "prompt": "e2e:echo away a"}]}'
+- launchApp
+- tapOn: ${output.c.inboxTitle}
+- extendedWaitUntil:
+    visible: ${output.s.inboxFinishedLabel}
+    timeout: 30000
+- assertVisible:
+    text: Away on A  # literal-ok: seeded title (newest finished)
+    above: Done on A  # literal-ok: seeded title
+- assertNotVisible: Wait on A  # literal-ok: blocked conversations are not finished work
+# Acknowledge one: only that run hides.
+- tapOn: Away on A  # literal-ok: seeded title
+- back
+- assertNotVisible: Away on A  # literal-ok: acknowledged
+- assertVisible: Done on A  # literal-ok: still unread
+- tapOn: Done on A  # literal-ok: seeded title
+- back
+- tapOn: Done on B  # literal-ok: seeded title
+- back
+- tapOn: Wait on A  # literal-ok: seeded title
+- tapOn: ${output.s.kitRequestAllowOnce}
+- back
+- extendedWaitUntil:
+    visible: ${output.s.inboxEmptyTitle}
+    timeout: 30000
+- back
+
+# S4 Turn on check-in reminders: none appear in the foreground, during quiet hours, or when off; a long run reminds
+#    once; turning the rule off retires only check-ins; the same session in another workspace starts a new
+#    observation. [B-ANDR-059]
+# S4 [B-ANDR-059]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S4 check-ins: never in the foreground, once per long run, off retires them [B-ANDR-059]"
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: check in
+- tapOn: ${output.s.monitorCheckIn}
+- tapOn: ${output.s.monitorCheckIn}
+- back
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+# Foreground: none.
+# adb: clock-advance
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: clock-advance
+      ARGS: '{"advance_minutes": 30}'
+- runFlow: ../_sub/open-shade.yaml
+- assertNotVisible: ${output.checkIn}
+- runFlow: ../_sub/close-shade.yaml
+# Away: one reminder for the long run.
+- launchApp
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- pressKey: Home
+# adb: clock-advance
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: clock-advance
+      ARGS: '{"advance_minutes": 30}'
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.checkIn}
+    timeout: 60000
+# adb: dumpsys-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: dumpsys-count
+      ARGS: '{"service": "notification", "match": "checkin"}'
+- assertTrue: ${output.hook.count <= 1}
+- runFlow: ../_sub/close-shade.yaml
+# Rule off: check-ins retire, other alerts stay.
+- launchApp
+- back
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: check in
+- tapOn: ${output.s.monitorCheckIn}
+- tapOn: ${output.s.monitorCheckIn}
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- assertNotVisible: ${output.checkIn}
+- runFlow: ../_sub/close-shade.yaml
+# adb: clock-restore
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: clock-restore
+# UNIT-ONLY: quiet hours suppress check-ins; the same session in another workspace starts a new observation.

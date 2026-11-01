@@ -1,0 +1,4 @@
+{
+  "_comment": "Labels the Flutter app hard-codes in Dart (not in the ARB). Each needs its Dart path; 'confirm' means the label must be checked on the first Flutter run (plan 14 §4.3). The l10n owner copies each into :ui:words with the same text.",
+  "x_retry": {"text": "Retry", "source": "Material/kit retry buttons; confirm on the first Flutter run"}
+}

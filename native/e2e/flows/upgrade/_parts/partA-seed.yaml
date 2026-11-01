@@ -1,0 +1,239 @@
+# E2E-39 Part A (seed), shared by both apps: run on the Flutter app from a clean install.
+# Leaves: FX-OC2 connected with its password; FX-OC2-B saved, with a prompt queued for it while it is cut off (fx-proxy
+# keeps it cut until the native app is checked); a self-signed FX-TLS server with a pinned certificate; finished-work
+# notifications on; a draft with an attachment, a saved prompt (the composer's stash); two pinned conversations; an
+# always-allow rule; built-in Linux with project app and its server running; a daily scheduled prompt; text Smallest,
+# style Soft with sharp corners; the app language Arabic (set last, so every step above reads English).
+# Strings come from the caller (strings.js already ran). Secrets: SERVER_PASSWORD, SERVER_B_PASSWORD.
+appId: ${APP_ID}
+tags: [linux-setup]
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+# adb: permission
+- runScript:
+    file: ../../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+- extendedWaitUntil:
+    visible: ${output.s.welcomeComputerConnect}
+    timeout: 30000
+- runFlow:
+    file: ../../_sub/connect-server.yaml
+    env:
+      ADDRESS: ${output.fx.serverAddress}
+      PASSWORD: ${SERVER_PASSWORD}
+# Conversations to pin and to hold the draft (titles are fixture data passed in ARGS).
+- runScript:
+    file: ../../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: seed-sessions
+      ARGS: '{"project": "app", "titles": ["Upgrade pin one", "Upgrade pin two", "Upgrade draft"]}'
+- runFlow: ../../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: "Upgrade draft"  # literal-ok: title seeded through the fixture above
+    timeout: 30000
+
+# Two pinned conversations (their dynamic launcher shortcuts follow the pins).
+# confirm: the pin action of a Conversations row (see E2E-21 S5).
+- longPressOn: "Upgrade pin one"  # literal-ok: title seeded through the fixture above
+- tapOn: ${output.rc.sessionRelationsPin}
+- longPressOn: "Upgrade pin two"  # literal-ok: title seeded through the fixture above
+- tapOn: ${output.rc.sessionRelationsPin}
+
+# An always-allow rule, then a draft with an attachment and a saved prompt, in "Upgrade draft".
+- tapOn: "Upgrade draft"  # literal-ok: title seeded through the fixture above
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- runFlow:
+    file: ../../_sub/send-prompt.yaml
+    env:
+      PROMPT: "e2e:ask-shell ls"  # literal-ok: stub-model magic prompt
+- extendedWaitUntil:
+    visible: ${output.s.chatUiAlwaysAllow}
+    timeout: 30000
+- tapOn: ${output.s.chatUiAlwaysAllow}
+- extendedWaitUntil:
+    notVisible: ${output.s.chatUiAlwaysAllow}
+    timeout: 30000
+- tapOn: ${output.s.kitComposerField}
+- inputText: "upgrade saved prompt"  # literal-ok: seed text
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerToolSaveForLater}
+- extendedWaitUntil:
+    visible: ${output.s.promptStashed}
+    timeout: 15000
+# confirm: the composer's "Attach and more" tray lists the project's files (attach notes.txt).
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.chatUiProjectFiles}
+- tapOn: ${output.fx.fileNotes}
+- tapOn: ${output.s.kitComposerField}
+- inputText: "upgrade draft text"  # literal-ok: seed text left unsent as the draft
+- hideKeyboard
+- back
+
+# A prompt queued for FX-OC2-B while it is cut off: it must still be queued, unsent, after the upgrade.
+- runFlow: ../../_sub/add-second-server.yaml
+- runScript:
+    file: ../../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: seed-sessions
+      ARGS: '{"project": "app", "titles": ["Upgrade queued"]}'
+- runFlow: ../../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: "Upgrade queued"  # literal-ok: title seeded through the fixture above
+    timeout: 30000
+- runScript:
+    file: ../../_fx/fx.js
+    env:
+      TARGET: fx-proxy
+      ACTION: cut-host
+      ARGS: "${JSON.stringify({host: output.fx.serverHost, port: parseInt(output.fx.serverBAddress.split(':')[1], 10)})}"
+- tapOn: "Upgrade queued"  # literal-ok: title seeded through the fixture above
+- runFlow:
+    file: ../../_sub/send-prompt.yaml
+    env:
+      PROMPT: "e2e:echo queued once"  # literal-ok: stub-model magic prompt, must arrive exactly once
+- extendedWaitUntil:
+    visible: ${output.s.chatUiQueuedWillSendWhenReconnected}
+    timeout: 30000
+- back
+
+# A self-signed server whose certificate is pinned (same steps as E2E-04).
+- runFlow: ../../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupAddServer}
+- tapOn: ${output.s.e7SetupServerUrl}
+- inputText: ${output.fx.tlsSelfSignedUrl}
+- tapOn: ${output.s.e7SetupServerPassword}
+- inputText: ${SERVER_PASSWORD}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupCertificate}
+    timeout: 30000
+- tapOn: ${output.s.serverTrustCertificateInspect}
+- tapOn: ${output.s.serverTrustCertificateAccept}
+- extendedWaitUntil:
+    visible: ${output.c.serverTrustCertificatePinned}
+    timeout: 30000
+- tapOn: ${output.s.e7SetupConnect}
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+
+# Finished-work notifications on.
+- runFlow: ../../_sub/open-settings.yaml
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.notifyFinishedRuns}
+- tapOn:
+    text: ${output.s.notifyFinishedRuns}
+    index: 1
+- runFlow:
+    when:
+      visible:
+        text: ${output.s.notifyFinishedRuns}
+        checked: false
+    commands:
+      - tapOn: ${output.s.notifyFinishedRuns}
+- back
+- back
+
+# A daily scheduled prompt.
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.scheduleTitle}
+- tapOn:
+    text: ${output.s.scheduleTitle}
+    index: 1
+- tapOn: ${output.s.scheduleNew}
+- tapOn: ${output.s.scheduleAsk}
+- inputText: "e2e:echo daily upgrade"  # literal-ok: stub-model magic prompt for the schedule
+- hideKeyboard
+- tapOn: ${output.s.scheduleEveryDay}
+- tapOn: ${output.re.scheduleForWhen}
+- extendedWaitUntil:
+    visible: ".*e2e:echo daily upgrade.*"  # literal-ok: the prompt typed above names the schedule
+    timeout: 15000
+- back
+- back
+
+# Text Smallest; style Soft with a tweak (sharp corners).
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.textSizeTitle}
+- tapOn:
+    text: ${output.s.textSizeTitle}
+    index: 1
+- tapOn: ${output.s.textSizeSmallest}
+- back
+- back
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.e7AppearanceTitle}
+- tapOn:
+    text: ${output.s.e7AppearanceTitle}
+    index: 1
+- tapOn: ${output.s.appearanceSurfaceSoft}
+- tapOn: ${output.s.appearanceFineTuneCornersSharp}
+- runFlow:
+    when:
+      visible: ${output.s.e7AppearanceApply}
+    commands:
+      - tapOn: ${output.s.e7AppearanceApply}
+- back
+- back
+
+# Built-in Linux with project app, its server running (FX-LINUXDL where the build reads it; the pinned hosts on
+# Flutter R). Long: up to 40 minutes.
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.phoneSetupStartSetUp}
+- repeat:
+    times: 10
+    while:
+      notVisible: ${output.s.phoneSetupReadyTitle}
+    commands:
+      - extendedWaitUntil:
+          visible: ${output.s.phoneSetupReadyTitle}
+          timeout: 300000
+          optional: true
+- tapOn: ${output.s.phoneSetupReadyNameLabel}
+- inputText: ${output.fx.projectApp}
+- hideKeyboard
+- tapOn: ${output.s.phoneSetupReadyCreateOpen}
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 120000
+- back
+
+# NEEDS-HOOK: place-widget: put the Conversations widget on the launcher home screen (05 §10.4 does it with the
+#   UIAutomator script e2e/seed/surfaces.py); without it Part C's widget check is skipped.
+# The two pinned conversations above are the app's launcher shortcuts.
+
+# Arabic last.
+- runFlow: ../../_sub/open-settings.yaml
+- runFlow:
+    file: ../../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.settingsV3Language}
+- tapOn: ${output.s.settingsV3Language}
+- tapOn: ${output.s.e7LocaleUiArabic}
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.x_ar_chats_home}
+    timeout: 60000

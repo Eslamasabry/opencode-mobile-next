@@ -1,0 +1,380 @@
+# E2E-11 Drafts, saved prompts and queued prompts survive anything
+# slice: 3   avd: A   fixtures: FX-OC2, FX-OC2-B   snapshot: base
+# rows: B-STATE-100, B-STATE-102, B-STATE-085, B-CHAT-088, B-STATE-140, B-STATE-088, B-STATE-066, B-STATE-033
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-3, g3, chat]
+---
+- runScript: ../../runner/out/strings.js
+
+# S1 Type a draft with an attached image and leave the conversation: reopen it and see the draft and attachment; an
+#    attachment-only draft also persists; empty the draft and see the entry vanish. Two servers with the same session
+#    id keep independent drafts. [B-STATE-100]
+# S1 [B-STATE-100]
+- runFlow:
+    file: ../_sub/connect-fx-oc2.yaml
+    label: "S1 draft with an image survives leaving [B-STATE-100]"
+# adb: push-media
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: push-media
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo draft-home
+- extendedWaitUntil:
+    visible: ECHO draft-home  # literal-ok: stub model reply to e2e:echo
+    timeout: 30000
+- tapOn: ${output.s.kitComposerField}
+- inputText: draft-one
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerTrayFile}  # confirm: an image picked as a file lands as an image attachment
+- tapOn: ${output.fx.downloadPhoto1}
+- extendedWaitUntil:
+    visible: (?s).*photo1.*  # literal-ok: attachment chip for fixture file photo1.jpg
+    timeout: 15000
+- back
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 15000
+- tapOn: (?s).*draft-home.*  # literal-ok: the conversation row of the prompt sent above; confirm: row title
+- extendedWaitUntil:
+    visible: draft-one  # literal-ok: the draft typed above
+    timeout: 15000
+- assertVisible: (?s).*photo1.*  # literal-ok: attachment chip for fixture file photo1.jpg
+# An attachment-only draft also persists.
+- tapOn: draft-one  # literal-ok: the draft typed above
+- eraseText: 20
+- back
+- tapOn: (?s).*draft-home.*  # literal-ok: the conversation row
+- extendedWaitUntil:
+    visible: (?s).*photo1.*  # literal-ok: attachment chip for fixture file photo1.jpg
+    timeout: 15000
+# UNIT-ONLY: emptying the draft removes its stored entry, and two servers with the same session id keep independent
+# drafts (draft store tests; the storage key is per profile).
+
+# S2 Fill the draft store (fixture limit) and try one more: the new draft is refused with a message and unsent work is
+#    not evicted; leaving with a draft that could not be saved tells you. Older drafts show up in "Saved prompts" once,
+#    intact. [B-STATE-102]
+# S2 [B-STATE-102]
+# SUSPECTED-GAP: no QA hook lowers the draft store limit; a nearly full disk stands in for "the store is full".
+# adb: fill-disk
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: fill-disk
+      ARGS: '{"leave_mb": 1}'
+    label: "S2 a draft that cannot be saved is said, nothing evicted [B-STATE-102]"
+- tapOn: ${output.s.kitComposerField}
+- inputText: draft-when-full
+- back
+- extendedWaitUntil:
+    visible: ${output.s.draftLeaveTitle}
+    timeout: 15000
+- assertVisible: ${output.s.draftKeepEditing}
+- tapOn: ${output.s.draftKeepEditing}
+- assertVisible: (?s).*photo1.*  # literal-ok: the earlier attachment was not evicted
+# adb: unfill-disk
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: unfill-disk
+- tapOn: draft-when-full  # literal-ok: the draft typed above
+- eraseText: 30
+- back
+# UNIT-ONLY: older drafts move to Saved prompts once and intact (draft migration test).
+
+# S3 Open Settings > "Saved prompts": delete a prompt and see it vanish at once and persist after restart; tap Undo:
+#    the exact text, metadata and bytes return; a refused deletion keeps the prompt and retry works. [B-STATE-085]
+# S3 [B-STATE-085]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S3 delete, undo and restart in Saved prompts [B-STATE-085]"
+- tapOn: ${output.s.kitComposerField}
+- inputText: saved-undo
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerToolSaveForLater}
+- extendedWaitUntil:
+    visible: ${output.s.promptStashed}
+    timeout: 15000
+- tapOn: ${output.s.kitComposerField}
+- inputText: saved-gone
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerToolSaveForLater}
+- extendedWaitUntil:
+    visible: ${output.s.promptStashed}
+    timeout: 15000
+- back
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.promptStashTitle}
+- tapOn:
+    text: ${output.s.promptStashTitle}
+    index: 1
+- extendedWaitUntil:
+    visible: (?s).*saved-undo.*  # literal-ok: prompt saved above
+    timeout: 15000
+- tapOn:
+    text: ${output.s.promptStashRowActions}
+    index: 1  # newest first: saved-gone is row 0, saved-undo row 1
+- tapOn: ${output.s.promptStashDeleteAction}
+- assertNotVisible: (?s).*saved-undo.*  # literal-ok: prompt saved above
+- tapOn: ${output.s.kitUndoAction}
+- extendedWaitUntil:
+    visible: (?s).*saved-undo.*  # literal-ok: the exact text is back
+    timeout: 15000
+- tapOn:
+    text: ${output.s.promptStashRowActions}
+    index: 0
+- tapOn: ${output.s.promptStashDeleteAction}
+- assertNotVisible: (?s).*saved-gone.*  # literal-ok: prompt saved above
+- runFlow: ../_sub/restart-app.yaml
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.promptStashTitle}
+- tapOn:
+    text: ${output.s.promptStashTitle}
+    index: 1
+- extendedWaitUntil:
+    visible: (?s).*saved-undo.*  # literal-ok: prompt saved above
+    timeout: 15000
+- assertNotVisible: (?s).*saved-gone.*  # literal-ok: the deletion persisted
+# UNIT-ONLY: the restored metadata and attachment bytes, and a refused deletion that keeps the prompt (stash store test).
+- back
+- back
+
+# S4 Stash a prompt (save to stash), force-stop, relaunch: the stash is recovered with its attachments and references,
+#    separate from drafts and from other servers; stashing 50 never evicts a saved prompt. [B-CHAT-088, B-STATE-140]
+# S4 [B-CHAT-088, B-STATE-140]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S4 stash with attachment survives a kill, per server [B-CHAT-088, B-STATE-140]"
+- tapOn: ${output.s.kitComposerField}
+- inputText: stash-with-file
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerTrayFile}
+- tapOn: ${output.fx.downloadPhoto1}
+- extendedWaitUntil:
+    visible: (?s).*photo1.*  # literal-ok: attachment chip for fixture file photo1.jpg
+    timeout: 15000
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerToolSaveForLater}
+- extendedWaitUntil:
+    visible: ${output.s.promptStashed}
+    timeout: 15000
+- assertNotVisible: stash-with-file  # literal-ok: the composer is empty after stashing
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.promptStashTitle}
+- tapOn:
+    text: ${output.s.promptStashTitle}
+    index: 1
+- extendedWaitUntil:
+    visible: (?s).*stash-with-file.*  # literal-ok: prompt stashed above
+    timeout: 15000
+- assertVisible: ${output.rc.promptStashAttachments}
+- back
+- back
+# Separate from other servers: FX-OC2-B's Saved prompts do not show it.
+- runFlow: ../_sub/add-second-server.yaml
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.promptStashTitle}
+- tapOn:
+    text: ${output.s.promptStashTitle}
+    index: 1
+- assertNotVisible: (?s).*stash-with-file.*  # literal-ok: belongs to FX-OC2 only
+- back
+- back
+# UNIT-ONLY: the 50-prompt stash limit never evicts a saved prompt (promptStashFull; stash store test).
+
+# S5 Take a photo from the composer, then [adb] kill the app while the camera is open: on return the photo is in the
+#    same draft with its text, attachments and location; a failed save keeps it; the photo returns to its own
+#    conversation, not another. [B-STATE-088]
+# S5 [B-STATE-088]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S5 a photo taken while the app was killed lands in its draft [B-STATE-088]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo camera-home
+- extendedWaitUntil:
+    visible: ECHO camera-home  # literal-ok: stub model reply to e2e:echo
+    timeout: 30000
+- tapOn: ${output.s.kitComposerField}
+- inputText: photo-draft
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerTrayCamera}
+# retry-reason: the camera permission prompt is system UI
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible: While using the app  # literal-ok: Android permission dialog button (system UI)
+          commands:
+            - tapOn: While using the app  # literal-ok: Android permission dialog button (system UI)
+# adb: kill-app-proc
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: kill-app-proc
+      ARGS: '{"match": "${APP_ID}"}'
+- assertTrue: ${output.hook.killed >= 1}
+# The system camera app is still in front: take the picture (system UI, not ours).
+- tapOn: Shutter  # literal-ok: emulator camera app's shutter button (system UI); confirm: camera app label
+- runFlow:
+    when:
+      visible: Done  # literal-ok: emulator camera app's confirm button (system UI)
+    commands:
+      - tapOn: Done  # literal-ok: emulator camera app's confirm button (system UI)
+- extendedWaitUntil:
+    visible: photo-draft  # literal-ok: the draft text is back with the photo
+    timeout: 30000
+- assertVisible: ECHO camera-home  # literal-ok: the same conversation, not another
+# SUSPECTED-GAP: the attachment chip's name for a camera photo (no fixture name); the count line stands in.
+- assertVisible: ${output.rc.kitQueuedAttachments}  # confirm: how the composer names one attached photo
+# UNIT-ONLY: a failed save keeps the photo, and the stored location (camera handoff recovery test).
+
+# S6 Queue three prompts offline, then remove the server: the dialog counts them; "Keep" moves them to Saved prompts
+#    (survive restart, deletable); the other server's queue is untouched. [B-STATE-066, B-STATE-033]
+# S6 [B-STATE-066, B-STATE-033]
+# FX-OC2-B is the active server (S4). It gets one queued prompt of its own first.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: stop-server
+    label: "S6 removing a server counts and keeps its queue; the other's untouched [B-STATE-066, B-STATE-033]"
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: queued-on-B
+- extendedWaitUntil:
+    visible: ${output.s.kitQueuedWaiting}
+    timeout: 30000
+- back
+# Switch back to FX-OC2 and queue three there.
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- longPressOn: ${output.c.settingsV3NotConnected}  # confirm: FX-OC2's row is the one not connected
+- tapOn: ${output.s.e7SetupConnect}
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: stop-server
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: queued-A1
+- extendedWaitUntil:
+    visible: ${output.s.kitQueuedWaiting}
+    timeout: 30000
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: queued-A2
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: queued-A3
+- back
+# Remove FX-OC2: the dialog counts the three; removing keeps them in Saved prompts.
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- longPressOn: (?s).*3 prompts waiting to send.*  # literal-ok: FX-OC2's row (serverRowQueuedWaiting with 3)
+- tapOn: ${output.s.capsuleRemove}
+- extendedWaitUntil:
+    visible: ${output.rc.serversRemoveQueuedKept}
+    timeout: 15000
+- assertVisible: (?s).*3 queued prompts move to Saved prompts.*  # literal-ok: the count of S6's three prompts
+- tapOn:
+    text: ${output.s.capsuleRemove}
+    below: ${output.c.serversRemoveBody}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: start-server
+- runFlow: ../_sub/restart-app.yaml
+# With the active server removed the app shows the servers; FX-OC2-B's queue is untouched.
+- runFlow:
+    when:
+      notVisible: ${output.s.e7SetupAddServer}
+    commands:
+      - runFlow: ../_sub/open-settings.yaml
+      - scrollUntilVisible:
+          element: ${output.s.e7SetupServers}
+      - tapOn: ${output.s.e7SetupServers}
+- extendedWaitUntil:
+    visible: (?s).*1 prompt waiting to send.*  # literal-ok: FX-OC2-B's row still counts its one prompt
+    timeout: 15000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: start-server
+- longPressOn: (?s).*1 prompt waiting to send.*  # literal-ok: FX-OC2-B's row
+- tapOn: ${output.s.e7SetupConnect}
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.promptStashTitle}
+- tapOn:
+    text: ${output.s.promptStashTitle}
+    index: 1
+- extendedWaitUntil:
+    visible: (?s).*queued-A1.*  # literal-ok: queued prompt kept as a saved prompt; confirm: kept prompts show here
+    timeout: 15000
+- assertVisible: (?s).*queued-A3.*  # literal-ok: queued prompt kept as a saved prompt
+# Deletable.
+- tapOn:
+    text: ${output.s.promptStashRowActions}
+    index: 0
+- tapOn: ${output.s.promptStashDeleteAction}
+- assertVisible: ${output.s.promptStashDeleted}

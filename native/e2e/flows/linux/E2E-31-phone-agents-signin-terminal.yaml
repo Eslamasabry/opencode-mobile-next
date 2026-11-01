@@ -1,0 +1,145 @@
+# E2E-31 Agents on this phone: sign-in terminal and running by name
+# slice: 3   avd: A   fixtures: FX-OC2, FX-LINUXDL, FX-AUTH   snapshot: flutter-linux
+# rows: B-AGENT-129, B-LINUX-125, B-LINUX-119
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-3, g3, linux, linux-setup]
+---
+- runScript: ../../runner/out/strings.js
+# flutter-linux: built-in Linux. Claude Code and Codex are installed from the agents catalog first (Needs).
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- scrollUntilVisible:
+    element: ${output.s.settingsV3AgentsOnPhone}
+- tapOn: ${output.s.settingsV3AgentsOnPhone}
+# Install both agents if the snapshot does not have them yet.
+- runFlow:
+    when:
+      visible: ${output.t.agentsInstallAction.replace('{agent}', output.t.localAgentPageTitle)}
+    commands:
+      - tapOn: ${output.t.agentsInstallAction.replace('{agent}', output.t.localAgentPageTitle)}
+      - extendedWaitUntil:
+          visible: ${output.s.agentsStateSignInNeeded}
+          timeout: 300000
+- runFlow:
+    when:
+      visible: ${output.t.agentsInstallAction.replace('{agent}', output.t.firstRunAgentCodex)}
+    commands:
+      - tapOn: ${output.t.agentsInstallAction.replace('{agent}', output.t.firstRunAgentCodex)}
+      - extendedWaitUntil:
+          visible: ${output.s.agentsStateSignInNeeded}
+          timeout: 300000
+
+# S1 Agents > Claude Code on this phone > "Sign in": a visible terminal opens running exactly the sign-in script and
+#    nothing else; do the same for every installed phone agent; Codex's folder exists before any agent process
+#    starts. [B-AGENT-129, B-LINUX-125]
+# S1 [B-AGENT-129, B-LINUX-125]
+# SUSPECTED-GAP: FX-AUTH answers the agents' sign-in only if their sign-in hosts can be pointed at it; Flutter R has
+#   no override, so the fixed code may never print there.
+- tapOn:
+    text: ${output.s.localAgentPageTitle}
+    label: "S1 sign-in opens a terminal running only the sign-in [B-AGENT-129, B-LINUX-125]"
+- tapOn: ${output.t.agentsSignInAction.replace('{agent}', output.t.localAgentPageTitle)}
+- extendedWaitUntil:
+    visible: ${output.s.localTerminalSemantics}
+    timeout: 60000
+- assertVisible: ${output.rc.agentsSignInTerminalIntro}
+# The FX-AUTH stub prints its fixed code inside the terminal.
+- extendedWaitUntil:
+    visible: ".*E2E-AUTH-CODE.*"  # literal-ok: fixture fact authCode (request)
+    timeout: 60000
+# Nothing else runs in that terminal: exactly one sign-in process.
+# adb: ps-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: ps-count
+      ARGS: '{"match": "login"}'
+- assertTrue: ${output.hook.count == 1}
+- back
+- back
+- tapOn: ${output.s.firstRunAgentCodex}
+- tapOn: ${output.t.agentsSignInAction.replace('{agent}', output.t.firstRunAgentCodex)}
+- extendedWaitUntil:
+    visible: ${output.s.localTerminalSemantics}
+    timeout: 60000
+- assertVisible: ${output.rc.agentsSignInTerminalIntroOther}
+- back
+- back
+# UNIT-ONLY: the exact sign-in command line, and Codex's folder made before any agent process (PhoneAgentSignIn
+#   tests).
+
+# S2 In Terminal type `claude --version` (agent by name): it runs as the agent user. [adb] interrupt an agent download
+#    midway, run cleanup, resume: the partial download survives extraction cleanup and resumes. [B-LINUX-119]
+# S2 [B-LINUX-119]
+- back:
+    label: "S2 an agent runs by name; a partial download resumes [B-LINUX-119]"
+- scrollUntilVisible:
+    element: ${output.s.thisPhoneTerminal}
+- tapOn: ${output.s.thisPhoneTerminal}
+- extendedWaitUntil:
+    visible: ${output.s.localTerminalSemantics}
+    timeout: 60000
+- tapOn: ${output.s.localTerminalSemantics}
+- inputText: "claude --version && echo user=$(id -un)"  # literal-ok: shell command typed by the person
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: ".*[0-9]+\\.[0-9]+\\.[0-9]+.*"  # literal-ok: a version number in the terminal output
+    timeout: 30000
+# confirm: the agent user's name inside Ubuntu (not root).
+- assertNotVisible: ".*user=root.*"  # literal-ok: the agent does not run as root
+- back
+- back
+# Interrupt an agent download midway, then resume it.
+- tapOn: ${output.s.settingsV3AgentsOnPhone}
+- tapOn: ${output.s.localAgentPageTitle}
+- tapOn: ${output.t.agentsRemoveAction.replace('{agent}', output.t.localAgentPageTitle)}
+# confirm: the confirmation button repeats the action name.
+- tapOn: ${output.t.agentsRemoveAction.replace('{agent}', output.t.localAgentPageTitle)}
+- extendedWaitUntil:
+    visible: ${output.rc.agentsInstallAction}
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-LINUXDL
+      ACTION: throttle
+      ARGS: '{"kbps": 2000}'
+- tapOn: ${output.rc.agentsInstallAction}
+- extendedWaitUntil:
+    visible: ${output.rc.agentsInstalling}
+    timeout: 30000
+# adb: kill-app-proc
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: kill-app-proc
+      ARGS: '{"match": "proot"}'
+- extendedWaitUntil:
+    visible: ${'(' + output.s.agentsSetupInterrupted + '|' + output.s.agentsFailInterrupted + ')'}  # literal-ok: alternation of two strings
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-LINUXDL
+      ACTION: restore
+- tapOn: ${output.rc.agentsInstallAction}
+- extendedWaitUntil:
+    visible: ${output.s.agentsStateSignInNeeded}
+    timeout: 300000
+# The resumed download asked only for the rest of the file.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-LINUXDL
+      ACTION: request-log
+      ARGS: '{"last": 1}'
+- assertTrue: ${output.fxr.ranged == true}
+# UNIT-ONLY: the extraction cleanup step leaves the partial download in place (AgentInstall cleanup test).

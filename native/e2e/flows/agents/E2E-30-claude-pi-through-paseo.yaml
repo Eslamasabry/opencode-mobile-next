@@ -1,0 +1,294 @@
+# E2E-30 Claude Code and Pi through Paseo
+# slice: 3   avd: A   fixtures: FX-PASEO, FX-OC2   snapshot: base
+# rows: B-PROTO-070, B-AGENT-146, B-AGENT-164, B-AGENT-180, B-AGENT-174, B-AGENT-167, B-AGENT-159
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-3, g3, agents]
+---
+- runScript: ../../runner/out/strings.js
+# Secrets from the runner: SERVER_PASSWORD (FX-OC2), PASEO_PASSWORD (FX-PASEO daemon password).
+# FX-PASEO: scripted fake-claude and fake-pi agents (they echo "ECHO <text>"), Claude history for project app on disk,
+# terminals; fixture facts requested: paseoProjectDir (/work/app) and the history title "Old fixture chat".
+- runFlow: ../_sub/connect-fx-oc2.yaml
+
+# S1 Add server > "Claude Code or Pi": bad input never opens a socket; a verified daemon names its ready runtimes.
+#    [B-PROTO-070]
+# S1 [B-PROTO-070]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S1 Paseo: bad input stays local; the daemon names its agents [B-PROTO-070]"
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupAddServer}
+- tapOn: ${output.s.addServerTypePaseo}
+- tapOn: ${output.s.connectionServerAddress}
+- inputText: "ws://user:pw@10.0.2.2"  # literal-ok: an address with credentials (refused locally)
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-PASEO
+      ACTION: request-log
+- assertTrue: ${output.fxr.count == 0}
+- tapOn: ${output.s.connectionServerAddress}
+- eraseText: 60
+- inputText: ${'ws://' + output.fx.paseoAddress}  # literal-ok: scheme + fixture address
+- tapOn: ${output.s.codexProjectFolder}
+- inputText: "/work/app"  # literal-ok: fixture fact paseoProjectDir (request)
+- tapOn: ${output.s.paseoPasswordLabel}
+- inputText: ${PASEO_PASSWORD}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.rc.paseoCheckReady}
+    timeout: 30000
+- assertVisible: ${'.*' + output.s.localAgentPageTitle + '.*'}  # literal-ok: contains-form of a string key
+- tapOn: ${output.s.e7SetupConnect}
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+
+# S2 Start a conversation: before it starts, the daemon lists what the chosen agent offers (models, modes); a choice
+#    made first is sent when the conversation starts; a running agent's long model id shows as the list's own id.
+#    [B-AGENT-146]
+# S2 [B-AGENT-146]
+- tapOn:
+    text: ${output.s.chatsHomeNewChat}
+    label: "S2 the agent's models are listed first; the choice is sent [B-AGENT-146]"
+- runFlow:
+    when:
+      visible: ${output.s.agentsChooseTitle}
+    commands:
+      - tapOn: ${output.s.localAgentPageTitle}
+- tapOn: ${output.s.agentsModelDefault}
+- extendedWaitUntil:
+    visible: ${output.s.agentsModelTitle}
+    timeout: 30000
+# FX-PASEO offers two models for fake-claude; pick the second one before starting.
+- tapOn:
+    below: ${output.s.agentsModelDefault}
+    index: 1
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "e2e:echo paseo one"  # literal-ok: prompt the fake agent echoes
+- extendedWaitUntil:
+    visible: "ECHO paseo one"  # literal-ok: FX-PASEO reply
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-PASEO
+      ACTION: request-log
+      ARGS: '{"method": "create-agent", "last": 1}'
+- assertTrue: ${output.fxr.model != null}
+# UNIT-ONLY: a running agent's long model id maps to the list's own id (PaseoModelList test).
+
+# S3 Open an old conversation: history shows the merged timeline and the live stream continues; delete archives it;
+#    archive it on another device: the session disappears here; [fx] drop the socket: the app reconnects and rereads
+#    the agent list. [B-AGENT-164]
+# S3 [B-AGENT-164]
+- back:
+    label: "S3 old history plus live; archive here and elsewhere; reconnect [B-AGENT-164]"
+- tapOn: "Old fixture chat"  # literal-ok: fixture fact paseoHistoryTitle (request)
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: "e2e:echo still live"  # literal-ok: prompt the fake agent echoes
+- extendedWaitUntil:
+    visible: "ECHO still live"  # literal-ok: FX-PASEO reply
+    timeout: 30000
+- tapOn: ${output.s.kitTopBarMore}
+- tapOn: ${output.s.sessionMenuDelete}
+- runFlow:
+    when:
+      visible: ${output.s.sessionMenuDelete}
+    commands:
+      - tapOn: ${output.s.sessionMenuDelete}
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+- assertNotVisible: "Old fixture chat"  # literal-ok: fixture fact paseoHistoryTitle (request)
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-PASEO
+      ACTION: archive-elsewhere
+      ARGS: '{"which": "newest"}'
+- extendedWaitUntil:
+    notVisible: "ECHO paseo one"  # literal-ok: the row preview of the conversation archived elsewhere
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-PASEO
+      ACTION: drop-socket
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-PASEO
+      ACTION: request-log
+      ARGS: '{"method": "list-agents", "since": "drop"}'
+- assertTrue: ${output.fxr.count >= 1}
+# confirm: the deleted conversation is archived on the daemon, not erased (FX-PASEO archive log).
+
+# S4 Resume a conversation from the list: the header title equals the row title. [B-AGENT-180]
+# S4 [B-AGENT-180]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-PASEO
+      ACTION: add-history
+      ARGS: '{"title": "Resume fixture chat"}'
+    label: "S4 the header title equals the row title [B-AGENT-180]"
+- extendedWaitUntil:
+    visible: "Resume fixture chat"  # literal-ok: title of the history the fixture just added
+    timeout: 30000
+- tapOn: "Resume fixture chat"  # literal-ok: title of the history the fixture just added
+- assertVisible:
+    text: "Resume fixture chat"  # literal-ok: the same title in the header
+    above: ${output.s.kitComposerField}
+- back
+
+# S5 Import Claude Code conversations: this project's conversations are listed newest first; import one: it opens
+#    with its history; a daemon refusal is a failure message, not a conversation. [B-AGENT-174]
+# S5 [B-AGENT-174]
+- tapOn:
+    text: ${output.s.chatsHomeNewChat}
+    label: "S5 import a Claude Code conversation; a refusal is a message [B-AGENT-174]"
+- tapOn: ${output.s.claudeImportTitle}
+- extendedWaitUntil:
+    visible: ${output.rc.claudeImportIntro}
+    timeout: 30000
+# FX-PASEO holds two on-disk Claude conversations: "Newer import" above "Older import".
+- assertVisible:
+    text: "Newer import"  # literal-ok: fixture fact paseoImportTitles (request)
+    above: "Older import"  # literal-ok: fixture fact paseoImportTitles (request)
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-PASEO
+      ACTION: refuse-import
+- tapOn: "Older import"  # literal-ok: fixture fact paseoImportTitles (request)
+- extendedWaitUntil:
+    visible: ${output.s.claudeImportFailed}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-PASEO
+      ACTION: restore
+- tapOn: "Newer import"  # literal-ok: fixture fact paseoImportTitles (request)
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- assertVisible: ".*imported history line.*"  # literal-ok: fixture fact paseoImportBody (request)
+- back
+
+# S6 Settings > Host > "Update Paseo": ordered progress phases appear without the screen ending; when versions match
+#    it says already up to date; a failure returns a reason rather than a crash; after the restart the app
+#    reconnects by itself. [B-AGENT-167]
+# S6 [B-AGENT-167]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S6 updating the daemon shows phases and reconnects [B-AGENT-167]"
+# confirm: the Paseo host's update row is found by searching Settings for "Update agents".
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.hostUpdateConfirmAction}
+- tapOn: ${output.rc.hostUpdateRow}
+- tapOn: ${output.s.hostUpdateConfirmAction}
+- extendedWaitUntil:
+    visible: ${output.s.hostUpdateDownloading}
+    timeout: 30000
+- extendedWaitUntil:
+    visible: ${output.s.hostUpdateInstalling}
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ${output.rc.hostUpdateDone}
+    timeout: 60000
+- assertNotVisible: ${output.s.hostUpdateDropped}
+# Same version now: already up to date.
+- tapOn: ${output.rc.hostUpdateRow}
+- tapOn: ${output.s.hostUpdateConfirmAction}
+- extendedWaitUntil:
+    visible: ${output.rc.hostUpdateCurrent}
+    timeout: 30000
+# A failing update gives a reason.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-PASEO
+      ACTION: fail-update
+- tapOn: ${output.rc.hostUpdateRow}
+- tapOn: ${output.s.hostUpdateConfirmAction}
+- extendedWaitUntil:
+    visible: ${output.s.hostUpdateFailed}
+    timeout: 60000
+- assertVisible: ${output.s.hostUpdateDetailsRow}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-PASEO
+      ACTION: restore
+- back
+- back
+
+# S7 Open Terminal in the project: it lists this folder's terminals by title; open one (screen replays, then
+#    streams); type and resize reach it; a split multi-byte character arrives whole; rename and close by id; closing
+#    an ended terminal is not an error; an exited shell ends the stream; an unopenable terminal is a plain failure.
+#    [B-AGENT-159]
+# S7 [B-AGENT-159]
+# confirm: on a Paseo server the project's terminals are reached through the Files tab's Terminal row.
+- tapOn:
+    text: ${output.s.shellTabFiles}
+    label: "S7 Paseo terminals list, replay, stream, rename, close [B-AGENT-159]"
+- tapOn: ${output.s.libraryTerminalTitle}
+- extendedWaitUntil:
+    visible: "fixture-term"  # literal-ok: fixture fact paseoTerminalTitle (request)
+    timeout: 30000
+- tapOn: "fixture-term"  # literal-ok: fixture fact paseoTerminalTitle (request)
+- extendedWaitUntil:
+    visible: ".*replayed line.*"  # literal-ok: fixture fact paseoTerminalReplay (request)
+    timeout: 30000
+- tapOn: ${output.s.e7SetupCommandInput}
+- inputText: "echo héllo"  # literal-ok: typed text with a multi-byte character
+- tapOn: ${output.s.e7SetupSendCommand}
+- extendedWaitUntil:
+    visible: ".*héllo.*"  # literal-ok: the echoed multi-byte text arrives whole
+    timeout: 30000
+- tapOn: ${output.t.terminalScreenMenuLabel.replace('{name}', 'fixture-term')}  # literal-ok: fixture fact paseoTerminalTitle (request)
+- tapOn: ${output.t.terminalScreenRename.replace('{name}', 'fixture-term')}  # literal-ok: fixture fact paseoTerminalTitle (request)
+- tapOn: ${output.s.terminalScreenNameLabel}
+- eraseText: 30
+- inputText: "renamed-term"  # literal-ok: the new name typed by the person
+- tapOn: ${output.s.terminalScreenRenameConfirm}
+- assertVisible: "renamed-term"  # literal-ok: the new name
+- tapOn: ${output.s.e7SetupCommandInput}
+- inputText: "exit"  # literal-ok: ends the shell
+- tapOn: ${output.s.e7SetupSendCommand}
+- extendedWaitUntil:
+    visible: ${output.s.terminalStateEnded}
+    timeout: 30000
+- tapOn: ${output.t.terminalScreenMenuLabel.replace('{name}', 'renamed-term')}  # literal-ok: the renamed terminal
+- tapOn: ${output.t.terminalScreenRemove.replace('{name}', 'renamed-term')}  # literal-ok: the renamed terminal
+- tapOn: ${output.s.terminalScreenRemoveConfirm}
+- assertNotVisible: "renamed-term"  # literal-ok: the closed terminal is gone, without an error
+- assertNotVisible: ${output.s.terminalScreenCreateFailed}
+# An unopenable terminal is a plain failure.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-PASEO
+      ACTION: refuse-terminal
+- tapOn: ${output.s.e7SetupNewTerminal}
+- extendedWaitUntil:
+    visible: ${output.s.terminalScreenCreateFailed}
+    timeout: 30000
+# UNIT-ONLY: resize reaches the daemon; rename and close address the terminal by id (PaseoTerminal tests).

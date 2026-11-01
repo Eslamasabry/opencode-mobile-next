@@ -1,0 +1,295 @@
+# E2E-32 Memory on the phone: install, start, pair, capture, stop
+# slice: after-switch   avd: A   fixtures: FX-OC2, FX-NODE   snapshot: flutter-linux
+# rows: B-LINUX-066, B-NAV-014, B-LINUX-067, B-LINUX-068, B-LINUX-069, B-PROTO-057, B-SEC-069, B-NAV-013, B-AGENT-098
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-after-switch, d6, linux]
+---
+- runScript: ../../runner/out/strings.js
+# flutter-linux: built-in Linux, no memory node yet. Never clearState here. Secrets: NODE_PAIR_CODE (FX-NODE's
+# one-time code, from the runner).
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+
+# S1 Chats home > Memory row: without built-in Linux it says unsupported; with Linux and no build it says ready to
+#    install; stopped when a vault exists; running when the service runs. The Memory page shows its state and
+#    actions. [B-LINUX-066, B-NAV-014]
+# S1 [B-LINUX-066, B-NAV-014]
+# confirm: the Memory row on the Conversations home.
+- scrollUntilVisible:
+    element: ${output.c.fbMemoryTitle}
+    label: "S1 the Memory row and page say where it stands [B-LINUX-066, B-NAV-014]"
+- tapOn: ${output.c.fbMemoryTitle}
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeTitle}
+    timeout: 30000
+- assertVisible: ${output.s.fbNodeNotInstalledTitle}
+- assertVisible: ${output.s.fbNodeRun}
+- assertVisible: ${output.s.fbNodeOwnServer}
+# UNIT-ONLY: without built-in Linux the row says unsupported (FbNodeState tests; this snapshot has Linux).
+
+# S2 Tap "Run memory on this phone": it installs, creates the vault, starts, then pairs with the owner key; an
+#    installed program is not reinstalled; kill the install: the failure is classified (no build / install with
+#    reason / start with log / pairing) and "Start" retries pairing only; double-tap does nothing twice.
+#    [B-LINUX-067]
+# S2 [B-LINUX-067]
+- doubleTapOn:
+    text: ${output.s.fbNodeRun}
+    label: "S2 install, vault, start, pair; a killed install is classified [B-LINUX-067]"
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeStepCopying}
+    timeout: 30000
+# Kill the install midway.
+# adb: kill-app-proc
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: kill-app-proc
+      ARGS: '{"match": "proot"}'
+- extendedWaitUntil:
+    visible: ${'(' + output.s.fbNodeFailInstall + '|' + output.s.fbNodeFailStart + '|' + output.s.fbNodeFailPair + ')'}  # literal-ok: alternation of the classified failures
+    timeout: 60000
+- tapOn: ${'(' + output.s.fbNodeStart + '|' + output.s.fbNodeRun + ')'}  # literal-ok: alternation of the two retry actions
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeRunningTitle}
+    timeout: 60000
+- assertVisible: ${output.s.fbNodeRunningBody}
+# The double tap ran setup once: one node process.
+# adb: ps-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: ps-count
+      ARGS: '{"match": "factsbook"}'
+- assertTrue: ${output.hook.count == 1}
+# UNIT-ONLY: an installed program is not reinstalled; "Start" after a pairing failure retries pairing only
+#   (FbNodeRun tests).
+
+# S3 Stop: data kept and the node stopped; Restart: pairing kept; Remove: data deleted, back to ready-to-install.
+#    [B-LINUX-068]
+# S3 [B-LINUX-068]
+- tapOn:
+    text: ${output.s.fbNodeStop}
+    label: "S3 stop keeps data, restart keeps pairing, remove deletes [B-LINUX-068]"
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeStoppedTitle}
+    timeout: 60000
+- assertVisible: ${output.s.fbNodeStoppedBody}
+- tapOn: ${output.s.fbNodeStart}
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeRunningTitle}
+    timeout: 60000
+- tapOn: ${output.s.fbNodeRestart}
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeRunningTitle}
+    timeout: 60000
+# Restart did not pair again.
+- assertNotVisible: ${output.s.fbNodeStepPairing}
+- scrollUntilVisible:
+    element: ${output.s.fbNodeRemove}
+- tapOn: ${output.s.fbNodeRemove}
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeRemoveTitle}
+    timeout: 15000
+- assertVisible: ${output.s.fbNodeRemoveLoses1}
+- tapOn: ${output.s.fbNodeRemove}
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeRemoved}
+    timeout: 60000
+- assertVisible: ${output.s.fbNodeNotInstalledTitle}
+
+# S4 Stop the node, relaunch the app: it stays stopped (Stop is remembered); tap Start: remembered no more; relaunch
+#    with it stopped but not by you: it is started automatically while Linux is still starting after an update,
+#    retrying busy or failed first looks, showing "starting" the whole time; a memory this app is not paired with is
+#    left alone. [B-LINUX-069]
+# S4 [B-LINUX-069]
+- tapOn:
+    text: ${output.s.fbNodeRun}
+    label: "S4 a stop is remembered; an unexpected stop restarts [B-LINUX-069]"
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeRunningTitle}
+    timeout: 60000
+- tapOn: ${output.s.fbNodeStop}
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeStoppedTitle}
+    timeout: 60000
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- assertVisible: ${output.c.fbMemoryStopped}
+- tapOn: ${output.c.fbMemoryStopped}
+- tapOn: ${output.s.fbNodeStart}
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeRunningTitle}
+    timeout: 60000
+# Stopped, but not by the person: end the node process, then relaunch.
+# adb: kill-app-proc
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: kill-app-proc
+      ARGS: '{"match": "factsbook"}'
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ${output.c.fbMemoryStarting}
+    timeout: 30000
+- tapOn: ${output.c.fbMemoryTitle}
+- extendedWaitUntil:
+    visible: ${output.s.fbNodeRunningTitle}
+    timeout: 60000
+# UNIT-ONLY: retries of busy or failed first looks after an update; an unpaired memory is left alone (FbNodeAutostart
+#   tests).
+
+# S5 Pair with a remote node: the code becomes a token without an Authorization header; a refused code is a plain
+#    failure; node info needs no credential. A public or credential-bearing node address is refused (private
+#    addresses only, default port applied). [B-PROTO-057, B-SEC-069]
+# S5 [B-PROTO-057, B-SEC-069]
+- scrollUntilVisible:
+    element: ${output.s.fbNodeOwnServer}
+    label: "S5 pair a remote node; public or credentialed addresses refused [B-PROTO-057, B-SEC-069]"
+- tapOn: ${output.s.fbNodeOwnServer}
+- extendedWaitUntil:
+    visible: ${output.s.fbConnectTitle}
+    timeout: 15000
+# A public-looking address is refused before anything is sent.
+- tapOn: ${output.s.fbConnectAddress}
+- inputText: "fixture.example.net:8787"  # literal-ok: a public-looking node address (documentation domain)
+- tapOn: ${output.s.fbConnectCode}
+- inputText: ${NODE_PAIR_CODE}
+- hideKeyboard
+- tapOn: ${output.s.fbConnectButton}
+- extendedWaitUntil:
+    visible: ${output.s.fbConnectFailedTitle}
+    timeout: 30000
+# A credential-bearing address is refused too.
+- tapOn: ${output.s.fbConnectAddress}
+- eraseText: 60
+- inputText: ${'e2e:pw@' + output.fx.nodeAddress}  # literal-ok: credentials put in the address on purpose
+- hideKeyboard
+- tapOn: ${output.s.fbConnectButton}
+- extendedWaitUntil:
+    visible: ${output.s.fbConnectFailedTitle}
+    timeout: 30000
+# A wrong code is a plain failure.
+- tapOn: ${output.s.fbConnectAddress}
+- eraseText: 60
+- inputText: ${output.fx.nodeAddress}
+- tapOn: ${output.s.fbConnectCode}
+- eraseText: 40
+- inputText: "000000"  # literal-ok: a code the node refuses
+- hideKeyboard
+- tapOn: ${output.s.fbConnectButton}
+- extendedWaitUntil:
+    visible: ${output.s.fbConnectFailedTitle}
+    timeout: 30000
+- tapOn: ${output.s.fbConnectCode}
+- eraseText: 40
+- inputText: ${NODE_PAIR_CODE}
+- hideKeyboard
+- tapOn: ${output.s.fbConnectButton}
+- extendedWaitUntil:
+    visible: ${output.s.fbMemoryTitle}
+    timeout: 30000
+# The pairing request carried no Authorization header.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-NODE
+      ACTION: request-log
+      ARGS: '{"path": "/pair", "last": 1}'
+- assertTrue: ${output.fxr.authorization == false}
+# UNIT-ONLY: node info needs no credential; the default port is applied to a bare host (FbPairing tests).
+
+# S6 Open a Thing: the actions name their target; "Add something" exists; a reminder is one-off unless the words say
+#    it repeats and how; the Status page opens. [B-NAV-013]
+# S6 [B-NAV-013]
+- tapOn:
+    text: ${output.s.fbMemoryOpenAboutYou}
+    label: "S6 a Thing's actions name it; Add something; Status [B-NAV-013]"
+# FX-NODE serves one Thing named Garden.
+- tapOn: "Garden"  # literal-ok: fixture fact nodeThing (request)
+- assertVisible: ${output.t.fbThingAddFact.replace('{thing}', 'Garden')}  # literal-ok: fixture fact nodeThing (request)
+- back
+- back
+- assertVisible: ${output.s.fbMemoryAddSomething}
+- tapOn: ${output.s.fbMemoryAddSomething}
+- assertVisible: ${output.s.fbCaptureTitle}
+- back
+# confirm: the Status page is reached from the Memory page's status line.
+- tapOn: ${output.rc.fbStatusAllWorking}
+- assertVisible: ${output.s.fbStatusTitle}
+- back
+# UNIT-ONLY: a reminder repeats only when the words say how (FbReminderParse tests).
+
+# S7 Capture a note while the node is unreachable: it is kept on the phone and counted once; bring the node back: it
+#    is sent automatically with the same key; a full outbox refuses the newest note; a note held in the node's own
+#    queue is not counted as lost; discard removes a phone note locally and a node note at the node. [B-AGENT-098]
+# S7 [B-AGENT-098]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-NODE
+      ACTION: unreachable
+    label: "S7 an offline note is kept, counted once, sent later [B-AGENT-098]"
+- tapOn: ${output.s.fbMemoryAddSomething}
+- tapOn: ${output.s.fbCaptureNote}
+- inputText: "e2e offline note one"  # literal-ok: note typed by the person
+- hideKeyboard
+- tapOn: ${output.s.fbCaptureSave}
+- extendedWaitUntil:
+    visible: ${output.s.fbCaptureKept}
+    timeout: 30000
+- back
+- assertVisible: ${output.t.fbMemoryNotSaved.match(/(?:=1|one)\{([^}]*)\}/)[1]}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-NODE
+      ACTION: restore
+- extendedWaitUntil:
+    notVisible: ${output.rc.fbMemoryNotSaved}
+    timeout: 60000
+# Sent once, with the key it was kept under.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-NODE
+      ACTION: request-log
+      ARGS: '{"path": "/inbox"}'
+- assertTrue: ${output.fxr.distinctKeys == 1}
+# Discard a phone note.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-NODE
+      ACTION: unreachable
+- tapOn: ${output.s.fbMemoryAddSomething}
+- tapOn: ${output.s.fbCaptureNote}
+- inputText: "e2e offline note two"  # literal-ok: note typed by the person
+- hideKeyboard
+- tapOn: ${output.s.fbCaptureSave}
+- back
+- tapOn: ${output.rc.fbMemoryNotSaved}
+- tapOn: "e2e offline note two"  # literal-ok: the note kept above
+- tapOn: ${output.s.fbNotSavedDiscard}
+- assertVisible: ${output.s.fbNotSavedDiscardTitle}
+- tapOn: ${output.s.fbNotSavedDiscard}
+- extendedWaitUntil:
+    visible: ${output.s.fbNotSavedEmptyTitle}
+    timeout: 15000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-NODE
+      ACTION: restore
+# UNIT-ONLY: a full outbox refuses the newest note; a note in the node's queue is not lost; discarding a node note
+#   deletes it at the node (FbOutbox tests).

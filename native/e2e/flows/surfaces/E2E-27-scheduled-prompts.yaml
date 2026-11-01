@@ -1,0 +1,291 @@
+# E2E-27 Scheduled prompts and the morning summary
+# slice: 4   avd: A   fixtures: FX-OC2   snapshot: base
+# rows: B-STATE-089, B-NAV-054, B-STATE-091, B-ANDR-070
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-4, g4, surfaces]
+---
+- runScript: ../../runner/out/strings.js
+
+- runFlow: ../_sub/connect-fx-oc2.yaml
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+# adb: appop
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: appop
+      ARGS: '{"op": "SCHEDULE_EXACT_ALARM", "mode": "allow"}'
+# A conversation to schedule into.
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo schedule home
+- extendedWaitUntil:
+    visible: ${'(?s).*ECHO schedule home.*'}  # literal-ok: stub-model echo
+    timeout: 30000
+- back
+
+# S1 Settings > "Scheduled prompts" > add: choose a time a minute ahead; edit it; pause it; resume it; delete it; each
+#    action updates the Android alarm ([adb] `dumpsys alarm`); a mutation error shows an actionable message. Saving
+#    across profiles is refused. [B-STATE-089]
+# S1 [B-STATE-089]
+# confirm: Flutter R reaches Scheduled prompts from the project hub and the launcher; settings search is the guess here.
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S1 add, edit, pause, resume, delete; the alarm follows [B-STATE-089]"
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: scheduled prompts
+- tapOn: ${output.s.scheduleTitle}
+- extendedWaitUntil:
+    visible: ${output.s.scheduleNew}
+    timeout: 15000
+- tapOn: ${output.s.scheduleNew}
+- tapOn: ${output.s.scheduleAsk}
+- inputText: e2e:echo scheduled one
+- hideKeyboard
+- tapOn: ${output.s.scheduleOnce}
+# A minute ahead: one notch up on the time wheel from its default (now, rounded).
+# confirm: the time wheel's default and its notch size on Flutter R
+- swipe:
+    from:
+      text: ${output.s.scheduleTime}
+    direction: UP
+- tapOn: ${output.re.scheduleForWhen}
+- extendedWaitUntil:
+    visible: ${'(?s).*e2e:echo scheduled one.*'}  # literal-ok: the prompt typed above names the schedule
+    timeout: 15000
+# adb: dumpsys-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: dumpsys-count
+      ARGS: '{"service": "alarm", "match": "oc-schedule"}'
+- assertTrue: ${output.hook.count >= 1}
+# Edit.
+- tapOn: ${output.s.scheduleEdit}
+- tapOn: ${output.s.scheduleAsk}
+- eraseText: 40
+- inputText: e2e:echo scheduled two
+- hideKeyboard
+- tapOn: ${output.re.scheduleForWhen}
+- extendedWaitUntil:
+    visible: ${'(?s).*e2e:echo scheduled two.*'}  # literal-ok: the edited prompt
+    timeout: 15000
+# Pause: the row's switch.
+- tapOn: ${'(?s).*e2e:echo scheduled two.*'}  # literal-ok: the edited prompt
+- extendedWaitUntil:
+    visible: ${output.c.schedulePaused}
+    timeout: 15000
+# adb: dumpsys-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: dumpsys-count
+      ARGS: '{"service": "alarm", "match": "oc-schedule"}'
+- assertTrue: ${output.hook.count == 0}
+# Resume.
+- tapOn: ${'(?s).*e2e:echo scheduled two.*'}  # literal-ok: the edited prompt
+- extendedWaitUntil:
+    notVisible: ${output.c.schedulePaused}
+    timeout: 15000
+# adb: dumpsys-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: dumpsys-count
+      ARGS: '{"service": "alarm", "match": "oc-schedule"}'
+- assertTrue: ${output.hook.count >= 1}
+# Delete.
+- tapOn: ${output.s.scheduleEdit}
+- tapOn: ${output.s.scheduleDelete}
+- extendedWaitUntil:
+    visible: ${output.re.scheduleDeleteNamedTitle}
+    timeout: 15000
+- tapOn:
+    text: ${output.s.scheduleDelete}
+    below: ${output.re.scheduleDeleteNamedTitle}
+- extendedWaitUntil:
+    visible: ${output.s.scheduleEmpty}
+    timeout: 15000
+# adb: dumpsys-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: dumpsys-count
+      ARGS: '{"service": "alarm", "match": "oc-schedule"}'
+- assertTrue: ${output.hook.count == 0}
+# UNIT-ONLY: a mutation error's actionable message (local store failure) and saving across profiles being refused.
+
+# S2 Let one fire: a notification appears; tap it: the conversation it created opens if reached, otherwise the history
+#    opens; delete the schedule, tap an old notification: nothing opens. [B-NAV-054]
+# S2 [B-NAV-054]
+- tapOn:
+    text: ${output.s.scheduleNew}
+    label: "S2 a fired schedule's notification opens its conversation [B-NAV-054]"
+- tapOn: ${output.s.scheduleAsk}
+- inputText: e2e:echo fired run
+- hideKeyboard
+- tapOn: ${output.s.scheduleOnce}
+- swipe:
+    from:
+      text: ${output.s.scheduleTime}
+    direction: UP
+- tapOn: ${output.re.scheduleForWhen}
+- pressKey: Home
+# adb: clock-advance
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: clock-advance
+      ARGS: '{"advance_minutes": 3}'
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.c.x_native_schedule_title}
+    timeout: 60000
+- tapOn: ${output.c.x_native_schedule_title}
+- extendedWaitUntil:
+    visible: ${'(?s).*ECHO fired run.*'}  # literal-ok: stub-model echo of the scheduled prompt
+    timeout: 30000
+- assertVisible: ${output.s.kitComposerField}
+# Delete the schedule; a second, old notification then opens nothing.
+- back
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: scheduled prompts
+- tapOn: ${output.s.scheduleTitle}
+- tapOn: ${'(?s).*e2e:echo fired run.*'}  # literal-ok: the scheduled prompt names its row
+- runFlow:
+    when:
+      visible: ${output.s.scheduleDelete}
+    commands:
+      - tapOn: ${output.s.scheduleDelete}
+      - tapOn:
+          text: ${output.s.scheduleDelete}
+          below: ${output.re.scheduleDeleteNamedTitle}
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- runFlow:
+    when:
+      visible: ${output.c.x_native_schedule_title}
+    commands:
+      - tapOn: ${output.c.x_native_schedule_title}
+- runFlow: ../_sub/close-shade.yaml
+- assertNotVisible: ${'(?s).*ECHO fired run.*'}  # literal-ok: nothing opens for a deleted schedule
+# UNIT-ONLY: "history opens when the conversation is not reached" (needs a run that never created one).
+
+# S3 Turn the morning digest on; run two schedules overnight ([adb] advance the clock): at the next local morning the
+#    summary counts only completed runs in the window, appears once, and tapping it opens the history; with the digest
+#    off nothing appears. [B-STATE-091, B-NAV-054]
+# S3 [B-STATE-091, B-NAV-054]
+- launchApp:
+    label: "S3 one morning summary that opens the history [B-STATE-091, B-NAV-054]"
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: scheduled prompts
+- tapOn: ${output.s.scheduleTitle}
+- tapOn: ${output.s.scheduleNew}
+- tapOn: ${output.s.scheduleAsk}
+- inputText: e2e:echo night one
+- hideKeyboard
+- tapOn: ${output.s.scheduleEveryDay}
+- tapOn: ${output.re.scheduleForWhen}
+- tapOn: ${output.s.scheduleNew}
+- tapOn: ${output.s.scheduleAsk}
+- inputText: e2e:echo night two
+- hideKeyboard
+- tapOn: ${output.s.scheduleEveryDay}
+- tapOn: ${output.re.scheduleForWhen}
+- tapOn: ${output.s.scheduleDigest}
+- extendedWaitUntil:
+    visible: ${output.rc.scheduleRuleDaily}
+    timeout: 15000
+- pressKey: Home
+# adb: clock-advance
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: clock-advance
+      ARGS: '{"advance_minutes": 1440}'
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.c.x_native_schedule_digest_title}
+    timeout: 60000
+# Only completed runs in the window: two started.
+- assertVisible: ${'(?s).*2 started.*'}  # literal-ok: native_schedule_digest_body "%1$d started · ..." with 2 runs
+- tapOn: ${output.c.x_native_schedule_digest_title}
+- extendedWaitUntil:
+    visible: ${output.s.scheduleTitle}
+    timeout: 30000
+- assertVisible: ${output.rc.scheduleSent}
+# Digest off: nothing the next morning.
+- tapOn: ${output.s.scheduleDigest}
+- pressKey: Home
+# adb: clock-advance
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: clock-advance
+      ARGS: '{"advance_minutes": 1440}'
+- runFlow: ../_sub/open-shade.yaml
+- assertNotVisible: ${output.c.x_native_schedule_digest_title}
+- runFlow: ../_sub/close-shade.yaml
+# adb: clock-restore
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: clock-restore
+# UNIT-ONLY: "appears once" across restarts and the window boundary are DigestPolicy unit checks.
+
+# S4 While a scheduled run leases the phone runtime, try to send from the composer: the send is blocked with a reason
+#    and the typed text stays; when the lease ends, send works. [B-ANDR-070]
+# S4 [B-ANDR-070]
+# SUSPECTED-GAP: the lease applies to the phone's own server (built-in Linux); this flow runs on the base snapshot
+#   against FX-OC2, so Flutter R may never block. It needs the flutter-linux snapshot or a QA lease hook.
+- launchApp:
+    label: "S4 a leased phone runtime blocks the composer, text kept [B-ANDR-070]"
+- tapOn: ${output.s.scheduleNew}
+- tapOn: ${output.s.scheduleAsk}
+- inputText: e2e:slow-finish
+- hideKeyboard
+- tapOn: ${output.s.scheduleOnce}
+- tapOn: ${output.re.scheduleForWhen}
+- tapOn: ${'(?s).*e2e:slow-finish.*'}  # literal-ok: the scheduled prompt names its row
+- runFlow:
+    when:
+      visible: ${output.s.scheduleRunNow}
+    commands:
+      - tapOn: ${output.s.scheduleRunNow}
+- back
+- back
+- back
+- tapOn: ${output.s.chatsHomeNewChat}
+- tapOn: ${output.fx.projectApp}
+- tapOn: ${output.s.kitComposerField}
+- inputText: e2e:echo typed while leased
+- tapOn: ${output.s.kitComposerSend}
+- extendedWaitUntil:
+    visible: ${output.c.schedulePhoneBusy}
+    timeout: 15000
+- assertVisible: ${'(?s).*typed while leased.*'}  # literal-ok: the text typed above stays
+- extendedWaitUntil:
+    notVisible: ${output.c.schedulePhoneBusy}
+    timeout: 60000
+- tapOn: ${output.s.kitComposerSend}
+- extendedWaitUntil:
+    visible: ${'(?s).*ECHO typed while leased.*'}  # literal-ok: stub-model echo once the lease ends
+    timeout: 60000

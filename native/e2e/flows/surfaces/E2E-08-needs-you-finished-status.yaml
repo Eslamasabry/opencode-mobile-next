@@ -1,0 +1,345 @@
+# E2E-08 Needs-you, finished-reply and the ongoing status notification
+# slice: 4   avd: A   fixtures: FX-OC2, FX-OC2-B   snapshot: base
+# rows: B-ANDR-023, B-ANDR-041, B-ANDR-042, B-ANDR-043, B-ANDR-011, B-ANDR-040, B-ANDR-047, B-SEC-149, B-ANDR-026, B-ANDR-033
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-4, g4, surfaces, phone-smoke]
+---
+- runScript: ../../runner/out/strings.js
+
+- runFlow: ../_sub/connect-fx-oc2.yaml
+# Notification copy built on the Android side (Kotlin): "Finished: <chat>", "Allow <agent> to continue?".
+- evalScript: ${output.finishedAny = '(?s).*' + output.s.android_native_alert_complete_title.replace('%1\\$s', '.*') + '.*'}
+- evalScript: ${output.askEditNotes = '(?s).*' + output.s.android_native_ask_edit.replace('%1\\$s', output.fx.fileNotes.replace('.', '\\.')) + '.*'}
+
+# S1 Open a new conversation, send a message; the offer to turn on finished-reply notifications appears only after the
+#    first reply has completed (never before) and only once. Accept it and allow the system permission. [B-ANDR-023]
+# S1 [B-ANDR-023]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S1 notify offer only after the first reply [B-ANDR-023]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo first reply here
+- assertNotVisible: ${output.s.firstRunNotifyTitle}
+- extendedWaitUntil:
+    visible: ${'(?s).*ECHO first reply here.*'}  # literal-ok: stub-model echo of the prompt above
+    timeout: 30000
+- extendedWaitUntil:
+    visible: ${output.s.firstRunNotifyTitle}
+    timeout: 30000
+- tapOn: ${output.s.firstRunNotifyAccept}
+# The system permission dialog is Android's, not ours.
+# retry-reason: the permission dialog animates in from the system UI
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible: Allow  # literal-ok: Android system permission dialog button
+          commands:
+            - tapOn: Allow  # literal-ok: Android system permission dialog button
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo second reply
+- extendedWaitUntil:
+    visible: ${'(?s).*ECHO second reply.*'}  # literal-ok: stub-model echo
+    timeout: 30000
+- assertNotVisible: ${output.s.firstRunNotifyTitle}
+
+# S2 Send `e2e:slow-finish`, press Home. see one ongoing notification: "1 working" with a real progress bar when the
+#    agent has tasks ("5 of 6"), no endless spinner when it has none, long runs shown in hours. Start a second
+#    conversation: several chats show as lines with "+N more" after two. [B-ANDR-041, B-ANDR-042]
+# S2 [B-ANDR-041, B-ANDR-042]
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+    label: "S2 one ongoing status with task progress [B-ANDR-041, B-ANDR-042]"
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.rc.notifStatusTasksProgress}
+    timeout: 30000
+# UNIT-ONLY: the bar is determinate (setProgress indeterminate=false) and long runs read in hours (notifStatusHours).
+- runFlow: ../_sub/close-shade.yaml
+- launchApp
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectOther}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.rc.notifStatusChatsWorking}
+    timeout: 30000
+# Three chats: two lines, then "+1 more".
+- assertVisible: ${output.rc.notifStatusMore}
+
+# S3 Let the agent ask for permission: the notification switches to a needs-you state naming whose request, offering
+#    Open, pluralising for two, beating working (and saying how many still work), never repeating the request text.
+#    [B-ANDR-043]
+# S3 [B-ANDR-043]
+- runFlow:
+    file: ../_sub/close-shade.yaml
+    label: "S3 needs-you beats working [B-ANDR-043]"
+- launchApp
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.rc.notifStatusNeedsYou}
+    timeout: 30000
+- assertVisible: ${output.rc.notifStatusStillWorking}
+- assertVisible: ${output.s.android_native_status_action_open}
+- runFlow: ../_sub/close-shade.yaml
+# A second ask on another chat: "2 need you".
+- launchApp
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectOther}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell ls -la
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${'(?s).*2 need you.*'}  # literal-ok: plural form "other" of notifStatusNeedsYou with count 2
+    timeout: 30000
+# The status line never repeats the request text (the command).
+- assertNotVisible: ${'(?s).*ls -la.*'}  # literal-ok: the command sent above
+
+# S4 Let the reply finish: a notification says "Reply finished", names the chat and its first line; open it and the
+#    alert clears; a finished reply raises an alert once whatever the event order; a background error replaces the
+#    completion; sub-agent alerts stay quiet. [B-ANDR-011, B-ANDR-040]
+# S4 [B-ANDR-011, B-ANDR-040]
+- runFlow:
+    file: ../_sub/close-shade.yaml
+    label: "S4 finished alert names the chat and clears on open [B-ANDR-011, B-ANDR-040]"
+- launchApp
+- tapOn: ${output.s.kitRequestAllowOnce}
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.finishedAny}
+    timeout: 60000
+# confirm: the catalog's "Reply finished" wording; Flutter R titles it "Finished: <chat>" (native_alert_complete_title)
+# The first line of the reply is the body.
+- assertVisible: ${'(?s).*All done\..*'}  # literal-ok: stub-model e2e:slow-finish final line
+- tapOn: ${output.finishedAny}
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- runFlow: ../_sub/open-shade.yaml
+- assertNotVisible: ${output.finishedAny}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: reorder-events
+      ARGS: '{"session": "latest", "order": "idle-before-message"}'
+# UNIT-ONLY: one alert whatever the event order, a background error replaces the completion, sub-agent alerts stay quiet.
+- runFlow: ../_sub/close-shade.yaml
+
+# S5 Pull down the shade while a reply runs: the Stop action stops exactly the chat the status named; after the chat
+#    finished, Stop leaves it alone. [B-ANDR-040]
+# S5 [B-ANDR-040]
+- launchApp:
+    label: "S5 Stop from the status stops that chat [B-ANDR-040]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.s.android_native_status_action_stop_reply}
+    timeout: 30000
+- tapOn: ${output.s.android_native_status_action_stop_reply}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "session-abort"}'
+- assertTrue: ${output.fxr.count == 1 && output.fxr.last.sameSessionAsStatus}
+- runFlow: ../_sub/close-shade.yaml
+
+# S6 Lock the screen ([adb] `input keyevent 26`): the lock-screen version shows only counts, no titles or lines. With
+#    two saved servers the app name reads "on <server>"; with one it does not. [B-ANDR-047]
+# S6 [B-ANDR-047]
+- launchApp:
+    label: "S6 lock screen shows counts only [B-ANDR-047]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- assertNotVisible: ${output.rc.notifStatusOnServer}
+- runFlow: ../_sub/close-shade.yaml
+# adb: screen
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: screen
+      ARGS: '{"on": false}'
+# Wake without dismissing the keyguard: the lock screen itself.
+- pressKey: Power
+# SUSPECTED-GAP: VISIBILITY_PRIVATE redacts only behind a secure lock; the base AVD has no PIN and no hook sets one.
+- assertVisible: ${output.rc.notifStatusPublicWorking}
+- assertNotVisible: ${'(?s).*ECHO.*'}  # literal-ok: no reply line on the lock screen
+# adb: screen
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: screen
+      ARGS: '{"on": true}'
+# Two saved servers: "on <server>" joins the app name.
+- launchApp
+- back
+- runFlow: ../_sub/add-second-server.yaml
+- tapOn: ${output.s.chatsHomeNewChat}
+- tapOn: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.rc.notifStatusOnServer}
+    timeout: 30000
+- runFlow: ../_sub/close-shade.yaml
+
+# S7 Send `e2e:secret` (reply contains a fake provider key): neither the notification, nor the live status, nor a
+#    copied log contains it (masked), and the same after an app restart. [B-SEC-149]
+# S7 [B-SEC-149]
+- launchApp:
+    label: "S7 the fake key never reaches the shade or the log [B-SEC-149]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:secret
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.finishedAny}
+    timeout: 60000
+- assertNotVisible: ${output.fx.secretKey}
+- runFlow: ../_sub/close-shade.yaml
+# adb: logcat-scan
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: logcat-scan
+- assertTrue: ${output.hook.found == false}
+- runFlow: ../_sub/restart-app.yaml
+- runFlow: ../_sub/open-shade.yaml
+- assertNotVisible: ${output.fx.secretKey}
+- runFlow: ../_sub/close-shade.yaml
+# adb: logcat-scan
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: logcat-scan
+- assertTrue: ${output.hook.found == false}
+
+# S8 The "needs you" preset is offered once, remembered after restart, explains interrupted asks, can be changed in
+#    Settings, and cannot be answered twice. [B-ANDR-026]
+# S8 [B-ANDR-026]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S8 the needs-you answer is remembered and changeable [B-ANDR-026]"
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: notify me
+# confirm: the consent row lives under Settings > Notifications ("Your answers")
+- tapOn: ${output.c.consentRowNeedsYou}
+- assertVisible: ${output.c.consentValueAllowed}
+- runFlow: ../_sub/restart-app.yaml
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: notify me
+- tapOn: ${output.c.consentRowNeedsYou}
+- assertVisible: ${output.c.consentValueAllowed}
+- assertVisible: ${output.c.consentAllowedNeedsYou}
+# UNIT-ONLY: the offer cannot be answered twice (a second accept is a no-op); interrupted-ask wording is a unit check.
+- back
+- back
+
+# S9 Return to the app: outstanding alerts are dismissed. The live status counts running sessions and pending requests,
+#    names the freshest busy session, updates on state changes and tool events, its running sentence follows the app
+#    language (switch to Arabic and see Arabic copy) and tool sentences never repeat the tool input. [B-ANDR-011,
+#    B-ANDR-033]
+# S9 [B-ANDR-011, B-ANDR-033]
+- tapOn:
+    text: ${output.s.chatsHomeNewChat}
+    label: "S9 alerts clear on return; status follows the app language [B-ANDR-011, B-ANDR-033]"
+- tapOn: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell cat secret-input.txt
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.rc.notifStatusNeedsYou}
+    timeout: 30000
+- assertNotVisible: ${'(?s).*secret-input\.txt.*'}  # literal-ok: tool input from the prompt above
+- runFlow: ../_sub/close-shade.yaml
+- launchApp
+- runFlow: ../_sub/open-shade.yaml
+- assertNotVisible: ${output.finishedAny}
+- runFlow: ../_sub/close-shade.yaml
+# Switch the app to Arabic: the status sentence is no longer English.
+- tapOn: ${output.s.kitRequestReject}
+- back
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: language
+- tapOn: ${output.s.settingsV3Language}
+- tapOn: ${output.s.e7LocaleUiArabic}
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- assertNotVisible: ${output.rc.notifStatusChatsWorking}
+- assertNotVisible: ${output.rc.notifStatusNeedsYou}
+- runFlow: ../_sub/close-shade.yaml
+# The language screen names each language in itself, so English is found in the Arabic UI.
+- launchApp
+- tapOn: ${output.s.e7LocaleUiEnglish}

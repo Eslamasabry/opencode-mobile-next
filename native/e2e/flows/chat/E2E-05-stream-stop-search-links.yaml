@@ -1,0 +1,324 @@
+# E2E-05 Send a prompt, watch it stream, stop it, search it, follow links
+# slice: 2   avd: A, 26   fixtures: FX-OC2, fx-proxy   snapshot: base
+# rows: B-CHAT-017, B-CHAT-060, B-CHAT-086, B-CHAT-115, B-SEC-064, B-CHAT-064, B-CHAT-082, B-PROTO-061, B-PROTO-034
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-2, g2, chat, smoke, phone-smoke]
+---
+- runScript: ../../runner/out/strings.js
+
+# S1 Open an empty project folder: the starter suggestions offer ways to make something. Open `app` (files and Git
+#    history): the starters offer ways to work on the files and include "what changed recently"; in a folder with
+#    files but no Git history that starter is absent; while the folder is still loading no starters show; an
+#    unfinished starter ends with a space, not an ellipsis; in Arabic the starters are Arabic. [B-CHAT-017]
+# S1 [B-CHAT-017]
+- runFlow:
+    file: ../_sub/connect-fx-oc2.yaml
+    label: "S1 starters follow the folder [B-CHAT-017]"
+# An empty folder offers ways to make something.
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: empty  # literal-ok: fixture fact projectEmpty (request): an empty project folder on FX-OC2
+- assertVisible: ${output.s.chatStartEmptyFolder}  # confirm: the empty-folder line above the starters
+- assertVisible: ${output.s.chatStartBuildWebPage}
+- assertNotVisible: ${output.s.chatStartWhatChanged}
+- back
+# app has files and Git history: work on the files, "What changed recently?" included.
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- extendedWaitUntil:
+    visible: ${output.s.chatStartWhatChanged}
+    timeout: 30000
+- assertVisible: ${output.s.chatStartExplainProject}
+- assertNotVisible: ${output.s.chatStartBuildWebPage}
+- back
+# A folder with files but no Git history has no "What changed recently?".
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: plain  # literal-ok: fixture fact projectNoGit (request): files, no Git history
+- extendedWaitUntil:
+    visible: ${output.s.chatStartExplainProject}
+    timeout: 30000
+- assertNotVisible: ${output.s.chatStartWhatChanged}
+- back
+# UNIT-ONLY: no starters while the folder is loading (too brief to catch), the trailing space of an unfinished
+# starter, and the Arabic starters (E2E-23 repeats the chat start in Arabic).
+
+# S2 type `e2e:long` and tap Send. see the reply grow word by word without the list jumping; a streaming caret shows
+#    at the end of the reply. The reply contains headings, a table and a fenced block with a long line. (What
+#    read-aloud skips - fences, tables, link targets - is proven by the unit test.) [B-CHAT-060]
+# S2 [B-CHAT-060]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S2 a long reply streams [B-CHAT-060]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:long
+- extendedWaitUntil:
+    visible: ${output.s.kitTurnLiveStopShort}
+    timeout: 30000
+# UNIT-ONLY: word-by-word growth without the list jumping and the streaming caret (frame-level; 13 §3.8 benchmarks).
+
+# S3 While it streams tap "Stop": see the reply end as stopped (not as an error) and the phrase chips stay; the Send
+#    control returns. [fx] verify the server saw an abort. Then send `e2e:cut`: the reply ends cut off by length and a
+#    "Continue" button appears. A reply that ends with an error notice hides the phrase chips; a stop or a length cut
+#    does not. [B-CHAT-086]
+# S3 [B-CHAT-086]
+- tapOn:
+    text: ${output.s.kitTurnLiveStopShort}
+    label: "S3 stop ends as stopped, length cut offers Continue [B-CHAT-086]"
+- extendedWaitUntil:
+    visible: ${output.s.kitTurnStopped}  # confirm: the stopped line under the reply
+    timeout: 30000
+- assertNotVisible: ${output.c.chatSendFailed}
+- assertVisible: ${output.s.kitComposerSend}
+- runFlow:
+    when:
+      visible: ${output.s.phraseChipsRowLabel}
+    commands:
+      - assertVisible: ${output.rc.phraseChipsSend}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-log
+      ARGS: '{"method": "POST", "path": "/api/session/*/abort"}'
+- assertTrue: ${output.fxr.count >= 1}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:cut
+- extendedWaitUntil:
+    visible: ${output.s.messageViewContinueReply}  # confirm: the catalog's "Continue" button
+    timeout: 60000
+# UNIT-ONLY: an error notice hides the phrase chips (needs a scripted turn error; chat notices widget test).
+
+# S4 Open the in-conversation search, type a word that appears in the reply, in a tool output and in a file the agent
+#    read: see one match count that includes all three places; keep the search open while a new reply streams and see
+#    the count grow; delete a message and see it drop. [B-CHAT-115]
+# S4 [B-CHAT-115]
+# SUSPECTED-GAP: the stub model must read a file and run a tool whose outputs hold the search word (e2e:files-edit).
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:files-edit
+    label: "S4 one search count over reply, tool output and file [B-CHAT-115]"
+- extendedWaitUntil:
+    notVisible: ${output.s.kitTurnLiveStopShort}
+    timeout: 60000
+- tapOn: ${output.s.chatUiSessionMenu}
+- tapOn: ${output.s.sessionMenuFind}
+- tapOn: ${output.s.transcriptFindHint}
+- inputText: ECHO  # literal-ok: fixture fact searchWord (request): appears in a reply, a tool output and a read file
+- extendedWaitUntil:
+    visible: ${output.rc.transcriptFindCount}
+    timeout: 15000
+- copyTextFrom: ${output.rc.transcriptFindCount}
+- evalScript: ${output.countBefore = parseInt((maestro.copiedText.match(/(\d+) matches/) || [0, 1])[1])}
+- assertTrue: ${output.countBefore >= 3}
+# A new reply streams while the search stays open: the count grows.
+- hideKeyboard
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo ECHO grows
+- extendedWaitUntil:
+    notVisible: ${output.s.kitTurnLiveStopShort}
+    timeout: 60000
+- copyTextFrom: ${output.rc.transcriptFindCount}
+- evalScript: ${output.countGrown = parseInt((maestro.copiedText.match(/(\d+) matches/) || [0, 1])[1])}
+- assertTrue: ${output.countGrown > output.countBefore}
+# Delete a message: the count drops.
+- longPressOn: ECHO ECHO grows  # literal-ok: stub model reply to e2e:echo
+- tapOn: ${output.s.chatUiDeleteMessage}
+- tapOn:
+    text: ${output.s.chatUiDeleteMessage}
+    index: 0
+- copyTextFrom: ${output.rc.transcriptFindCount}
+- evalScript: ${output.countDropped = parseInt((maestro.copiedText.match(/(\d+) matches/) || [0, 1])[1])}
+- assertTrue: ${output.countDropped < output.countGrown}
+- tapOn: ${output.s.transcriptFindClose}
+
+# S5 In the reply, tap `https://example.com/a`: the safe-link confirmation names the host and opens the browser. Tap
+#    the `http://example.org/b` link: opens only after the plain-http warning. Tap `javascript:alert(1)`,
+#    `intent://…`, a link with credentials and a very long URL: nothing opens and no browser starts. [B-SEC-064]
+# S5 [B-SEC-064]
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:long
+    label: "S5 only safe links open, after the right confirmation [B-SEC-064]"
+- extendedWaitUntil:
+    notVisible: ${output.s.kitTurnLiveStopShort}
+    timeout: 60000
+- scrollUntilVisible:
+    element: https://example\.com/a  # literal-ok: link in the e2e:long stub reply
+    direction: UP
+- tapOn: https://example\.com/a  # literal-ok: link in the e2e:long stub reply; confirm: the link is its own tap target
+- extendedWaitUntil:
+    visible: ${output.s.e7SharedOpenExternalLink}
+    timeout: 15000
+- assertVisible: ${output.rc.externalLinkOpensHost}
+- assertVisible: (?s).*example\.com.*  # literal-ok: the host named in the confirmation
+- tapOn: ${output.s.e7SharedOpenLink}
+- assertNotVisible: ${output.s.kitComposerField}
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- scrollUntilVisible:
+    element: http://example\.org/b  # literal-ok: link in the e2e:long stub reply
+    direction: UP
+- tapOn: http://example\.org/b  # literal-ok: link in the e2e:long stub reply
+- extendedWaitUntil:
+    visible: ${output.s.e7SharedOpenInsecureHTTPLink}
+    timeout: 15000
+- assertVisible: ${output.c.e7SharedHTTPIsNotEncryptedOtherDevicesOn}
+- tapOn: ${output.s.e7SharedOpenHTTPLink}
+- assertNotVisible: ${output.s.kitComposerField}
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+# Blocked links: nothing opens, the app stays in front.
+- scrollUntilVisible:
+    element: javascript:alert\(1\)  # literal-ok: link in the e2e:long stub reply
+    direction: UP
+- tapOn: javascript:alert\(1\)  # literal-ok: link in the e2e:long stub reply
+- runFlow:
+    when:
+      visible: ${output.s.externalLinkBlockedTitle}
+    commands:
+      - tapOn: ${output.s.kitSheetClose}  # confirm: the blocked-link notice's close
+- assertVisible: ${output.s.kitComposerField}
+- scrollUntilVisible:
+    element: intent://x  # literal-ok: link in the e2e:long stub reply
+    direction: UP
+- tapOn: intent://x  # literal-ok: link in the e2e:long stub reply
+- runFlow:
+    when:
+      visible: ${output.s.externalLinkBlockedTitle}
+    commands:
+      - tapOn: ${output.s.kitSheetClose}
+- assertVisible: ${output.s.kitComposerField}
+- scrollUntilVisible:
+    element: (?s).*user:pw@example\.com.*  # literal-ok: credential link in the e2e:long stub reply
+    direction: UP
+- tapOn: (?s).*user:pw@example\.com.*  # literal-ok: credential link in the e2e:long stub reply
+- runFlow:
+    when:
+      visible: ${output.s.externalLinkBlockedTitle}
+    commands:
+      - tapOn: ${output.s.kitSheetClose}
+- assertNotVisible: ${output.s.e7SharedOpenLink}
+- assertVisible: ${output.s.kitComposerField}
+# UNIT-ONLY: the 3,000-character URL (cannot be targeted as visible text; external_link_test covers the length cap).
+
+# S6 A path such as `lib/main.dart:42` in the reply is rendered as a file link; tap it: the file viewer opens at line
+#    42. A plain word with a dot that is not a path is not linked. [B-CHAT-064]
+# S6 [B-CHAT-064]
+- scrollUntilVisible:
+    element: ${output.fx.fileMainDartLine}
+    direction: UP
+    label: "S6 a path in the reply opens the file at its line [B-CHAT-064]"
+- tapOn: ${output.fx.fileMainDartLine}  # confirm: the path is its own tap target
+- extendedWaitUntil:
+    visible: (?s).*main\.dart.*  # literal-ok: file viewer title for fixture file lib/main.dart
+    timeout: 30000
+- assertVisible: '42'  # literal-ok: the line number the viewer opened at; confirm: the viewer's line marker
+- back
+# UNIT-ONLY: a dotted word that is not a path stays plain text (link detection unit test).
+
+# S7 Long-press a phrase chip above the input and hide it; see it gone and its starter too; open the phrase list and
+#    tap "Show hidden phrases" to bring it back. [B-CHAT-082]
+# S7 [B-CHAT-082]
+- copyTextFrom:
+    text: ${output.rc.phraseChipsSend}
+    index: 0
+    label: "S7 hide a phrase chip and bring it back [B-CHAT-082]"
+- evalScript: ${output.chip = maestro.copiedText}
+- longPressOn:
+    text: ${output.rc.phraseChipsSend}
+    index: 0
+- tapOn: ${output.s.phraseChipsHide}
+- assertNotVisible: ${output.chip}  # literal-ok: the chip text read above
+# UNIT-ONLY: the hidden phrase's starter is hidden too (phrase chips controller test).
+- back
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.settingsPhraseChipsTitle}
+- tapOn:
+    text: ${output.s.settingsPhraseChipsTitle}
+    index: 1
+- tapOn: ${output.s.settingsPhraseChipsShowHidden}
+- back
+- back
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- extendedWaitUntil:
+    visible: ${output.chip}  # literal-ok: the chip text read above is back
+    timeout: 15000
+
+# S8 Open a conversation with more than a few hundred messages (fixture `long-history`): it opens at the newest
+#    message; scroll up and see older pages arrive one page at a time, with no jump and no duplicate rows.
+#    [B-PROTO-061]
+# S8 [B-PROTO-061]
+- launchApp:
+    stopApp: true
+    label: "S8 long history opens at the newest, pages upward [B-PROTO-061]"
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+- tapOn: ${output.fx.longHistorySession}
+- extendedWaitUntil:
+    visible: long-history newest  # literal-ok: fixture fact longHistoryNewest (request): text of the newest message
+    timeout: 30000
+- assertNotVisible: long-history oldest  # literal-ok: fixture fact longHistoryOldest (request)
+- scrollUntilVisible:
+    element: long-history oldest  # literal-ok: fixture fact longHistoryOldest (request)
+    direction: UP
+    timeout: 60000
+# UNIT-ONLY: one page per load, no jump and no duplicate rows (history paging contract test).
+- back
+
+# S9 [fx] drop the event stream connection mid-reply (close the socket, keep the server): see the status line say it
+#    is reconnecting, then the reply continues and no message is duplicated. [B-PROTO-034]
+# S9 [B-PROTO-034]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S9 stream drop reconnects without duplicates [B-PROTO-034]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- extendedWaitUntil:
+    visible: ${output.s.kitTurnLiveStopShort}
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: fx-proxy
+      ACTION: drop-stream
+      ARGS: '{"host": "10.0.2.2", "port": 4097}'
+- extendedWaitUntil:
+    visible: ${output.c.connectionReconnectingQuiet}  # confirm: the status line wording while the stream reconnects
+    timeout: 30000
+- extendedWaitUntil:
+    visible: All done\.  # literal-ok: final reply of e2e:slow-finish
+    timeout: 60000
+- assertNotVisible:
+    text: All done\.  # literal-ok: final reply of e2e:slow-finish, must not appear twice
+    index: 1

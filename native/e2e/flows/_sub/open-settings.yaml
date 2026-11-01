@@ -1,0 +1,7 @@
+# From any top-level screen: open Settings.
+appId: ${APP_ID}
+---
+- tapOn: ${output.s.librarySettingsTitle}
+- extendedWaitUntil:
+    visible: ${output.s.settingsHubSearch}
+    timeout: 15000

@@ -1,0 +1,106 @@
+# E2E-09 Keep running in the background
+# slice: 4   avd: A   fixtures: FX-OC2   snapshot: base
+# rows: B-ANDR-012, B-ANDR-009
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-4, g4, surfaces]
+---
+- runScript: ../../runner/out/strings.js
+
+# Needs API 35+ with the notification permission denied at the start.
+- runFlow: ../_sub/connect-fx-oc2.yaml
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": false}'
+- evalScript: ${output.finishedAny = '(?s).*' + output.s.android_native_alert_complete_title.replace('%1\\$s', '.*') + '.*'}
+
+# S1 Open Settings, search "keep running"; turn on the live connection while the notification permission is denied:
+#    it stays off and says why ("Allow notifications"); unsupported platforms and an unavailable service leave it off
+#    with a reason. [B-ANDR-012]
+# S1 [B-ANDR-012]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S1 denied notifications keep live mode off, with a reason [B-ANDR-012]"
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: keep running
+- tapOn: ${output.s.e7SettingsUi25}
+- tapOn: ${output.s.e7SettingsUi25}
+# Android may ask for the permission again; refuse it.
+# retry-reason: the system permission dialog animates in from the system UI
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible: Don’t allow  # literal-ok: Android system permission dialog button
+          commands:
+            - tapOn: Don’t allow  # literal-ok: Android system permission dialog button
+# confirm: the reason shown under the switch on Flutter R (e7SettingsUi22 "Android did not enable background mode.")
+- extendedWaitUntil:
+    visible: ${output.c.e7SettingsUi22}
+    timeout: 30000
+- assertNotVisible: ${output.s.e7SettingsUi32}
+- assertNotVisible: ${output.s.e7SettingsUi28}
+# UNIT-ONLY: unsupported platforms and an unavailable service leave it off with a reason (no device lacks the service).
+
+# S2 Grant notification permission; turn it on again: the switch turns on only after Android confirms the service
+#    started; kill and relaunch the app: the saved choice is restored through the native service. A malformed native
+#    status never grants the capability. [B-ANDR-012]
+# S2 [B-ANDR-012]
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+    label: "S2 granted: on only once the service runs, restored after a kill [B-ANDR-012]"
+- tapOn: ${output.s.e7SettingsUi25}
+- extendedWaitUntil:
+    visible: ${output.s.e7SettingsUi32}
+    timeout: 30000
+- assertNotVisible: ${output.c.e7SettingsUi22}
+# adb: kill-app-proc
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: kill-app-proc
+      ARGS: '{"match": "opencode_mobile"}'
+- launchApp
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: keep running
+- tapOn: ${output.s.e7SettingsUi25}
+- extendedWaitUntil:
+    visible: ${output.s.e7SettingsUi32}
+    timeout: 30000
+# UNIT-ONLY: a malformed native status never grants the capability.
+- back
+- back
+
+# S3 With live mode on, send `e2e:slow-finish`, press Home, wait 60 s: the reply completes and the notification says
+#    so (the connection stayed active in the background). [B-ANDR-009]
+# S3 [B-ANDR-009]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S3 reply completes with the app away [B-ANDR-009]"
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.finishedAny}
+    timeout: 60000
+- runFlow: ../_sub/close-shade.yaml
+- launchApp
+- assertVisible: ${'(?s).*All done\..*'}  # literal-ok: stub-model e2e:slow-finish final line

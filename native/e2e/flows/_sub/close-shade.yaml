@@ -1,0 +1,8 @@
+appId: ${APP_ID}
+---
+# adb: shade
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: shade
+      ARGS: '{"open": false}'

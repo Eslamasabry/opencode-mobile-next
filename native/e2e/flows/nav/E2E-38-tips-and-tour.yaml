@@ -1,0 +1,175 @@
+# E2E-38 Tips and the Make it yours tour
+# slice: 4   avd: A   fixtures: FX-OC2   snapshot: base
+# rows: B-NAV-038, B-NAV-039, B-NAV-074
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-4, g4, nav]
+---
+- runScript: ../../runner/out/strings.js
+
+# Fresh install with tips reset (clearState in connect-fx-oc2), notifications allowed.
+- runFlow: ../_sub/connect-fx-oc2.yaml
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+
+# S1 Use the app for the first time: no tip shows before the first reply; after it, a tip appears once and never again
+#    when shown or dismissed; two tips never show at once, and the refused one is not consumed; unreadable tip state
+#    counts as none shown. [B-NAV-038]
+# S1 [B-NAV-038]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S1 no tip before the first reply; one tip after, once [B-NAV-038]"
+- assertNotVisible: ${output.s.nudgeDismiss}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo first tip
+- assertNotVisible: ${output.s.nudgeDismiss}
+- extendedWaitUntil:
+    visible: ${'(?s).*ECHO first tip.*'}  # literal-ok: stub-model echo
+    timeout: 30000
+# confirm: which tip Flutter R shows first after the first reply (a "Hide tip" control either way)
+- extendedWaitUntil:
+    visible: ${output.s.nudgeDismiss}
+    timeout: 30000
+- tapOn: ${output.s.nudgeDismiss}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo second tip
+- extendedWaitUntil:
+    visible: ${'(?s).*ECHO second tip.*'}  # literal-ok: stub-model echo
+    timeout: 30000
+- assertNotVisible: ${output.s.nudgeDismiss}
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+- assertNotVisible: ${output.s.nudgeDismiss}
+# UNIT-ONLY: two tips never at once and the refused one is not consumed; unreadable tip state counts as none shown
+#   (corrupting the shared prefs file would also drop the saved server).
+
+# S2 Approve three asks of one kind: the "always allow" tip appears; finish a run that changed files: the "review" tip;
+#    wait one minute with notifications ready: the "leave the app" tip; a conversation at 80 percent context: the
+#    "compact" tip; none appear with automatic approvals, no changes, notifications unreachable or an early end;
+#    another card above the composer holds tips back. [B-NAV-039]
+# S2 [B-NAV-039]
+- tapOn:
+    text: ${output.s.chatsHomeNewChat}
+    label: "S2 always-allow, review, leave and compact tips at their moment [B-NAV-039]"
+- tapOn: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell ls
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- tapOn: ${output.s.kitRequestAllowOnce}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell ls
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- tapOn: ${output.s.kitRequestAllowOnce}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-shell ls
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- tapOn: ${output.s.kitRequestAllowOnce}
+- extendedWaitUntil:
+    visible: ${output.rc.nudgeApprovals}
+    timeout: 30000
+- tapOn: ${output.s.nudgeDismiss}
+# A run that changed files: the review tip.
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:files-edit
+- extendedWaitUntil:
+    visible: ${output.rc.nudgeReviewChangesCount}
+    timeout: 60000
+- tapOn: ${output.s.nudgeDismiss}
+# One minute into a run with notifications ready: the leave-the-app tip.
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+- extendedWaitUntil:
+    visible: ${output.c.nudgeLeave}
+    timeout: 60000
+- tapOn: ${output.s.nudgeDismiss}
+# 80 percent context: the compact tip.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: stub-model
+      ACTION: set-context-usage
+      ARGS: '{"percent": 80}'
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo fill context
+- extendedWaitUntil:
+    visible: ${output.rc.nudgeCompact}
+    timeout: 60000
+- tapOn: ${output.s.nudgeDismiss}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: stub-model
+      ACTION: set-context-usage
+      ARGS: '{"percent": 0}'
+# UNIT-ONLY: none with automatic approvals, no changes, notifications unreachable or an early end; another card above
+#   the composer holds tips back (NudgePolicy unit cases).
+- back
+
+# S3 Settings > Help > "Tips": the list replays tips; "Show tips again" resets all; the "Make it yours" tour starts from
+#    Help. [B-NAV-074]
+# S3 [B-NAV-074]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S3 Help > Tips replays, resets, and starts the tour [B-NAV-074]"
+- scrollUntilVisible:
+    element: ${output.s.tipsTitle}
+- tapOn: ${output.s.tipsTitle}
+- extendedWaitUntil:
+    visible: ${output.s.tipsIntro}
+    timeout: 15000
+- assertVisible: ${output.s.tipSendLaterTitle}
+- tapOn:
+    text: ${output.s.tipsShowMe}
+    index: 0
+- extendedWaitUntil:
+    visible: ${output.s.nudgeDismiss}
+    timeout: 15000
+- tapOn: ${output.s.nudgeDismiss}
+- runFlow:
+    when:
+      notVisible: ${output.s.tipsIntro}
+    commands:
+      - back
+- scrollUntilVisible:
+    element: ${output.s.discoverShowTipsAgain}
+- tapOn: ${output.s.discoverShowTipsAgain}
+- extendedWaitUntil:
+    visible: ${output.s.discoverShowTipsDone}
+    timeout: 15000
+# The tour starts from Help.
+- scrollUntilVisible:
+    element: ${output.s.tourMakeItYoursTitle}
+- tapOn: ${output.s.tourMakeItYoursTitle}
+- extendedWaitUntil:
+    visible: ${output.c.tourMakeItYoursColours}
+    timeout: 15000

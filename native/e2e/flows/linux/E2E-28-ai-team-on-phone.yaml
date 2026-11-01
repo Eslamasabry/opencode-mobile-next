@@ -1,0 +1,197 @@
+# E2E-28 AI Team on the phone
+# slice: after-switch   avd: A   fixtures: FX-OC2, FX-LINUXDL   snapshot: flutter-linux
+# rows: B-LINUX-172, B-LINUX-173, B-AGENT-276, B-AGENT-042
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-after-switch, d6, linux, linux-setup]
+---
+- runScript: ../../runner/out/strings.js
+# flutter-linux: built-in Linux, its OpenCode server running (the stop question applies), project app. No clearState.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+
+# S1 Open AI Team: the setup page shows its states in order (checking, a stop question when a server is running,
+#    failure, ready); while the check runs, execution is gated. [B-LINUX-172]
+# S1 [B-LINUX-172]
+- scrollUntilVisible:
+    element: ${output.s.thisPhoneAddTools}
+    label: "S1 AI Team setup: check, stop question, ready [B-LINUX-172]"
+- tapOn: ${output.s.thisPhoneAddTools}
+- tapOn: ${output.s.aiteamComponentTitle}
+- tapOn: ${output.s.phoneSetupStartAdd}
+- repeat:
+    times: 4
+    while:
+      notVisible: ${output.s.phoneTeamSetupTitle}
+    commands:
+      - extendedWaitUntil:
+          visible: ${output.s.phoneTeamSetupTitle}
+          timeout: 300000
+          optional: true
+- assertVisible: ${output.s.phoneTeamStepCheck}
+- assertVisible:
+    text: ${output.s.phoneTeamStepStop}
+    above: ${output.s.phoneTeamStepCheck}
+- extendedWaitUntil:
+    visible: ${output.s.phoneTeamStopTitle}
+    timeout: 300000
+# Gated while the check has not passed.
+- assertVisible: ${output.s.phoneTeamStopWaiting}
+- tapOn: ${output.s.phoneTeamStopConfirm}
+- extendedWaitUntil:
+    visible: ${output.s.phoneTeamDoneTitle}
+    timeout: 300000
+- assertVisible: ${output.s.phoneTeamDoneBody}
+# UNIT-ONLY: team work cannot start while the check runs (PhoneTeamSetup gate test).
+- back
+
+# S2 [fx] make the engine start hang and a reply never end: the check ends in a failure with a reason instead of
+#    waiting forever; progress shows while it runs; interrupted work offers "Resume". [B-LINUX-173]
+# S2 [B-LINUX-173]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-LINUXDL
+      ACTION: serve-variant
+      ARGS: '{"component": "aiteam", "variant": "engine-hangs"}'
+    label: "S2 a hung engine ends in a reason; work can resume [B-LINUX-173]"
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: hang-replies
+- scrollUntilVisible:
+    element: ${output.s.aiteamComponentTurnOff}
+- tapOn: ${output.s.aiteamComponentTurnOff}
+- tapOn: ${output.s.aiteamComponentTurnOff}
+- tapOn: ${output.s.aiteamComponentStart}
+- extendedWaitUntil:
+    visible: ${output.rc.aiteamComponentStageSoFar}
+    timeout: 60000
+- extendedWaitUntil:
+    visible: ${output.s.phoneTeamFailEngineTitle}
+    timeout: 300000
+- assertVisible: ${output.s.phoneTeamWhyEngine}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-LINUXDL
+      ACTION: restore
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: restore
+- tapOn: ${output.s.aiteamComponentStart}
+- extendedWaitUntil:
+    visible: ${output.s.aiteamComponentRunning}
+    timeout: 300000
+# confirm: work interrupted by the hang is listed with its Resume action on the team page.
+- tapOn: ${output.s.teamUiHomeTitle}
+- runFlow:
+    when:
+      visible: ${output.rc.teamProjectInterruptedRow}
+    commands:
+      - assertVisible: ${output.s.teamProjectResume}
+
+# S3 Give the team a task that reaches a gate: the board shows the gate row and capability; one notification per gate
+#    appears with fixed copy and ids only; answering dismisses it; with the app in the foreground nothing is posted.
+#    [B-AGENT-276]
+# S3 [B-AGENT-276]
+- tapOn:
+    text: ${output.s.teamProjectNew}
+    label: "S3 a gate shows on the board and as one notification [B-AGENT-276]"
+# confirm: the new-project goal field; the stub model's e2e:choice makes the lead ask a decision (a gate).
+- inputText: "e2e:choice"  # literal-ok: stub-model magic prompt as the team goal
+- hideKeyboard
+- tapOn: ${output.s.teamProjectPlan}
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.rc.teamUiRunTimelineGateOpened}
+    timeout: 300000
+# Fixed copy: the goal text never appears in the notification.
+- assertNotVisible: ".*e2e:choice.*"  # literal-ok: the goal typed above must not leak into the notification
+# adb: dumpsys-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: dumpsys-count
+      ARGS: '{"service": "notification", "match": "team"}'
+- assertTrue: ${output.hook.count == 1}
+- tapOn: ${output.rc.teamUiRunTimelineGateOpened}
+- extendedWaitUntil:
+    visible: ${output.s.teamUiHomeGateKindChoice}
+    timeout: 30000
+- tapOn: ${output.s.teamUiHomeNeedsYouAnswer}
+- tapOn: ${output.s.teamUiHomeGateOptions}
+# adb: dumpsys-count
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: dumpsys-count
+      ARGS: '{"service": "notification", "match": "team"}'
+- assertTrue: ${output.hook.count == 0}
+# UNIT-ONLY: with the app in the foreground a new gate posts nothing; ids only in the payload (TeamGateNotifier test).
+
+# S4 Turn the AI Team off: reopen the app, it stays off and the installed tools stay; "Stop" for now still allows
+#    recovery; "Remove" stops it and runs the remove script; "Start" re-enables a team that was off; recovery queued
+#    after removal stays off. [B-AGENT-042]
+# S4 [B-AGENT-042]
+- runFlow:
+    file: ../_sub/open-settings.yaml
+    label: "S4 off stays off, tools stay; Start and Remove [B-AGENT-042]"
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- scrollUntilVisible:
+    element: ${output.s.aiteamComponentTurnOff}
+- tapOn: ${output.s.aiteamComponentTurnOff}
+- assertVisible: ${output.s.aiteamComponentTurnOffTitle}
+- assertVisible: ${output.s.aiteamComponentTurnOffKept}
+- tapOn: ${output.s.aiteamComponentTurnOff}
+- extendedWaitUntil:
+    visible: ${output.s.aiteamComponentStopped}
+    timeout: 60000
+- stopApp
+- launchApp
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- scrollUntilVisible:
+    element: ${output.s.aiteamComponentStopped}
+- assertVisible: ${output.s.aiteamComponentStart}
+# The tools stay installed: AI Team can still be removed as a tool.
+- tapOn: ${output.s.thisPhoneAddTools}
+- assertVisible: ${output.t.thisPhoneRemoveTool.replace('{tool}', output.t.aiteamComponentTitle)}
+- back
+# Start re-enables it.
+- tapOn: ${output.s.aiteamComponentStart}
+- extendedWaitUntil:
+    visible: ${output.s.aiteamComponentRunning}
+    timeout: 60000
+# Remove stops it and runs the remove script.
+- tapOn: ${output.s.thisPhoneAddTools}
+- tapOn: ${output.t.thisPhoneRemoveTool.replace('{tool}', output.t.aiteamComponentTitle)}
+- assertVisible: ${output.s.thisPhoneRemoveTeamLost}
+- assertVisible: ${output.s.thisPhoneRemoveTeamKept}
+- tapOn: ${output.t.thisPhoneRemoveTool.replace('{tool}', output.t.aiteamComponentTitle)}
+- extendedWaitUntil:
+    visible: ${output.s.aiteamComponentAdd}
+    timeout: 60000
+- stopApp
+- launchApp
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.settingsV3ThisPhone}
+- tapOn: ${output.s.settingsV3ThisPhone}
+- assertNotVisible: ${output.s.aiteamComponentRunning}
+# UNIT-ONLY: "Stop" for now keeps recovery possible; a recovery queued before removal stays off (AiTeamComponent tests).

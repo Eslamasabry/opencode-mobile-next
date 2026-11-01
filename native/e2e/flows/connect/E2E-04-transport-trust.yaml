@@ -1,0 +1,273 @@
+# E2E-04 Transport trust: HTTPS, consent for plain HTTP, certificate pins
+# slice: 2   avd: A   fixtures: FX-OC2, FX-TLS   snapshot: base
+# rows: B-SEC-007, B-SEC-120, B-SEC-153, B-SEC-154
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-2, g2, connect]
+---
+- runScript: ../../runner/out/strings.js
+
+# S1 Add the HTTPS server with a trusted certificate: connects; the password is sent only over TLS (fixture log shows
+#    no Basic header on any plaintext hop). [B-SEC-007]
+# S1 [B-SEC-007]
+- runFlow:
+    file: ../_sub/start-clean.yaml
+    label: "S1 trusted HTTPS connects, password only over TLS [B-SEC-007]"
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: clear-request-log
+      ARGS: '{"server": "all"}'
+- tapOn: ${output.s.welcomeComputerConnect}
+- tapOn: ${output.s.e7SetupServerUrl}
+- inputText: ${output.fx.tlsTrustedUrl}
+- tapOn: ${output.s.e7SetupServerPassword}
+- inputText: ${SERVER_PASSWORD}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+# SUSPECTED-GAP: the trusted name needs the emulator's DNS pointed at the tailnet resolver (plan 14 §4.4 [U]).
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupProbeV2}
+    timeout: 30000
+- assertNotVisible: ${output.s.addServerCleartextConfirm}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: request-log
+      ARGS: '{"server": "all", "plaintext": true, "auth": true}'
+- assertTrue: ${output.fxr.count == 0}
+
+# S2 Add the plain-HTTP server on a private address with credentials: accepted without a prompt; a bare private
+#    address gains https first. Add the public-name HTTP server: see an explicit HTTP consent prompt naming the
+#    origin; loopback and https never prompt. [B-SEC-120]
+# S2 [B-SEC-120]
+- tapOn:
+    text: ${output.s.e7SetupServerUrl}
+    label: "S2 plain HTTP consent only for a public name [B-SEC-120]"
+- eraseText: 120
+- inputText: ${output.fx.httpPrivateUrl}
+- hideKeyboard
+# confirm: Flutter R shows a quiet private-network warning under the field; no consent sheet opens by itself.
+- assertNotVisible: ${output.s.serverTrustHttpTitle}
+- assertNotVisible: ${output.c.serverTrustHttpPublicBody}
+# UNIT-ONLY: which scheme a bare private address gains first (the URL normaliser test).
+# Loopback never prompts.
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 120
+- inputText: http://127.0.0.1:4097  # literal-ok: loopback address
+- hideKeyboard
+- assertNotVisible: ${output.s.addServerCleartextConfirm}
+# The public-name HTTP server asks, naming the origin.
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 120
+- inputText: ${output.fx.httpPublicUrl}
+- hideKeyboard
+- extendedWaitUntil:
+    visible: ${output.c.serverTrustHttpPublicBody}
+    timeout: 15000
+- tapOn: ${output.s.addServerCleartextConfirm}
+- extendedWaitUntil:
+    visible: ${output.s.serverTrustHttpTitle}
+    timeout: 15000
+- assertVisible: ${output.fx.httpPublicUrl}
+- tapOn: ${output.s.serverTrustHttpAccept}
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupProbeV2}
+    timeout: 30000
+- assertVisible: ${output.c.addServerCleartextConfirmed}
+
+# S3 Type URLs with embedded credentials, a query or a fragment into the address field: see them refused; a path is
+#    ignored for trust; the same host on another port is a separate trust decision; consent granted for port 4097
+#    does not apply to 4098. Try to attach a certificate pin to an HTTP address: refused (a pin cannot be downgraded
+#    to HTTP); a SHA-256 pin with colons is accepted, a truncated one is refused. [B-SEC-153]
+# S3 [B-SEC-153]
+- tapOn:
+    text: ${output.s.e7SetupServerUrl}
+    label: "S3 credentials, query and fragment refused; trust is per origin [B-SEC-153]"
+- eraseText: 120
+- inputText: ${output.fx.httpPublicUrl.replace('://', '://user:pw@')}
+- hideKeyboard
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupUrlCredentials}
+    timeout: 15000
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 160
+- inputText: ${output.fx.httpPublicUrl + '/?a=1'}
+- hideKeyboard
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupUrlQuery}
+    timeout: 15000
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 160
+- inputText: ${output.fx.httpPublicUrl + '/#frag'}
+- hideKeyboard
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupUrlQuery}
+    timeout: 15000
+# A path does not create a new trust decision: the same origin with a path is still confirmed.
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 160
+- inputText: ${output.fx.httpPublicUrl + '/some/path'}
+- hideKeyboard
+- assertNotVisible: ${output.c.serverTrustHttpPublicBody}  # confirm: Flutter R may ask to remove the path (e7SetupUrlPath)
+# Another port of the same host asks again.
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 160
+- inputText: ${output.fx.httpPublicUrl.replace(':8449', ':8450')}
+- hideKeyboard
+- extendedWaitUntil:
+    visible: ${output.c.serverTrustHttpPublicBody}
+    timeout: 15000
+- assertVisible: ${output.s.addServerCleartextConfirm}
+# UNIT-ONLY: pin format rules (colons accepted, truncated refused, no pin on http://); the editor has no pin field,
+# pins come only from "Check certificate" (server trust unit tests).
+
+# S4 Trust the self-signed server by pinning its fingerprint: connects. Replace its certificate with a different
+#    self-signed one: see the blocked-before-password message. The expired certificate and an untrusted certificate
+#    show two different messages. The redirecting server is not followed. [B-SEC-007]
+# S4 [B-SEC-007]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: swap-cert
+      ARGS: '{"server": "self-signed", "cert": "A"}'
+    label: "S4 pinned self-signed, changed, expired and redirect [B-SEC-007]"
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 160
+- inputText: ${output.fx.tlsSelfSignedUrl}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupCertificate}
+    timeout: 30000
+- tapOn: ${output.s.serverTrustCertificateInspect}
+- extendedWaitUntil:
+    visible: ${output.s.serverTrustCertificateTitle}
+    timeout: 30000
+- tapOn: ${output.s.serverTrustCertificateAccept}
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupProbeV2}
+    timeout: 30000
+- assertVisible: ${output.c.serverTrustCertificatePinned}
+# Save it: the pin must survive the restart in S5.
+- tapOn: ${output.s.e7SetupConnect}
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: swap-cert
+      ARGS: '{"server": "self-signed", "cert": "B"}'
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: clear-request-log
+      ARGS: '{"server": "self-signed"}'
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.s.serverTrustCertificateRecheck}
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: request-log
+      ARGS: '{"server": "self-signed", "auth": true}'
+- assertTrue: ${output.fxr.count == 0}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: swap-cert
+      ARGS: '{"server": "self-signed", "cert": "A"}'
+# Expired and untrusted read differently; the redirect is not followed.
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupAddServer}
+- tapOn: ${output.s.e7SetupServerUrl}
+- inputText: ${output.fx.tlsExpiredUrl}
+- tapOn: ${output.s.e7SetupServerPassword}
+- inputText: ${SERVER_PASSWORD}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- tapOn: ${output.s.serverTrustCertificateInspect}  # confirm: expiry shows on the certificate check
+- extendedWaitUntil:
+    visible: ${output.c.serverTrustCertificateValidityError}
+    timeout: 30000
+- back
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: clear-request-log
+      ARGS: '{"server": "all"}'
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 160
+- inputText: ${output.fx.tlsRedirectUrl}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.s.e7SetupTestConnection}
+    timeout: 30000
+- assertNotVisible: ${output.rc.e7SetupProbeV2}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-TLS
+      ACTION: request-log
+      ARGS: '{"server": "redirect-target"}'
+- assertTrue: ${output.fxr.count == 0}
+
+# S5 [adb] force-stop and relaunch, then rebuild the profile list (sign out of other profiles): the public-HTTP
+#    choice and the pin are still in force; a second profile on the same host does not inherit the pin; editing the
+#    host, port or scheme drops the pin and asks again; a hand-edited wrong-origin pin never restores trust.
+#    [B-SEC-154]
+# S5 [B-SEC-154]
+- runFlow:
+    file: ../_sub/restart-app.yaml
+    label: "S5 pin survives restart, not shared, dropped on edit [B-SEC-154]"
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+- assertNotVisible: ${output.s.serverTrustCertificateRecheck}
+- assertNotVisible: ${output.s.serverTrustCertificateChangedTitle}
+# A second profile on the same host does not inherit the pin.
+- runFlow: ../_sub/open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupAddServer}
+- tapOn: ${output.s.e7SetupServerUrl}
+- inputText: ${output.fx.tlsSelfSignedUrl}
+- tapOn: ${output.s.e7SetupServerPassword}
+- inputText: ${SERVER_PASSWORD}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupCertificate}
+    timeout: 30000
+- assertNotVisible: ${output.c.serverTrustCertificatePinned}
+# Editing the pinned profile's port drops the pin and asks again.
+- back
+- tapOn: ${output.s.kitMore}  # confirm: the pinned server's row menu (first row)
+- tapOn: ${output.s.e7SetupEdit}
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 160
+- inputText: ${output.fx.tlsSelfSignedUrl.replace(':8444', ':8445')}
+- hideKeyboard
+- assertNotVisible: ${output.c.serverTrustCertificatePinned}
+# The public-HTTP choice is still in force: its origin shows as confirmed, with no new consent.
+- tapOn: ${output.s.e7SetupServerUrl}
+- eraseText: 160
+- inputText: ${output.fx.httpPublicUrl}
+- hideKeyboard
+- assertNotVisible: ${output.s.serverTrustHttpTitle}  # confirm: per-profile vs per-origin consent after restart
+# UNIT-ONLY: a hand-edited wrong-origin pin in storage never restores trust (ProfileStore load test).

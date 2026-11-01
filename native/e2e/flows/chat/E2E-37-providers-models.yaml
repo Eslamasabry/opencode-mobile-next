@@ -1,0 +1,166 @@
+# E2E-37 Providers, models and how to connect them
+# slice: 5   avd: A   fixtures: FX-OC2   snapshot: base
+# rows: B-NAV-006, B-CHAT-066, B-NAV-034, B-AGENT-209, B-AGENT-172
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-5, g5, chat]
+---
+- runScript: ../../runner/out/strings.js
+
+# FX-OC2 for this flow has two providers: the stub provider (connected and loaded, model "E2E Stub" with id
+# "e2e-stub") and a second one that is connected but not loaded yet.
+# SUSPECTED-GAP: FX-OC2 needs a second, connected-but-unloaded provider on demand (fx set-providers).
+
+# S1 Open Providers > connect a provider: the connect methods are ordered headless (device code) first, key methods in
+#    between and the browser flow last; each hint says where its flow finishes. [B-NAV-006]
+# S1 [B-NAV-006]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: set-providers
+      ARGS: '{"preset": "stub-plus-unloaded"}'
+    label: "S1 connect methods: device code, keys, browser last [B-NAV-006]"
+- runFlow: ../_sub/connect-fx-oc2.yaml
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: ${output.t.settingsV3Providers}
+- tapOn:
+    text: ${output.s.settingsV3Providers}
+    index: 1
+- tapOn: ${output.s.pickerConnectProvider}  # confirm: the connect entry on the Providers page
+- tapOn: (?s).*OpenAI.*  # literal-ok: fixture fact providerWithAllMethods (request): a provider offering code, key and browser
+- extendedWaitUntil:
+    visible: ${output.c.e7SetupDeviceCodeHint}
+    timeout: 15000
+- assertVisible:
+    text: ${output.c.e7SetupApiKeyHint}
+    below: ${output.c.e7SetupDeviceCodeHint}
+- assertVisible:
+    text: ${output.c.e7SetupBrowserHint}
+    below: ${output.c.e7SetupApiKeyHint}
+- back
+- back
+- back
+- back
+
+# S2 Open a conversation while the model catalog is loading ([fx] delay it): the chip already names the model from its
+#    id; once loaded it shows the catalog name; a previously seen name wins until then. [B-CHAT-066]
+# S2 [B-CHAT-066]
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: delay-endpoint
+      ARGS: '{"method": "GET", "path": "/api/provider", "ms": 20000}'
+    label: "S2 the chip names the model while the catalog loads [B-CHAT-066]"
+- runFlow: ../_sub/restart-app.yaml
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- extendedWaitUntil:
+    visible: (?s).*e2e-stub.*  # literal-ok: fixture fact stubModelId (request): the chip falls back to the model id
+    timeout: 15000
+- extendedWaitUntil:
+    visible: (?s).*E2E Stub.*  # literal-ok: fixture fact stubModelName (request): the catalog name once loaded
+    timeout: 60000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: restore-endpoint
+      ARGS: '{"method": "GET", "path": "/api/provider"}'
+# UNIT-ONLY: a previously seen catalog name wins over the id until the catalog loads (model label cache test).
+
+# S3 Open the picker: it leads with the current model and its provider family; a provider-bound session does not
+#    inherit the global provider; the not-loaded notice reads naturally for one provider and for many. [B-NAV-034]
+# S3 [B-NAV-034]
+- tapOn:
+    text: (?s).*E2E Stub.*  # literal-ok: fixture fact stubModelName (request): the model chip
+    label: "S3 picker leads with the current model; not-loaded notice [B-NAV-034]"
+- extendedWaitUntil:
+    visible: ${output.s.modelPickerSheetTitle}
+    timeout: 15000
+- assertVisible: ${output.s.modelPickerInUse}
+- assertVisible:
+    text: (?s).*E2E Stub.*  # literal-ok: the current model leads the picker
+    below: ${output.s.modelPickerSheetTitle}
+- assertVisible: ${output.rc.e7ModelUiUnloadedProviders}
+# UNIT-ONLY: a provider-bound session ignores the global provider, and the plural wording for many unloaded providers
+# (picker tests).
+- back
+
+# S4 Pick a model of the not-loaded provider: "not loaded yet" shows only before a reload was tried, the reload runs,
+#    and the notice names the running replies a reload waits for. [B-AGENT-209]
+# S4 [B-AGENT-209]
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:slow-finish
+    label: "S4 not-loaded provider: reload runs, waits for running replies [B-AGENT-209]"
+- extendedWaitUntil:
+    visible: ${output.s.kitTurnLiveStopShort}
+    timeout: 30000
+- tapOn: (?s).*E2E Stub.*  # literal-ok: the model chip
+- tapOn: (?s).*Unloaded.*  # literal-ok: fixture fact unloadedProviderName (request): the not-loaded provider's row
+- extendedWaitUntil:
+    visible: ${output.rc.pickerProviderNotLoaded}
+    timeout: 15000
+- tapOn: ${output.s.modelChoiceReloadProviders}
+- extendedWaitUntil:
+    visible: ${output.rc.e7ModelUiProviderReloadWaits}
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible: ${output.rc.pickerProviderNotLoaded}
+    timeout: 60000
+- back
+
+# S5 Set a thinking level on a draft, switch model, send: the level reaches create; on an existing session the level
+#    applies after the model; "default" resets it; another provider's model is rejected for a provider-bound draft; a
+#    rejection keeps the draft. [B-AGENT-172]
+# S5 [B-AGENT-172]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S5 the thinking level reaches create; default resets it [B-AGENT-172]"
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: clear-request-log
+- tapOn: (?s).*E2E Stub.*  # literal-ok: the model chip
+- tapOn: ${output.s.modelPickerThinking}
+- tapOn: ${output.s.modelEffortHigh}
+- tapOn: (?s).*E2E Stub Think.*  # literal-ok: fixture fact stubThinkingModelName (request): a second stub model with levels
+- runFlow:
+    when:
+      visible: ${output.s.modelPickerUseChosenModel}
+    commands:
+      - tapOn: ${output.s.modelPickerUseChosenModel}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo thinking
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: wait-request
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "timeout_ms": 30000}'
+- assertTrue: ${output.fxr.last.variant == 'high'}
+# "Default" resets it.
+- tapOn: (?s).*E2E Stub Think.*  # literal-ok: the model chip
+- tapOn: ${output.s.modelPickerThinking}
+- tapOn: ${output.s.modelPickerReasonDefault}  # confirm: the "default" thinking choice
+- runFlow:
+    when:
+      visible: ${output.s.modelPickerUseChosenModel}
+    commands:
+      - tapOn: ${output.s.modelPickerUseChosenModel}
+- assertVisible: ${output.c.chatUiThinkingLevelDefault}
+# UNIT-ONLY: the level applies after the model on an existing session, another provider's model is rejected for a
+# provider-bound draft and the rejection keeps the draft (model selection tests).

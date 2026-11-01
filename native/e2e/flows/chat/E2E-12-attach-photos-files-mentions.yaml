@@ -1,0 +1,188 @@
+# E2E-12 Attach photos, files, spreadsheets and mentions
+# slice: 5   avd: A   fixtures: FX-OC2   snapshot: base
+# rows: B-MEDIA-007, B-MEDIA-006, B-CHAT-087, B-ANDR-051
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-5, g5, chat]
+---
+- runScript: ../../runner/out/strings.js
+
+# S1 Tap the attach control, "Photos": the picker is the system gallery; pick two photos (the gallery allows several up
+#    to the room left); pick with one slot left: single picker is used; cancel the picker: nothing is left pending.
+#    Large photos are scaled down before reading. [B-MEDIA-007]
+# S1 [B-MEDIA-007]
+- runFlow:
+    file: ../_sub/connect-fx-oc2.yaml
+    label: "S1 system gallery, several photos, cancel leaves nothing [B-MEDIA-007]"
+# adb: push-media
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: push-media
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- tapOn: ${output.s.kitComposerTools}  # the attach control ("Attach and more")
+- tapOn: ${output.s.composerTrayPhotos}
+# The Android photo picker (system UI): its items have no fixture names, so pick the first two by position.
+- extendedWaitUntil:
+    visible: (?s).*Photo.*  # literal-ok: Android photo picker item description (system UI)
+    timeout: 15000
+- tapOn:
+    text: (?s).*Photo.*  # literal-ok: Android photo picker item description (system UI)
+    index: 0
+- tapOn:
+    text: (?s).*Photo.*  # literal-ok: Android photo picker item description (system UI)
+    index: 1
+- tapOn: (?s)Add.*  # literal-ok: Android photo picker confirm button (system UI)
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 15000
+- assertVisible: ${output.rc.kitQueuedAttachments}  # confirm: how the composer counts two attached photos
+# Cancel the picker: nothing new is pending.
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerTrayPhotos}
+- back
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 15000
+- assertVisible: (?s).*2 attachments.*  # literal-ok: still the two from above (kitQueuedAttachments, count 2)
+# UNIT-ONLY: the single picker with one slot left (needs the attachment cap minus one) and the down-scaling of large
+# photos before reading (attachment pipeline test).
+
+# S2 Attach `data.xlsx`: it becomes CSV, one block per sheet; attach `report.docx`: paragraphs; a name-only or
+#    unsupported file is refused with a plain message rather than half-read. [B-MEDIA-006]
+# S2 [B-MEDIA-006]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S2 xlsx as CSV, docx as paragraphs, stub refused [B-MEDIA-006]"
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: clear-request-log
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerTrayFile}
+- tapOn: ${output.fx.downloadXlsx}
+- extendedWaitUntil:
+    visible: (?s).*data\.xlsx.*  # literal-ok: attachment chip for fixture file data.xlsx
+    timeout: 15000
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerTrayFile}
+- tapOn: ${output.fx.downloadDocx}
+- extendedWaitUntil:
+    visible: (?s).*report\.docx.*  # literal-ok: attachment chip for fixture file report.docx
+    timeout: 15000
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:echo attached
+- extendedWaitUntil:
+    visible: ECHO attached  # literal-ok: stub model reply to e2e:echo
+    timeout: 30000
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-log
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "body_contains": "attached"}'
+# The fixture reports the text parts it received: one CSV block per sheet of data.xlsx, the paragraphs of report.docx.
+- assertTrue: ${output.fxr.count == 1 && output.fxr.last.csv_blocks == output.fxr.fixture.xlsx_sheets}
+- assertTrue: ${output.fxr.last.docx_paragraphs >= 1}
+# A name-only stub is refused in plain words, not half-read.
+- tapOn: ${output.s.kitComposerTools}
+- tapOn: ${output.s.composerTrayFile}
+- tapOn: name-only  # literal-ok: fixture fact downloadNameOnly (request): the name-only stub file push-media adds
+- extendedWaitUntil:
+    visible: ${output.c.chatAttachmentUnsupported}  # confirm: the refusal sentence for a name-only file
+    timeout: 15000
+
+# S3 Type `@` and mention `README.md` with a line range; Send; the sent message carries the exact reference and range;
+#    delete the mention before sending and no file part is sent; typing a path that merely starts like a mention is not
+#    a mention. [B-CHAT-087]
+# S3 [B-CHAT-087]
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+    label: "S3 an @ mention sends the exact reference and range [B-CHAT-087]"
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: clear-request-log
+- tapOn: ${output.s.kitComposerField}
+- inputText: '@'
+- extendedWaitUntil:
+    visible: ${output.s.mentionSheetTitle}
+    timeout: 15000
+- tapOn: ${output.s.mentionSearchLabel}
+- inputText: README
+- tapOn: ${output.fx.fileReadme}
+# SUSPECTED-GAP: how a line range is given to a mention on Flutter R (typed after the path, e.g. README.md#L1-3).
+- inputText: '#L1-3 '  # confirm: the range syntax the composer accepts after a mention
+- tapOn: ${output.s.kitComposerSend}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: wait-request
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "timeout_ms": 30000}'
+- assertTrue: ${output.fxr.last.file_parts.length == 1 && output.fxr.last.file_parts[0].path == 'README.md'}
+- assertTrue: ${output.fxr.last.file_parts[0].start == 1 && output.fxr.last.file_parts[0].end == 3}
+# Deleting the mention before sending sends no file part.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: clear-request-log
+- tapOn: ${output.s.kitComposerField}
+- inputText: '@'
+- tapOn: ${output.s.mentionSearchLabel}
+- inputText: README
+- tapOn: ${output.fx.fileReadme}
+- tapOn: ${output.s.kitComposerField}
+- eraseText: 40
+- inputText: e2e:echo no-mention foo@bar/lib
+- assertNotVisible: ${output.s.mentionSheetTitle}
+- tapOn: ${output.s.kitComposerSend}
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: wait-request
+      ARGS: '{"method": "POST", "path": "/api/session/*/prompt_async", "timeout_ms": 30000}'
+- assertTrue: ${output.fxr.last.file_parts.length == 0}
+
+# S4 Browse to a folder from "Phone storage": `/sdcard` reads as internal storage, Up stops at internal storage, a
+#    missing folder is said to be missing. [B-ANDR-051]
+# S4 [B-ANDR-051]
+# SUSPECTED-GAP: on Flutter R the phone place of the folder browser may need the in-app Linux server.
+# adb: appop
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: appop
+      ARGS: '{"op": "MANAGE_EXTERNAL_STORAGE", "mode": "allow"}'
+    label: "S4 phone storage reads as internal storage; Up stops there [B-ANDR-051]"
+- back
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 15000
+- tapOn: ${output.s.chatsHomeNewChat}
+- tapOn: ${output.s.chatsNewProjectRow}  # confirm: the path to the folder browser from a new conversation
+- tapOn: ${output.s.projectFolderOpen}
+- tapOn: ${output.s.folderBrowserPlacePhone}
+- extendedWaitUntil:
+    visible: ${output.c.folderBrowserInternalStorage}
+    timeout: 30000
+- assertNotVisible: (?s).*/sdcard.*  # literal-ok: the raw path never shows
+- tapOn: Download  # literal-ok: Android's shared Download folder
+- tapOn: ${output.s.folderBrowserUp}
+- tapOn: ${output.s.folderBrowserUp}
+- assertVisible: ${output.c.folderBrowserInternalStorage}
+- assertNotVisible: (?s).*/storage/emulated.*  # literal-ok: Up does not climb above internal storage
+# UNIT-ONLY: a folder that vanished between listing and opening reads folderBrowserErrorMissing (folder browser test).

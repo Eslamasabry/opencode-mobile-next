@@ -1,0 +1,482 @@
+# E2E-25 Launcher shortcuts, Quick Settings tile, deep links and share-in
+# slice: 4   avd: A   fixtures: FX-OC2, FX-OC2-B   snapshot: base
+# rows: B-ANDR-030, B-ANDR-027, B-ANDR-028, B-ANDR-071, B-ANDR-073, B-NAV-064, B-NAV-061, B-NAV-062, B-ANDR-075, B-NAV-005
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-4, g4, surfaces, phone-smoke]
+---
+- runScript: ../../runner/out/strings.js
+
+- runFlow: ../_sub/connect-fx-oc2.yaml
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+# Six conversations to pin; their titles are fixture data passed in ARGS (the last one is long).
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: seed-sessions
+      ARGS: '{"project": "app", "titles": ["Pin one", "Pin two", "Pin three", "Pin four", "Pin five", "Pin six has a very long title that a launcher shortcut must cut short"]}'
+- evalScript: ${output.pins = ['Pin one', 'Pin two', 'Pin three', 'Pin four', 'Pin five', 'Pin six has a very long title that a launcher shortcut must cut short']}
+- evalScript: ${output.askEditNotes = '(?s).*' + output.s.android_native_ask_edit.replace('%1\\$s', output.fx.fileNotes.replace('.', '\\.')) + '.*'}
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+
+# S1 Pin 6 conversations. Long-press the launcher icon: the dynamic shortcuts show at most four, with titles only (long
+#    titles cut); change nothing and reopen: no republish; disconnect the server: the shortcuts and the Quick Settings
+#    tile are withdrawn; suspending keeps the last state; the tile carries only the activity count. [B-ANDR-030]
+# S1 [B-ANDR-030]
+# SUSPECTED-GAP: Flutter R pins only subagent rows (sessionRelationsPin on the Subagents screen); no pin action was
+#   found on Conversations rows. confirm: the pin control's label and place on the first Flutter run.
+- longPressOn:
+    text: ${output.pins[0]}
+    label: "S1 pin six, launcher shows at most four titles [B-ANDR-030]"
+- tapOn: ${output.rc.sessionRelationsPin}
+- longPressOn: ${output.pins[1]}
+- tapOn: ${output.rc.sessionRelationsPin}
+- longPressOn: ${output.pins[2]}
+- tapOn: ${output.rc.sessionRelationsPin}
+- longPressOn: ${output.pins[3]}
+- tapOn: ${output.rc.sessionRelationsPin}
+- longPressOn: ${output.pins[4]}
+- tapOn: ${output.rc.sessionRelationsPin}
+- longPressOn: ${output.pins[5]}
+- tapOn: ${output.rc.sessionRelationsPin}
+- pressKey: Home
+# confirm: the base snapshot keeps the app icon on the home screen (label from build.gradle.kts appLabel)
+- longPressOn: ${output.s.x_app_label}
+- extendedWaitUntil:
+    visible: ${output.s.android_shortcut_new_task_short}
+    timeout: 15000
+# Four dynamic shortcuts at most, titles only; the long title is cut, so its full text is not shown.
+- assertNotVisible: ${output.pins[5]}
+- assertVisible: ${output.pins[0]}
+- pressKey: Back
+# Reopen with nothing changed: no republish.
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2
+      ACTION: request-count
+      ARGS: '{"kind": "session-list"}'
+# UNIT-ONLY: no republish when nothing changed (ShortcutManager calls are not observable from Maestro).
+# The tile carries only the activity count.
+# adb: qs-tile
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: qs-tile
+      ARGS: '{"action": "add", "component": ".AttentionTileService"}'
+- runFlow: ../_sub/open-shade.yaml
+- swipe:
+    start: 50%, 10%
+    end: 50%, 70%
+- assertVisible: ${output.c.android_tile_label}
+- assertNotVisible: ${output.pins[0]}
+- runFlow: ../_sub/close-shade.yaml
+# Disconnect: the shortcuts and the tile are withdrawn.
+- launchApp
+- runFlow: ../_sub/open-settings.yaml
+- runFlow:
+    file: ../_sub/settings-search.yaml
+    env:
+      QUERY: disconnect
+- tapOn: ${output.s.e7SettingsUi8}
+- tapOn: ${output.s.e7SettingsUi8}
+- runFlow:
+    when:
+      visible: ${output.s.e7SettingsUi8}
+    commands:
+      - tapOn: ${output.s.e7SettingsUi8}
+- pressKey: Home
+- longPressOn: ${output.s.x_app_label}
+- assertNotVisible: ${output.pins[0]}
+- pressKey: Back
+- runFlow: ../_sub/open-shade.yaml
+- swipe:
+    start: 50%, 10%
+    end: 50%, 70%
+- assertNotVisible: ${'(?s).*\\d+ needs? you.*'}  # literal-ok: android plurals tile_need_you (not in values/strings.xml string table)
+- runFlow: ../_sub/close-shade.yaml
+# UNIT-ONLY: suspending the app keeps the last published state.
+# Reconnect for the rest of the flow.
+- launchApp
+- runFlow:
+    when:
+      visible: ${output.s.welcomeComputerConnect}
+    commands:
+      - runFlow:
+          file: ../_sub/connect-server.yaml
+          env:
+            ADDRESS: ${output.fx.serverAddress}
+            PASSWORD: ${SERVER_PASSWORD}
+- runFlow:
+    when:
+      visible: ${output.rc.settingsV3ConnectTo}
+    commands:
+      - tapOn: ${output.rc.settingsV3ConnectTo}
+- pressKey: Back
+- pressKey: Back
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+
+# S2 Tap a pinned-session shortcut while the app is closed: the app opens that conversation exactly once. Tap another
+#    while the app is running: it opens too; if two taps arrive, the newer wins; a stale cold-start shortcut is not
+#    opened after a newer live one. [B-ANDR-027]
+# S2 [B-ANDR-027]
+- stopApp:
+    label: "S2 pinned shortcut opens its conversation once, cold and warm [B-ANDR-027]"
+- pressKey: Home
+- longPressOn: ${output.s.x_app_label}
+- tapOn: ${output.pins[0]}
+- extendedWaitUntil:
+    visible: ${output.s.kitComposerField}
+    timeout: 30000
+- assertVisible: ${output.pins[0]}
+# Exactly once: one Back returns to Conversations, not to a second copy.
+- pressKey: Back
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 15000
+- pressKey: Home
+- longPressOn: ${output.s.x_app_label}
+- tapOn: ${output.pins[1]}
+- extendedWaitUntil:
+    visible: ${output.pins[1]}
+    timeout: 30000
+- assertVisible: ${output.s.kitComposerField}
+# UNIT-ONLY: two taps arriving together (newer wins) and a stale cold-start shortcut after a newer live one.
+
+# S3 Tap each static shortcut (connect, background settings, widget taps) cold and warm: each opens its screen once;
+#    an unknown action does nothing. [B-ANDR-028]
+# S3 [B-ANDR-028]
+# confirm: Flutter R's static shortcuts are Connect and New conversation (res/xml/shortcuts.xml); background settings
+#   and widget taps come from the widget (E2E-26).
+- stopApp:
+    label: "S3 static shortcuts open their screen once [B-ANDR-028]"
+- pressKey: Home
+- longPressOn: ${output.s.x_app_label}
+- tapOn: ${output.s.android_shortcut_connect_short}
+- extendedWaitUntil:
+    visible: ${output.s.e7SetupServers}
+    timeout: 30000
+- pressKey: Back
+- pressKey: Home
+- longPressOn: ${output.s.x_app_label}
+- tapOn: ${output.s.android_shortcut_new_task_short}
+- extendedWaitUntil:
+    visible: ${output.s.chatsNewChooseProject}
+    timeout: 30000
+- pressKey: Back
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 15000
+# NEEDS-HOOK: launch-extra: am start MainActivity with --es oc.shortcut bogus (an unknown action must do nothing)
+
+# S4 Cold-start from a session link `[adb] am start -d <session link>`: a launching link is consumed once and delivered
+#    only when the app is ready; a malformed or oversized link never becomes pending; with credentials in the link
+#    nothing is stored. A newer valid link replaces an older one. [B-ANDR-071, B-ANDR-073, B-NAV-064]
+# S4 [B-ANDR-071, B-ANDR-073, B-NAV-064]
+# Take two real links from the app: Conversation menu > Open on another phone > the link under "Link".
+- tapOn:
+    text: ${output.pins[2]}
+    label: "S4 session links: cold, once, malformed ignored, newer wins [B-ANDR-071, B-ANDR-073, B-NAV-064]"
+- tapOn: ${output.s.chatUiSessionMenu}
+- tapOn: ${output.s.handoffUiPhoneTitle}
+- copyTextFrom: ${'opencode-mobile://session.*'}  # literal-ok: the app's own session link scheme (lib/domain/session_handoff.dart)
+- evalScript: ${output.link1 = maestro.copiedText}
+- pressKey: Back
+- pressKey: Back
+- pressKey: Back
+- tapOn: ${output.pins[3]}
+- tapOn: ${output.s.chatUiSessionMenu}
+- tapOn: ${output.s.handoffUiPhoneTitle}
+- copyTextFrom: ${'opencode-mobile://session.*'}  # literal-ok: the app's own session link scheme
+- evalScript: ${output.link2 = maestro.copiedText}
+- stopApp
+# adb: view-link
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: view-link
+      ARGS: "${JSON.stringify({uri: output.link1})}"
+- extendedWaitUntil:
+    visible: ${output.pins[2]}
+    timeout: 30000
+- assertVisible: ${output.s.kitComposerField}
+- pressKey: Back
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 15000
+# Consumed once: a restart does not open it again.
+- runFlow: ../_sub/restart-app.yaml
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+- assertNotVisible: ${output.s.kitComposerField}
+# Malformed and oversized links never become pending.
+- stopApp
+# adb: view-link
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: view-link
+      ARGS: '{"uri": "opencode-mobile://session?profile=../etc&session=%00"}'
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+- assertNotVisible: ${output.s.kitComposerField}
+- stopApp
+# adb: view-link
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: view-link
+      ARGS: "${JSON.stringify({uri: output.link1 + '&pad=' + 'x'.repeat(3900)})}"
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+- assertNotVisible: ${output.s.kitComposerField}
+# Credentials in the link: refused, nothing stored.
+# adb: view-link
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: view-link
+      ARGS: '{"uri": "opencode-mobile://session/v2?origin=https%3A%2F%2Fuser%3Apw%40oc-fixture.ts.net&instance=00000000-0000-0000-0000-000000000000&session=ses_x"}'
+- runFlow:
+    when:
+      visible: ${output.c.sessionAddressFailCredentials}
+    commands:
+      - assertVisible: ${output.c.sessionAddressFailCredentials}
+- assertNotVisible: ${output.s.kitComposerField}
+# UNIT-ONLY: nothing from a credential-bearing link is written to storage.
+# A newer valid link replaces an older one.
+- stopApp
+# adb: view-link
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: view-link
+      ARGS: "${JSON.stringify({uri: output.link1})}"
+# adb: view-link
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: view-link
+      ARGS: "${JSON.stringify({uri: output.link2})}"
+- extendedWaitUntil:
+    visible: ${output.pins[3]}
+    timeout: 30000
+- pressKey: Back
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 15000
+
+# S5 Open a session link on a phone that does not know the host: the app keeps the link through "Add server" and
+#    sign-in and then lands on the session; with two saved servers matching the origin it asks which; a mismatched
+#    server never reuses secrets. [B-NAV-061]
+# S5 [B-NAV-061]
+# SUSPECTED-GAP: Flutter R's profile links name the sending phone's profile id; after a clean install the new profile
+#   id differs, so landing on the session after "Add server" may need the v2 address link (.ts.net HTTPS only).
+- launchApp:
+    clearState: true
+    stopApp: true
+    label: "S5 an unknown server's link survives Add server and sign-in [B-NAV-061]"
+# adb: view-link
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: view-link
+      ARGS: "${JSON.stringify({uri: output.link1})}"
+- extendedWaitUntil:
+    visible: ${output.c.handoffUiLinkServerMissing}
+    timeout: 30000
+- tapOn: ${output.s.handoffUiLinkAddServer}
+- tapOn: ${output.s.e7SetupServerUrl}
+- inputText: ${output.fx.serverAddress}
+- tapOn: ${output.s.e7SetupServerPassword}
+- inputText: ${SERVER_PASSWORD}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupProbeV2}
+    timeout: 30000
+- tapOn: ${output.s.e7SetupConnect}
+- extendedWaitUntil:
+    visible: ${output.pins[2]}
+    timeout: 60000
+# With two saved servers matching the origin it asks which.
+- pressKey: Back
+- runFlow: ../_sub/add-second-server.yaml
+- runScript:
+    file: ../_fx/fx.js
+    env:
+      TARGET: FX-OC2-B
+      ACTION: alias-origin
+      ARGS: '{"as": "FX-OC2"}'
+# adb: view-link
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: view-link
+      ARGS: "${JSON.stringify({uri: output.link1})}"
+- extendedWaitUntil:
+    visible: ${output.c.sessionAddressChooseBody}
+    timeout: 30000
+- pressKey: Back
+# UNIT-ONLY: a mismatched server never reuses secrets (no request with the other server's password).
+
+# S6 Share a conversation link with "Include this server's address": the option appears only when both gates allow
+#    it; the receiving phone follows the address flow. [B-NAV-062]
+# S6 [B-NAV-062]
+- tapOn:
+    text: ${output.pins[2]}
+    label: "S6 address option only where both gates allow it [B-NAV-062]"
+- tapOn: ${output.s.chatUiSessionMenu}
+- tapOn: ${output.s.handoffUiPhoneTitle}
+# FX-OC2 is plain HTTP on a private address: not a .ts.net HTTPS host, so the option is not offered.
+- assertVisible: ${output.c.sessionAddressUnsupportedHost}
+- assertNotVisible: ${output.s.sessionAddressDisclosure}
+# UNIT-ONLY: the receiving phone's address flow (needs a second device and FX-TLS's trusted .ts.net host).
+- pressKey: Back
+- pressKey: Back
+- pressKey: Back
+
+# S7 [adb] share text from another app into this app (cold, then while running, then twice quickly): the text opens a
+#    new conversation draft once; an empty share is ignored; a newer live share wins over a pending cold-start share
+#    and is never delivered twice; with no connection it says "Connect to a server and the shared text opens in a new
+#    conversation". [B-ANDR-075]
+# S7 [B-ANDR-075]
+- stopApp:
+    label: "S7 shared text opens one draft; newer wins; offline says why [B-ANDR-075]"
+# adb: share-text
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: share-text
+      ARGS: '{"text": "shared cold one"}'
+- extendedWaitUntil:
+    visible: ${'(?s).*shared cold one.*'}  # literal-ok: the text shared above
+    timeout: 30000
+- assertVisible: ${output.s.kitComposerField}
+- pressKey: Back
+- runFlow:
+    when:
+      visible: ${output.s.chatsHomeTitle}
+    commands:
+      - assertNotVisible: ${'(?s).*shared cold one.*'}  # literal-ok: never delivered twice
+# Running: a live share.
+# adb: share-text
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: share-text
+      ARGS: '{"text": "shared live two"}'
+- extendedWaitUntil:
+    visible: ${'(?s).*shared live two.*'}  # literal-ok: the text shared above
+    timeout: 30000
+- pressKey: Back
+# Twice quickly: the newer wins, once.
+# adb: share-text
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: share-text
+      ARGS: '{"text": "shared quick three"}'
+# adb: share-text
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: share-text
+      ARGS: '{"text": "shared quick four"}'
+- extendedWaitUntil:
+    visible: ${'(?s).*shared quick four.*'}  # literal-ok: the newer shared text
+    timeout: 30000
+- assertNotVisible: ${'(?s).*shared quick three.*'}  # literal-ok: the older shared text
+- pressKey: Back
+# Empty share: ignored.
+# adb: share-text
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: share-text
+      ARGS: '{"text": ""}'
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 15000
+- assertNotVisible: ${output.s.kitComposerField}
+# No connection: the plain sentence.
+- launchApp:
+    clearState: true
+    stopApp: true
+# adb: share-text
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: share-text
+      ARGS: '{"text": "shared offline five"}'
+- extendedWaitUntil:
+    visible: ${output.c.shareWaitingForServer}
+    timeout: 30000
+
+# S8 Tap a notification: it opens the typed destination once, in the right profile; tap it again from the shade:
+#    nothing happens twice. [B-NAV-005]
+# S8 [B-NAV-005]
+- runFlow:
+    file: ../_sub/connect-fx-oc2.yaml
+    label: "S8 a notification opens its destination once [B-NAV-005]"
+# adb: permission
+- runScript:
+    file: ../_hooks/adb.js
+    env:
+      HOOK: permission
+      ARGS: '{"perm": "POST_NOTIFICATIONS", "grant": true}'
+- runFlow:
+    file: ../_sub/new-conversation.yaml
+    env:
+      PROJECT: ${output.fx.projectApp}
+- runFlow:
+    file: ../_sub/send-prompt.yaml
+    env:
+      PROMPT: e2e:ask-edit
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- pressKey: Back
+- pressKey: Home
+- runFlow: ../_sub/open-shade.yaml
+- extendedWaitUntil:
+    visible: ${output.askEditNotes}
+    timeout: 30000
+- tapOn: ${output.askEditNotes}
+- extendedWaitUntil:
+    visible: ${output.s.kitRequestAllowOnce}
+    timeout: 30000
+- pressKey: Back
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 15000
+- runFlow: ../_sub/open-shade.yaml
+- runFlow:
+    when:
+      visible: ${output.askEditNotes}
+    commands:
+      - tapOn: ${output.askEditNotes}
+- runFlow: ../_sub/close-shade.yaml
+# Nothing twice: one Back from the conversation reaches Conversations.
+- runFlow:
+    when:
+      visible: ${output.s.kitComposerField}
+    commands:
+      - pressKey: Back
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 15000

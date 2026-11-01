@@ -1,0 +1,217 @@
+# E2E-39 Upgrade in place from the Flutter app to the native app
+# slice: 6   avd: A   fixtures: FX-OC2, FX-OC2-B, fx-proxy, FX-TLS, FX-LINUXDL, FX-GH   snapshot: base
+# rows: B-MIGR-004, B-MIGR-005, B-NAV-017, B-MIGR-006, B-MIGR-007, B-MIGR-008, B-MIGR-009, B-MIGR-010, B-MIGR-011, B-MIGR-013, B-MIGR-012
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-6, g6, upgrade, linux-setup]
+---
+- runScript: ../../runner/out/strings.js
+# How it runs (plan 14 §4.5, 05 §10.5):
+#   Flutter proof of Parts A and C:  run.py --app flutter --apk R.apk --flows E2E-39
+#   The bridge:                     run.py --app native  --apk R.apk --native-apk native.apk --flows E2E-39
+# Both start with the Flutter APK installed (--apk). Steps 3-13 run only when APP is native: the install-native hook
+# puts the native APK over the seeded Flutter app (never uninstall), and Part C judges the native app.
+# Snapshot base, not flutter-final-seeded: Part A is the seed and must itself be proven on Flutter (step 2), and a
+# snapshot named for one app is not loaded for the other (run.py loads "<app>-<snapshot>"). Part A sets up built-in
+# Linux, so this flow is tagged linux-setup (waits up to 300 s).
+
+# S1 Part A on the Flutter app: connect FX-OC2 with a password; set Arabic and Smallest text, style Soft with a tweak;
+#    turn on finished-reply notifications; save a draft with an attachment, a saved prompt, a stash, and an offline
+#    queued prompt; pin two conversations; accept an always-allow rule; pin a certificate; set up built-in Linux with
+#    a project and start the in-app server; add a scheduled prompt and place a widget and two shortcuts.
+# S1 []
+- runFlow:
+    file: _parts/partA-seed.yaml
+    label: "S1 Part A: seed the Flutter app"
+# confirm: "a saved prompt" and "a stash" are one feature on Flutter R (Saved prompts, filled by "Save prompt for
+#   later"); Part A makes one. The widget needs a place-widget hook (see Part A).
+
+# S2 Part B (baseline): run Part C on the Flutter app to prove the assertions themselves.
+# S2 []
+- runFlow:
+    file: _parts/partC-assert.yaml
+    label: "S2 Part B: Part C passes on the Flutter app"
+
+# S3 [adb] `adb install -r native.apk` (never uninstall): the install succeeds in place because package name and
+#    certificate match. [B-MIGR-004]
+# S3 [B-MIGR-004]
+# adb: install-native
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "S3 the native APK installs over the Flutter app [B-MIGR-004]"
+    commands:
+      # adb: install-native
+      - runScript:
+          file: ../_hooks/adb.js
+          env:
+            HOOK: install-native
+      - assertTrue: ${output.hook.installed == true}
+
+# S10 runs here, before S4: it needs the very first launch after the install.
+# S10 [adb] kill the native app during the first launch of a fresh upgrade and relaunch: the migration resumes,
+#     nothing is duplicated, and the Flutter source data is still present until verified. [B-MIGR-010]
+# S10 [B-MIGR-010]
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "S10 a first launch killed mid-migration resumes [B-MIGR-010]"
+    commands:
+      - launchApp
+      - stopApp
+      - launchApp
+      - extendedWaitUntil:
+          visible: ${output.s.x_ar_chats_home}
+          timeout: 60000
+# Nothing duplicated: Part C (S4) checks the pinned rows appear once.
+# UNIT-ONLY: the Flutter source data stays until verified (MigrationJournal tests; the J2 journey checks files as
+#   root).
+
+# S4 Launch the native app. It may show a short "updating" state but asks nothing and needs no sign-in. Part C: the
+#    Conversations list is shown, not the welcome screen, and no first-run guide or first-reply notification question
+#    appears: an upgraded device is never walked through first run. [B-MIGR-005, B-NAV-017]
+# S4 [B-MIGR-005, B-NAV-017]
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "S4 Part C on native: Conversations, no first run [B-MIGR-005, B-NAV-017]"
+    commands:
+      - runFlow: _parts/partC-assert.yaml
+      - assertTrue: ${output.pc.S4 == true}
+
+# S5 Part C: language Arabic, text Smallest, style Soft with the tweak, notification choices and tips state as set;
+#    nothing reset to defaults. [B-MIGR-005]
+# S5 [B-MIGR-005]
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "S5 settings kept: Arabic, Smallest, Soft + tweak, notifications [B-MIGR-005]"
+    commands:
+      - assertTrue: ${output.pc.S5 == true}
+# UNIT-ONLY: the tips state (shown counts) is carried over (Migration prefs test).
+
+# S6 Part C: FX-OC2 is connected with no password prompt; the pin is still in force. [B-MIGR-006]
+# S6 [B-MIGR-006]
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "S6 servers connect without a password; the pin holds [B-MIGR-006]"
+    commands:
+      - assertTrue: ${output.pc.S6 == true}
+
+# S7 Part C: the draft with its attachment, saved prompt, stash, pins, always-allow rule and queued prompt are all
+#    there; the queued prompt flushes once when online. [B-MIGR-007]
+# S7 [B-MIGR-007]
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "S7 drafts, saved prompt, pins, rule kept; the queued prompt sends once [B-MIGR-007]"
+    commands:
+      - assertTrue: ${output.pc.S7 == true}
+      # FX-OC2-B comes back: the queued prompt is sent exactly once.
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: fx-proxy
+            ACTION: restore-host
+            ARGS: "${JSON.stringify({host: output.fx.serverHost, port: parseInt(output.fx.serverBAddress.split(':')[1], 10)})}"
+      - tapOn: "Upgrade queued"  # literal-ok: title seeded in Part A
+      - extendedWaitUntil:
+          visible: "ECHO queued once"  # literal-ok: stub-model reply to the queued prompt
+          timeout: 60000
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-OC2-B
+            ACTION: request-log
+            ARGS: '{"text": "e2e:echo queued once"}'
+      - assertTrue: ${output.fxr.count == 1}
+      - back
+
+# S8 Part C: the in-app Linux and its project and server are there without reinstall; the server starts.
+#    [B-MIGR-008]
+# S8 [B-MIGR-008]
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "S8 Linux, project and server kept; the server starts [B-MIGR-008]"
+    commands:
+      - assertTrue: ${output.pc.S8 == true}
+
+# S9 Part C: attachments, voice model and reports from the old documents directory are readable and not
+#    re-downloaded. [B-MIGR-009]
+# S9 [B-MIGR-009]
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "S9 old attachments open from where they were [B-MIGR-009]"
+    commands:
+      - assertTrue: ${output.pc.S9 == true}
+# UNIT-ONLY: the voice model and saved reports are read in place, not downloaded again (Migration documents-dir test;
+#   Part A downloads no voice model).
+
+# S11 Part C: no password or token appears in `adb logcat`, the diagnostics report or any notification during the
+#     migration. [B-MIGR-011]
+# S11 [B-MIGR-011]
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "S11 no secret in the log during the migration [B-MIGR-011]"
+    commands:
+      - assertTrue: ${output.pc.S11 == true}
+# UNIT-ONLY: the diagnostics report and notification texts carry no secret (Migration audit redaction test).
+
+# S12 Part C: the schedule still fires, the widget redraws, the pinned shortcuts and Quick Settings tile are
+#     republished. [B-MIGR-013]
+# S12 [B-MIGR-013]
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "S12 schedule fires, shortcuts republished [B-MIGR-013]"
+    commands:
+      - assertTrue: ${output.pc.S12 == true}
+# UNIT-ONLY: the Quick Settings tile is republished (TileService request is not observable from Maestro).
+
+# S13 Open Settings > About: a new native release notice still appears through the in-app update line and opens the
+#     install flow; code push no longer applies. [B-MIGR-012]
+# S13 [B-MIGR-012]
+# SUSPECTED-GAP: the update feed is github.com/releases/latest; FX-GH answers only through the native stableQa
+#   updateFeedUrl override (a -qa companion). On stableRelease this step is expected to fail.
+- runFlow:
+    when:
+      true: ${APP == 'native'}
+    label: "S13 a newer release shows in Updates and opens the install [B-MIGR-012]"
+    commands:
+      - runScript:
+          file: ../_fx/fx.js
+          env:
+            TARGET: FX-GH
+            ACTION: publish-release
+            ARGS: '{"bump": "minor"}'
+      # The app is Arabic again after Part C: switch to English for this step.
+      - tapOn: ${output.s.x_ar_settings}
+      - tapOn: ${output.s.x_ar_settings_search}
+      - setClipboard:
+          text: ${output.t.x_ar_language}
+      - pasteText
+      - hideKeyboard
+      - tapOn: ${output.s.x_ar_language}
+      - tapOn: ${output.s.e7LocaleUiEnglish}
+      - back
+      - runFlow:
+          file: ../_sub/settings-search.yaml
+          env:
+            QUERY: ${output.t.appUpdatesTitle}
+      - tapOn:
+          text: ${output.s.appUpdatesTitle}
+          index: 1
+      - tapOn: ${output.s.appUpdateCheckNow}
+      - extendedWaitUntil:
+          visible: ${output.rc.appUpdateAvailableLine}
+          timeout: 60000
+      - tapOn: ${output.s.appUpdateUpdate}
+      - extendedWaitUntil:
+          visible: ${output.rc.appUpdateDownloadingTitle}
+          timeout: 30000
+      - tapOn: ${output.s.appUpdateCancel}
+# UNIT-ONLY: code push (Shorebird) no longer applies to the native app (AppUpdater source test).

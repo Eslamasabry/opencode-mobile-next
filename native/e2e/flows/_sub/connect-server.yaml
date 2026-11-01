@@ -1,0 +1,18 @@
+# From the welcome screen: connect a computer by typed address and password, land on Conversations.
+# env: ADDRESS (bare host:port or URL), PASSWORD
+appId: ${APP_ID}
+---
+- tapOn: ${output.s.welcomeComputerConnect}
+- tapOn: ${output.s.e7SetupServerUrl}
+- inputText: ${ADDRESS}
+- tapOn: ${output.s.e7SetupServerPassword}
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupProbeV2}
+    timeout: 30000
+- tapOn: ${output.s.e7SetupConnect}
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000

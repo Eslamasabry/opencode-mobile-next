@@ -1,0 +1,6 @@
+# In a conversation: type PROMPT into the composer and send it. env: PROMPT (raw text, e.g. "e2e:echo hi")
+appId: ${APP_ID}
+---
+- tapOn: ${output.s.kitComposerField}
+- inputText: ${PROMPT}
+- tapOn: ${output.s.kitComposerSend}
