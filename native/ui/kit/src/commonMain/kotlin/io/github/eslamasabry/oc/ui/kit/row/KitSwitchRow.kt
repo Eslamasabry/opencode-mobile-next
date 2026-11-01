@@ -25,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.compositeOver
+import io.github.eslamasabry.oc.ui.design.tokens.Alphas
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -170,13 +172,13 @@ internal fun KitSwitchTrack(checked: Boolean, active: Boolean) {
     val track by animateColorAsState(
         when {
             checked && active -> colors.accent
-            checked -> colors.text3
+            checked -> colors.accent.copy(alpha = Alphas.DISABLED).compositeOver(colors.surface3) // on, but fixed
             else -> colors.surface3
         },
         specs.quick(),
         label = "switch-track",
     )
-    val thumbColor = if (checked && active) colors.onAccent else if (checked) colors.surface1 else colors.text2
+    val thumbColor = if (checked) colors.onAccent else colors.text2
     val x by animateDpAsState(if (checked) (TRACK_W - THUMB - 4).dp else 4.dp, specs.quick(), label = "switch-thumb")
     Box(Modifier.size(TRACK_W.dp, TRACK_H.dp).clip(KitShapeId.Pill.toShape()).background(track)) {
         Box(Modifier.offset(x = x, y = ((TRACK_H - THUMB) / 2).dp).size(THUMB.dp).clip(KitShapeId.Circle.toShape()).background(thumbColor))

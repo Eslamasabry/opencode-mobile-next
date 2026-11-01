@@ -71,7 +71,7 @@ class PartBWords(
     val confirmTitle: String, val confirmAct: String, val confirmBody: String, val c1: String, val c2: String, val serverName: String,
     val renameTitle: String, val renameLabel: String, val rename: String, val chatName: String,
     val menuTitle: String, val pin: String, val markRead: String, val moveTo: String, val inbox: String, val archive: String, val noServer: String,
-    val undone: String, val screen: String,
+    val undone: String, val screen: String, val twoMin: String,
 ) {
     companion object {
         val En = PartBWords(
@@ -94,7 +94,7 @@ class PartBWords(
             renameTitle = "Rename chat?", renameLabel = "Name", rename = "Rename", chatName = "Fix the login bug",
             menuTitle = "Chat actions", pin = "Pin", markRead = "Mark as read", moveTo = "Move to", inbox = "Inbox", archive = "Archive",
             noServer = "Connect a server first",
-            undone = "Chat archived", screen = "Conversations",
+            undone = "Chat archived", screen = "Conversations", twoMin = "2 min",
         )
         val Ar = PartBWords(
             send = "إرسال", attach = "إرفاق", cancel = "إلغاء", run = "شغّل مرة أخرى", reason = "صِل بخادم أولًا", delete = "احذف المحادثة",
@@ -116,7 +116,7 @@ class PartBWords(
             renameTitle = "أتعيد تسمية المحادثة؟", renameLabel = "الاسم", rename = "أعد التسمية", chatName = "إصلاح خطأ الدخول",
             menuTitle = "إجراءات المحادثة", pin = "تثبيت", markRead = "علّمها مقروءة", moveTo = "انقل إلى", inbox = "الوارد", archive = "الأرشيف",
             noServer = "صِل بخادم أولًا",
-            undone = "أُرشفت المحادثة", screen = "المحادثات",
+            undone = "أُرشفت المحادثة", screen = "المحادثات", twoMin = "دقيقتين",
         )
 
         fun of(localeTag: String): PartBWords = if (localeTag.startsWith("ar")) Ar else En
@@ -162,7 +162,7 @@ fun ChipsScene(w: PartBWords, onRemove: () -> Unit = {}) {
             KitChip(w.chipQueued, kind = KitChipKind.Action, tone = KitChipTone.Active, onClick = {})
             KitChip(w.chipQueued, tone = KitChipTone.Attention)
         }
-        KitNeedsYou(KitNeedsYouReason.Decision, waiting = "2 min")
+        KitNeedsYou(KitNeedsYouReason.Decision, waiting = w.twoMin)
         KitNeedsYou(KitNeedsYouReason.Consent)
     }
 }

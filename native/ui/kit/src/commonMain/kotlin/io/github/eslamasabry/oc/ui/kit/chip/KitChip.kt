@@ -9,11 +9,12 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -85,8 +86,7 @@ public fun KitChip(
     val face: @Composable () -> Unit = {
         Row(
             Modifier.heightIn(min = tokens.chipHeight.dp)
-                .clip(shape)
-                .background(fill)
+                .background(fill, shape)
                 .border(1.dp, edge, shape)
                 .padding(horizontal = Space.S3.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -95,9 +95,11 @@ public fun KitChip(
             icon?.let { KitGlyph(it, colors.tone(words), (tokens.smallIcon - 4).dp) }
             KitText(label, role = TypeRole.Label, tone = words, kind = KitTextKind.Frame, maxLines = 1)
             if (kind == KitChipKind.Count && count != null) {
-                KitText(count.toString(), role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+                KitText(count.toString(), role = TypeRole.Label, tone = words, kind = KitTextKind.Frame)
             }
             if (kind == KitChipKind.Removable && onRemove != null) {
+                // The pill stays 32 dp; the remove target keeps its 48 dp and overhangs the pill evenly.
+                Box(Modifier.size(tokens.chipHeight.dp).wrapContentSize(unbounded = true), contentAlignment = Alignment.Center) {
                 KitTappable(
                     onClick = onRemove,
                     modifier =
@@ -106,6 +108,7 @@ public fun KitChip(
                             .semantics { contentDescription = removeLabel.orEmpty() },
                     shape = KitShapeId.Circle,
                 ) { KitGlyph(KitPartGlyphs.Close, colors.tone(words), (tokens.smallIcon - 6).dp) }
+                }
             }
         }
     }
