@@ -167,74 +167,77 @@ public fun ChatScreen(state: ChatUi, actions: ChatActions, composerHost: Compose
             )
         }
 
-    KitScreen(
-        modifier = modifier,
-        page = true,
-        topBar = {
-            KitTopBar(
-                title = state.title ?: stringResource(Res.string.commandUntitledChat),
-                exit = KitTopBarExit.Back,
-                exitLabel = stringResource(Res.string.kitTopBarBack),
-                onExit = actions::leaveRequested,
-                actions = listOf(KitLineAction(stringResource(Res.string.kitTopBarSearch), { actions.find(state.find?.query ?: "") }, testTag = "chat-find-open")),
-            )
-        },
-        status = state.status?.let { statusLine(it, actions) },
-        search = state.find?.let { find -> @Composable { FindBar(find, actions) } },
-        loading = state.phase == ChatPhase.Loading,
-        loadingLabel = stringResource(Res.string.chatLoadingConversation),
-        bottom = {
-            composerHost.Composer(
-                ComposerTarget(state.ref.profileId.raw, state.ref.sessionId.raw),
-                chrome,
-                Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-            )
-        },
-    ) {
-        when (val phase = state.phase) {
-            // First load: the skeleton under the loading line, never an empty-state text (plan 09 §6.5).
-            ChatPhase.Loading -> KitSkeletonRows(Modifier.testTag("chat-loading"), count = 6)
-            is ChatPhase.Failed ->
-                KitStateView(
-                    kind = KitStateKind.Error,
-                    title = stringResource(Res.string.chatLoadFailedTitle),
-                    body = stringResource(Res.string.chatLoadFailedBody),
-                    failure = phase.failure,
-                    onRetry = actions::retryLoad,
-                    modifier = Modifier.testTag("chat-load-error"),
+    Box(modifier.fillMaxSize()) {
+        KitScreen(
+            modifier = Modifier.fillMaxSize(),
+            page = true,
+            topBar = {
+                KitTopBar(
+                    title = state.title ?: stringResource(Res.string.commandUntitledChat),
+                    exit = KitTopBarExit.Back,
+                    exitLabel = stringResource(Res.string.kitTopBarBack),
+                    onExit = actions::leaveRequested,
+                    actions = listOf(KitLineAction(stringResource(Res.string.kitTopBarSearch), { actions.find(state.find?.query ?: "") }, testTag = "chat-find-open")),
                 )
-            ChatPhase.Live ->
-                Box(Modifier.fillMaxSize()) {
-                    ChatTranscriptList(
-                        rows = state.rows,
-                        live = state.live,
-                        pending = state.pending,
-                        words = words,
-                        listWords = listWords,
-                        list = list,
-                        reveal = reveal,
-                        motion = motion,
-                        onOpenMenu = actions::openMessageMenu,
-                        onRetrySend = actions::retrySend,
-                        modifier = Modifier.fillMaxSize(),
+            },
+            status = state.status?.let { statusLine(it, actions) },
+            search = state.find?.let { find -> @Composable { FindBar(find, actions) } },
+            loading = state.phase == ChatPhase.Loading,
+            loadingLabel = stringResource(Res.string.chatLoadingConversation),
+            bottom = {
+                composerHost.Composer(
+                    ComposerTarget(state.ref.profileId.raw, state.ref.sessionId.raw),
+                    chrome,
+                    Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
+                )
+            },
+        ) {
+            when (val phase = state.phase) {
+                // First load: the skeleton under the loading line, never an empty-state text (plan 09 §6.5).
+                ChatPhase.Loading -> KitSkeletonRows(Modifier.testTag("chat-loading"), count = 6)
+                is ChatPhase.Failed ->
+                    KitStateView(
+                        kind = KitStateKind.Error,
+                        title = stringResource(Res.string.chatLoadFailedTitle),
+                        body = stringResource(Res.string.chatLoadFailedBody),
+                        failure = phase.failure,
+                        onRetry = actions::retryLoad,
+                        modifier = Modifier.testTag("chat-load-error"),
                     )
-                    EarlierMessagesPill(state, list, itemsBelowRows, actions, Modifier.align(Alignment.TopCenter).padding(top = Space.S2.dp))
-                }
-        }
-    }
-
-    MessageMenu(state.menu, actions)
-    KitConfirm(
-        spec = confirmSpec(state.confirm),
-        onConfirm = {
-            when (latest.confirm) {
-                is ChatConfirm.DeleteMessage -> actions.confirmDelete()
-                ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
-                null -> Unit
+                ChatPhase.Live ->
+                    Box(Modifier.fillMaxSize()) {
+                        ChatTranscriptList(
+                            rows = state.rows,
+                            live = state.live,
+                            pending = state.pending,
+                            words = words,
+                            listWords = listWords,
+                            list = list,
+                            reveal = reveal,
+                            motion = motion,
+                            onOpenMenu = actions::openMessageMenu,
+                            onRetrySend = actions::retrySend,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                        EarlierMessagesPill(state, list, itemsBelowRows, actions, Modifier.align(Alignment.TopCenter).padding(top = Space.S2.dp))
+                    }
             }
-        },
-        onCancel = actions::dismissConfirm,
-    )
+        }
+
+        // The menu opens over the composer's end, where the action that opened it is under the thumb.
+        MessageMenu(state.menu, actions, Modifier.align(Alignment.BottomEnd))
+        KitConfirm(
+            spec = confirmSpec(state.confirm),
+            onConfirm = {
+                when (latest.confirm) {
+                    is ChatConfirm.DeleteMessage -> actions.confirmDelete()
+                    ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
+                    null -> Unit
+                }
+            },
+            onCancel = actions::dismissConfirm,
+        )
+    }
 }
 
 /**
@@ -270,7 +273,8 @@ private fun EarlierMessagesPill(state: ChatUi, list: TranscriptListState, itemsB
 @Composable
 private fun FindBar(find: FindUi, actions: ChatActions) {
     val field = rememberTextFieldState(find.query)
-    LaunchedEffect(field) { snapshotFlow { field.text.toString() }.collect { if (it != find.query) actions.find(it) } }
+    val query by rememberUpdatedState(find.query)
+    LaunchedEffect(field) { snapshotFlow { field.text.toString() }.collect { if (it != query) actions.find(it) } }
     Column(Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp).testTag("transcript-find-bar")) {
         KitField(field, stringResource(Res.string.transcriptFindHint), Modifier.testTag("transcript-find-input"))
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -290,7 +294,7 @@ private fun FindBar(find: FindUi, actions: ChatActions) {
 
 /** One action list per message (plan 09 §6.6). Copy waits for a kit copy part (request K-3): absent, never broken. */
 @Composable
-private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions) {
+private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Modifier) {
     val items =
         menu?.actions.orEmpty().filter { it != MessageAction.Copy }.map { action ->
             KitMenuItem(
@@ -310,7 +314,7 @@ private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions) {
         items = items,
         onDismissRequest = actions::closeMessageMenu,
         title = stringResource(Res.string.kitMessageActions),
-        modifier = Modifier.testTag("message-menu"),
+        modifier = modifier.testTag("message-menu"),
     ) {}
 }
 
