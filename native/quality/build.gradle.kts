@@ -10,7 +10,9 @@ dependencies {
     listOf(
         ":core:common", ":core:security", ":core:model", ":core:domain", ":core:testing",
         ":engine:connection", ":engine:transcript", ":ui:routes", ":ui:kit", ":ui:shell", ":feature:chats",
+        ":ui:kit-chat", ":feature:chat", // P3: the headless transcript stream test (K1 forbids test imports in features)
     ).forEach { testImplementation(project(it)) }
+    testImplementation(libs.compose.foundation)
     testImplementation(libs.metrox.viewmodel)
     testImplementation(libs.lifecycle.viewmodel)
     testImplementation(libs.kotlinx.coroutines.test)
