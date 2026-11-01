@@ -1,14 +1,16 @@
 package io.github.eslamasabry.oc.engine.transcript
 
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.engine.transcript.internal.RowBuilder
 import io.github.eslamasabry.oc.engine.transcript.internal.TranscriptModel
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
-import io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeRow
+import io.github.eslamasabry.oc.engine.transcript.state.OlderState
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
+import io.github.eslamasabry.oc.engine.transcript.state.TranscriptPhase
 import io.github.eslamasabry.oc.engine.transcript.state.WorkLineRow
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
-import io.github.eslamasabry.oc.engine.transcript.state.sessionIdOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -29,26 +31,40 @@ import kotlin.time.Duration.Companion.minutes
  * counts compared against the Flutter flush algorithm, and the engine's derive cost measured. Numbers are written to
  * build/p3/engine.json (synthetic sizes and timings only, never transcript content).
  */
+/** The session an adapted event belongs to (the events this adapter emits). */
+private val GatewayEvent.sessionIdOrNull: String?
+    get() =
+        when (this) {
+            is GatewayEvent.RunStarted -> sessionId.raw
+            is GatewayEvent.RunEnded -> sessionId.raw
+            is GatewayEvent.MessageUpserted -> message.sessionId
+            is GatewayEvent.PartUpserted -> part.sessionId
+            is GatewayEvent.PartDelta -> sessionId.raw
+            is GatewayEvent.Notice -> sessionId.raw
+            else -> null
+        }
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecordedStreamTest {
     private val session: String get() = Oc2Sse.adapt(RecordedStream.recordingBody()).firstNotNullOf { it.event.sessionIdOrNull }
 
     @Test
-    fun `the Flutter OC2 recording reduces to prompt, notice, work line, two replies and one footer`() {
+    fun `B-CHAT-121 the Flutter OC2 recording reduces to prompt, notice, one work line, the answer and one footer`() {
         val events = Oc2Sse.adapt(RecordedStream.recordingBody())
-        val model = TranscriptModel(session, TranscriptCounters())
-        events.forEach { model.apply(it.event) }
-        val s = model.derive(1)
-        // Newest first: footer, the second step's words, the work line, the first step's words, the notice, the prompt.
-        assertEquals(6, s.rows.size, s.rows.joinToString { it.key })
+        val h = Harness(session)
+        events.forEach { h.model.apply(it.event) }
+        val s = h.derive()
+        // Newest first: footer, the answer, the work line (the first step's passing "pong." folds into it with the
+        // read call and the thoughts: `_markFoldedWork`), the notice (filed before any step, so it stays), the prompt.
+        assertEquals(listOf("footer", "b", "work", "notice", "prompt"), s.rows.map { it.key.substringBefore(':') }, s.rows.joinToString { it.key })
         assertTrue(s.rows[0] is FooterRow)
         assertEquals("pong.", (s.rows[1] as BlockRow).text)
         val work = s.rows[2] as WorkLineRow
         assertEquals(1, work.calls)
+        assertEquals(1, work.folded)
         assertEquals(WorkState.Done, work.state)
-        assertEquals("pong.", (s.rows[3] as BlockRow).text)
-        assertTrue(s.rows[4] is NoticeRow)
-        assertTrue((s.rows[5] as PromptRow).text.startsWith("Reply with exactly the word: pong."))
+        assertTrue(s.rows[3] is NoticeRow)
+        assertTrue((s.rows[4] as PromptRow).text.startsWith("Reply with exactly the word: pong."))
         assertTrue(s.rows.filterIsInstance<BlockRow>().none { it.live })
         assertEquals(1, s.rows.map { it.turnId }.toSet().size) // the notice never started a turn
     }
@@ -82,7 +98,11 @@ class RecordedStreamTest {
 
             // The engine: the same frames at the same virtual times, through the lane and the 50 ms publisher.
             val parent = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
-            val handle = TranscriptHandle(sid, StandardTestDispatcher(testScheduler), parent, nowMs = { testScheduler.currentTime })
+            val handle =
+                TranscriptHandle(
+                    sid, StandardTestDispatcher(testScheduler), parent, nowMs = { Ev.T0 + testScheduler.currentTime },
+                    history = { _, _, _ -> Ev.page(emptyList()) }, autoLoad = false,
+                )
             parent.launch { handle.state.collect { } }
             runCurrent()
             val start = groups.firstKey()
@@ -107,7 +127,7 @@ class RecordedStreamTest {
             assertTrue(s.rows.filterIsInstance<BlockRow>().none { it.live })
             assertEquals(s.rows.size, s.rows.map { it.key }.toSet().size, "keys are unique")
             for (i in listOf(0, 1, s.rows.size / 2, s.rows.size - 1)) assertEquals(i, s.indexOf(s.rows[i].key))
-            assertEquals(0, handle.refreshRequests)
+            assertEquals(0, handle.counters.refreshRequests)
 
             // Derive cost on the JVM: replay synchronously, deriving at each reference publish point.
             val timing = deriveTimings(sid, timed, groups, changing)
@@ -132,13 +152,14 @@ class RecordedStreamTest {
         changing: BooleanArray,
     ): Map<String, Any> {
         val model = TranscriptModel(sid, TranscriptCounters())
+        val rows = RowBuilder(model, TranscriptCounters())
         val flush = FlutterFlushModel()
         val derives = ArrayList<Long>()
         var applyNs = 0L
         var rev = 0L
         fun timedDerive() {
             val t0 = System.nanoTime()
-            model.derive(++rev)
+            rows.derive(++rev, TranscriptPhase.Live, OlderState.None)
             derives += System.nanoTime() - t0
         }
         for ((at, idx) in groups) {

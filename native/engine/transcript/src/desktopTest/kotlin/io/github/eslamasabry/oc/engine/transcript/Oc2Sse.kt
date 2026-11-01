@@ -1,14 +1,20 @@
 package io.github.eslamasabry.oc.engine.transcript
 
-import io.github.eslamasabry.oc.engine.transcript.state.DeltaField
-import io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent
-import io.github.eslamasabry.oc.engine.transcript.state.MessageInfo
-import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
-import io.github.eslamasabry.oc.engine.transcript.state.Part
-import io.github.eslamasabry.oc.engine.transcript.state.PartType
-import io.github.eslamasabry.oc.engine.transcript.state.Role
-import io.github.eslamasabry.oc.engine.transcript.state.RunOutcome
-import io.github.eslamasabry.oc.engine.transcript.state.ToolStatus
+import io.github.eslamasabry.oc.core.common.ids.MessageId
+import io.github.eslamasabry.oc.core.common.ids.PartId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.domain.events.DeltaField
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.events.InterruptReason
+import io.github.eslamasabry.oc.core.domain.events.NoticeKind
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
+import io.github.eslamasabry.oc.core.model.transcript.MsgTime
+import io.github.eslamasabry.oc.core.model.transcript.Part
+import io.github.eslamasabry.oc.core.model.transcript.PartType
+import io.github.eslamasabry.oc.core.model.transcript.Role
+import io.github.eslamasabry.oc.core.model.transcript.ToolState
+import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -56,30 +62,32 @@ object Oc2Sse {
         val sid = d.str("sessionID") ?: ""
         val mid = d.str("assistantMessageID") ?: ""
         val ordinal = d["ordinal"]?.jsonPrimitive?.intOrNull ?: 0
+        val s = SessionId(sid)
         fun assistant(completed: Long? = null, finish: String? = null) =
-            MessageInfo(mid, sid, Role.Assistant, createdMs = f["created"]?.jsonPrimitive?.longOrNull,
-                completedMs = completed, finish = finish)
+            MessageInfo(mid, sid, Role.Assistant, time = MsgTime(f["created"]?.jsonPrimitive?.longOrNull, completed), finish = finish)
+        fun delta(part: String, field: DeltaField) =
+            GatewayEvent.PartDelta(s, MessageId(mid), PartId(part), field, d.str("delta") ?: "")
         return when (type) {
             "server.connected" -> listOf(GatewayEvent.Connected)
-            "session.execution.started" -> listOf(GatewayEvent.RunStarted(sid))
-            "session.step.started" -> listOf(GatewayEvent.RunStarted(sid), GatewayEvent.MessageUpserted(assistant()))
+            "session.execution.started" -> listOf(GatewayEvent.RunStarted(s))
+            "session.step.started" -> listOf(GatewayEvent.RunStarted(s), GatewayEvent.MessageUpserted(assistant()))
             "session.step.ended" ->
                 listOf(GatewayEvent.MessageUpserted(assistant(completed = f["created"]?.jsonPrimitive?.longOrNull, finish = d.str("finish"))))
-            "session.execution.succeeded" -> listOf(GatewayEvent.RunEnded(sid, RunOutcome.Succeeded))
-            "session.execution.interrupted" -> listOf(GatewayEvent.RunEnded(sid, RunOutcome.Interrupted(d.str("reason"))))
-            "session.text.started" -> listOf(GatewayEvent.PartUpserted(Part("text-$ordinal", mid, sid, PartType.Text)))
-            "session.text.delta" -> listOf(GatewayEvent.PartDelta(sid, mid, "text-$ordinal", DeltaField.Text, d.str("delta") ?: ""))
+            "session.execution.succeeded" -> listOf(GatewayEvent.RunEnded(s, RunOutcome.Succeeded))
+            "session.execution.interrupted" -> listOf(GatewayEvent.RunEnded(s, RunOutcome.Interrupted(interrupt(d.str("reason")))))
+            "session.text.started" -> listOf(GatewayEvent.PartUpserted(Part("text-$ordinal", mid, sid, PartType.Text, rawType = "text")))
+            "session.text.delta" -> listOf(delta("text-$ordinal", DeltaField.Text))
             "session.text.ended" ->
-                listOf(GatewayEvent.PartUpserted(Part("text-$ordinal", mid, sid, PartType.Text, text = d.str("text") ?: "", ended = true)))
-            "session.reasoning.started" -> listOf(GatewayEvent.PartUpserted(Part("reasoning-$ordinal", mid, sid, PartType.Reasoning)))
+                listOf(GatewayEvent.PartUpserted(Part("text-$ordinal", mid, sid, PartType.Text, rawType = "text", text = d.str("text") ?: "", ended = true)))
+            "session.reasoning.started" -> listOf(GatewayEvent.PartUpserted(Part("reasoning-$ordinal", mid, sid, PartType.Reasoning, rawType = "reasoning")))
             "session.reasoning.delta" ->
-                listOf(GatewayEvent.PartDelta(sid, mid, "reasoning-$ordinal", DeltaField.Reasoning, d.str("delta") ?: ""))
+                listOf(delta("reasoning-$ordinal", DeltaField.Reasoning))
             "session.reasoning.ended" ->
-                listOf(GatewayEvent.PartUpserted(Part("reasoning-$ordinal", mid, sid, PartType.Reasoning, text = d.str("text") ?: "", ended = true)))
+                listOf(GatewayEvent.PartUpserted(Part("reasoning-$ordinal", mid, sid, PartType.Reasoning, rawType = "reasoning", text = d.str("text") ?: "", ended = true)))
             "session.tool.input.started" ->
                 listOf(GatewayEvent.PartUpserted(tool(d, sid, mid, ToolStatus.Pending)))
             "session.tool.input.delta" ->
-                listOf(GatewayEvent.PartDelta(sid, mid, d.str("id") ?: "", DeltaField.ToolInputRaw, d.str("delta") ?: ""))
+                listOf(delta(d.str("id") ?: "", DeltaField.ToolInputRaw))
             "session.tool.input.ended" -> listOf(GatewayEvent.PartUpserted(tool(d, sid, mid, ToolStatus.Pending)))
             "session.tool.called" -> listOf(GatewayEvent.PartUpserted(tool(d, sid, mid, ToolStatus.Running)))
             "session.tool.success" -> listOf(GatewayEvent.PartUpserted(tool(d, sid, mid, ToolStatus.Completed, ended = true)))
@@ -91,19 +99,29 @@ object Oc2Sse {
                 if (item?.str("type") != "user") return emptyList()
                 val text = item["payload"]?.jsonObject?.str("text") ?: ""
                 listOf(
-                    GatewayEvent.MessageUpserted(MessageInfo(inboxId, sid, Role.User, createdMs = f["created"]?.jsonPrimitive?.longOrNull)),
-                    GatewayEvent.PartUpserted(Part("text-0", inboxId, sid, PartType.Text, text = text, ended = true)),
+                    GatewayEvent.MessageUpserted(MessageInfo(inboxId, sid, Role.User, time = MsgTime(f["created"]?.jsonPrimitive?.longOrNull, null))),
+                    GatewayEvent.PartUpserted(Part("text-0", inboxId, sid, PartType.Text, rawType = "text", text = text, ended = true)),
                 )
             }
             "session.instructions.updated" -> {
                 // Instruction text is never shown (T10): only the kind crosses. evt_… → msg_… id.
                 val id = (f.str("id") ?: "evt_").replaceFirst("evt_", "msg_")
-                listOf(GatewayEvent.Notice(sid, id, "$id-notice", NoticeKind.InstructionsUpdated))
+                listOf(GatewayEvent.Notice(s, MessageId(id), NoticeKind.InstructionsUpdated))
             }
             else -> emptyList() // usage, deleted, step.streamed, inbox.delivered: not transcript rows in P3
         }
     }
 
     private fun tool(d: JsonObject, sid: String, mid: String, status: ToolStatus, ended: Boolean = false): Part =
-        Part(d.str("id") ?: "", mid, sid, PartType.Tool, toolName = d.str("name"), toolStatus = status, ended = ended)
+        Part(d.str("id") ?: "", mid, sid, PartType.Tool, rawType = "tool", callId = d.str("id"), toolName = d.str("name"),
+            tool = ToolState(status), ended = ended)
+
+    private fun interrupt(reason: String?): InterruptReason =
+        when (reason) {
+            "user" -> InterruptReason.User
+            "inactivity" -> InterruptReason.Inactivity
+            "shutdown" -> InterruptReason.Shutdown
+            "superseded" -> InterruptReason.Superseded
+            else -> InterruptReason.Unknown
+        }
 }
