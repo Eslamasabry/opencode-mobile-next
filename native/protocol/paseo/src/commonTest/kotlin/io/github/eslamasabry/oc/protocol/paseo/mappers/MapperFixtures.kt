@@ -21,7 +21,7 @@ fun mapperAgent(
         "provider" to provider,
         "persistence" to mapOf("provider" to provider, "sessionId" to "native-$id"),
         "cwd" to cwd,
-        "model" to "claude-haiku-4-5",
+        "model" to "fixture-model-1",
         "title" to title,
         "status" to status,
         "createdAt" to "2026-09-19T03:35:27.840Z",

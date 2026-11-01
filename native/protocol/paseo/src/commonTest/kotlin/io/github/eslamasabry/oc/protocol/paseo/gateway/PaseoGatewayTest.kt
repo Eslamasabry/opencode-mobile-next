@@ -50,7 +50,7 @@ class PaseoGatewayTest {
         val sessions = h.gateway.allSessions().ok()
         assertEquals(listOf("a1"), sessions.map { it.id.raw })
         assertEquals("Agent a1", sessions.single().title)
-        assertEquals("claude/claude-haiku-4-5", sessions.single().model)
+        assertEquals("claude/fixture-model-1", sessions.single().model)
         assertEquals(0.04, sessions.single().cost)
         assertEquals("opencode-mobile", h.daemon.of("fetch_agents_request").single().obj("subscribe")?.str("subscriptionId"))
     }
@@ -63,7 +63,7 @@ class PaseoGatewayTest {
         h.daemon.push("agent_update", jsonOf("kind" to "upsert", "agent" to agentJson("a1", status = "running")))
         h.pump()
         val session = h.events.filterIsInstance<GatewayEvent.SessionUpserted>().first().session
-        assertEquals("claude-haiku-4-5", session.selection?.model?.modelId)
+        assertEquals("fixture-model-1", session.selection?.model?.modelId)
         assertEquals("default", session.selection?.agent)
         assertTrue(session.selection?.modelKnown == true)
     }

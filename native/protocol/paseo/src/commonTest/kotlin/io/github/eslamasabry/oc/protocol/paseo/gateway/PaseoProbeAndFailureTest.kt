@@ -96,16 +96,16 @@ class PaseoProbeAndFailureTest {
         h.daemon.handlers["set_agent_thinking_request"] = { "set_agent_thinking_response" to jsonOf("ok" to true) }
         h.daemon.handlers["set_agent_model_request"] = { "set_agent_model_response" to jsonOf("ok" to true) }
         h.daemon.handlers["send_agent_message_request"] = { "send_agent_message_response" to jsonOf("accepted" to true) }
-        h.gateway.prompt(SessionId("a1"), OutgoingPrompt("go", ModelSelection(ModelRef("claude", "claude-haiku-4-5"), "high"))).let { assertIs<Outcome.Ok<*>>(it) }
+        h.gateway.prompt(SessionId("a1"), OutgoingPrompt("go", ModelSelection(ModelRef("claude", "fixture-model-1"), "high"))).let { assertIs<Outcome.Ok<*>>(it) }
         val order = h.daemon.sent.map { it.str("type") }.filter { it == "set_agent_thinking_request" || it == "send_agent_message_request" }
         assertEquals(listOf("set_agent_thinking_request", "send_agent_message_request"), order)
         assertEquals("high", h.daemon.of("set_agent_thinking_request").single().str("thinkingOptionId"))
-        h.gateway.setSessionModel(SessionId("a1"), ModelRef("claude", "claude-haiku-4-5"), "").let { assertIs<Outcome.Ok<*>>(it) }
+        h.gateway.setSessionModel(SessionId("a1"), ModelRef("claude", "fixture-model-1"), "").let { assertIs<Outcome.Ok<*>>(it) }
         assertEquals("null", h.daemon.of("set_agent_thinking_request").last()["thinkingOptionId"].toString())
         // A refused thinking change stops the send.
         h.daemon.handlers["set_agent_thinking_request"] = { "rpc_error" to jsonOf("error" to "no such level") }
         val sends = h.daemon.of("send_agent_message_request").size
-        assertIs<Outcome.Failed>(h.gateway.prompt(SessionId("a1"), OutgoingPrompt("go", ModelSelection(ModelRef("claude", "claude-haiku-4-5"), "max"))))
+        assertIs<Outcome.Failed>(h.gateway.prompt(SessionId("a1"), OutgoingPrompt("go", ModelSelection(ModelRef("claude", "fixture-model-1"), "max"))))
         assertEquals(sends, h.daemon.of("send_agent_message_request").size)
     }
 
