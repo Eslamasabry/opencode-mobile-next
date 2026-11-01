@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -161,32 +162,44 @@ internal fun ComposerHalo(
     }
     Box(
         modifier
+            // The halo spills past the pill: its layer gets that room so the blur is not cut at the pill's rectangle.
+            .outset(HALO_ROOM_DP.dp)
             .graphicsLayer { alpha = strength() * (breath?.invoke() ?: GlowGeometry.HALO_STILL) }
+            .padding(HALO_ROOM_DP.dp)
             .dropShadow(shape, shadow),
     )
 }
+
+/** Room around the pill for the halo's blur and spread (18 dp blur + 1 dp spread, rounded up). */
+private const val HALO_ROOM_DP = 24
+
+/** Lays the node out [by] larger on every side than the space it is given, centred on it (for glows that spill). */
+private fun Modifier.outset(by: Dp): Modifier =
+    layout { measurable, constraints ->
+        val pad = by.roundToPx()
+        val p = measurable.measure(
+            constraints.copy(
+                minWidth = constraints.minWidth + 2 * pad, maxWidth = constraints.maxWidth + 2 * pad,
+                minHeight = constraints.minHeight + 2 * pad, maxHeight = constraints.maxHeight + 2 * pad,
+            ),
+        )
+        layout(p.width - 2 * pad, p.height - 2 * pad) { p.place(-pad, -pad) }
+    }
 
 /** The Soft ring's blurred wash on its own layer (a constant blur; the sweep turns by a canvas rotation). */
 @Composable
 private fun SoftWash(strength: () -> Float, phase: () -> Float, colours: GlowColours, corner: Dp, modifier: Modifier) {
     Box(
         modifier
-            .layout { measurable, constraints ->
-                // The wash spills outside the pill: give its layer room so the blur is not cut at the pill's edge.
-                val pad = (GlowGeometry.SOFT_WASH_DP / 2f + GlowGeometry.SOFT_WASH_BLUR_DP * 2f).dp.roundToPx()
-                val p = measurable.measure(constraints.copy(
-                    minWidth = constraints.minWidth + 2 * pad, maxWidth = constraints.maxWidth + 2 * pad,
-                    minHeight = constraints.minHeight + 2 * pad, maxHeight = constraints.maxHeight + 2 * pad,
-                ))
-                layout(p.width - 2 * pad, p.height - 2 * pad) { p.place(-pad, -pad) }
-            }
+            // The wash spills outside the pill: its layer gets room so the blur is not cut at the pill's edge.
+            .outset((GlowGeometry.SOFT_WASH_DP / 2f + GlowGeometry.SOFT_WASH_BLUR_DP * 2f).dp)
             .graphicsLayer {
                 val blur = GlowGeometry.SOFT_WASH_BLUR_DP.dp.toPx()
                 renderEffect = BlurEffect(blur, blur, TileMode.Decal)
                 alpha = strength()
             }
             .drawWithCache {
-                val pad = (GlowGeometry.SOFT_WASH_DP / 2f + GlowGeometry.SOFT_WASH_BLUR_DP * 2f).dp.toPx()
+                val pad = (GlowGeometry.SOFT_WASH_DP / 2f + GlowGeometry.SOFT_WASH_BLUR_DP * 2f).dp.roundToPx().toFloat()
                 val pill = Size(size.width - 2 * pad, size.height - 2 * pad)
                 val band = ringBand(pill, corner.toPx(), GlowGeometry.SOFT_WASH_DP.dp.toPx(), Offset(pad, pad))
                 val sweep = Brush.sweepGradient(
