@@ -1,0 +1,4730 @@
+{
+  "api2/agents.json": [
+    {
+      "description": "The default agent. Executes tools based on configured permissions.",
+      "hidden": false,
+      "id": "build",
+      "mode": "primary",
+      "name": "Build",
+      "permissions": [
+        {
+          "action": "*",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "ask",
+          "resource": "*"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env.*"
+        },
+        {
+          "action": "read",
+          "effect": "allow",
+          "resource": "*.env.example"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/tmp/opencode/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.config/opencode/*"
+        },
+        {
+          "action": "question",
+          "effect": "allow",
+          "resource": "*"
+        }
+      ],
+      "selectable": true
+    },
+    {
+      "description": "General-purpose agent for researching complex questions and executing multi-step tasks. Use this agent to execute multiple units of work in parallel.",
+      "hidden": false,
+      "id": "general",
+      "mode": "subagent",
+      "name": "General",
+      "permissions": [
+        {
+          "action": "*",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "ask",
+          "resource": "*"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env.*"
+        },
+        {
+          "action": "read",
+          "effect": "allow",
+          "resource": "*.env.example"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/tmp/opencode/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.config/opencode/*"
+        },
+        {
+          "action": "question",
+          "effect": "deny",
+          "resource": "*"
+        },
+        {
+          "action": "subagent",
+          "effect": "deny",
+          "resource": "*"
+        }
+      ],
+      "selectable": false
+    },
+    {
+      "description": "Fast agent specialized for exploring codebases. Use this when you need to quickly find files by patterns (eg. \"src/components/**/*.tsx\"), search code for keywords (eg. \"API endpoints\"), or answer questions about the codebase (eg. \"how do API endpoints work?\"). When calling this agent, specify the desired thoroughness level: \"quick\" for basic searches, \"medium\" for moderate exploration, or \"very thorough\" for comprehensive analysis across multiple locations and naming conventions.",
+      "hidden": false,
+      "id": "explore",
+      "mode": "subagent",
+      "name": "Explore",
+      "permissions": [
+        {
+          "action": "*",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "ask",
+          "resource": "*"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env.*"
+        },
+        {
+          "action": "read",
+          "effect": "allow",
+          "resource": "*.env.example"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/tmp/opencode/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.config/opencode/*"
+        },
+        {
+          "action": "*",
+          "effect": "deny",
+          "resource": "*"
+        },
+        {
+          "action": "grep",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "glob",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "webfetch",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "websearch",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "read",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env.*"
+        },
+        {
+          "action": "read",
+          "effect": "allow",
+          "resource": "*.env.example"
+        },
+        {
+          "action": "subagent",
+          "effect": "deny",
+          "resource": "*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "ask",
+          "resource": "*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/tmp/opencode/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.config/opencode/*"
+        }
+      ],
+      "selectable": false
+    },
+    {
+      "hidden": true,
+      "id": "compaction",
+      "mode": "primary",
+      "name": "Compaction",
+      "permissions": [
+        {
+          "action": "*",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "ask",
+          "resource": "*"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env.*"
+        },
+        {
+          "action": "read",
+          "effect": "allow",
+          "resource": "*.env.example"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/tmp/opencode/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.config/opencode/*"
+        },
+        {
+          "action": "*",
+          "effect": "deny",
+          "resource": "*"
+        }
+      ],
+      "selectable": false
+    },
+    {
+      "hidden": true,
+      "id": "title",
+      "mode": "primary",
+      "name": "Title",
+      "permissions": [
+        {
+          "action": "*",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "ask",
+          "resource": "*"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env.*"
+        },
+        {
+          "action": "read",
+          "effect": "allow",
+          "resource": "*.env.example"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/tmp/opencode/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.config/opencode/*"
+        },
+        {
+          "action": "*",
+          "effect": "deny",
+          "resource": "*"
+        }
+      ],
+      "selectable": false
+    },
+    {
+      "hidden": true,
+      "id": "summary",
+      "mode": "primary",
+      "name": "Summary",
+      "permissions": [
+        {
+          "action": "*",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "ask",
+          "resource": "*"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env.*"
+        },
+        {
+          "action": "read",
+          "effect": "allow",
+          "resource": "*.env.example"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/tmp/opencode/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.config/opencode/*"
+        },
+        {
+          "action": "*",
+          "effect": "deny",
+          "resource": "*"
+        }
+      ],
+      "selectable": false
+    },
+    {
+      "description": "Read-only agent for exploring the codebase and planning work before implementation.",
+      "hidden": false,
+      "id": "plan",
+      "mode": "primary",
+      "name": "Plan",
+      "permissions": [
+        {
+          "action": "*",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "ask",
+          "resource": "*"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env"
+        },
+        {
+          "action": "read",
+          "effect": "ask",
+          "resource": "*.env.*"
+        },
+        {
+          "action": "read",
+          "effect": "allow",
+          "resource": "*.env.example"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/tmp/opencode/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.config/opencode/*"
+        },
+        {
+          "action": "question",
+          "effect": "allow",
+          "resource": "*"
+        },
+        {
+          "action": "edit",
+          "effect": "deny",
+          "resource": "*"
+        },
+        {
+          "action": "edit",
+          "effect": "allow",
+          "resource": "/home/dev/.opencode/plan/*"
+        },
+        {
+          "action": "external_directory",
+          "effect": "allow",
+          "resource": "/home/dev/.opencode/plan/*"
+        }
+      ],
+      "selectable": true
+    }
+  ],
+  "api2/commands.json": [
+    {
+      "description": "guided AGENTS.md setup",
+      "name": "init"
+    },
+    {
+      "description": "review changes [commit|branch|pr], defaults to uncommitted",
+      "name": "review"
+    },
+    {
+      "description": "Load OpenTUI skill and get contextual guidance for building terminal user interfaces",
+      "name": "opentui"
+    }
+  ],
+  "api2/error_form_invalid_answer.json": {
+    "message": "Invalid option for form field: env",
+    "tag": "FormInvalidAnswerError"
+  },
+  "api2/error_not_found.json": {
+    "message": "Session not found: ses_doesnotexist",
+    "tag": "SessionNotFoundError"
+  },
+  "api2/events.sse": [
+    {
+      "event": {
+        "v": "ServerConnected"
+      },
+      "id": "evt_04acb4575001Asi0ADJYVxL8wV",
+      "type": "server.connected"
+    },
+    {
+      "created": 1787961231720,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 0,
+        "version": 1
+      },
+      "event": {
+        "location": {
+          "directory": "/home/dev/projects/oc_app"
+        },
+        "projectID": "5e625357c202857bf3cd6f591d76b2bec8b5093d",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "slug": "glowing-garden",
+        "subpath": "",
+        "title": "api2 fixture probe",
+        "v": "SessionCreated",
+        "version": "0.0.0-beta-18600"
+      },
+      "id": "evt_04acb4968001OprCAefWhP9kgG",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.created"
+    },
+    {
+      "created": 1787961231753,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 1,
+        "version": 1
+      },
+      "event": {
+        "delivery": "steer",
+        "inboxID": "msg_04acb4987001Ei5pD9H8pLWeKb",
+        "item": {
+          "delivery": "steer",
+          "id": "msg_04acb4987001Ei5pD9H8pLWeKb",
+          "payload": {
+            "files": [
+              {
+                "data": "dGlueSBhdHRhY2htZW50",
+                "mime": "text/plain",
+                "name": "att.txt",
+                "source": {
+                  "type": "inline"
+                }
+              }
+            ],
+            "text": "Reply with exactly the word: pong. Then use the read tool to read the file README.md (just the first 5 lines)."
+          },
+          "promptText": "Reply with exactly the word: pong. Then use the read tool to read the file README.md (just the first 5 lines).",
+          "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+          "type": "user"
+        },
+        "phase": "enqueued",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionInbox"
+      },
+      "id": "evt_04acb4989001vfE23K8ZhCehtl",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.inbox.enqueued"
+    },
+    {
+      "created": 1787961231756,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 2,
+        "version": 1
+      },
+      "event": {
+        "phase": "started",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionExecution"
+      },
+      "id": "evt_04acb498c0014ckK5TEh8OaP7Y",
+      "type": "session.execution.started"
+    },
+    {
+      "created": 1787961231764,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 3,
+        "version": 2
+      },
+      "event": {
+        "delta": {
+          "core/codemode": "19adcab9b2f5b0e7e23aaff1bf8c147de8d0e552b38f2cc5c4450c63cb426dde",
+          "core/date": "6c8d2d3c2bccea20b61c77ecfb8cd07045d2ec5c99a03b6f797d7e08ece08134",
+          "core/environment": "1c3c141109fdace7c3c226a44af61c980b03dd29cee68f57674d5909f96a16e1",
+          "core/mcp-guidance": "ebfb2cdb7f306bc024f59985a6d693126c41c28f4ddadb5905c67683b520c1f7",
+          "core/skill-guidance": "07796df8f9cffe158f8c00c2a5108bd95600a257a4c8df6ea1c15461df7524fe"
+        },
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionInstructionsUpdated"
+      },
+      "id": "evt_04acb4994001NigwglesAbmvXG",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "metadata": {
+        "instructions": {
+          "initial": true
+        }
+      },
+      "type": "session.instructions.updated"
+    },
+    {
+      "created": 1787961231766,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 4,
+        "version": 1
+      },
+      "event": {
+        "inboxID": "msg_04acb4987001Ei5pD9H8pLWeKb",
+        "phase": "delivered",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionInbox"
+      },
+      "id": "evt_04acb499600175nRk2niCmounW",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.inbox.delivered"
+    },
+    {
+      "created": 1787961233596,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 5,
+        "version": 1
+      },
+      "event": {
+        "agent": "build",
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "model": "openai/gpt-5.6-sol",
+        "phase": "started",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "snapshot": "59785f455ee0e35afacfc27ec31ae20efab265a6",
+        "v": "SessionStep"
+      },
+      "id": "evt_04acb50bc001K8rthbZFsACbCK",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.step.started"
+    },
+    {
+      "created": 1787961233603,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 6,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "ordinal": 0,
+        "phase": "started",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionReasoning"
+      },
+      "id": "evt_04acb50c3001VatxCGnwEhDpVU",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.reasoning.started"
+    },
+    {
+      "created": 1787961234437,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 7,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "ordinal": 0,
+        "phase": "ended",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "text": "",
+        "v": "SessionReasoning"
+      },
+      "id": "evt_04acb5405001vi9hQxLTc5OFR5",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.reasoning.ended"
+    },
+    {
+      "created": 1787961234442,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 8,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "ordinal": 0,
+        "phase": "started",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionText"
+      },
+      "id": "evt_04acb540a00177I3K2bZkbp3uU",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.text.started"
+    },
+    {
+      "created": 1787961234620,
+      "event": {
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "delta": "pong.",
+        "ordinal": 0,
+        "phase": "delta",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionText"
+      },
+      "id": "evt_04acb54bc001sprst9G0UxsGaB",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.text.delta"
+    },
+    {
+      "created": 1787961234621,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 9,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "ordinal": 0,
+        "phase": "ended",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "text": "pong.",
+        "v": "SessionText"
+      },
+      "id": "evt_04acb54bd001hR7CkMcuK47tve",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.text.ended"
+    },
+    {
+      "created": 1787961234628,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 10,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "callID": "call_qdg2bCIuJ1zMqEwatSi1wXOz",
+        "name": "read",
+        "phase": "started",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionToolInput"
+      },
+      "id": "evt_04acb54c4001iiboBvdYYEsj5r",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.tool.input.started"
+    },
+    {
+      "created": 1787961234944,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 11,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "callID": "call_qdg2bCIuJ1zMqEwatSi1wXOz",
+        "phase": "ended",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "text": "{\"path\":\"README.md\",\"offset\":1,\"limit\":5}",
+        "v": "SessionToolInput"
+      },
+      "id": "evt_04acb5600001GxTC6osEfSWs8s",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.tool.input.ended"
+    },
+    {
+      "created": 1787961234951,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 12,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "callID": "call_qdg2bCIuJ1zMqEwatSi1wXOz",
+        "executed": false,
+        "input": {
+          "limit": 5,
+          "offset": 1,
+          "path": "README.md"
+        },
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionToolCalled"
+      },
+      "id": "evt_04acb5607001ofkiXu8Wtz96EB",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.tool.called"
+    },
+    {
+      "created": 1787961234956,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 13,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "phase": "streamed",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionStep"
+      },
+      "id": "evt_04acb560c0013WSzTWj2XQWXBu",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.step.streamed"
+    },
+    {
+      "created": 1787961234965,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 14,
+        "version": 2
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "callID": "call_qdg2bCIuJ1zMqEwatSi1wXOz",
+        "executed": false,
+        "items": [
+          {
+            "text": "Read file README.md, lines 1-5\n1: # OpenCode for Android\n2: \n3: A native Flutter client for [opencode](https://opencode.ai) that connects to an\n4: opencode server either **remotely** (your dev box / VPS) or **on-device** — the\n5: app drives Termux itself, so you never manage a terminal by hand. Ships with\n[Output truncated. Continue reading with offset: 6]",
+            "v": "text"
+          }
+        ],
+        "metadata": {
+          "truncated": true
+        },
+        "phase": "success",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionToolResult"
+      },
+      "id": "evt_04acb5615001kvk7sSK4xvSS4I",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.tool.success"
+    },
+    {
+      "created": 1787961234975,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 15,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb499d0018dZywDIvO4DCTc",
+        "cost": 0.0,
+        "finish": "tool-calls",
+        "phase": "ended",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "snapshot": "59785f455ee0e35afacfc27ec31ae20efab265a6",
+        "tokens": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 11185,
+          "output": 37,
+          "reasoning": 35
+        },
+        "v": "SessionStep"
+      },
+      "id": "evt_04acb561f001Yn11tLK7v8CTW6",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.step.ended"
+    },
+    {
+      "created": 1787961234978,
+      "event": {
+        "cost": 0.0,
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "tokens": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 11185,
+          "output": 37,
+          "reasoning": 35
+        },
+        "v": "SessionUsageUpdated"
+      },
+      "id": "evt_04acb56220015twiyw1DoHax8F",
+      "type": "session.usage.updated"
+    },
+    {
+      "created": 1787961237069,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 16,
+        "version": 1
+      },
+      "event": {
+        "agent": "build",
+        "assistantMessageID": "msg_04acb562a001AVrRyQ0SN5T20D",
+        "model": "openai/gpt-5.6-sol",
+        "phase": "started",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "snapshot": "59785f455ee0e35afacfc27ec31ae20efab265a6",
+        "v": "SessionStep"
+      },
+      "id": "evt_04acb5e4d001cIhGCsSKBU741l",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.step.started"
+    },
+    {
+      "created": 1787961237077,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 17,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb562a001AVrRyQ0SN5T20D",
+        "ordinal": 0,
+        "phase": "started",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionReasoning"
+      },
+      "id": "evt_04acb5e55001uFXODb0f4brbUf",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.reasoning.started"
+    },
+    {
+      "created": 1787961237672,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 18,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb562a001AVrRyQ0SN5T20D",
+        "ordinal": 0,
+        "phase": "ended",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "text": "",
+        "v": "SessionReasoning"
+      },
+      "id": "evt_04acb60a8001igMxgqA7PnLwO5",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.reasoning.ended"
+    },
+    {
+      "created": 1787961237693,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 19,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb562a001AVrRyQ0SN5T20D",
+        "ordinal": 0,
+        "phase": "started",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionText"
+      },
+      "id": "evt_04acb60bd001HvgoUDdlh1hB9K",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.text.started"
+    },
+    {
+      "created": 1787961237696,
+      "event": {
+        "assistantMessageID": "msg_04acb562a001AVrRyQ0SN5T20D",
+        "delta": "pong.",
+        "ordinal": 0,
+        "phase": "delta",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionText"
+      },
+      "id": "evt_04acb60c0001eG6QA06gU6Rbsu",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.text.delta"
+    },
+    {
+      "created": 1787961237696,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 20,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb562a001AVrRyQ0SN5T20D",
+        "ordinal": 0,
+        "phase": "ended",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "text": "pong.",
+        "v": "SessionText"
+      },
+      "id": "evt_04acb60c00025MUuFDNZVQEG79",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.text.ended"
+    },
+    {
+      "created": 1787961237707,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 21,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb562a001AVrRyQ0SN5T20D",
+        "phase": "streamed",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionStep"
+      },
+      "id": "evt_04acb60cb001E3NNXU1YPawEKy",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.step.streamed"
+    },
+    {
+      "created": 1787961237716,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 22,
+        "version": 1
+      },
+      "event": {
+        "assistantMessageID": "msg_04acb562a001AVrRyQ0SN5T20D",
+        "cost": 0.0,
+        "finish": "stop",
+        "phase": "ended",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "snapshot": "59785f455ee0e35afacfc27ec31ae20efab265a6",
+        "tokens": {
+          "cacheRead": 10752,
+          "cacheWrite": 0,
+          "input": 617,
+          "output": 8,
+          "reasoning": 23
+        },
+        "v": "SessionStep"
+      },
+      "id": "evt_04acb60d4001M1u4yiJB2eN0Pz",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.step.ended"
+    },
+    {
+      "created": 1787961237718,
+      "event": {
+        "cost": 0.0,
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "tokens": {
+          "cacheRead": 10752,
+          "cacheWrite": 0,
+          "input": 11802,
+          "output": 45,
+          "reasoning": 58
+        },
+        "v": "SessionUsageUpdated"
+      },
+      "id": "evt_04acb60d6001uYfgQfuC4DLCK1",
+      "type": "session.usage.updated"
+    },
+    {
+      "created": 1787961237719,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 23,
+        "version": 1
+      },
+      "event": {
+        "phase": "succeeded",
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionExecution"
+      },
+      "id": "evt_04acb60d70019aOq7P701idn3f",
+      "type": "session.execution.succeeded"
+    },
+    {
+      "created": 1787961237819,
+      "durable": {
+        "aggregateID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "seq": 24,
+        "version": 2
+      },
+      "event": {
+        "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+        "v": "SessionDeleted"
+      },
+      "id": "evt_04acb613b001UOH3UJeMhhCYSx",
+      "location": {
+        "directory": "/home/dev/projects/oc_app"
+      },
+      "type": "session.deleted"
+    }
+  ],
+  "api2/form_state_pending.json": {
+    "status": "pending"
+  },
+  "api2/forms_session.json": [
+    {
+      "fields": [
+        {
+          "custom": false,
+          "key": "env",
+          "options": [
+            {
+              "label": "Production",
+              "value": "prod"
+            },
+            {
+              "description": "Pre-release",
+              "label": "Staging",
+              "value": "stage"
+            }
+          ],
+          "required": true,
+          "title": "Environment",
+          "type": "string",
+          "when": []
+        },
+        {
+          "custom": false,
+          "default": false,
+          "key": "confirm",
+          "options": [],
+          "required": false,
+          "title": "Confirm",
+          "type": "boolean",
+          "when": []
+        },
+        {
+          "custom": false,
+          "key": "retries",
+          "maximum": 10,
+          "minimum": 1,
+          "options": [],
+          "required": false,
+          "title": "Retries",
+          "type": "integer",
+          "when": []
+        },
+        {
+          "custom": false,
+          "key": "reason",
+          "options": [],
+          "required": false,
+          "title": "Why",
+          "type": "string",
+          "when": [
+            {
+              "key": "confirm",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "id": "frm_04c3909aa001rDGq3xT0IiMZ0B",
+      "sessionID": "ses_fb3c6f68cffe268QQhp3ZL6V8f",
+      "title": "Connect to Sentry"
+    }
+  ],
+  "api2/fs_list.json": [
+    {
+      "isDirectory": true,
+      "path": "lib/api/",
+      "type": "directory"
+    },
+    {
+      "isDirectory": true,
+      "path": "lib/background/",
+      "type": "directory"
+    },
+    {
+      "isDirectory": true,
+      "path": "lib/diagnostics/",
+      "type": "directory"
+    },
+    {
+      "isDirectory": true,
+      "path": "lib/state/",
+      "type": "directory"
+    },
+    {
+      "isDirectory": true,
+      "path": "lib/termux/",
+      "type": "directory"
+    },
+    {
+      "isDirectory": true,
+      "path": "lib/ui/",
+      "type": "directory"
+    },
+    {
+      "isDirectory": true,
+      "path": "lib/update/",
+      "type": "directory"
+    },
+    {
+      "isDirectory": true,
+      "path": "lib/voice/",
+      "type": "directory"
+    },
+    {
+      "isDirectory": false,
+      "path": "lib/main.dart",
+      "type": "file"
+    }
+  ],
+  "api2/inbox_list.json": [
+    {
+      "delivery": "queue",
+      "id": "msg_04c392e26001fDTa7Nswnl15Sq",
+      "payload": {
+        "text": "queued while form pending"
+      },
+      "promptText": "queued while form pending",
+      "sessionID": "ses_fb3c6f68cffe268QQhp3ZL6V8f",
+      "timeCreated": 1787985210919,
+      "type": "user"
+    }
+  ],
+  "api2/location.json": {
+    "canonical": "/home/dev/projects/oc_app",
+    "directory": "/home/dev/projects/oc_app",
+    "projectDirectory": "/home/dev/projects/oc_app",
+    "projectID": "5e625357c202857bf3cd6f591d76b2bec8b5093d"
+  },
+  "api2/message_assistant.json": {
+    "agent": "build",
+    "completed": true,
+    "content": [
+      {
+        "state": {
+          "itemId": "rs_0122e05649ee457d016a921f91839487d2b71b850ce16de292",
+          "reasoningEncryptedContent": "redacted"
+        },
+        "text": "",
+        "time": {
+          "completed": 1787961234437,
+          "created": 1787961233603
+        },
+        "v": "reasoning"
+      },
+      {
+        "state": {
+          "itemId": "msg_0122e05649ee457d016a921f925c0c87d2a03f1e545c8c178d",
+          "phase": "commentary"
+        },
+        "text": "pong.",
+        "v": "text"
+      },
+      {
+        "executed": false,
+        "id": "call_qdg2bCIuJ1zMqEwatSi1wXOz",
+        "name": "read",
+        "state": {
+          "input": {
+            "limit": 5,
+            "offset": 1,
+            "path": "README.md"
+          },
+          "items": [
+            {
+              "text": "Read file README.md, lines 1-5\n1: # OpenCode for Android\n2: \n3: A native Flutter client for [opencode](https://opencode.ai) that connects to an\n4: opencode server either **remotely** (your dev box / VPS) or **on-device** — the\n5: app drives Termux itself, so you never manage a terminal by hand. Ships with\n[Output truncated. Continue reading with offset: 6]",
+              "v": "text"
+            }
+          ],
+          "metadata": {
+            "truncated": true
+          },
+          "v": "completed"
+        },
+        "time": {
+          "completed": 1787961234965,
+          "created": 1787961234628,
+          "ran": 1787961234951
+        },
+        "v": "tool"
+      }
+    ],
+    "cost": 0.0,
+    "finish": "tool-calls",
+    "id": "msg_04acb499d0018dZywDIvO4DCTc",
+    "model": "openai/gpt-5.6-sol",
+    "text": "pong.",
+    "time": {
+      "completed": 1787961234975,
+      "created": 1787961233596,
+      "streamed": 1787961234956
+    },
+    "tokens": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 11185,
+      "output": 37,
+      "reasoning": 35
+    },
+    "v": "Assistant"
+  },
+  "api2/messages.json": {
+    "data": [
+      {
+        "files": [
+          {
+            "data": "dGlueSBhdHRhY2htZW50",
+            "mime": "text/plain",
+            "name": "att.txt",
+            "sourceType": "inline"
+          }
+        ],
+        "id": "msg_04acb4987001Ei5pD9H8pLWeKb",
+        "text": "Reply with exactly the word: pong. Then use the read tool to read the file README.md (just the first 5 lines).",
+        "time": {
+          "created": 1787961231766
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "state": {
+              "itemId": "rs_0122e05649ee457d016a921f91839487d2b71b850ce16de292",
+              "reasoningEncryptedContent": "redacted"
+            },
+            "text": "",
+            "time": {
+              "completed": 1787961234437,
+              "created": 1787961233603
+            },
+            "v": "reasoning"
+          },
+          {
+            "state": {
+              "itemId": "msg_0122e05649ee457d016a921f925c0c87d2a03f1e545c8c178d",
+              "phase": "commentary"
+            },
+            "text": "pong.",
+            "v": "text"
+          },
+          {
+            "executed": false,
+            "id": "call_qdg2bCIuJ1zMqEwatSi1wXOz",
+            "name": "read",
+            "state": {
+              "input": {
+                "limit": 5,
+                "offset": 1,
+                "path": "README.md"
+              },
+              "items": [
+                {
+                  "text": "Read file README.md, lines 1-5\n1: # OpenCode for Android\n2: \n3: A native Flutter client for [opencode](https://opencode.ai) that connects to an\n4: opencode server either **remotely** (your dev box / VPS) or **on-device** — the\n5: app drives Termux itself, so you never manage a terminal by hand. Ships with\n[Output truncated. Continue reading with offset: 6]",
+                  "v": "text"
+                }
+              ],
+              "metadata": {
+                "truncated": true
+              },
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1787961234965,
+              "created": 1787961234628,
+              "ran": 1787961234951
+            },
+            "v": "tool"
+          }
+        ],
+        "cost": 0.0,
+        "finish": "tool-calls",
+        "id": "msg_04acb499d0018dZywDIvO4DCTc",
+        "model": "openai/gpt-5.6-sol",
+        "text": "pong.",
+        "time": {
+          "completed": 1787961234975,
+          "created": 1787961233596,
+          "streamed": 1787961234956
+        },
+        "tokens": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 11185,
+          "output": 37,
+          "reasoning": 35
+        },
+        "v": "Assistant"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "state": {
+              "itemId": "rs_0122e05649ee457d016a921f94f33087d2bb9de980b473cd52",
+              "reasoningEncryptedContent": "redacted"
+            },
+            "text": "",
+            "time": {
+              "completed": 1787961237672,
+              "created": 1787961237077
+            },
+            "v": "reasoning"
+          },
+          {
+            "state": {
+              "itemId": "msg_0122e05649ee457d016a921f957e5087d2936c77d3ad05913e",
+              "phase": "final_answer"
+            },
+            "text": "pong.",
+            "v": "text"
+          }
+        ],
+        "cost": 0.0,
+        "finish": "stop",
+        "id": "msg_04acb562a001AVrRyQ0SN5T20D",
+        "model": "openai/gpt-5.6-sol",
+        "text": "pong.",
+        "time": {
+          "completed": 1787961237716,
+          "created": 1787961237069,
+          "streamed": 1787961237707
+        },
+        "tokens": {
+          "cacheRead": 10752,
+          "cacheWrite": 0,
+          "input": 617,
+          "output": 8,
+          "reasoning": 23
+        },
+        "v": "Assistant"
+      }
+    ],
+    "next": "eyJpZCI6Im1zZ18wNGFjYjU2MmEwMDFBVnJSeVEwU041VDIwRCIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9",
+    "previous": "eyJpZCI6Im1zZ18wNGFjYjQ5ODcwMDFFaTVwRDlIOHBMV2VLYiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ"
+  },
+  "api2/messages_2_1_1.json": {
+    "data": [
+      {
+        "files": [],
+        "id": "msg_15c637850001DAbvOOmXP8LeQv",
+        "text": "Use the read tool on README.md, then reply with exactly its first line.",
+        "time": {
+          "created": 1792551385264
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "text": "The user wants me to read README.md and reply with exactly its first line. Simple task: use the read tool on README.md, then output the first line verbatim.",
+            "time": {
+              "completed": 1792551388689,
+              "created": 1792551388554
+            },
+            "v": "reasoning"
+          },
+          {
+            "executed": false,
+            "id": "f96b8be5-7d45-4f80-9f49-0f0373b9114d",
+            "name": "read",
+            "state": {
+              "input": {
+                "path": "README.md"
+              },
+              "items": [
+                {
+                  "text": "Read file README.md, lines 1-1\n1: # scratch",
+                  "v": "text"
+                }
+              ],
+              "metadata": {
+                "truncated": false
+              },
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1792551388768,
+              "created": 1792551388673,
+              "ran": 1792551388714
+            },
+            "v": "tool"
+          }
+        ],
+        "cost": 0.0,
+        "finish": "tool-calls",
+        "id": "msg_15c6378fe001qq3gCyi9VL7xdr",
+        "model": "opencode/glm-5.3-flash-free#default",
+        "rawFinish": "tool_calls",
+        "text": "",
+        "time": {
+          "completed": 1792551388800,
+          "created": 1792551387783,
+          "streamed": 1792551388723
+        },
+        "tokens": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 7931,
+          "output": 47,
+          "reasoning": 0
+        },
+        "v": "Assistant"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "text": "# scratch",
+            "v": "text"
+          }
+        ],
+        "cost": 0.0,
+        "finish": "stop",
+        "id": "msg_15c63869e001FCJY2FpbSO5kt9",
+        "model": "opencode/glm-5.3-flash-free#default",
+        "rawFinish": "stop",
+        "text": "# scratch",
+        "time": {
+          "completed": 1792551389465,
+          "created": 1792551388870,
+          "streamed": 1792551389441
+        },
+        "tokens": {
+          "cacheRead": 4480,
+          "cacheWrite": 0,
+          "input": 3517,
+          "output": 4,
+          "reasoning": 0
+        },
+        "v": "Assistant"
+      },
+      {
+        "id": "msg_15c638921001snk4km4M21ZgTV",
+        "time": {
+          "created": 1792551389473
+        },
+        "type": "idle",
+        "v": "Unknown"
+      },
+      {
+        "id": "msg_15c63892e001pKEPT66lnj3uoc",
+        "reason": "manual",
+        "status": "completed",
+        "summary": "## Objective\n- Read README.md and reply with exactly its first line.\n\n## Requirements\n- Reply must reproduce the first line of README.md exactly.\n\n## Decisions\n- (none)\n\n## Work State\n### Completed\n- Read README.md; first line is `# scratch` and was reported to the user.\n\n### Active\n- (none)\n\n### Blocked\n- (none)\n\n## Next Move\n- (none)\n\n## Relevant Files\n- `README.md`: the only file read; its first line is `# scratch`.\n\n## Important Context\n- README.md contains only a single line (`# scratch`); task is fully resolved with no follow-up requested.",
+        "time": {
+          "created": 1792551389509
+        },
+        "v": "Compaction"
+      },
+      {
+        "id": "msg_15c638f7e001D9DrJNEU6fCitj",
+        "time": {
+          "created": 1792551391102
+        },
+        "type": "idle",
+        "v": "Unknown"
+      }
+    ],
+    "next": "eyJpZCI6Im1zZ18xNWM2MzhmN2UwMDFEOURySk5FVTZmQ2l0aiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9",
+    "previous": "eyJpZCI6Im1zZ18xNWM2Mzc4NTAwMDFEQWJ2T09tWFA4TGVRdiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ"
+  },
+  "api2/messages_page1.json": {
+    "data": [
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "state": {
+              "itemId": "rs_0122e05649ee457d016a921f94f33087d2bb9de980b473cd52",
+              "reasoningEncryptedContent": "redacted"
+            },
+            "text": "",
+            "time": {
+              "completed": 1787961237672,
+              "created": 1787961237077
+            },
+            "v": "reasoning"
+          },
+          {
+            "state": {
+              "itemId": "msg_0122e05649ee457d016a921f957e5087d2936c77d3ad05913e",
+              "phase": "final_answer"
+            },
+            "text": "pong.",
+            "v": "text"
+          }
+        ],
+        "cost": 0.0,
+        "finish": "stop",
+        "id": "msg_04acb562a001AVrRyQ0SN5T20D",
+        "model": "openai/gpt-5.6-sol",
+        "text": "pong.",
+        "time": {
+          "completed": 1787961237716,
+          "created": 1787961237069,
+          "streamed": 1787961237707
+        },
+        "tokens": {
+          "cacheRead": 10752,
+          "cacheWrite": 0,
+          "input": 617,
+          "output": 8,
+          "reasoning": 23
+        },
+        "v": "Assistant"
+      }
+    ],
+    "next": "eyJpZCI6Im1zZ18wNGFjYjU2MmEwMDFBVnJSeVEwU041VDIwRCIsIm9yZGVyIjoiZGVzYyIsImRpcmVjdGlvbiI6Im5leHQifQ",
+    "previous": "eyJpZCI6Im1zZ18wNGFjYjU2MmEwMDFBVnJSeVEwU041VDIwRCIsIm9yZGVyIjoiZGVzYyIsImRpcmVjdGlvbiI6InByZXZpb3VzIn0"
+  },
+  "api2/messages_page2.json": {
+    "data": [
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "state": {
+              "itemId": "rs_0122e05649ee457d016a921f91839487d2b71b850ce16de292",
+              "reasoningEncryptedContent": "redacted"
+            },
+            "text": "",
+            "time": {
+              "completed": 1787961234437,
+              "created": 1787961233603
+            },
+            "v": "reasoning"
+          },
+          {
+            "state": {
+              "itemId": "msg_0122e05649ee457d016a921f925c0c87d2a03f1e545c8c178d",
+              "phase": "commentary"
+            },
+            "text": "pong.",
+            "v": "text"
+          },
+          {
+            "executed": false,
+            "id": "call_qdg2bCIuJ1zMqEwatSi1wXOz",
+            "name": "read",
+            "state": {
+              "input": {
+                "limit": 5,
+                "offset": 1,
+                "path": "README.md"
+              },
+              "items": [
+                {
+                  "text": "Read file README.md, lines 1-5\n1: # OpenCode for Android\n2: \n3: A native Flutter client for [opencode](https://opencode.ai) that connects to an\n4: opencode server either **remotely** (your dev box / VPS) or **on-device** — the\n5: app drives Termux itself, so you never manage a terminal by hand. Ships with\n[Output truncated. Continue reading with offset: 6]",
+                  "v": "text"
+                }
+              ],
+              "metadata": {
+                "truncated": true
+              },
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1787961234965,
+              "created": 1787961234628,
+              "ran": 1787961234951
+            },
+            "v": "tool"
+          }
+        ],
+        "cost": 0.0,
+        "finish": "tool-calls",
+        "id": "msg_04acb499d0018dZywDIvO4DCTc",
+        "model": "openai/gpt-5.6-sol",
+        "text": "pong.",
+        "time": {
+          "completed": 1787961234975,
+          "created": 1787961233596,
+          "streamed": 1787961234956
+        },
+        "tokens": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 11185,
+          "output": 37,
+          "reasoning": 35
+        },
+        "v": "Assistant"
+      },
+      {
+        "files": [
+          {
+            "data": "dGlueSBhdHRhY2htZW50",
+            "mime": "text/plain",
+            "name": "att.txt",
+            "sourceType": "inline"
+          }
+        ],
+        "id": "msg_04acb4987001Ei5pD9H8pLWeKb",
+        "text": "Reply with exactly the word: pong. Then use the read tool to read the file README.md (just the first 5 lines).",
+        "time": {
+          "created": 1787961231766
+        },
+        "v": "User"
+      }
+    ],
+    "next": "eyJpZCI6Im1zZ18wNGFjYjQ5ODcwMDFFaTVwRDlIOHBMV2VLYiIsIm9yZGVyIjoiZGVzYyIsImRpcmVjdGlvbiI6Im5leHQifQ",
+    "previous": "eyJpZCI6Im1zZ18wNGFjYjQ5OWQwMDE4ZFp5d0RJdk80RENUYyIsIm9yZGVyIjoiZGVzYyIsImRpcmVjdGlvbiI6InByZXZpb3VzIn0"
+  },
+  "api2/messages_variants.json": {
+    "data": [
+      {
+        "command": "echo fixture-shell-ok && ls lib | head -3",
+        "exit": 0,
+        "id": "msg_04c3c86110023p3yzoa2K1ADFU",
+        "output": "fixture-shell-ok\napi\napi2\nbackground\n",
+        "outputTruncated": false,
+        "shellID": "sh_04c3c860f001UQUM5FAZ50KWdV",
+        "status": "exited",
+        "time": {
+          "completed": 1787985430037,
+          "created": 1787985430033
+        },
+        "v": "Shell"
+      },
+      {
+        "command": "echo fixture-shell-ok",
+        "exit": 0,
+        "id": "msg_04c3c92d7001Al3CplaZ3TqB8k",
+        "output": "fixture-shell-ok\n",
+        "outputTruncated": false,
+        "shellID": "sh_04c3c92d50010GMVO2Y5cMHD3h",
+        "status": "exited",
+        "time": {
+          "completed": 1787985433331,
+          "created": 1787985433303
+        },
+        "v": "Shell"
+      },
+      {
+        "command": "bash -c \"echo about-to-fail; exit 3\"",
+        "exit": 3,
+        "id": "msg_04c3ca8ea0019BUZzgFf23Z1TT",
+        "output": "about-to-fail\n",
+        "outputTruncated": false,
+        "shellID": "sh_04c3ca8e8001CE9unP6Tmc1D66",
+        "status": "exited",
+        "time": {
+          "completed": 1787985438956,
+          "created": 1787985438954
+        },
+        "v": "Shell"
+      },
+      {
+        "id": "msg_04c3cb9030012DfiUB58n1oJIE",
+        "model": "openai/gpt-5.6-sol#high",
+        "time": {
+          "created": 1787985443075
+        },
+        "v": "ModelSwitched"
+      },
+      {
+        "agent": "plan",
+        "id": "msg_04c3ccbf3001y5Mnj0QtwaJmAH",
+        "time": {
+          "created": 1787985447923
+        },
+        "v": "AgentSwitched"
+      },
+      {
+        "id": "msg_04c3ccbf5001pvh29hpq9dxcxi",
+        "text": "<system-reminder>\nYou are in Plan mode. You may optionally create or update plan documents in:\n/home/dev/.opencode/plan\n\nDo not modify any other files or ask a subagent to do so.\n\nYou remain in Plan mode until the user switches agents. If the user asks you to implement changes, do not do so. Tell them they need to switch agents.\n</system-reminder>",
+        "time": {
+          "created": 1787985447946
+        },
+        "v": "Synthetic"
+      },
+      {
+        "agent": "plan",
+        "completed": true,
+        "content": [
+          {
+            "state": {
+              "itemId": "rs_021b00e8cfdea21c016a927e29a53487d2a2bf244eeb30ecf9",
+              "reasoningEncryptedContent": "redacted"
+            },
+            "text": "**Summarizing command results and exit code**",
+            "time": {
+              "completed": 1787985451326,
+              "created": 1787985449805
+            },
+            "v": "reasoning"
+          },
+          {
+            "state": {
+              "itemId": "msg_021b00e8cfdea21c016a927e2b0edc87d281c70df39a5950d5",
+              "phase": "final_answer"
+            },
+            "text": "The first two commands succeeded. The third printed `about-to-fail` and intentionally exited with status code `3`.",
+            "v": "text"
+          }
+        ],
+        "cost": 0.0,
+        "finish": "stop",
+        "id": "msg_04c3ccc12001bAsJL8dWhQfDIW",
+        "model": "openai/gpt-5.6-sol#high",
+        "text": "The first two commands succeeded. The third printed `about-to-fail` and intentionally exited with status code `3`.",
+        "time": {
+          "completed": 1787985451681,
+          "created": 1787985449803,
+          "streamed": 1787985451673
+        },
+        "tokens": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 11335,
+          "output": 30,
+          "reasoning": 53
+        },
+        "v": "Assistant"
+      },
+      {
+        "id": "msg_04c3ccbfb001l6JcToYc32MFmR",
+        "reason": "manual",
+        "status": "completed",
+        "summary": "## Objective\n- Verify shell command execution and report command outcomes.\n\n## Important Details\n- Plan mode is active; only plan documents under `/home/dev/.opencode/plan` may be modified.\n- No files were modified.\n\n## Work State\n### Completed\n- `echo fixture-shell-ok && ls lib | head -3` succeeded, listing `api`, `api2`, and `background`.\n- `echo fixture-shell-ok` succeeded.\n- `bash -c \"echo about-to-fail; exit 3\"` printed `about-to-fail` and intentionally exited with status code `3`.\n\n### Active\n- (none)\n\n### Blocked\n- (none)\n\n## Next Move\n1. (none)\n2. (none)\n\n## Relevant Files\n- `lib`: Directory inspected by the successful listing command.\n",
+        "time": {
+          "created": 1787985451684
+        },
+        "v": "Compaction"
+      }
+    ],
+    "next": "eyJpZCI6Im1zZ18wNGMzY2NiZmIwMDFsNkpjVG9ZYzMyTUZtUiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9",
+    "previous": "eyJpZCI6Im1zZ18wNGMzYzg2MTEwMDIzcDN5em9hMksxQURGVSIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ"
+  },
+  "api2/model_default.json": {
+    "cost": [],
+    "enabled": true,
+    "family": "gpt-sol",
+    "id": "gpt-5.6-sol",
+    "input": [
+      "text",
+      "image"
+    ],
+    "limit": {
+      "context": 1050000,
+      "input": 922000,
+      "output": 128000
+    },
+    "modelID": "gpt-5.6-sol",
+    "name": "GPT-5.6 Sol 1M (OAuth)",
+    "output": [
+      "text"
+    ],
+    "providerID": "openai",
+    "ref": "openai/gpt-5.6-sol",
+    "released": 1783555200000,
+    "status": "active",
+    "tools": true,
+    "variants": [
+      "none",
+      "low",
+      "medium",
+      "high",
+      "xhigh",
+      "max"
+    ]
+  },
+  "api2/models_sample.json": [
+    {
+      "cost": [
+        {
+          "cacheRead": 0.042,
+          "cacheWrite": 0.0,
+          "input": 0.834,
+          "output": 2.501
+        }
+      ],
+      "enabled": true,
+      "family": "Hy",
+      "id": "hy4-preview",
+      "input": [
+        "text"
+      ],
+      "limit": {
+        "context": 1024000,
+        "output": 64000
+      },
+      "modelID": "hy4-preview",
+      "name": "Hy4 preview",
+      "output": [
+        "text"
+      ],
+      "providerID": "opencode-go",
+      "ref": "opencode-go/hy4-preview",
+      "released": 1787875200000,
+      "status": "active",
+      "tools": true,
+      "variants": [
+        "none",
+        "high"
+      ]
+    },
+    {
+      "cost": [
+        {
+          "cacheRead": 0.0,
+          "cacheWrite": 0.0,
+          "input": 0.0,
+          "output": 0.0
+        }
+      ],
+      "enabled": true,
+      "family": "ling",
+      "id": "ling-3.0-flash-fin-free",
+      "input": [
+        "text"
+      ],
+      "limit": {
+        "context": 262144,
+        "output": 32768
+      },
+      "modelID": "ling-3.0-flash-fin-free",
+      "name": "Ling 3.0 Flash Fin Free",
+      "output": [
+        "text"
+      ],
+      "providerID": "opencode",
+      "ref": "opencode/ling-3.0-flash-fin-free",
+      "released": 1787788800000,
+      "status": "active",
+      "tools": true,
+      "variants": []
+    },
+    {
+      "cost": [
+        {
+          "cacheRead": 0.015,
+          "cacheWrite": 0.0,
+          "input": 0.075,
+          "output": 0.25
+        }
+      ],
+      "enabled": true,
+      "family": "glm",
+      "id": "glm-5.3-flash",
+      "input": [
+        "text",
+        "image",
+        "video",
+        "pdf"
+      ],
+      "limit": {
+        "context": 1000000,
+        "output": 131072
+      },
+      "modelID": "glm-5.3-flash",
+      "name": "GLM-5.3-Flash",
+      "output": [
+        "text"
+      ],
+      "providerID": "zai",
+      "ref": "zai/glm-5.3-flash",
+      "released": 1787702400000,
+      "status": "active",
+      "tools": true,
+      "variants": [
+        "low",
+        "high",
+        "max"
+      ]
+    },
+    {
+      "cost": [
+        {
+          "cacheRead": 0.016,
+          "cacheWrite": 0.2,
+          "input": 0.15,
+          "output": 0.47
+        }
+      ],
+      "enabled": true,
+      "family": "qwen",
+      "id": "qwen3.8-flash",
+      "input": [
+        "text",
+        "image",
+        "video"
+      ],
+      "limit": {
+        "context": 1000000,
+        "output": 131072
+      },
+      "modelID": "qwen3.8-flash",
+      "name": "Qwen3.8 Flash",
+      "output": [
+        "text"
+      ],
+      "providerID": "opencode-go",
+      "ref": "opencode-go/qwen3.8-flash",
+      "released": 1787702400000,
+      "status": "active",
+      "tools": true,
+      "variants": [
+        "none",
+        "low",
+        "medium",
+        "xhigh"
+      ]
+    }
+  ],
+  "api2/prompt_receipt.json": {
+    "delivery": "steer",
+    "id": "msg_04acb4987001Ei5pD9H8pLWeKb",
+    "payload": {
+      "files": [
+        {
+          "data": "dGlueSBhdHRhY2htZW50",
+          "mime": "text/plain",
+          "name": "att.txt",
+          "source": {
+            "type": "inline"
+          }
+        }
+      ],
+      "text": "Reply with exactly the word: pong. Then use the read tool to read the file README.md (just the first 5 lines)."
+    },
+    "promptText": "Reply with exactly the word: pong. Then use the read tool to read the file README.md (just the first 5 lines).",
+    "sessionID": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+    "timeCreated": 1787961231753,
+    "type": "user"
+  },
+  "api2/providers.json": [
+    {
+      "activation": "auto",
+      "id": "google",
+      "integrationID": "google",
+      "name": "Google",
+      "package": "aisdk:@ai-sdk/google"
+    },
+    {
+      "activation": "auto",
+      "id": "anthropic",
+      "integrationID": "anthropic",
+      "name": "Anthropic",
+      "package": "aisdk:@ai-sdk/anthropic"
+    },
+    {
+      "activation": "enabled",
+      "id": "zai",
+      "integrationID": "zai",
+      "name": "Z.ai (GLM)",
+      "package": "aisdk:@ai-sdk/openai-compatible"
+    },
+    {
+      "activation": "enabled",
+      "id": "openai",
+      "integrationID": "openai",
+      "name": "OpenAI",
+      "package": "aisdk:@ai-sdk/openai"
+    },
+    {
+      "activation": "auto",
+      "id": "opencode-go",
+      "integrationID": "opencode-go",
+      "name": "OpenCode Go",
+      "package": "aisdk:@ai-sdk/openai-compatible"
+    },
+    {
+      "activation": "auto",
+      "id": "zai-coding-plan",
+      "integrationID": "zai-coding-plan",
+      "name": "Z.AI Coding Plan",
+      "package": "aisdk:@ai-sdk/openai-compatible"
+    },
+    {
+      "activation": "auto",
+      "id": "zenmux",
+      "integrationID": "zenmux",
+      "name": "ZenMux",
+      "package": "aisdk:@ai-sdk/openai-compatible"
+    },
+    {
+      "activation": "auto",
+      "id": "opencode",
+      "integrationID": "opencode",
+      "name": "OpenCode Zen",
+      "package": "aisdk:@ai-sdk/openai-compatible"
+    },
+    {
+      "activation": "auto",
+      "id": "github-copilot",
+      "integrationID": "github-copilot",
+      "name": "GitHub Copilot",
+      "package": "aisdk:@ai-sdk/openai-compatible"
+    },
+    {
+      "activation": "auto",
+      "id": "fireworks-ai",
+      "integrationID": "fireworks-ai",
+      "name": "Fireworks AI",
+      "package": "aisdk:@ai-sdk/openai-compatible"
+    },
+    {
+      "activation": "auto",
+      "id": "minimax",
+      "integrationID": "minimax",
+      "name": "MiniMax (minimax.io)",
+      "package": "aisdk:@ai-sdk/anthropic"
+    }
+  ],
+  "api2/session_create.json": {
+    "archived": false,
+    "cost": 0.0,
+    "id": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+    "location": {
+      "directory": "/home/dev/projects/oc_app"
+    },
+    "projectID": "5e625357c202857bf3cd6f591d76b2bec8b5093d",
+    "reverted": false,
+    "time": {
+      "created": 1787961231720,
+      "updated": 1787961231720
+    },
+    "title": "api2 fixture probe",
+    "tokens": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 0,
+      "output": 0,
+      "reasoning": 0
+    }
+  },
+  "api2/session_stats.json": {
+    "activeDays": 3,
+    "activity": [
+      {
+        "date": "2026-09-03",
+        "steps": 40
+      },
+      {
+        "date": "2026-09-04",
+        "steps": 32
+      },
+      {
+        "date": "2026-09-05",
+        "steps": 24
+      }
+    ],
+    "cost": 3.42,
+    "from": 1788307200000,
+    "models": [
+      {
+        "cost": 2.71,
+        "modelID": "gpt-5.6-sol",
+        "providerID": "openai",
+        "steps": 70,
+        "tokens": {
+          "cacheRead": 40000,
+          "cacheWrite": 8000,
+          "input": 100000,
+          "output": 16000,
+          "reasoning": 4000
+        },
+        "variant": "high"
+      },
+      {
+        "cost": 0.71,
+        "modelID": "gpt-5.4-mini",
+        "providerID": "openai",
+        "steps": 26,
+        "tokens": {
+          "cacheRead": 22000,
+          "cacheWrite": 0,
+          "input": 24000,
+          "output": 2200,
+          "reasoning": 600
+        }
+      }
+    ],
+    "prompts": 38,
+    "sessions": 12,
+    "steps": 96,
+    "streak": 3,
+    "subagents": 4,
+    "to": 1788652800000,
+    "tokens": {
+      "cacheRead": 62000,
+      "cacheWrite": 8000,
+      "input": 124000,
+      "output": 18200,
+      "reasoning": 4600
+    },
+    "tools": {
+      "calls": 80,
+      "failed": 5,
+      "succeeded": 72,
+      "unfinished": 3
+    }
+  },
+  "api2/sessions_page.json": {
+    "data": [
+      {
+        "agent": "build",
+        "archived": false,
+        "cost": 0.0,
+        "id": "ses_fb5c08101ffef0R2ldyIoWpgaW",
+        "location": {
+          "directory": "/home/dev/projects/oc_app"
+        },
+        "model": "openai/gpt-5.6-sol#default",
+        "projectID": "5e625357c202857bf3cd6f591d76b2bec8b5093d",
+        "reverted": false,
+        "time": {
+          "created": 1787952070398,
+          "updated": 1787952242199
+        },
+        "title": "Repo test strategy overview",
+        "tokens": {
+          "cacheRead": 78336,
+          "cacheWrite": 0,
+          "input": 59422,
+          "output": 861,
+          "reasoning": 61
+        }
+      },
+      {
+        "agent": "explore",
+        "archived": false,
+        "cost": 0.0,
+        "id": "ses_fb5fc9dcfffexGUXQHNpaU8or2",
+        "location": {
+          "directory": "/home/dev/projects/other_app"
+        },
+        "model": "opencode/big-pickle#default",
+        "parentID": "ses_fb605903fffeXEvQTkm7ciT5wg",
+        "projectID": "b4cc186ad6c7edbce076624543d0474d55a898cc",
+        "reverted": false,
+        "time": {
+          "created": 1787948130864,
+          "updated": 1787948780798
+        },
+        "title": "Review sample_app providers and evaluators (@explore subagent)",
+        "tokens": {
+          "cacheRead": 1043200,
+          "cacheWrite": 0,
+          "input": 234137,
+          "output": 13763,
+          "reasoning": 0
+        }
+      },
+      {
+        "agent": "build",
+        "archived": false,
+        "cost": 1.9628420799999997,
+        "id": "ses_fb6058dcfffeyIJIsJ4YU39ki4",
+        "location": {
+          "directory": "/home/dev/projects/other_app"
+        },
+        "model": "opencode-go/glm-5.3#default",
+        "projectID": "b4cc186ad6c7edbce076624543d0474d55a898cc",
+        "reverted": false,
+        "time": {
+          "created": 1787947545136,
+          "updated": 1787948408870
+        },
+        "title": "Sample app P1 review: SHIP or HOLD verdict",
+        "tokens": {
+          "cacheRead": 6293568,
+          "cacheWrite": 0,
+          "input": 174516,
+          "output": 3649,
+          "reasoning": 15031
+        }
+      }
+    ],
+    "next": "eyJhbmNob3IiOnsiaWQiOiJzZXNfZmI2MDU4ZGNmZmZleUlKSXNKNFlVMzlraTQiLCJ0aW1lIjoxNzg3OTQ4NDA4ODcwLCJkaXJlY3Rpb24iOiJuZXh0In19",
+    "previous": "eyJhbmNob3IiOnsiaWQiOiJzZXNfZmI1YzA4MTAxZmZlZjBSMmxkeUlvV3BnYVciLCJ0aW1lIjoxNzg3OTUyMjQyMTk5LCJkaXJlY3Rpb24iOiJwcmV2aW91cyJ9fQ"
+  },
+  "api2/skills_sample.json": [
+    {
+      "contentLength": 11218,
+      "description": "Use this skill for any question about OpenCode itself, including how OpenCode works, using or configuring it, migrating from V1 to V2, troubleshooting it, developing plugins or integrations, using the OpenCode SDK, clients, server, or API, and contributing to the OpenCode codebase. Also use it for OpenCode agents, commands, skills, tools, permissions, MCP servers, providers, models, themes, keybinds, formatters, the CLI, TUI, desktop app, and web app.",
+      "id": "opencode",
+      "location": "/builtin/opencode.md",
+      "name": "OpenCode",
+      "slash": false
+    },
+    {
+      "contentLength": 4666,
+      "description": "Use when the user wants to report an opencode issue or bug. Collect standard diagnostics, add user-specific reproduction context, and publish the issue with GitHub CLI.",
+      "id": "report",
+      "location": "/builtin/report.md",
+      "name": "Report",
+      "slash": true
+    }
+  ],
+  "coverage/oc2_events_samples.json": {
+    "compaction_failed": [
+      {
+        "created": 1788960000064,
+        "event": {
+          "error": {
+            "message": "The summary model refused the request",
+            "status": 400,
+            "type": "compaction"
+          },
+          "phase": "failed",
+          "reason": "manual",
+          "sessionID": "ses_checkout",
+          "v": "SessionCompaction"
+        },
+        "id": "evt_0064",
+        "type": "session.compaction.failed"
+      }
+    ],
+    "compaction_run": [
+      {
+        "created": 1788960000060,
+        "event": {
+          "phase": "started",
+          "reason": "auto",
+          "sessionID": "ses_checkout",
+          "v": "SessionCompaction"
+        },
+        "id": "evt_0060",
+        "type": "session.compaction.started"
+      },
+      {
+        "created": 1788960000061,
+        "event": {
+          "phase": "delta",
+          "sessionID": "ses_checkout",
+          "text": "Summarising the upload work",
+          "v": "SessionCompaction"
+        },
+        "id": "evt_0061",
+        "type": "session.compaction.delta"
+      },
+      {
+        "created": 1788960000062,
+        "event": {
+          "phase": "ended",
+          "reason": "auto",
+          "sessionID": "ses_checkout",
+          "text": "Summary: the retry button was added and tested.",
+          "v": "SessionCompaction"
+        },
+        "id": "evt_0062",
+        "type": "session.compaction.ended"
+      },
+      {
+        "created": 1788960000063,
+        "event": {
+          "sessionID": "ses_checkout",
+          "v": "SessionCompacted"
+        },
+        "id": "evt_0063",
+        "type": "session.compacted"
+      }
+    ],
+    "form_created": [
+      {
+        "created": 1788960000084,
+        "event": {
+          "form": {
+            "fields": [
+              {
+                "custom": false,
+                "key": "env",
+                "options": [
+                  {
+                    "label": "Production",
+                    "value": "prod"
+                  }
+                ],
+                "required": true,
+                "title": "Environment",
+                "type": "string",
+                "when": []
+              }
+            ],
+            "id": "frm_ev1",
+            "sessionID": "ses_checkout",
+            "title": "Connect to Sentry"
+          },
+          "v": "FormCreated"
+        },
+        "id": "evt_0084",
+        "type": "form.created"
+      }
+    ],
+    "form_replied_cancelled": [
+      {
+        "created": 1788960000085,
+        "event": {
+          "form": {
+            "fields": [
+              {
+                "custom": false,
+                "key": "b",
+                "options": [],
+                "required": false,
+                "title": "Create it",
+                "type": "boolean",
+                "when": []
+              }
+            ],
+            "id": "frm_ev2",
+            "sessionID": "ses_checkout",
+            "title": "Pick a branch for the push"
+          },
+          "v": "FormCreated"
+        },
+        "id": "evt_0085",
+        "type": "form.created"
+      },
+      {
+        "created": 1788960000086,
+        "event": {
+          "answer": {
+            "b": true
+          },
+          "id": "frm_ev2",
+          "sessionID": "ses_checkout",
+          "v": "FormReplied"
+        },
+        "id": "evt_0086",
+        "type": "form.replied"
+      },
+      {
+        "created": 1788960000087,
+        "event": {
+          "form": {
+            "fields": [
+              {
+                "custom": false,
+                "key": "c",
+                "options": [],
+                "required": false,
+                "title": "Clear it",
+                "type": "boolean",
+                "when": []
+              }
+            ],
+            "id": "frm_ev3",
+            "sessionID": "ses_checkout",
+            "title": "Choose a cache policy"
+          },
+          "v": "FormCreated"
+        },
+        "id": "evt_0087",
+        "type": "form.created"
+      },
+      {
+        "created": 1788960000088,
+        "event": {
+          "id": "frm_ev3",
+          "sessionID": "ses_checkout",
+          "v": "FormCancelled"
+        },
+        "id": "evt_0088",
+        "type": "form.cancelled"
+      }
+    ],
+    "interrupted_and_inbox": [
+      {
+        "created": 1788960000053,
+        "event": {
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionExecution"
+        },
+        "id": "evt_0053",
+        "type": "session.execution.started"
+      },
+      {
+        "created": 1788960000054,
+        "event": {
+          "delivery": "steer",
+          "inboxID": "msg_inbox01",
+          "item": {
+            "delivery": "steer",
+            "id": "msg_inbox01",
+            "payload": {
+              "text": "First message"
+            },
+            "promptText": "First message",
+            "sessionID": "ses_checkout",
+            "type": "user"
+          },
+          "phase": "enqueued",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0054",
+        "type": "session.inbox.enqueued"
+      },
+      {
+        "created": 1788960000055,
+        "event": {
+          "inboxID": "msg_inbox01",
+          "phase": "delivered",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0055",
+        "type": "session.inbox.delivered"
+      },
+      {
+        "created": 1788960000056,
+        "event": {
+          "delivery": "queue",
+          "inboxID": "msg_inbox02",
+          "item": {
+            "delivery": "queue",
+            "id": "msg_inbox02",
+            "payload": {
+              "text": "Second message that gets cancelled"
+            },
+            "promptText": "Second message that gets cancelled",
+            "sessionID": "ses_checkout",
+            "type": "user"
+          },
+          "phase": "enqueued",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0056",
+        "type": "session.inbox.enqueued"
+      },
+      {
+        "created": 1788960000057,
+        "event": {
+          "delivery": "steer",
+          "inboxID": "msg_inbox02",
+          "phase": "deliveryChanged",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0057",
+        "type": "session.inbox.delivery.changed"
+      },
+      {
+        "created": 1788960000058,
+        "event": {
+          "inboxID": "msg_inbox02",
+          "phase": "cancelled",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0058",
+        "type": "session.inbox.cancelled"
+      },
+      {
+        "created": 1788960000059,
+        "event": {
+          "phase": "interrupted",
+          "reason": "user",
+          "sessionID": "ses_checkout",
+          "v": "SessionExecution"
+        },
+        "id": "evt_0059",
+        "type": "session.execution.interrupted"
+      }
+    ],
+    "live_streaming": [
+      {
+        "created": 1788960000015,
+        "event": {
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionExecution"
+        },
+        "id": "evt_0015",
+        "type": "session.execution.started"
+      },
+      {
+        "created": 1788960000016,
+        "event": {
+          "delivery": "steer",
+          "inboxID": "msg_inbox01",
+          "item": {
+            "delivery": "steer",
+            "id": "msg_inbox01",
+            "payload": {
+              "text": "Explain the retry loop"
+            },
+            "promptText": "Explain the retry loop",
+            "sessionID": "ses_checkout",
+            "type": "user"
+          },
+          "phase": "enqueued",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0016",
+        "type": "session.inbox.enqueued"
+      },
+      {
+        "created": 1788960000017,
+        "event": {
+          "inboxID": "msg_inbox01",
+          "phase": "delivered",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0017",
+        "type": "session.inbox.delivered"
+      },
+      {
+        "created": 1788960000018,
+        "event": {
+          "agent": "build",
+          "assistantMessageID": "msg_asst01",
+          "model": "anthropic/claude-opus-5-5",
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionStep"
+        },
+        "id": "evt_0018",
+        "type": "session.step.started"
+      },
+      {
+        "created": 1788960000019,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "ordinal": 0,
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionReasoning"
+        },
+        "id": "evt_0019",
+        "type": "session.reasoning.started"
+      },
+      {
+        "created": 1788960000020,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "delta": "Looking at how the queue retries",
+          "ordinal": 0,
+          "phase": "delta",
+          "sessionID": "ses_checkout",
+          "v": "SessionReasoning"
+        },
+        "id": "evt_0020",
+        "type": "session.reasoning.delta"
+      },
+      {
+        "created": 1788960000021,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "ordinal": 0,
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionText"
+        },
+        "id": "evt_0021",
+        "type": "session.text.started"
+      },
+      {
+        "created": 1788960000022,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "delta": "The queue retries three times",
+          "ordinal": 0,
+          "phase": "delta",
+          "sessionID": "ses_checkout",
+          "v": "SessionText"
+        },
+        "id": "evt_0022",
+        "type": "session.text.delta"
+      }
+    ],
+    "notices_and_revert": [
+      {
+        "created": 1788960000065,
+        "event": {
+          "delivery": "steer",
+          "inboxID": "msg_inbox01",
+          "item": {
+            "delivery": "steer",
+            "id": "msg_inbox01",
+            "payload": {
+              "text": "Add a retry button to the upload screen"
+            },
+            "promptText": "Add a retry button to the upload screen",
+            "sessionID": "ses_checkout",
+            "type": "user"
+          },
+          "phase": "enqueued",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0065",
+        "type": "session.inbox.enqueued"
+      },
+      {
+        "created": 1788960000066,
+        "event": {
+          "inboxID": "msg_inbox01",
+          "phase": "delivered",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0066",
+        "type": "session.inbox.delivered"
+      },
+      {
+        "created": 1788960000067,
+        "event": {
+          "description": "Helper agent finished",
+          "sessionID": "ses_checkout",
+          "text": "The explore agent finished: two loops can retry forever.",
+          "v": "SessionSynthetic"
+        },
+        "id": "evt_0067",
+        "type": "session.synthetic"
+      },
+      {
+        "created": 1788960000068,
+        "event": {
+          "phase": "staged",
+          "revert": {
+            "diff": "@@ -1 +1 @@",
+            "messageID": "msg_inbox01"
+          },
+          "sessionID": "ses_checkout",
+          "v": "SessionRevert"
+        },
+        "id": "evt_0068",
+        "type": "session.revert.staged"
+      },
+      {
+        "created": 1788960000069,
+        "event": {
+          "phase": "cleared",
+          "sessionID": "ses_checkout",
+          "v": "SessionRevert"
+        },
+        "id": "evt_0069",
+        "type": "session.revert.cleared"
+      },
+      {
+        "created": 1788960000070,
+        "event": {
+          "phase": "committed",
+          "sessionID": "ses_checkout",
+          "toMessageID": "msg_inbox01",
+          "v": "SessionRevert"
+        },
+        "id": "evt_0070",
+        "type": "session.revert.committed"
+      },
+      {
+        "created": 1788960000071,
+        "event": {
+          "content": [
+            {
+              "text": "Edited answer from a PATCH",
+              "v": "text"
+            }
+          ],
+          "messageID": "msg_asst01",
+          "sessionID": "ses_checkout",
+          "v": "SessionMessageContentUpdated"
+        },
+        "id": "evt_0071",
+        "type": "session.message.content.updated"
+      },
+      {
+        "created": 1788960000072,
+        "event": {
+          "sessionID": "ses_checkout",
+          "title": "Retry upload button",
+          "v": "SessionRenamed"
+        },
+        "id": "evt_0072",
+        "type": "session.renamed"
+      }
+    ],
+    "permission_asked": [
+      {
+        "created": 1788960000081,
+        "event": {
+          "request": {
+            "action": "bash",
+            "id": "per_ev1",
+            "message": "The agent wants to publish the branch",
+            "metadata": {
+              "command": "git push origin main"
+            },
+            "resources": [
+              "git push origin main"
+            ],
+            "save": [
+              "git push *"
+            ],
+            "sessionID": "ses_checkout",
+            "source": {
+              "id": "call_t1",
+              "messageID": "msg_asst01",
+              "type": "tool"
+            }
+          },
+          "v": "PermissionAsked"
+        },
+        "id": "evt_0081",
+        "type": "permission.asked"
+      }
+    ],
+    "permission_replied": [
+      {
+        "created": 1788960000082,
+        "event": {
+          "request": {
+            "action": "bash",
+            "id": "per_ev2",
+            "message": "The agent wants to clear the cache",
+            "metadata": {},
+            "resources": [
+              "rm -rf build/cache"
+            ],
+            "save": [
+              "rm *"
+            ],
+            "sessionID": "ses_checkout",
+            "source": {
+              "id": "call_t2",
+              "messageID": "msg_asst01",
+              "type": "tool"
+            }
+          },
+          "v": "PermissionAsked"
+        },
+        "id": "evt_0082",
+        "type": "permission.asked"
+      },
+      {
+        "created": 1788960000083,
+        "event": {
+          "reply": "once",
+          "requestID": "per_ev2",
+          "sessionID": "ses_checkout",
+          "v": "PermissionReplied"
+        },
+        "id": "evt_0083",
+        "type": "permission.replied"
+      }
+    ],
+    "retry_only": [
+      {
+        "created": 1788960000041,
+        "event": {
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionExecution"
+        },
+        "id": "evt_0041",
+        "type": "session.execution.started"
+      },
+      {
+        "created": 1788960000042,
+        "event": {
+          "delivery": "steer",
+          "inboxID": "msg_inbox01",
+          "item": {
+            "delivery": "steer",
+            "id": "msg_inbox01",
+            "payload": {
+              "text": "Add a retry button to the upload screen"
+            },
+            "promptText": "Add a retry button to the upload screen",
+            "sessionID": "ses_checkout",
+            "type": "user"
+          },
+          "phase": "enqueued",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0042",
+        "type": "session.inbox.enqueued"
+      },
+      {
+        "created": 1788960000043,
+        "event": {
+          "inboxID": "msg_inbox01",
+          "phase": "delivered",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0043",
+        "type": "session.inbox.delivered"
+      },
+      {
+        "created": 1788960000044,
+        "event": {
+          "agent": "build",
+          "assistantMessageID": "msg_asst01",
+          "model": "anthropic/claude-opus-5-5",
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionStep"
+        },
+        "id": "evt_0044",
+        "type": "session.step.started"
+      },
+      {
+        "created": 1788960000045,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "at": 1788960020000,
+          "attempt": 3,
+          "error": {
+            "message": "Rate limit reached for the model",
+            "status": 429,
+            "type": "api"
+          },
+          "sessionID": "ses_checkout",
+          "v": "SessionRetryScheduled"
+        },
+        "id": "evt_0045",
+        "type": "session.retry.scheduled"
+      }
+    ],
+    "status_busy_idle": [
+      {
+        "created": 1788960000073,
+        "event": {
+          "delivery": "steer",
+          "inboxID": "msg_inbox01",
+          "item": {
+            "delivery": "steer",
+            "id": "msg_inbox01",
+            "payload": {
+              "text": "Add a retry button to the upload screen"
+            },
+            "promptText": "Add a retry button to the upload screen",
+            "sessionID": "ses_checkout",
+            "type": "user"
+          },
+          "phase": "enqueued",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0073",
+        "type": "session.inbox.enqueued"
+      },
+      {
+        "created": 1788960000074,
+        "event": {
+          "inboxID": "msg_inbox01",
+          "phase": "delivered",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0074",
+        "type": "session.inbox.delivered"
+      },
+      {
+        "created": 1788960000075,
+        "event": {
+          "sessionID": "ses_checkout",
+          "status": "busy",
+          "v": "SessionStatus"
+        },
+        "id": "evt_0075",
+        "type": "session.status"
+      },
+      {
+        "created": 1788960000076,
+        "event": {
+          "phase": "succeeded",
+          "sessionID": "ses_checkout",
+          "v": "SessionExecution"
+        },
+        "id": "evt_0076",
+        "type": "session.execution.succeeded"
+      },
+      {
+        "created": 1788960000077,
+        "event": {
+          "sessionID": "ses_checkout",
+          "status": "idle",
+          "v": "SessionStatus"
+        },
+        "id": "evt_0077",
+        "type": "session.idle"
+      }
+    ],
+    "status_retry_with_action": [
+      {
+        "created": 1788960000078,
+        "event": {
+          "delivery": "steer",
+          "inboxID": "msg_inbox01",
+          "item": {
+            "delivery": "steer",
+            "id": "msg_inbox01",
+            "payload": {
+              "text": "Add a retry button to the upload screen"
+            },
+            "promptText": "Add a retry button to the upload screen",
+            "sessionID": "ses_checkout",
+            "type": "user"
+          },
+          "phase": "enqueued",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0078",
+        "type": "session.inbox.enqueued"
+      },
+      {
+        "created": 1788960000079,
+        "event": {
+          "inboxID": "msg_inbox01",
+          "phase": "delivered",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0079",
+        "type": "session.inbox.delivered"
+      },
+      {
+        "created": 1788960000080,
+        "event": {
+          "attempt": 3,
+          "message": "Rate limit reached for the model",
+          "next": 1788960020000,
+          "sessionID": "ses_checkout",
+          "status": "retry",
+          "v": "SessionStatus"
+        },
+        "id": "evt_0080",
+        "type": "session.status"
+      }
+    ],
+    "step_failed_and_retry": [
+      {
+        "created": 1788960000035,
+        "event": {
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionExecution"
+        },
+        "id": "evt_0035",
+        "type": "session.execution.started"
+      },
+      {
+        "created": 1788960000036,
+        "event": {
+          "delivery": "steer",
+          "inboxID": "msg_inbox01",
+          "item": {
+            "delivery": "steer",
+            "id": "msg_inbox01",
+            "payload": {
+              "text": "Add a retry button to the upload screen"
+            },
+            "promptText": "Add a retry button to the upload screen",
+            "sessionID": "ses_checkout",
+            "type": "user"
+          },
+          "phase": "enqueued",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0036",
+        "type": "session.inbox.enqueued"
+      },
+      {
+        "created": 1788960000037,
+        "event": {
+          "inboxID": "msg_inbox01",
+          "phase": "delivered",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0037",
+        "type": "session.inbox.delivered"
+      },
+      {
+        "created": 1788960000038,
+        "event": {
+          "agent": "build",
+          "assistantMessageID": "msg_asst01",
+          "model": "anthropic/claude-opus-5-5",
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionStep"
+        },
+        "id": "evt_0038",
+        "type": "session.step.started"
+      },
+      {
+        "created": 1788960000039,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "cost": 0.002,
+          "error": {
+            "message": "The provider is overloaded, try again in a minute",
+            "status": 529,
+            "type": "api"
+          },
+          "finish": "content-filter",
+          "phase": "failed",
+          "sessionID": "ses_checkout",
+          "snapshot": "snap_f1",
+          "tokens": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 500,
+            "output": 0,
+            "reasoning": 0
+          },
+          "v": "SessionStep"
+        },
+        "id": "evt_0039",
+        "type": "session.step.failed"
+      },
+      {
+        "created": 1788960000040,
+        "event": {
+          "error": {
+            "status": 401,
+            "type": "provider.auth"
+          },
+          "phase": "failed",
+          "sessionID": "ses_checkout",
+          "v": "SessionExecution"
+        },
+        "id": "evt_0040",
+        "type": "session.execution.failed"
+      }
+    ],
+    "tool_progress_only": [
+      {
+        "created": 1788960000046,
+        "event": {
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionExecution"
+        },
+        "id": "evt_0046",
+        "type": "session.execution.started"
+      },
+      {
+        "created": 1788960000047,
+        "event": {
+          "delivery": "steer",
+          "inboxID": "msg_inbox01",
+          "item": {
+            "delivery": "steer",
+            "id": "msg_inbox01",
+            "payload": {
+              "text": "Push the branch"
+            },
+            "promptText": "Push the branch",
+            "sessionID": "ses_checkout",
+            "type": "user"
+          },
+          "phase": "enqueued",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0047",
+        "type": "session.inbox.enqueued"
+      },
+      {
+        "created": 1788960000048,
+        "event": {
+          "inboxID": "msg_inbox01",
+          "phase": "delivered",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0048",
+        "type": "session.inbox.delivered"
+      },
+      {
+        "created": 1788960000049,
+        "event": {
+          "agent": "build",
+          "assistantMessageID": "msg_asst01",
+          "model": "anthropic/claude-opus-5-5",
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionStep"
+        },
+        "id": "evt_0049",
+        "type": "session.step.started"
+      },
+      {
+        "created": 1788960000050,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "callID": "call_t9",
+          "name": "bash",
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionToolInput"
+        },
+        "id": "evt_0050",
+        "type": "session.tool.input.started"
+      },
+      {
+        "created": 1788960000051,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "callID": "call_t9",
+          "executed": true,
+          "input": {
+            "command": "git push origin main"
+          },
+          "sessionID": "ses_checkout",
+          "v": "SessionToolCalled"
+        },
+        "id": "evt_0051",
+        "type": "session.tool.called"
+      },
+      {
+        "created": 1788960000052,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "callID": "call_t9",
+          "metadata": {
+            "output": "Enumerating objects: 12, done."
+          },
+          "sessionID": "ses_checkout",
+          "v": "SessionToolProgress"
+        },
+        "id": "evt_0052",
+        "type": "session.tool.progress"
+      }
+    ],
+    "tool_run": [
+      {
+        "created": 1788960000023,
+        "event": {
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionExecution"
+        },
+        "id": "evt_0023",
+        "type": "session.execution.started"
+      },
+      {
+        "created": 1788960000024,
+        "event": {
+          "delivery": "steer",
+          "inboxID": "msg_inbox01",
+          "item": {
+            "delivery": "steer",
+            "id": "msg_inbox01",
+            "payload": {
+              "text": "Push the branch"
+            },
+            "promptText": "Push the branch",
+            "sessionID": "ses_checkout",
+            "type": "user"
+          },
+          "phase": "enqueued",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0024",
+        "type": "session.inbox.enqueued"
+      },
+      {
+        "created": 1788960000025,
+        "event": {
+          "inboxID": "msg_inbox01",
+          "phase": "delivered",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0025",
+        "type": "session.inbox.delivered"
+      },
+      {
+        "created": 1788960000026,
+        "event": {
+          "agent": "build",
+          "assistantMessageID": "msg_asst01",
+          "model": "anthropic/claude-opus-5-5",
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionStep"
+        },
+        "id": "evt_0026",
+        "type": "session.step.started"
+      },
+      {
+        "created": 1788960000027,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "callID": "call_t1",
+          "name": "bash",
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionToolInput"
+        },
+        "id": "evt_0027",
+        "type": "session.tool.input.started"
+      },
+      {
+        "created": 1788960000028,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "callID": "call_t1",
+          "delta": "{\"command\":\"git pu",
+          "phase": "delta",
+          "sessionID": "ses_checkout",
+          "v": "SessionToolInput"
+        },
+        "id": "evt_0028",
+        "type": "session.tool.input.delta"
+      },
+      {
+        "created": 1788960000029,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "callID": "call_t1",
+          "phase": "ended",
+          "sessionID": "ses_checkout",
+          "text": "{\"command\":\"git push origin main\"}",
+          "v": "SessionToolInput"
+        },
+        "id": "evt_0029",
+        "type": "session.tool.input.ended"
+      },
+      {
+        "created": 1788960000030,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "callID": "call_t1",
+          "executed": true,
+          "input": {
+            "command": "git push origin main",
+            "description": "Publish the branch"
+          },
+          "sessionID": "ses_checkout",
+          "v": "SessionToolCalled"
+        },
+        "id": "evt_0030",
+        "type": "session.tool.called"
+      },
+      {
+        "created": 1788960000031,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "callID": "call_t1",
+          "metadata": {
+            "output": "Enumerating objects: 12, done."
+          },
+          "sessionID": "ses_checkout",
+          "v": "SessionToolProgress"
+        },
+        "id": "evt_0031",
+        "type": "session.tool.progress"
+      },
+      {
+        "created": 1788960000032,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "callID": "call_t1",
+          "executed": true,
+          "items": [
+            {
+              "text": "Everything up-to-date",
+              "v": "text"
+            }
+          ],
+          "metadata": {
+            "exit": 0
+          },
+          "phase": "success",
+          "sessionID": "ses_checkout",
+          "v": "SessionToolResult"
+        },
+        "id": "evt_0032",
+        "type": "session.tool.success"
+      },
+      {
+        "created": 1788960000033,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "callID": "call_t2",
+          "executed": false,
+          "input": {
+            "command": "rm -rf build/cache"
+          },
+          "sessionID": "ses_checkout",
+          "v": "SessionToolCalled"
+        },
+        "id": "evt_0033",
+        "type": "session.tool.called"
+      },
+      {
+        "created": 1788960000034,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "callID": "call_t2",
+          "error": {
+            "message": "Permission denied while removing build/cache",
+            "status": 126,
+            "type": "tool.failed"
+          },
+          "executed": true,
+          "items": [
+            {
+              "text": "rm: cannot remove build/cache",
+              "v": "text"
+            }
+          ],
+          "metadata": {
+            "exit": 126
+          },
+          "phase": "failed",
+          "sessionID": "ses_checkout",
+          "v": "SessionToolResult"
+        },
+        "id": "evt_0034",
+        "type": "session.tool.failed"
+      }
+    ],
+    "turn_done": [
+      {
+        "created": 1788960000001,
+        "durable": {
+          "aggregateID": "ses_checkout",
+          "seq": 1,
+          "version": 1
+        },
+        "event": {
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionExecution"
+        },
+        "id": "evt_0001",
+        "location": {
+          "directory": "/work/app"
+        },
+        "metadata": {
+          "source": "tui"
+        },
+        "type": "session.execution.started"
+      },
+      {
+        "created": 1788960000002,
+        "event": {
+          "delivery": "steer",
+          "inboxID": "msg_inbox01",
+          "item": {
+            "delivery": "steer",
+            "id": "msg_inbox01",
+            "payload": {
+              "text": "Add a retry button to the upload screen"
+            },
+            "promptText": "Add a retry button to the upload screen",
+            "sessionID": "ses_checkout",
+            "type": "user"
+          },
+          "phase": "enqueued",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0002",
+        "type": "session.inbox.enqueued"
+      },
+      {
+        "created": 1788960000003,
+        "event": {
+          "delta": {
+            "core/environment": "1adeb0c"
+          },
+          "sessionID": "ses_checkout",
+          "text": "Prefer short answers",
+          "v": "SessionInstructionsUpdated"
+        },
+        "id": "evt_0003",
+        "type": "session.instructions.updated"
+      },
+      {
+        "created": 1788960000004,
+        "event": {
+          "inboxID": "msg_inbox01",
+          "phase": "delivered",
+          "sessionID": "ses_checkout",
+          "v": "SessionInbox"
+        },
+        "id": "evt_0004",
+        "type": "session.inbox.delivered"
+      },
+      {
+        "created": 1788960000005,
+        "event": {
+          "agent": "build",
+          "assistantMessageID": "msg_asst01",
+          "model": "anthropic/claude-opus-5-5#high",
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "snapshot": "snap_c5104f",
+          "v": "SessionStep"
+        },
+        "id": "evt_0005",
+        "type": "session.step.started"
+      },
+      {
+        "created": 1788960000006,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "ordinal": 0,
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionReasoning"
+        },
+        "id": "evt_0006",
+        "type": "session.reasoning.started"
+      },
+      {
+        "created": 1788960000007,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "delta": "Thinking about the queue first",
+          "ordinal": 0,
+          "phase": "delta",
+          "sessionID": "ses_checkout",
+          "v": "SessionReasoning"
+        },
+        "id": "evt_0007",
+        "type": "session.reasoning.delta"
+      },
+      {
+        "created": 1788960000008,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "ordinal": 0,
+          "phase": "ended",
+          "sessionID": "ses_checkout",
+          "text": "The retry button must keep the failed file name, so I will read the queue first.",
+          "v": "SessionReasoning"
+        },
+        "id": "evt_0008",
+        "type": "session.reasoning.ended"
+      },
+      {
+        "created": 1788960000009,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "ordinal": 0,
+          "phase": "started",
+          "sessionID": "ses_checkout",
+          "v": "SessionText"
+        },
+        "id": "evt_0009",
+        "type": "session.text.started"
+      },
+      {
+        "created": 1788960000010,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "delta": "I added a ",
+          "ordinal": 0,
+          "phase": "delta",
+          "sessionID": "ses_checkout",
+          "v": "SessionText"
+        },
+        "id": "evt_0010",
+        "type": "session.text.delta"
+      },
+      {
+        "created": 1788960000011,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "ordinal": 0,
+          "phase": "ended",
+          "sessionID": "ses_checkout",
+          "text": "I added a Retry button next to every failed upload.",
+          "v": "SessionText"
+        },
+        "id": "evt_0011",
+        "type": "session.text.ended"
+      },
+      {
+        "created": 1788960000012,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "phase": "streamed",
+          "sessionID": "ses_checkout",
+          "v": "SessionStep"
+        },
+        "id": "evt_0012",
+        "type": "session.step.streamed"
+      },
+      {
+        "created": 1788960000013,
+        "event": {
+          "assistantMessageID": "msg_asst01",
+          "cost": 0.0421,
+          "finish": "stop",
+          "phase": "ended",
+          "sessionID": "ses_checkout",
+          "snapshot": "snap_d4e5f6",
+          "tokens": {
+            "cacheRead": 4000,
+            "cacheWrite": 500,
+            "input": 9100,
+            "output": 1210,
+            "reasoning": 400
+          },
+          "v": "SessionStep"
+        },
+        "id": "evt_0013",
+        "type": "session.step.ended"
+      },
+      {
+        "created": 1788960000014,
+        "event": {
+          "phase": "succeeded",
+          "sessionID": "ses_checkout",
+          "v": "SessionExecution"
+        },
+        "id": "evt_0014",
+        "type": "session.execution.succeeded"
+      }
+    ]
+  },
+  "coverage/oc2_messages_samples.json": {
+    "assistant_all_fields": [
+      {
+        "files": [],
+        "id": "msg_002",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "state": {
+              "anthropic": {
+                "signature": "sig-abc"
+              }
+            },
+            "text": "The retry button must keep the failed file name, so I will read the queue first.",
+            "time": {
+              "completed": 1788960002900,
+              "created": 1788960002000
+            },
+            "v": "reasoning"
+          },
+          {
+            "state": {
+              "openai": {
+                "itemId": "msg_abc"
+              }
+            },
+            "text": "I added a Retry button next to every failed upload.",
+            "v": "text"
+          }
+        ],
+        "cost": 0.0421,
+        "finish": "stop",
+        "id": "msg_003",
+        "metadata": {
+          "traceId": "tr-9"
+        },
+        "model": "anthropic/claude-opus-5-5#high",
+        "rawFinish": "end_turn",
+        "text": "I added a Retry button next to every failed upload.",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "tokens": {
+          "cacheRead": 4000,
+          "cacheWrite": 500,
+          "input": 9100,
+          "output": 1210,
+          "reasoning": 400
+        },
+        "v": "Assistant"
+      }
+    ],
+    "compaction_failed": [
+      {
+        "files": [],
+        "id": "msg_053",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "error": {
+          "message": "The summary model refused the request",
+          "status": 400,
+          "type": "compaction"
+        },
+        "id": "msg_054",
+        "metadata": {
+          "by": "auto"
+        },
+        "reason": "auto",
+        "status": "failed",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "Compaction"
+      }
+    ],
+    "compaction_states": [
+      {
+        "files": [],
+        "id": "msg_050",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "id": "msg_051",
+        "metadata": {
+          "by": "auto"
+        },
+        "reason": "auto",
+        "status": "running",
+        "summary": "Working on the upload retry button.",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "Compaction"
+      },
+      {
+        "id": "msg_052",
+        "metadata": {
+          "by": "manual"
+        },
+        "reason": "manual",
+        "status": "completed",
+        "summary": "Summary: the retry button was added and tested.",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "Compaction"
+      }
+    ],
+    "error_api_overloaded": [
+      {
+        "files": [],
+        "id": "msg_038",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [],
+        "error": {
+          "message": "The provider is overloaded, try again in a minute",
+          "status": 529,
+          "type": "api"
+        },
+        "finish": "error",
+        "id": "msg_039",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "error_provider_auth_empty": [
+      {
+        "files": [],
+        "id": "msg_040",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [],
+        "error": {
+          "status": 401,
+          "type": "provider.auth"
+        },
+        "finish": "error",
+        "id": "msg_041",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "retry_scheduled": [
+      {
+        "files": [],
+        "id": "msg_042",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": false,
+        "content": [],
+        "finish": "unknown",
+        "id": "msg_043",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "shell_messages": [
+      {
+        "command": "ls -la lib/upload",
+        "exit": 0,
+        "id": "msg_048",
+        "metadata": {
+          "origin": "composer"
+        },
+        "output": "upload_screen.dart\nupload_queue.dart",
+        "outputTruncated": true,
+        "shellID": "shl_1",
+        "status": "exited",
+        "time": {
+          "completed": 1788960003000,
+          "created": 1788960001000
+        },
+        "v": "Shell"
+      },
+      {
+        "command": "sleep 600",
+        "id": "msg_049",
+        "output": "partial output before the limit",
+        "outputTruncated": false,
+        "shellID": "shl_2",
+        "status": "timeout",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960004000
+        },
+        "v": "Shell"
+      }
+    ],
+    "switch_notices": [
+      {
+        "files": [],
+        "id": "msg_055",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "plan",
+        "id": "msg_056",
+        "metadata": {
+          "by": "person"
+        },
+        "previous": "build",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "AgentSwitched"
+      },
+      {
+        "id": "msg_057",
+        "metadata": {
+          "by": "person"
+        },
+        "model": "openai/gpt-6-sol#high",
+        "previous": "anthropic/claude-opus-5-5#max",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "ModelSwitched"
+      },
+      {
+        "id": "msg_058",
+        "location": {
+          "directory": "/work/shopfront-web",
+          "workspaceID": "wrk_1"
+        },
+        "metadata": {
+          "by": "person"
+        },
+        "projectID": "prj_1",
+        "subpath": "packages/web",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "LocationSwitched"
+      }
+    ],
+    "synthetic_system_skill": [
+      {
+        "files": [],
+        "id": "msg_044",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "description": "Helper agent finished",
+        "id": "msg_045",
+        "metadata": {
+          "agent": "explore",
+          "childID": "ses_child1",
+          "source": "subagent",
+          "state": "completed"
+        },
+        "text": "The explore agent finished: two loops can retry forever.",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "Synthetic"
+      },
+      {
+        "description": "Rules updated",
+        "id": "msg_046",
+        "metadata": {
+          "origin": "server"
+        },
+        "text": "The project rules file changed on disk.",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "System"
+      },
+      {
+        "id": "msg_047",
+        "metadata": {
+          "origin": "slash"
+        },
+        "name": "flutter-testing",
+        "skill": "skill_flutter",
+        "text": "Always run the widget tests with --concurrency=1.",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "Skill"
+      }
+    ],
+    "tool_bash": [
+      {
+        "files": [],
+        "id": "msg_005",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "executed": true,
+            "id": "call_004",
+            "name": "bash",
+            "state": {
+              "input": {
+                "command": "flutter test test/upload_screen_test.dart",
+                "description": "Run the upload screen tests",
+                "timeout": 120000,
+                "workdir": "/work/app"
+              },
+              "items": [
+                {
+                  "text": "00:04 +12: All tests passed!",
+                  "v": "text"
+                }
+              ],
+              "metadata": {
+                "exit": 0,
+                "output": "00:04 +12: All tests passed!"
+              },
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1788960007100,
+              "created": 1788960003000,
+              "ran": 1788960003100
+            },
+            "v": "tool"
+          }
+        ],
+        "finish": "tool-calls",
+        "id": "msg_006",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "tool_edit": [
+      {
+        "files": [],
+        "id": "msg_011",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "executed": true,
+            "id": "call_010",
+            "name": "edit",
+            "state": {
+              "input": {
+                "filePath": "/work/app/lib/upload/upload_screen.dart",
+                "newString": "final retries = 3;",
+                "oldString": "final retries = 1;",
+                "replaceAll": true
+              },
+              "items": [
+                {
+                  "text": "Edit applied successfully.",
+                  "v": "text"
+                }
+              ],
+              "metadata": {
+                "diagnostics": {
+                  "/work/app/lib/upload/upload_screen.dart": [
+                    {
+                      "message": "Unused import",
+                      "severity": 2
+                    }
+                  ]
+                },
+                "diff": "--- a/lib/upload/upload_screen.dart\n+++ b/lib/upload/upload_screen.dart\n@@ -1 +1 @@\n-final retries = 1;\n+final retries = 3;",
+                "filediff": {
+                  "additions": 6,
+                  "after": "final retries = 3;",
+                  "before": "final retries = 1;",
+                  "deletions": 4,
+                  "file": "/work/app/lib/upload/upload_screen.dart"
+                }
+              },
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1788960007100,
+              "created": 1788960003000,
+              "ran": 1788960003100
+            },
+            "v": "tool"
+          }
+        ],
+        "finish": "tool-calls",
+        "id": "msg_012",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "tool_failed_with_file": [
+      {
+        "files": [],
+        "id": "msg_036",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "executed": true,
+            "id": "call_035",
+            "name": "bash",
+            "state": {
+              "error": {
+                "message": "Command exited with code 128: fatal: could not read Username",
+                "status": 128,
+                "type": "tool.failed"
+              },
+              "input": {
+                "command": "git push origin main"
+              },
+              "items": [
+                {
+                  "text": "remote: Invalid username or password.",
+                  "v": "text"
+                },
+                {
+                  "mime": "text/plain",
+                  "name": "push.log",
+                  "uri": "file:///work/app/build/push.log",
+                  "v": "file"
+                }
+              ],
+              "metadata": {
+                "exit": 128
+              },
+              "v": "error"
+            },
+            "time": {
+              "completed": 1788960003900,
+              "created": 1788960003000,
+              "ran": 1788960003100
+            },
+            "v": "tool"
+          }
+        ],
+        "finish": "tool-calls",
+        "id": "msg_037",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "tool_glob": [
+      {
+        "files": [],
+        "id": "msg_020",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "executed": true,
+            "id": "call_019",
+            "name": "glob",
+            "state": {
+              "input": {
+                "path": "test",
+                "pattern": "**/*_test.dart"
+              },
+              "items": [
+                {
+                  "text": "test/a_test.dart\ntest/b_test.dart",
+                  "v": "text"
+                }
+              ],
+              "metadata": {
+                "count": 2,
+                "truncated": true
+              },
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1788960007100,
+              "created": 1788960003000,
+              "ran": 1788960003100
+            },
+            "v": "tool"
+          }
+        ],
+        "finish": "tool-calls",
+        "id": "msg_021",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "tool_grep": [
+      {
+        "files": [],
+        "id": "msg_017",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "executed": true,
+            "id": "call_016",
+            "name": "grep",
+            "state": {
+              "input": {
+                "include": "*.dart",
+                "path": "lib",
+                "pattern": "TODO"
+              },
+              "items": [
+                {
+                  "text": "Found 5 matches\nlib/a.dart:\n  Line 12: // TODO tidy",
+                  "v": "text"
+                }
+              ],
+              "metadata": {
+                "matches": 5,
+                "truncated": true
+              },
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1788960007100,
+              "created": 1788960003000,
+              "ran": 1788960003100
+            },
+            "v": "tool"
+          }
+        ],
+        "finish": "tool-calls",
+        "id": "msg_018",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "tool_read": [
+      {
+        "files": [],
+        "id": "msg_008",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "executed": true,
+            "id": "call_007",
+            "name": "read",
+            "state": {
+              "input": {
+                "filePath": "/work/app/lib/main.dart",
+                "limit": 40,
+                "offset": 12
+              },
+              "items": [
+                {
+                  "text": "00012| void main() {\n00013|   runApp(const App());",
+                  "v": "text"
+                }
+              ],
+              "metadata": {
+                "truncated": true
+              },
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1788960007100,
+              "created": 1788960003000,
+              "ran": 1788960003100
+            },
+            "v": "tool"
+          }
+        ],
+        "finish": "tool-calls",
+        "id": "msg_009",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "tool_running_streaming": [
+      {
+        "files": [],
+        "id": "msg_033",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": false,
+        "content": [
+          {
+            "id": "call_031",
+            "name": "bash",
+            "state": {
+              "rawInput": "{\"command\":\"npm run dev",
+              "v": "streaming"
+            },
+            "time": {
+              "created": 1788960003000
+            },
+            "v": "tool"
+          },
+          {
+            "executed": true,
+            "id": "call_032",
+            "name": "bash",
+            "state": {
+              "input": {
+                "command": "npm run dev"
+              },
+              "metadata": {
+                "output": "ready on port 5173"
+              },
+              "v": "running"
+            },
+            "time": {
+              "created": 1788960003000,
+              "ran": 1788960003100
+            },
+            "v": "tool"
+          }
+        ],
+        "finish": "tool-calls",
+        "id": "msg_034",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "tool_task": [
+      {
+        "files": [],
+        "id": "msg_026",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "executed": true,
+            "id": "call_025",
+            "name": "task",
+            "state": {
+              "input": {
+                "command": "audit-retries",
+                "description": "Audit the upload retry code",
+                "prompt": "Read lib/upload and list every place a retry can loop forever",
+                "subagent_type": "explore"
+              },
+              "items": [
+                {
+                  "text": "task_id: ses_child1 (for resuming)\n\n<task_result>\nTwo loops can retry forever.\n</task_result>",
+                  "v": "text"
+                }
+              ],
+              "metadata": {
+                "model": {
+                  "modelID": "claude-sonnet-5-5",
+                  "providerID": "openrouter"
+                },
+                "sessionId": "ses_child1"
+              },
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1788960007100,
+              "created": 1788960003000,
+              "ran": 1788960003100
+            },
+            "v": "tool"
+          }
+        ],
+        "finish": "tool-calls",
+        "id": "msg_027",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "tool_todowrite": [
+      {
+        "files": [],
+        "id": "msg_029",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "executed": true,
+            "id": "call_028",
+            "name": "todowrite",
+            "state": {
+              "input": {
+                "todos": [
+                  {
+                    "content": "Read the upload queue",
+                    "priority": "high",
+                    "status": "completed"
+                  },
+                  {
+                    "content": "Add the retry button",
+                    "priority": "medium",
+                    "status": "in_progress"
+                  },
+                  {
+                    "content": "Write the widget test",
+                    "priority": "low",
+                    "status": "pending"
+                  }
+                ]
+              },
+              "items": [
+                {
+                  "text": "[{\"content\":\"Read the upload queue\"}]",
+                  "v": "text"
+                }
+              ],
+              "metadata": {},
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1788960007100,
+              "created": 1788960003000,
+              "ran": 1788960003100
+            },
+            "v": "tool"
+          }
+        ],
+        "finish": "tool-calls",
+        "id": "msg_030",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "tool_webfetch": [
+      {
+        "files": [],
+        "id": "msg_023",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "executed": true,
+            "id": "call_022",
+            "name": "webfetch",
+            "state": {
+              "input": {
+                "format": "markdown",
+                "timeout": 30,
+                "url": "https://docs.flutter.dev/cookbook/networking"
+              },
+              "items": [
+                {
+                  "text": "Networking cookbook: fetch data from the internet",
+                  "v": "text"
+                }
+              ],
+              "metadata": {},
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1788960007100,
+              "created": 1788960003000,
+              "ran": 1788960003100
+            },
+            "v": "tool"
+          }
+        ],
+        "finish": "tool-calls",
+        "id": "msg_024",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "tool_write": [
+      {
+        "files": [],
+        "id": "msg_014",
+        "text": "Add a retry button to the upload screen",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      },
+      {
+        "agent": "build",
+        "completed": true,
+        "content": [
+          {
+            "executed": true,
+            "id": "call_013",
+            "name": "write",
+            "state": {
+              "input": {
+                "content": "class RetryButton extends StatelessWidget {}",
+                "filePath": "/work/app/lib/upload/retry_button.dart"
+              },
+              "items": [
+                {
+                  "text": "Wrote file successfully.",
+                  "v": "text"
+                }
+              ],
+              "metadata": {
+                "exists": false,
+                "filepath": "/work/app/lib/upload/retry_button.dart"
+              },
+              "v": "completed"
+            },
+            "time": {
+              "completed": 1788960007100,
+              "created": 1788960003000,
+              "ran": 1788960003100
+            },
+            "v": "tool"
+          }
+        ],
+        "finish": "tool-calls",
+        "id": "msg_015",
+        "model": "anthropic/claude-opus-5-5#high",
+        "text": "",
+        "time": {
+          "completed": 1788960009000,
+          "created": 1788960001000,
+          "streamed": 1788960005000
+        },
+        "v": "Assistant"
+      }
+    ],
+    "user_prompt_all_fields": [
+      {
+        "files": [
+          {
+            "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+            "description": "The upload screen as it looks today",
+            "mime": "image/png",
+            "name": "screenshot.png",
+            "sourceType": "inline"
+          },
+          {
+            "data": "",
+            "mime": "text/x-dart",
+            "name": "upload_screen.dart",
+            "sourceType": "uri",
+            "sourceUri": "file:///work/app/lib/upload/upload_screen.dart"
+          }
+        ],
+        "id": "msg_001",
+        "metadata": {
+          "client": "mobile"
+        },
+        "text": "Compare @screenshot.png and @upload_screen.dart",
+        "time": {
+          "created": 1788960001000
+        },
+        "v": "User"
+      }
+    ]
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "data": [
+    {
+      "id": "msg_04acb4987001Ei5pD9H8pLWeKb",
+      "time": {
+        "created": 1787961231766
+      },
+      "text": "Reply with exactly the word: pong. Then use the read tool to read the file README.md (just the first 5 lines).",
+      "files": [
+        {
+          "data": "dGlueSBhdHRhY2htZW50",
+          "mime": "text/plain",
+          "source": {
+            "type": "inline"
+          },
+          "name": "att.txt"
+        }
+      ],
+      "type": "user"
+    },
+    {
+      "id": "msg_04acb499d0018dZywDIvO4DCTc",
+      "time": {
+        "created": 1787961233596,
+        "streamed": 1787961234956,
+        "completed": 1787961234975
+      },
+      "type": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "gpt-5.6-sol",
+        "providerID": "openai"
+      },
+      "content": [
+        {
+          "type": "reasoning",
+          "text": "",
+          "state": {
+            "itemId": "rs_0122e05649ee457d016a921f91839487d2b71b850ce16de292",
+            "reasoningEncryptedContent": "redacted"
+          },
+          "time": {
+            "created": 1787961233603,
+            "completed": 1787961234437
+          }
+        },
+        {
+          "type": "text",
+          "text": "pong.",
+          "state": {
+            "itemId": "msg_0122e05649ee457d016a921f925c0c87d2a03f1e545c8c178d",
+            "phase": "commentary"
+          }
+        },
+        {
+          "type": "tool",
+          "id": "call_qdg2bCIuJ1zMqEwatSi1wXOz",
+          "name": "read",
+          "executed": false,
+          "providerState": {
+            "itemId": "fc_0122e05649ee457d016a921f927ccc87d2933eeaea9b73f4f8"
+          },
+          "state": {
+            "status": "completed",
+            "input": {
+              "path": "README.md",
+              "offset": 1,
+              "limit": 5
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Read file README.md, lines 1-5\n1: # OpenCode for Android\n2: \n3: A native Flutter client for [opencode](https://opencode.ai) that connects to an\n4: opencode server either **remotely** (your dev box / VPS) or **on-device** \u2014 the\n5: app drives Termux itself, so you never manage a terminal by hand. Ships with\n[Output truncated. Continue reading with offset: 6]"
+              }
+            ],
+            "metadata": {
+              "truncated": true
+            }
+          },
+          "time": {
+            "created": 1787961234628,
+            "ran": 1787961234951,
+            "completed": 1787961234965
+          }
+        }
+      ],
+      "snapshot": {
+        "start": "59785f455ee0e35afacfc27ec31ae20efab265a6",
+        "end": "59785f455ee0e35afacfc27ec31ae20efab265a6",
+        "files": []
+      },
+      "finish": "tool-calls",
+      "providerState": {
+        "responseId": "resp_0122e05649ee457d016a921f90407c87d2a920591de15c49a6",
+        "serviceTier": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 11185,
+        "output": 37,
+        "reasoning": 35,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      }
+    },
+    {
+      "id": "msg_04acb562a001AVrRyQ0SN5T20D",
+      "time": {
+        "created": 1787961237069,
+        "streamed": 1787961237707,
+        "completed": 1787961237716
+      },
+      "type": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "gpt-5.6-sol",
+        "providerID": "openai"
+      },
+      "content": [
+        {
+          "type": "reasoning",
+          "text": "",
+          "state": {
+            "itemId": "rs_0122e05649ee457d016a921f94f33087d2bb9de980b473cd52",
+            "reasoningEncryptedContent": "redacted"
+          },
+          "time": {
+            "created": 1787961237077,
+            "completed": 1787961237672
+          }
+        },
+        {
+          "type": "text",
+          "text": "pong.",
+          "state": {
+            "itemId": "msg_0122e05649ee457d016a921f957e5087d2936c77d3ad05913e",
+            "phase": "final_answer"
+          }
+        }
+      ],
+      "snapshot": {
+        "start": "59785f455ee0e35afacfc27ec31ae20efab265a6",
+        "end": "59785f455ee0e35afacfc27ec31ae20efab265a6",
+        "files": []
+      },
+      "finish": "stop",
+      "providerState": {
+        "responseId": "resp_0122e05649ee457d016a921f9357d087d2a7e679c6a877fe22",
+        "serviceTier": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 617,
+        "output": 8,
+        "reasoning": 23,
+        "cache": {
+          "read": 10752,
+          "write": 0
+        }
+      }
+    }
+  ],
+  "cursor": {
+    "previous": "eyJpZCI6Im1zZ18wNGFjYjQ5ODcwMDFFaTVwRDlIOHBMV2VLYiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+    "next": "eyJpZCI6Im1zZ18wNGFjYjU2MmEwMDFBVnJSeVEwU041VDIwRCIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+  }
+}
