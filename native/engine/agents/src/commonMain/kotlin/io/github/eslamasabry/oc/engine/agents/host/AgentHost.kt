@@ -180,8 +180,8 @@ public enum class LegacySignInStatus { SignedIn, SignedOut, LimitReached, Unknow
 
 public enum class HelperExitKind { Unexpected, LimitOrMemory, Requested }
 
-/** One observed helper exit; no profile data. */
-public data class AgentHelperExit(val atEpochMillis: Long, val kind: HelperExitKind)
+/** One observed helper exit; no profile data. [exitCode] is the process code when the native side saw one. */
+public data class AgentHelperExit(val atEpochMillis: Long, val kind: HelperExitKind, val exitCode: Long? = null)
 
 /** The native agent-host error codes (11 §5.5 RuntimeProblem values appended by CR17-1). */
 public enum class AgentHostProblem(public val code: String) {
