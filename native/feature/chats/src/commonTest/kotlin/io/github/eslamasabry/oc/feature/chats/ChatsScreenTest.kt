@@ -91,7 +91,8 @@ class ChatsScreenTest {
         onNodeWithText("No conversations yet").assertExists()
         onAllNodesWithText("New conversation").assertCountEquals(1)
         onNodeWithText("New conversation").performClick()
-        assertEquals(listOf("new"), actions.calls)
+        onNodeWithText("Show all conversations").performClick()
+        assertEquals(listOf("new", "all"), actions.calls)
     }
 
     @Test

@@ -58,6 +58,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewChat
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeShowAll
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeToday
 import io.github.eslamasabry.oc.ui.words.res.chats_all_filter
@@ -131,6 +132,16 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
                         item(key = "earlier") { KitSectionLabel(stringResource(Res.string.chatsHomeEarlier)) }
                         items(state.earlier, key = { it.key }) { ConversationRow(it, actions) }
                     }
+                }
+            }
+            if (state.phase != ChatsPhase.Opening) {
+                // The visible way to the full list (All conversations, B12) besides Search.
+                item(key = "show-all") {
+                    KitButton(
+                        label = stringResource(Res.string.chatsHomeShowAll),
+                        onClick = actions::showAll,
+                        role = KitButtonRole.Tertiary,
+                    )
                 }
             }
         }
