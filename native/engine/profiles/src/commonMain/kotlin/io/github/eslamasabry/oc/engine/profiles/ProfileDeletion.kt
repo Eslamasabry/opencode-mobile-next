@@ -104,7 +104,7 @@ public fun interface RetainedKeys {
  */
 public data class DeletionOptions(
     val keepQueuedPromptsAsDrafts: Boolean = false,
-    val confirmedQueue: Any? = null,
+    val confirmedQueue: QueuedPromptRemovalPlan? = null,
     val linuxGone: Boolean = false,
 ) {
     val structuralPlan: StructuralPlan get() = StructuralPlan(keepQueuedPromptsAsDrafts)

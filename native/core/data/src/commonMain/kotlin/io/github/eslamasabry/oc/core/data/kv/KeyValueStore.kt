@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.core.data.kv
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.data.lane.WriterLane
 import kotlinx.coroutines.flow.SharedFlow
@@ -42,6 +43,13 @@ public interface KeyValueStore {
      * Atomic compare-and-set of one string key (schedule envelope CAS, widget snapshot patches). `Ok(false)` when the
      * current value is not [expected] (a non-string value never equals). [next] null removes the key.
      */
+    /**
+     * Atomic conditional edit of several keys, under the file-wide lock. B-STATE-063 eng-4: a queue removal and
+     * its saved prompts must share one comparison and commit. Unsupported stores refuse rather than lose data.
+     */
+    public suspend fun compareAndCommit(lane: WriterLane, expected: Map<String, PrefValue?>, edit: PrefEdit.() -> Unit): Outcome<Boolean> =
+        Outcome.Failed(Failure.StorageRefused())
+
     public suspend fun compareAndSet(lane: WriterLane, key: String, expected: String?, next: String?): Outcome<Boolean>
 }
 

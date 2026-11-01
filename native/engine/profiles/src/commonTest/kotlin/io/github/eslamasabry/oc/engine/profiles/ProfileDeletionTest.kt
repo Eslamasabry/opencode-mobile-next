@@ -8,13 +8,6 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLane
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -22,6 +15,13 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileDeletionTest {
@@ -78,7 +78,7 @@ class ProfileDeletionTest {
         val h = harness()
         h.seedFixture()
 
-        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed).ok()
+        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed, DeletionOptions(confirmedQueue = h.confirmedQueue(doomed))).ok()
 
         assertTrue(result.complete)
         assertTrue(result.failures.isEmpty())
@@ -110,7 +110,7 @@ class ProfileDeletionTest {
         val h = harness()
         h.seedFixture()
 
-        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(keeper).ok()
+        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(keeper, DeletionOptions(confirmedQueue = h.confirmedQueue(keeper))).ok()
 
         assertTrue(result.complete)
         assertEquals(1, result.removedByOwner[":engine:delivery"])
@@ -128,7 +128,7 @@ class ProfileDeletionTest {
         h.seedFixture()
         h.backend.refuse += "oc.offlineQueue"
 
-        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed).ok()
+        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed, DeletionOptions(confirmedQueue = h.confirmedQueue(doomed))).ok()
 
         assertFalse(result.removedProfile)
         assertEquals(listOf(":engine:delivery"), result.failedOwners)
@@ -147,7 +147,7 @@ class ProfileDeletionTest {
         h.seedFixture()
         h.backend.refuse += "oc.sessionDrafts"
 
-        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed).ok()
+        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed, DeletionOptions(confirmedQueue = h.confirmedQueue(doomed))).ok()
 
         assertFalse(result.removedProfile)
         assertEquals(listOf(":engine:composer"), result.failedOwners)
@@ -162,7 +162,7 @@ class ProfileDeletionTest {
         h.seedFixture()
         h.backend.refuse += setOf("oc.pinnedShortcuts", "oc.attentionTile")
 
-        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed).ok()
+        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed, DeletionOptions(confirmedQueue = h.confirmedQueue(doomed))).ok()
 
         assertFalse(result.removedProfile)
         assertEquals(listOf(":android:background", ":android:background"), result.failedOwners)
@@ -178,7 +178,7 @@ class ProfileDeletionTest {
         h.seedFixture()
         h.backend.refuse += setOf("oc.offlineQueue", "oc.sessionDrafts", "oc.location.doomed")
 
-        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed).ok()
+        val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed, DeletionOptions(confirmedQueue = h.confirmedQueue(doomed))).ok()
 
         assertEquals(listOf(":engine:delivery", ":engine:composer", ProfileDeletion.SWEEP_OWNER), result.failedOwners)
         assertFalse(result.removedProfile)
@@ -209,7 +209,7 @@ class ProfileDeletionTest {
             "oc.widgetSessions" to json(mapOf("connected" to true, "sessions" to listOf(mapOf("id" to "ses_a", "title" to "Legacy")))),
         )
 
-        assertTrue(h.deletion(cleaners = h.embeddedCleaners()).delete(doomed).ok().complete)
+        assertTrue(h.deletion(cleaners = h.embeddedCleaners()).delete(doomed, DeletionOptions(confirmedQueue = h.confirmedQueue(doomed))).ok().complete)
 
         assertEquals("", h.string("oc.builtinServerOwner"))
         assertNull(h.string("oc.builtinRecovery.doomed"))
@@ -414,8 +414,9 @@ class ProfileDeletionTest {
         h.seedFixture()
         val deletion = h.deletion(cleaners = h.embeddedCleaners())
 
-        val first = async { deletion.delete(doomed) }
-        val second = async { deletion.delete(doomed) }
+        val options = DeletionOptions(confirmedQueue = h.confirmedQueue(doomed))
+        val first = async { deletion.delete(doomed, options) }
+        val second = async { deletion.delete(doomed, options) }
 
         assertEquals(first.await(), second.await())
         assertTrue(first.await().ok().complete)
@@ -433,7 +434,7 @@ class ProfileDeletionTest {
                 throw IllegalStateException("secret-text-must-not-leak")
         }
 
-        val result = h.deletion(cleaners = h.embeddedCleaners() + broken).delete(doomed).ok()
+        val result = h.deletion(cleaners = h.embeddedCleaners() + broken).delete(doomed, DeletionOptions(confirmedQueue = h.confirmedQueue(doomed))).ok()
 
         assertFalse(result.removedProfile)
         assertEquals(listOf("test:broken"), result.failedOwners)

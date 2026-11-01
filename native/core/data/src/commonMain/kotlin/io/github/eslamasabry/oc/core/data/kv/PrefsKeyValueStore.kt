@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.data.lane.WriterLane
 import io.github.eslamasabry.oc.core.data.migration.GateState
 import io.github.eslamasabry.oc.core.data.migration.MigrationGate
 import io.github.eslamasabry.oc.core.data.migration.MigrationOnly
+import kotlin.concurrent.atomics.AtomicReference
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.toPersistentHashMap
@@ -19,7 +20,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlin.concurrent.atomics.AtomicReference
 
 /** `commit()` answered false. Only its class name reaches `Failure.details` (plan 03 §16.1 `StorageFailures`). */
 internal class CommitRefused : Exception()
@@ -119,6 +119,23 @@ public class PrefsKeyValueStore(
                     }
                 }
                 if (result is Outcome.Ok && result.value) mutableChanges.emit(setOf(key))
+                result
+            }
+        }
+    }
+
+    override suspend fun compareAndCommit(lane: WriterLane, expected: Map<String, PrefValue?>, edit: PrefEdit.() -> Unit): Outcome<Boolean> {
+        val ops = Recorder(codec).apply(edit)
+        ops.refusal?.let { return Outcome.Failed(it) }
+        gate.awaitWritable()
+        return lane.write {
+            // B-STATE-063 eng-4: compare, commit and publish are one admitted, non-cancellable operation.
+            withContext(io + NonCancellable) {
+                val result = fileLock.withLock {
+                    if (expected.any { (key, value) -> loaded().values[key] != value }) Outcome.Ok(false)
+                    else applyLocked(ops.changes.mapKeys { FlutterPrefsCodec.physicalKey(it.key) }).map { true }
+                }
+                if (result is Outcome.Ok && result.value && ops.changes.isNotEmpty()) mutableChanges.emit(ops.changes.keys)
                 result
             }
         }

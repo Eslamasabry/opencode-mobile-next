@@ -166,3 +166,6 @@ internal class MapCopy(
         "$k=$text"
     }
 }
+
+internal fun Harness.confirmedQueue(profileId: ProfileId): QueuedPromptRemovalPlan =
+    (QueuedPromptRemovalPlan.fromSnapshot(profileId, string("oc.offlineQueue")) as Outcome.Ok).value

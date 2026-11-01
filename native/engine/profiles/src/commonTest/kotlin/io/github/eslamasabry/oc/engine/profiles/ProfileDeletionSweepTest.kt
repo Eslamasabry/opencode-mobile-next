@@ -123,7 +123,7 @@ class ProfileDeletionSweepTest {
         val bCopiesBefore = copies.associate { it.label to it.entries.filterKeys { k -> b.raw in k } }
         val sweep = FlutterEraSweep(RetainedCopies { copies.ok() })
 
-        val result = h.deletion(cleaners = h.embeddedCleaners() + sweep).delete(a)
+        val result = h.deletion(cleaners = h.embeddedCleaners() + sweep).delete(a, DeletionOptions(confirmedQueue = h.confirmedQueue(a)))
 
         val done = assertIs<Outcome.Ok<DeleteProfileResult>>(result).value
         assertTrue(done.complete, done.failures.toString())
@@ -151,7 +151,7 @@ class ProfileDeletionSweepTest {
         copies[3].refuse = true
         val sweep = FlutterEraSweep(RetainedCopies { copies.ok() })
 
-        val kept = assertIs<Outcome.Ok<DeleteProfileResult>>(h.deletion(cleaners = h.embeddedCleaners() + sweep).delete(a)).value
+        val kept = assertIs<Outcome.Ok<DeleteProfileResult>>(h.deletion(cleaners = h.embeddedCleaners() + sweep).delete(a, DeletionOptions(confirmedQueue = h.confirmedQueue(a)))).value
         assertFalse(kept.removedProfile)
         assertEquals(listOf(FlutterEraSweep.OWNER), kept.failedOwners)
         assertTrue(h.store.profiles.value.any { it.id == a })
@@ -160,7 +160,7 @@ class ProfileDeletionSweepTest {
         assertTrue(copies.filterIndexed { i, _ -> i != 3 }.all { a.raw !in it.bytes() })
 
         copies[3].refuse = false
-        val done = assertIs<Outcome.Ok<DeleteProfileResult>>(h.deletion(cleaners = h.embeddedCleaners() + sweep).delete(a)).value
+        val done = assertIs<Outcome.Ok<DeleteProfileResult>>(h.deletion(cleaners = h.embeddedCleaners() + sweep).delete(a, DeletionOptions(confirmedQueue = h.confirmedQueue(a)))).value
         assertTrue(done.complete)
         assertTrue(copies.all { a.raw !in it.bytes() })
     }
