@@ -106,6 +106,7 @@ class MigrationRunnerTest {
         assertEquals(1, w.signals.done.size) // migration_done is emitted once
     }
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @Test
     fun `B-MIGR-010 Try again while Running waits on the same run and never starts a second runner`() = runTest {
         val w = world().apply { Seed.phone(this) }
@@ -241,5 +242,28 @@ class MigrationRunnerTest {
 
         assertEquals(RawPref.Bool(false), w.logical()["oc.native.flutterReadable"])
         assertTrue(w.journalText().contains("\"flutterReadable\":false"))
+    }
+
+    @Test
+    fun `the census flags AI Team, Memory and Gemma data for the one-time notice, which never shows again`() = runTest {
+        val w = world().apply { Seed.phone(this) }
+        File(w.paths.files, "oc.teamEngine.${Seed.REMOTE}").mkdirs()
+        File(w.paths.files, "local_llm_models/gemma").apply { mkdirs() }.resolve("model.bin").writeBytes(byteArrayOf(1))
+        File(w.paths.externalFilesDir, "factsbook").mkdirs()
+
+        val runner = w.runner(io())
+        val open = assertIs<RunnerState.Open>(runner.run())
+        assertEquals(setOf(DeferredFeature.AiTeam, DeferredFeature.Memory, DeferredFeature.Gemma), open.notices.deferredFeatures)
+        runner.acknowledgeNotices()
+        assertEquals(MigrationNoticeSet(), assertIs<RunnerState.Open>(runner.state.value).notices)
+
+        assertEquals(MigrationNoticeSet(), assertIs<RunnerState.Open>(w.runner(io()).run()).notices)
+        assertTrue(File(w.paths.files, "oc.teamEngine.${Seed.REMOTE}").isDirectory) // never touched
+    }
+
+    @Test
+    fun `a phone without AI Team, Memory or Gemma data gets no deferred-feature notice`() = runTest {
+        val w = world().apply { Seed.phone(this) }
+        assertEquals(emptySet(), assertIs<RunnerState.Open>(w.runner(io()).run()).notices.deferredFeatures)
     }
 }

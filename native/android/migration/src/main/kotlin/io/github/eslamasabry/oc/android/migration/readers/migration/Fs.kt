@@ -64,7 +64,7 @@ internal object Fs {
 
     /** tmp file + fsync + atomic rename + parent fsync. */
     fun writeAtomically(target: File, bytes: ByteArray, faults: FaultPoints = FaultPoints.None, label: String = target.name) {
-        val parent = target.absoluteFile.parentFile
+        val parent: File = requireNotNull(target.absoluteFile.parentFile)
         parent.mkdirs()
         val tmp = File(parent, target.name + ".tmp")
         FileOutputStream(tmp).use { out ->
@@ -80,7 +80,7 @@ internal object Fs {
 
     /** Copy with hashing and fsync. Returns the SHA-256 of what was written. */
     fun copyDurably(from: File, to: File): String {
-        to.absoluteFile.parentFile.mkdirs()
+        requireNotNull(to.absoluteFile.parentFile).mkdirs()
         val md = MessageDigest.getInstance("SHA-256")
         FileInputStream(from).use { input ->
             FileOutputStream(to).use { out ->

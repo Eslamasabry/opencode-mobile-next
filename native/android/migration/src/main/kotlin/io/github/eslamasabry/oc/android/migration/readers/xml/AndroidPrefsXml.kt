@@ -121,7 +121,7 @@ internal object AndroidPrefsXml {
 
         fun run(): PrefsXmlRead {
             try {
-                if (s.startsWith("﻿")) i = 1
+                if (s.startsWith("\uFEFF")) i = 1
                 readDocument()
             } catch (f: Fatal) {
                 fatal(f.problem, f.offset)

@@ -42,9 +42,10 @@ class MigrationAuditPrivacyTest {
         val events = (w.signals.done.map { it.toString() } + w.signals.lines + w.signals.updated.map { it.toString() }).joinToString("\n")
         for (p in planted) assertFalse(events.contains(p), "an event holds a planted value")
         // The event's fields are enums and buckets only (16 K-SEC-11).
-        val e = w.signals.done.single()
-        assertEquals(setOf("outcome", "failedStep", "secretsReentry", "duration"), MigrationDoneEvent::class.java.declaredFields.map { it.name }.toSet())
-        assertTrue(e.outcome is Enum<*> && e.failedStep is Enum<*> && e.secretsReentry is Enum<*> && e.duration is Enum<*>)
+        assertEquals(1, w.signals.done.size)
+        val fields = MigrationDoneEvent::class.java.declaredFields.filter { !java.lang.reflect.Modifier.isStatic(it.modifiers) }
+        assertEquals(setOf("outcome", "failedStep", "secretsReentry", "duration"), fields.map { it.name }.toSet())
+        assertTrue(fields.all { it.type.isEnum })
         assertEquals("Update moved your data: 3 servers, 7 saved sign-ins (2 need the password again).", w.signals.lines.single())
     }
 
