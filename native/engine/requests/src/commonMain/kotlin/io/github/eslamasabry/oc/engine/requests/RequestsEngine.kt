@@ -7,7 +7,6 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
-import io.github.eslamasabry.oc.core.common.flatMap
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
@@ -204,20 +203,58 @@ public class RequestsEngine(
     /** Sends a held answer if [held] is still its phase; null when someone else moved it first. */
     private suspend fun send(id: RequestId, held: AnswerPhase.Held): Outcome<Unit>? = claimAndWrite(id, held, held.answer)
 
-    /** Claims [expected] → Sending atomically, then writes. Null when the claim lost (the caller looks again). */
-    private suspend fun claimAndWrite(id: RequestId, expected: AnswerPhase, answer: RequestAnswer): Outcome<Unit>? {
-        val sending = AnswerPhase.Sending(answer, clock.now().toEpochMilliseconds(), CompletableDeferred())
-        var claimed = false
+    /**
+     * Claims and captures the entry together; the connection owns the write, callers only await its
+     * result.
+     */
+    private suspend fun claimAndWrite(
+        id: RequestId,
+        expected: AnswerPhase,
+        answer: RequestAnswer,
+    ): Outcome<Unit>? {
+        val sending =
+            AnswerPhase.Sending(answer, clock.now().toEpochMilliseconds(), CompletableDeferred())
+        var claimed: PendingRequest? = null
         state.update { list ->
-            claimed = false
-            list.mapEntry(id) { entry -> if (entry.phase === expected) entry.withPhase(sending).also { claimed = true } else entry }
+            claimed = null
+            list.mapEntry(id) { entry ->
+                if (entry.phase === expected) entry.withPhase(sending).also { claimed = it }
+                else entry
+            }
         }
-        if (!claimed) return null
-        val entry = state.value.first { it.id == id }
-        val written = port.awaitActionTransport().flatMap { reply(entry, answer) }
-        val outcome = settleWrite(entry, sending, written)
-        sending.result.complete(outcome)
-        return outcome
+        val entry = claimed ?: return null
+        val write =
+            scope.launch(lane) {
+                // Settlement can remove a claimed entry before this job starts or while the
+                // transport wakes.
+                val written =
+                    if (phaseOf(id) !== sending) Unit.ok()
+                    else {
+                        val transport = port.awaitActionTransport()
+                        when {
+                            phaseOf(id) !== sending -> Unit.ok()
+                            transport is Outcome.Failed -> transport
+                            else -> reply(entry, answer)
+                        }
+                    }
+                sending.result.complete(settleWrite(entry, sending, written))
+            }
+        // Also runs if the connection was cancelled before the job could start. Never replay an
+        // uncertain write.
+        write.invokeOnCompletion { cause ->
+            if (cause != null) {
+                val failure = Failure.Refused(RefusalReason.DispatchUncertain)
+                state.update { list ->
+                    list.mapEntry(id) {
+                        if (it.phase === sending)
+                            it.withPhase(AnswerPhase.NotAccepted(answer, failure))
+                        else it
+                    }
+                }
+                sending.result.complete(if (phaseOf(id) == null) Unit.ok() else failure.failed())
+            }
+        }
+        return sending.result.await()
     }
 
     private suspend fun reply(entry: PendingRequest, answer: RequestAnswer): Outcome<Unit> =

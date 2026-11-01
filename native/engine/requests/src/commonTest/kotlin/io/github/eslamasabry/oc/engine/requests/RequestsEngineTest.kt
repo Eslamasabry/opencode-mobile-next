@@ -16,10 +16,15 @@ import io.github.eslamasabry.oc.core.testing.assertTimerTable
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -411,6 +416,95 @@ class RequestsEngineTest {
             engine.answer(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once))
             engine.close()
             assertEquals(listOf("reply p1 Once"), port.replies)
+        }
+
+    @Test
+    fun `B-AGENT-031 req-1 cancelling the initiating caller does not strand the shared write`() =
+        runTest {
+            val engine = engine()
+            ask(permission("p1"))
+            val gate = CompletableDeferred<Unit>()
+            port.replyGate = gate
+            val first = async {
+                engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once))
+            }
+            runCurrent()
+            val second = async {
+                engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Reject))
+            }
+            runCurrent()
+            first.cancelAndJoin()
+            gate.complete(Unit)
+            runCurrent()
+            val completed = second.isCompleted
+            if (!completed) second.cancelAndJoin()
+            assertTrue(completed, "the remaining caller must receive the shared result")
+            assertEquals(Outcome.Ok(Unit), second.await())
+            assertIs<AnswerPhase.Sent>(engine.phaseOf("p1"))
+            assertEquals(listOf("reply p1 Once"), port.replies)
+        }
+
+    @Test
+    fun `B-PROTO-048 req-2 settlement during transport wake resolves both callers without dispatch`() =
+        runTest {
+            val engine = engine()
+            ask(permission("p1"))
+            val gate = CompletableDeferred<Unit>()
+            port.wakeGate = gate
+            val first = async {
+                engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once))
+            }
+            runCurrent()
+            val second = async {
+                engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Reject))
+            }
+            runCurrent()
+            port.events.emit(GatewayEvent.PermissionSettled(S1, RequestId("p1")))
+            runCurrent()
+            gate.complete(Unit)
+            assertEquals(Outcome.Ok(Unit), first.await())
+            assertEquals(Outcome.Ok(Unit), second.await())
+            assertEquals(emptyList(), port.replies)
+            assertEquals(emptyList(), engine.pending.value)
+        }
+
+    @Test
+    fun `B-AGENT-031 req-1 connection cancellation completes the shared result as uncertain without replay`() =
+        runTest {
+            val owner = CoroutineScope(backgroundScope.coroutineContext + Job(backgroundScope.coroutineContext[Job]))
+            val engine = engine(owner)
+            ask(permission("p1"))
+            port.replyGate = CompletableDeferred()
+            val caller = async { engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)) }
+            runCurrent()
+            owner.cancel()
+            runCurrent()
+            val completed = caller.isCompleted
+            if (!completed) caller.cancelAndJoin()
+            assertTrue(completed)
+            assertEquals(Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain)), caller.await())
+            assertIs<AnswerPhase.NotAccepted>(engine.phaseOf("p1"))
+            port.replyGate?.complete(Unit)
+            runCurrent()
+            assertEquals(1, port.replies.size)
+        }
+
+    @Test
+    fun `B-PROTO-048 req-2 settlement at claim publication never loses the captured entry`() =
+        runTest {
+            val dispatcher = UnconfinedTestDispatcher(testScheduler)
+            val engine = RequestsEngine(port, backgroundScope, TestDispatchers(dispatcher), clock, TestPacer())
+            ask(permission("p1"))
+            backgroundScope.launch(dispatcher) {
+                engine.pending.collect { pending ->
+                    if (pending.any { it.phase is AnswerPhase.Sending }) {
+                        port.events.emit(GatewayEvent.PermissionSettled(S1, RequestId("p1")))
+                    }
+                }
+            }
+            assertEquals(Outcome.Ok(Unit), engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)))
+            assertEquals(emptyList(), engine.pending.value)
+            assertEquals(emptyList(), port.replies)
         }
 
     @Test
