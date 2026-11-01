@@ -90,6 +90,7 @@ class ReplyWatchServiceTest {
     private val app: Application = RuntimeEnvironment.getApplication()
     private val manager = app.getSystemService(NotificationManager::class.java)
     private val words = NotifyWords(app) { "en" }
+    private val owners = StatusOwners()
     private val registry = ChannelRegistry(manager, words).also { it.ensure() }
 
     private inner class Source : ReplyRunSource {
@@ -110,7 +111,7 @@ class ReplyWatchServiceTest {
     private fun TestScope.start(source: Source): Pair<ReplyWatchServiceBody, ShellService> {
         val body =
             ReplyWatchServiceBody(
-                app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source,
+                app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source, owners,
                 scope = backgroundScope, elapsedMs = { testScheduler.currentTime },
             )
         val service = Robolectric.buildService(ShellService::class.java).create().get()
@@ -120,6 +121,45 @@ class ReplyWatchServiceTest {
 
     private val finished =
         CodingAlert(AlertKind.Complete, "ses_1", AlertKeys.status("p1", "ses_1"), profileId = "p1", chatTitle = "Fix login", detail = "Login works again.")
+
+    @Test
+    fun `S11-4 notify finding 3 live and sign-in co-owners survive timeout and destruction`() = runTest {
+        for (owner in listOf(StatusOwner.Live, StatusOwner.SignIn)) {
+            val (body, _) = start(Source())
+            runCurrent()
+            val remaining = StatusContent(StatusKind.Idle, owner.name)
+            owners.begin(owner, remaining)
+            body.onTimeout()
+            assertFalse(owners.has(StatusOwner.Reply))
+            assertEquals(owner.name, shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+            owners.end(owner) { }
+
+            val (last, _) = start(Source())
+            runCurrent()
+            owners.begin(owner, remaining)
+            owners.end(owner) { }
+            last.onDestroy()
+            assertFalse(owners.has(StatusOwner.Reply))
+            assertNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
+        }
+    }
+
+    @Test
+    fun `S11-4 notify finding 3 a server arriving during watch retains its row after reply leaves`() = runTest {
+        val source = Source()
+        val (body, service) = start(source)
+        runCurrent()
+        source.serverHoldsRow.value = true
+        val remaining = StatusContent(StatusKind.Idle, "Server ready")
+        owners.begin(StatusOwner.Server, remaining)
+        manager.notify(NotificationIds.STATUS, StatusRenderer(app, words).build(remaining, true, null))
+        source.appVisible.value = true
+        advanceTimeBy(1_500)
+        assertFalse(body.active)
+        assertTrue(shadowOf(service).isForegroundStopped)
+        assertNotNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
+        assertEquals("Server ready", shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+    }
 
     @Test
     fun `plan 11 9_2 promise first - the status row is in the foreground before any watching`() =
@@ -231,9 +271,10 @@ class ReplyWatchServiceTest {
             val source = Source().apply { serverHoldsRow.value = true }
             val body =
                 ReplyWatchServiceBody(
-                    app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source,
+                    app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source, owners,
                     scope = backgroundScope, elapsedMs = { testScheduler.currentTime },
                 )
+            owners.begin(StatusOwner.Server, StatusContent(StatusKind.Idle, "Server ready"))
             body.joinServerRow()
             runCurrent()
             source.alerts.tryEmit(finished)

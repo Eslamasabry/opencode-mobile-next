@@ -127,6 +127,7 @@ public class ReplyWatchServiceBody(
     private val renderer: StatusRenderer,
     private val shade: AlertShade,
     private val source: ReplyRunSource,
+    private val owners: StatusOwners,
     private val scope: CoroutineScope,
     /** Monotonic milliseconds (`SystemClock::elapsedRealtime` in the app; virtual time in tests). */
     private val elapsedMs: () -> Long,
@@ -163,15 +164,20 @@ public class ReplyWatchServiceBody(
                 false
             }
         if (!promised) {
+            service.stopSelf()
+            this.service = null
             finish(ReplyWatchEnd.StartRefused)
             return Service.START_NOT_STICKY
         }
+        owners.begin(StatusOwner.Reply, currentContent())
         watch(joined = false)
         return Service.START_NOT_STICKY
     }
 
     /** Joins the server-held row as owner `reply` (no foreground start, no budget spent). */
     public fun joinServerRow() {
+        if (!owners.has(StatusOwner.Server)) return
+        owners.begin(StatusOwner.Reply, currentContent())
         watch(joined = true)
     }
 
@@ -189,7 +195,7 @@ public class ReplyWatchServiceBody(
     public fun onDestroy() {
         job?.cancel()
         job = null
-        service = null
+        releaseRow()
     }
 
     private fun watch(joined: Boolean) {
@@ -262,10 +268,27 @@ public class ReplyWatchServiceBody(
         _ended.value = reason
         val running = job
         job = null
-        service?.let { s ->
-            ServiceCompat.stopForeground(s, ServiceCompat.STOP_FOREGROUND_REMOVE)
-            s.stopSelf()
-        }
+        releaseRow()
         running?.cancel()
     }
+    private fun releaseRow() {
+        val leavingService = service
+        service = null
+        owners.end(StatusOwner.Reply) { remaining ->
+            leavingService?.let { s ->
+                ServiceCompat.stopForeground(s, if (remaining == null) ServiceCompat.STOP_FOREGROUND_REMOVE else ServiceCompat.STOP_FOREGROUND_DETACH)
+            }
+            if (remaining != null) {
+                try {
+                    manager.notify(NotificationIds.STATUS, renderer.build(remaining, ongoing = true, chip = null))
+                } catch (_: SecurityException) {
+                    // Another owner's service still holds the row even when updates are blocked.
+                }
+            } else if (leavingService == null) {
+                manager.cancel(NotificationIds.STATUS)
+            }
+        }
+        leavingService?.stopSelf()
+    }
+
 }
