@@ -24,3 +24,10 @@
 :android:linux	S	runtime-owner	slice-1
 :tools:strings	S	l10n-owner	slice-1
 :tools:flutter-migration-readers	S	migration-owner	slice-0
+:engine:settings	S	core-owner (S1-ENG)	slice-1
+:engine:diagnostics	S	diagnostics-owner	slice-1
+:engine:profiles	S	core-owner (S1-ENG)	slice-1
+:android:platform	F	(slice brief names the agent)	slice-1
+:engine:entry	S	coordinator	slice-2
+:engine:composer	S	chat-lead	slice-3
+:engine:runtime	S	runtime-owner	slice-3
