@@ -1,0 +1,2 @@
+# Exact values scan_push.sh lets through: "<rule> <value>  # reason". Keep this list short; every line needs a reason.
+private-ip 10.0.2.2  # the Android emulator's fixed alias for the host's loopback, not a real network address
